@@ -73,7 +73,7 @@ export const CoreMetrics = () => {
           deadline: 'End of month',
           whyItMatters: 'Your first customers validate that people actually want what you\'re building.',
           icon: Users,
-          color: 'text-blue-600'
+          color: 'text-info'
         },
         {
           id: 'revenue',
@@ -83,7 +83,7 @@ export const CoreMetrics = () => {
           deadline: 'End of quarter',
           whyItMatters: 'Revenue proves your business model works and gives you options beyond fundraising.',
           icon: DollarSign,
-          color: 'text-green-600'
+          color: 'text-success'
         },
         {
           id: 'runway',
@@ -93,7 +93,7 @@ export const CoreMetrics = () => {
           deadline: 'Before hitting 6 months',
           whyItMatters: 'Runway is how long you can operate. You need at least 6 months to raise without desperation.',
           icon: Calendar,
-          color: 'text-orange-600'
+          color: 'text-warning'
         }
       ];
 
@@ -233,9 +233,9 @@ export const CoreMetrics = () => {
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all duration-1000 ${
-                      metric.color === 'text-blue-600' ? 'bg-blue-600' :
-                      metric.color === 'text-green-600' ? 'bg-green-600' :
-                      'bg-orange-600'
+                      metric.color === 'text-info' ? 'bg-info' :
+                      metric.color === 'text-success' ? 'bg-success' :
+                      'bg-warning'
                     }`}
                     style={{ width: `${progress}%` }}
                   />

@@ -45,6 +45,12 @@ Use these for almost everything. All flip correctly between light and dark mode.
 
 **Do not use the categorical palette for status.** "Action" is red but does not mean "error"; "growth" is green but does not mean "success." Status always uses the Layer-2 status family above.
 
+### Categorical / decorative accents (the one residual)
+A handful of components still use raw `purple`/`indigo`/`violet`/`fuchsia`/`pink` utilities for **decorative category variety** (activity-type icons, gradient flourishes, per-item accents) — hues the semantic system has no equivalent for. These were **left intentionally**: they carry no status meaning, and mapping them to `success`/`warning`/etc. would either change their color or collapse `bg`/`text` pairs to the same hue. Two valid ways to finish them later (a per-usage pass with visual QA):
+1. **Consolidate to the brand** — replace decorative rainbow accents with `primary`/`accent-teal`/neutral (matches the single-accent direction taken on Pricing). Recommended for a more premium, less "vibe-coded" feel.
+2. **Add a categorical palette** — if multi-hue category coding is genuinely wanted, add named `--cat-*` tokens (with both a solid and a `-subtle` per hue) and map to those.
+The lint rule still flags these (at `warn`) so they stay visible until decided. Decorative wallpapers/backgrounds remain fully exempt.
+
 ### `--accent` is deprecated
 `--accent` is a near-duplicate of `--primary` (both blue). **Prefer `primary` in new code.** `accent` is kept only for existing usages and may be removed later.
 

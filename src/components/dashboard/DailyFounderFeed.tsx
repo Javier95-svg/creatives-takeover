@@ -34,7 +34,7 @@ const iconByKind: Record<FounderFeedCardKind | 'daily_prompt', typeof Sparkles> 
 
 const labelToneByLayer = {
   founder: 'bg-primary/10 text-primary border-primary/20',
-  platform: 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:text-emerald-300',
+  platform: 'bg-success/10 text-success border-success/20 dark:text-success',
 };
 
 function isExternalRoute(route: string) {

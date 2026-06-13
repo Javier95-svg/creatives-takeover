@@ -80,7 +80,7 @@ const ProjectsDashboard = () => {
 
   const getStatusBadge = (session: ChatSession) => {
     if (session.is_completed) {
-      return <Badge className="bg-green-100 text-green-800">Completed</Badge>;
+      return <Badge className="bg-success-subtle text-success">Completed</Badge>;
     }
     if (session.current_step > 0) {
       return <Badge variant="secondary">In Progress</Badge>;
@@ -142,9 +142,9 @@ const ProjectsDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Completed</p>
-                <p className="text-3xl font-bold text-green-600">{analytics.completedProjects}</p>
+                <p className="text-3xl font-bold text-success">{analytics.completedProjects}</p>
               </div>
-              <BarChart3 className="w-8 h-8 text-green-600" />
+              <BarChart3 className="w-8 h-8 text-success" />
             </div>
           </CardContent>
         </Card>
@@ -154,9 +154,9 @@ const ProjectsDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">In Progress</p>
-                <p className="text-3xl font-bold text-orange-600">{analytics.inProgressProjects}</p>
+                <p className="text-3xl font-bold text-warning">{analytics.inProgressProjects}</p>
               </div>
-              <TrendingUp className="w-8 h-8 text-orange-600" />
+              <TrendingUp className="w-8 h-8 text-warning" />
             </div>
           </CardContent>
         </Card>
@@ -166,9 +166,9 @@ const ProjectsDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Time Invested</p>
-                <p className="text-3xl font-bold text-blue-600">{analytics.totalTimeSpent}</p>
+                <p className="text-3xl font-bold text-info">{analytics.totalTimeSpent}</p>
               </div>
-              <Calendar className="w-8 h-8 text-blue-600" />
+              <Calendar className="w-8 h-8 text-info" />
             </div>
           </CardContent>
         </Card>

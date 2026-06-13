@@ -242,43 +242,43 @@ export default function CustomPromptChainCreator({ onClose, onSuccess, editingCh
 
         <CardContent className="p-6 space-y-6">
           {/* Tips Section */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="bg-info-subtle border border-info rounded-lg p-4">
             <button
               type="button"
               onClick={() => setShowTips(!showTips)}
               className="flex items-center justify-between w-full text-left"
             >
               <div className="flex items-center gap-2">
-                <Info className="w-5 h-5 text-blue-600" />
-                <h3 className="font-semibold text-blue-900">Tips for Creating Effective Prompt Chains</h3>
+                <Info className="w-5 h-5 text-info" />
+                <h3 className="font-semibold text-info">Tips for Creating Effective Prompt Chains</h3>
               </div>
               {showTips ? (
-                <ChevronUp className="w-4 h-4 text-blue-600" />
+                <ChevronUp className="w-4 h-4 text-info" />
               ) : (
-                <ChevronDown className="w-4 h-4 text-blue-600" />
+                <ChevronDown className="w-4 h-4 text-info" />
               )}
             </button>
             {showTips && (
-              <div className="mt-4 space-y-3 text-sm text-blue-800">
+              <div className="mt-4 space-y-3 text-sm text-info">
                 <div>
                   <p className="font-medium mb-1">✓ Make prompts specific and actionable</p>
-                  <p className="text-blue-700">Each prompt should guide users through a clear, actionable step in their business journey.</p>
+                  <p className="text-info">Each prompt should guide users through a clear, actionable step in their business journey.</p>
                 </div>
                 <div>
                   <p className="font-medium mb-1">✓ Use clear, concise language</p>
-                  <p className="text-blue-700">Write prompts that are easy to understand and follow, avoiding jargon when possible.</p>
+                  <p className="text-info">Write prompts that are easy to understand and follow, avoiding jargon when possible.</p>
                 </div>
                 <div>
                   <p className="font-medium mb-1">✓ Ensure logical progression</p>
-                  <p className="text-blue-700">Each step should build naturally on the previous one, creating a cohesive 30-day journey.</p>
+                  <p className="text-info">Each step should build naturally on the previous one, creating a cohesive 30-day journey.</p>
                 </div>
                 <div>
                   <p className="font-medium mb-1">✓ Add relevant tags</p>
-                  <p className="text-blue-700">Tags help users discover your prompt chain. Use 3-5 relevant keywords that describe your business concept.</p>
+                  <p className="text-info">Tags help users discover your prompt chain. Use 3-5 relevant keywords that describe your business concept.</p>
                 </div>
-                <div className="pt-2 border-t border-blue-200">
-                  <p className="font-medium text-blue-900">💡 Remember:</p>
-                  <p className="text-blue-700">Your Account name will be displayed as the author, so create something you're proud to share with the community!</p>
+                <div className="pt-2 border-t border-info">
+                  <p className="font-medium text-info">💡 Remember:</p>
+                  <p className="text-info">Your Account name will be displayed as the author, so create something you're proud to share with the community!</p>
                 </div>
               </div>
             )}
@@ -302,10 +302,10 @@ export default function CustomPromptChainCreator({ onClose, onSuccess, editingCh
                   }
                 }}
                 placeholder="e.g., AI-Powered Personal Finance Coach"
-                className={errors.conceptTitle ? 'border-red-500' : ''}
+                className={errors.conceptTitle ? 'border-destructive' : ''}
               />
               {errors.conceptTitle && (
-                <p className="text-sm text-red-500">{errors.conceptTitle}</p>
+                <p className="text-sm text-destructive">{errors.conceptTitle}</p>
               )}
             </div>
 
@@ -324,10 +324,10 @@ export default function CustomPromptChainCreator({ onClose, onSuccess, editingCh
                 }}
                 placeholder="Describe your business concept..."
                 rows={3}
-                className={errors.description ? 'border-red-500' : ''}
+                className={errors.description ? 'border-destructive' : ''}
               />
               {errors.description && (
-                <p className="text-sm text-red-500">{errors.description}</p>
+                <p className="text-sm text-destructive">{errors.description}</p>
               )}
             </div>
 
@@ -345,7 +345,7 @@ export default function CustomPromptChainCreator({ onClose, onSuccess, editingCh
                     }
                   }}
                 >
-                  <SelectTrigger className={errors.category ? 'border-red-500' : ''}>
+                  <SelectTrigger className={errors.category ? 'border-destructive' : ''}>
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -357,7 +357,7 @@ export default function CustomPromptChainCreator({ onClose, onSuccess, editingCh
                   </SelectContent>
                 </Select>
                 {errors.category && (
-                  <p className="text-sm text-red-500">{errors.category}</p>
+                  <p className="text-sm text-destructive">{errors.category}</p>
                 )}
               </div>
 
@@ -411,7 +411,7 @@ export default function CustomPromptChainCreator({ onClose, onSuccess, editingCh
                       <button
                         type="button"
                         onClick={() => removeTag(tag)}
-                        className="ml-1 hover:text-red-500"
+                        className="ml-1 hover:text-destructive"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -431,7 +431,7 @@ export default function CustomPromptChainCreator({ onClose, onSuccess, editingCh
                   Each step must have a title, day range, and prompt text. <strong>Exactly 7 steps are required</strong> - no more, no less.
                 </p>
               </div>
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+              <Badge variant="outline" className="bg-info-subtle text-info border-info">
                 {formData.steps.filter(s => s.title.trim() && s.dayRange.trim() && s.prompt.trim()).length} / 7 Complete
               </Badge>
             </div>
@@ -439,12 +439,12 @@ export default function CustomPromptChainCreator({ onClose, onSuccess, editingCh
             {formData.steps.map((step, index) => {
               const isStepComplete = step.title.trim() && step.dayRange.trim() && step.prompt.trim();
               return (
-              <Card key={index} className={`p-4 ${isStepComplete ? 'border-green-200 bg-green-50/30' : 'border-gray-200'}`}>
+              <Card key={index} className={`p-4 ${isStepComplete ? 'border-success bg-success-subtle' : 'border-border'}`}>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 mb-2">
                     <Badge variant="outline">Step {step.step}</Badge>
                     {isStepComplete && (
-                      <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200 text-xs">
+                      <Badge variant="outline" className="bg-success-subtle text-success border-success text-xs">
                         ✓ Complete
                       </Badge>
                     )}
@@ -458,10 +458,10 @@ export default function CustomPromptChainCreator({ onClose, onSuccess, editingCh
                         value={step.title}
                         onChange={(e) => updateStep(index, 'title', e.target.value)}
                         placeholder={stepTitles[index] || `Step ${index + 1} Title`}
-                        className={errors[`step${index}_title`] ? 'border-red-500' : ''}
+                        className={errors[`step${index}_title`] ? 'border-destructive' : ''}
                       />
                       {errors[`step${index}_title`] && (
-                        <p className="text-sm text-red-500">{errors[`step${index}_title`]}</p>
+                        <p className="text-sm text-destructive">{errors[`step${index}_title`]}</p>
                       )}
                     </div>
 
@@ -472,10 +472,10 @@ export default function CustomPromptChainCreator({ onClose, onSuccess, editingCh
                         value={step.dayRange}
                         onChange={(e) => updateStep(index, 'dayRange', e.target.value)}
                         placeholder={defaultDayRanges[index] || "e.g., Days 1-2"}
-                        className={errors[`step${index}_dayRange`] ? 'border-red-500' : ''}
+                        className={errors[`step${index}_dayRange`] ? 'border-destructive' : ''}
                       />
                       {errors[`step${index}_dayRange`] && (
-                        <p className="text-sm text-red-500">{errors[`step${index}_dayRange`]}</p>
+                        <p className="text-sm text-destructive">{errors[`step${index}_dayRange`]}</p>
                       )}
                     </div>
                   </div>
@@ -488,10 +488,10 @@ export default function CustomPromptChainCreator({ onClose, onSuccess, editingCh
                       onChange={(e) => updateStep(index, 'prompt', e.target.value)}
                       placeholder="Enter the prompt text for this step..."
                       rows={4}
-                      className={errors[`step${index}_prompt`] ? 'border-red-500' : ''}
+                      className={errors[`step${index}_prompt`] ? 'border-destructive' : ''}
                     />
                     {errors[`step${index}_prompt`] && (
-                      <p className="text-sm text-red-500">{errors[`step${index}_prompt`]}</p>
+                      <p className="text-sm text-destructive">{errors[`step${index}_prompt`]}</p>
                     )}
                   </div>
                 </div>

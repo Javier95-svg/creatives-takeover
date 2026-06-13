@@ -11,21 +11,21 @@ const CommunityPulse = () => {
       title: "Share Your Journey",
       description: "Tell your story, wins and failures",
       action: "Start Writing",
-      gradient: "from-blue-500/10 to-purple-500/10"
+      gradient: "from-info/10 to-purple-500/10"
     },
     {
       icon: Users,
       title: "Ask the Community",
       description: "Get advice from fellow entrepreneurs", 
       action: "Ask Question",
-      gradient: "from-green-500/10 to-blue-500/10"
+      gradient: "from-success/10 to-info/10"
     },
     {
       icon: TrendingUp,
       title: "Share an Insight",
       description: "What did you learn recently?",
       action: "Share Tip",
-      gradient: "from-orange-500/10 to-red-500/10"
+      gradient: "from-warning/10 to-destructive/10"
     },
     {
       icon: Sparkles,

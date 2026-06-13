@@ -110,10 +110,10 @@ const numberFromInput = (value: string) => {
 };
 
 const scoreColor = (value: number) =>
-  value >= 75 ? 'text-emerald-500' : value >= 50 ? 'text-amber-500' : 'text-rose-500';
+  value >= 75 ? 'text-success' : value >= 50 ? 'text-warning' : 'text-destructive';
 
 const scoreProgressColor = (value: number) =>
-  value >= 75 ? '[&>div]:bg-emerald-500' : value >= 50 ? '[&>div]:bg-amber-500' : '[&>div]:bg-rose-500';
+  value >= 75 ? '[&>div]:bg-success' : value >= 50 ? '[&>div]:bg-warning' : '[&>div]:bg-destructive';
 
 type TractionTab = 'sprint' | 'retention' | 'recent' | 'signal';
 
@@ -145,7 +145,7 @@ function StepNav({ active, onSelect }: { active: TractionTab; onSelect: (t: Trac
           <span className={cn(
             'flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-bold transition-colors',
             active === tab.id
-              ? 'border-emerald-500 bg-emerald-500 text-white'
+              ? 'border-success bg-success text-white'
               : 'border-border bg-card text-muted-foreground',
           )}>
             {tab.step}
@@ -480,7 +480,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                   <p className="text-sm text-muted-foreground">This week's score</p>
                   <p className={cn('mt-1 text-5xl font-bold', scoreColor(score.combinedScore))}>{score.combinedScore}</p>
                 </div>
-                <Badge className={cn(score.phaseSevenReady ? 'bg-emerald-600' : score.combinedScore >= 75 ? 'bg-emerald-600' : score.combinedScore >= 50 ? 'bg-amber-500' : 'bg-rose-500')}>
+                <Badge className={cn(score.phaseSevenReady ? 'bg-success' : score.combinedScore >= 75 ? 'bg-success' : score.combinedScore >= 50 ? 'bg-warning' : 'bg-destructive')}>
                   {score.phaseSevenReady ? 'Phase 7 Ready' : `${score.consistencyStreakWeeks} week streak`}
                 </Badge>
               </div>
@@ -489,7 +489,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
           ) : (
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2 text-muted-foreground">
-                <LineChart className="h-5 w-5 text-emerald-500" />
+                <LineChart className="h-5 w-5 text-success" />
                 <span className="text-sm font-medium">Your Traction Score will appear here</span>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">Fill in the Distribution Sprint Log and Retention Snapshot below. Save the week to lock in your score and start building your streak.</p>
@@ -506,14 +506,14 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         </div>
       </section>
 
-      <section className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5">
-          <p className="mb-4 text-center text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+      <section className="rounded-xl border border-success/20 bg-success/5 p-5">
+          <p className="mb-4 text-center text-sm font-semibold text-success dark:text-success">
             How Traction Engine works — follow the steps in order
           </p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {TRACTION_TABS.map((tab) => (
               <div key={tab.id} className="flex flex-col items-center gap-2 text-center">
-                <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-success/15 text-xs font-bold text-success dark:text-success">
                   {tab.step}
                 </span>
                 <div>
@@ -523,7 +523,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
               </div>
             ))}
           </div>
-          <div className="mt-5 border-t border-emerald-500/20 pt-4">
+          <div className="mt-5 border-t border-success/20 pt-4">
             <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
               {TRACTION_TABS.map((tab) => (
                 <button
@@ -533,15 +533,15 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                   className={cn(
                     'flex flex-col items-center gap-1.5 rounded-lg border-2 px-3 py-3 text-center transition-colors focus-visible:outline-none',
                     activeTab === tab.id
-                      ? 'border-emerald-500 bg-emerald-500/10 text-foreground'
-                      : 'border-emerald-500/20 bg-background/40 text-muted-foreground hover:border-emerald-500/40 hover:text-foreground/80',
+                      ? 'border-success bg-success/10 text-foreground'
+                      : 'border-success/20 bg-background/40 text-muted-foreground hover:border-success/40 hover:text-foreground/80',
                   )}
                 >
                   <span className={cn(
                     'flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-colors',
                     activeTab === tab.id
-                      ? 'bg-emerald-500 text-white'
-                      : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+                      ? 'bg-success text-white'
+                      : 'bg-success/15 text-success dark:text-success',
                   )}>
                     {tab.step}
                   </span>
@@ -568,7 +568,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
               </div>
               <CardDescription>Run a maximum of two active channels. Each channel sprint lasts six weeks.</CardDescription>
               {activeSprints.length >= 2 && (
-                <div className="mt-2 flex items-start gap-2 rounded-md border border-amber-400/40 bg-amber-500/5 px-3 py-2 text-xs text-amber-600">
+                <div className="mt-2 flex items-start gap-2 rounded-md border border-warning/40 bg-warning/5 px-3 py-2 text-xs text-warning">
                   <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
                   <span>Two active channels open. Close one sprint before adding a new channel.</span>
                 </div>
@@ -586,14 +586,14 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                         className={cn(
                           'rounded-lg border p-3',
                           atBoundary
-                            ? 'border-amber-400/60 bg-amber-500/5'
+                            ? 'border-warning/60 bg-warning/5'
                             : 'border-border/70 bg-background/70',
                         )}
                       >
                         <div className="flex items-center justify-between gap-3">
                           <div>
                             <p className="text-sm font-medium">{sprint.channel}</p>
-                            <p className={cn('text-xs', atBoundary ? 'font-medium text-amber-500' : 'text-muted-foreground')}>
+                            <p className={cn('text-xs', atBoundary ? 'font-medium text-warning' : 'text-muted-foreground')}>
                               Week {weekNum} of 6{atBoundary ? ' — sprint complete' : ''}
                             </p>
                           </div>
@@ -602,7 +602,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                           </Button>
                         </div>
                         {atBoundary && (
-                          <div className="mt-2 flex items-start gap-2 rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-600">
+                          <div className="mt-2 flex items-start gap-2 rounded-md bg-warning/10 px-3 py-2 text-xs text-warning">
                             <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
                             <span>This sprint has reached 6 weeks. Close it to log the summary and open a new channel if needed.</span>
                           </div>
@@ -635,7 +635,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                   </div>
 
                   {isFirstTime && index === 0 && (
-                    <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                    <p className="text-xs font-medium text-success dark:text-success">
                       Start here — name the one channel you ran this week.
                     </p>
                   )}
@@ -850,7 +850,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                         <p className="text-sm font-medium">{log.week_start_date}</p>
                         <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{log.prioritized_recommendation}</p>
                       </div>
-                      <Badge className={cn('text-white', log.combined_score >= 75 ? 'bg-emerald-600' : log.combined_score >= 50 ? 'bg-amber-500' : 'bg-rose-500')}>
+                      <Badge className={cn('text-white', log.combined_score >= 75 ? 'bg-success' : log.combined_score >= 50 ? 'bg-warning' : 'bg-destructive')}>
                         {log.combined_score}
                       </Badge>
                     </div>
@@ -893,7 +893,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                 <p className="text-sm font-semibold">Phase 7 readiness</p>
                 <div className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
                   {score.phaseSevenReady ? (
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-success" />
                   ) : (
                     <XCircle className="mt-0.5 h-4 w-4 text-muted-foreground" />
                   )}

@@ -110,23 +110,23 @@ const SuccessStats = () => {
           <p className="text-muted-foreground mb-6">Trusted by creative entrepreneurs from</p>
           <div className="flex flex-wrap justify-center items-center gap-8 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-4 bg-gradient-to-r from-red-500 to-red-600 rounded-sm"></div>
+              <div className="w-6 h-4 bg-gradient-to-r from-destructive to-destructive rounded-sm"></div>
               <span>United States</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-6 h-4 bg-gradient-to-r from-blue-500 to-blue-600 rounded-sm"></div>
+              <div className="w-6 h-4 bg-gradient-to-r from-info to-info rounded-sm"></div>
               <span>United Kingdom</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-6 h-4 bg-gradient-to-r from-red-500 via-yellow-500 to-red-600 rounded-sm"></div>
+              <div className="w-6 h-4 bg-gradient-to-r from-destructive via-warning to-destructive rounded-sm"></div>
               <span>Germany</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-6 h-4 bg-gradient-to-r from-green-500 to-red-600 rounded-sm"></div>
+              <div className="w-6 h-4 bg-gradient-to-r from-success to-destructive rounded-sm"></div>
               <span>Italy</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-6 h-4 bg-gradient-to-r from-red-500 via-white to-red-600 rounded-sm"></div>
+              <div className="w-6 h-4 bg-gradient-to-r from-destructive via-white to-destructive rounded-sm"></div>
               <span>Canada</span>
             </div>
             <div className="text-primary font-medium">+ 45 more countries</div>

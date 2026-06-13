@@ -33,11 +33,11 @@ const STEPS = [
 
 export function FundraisingFunnel() {
   return (
-    <Card className="border-primary/25 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-50 shadow-xl">
+    <Card className="border-primary/25 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-muted-foreground shadow-xl">
       <CardHeader className="space-y-2">
         <Badge variant="outline" className="w-fit border-primary/40 text-primary">Pro Overlay</Badge>
         <CardTitle className="text-xl text-white">Fundraising Funnel</CardTitle>
-        <CardDescription className="text-slate-300">
+        <CardDescription className="text-muted-foreground">
           Layer fundraising motion on top of the build journey. Each step links to the surface that moves the conversation forward.
         </CardDescription>
       </CardHeader>
@@ -54,7 +54,7 @@ export function FundraisingFunnel() {
                   <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
                     <Icon className="h-4 w-4" />
                   </div>
-                  <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Step {index + 1}</span>
+                  <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Step {index + 1}</span>
                 </div>
                 <p className="mt-3 text-sm font-semibold text-white">{step.label}</p>
                 <Button asChild variant="ghost" size="sm" className="mt-3 px-0 text-primary hover:bg-transparent">

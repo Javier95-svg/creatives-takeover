@@ -44,7 +44,7 @@ const DemoCallCard: React.FC<DemoCallCardProps> = ({
       case 'scheduled':
         return <Badge variant="secondary">Scheduled</Badge>;
       case 'in_progress':
-        return <Badge className="bg-green-500 hover:bg-green-600">Live</Badge>;
+        return <Badge className="bg-success hover:bg-success">Live</Badge>;
       case 'completed':
         return <Badge variant="outline">Completed</Badge>;
       case 'cancelled':

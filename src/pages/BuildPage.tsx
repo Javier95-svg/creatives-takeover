@@ -352,8 +352,8 @@ const BuildHero = ({ onOpen }: HeroProps) => {
             <div
               className={cn(
                 'group relative cursor-text rounded-2xl border bg-card/40 p-5 pb-3.5 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.5)] backdrop-blur-sm transition-all duration-300',
-                'hover:border-blue-400/30 hover:shadow-[0_36px_90px_-40px_rgba(0,0,0,0.7),0_0_60px_-20px_rgba(59,130,246,0.2)]',
-                'focus-within:border-blue-400/40 focus-within:shadow-[0_36px_90px_-40px_rgba(0,0,0,0.7),0_0_60px_-20px_rgba(59,130,246,0.25)]',
+                'hover:border-info/30 hover:shadow-[0_36px_90px_-40px_rgba(0,0,0,0.7),0_0_60px_-20px_rgba(59,130,246,0.2)]',
+                'focus-within:border-info/40 focus-within:shadow-[0_36px_90px_-40px_rgba(0,0,0,0.7),0_0_60px_-20px_rgba(59,130,246,0.25)]',
               )}
               onClick={() => editRef.current?.focus()}
             >
@@ -421,7 +421,7 @@ const BuildHero = ({ onOpen }: HeroProps) => {
                   key={chip.label}
                   type="button"
                   onClick={() => onOpen(chip.intent)}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/30 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:-translate-y-0.5 hover:border-blue-400/40 hover:text-foreground"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/30 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:-translate-y-0.5 hover:border-info/40 hover:text-foreground"
                 >
                   <span className="h-1.5 w-1.5 rounded-full" style={{ background: chip.dot }} />
                   {chip.label}
@@ -458,7 +458,7 @@ const BuildHero = ({ onOpen }: HeroProps) => {
             </span>
             <span className="h-5 w-px bg-border" />
             <span className="text-muted-foreground">
-              <span className="text-amber-400">★★★★★</span>{' '}
+              <span className="text-warning">★★★★★</span>{' '}
               <strong className="text-foreground">4.8/5</strong>
             </span>
           </div>

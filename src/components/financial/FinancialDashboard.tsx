@@ -184,11 +184,11 @@ const FinancialDashboard = ({ businessPlan }: { businessPlan?: any }) => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Total Revenue</p>
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-2xl font-bold text-success">
                     ${metrics.totalRevenue.toLocaleString()}
                   </p>
                 </div>
-                <DollarSign className="w-8 h-8 text-green-600" />
+                <DollarSign className="w-8 h-8 text-success" />
               </div>
             </CardContent>
           </Card>
@@ -198,14 +198,14 @@ const FinancialDashboard = ({ businessPlan }: { businessPlan?: any }) => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Net Profit</p>
-                  <p className={`text-2xl font-bold ${metrics.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <p className={`text-2xl font-bold ${metrics.netProfit >= 0 ? 'text-success' : 'text-destructive'}`}>
                     ${metrics.netProfit.toLocaleString()}
                   </p>
                 </div>
                 {metrics.netProfit >= 0 ? (
-                  <TrendingUp className="w-8 h-8 text-green-600" />
+                  <TrendingUp className="w-8 h-8 text-success" />
                 ) : (
-                  <TrendingDown className="w-8 h-8 text-red-600" />
+                  <TrendingDown className="w-8 h-8 text-destructive" />
                 )}
               </div>
             </CardContent>
@@ -216,11 +216,11 @@ const FinancialDashboard = ({ businessPlan }: { businessPlan?: any }) => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Break-even</p>
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-2xl font-bold text-info">
                     {metrics.breakEvenMonth > 0 ? `Month ${metrics.breakEvenMonth}` : 'Not reached'}
                   </p>
                 </div>
-                <Target className="w-8 h-8 text-blue-600" />
+                <Target className="w-8 h-8 text-info" />
               </div>
             </CardContent>
           </Card>
@@ -230,7 +230,7 @@ const FinancialDashboard = ({ businessPlan }: { businessPlan?: any }) => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Profit Margin</p>
-                  <p className={`text-2xl font-bold ${metrics.profitMargin >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <p className={`text-2xl font-bold ${metrics.profitMargin >= 0 ? 'text-success' : 'text-destructive'}`}>
                     {metrics.profitMargin}%
                   </p>
                 </div>
@@ -413,9 +413,9 @@ const FinancialDashboard = ({ businessPlan }: { businessPlan?: any }) => {
             <CardContent className="space-y-4">
               <div className="flex items-start gap-3">
                 {metrics.breakEvenMonth > 0 ? (
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-2 h-2 bg-success rounded-full mt-2 flex-shrink-0"></div>
                 ) : (
-                  <AlertTriangle className="w-4 h-4 text-orange-500 mt-1 flex-shrink-0" />
+                  <AlertTriangle className="w-4 h-4 text-warning mt-1 flex-shrink-0" />
                 )}
                 <div>
                   <p className="font-medium">Break-even Analysis</p>
@@ -429,7 +429,7 @@ const FinancialDashboard = ({ businessPlan }: { businessPlan?: any }) => {
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                <div className="w-2 h-2 bg-info rounded-full mt-2 flex-shrink-0"></div>
                 <div>
                   <p className="font-medium">Customer Economics</p>
                   <p className="text-sm text-muted-foreground">
@@ -458,7 +458,7 @@ const FinancialDashboard = ({ businessPlan }: { businessPlan?: any }) => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <p className="font-medium">Estimated Funding Needed</p>
-                <p className="text-2xl font-bold text-blue-600">
+                <p className="text-2xl font-bold text-info">
                   ${Math.abs(Math.min(...financialData.map(d => d.profit), 0)).toLocaleString()}
                 </p>
                 <p className="text-sm text-muted-foreground">

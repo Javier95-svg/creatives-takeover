@@ -148,23 +148,23 @@ const getDecisionLabel = (score: number) => {
     return {
       title: "Build",
       description: "Strong signal. Move to Market Need Lab and design your MVP scope.",
-      tone: "text-emerald-600",
-      badge: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
+      tone: "text-success",
+      badge: "bg-success/10 text-success border-success",
     };
   }
   if (score >= 60) {
     return {
       title: "Refine",
       description: "Promising, but tighten the problem or segment before building.",
-      tone: "text-amber-600",
-      badge: "bg-amber-500/10 text-amber-700 border-amber-200",
+      tone: "text-warning",
+      badge: "bg-warning/10 text-warning border-warning",
     };
   }
   return {
     title: "Pause",
     description: "Weak signal. Replace or reshape this idea before investing time.",
-    tone: "text-rose-600",
-    badge: "bg-rose-500/10 text-rose-700 border-rose-200",
+    tone: "text-destructive",
+    badge: "bg-destructive/10 text-destructive border-destructive",
   };
 };
 
@@ -482,7 +482,7 @@ export default function ValidateJourneyPage() {
                             <span className="text-primary font-semibold">Idea {index + 1}</span>
                             <span className="text-sm text-muted-foreground">Score {score}/100</span>
                             {isChosen && (
-                              <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-200">
+                              <Badge className="bg-success/15 text-success border-success">
                                 Chosen
                               </Badge>
                             )}
@@ -754,7 +754,7 @@ export default function ValidateJourneyPage() {
                         </div>
                       ))}
                       {chosenIdeaId && (
-                        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                        <div className="rounded-lg border border-success bg-success-subtle px-3 py-2 text-sm text-success">
                           Chosen concept: {ideas.find((idea) => idea.id === chosenIdeaId)?.name || "Unnamed idea"}
                         </div>
                       )}

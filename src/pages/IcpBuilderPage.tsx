@@ -264,14 +264,14 @@ export default function ICPBuilderPage() {
       </main>
 
       {showLeadBanner && (!leadCaptured || leadSubmitState === "submitted") ? (
-        <div className="fixed inset-x-4 bottom-4 z-50 mx-auto w-auto max-w-[24rem] overflow-hidden rounded-3xl border border-white/70 bg-white/90 text-slate-950 shadow-[0_28px_80px_-32px_rgba(15,23,42,0.45)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/90 dark:text-white sm:left-auto sm:right-5 sm:mx-0">
+        <div className="fixed inset-x-4 bottom-4 z-50 mx-auto w-auto max-w-[24rem] overflow-hidden rounded-3xl border border-white/70 bg-white/90 text-foreground shadow-[0_28px_80px_-32px_rgba(15,23,42,0.45)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/90 dark:text-white sm:left-auto sm:right-5 sm:mx-0">
           <div className="pointer-events-none absolute -right-16 -top-20 h-36 w-36 rounded-full bg-accent-teal/25 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-20 left-6 h-28 w-28 rounded-full bg-emerald-400/20 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-20 left-6 h-28 w-28 rounded-full bg-success/20 blur-3xl" />
 
           <button
             type="button"
             aria-label="Dismiss save progress banner"
-            className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/70 bg-white/80 text-slate-500 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-950 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-teal/50 dark:border-white/10 dark:bg-white/10 dark:text-slate-300 dark:hover:bg-white dark:hover:text-slate-950"
+            className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-white/80 text-muted-foreground shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-950 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-teal/50 dark:border-white/10 dark:bg-white/10 dark:text-muted-foreground dark:hover:bg-white dark:hover:text-foreground"
             onClick={handleDismissLeadBanner}
           >
             <X className="h-4 w-4" />
@@ -280,12 +280,12 @@ export default function ICPBuilderPage() {
           <div className="relative p-5 pr-14">
             {leadSubmitState === "submitted" ? (
               <div className="flex items-start gap-3 pr-1">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/12 text-emerald-600 dark:text-emerald-300">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-success/12 text-success dark:text-success">
                   <CheckCircle2 className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-950 dark:text-white">Resume link saved</p>
-                  <p className="mt-1 text-sm leading-5 text-slate-600 dark:text-slate-300">
+                  <p className="text-sm font-semibold text-foreground dark:text-white">Resume link saved</p>
+                  <p className="mt-1 text-sm leading-5 text-muted-foreground dark:text-muted-foreground">
                     Your ICP Draft progress is connected to this email.
                   </p>
                 </div>
@@ -298,24 +298,24 @@ export default function ICPBuilderPage() {
                     ICP Draft checkpoint
                   </div>
                   <div>
-                    <h2 className="text-lg font-semibold tracking-tight text-slate-950 dark:text-white">
+                    <h2 className="text-lg font-semibold tracking-tight text-foreground dark:text-white">
                       Save your ICP Draft progress
                     </h2>
-                    <p className="mt-1 text-sm leading-5 text-slate-600 dark:text-slate-300">
+                    <p className="mt-1 text-sm leading-5 text-muted-foreground dark:text-muted-foreground">
                       Send yourself a resume link so you can pick up this customer profile later.
                     </p>
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200/80 bg-slate-50/90 p-3 dark:border-white/10 dark:bg-white/5">
+                <div className="rounded-2xl border border-border/80 bg-muted p-3 dark:border-white/10 dark:bg-white/5">
                   <div className="mb-3 flex items-center justify-between gap-3 text-xs">
-                    <span className="font-medium text-slate-600 dark:text-slate-300">Draft auto-saved in this browser</span>
-                    <span className="rounded-full bg-emerald-500/10 px-2 py-1 font-semibold text-emerald-700 dark:text-emerald-300">
+                    <span className="font-medium text-muted-foreground dark:text-muted-foreground">Draft auto-saved in this browser</span>
+                    <span className="rounded-full bg-success/10 px-2 py-1 font-semibold text-success dark:text-success">
                       Active
                     </span>
                   </div>
                   <div className="relative">
-                    <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <input
                       type="email"
                       value={leadEmail}
@@ -326,7 +326,7 @@ export default function ICPBuilderPage() {
                         event.currentTarget.form?.requestSubmit();
                       }}
                       placeholder="you@company.com"
-                      className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-accent-teal focus:ring-4 focus:ring-accent-teal/15 dark:border-white/10 dark:bg-slate-950/70 dark:text-white"
+                      className="h-11 w-full rounded-xl border border-border bg-white pl-9 pr-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-accent-teal focus:ring-4 focus:ring-accent-teal/15 dark:border-white/10 dark:bg-slate-950/70 dark:text-white"
                     />
                   </div>
                 </div>

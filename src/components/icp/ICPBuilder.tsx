@@ -1684,7 +1684,7 @@ const ICPBuilder: React.FC = () => {
             className="min-h-[280px] rounded-5xl border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
           />
           {session.fastDescription.length > 0 ? (
-            <p className={`px-1 text-xs transition-colors ${fastWordCount >= 30 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}>
+            <p className={`px-1 text-xs transition-colors ${fastWordCount >= 30 ? "text-success dark:text-success" : "text-muted-foreground"}`}>
               {fastWordCount >= 30 ? "✓ Ready to generate" : `${fastWordCount} / 30 words minimum`}
             </p>
           ) : null}
@@ -1772,7 +1772,7 @@ const ICPBuilder: React.FC = () => {
                       }
                       onKeyDown={handleFieldSubmit}
                       placeholder="Freelance Graphic Designer"
-                      className="h-12 rounded-xl border-border/60 bg-sky-50/70 dark:bg-slate-900/70"
+                      className="h-12 rounded-xl border-border/60 bg-info-subtle dark:bg-slate-900/70"
                     />
                   </div>
                   <div className="space-y-2">
@@ -1788,7 +1788,7 @@ const ICPBuilder: React.FC = () => {
                       }
                       onKeyDown={handleFieldSubmit}
                       placeholder="Creative Services"
-                      className="h-12 rounded-xl border-border/60 bg-sky-50/70 dark:bg-slate-900/70"
+                      className="h-12 rounded-xl border-border/60 bg-info-subtle dark:bg-slate-900/70"
                     />
                   </div>
                   <div className="space-y-2">
@@ -1804,7 +1804,7 @@ const ICPBuilder: React.FC = () => {
                       }
                       onKeyDown={handleFieldSubmit}
                       placeholder="2–5 years, working solo or with 1 assistant"
-                      className="h-12 rounded-xl border-border/60 bg-sky-50/70 dark:bg-slate-900/70"
+                      className="h-12 rounded-xl border-border/60 bg-info-subtle dark:bg-slate-900/70"
                     />
                   </div>
                 </div>
@@ -1949,9 +1949,9 @@ const ICPBuilder: React.FC = () => {
   if (showPostIcpNudge) {
     return (
       <div className="fixed inset-0 z-[210] flex items-center justify-center bg-slate-950/70 px-4 backdrop-blur-sm">
-        <Card className="w-full max-w-[480px] border-2 border-blue-500/70 bg-background shadow-2xl">
+        <Card className="w-full max-w-[480px] border-2 border-info/70 bg-background shadow-2xl">
           <CardContent className="space-y-6 p-6 sm:p-8">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-500">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-info/10 text-info">
               <TrendingUp className="h-6 w-6" />
             </div>
             <div className="space-y-3">

@@ -72,7 +72,7 @@ const AdminGamification = () => {
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      <Target className="w-4 h-4 text-blue-500" />
+                      <Target className="w-4 h-4 text-info" />
                       Total Posts
                     </CardTitle>
                   </CardHeader>
@@ -85,7 +85,7 @@ const AdminGamification = () => {
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-green-500" />
+                      <TrendingUp className="w-4 h-4 text-success" />
                       Comments
                     </CardTitle>
                   </CardHeader>
@@ -98,7 +98,7 @@ const AdminGamification = () => {
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      <Trophy className="w-4 h-4 text-yellow-500" />
+                      <Trophy className="w-4 h-4 text-warning" />
                       Upvotes
                     </CardTitle>
                   </CardHeader>

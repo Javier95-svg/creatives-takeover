@@ -17,8 +17,8 @@ const weekMilestones = [
     description: 'Days 1-2',
     subtitle: 'Problem & solution definition',
     icon: Target,
-    color: 'text-blue-500',
-    bgColor: 'bg-blue-500/10',
+    color: 'text-info',
+    bgColor: 'bg-info/10',
     key: 'week1_validated' as keyof LaunchRoadmap,
   },
   {
@@ -28,8 +28,8 @@ const weekMilestones = [
     description: 'Days 3-4',
     subtitle: 'Identify ideal first customers',
     icon: Users,
-    color: 'text-cyan-500',
-    bgColor: 'bg-cyan-500/10',
+    color: 'text-info',
+    bgColor: 'bg-info/10',
     key: 'week1_validated' as keyof LaunchRoadmap,
   },
   {
@@ -39,8 +39,8 @@ const weekMilestones = [
     description: 'Days 5-7',
     subtitle: 'Market validation & testing',
     icon: CheckCircle2,
-    color: 'text-emerald-500',
-    bgColor: 'bg-emerald-500/10',
+    color: 'text-success',
+    bgColor: 'bg-success/10',
     key: 'week1_validated' as keyof LaunchRoadmap,
   },
   {
@@ -61,8 +61,8 @@ const weekMilestones = [
     description: 'Days 15-21',
     subtitle: 'Go-to-market execution',
     icon: Target,
-    color: 'text-orange-500',
-    bgColor: 'bg-orange-500/10',
+    color: 'text-warning',
+    bgColor: 'bg-warning/10',
     key: 'week3_launched' as keyof LaunchRoadmap,
   },
   {
@@ -72,8 +72,8 @@ const weekMilestones = [
     description: 'Days 22-25',
     subtitle: 'Revenue strategy',
     icon: DollarSign,
-    color: 'text-amber-500',
-    bgColor: 'bg-amber-500/10',
+    color: 'text-warning',
+    bgColor: 'bg-warning/10',
     key: 'week4_first_customer' as keyof LaunchRoadmap,
   },
   {
@@ -83,8 +83,8 @@ const weekMilestones = [
     description: 'Days 26-30',
     subtitle: 'Achieve first revenue',
     icon: DollarSign,
-    color: 'text-green-500',
-    bgColor: 'bg-green-500/10',
+    color: 'text-success',
+    bgColor: 'bg-success/10',
     key: 'week4_first_customer' as keyof LaunchRoadmap,
   },
 ];
@@ -180,7 +180,7 @@ export const LaunchRoadmapTimeline = ({ roadmap }: LaunchRoadmapTimelineProps) =
                         <StatusIcon
                           className={cn(
                             'h-4 w-4',
-                            isCompleted ? 'text-green-500' : 'text-muted-foreground'
+                            isCompleted ? 'text-success' : 'text-muted-foreground'
                           )}
                         />
                         <span className="text-xs text-muted-foreground">
@@ -197,11 +197,11 @@ export const LaunchRoadmapTimeline = ({ roadmap }: LaunchRoadmapTimelineProps) =
 
         {/* First Customer Date */}
         {roadmap.first_customer_date && (
-          <div className="pt-4 border-t bg-green-500/10 rounded-lg p-4">
+          <div className="pt-4 border-t bg-success/10 rounded-lg p-4">
             <div className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-green-500" />
+              <DollarSign className="h-5 w-5 text-success" />
               <div>
-                <div className="font-semibold text-green-600">First Customer Achieved! 🎉</div>
+                <div className="font-semibold text-success">First Customer Achieved! 🎉</div>
                 <div className="text-sm text-muted-foreground">
                   {new Date(roadmap.first_customer_date).toLocaleDateString()}
                 </div>

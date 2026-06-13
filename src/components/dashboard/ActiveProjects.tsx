@@ -27,10 +27,10 @@ export const ActiveProjects = () => {
   };
 
   const getProjectStage = (progress: number) => {
-    if (progress >= 80) return { name: 'Refinement', color: 'text-green-600', bgColor: 'bg-green-500/10', borderColor: 'border-green-500/20', icon: CheckCircle2 };
-    if (progress >= 60) return { name: 'Development', color: 'text-orange-600', bgColor: 'bg-orange-500/10', borderColor: 'border-orange-500/20', icon: Code };
-    if (progress >= 40) return { name: 'Planning', color: 'text-yellow-600', bgColor: 'bg-yellow-500/10', borderColor: 'border-yellow-500/20', icon: FileText };
-    return { name: 'Ideation', color: 'text-blue-600', bgColor: 'bg-blue-500/10', borderColor: 'border-blue-500/20', icon: Lightbulb };
+    if (progress >= 80) return { name: 'Refinement', color: 'text-success', bgColor: 'bg-success/10', borderColor: 'border-success/20', icon: CheckCircle2 };
+    if (progress >= 60) return { name: 'Development', color: 'text-warning', bgColor: 'bg-warning/10', borderColor: 'border-warning/20', icon: Code };
+    if (progress >= 40) return { name: 'Planning', color: 'text-warning', bgColor: 'bg-warning/10', borderColor: 'border-warning/20', icon: FileText };
+    return { name: 'Ideation', color: 'text-info', bgColor: 'bg-info/10', borderColor: 'border-info/20', icon: Lightbulb };
   };
 
   const getNextStep = (currentStep: number) => {

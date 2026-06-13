@@ -24,14 +24,14 @@ const DownloadsSection = () => {
       items: ["Business Cards", "Flyers", "Social Media", "Presentations"]
     },
     {
-      icon: <Image className="w-6 h-6 text-blue-500" />,
+      icon: <Image className="w-6 h-6 text-info" />,
       title: "Stock Images",
       description: "High-quality royalty-free images",
       count: "1000+",
       items: ["Photography", "Illustrations", "Backgrounds", "Textures"]
     },
     {
-      icon: <Type className="w-6 h-6 text-green-500" />,
+      icon: <Type className="w-6 h-6 text-success" />,
       title: "Fonts & Typography",
       description: "Curated font collections",
       count: "200+",

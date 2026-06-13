@@ -852,10 +852,10 @@ const AdminAnalytics = () => {
                     {realTimeActivity?.map((event) => (
                       <div key={event.id} className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex items-center gap-3">
-                          {event.event_type === 'page_view' && <Eye className="h-4 w-4 text-blue-500" />}
-                          {event.event_type === 'click' && <MousePointerClick className="h-4 w-4 text-green-500" />}
+                          {event.event_type === 'page_view' && <Eye className="h-4 w-4 text-info" />}
+                          {event.event_type === 'click' && <MousePointerClick className="h-4 w-4 text-success" />}
                           {event.event_type === 'scroll' && <Activity className="h-4 w-4 text-purple-500" />}
-                          {event.event_type === 'exit_intent' && <LogOut className="h-4 w-4 text-red-500" />}
+                          {event.event_type === 'exit_intent' && <LogOut className="h-4 w-4 text-destructive" />}
                           <div>
                             <p className="font-medium">{event.event_type.replace('_', ' ')}</p>
                             <p className="text-sm text-muted-foreground">{event.page_path}</p>

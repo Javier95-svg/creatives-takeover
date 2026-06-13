@@ -123,7 +123,7 @@ const CommunityTestimonials = () => {
                 {/* Rating */}
                 <div className="flex items-center mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-current text-yellow-500" />
+                    <Star key={i} className="w-4 h-4 fill-current text-warning" />
                   ))}
                 </div>
 

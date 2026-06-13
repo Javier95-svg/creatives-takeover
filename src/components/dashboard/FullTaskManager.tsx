@@ -26,10 +26,10 @@ const SOURCE_CONFIG: Record<
   { label: string; color: string; icon: React.ComponentType<{ className?: string }> }
 > = {
   bizmap:     { label: 'BizMap',      color: 'bg-primary/10 text-primary border-primary/20',             icon: Compass  },
-  daily:      { label: 'Daily',       color: 'bg-orange-500/10 text-orange-600 border-orange-500/20',     icon: Star     },
+  daily:      { label: 'Daily',       color: 'bg-warning/10 text-warning border-warning/20',     icon: Star     },
   challenge:  { label: 'Challenge',   color: 'bg-purple-500/10 text-purple-600 border-purple-500/20',     icon: Trophy   },
-  commitment: { label: 'Commitment',  color: 'bg-green-500/10 text-green-700 border-green-500/20',        icon: Handshake},
-  priority:   { label: 'Priority',    color: 'bg-rose-500/10 text-rose-600 border-rose-500/20',           icon: Star     },
+  commitment: { label: 'Commitment',  color: 'bg-success/10 text-success border-success/20',        icon: Handshake},
+  priority:   { label: 'Priority',    color: 'bg-destructive/10 text-destructive border-destructive/20',           icon: Star     },
 };
 
 type FilterSource = 'all' | TaskSource;
@@ -61,7 +61,7 @@ function TaskRow({ task }: { task: UnifiedTask }) {
         aria-label={task.isCompleted ? 'Mark incomplete' : 'Mark complete'}
       >
         {task.isCompleted ? (
-          <CheckCircle2 className="h-5 w-5 text-green-600" />
+          <CheckCircle2 className="h-5 w-5 text-success" />
         ) : (
           <Circle className="h-5 w-5 text-muted-foreground" />
         )}
@@ -81,7 +81,7 @@ function TaskRow({ task }: { task: UnifiedTask }) {
             {cfg.label}
           </span>
           {task.priority === 'high' && (
-            <Badge variant="outline" className="text-xs border-red-400/30 text-red-500">High</Badge>
+            <Badge variant="outline" className="text-xs border-destructive/30 text-destructive">High</Badge>
           )}
           {task.deadline && (
             <span className="text-xs text-muted-foreground">

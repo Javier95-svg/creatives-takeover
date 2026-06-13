@@ -384,7 +384,7 @@ const StoryArticle = () => {
                   variant="ghost"
                   size="sm"
                   onClick={() => shareOnSocial("linkedin")}
-                  className="flex items-center gap-2 text-blue-600 hover:text-blue-500"
+                  className="flex items-center gap-2 text-info hover:text-info"
                 >
                   <Linkedin className="w-4 h-4" />
                   LinkedIn
@@ -393,7 +393,7 @@ const StoryArticle = () => {
                   variant="ghost"
                   size="sm"
                   onClick={() => shareOnSocial("facebook")}
-                  className="flex items-center gap-2 text-blue-700 hover:text-blue-600"
+                  className="flex items-center gap-2 text-info hover:text-info"
                 >
                   <Facebook className="w-4 h-4" />
                   Facebook

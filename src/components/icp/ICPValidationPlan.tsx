@@ -10,15 +10,15 @@ interface ICPValidationPlanProps {
 }
 
 const verdictStyles: Record<ICPAnalysis['validationPlan']['verdict'], string> = {
-  'Strong Wedge': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-  'Worth Testing': 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-  'Needs Sharper Focus': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  'Strong Wedge': 'bg-success-subtle text-success dark:bg-success/30 dark:text-success',
+  'Worth Testing': 'bg-warning-subtle text-warning dark:bg-warning/30 dark:text-warning',
+  'Needs Sharper Focus': 'bg-destructive-subtle text-destructive dark:bg-destructive/30 dark:text-destructive',
 };
 
 const priorityStyles: Record<'High' | 'Medium' | 'Low', string> = {
-  High: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  Medium: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-  Low: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  High: 'bg-destructive-subtle text-destructive dark:bg-destructive/30 dark:text-destructive',
+  Medium: 'bg-warning-subtle text-warning dark:bg-warning/30 dark:text-warning',
+  Low: 'bg-info-subtle text-info dark:bg-info/30 dark:text-info',
 };
 
 const ICPValidationPlan: React.FC<ICPValidationPlanProps> = ({ plan }) => {
@@ -42,7 +42,7 @@ const ICPValidationPlan: React.FC<ICPValidationPlanProps> = ({ plan }) => {
     <div className="space-y-6">
       <Card className="overflow-hidden rounded-4xl border border-primary/20 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_42%),rgba(16,185,129,0.07)] shadow-[0_20px_60px_-36px_rgba(14,165,233,0.45)]">
         <CardHeader className="space-y-5 pb-0">
-          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-sky-500/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700 dark:bg-slate-950/60 dark:text-sky-300">
+          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-info/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-info dark:bg-slate-950/60 dark:text-info">
             <FlaskConical className="h-3.5 w-3.5" />
             Validation plan
           </div>

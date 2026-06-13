@@ -50,8 +50,8 @@ const Phase4CollaborationDemo = () => {
                 <h3 className="font-semibold text-accent-foreground">📊 Activity Feeds</h3>
                 <p className="text-sm text-muted-foreground">Real-time activity tracking</p>
               </div>
-              <div className="bg-green-500/10 px-4 py-2 rounded-lg">
-                <h3 className="font-semibold text-green-700">🔔 Smart Notifications</h3>
+              <div className="bg-success/10 px-4 py-2 rounded-lg">
+                <h3 className="font-semibold text-success">🔔 Smart Notifications</h3>
                 <p className="text-sm text-muted-foreground">Contextual alerts</p>
               </div>
             </div>

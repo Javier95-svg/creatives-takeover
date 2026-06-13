@@ -35,13 +35,13 @@ const FundingOpportunityCard = ({
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'grant':
-        return 'bg-blue-500/10 text-blue-600 border-blue-500/20';
+        return 'bg-info/10 text-info border-info/20';
       case 'accelerator':
         return 'bg-purple-500/10 text-purple-600 border-purple-500/20';
       case 'contest':
-        return 'bg-orange-500/10 text-orange-600 border-orange-500/20';
+        return 'bg-warning/10 text-warning border-warning/20';
       case 'microfund':
-        return 'bg-green-500/10 text-green-600 border-green-500/20';
+        return 'bg-success/10 text-success border-success/20';
       default:
         return 'bg-muted text-muted-foreground';
     }
@@ -83,7 +83,7 @@ const FundingOpportunityCard = ({
             {opportunity.type}
           </Badge>
           {opportunity.is_featured && (
-            <Badge className="text-xs bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
+            <Badge className="text-xs bg-warning/10 text-warning border-warning/20">
               Featured
             </Badge>
           )}

@@ -242,7 +242,7 @@ const PresenceOverview: React.FC<PresenceOverviewProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+            <div className="w-3 h-3 rounded-full bg-success"></div>
             <span className="font-medium">{currentUser?.status || 'Online'}</span>
             {currentUser?.activity_type && (
               <Badge variant="outline" className="capitalize">
@@ -309,9 +309,9 @@ const PresenceOverview: React.FC<PresenceOverviewProps> = ({
                 <div key={userStatus.id} className="flex items-center justify-between p-3 rounded-lg border">
                   <div className="flex items-center gap-3">
                     <div className={`w-3 h-3 rounded-full ${
-                      userStatus.status === 'online' ? 'bg-green-500' :
-                      userStatus.status === 'away' ? 'bg-yellow-500' :
-                      userStatus.status === 'busy' ? 'bg-red-500' : 'bg-gray-400'
+                      userStatus.status === 'online' ? 'bg-success' :
+                      userStatus.status === 'away' ? 'bg-warning' :
+                      userStatus.status === 'busy' ? 'bg-destructive' : 'bg-gray-400'
                     }`} />
                     <div>
                       <p className="font-medium">

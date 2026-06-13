@@ -32,8 +32,8 @@ export function ActivationJourneyStrip({
       className={cn(
         'rounded-4xl border px-5 py-5 shadow-sm backdrop-blur-sm',
         isComplete
-          ? 'border-green-500/25 bg-green-500/10'
-          : 'border-sky-500/25 bg-sky-500/10',
+          ? 'border-success/25 bg-success/10'
+          : 'border-info/25 bg-info/10',
         className,
       )}
     >
@@ -48,9 +48,9 @@ export function ActivationJourneyStrip({
           </div>
           <div className="flex items-start gap-2 rounded-2xl border border-current/10 bg-background/65 px-4 py-3 text-sm">
             {isComplete ? (
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success dark:text-success" />
             ) : (
-              <Compass className="mt-0.5 h-4 w-4 shrink-0 text-sky-600 dark:text-sky-300" />
+              <Compass className="mt-0.5 h-4 w-4 shrink-0 text-info dark:text-info" />
             )}
             <p className="leading-relaxed text-foreground/85">
               {isComplete ? completedLabel : doneLabel}

@@ -56,7 +56,7 @@ export function SmartFocusCard() {
       <Card className="border-2 border-muted">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-green-500" />
+            <CheckCircle2 className="h-5 w-5 text-success" />
             <CardTitle>All Clear!</CardTitle>
           </div>
           <CardDescription>
@@ -104,7 +104,7 @@ export function SmartFocusCard() {
                 {task.priority} priority
               </Badge>
               {task.contributes_to_weekly_mission && (
-                <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-600 border-blue-500/30">
+                <Badge variant="outline" className="text-xs bg-info/10 text-info border-info/30">
                   Routine
                 </Badge>
               )}
@@ -114,21 +114,21 @@ export function SmartFocusCard() {
           {/* Impact Metrics */}
           <div className="grid grid-cols-3 gap-3">
             <div className="flex items-center gap-2 text-sm">
-              <Zap className="h-4 w-4 text-orange-500" />
+              <Zap className="h-4 w-4 text-warning" />
               <div>
                 <p className="text-xs text-muted-foreground">Impact</p>
                 <p className="font-semibold">{expectedImpact}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <Clock className="h-4 w-4 text-blue-500" />
+              <Clock className="h-4 w-4 text-info" />
               <div>
                 <p className="text-xs text-muted-foreground">Effort</p>
                 <p className="font-semibold">{estimatedTime}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <Calendar className="h-4 w-4 text-green-500" />
+              <Calendar className="h-4 w-4 text-success" />
               <div>
                 <p className="text-xs text-muted-foreground">Due</p>
                 <p className="font-semibold text-xs">

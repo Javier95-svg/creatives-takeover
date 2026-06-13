@@ -124,8 +124,8 @@ export default function SubscriptionSuccess() {
             {!verifying && verifyError && (
               <div className="space-y-6">
                 <div className="space-y-4">
-                  <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto">
-                    <AlertCircle className="w-8 h-8 text-yellow-600" />
+                  <div className="w-16 h-16 bg-warning-subtle rounded-full flex items-center justify-center mx-auto">
+                    <AlertCircle className="w-8 h-8 text-warning" />
                   </div>
                   <h1 className="text-3xl font-bold">Confirming your subscription</h1>
                   <p className="text-muted-foreground text-lg">
@@ -152,8 +152,8 @@ export default function SubscriptionSuccess() {
             {!verifying && verified && (
               <>
                 <div className="space-y-4">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                    <CheckCircle className="w-8 h-8 text-green-600" />
+                  <div className="w-16 h-16 bg-success-subtle rounded-full flex items-center justify-center mx-auto">
+                    <CheckCircle className="w-8 h-8 text-success" />
                   </div>
                   <h1 className="text-3xl font-bold">Subscription Successful!</h1>
                   <p className="text-muted-foreground text-lg">
@@ -181,7 +181,7 @@ export default function SubscriptionSuccess() {
                         <div className="text-sm text-muted-foreground">Monthly billing</div>
                       </div>
                       <div className="space-y-2">
-                        <div className="text-2xl font-bold text-green-600">{balance}</div>
+                        <div className="text-2xl font-bold text-success">{balance}</div>
                         <div className="text-sm text-muted-foreground">Available now</div>
                       </div>
                     </div>
@@ -190,23 +190,23 @@ export default function SubscriptionSuccess() {
                       <h3 className="font-medium">What you get:</h3>
                       <ul className="space-y-2 text-sm">
                         <li className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <CheckCircle className="h-4 w-4 text-success" />
                           <span>{tierInfo.credits} credits every month</span>
                         </li>
                         <li className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <CheckCircle className="h-4 w-4 text-success" />
                           <span>
                             Generate {Math.floor(tierInfo.credits / 10)} launch reports per month
                           </span>
                         </li>
                         <li className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <CheckCircle className="h-4 w-4 text-success" />
                           <span>
                             Create {Math.floor(tierInfo.credits / 5)} marketing assets per month
                           </span>
                         </li>
                         <li className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <CheckCircle className="h-4 w-4 text-success" />
                           <span>Priority support and advanced features</span>
                         </li>
                       </ul>

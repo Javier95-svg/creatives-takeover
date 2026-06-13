@@ -88,7 +88,7 @@ export const ProfileStats = ({ stats }: ProfileStatsProps) => {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Flame className="h-4 w-4 text-orange-500" />
+            <Flame className="h-4 w-4 text-warning" />
             Activity Streak
           </CardTitle>
         </CardHeader>

@@ -31,7 +31,7 @@ export function ContentProgressCard() {
     <Card className="border-border/70 bg-card/90">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-          <BookOpen className="h-4 w-4 text-teal-500" />
+          <BookOpen className="h-4 w-4 text-accent-teal" />
           Founder Library
         </CardTitle>
       </CardHeader>
@@ -40,7 +40,7 @@ export function ContentProgressCard() {
         {/* Saved articles */}
         <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 px-3 py-2.5">
           <div className="flex items-center gap-2">
-            <Bookmark className="h-4 w-4 text-teal-500" />
+            <Bookmark className="h-4 w-4 text-accent-teal" />
             <span className="text-sm font-medium">Bookmarked</span>
           </div>
           <span className="text-lg font-bold">
@@ -60,7 +60,7 @@ export function ContentProgressCard() {
                 <Badge
                   key={topic}
                   variant="outline"
-                  className="text-xs border-teal-500/30 text-teal-600"
+                  className="text-xs border-accent-teal/30 text-accent-teal"
                 >
                   {topic}
                 </Badge>

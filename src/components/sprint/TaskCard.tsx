@@ -42,7 +42,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onStatusChange }) => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'urgent': return 'bg-[hsl(var(--red-primary))] text-white';
-      case 'high': return 'bg-orange-500 text-white';
+      case 'high': return 'bg-warning text-white';
       case 'medium': return 'bg-[hsl(var(--blue-primary))] text-white';
       case 'low': return 'bg-gray-500 text-white';
       default: return 'bg-gray-500 text-white';
@@ -79,7 +79,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onStatusChange }) => {
     <>
       <Card className="group hover:shadow-md transition-all duration-200 cursor-pointer relative overflow-hidden">
         {task.priority === 'urgent' && (
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[hsl(var(--red-primary))] to-orange-500" />
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[hsl(var(--red-primary))] to-warning" />
         )}
         
         <CardContent className="p-4">

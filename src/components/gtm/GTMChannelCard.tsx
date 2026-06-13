@@ -12,26 +12,26 @@ interface GTMChannelCardProps {
 }
 
 const CHANNEL_COLORS: Record<string, string> = {
-  linkedin: 'border-blue-500/40 bg-blue-500/5',
-  reddit: 'border-orange-500/40 bg-orange-500/5',
-  twitter: 'border-gray-500/40 bg-gray-500/5',
-  'x ': 'border-gray-500/40 bg-gray-500/5',
+  linkedin: 'border-info/40 bg-info/5',
+  reddit: 'border-warning/40 bg-warning/5',
+  twitter: 'border-border/40 bg-gray-500/5',
+  'x ': 'border-border/40 bg-gray-500/5',
   discord: 'border-indigo-500/40 bg-indigo-500/5',
   email: 'border-primary/40 bg-primary/5',
   cold: 'border-primary/40 bg-primary/5',
   instagram: 'border-pink-500/40 bg-pink-500/5',
   tiktok: 'border-pink-500/40 bg-pink-500/5',
-  seo: 'border-green-500/40 bg-green-500/5',
-  content: 'border-green-500/40 bg-green-500/5',
+  seo: 'border-success/40 bg-success/5',
+  content: 'border-success/40 bg-success/5',
   community: 'border-purple-500/40 bg-purple-500/5',
-  partnership: 'border-yellow-500/40 bg-yellow-500/5',
-  product: 'border-orange-500/40 bg-orange-500/5',
+  partnership: 'border-warning/40 bg-warning/5',
+  product: 'border-warning/40 bg-warning/5',
 };
 
 const getFitScoreColor = (score: number) => {
-  if (score >= 8) return 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800';
-  if (score >= 6.5) return 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800';
-  return 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-800';
+  if (score >= 8) return 'bg-success-subtle text-success border-success dark:bg-success/30 dark:text-success dark:border-success';
+  if (score >= 6.5) return 'bg-warning-subtle text-warning border-warning dark:bg-warning/30 dark:text-warning dark:border-warning';
+  return 'bg-warning-subtle text-warning border-warning dark:bg-warning/30 dark:text-warning dark:border-warning';
 };
 
 const getChannelAccent = (channelName: string) => {
@@ -54,7 +54,7 @@ const GTMChannelCard: React.FC<GTMChannelCardProps> = ({ channel, rank }) => {
             <span className="text-xs font-mono text-muted-foreground">#{rank}</span>
             <CardTitle className="text-lg">{channel.channel}</CardTitle>
             {channel.isStretch && (
-              <Badge variant="outline" className="text-xs border-yellow-400 text-yellow-600">
+              <Badge variant="outline" className="text-xs border-warning text-warning">
                 Stretch — try after 30 days
               </Badge>
             )}

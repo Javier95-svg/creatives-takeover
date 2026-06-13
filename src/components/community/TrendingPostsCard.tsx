@@ -45,7 +45,7 @@ const TrendingPostsCard = () => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-orange-500" />
+          <TrendingUp className="w-5 h-5 text-warning" />
           Trending Now
         </CardTitle>
         <CardDescription>
@@ -62,7 +62,7 @@ const TrendingPostsCard = () => {
               className="block p-3 rounded-lg border hover:border-primary/50 transition-colors"
             >
               <div className="flex items-start gap-3">
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 text-white font-bold text-sm">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-warning to-pink-500 text-white font-bold text-sm">
                   {index + 1}
                 </div>
                 <div className="flex-1 min-w-0">

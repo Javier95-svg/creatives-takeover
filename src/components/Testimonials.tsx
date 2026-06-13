@@ -56,7 +56,7 @@ const Testimonials = () => {
               {[...Array(5)].map((_, i) => (
                 <Star 
                   key={i} 
-                  className="w-5 h-5 fill-yellow-400 text-yellow-400 animate-bounce"
+                  className="w-5 h-5 fill-warning text-warning animate-bounce"
                   style={{ animationDelay: `${i * 0.1}s` }}
                 />
               ))}
@@ -87,7 +87,7 @@ const Testimonials = () => {
                   {[...Array(testimonial.rating)].map((_, i) => (
                     <Star 
                       key={i} 
-                      className="w-4 h-4 fill-yellow-400 text-yellow-400 group-hover:animate-pulse transition-all duration-300"
+                      className="w-4 h-4 fill-warning text-warning group-hover:animate-pulse transition-all duration-300"
                       style={{ animationDelay: `${i * 0.05}s` }}
                     />
                   ))}

@@ -300,7 +300,7 @@ export default function LaunchComposerPage() {
         </div>
 
         {readiness && !readiness.canPublishLaunchPage && (
-          <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-900">
+          <div className="mb-6 rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm text-warning">
             {readiness.missing.join(' ')}
             {launchFixActions.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">

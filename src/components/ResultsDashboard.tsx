@@ -7,14 +7,14 @@ const metrics = [
     label: "Revenue Generated",
     value: "$2.3M",
     change: "+127%",
-    color: "text-green-400"
+    color: "text-success"
   },
   {
     icon: Users,
     label: "Active AI Agents",
     value: "1,247",
     change: "+89%",
-    color: "text-blue-400"
+    color: "text-info"
   },
   {
     icon: Clock,
@@ -28,7 +28,7 @@ const metrics = [
     label: "Conversion Rate",
     value: "34.2%",
     change: "+156%",
-    color: "text-orange-400"
+    color: "text-warning"
   }
 ];
 
@@ -129,7 +129,7 @@ const ResultsDashboard = () => {
         {/* Live Indicator */}
         <div className="text-center mt-12">
           <div className="inline-flex items-center gap-2 glass-card text-sm">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+            <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
             <span>Live data • Updates every 30 seconds</span>
           </div>
         </div>

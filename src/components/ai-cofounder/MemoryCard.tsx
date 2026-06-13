@@ -12,9 +12,9 @@ interface MemoryCardProps {
 }
 
 const MEMORY_TYPE_CONFIG = {
-  decision: { icon: '🎯', label: 'Decision', color: 'bg-blue-500/10 text-blue-700' },
-  win: { icon: '🏆', label: 'Win', color: 'bg-green-500/10 text-green-700' },
-  challenge: { icon: '⚠️', label: 'Challenge', color: 'bg-orange-500/10 text-orange-700' },
+  decision: { icon: '🎯', label: 'Decision', color: 'bg-info/10 text-info' },
+  win: { icon: '🏆', label: 'Win', color: 'bg-success/10 text-success' },
+  challenge: { icon: '⚠️', label: 'Challenge', color: 'bg-warning/10 text-warning' },
   insight: { icon: '💡', label: 'Insight', color: 'bg-purple-500/10 text-purple-700' },
   goal: { icon: '🎯', label: 'Goal', color: 'bg-indigo-500/10 text-indigo-700' },
   feedback: { icon: '💬', label: 'Feedback', color: 'bg-pink-500/10 text-pink-700' }
@@ -35,7 +35,7 @@ export const MemoryCard = ({ memory, onEdit, onDelete }: MemoryCardProps) => {
             </Badge>
             {isImportant && (
               <Badge variant="outline" className="gap-1">
-                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                <Star className="h-3 w-3 fill-warning text-warning" />
                 Important
               </Badge>
             )}

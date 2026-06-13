@@ -110,7 +110,7 @@ export const WeeklyCheckInModal = ({ open, onOpenChange, weekNumber, onSubmit }:
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="flex items-center gap-2 text-base">
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <CheckCircle2 className="h-4 w-4 text-success" />
                 This Week's Wins 🎉
               </Label>
               <Button
@@ -147,7 +147,7 @@ export const WeeklyCheckInModal = ({ open, onOpenChange, weekNumber, onSubmit }:
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="flex items-center gap-2 text-base">
-                <AlertCircle className="h-4 w-4 text-orange-500" />
+                <AlertCircle className="h-4 w-4 text-warning" />
                 Blockers & Challenges
               </Label>
               <Button
@@ -184,7 +184,7 @@ export const WeeklyCheckInModal = ({ open, onOpenChange, weekNumber, onSubmit }:
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="flex items-center gap-2 text-base">
-                <Target className="h-4 w-4 text-blue-500" />
+                <Target className="h-4 w-4 text-info" />
                 Next Week's Goals
               </Label>
               <Button

@@ -395,7 +395,7 @@ const Login = () => {
                     onChange={handleInputChange}
                     placeholder="Enter your email"
                     className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
-                      errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+                      errors.email ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''
                     }`}
                     disabled={isLoading}
                     autoComplete="email"
@@ -408,7 +408,7 @@ const Login = () => {
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-sm text-red-500 animate-fade-in">{errors.email}</p>
+                  <p className="text-sm text-destructive animate-fade-in">{errors.email}</p>
                 )}
               </div>
 
@@ -427,7 +427,7 @@ const Login = () => {
                     onChange={handleInputChange}
                     placeholder="Enter your password"
                     className={`pl-10 pr-12 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
-                      errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+                      errors.password ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''
                     }`}
                     disabled={isLoading}
                     autoComplete="current-password"
@@ -450,7 +450,7 @@ const Login = () => {
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-sm text-red-500 animate-fade-in">{errors.password}</p>
+                  <p className="text-sm text-destructive animate-fade-in">{errors.password}</p>
                 )}
               </div>
 

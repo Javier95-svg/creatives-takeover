@@ -83,7 +83,7 @@ export function CreditActivityCard() {
                     </p>
                   </div>
                   <div className="text-left sm:text-right">
-                    <p className={tx.amount < 0 ? "font-semibold text-destructive" : "font-semibold text-emerald-600"}>
+                    <p className={tx.amount < 0 ? "font-semibold text-destructive" : "font-semibold text-success"}>
                       {formatAmount(tx.amount)} credits
                     </p>
                     {balanceAfter !== null && (

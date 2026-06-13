@@ -370,7 +370,7 @@ function EmailForm({
       ) : null}
 
       {state.errorMessage ? (
-        <p id={errorId} className="rounded-md border border-red-300/50 bg-red-500/10 px-3 py-2 text-xs text-left text-red-100" role="alert">
+        <p id={errorId} className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-left text-destructive" role="alert">
           {state.errorMessage}
         </p>
       ) : null}

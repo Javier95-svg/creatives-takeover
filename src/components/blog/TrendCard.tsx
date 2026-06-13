@@ -50,22 +50,22 @@ const TrendCard = ({ trend, onClick, showRelated = false }: TrendCardProps) => {
 
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
-      case 'positive': return 'text-green-600 bg-green-50 border-green-200';
-      case 'negative': return 'text-red-600 bg-red-50 border-red-200';
-      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+      case 'positive': return 'text-success bg-success-subtle border-success';
+      case 'negative': return 'text-destructive bg-destructive-subtle border-destructive';
+      default: return 'text-muted-foreground bg-muted border-border';
     }
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 75) return 'text-green-600';
-    if (score >= 50) return 'text-yellow-600';
-    return 'text-red-600';
+    if (score >= 75) return 'text-success';
+    if (score >= 50) return 'text-warning';
+    return 'text-destructive';
   };
 
   const getDifficultyColor = (difficulty: number) => {
-    if (difficulty <= 3) return 'text-green-600 bg-green-50';
-    if (difficulty <= 6) return 'text-yellow-600 bg-yellow-50';
-    return 'text-red-600 bg-red-50';
+    if (difficulty <= 3) return 'text-success bg-success-subtle';
+    if (difficulty <= 6) return 'text-warning bg-warning-subtle';
+    return 'text-destructive bg-destructive-subtle';
   };
 
   const getDifficultyLabel = (difficulty: number) => {
@@ -197,7 +197,7 @@ const TrendCard = ({ trend, onClick, showRelated = false }: TrendCardProps) => {
           {trend.action_steps && trend.action_steps.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <CheckCircle className="h-4 w-4 text-green-600" />
+                <CheckCircle className="h-4 w-4 text-success" />
                 <span className="text-sm font-medium">Next Steps</span>
               </div>
               <div className="space-y-1">

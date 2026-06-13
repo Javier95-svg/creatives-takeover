@@ -15,11 +15,11 @@ export const showAchievementToast = (props: AchievementToastProps) => {
     
     switch (props.type) {
       case 'badge':
-        return <Award className="w-6 h-6 text-yellow-500" />;
+        return <Award className="w-6 h-6 text-warning" />;
       case 'level_up':
         return <Star className="w-6 h-6 text-purple-500" />;
       case 'milestone':
-        return <Zap className="w-6 h-6 text-blue-500" />;
+        return <Zap className="w-6 h-6 text-info" />;
       default:
         return <Trophy className="w-6 h-6 text-primary" />;
     }

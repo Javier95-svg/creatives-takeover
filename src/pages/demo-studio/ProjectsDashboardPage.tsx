@@ -262,7 +262,7 @@ export default function ProjectsDashboardPage() {
                     <MonitorPlay className="h-5 w-5" />
                   </div>
                   {project.launch_published ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-label font-medium text-emerald-600">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-label font-medium text-success">
                       <Globe className="h-3 w-3" /> Live
                     </span>
                   ) : (

@@ -178,7 +178,7 @@ const JobApplicationForm = ({ isOpen, onClose, position }: JobApplicationFormPro
 
         {submitSuccess ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-4">
-            <CheckCircle className="h-16 w-16 text-green-500" />
+            <CheckCircle className="h-16 w-16 text-success" />
             <h3 className="text-xl font-semibold">Application Submitted!</h3>
             <p className="text-muted-foreground text-center">
               Thank you for your interest. We'll be in touch soon.

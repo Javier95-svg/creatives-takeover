@@ -53,8 +53,8 @@ const WelcomeNewUser: React.FC<WelcomeNewUserProps> = ({ onDismiss }) => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-green-500/10">
-            <Trophy className="h-5 w-5 text-green-500 flex-shrink-0" />
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-success/10">
+            <Trophy className="h-5 w-5 text-success flex-shrink-0" />
             <div>
               <div className="font-medium text-sm">Grow</div>
               <div className="text-xs text-muted-foreground">Learn and succeed together</div>
@@ -69,7 +69,7 @@ const WelcomeNewUser: React.FC<WelcomeNewUserProps> = ({ onDismiss }) => {
           </h4>
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm">
-              <CheckCircle className="h-4 w-4 text-green-500" />
+              <CheckCircle className="h-4 w-4 text-success" />
               <span className="text-muted-foreground">Complete your profile</span>
             </div>
             <div className="flex items-center gap-2 text-sm">

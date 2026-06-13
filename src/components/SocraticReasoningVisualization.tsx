@@ -28,25 +28,25 @@ const SocraticReasoningVisualization: React.FC<SocraticReasoningVisualizationPro
     const colors = {
       'problem_solution_fit': 'bg-[hsl(var(--blue-primary))]/10 text-[hsl(var(--blue-primary))]',
       'market_validation': 'bg-[hsl(var(--green-primary))]/10 text-[hsl(var(--green-primary))]',
-      'financial_modeling': 'bg-yellow-100 text-yellow-800',
+      'financial_modeling': 'bg-warning-subtle text-warning',
       'competitive_analysis': 'bg-[hsl(var(--blue-primary))]/10 text-[hsl(var(--blue-primary))]',
       'growth_strategy': 'bg-[hsl(var(--red-primary))]/10 text-[hsl(var(--red-primary))]',
       'risk_assessment': 'bg-[hsl(var(--red-primary))]/10 text-[hsl(var(--red-primary))]',
-      'decision_making': 'bg-gray-100 text-gray-800'
+      'decision_making': 'bg-muted text-foreground'
     };
-    return colors[type] || 'bg-gray-100 text-gray-800';
+    return colors[type] || 'bg-muted text-foreground';
   };
 
   const getConfidenceColor = (confidence: number): string => {
     if (confidence >= 0.8) return 'text-[hsl(var(--green-primary))]';
-    if (confidence >= 0.6) return 'text-yellow-600';
+    if (confidence >= 0.6) return 'text-warning';
     return 'text-[hsl(var(--red-primary))]';
   };
 
   const getImpactColor = (impact: 'low' | 'medium' | 'high'): string => {
     const colors = {
       'low': 'bg-[hsl(var(--green-primary))]/10 text-[hsl(var(--green-primary))]',
-      'medium': 'bg-yellow-100 text-yellow-800',
+      'medium': 'bg-warning-subtle text-warning',
       'high': 'bg-[hsl(var(--red-primary))]/10 text-[hsl(var(--red-primary))]'
     };
     return colors[impact];
@@ -55,9 +55,9 @@ const SocraticReasoningVisualization: React.FC<SocraticReasoningVisualizationPro
   const renderOverview = () => (
     <div className="space-y-6">
       {/* Reasoning Type and Confidence */}
-      <div className="bg-white p-6 rounded-lg border border-gray-200">
+      <div className="bg-white p-6 rounded-lg border border-border">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Reasoning Analysis</h3>
+          <h3 className="text-lg font-semibold text-foreground">Reasoning Analysis</h3>
           <span className={`px-3 py-1 rounded-full text-sm font-medium ${getReasoningTypeColor(analysis.reasoningType)}`}>
             {analysis.reasoningType.replace('_', ' ').toUpperCase()}
           </span>
@@ -68,34 +68,34 @@ const SocraticReasoningVisualization: React.FC<SocraticReasoningVisualizationPro
             <div className={`text-3xl font-bold ${getConfidenceColor(analysis.confidence)}`}>
               {Math.round(analysis.confidence * 100)}%
             </div>
-            <div className="text-sm text-gray-600">Overall Confidence</div>
+            <div className="text-sm text-muted-foreground">Overall Confidence</div>
           </div>
           
           <div className="text-center">
-            <div className="text-3xl font-bold text-blue-600">
+            <div className="text-3xl font-bold text-info">
               {analysis.logicGaps.length}
             </div>
-            <div className="text-sm text-gray-600">Logic Gaps</div>
+            <div className="text-sm text-muted-foreground">Logic Gaps</div>
           </div>
           
           <div className="text-center">
             <div className="text-3xl font-bold text-purple-600">
               {analysis.assumptions.length}
             </div>
-            <div className="text-sm text-gray-600">Assumptions</div>
+            <div className="text-sm text-muted-foreground">Assumptions</div>
           </div>
         </div>
       </div>
 
       {/* Key Entities */}
       {analysis.entities.length > 0 && (
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Key Business Concepts</h3>
+        <div className="bg-white p-6 rounded-lg border border-border">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Key Business Concepts</h3>
           <div className="flex flex-wrap gap-2">
             {analysis.entities.slice(0, 10).map((entity, index) => (
               <span
                 key={index}
-                className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+                className="px-3 py-1 bg-muted text-foreground rounded-full text-sm"
               >
                 {entity.text}
               </span>
@@ -105,15 +105,15 @@ const SocraticReasoningVisualization: React.FC<SocraticReasoningVisualizationPro
       )}
 
       {/* Evidence Strength */}
-      <div className="bg-white p-6 rounded-lg border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Evidence Strength</h3>
+      <div className="bg-white p-6 rounded-lg border border-border">
+        <h3 className="text-lg font-semibold text-foreground mb-4">Evidence Strength</h3>
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Overall Evidence</span>
+            <span className="text-sm text-muted-foreground">Overall Evidence</span>
             <div className="flex items-center space-x-2">
-              <div className="w-32 bg-gray-200 rounded-full h-2">
+              <div className="w-32 bg-muted rounded-full h-2">
                 <div 
-                  className="bg-blue-600 h-2 rounded-full" 
+                  className="bg-info h-2 rounded-full" 
                   style={{ width: `${analysis.evidenceStrength.overall * 100}%` }}
                 ></div>
               </div>
@@ -123,9 +123,9 @@ const SocraticReasoningVisualization: React.FC<SocraticReasoningVisualizationPro
           
           {Object.entries(analysis.evidenceStrength.byType).map(([type, strength]) => (
             <div key={type} className="flex items-center justify-between">
-              <span className="text-sm text-gray-600 capitalize">{type}</span>
+              <span className="text-sm text-muted-foreground capitalize">{type}</span>
               <div className="flex items-center space-x-2">
-                <div className="w-24 bg-gray-200 rounded-full h-2">
+                <div className="w-24 bg-muted rounded-full h-2">
                   <div 
                     className="bg-gray-600 h-2 rounded-full" 
                     style={{ width: `${strength * 100}%` }}
@@ -144,17 +144,17 @@ const SocraticReasoningVisualization: React.FC<SocraticReasoningVisualizationPro
     <div className="space-y-4">
       {analysis.logicGaps.length === 0 ? (
         <div className="text-center py-8">
-          <div className="text-green-600 text-4xl mb-2">✅</div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Logic Gaps Found</h3>
-          <p className="text-gray-600">Your reasoning appears to be well-structured!</p>
+          <div className="text-success text-4xl mb-2">✅</div>
+          <h3 className="text-lg font-semibold text-foreground mb-2">No Logic Gaps Found</h3>
+          <p className="text-muted-foreground">Your reasoning appears to be well-structured!</p>
         </div>
       ) : (
         analysis.logicGaps.map((gap, index) => (
-          <div key={gap.id} className="bg-white p-6 rounded-lg border border-gray-200">
+          <div key={gap.id} className="bg-white p-6 rounded-lg border border-border">
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">{gap.description}</h4>
-                <p className="text-sm text-gray-600 mb-3">{gap.type.replace('_', ' ').toUpperCase()}</p>
+                <h4 className="text-lg font-semibold text-foreground mb-2">{gap.description}</h4>
+                <p className="text-sm text-muted-foreground mb-3">{gap.type.replace('_', ' ').toUpperCase()}</p>
               </div>
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${getImpactColor(gap.impact)}`}>
                 {gap.impact.toUpperCase()} IMPACT
@@ -162,17 +162,17 @@ const SocraticReasoningVisualization: React.FC<SocraticReasoningVisualizationPro
             </div>
             
             <div className="mb-4">
-              <h5 className="text-sm font-medium text-gray-700 mb-2">Suggestions:</h5>
+              <h5 className="text-sm font-medium text-foreground mb-2">Suggestions:</h5>
               <ul className="list-disc list-inside space-y-1">
                 {gap.suggestions.map((suggestion, idx) => (
-                  <li key={idx} className="text-sm text-gray-600">{suggestion}</li>
+                  <li key={idx} className="text-sm text-muted-foreground">{suggestion}</li>
                 ))}
               </ul>
             </div>
             
             <button
               onClick={() => onExploreGap(gap)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              className="px-4 py-2 bg-info text-white rounded-lg hover:bg-info transition-colors text-sm font-medium"
             >
               Explore This Gap
             </button>
@@ -186,17 +186,17 @@ const SocraticReasoningVisualization: React.FC<SocraticReasoningVisualizationPro
     <div className="space-y-4">
       {analysis.assumptions.length === 0 ? (
         <div className="text-center py-8">
-          <div className="text-green-600 text-4xl mb-2">🎯</div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Assumptions Detected</h3>
-          <p className="text-gray-600">Your statements appear to be well-supported!</p>
+          <div className="text-success text-4xl mb-2">🎯</div>
+          <h3 className="text-lg font-semibold text-foreground mb-2">No Assumptions Detected</h3>
+          <p className="text-muted-foreground">Your statements appear to be well-supported!</p>
         </div>
       ) : (
         analysis.assumptions.map((assumption, index) => (
-          <div key={assumption.id} className="bg-white p-6 rounded-lg border border-gray-200">
+          <div key={assumption.id} className="bg-white p-6 rounded-lg border border-border">
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">"{assumption.text}"</h4>
-                <p className="text-sm text-gray-600 mb-3">{assumption.type.replace('_', ' ').toUpperCase()}</p>
+                <h4 className="text-lg font-semibold text-foreground mb-2">"{assumption.text}"</h4>
+                <p className="text-sm text-muted-foreground mb-3">{assumption.type.replace('_', ' ').toUpperCase()}</p>
               </div>
               <div className={`px-2 py-1 rounded-full text-xs font-medium ${getConfidenceColor(assumption.confidence)} bg-opacity-20`}>
                 {Math.round(assumption.confidence * 100)}% CONFIDENCE
@@ -204,10 +204,10 @@ const SocraticReasoningVisualization: React.FC<SocraticReasoningVisualizationPro
             </div>
             
             <div className="mb-4">
-              <h5 className="text-sm font-medium text-gray-700 mb-2">Validation Methods:</h5>
+              <h5 className="text-sm font-medium text-foreground mb-2">Validation Methods:</h5>
               <ul className="list-disc list-inside space-y-1">
                 {assumption.validationMethods.map((method, idx) => (
-                  <li key={idx} className="text-sm text-gray-600">{method}</li>
+                  <li key={idx} className="text-sm text-muted-foreground">{method}</li>
                 ))}
               </ul>
             </div>
@@ -228,26 +228,26 @@ const SocraticReasoningVisualization: React.FC<SocraticReasoningVisualizationPro
     <div className="space-y-4">
       {analysis.logicalFallacies.length === 0 ? (
         <div className="text-center py-8">
-          <div className="text-green-600 text-4xl mb-2">🧠</div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Logical Fallacies Detected</h3>
-          <p className="text-gray-600">Your reasoning appears to be logically sound!</p>
+          <div className="text-success text-4xl mb-2">🧠</div>
+          <h3 className="text-lg font-semibold text-foreground mb-2">No Logical Fallacies Detected</h3>
+          <p className="text-muted-foreground">Your reasoning appears to be logically sound!</p>
         </div>
       ) : (
         analysis.logicalFallacies.map((fallacy, index) => (
-          <div key={index} className="bg-white p-6 rounded-lg border border-gray-200">
+          <div key={index} className="bg-white p-6 rounded-lg border border-border">
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">{fallacy.description}</h4>
-                <p className="text-sm text-gray-600 mb-3">{fallacy.type.replace('_', ' ').toUpperCase()}</p>
+                <h4 className="text-lg font-semibold text-foreground mb-2">{fallacy.description}</h4>
+                <p className="text-sm text-muted-foreground mb-3">{fallacy.type.replace('_', ' ').toUpperCase()}</p>
               </div>
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${getImpactColor(fallacy.impact)}`}>
                 {fallacy.impact.toUpperCase()} IMPACT
               </span>
             </div>
             
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h5 className="text-sm font-medium text-blue-900 mb-2">Suggested Correction:</h5>
-              <p className="text-sm text-blue-800">{fallacy.correction}</p>
+            <div className="bg-info-subtle p-4 rounded-lg">
+              <h5 className="text-sm font-medium text-info mb-2">Suggested Correction:</h5>
+              <p className="text-sm text-info">{fallacy.correction}</p>
             </div>
           </div>
         ))
@@ -258,21 +258,21 @@ const SocraticReasoningVisualization: React.FC<SocraticReasoningVisualizationPro
   const renderEvidence = () => (
     <div className="space-y-6">
       {/* Evidence Strength Overview */}
-      <div className="bg-white p-6 rounded-lg border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Evidence Strength Analysis</h3>
+      <div className="bg-white p-6 rounded-lg border border-border">
+        <h3 className="text-lg font-semibold text-foreground mb-4">Evidence Strength Analysis</h3>
         <div className="space-y-4">
           {Object.entries(analysis.evidenceStrength.byType).map(([type, strength]) => (
             <div key={type} className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-4 h-4 rounded-full bg-gray-300"></div>
-                <span className="text-sm font-medium text-gray-700 capitalize">{type}</span>
+                <div className="w-4 h-4 rounded-full bg-muted"></div>
+                <span className="text-sm font-medium text-foreground capitalize">{type}</span>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="w-32 bg-gray-200 rounded-full h-2">
+                <div className="w-32 bg-muted rounded-full h-2">
                   <div 
                     className={`h-2 rounded-full ${
-                      strength >= 0.8 ? 'bg-green-500' : 
-                      strength >= 0.5 ? 'bg-yellow-500' : 'bg-red-500'
+                      strength >= 0.8 ? 'bg-success' : 
+                      strength >= 0.5 ? 'bg-warning' : 'bg-destructive'
                     }`}
                     style={{ width: `${strength * 100}%` }}
                   ></div>
@@ -286,13 +286,13 @@ const SocraticReasoningVisualization: React.FC<SocraticReasoningVisualizationPro
 
       {/* Evidence Gaps */}
       {analysis.evidenceStrength.gaps.length > 0 && (
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Evidence Gaps</h3>
+        <div className="bg-white p-6 rounded-lg border border-border">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Evidence Gaps</h3>
           <div className="space-y-2">
             {analysis.evidenceStrength.gaps.map((gap, index) => (
               <div key={index} className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                <span className="text-sm text-gray-600">{gap}</span>
+                <div className="w-2 h-2 bg-destructive rounded-full"></div>
+                <span className="text-sm text-muted-foreground">{gap}</span>
               </div>
             ))}
           </div>
@@ -305,11 +305,11 @@ const SocraticReasoningVisualization: React.FC<SocraticReasoningVisualizationPro
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">🧠 Socratic Reasoning Analysis</h2>
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <h2 className="text-xl font-semibold text-foreground">🧠 Socratic Reasoning Analysis</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-muted-foreground hover:text-muted-foreground transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -318,7 +318,7 @@ const SocraticReasoningVisualization: React.FC<SocraticReasoningVisualizationPro
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-gray-200">
+        <div className="border-b border-border">
           <nav className="flex space-x-8 px-6">
             {[
               { id: 'overview', label: 'Overview', icon: '📊' },
@@ -332,13 +332,13 @@ const SocraticReasoningVisualization: React.FC<SocraticReasoningVisualizationPro
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-info text-info'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                 }`}
               >
                 {tab.icon} {tab.label}
                 {tab.count !== undefined && tab.count > 0 && (
-                  <span className="ml-2 px-2 py-1 bg-red-100 text-red-600 rounded-full text-xs">
+                  <span className="ml-2 px-2 py-1 bg-destructive-subtle text-destructive rounded-full text-xs">
                     {tab.count}
                   </span>
                 )}

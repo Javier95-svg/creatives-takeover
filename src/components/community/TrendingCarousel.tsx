@@ -98,13 +98,13 @@ const TrendingCarousel = () => {
 
   if (isLoading) {
     return (
-      <Card className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border-orange-500/20">
+      <Card className="bg-gradient-to-r from-warning/10 to-destructive/10 border-warning/20">
         <CardContent className="p-6">
           <div className="animate-pulse">
-            <div className="h-6 bg-orange-500/20 rounded w-48 mb-4"></div>
+            <div className="h-6 bg-warning/20 rounded w-48 mb-4"></div>
             <div className="grid grid-cols-3 gap-4">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-32 bg-orange-500/10 rounded"></div>
+                <div key={i} className="h-32 bg-warning/10 rounded"></div>
               ))}
             </div>
           </div>
@@ -119,21 +119,21 @@ const TrendingCarousel = () => {
 
   const getTrendingIcon = (index: number) => {
     switch (index) {
-      case 0: return <Crown className="h-4 w-4 text-yellow-600" />;
-      case 1: return <Star className="h-4 w-4 text-gray-600" />;
-      case 2: return <Flame className="h-4 w-4 text-orange-600" />;
-      default: return <Flame className="h-4 w-4 text-orange-600" />;
+      case 0: return <Crown className="h-4 w-4 text-warning" />;
+      case 1: return <Star className="h-4 w-4 text-muted-foreground" />;
+      case 2: return <Flame className="h-4 w-4 text-warning" />;
+      default: return <Flame className="h-4 w-4 text-warning" />;
     }
   };
 
   const visiblePosts = trendingPosts.slice(currentIndex, currentIndex + 3);
 
   return (
-    <Card className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border-orange-500/20 overflow-hidden">
+    <Card className="bg-gradient-to-r from-warning/10 to-destructive/10 border-warning/20 overflow-hidden">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Flame className="h-5 w-5 text-orange-500 animate-pulse" />
+            <Flame className="h-5 w-5 text-warning animate-pulse" />
             <h3 className="text-lg font-semibold">Trending Stories</h3>
           </div>
           <div className="flex items-center gap-2">
@@ -174,10 +174,10 @@ const TrendingCarousel = () => {
                     <Badge 
                       variant="secondary" 
                       className={`
-                        ${globalIndex === 0 ? 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 text-yellow-700 border-yellow-500/30' : ''}
-                        ${globalIndex === 1 ? 'bg-gradient-to-r from-gray-500/20 to-gray-600/20 text-gray-700 border-gray-500/30' : ''}
-                        ${globalIndex === 2 ? 'bg-gradient-to-r from-orange-500/20 to-orange-600/20 text-orange-700 border-orange-500/30' : ''}
-                        ${globalIndex > 2 ? 'bg-gradient-to-r from-red-500/20 to-red-600/20 text-red-700 border-red-500/30' : ''}
+                        ${globalIndex === 0 ? 'bg-gradient-to-r from-warning/20 to-warning/20 text-warning border-warning/30' : ''}
+                        ${globalIndex === 1 ? 'bg-gradient-to-r from-gray-500/20 to-gray-600/20 text-foreground border-border/30' : ''}
+                        ${globalIndex === 2 ? 'bg-gradient-to-r from-warning/20 to-warning/20 text-warning border-warning/30' : ''}
+                        ${globalIndex > 2 ? 'bg-gradient-to-r from-destructive/20 to-destructive/20 text-destructive border-destructive/30' : ''}
                       `}
                     >
                       #{globalIndex + 1} Trending

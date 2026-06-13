@@ -222,9 +222,9 @@ export const InvestorQAPrepModal: React.FC<InvestorQAPrepModalProps> = ({ onClos
   };
 
   const difficultyColors = {
-    common: 'bg-green-100 text-green-700 border-green-200',
-    tough: 'bg-orange-100 text-orange-700 border-orange-200',
-    killer: 'bg-red-100 text-red-700 border-red-200'
+    common: 'bg-success-subtle text-success border-success',
+    tough: 'bg-warning-subtle text-warning border-warning',
+    killer: 'bg-destructive-subtle text-destructive border-destructive'
   };
 
   const categories = [
@@ -291,22 +291,22 @@ export const InvestorQAPrepModal: React.FC<InvestorQAPrepModalProps> = ({ onClos
                     <div className="px-4 pb-4 space-y-4 border-t">
                       <div className="pt-4">
                         <div className="flex items-start gap-2 mb-2">
-                          <AlertCircle className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                          <AlertCircle className="h-4 w-4 text-info shrink-0 mt-0.5" />
                           <div>
-                            <p className="text-xs font-semibold text-blue-900">Why They Ask This</p>
-                            <p className="text-sm text-blue-700 mt-1">{q.why}</p>
+                            <p className="text-xs font-semibold text-info">Why They Ask This</p>
+                            <p className="text-sm text-info mt-1">{q.why}</p>
                           </div>
                         </div>
                       </div>
 
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                        <p className="text-xs font-semibold text-green-900 mb-1">✓ Good Answer</p>
-                        <p className="text-sm text-green-800">{q.goodAnswer}</p>
+                      <div className="bg-success-subtle border border-success rounded-lg p-3">
+                        <p className="text-xs font-semibold text-success mb-1">✓ Good Answer</p>
+                        <p className="text-sm text-success">{q.goodAnswer}</p>
                       </div>
 
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                        <p className="text-xs font-semibold text-red-900 mb-1">✗ Bad Answer</p>
-                        <p className="text-sm text-red-800">{q.badAnswer}</p>
+                      <div className="bg-destructive-subtle border border-destructive rounded-lg p-3">
+                        <p className="text-xs font-semibold text-destructive mb-1">✗ Bad Answer</p>
+                        <p className="text-sm text-destructive">{q.badAnswer}</p>
                       </div>
 
                       <div className="bg-muted/30 rounded-lg p-3">

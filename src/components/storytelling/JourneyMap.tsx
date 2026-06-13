@@ -14,26 +14,26 @@ export const JourneyMap = ({ milestones }: JourneyMapProps) => {
       case 'problem':
         return {
           icon: AlertCircle,
-          color: 'text-red-500',
-          bgColor: 'bg-red-500/10',
-          borderColor: 'border-red-500/30',
-          lineColor: 'bg-red-500/30'
+          color: 'text-destructive',
+          bgColor: 'bg-destructive/10',
+          borderColor: 'border-destructive/30',
+          lineColor: 'bg-destructive/30'
         };
       case 'struggle':
         return {
           icon: AlertCircle,
-          color: 'text-orange-500',
-          bgColor: 'bg-orange-500/10',
-          borderColor: 'border-orange-500/30',
-          lineColor: 'bg-orange-500/30'
+          color: 'text-warning',
+          bgColor: 'bg-warning/10',
+          borderColor: 'border-warning/30',
+          lineColor: 'bg-warning/30'
         };
       case 'solution':
         return {
           icon: CheckCircle,
-          color: 'text-green-500',
-          bgColor: 'bg-green-500/10',
-          borderColor: 'border-green-500/30',
-          lineColor: 'bg-green-500/30'
+          color: 'text-success',
+          bgColor: 'bg-success/10',
+          borderColor: 'border-success/30',
+          lineColor: 'bg-success/30'
         };
       default:
         return {
@@ -49,7 +49,7 @@ export const JourneyMap = ({ milestones }: JourneyMapProps) => {
   return (
     <div className="relative py-4">
       {/* Background connector line - gradient from problem to solution */}
-      <div className="absolute top-5 left-0 right-0 h-0.5 bg-gradient-to-r from-red-500/20 via-orange-500/20 to-green-500/20 z-0" />
+      <div className="absolute top-5 left-0 right-0 h-0.5 bg-gradient-to-r from-destructive/20 via-warning/20 to-success/20 z-0" />
       
       <div className="flex items-start justify-between relative z-10">
         {milestones.map((milestone, index) => {

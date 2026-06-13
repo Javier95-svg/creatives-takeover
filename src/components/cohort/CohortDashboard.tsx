@@ -117,13 +117,13 @@ export const CohortDashboard = ({ cohort, membership, members, onCheckIn }: Coho
               <div className="text-xs text-muted-foreground mt-1">Check-ins</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-green-500">
+              <div className="text-3xl font-bold text-success">
                 {membership.milestones_completed}
               </div>
               <div className="text-xs text-muted-foreground mt-1">Milestones</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-blue-500">
+              <div className="text-3xl font-bold text-info">
                 {membership.attendance_rate.toFixed(0)}%
               </div>
               <div className="text-xs text-muted-foreground mt-1">Attendance</div>

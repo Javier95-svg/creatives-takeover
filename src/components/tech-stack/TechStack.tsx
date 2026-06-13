@@ -482,7 +482,7 @@ const TechStack: React.FC = () => {
               </div>
 
               {previewReport.has_variable && (
-                <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800 dark:border-yellow-900 dark:bg-yellow-950/20 dark:text-yellow-200">
+                <div className="rounded-lg border border-warning bg-warning-subtle p-3 text-sm text-warning dark:border-warning dark:bg-warning/20 dark:text-warning">
                   Variable costs included. Total only reflects fixed monthly pricing.
                 </div>
               )}
@@ -1268,8 +1268,8 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
             </div>
 
             {/* Budget Range Info */}
-            <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-900">
-              <p className="text-sm text-blue-800 dark:text-blue-200">
+            <div className="p-3 bg-info-subtle dark:bg-info/20 rounded-lg border border-info dark:border-info">
+              <p className="text-sm text-info dark:text-info">
                 <strong>Budget Range:</strong> {
                   total < 200 ? 'Budget-Conscious (Great for bootstrapped startups and MVPs)' :
                     total < 500 ? 'Mid-Range (Suitable for growth-stage startups)' :
@@ -1279,8 +1279,8 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
             </div>
 
             {hasVariable && (
-              <div className="p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg border border-yellow-200 dark:border-yellow-900">
-                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+              <div className="p-3 bg-warning-subtle dark:bg-warning/20 rounded-lg border border-warning dark:border-warning">
+                <p className="text-sm text-warning dark:text-warning">
                   <strong>Variable Costs Alert:</strong> Some selected products use usage-based pricing.
                   The totals above only include fixed monthly costs. Plan for 20-30% additional budget for
                   variable charges as you scale.
@@ -1347,15 +1347,15 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
           <CardContent className="space-y-3">
             {generateStrategy.recommendations.map((rec, idx) => {
               const priorityColors = {
-                high: 'border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/20',
-                medium: 'border-yellow-200 dark:border-yellow-900 bg-yellow-50 dark:bg-yellow-950/20',
-                low: 'border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/20'
+                high: 'border-destructive dark:border-destructive bg-destructive-subtle dark:bg-destructive/20',
+                medium: 'border-warning dark:border-warning bg-warning-subtle dark:bg-warning/20',
+                low: 'border-info dark:border-info bg-info-subtle dark:bg-info/20'
               };
 
               const iconColors = {
-                high: 'text-red-600 dark:text-red-400',
-                medium: 'text-yellow-600 dark:text-yellow-400',
-                low: 'text-blue-600 dark:text-blue-400'
+                high: 'text-destructive dark:text-destructive',
+                medium: 'text-warning dark:text-warning',
+                low: 'text-info dark:text-info'
               };
 
               return (
@@ -1374,9 +1374,9 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-semibold text-sm">{rec.title}</h4>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${rec.priority === 'high' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' :
-                          rec.priority === 'medium' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' :
-                            'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${rec.priority === 'high' ? 'bg-destructive-subtle dark:bg-destructive/30 text-destructive dark:text-destructive' :
+                          rec.priority === 'medium' ? 'bg-warning-subtle dark:bg-warning/30 text-warning dark:text-warning' :
+                            'bg-info-subtle dark:bg-info/30 text-info dark:text-info'
                           }`}>
                           {rec.priority}
                         </span>
@@ -1406,9 +1406,9 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
           <CardContent className="space-y-4">
             {integrationSuggestions.map((integration, idx) => {
               const difficultyColors = {
-                easy: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-900',
-                medium: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-900',
-                advanced: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-900'
+                easy: 'bg-success-subtle dark:bg-success/30 text-success dark:text-success border-success dark:border-success',
+                medium: 'bg-warning-subtle dark:bg-warning/30 text-warning dark:text-warning border-warning dark:border-warning',
+                advanced: 'bg-warning-subtle dark:bg-warning/30 text-warning dark:text-warning border-warning dark:border-warning'
               };
 
               return (

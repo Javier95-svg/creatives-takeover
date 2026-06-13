@@ -317,14 +317,14 @@ const UpgradePromptDialog = ({
           <>
             <div className="space-y-5">
               {tierDetails && (
-                <Card className={isStarterRecommendation ? "border-2 border-blue-500/70 bg-blue-500/5" : "border-primary/30 bg-primary/5"}>
+                <Card className={isStarterRecommendation ? "border-2 border-info/70 bg-info/5" : "border-primary/30 bg-primary/5"}>
                   <CardContent className="pt-6 pb-5">
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2">
                           <Crown className="h-4 w-4 text-primary" />
                           <span className="font-semibold">{tierDetails.name} Plan</span>
-                          <Badge className={isStarterRecommendation ? "bg-amber-500 text-amber-950 text-xs" : "text-xs"}>
+                          <Badge className={isStarterRecommendation ? "bg-warning text-warning text-xs" : "text-xs"}>
                             {isStarterRecommendation ? "Most popular" : "Recommended"}
                           </Badge>
                         </div>

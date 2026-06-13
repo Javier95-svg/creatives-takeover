@@ -278,13 +278,13 @@ const VCProfilePage = () => {
             <div className="min-w-0">
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 {vc.is_featured && (
-                  <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30 hover:bg-amber-500/20">
-                    <Star className="h-3 w-3 mr-1 fill-amber-500" />
+                  <Badge className="bg-warning/10 text-warning border-warning/30 hover:bg-warning/20">
+                    <Star className="h-3 w-3 mr-1 fill-warning" />
                     Featured
                   </Badge>
                 )}
                 {vc.remote_friendly && (
-                  <Badge variant="outline" className="text-green-600 border-green-500/30 bg-green-500/5">
+                  <Badge variant="outline" className="text-success border-success/30 bg-success/5">
                     <Wifi className="h-3 w-3 mr-1" />
                     Remote friendly
                   </Badge>
@@ -301,7 +301,7 @@ const VCProfilePage = () => {
                       <Badge
                         key={stage}
                         variant="outline"
-                        className="border-sky-500/30 bg-sky-500/10 text-sky-700 capitalize"
+                        className="border-info/30 bg-info/10 text-info capitalize"
                       >
                         {stage.replaceAll("-", " ")}
                       </Badge>
@@ -327,7 +327,7 @@ const VCProfilePage = () => {
                       <Badge
                         key={geo}
                         variant="outline"
-                        className="border-emerald-500/30 bg-emerald-500/10 text-emerald-700"
+                        className="border-success/30 bg-success/10 text-success"
                       >
                         {geo}
                       </Badge>

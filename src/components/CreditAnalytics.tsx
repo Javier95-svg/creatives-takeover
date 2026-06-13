@@ -129,7 +129,7 @@ export function CreditAnalytics({ className }: CreditAnalyticsProps) {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-500">-{totalSpent}</div>
+            <div className="text-2xl font-bold text-destructive">-{totalSpent}</div>
             <p className="text-xs text-muted-foreground">
               Credits used
             </p>
@@ -142,7 +142,7 @@ export function CreditAnalytics({ className }: CreditAnalyticsProps) {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-500">+{totalEarned}</div>
+            <div className="text-2xl font-bold text-success">+{totalEarned}</div>
             <p className="text-xs text-muted-foreground">
               Last 30 days
             </p>
@@ -207,7 +207,7 @@ export function CreditAnalytics({ className }: CreditAnalyticsProps) {
                         {transaction.feature || '—'}
                       </TableCell>
                       <TableCell>
-                        <span className={transaction.amount > 0 ? "text-green-600" : "text-red-600"}>
+                        <span className={transaction.amount > 0 ? "text-success" : "text-destructive"}>
                           {transaction.amount > 0 ? '+' : ''}{transaction.amount}
                         </span>
                       </TableCell>

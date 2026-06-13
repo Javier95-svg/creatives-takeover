@@ -62,12 +62,12 @@ const milestoneIcons: Record<string, React.ElementType> = {
 };
 
 const milestoneColors: Record<string, string> = {
-  'idea-validated': 'bg-yellow-500',
-  'waitlist-launched': 'bg-blue-500',
-  'first-user': 'bg-green-500',
-  'first-revenue': 'bg-emerald-500',
+  'idea-validated': 'bg-warning',
+  'waitlist-launched': 'bg-info',
+  'first-user': 'bg-success',
+  'first-revenue': 'bg-success',
   'funding': 'bg-purple-500',
-  'launch': 'bg-orange-500',
+  'launch': 'bg-warning',
   'partnership': 'bg-pink-500',
   'custom': 'bg-gray-500',
 };

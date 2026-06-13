@@ -78,7 +78,7 @@ const EmailTemplateModal = ({ template, isOpen, onClose }: EmailTemplateModalPro
             onClick={() => handleVariableClick(part)}
             className={`inline-flex items-center rounded px-1 py-0.5 font-mono text-xs transition-colors ${
               hasValue
-                ? "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20"
+                ? "bg-success/10 text-success hover:bg-success/20"
                 : "bg-primary/10 text-primary hover:bg-primary/20"
             }`}
             title="Click to edit"

@@ -60,28 +60,28 @@ const StreakNotificationBanner = ({ onDismiss }: StreakNotificationBannerProps) 
   const getMotivation = () => {
     if (!hasCheckedIn && currentStreak > 0) {
       return {
-        icon: <Flame className="w-5 h-5 text-orange-500" />,
+        icon: <Flame className="w-5 h-5 text-warning" />,
         title: "Don't break your streak!",
         message: `You're on a ${currentStreak} day streak. Check in today to keep it going!`,
-        color: "border-orange-500/50 bg-orange-500/5"
+        color: "border-warning/50 bg-warning/5"
       };
     }
     
     if (!isCompleted && todaysChallenge) {
       return {
-        icon: <Trophy className="w-5 h-5 text-yellow-500" />,
+        icon: <Trophy className="w-5 h-5 text-warning" />,
         title: "Today's challenge awaits!",
         message: `Complete today's challenge to earn ${todaysChallenge.reward_points} bonus points.`,
-        color: "border-yellow-500/50 bg-yellow-500/5"
+        color: "border-warning/50 bg-warning/5"
       };
     }
 
     if (currentStreak === 0) {
       return {
-        icon: <Sparkles className="w-5 h-5 text-blue-500" />,
+        icon: <Sparkles className="w-5 h-5 text-info" />,
         title: "Start your journey!",
         message: "Post or engage today to start building your community streak.",
-        color: "border-blue-500/50 bg-blue-500/5"
+        color: "border-info/50 bg-info/5"
       };
     }
 
@@ -114,7 +114,7 @@ const StreakNotificationBanner = ({ onDismiss }: StreakNotificationBannerProps) 
       
       {currentStreak > 0 && (
         <div className="px-4 pb-3 flex items-center gap-2 text-xs">
-          <Flame className="w-4 h-4 text-orange-500" />
+          <Flame className="w-4 h-4 text-warning" />
           <span className="font-semibold">{currentStreak} day streak</span>
           {currentStreak >= 7 && (
             <span className="text-muted-foreground">• You're on fire! 🔥</span>

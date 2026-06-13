@@ -161,7 +161,7 @@ function BulletList({ values, empty }: { values: string[] | null | undefined; em
     <ul className="space-y-2">
       {values.map((value) => (
         <li key={value} className="flex gap-2 text-sm leading-6 text-muted-foreground">
-          <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-emerald-500" aria-hidden="true" />
+          <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
           <span>{value}</span>
         </li>
       ))}

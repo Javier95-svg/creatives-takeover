@@ -329,7 +329,7 @@ const PollCard: React.FC<PollCardProps> = ({
             <div className="flex items-center gap-2">
               <h3 className="font-medium">{poll.title}</h3>
               {getStatusBadge()}
-              {hasUserVoted && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+              {hasUserVoted && <CheckCircle2 className="h-4 w-4 text-success" />}
             </div>
             {poll.description && (
               <p className="text-sm text-muted-foreground">{poll.description}</p>
@@ -400,7 +400,7 @@ const PollCard: React.FC<PollCardProps> = ({
                   <button
                     key={rating}
                     onClick={() => setRatingValue(rating)}
-                    className={`p-1 ${ratingValue >= rating ? 'text-yellow-500' : 'text-muted-foreground'}`}
+                    className={`p-1 ${ratingValue >= rating ? 'text-warning' : 'text-muted-foreground'}`}
                   >
                     <Star className="h-5 w-5 fill-current" />
                   </button>
@@ -475,7 +475,7 @@ const PollCard: React.FC<PollCardProps> = ({
                     <Star
                       key={rating}
                       className={`h-4 w-4 ${
-                        rating <= results.averageRating ? 'text-yellow-500 fill-current' : 'text-muted-foreground'
+                        rating <= results.averageRating ? 'text-warning fill-current' : 'text-muted-foreground'
                       }`}
                     />
                   ))}

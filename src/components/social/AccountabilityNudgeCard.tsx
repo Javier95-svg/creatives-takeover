@@ -42,9 +42,9 @@ export const AccountabilityNudgeCard = ({ nudge }: AccountabilityNudgeCardProps)
 
   const getNudgeColor = (type: string) => {
     switch (type) {
-      case 'missed_checkin': return 'text-orange-500';
-      case 'encouragement': return 'text-green-500';
-      case 'check_in': return 'text-blue-500';
+      case 'missed_checkin': return 'text-warning';
+      case 'encouragement': return 'text-success';
+      case 'check_in': return 'text-info';
       case 'milestone': return 'text-purple-500';
       default: return 'text-primary';
     }

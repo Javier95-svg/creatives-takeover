@@ -12,19 +12,19 @@ interface ValidationScoreCardProps {
 export const ValidationScoreCard = ({ validation, showDetails = true }: ValidationScoreCardProps) => {
   const getScoreColor = (score: number) => {
     if (score >= 75) return 'text-[hsl(var(--green-primary))]';
-    if (score >= 50) return 'text-yellow-500';
+    if (score >= 50) return 'text-warning';
     return 'text-[hsl(var(--red-primary))]';
   };
 
   const getScoreBgColor = (score: number) => {
     if (score >= 75) return 'bg-[hsl(var(--green-primary))]/10';
-    if (score >= 50) return 'bg-yellow-500/10';
+    if (score >= 50) return 'bg-warning/10';
     return 'bg-[hsl(var(--red-primary))]/10';
   };
 
   const getValidationLevel = (score: number) => {
     if (score >= 75) return { text: 'Strong Validation', icon: CheckCircle2, color: 'text-[hsl(var(--green-primary))]' };
-    if (score >= 50) return { text: 'Moderate Validation', icon: AlertCircle, color: 'text-yellow-500' };
+    if (score >= 50) return { text: 'Moderate Validation', icon: AlertCircle, color: 'text-warning' };
     return { text: 'Needs Improvement', icon: AlertCircle, color: 'text-[hsl(var(--red-primary))]' };
   };
 
@@ -89,7 +89,7 @@ export const ValidationScoreCard = ({ validation, showDetails = true }: Validati
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-2">
-                    <TrendingDown className="h-4 w-4 text-orange-500" />
+                    <TrendingDown className="h-4 w-4 text-warning" />
                     Competition Intensity
                   </span>
                   <span className={`font-semibold ${getScoreColor(100 - validation.competition_score)}`}>

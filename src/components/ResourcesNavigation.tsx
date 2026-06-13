@@ -15,7 +15,7 @@ import { RevealGroup, ScrollReveal } from "@/components/animations/ScrollReveal"
 const ResourcesNavigation = () => {
   const navigationCards = [
     {
-      icon: <Info className="w-8 h-8 text-blue-500" />,
+      icon: <Info className="w-8 h-8 text-info" />,
       title: "About Our Mission",
       description: "Learn about our story, mission, and commitment to empowering creatives worldwide",
       link: "/about",
@@ -23,7 +23,7 @@ const ResourcesNavigation = () => {
       highlight: false
     },
     {
-      icon: <Settings className="w-8 h-8 text-green-500" />,
+      icon: <Settings className="w-8 h-8 text-success" />,
       title: "Our Services",
       description: "Discover our comprehensive creative subscription and platform services",
       link: "/services",

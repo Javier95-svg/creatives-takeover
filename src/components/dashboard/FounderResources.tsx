@@ -21,7 +21,7 @@ const resources: Resource[] = [
     description: 'Step-by-step guide to building your minimum viable product',
     link: '/bizmap-ai',
     icon: FileText,
-    color: 'text-blue-600'
+    color: 'text-info'
   },
   {
     id: 'customers',
@@ -30,7 +30,7 @@ const resources: Resource[] = [
     description: 'Proven strategies to acquire your first paying customers',
     link: '/dashboard',
     icon: Users,
-    color: 'text-green-600'
+    color: 'text-success'
   },
   {
     id: 'pitch',
@@ -48,7 +48,7 @@ const resources: Resource[] = [
     description: 'Complete guide to raising your pre-seed round',
     link: '/dashboard',
     icon: DollarSign,
-    color: 'text-orange-600'
+    color: 'text-warning'
   }
 ];
 

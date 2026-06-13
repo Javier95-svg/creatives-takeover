@@ -269,7 +269,7 @@ const AuthCallback = () => {
       case 'loading':
         return 'text-primary';
       case 'success':
-        return 'text-green-600';
+        return 'text-success';
       case 'error':
         return 'text-destructive';
       default:
@@ -290,14 +290,14 @@ const AuthCallback = () => {
             {status === 'loading' ? (
               <Loader2 className="h-12 w-12 animate-spin text-primary" />
             ) : status === 'success' ? (
-              <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="h-12 w-12 rounded-full bg-success-subtle flex items-center justify-center">
+                <svg className="h-6 w-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
             ) : (
-              <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
-                <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="h-12 w-12 rounded-full bg-destructive-subtle flex items-center justify-center">
+                <svg className="h-6 w-6 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </div>

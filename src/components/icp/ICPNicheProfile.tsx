@@ -62,7 +62,7 @@ const ICPNicheProfile: React.FC<ICPNicheProfileProps> = ({ profile }) => {
               <span className="text-muted-foreground">{profile.nicheSize}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <TrendingUp className="w-4 h-4 text-green-600" />
+              <TrendingUp className="w-4 h-4 text-success" />
               <span className="font-medium">Growth:</span>
               <span className="text-muted-foreground">{profile.growthTrend}</span>
             </div>
@@ -168,7 +168,7 @@ const ICPNicheProfile: React.FC<ICPNicheProfileProps> = ({ profile }) => {
             <p className="text-xs font-medium text-muted-foreground mb-2">Purchase Triggers</p>
             <div className="flex flex-wrap gap-2">
               {profile.buyingBehavior.triggers.map((trigger, i) => (
-                <Badge key={i} variant="secondary" className="text-xs bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
+                <Badge key={i} variant="secondary" className="text-xs bg-warning-subtle text-warning dark:bg-warning/30 dark:text-warning">
                   {trigger}
                 </Badge>
               ))}

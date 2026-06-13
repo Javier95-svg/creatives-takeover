@@ -216,7 +216,7 @@ export function IcpUnlockGate({
 
           <div className="mt-5 rounded-3xl border border-border/50 bg-background/60 px-4 py-4">
             <div className="flex items-start gap-3">
-              <div className="flex shrink-0 text-amber-400">
+              <div className="flex shrink-0 text-warning">
                 {[0, 1, 2, 3, 4].map((i) => (
                   <Star key={i} className="h-3.5 w-3.5 fill-current" />
                 ))}

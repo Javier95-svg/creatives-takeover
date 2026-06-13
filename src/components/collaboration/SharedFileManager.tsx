@@ -128,11 +128,11 @@ export const SharedFileManager: React.FC<SharedFileManagerProps> = ({
   };
 
   const getFileTypeColor = (fileType: string) => {
-    if (fileType.startsWith('image/')) return 'bg-green-100 text-green-800';
-    if (fileType.includes('pdf')) return 'bg-red-100 text-red-800';
-    if (fileType.includes('document')) return 'bg-blue-100 text-blue-800';
-    if (fileType.includes('spreadsheet')) return 'bg-emerald-100 text-emerald-800';
-    return 'bg-gray-100 text-gray-800';
+    if (fileType.startsWith('image/')) return 'bg-success-subtle text-success';
+    if (fileType.includes('pdf')) return 'bg-destructive-subtle text-destructive';
+    if (fileType.includes('document')) return 'bg-info-subtle text-info';
+    if (fileType.includes('spreadsheet')) return 'bg-success-subtle text-success';
+    return 'bg-muted text-foreground';
   };
 
   const filteredFiles = files.filter(file => {
@@ -331,9 +331,9 @@ const FileCard: React.FC<FileCardProps> = ({
   onShare,
 }) => {
   const getFileIcon = (fileType: string) => {
-    if (fileType.startsWith('image/')) return <Image className="h-4 w-4 text-green-600" />;
-    if (fileType.includes('pdf') || fileType.includes('document')) return <FileText className="h-4 w-4 text-red-600" />;
-    return <File className="h-4 w-4 text-blue-600" />;
+    if (fileType.startsWith('image/')) return <Image className="h-4 w-4 text-success" />;
+    if (fileType.includes('pdf') || fileType.includes('document')) return <FileText className="h-4 w-4 text-destructive" />;
+    return <File className="h-4 w-4 text-info" />;
   };
 
   const formatFileSize = (bytes: number) => {

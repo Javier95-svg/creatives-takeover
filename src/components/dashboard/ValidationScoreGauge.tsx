@@ -14,13 +14,13 @@ export const ValidationScoreGauge = ({ validation, showBreakdown = true }: Valid
   
   const getScoreColor = (score: number) => {
     if (score >= 70) return 'text-[hsl(var(--green-primary))]';
-    if (score >= 50) return 'text-yellow-600';
+    if (score >= 50) return 'text-warning';
     return 'text-[hsl(var(--red-primary))]';
   };
 
   const getScoreBgColor = (score: number) => {
     if (score >= 70) return 'bg-[hsl(var(--green-primary))]/10';
-    if (score >= 50) return 'bg-yellow-500/10';
+    if (score >= 50) return 'bg-warning/10';
     return 'bg-[hsl(var(--red-primary))]/10';
   };
 
@@ -132,7 +132,7 @@ export const ValidationScoreGauge = ({ validation, showBreakdown = true }: Valid
               <span className="text-xs text-muted-foreground">Confidence:</span>
               <span className={`text-xs font-medium capitalize ${
                 validation.confidence_level === 'high' ? 'text-[hsl(var(--green-primary))]' :
-                validation.confidence_level === 'medium' ? 'text-yellow-600' :
+                validation.confidence_level === 'medium' ? 'text-warning' :
                 'text-[hsl(var(--red-primary))]'
               }`}>
                 {validation.confidence_level}

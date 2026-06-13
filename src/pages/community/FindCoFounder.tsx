@@ -175,7 +175,7 @@ const FindCoFounder = () => {
                 <Filter className="w-4 h-4 mr-2" />
                 Filters
               </Button>
-              <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 md:w-auto">
+              <Button asChild className="bg-gradient-to-r from-info to-purple-600 hover:from-info hover:to-purple-700 md:w-auto">
                 <Link to="/co-founder/create">
                   <Plus className="w-4 h-4 mr-2" />
                   Create Post
@@ -205,7 +205,7 @@ const FindCoFounder = () => {
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
                 Be the first to post and find your perfect co-founder!
               </p>
-              <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+              <Button asChild size="lg" className="bg-gradient-to-r from-info to-purple-600 hover:from-info hover:to-purple-700">
                 <Link to="/co-founder/create">
                   <Plus className="w-4 h-4 mr-2" />
                   Create Your Post
@@ -471,7 +471,7 @@ const FindCoFounder = () => {
               <span className="text-sm font-medium text-primary">Find Your Perfect Match</span>
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-4">
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-info via-purple-600 to-pink-600 bg-clip-text text-transparent">
                 Find a Co-Founder
               </span>
             </h1>

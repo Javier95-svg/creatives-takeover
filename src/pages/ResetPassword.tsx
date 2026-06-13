@@ -216,8 +216,8 @@ const ResetPassword = () => {
           <Card className="glass-card border-2 border-border/50 shadow-2xl">
             <CardContent className="p-8 text-center space-y-4">
               <div className="flex justify-center">
-                <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center">
-                  <AlertCircle className="w-8 h-8 text-red-500" />
+                <div className="w-16 h-16 rounded-full bg-destructive/20 flex items-center justify-center">
+                  <AlertCircle className="w-8 h-8 text-destructive" />
                 </div>
               </div>
               <div className="space-y-2">
@@ -284,8 +284,8 @@ const ResetPassword = () => {
               {isSuccess ? (
                 <div className="space-y-6 text-center">
                   <div className="flex justify-center">
-                    <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
-                      <CheckCircle className="w-8 h-8 text-green-500" />
+                    <div className="w-16 h-16 rounded-full bg-success/20 flex items-center justify-center">
+                      <CheckCircle className="w-8 h-8 text-success" />
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -316,7 +316,7 @@ const ResetPassword = () => {
                         onChange={handleInputChange}
                         placeholder="Enter new password"
                         className={`pl-10 pr-12 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
-                          errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+                          errors.password ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''
                         }`}
                         disabled={isLoading}
                         autoComplete="new-password"
@@ -335,7 +335,7 @@ const ResetPassword = () => {
                       </button>
                     </div>
                     {errors.password && (
-                      <p className="text-sm text-red-500 animate-fade-in">{errors.password}</p>
+                      <p className="text-sm text-destructive animate-fade-in">{errors.password}</p>
                     )}
                   </div>
 
@@ -354,7 +354,7 @@ const ResetPassword = () => {
                         onChange={handleInputChange}
                         placeholder="Confirm new password"
                         className={`pl-10 pr-12 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
-                          errors.confirmPassword ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+                          errors.confirmPassword ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''
                         }`}
                         disabled={isLoading}
                         autoComplete="new-password"
@@ -373,7 +373,7 @@ const ResetPassword = () => {
                       </button>
                     </div>
                     {errors.confirmPassword && (
-                      <p className="text-sm text-red-500 animate-fade-in">{errors.confirmPassword}</p>
+                      <p className="text-sm text-destructive animate-fade-in">{errors.confirmPassword}</p>
                     )}
                   </div>
 

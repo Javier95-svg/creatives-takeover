@@ -53,7 +53,7 @@ const VCGrid = ({ vcs, canViewProfiles = true, isAuthenticated = true }: VCGridP
               and industry, and discover the right investors for your startup.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+              <Button asChild size="lg" className="bg-gradient-to-r from-info to-purple-600 hover:from-info hover:to-purple-700">
                 <Link to={`/signup?source=vc_profiles&return=${encodeURIComponent('/vc-search')}`}>
                   <UserPlus className="w-4 h-4 mr-2" />
                   Sign Up Free

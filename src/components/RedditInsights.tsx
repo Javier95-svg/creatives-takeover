@@ -20,9 +20,9 @@ export const RedditInsights = ({ discussions }: RedditInsightsProps) => {
 
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
-      case 'positive': return 'bg-green-500/10 text-green-600 dark:text-green-400';
-      case 'negative': return 'bg-red-500/10 text-red-600 dark:text-red-400';
-      default: return 'bg-gray-500/10 text-gray-600 dark:text-gray-400';
+      case 'positive': return 'bg-success/10 text-success dark:text-success';
+      case 'negative': return 'bg-destructive/10 text-destructive dark:text-destructive';
+      default: return 'bg-gray-500/10 text-muted-foreground dark:text-muted-foreground';
     }
   };
 
@@ -44,14 +44,14 @@ export const RedditInsights = ({ discussions }: RedditInsightsProps) => {
             <div className="text-2xl font-bold text-primary">{discussions.length}</div>
             <div className="text-xs text-muted-foreground mt-1">Total Posts</div>
           </div>
-          <div className="text-center p-3 rounded-lg bg-green-500/5">
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+          <div className="text-center p-3 rounded-lg bg-success/5">
+            <div className="text-2xl font-bold text-success dark:text-success">
               {positivePosts.length}
             </div>
             <div className="text-xs text-muted-foreground mt-1">Demand Signals</div>
           </div>
-          <div className="text-center p-3 rounded-lg bg-blue-500/5">
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+          <div className="text-center p-3 rounded-lg bg-info/5">
+            <div className="text-2xl font-bold text-info dark:text-info">
               {discussions.reduce((sum, p) => sum + p.upvotes, 0)}
             </div>
             <div className="text-xs text-muted-foreground mt-1">Total Upvotes</div>
@@ -127,14 +127,14 @@ export const RedditInsights = ({ discussions }: RedditInsightsProps) => {
         {positivePosts.length > 0 && (
           <div>
             <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-green-600 dark:text-green-400" />
+              <TrendingUp className="w-4 h-4 text-success dark:text-success" />
               Demand Signals (Positive Sentiment)
             </h3>
             <div className="space-y-2">
               {positivePosts.map((post, idx) => (
                 <div
                   key={post.post_id || `positive-${idx}`}
-                  className="p-3 rounded-lg border border-green-500/20 bg-green-500/5"
+                  className="p-3 rounded-lg border border-success/20 bg-success/5"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-sm font-medium flex-1">{post.title}</p>

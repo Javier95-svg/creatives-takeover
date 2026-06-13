@@ -217,8 +217,8 @@ const MentorBookingPage = () => {
                   </div>
 
                   {confirmed ? (
-                    <div className="rounded-lg border border-green-500/40 bg-green-500/5 p-4 text-center">
-                      <p className="font-semibold text-green-700 dark:text-green-400">Booking confirmed 🎉</p>
+                    <div className="rounded-lg border border-success/40 bg-success/5 p-4 text-center">
+                      <p className="font-semibold text-success dark:text-success">Booking confirmed 🎉</p>
                       <p className="text-sm text-muted-foreground mt-1">
                         Your discovery call with {mentor.name} is confirmed. You can manage it from your dashboard.
                       </p>

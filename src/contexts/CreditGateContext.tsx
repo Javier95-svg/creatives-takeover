@@ -121,7 +121,7 @@ export const CreditGateProvider = ({ children }: { children: ReactNode }) => {
         >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-600" />
+              <AlertTriangle className="h-5 w-5 text-warning" />
               You've used all your credits for this month
             </DialogTitle>
             <DialogDescription>

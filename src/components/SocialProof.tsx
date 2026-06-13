@@ -71,7 +71,7 @@ export const SocialProof = ({
           </span>
         )}
         {showRecentActivity && recentSignups > 0 && (
-          <span className="px-2 py-1 bg-green-500/10 text-green-600 rounded-full">
+          <span className="px-2 py-1 bg-success/10 text-success rounded-full">
             {recentSignups} joined today
           </span>
         )}
@@ -88,7 +88,7 @@ export const SocialProof = ({
       )}
       {showRecentActivity && recentSignups > 0 && (
         <p className="text-center text-xs animate-pulse">
-          <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+          <span className="inline-block w-2 h-2 bg-success rounded-full mr-1"></span>
           {recentSignups} {recentSignups === 1 ? 'person' : 'people'} signed up in the last hour
         </p>
       )}

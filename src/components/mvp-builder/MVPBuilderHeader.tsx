@@ -119,9 +119,9 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
       <span
         className={cn(
           'hidden lg:flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-label font-medium',
-          healthy && 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300',
-          needsAuth && 'border-amber-300/25 bg-amber-300/10 text-amber-100',
-          !healthy && !needsAuth && 'border-white/10 bg-white/5 text-slate-300'
+          healthy && 'border-success/20 bg-success/10 text-success',
+          needsAuth && 'border-warning/25 bg-warning/10 text-warning',
+          !healthy && !needsAuth && 'border-white/10 bg-white/5 text-muted-foreground'
         )}
       >
         <Icon className="h-3 w-3" />
@@ -133,7 +133,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
   const saveIndicator = () => {
     if (isSavingProject) {
       return (
-        <span className="hidden sm:flex items-center gap-1 text-label text-slate-400">
+        <span className="hidden sm:flex items-center gap-1 text-label text-muted-foreground">
           <Loader2 className="h-3 w-3 animate-spin" />
           Saving…
         </span>
@@ -143,7 +143,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
       return (
         <button
           onClick={onSaveProject}
-          className="hidden sm:flex items-center gap-1 text-label text-amber-300 hover:text-amber-200 transition-colors"
+          className="hidden sm:flex items-center gap-1 text-label text-warning hover:text-warning transition-colors"
         >
           <AlertCircle className="h-3 w-3" />
           Unsaved
@@ -152,8 +152,8 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
     }
     if (lastSavedAt) {
       return (
-        <span className="hidden sm:flex items-center gap-1 text-label text-slate-500">
-          <Check className="h-3 w-3 text-emerald-400" />
+        <span className="hidden sm:flex items-center gap-1 text-label text-muted-foreground">
+          <Check className="h-3 w-3 text-success" />
           Saved {formatRelativeTime(lastSavedAt)}
         </span>
       );
@@ -174,7 +174,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
         <div className="relative flex items-center gap-2">
           <Link
             to="/"
-            className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors"
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-white transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             <span className="hidden sm:inline">Platform</span>
@@ -183,12 +183,12 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
             variant="ghost"
             size="pill-sm"
             onClick={() => setProjectsOpen(true)}
-            className="gap-1.5 border border-white/10 bg-white/[0.04] px-2.5 font-medium text-slate-300 hover:bg-white/[0.08] hover:text-white transition-colors"
+            className="gap-1.5 border border-white/10 bg-white/[0.04] px-2.5 font-medium text-muted-foreground hover:bg-white/[0.08] hover:text-white transition-colors"
           >
             <FolderOpen className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Projects</span>
             {savedProjects.length > 0 && (
-              <span className="ml-0.5 rounded-full bg-white/10 px-1.5 py-0.5 text-caption text-slate-300">
+              <span className="ml-0.5 rounded-full bg-white/10 px-1.5 py-0.5 text-caption text-muted-foreground">
                 {savedProjects.length}
               </span>
             )}
@@ -207,7 +207,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
                 onKeyDown={handleKeyDown}
                 className="h-7 w-48 border-white/10 bg-white/5 px-2 py-0 text-center text-sm text-white focus-visible:ring-white/20"
               />
-              <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-300 hover:text-white" onClick={commit}>
+              <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-white" onClick={commit}>
                 <Check className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -227,18 +227,18 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
         <div className="relative flex items-center gap-2">
           {renderStatusChip('GitHub', integrations.github.status, Github)}
           {renderStatusChip('Supabase', integrations.supabase.status, Database)}
-          <span className="hidden md:flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-label font-medium text-emerald-300">
+          <span className="hidden md:flex items-center gap-1.5 rounded-full border border-success/20 bg-success/10 px-2 py-0.5 text-label font-medium text-success">
             {primaryModelLabel}
             {additionalModels > 0 ? ` +${additionalModels}` : ''}
           </span>
-          <span className="hidden sm:flex items-center gap-1.5 rounded-full border border-sky-400/20 bg-sky-400/10 px-2.5 py-0.5 text-xs font-medium text-sky-200 backdrop-blur-sm">
-            <span className="h-1.5 w-1.5 rounded-full bg-sky-300 shrink-0" />
+          <span className="hidden sm:flex items-center gap-1.5 rounded-full border border-info/20 bg-info/10 px-2.5 py-0.5 text-xs font-medium text-info backdrop-blur-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-info shrink-0" />
             {creditsAvailable} credits
           </span>
           {creditsAvailable === 0 && (
             <Link
               to="/pricing#credit-packs"
-              className="hidden lg:inline-flex h-7 items-center rounded-md border border-amber-300/25 bg-amber-300/10 px-2 text-xs font-medium text-amber-100 hover:bg-amber-300/15"
+              className="hidden lg:inline-flex h-7 items-center rounded-md border border-warning/25 bg-warning/10 px-2 text-xs font-medium text-warning hover:bg-warning/15"
             >
               Buy Credits
             </Link>
@@ -274,10 +274,10 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
 
       {/* Projects drawer */}
       <Sheet open={projectsOpen} onOpenChange={setProjectsOpen}>
-        <SheetContent side="left" className="dark mvp-surface w-[320px] sm:w-[380px] p-0 bg-background border-white/10 text-slate-100">
+        <SheetContent side="left" className="dark mvp-surface w-[320px] sm:w-[380px] p-0 bg-background border-white/10 text-muted-foreground">
           <SheetHeader className="px-5 pt-5 pb-4 border-b border-white/8">
             <SheetTitle className="text-white text-sm font-semibold">Your Projects</SheetTitle>
-            <SheetDescription className="text-slate-400 text-xs">
+            <SheetDescription className="text-muted-foreground text-xs">
               Click a project to load it. Your current project auto-saves every 30 seconds.
             </SheetDescription>
           </SheetHeader>
@@ -285,7 +285,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
             <div className="p-4 space-y-2">
               {savedProjects.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-white/10 p-6 text-center">
-                  <p className="text-xs text-slate-500">No saved projects yet. Build something and it will appear here.</p>
+                  <p className="text-xs text-muted-foreground">No saved projects yet. Build something and it will appear here.</p>
                 </div>
               ) : (
                 savedProjects
@@ -300,13 +300,13 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
                       <div className="flex items-center justify-between gap-2">
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-white truncate">{project.title || 'Untitled Project'}</p>
-                          <div className="mt-1 flex items-center gap-2 text-label text-slate-500">
+                          <div className="mt-1 flex items-center gap-2 text-label text-muted-foreground">
                             <Clock className="h-3 w-3 shrink-0" />
                             <span>{formatRelativeTime(project.updated_at)}</span>
                             {project.deployment_url && (
                               <>
                                 <span>·</span>
-                                <span className="text-emerald-400">Deployed</span>
+                                <span className="text-success">Deployed</span>
                               </>
                             )}
                             {project.project_files && project.project_files.length > 0 && (
@@ -317,7 +317,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
                             )}
                           </div>
                         </div>
-                        <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-slate-400 shrink-0 transition-colors" />
+                        <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-muted-foreground shrink-0 transition-colors" />
                       </div>
                     </button>
                   ))
@@ -329,19 +329,19 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
 
       {/* Confirm "New" when there's an active project */}
       <AlertDialog open={confirmNewOpen} onOpenChange={setConfirmNewOpen}>
-        <AlertDialogContent className="dark mvp-surface bg-background border-white/10 text-slate-100">
+        <AlertDialogContent className="dark mvp-surface bg-background border-white/10 text-muted-foreground">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white">Start a new project?</AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-400">
+            <AlertDialogDescription className="text-muted-foreground">
               Your current project is auto-saved. It will appear in your Projects list and you can come back to it any time.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white">
+            <AlertDialogCancel className="border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white">
               Keep working
             </AlertDialogCancel>
             <AlertDialogAction
-              className="bg-white text-slate-950 hover:bg-slate-100"
+              className="bg-white text-foreground hover:bg-muted"
               onClick={() => { onNewProject(); setConfirmNewOpen(false); }}
             >
               New project

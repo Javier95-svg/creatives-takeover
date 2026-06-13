@@ -116,7 +116,7 @@ export default function SharedBizMapOutputPage() {
   const description = record ? getBizMapShareDescription(record) : 'Shared BizMap AI output from Creatives Takeover.';
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.08),transparent_35%),linear-gradient(180deg,rgba(248,250,252,0.98),rgba(241,245,249,0.95))] text-slate-950 dark:bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.14),transparent_32%),linear-gradient(180deg,rgba(2,6,23,1),rgba(3,7,18,0.98))] dark:text-white">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.08),transparent_35%),linear-gradient(180deg,rgba(248,250,252,0.98),rgba(241,245,249,0.95))] text-foreground dark:bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.14),transparent_32%),linear-gradient(180deg,rgba(2,6,23,1),rgba(3,7,18,0.98))] dark:text-white">
       <Helmet>
         <title>{record ? `${record.title} | Creatives Takeover` : 'Shared BizMap Output | Creatives Takeover'}</title>
         <meta name="description" content={description} />
@@ -135,7 +135,7 @@ export default function SharedBizMapOutputPage() {
 
       <main className="mx-auto flex min-h-screen max-w-5xl flex-col px-4 py-10 sm:px-6 lg:px-8">
         <div className="mb-8 flex items-center justify-between gap-4">
-          <Link to="/" className="text-sm font-semibold tracking-[0.18em] text-slate-600 uppercase dark:text-slate-300">
+          <Link to="/" className="text-sm font-semibold tracking-[0.18em] text-muted-foreground uppercase dark:text-muted-foreground">
             Creatives Takeover
           </Link>
           <Button asChild onClick={handleCTA} className="gap-2">
@@ -155,7 +155,7 @@ export default function SharedBizMapOutputPage() {
         ) : !record ? (
           <div className="flex flex-1 items-center justify-center">
             <div className="max-w-lg rounded-5xl border border-border/60 bg-background/80 p-8 text-center shadow-sm">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Share link unavailable</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground dark:text-muted-foreground">Share link unavailable</p>
               <h1 className="mt-4 text-3xl font-semibold">This BizMap output is no longer public.</h1>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                 The founder may have disabled the share link or replaced it with a newer version.
@@ -346,13 +346,13 @@ export default function SharedBizMapOutputPage() {
             ) : null}
 
             <section className="rounded-5xl border border-border/60 bg-slate-950 px-6 py-8 text-white shadow-sm dark:bg-slate-900">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-300">Build your own</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-info">Build your own</p>
               <h2 className="mt-3 text-2xl font-semibold">Turn your idea into a real founder output.</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-300">
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
                 Creatives Takeover helps founders generate ICPs, validation reports, GTM strategies, and the next action to move through BizMap AI with real momentum.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <Button asChild onClick={handleCTA} className="gap-2 bg-white text-slate-950 hover:bg-slate-100">
+                <Button asChild onClick={handleCTA} className="gap-2 bg-white text-foreground hover:bg-muted">
                   <Link to={`/signup?returnTo=${encodeURIComponent('/bizmap-ai')}&shared_output=${encodeURIComponent(record.slug)}`}>
                     Start free
                     <ArrowRight className="h-4 w-4" />

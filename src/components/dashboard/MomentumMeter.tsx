@@ -72,9 +72,9 @@ export const MomentumMeter = ({ userId, stats }: MomentumMeterProps) => {
   };
 
   const insights = [
-    { icon: Target, label: 'Active Goals', value: stats.activeSprints, color: 'text-blue-500' },
-    { icon: CheckCircle2, label: 'Sessions Done', value: stats.completedSessions, color: 'text-green-500' },
-    { icon: TrendingUp, label: 'Day Streak', value: stats.currentStreak, color: 'text-orange-500' },
+    { icon: Target, label: 'Active Goals', value: stats.activeSprints, color: 'text-info' },
+    { icon: CheckCircle2, label: 'Sessions Done', value: stats.completedSessions, color: 'text-success' },
+    { icon: TrendingUp, label: 'Day Streak', value: stats.currentStreak, color: 'text-warning' },
   ];
 
   return (

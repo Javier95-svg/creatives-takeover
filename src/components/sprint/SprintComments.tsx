@@ -59,10 +59,10 @@ const SprintComments: React.FC<SprintCommentsProps> = ({
 
   const getCommentTypeColor = (type: SprintComment['comment_type']) => {
     switch (type) {
-      case 'nudge': return 'text-orange-600 bg-orange-50';
-      case 'celebration': return 'text-green-600 bg-green-50';
-      case 'feedback': return 'text-blue-600 bg-blue-50';
-      default: return 'text-gray-600 bg-gray-50';
+      case 'nudge': return 'text-warning bg-warning-subtle';
+      case 'celebration': return 'text-success bg-success-subtle';
+      case 'feedback': return 'text-info bg-info-subtle';
+      default: return 'text-muted-foreground bg-muted';
     }
   };
 

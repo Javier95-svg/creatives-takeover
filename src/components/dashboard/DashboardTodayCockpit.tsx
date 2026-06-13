@@ -45,11 +45,11 @@ function StatTile({
 }) {
   const accentClass =
     accent === "amber"
-      ? "text-amber-500"
+      ? "text-warning"
       : accent === "rose"
-        ? "text-rose-500"
+        ? "text-destructive"
         : accent === "emerald"
-          ? "text-emerald-500"
+          ? "text-success"
           : "text-primary";
   return (
     <div className="rounded-xl border border-border/60 bg-background/80 p-3">
@@ -196,7 +196,7 @@ export default function DashboardTodayCockpit() {
                 </p>
               </div>
               {dailyMission.mission.completed ? (
-                <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-success/25 bg-success/10 px-3 py-1.5 text-xs font-semibold text-success dark:text-success">
                   <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
                   Done
                 </span>
@@ -267,7 +267,7 @@ export default function DashboardTodayCockpit() {
                   ))}
                 </ul>
               ) : (
-                <div className="flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2.5 text-sm text-emerald-700 dark:text-emerald-300">
+                <div className="flex items-center gap-2 rounded-lg border border-success/20 bg-success/10 px-3 py-2.5 text-sm text-success dark:text-success">
                   <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
                   All habits done for today. Nice.
                 </div>
@@ -289,7 +289,7 @@ export default function DashboardTodayCockpit() {
               {overdueTasks.length > 0 ? (
                 <Link
                   to="/dashboard/tasks"
-                  className="mb-2 flex items-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm font-medium text-rose-700 transition-colors hover:bg-rose-500/15 dark:text-rose-300"
+                  className="mb-2 flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/15 dark:text-destructive"
                 >
                   <AlertTriangle className="h-4 w-4" aria-hidden="true" />
                   {overdueTasks.length} overdue — clear {overdueTasks.length === 1 ? "it" : "them"} first
@@ -313,7 +313,7 @@ export default function DashboardTodayCockpit() {
                 </ul>
               ) : overdueTasks.length === 0 ? (
                 <div className="flex items-center gap-2 rounded-lg border border-border/50 bg-background/80 px-3 py-2.5 text-sm text-muted-foreground">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500" aria-hidden="true" />
+                  <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />
                   Nothing due today. Plan your next move.
                 </div>
               ) : null}

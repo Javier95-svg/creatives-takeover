@@ -7,14 +7,14 @@ import { RevealGroup, ScrollReveal } from "@/components/animations/ScrollReveal"
 const ServicesNavigation = () => {
   const navigationCards = [
     {
-      icon: <Home className="w-8 h-8 text-blue-500" />,
+      icon: <Home className="w-8 h-8 text-info" />,
       title: "Back to Home",
       description: "Explore our platform overview and company information",
       link: "/",
       cta: "Go Home"
     },
     {
-      icon: <DollarSign className="w-8 h-8 text-green-500" />,
+      icon: <DollarSign className="w-8 h-8 text-success" />,
       title: "View Pricing",
       description: "Compare subscription plans and find the perfect fit for your needs",
       link: "/pricing",

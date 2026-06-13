@@ -189,7 +189,7 @@ const BlogPost = () => {
                 variant="ghost" 
                 size="sm" 
                 onClick={() => shareOnSocial('twitter')}
-                className="text-blue-400 hover:text-blue-300"
+                className="text-info hover:text-info"
               >
                 Twitter
               </Button>
@@ -197,7 +197,7 @@ const BlogPost = () => {
                 variant="ghost" 
                 size="sm" 
                 onClick={() => shareOnSocial('linkedin')}
-                className="text-blue-600 hover:text-blue-500"
+                className="text-info hover:text-info"
               >
                 LinkedIn
               </Button>
@@ -205,7 +205,7 @@ const BlogPost = () => {
                 variant="ghost" 
                 size="sm" 
                 onClick={() => shareOnSocial('facebook')}
-                className="text-blue-700 hover:text-blue-600"
+                className="text-info hover:text-info"
               >
                 Facebook
               </Button>

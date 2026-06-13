@@ -583,16 +583,16 @@ const FundraisingReadinessToolkit = () => {
         {aiAnalysis && (
           <Card className={cn(
             "border-2",
-            aiAnalysis.verdict === 'Ready' ? "border-green-500/50 bg-green-500/5" : 
-            aiAnalysis.verdict === 'Almost Ready' ? "border-yellow-500/50 bg-yellow-500/5" :
-            "border-orange-500/50 bg-orange-500/5"
+            aiAnalysis.verdict === 'Ready' ? "border-success/50 bg-success/5" : 
+            aiAnalysis.verdict === 'Almost Ready' ? "border-warning/50 bg-warning/5" :
+            "border-warning/50 bg-warning/5"
           )}>
             <CardHeader>
               <div className="flex items-center gap-3">
                 {aiAnalysis.verdict === 'Ready' ? (
-                  <CheckCircle2 className="h-6 w-6 text-green-500" />
+                  <CheckCircle2 className="h-6 w-6 text-success" />
                 ) : (
-                  <AlertCircle className="h-6 w-6 text-orange-500" />
+                  <AlertCircle className="h-6 w-6 text-warning" />
                 )}
                 <div>
                   <CardTitle className="text-2xl">
@@ -610,9 +610,9 @@ const FundraisingReadinessToolkit = () => {
               {/* Summary */}
               <div className={cn(
                 "p-4 rounded-lg",
-                aiAnalysis.verdict === 'Ready' ? "bg-green-500/10 border border-green-500/20" : 
-                aiAnalysis.verdict === 'Almost Ready' ? "bg-yellow-500/10 border border-yellow-500/20" :
-                "bg-orange-500/10 border border-orange-500/20"
+                aiAnalysis.verdict === 'Ready' ? "bg-success/10 border border-success/20" : 
+                aiAnalysis.verdict === 'Almost Ready' ? "bg-warning/10 border border-warning/20" :
+                "bg-warning/10 border border-warning/20"
               )}>
                 <p className="text-sm font-medium mb-2">Summary</p>
                 <p className="text-sm text-muted-foreground">{aiAnalysis.summary}</p>
@@ -622,13 +622,13 @@ const FundraisingReadinessToolkit = () => {
               {aiAnalysis.strengths && aiAnalysis.strengths.length > 0 && (
                 <div className="space-y-3">
                   <h4 className="font-semibold text-sm flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <CheckCircle2 className="h-4 w-4 text-success" />
                     Strengths
                   </h4>
                   <ul className="space-y-2">
                     {aiAnalysis.strengths.map((strength, index) => (
                       <li key={index} className="flex gap-3 text-sm">
-                        <span className="text-green-500 mt-1">✓</span>
+                        <span className="text-success mt-1">✓</span>
                         <span className="text-muted-foreground">{strength}</span>
                       </li>
                     ))}
@@ -640,13 +640,13 @@ const FundraisingReadinessToolkit = () => {
               {aiAnalysis.critical_gaps && aiAnalysis.critical_gaps.length > 0 && (
                 <div className="space-y-3">
                   <h4 className="font-semibold text-sm flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4 text-orange-500" />
+                    <AlertCircle className="h-4 w-4 text-warning" />
                     Critical Gaps
                   </h4>
                   <ul className="space-y-2">
                     {aiAnalysis.critical_gaps.map((gap, index) => (
                       <li key={index} className="flex gap-3 text-sm">
-                        <span className="text-orange-500 mt-1">•</span>
+                        <span className="text-warning mt-1">•</span>
                         <span className="text-muted-foreground">{gap}</span>
                       </li>
                     ))}

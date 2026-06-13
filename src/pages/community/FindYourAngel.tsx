@@ -830,7 +830,7 @@ const FindYourAngel = () => {
                         </p>
                         <Button
                           size="lg"
-                          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                          className="bg-gradient-to-r from-info to-purple-600 hover:from-info hover:to-purple-700"
                           onClick={() => {
                             trackUpgradeClicked({
                               from_plan: normalizePlanId(currentTier),

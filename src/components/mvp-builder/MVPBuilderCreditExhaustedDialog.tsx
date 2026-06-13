@@ -71,7 +71,7 @@ export const MVPBuilderCreditExhaustedDialog = ({
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Coins className="h-5 w-5 text-amber-500" />
+            <Coins className="h-5 w-5 text-warning" />
             Keep building your MVP
           </DialogTitle>
           <DialogDescription>

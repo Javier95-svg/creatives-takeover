@@ -27,49 +27,49 @@ const creditBreakdown: {
       description: "Free on every plan, so you can define your ideal customer profile without spending credits.",
       badge: "FREE",
       badgeVariant: "outline",
-      badgeClassName: "bg-green-50 dark:bg-green-950/30",
+      badgeClassName: "bg-success-subtle dark:bg-success/30",
     },
     {
       name: "Demo Studio",
       description: `Unlocked on every plan. Publishing or generating a waitlist costs ${getCreditCostForPlan('WAITLIST_GENERATION', 'rookie')} credits on Rookie and ${CREDIT_COSTS.WAITLIST_GENERATION} credits on paid plans.`,
       badge: `${getCreditCostForPlan('WAITLIST_GENERATION', 'rookie')} / ${CREDIT_COSTS.WAITLIST_GENERATION} credits`,
       badgeVariant: "outline",
-      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
+      badgeClassName: "bg-info-subtle dark:bg-info/30",
     },
     {
       name: "Product-Market Fit Lab",
       description: `Preview only on Rookie. Starter, Rising, and Pro unlock PMF analysis at ${CREDIT_COSTS.PMF_ANALYSIS} credits per full analysis and ${CREDIT_COSTS.PMF_SCORING} credits per evidence score.`,
       badge: "Unlocked on Starter+",
       badgeVariant: "outline",
-      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
+      badgeClassName: "bg-info-subtle dark:bg-info/30",
     },
     {
       name: "MVP Builder",
       description: `Available on every plan using the user's regular account credit balance: ${CREDIT_COSTS.APP_BUILDER_GENERATE} credits for a React app, ${CREDIT_COSTS.APP_BUILDER_REFINE} for targeted edits, ${CREDIT_COSTS.APP_BUILDER_DEBUG} for bug fixes, and ${CREDIT_COSTS.APP_BUILDER_DEPLOY} to deploy.`,
       badge: "All plans",
       badgeVariant: "outline",
-      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
+      badgeClassName: "bg-info-subtle dark:bg-info/30",
     },
     {
       name: "Tech Stack Builder",
       description: `Preview only on Rookie and Starter. Rising and Pro unlock it at ${CREDIT_COSTS.TECH_STACK_GENERATION} credits per generation.`,
       badge: "Unlocked on Rising+",
       badgeVariant: "outline",
-      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
+      badgeClassName: "bg-info-subtle dark:bg-info/30",
     },
     {
       name: "GTM Strategist",
       description: `Preview only on Rookie and Starter. Rising and Pro unlock it at ${CREDIT_COSTS.GTM_ANALYSIS} credits per strategy.`,
       badge: "Unlocked on Rising+",
       badgeVariant: "outline",
-      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
+      badgeClassName: "bg-info-subtle dark:bg-info/30",
     },
     {
       name: "Directories",
       description: "Preview only on Rookie and Starter. Included on Rising and Pro.",
       badge: "Included on Rising+",
       badgeVariant: "outline",
-      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
+      badgeClassName: "bg-info-subtle dark:bg-info/30",
     },
   ],
   insighta: [
@@ -78,35 +78,35 @@ const creditBreakdown: {
       description: "Rookie can browse only. Starter gets 2 profile views/monthly, Rising 10 profile views/monthly, and Pro unlimited profile views.",
       badge: "View limits",
       badgeVariant: "outline",
-      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
+      badgeClassName: "bg-info-subtle dark:bg-info/30",
     },
     {
       name: "Accelerator Hunt",
       description: "Rookie can browse only. Starter gets 2 profile views/monthly, Rising 10 profile views/monthly, and Pro unlimited profile views.",
       badge: "View limits",
       badgeVariant: "outline",
-      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
+      badgeClassName: "bg-info-subtle dark:bg-info/30",
     },
     {
       name: "Email Templates",
       description: "Starter, Rising, and Pro have full plan-gated access. Rookie does not include it.",
       badge: "Included on Starter+",
       badgeVariant: "outline",
-      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
+      badgeClassName: "bg-info-subtle dark:bg-info/30",
     },
     {
       name: "Pitch Deck Analyzer",
       description: `Unlocked on Rising and Pro at ${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits per analysis. Rookie and Starter do not include it.`,
       badge: "Unlocked on Rising+",
       badgeVariant: "outline",
-      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
+      badgeClassName: "bg-info-subtle dark:bg-info/30",
     },
     {
       name: "Insighta Test",
       description: "Included on every plan.",
       badge: "Included",
       badgeVariant: "outline",
-      badgeClassName: "bg-green-50 dark:bg-green-950/30",
+      badgeClassName: "bg-success-subtle dark:bg-success/30",
     },
   ],
   community: [
@@ -115,21 +115,21 @@ const creditBreakdown: {
       description: "Available on every plan with no monthly cap. Each confirmed booking costs 10 credits.",
       badge: "10 credits",
       badgeVariant: "outline",
-      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
+      badgeClassName: "bg-info-subtle dark:bg-info/30",
     },
     {
       name: "Find a Co-Founder Posting",
       description: "Rookie gets 1 post/monthly, Starter 2, and Rising plus Pro are unlimited.",
       badge: "Monthly quotas",
       badgeVariant: "outline",
-      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
+      badgeClassName: "bg-info-subtle dark:bg-info/30",
     },
     {
       name: "Find Your Angel",
       description: "Pro only. Rookie, Starter, and Rising do not include investor access here.",
       badge: "PRO ONLY",
       badgeVariant: "outline",
-      badgeClassName: "bg-red-50 dark:bg-red-950/30",
+      badgeClassName: "bg-destructive-subtle dark:bg-destructive/30",
     },
   ],
 };
@@ -166,7 +166,7 @@ const SubscriptionFeatures = () => {
         {/* Credit Breakdown Grid - wider cards for readability */}
         <RevealGroup className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start" variant="card">
           {/* BizMap AI Card */}
-          <Card className="rounded-2xl border border-slate-300/60 dark:border-slate-500/40 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+          <Card className="rounded-2xl border border-border/60 dark:border-border/40 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
             <CardHeader>
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 rounded-full bg-primary/10">
@@ -191,7 +191,7 @@ const SubscriptionFeatures = () => {
           </Card>
 
           {/* Insighta Card */}
-          <Card className="rounded-2xl border border-slate-300/60 dark:border-slate-500/40 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+          <Card className="rounded-2xl border border-border/60 dark:border-border/40 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
             <CardHeader>
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 rounded-full bg-primary/10">
@@ -216,7 +216,7 @@ const SubscriptionFeatures = () => {
           </Card>
 
           {/* Community Card */}
-          <Card className="rounded-2xl border border-slate-300/60 dark:border-slate-500/40 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+          <Card className="rounded-2xl border border-border/60 dark:border-border/40 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
             <CardHeader>
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 rounded-full bg-primary/10">

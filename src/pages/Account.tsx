@@ -721,11 +721,11 @@ const Account = () => {
           {/* Centered Hero Section */}
           <div className="text-center py-12 space-y-4">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight">
-              <span className="bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-white via-info to-purple-200 bg-clip-text text-transparent">
                 My Profile
               </span>
             </h1>
-            <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               Manage your account information and preferences.
             </p>
           </div>
@@ -1288,7 +1288,7 @@ const Account = () => {
               <CardContent className="space-y-4">
                 {quizData.completedAt && !quizEditMode && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                    <CheckCircle2 className="w-4 h-4 text-success" />
                     Completed on {new Date(quizData.completedAt).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long',

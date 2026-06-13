@@ -1153,7 +1153,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
             </Avatar>
             {/* Presence indicator */}
             {presenceData[firstMessage.sender_id]?.status === 'online' && (
-              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background" />
+              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-success rounded-full border-2 border-background" />
             )}
           </div>
         )}
@@ -1250,7 +1250,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	                      if (receiptState === 'read') {
                         return (
                           <span className="text-xs flex items-center" title="Read">
-                            <CheckCheck className="h-3 w-3 text-blue-500" />
+                            <CheckCheck className="h-3 w-3 text-info" />
                           </span>
                         );
                       }
@@ -1481,7 +1481,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                         {(() => {
                           const otherParticipantId = getOtherParticipant(conversation);
                           return otherParticipantId && presenceData[otherParticipantId]?.status === 'online' && (
-                            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background" />
+                            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-success rounded-full border-2 border-background" />
                           );
                         })()}
                       </div>
@@ -1595,7 +1595,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	                          </AvatarFallback>
 	                        </Avatar>
 	                        {otherParticipantId && presenceData[otherParticipantId]?.status === 'online' && (
-	                          <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background" />
+	                          <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-success rounded-full border-2 border-background" />
 	                        )}
 	                      </div>
 	                      <div className="min-w-0">

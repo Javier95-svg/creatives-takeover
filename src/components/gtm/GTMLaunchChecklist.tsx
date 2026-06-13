@@ -12,7 +12,7 @@ type Priority = 'must' | 'should' | 'nice';
 
 const PRIORITY_CONFIG: Record<Priority, { label: string; className: string }> = {
   must: { label: 'Must', className: 'bg-destructive/10 text-destructive border-destructive/20' },
-  should: { label: 'Should', className: 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800' },
+  should: { label: 'Should', className: 'bg-warning-subtle text-warning border-warning dark:bg-warning/30 dark:text-warning dark:border-warning' },
   nice: { label: 'Nice', className: 'bg-muted text-muted-foreground border-border' },
 };
 
@@ -73,7 +73,7 @@ const GTMLaunchChecklist: React.FC<GTMLaunchChecklistProps> = ({ checklist }) =>
       </div>
       <div className="flex items-center gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5"><Badge variant="outline" className="text-caption py-0 bg-destructive/10 text-destructive border-destructive/20">Must</Badge> Required</span>
-        <span className="flex items-center gap-1.5"><Badge variant="outline" className="text-caption py-0 bg-yellow-100 text-yellow-700 border-yellow-200">Should</Badge> Recommended</span>
+        <span className="flex items-center gap-1.5"><Badge variant="outline" className="text-caption py-0 bg-warning-subtle text-warning border-warning">Should</Badge> Recommended</span>
         <span className="flex items-center gap-1.5"><Badge variant="outline" className="text-caption py-0">Nice</Badge> Optional</span>
       </div>
       <div className="space-y-6">

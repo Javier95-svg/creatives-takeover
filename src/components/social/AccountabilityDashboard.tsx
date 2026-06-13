@@ -97,7 +97,7 @@ export const AccountabilityDashboard = () => {
                 <p className="text-sm font-medium text-muted-foreground">Pending Requests</p>
                 <p className="text-2xl font-bold">{stats.pendingRequests}</p>
               </div>
-              <UserPlus className="h-8 w-8 text-orange-500" />
+              <UserPlus className="h-8 w-8 text-warning" />
             </div>
           </CardContent>
         </Card>
@@ -109,7 +109,7 @@ export const AccountabilityDashboard = () => {
                 <p className="text-sm font-medium text-muted-foreground">Unread Nudges</p>
                 <p className="text-2xl font-bold">{stats.unreadNudges}</p>
               </div>
-              <Bell className="h-8 w-8 text-red-500" />
+              <Bell className="h-8 w-8 text-destructive" />
             </div>
           </CardContent>
         </Card>
@@ -121,7 +121,7 @@ export const AccountabilityDashboard = () => {
                 <p className="text-sm font-medium text-muted-foreground">Total Nudges</p>
                 <p className="text-2xl font-bold">{stats.totalNudges}</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-green-500" />
+              <TrendingUp className="h-8 w-8 text-success" />
             </div>
           </CardContent>
         </Card>
@@ -156,7 +156,7 @@ export const AccountabilityDashboard = () => {
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
               <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
                 <div className="mb-2 flex items-center gap-2 text-label font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                  <Flame className="h-3.5 w-3.5 text-orange-500" />
+                  <Flame className="h-3.5 w-3.5 text-warning" />
                   Consistency
                 </div>
                 <p className="text-lg font-semibold text-foreground">{currentStreak} day streak</p>
@@ -172,7 +172,7 @@ export const AccountabilityDashboard = () => {
               </div>
               <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
                 <div className="mb-2 flex items-center gap-2 text-label font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                  <Bell className="h-3.5 w-3.5 text-red-500" />
+                  <Bell className="h-3.5 w-3.5 text-destructive" />
                   Pressure
                 </div>
                 <p className="text-lg font-semibold text-foreground">{recentNudges.length} live nudges</p>

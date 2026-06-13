@@ -155,7 +155,7 @@ export const CommunityCheckInsFeed: React.FC<CommunityCheckInsFeedProps> = ({
                       
                       {/* Completed Tasks */}
                       {checkIn.completed_tasks.length > 0 && (
-                        <div className="flex items-center space-x-1 text-green-600">
+                        <div className="flex items-center space-x-1 text-success">
                           <span>✓</span>
                           <span>{checkIn.completed_tasks.length} tasks</span>
                         </div>
@@ -188,8 +188,8 @@ export const CommunityCheckInsFeed: React.FC<CommunityCheckInsFeedProps> = ({
                     
                     {/* Blockers */}
                     {checkIn.blockers && (
-                      <div className="mt-3 p-2 bg-orange-50 border-l-2 border-orange-200 rounded">
-                        <p className="text-xs text-orange-800">
+                      <div className="mt-3 p-2 bg-warning-subtle border-l-2 border-warning rounded">
+                        <p className="text-xs text-warning">
                           <strong>Blocker:</strong> {checkIn.blockers}
                         </p>
                       </div>

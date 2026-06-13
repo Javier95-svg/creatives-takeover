@@ -226,7 +226,7 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
             className={cn(
               "h-3.5 w-3.5",
               star <= Math.round(rating)
-                ? "fill-yellow-400 text-yellow-400"
+                ? "fill-warning text-warning"
                 : "text-muted-foreground/20"
             )}
           />
@@ -386,7 +386,7 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
                     href={mentor.linkedin_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex h-5 w-5 items-center justify-center text-muted-foreground transition-colors hover:text-blue-600 hover:scale-110 sm:h-auto sm:w-auto"
+                    className="flex h-5 w-5 items-center justify-center text-muted-foreground transition-colors hover:text-info hover:scale-110 sm:h-auto sm:w-auto"
                     aria-label="LinkedIn"
                   >
                     <Linkedin className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
@@ -443,7 +443,7 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
             <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
               {averageRating > 0 && (
                 <div className="flex items-center gap-1">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  <Star className="h-4 w-4 fill-warning text-warning" />
                   <span>{averageRating.toFixed(1)}</span>
                 </div>
               )}

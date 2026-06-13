@@ -65,7 +65,7 @@ export function CreditCostNotice({
     <div
       className={cn(
         "flex items-center gap-2 rounded-lg border border-border/60 bg-muted/45 px-3 py-2 text-sm text-muted-foreground",
-        quote.status === "locked" && "border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-100",
+        quote.status === "locked" && "border-warning/30 bg-warning/10 text-warning dark:text-warning",
         className
       )}
     >

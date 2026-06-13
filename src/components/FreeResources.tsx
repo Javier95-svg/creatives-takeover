@@ -9,8 +9,8 @@ const resources = [
     description: "Complete 47-page guide to building your AI-powered empire",
     type: "PDF Guide",
     downloads: "12,847",
-    color: "text-blue-400",
-    bgGradient: "from-blue-500/10 to-blue-600/5"
+    color: "text-info",
+    bgGradient: "from-info/10 to-info/5"
   },
   {
     icon: Video,
@@ -27,8 +27,8 @@ const resources = [
     description: "Templates, checklists, and frameworks for AI implementation",
     type: "Resource Kit",
     downloads: "15,203",
-    color: "text-green-400",
-    bgGradient: "from-green-500/10 to-green-600/5"
+    color: "text-success",
+    bgGradient: "from-success/10 to-success/5"
   }
 ];
 

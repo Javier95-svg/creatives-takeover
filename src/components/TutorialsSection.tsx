@@ -17,7 +17,7 @@ import {
 const TutorialsSection = () => {
   const tutorialCategories = [
     {
-      icon: <Palette className="w-6 h-6 text-blue-500" />,
+      icon: <Palette className="w-6 h-6 text-info" />,
       name: "Design Basics",
       count: 45,
       color: "blue"
@@ -29,13 +29,13 @@ const TutorialsSection = () => {
       color: "purple"
     },
     {
-      icon: <Camera className="w-6 h-6 text-green-500" />,
+      icon: <Camera className="w-6 h-6 text-success" />,
       name: "Photography",
       count: 29,
       color: "green"
     },
     {
-      icon: <PenTool className="w-6 h-6 text-orange-500" />,
+      icon: <PenTool className="w-6 h-6 text-warning" />,
       name: "Illustration",
       count: 34,
       color: "orange"
@@ -119,10 +119,10 @@ const TutorialsSection = () => {
 
   const getLevelColor = (level: string) => {
     switch (level) {
-      case "Beginner": return "bg-green-500/10 text-green-600 border-green-500/20";
-      case "Intermediate": return "bg-yellow-500/10 text-yellow-600 border-yellow-500/20";
-      case "Advanced": return "bg-red-500/10 text-red-600 border-red-500/20";
-      default: return "bg-gray-500/10 text-gray-600 border-gray-500/20";
+      case "Beginner": return "bg-success/10 text-success border-success/20";
+      case "Intermediate": return "bg-warning/10 text-warning border-warning/20";
+      case "Advanced": return "bg-destructive/10 text-destructive border-destructive/20";
+      default: return "bg-gray-500/10 text-muted-foreground border-border/20";
     }
   };
 

@@ -19,20 +19,20 @@ export function ContextAwareBanner() {
   // Determine message based on context
   let message = '';
   let icon = <TrendingUp className="h-4 w-4" />;
-  let color = 'bg-blue-50 border-blue-200 text-blue-800';
+  let color = 'bg-info-subtle border-info text-info';
 
   if (insights.criticalBlockers.length > 0) {
     message = `⚠️ You have ${insights.criticalBlockers.length} critical blocker(s) that need attention.`;
     icon = <AlertCircle className="h-4 w-4" />;
-    color = 'bg-red-50 border-red-200 text-red-800';
+    color = 'bg-destructive-subtle border-destructive text-destructive';
   } else if (progressMetrics.onTrack) {
     message = `🎯 Great! You're on Day ${progressMetrics.currentDay}/30 and on track with ${progressMetrics.completedMilestones.length} milestones completed.`;
     icon = <CheckCircle2 className="h-4 w-4" />;
-    color = 'bg-green-50 border-green-200 text-green-800';
+    color = 'bg-success-subtle border-success text-success';
   } else if (progressMetrics.currentDay > 0) {
     message = `📊 Day ${progressMetrics.currentDay}/30 - Let's get you back on track! ${progressMetrics.completedMilestones.length} milestones done.`;
     icon = <TrendingUp className="h-4 w-4" />;
-    color = 'bg-yellow-50 border-yellow-200 text-yellow-800';
+    color = 'bg-warning-subtle border-warning text-warning';
   } else {
     message = `👋 Welcome back! Let's continue building your business plan.`;
   }

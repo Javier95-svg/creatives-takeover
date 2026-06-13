@@ -17,7 +17,7 @@ const ICPPositioning: React.FC<ICPPositioningProps> = ({ positioning }) => {
     <div className="space-y-6">
       <Card className="overflow-hidden rounded-4xl border border-primary/20 bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.12),transparent_42%),rgba(14,165,233,0.05)] shadow-[0_20px_60px_-36px_rgba(14,165,233,0.42)]">
         <CardHeader className="space-y-5 pb-0">
-          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-sky-500/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700 dark:bg-slate-950/60 dark:text-sky-300">
+          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-info/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-info dark:bg-slate-950/60 dark:text-info">
             <Megaphone className="h-3.5 w-3.5" />
             Positioning system
           </div>
@@ -47,8 +47,8 @@ const ICPPositioning: React.FC<ICPPositioningProps> = ({ positioning }) => {
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Differentiators</p>
             <div className="space-y-2">
               {differentiators.map((item, index) => (
-                <div key={index} className="flex items-start gap-3 rounded-2.5xl border border-emerald-200/60 bg-emerald-50/80 p-4 dark:border-emerald-900/40 dark:bg-emerald-900/10">
-                  <Shield className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" />
+                <div key={index} className="flex items-start gap-3 rounded-2.5xl border border-success/60 bg-success-subtle p-4 dark:border-success/40 dark:bg-success/10">
+                  <Shield className="mt-0.5 h-4 w-4 flex-shrink-0 text-success" />
                   <span className="text-sm">{item}</span>
                 </div>
               ))}

@@ -10,9 +10,9 @@ interface ICPDecisionSummaryProps {
 }
 
 const confidenceStyles: Record<ICPAnalysis['recommendation']['confidence'], string> = {
-  High: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-  Medium: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-  Low: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  High: 'bg-success-subtle text-success dark:bg-success/30 dark:text-success',
+  Medium: 'bg-warning-subtle text-warning dark:bg-warning/30 dark:text-warning',
+  Low: 'bg-destructive-subtle text-destructive dark:bg-destructive/30 dark:text-destructive',
 };
 
 const ICPDecisionSummary: React.FC<ICPDecisionSummaryProps> = ({ recommendation }) => {
@@ -24,7 +24,7 @@ const ICPDecisionSummary: React.FC<ICPDecisionSummaryProps> = ({ recommendation 
     <div className="space-y-6">
       <Card className="overflow-hidden rounded-4xl border border-primary/20 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_42%),rgba(14,165,233,0.06)] shadow-[0_20px_60px_-36px_rgba(14,165,233,0.55)]">
         <CardHeader className="space-y-5 pb-0">
-          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-sky-500/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700 dark:bg-slate-950/60 dark:text-sky-300">
+          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-info/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-info dark:bg-slate-950/60 dark:text-info">
             <Compass className="h-3.5 w-3.5" />
             Recommended path
           </div>
@@ -89,7 +89,7 @@ const ICPDecisionSummary: React.FC<ICPDecisionSummaryProps> = ({ recommendation 
             <ul className="space-y-2">
               {evidenceSignals.map((signal, index) => (
                 <li key={index} className="flex items-start gap-3 rounded-2.5xl border border-border/50 bg-background/70 px-4 py-3 text-sm">
-                  <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-sky-500" />
+                  <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-info" />
                   <span>{signal}</span>
                 </li>
               ))}
@@ -110,7 +110,7 @@ const ICPDecisionSummary: React.FC<ICPDecisionSummaryProps> = ({ recommendation 
             <ul className="space-y-2">
               {doNotTargetYet.map((segment, index) => (
                 <li key={index} className="flex items-start gap-3 rounded-2.5xl border border-border/50 bg-background/70 px-4 py-3 text-sm">
-                  <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-orange-500" />
+                  <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-warning" />
                   <span>{segment}</span>
                 </li>
               ))}
@@ -129,7 +129,7 @@ const ICPDecisionSummary: React.FC<ICPDecisionSummaryProps> = ({ recommendation 
             <ul className="space-y-2">
               {openQuestions.map((question, index) => (
                 <li key={index} className="flex items-start gap-3 rounded-2.5xl border border-border/50 bg-background/70 px-4 py-3 text-sm">
-                  <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+                  <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-success" />
                   <span>{question}</span>
                 </li>
               ))}

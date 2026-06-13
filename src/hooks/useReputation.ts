@@ -124,11 +124,11 @@ export const useReputation = (userId?: string) => {
   const getLevelColor = (level: number) => {
     switch (level) {
       case 1: return 'text-muted-foreground';
-      case 2: return 'text-blue-500';
-      case 3: return 'text-green-500';
+      case 2: return 'text-info';
+      case 3: return 'text-success';
       case 4: return 'text-purple-500';
-      case 5: return 'text-orange-500';
-      case 6: return 'text-yellow-500';
+      case 5: return 'text-warning';
+      case 6: return 'text-warning';
       default: return 'text-muted-foreground';
     }
   };

@@ -82,10 +82,10 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
                   strokeDasharray={`${2 * Math.PI * 85}`}
                   strokeDashoffset={`${2 * Math.PI * 85 * (1 - analysis.overallScore / 100)}`}
                   className={`transition-all duration-1000 ${
-                    analysis.overallScore >= 85 ? 'text-green-500' :
-                    analysis.overallScore >= 70 ? 'text-blue-500' :
-                    analysis.overallScore >= 55 ? 'text-yellow-500' :
-                    'text-red-500'
+                    analysis.overallScore >= 85 ? 'text-success' :
+                    analysis.overallScore >= 70 ? 'text-info' :
+                    analysis.overallScore >= 55 ? 'text-warning' :
+                    'text-destructive'
                   }`}
                   strokeLinecap="round"
                 />
@@ -115,9 +115,9 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
       <div className="grid md:grid-cols-2 gap-6">
         {/* Strengths */}
         {analysis.strengths.length > 0 && (
-          <Card className="border-green-200 bg-green-50/50">
+          <Card className="border-success bg-success-subtle">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-green-700">
+              <CardTitle className="flex items-center gap-2 text-success">
                 <CheckCircle2 className="h-5 w-5" />
                 Key Strengths
               </CardTitle>
@@ -126,7 +126,7 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
               <ul className="space-y-2">
                 {analysis.strengths.map((strength, idx) => (
                   <li key={idx} className="flex items-start gap-2 text-sm">
-                    <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
+                    <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
                     <span>{strength}</span>
                   </li>
                 ))}
@@ -137,9 +137,9 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
 
         {/* Weaknesses */}
         {analysis.weaknesses.length > 0 && (
-          <Card className="border-yellow-200 bg-yellow-50/50">
+          <Card className="border-warning bg-warning-subtle">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-yellow-700">
+              <CardTitle className="flex items-center gap-2 text-warning">
                 <AlertTriangle className="h-5 w-5" />
                 Areas for Improvement
               </CardTitle>
@@ -148,7 +148,7 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
               <ul className="space-y-2">
                 {analysis.weaknesses.map((weakness, idx) => (
                   <li key={idx} className="flex items-start gap-2 text-sm">
-                    <AlertTriangle className="h-4 w-4 text-yellow-600 shrink-0 mt-0.5" />
+                    <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
                     <span>{weakness}</span>
                   </li>
                 ))}
@@ -160,9 +160,9 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
 
       {/* Recommendations */}
       {analysis.recommendations.length > 0 && (
-        <Card className="border-blue-200 bg-blue-50/50">
+        <Card className="border-info bg-info-subtle">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-700">
+            <CardTitle className="flex items-center gap-2 text-info">
               <Lightbulb className="h-5 w-5" />
               Recommendations
             </CardTitle>
@@ -171,7 +171,7 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
             <ul className="space-y-3">
               {analysis.recommendations.map((recommendation, idx) => (
                 <li key={idx} className="flex items-start gap-2 text-sm">
-                  <Lightbulb className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                  <Lightbulb className="h-4 w-4 text-info shrink-0 mt-0.5" />
                   <span>{recommendation}</span>
                 </li>
               ))}
@@ -200,8 +200,8 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
                 <Star
                   className={`h-8 w-8 ${
                     rating <= userRating
-                      ? 'fill-yellow-400 text-yellow-400'
-                      : 'text-gray-300'
+                      ? 'fill-warning text-warning'
+                      : 'text-muted-foreground'
                   }`}
                 />
               </button>

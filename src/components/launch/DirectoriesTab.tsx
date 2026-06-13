@@ -28,18 +28,18 @@ const CATEGORY_FILTER_OPTIONS: { label: string; value: DirectoryCategory | 'all'
 ];
 
 const COST_BADGE_STYLES: Record<CostType, string> = {
-  free: 'bg-green-500/10 text-green-700 border-green-500/30',
-  freemium: 'bg-blue-500/10 text-blue-700 border-blue-500/30',
-  paid: 'bg-orange-500/10 text-orange-700 border-orange-500/30',
+  free: 'bg-success/10 text-success border-success/30',
+  freemium: 'bg-info/10 text-info border-info/30',
+  paid: 'bg-warning/10 text-warning border-warning/30',
 };
 
 const CATEGORY_BADGE_STYLES: Record<DirectoryCategory, string> = {
   aggregator: 'bg-indigo-500/10 text-indigo-700 border-indigo-500/30',
   community: 'bg-purple-500/10 text-purple-700 border-purple-500/30',
-  newsletter: 'bg-amber-500/10 text-amber-700 border-amber-500/30',
-  review: 'bg-cyan-500/10 text-cyan-700 border-cyan-500/30',
+  newsletter: 'bg-warning/10 text-warning border-warning/30',
+  review: 'bg-info/10 text-info border-info/30',
   social: 'bg-pink-500/10 text-pink-700 border-pink-500/30',
-  'vc-platform': 'bg-emerald-500/10 text-emerald-700 border-emerald-500/30',
+  'vc-platform': 'bg-success/10 text-success border-success/30',
 };
 
 export default function DirectoriesTab() {

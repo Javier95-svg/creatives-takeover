@@ -372,7 +372,7 @@ export const VoiceVideoCall: React.FC<VoiceVideoCallProps> = ({
               You {isScreenSharing && '(Screen)'}
             </div>
             {!isAudioEnabled && (
-              <div className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded">
+              <div className="absolute top-2 right-2 bg-destructive text-white p-1 rounded">
                 <MicOff className="h-4 w-4" />
               </div>
             )}

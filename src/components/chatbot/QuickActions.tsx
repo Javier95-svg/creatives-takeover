@@ -37,7 +37,7 @@ export function QuickActions({ onActionClick }: QuickActionsProps) {
 
   return (
     <div className="flex flex-wrap gap-2 px-4 pb-3">
-      <div className="flex items-center gap-1 text-xs text-gray-500">
+      <div className="flex items-center gap-1 text-xs text-muted-foreground">
         <Lightbulb className="h-3 w-3" />
         <span>Suggested:</span>
       </div>

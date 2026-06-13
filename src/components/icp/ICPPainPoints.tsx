@@ -10,10 +10,10 @@ interface ICPPainPointsProps {
 }
 
 const severityColors: Record<'Critical' | 'High' | 'Medium' | 'Low', string> = {
-  Critical: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800',
-  High: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-orange-200 dark:border-orange-800',
-  Medium: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800',
-  Low: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800',
+  Critical: 'bg-destructive-subtle text-destructive dark:bg-destructive/30 dark:text-destructive border-destructive dark:border-destructive',
+  High: 'bg-warning-subtle text-warning dark:bg-warning/30 dark:text-warning border-warning dark:border-warning',
+  Medium: 'bg-warning-subtle text-warning dark:bg-warning/30 dark:text-warning border-warning dark:border-warning',
+  Low: 'bg-info-subtle text-info dark:bg-info/30 dark:text-info border-info dark:border-info',
 };
 
 const severityBorderColors: Record<'Critical' | 'High' | 'Medium' | 'Low', string> = {
@@ -24,9 +24,9 @@ const severityBorderColors: Record<'Critical' | 'High' | 'Medium' | 'Low', strin
 };
 
 const opportunityColor = (score: number) => {
-  if (score >= 8) return 'text-green-600';
-  if (score >= 5) return 'text-yellow-600';
-  return 'text-red-600';
+  if (score >= 8) return 'text-success';
+  if (score >= 5) return 'text-warning';
+  return 'text-destructive';
 };
 
 const ICPPainPoints: React.FC<ICPPainPointsProps> = ({ painPoints }) => {
@@ -38,7 +38,7 @@ const ICPPainPoints: React.FC<ICPPainPointsProps> = ({ painPoints }) => {
       <Card className="overflow-hidden rounded-4xl border border-primary/20 bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.14),transparent_42%),rgba(249,115,22,0.05)] shadow-[0_20px_60px_-36px_rgba(249,115,22,0.42)]">
         <CardContent className="grid gap-5 pt-6 md:grid-cols-[1.1fr_0.9fr]">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-orange-700 dark:bg-slate-950/60 dark:text-orange-300">
+            <div className="inline-flex items-center gap-2 rounded-full border border-warning/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-warning dark:bg-slate-950/60 dark:text-warning">
               <AlertTriangle className="h-3.5 w-3.5" />
               Pain map
             </div>
@@ -92,8 +92,8 @@ const ICPPainPoints: React.FC<ICPPainPointsProps> = ({ painPoints }) => {
                   <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Current workaround</p>
                   <p className="text-sm">{pain.currentWorkaround}</p>
                 </div>
-                <div className="rounded-2.5xl border border-orange-200/60 bg-orange-50/80 p-4 dark:border-orange-900/40 dark:bg-orange-900/10">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-700 dark:text-orange-400">Why it stays unresolved</p>
+                <div className="rounded-2.5xl border border-warning/60 bg-warning-subtle p-4 dark:border-warning/40 dark:bg-warning/10">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-warning dark:text-warning">Why it stays unresolved</p>
                   <p className="text-sm">{pain.whyUnresolved}</p>
                 </div>
                 <div className="rounded-2.5xl border border-border/50 bg-muted/30 p-4">

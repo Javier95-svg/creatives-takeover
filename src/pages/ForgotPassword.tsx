@@ -106,8 +106,8 @@ const ForgotPassword = () => {
               {isSuccess ? (
                 <div className="space-y-6 text-center">
                   <div className="flex justify-center">
-                    <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
-                      <CheckCircle className="w-8 h-8 text-green-500" />
+                    <div className="w-16 h-16 rounded-full bg-success/20 flex items-center justify-center">
+                      <CheckCircle className="w-8 h-8 text-success" />
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -159,7 +159,7 @@ const ForgotPassword = () => {
                         onChange={handleInputChange}
                         placeholder="Enter your email"
                         className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
-                          error ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+                          error ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''
                         }`}
                         disabled={isLoading}
                         autoComplete="email"
@@ -169,7 +169,7 @@ const ForgotPassword = () => {
                       />
                     </div>
                     {error && (
-                      <p className="text-sm text-red-500 animate-fade-in">{error}</p>
+                      <p className="text-sm text-destructive animate-fade-in">{error}</p>
                     )}
                   </div>
 

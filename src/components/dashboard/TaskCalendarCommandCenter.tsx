@@ -53,9 +53,9 @@ const VIEW_LABELS: Record<TaskCalendarView, string> = {
 
 const DAY_STATUS_STYLES = {
   empty: 'border-border/50 bg-background',
-  completed: 'border-emerald-500/30 bg-emerald-500/10',
-  pending: 'border-amber-500/30 bg-amber-500/10',
-  overdue: 'border-rose-500/40 bg-rose-500/10',
+  completed: 'border-success/30 bg-success/10',
+  pending: 'border-warning/30 bg-warning/10',
+  overdue: 'border-destructive/40 bg-destructive/10',
 };
 
 type CreateTaskFn = (input: {
@@ -90,7 +90,7 @@ function TaskSourceBadge({ task }: { task: CalendarTaskRow }) {
   const source = getTaskSource(task);
   if (source === 'platform') {
     return (
-      <Badge variant="outline" className="border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300">
+      <Badge variant="outline" className="border-info/30 bg-info/10 text-info dark:text-info">
         <Sparkles className="mr-1 h-3 w-3" />
         Platform recommended
       </Badge>
@@ -102,7 +102,7 @@ function TaskSourceBadge({ task }: { task: CalendarTaskRow }) {
 
 function TaskStatusBadge({ task }: { task: CalendarTaskRow }) {
   const status = getTaskRuntimeStatus(task);
-  if (status === 'completed') return <Badge className="bg-emerald-600 text-white">Completed</Badge>;
+  if (status === 'completed') return <Badge className="bg-success text-white">Completed</Badge>;
   if (status === 'overdue') return <Badge variant="destructive">Overdue</Badge>;
   return <Badge variant="secondary">Pending</Badge>;
 }
@@ -134,8 +134,8 @@ function TaskCard({
       id={`task-${task.id}`}
       className={cn(
         'rounded-lg border bg-background p-4 shadow-sm transition-colors',
-        source === 'platform' && 'border-sky-500/30 bg-sky-500/[0.06]',
-        status === 'overdue' && 'border-rose-500/40 bg-rose-500/[0.06]',
+        source === 'platform' && 'border-info/30 bg-info/[0.06]',
+        status === 'overdue' && 'border-destructive/40 bg-destructive/[0.06]',
         highlighted && 'ring-2 ring-primary',
       )}
     >
@@ -148,7 +148,7 @@ function TaskCard({
           aria-label={task.is_completed ? 'Mark task pending' : 'Mark task completed'}
         >
           {task.is_completed ? (
-            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+            <CheckCircle2 className="h-5 w-5 text-success" />
           ) : (
             <Circle className="h-5 w-5" />
           )}
@@ -163,7 +163,7 @@ function TaskCard({
               <p className="text-sm leading-relaxed text-muted-foreground">{task.task_description}</p>
             )}
             {task.recommendation_reason && (
-              <p className="text-xs leading-relaxed text-sky-700 dark:text-sky-300">{task.recommendation_reason}</p>
+              <p className="text-xs leading-relaxed text-info dark:text-info">{task.recommendation_reason}</p>
             )}
           </div>
 
@@ -546,9 +546,9 @@ export function TaskCalendarCommandCenter() {
                       {format(day, 'd')}
                     </span>
                     <div className="flex items-center gap-1">
-                      {hasPlatformTask && <Sparkles className="h-3.5 w-3.5 text-sky-500" />}
-                      {status === 'completed' && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />}
-                      {status === 'overdue' && <Clock className="h-3.5 w-3.5 text-rose-600" />}
+                      {hasPlatformTask && <Sparkles className="h-3.5 w-3.5 text-info" />}
+                      {status === 'completed' && <CheckCircle2 className="h-3.5 w-3.5 text-success" />}
+                      {status === 'overdue' && <Clock className="h-3.5 w-3.5 text-destructive" />}
                     </div>
                   </div>
 
@@ -558,8 +558,8 @@ export function TaskCalendarCommandCenter() {
                         key={task.id}
                         className={cn(
                           'truncate rounded border bg-background/80 px-2 py-1 text-xs',
-                          getTaskSource(task) === 'platform' && 'border-sky-500/30 text-sky-700 dark:text-sky-300',
-                          getTaskRuntimeStatus(task) === 'overdue' && 'border-rose-500/30 text-rose-600',
+                          getTaskSource(task) === 'platform' && 'border-info/30 text-info dark:text-info',
+                          getTaskRuntimeStatus(task) === 'overdue' && 'border-destructive/30 text-destructive',
                           task.is_completed && 'text-muted-foreground line-through',
                         )}
                       >
@@ -576,10 +576,10 @@ export function TaskCalendarCommandCenter() {
           </div>
 
           <div className="flex flex-wrap gap-4 border-t px-4 py-3 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" />Completed</span>
-            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-500" />Pending</span>
-            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-rose-500" />Overdue</span>
-            <span className="inline-flex items-center gap-1.5"><Sparkles className="h-3 w-3 text-sky-500" />Platform task</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-success" />Completed</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-warning" />Pending</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-destructive" />Overdue</span>
+            <span className="inline-flex items-center gap-1.5"><Sparkles className="h-3 w-3 text-info" />Platform task</span>
           </div>
         </section>
 

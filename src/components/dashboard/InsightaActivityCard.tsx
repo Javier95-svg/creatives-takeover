@@ -30,7 +30,7 @@ export function InsightaActivityCard() {
       label: 'VC Profiles Viewed',
       value: vcLoading ? '…' : viewCount,
       sub: 'this month',
-      color: 'text-blue-500',
+      color: 'text-info',
     },
     {
       icon: FileSearch,
@@ -44,14 +44,14 @@ export function InsightaActivityCard() {
       label: 'Accelerators',
       value: 'Browse',
       sub: 'programs available',
-      color: 'text-teal-500',
+      color: 'text-accent-teal',
     },
     {
       icon: Mail,
       label: 'Email Templates',
       value: 'Access',
       sub: 'outreach templates',
-      color: 'text-orange-500',
+      color: 'text-warning',
     },
   ];
 
@@ -59,7 +59,7 @@ export function InsightaActivityCard() {
     <Card className="border-border/70 bg-card/90">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-          <TrendingUp className="h-4 w-4 text-blue-500" />
+          <TrendingUp className="h-4 w-4 text-info" />
           Fundraising Hub
         </CardTitle>
       </CardHeader>

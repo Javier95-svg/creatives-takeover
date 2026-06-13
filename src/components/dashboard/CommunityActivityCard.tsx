@@ -36,7 +36,7 @@ export function CommunityActivityCard() {
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-xs">
             <span className="flex items-center gap-1 font-medium">
-              <Star className="h-3.5 w-3.5 text-yellow-500" />
+              <Star className="h-3.5 w-3.5 text-warning" />
               {repLoading ? '…' : (reputation?.level_name ?? 'Newcomer')}
             </span>
             <span className="text-muted-foreground">
@@ -58,7 +58,7 @@ export function CommunityActivityCard() {
               <p className="text-xs text-purple-600 mt-0.5">+{todaysChallenge.reward_points} pts</p>
             </div>
             {challengeDone ? (
-              <Badge className="bg-green-500/10 text-green-700 border-green-500/20 text-xs shrink-0">
+              <Badge className="bg-success/10 text-success border-success/20 text-xs shrink-0">
                 Done ✓
               </Badge>
             ) : (

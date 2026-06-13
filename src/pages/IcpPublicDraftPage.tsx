@@ -52,8 +52,8 @@ export default function IcpPublicDraftPage() {
       <div className="min-h-screen bg-[#f6f7fb]">
         <IcpProgressBar progress={100} />
         <div className="flex min-h-screen items-center justify-center px-6">
-          <Card className="rounded-5xl border-slate-200 bg-white shadow-sm">
-            <CardContent className="flex items-center gap-3 px-6 py-8 text-slate-500">
+          <Card className="rounded-5xl border-border bg-white shadow-sm">
+            <CardContent className="flex items-center gap-3 px-6 py-8 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
               Loading shared ICP Draft...
             </CardContent>
@@ -68,11 +68,11 @@ export default function IcpPublicDraftPage() {
       <div className="min-h-screen bg-[#f6f7fb]">
         <IcpProgressBar progress={100} />
         <div className="flex min-h-screen items-center justify-center px-6">
-          <Card className="max-w-lg rounded-5xl border-slate-200 bg-white shadow-sm">
+          <Card className="max-w-lg rounded-5xl border-border bg-white shadow-sm">
             <CardContent className="space-y-4 p-8 text-center">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent-teal">Share link unavailable</p>
-              <h1 className="text-3xl font-semibold tracking-tight text-slate-950">This ICP Draft is no longer public.</h1>
-              <p className="text-sm leading-6 text-slate-500">
+              <h1 className="text-3xl font-semibold tracking-tight text-foreground">This ICP Draft is no longer public.</h1>
+              <p className="text-sm leading-6 text-muted-foreground">
                 The founder may have disabled the share link or replaced it with a newer one.
               </p>
               <Button asChild>
@@ -132,7 +132,7 @@ export default function IcpPublicDraftPage() {
               }}
             />
             <div className="pb-6 text-center">
-              <p className="mb-4 text-sm text-slate-500">
+              <p className="mb-4 text-sm text-muted-foreground">
                 Built with{" "}
                 <a
                   href="https://creatives-takeover.com"

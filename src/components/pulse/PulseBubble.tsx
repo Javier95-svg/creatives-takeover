@@ -31,7 +31,7 @@ export const PulseBubble = ({ hasUnread, onClick, compactMobileHomepage = false 
       >
         <MessageSquare className={cn(compactMobileHomepage ? "h-5 w-5" : "h-6 w-6")} />
         {hasUnread && (
-          <span className="absolute top-0 right-0 h-3.5 w-3.5 rounded-full bg-green-500 border-2 border-background" />
+          <span className="absolute top-0 right-0 h-3.5 w-3.5 rounded-full bg-success border-2 border-background" />
         )}
       </Button>
     </div>

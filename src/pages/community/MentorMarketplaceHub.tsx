@@ -472,7 +472,7 @@ const MentorMarketplaceHub = () => {
                           key={item.title}
                           className="group stagger-item hover-lift rounded-3xl border border-border/60 bg-background/70 p-4 shadow-sm transition-all duration-500 dark:bg-slate-900/70"
                         >
-                          <Icon className="mb-3 h-5 w-5 text-sky-600 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:scale-105 dark:text-sky-300" />
+                          <Icon className="mb-3 h-5 w-5 text-info transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:scale-105 dark:text-info" />
                           <p className="text-sm font-semibold">{item.title}</p>
                           <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                             {item.description}

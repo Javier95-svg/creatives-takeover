@@ -423,16 +423,16 @@ const FundraisingReadinessToolkitAll = () => {
         {aiAnalysis && (
           <Card className={cn(
             "border-2",
-            aiAnalysis.verdict === 'Ready' ? "border-green-500/50 bg-green-500/5" :
-            aiAnalysis.verdict === 'Almost Ready' ? "border-yellow-500/50 bg-yellow-500/5" :
-            "border-orange-500/50 bg-orange-500/5"
+            aiAnalysis.verdict === 'Ready' ? "border-success/50 bg-success/5" :
+            aiAnalysis.verdict === 'Almost Ready' ? "border-warning/50 bg-warning/5" :
+            "border-warning/50 bg-warning/5"
           )}>
             <CardHeader>
               <div className="flex items-center gap-3">
                 {aiAnalysis.verdict === 'Ready' ? (
-                  <CheckCircle2 className="h-6 w-6 text-green-500" />
+                  <CheckCircle2 className="h-6 w-6 text-success" />
                 ) : (
-                  <AlertCircle className="h-6 w-6 text-orange-500" />
+                  <AlertCircle className="h-6 w-6 text-warning" />
                 )}
                 <div>
                   <CardTitle className="text-2xl">
@@ -450,9 +450,9 @@ const FundraisingReadinessToolkitAll = () => {
               {/* Summary */}
               <div className={cn(
                 "p-4 rounded-lg",
-                aiAnalysis.verdict === 'Ready' ? "bg-green-500/10 border border-green-500/20" :
-                aiAnalysis.verdict === 'Almost Ready' ? "bg-yellow-500/10 border border-yellow-500/20" :
-                "bg-orange-500/10 border border-orange-500/20"
+                aiAnalysis.verdict === 'Ready' ? "bg-success/10 border border-success/20" :
+                aiAnalysis.verdict === 'Almost Ready' ? "bg-warning/10 border border-warning/20" :
+                "bg-warning/10 border border-warning/20"
               )}>
                 <p className="text-sm font-medium mb-2">Summary</p>
                 <p className="text-sm text-muted-foreground">{aiAnalysis.summary}</p>
@@ -462,13 +462,13 @@ const FundraisingReadinessToolkitAll = () => {
               {aiAnalysis.strengths && aiAnalysis.strengths.length > 0 && (
                 <div className="space-y-3">
                   <h4 className="font-semibold text-sm flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <CheckCircle2 className="h-4 w-4 text-success" />
                     Strengths
                   </h4>
                   <ul className="space-y-2">
                     {aiAnalysis.strengths.map((strength, index) => (
                       <li key={index} className="flex gap-3 text-sm">
-                        <span className="text-green-500 mt-1">✓</span>
+                        <span className="text-success mt-1">✓</span>
                         <span className="text-muted-foreground">{strength}</span>
                       </li>
                     ))}
@@ -480,13 +480,13 @@ const FundraisingReadinessToolkitAll = () => {
               {aiAnalysis.critical_gaps && aiAnalysis.critical_gaps.length > 0 && (
                 <div className="space-y-3">
                   <h4 className="font-semibold text-sm flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4 text-orange-500" />
+                    <AlertCircle className="h-4 w-4 text-warning" />
                     Critical Gaps
                   </h4>
                   <ul className="space-y-2">
                     {aiAnalysis.critical_gaps.map((gap, index) => (
                       <li key={index} className="flex gap-3 text-sm">
-                        <span className="text-orange-500 mt-1">•</span>
+                        <span className="text-warning mt-1">•</span>
                         <span className="text-muted-foreground">{gap}</span>
                       </li>
                     ))}
@@ -518,7 +518,7 @@ const FundraisingReadinessToolkitAll = () => {
                             )}
                           </div>
                           {action.leverage_strength && (
-                            <div className="text-xs text-blue-600 dark:text-blue-400 flex items-start gap-1">
+                            <div className="text-xs text-info dark:text-info flex items-start gap-1">
                               <span>💡</span>
                               <span>{action.leverage_strength}</span>
                             </div>
@@ -537,11 +537,11 @@ const FundraisingReadinessToolkitAll = () => {
                     <span className="text-xl">💡</span>
                     Leverage Your Strengths
                   </h4>
-                  <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <div className="bg-info-subtle dark:bg-info/20 border border-info dark:border-info rounded-lg p-4">
                     <ul className="space-y-2">
                       {aiAnalysis.strength_leverage_opportunities.map((opportunity, index) => (
                         <li key={index} className="flex gap-3 text-sm">
-                          <span className="text-blue-600 dark:text-blue-400 mt-1">→</span>
+                          <span className="text-info dark:text-info mt-1">→</span>
                           <span className="text-foreground">{opportunity}</span>
                         </li>
                       ))}
@@ -557,9 +557,9 @@ const FundraisingReadinessToolkitAll = () => {
                     <span className="text-xl">🏢</span>
                     Success Story: Company Like You
                   </h4>
-                  <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4 space-y-2">
+                  <div className="bg-success-subtle dark:bg-success/20 border border-success dark:border-success rounded-lg p-4 space-y-2">
                     <div className="flex items-start gap-2">
-                      <span className="font-semibold text-green-700 dark:text-green-300">{aiAnalysis.comparable_company.company}</span>
+                      <span className="font-semibold text-success dark:text-success">{aiAnalysis.comparable_company.company}</span>
                     </div>
                     <p className="text-sm text-muted-foreground">
                       <span className="font-medium">Why similar:</span> {aiAnalysis.comparable_company.similar_because}
@@ -567,7 +567,7 @@ const FundraisingReadinessToolkitAll = () => {
                     <p className="text-sm text-muted-foreground">
                       <span className="font-medium">What they did:</span> {aiAnalysis.comparable_company.what_they_did}
                     </p>
-                    <p className="text-sm font-medium text-green-700 dark:text-green-300">
+                    <p className="text-sm font-medium text-success dark:text-success">
                       {aiAnalysis.comparable_company.outcome}
                     </p>
                   </div>

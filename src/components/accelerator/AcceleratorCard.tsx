@@ -99,7 +99,7 @@ const AcceleratorCard = ({ accelerator, profileLink }: AcceleratorCardProps) => 
             </span>
           </div>
           <div className="flex items-start justify-between gap-3">
-            <span className="text-sky-700">Funding</span>
+            <span className="text-info">Funding</span>
             <span className="max-w-[11rem] text-right font-medium line-clamp-2">
               {fundingLabel}
             </span>

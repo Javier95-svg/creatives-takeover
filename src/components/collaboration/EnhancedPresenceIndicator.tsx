@@ -140,11 +140,11 @@ const StatusIndicator: React.FC<StatusIndicatorProps> = ({ status }) => {
   const getStatusColor = (status: UserStatus['status']) => {
     switch (status) {
       case 'online':
-        return 'bg-green-500';
+        return 'bg-success';
       case 'away':
-        return 'bg-yellow-500';
+        return 'bg-warning';
       case 'busy':
-        return 'bg-red-500';
+        return 'bg-destructive';
       case 'offline':
         return 'bg-gray-400';
       default:
@@ -178,11 +178,11 @@ const ActivityIndicator: React.FC<ActivityIndicatorProps> = ({ activityType }) =
   const getActivityColor = (activity: NonNullable<UserStatus['activity_type']>) => {
     switch (activity) {
       case 'working':
-        return 'bg-blue-500';
+        return 'bg-info';
       case 'meeting':
         return 'bg-purple-500';
       case 'break':
-        return 'bg-orange-500';
+        return 'bg-warning';
       case 'focus':
         return 'bg-indigo-500';
     }

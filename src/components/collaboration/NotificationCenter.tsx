@@ -40,19 +40,19 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const getNotificationIcon = (type: CollaborationNotification['notification_type']) => {
     switch (type) {
       case 'user_joined':
-        return <UserPlus className="h-4 w-4 text-green-500" />;
+        return <UserPlus className="h-4 w-4 text-success" />;
       case 'user_left':
-        return <UserMinus className="h-4 w-4 text-orange-500" />;
+        return <UserMinus className="h-4 w-4 text-warning" />;
       case 'message':
-        return <MessageSquare className="h-4 w-4 text-blue-500" />;
+        return <MessageSquare className="h-4 w-4 text-info" />;
       case 'comment':
         return <MessageCircle className="h-4 w-4 text-purple-500" />;
       case 'edit':
         return <Edit className="h-4 w-4 text-indigo-500" />;
       case 'call_started':
-        return <Phone className="h-4 w-4 text-green-500" />;
+        return <Phone className="h-4 w-4 text-success" />;
       case 'call_ended':
-        return <PhoneOff className="h-4 w-4 text-red-500" />;
+        return <PhoneOff className="h-4 w-4 text-destructive" />;
       default:
         return <Bell className="h-4 w-4" />;
     }
@@ -164,19 +164,19 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   const getNotificationIcon = (type: CollaborationNotification['notification_type']) => {
     switch (type) {
       case 'user_joined':
-        return <UserPlus className="h-4 w-4 text-green-500" />;
+        return <UserPlus className="h-4 w-4 text-success" />;
       case 'user_left':
-        return <UserMinus className="h-4 w-4 text-orange-500" />;
+        return <UserMinus className="h-4 w-4 text-warning" />;
       case 'message':
-        return <MessageSquare className="h-4 w-4 text-blue-500" />;
+        return <MessageSquare className="h-4 w-4 text-info" />;
       case 'comment':
         return <MessageCircle className="h-4 w-4 text-purple-500" />;
       case 'edit':
         return <Edit className="h-4 w-4 text-indigo-500" />;
       case 'call_started':
-        return <Phone className="h-4 w-4 text-green-500" />;
+        return <Phone className="h-4 w-4 text-success" />;
       case 'call_ended':
-        return <PhoneOff className="h-4 w-4 text-red-500" />;
+        return <PhoneOff className="h-4 w-4 text-destructive" />;
       default:
         return <Bell className="h-4 w-4" />;
     }

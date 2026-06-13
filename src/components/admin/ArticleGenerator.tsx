@@ -234,7 +234,7 @@ export const ArticleGenerator = () => {
               <CardContent className="text-sm space-y-2">
                 <div className="flex justify-between">
                   <span>Saved:</span>
-                  <span className="font-semibold text-green-600">{rssResult.saved}</span>
+                  <span className="font-semibold text-success">{rssResult.saved}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Skipped:</span>
@@ -270,7 +270,7 @@ export const ArticleGenerator = () => {
               <CardContent className="text-sm space-y-2">
                 <div className="flex justify-between">
                   <span>Articles Found:</span>
-                  <span className="font-semibold text-green-600">{trendsResult.articles?.length || 0}</span>
+                  <span className="font-semibold text-success">{trendsResult.articles?.length || 0}</span>
                 </div>
                 {trendsResult.message && (
                   <p className="text-muted-foreground text-xs">{trendsResult.message}</p>
@@ -279,9 +279,9 @@ export const ArticleGenerator = () => {
             </Card>
           )}
 
-          <div className="flex items-start gap-2 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-            <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-blue-900 dark:text-blue-100">
+          <div className="flex items-start gap-2 p-4 bg-info-subtle dark:bg-info/20 rounded-lg border border-info dark:border-info">
+            <AlertCircle className="h-5 w-5 text-info dark:text-info flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-info dark:text-info">
               <p className="font-medium mb-1">How it works:</p>
               <ul className="list-disc list-inside space-y-1 text-xs">
                 <li><strong>RSS Fetcher:</strong> Pulls from 13 premium sources (HBR, TechCrunch, McKinsey, etc.)</li>

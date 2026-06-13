@@ -121,26 +121,26 @@ function checkVagueness(field: string, value: string): VaguenessWarning[] {
 const VaguenessWarningCard: React.FC<{ warning: VaguenessWarning }> = ({ warning }) => {
   const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-xl border-l-4 border-amber-400 bg-amber-50 px-4 py-3 dark:bg-amber-950/30">
+    <div className="rounded-xl border-l-4 border-warning bg-warning-subtle px-4 py-3 dark:bg-warning/30">
       <div className="flex items-start gap-2">
-        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
         <div className="flex-1 space-y-1">
           <p className="text-sm">
-            <span className="font-semibold text-amber-800 dark:text-amber-300">Let's sharpen this: </span>
-            <span className="text-amber-900 dark:text-amber-200">{warning.message}</span>
+            <span className="font-semibold text-warning dark:text-warning">Let's sharpen this: </span>
+            <span className="text-warning dark:text-warning">{warning.message}</span>
           </p>
           <Collapsible open={open} onOpenChange={setOpen}>
             <CollapsibleTrigger asChild>
               <button
                 type="button"
-                className="inline-flex items-center gap-1 text-xs text-amber-600 underline-offset-2 hover:underline dark:text-amber-400"
+                className="inline-flex items-center gap-1 text-xs text-warning underline-offset-2 hover:underline dark:text-warning"
               >
                 Why this matters
                 <ChevronDown className={cn('h-3 w-3 transition-transform duration-200', open && 'rotate-180')} />
               </button>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">{warning.whyItMatters}</p>
+              <p className="mt-1 text-xs text-warning dark:text-warning">{warning.whyItMatters}</p>
             </CollapsibleContent>
           </Collapsible>
         </div>
@@ -514,9 +514,9 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
               ];
               if (allWarns.length >= 2) {
                 return (
-                  <div className="flex items-start gap-3 rounded-xl border-l-4 border-amber-400 bg-amber-50 px-4 py-3 dark:bg-amber-950/30">
-                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-                    <p className="text-sm text-amber-900 dark:text-amber-200">
+                  <div className="flex items-start gap-3 rounded-xl border-l-4 border-warning bg-warning-subtle px-4 py-3 dark:bg-warning/30">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                    <p className="text-sm text-warning dark:text-warning">
                       <span className="font-semibold">Your ICP has {allWarns.length} areas that could make your output less useful.</span>{' '}
                       Consider refining before generating.
                     </p>
@@ -779,7 +779,7 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
                     <p className="text-xs text-muted-foreground">Cmd/Ctrl + Enter to continue</p>
                     <p className="text-right text-xs text-muted-foreground">
                       {canContinue ? (
-                        <span className="inline-flex items-center justify-end gap-1 text-green-600 dark:text-green-400">
+                        <span className="inline-flex items-center justify-end gap-1 text-success dark:text-success">
                           <CheckCircle2 className="h-3 w-3" />
                           Ready to move on
                         </span>
@@ -800,8 +800,8 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
                     }
                     if (currentValue.trim().split(/\s+/).filter(Boolean).length >= 5) {
                       return (
-                        <div className="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-2.5 text-sm text-green-800 dark:border-green-800/40 dark:bg-green-950/30 dark:text-green-300">
-                          <CheckCircle2 className="h-4 w-4 shrink-0 text-green-500" />
+                        <div className="flex items-center gap-2 rounded-xl border border-success bg-success-subtle px-4 py-2.5 text-sm text-success dark:border-success/40 dark:bg-success/30 dark:text-success">
+                          <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
                           Your inputs look specific — great foundation for a useful ICP.
                         </div>
                       );

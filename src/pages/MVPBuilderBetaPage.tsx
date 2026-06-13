@@ -305,7 +305,7 @@ export default function MVPBuilderBetaPage() {
               ) : (
                 <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border/60 bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
                   {artifactStatus === 'saved' ? (
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <CheckCircle2 className="h-4 w-4 text-success" />
                   ) : (
                     <CircleDashed className="h-4 w-4" />
                   )}

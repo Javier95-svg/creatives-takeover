@@ -67,9 +67,9 @@ export const MVPBuilderLowCreditBanner = ({ projectName }: MVPBuilderLowCreditBa
   if (!visible) return null;
 
   return (
-    <div className="flex shrink-0 items-center justify-between gap-3 border-b border-amber-400/20 bg-amber-400/10 px-4 py-2 text-sm text-amber-100">
+    <div className="flex shrink-0 items-center justify-between gap-3 border-b border-warning/20 bg-warning/10 px-4 py-2 text-sm text-warning">
       <div className="flex min-w-0 items-center gap-2">
-        <Coins className="h-4 w-4 shrink-0 text-amber-300" />
+        <Coins className="h-4 w-4 shrink-0 text-warning" />
         <span className="truncate">
           {contextLine} Top up or upgrade to keep building without interruptions.
         </span>
@@ -78,7 +78,7 @@ export const MVPBuilderLowCreditBanner = ({ projectName }: MVPBuilderLowCreditBa
         <Button
           variant="ghost"
           size="pill-sm"
-          className="bg-white px-3 text-slate-950 hover:bg-slate-100 hover:text-slate-950"
+          className="bg-white px-3 text-foreground hover:bg-muted hover:text-foreground"
           onClick={() => {
             trackContextualUpgradeCtaClicked({ ...contextualProps, outcome: 'credits' });
             navigate('/pricing#credit-packs');
@@ -90,7 +90,7 @@ export const MVPBuilderLowCreditBanner = ({ projectName }: MVPBuilderLowCreditBa
           variant="ghost"
           size="icon-sm"
           aria-label="Dismiss"
-          className="text-amber-200/80 hover:bg-amber-200/10 hover:text-white"
+          className="text-warning/80 hover:bg-warning-subtle hover:text-white"
           onClick={() => {
             trackContextualUpgradeDismissed(contextualProps);
             setDismissed(true);

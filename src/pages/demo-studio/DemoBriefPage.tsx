@@ -300,7 +300,7 @@ export default function DemoBriefPage() {
         </div>
 
         {!completeness.complete && (
-          <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-900">
+          <div className="mb-6 rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm text-warning">
             Complete Audience, Problem, Product promise, Aha moment, and CTA to unlock storyboard and VSL script generation. Missing now: {completeness.missing.join(', ')}.
           </div>
         )}

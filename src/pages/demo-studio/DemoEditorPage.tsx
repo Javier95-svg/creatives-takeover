@@ -430,7 +430,7 @@ export default function DemoEditorPage() {
             className="h-9 w-48 border-transparent bg-transparent text-sm font-semibold hover:border-border focus:border-border md:w-72"
           />
           {demo?.status === 'published' ? (
-            <span className="hidden items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600 sm:inline-flex">
+            <span className="hidden items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success sm:inline-flex">
               <Globe className="h-3 w-3" /> Published
             </span>
           ) : (
@@ -508,7 +508,7 @@ export default function DemoEditorPage() {
             <div className="mt-3 grid gap-2 sm:grid-cols-5">
               {setupChecklist.map((item, index) => (
                 <div key={item.label} className="flex items-center gap-2 rounded-lg border border-border/70 bg-background/70 px-3 py-2">
-                  <span className={item.done ? 'text-emerald-600' : 'text-muted-foreground'}>
+                  <span className={item.done ? 'text-success' : 'text-muted-foreground'}>
                     {item.done ? <Check className="h-4 w-4" /> : <span className="flex h-4 w-4 items-center justify-center rounded-full border text-caption">{index + 1}</span>}
                   </span>
                   <span className="text-xs font-medium">{item.label}</span>
@@ -552,7 +552,7 @@ export default function DemoEditorPage() {
           {demo?.public_id && (
             <div className="mt-4 space-y-3 rounded-xl border border-border bg-card p-4">
               <h4 className="flex items-center gap-1.5 text-sm font-semibold">
-                <Globe className="h-4 w-4 text-emerald-600" /> Share your demo
+                <Globe className="h-4 w-4 text-success" /> Share your demo
               </h4>
               <div className="flex items-center gap-2">
                 <Input readOnly value={shareUrl} className="text-xs" />

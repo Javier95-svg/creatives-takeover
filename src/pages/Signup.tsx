@@ -616,14 +616,14 @@ const Signup = () => {
                         value={formData.firstName}
                         onChange={handleInputChange}
                         placeholder="First name"
-                        className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.firstName ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}`}
+                        className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.firstName ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''}`}
                         disabled={isLoading}
                         autoComplete="given-name"
                         required
                       />
                     </div>
                     {errors.firstName && (
-                      <p className="text-sm text-red-500 animate-fade-in">{errors.firstName}</p>
+                      <p className="text-sm text-destructive animate-fade-in">{errors.firstName}</p>
                     )}
                   </div>
 
@@ -638,13 +638,13 @@ const Signup = () => {
                       value={formData.lastName}
                       onChange={handleInputChange}
                       placeholder="Last name"
-                      className={`h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.lastName ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}`}
+                      className={`h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.lastName ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''}`}
                       disabled={isLoading}
                       autoComplete="family-name"
                       required
                     />
                     {errors.lastName && (
-                      <p className="text-sm text-red-500 animate-fade-in">{errors.lastName}</p>
+                      <p className="text-sm text-destructive animate-fade-in">{errors.lastName}</p>
                     )}
                   </div>
                 </div>
@@ -662,7 +662,7 @@ const Signup = () => {
                       value={formData.username}
                       onChange={handleInputChange}
                       placeholder="Choose your username"
-                      className={`h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.username ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}`}
+                      className={`h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.username ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''}`}
                       disabled={isLoading}
                       autoComplete="username"
                       autoCapitalize="off"
@@ -672,7 +672,7 @@ const Signup = () => {
                     />
                   </div>
                   {!errors.username && formData.username && (
-                    <p className={`text-xs ${usernameStatus === "taken" ? "text-red-500" : "text-muted-foreground"}`}>
+                    <p className={`text-xs ${usernameStatus === "taken" ? "text-destructive" : "text-muted-foreground"}`}>
                       {usernameStatus === "checking" && "Checking username availability..."}
                       {usernameStatus === "available" && "Username is available"}
                       {usernameStatus === "taken" && "That username is already taken"}
@@ -680,7 +680,7 @@ const Signup = () => {
                     </p>
                   )}
                   {errors.username && (
-                    <p className="text-sm text-red-500 animate-fade-in">{errors.username}</p>
+                    <p className="text-sm text-destructive animate-fade-in">{errors.username}</p>
                   )}
                   <p className="text-xs text-muted-foreground">
                     Your public profile will be at <span className="font-medium">/profile/{formData.username || "username"}</span>
@@ -702,7 +702,7 @@ const Signup = () => {
                       onChange={handleInputChange}
                       onBlur={() => { setLastFocused('email'); setFieldsInteracted(prev => new Set(prev).add('email')); }}
                       placeholder="Enter your email"
-                      className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+                      className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.email ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''
                         }`}
                       disabled={isLoading}
                       autoComplete="email"
@@ -713,7 +713,7 @@ const Signup = () => {
                     />
                   </div>
                   {errors.email && (
-                    <p className="text-sm text-red-500 animate-fade-in">{errors.email}</p>
+                    <p className="text-sm text-destructive animate-fade-in">{errors.email}</p>
                   )}
                 </div>
 
@@ -732,7 +732,7 @@ const Signup = () => {
                       onChange={handleInputChange}
                       onBlur={() => { setLastFocused('password'); setFieldsInteracted(prev => new Set(prev).add('password')); }}
                       placeholder="Create a password"
-                      className={`pl-10 pr-12 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+                      className={`pl-10 pr-12 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.password ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''
                         }`}
                       disabled={isLoading}
                       autoComplete="new-password"
@@ -756,7 +756,7 @@ const Signup = () => {
                     <p className="text-xs text-muted-foreground">Use at least {MIN_PASSWORD_LENGTH} characters</p>
                   )}
                   {errors.password && (
-                    <p className="text-sm text-red-500 animate-fade-in">{errors.password}</p>
+                    <p className="text-sm text-destructive animate-fade-in">{errors.password}</p>
                   )}
                 </div>
 
@@ -811,7 +811,7 @@ const Signup = () => {
                   <p className="text-xs text-muted-foreground flex items-center justify-center gap-2">
                     <span
                       aria-hidden="true"
-                      className="pointer-events-none relative w-2 h-2 rounded-full bg-green-500"
+                      className="pointer-events-none relative w-2 h-2 rounded-full bg-success"
                       style={{
                         animation: 'flicker 1.5s ease-in-out infinite',
                         boxShadow: '0 0 6px rgba(34, 197, 94, 0.8), 0 0 12px rgba(34, 197, 94, 0.5)'

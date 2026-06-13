@@ -187,7 +187,7 @@ export function Phase1Test() {
       </div>
 
       {!user && (
-        <div className="p-6 border border-yellow-500/50 bg-yellow-500/10 rounded-lg">
+        <div className="p-6 border border-warning/50 bg-warning/10 rounded-lg">
           <p className="text-center text-lg font-medium">
             👋 Sign in to run interactive tests and save your progress
           </p>
@@ -216,7 +216,7 @@ export function Phase1Test() {
                 <p><strong>Skill Gaps:</strong> {profile.skill_gaps.join(', ') || 'None'}</p>
                 <p><strong>Goals:</strong> {profile.primary_goals.join(', ') || 'None'}</p>
                 {missingFields.length > 0 && (
-                  <p className="text-yellow-600">
+                  <p className="text-warning">
                     <strong>Missing:</strong> {missingFields.join(', ')}
                   </p>
                 )}
@@ -271,7 +271,7 @@ export function Phase1Test() {
               {blockers.length > 0 ? (
                 <div className="space-y-2">
                   {blockers.map(b => (
-                    <div key={b.id} className="p-3 border rounded-lg bg-red-50 dark:bg-red-950/20">
+                    <div key={b.id} className="p-3 border rounded-lg bg-destructive-subtle dark:bg-destructive/20">
                       <p className="font-medium">{b.blocker_title}</p>
                       <p className="text-sm text-muted-foreground">Severity: {b.severity}</p>
                     </div>
@@ -307,7 +307,7 @@ export function Phase1Test() {
                   </div>
                   <div className="p-4 border rounded-lg bg-muted/30">
                     <p className="text-sm text-muted-foreground mb-1">Status</p>
-                    <p className={`text-lg font-bold ${metrics.onTrack ? 'text-green-600' : 'text-red-600'}`}>
+                    <p className={`text-lg font-bold ${metrics.onTrack ? 'text-success' : 'text-destructive'}`}>
                       {metrics.onTrack ? '✓ On Track' : '⚠ Behind'}
                     </p>
                   </div>
@@ -373,9 +373,9 @@ export function Phase1Test() {
                     <div key={idx} className="p-4 border rounded-lg bg-muted/30">
                       <div className="flex items-center gap-2 mb-2">
                         <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                          suggestion.priority === 'high' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-                          suggestion.priority === 'medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                          'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                          suggestion.priority === 'high' ? 'bg-destructive-subtle text-destructive dark:bg-destructive dark:text-destructive' :
+                          suggestion.priority === 'medium' ? 'bg-warning-subtle text-warning dark:bg-warning dark:text-warning' :
+                          'bg-info-subtle text-info dark:bg-info dark:text-info'
                         }`}>
                           {suggestion.priority}
                         </span>

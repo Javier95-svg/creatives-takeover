@@ -46,9 +46,9 @@ function StatusBadge({ status }: { status: MVPIntegrationStatus }) {
       variant="outline"
       className={cn(
         'shrink-0 text-label',
-        healthy && 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300',
-        warn && 'border-amber-300/30 bg-amber-300/10 text-amber-100',
-        !healthy && !warn && 'border-white/10 bg-white/5 text-slate-400'
+        healthy && 'border-success/30 bg-success/10 text-success',
+        warn && 'border-warning/30 bg-warning/10 text-warning',
+        !healthy && !warn && 'border-white/10 bg-white/5 text-muted-foreground'
       )}
     >
       {STATUS_LABEL[status]}
@@ -103,7 +103,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
     <div className="flex flex-col gap-4 overflow-y-auto p-4">
       <div className="space-y-1">
         <h2 className="text-sm font-semibold text-white">Integrations</h2>
-        <p className="text-xs leading-relaxed text-slate-400">
+        <p className="text-xs leading-relaxed text-muted-foreground">
           Connect GitHub to push code to a repo and Supabase to manage your backend. Both are optional — the builder works without them.
         </p>
       </div>
@@ -117,7 +117,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
             </span>
             <div>
               <p className="text-sm font-semibold text-white">GitHub</p>
-              <p className="text-label text-slate-400">
+              <p className="text-label text-muted-foreground">
                 {githubRepoSession
                   ? `${githubRepoSession.fullName} · main`
                   : githubConnection.connected
@@ -130,7 +130,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
         </div>
 
         {(githubStatus === 'error' || githubStatus === 'expired') && githubConnection.lastError && (
-          <div className="mb-3 flex gap-2 rounded-lg border border-amber-300/20 bg-amber-300/10 p-2.5 text-xs text-amber-100">
+          <div className="mb-3 flex gap-2 rounded-lg border border-warning/20 bg-warning/10 p-2.5 text-xs text-warning">
             <ShieldAlert className="h-3.5 w-3.5 shrink-0 mt-0.5" />
             <span>{githubConnection.lastError}</span>
           </div>
@@ -138,7 +138,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
 
         {githubRepoSession ? (
           <div className="space-y-2">
-            <div className="flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200">
+            <div className="flex items-center gap-2 rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-xs text-success">
               <Check className="h-3.5 w-3.5 shrink-0" />
               <span>Connected to <strong>{githubRepoSession.fullName}</strong> · main branch</span>
             </div>
@@ -148,7 +148,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
               size="sm"
               onClick={onRefreshGitHub}
               disabled={isGitHubBusy}
-              className="h-7 gap-1.5 px-2 text-xs text-slate-400 hover:text-white"
+              className="h-7 gap-1.5 px-2 text-xs text-muted-foreground hover:text-white"
             >
               <Unplug className="h-3 w-3" />
               Disconnect
@@ -158,12 +158,12 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
           <div className="space-y-3">
             <div className="flex items-end gap-2">
               <label className="flex-1 space-y-1.5">
-                <span className="text-label font-medium uppercase tracking-wider text-slate-500">Repository</span>
+                <span className="text-label font-medium uppercase tracking-wider text-muted-foreground">Repository</span>
                 <select
                   value={selectedRepo}
                   onChange={(e) => setSelectedRepo(e.target.value)}
                   disabled={isGitHubBusy}
-                  className="h-9 w-full rounded-lg border border-white/10 bg-card px-3 text-sm text-white outline-none focus:ring-2 focus:ring-sky-400/30"
+                  className="h-9 w-full rounded-lg border border-white/10 bg-card px-3 text-sm text-white outline-none focus:ring-2 focus:ring-info/30"
                 >
                   <option value="">Select repository</option>
                   {githubRepositories.map((r) => (
@@ -183,7 +183,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
               </Button>
             </div>
             {selectedRepoMeta?.defaultBranch && selectedRepoMeta.defaultBranch !== 'main' && (
-              <p className="text-label text-amber-200">
+              <p className="text-label text-warning">
                 Default branch is <code>{selectedRepoMeta.defaultBranch}</code> — import will use main.
               </p>
             )}
@@ -219,7 +219,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
             </span>
             <div>
               <p className="text-sm font-semibold text-white">Supabase</p>
-              <p className="text-label text-slate-400">
+              <p className="text-label text-muted-foreground">
                 {supabaseConnection.project?.ref
                   ? `${supabaseConnection.project.ref}.supabase.co`
                   : 'Paste your project URL and service role key'}
@@ -230,7 +230,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
         </div>
 
         {(supabaseStatus === 'error' || supabaseStatus === 'expired') && supabaseConnection.lastError && (
-          <div className="mb-3 flex gap-2 rounded-lg border border-amber-300/20 bg-amber-300/10 p-2.5 text-xs text-amber-100">
+          <div className="mb-3 flex gap-2 rounded-lg border border-warning/20 bg-warning/10 p-2.5 text-xs text-warning">
             <ShieldAlert className="h-3.5 w-3.5 shrink-0 mt-0.5" />
             <span>{supabaseConnection.lastError}</span>
           </div>
@@ -238,7 +238,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
 
         {supabaseStatus === 'connected' && supabaseConnection.project ? (
           <div className="space-y-2">
-            <div className="flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200">
+            <div className="flex items-center gap-2 rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-xs text-success">
               <Check className="h-3.5 w-3.5 shrink-0" />
               <span>Connected to <strong>{supabaseConnection.project.ref}.supabase.co</strong></span>
             </div>
@@ -248,7 +248,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
               size="sm"
               onClick={onRefreshSupabase}
               disabled={isSupabaseBusy}
-              className="h-7 gap-1.5 px-2 text-xs text-slate-400 hover:text-white"
+              className="h-7 gap-1.5 px-2 text-xs text-muted-foreground hover:text-white"
             >
               <Unplug className="h-3 w-3" />
               Disconnect
@@ -257,7 +257,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
         ) : (
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <label className="text-label font-medium uppercase tracking-wider text-slate-500">
+              <label className="text-label font-medium uppercase tracking-wider text-muted-foreground">
                 Project URL
               </label>
               <input
@@ -266,11 +266,11 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
                 onChange={(e) => setSupabaseUrl(e.target.value)}
                 placeholder="https://xxxxxxxxxxxx.supabase.co"
                 disabled={isSupabaseBusy}
-                className="h-9 w-full rounded-lg border border-white/10 bg-card px-3 text-sm text-white placeholder:text-slate-600 outline-none focus:ring-2 focus:ring-sky-400/30"
+                className="h-9 w-full rounded-lg border border-white/10 bg-card px-3 text-sm text-white placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-info/30"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-label font-medium uppercase tracking-wider text-slate-500">
+              <label className="text-label font-medium uppercase tracking-wider text-muted-foreground">
                 Service Role Key
               </label>
               <div className="relative">
@@ -281,17 +281,17 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
                   onChange={(e) => setSupabaseKey(e.target.value)}
                   placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6Ikp..."
                   disabled={isSupabaseBusy}
-                  className="h-9 w-full rounded-lg border border-white/10 bg-card px-3 pr-14 text-sm text-white placeholder:text-slate-600 outline-none focus:ring-2 focus:ring-sky-400/30"
+                  className="h-9 w-full rounded-lg border border-white/10 bg-card px-3 pr-14 text-sm text-white placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-info/30"
                 />
                 <button
                   type="button"
                   onClick={() => setShowKey((v) => !v)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-caption text-slate-500 hover:text-white"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-caption text-muted-foreground hover:text-white"
                 >
                   {showKey ? 'hide' : 'show'}
                 </button>
               </div>
-              <p className="text-caption text-slate-600">
+              <p className="text-caption text-muted-foreground">
                 Found in Supabase Dashboard → Project Settings → API → service_role key
               </p>
             </div>

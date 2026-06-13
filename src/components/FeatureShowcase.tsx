@@ -9,14 +9,14 @@ const FeatureShowcase = () => {
       title: "Lightning Fast Development",
       description: "Build production-ready apps 10x faster with our AI-powered platform. From idea to deployment in minutes, not months.",
       stats: "90% faster time-to-market",
-      gradient: "from-primary/10 to-blue-500/10"
+      gradient: "from-primary/10 to-info/10"
     },
     {
-      icon: <Target className="w-8 h-8 text-green-500" />,
+      icon: <Target className="w-8 h-8 text-success" />,
       title: "Precision AI Matching",
       description: "Our advanced AI understands your vision and matches you with the perfect technical solutions and design patterns.",
       stats: "99.2% accuracy rate",
-      gradient: "from-green-500/10 to-emerald-500/10"
+      gradient: "from-success/10 to-success/10"
     },
     {
       icon: <Users className="w-8 h-8 text-purple-500" />,
@@ -26,11 +26,11 @@ const FeatureShowcase = () => {
       gradient: "from-purple-500/10 to-pink-500/10"
     },
     {
-      icon: <Rocket className="w-8 h-8 text-orange-500" />,
+      icon: <Rocket className="w-8 h-8 text-warning" />,
       title: "Scale Without Limits",
       description: "Your apps grow with your success. Enterprise-grade infrastructure that scales from prototype to millions of users.",
       stats: "99.99% uptime guarantee",
-      gradient: "from-orange-500/10 to-red-500/10"
+      gradient: "from-warning/10 to-destructive/10"
     }
   ];
 

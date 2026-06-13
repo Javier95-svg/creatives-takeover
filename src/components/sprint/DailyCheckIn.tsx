@@ -255,7 +255,7 @@ export const DailyCheckIn: React.FC<DailyCheckInProps> = ({
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Calendar className="w-5 h-5 text-green-500" />
+                <Calendar className="w-5 h-5 text-success" />
                 <span className="text-sm font-medium">Checked in today!</span>
               </div>
               <div className="flex items-center space-x-2">

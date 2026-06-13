@@ -549,7 +549,7 @@ export const BizMapChat = ({
                           onLoad={() => URL.revokeObjectURL(previewUrl)}
                         />
                       ) : isPDF ? (
-                        <FileText className="w-6 h-6 text-red-500" />
+                        <FileText className="w-6 h-6 text-destructive" />
                       ) : (
                         <FileText className="w-6 h-6 text-muted-foreground" />
                       )}

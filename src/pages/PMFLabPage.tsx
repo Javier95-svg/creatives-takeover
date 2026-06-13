@@ -119,14 +119,14 @@ export default function PMFLabPage() {
       title: 'Move to Building',
       description: 'You have enough demand evidence to scope your MVP and move into the building stage.',
       icon: Rocket,
-      tone: 'border-green-500/25 bg-green-500/10 text-green-700 dark:text-green-400',
+      tone: 'border-success/25 bg-success/10 text-success dark:text-success',
     },
     {
       label: 'Score below 75',
       title: 'Iterate before building',
       description: 'PMF Lab will surface missing features, recurring objections, and what to improve before moving into development.',
       icon: ArrowRight,
-      tone: 'border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-400',
+      tone: 'border-warning/25 bg-warning/10 text-warning dark:text-warning',
     },
   ];
 

@@ -121,7 +121,7 @@ export const TaskOverview = () => {
       case 'high':
         return 'border-[hsl(var(--red-primary))]/50 text-[hsl(var(--red-primary))]';
       case 'medium':
-        return 'border-orange-500/50 text-orange-500';
+        return 'border-warning/50 text-warning';
       case 'low':
         return 'border-[hsl(var(--blue-primary))]/50 text-[hsl(var(--blue-primary))]';
       default:

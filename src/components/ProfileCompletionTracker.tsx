@@ -80,7 +80,7 @@ export const ProfileCompletionTracker = ({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold">Complete Your Profile</h3>
-            <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="text-2xl font-bold bg-gradient-to-r from-info to-purple-600 bg-clip-text text-transparent">
               {completionPercentage}%
             </span>
           </div>
@@ -91,7 +91,7 @@ export const ProfileCompletionTracker = ({
             {completionItems.map((item) => (
               <div key={item.label} className="flex items-center gap-2 text-xs">
                 {item.completed ? (
-                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  <CheckCircle2 className="h-4 w-4 text-success" />
                 ) : (
                   <Circle className="h-4 w-4 text-muted-foreground" />
                 )}

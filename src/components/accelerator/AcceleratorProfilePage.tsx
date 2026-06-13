@@ -226,8 +226,8 @@ const AcceleratorProfilePage = () => {
                 <div className="flex items-center gap-3 mb-2">
                   <CardTitle className="text-3xl">{accelerator.title}</CardTitle>
                   {accelerator.is_featured && (
-                    <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30 hover:bg-amber-500/20">
-                      <Star className="h-3 w-3 mr-1 fill-amber-500" />
+                    <Badge className="bg-warning/10 text-warning border-warning/30 hover:bg-warning/20">
+                      <Star className="h-3 w-3 mr-1 fill-warning" />
                       Featured
                     </Badge>
                   )}
@@ -272,7 +272,7 @@ const AcceleratorProfilePage = () => {
           </div>
 
           <div className="p-4 rounded-lg bg-muted/50 border text-center">
-            <Globe className="h-5 w-5 mx-auto mb-1.5 text-blue-500" />
+            <Globe className="h-5 w-5 mx-auto mb-1.5 text-info" />
             <p className="text-lg font-bold leading-tight">
               {accelerator.location && accelerator.location.includes('Global') ? 'Yes' : 'Regional'}
             </p>
@@ -325,7 +325,7 @@ const AcceleratorProfilePage = () => {
           <div className="grid sm:grid-cols-2 gap-3">
             {accelerator.funding_amount && (
               <div className="flex items-start gap-3 p-4 rounded-lg border bg-muted/30">
-                <DollarSign className="h-5 w-5 mt-0.5 text-green-500 shrink-0" />
+                <DollarSign className="h-5 w-5 mt-0.5 text-success shrink-0" />
                 <div>
                   <p className="text-sm font-semibold">Funding: {accelerator.funding_amount}</p>
                   <p className="text-sm text-muted-foreground mt-0.5">
@@ -335,7 +335,7 @@ const AcceleratorProfilePage = () => {
               </div>
             )}
             <div className="flex items-start gap-3 p-4 rounded-lg border bg-muted/30">
-              <Users className="h-5 w-5 mt-0.5 text-blue-500 shrink-0" />
+              <Users className="h-5 w-5 mt-0.5 text-info shrink-0" />
               <div>
                 <p className="text-sm font-semibold">Mentorship & Network</p>
                 <p className="text-sm text-muted-foreground mt-0.5">
@@ -353,7 +353,7 @@ const AcceleratorProfilePage = () => {
               </div>
             </div>
             <div className="flex items-start gap-3 p-4 rounded-lg border bg-muted/30">
-              <CheckCircle className="h-5 w-5 mt-0.5 text-green-500 shrink-0" />
+              <CheckCircle className="h-5 w-5 mt-0.5 text-success shrink-0" />
               <div>
                 <p className="text-sm font-semibold">Demo Day & Investor Access</p>
                 <p className="text-sm text-muted-foreground mt-0.5">
@@ -371,7 +371,7 @@ const AcceleratorProfilePage = () => {
           </p>
 
           <div className="flex items-start gap-3 p-4 rounded-lg border bg-muted/30 mb-4">
-            <CheckCircle className="h-5 w-5 mt-0.5 text-green-500 shrink-0" />
+            <CheckCircle className="h-5 w-5 mt-0.5 text-success shrink-0" />
             <div>
               <p className="text-sm font-semibold">Open Application</p>
               <p className="text-sm text-muted-foreground mt-0.5">

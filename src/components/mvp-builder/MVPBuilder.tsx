@@ -204,7 +204,7 @@ export const MVPBuilder: React.FC = () => {
       />
 
       {isGenerating && heldCredits > 0 && (
-        <div className="border-b border-sky-300/20 bg-sky-300/10 px-4 py-2 text-center text-xs font-medium text-sky-100">
+        <div className="border-b border-info/20 bg-info/10 px-4 py-2 text-center text-xs font-medium text-info">
           {creditsAvailable} credits available - {heldCredits} credits held while MVP Builder works
         </div>
       )}
@@ -220,8 +220,8 @@ export const MVPBuilder: React.FC = () => {
               className={cn(
                 'gap-1.5 px-4 text-xs font-medium transition-all duration-200',
                 mobileTab === 'chat'
-                  ? 'bg-white text-slate-950 shadow-sm hover:bg-white hover:text-slate-950'
-                  : 'text-slate-300 hover:bg-transparent hover:text-white'
+                  ? 'bg-white text-foreground shadow-sm hover:bg-white hover:text-foreground'
+                  : 'text-muted-foreground hover:bg-transparent hover:text-white'
               )}
               onClick={() => setMobileTab('chat')}
             >
@@ -234,8 +234,8 @@ export const MVPBuilder: React.FC = () => {
               className={cn(
                 'gap-1.5 px-4 text-xs font-medium transition-all duration-200',
                 mobileTab === 'preview'
-                  ? 'bg-white text-slate-950 shadow-sm hover:bg-white hover:text-slate-950'
-                  : 'text-slate-300 hover:bg-transparent hover:text-white'
+                  ? 'bg-white text-foreground shadow-sm hover:bg-white hover:text-foreground'
+                  : 'text-muted-foreground hover:bg-transparent hover:text-white'
               )}
               onClick={() => setMobileTab('preview')}
             >

@@ -74,7 +74,7 @@ export const SourceCitation: React.FC<SourceCitationProps> = ({ sources, classNa
                           </span>
                           <Badge 
                             variant="outline" 
-                            className="text-xs px-1.5 py-0 h-5 bg-blue-500/10 text-blue-700 border-blue-500/20"
+                            className="text-xs px-1.5 py-0 h-5 bg-info/10 text-info border-info/20"
                           >
                             Web
                           </Badge>

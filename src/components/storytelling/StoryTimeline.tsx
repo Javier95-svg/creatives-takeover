@@ -10,11 +10,11 @@ export const StoryTimeline = ({ stages }: StoryTimelineProps) => {
   const getEmotionColor = (emotion: string) => {
     switch (emotion) {
       case 'struggle':
-        return 'from-red-500/60 to-red-600/40';
+        return 'from-destructive/60 to-destructive/40';
       case 'uncertainty':
-        return 'from-amber-500/60 to-amber-600/40';
+        return 'from-warning/60 to-warning/40';
       case 'hope':
-        return 'from-green-500/60 to-green-600/40';
+        return 'from-success/60 to-success/40';
       default:
         return 'from-primary/60 to-primary/40';
     }

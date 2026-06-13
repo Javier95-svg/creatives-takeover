@@ -20,13 +20,13 @@ export const DailyTaskList = ({ tasks, onTaskStatusChange, showAllTasks = false 
   const getPriorityColor = (priority: RoadmapTask['priority']) => {
     switch (priority) {
       case 'critical':
-        return 'text-red-500 bg-red-500/10';
+        return 'text-destructive bg-destructive/10';
       case 'high':
-        return 'text-orange-500 bg-orange-500/10';
+        return 'text-warning bg-warning/10';
       case 'medium':
-        return 'text-yellow-500 bg-yellow-500/10';
+        return 'text-warning bg-warning/10';
       case 'low':
-        return 'text-blue-500 bg-blue-500/10';
+        return 'text-info bg-info/10';
       default:
         return 'text-muted-foreground bg-muted';
     }
@@ -35,11 +35,11 @@ export const DailyTaskList = ({ tasks, onTaskStatusChange, showAllTasks = false 
   const getStatusIcon = (status: RoadmapTask['status']) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+        return <CheckCircle2 className="h-4 w-4 text-success" />;
       case 'in_progress':
-        return <Clock className="h-4 w-4 text-blue-500 animate-pulse" />;
+        return <Clock className="h-4 w-4 text-info animate-pulse" />;
       case 'blocked':
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
+        return <AlertCircle className="h-4 w-4 text-destructive" />;
       default:
         return null;
     }
@@ -83,8 +83,8 @@ export const DailyTaskList = ({ tasks, onTaskStatusChange, showAllTasks = false 
       <CardContent className="space-y-4">
         {/* Blocked Tasks Warning */}
         {blockedTasks.length > 0 && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-            <div className="flex items-center gap-2 text-red-600">
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+            <div className="flex items-center gap-2 text-destructive">
               <AlertCircle className="h-4 w-4" />
               <span className="text-sm font-semibold">
                 {blockedTasks.length} task{blockedTasks.length > 1 ? 's' : ''} blocked
@@ -184,7 +184,7 @@ const TaskItem = ({ task, onClick, isSelected, getPriorityColor, getStatusIcon }
         'group relative border rounded-lg p-4 transition-all',
         isInteractive ? 'cursor-pointer' : 'cursor-default',
         isCompleted && 'opacity-60 bg-muted/50',
-        isBlocked && 'border-red-500/20 bg-red-500/5',
+        isBlocked && 'border-destructive/20 bg-destructive/5',
         isSelected && 'ring-2 ring-primary',
         !isCompleted && !isBlocked && 'hover:border-primary/50 hover:shadow-md'
       )}
@@ -223,7 +223,7 @@ const TaskItem = ({ task, onClick, isSelected, getPriorityColor, getStatusIcon }
 
           {/* Blocker */}
           {isBlocked && task.blocker_reason && (
-            <div className="flex items-start gap-2 text-xs text-red-600 bg-red-500/10 rounded p-2">
+            <div className="flex items-start gap-2 text-xs text-destructive bg-destructive/10 rounded p-2">
               <AlertCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />
               <span>{task.blocker_reason}</span>
             </div>
@@ -242,7 +242,7 @@ const TaskItem = ({ task, onClick, isSelected, getPriorityColor, getStatusIcon }
               </span>
             </div>
             {task.completed_at && (
-              <span className="text-green-600">
+              <span className="text-success">
                 Completed {new Date(task.completed_at).toLocaleDateString()}
               </span>
             )}

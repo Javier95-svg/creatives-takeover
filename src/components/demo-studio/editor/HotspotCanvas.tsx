@@ -180,7 +180,7 @@ export default function HotspotCanvas({
             {selected && (
               <span
                 onPointerDown={(e) => startResize(e, h.id, { x: h.x, y: h.y, w: h.w, h: h.h })}
-                className="absolute -bottom-1.5 -right-1.5 h-3 w-3 cursor-se-resize rounded-full border border-slate-900 bg-white"
+                className="absolute -bottom-1.5 -right-1.5 h-3 w-3 cursor-se-resize rounded-full border border-border bg-white"
               />
             )}
           </div>

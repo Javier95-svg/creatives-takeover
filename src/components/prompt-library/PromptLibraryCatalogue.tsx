@@ -53,24 +53,24 @@ const parseCSV = (csvText: string): Prompt[] => {
 const tierConfig = {
   Free: {
     icon: Gift,
-    color: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    color: 'bg-success-subtle text-success border-success',
     bgColor: 'bg-white',
-    textColor: 'text-gray-900',
-    borderColor: 'border-gray-200',
+    textColor: 'text-foreground',
+    borderColor: 'border-border',
   },
   Rising: {
     icon: Sparkles,
     color: 'bg-purple-100 text-purple-700 border-purple-200',
-    bgColor: 'bg-gray-50',
-    textColor: 'text-gray-400',
-    borderColor: 'border-gray-300',
+    bgColor: 'bg-muted',
+    textColor: 'text-muted-foreground',
+    borderColor: 'border-border',
   },
   Pro: {
     icon: Crown,
-    color: 'bg-amber-100 text-amber-700 border-amber-200',
-    bgColor: 'bg-gray-50',
-    textColor: 'text-gray-400',
-    borderColor: 'border-gray-300',
+    color: 'bg-warning-subtle text-warning border-warning',
+    bgColor: 'bg-muted',
+    textColor: 'text-muted-foreground',
+    borderColor: 'border-border',
   },
 };
 
@@ -110,8 +110,8 @@ export default function PromptLibraryCatalogue() {
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Prompt Library</h1>
-        <p className="text-gray-600">Browse our collection of business prompts tailored to your needs</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">Prompt Library</h1>
+        <p className="text-muted-foreground">Browse our collection of business prompts tailored to your needs</p>
       </div>
 
       <div className="flex flex-wrap gap-3 mb-8">
@@ -156,22 +156,22 @@ export default function PromptLibraryCatalogue() {
                     {prompt.tier}
                   </Badge>
                   {isLocked && (
-                    <Lock className="w-4 h-4 text-gray-400" />
+                    <Lock className="w-4 h-4 text-muted-foreground" />
                   )}
                 </div>
 
                 <h3
                   className={`
                     text-sm font-semibold leading-tight
-                    ${isLocked ? 'text-gray-500 blur-[0.5px]' : 'text-gray-900'}
+                    ${isLocked ? 'text-muted-foreground blur-[0.5px]' : 'text-foreground'}
                   `}
                 >
                   {prompt.name}
                 </h3>
 
                 {isLocked && (
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    <p className="text-xs text-gray-500">Click to unlock</p>
+                  <div className="mt-3 pt-3 border-t border-border">
+                    <p className="text-xs text-muted-foreground">Click to unlock</p>
                   </div>
                 )}
               </CardContent>
@@ -182,7 +182,7 @@ export default function PromptLibraryCatalogue() {
 
       {filteredPrompts.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">No prompts found for this filter</p>
+          <p className="text-muted-foreground text-lg">No prompts found for this filter</p>
         </div>
       )}
 
@@ -195,7 +195,7 @@ export default function PromptLibraryCatalogue() {
                   {selectedPrompt.tier === 'Rising' ? (
                     <Sparkles className="w-5 h-5 text-purple-600" />
                   ) : (
-                    <Crown className="w-5 h-5 text-amber-600" />
+                    <Crown className="w-5 h-5 text-warning" />
                   )}
                   Upgrade to {selectedPrompt.tier}
                 </>

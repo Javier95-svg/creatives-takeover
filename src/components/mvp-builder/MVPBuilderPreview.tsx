@@ -266,27 +266,27 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
   }, [html]);
 
   const statusBadge = isGenerating ? (
-    <span className="flex items-center gap-1.5 text-xs font-medium text-amber-500">
-      <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+    <span className="flex items-center gap-1.5 text-xs font-medium text-warning">
+      <span className="h-1.5 w-1.5 rounded-full bg-warning animate-pulse shrink-0" />
       Building...
     </span>
   ) : projectFramework === 'react-vite' && webContainerState.status === 'ready' ? (
-    <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-500">
-      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+    <span className="flex items-center gap-1.5 text-xs font-medium text-success">
+      <span className="h-1.5 w-1.5 rounded-full bg-success shrink-0" />
       WebContainer ready
     </span>
   ) : projectFramework === 'react-vite' && ['booting', 'mounting', 'installing', 'starting'].includes(webContainerState.status) ? (
-    <span className="flex items-center gap-1.5 text-xs font-medium text-amber-500">
+    <span className="flex items-center gap-1.5 text-xs font-medium text-warning">
       <Loader2 className="h-3 w-3 animate-spin" />
       {webContainerState.status}
     </span>
   ) : previewState.canPreview && html ? (
-    <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-500">
-      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+    <span className="flex items-center gap-1.5 text-xs font-medium text-success">
+      <span className="h-1.5 w-1.5 rounded-full bg-success shrink-0" />
       {previewState.runtimeMode === 'sandbox' ? 'Sandbox ready' : 'Preview ready'}
     </span>
   ) : projectFiles.length > 0 ? (
-    <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
+    <span className="flex items-center gap-1.5 text-xs font-medium text-warning">
       <TriangleAlert className="h-3 w-3" />
       Code-only preview
     </span>
@@ -417,7 +417,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                       disabled={!html && projectFramework !== 'react-vite'}
                     >
                       {copied ? (
-                        <Check className="h-3.5 w-3.5 text-emerald-500" />
+                        <Check className="h-3.5 w-3.5 text-success" />
                       ) : (
                         <Copy className="h-3.5 w-3.5" />
                       )}
@@ -559,7 +559,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
             {!html && projectFramework !== 'react-vite' && !isGenerating && projectFiles.length > 0 && (
               <div className="mx-6 max-w-xl rounded-3xl border border-border/60 bg-background/95 p-6 text-left shadow-sm">
                 <div className="flex items-start gap-3">
-                  <div className="mt-0.5 rounded-2xl bg-amber-500/10 p-2 text-amber-600">
+                  <div className="mt-0.5 rounded-2xl bg-warning/10 p-2 text-warning">
                     <TriangleAlert className="h-5 w-5" />
                   </div>
                   <div>
@@ -601,7 +601,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
 
             {(html || projectFramework === 'react-vite') && (
               projectFramework === 'react-vite' ? (
-                <div className="flex h-full w-full flex-col bg-slate-950 text-slate-100">
+                <div className="flex h-full w-full flex-col bg-slate-950 text-muted-foreground">
                   {webContainerState.previewUrl ? (
                     <iframe
                       key={`${previewKey}-${webContainerState.previewUrl}`}
@@ -614,28 +614,28 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                     <div className="flex flex-1 items-center justify-center px-6 text-center">
                       <div className="max-w-md">
                         {webContainerState.status === 'unsupported' ? (
-                          <TriangleAlert className="mx-auto h-10 w-10 text-amber-400" />
+                          <TriangleAlert className="mx-auto h-10 w-10 text-warning" />
                         ) : webContainerState.status === 'error' ? (
-                          <TriangleAlert className="mx-auto h-10 w-10 text-red-400" />
+                          <TriangleAlert className="mx-auto h-10 w-10 text-destructive" />
                         ) : (
                           <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
                         )}
                         <p className="mt-4 text-sm font-medium">
                           {webContainerState.error || 'Starting React/Vite preview...'}
                         </p>
-                        <p className="mt-2 text-xs text-slate-400">
+                        <p className="mt-2 text-xs text-muted-foreground">
                           WebContainer installs dependencies and runs the Vite dev server in your browser.
                         </p>
                       </div>
                     </div>
                   )}
                   <div className="max-h-40 overflow-y-auto border-t border-white/10 bg-black/70 px-3 py-2 font-mono text-label">
-                    <div className="mb-1 flex items-center gap-1.5 text-slate-400">
+                    <div className="mb-1 flex items-center gap-1.5 text-muted-foreground">
                       <TerminalSquare className="h-3.5 w-3.5" />
                       Runtime logs
                     </div>
                     {webContainerState.logs.length === 0 ? (
-                      <div className="text-slate-500">No runtime logs yet.</div>
+                      <div className="text-muted-foreground">No runtime logs yet.</div>
                     ) : (
                       webContainerState.logs.slice(-8).map((log) => (
                         <div
@@ -643,10 +643,10 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                           className={cn(
                             'truncate',
                             log.level === 'error'
-                              ? 'text-red-300'
+                              ? 'text-destructive'
                               : log.level === 'warn'
-                              ? 'text-amber-300'
-                              : 'text-slate-300'
+                              ? 'text-warning'
+                              : 'text-muted-foreground'
                           )}
                         >
                           {log.message}
@@ -667,7 +667,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                 {(previewState.warnings.length > 0 || isShowingPreviewFallback) && (
                   <div className="absolute left-4 right-4 top-4 z-20 space-y-2">
                     {isShowingPreviewFallback && (
-                      <div className="rounded-2xl border border-amber-500/25 bg-background/95 px-4 py-3 text-sm text-amber-700 shadow-lg backdrop-blur">
+                      <div className="rounded-2xl border border-warning/25 bg-background/95 px-4 py-3 text-sm text-warning shadow-lg backdrop-blur">
                         Showing the last working preview because the latest code cannot be rendered safely yet.
                       </div>
                     )}
@@ -684,7 +684,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
 
                 {runtimeError && !isGenerating && (
                   <div className="absolute left-4 right-4 top-4 z-20">
-                    <div className="rounded-2xl border border-red-500/25 bg-background/95 px-4 py-3 text-sm text-red-700 shadow-lg backdrop-blur">
+                    <div className="rounded-2xl border border-destructive/25 bg-background/95 px-4 py-3 text-sm text-destructive shadow-lg backdrop-blur">
                       {runtimeError}
                     </div>
                   </div>

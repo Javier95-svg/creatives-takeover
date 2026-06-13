@@ -30,7 +30,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
           )}
           {status === 'found' && (
             <>
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <CheckCircle2 className="h-4 w-4 text-success" />
               <span className="text-muted-foreground">
                 Found <Badge variant="secondary" className="mx-1">{sourceCount}</Badge> sources
               </span>

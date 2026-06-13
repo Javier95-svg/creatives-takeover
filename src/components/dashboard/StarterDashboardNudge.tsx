@@ -121,10 +121,10 @@ export const StarterDashboardNudge = () => {
   }
 
   return (
-    <Card className="mb-6 border-2 border-blue-500/70 bg-blue-500/5 shadow-sm">
+    <Card className="mb-6 border-2 border-info/70 bg-info/5 shadow-sm">
       <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-info/10 text-info">
             <TrendingUp className="h-5 w-5" />
           </div>
           <div>

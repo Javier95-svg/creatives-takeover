@@ -57,7 +57,7 @@ export default function VslSlot({
             VSL variation
           </CardTitle>
           {vsl?.is_primary && (
-            <Badge className="gap-1 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/10">
+            <Badge className="gap-1 bg-success/10 text-success hover:bg-success/10">
               <CheckCircle2 className="h-3.5 w-3.5" /> Primary
             </Badge>
           )}

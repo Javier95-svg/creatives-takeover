@@ -53,7 +53,7 @@ export default function PhaseCard({
   let badgeClass: string;
   if (isComplete) {
     badgeContent = 'Complete';
-    badgeClass = 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
+    badgeClass = 'bg-success/10 text-success border-success/20';
   } else if (isActive) {
     badgeContent = `${completionPercent}%`;
     badgeClass = 'bg-primary/10 text-primary border-primary/20';
@@ -145,7 +145,7 @@ export default function PhaseCard({
                     className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm hover:bg-muted/50 transition-colors"
                   >
                     {tool.used ? (
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                      <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
                     ) : (
                       <ToolIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                     )}

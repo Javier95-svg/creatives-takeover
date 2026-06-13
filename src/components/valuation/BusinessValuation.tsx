@@ -205,7 +205,7 @@ const BusinessValuation = ({ businessPlan }: { businessPlan?: any }) => {
   const getReadinessColor = (score: number) => {
     if (score >= 80) return "text-[hsl(var(--green-primary))]";
     if (score >= 60) return "text-[hsl(var(--blue-primary))]";
-    if (score >= 40) return "text-orange-600";
+    if (score >= 40) return "text-warning";
     return "text-[hsl(var(--red-primary))]";
   };
 

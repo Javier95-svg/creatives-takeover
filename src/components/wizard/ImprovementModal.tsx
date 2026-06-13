@@ -50,9 +50,9 @@ export const ImprovementModal: React.FC<ImprovementModalProps> = ({
   };
 
   const getScoreColor = () => {
-    if (quality.score >= 80) return 'text-green-600';
-    if (quality.score >= 60) return 'text-yellow-600';
-    return 'text-orange-600';
+    if (quality.score >= 80) return 'text-success';
+    if (quality.score >= 60) return 'text-warning';
+    return 'text-warning';
   };
 
   return (
@@ -160,10 +160,10 @@ export const ImprovementModal: React.FC<ImprovementModalProps> = ({
                   {examples.map((example, idx) => (
                     <div
                       key={idx}
-                      className="p-3 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-900 rounded-md text-sm"
+                      className="p-3 bg-success-subtle dark:bg-success/10 border border-success dark:border-success rounded-md text-sm"
                     >
                       <div className="flex items-start gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
                         <p>{example}</p>
                       </div>
                     </div>

@@ -76,18 +76,18 @@ export const FriendRequestsModal = ({ open, onOpenChange }: FriendRequestsModalP
                       variant="outline"
                       onClick={() => handleAccept(request.id)}
                       disabled={loading}
-                      className="min-h-[44px] min-w-[44px] sm:h-8 sm:w-8 p-0 bg-green-500/10 border-green-500/20 hover:bg-green-500/20"
+                      className="min-h-[44px] min-w-[44px] sm:h-8 sm:w-8 p-0 bg-success/10 border-success/20 hover:bg-success/20"
                     >
-                      <Check className="h-4 w-4 text-green-600" />
+                      <Check className="h-4 w-4 text-success" />
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => handleDecline(request.id)}
                       disabled={loading}
-                      className="min-h-[44px] min-w-[44px] sm:h-8 sm:w-8 p-0 bg-red-500/10 border-red-500/20 hover:bg-red-500/20"
+                      className="min-h-[44px] min-w-[44px] sm:h-8 sm:w-8 p-0 bg-destructive/10 border-destructive/20 hover:bg-destructive/20"
                     >
-                      <X className="h-4 w-4 text-red-600" />
+                      <X className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
                 </div>

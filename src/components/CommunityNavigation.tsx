@@ -14,7 +14,7 @@ import {
 const CommunityNavigation = () => {
   const navigationCards = [
     {
-      icon: <BookOpen className="w-8 h-8 text-green-500" />,
+      icon: <BookOpen className="w-8 h-8 text-success" />,
       title: "Learning Resources",
       description: "Access tutorials, guides, and exclusive content to enhance your creative skills",
       link: "/resources",
@@ -22,7 +22,7 @@ const CommunityNavigation = () => {
       highlight: false
     },
     {
-      icon: <HelpCircle className="w-8 h-8 text-blue-500" />,
+      icon: <HelpCircle className="w-8 h-8 text-info" />,
       title: "FAQ & Support",
       description: "Get answers to common questions about our creative community platform",
       link: "/faq",

@@ -167,7 +167,7 @@ export const OnboardingChecklist = ({
       {/* Decorative background */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-0 right-0 w-32 h-32 bg-primary rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-500 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-40 h-40 bg-info rounded-full blur-3xl" />
       </div>
 
       {/* Dismiss button */}
@@ -206,12 +206,12 @@ export const OnboardingChecklist = ({
               key={item.id}
               className={`flex items-start gap-3 p-3 rounded-lg transition-all duration-300 ${
                 item.completed
-                  ? 'bg-green-500/10 border border-green-500/20'
+                  ? 'bg-success/10 border border-success/20'
                   : 'bg-background/30 border border-border/50 hover:border-primary/30'
               }`}
             >
               {item.completed ? (
-                <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+                <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
               ) : (
                 <Circle className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
               )}
@@ -234,7 +234,7 @@ export const OnboardingChecklist = ({
           <div className="pt-4">
             <Button
               onClick={handleVisitDashboard}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              className="w-full bg-gradient-to-r from-info to-purple-600 hover:from-info hover:to-purple-700"
             >
               Explore Your Dashboard →
             </Button>
@@ -243,7 +243,7 @@ export const OnboardingChecklist = ({
 
         {allCompleted && (
           <div className="pt-4 text-center">
-            <p className="text-sm text-green-500 font-medium animate-pulse">
+            <p className="text-sm text-success font-medium animate-pulse">
               ✨ Congratulations! You're all set up! ✨
             </p>
           </div>

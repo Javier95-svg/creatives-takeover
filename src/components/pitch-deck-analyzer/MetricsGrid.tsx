@@ -25,17 +25,17 @@ export const MetricsGrid: React.FC<MetricsGridProps> = ({ subScores }) => {
   }));
 
   const getScoreColor = (score: number): string => {
-    if (score >= 85) return 'text-green-600';
-    if (score >= 70) return 'text-blue-600';
-    if (score >= 55) return 'text-yellow-600';
-    return 'text-red-600';
+    if (score >= 85) return 'text-success';
+    if (score >= 70) return 'text-info';
+    if (score >= 55) return 'text-warning';
+    return 'text-destructive';
   };
 
   const getScoreBadge = (score: number): string => {
-    if (score >= 85) return 'bg-green-50 text-green-700 border-green-200';
-    if (score >= 70) return 'bg-blue-50 text-blue-700 border-border-blue-200';
-    if (score >= 55) return 'bg-yellow-50 text-yellow-700 border-yellow-200';
-    return 'bg-red-50 text-red-700 border-red-200';
+    if (score >= 85) return 'bg-success-subtle text-success border-success';
+    if (score >= 70) return 'bg-info-subtle text-info border-border-info';
+    if (score >= 55) return 'bg-warning-subtle text-warning border-warning';
+    return 'bg-destructive-subtle text-destructive border-destructive';
   };
 
   return (

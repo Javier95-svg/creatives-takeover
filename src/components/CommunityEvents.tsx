@@ -217,7 +217,7 @@ const CommunityEvents = () => {
                       <span className="text-sm">{event.attendees} attendees</span>
                     </div>
                     <div className="flex items-center justify-center">
-                      <Star className="w-4 h-4 mr-2 text-yellow-500" />
+                      <Star className="w-4 h-4 mr-2 text-warning" />
                       <span className="text-sm">{event.rating}/5 rating</span>
                     </div>
                   </div>

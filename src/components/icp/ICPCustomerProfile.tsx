@@ -19,7 +19,7 @@ const ICPCustomerProfile: React.FC<ICPCustomerProfileProps> = ({ profile }) => {
     <div className="space-y-6">
       <Card className="overflow-hidden rounded-4xl border border-primary/20 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.14),transparent_42%),rgba(34,197,94,0.06)] shadow-[0_20px_60px_-36px_rgba(34,197,94,0.45)]">
         <CardHeader className="space-y-5 pb-0">
-          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-500/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:bg-slate-950/60 dark:text-emerald-300">
+          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-success/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-success dark:bg-slate-950/60 dark:text-success">
             <Users className="h-3.5 w-3.5" />
             Customer profile
           </div>
@@ -93,7 +93,7 @@ const ICPCustomerProfile: React.FC<ICPCustomerProfileProps> = ({ profile }) => {
               <ul className="space-y-2">
                 {urgencySignals.map((signal, index) => (
                   <li key={index} className="flex items-start gap-3 rounded-2.5xl border border-border/50 bg-background/70 px-4 py-3 text-sm">
-                    <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+                    <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-success" />
                     <span>{signal}</span>
                   </li>
                 ))}
@@ -117,7 +117,7 @@ const ICPCustomerProfile: React.FC<ICPCustomerProfileProps> = ({ profile }) => {
               <ul className="space-y-2">
                 {currentAlternatives.map((alternative, index) => (
                   <li key={index} className="flex items-start gap-3 rounded-2.5xl border border-border/50 bg-background/70 px-4 py-3 text-sm">
-                    <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-sky-500" />
+                    <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-info" />
                     <span>{alternative}</span>
                   </li>
                 ))}
@@ -128,7 +128,7 @@ const ICPCustomerProfile: React.FC<ICPCustomerProfileProps> = ({ profile }) => {
               <ul className="space-y-2">
                 {switchingCosts.map((cost, index) => (
                   <li key={index} className="flex items-start gap-3 rounded-2.5xl border border-border/50 bg-background/70 px-4 py-3 text-sm">
-                    <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-orange-500" />
+                    <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-warning" />
                     <span>{cost}</span>
                   </li>
                 ))}

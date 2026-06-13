@@ -250,10 +250,10 @@ const TemplateLibrary = () => {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case "Beginner": return "text-green-600 bg-green-100";
-      case "Intermediate": return "text-orange-600 bg-orange-100";
-      case "Advanced": return "text-red-600 bg-red-100";
-      default: return "text-gray-600 bg-gray-100";
+      case "Beginner": return "text-success bg-success-subtle";
+      case "Intermediate": return "text-warning bg-warning-subtle";
+      case "Advanced": return "text-destructive bg-destructive-subtle";
+      default: return "text-muted-foreground bg-muted";
     }
   };
 
@@ -343,7 +343,7 @@ const TemplateLibrary = () => {
                 {/* Popularity Badge */}
                 {template.popularity >= 90 && (
                   <div className="absolute top-4 right-4 z-10">
-                    <Badge className="bg-yellow-100 text-yellow-800 gap-1">
+                    <Badge className="bg-warning-subtle text-warning gap-1">
                       <Star className="w-3 h-3 fill-current" />
                       Popular
                     </Badge>

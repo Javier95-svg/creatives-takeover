@@ -51,19 +51,19 @@ export default function ComingSoonPage({ title, description, highlights }: Comin
           <div className="container mx-auto max-w-3xl relative z-10 space-y-8">
             {/* Hero card */}
             <Card className="border-primary/20 overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-blue-500 to-emerald-500" />
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-info to-success" />
               <CardContent className="flex flex-col items-center justify-center py-16 px-8 text-center space-y-6">
                 {/* Animated icon */}
                 <div className="relative">
                   <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
                     <Rocket className="w-10 h-10 text-primary" />
                   </div>
-                  <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center animate-bounce">
-                    <Zap className="w-3.5 h-3.5 text-yellow-900" />
+                  <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-warning flex items-center justify-center animate-bounce">
+                    <Zap className="w-3.5 h-3.5 text-warning" />
                   </div>
                 </div>
 
-                <Badge className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 px-5 py-1.5 text-sm font-semibold tracking-wide">
+                <Badge className="bg-warning-subtle text-warning dark:bg-warning/30 dark:text-warning px-5 py-1.5 text-sm font-semibold tracking-wide">
                   Coming Soon
                 </Badge>
 

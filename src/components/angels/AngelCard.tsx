@@ -16,15 +16,15 @@ const getStageColor = (stage: string): string => {
     case 'pre-seed':
       return 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400';
     case 'seed':
-      return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+      return 'bg-success-subtle text-success dark:bg-success/30 dark:text-success';
     case 'series a':
-      return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+      return 'bg-info-subtle text-info dark:bg-info/30 dark:text-info';
     case 'series b':
-      return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
+      return 'bg-warning-subtle text-warning dark:bg-warning/30 dark:text-warning';
     case 'series c+':
-      return 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400';
+      return 'bg-destructive-subtle text-destructive dark:bg-destructive/30 dark:text-destructive';
     default:
-      return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+      return 'bg-muted text-foreground dark:bg-gray-800 dark:text-muted-foreground';
   }
 };
 
@@ -90,7 +90,7 @@ export const AngelCard = ({ angel, className, priority = false }: AngelCardProps
                   .map((sector) => (
                   <Badge
                     key={sector}
-                    className="bg-red-600 text-white text-xs font-medium px-3 py-1 hover:bg-red-600"
+                    className="bg-destructive text-white text-xs font-medium px-3 py-1 hover:bg-destructive"
                   >
                     {sector}
                   </Badge>
@@ -116,7 +116,7 @@ export const AngelCard = ({ angel, className, priority = false }: AngelCardProps
                     href={angel.linkedin_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-blue-600 transition-colors"
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-info transition-colors"
                     aria-label="LinkedIn"
                   >
                     <Linkedin className="h-4 w-4" />

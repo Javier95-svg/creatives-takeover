@@ -19,9 +19,9 @@ const badgeIcons: Record<string, React.ReactNode> = {
 
 const getRarityColor = (rarity?: string) => {
   switch (rarity) {
-    case 'legendary': return 'border-yellow-500 bg-yellow-500/10';
+    case 'legendary': return 'border-warning bg-warning/10';
     case 'epic': return 'border-purple-500 bg-purple-500/10';
-    case 'rare': return 'border-blue-500 bg-blue-500/10';
+    case 'rare': return 'border-info bg-info/10';
     default: return 'border-muted-foreground/20';
   }
 };

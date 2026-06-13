@@ -11,7 +11,7 @@ const QuotaBar = ({ used, max }: { used: number; max: number }) => {
   }
 
   const pct = max > 0 ? Math.min((used / max) * 100, 100) : 0;
-  const color = pct >= 100 ? 'bg-destructive' : pct >= 66 ? 'bg-yellow-500' : 'bg-primary';
+  const color = pct >= 100 ? 'bg-destructive' : pct >= 66 ? 'bg-warning' : 'bg-primary';
   return (
     <div className="w-full h-1.5 rounded-full bg-muted mt-2">
       <div className={`h-1.5 rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />

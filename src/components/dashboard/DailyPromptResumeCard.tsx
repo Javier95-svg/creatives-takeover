@@ -9,12 +9,12 @@ interface DailyPromptResumeCardProps {
 
 export function DailyPromptResumeCard({ mode, onResume }: DailyPromptResumeCardProps) {
   return (
-    <Card className="border-amber-200 bg-amber-50/70 shadow-sm dark:border-amber-900/40 dark:bg-amber-950/20">
+    <Card className="border-warning bg-warning-subtle shadow-sm dark:border-warning/40 dark:bg-warning/20">
       <CardContent className="flex flex-col gap-3 pt-6 md:flex-row md:items-center md:justify-between">
         <div className="flex items-start gap-3">
-          <AlarmClock className="mt-0.5 h-5 w-5 text-amber-600" />
+          <AlarmClock className="mt-0.5 h-5 w-5 text-warning" />
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700 dark:text-amber-400">Unresolved check-in</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-warning dark:text-warning">Unresolved check-in</p>
             <p className="mt-1 text-base font-semibold">
               {mode === 'morning'
                 ? 'Your daily goal is still waiting'

@@ -29,23 +29,23 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
   const getActivityIcon = (type: CollaborationActivity['activity_type']) => {
     switch (type) {
       case 'joined':
-        return <UserPlus className="h-4 w-4 text-green-500" />;
+        return <UserPlus className="h-4 w-4 text-success" />;
       case 'left':
-        return <UserMinus className="h-4 w-4 text-orange-500" />;
+        return <UserMinus className="h-4 w-4 text-warning" />;
       case 'message':
-        return <MessageSquare className="h-4 w-4 text-blue-500" />;
+        return <MessageSquare className="h-4 w-4 text-info" />;
       case 'comment':
         return <MessageCircle className="h-4 w-4 text-purple-500" />;
       case 'edit':
         return <Edit className="h-4 w-4 text-indigo-500" />;
       case 'call_started':
-        return <Phone className="h-4 w-4 text-green-500" />;
+        return <Phone className="h-4 w-4 text-success" />;
       case 'call_ended':
-        return <PhoneOff className="h-4 w-4 text-red-500" />;
+        return <PhoneOff className="h-4 w-4 text-destructive" />;
       case 'screen_share_started':
-        return <Monitor className="h-4 w-4 text-blue-500" />;
+        return <Monitor className="h-4 w-4 text-info" />;
       case 'screen_share_ended':
-        return <MonitorOff className="h-4 w-4 text-gray-500" />;
+        return <MonitorOff className="h-4 w-4 text-muted-foreground" />;
       default:
         return <Activity className="h-4 w-4" />;
     }
@@ -193,23 +193,23 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
   const getActivityIcon = (type: CollaborationActivity['activity_type']) => {
     switch (type) {
       case 'joined':
-        return <UserPlus className="h-4 w-4 text-green-500" />;
+        return <UserPlus className="h-4 w-4 text-success" />;
       case 'left':
-        return <UserMinus className="h-4 w-4 text-orange-500" />;
+        return <UserMinus className="h-4 w-4 text-warning" />;
       case 'message':
-        return <MessageSquare className="h-4 w-4 text-blue-500" />;
+        return <MessageSquare className="h-4 w-4 text-info" />;
       case 'comment':
         return <MessageCircle className="h-4 w-4 text-purple-500" />;
       case 'edit':
         return <Edit className="h-4 w-4 text-indigo-500" />;
       case 'call_started':
-        return <Phone className="h-4 w-4 text-green-500" />;
+        return <Phone className="h-4 w-4 text-success" />;
       case 'call_ended':
-        return <PhoneOff className="h-4 w-4 text-red-500" />;
+        return <PhoneOff className="h-4 w-4 text-destructive" />;
       case 'screen_share_started':
-        return <Monitor className="h-4 w-4 text-blue-500" />;
+        return <Monitor className="h-4 w-4 text-info" />;
       case 'screen_share_ended':
-        return <MonitorOff className="h-4 w-4 text-gray-500" />;
+        return <MonitorOff className="h-4 w-4 text-muted-foreground" />;
       default:
         return <Activity className="h-4 w-4" />;
     }

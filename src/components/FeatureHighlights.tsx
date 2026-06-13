@@ -93,8 +93,8 @@ const FeatureHighlights = () => {
                 <div className="absolute -top-3 left-6">
                   <Badge className={`${
                     feature.highlight === "Most Used" ? "bg-primary" : 
-                    feature.highlight === "Top Rated" ? "bg-green-500" :
-                    feature.highlight === "New" ? "bg-blue-500" : "bg-secondary"
+                    feature.highlight === "Top Rated" ? "bg-success" :
+                    feature.highlight === "New" ? "bg-info" : "bg-secondary"
                   } text-white shadow-lg`}>
                     {feature.highlight}
                   </Badge>

@@ -234,7 +234,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
             className={cn(
               "h-3.5 w-3.5",
               star <= Math.round(ratingValue)
-                ? "fill-yellow-400 text-yellow-400"
+                ? "fill-warning text-warning"
                 : "text-muted-foreground/20"
             )}
           />
@@ -495,7 +495,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
                       href={mentor.linkedin_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex h-5 w-5 items-center justify-center text-muted-foreground transition-colors hover:text-blue-600 sm:h-auto sm:w-auto"
+                      className="flex h-5 w-5 items-center justify-center text-muted-foreground transition-colors hover:text-info sm:h-auto sm:w-auto"
                       aria-label="LinkedIn"
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -561,7 +561,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
             <div className="flex items-center gap-4 text-xs lg:text-sm text-muted-foreground">
               {rating > 0 && (
                 <div className="flex items-center gap-1">
-                  <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                  <Star className="h-3.5 w-3.5 fill-warning text-warning" />
                   <span>{rating.toFixed(1)}</span>
                 </div>
               )}

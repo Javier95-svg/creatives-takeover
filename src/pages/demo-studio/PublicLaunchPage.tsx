@@ -106,11 +106,11 @@ export default function PublicLaunchPage() {
   const successMessage = data.launchPage.theme?.successMessage || 'You are on the early access list.';
   const ctaLabel = data.launchPage.cta_label || DEFAULT_DEMO_STUDIO_CTA;
   const pageClass = background === 'light'
-    ? 'min-h-screen bg-white text-slate-950'
+    ? 'min-h-screen bg-white text-foreground'
     : background === 'gradient'
       ? 'min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.28),transparent_34%),linear-gradient(135deg,#020617,#111827)] text-white'
       : 'min-h-screen bg-slate-950 text-white';
-  const mutedText = background === 'light' ? 'text-slate-600' : 'text-white/70';
+  const mutedText = background === 'light' ? 'text-muted-foreground' : 'text-white/70';
   const mediaOrder = layout === 'demo_first' ? 'lg:order-first' : '';
 
   return (
@@ -127,7 +127,7 @@ export default function PublicLaunchPage() {
           </Link>
           <a
             href="#signup"
-            className="rounded-full bg-white px-4 py-2 text-sm font-medium text-slate-950"
+            className="rounded-full bg-white px-4 py-2 text-sm font-medium text-foreground"
             onClick={() => {
               void trackDemoEvent('cta_click', {
                 projectId: data.project.id,
@@ -175,7 +175,7 @@ export default function PublicLaunchPage() {
               </Button>
             </form>
             {submitted && (
-              <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-emerald-300">
+              <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-success">
                 <CheckCircle2 className="h-4 w-4" /> {successMessage}
               </p>
             )}
@@ -188,7 +188,7 @@ export default function PublicLaunchPage() {
         </section>
 
         {data.demo && (
-          <section className="mt-10 rounded-2xl bg-white p-3 text-slate-950 md:p-4">
+          <section className="mt-10 rounded-2xl bg-white p-3 text-foreground md:p-4">
             <DemoPlayer
               steps={data.demo.steps}
               theme={data.demo.demo.theme}

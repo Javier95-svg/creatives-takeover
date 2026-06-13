@@ -31,11 +31,11 @@ const BusinessPlanningDemo = ({ scenario }: BusinessPlanningDemoProps) => {
   ];
 
   const successMetrics = [
-    { label: 'Market Clarity', score: 92, color: 'text-green-500' },
-    { label: 'Problem Validation', score: 88, color: 'text-green-500' },
-    { label: 'Solution Strength', score: 85, color: 'text-green-500' },
-    { label: 'Financial Planning', score: 78, color: 'text-yellow-500' },
-    { label: 'Execution Feasibility', score: 82, color: 'text-green-500' }
+    { label: 'Market Clarity', score: 92, color: 'text-success' },
+    { label: 'Problem Validation', score: 88, color: 'text-success' },
+    { label: 'Solution Strength', score: 85, color: 'text-success' },
+    { label: 'Financial Planning', score: 78, color: 'text-warning' },
+    { label: 'Execution Feasibility', score: 82, color: 'text-success' }
   ];
 
   return (

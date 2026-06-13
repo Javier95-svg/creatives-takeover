@@ -54,19 +54,19 @@ const ICPNicheScore: React.FC<ICPNicheScoreProps> = ({ score, actionPlan = [], n
   }, [score.overall]);
 
   const scoreColor =
-    score.overall >= 70 ? 'text-green-600' :
-    score.overall >= 50 ? 'text-yellow-600' :
-    'text-red-600';
+    score.overall >= 70 ? 'text-success' :
+    score.overall >= 50 ? 'text-warning' :
+    'text-destructive';
 
   const scoreBgColor =
-    score.overall >= 70 ? 'bg-green-500' :
-    score.overall >= 50 ? 'bg-yellow-500' :
-    'bg-red-500';
+    score.overall >= 70 ? 'bg-success' :
+    score.overall >= 50 ? 'bg-warning' :
+    'bg-destructive';
 
   const verdictBadgeColor =
-    score.verdict === 'Highly Viable' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-    score.verdict === 'Promising' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
-    'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+    score.verdict === 'Highly Viable' ? 'bg-success-subtle text-success dark:bg-success/30 dark:text-success' :
+    score.verdict === 'Promising' ? 'bg-warning-subtle text-warning dark:bg-warning/30 dark:text-warning' :
+    'bg-destructive-subtle text-destructive dark:bg-destructive/30 dark:text-destructive';
 
   const subScoreItems = [
     { label: 'Market Size', value: score.subScores.marketSize, description: 'Size and growth potential of the niche', icon: TrendingUp },
@@ -76,9 +76,9 @@ const ICPNicheScore: React.FC<ICPNicheScoreProps> = ({ score, actionPlan = [], n
   ];
 
   const priorityColors: Record<string, string> = {
-    High: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-    Medium: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-    Low: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    High: 'bg-destructive-subtle text-destructive dark:bg-destructive/30 dark:text-destructive',
+    Medium: 'bg-warning-subtle text-warning dark:bg-warning/30 dark:text-warning',
+    Low: 'bg-info-subtle text-info dark:bg-info/30 dark:text-info',
   };
 
   return (
@@ -121,9 +121,9 @@ const ICPNicheScore: React.FC<ICPNicheScoreProps> = ({ score, actionPlan = [], n
           {subScoreItems.map((item, index) => {
             const Icon = item.icon;
             const itemColor =
-              item.value >= 70 ? 'text-green-600' :
-              item.value >= 50 ? 'text-yellow-600' :
-              'text-red-600';
+              item.value >= 70 ? 'text-success' :
+              item.value >= 50 ? 'text-warning' :
+              'text-destructive';
 
             return (
               <div
@@ -157,18 +157,18 @@ const ICPNicheScore: React.FC<ICPNicheScoreProps> = ({ score, actionPlan = [], n
       {/* Verdict Summary */}
       <Card className={cn(
         "border-2",
-        score.overall >= 70 ? "border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/10" :
-        score.overall >= 50 ? "border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/10" :
-        "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10"
+        score.overall >= 70 ? "border-success dark:border-success bg-success-subtle dark:bg-success/10" :
+        score.overall >= 50 ? "border-warning dark:border-warning bg-warning-subtle dark:bg-warning/10" :
+        "border-destructive dark:border-destructive bg-destructive-subtle dark:bg-destructive/10"
       )}>
         <CardContent className="pt-6">
           <div className="flex items-start gap-3">
             {score.overall >= 70 ? (
-              <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
+              <CheckCircle2 className="w-5 h-5 text-success mt-0.5" />
             ) : score.overall >= 50 ? (
-              <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
+              <AlertTriangle className="w-5 h-5 text-warning mt-0.5" />
             ) : (
-              <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5" />
+              <AlertTriangle className="w-5 h-5 text-destructive mt-0.5" />
             )}
             <div>
               <p className="font-medium mb-1">

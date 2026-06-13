@@ -46,7 +46,7 @@ const ProgressCommunityPage = () => {
                   </div>
                   <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
                     <div className="mb-2 flex items-center gap-2 text-label font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                      <Flame className="h-3.5 w-3.5 text-orange-500" />
+                      <Flame className="h-3.5 w-3.5 text-warning" />
                       Signal
                     </div>
                     <p className="text-sm text-foreground">Consistency matters more than polished positioning.</p>

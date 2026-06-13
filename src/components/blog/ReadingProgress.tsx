@@ -54,7 +54,7 @@ const ReadingProgress = ({ readTime, onComplete }: ReadingProgressProps) => {
           {/* Time Remaining / Complete Badge */}
           <div className={cn(
             "flex items-center gap-2 text-sm font-medium transition-all duration-300",
-            isComplete ? "text-green-600" : "text-muted-foreground"
+            isComplete ? "text-success" : "text-muted-foreground"
           )}>
             {isComplete ? (
               <>

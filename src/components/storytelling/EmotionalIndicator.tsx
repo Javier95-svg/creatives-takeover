@@ -11,41 +11,41 @@ export const EmotionalIndicator = ({ emotion, intensity = 'medium' }: EmotionalI
       case 'frustrated':
         return {
           icon: Frown,
-          color: 'text-red-500',
-          bgColor: 'bg-red-500/10',
-          borderColor: 'border-red-500/20',
+          color: 'text-destructive',
+          bgColor: 'bg-destructive/10',
+          borderColor: 'border-destructive/20',
           label: 'Frustrated'
         };
       case 'anxious':
         return {
           icon: AlertCircle,
-          color: 'text-orange-500',
-          bgColor: 'bg-orange-500/10',
-          borderColor: 'border-orange-500/20',
+          color: 'text-warning',
+          bgColor: 'bg-warning/10',
+          borderColor: 'border-warning/20',
           label: 'Anxious'
         };
       case 'uncertain':
         return {
           icon: Meh,
-          color: 'text-amber-500',
-          bgColor: 'bg-amber-500/10',
-          borderColor: 'border-amber-500/20',
+          color: 'text-warning',
+          bgColor: 'bg-warning/10',
+          borderColor: 'border-warning/20',
           label: 'Uncertain'
         };
       case 'hopeful':
         return {
           icon: TrendingUp,
-          color: 'text-blue-500',
-          bgColor: 'bg-blue-500/10',
-          borderColor: 'border-blue-500/20',
+          color: 'text-info',
+          bgColor: 'bg-info/10',
+          borderColor: 'border-info/20',
           label: 'Hopeful'
         };
       case 'confident':
         return {
           icon: Smile,
-          color: 'text-green-500',
-          bgColor: 'bg-green-500/10',
-          borderColor: 'border-green-500/20',
+          color: 'text-success',
+          bgColor: 'bg-success/10',
+          borderColor: 'border-success/20',
           label: 'Confident'
         };
       default:

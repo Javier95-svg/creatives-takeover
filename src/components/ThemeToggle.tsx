@@ -20,14 +20,14 @@ const ThemeToggle = () => {
           {/* Sun icon on the left - active in light mode */}
           <Sun className={`h-4 w-4 transition-all duration-300 ${
             !isDark 
-              ? 'opacity-100 scale-110 text-yellow-500 dark:text-yellow-400' 
+              ? 'opacity-100 scale-110 text-warning dark:text-warning' 
               : 'opacity-30 scale-100 text-muted-foreground'
           }`} />
           
           {/* Moon icon on the right - active in dark mode */}
           <Moon className={`h-4 w-4 transition-all duration-300 ${
             isDark 
-              ? 'opacity-100 scale-110 text-blue-400' 
+              ? 'opacity-100 scale-110 text-info' 
               : 'opacity-30 scale-100 text-muted-foreground'
           }`} />
         </Button>

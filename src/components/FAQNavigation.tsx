@@ -14,7 +14,7 @@ import {
 const FAQNavigation = () => {
   const navigationCards = [
     {
-      icon: <DollarSign className="w-8 h-8 text-green-500" />,
+      icon: <DollarSign className="w-8 h-8 text-success" />,
       title: "View Pricing Plans",
       description: "Explore our affordable pricing options and find the perfect plan for your creative needs",
       link: "/pricing",
@@ -30,7 +30,7 @@ const FAQNavigation = () => {
       highlight: false
     },
     {
-      icon: <BookOpen className="w-8 h-8 text-blue-500" />,
+      icon: <BookOpen className="w-8 h-8 text-info" />,
       title: "Free Resources",
       description: "Access tutorials, guides, and downloads to enhance your creative skills and knowledge",
       link: "/resources",

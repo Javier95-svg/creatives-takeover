@@ -145,7 +145,7 @@ export default function BizMapJourneyHubPage() {
                         Stage {stage.numeral}: {stage.title}
                       </CardTitle>
                       {isCompleted ? (
-                        <Badge className="bg-green-500/10 text-green-700 border-green-500/30">Completed</Badge>
+                        <Badge className="bg-success/10 text-success border-success/30">Completed</Badge>
                       ) : (
                         <Badge variant="secondary">In progress</Badge>
                       )}
@@ -167,7 +167,7 @@ export default function BizMapJourneyHubPage() {
                               <div>
                                 <p className="text-sm font-semibold">
                                   {tool.name}
-                                  {tool.beta ? <Badge className="ml-2 bg-amber-500/10 text-amber-700 border-amber-500/30">Beta mode</Badge> : null}
+                                  {tool.beta ? <Badge className="ml-2 bg-warning/10 text-warning border-warning/30">Beta mode</Badge> : null}
                                 </p>
                                 <p className="mt-1 text-xs text-muted-foreground">{tool.description}</p>
                               </div>

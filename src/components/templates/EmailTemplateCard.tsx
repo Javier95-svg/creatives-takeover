@@ -13,15 +13,15 @@ const EmailTemplateCard = ({ template, onViewTemplate }: EmailTemplateCardProps)
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'cold-outreach':
-        return 'bg-blue-500/10 text-blue-600 border-blue-500/20';
+        return 'bg-info/10 text-info border-info/20';
       case 'warm-introduction':
-        return 'bg-green-500/10 text-green-600 border-green-500/20';
+        return 'bg-success/10 text-success border-success/20';
       case 'follow-up':
-        return 'bg-orange-500/10 text-orange-600 border-orange-500/20';
+        return 'bg-warning/10 text-warning border-warning/20';
       case 'thank-you':
         return 'bg-purple-500/10 text-purple-600 border-purple-500/20';
       case 'update':
-        return 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20';
+        return 'bg-warning/10 text-warning border-warning/20';
       default:
         return 'bg-muted text-muted-foreground';
     }
@@ -38,7 +38,7 @@ const EmailTemplateCard = ({ template, onViewTemplate }: EmailTemplateCardProps)
             </h3>
           </div>
           {template.popularity >= 85 && (
-            <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20 shrink-0 text-xs">
+            <Badge className="bg-warning/10 text-warning border-warning/20 shrink-0 text-xs">
               <Star className="h-3 w-3 fill-current mr-1" />
               Popular
             </Badge>

@@ -74,7 +74,7 @@ export const FounderOSIntegration = ({
           {/* Optional: Market Validation */}
           <div className="flex items-center justify-between p-3 bg-background/50 rounded-lg border">
             <div className="flex items-center gap-3">
-              <Target className={`h-5 w-5 ${validationComplete ? 'text-green-500' : 'text-muted-foreground'}`} />
+              <Target className={`h-5 w-5 ${validationComplete ? 'text-success' : 'text-muted-foreground'}`} />
               <div>
                 <div className="font-medium text-sm">Deep Market Validation</div>
                 <div className="text-xs text-muted-foreground">Optional: Get validation score 0-100</div>
@@ -104,11 +104,11 @@ export const FounderOSIntegration = ({
 
         {/* Success Message */}
         {roadmapComplete && (
-          <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+          <div className="p-4 bg-success/10 border border-success/20 rounded-lg">
             <div className="flex items-start gap-3">
               <div className="text-2xl">🎉</div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-green-700 dark:text-green-400 mb-1">
+                <p className="text-sm font-medium text-success dark:text-success mb-1">
                   Your 30-Day Launch Roadmap is Ready!
                 </p>
                 <p className="text-xs text-muted-foreground mb-3">

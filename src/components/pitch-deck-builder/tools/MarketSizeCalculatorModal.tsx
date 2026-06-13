@@ -173,12 +173,12 @@ Key Insight: We're targeting ${formatCurrency(som)} in revenue over ${timeframe}
               <h3 className="font-semibold text-lg">Your Market Opportunity</h3>
 
               <div className="space-y-3">
-                <Card className="p-4 bg-blue-50 border-blue-200">
+                <Card className="p-4 bg-info-subtle border-info">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-sm font-medium text-blue-900">TAM - Total Addressable Market</p>
-                      <p className="text-2xl font-bold text-blue-600 mt-1">{formatCurrency(tam)}</p>
-                      <p className="text-xs text-blue-700 mt-1">
+                      <p className="text-sm font-medium text-info">TAM - Total Addressable Market</p>
+                      <p className="text-2xl font-bold text-info mt-1">{formatCurrency(tam)}</p>
+                      <p className="text-xs text-info mt-1">
                         The total revenue opportunity if you achieved 100% market share
                       </p>
                     </div>
@@ -186,12 +186,12 @@ Key Insight: We're targeting ${formatCurrency(som)} in revenue over ${timeframe}
                 </Card>
 
                 {sam > 0 && (
-                  <Card className="p-4 bg-cyan-50 border-cyan-200">
+                  <Card className="p-4 bg-info-subtle border-info">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-sm font-medium text-cyan-900">SAM - Serviceable Available Market</p>
-                        <p className="text-2xl font-bold text-cyan-600 mt-1">{formatCurrency(sam)}</p>
-                        <p className="text-xs text-cyan-700 mt-1">
+                        <p className="text-sm font-medium text-info">SAM - Serviceable Available Market</p>
+                        <p className="text-2xl font-bold text-info mt-1">{formatCurrency(sam)}</p>
+                        <p className="text-xs text-info mt-1">
                           {reachableMarket}% of TAM that you can realistically serve
                         </p>
                       </div>
@@ -200,12 +200,12 @@ Key Insight: We're targeting ${formatCurrency(som)} in revenue over ${timeframe}
                 )}
 
                 {som > 0 && (
-                  <Card className="p-4 bg-green-50 border-green-200">
+                  <Card className="p-4 bg-success-subtle border-success">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-sm font-medium text-green-900">SOM - Serviceable Obtainable Market</p>
-                        <p className="text-2xl font-bold text-green-600 mt-1">{formatCurrency(som)}</p>
-                        <p className="text-xs text-green-700 mt-1">
+                        <p className="text-sm font-medium text-success">SOM - Serviceable Obtainable Market</p>
+                        <p className="text-2xl font-bold text-success mt-1">{formatCurrency(som)}</p>
+                        <p className="text-xs text-success mt-1">
                           {targetShare}% of SAM - your realistic revenue target in {timeframe} years
                         </p>
                       </div>

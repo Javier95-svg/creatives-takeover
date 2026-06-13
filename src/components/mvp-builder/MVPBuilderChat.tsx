@@ -592,34 +592,34 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-background text-slate-100">
+    <div className="flex h-full min-h-0 flex-col bg-background text-muted-foreground">
       <ScrollArea className="flex-1 min-h-0">
         <div className="p-4">
           {isEmpty ? (
             <div className="flex flex-col gap-5 py-6">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-sky-400/20 bg-white/[0.04]">
-                <Wand2 className="h-5 w-5 text-sky-200" />
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-info/20 bg-white/[0.04]">
+                <Wand2 className="h-5 w-5 text-info" />
               </div>
               <div className="space-y-2">
                 <h2 className="text-base font-semibold text-white">Ready to build</h2>
-                <p className="text-sm leading-relaxed text-slate-400">
+                <p className="text-sm leading-relaxed text-muted-foreground">
                   Your context is already loaded — target market, pain points, and positioning pulled from your dashboard and onboarding quiz. Just describe what you want to build.
                 </p>
               </div>
-              <div className="rounded-lg border border-sky-400/10 bg-sky-400/5 px-3 py-2.5 text-xs leading-relaxed text-slate-500">
+              <div className="rounded-lg border border-info/10 bg-info/5 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
                 Tip: type{' '}
-                <span className="font-medium text-sky-300">@icp-profile</span>,{' '}
-                <span className="font-medium text-sky-300">@pmf-score</span>, or{' '}
-                <span className="font-medium text-sky-300">@brand-kit</span>{' '}
+                <span className="font-medium text-info">@icp-profile</span>,{' '}
+                <span className="font-medium text-info">@pmf-score</span>, or{' '}
+                <span className="font-medium text-info">@brand-kit</span>{' '}
                 in your prompt to anchor the build to specific context.
               </div>
             </div>
           ) : (
             <div className="space-y-4">
               {projectVersions.length > 0 && (
-                <div className="flex items-center justify-between rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-label text-slate-300">
+                <div className="flex items-center justify-between rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-label text-muted-foreground">
                   <span>Version history</span>
-                  <Badge variant="outline" className="border-white/10 text-slate-300">
+                  <Badge variant="outline" className="border-white/10 text-muted-foreground">
                     v{projectVersions[0]?.version_number ?? projectVersions.length}
                   </Badge>
                 </div>
@@ -632,11 +632,11 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                 return (
                   <div
                     key={card.id}
-                    className="rounded-3xl border border-sky-400/14 bg-[linear-gradient(180deg,rgba(56,189,248,0.08),rgba(255,255,255,0.03))] p-4 shadow-overlay"
+                    className="rounded-3xl border border-info/14 bg-[linear-gradient(180deg,rgba(56,189,248,0.08),rgba(255,255,255,0.03))] p-4 shadow-overlay"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-label font-semibold uppercase tracking-[0.22em] text-sky-200/75">
+                        <p className="text-label font-semibold uppercase tracking-[0.22em] text-info/75">
                           Build change summary
                         </p>
                         <p className="mt-1 text-sm font-medium text-white">
@@ -647,7 +647,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                         type="button"
                         variant="ghost"
                         size="pill-sm"
-                        className="gap-1 border border-white/10 font-medium text-slate-300 hover:bg-white/[0.05] hover:text-white"
+                        className="gap-1 border border-white/10 font-medium text-muted-foreground hover:bg-white/[0.05] hover:text-white"
                         onClick={() =>
                           setExpandedChangeCards((prev) => ({
                             ...prev,
@@ -668,7 +668,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                         {card.details.map((detail) => (
                           <div
                             key={detail.id}
-                            className="rounded-2xl border border-white/8 bg-card px-3 py-2.5 text-sm text-slate-200"
+                            className="rounded-2xl border border-white/8 bg-card px-3 py-2.5 text-sm text-muted-foreground"
                           >
                             {detail.type === 'updated' && detail.from && detail.to && (
                               <span>
@@ -691,16 +691,16 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
       </ScrollArea>
 
       <div className="shrink-0 border-t border-white/6 bg-gradient-to-b from-background/20 to-background/95 px-4 pb-4 pt-3">
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-3 shadow-2xl backdrop-blur-xl transition-all duration-200 focus-within:border-sky-400/25 focus-within:bg-white/[0.06]">
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-3 shadow-2xl backdrop-blur-xl transition-all duration-200 focus-within:border-info/25 focus-within:bg-white/[0.06]">
           {queuedSubmissions.length > 0 && (
-            <div className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">
+            <div className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-warning/20 bg-warning/10 px-3 py-2 text-xs text-warning">
               <span>
                 {queuedSubmissions.length} message{queuedSubmissions.length > 1 ? 's' : ''} queued
                 {' '}— processing...
               </span>
               <button
                 type="button"
-                className="rounded-full border border-amber-200/20 p-1 text-amber-100 hover:bg-amber-200/10"
+                className="rounded-full border border-warning/20 p-1 text-warning hover:bg-warning-subtle"
                 onClick={() => setQueuedSubmissions((prev) => prev.slice(0, -1))}
               >
                 <X className="h-3.5 w-3.5" />
@@ -708,7 +708,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
             </div>
           )}
 
-          <div className="mb-3 flex flex-wrap items-center gap-2 text-label text-slate-400">
+          <div className="mb-3 flex flex-wrap items-center gap-2 text-label text-muted-foreground">
             <Button
               type="button"
               variant="ghost"
@@ -748,7 +748,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
             >
               <AtSign className="h-3.5 w-3.5" />
             </Button>
-            <div className="ml-auto flex items-center gap-2 text-label text-slate-500">
+            <div className="ml-auto flex items-center gap-2 text-label text-muted-foreground">
               <span>{selectedModelLabels[0]}</span>
               <span>·</span>
               <span>{githubConnection.connected ? 'Repo linked' : 'No repo linked'}</span>
@@ -760,12 +760,12 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
               {selectedReferenceItems.map((reference) => (
                 <span
                   key={reference.id}
-                  className="inline-flex items-center gap-2 rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-1 text-xs text-sky-100"
+                  className="inline-flex items-center gap-2 rounded-full border border-info/20 bg-info/10 px-3 py-1 text-xs text-info"
                 >
                   {reference.label}
                   <button
                     type="button"
-                    className="rounded-full p-0.5 text-sky-100/80 hover:bg-sky-100/10 hover:text-white"
+                    className="rounded-full p-0.5 text-info/80 hover:bg-info-subtle hover:text-white"
                     onClick={() => handleRemoveReference(reference.id)}
                   >
                     <X className="h-3 w-3" />
@@ -789,7 +789,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                   variant="ghost"
                   size="pill-sm"
                   onClick={() => applyActionPrompt(prompt)}
-                  className="border border-white/10 bg-white/[0.04] font-medium text-slate-300 hover:border-sky-300/30 hover:bg-sky-300/10 hover:text-white"
+                  className="border border-white/10 bg-white/[0.04] font-medium text-muted-foreground hover:border-info/30 hover:bg-info/10 hover:text-white"
                 >
                   {label}
                 </Button>
@@ -814,8 +814,8 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                     : 'Describe the next change to make...'
                 }
                 className={cn(
-                  'min-h-[52px] resize-none border-0 bg-transparent px-0 py-0 text-sm leading-relaxed text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none',
-                  isGenerating && 'text-slate-50'
+                  'min-h-[52px] resize-none border-0 bg-transparent px-0 py-0 text-sm leading-relaxed text-white placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none',
+                  isGenerating && 'text-muted-foreground'
                 )}
                 disabled={isGitHubBusy}
               />
@@ -828,10 +828,10 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                       onClick={() => handleSelectReference(reference.id)}
                       className="flex w-full items-start gap-3 rounded-xl px-3 py-2 text-left hover:bg-white/[0.05]"
                     >
-                      <span className="mt-0.5 rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-caption font-semibold text-sky-200">
+                      <span className="mt-0.5 rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-caption font-semibold text-info">
                         {reference.label}
                       </span>
-                      <span className="text-xs leading-relaxed text-slate-400">
+                      <span className="text-xs leading-relaxed text-muted-foreground">
                         {reference.description}
                       </span>
                     </button>
@@ -843,7 +843,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
               <Button
                 onClick={onCancelGeneration}
                 type="button"
-                className="h-11 shrink-0 rounded-2xl border border-rose-400/25 bg-rose-500/15 px-4 text-rose-100 hover:bg-rose-500/20"
+                className="h-11 shrink-0 rounded-2xl border border-destructive/25 bg-destructive/15 px-4 text-destructive hover:bg-destructive/20"
               >
                 <Square className="mr-2 h-4 w-4 fill-current" />
                 Stop
@@ -852,7 +852,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
               <Button
                 onClick={handleSend}
                 disabled={!input.trim() || isGitHubBusy}
-                className="h-11 shrink-0 rounded-2xl bg-white px-4 text-slate-950 shadow-sm transition-transform hover:scale-[1.03] hover:bg-slate-100 disabled:bg-white/10 disabled:text-slate-500"
+                className="h-11 shrink-0 rounded-2xl bg-white px-4 text-foreground shadow-sm transition-transform hover:scale-[1.03] hover:bg-muted disabled:bg-white/10 disabled:text-muted-foreground"
               >
                 <Send className="mr-2 h-4 w-4" />
                 {builderMode === 'chat' ? 'Ask' : 'Build'}
@@ -872,19 +872,19 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                 className={cn(
                   'px-3.5 text-xs transition-all duration-150',
                   builderMode === mode
-                    ? 'bg-white text-slate-950 shadow-sm hover:bg-white hover:text-slate-950'
-                    : 'text-slate-400 hover:bg-transparent hover:text-white'
+                    ? 'bg-white text-foreground shadow-sm hover:bg-white hover:text-foreground'
+                    : 'text-muted-foreground hover:bg-transparent hover:text-white'
                 )}
               >
                 {mode === 'chat' ? 'Chat' : 'Build'}
               </Button>
             ))}
           </div>
-          <div className="text-label text-slate-500">
+          <div className="text-label text-muted-foreground">
             {builderMode === 'chat' ? 'Text-only planning' : 'Generates and renders'}
           </div>
           {builderMode === 'build' && lastActionQuote && (
-            <div className="mt-2 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-label text-slate-300">
+            <div className="mt-2 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-label text-muted-foreground">
               {lastActionQuote.actionType === 'unsupported'
                 ? 'Phase 2 supports frontend app generation, edits, bug fixes, add-page, add-feature, and redesign.'
                 : lastActionQuote.actionType === 'unclear'
@@ -894,12 +894,12 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
           )}
           <Link
             to="/pricing#credit-packs"
-            className="text-label font-medium text-sky-300 hover:text-sky-200"
+            className="text-label font-medium text-info hover:text-info"
           >
             Buy credits
           </Link>
         </div>
-        <p className="mt-2 text-right text-caption text-slate-500">
+        <p className="mt-2 text-right text-caption text-muted-foreground">
           Enter to send - Shift+Enter for a new line - Type @ to reference founder context
         </p>
       </div>
@@ -1192,9 +1192,9 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                                   <Badge
                                     variant="outline"
                                     className={cn(
-                                      change.action === 'create' && 'border-emerald-300 text-emerald-700',
-                                      change.action === 'update' && 'border-amber-300 text-amber-700',
-                                      change.action === 'delete' && 'border-red-300 text-red-700'
+                                      change.action === 'create' && 'border-success text-success',
+                                      change.action === 'update' && 'border-warning text-warning',
+                                      change.action === 'delete' && 'border-destructive text-destructive'
                                     )}
                                   >
                                     {change.action.toUpperCase()}
@@ -1221,8 +1221,8 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                                         key={`${id}-${lineIndex}`}
                                         className={cn(
                                           'grid grid-cols-[58px_58px_auto] gap-2 px-2 py-0.5 border-b border-border/20 last:border-b-0',
-                                          line.type === 'add' && 'bg-emerald-500/10',
-                                          line.type === 'remove' && 'bg-red-500/10'
+                                          line.type === 'add' && 'bg-success/10',
+                                          line.type === 'remove' && 'bg-destructive/10'
                                         )}
                                       >
                                         <span className="text-muted-foreground/80 text-right pr-1">

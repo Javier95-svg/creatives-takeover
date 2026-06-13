@@ -170,10 +170,10 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
       {/* Info Message */}
       {documents.length > 0 && (
-        <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+        <div className="mt-4 p-3 bg-info-subtle dark:bg-info/20 rounded-lg border border-info dark:border-info">
           <div className="flex items-start space-x-2">
-            <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5" />
-            <p className="text-xs text-blue-800 dark:text-blue-200">
+            <AlertCircle className="h-4 w-4 text-info dark:text-info mt-0.5" />
+            <p className="text-xs text-info dark:text-info">
               Uploaded documents are automatically analyzed and can be referenced in your conversations with BizMap AI.
             </p>
           </div>

@@ -17,21 +17,21 @@ import {
 const GuidesSection = () => {
   const guideCategories = [
     {
-      icon: <Lightbulb className="w-6 h-6 text-yellow-500" />,
+      icon: <Lightbulb className="w-6 h-6 text-warning" />,
       title: "Getting Started",
       description: "Essential guides for creative beginners",
       count: 25,
       color: "yellow"
     },
     {
-      icon: <Target className="w-6 h-6 text-blue-500" />,
+      icon: <Target className="w-6 h-6 text-info" />,
       title: "Best Practices",
       description: "Industry standards and professional tips",
       count: 32,
       color: "blue"
     },
     {
-      icon: <TrendingUp className="w-6 h-6 text-green-500" />,
+      icon: <TrendingUp className="w-6 h-6 text-success" />,
       title: "Advanced Techniques",
       description: "Master-level strategies and workflows",
       count: 18,

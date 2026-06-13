@@ -25,11 +25,11 @@ interface ContentGridProps {
 }
 
 const contentTypeConfig = {
-  post: { icon: MessageCircle, label: "Post", color: "bg-blue-500/10 text-blue-500" },
+  post: { icon: MessageCircle, label: "Post", color: "bg-info/10 text-info" },
   diary: { icon: FileText, label: "Diary", color: "bg-purple-500/10 text-purple-500" },
-  prompt: { icon: Lightbulb, label: "Prompt", color: "bg-yellow-500/10 text-yellow-500" },
-  pitch: { icon: Target, label: "Pitch", color: "bg-green-500/10 text-green-500" },
-  feedback: { icon: HelpCircle, label: "Feedback", color: "bg-orange-500/10 text-orange-500" },
+  prompt: { icon: Lightbulb, label: "Prompt", color: "bg-warning/10 text-warning" },
+  pitch: { icon: Target, label: "Pitch", color: "bg-success/10 text-success" },
+  feedback: { icon: HelpCircle, label: "Feedback", color: "bg-warning/10 text-warning" },
 };
 
 export const ContentGrid = ({ items, isOwnProfile, onEdit, onDelete }: ContentGridProps) => {

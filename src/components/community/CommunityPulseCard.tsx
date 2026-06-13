@@ -86,7 +86,7 @@ const CommunityPulseCard = () => {
           <div className="pt-4 border-t">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm">
-                <Trophy className="w-4 h-4 text-yellow-500" />
+                <Trophy className="w-4 h-4 text-warning" />
                 <span className="text-muted-foreground">Challenges completed today</span>
               </div>
               <span className="text-lg font-semibold">{todaysPulse.challenges_completed}</span>

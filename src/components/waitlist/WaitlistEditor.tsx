@@ -1375,22 +1375,22 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
   const conversionRate = viewCount > 0 ? `${((signupCount / viewCount) * 100).toFixed(1)}%` : '--';
   const toolbarCardClass = 'border border-border/60 bg-white/80 shadow-sm backdrop-blur dark:border-0 dark:bg-[linear-gradient(135deg,rgba(15,23,42,0.96),rgba(30,41,59,0.95)_45%,rgba(14,165,233,0.26)_100%)] dark:shadow-[0_30px_90px_rgba(15,23,42,0.28)]';
   const builderCardClass = 'border border-border/60 bg-white/80 shadow-sm backdrop-blur dark:border-white/12 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.94))] dark:shadow-[0_20px_50px_rgba(15,23,42,0.18)]';
-  const softInsetBoxClass = 'rounded-2xl border border-border/60 bg-slate-50/80 px-4 py-3 text-sm dark:border-white/12 dark:bg-white/6';
-  const actionButtonClass = 'border-border/60 bg-white/80 text-slate-700 hover:bg-white hover:text-slate-950 dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 dark:hover:text-white';
-  const primaryButtonClass = 'border border-sky-300/30 bg-sky-500 text-white hover:bg-sky-400';
-  const inputSurfaceClass = 'border-border/60 bg-white text-slate-950 placeholder:text-slate-400 dark:border-white/15 dark:bg-white/10 dark:text-white dark:placeholder:text-slate-300';
-  const selectSurfaceClass = 'h-11 w-full rounded-2xl border border-border/60 bg-white px-4 text-sm text-slate-950 dark:border-white/15 dark:bg-white/10 dark:text-white';
-  const ghostButtonClass = 'text-slate-700 hover:bg-slate-100 hover:text-slate-950 dark:text-white dark:hover:bg-white/10 dark:hover:text-white';
+  const softInsetBoxClass = 'rounded-2xl border border-border/60 bg-muted px-4 py-3 text-sm dark:border-white/12 dark:bg-white/6';
+  const actionButtonClass = 'border-border/60 bg-white/80 text-foreground hover:bg-white hover:text-foreground dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 dark:hover:text-white';
+  const primaryButtonClass = 'border border-info/30 bg-info text-white hover:bg-info';
+  const inputSurfaceClass = 'border-border/60 bg-white text-foreground placeholder:text-muted-foreground dark:border-white/15 dark:bg-white/10 dark:text-white dark:placeholder:text-muted-foreground';
+  const selectSurfaceClass = 'h-11 w-full rounded-2xl border border-border/60 bg-white px-4 text-sm text-foreground dark:border-white/15 dark:bg-white/10 dark:text-white';
+  const ghostButtonClass = 'text-foreground hover:bg-muted hover:text-foreground dark:text-white dark:hover:bg-white/10 dark:hover:text-white';
   const studioShellClass = 'overflow-hidden rounded-5xl border border-border/60 bg-white/75 shadow-[0_30px_90px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(135deg,rgba(2,6,23,0.96),rgba(15,23,42,0.96)_40%,rgba(30,41,59,0.94))] dark:shadow-[0_30px_90px_rgba(2,6,23,0.42)]';
   const studioAsideClass = 'border-r border-border/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.94))] backdrop-blur dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(2,6,23,0.98),rgba(15,23,42,0.96)_50%,rgba(30,41,59,0.94))]';
-  const studioHeaderClass = 'border-b border-border/60 bg-white/90 p-4 text-slate-950 backdrop-blur dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(30,41,59,0.96))] dark:text-white';
-  const studioTabsListClass = 'grid h-auto w-full grid-cols-6 gap-1 rounded-2.5xl bg-slate-100 p-1.5 shadow-inner dark:bg-white/8 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]';
-  const studioTabsTriggerClass = 'rounded-2xl px-2 py-2 text-label font-semibold text-slate-600 data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm dark:text-white/75 dark:data-[state=active]:bg-sky-300 dark:data-[state=active]:text-slate-950';
-  const contentTabClass = 'mt-0 space-y-4 [&>div]:rounded-3xl [&>div]:border [&>div]:border-border/60 [&>div]:bg-white/80 [&>div]:p-4 [&>div]:shadow-sm [&_input]:border-border/60 [&_input]:bg-white [&_input]:text-slate-950 [&_input]:placeholder:text-slate-400 [&_label]:text-slate-950 [&_textarea]:border-border/60 [&_textarea]:bg-white [&_textarea]:text-slate-950 [&_textarea]:placeholder:text-slate-400 dark:text-white dark:[&>div]:border-white/10 dark:[&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] dark:[&>div]:shadow-overlay dark:[&_input]:border-white/15 dark:[&_input]:bg-white/5 dark:[&_input]:text-white dark:[&_input]:placeholder:text-slate-400 dark:[&_label]:text-white dark:[&_textarea]:border-white/15 dark:[&_textarea]:bg-white/5 dark:[&_textarea]:text-white dark:[&_textarea]:placeholder:text-slate-400';
-  const styleTabClass = 'mt-0 space-y-4 [&>div]:rounded-3xl [&>div]:border [&>div]:border-border/60 [&>div]:bg-white/80 [&>div]:p-4 [&>div]:shadow-sm [&_button]:text-slate-700 [&_input]:border-border/60 [&_input]:bg-white [&_input]:text-slate-950 [&_label]:text-slate-950 [&_select]:border-border/60 [&_select]:bg-white [&_select]:text-slate-950 dark:text-white dark:[&>div]:border-white/10 dark:[&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] dark:[&>div]:shadow-overlay dark:[&_button]:text-white dark:[&_input]:border-white/15 dark:[&_input]:bg-white/5 dark:[&_input]:text-white dark:[&_label]:text-white dark:[&_select]:border-white/15 dark:[&_select]:bg-slate-950 dark:[&_select]:text-white';
-  const formTabClass = 'mt-0 space-y-4 [&>div]:rounded-3xl [&>div]:border [&>div]:border-border/60 [&>div]:bg-white/80 [&>div]:p-4 [&>div]:shadow-sm [&_input]:border-border/60 [&_input]:bg-white [&_input]:text-slate-950 [&_input]:placeholder:text-slate-400 [&_label]:text-slate-950 [&_textarea]:border-border/60 [&_textarea]:bg-white [&_textarea]:text-slate-950 [&_textarea]:placeholder:text-slate-400 [&_select]:border-border/60 [&_select]:bg-white [&_select]:text-slate-950 dark:text-white dark:[&>div]:border-white/10 dark:[&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] dark:[&>div]:shadow-overlay dark:[&_input]:border-white/15 dark:[&_input]:bg-white/5 dark:[&_input]:text-white dark:[&_input]:placeholder:text-slate-400 dark:[&_label]:text-white dark:[&_textarea]:border-white/15 dark:[&_textarea]:bg-white/5 dark:[&_textarea]:text-white dark:[&_textarea]:placeholder:text-slate-400 dark:[&_select]:border-white/15 dark:[&_select]:bg-slate-950 dark:[&_select]:text-white';
-  const launchTabClass = 'mt-0 space-y-4 [&>div]:rounded-3xl [&>div]:border [&>div]:border-border/60 [&>div]:bg-white/80 [&>div]:p-4 [&>div]:shadow-sm [&>label]:rounded-3xl [&>label]:border [&>label]:border-border/60 [&>label]:bg-white/80 [&>label]:px-4 [&>label]:py-3 [&>label]:shadow-sm [&_input]:border-border/60 [&_input]:bg-white [&_input]:text-slate-950 [&_input]:placeholder:text-slate-400 [&_label]:text-slate-950 [&_select]:border-border/60 [&_select]:bg-white [&_select]:text-slate-950 dark:text-white dark:[&>div]:border-white/10 dark:[&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] dark:[&>div]:shadow-overlay dark:[&>label]:border-white/10 dark:[&>label]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] dark:[&>label]:shadow-overlay dark:[&_input]:border-white/15 dark:[&_input]:bg-white/5 dark:[&_input]:text-white dark:[&_input]:placeholder:text-slate-400 dark:[&_label]:text-white dark:[&_select]:border-white/15 dark:[&_select]:bg-slate-950 dark:[&_select]:text-white';
-  const analyticsTabClass = 'mt-0 space-y-4 [&>div]:rounded-3xl [&>div]:border [&>div]:border-border/60 [&>div]:bg-white/80 [&>div]:p-4 [&>div]:shadow-sm [&_label]:text-slate-950 dark:text-white dark:[&>div]:border-white/10 dark:[&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] dark:[&>div]:shadow-overlay dark:[&_label]:text-white';
+  const studioHeaderClass = 'border-b border-border/60 bg-white/90 p-4 text-foreground backdrop-blur dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(30,41,59,0.96))] dark:text-white';
+  const studioTabsListClass = 'grid h-auto w-full grid-cols-6 gap-1 rounded-2.5xl bg-muted p-1.5 shadow-inner dark:bg-white/8 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]';
+  const studioTabsTriggerClass = 'rounded-2xl px-2 py-2 text-label font-semibold text-muted-foreground data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm dark:text-white/75 dark:data-[state=active]:bg-info dark:data-[state=active]:text-foreground';
+  const contentTabClass = 'mt-0 space-y-4 [&>div]:rounded-3xl [&>div]:border [&>div]:border-border/60 [&>div]:bg-white/80 [&>div]:p-4 [&>div]:shadow-sm [&_input]:border-border/60 [&_input]:bg-white [&_input]:text-foreground [&_input]:placeholder:text-muted-foreground [&_label]:text-foreground [&_textarea]:border-border/60 [&_textarea]:bg-white [&_textarea]:text-foreground [&_textarea]:placeholder:text-muted-foreground dark:text-white dark:[&>div]:border-white/10 dark:[&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] dark:[&>div]:shadow-overlay dark:[&_input]:border-white/15 dark:[&_input]:bg-white/5 dark:[&_input]:text-white dark:[&_input]:placeholder:text-muted-foreground dark:[&_label]:text-white dark:[&_textarea]:border-white/15 dark:[&_textarea]:bg-white/5 dark:[&_textarea]:text-white dark:[&_textarea]:placeholder:text-muted-foreground';
+  const styleTabClass = 'mt-0 space-y-4 [&>div]:rounded-3xl [&>div]:border [&>div]:border-border/60 [&>div]:bg-white/80 [&>div]:p-4 [&>div]:shadow-sm [&_button]:text-foreground [&_input]:border-border/60 [&_input]:bg-white [&_input]:text-foreground [&_label]:text-foreground [&_select]:border-border/60 [&_select]:bg-white [&_select]:text-foreground dark:text-white dark:[&>div]:border-white/10 dark:[&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] dark:[&>div]:shadow-overlay dark:[&_button]:text-white dark:[&_input]:border-white/15 dark:[&_input]:bg-white/5 dark:[&_input]:text-white dark:[&_label]:text-white dark:[&_select]:border-white/15 dark:[&_select]:bg-slate-950 dark:[&_select]:text-white';
+  const formTabClass = 'mt-0 space-y-4 [&>div]:rounded-3xl [&>div]:border [&>div]:border-border/60 [&>div]:bg-white/80 [&>div]:p-4 [&>div]:shadow-sm [&_input]:border-border/60 [&_input]:bg-white [&_input]:text-foreground [&_input]:placeholder:text-muted-foreground [&_label]:text-foreground [&_textarea]:border-border/60 [&_textarea]:bg-white [&_textarea]:text-foreground [&_textarea]:placeholder:text-muted-foreground [&_select]:border-border/60 [&_select]:bg-white [&_select]:text-foreground dark:text-white dark:[&>div]:border-white/10 dark:[&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] dark:[&>div]:shadow-overlay dark:[&_input]:border-white/15 dark:[&_input]:bg-white/5 dark:[&_input]:text-white dark:[&_input]:placeholder:text-muted-foreground dark:[&_label]:text-white dark:[&_textarea]:border-white/15 dark:[&_textarea]:bg-white/5 dark:[&_textarea]:text-white dark:[&_textarea]:placeholder:text-muted-foreground dark:[&_select]:border-white/15 dark:[&_select]:bg-slate-950 dark:[&_select]:text-white';
+  const launchTabClass = 'mt-0 space-y-4 [&>div]:rounded-3xl [&>div]:border [&>div]:border-border/60 [&>div]:bg-white/80 [&>div]:p-4 [&>div]:shadow-sm [&>label]:rounded-3xl [&>label]:border [&>label]:border-border/60 [&>label]:bg-white/80 [&>label]:px-4 [&>label]:py-3 [&>label]:shadow-sm [&_input]:border-border/60 [&_input]:bg-white [&_input]:text-foreground [&_input]:placeholder:text-muted-foreground [&_label]:text-foreground [&_select]:border-border/60 [&_select]:bg-white [&_select]:text-foreground dark:text-white dark:[&>div]:border-white/10 dark:[&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] dark:[&>div]:shadow-overlay dark:[&>label]:border-white/10 dark:[&>label]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] dark:[&>label]:shadow-overlay dark:[&_input]:border-white/15 dark:[&_input]:bg-white/5 dark:[&_input]:text-white dark:[&_input]:placeholder:text-muted-foreground dark:[&_label]:text-white dark:[&_select]:border-white/15 dark:[&_select]:bg-slate-950 dark:[&_select]:text-white';
+  const analyticsTabClass = 'mt-0 space-y-4 [&>div]:rounded-3xl [&>div]:border [&>div]:border-border/60 [&>div]:bg-white/80 [&>div]:p-4 [&>div]:shadow-sm [&_label]:text-foreground dark:text-white dark:[&>div]:border-white/10 dark:[&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] dark:[&>div]:shadow-overlay dark:[&_label]:text-white';
   const activationGuide = getToolJourneyGuide('/demo-studio');
   const hasTangibleOutput = Boolean(draftId || lastSavedAt);
   const launchKitCandidate = buildLaunchKitInputCandidate();
@@ -1399,7 +1399,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
   return (
     <div className="space-y-6">
       {isHydrating ? (
-        <div className="flex items-center gap-2 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-2 text-sm text-sky-700 dark:border-sky-300/15 dark:bg-sky-500/10 dark:text-sky-100">
+        <div className="flex items-center gap-2 rounded-2xl border border-info bg-info-subtle px-4 py-2 text-sm text-info dark:border-info/15 dark:bg-info/10 dark:text-info">
           <Loader2 className="h-4 w-4 animate-spin" />
           Syncing your latest waitlist data...
         </div>
@@ -1425,9 +1425,9 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
               </Button>
             ) : null}
             <Button variant="outline" onClick={resetToNew} size="sm" className={actionButtonClass}><Plus className="w-4 h-4 mr-1" /> New</Button>
-            <Button variant="outline" onClick={copyUrl} size="sm" disabled={!liveUrl} className={`${actionButtonClass} disabled:text-slate-400 dark:disabled:text-white/40`}><Copy className="w-4 h-4 mr-1" /> Copy live link</Button>
-            <Button variant="outline" onClick={handleExportCSV} size="sm" disabled={isGuest || !draftId} className={`${actionButtonClass} disabled:text-slate-400 dark:disabled:text-white/40`}><Download className="w-4 h-4 mr-1" /> Export CSV</Button>
-            <Button variant="outline" onClick={handleSave} size="sm" disabled={isSaving || isPublishing} className={`${actionButtonClass} disabled:text-slate-400 dark:disabled:text-white/40`}>
+            <Button variant="outline" onClick={copyUrl} size="sm" disabled={!liveUrl} className={`${actionButtonClass} disabled:text-muted-foreground dark:disabled:text-white/40`}><Copy className="w-4 h-4 mr-1" /> Copy live link</Button>
+            <Button variant="outline" onClick={handleExportCSV} size="sm" disabled={isGuest || !draftId} className={`${actionButtonClass} disabled:text-muted-foreground dark:disabled:text-white/40`}><Download className="w-4 h-4 mr-1" /> Export CSV</Button>
+            <Button variant="outline" onClick={handleSave} size="sm" disabled={isSaving || isPublishing} className={`${actionButtonClass} disabled:text-muted-foreground dark:disabled:text-white/40`}>
               {isSaving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
               Save draft
             </Button>
@@ -1444,9 +1444,9 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
         <Card className={builderCardClass}>
-          <CardContent className="space-y-3 p-4 text-slate-950 dark:text-white">
+          <CardContent className="space-y-3 p-4 text-foreground dark:text-white">
             <div className="space-y-1">
-              <Label htmlFor="waitlist-name" className="text-slate-950 dark:text-white">Waitlist name</Label>
+              <Label htmlFor="waitlist-name" className="text-foreground dark:text-white">Waitlist name</Label>
               <Input
                 id="waitlist-name"
                 value={productName}
@@ -1454,15 +1454,15 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                 placeholder="Name this waitlist"
                 className={inputSurfaceClass}
               />
-              <p className="text-xs text-slate-500 dark:text-slate-200/80">This name appears in My Waitlists and becomes the default title for the page.</p>
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground/80">This name appears in My Waitlists and becomes the default title for the page.</p>
             </div>
-            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-200/80">
-              <Badge variant="outline" className="border-border/60 bg-white/80 text-slate-700 dark:border-white/15 dark:bg-white/5 dark:text-white">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground dark:text-muted-foreground/80">
+              <Badge variant="outline" className="border-border/60 bg-white/80 text-foreground dark:border-white/15 dark:bg-white/5 dark:text-white">
                 {activeTemplate.productType}
               </Badge>
               <span>{activeTemplate.name} template</span>
               {isUploadingImage ? (
-                <span className="inline-flex items-center gap-1 text-sky-600 dark:text-sky-200">
+                <span className="inline-flex items-center gap-1 text-info dark:text-info">
                   <Loader2 className="h-3 w-3 animate-spin" />
                   Uploading image
                 </span>
@@ -1470,14 +1470,14 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
             </div>
 
             {hasUnsavedChanges ? (
-              <p className="text-xs text-amber-200">Unsaved changes in progress.</p>
+              <p className="text-xs text-warning">Unsaved changes in progress.</p>
             ) : lastSavedAt ? (
-              <p className="text-xs text-slate-500 dark:text-slate-200/80">Last saved {new Date(lastSavedAt).toLocaleString()}.</p>
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground/80">Last saved {new Date(lastSavedAt).toLocaleString()}.</p>
             ) : null}
 
             {isGuest ? (
               <div className={`${softInsetBoxClass} flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between`}>
-                <p className="text-slate-600 dark:text-slate-200/85">Your browser draft is being preserved locally. Sign in when you are ready to save, publish, and collect real signups.</p>
+                <p className="text-muted-foreground dark:text-muted-foreground/85">Your browser draft is being preserved locally. Sign in when you are ready to save, publish, and collect real signups.</p>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
@@ -1509,8 +1509,8 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
             {!isGuest && restorableGuestDraft ? (
               <div className={`${softInsetBoxClass} flex flex-col gap-3 md:flex-row md:items-center md:justify-between`}>
                 <div>
-                  <p className="font-medium text-slate-950 dark:text-white">Browser draft available</p>
-                  <p className="text-slate-500 dark:text-slate-200/80">You have an unsaved local waitlist draft from {restorableGuestDraft.savedAt ? new Date(restorableGuestDraft.savedAt).toLocaleString() : 'this browser'}.</p>
+                  <p className="font-medium text-foreground dark:text-white">Browser draft available</p>
+                  <p className="text-muted-foreground dark:text-muted-foreground/80">You have an unsaved local waitlist draft from {restorableGuestDraft.savedAt ? new Date(restorableGuestDraft.savedAt).toLocaleString() : 'this browser'}.</p>
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -1553,8 +1553,8 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
 
         {user && allPages.length > 0 ? (
           <Card className={builderCardClass}>
-            <CardContent className="space-y-2 p-4 text-slate-950 dark:text-white">
-              <Label htmlFor="waitlist-selector" className="text-slate-950 dark:text-white">My Waitlists</Label>
+            <CardContent className="space-y-2 p-4 text-foreground dark:text-white">
+              <Label htmlFor="waitlist-selector" className="text-foreground dark:text-white">My Waitlists</Label>
               <select
                 id="waitlist-selector"
                 className={selectSurfaceClass}
@@ -1579,7 +1579,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                   );
                 })}
               </select>
-              <p className="text-xs text-slate-500 dark:text-slate-200/80">Use the Waitlist name field to rename the current waitlist.</p>
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground/80">Use the Waitlist name field to rename the current waitlist.</p>
             </CardContent>
           </Card>
         ) : null}
@@ -1591,10 +1591,10 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as BuilderTab)} className="h-full flex flex-col">
               <div className={studioHeaderClass}>
                 <div className="mb-4 space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600 dark:text-sky-200">Design controls</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-info dark:text-info">Design controls</p>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-950 dark:text-white">Edit like a landing page studio</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-200/80">Move tab by tab through content, visual styling, forms, launch settings, and performance.</p>
+                    <h3 className="text-lg font-semibold text-foreground dark:text-white">Edit like a landing page studio</h3>
+                    <p className="text-sm text-muted-foreground dark:text-muted-foreground/80">Move tab by tab through content, visual styling, forms, launch settings, and performance.</p>
                   </div>
                 </div>
                 <TabsList className={studioTabsListClass}>
@@ -1610,9 +1610,9 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
               <div className="flex-1 overflow-y-auto p-4">
                 <TabsContent value="content" className={contentTabClass}>
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600 dark:text-sky-200">Content</p>
-                    <h4 className="text-lg font-semibold text-slate-950 dark:text-white">Shape the landing page story</h4>
-                    <p className="text-sm text-slate-500 dark:text-slate-300">Write the messaging, proof, and narrative the visitor experiences from hero to CTA.</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-info dark:text-info">Content</p>
+                    <h4 className="text-lg font-semibold text-foreground dark:text-white">Shape the landing page story</h4>
+                    <p className="text-sm text-muted-foreground dark:text-muted-foreground">Write the messaging, proof, and narrative the visitor experiences from hero to CTA.</p>
                   </div>
                   <div className="space-y-2">
                     <Label>Waitlist name</Label>
@@ -1649,7 +1649,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                       onBlur={(event) => updateContent({ benefits: textToLines(event.target.value, 3, 5, content.benefits) })}
                       rows={4}
                     />
-                    <p className="text-xs text-slate-500 dark:text-slate-300">Use 3 to 5 lines. Validation applies when you leave the field.</p>
+                    <p className="text-xs text-muted-foreground dark:text-muted-foreground">Use 3 to 5 lines. Validation applies when you leave the field.</p>
                   </div>
 
                   <div className="space-y-2">
@@ -1660,7 +1660,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                       onBlur={(event) => updateContent({ howItWorks: textToLines(event.target.value, 3, 4, content.howItWorks) })}
                       rows={4}
                     />
-                    <p className="text-xs text-slate-500 dark:text-slate-300">Use 3 to 4 steps. Validation applies when you leave the field.</p>
+                    <p className="text-xs text-muted-foreground dark:text-muted-foreground">Use 3 to 4 steps. Validation applies when you leave the field.</p>
                   </div>
 
                   <div className="space-y-2"><Label>Logo URL</Label><Input value={content.logoUrl || ''} onChange={(event) => updateContent({ logoUrl: event.target.value })} /></div>
@@ -1671,9 +1671,9 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
 
                 <TabsContent value="launchKit" className={contentTabClass}>
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600 dark:text-sky-200">Launch Kit</p>
-                    <h4 className="text-lg font-semibold text-slate-950 dark:text-white">Generate the copy package</h4>
-                    <p className="text-sm text-slate-500 dark:text-slate-300">Turn this waitlist into headlines, CTA copy, emails, and referral copy you can use immediately.</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-info dark:text-info">Launch Kit</p>
+                    <h4 className="text-lg font-semibold text-foreground dark:text-white">Generate the copy package</h4>
+                    <p className="text-sm text-muted-foreground dark:text-muted-foreground">Turn this waitlist into headlines, CTA copy, emails, and referral copy you can use immediately.</p>
                   </div>
 
                   <div className="space-y-3">
@@ -1698,13 +1698,13 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                     <div className="grid gap-3 md:grid-cols-2">
                       <div className="space-y-2">
                         <Label>Product category</Label>
-                        <select className="w-full rounded-md border border-border/60 bg-white px-3 py-2 text-sm text-slate-950 dark:border-white/15 dark:bg-slate-950 dark:text-white" value={launchKitCandidate.product_category} onChange={(event) => setLaunchKitInputDraft((current) => ({ ...current, product_category: event.target.value as WaitlistLaunchKitInputs['product_category'] }))}>
+                        <select className="w-full rounded-md border border-border/60 bg-white px-3 py-2 text-sm text-foreground dark:border-white/15 dark:bg-slate-950 dark:text-white" value={launchKitCandidate.product_category} onChange={(event) => setLaunchKitInputDraft((current) => ({ ...current, product_category: event.target.value as WaitlistLaunchKitInputs['product_category'] }))}>
                           {WAITLIST_LAUNCH_KIT_CATEGORIES.map((category) => <option key={category} value={category}>{category}</option>)}
                         </select>
                       </div>
                       <div className="space-y-2">
                         <Label>Tone</Label>
-                        <select className="w-full rounded-md border border-border/60 bg-white px-3 py-2 text-sm text-slate-950 dark:border-white/15 dark:bg-slate-950 dark:text-white" value={launchKitCandidate.tone_preference} onChange={(event) => setLaunchKitInputDraft((current) => ({ ...current, tone_preference: event.target.value as WaitlistLaunchKitInputs['tone_preference'] }))}>
+                        <select className="w-full rounded-md border border-border/60 bg-white px-3 py-2 text-sm text-foreground dark:border-white/15 dark:bg-slate-950 dark:text-white" value={launchKitCandidate.tone_preference} onChange={(event) => setLaunchKitInputDraft((current) => ({ ...current, tone_preference: event.target.value as WaitlistLaunchKitInputs['tone_preference'] }))}>
                           {WAITLIST_LAUNCH_KIT_TONES.map((tone) => <option key={tone} value={tone}>{tone}</option>)}
                         </select>
                       </div>
@@ -1739,8 +1739,8 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
 
                   {isGeneratingLaunchKit ? (
                     <div className="flex items-center gap-3">
-                      <Sparkles className="h-5 w-5 text-sky-600 dark:text-sky-200" />
-                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{launchKitLoadingMessage}</p>
+                      <Sparkles className="h-5 w-5 text-info dark:text-info" />
+                      <p className="text-sm font-medium text-foreground dark:text-muted-foreground">{launchKitLoadingMessage}</p>
                     </div>
                   ) : null}
 
@@ -1758,10 +1758,10 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                             </summary>
                             <div className="mt-2 space-y-1">
                               {launchKitHistory.map((historicalKit) => (
-                                <div key={historicalKit.inputHash} className="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-slate-50/50 px-3 py-2 dark:border-white/10 dark:bg-white/5">
+                                <div key={historicalKit.inputHash} className="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-muted px-3 py-2 dark:border-white/10 dark:bg-white/5">
                                   <div className="min-w-0">
-                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{historicalKit.inputs.product_name}</span>
-                                    <span className="ml-2 text-xs text-slate-400">{new Date(historicalKit.generatedAt).toLocaleDateString()}</span>
+                                    <span className="text-sm font-medium text-foreground dark:text-muted-foreground">{historicalKit.inputs.product_name}</span>
+                                    <span className="ml-2 text-xs text-muted-foreground">{new Date(historicalKit.generatedAt).toLocaleDateString()}</span>
                                   </div>
                                   <Button size="sm" variant="outline" className={actionButtonClass} onClick={() => setLaunchKit(historicalKit)}>Restore</Button>
                                 </div>
@@ -1773,25 +1773,25 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
 
                       <section className="space-y-3">
                         <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-sky-600 dark:text-sky-200" />
+                          <FileText className="h-4 w-4 text-info dark:text-info" />
                           <h5 className="font-semibold">Headlines</h5>
                         </div>
                         <div className="grid gap-3 xl:grid-cols-3">
                           {launchKitOutput.headlines.map((item) => (
-                            <div key={item.variant} className="rounded-md border border-border/60 bg-slate-50/80 p-3 dark:border-white/10 dark:bg-white/5">
+                            <div key={item.variant} className="rounded-md border border-border/60 bg-muted p-3 dark:border-white/10 dark:bg-white/5">
                               <div className="mb-2 flex items-center justify-between gap-2">
                                 <Badge>Variant {item.variant}</Badge>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <button type="button" className="rounded-full p-1 text-slate-500 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-white/10" aria-label="Why this angle?">
+                                    <button type="button" className="rounded-full p-1 text-muted-foreground hover:bg-muted dark:text-muted-foreground dark:hover:bg-white/10" aria-label="Why this angle?">
                                       <Info className="h-4 w-4" />
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent className="max-w-xs">{item.rationale}</TooltipContent>
                                 </Tooltip>
                               </div>
-                              <p className="text-lg font-bold leading-tight text-slate-950 dark:text-white">{item.headline}</p>
-                              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{item.subheadline}</p>
+                              <p className="text-lg font-bold leading-tight text-foreground dark:text-white">{item.headline}</p>
+                              <p className="mt-2 text-sm text-muted-foreground dark:text-muted-foreground">{item.subheadline}</p>
                               <Button size="sm" variant="outline" className={`mt-3 ${actionButtonClass}`} onClick={() => copyToClipboard(`${item.headline}\n${item.subheadline}`)}><Copy className="mr-1 h-4 w-4" />Copy</Button>
                             </div>
                           ))}
@@ -1801,8 +1801,8 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                       <section className="space-y-2">
                         <h5 className="font-semibold">Value Propositions</h5>
                         {launchKitOutput.value_props.map((item, index) => (
-                          <div key={item.bullet} className="flex items-start justify-between gap-3 rounded-md border border-border/60 bg-slate-50/80 p-3 dark:border-white/10 dark:bg-white/5">
-                            <p className="text-sm text-slate-700 dark:text-slate-200"><Check className="mr-2 inline h-4 w-4 text-emerald-600" />{item.bullet}</p>
+                          <div key={item.bullet} className="flex items-start justify-between gap-3 rounded-md border border-border/60 bg-muted p-3 dark:border-white/10 dark:bg-white/5">
+                            <p className="text-sm text-foreground dark:text-muted-foreground"><Check className="mr-2 inline h-4 w-4 text-success" />{item.bullet}</p>
                             <Button size="sm" variant="outline" className={actionButtonClass} onClick={() => copyToClipboard(item.bullet)}><Copy className="h-4 w-4" /><span className="sr-only">Copy value prop {index + 1}</span></Button>
                           </div>
                         ))}
@@ -1815,35 +1815,35 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                           ['Soft (lower-commitment)', launchKitOutput.cta.alternative_soft],
                           ['Urgency (FOMO)', launchKitOutput.cta.alternative_urgency],
                         ].map(([label, value]) => (
-                          <div key={label} className="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-slate-50/80 p-3 dark:border-white/10 dark:bg-white/5">
+                          <div key={label} className="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-muted p-3 dark:border-white/10 dark:bg-white/5">
                             <div className="min-w-0">
-                              <p className="text-xs text-slate-500 dark:text-slate-300">{label}</p>
-                              <span className="mt-1 inline-flex rounded-md bg-slate-950 px-3 py-2 text-sm font-semibold text-white dark:bg-sky-300 dark:text-slate-950">{value}</span>
+                              <p className="text-xs text-muted-foreground dark:text-muted-foreground">{label}</p>
+                              <span className="mt-1 inline-flex rounded-md bg-slate-950 px-3 py-2 text-sm font-semibold text-white dark:bg-info dark:text-foreground">{value}</span>
                             </div>
                             <Button size="sm" variant="outline" className={actionButtonClass} onClick={() => copyToClipboard(value)}><Copy className="mr-1 h-4 w-4" />Copy</Button>
                           </div>
                         ))}
-                        <p className="text-xs text-slate-500 dark:text-slate-300">Use one of these as your waitlist page button. We recommend starting with Primary.</p>
+                        <p className="text-xs text-muted-foreground dark:text-muted-foreground">Use one of these as your waitlist page button. We recommend starting with Primary.</p>
                       </section>
 
                       <section className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-sky-600 dark:text-sky-200" />
+                          <Mail className="h-4 w-4 text-info dark:text-info" />
                           <h5 className="font-semibold">Email Sequence</h5>
                         </div>
                         {launchKitOutput.email_sequence.map((email) => (
-                          <details key={email.email_number} className="rounded-md border border-border/60 bg-slate-50/80 p-3 dark:border-white/10 dark:bg-white/5">
+                          <details key={email.email_number} className="rounded-md border border-border/60 bg-muted p-3 dark:border-white/10 dark:bg-white/5">
                             <summary className="cursor-pointer list-none">
                               <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div>
                                   <Badge>{email.email_number === 1 ? 'Confirmation' : email.email_number === 2 ? 'Anticipation' : 'Launch'}</Badge>
-                                  <p className="mt-2 text-sm font-semibold text-slate-950 dark:text-white">{email.subject_line}</p>
-                                  <p className="text-xs text-slate-500 dark:text-slate-300">{email.trigger}</p>
+                                  <p className="mt-2 text-sm font-semibold text-foreground dark:text-white">{email.subject_line}</p>
+                                  <p className="text-xs text-muted-foreground dark:text-muted-foreground">{email.trigger}</p>
                                 </div>
                                 <Button size="sm" variant="outline" className={actionButtonClass} onClick={(event) => { event.preventDefault(); void copyToClipboard(formatWaitlistEmailPlainText(email)); }}><Copy className="mr-1 h-4 w-4" />Copy Email</Button>
                               </div>
                             </summary>
-                            <div className="mt-4 space-y-3 text-sm text-slate-700 dark:text-slate-200">
+                            <div className="mt-4 space-y-3 text-sm text-foreground dark:text-muted-foreground">
                               <p><strong>Preview:</strong> {email.preview_text}</p>
                               <div className="space-y-2">{email.body.split('\n\n').map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</div>
                               <p><strong>CTA:</strong> {email.in_email_cta}</p>
@@ -1852,11 +1852,11 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                         ))}
                       </section>
 
-                      <section className="space-y-2 rounded-md border border-border/60 bg-slate-50/80 p-3 dark:border-white/10 dark:bg-white/5">
-                        <h5 className="text-lg font-semibold text-slate-950 dark:text-white">{launchKitOutput.referral_hook.headline}</h5>
-                        <p className="text-sm text-slate-600 dark:text-slate-300">{launchKitOutput.referral_hook.copy}</p>
+                      <section className="space-y-2 rounded-md border border-border/60 bg-muted p-3 dark:border-white/10 dark:bg-white/5">
+                        <h5 className="text-lg font-semibold text-foreground dark:text-white">{launchKitOutput.referral_hook.headline}</h5>
+                        <p className="text-sm text-muted-foreground dark:text-muted-foreground">{launchKitOutput.referral_hook.copy}</p>
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="inline-flex rounded-md bg-slate-950 px-3 py-2 text-sm font-semibold text-white dark:bg-sky-300 dark:text-slate-950">{launchKitOutput.referral_hook.cta}</span>
+                          <span className="inline-flex rounded-md bg-slate-950 px-3 py-2 text-sm font-semibold text-white dark:bg-info dark:text-foreground">{launchKitOutput.referral_hook.cta}</span>
                           <Button size="sm" variant="outline" className={actionButtonClass} onClick={() => copyToClipboard(`${launchKitOutput.referral_hook.headline}\n${launchKitOutput.referral_hook.copy}\nCTA: ${launchKitOutput.referral_hook.cta}`)}><Copy className="mr-1 h-4 w-4" />Copy Block</Button>
                         </div>
                       </section>
@@ -1866,9 +1866,9 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
 
                 <TabsContent value="style" className={styleTabClass}>
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600 dark:text-sky-200">Style</p>
-                    <h4 className="text-lg font-semibold text-slate-950 dark:text-white">Tune the visual system</h4>
-                    <p className="text-sm text-slate-500 dark:text-slate-300">Switch themes, adjust layout, and fine-tune the palette so the page feels intentional before launch.</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-info dark:text-info">Style</p>
+                    <h4 className="text-lg font-semibold text-foreground dark:text-white">Tune the visual system</h4>
+                    <p className="text-sm text-muted-foreground dark:text-muted-foreground">Switch themes, adjust layout, and fine-tune the palette so the page feels intentional before launch.</p>
                   </div>
                   <div className="space-y-2">
                     <Label>Theme</Label>
@@ -1876,7 +1876,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                       <Button size="sm" variant={content.theme === 'dark' ? 'default' : 'outline'} onClick={() => applyThemePreset('dark')} className={content.theme === 'dark' ? primaryButtonClass : actionButtonClass}>Dark</Button>
                       <Button size="sm" variant={content.theme === 'light' ? 'default' : 'outline'} onClick={() => applyThemePreset('light')} className={content.theme === 'light' ? primaryButtonClass : actionButtonClass}>Light</Button>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-300">Switching theme applies a matching default palette. You can still fine-tune colors below.</p>
+                    <p className="text-xs text-muted-foreground dark:text-muted-foreground">Switching theme applies a matching default palette. You can still fine-tune colors below.</p>
                   </div>
 
                   <div className="space-y-2">
@@ -1903,7 +1903,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                           key={preset.value}
                           type="button"
                           onClick={() => updateContent({ accentColor: preset.value })}
-                          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs ${content.accentColor === preset.value ? 'border-sky-300 bg-sky-100 text-sky-800 dark:bg-sky-300/15 dark:text-white' : 'border-border/60 bg-white text-slate-700 dark:border-white/15 dark:bg-white/5 dark:text-white/85'}`}
+                          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs ${content.accentColor === preset.value ? 'border-info bg-info-subtle text-info dark:bg-info/15 dark:text-white' : 'border-border/60 bg-white text-foreground dark:border-white/15 dark:bg-white/5 dark:text-white/85'}`}
                         >
                           <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: preset.hex }} />{preset.label}
                         </button>
@@ -1913,10 +1913,10 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
 
                   <div className="space-y-2">
                     <Label>Typography</Label>
-                    <select className="w-full rounded-md border border-border/60 bg-white px-3 py-2 text-sm text-slate-950 dark:border-white/15 dark:bg-slate-950 dark:text-white" value={content.typography?.headingFamily} onChange={(event) => updateContent({ typography: { ...content.typography!, headingFamily: event.target.value } })}>
+                    <select className="w-full rounded-md border border-border/60 bg-white px-3 py-2 text-sm text-foreground dark:border-white/15 dark:bg-slate-950 dark:text-white" value={content.typography?.headingFamily} onChange={(event) => updateContent({ typography: { ...content.typography!, headingFamily: event.target.value } })}>
                       {WAITLIST_FONT_PRESETS.map((font) => <option key={font.value} value={font.value}>{font.label} (Headings)</option>)}
                     </select>
-                    <select className="w-full rounded-md border border-border/60 bg-white px-3 py-2 text-sm text-slate-950 dark:border-white/15 dark:bg-slate-950 dark:text-white" value={content.typography?.bodyFamily} onChange={(event) => updateContent({ typography: { ...content.typography!, bodyFamily: event.target.value } })}>
+                    <select className="w-full rounded-md border border-border/60 bg-white px-3 py-2 text-sm text-foreground dark:border-white/15 dark:bg-slate-950 dark:text-white" value={content.typography?.bodyFamily} onChange={(event) => updateContent({ typography: { ...content.typography!, bodyFamily: event.target.value } })}>
                       {WAITLIST_FONT_PRESETS.map((font) => <option key={`${font.value}-body`} value={font.value}>{font.label} (Body)</option>)}
                     </select>
                     <div className="space-y-1"><Label className="text-xs">Heading size: {content.typography?.headingSize}px</Label><input type="range" min={28} max={74} value={content.typography?.headingSize} onChange={(event) => updateContent({ typography: { ...content.typography!, headingSize: Number(event.target.value) } })} className="w-full" /></div>
@@ -1978,9 +1978,9 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
 
                 <TabsContent value="form" className={formTabClass}>
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600 dark:text-sky-200">Form</p>
-                    <h4 className="text-lg font-semibold text-slate-950 dark:text-white">Craft the signup experience</h4>
-                    <p className="text-sm text-slate-500 dark:text-slate-300">Decide what to collect, how the CTA reads, and what the visitor sees after signing up.</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-info dark:text-info">Form</p>
+                    <h4 className="text-lg font-semibold text-foreground dark:text-white">Craft the signup experience</h4>
+                    <p className="text-sm text-muted-foreground dark:text-muted-foreground">Decide what to collect, how the CTA reads, and what the visitor sees after signing up.</p>
                   </div>
                   <div className="space-y-2"><Label>CTA button label</Label><Input value={content.ctaText} onChange={(event) => updateContent({ ctaText: event.target.value })} /></div>
                   <div className="space-y-2"><Label>Email placeholder</Label><Input value={content.emailPlaceholder} onChange={(event) => updateContent({ emailPlaceholder: event.target.value })} /></div>
@@ -1990,7 +1990,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                     <label className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"><span>Collect first name</span><input type="checkbox" checked={Boolean(content.collectFirstName)} onChange={(event) => updateContent({ collectFirstName: event.target.checked })} /></label>
                     <label className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"><span>Show consent checkbox</span><input type="checkbox" checked={Boolean(content.collectConsent)} onChange={(event) => updateContent({ collectConsent: event.target.checked })} /></label>
                     <label className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"><span>Require consent</span><input type="checkbox" checked={Boolean(content.consentRequired)} onChange={(event) => updateContent({ consentRequired: event.target.checked })} /></label>
-                    {content.consentRequired ? <p className="text-xs text-slate-500 dark:text-slate-300">Required consent automatically keeps the checkbox visible on the public form.</p> : null}
+                    {content.consentRequired ? <p className="text-xs text-muted-foreground dark:text-muted-foreground">Required consent automatically keeps the checkbox visible on the public form.</p> : null}
                   </div>
 
                   <div className="space-y-2">
@@ -2007,14 +2007,14 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                     </div>
 
                     {(content.customFields?.length || 0) === 0 ? (
-                      <p className="text-xs text-slate-500 rounded-md border border-dashed border-border/60 bg-slate-50/80 p-3 dark:border-white/15 dark:bg-white/5 dark:text-slate-300">Add optional fields to capture context like company size, current stack, or role.</p>
+                      <p className="text-xs text-muted-foreground rounded-md border border-dashed border-border/60 bg-muted p-3 dark:border-white/15 dark:bg-white/5 dark:text-muted-foreground">Add optional fields to capture context like company size, current stack, or role.</p>
                     ) : (
                       <SortableList
                         items={content.customFields || []}
                         onReorder={(items) => updateContent({ customFields: items })}
                         className="space-y-2"
                         renderItem={(field) => (
-                          <div className="rounded-md border border-border/60 bg-slate-50/80 p-2 space-y-2 dark:border-white/10 dark:bg-slate-950/60">
+                          <div className="rounded-md border border-border/60 bg-muted p-2 space-y-2 dark:border-white/10 dark:bg-slate-950/60">
                             <div className="grid grid-cols-[1fr_auto] gap-2">
                               <Input value={field.label} onChange={(event) => updateContent({ customFields: (content.customFields || []).map((item) => item.id === field.id ? { ...item, label: event.target.value } : item) })} placeholder="Field label" />
                               <Button size="icon" variant="ghost" onClick={() => updateContent({ customFields: (content.customFields || []).filter((item) => item.id !== field.id) })}><Trash2 className="w-4 h-4" /></Button>
@@ -2023,7 +2023,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                             <Input value={field.placeholder} onChange={(event) => updateContent({ customFields: (content.customFields || []).map((item) => item.id === field.id ? { ...item, placeholder: event.target.value } : item) })} placeholder="Placeholder" />
 
                             <div className="grid grid-cols-2 gap-2">
-                              <select className="h-9 rounded-md border border-border/60 bg-white px-2 text-sm text-slate-950 dark:border-white/15 dark:bg-slate-950 dark:text-white" value={field.type} onChange={(event) => updateContent({ customFields: (content.customFields || []).map((item) => item.id === field.id ? { ...item, type: event.target.value as any } : item) })}>
+                              <select className="h-9 rounded-md border border-border/60 bg-white px-2 text-sm text-foreground dark:border-white/15 dark:bg-slate-950 dark:text-white" value={field.type} onChange={(event) => updateContent({ customFields: (content.customFields || []).map((item) => item.id === field.id ? { ...item, type: event.target.value as any } : item) })}>
                                 <option value="text">Text</option>
                                 <option value="textarea">Textarea</option>
                                 <option value="url">URL</option>
@@ -2045,9 +2045,9 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                 </TabsContent>
                 <TabsContent value="launch" className={launchTabClass}>
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600 dark:text-sky-200">Launch</p>
-                    <h4 className="text-lg font-semibold text-slate-950 dark:text-white">Publish with confidence</h4>
-                    <p className="text-sm text-slate-500 dark:text-slate-300">Handle the share URL, delivery settings, DNS checks, and go-live readiness from one panel.</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-info dark:text-info">Launch</p>
+                    <h4 className="text-lg font-semibold text-foreground dark:text-white">Publish with confidence</h4>
+                    <p className="text-sm text-muted-foreground dark:text-muted-foreground">Handle the share URL, delivery settings, DNS checks, and go-live readiness from one panel.</p>
                   </div>
                   <div className="space-y-2">
                     <Label>Launch checklist</Label>
@@ -2057,12 +2057,12 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                         { title: 'Slug', description: slugAvailable === false ? 'Choose another slug before publishing.' : slugDraft || currentSlug ? 'Your page slug is ready.' : 'A slug will be generated automatically if left empty.', complete: slugAvailable !== false },
                         { title: 'Publish', description: status === 'published' ? 'This waitlist is live and shareable.' : waitlistPublishDescription, complete: status === 'published' },
                       ].map((step) => (
-                        <div key={step.title} className="rounded-md border border-border/60 bg-slate-50/80 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/5">
+                        <div key={step.title} className="rounded-md border border-border/60 bg-muted px-3 py-2 text-sm dark:border-white/10 dark:bg-white/5">
                           <div className="flex items-center gap-2">
-                            {step.complete ? <Check className="h-4 w-4 text-emerald-600" /> : <AlertTriangle className="h-4 w-4 text-amber-500" />}
+                            {step.complete ? <Check className="h-4 w-4 text-success" /> : <AlertTriangle className="h-4 w-4 text-warning" />}
                             <span className="font-medium">{step.title}</span>
                           </div>
-                          <p className="mt-1 text-xs text-slate-500 dark:text-slate-300">{step.description}</p>
+                          <p className="mt-1 text-xs text-muted-foreground dark:text-muted-foreground">{step.description}</p>
                         </div>
                       ))}
                     </div>
@@ -2071,17 +2071,17 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                   <div className="space-y-2">
                     <Label>Public slug</Label>
                     <Input value={slugDraft} onChange={(event) => checkSlugAvailability(event.target.value)} placeholder="my-waitlist-page" />
-                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-300">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground dark:text-muted-foreground">
                       {isCheckingSlug ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
-                      {slugAvailable === true ? <Check className="w-3 h-3 text-green-600" /> : null}
-                      {slugAvailable === false ? <AlertTriangle className="w-3 h-3 text-red-500" /> : null}
+                      {slugAvailable === true ? <Check className="w-3 h-3 text-success" /> : null}
+                      {slugAvailable === false ? <AlertTriangle className="w-3 h-3 text-destructive" /> : null}
                       {slugAvailable === true ? 'This slug is available and will save with your draft.' : slugAvailable === false ? 'This slug is already taken.' : 'Draft saves and publishing will persist this slug automatically.'}
                     </div>
                   </div>
 
                   {status === 'published' && liveUrl ? (
                     <div className="rounded-md border p-3 text-sm space-y-2">
-                      <p className="text-xs text-slate-500 dark:text-slate-300">Live public URL</p>
+                      <p className="text-xs text-muted-foreground dark:text-muted-foreground">Live public URL</p>
                       <p className="font-mono text-xs break-all">{liveUrl}</p>
                       <div className="flex gap-2">
                         <Button size="sm" variant="outline" className={actionButtonClass} onClick={copyUrl}><Copy className="w-4 h-4 mr-1" />Copy</Button>
@@ -2089,14 +2089,14 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-md border border-dashed border-border/60 bg-slate-50/80 p-3 text-xs text-slate-500 space-y-1 dark:border-white/15 dark:bg-white/5 dark:text-slate-300">
+                    <div className="rounded-md border border-dashed border-border/60 bg-muted p-3 text-xs text-muted-foreground space-y-1 dark:border-white/15 dark:bg-white/5 dark:text-muted-foreground">
                       <p>Your waitlist is still in draft.</p>
                       <p>{reservedUrl ? `Reserved URL after publish: ${reservedUrl}` : 'A public URL will be created once you publish.'}</p>
                     </div>
                   )}
 
                   {publishBlockingReason ? (
-                    <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-950">
+                    <div className="rounded-md border border-warning/30 bg-warning/10 p-3 text-xs text-warning">
                       {publishBlockingReason}
                     </div>
                   ) : null}
@@ -2104,7 +2104,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                   <div className="space-y-2">
                     <Label>Integrations</Label>
                     <Input value={content.webhookUrl || ''} onChange={(event) => updateContent({ webhookUrl: event.target.value })} placeholder="Webhook URL (Zapier, Make, custom endpoint)" />
-                    <select className="w-full rounded-md border border-border/60 bg-white px-3 py-2 text-sm text-slate-950 dark:border-white/15 dark:bg-slate-950 dark:text-white" value={content.integrationProvider || 'none'} onChange={(event) => updateContent({ integrationProvider: event.target.value as any })}>
+                    <select className="w-full rounded-md border border-border/60 bg-white px-3 py-2 text-sm text-foreground dark:border-white/15 dark:bg-slate-950 dark:text-white" value={content.integrationProvider || 'none'} onChange={(event) => updateContent({ integrationProvider: event.target.value as any })}>
                       <option value="none">No email provider</option>
                       <option value="mailchimp">Mailchimp</option>
                       <option value="convertkit">ConvertKit</option>
@@ -2120,7 +2120,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                   <div className="space-y-2">
                     <Label>Email sending domain (optional)</Label>
                     <Input value={content.domainSetup?.domain || ''} onChange={(event) => updateContent({ domainSetup: { ...content.domainSetup!, domain: event.target.value.toLowerCase().trim(), status: event.target.value ? 'pending' : 'unconfigured' } })} placeholder="updates.yourstartup.com" />
-                    <p className="text-xs text-slate-500 dark:text-slate-300">This only verifies a sender domain for confirmation emails. Public waitlist pages still use the `/w/slug` URL.</p>
+                    <p className="text-xs text-muted-foreground dark:text-muted-foreground">This only verifies a sender domain for confirmation emails. Public waitlist pages still use the `/w/slug` URL.</p>
                   </div>
 
                   <div className="space-y-2"><Label>Sender email</Label><Input value={content.emailSetup?.senderEmail || ''} onChange={(event) => updateContent({ emailSetup: { ...content.emailSetup!, senderEmail: event.target.value } })} placeholder="hello@updates.yourstartup.com" /></div>
@@ -2128,28 +2128,28 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                   <div className="space-y-2"><Label>Reply-to email</Label><Input value={content.emailSetup?.replyToEmail || ''} onChange={(event) => updateContent({ emailSetup: { ...content.emailSetup!, replyToEmail: event.target.value } })} placeholder="founder@yourstartup.com" /></div>
 
                   {content.domainSetup?.verificationToken ? (
-                    <Card className="border border-dashed border-border/60 bg-slate-50/80 text-slate-950 shadow-none dark:border-white/15 dark:bg-white/5 dark:text-white">
-                      <CardHeader className="pb-3"><CardTitle className="text-sm text-slate-950 dark:text-white">DNS setup guide</CardTitle></CardHeader>
-                      <CardContent className="space-y-2 text-xs text-slate-600 dark:text-slate-200">
+                    <Card className="border border-dashed border-border/60 bg-muted text-foreground shadow-none dark:border-white/15 dark:bg-white/5 dark:text-white">
+                      <CardHeader className="pb-3"><CardTitle className="text-sm text-foreground dark:text-white">DNS setup guide</CardTitle></CardHeader>
+                      <CardContent className="space-y-2 text-xs text-muted-foreground dark:text-muted-foreground">
                         <p>Add these DNS records in your domain provider:</p>
-                        <div className="rounded border border-border/60 bg-white p-2 font-mono text-slate-900 dark:border-white/15 dark:bg-slate-950/60 dark:text-slate-100">TXT @ ct-waitlist-verification={content.domainSetup.verificationToken}</div>
-                        <div className="rounded border border-border/60 bg-white p-2 font-mono text-slate-900 dark:border-white/15 dark:bg-slate-950/60 dark:text-slate-100">TXT @ v=spf1 include:_spf.resend.com ~all</div>
-                        <div className="rounded border border-border/60 bg-white p-2 font-mono text-slate-900 dark:border-white/15 dark:bg-slate-950/60 dark:text-slate-100">CNAME ct1._domainkey ct1._domainkey.resend.com</div>
-                        <p className="text-slate-500 dark:text-slate-300">After adding DNS records, click Validate DNS. Propagation can take a few minutes.</p>
+                        <div className="rounded border border-border/60 bg-white p-2 font-mono text-foreground dark:border-white/15 dark:bg-slate-950/60 dark:text-muted-foreground">TXT @ ct-waitlist-verification={content.domainSetup.verificationToken}</div>
+                        <div className="rounded border border-border/60 bg-white p-2 font-mono text-foreground dark:border-white/15 dark:bg-slate-950/60 dark:text-muted-foreground">TXT @ v=spf1 include:_spf.resend.com ~all</div>
+                        <div className="rounded border border-border/60 bg-white p-2 font-mono text-foreground dark:border-white/15 dark:bg-slate-950/60 dark:text-muted-foreground">CNAME ct1._domainkey ct1._domainkey.resend.com</div>
+                        <p className="text-muted-foreground dark:text-muted-foreground">After adding DNS records, click Validate DNS. Propagation can take a few minutes.</p>
                       </CardContent>
                     </Card>
                   ) : (
-                    <p className="rounded-md border border-dashed border-border/60 bg-slate-50/80 p-3 text-xs text-slate-500 dark:border-white/15 dark:bg-white/5 dark:text-slate-300">
+                    <p className="rounded-md border border-dashed border-border/60 bg-muted p-3 text-xs text-muted-foreground dark:border-white/15 dark:bg-white/5 dark:text-muted-foreground">
                       Save your draft first to generate a verification token for DNS setup.
                     </p>
                   )}
 
                   <div className="rounded-md border border-border/60 p-3 text-xs space-y-2 dark:border-white/10">
-                    <div className="flex items-center justify-between"><span>Verification TXT</span>{content.domainSetup?.verificationValid ? <Unlock className="w-4 h-4 text-emerald-600" /> : <Lock className="w-4 h-4 text-amber-500" />}</div>
-                    <div className="flex items-center justify-between"><span>SPF</span>{content.domainSetup?.spfValid ? <Unlock className="w-4 h-4 text-emerald-600" /> : <Lock className="w-4 h-4 text-amber-500" />}</div>
-                    <div className="flex items-center justify-between"><span>DKIM</span>{content.domainSetup?.dkimValid ? <Unlock className="w-4 h-4 text-emerald-600" /> : <Lock className="w-4 h-4 text-amber-500" />}</div>
-                    <p className="text-slate-500 dark:text-slate-300">Status: <strong className="text-slate-950 dark:text-white">{content.domainSetup?.status || 'unconfigured'}</strong></p>
-                    {content.domainSetup?.lastCheckedAt ? <p className="text-slate-500 dark:text-slate-300">Last checked: {new Date(content.domainSetup.lastCheckedAt).toLocaleString()}</p> : null}
+                    <div className="flex items-center justify-between"><span>Verification TXT</span>{content.domainSetup?.verificationValid ? <Unlock className="w-4 h-4 text-success" /> : <Lock className="w-4 h-4 text-warning" />}</div>
+                    <div className="flex items-center justify-between"><span>SPF</span>{content.domainSetup?.spfValid ? <Unlock className="w-4 h-4 text-success" /> : <Lock className="w-4 h-4 text-warning" />}</div>
+                    <div className="flex items-center justify-between"><span>DKIM</span>{content.domainSetup?.dkimValid ? <Unlock className="w-4 h-4 text-success" /> : <Lock className="w-4 h-4 text-warning" />}</div>
+                    <p className="text-muted-foreground dark:text-muted-foreground">Status: <strong className="text-foreground dark:text-white">{content.domainSetup?.status || 'unconfigured'}</strong></p>
+                    {content.domainSetup?.lastCheckedAt ? <p className="text-muted-foreground dark:text-muted-foreground">Last checked: {new Date(content.domainSetup.lastCheckedAt).toLocaleString()}</p> : null}
                   </div>
 
                   <Button className={`w-full ${actionButtonClass}`} variant="outline" onClick={handleValidateDomain} disabled={isCheckingDns}>{isCheckingDns ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}Validate DNS</Button>
@@ -2159,23 +2159,23 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                       {isMarkingReady ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ShieldCheck className="w-4 h-4 mr-2" />}Mark as Ready
                     </Button>
                   ) : (
-                    <Badge className="w-full justify-center border-green-500/30 bg-green-500/10 text-green-700">Ready on {new Date(markReadyAt).toLocaleDateString()}</Badge>
+                    <Badge className="w-full justify-center border-success/30 bg-success/10 text-success">Ready on {new Date(markReadyAt).toLocaleDateString()}</Badge>
                   )}
                 </TabsContent>
 
                 <TabsContent value="analytics" className={analyticsTabClass}>
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600 dark:text-sky-200">Analytics</p>
-                    <h4 className="text-lg font-semibold text-slate-950 dark:text-white">Read the signal</h4>
-                    <p className="text-sm text-slate-500 dark:text-slate-300">Watch views, signups, and recent leads without leaving the builder.</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-info dark:text-info">Analytics</p>
+                    <h4 className="text-lg font-semibold text-foreground dark:text-white">Read the signal</h4>
+                    <p className="text-sm text-muted-foreground dark:text-muted-foreground">Watch views, signups, and recent leads without leaving the builder.</p>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="rounded border border-border/60 bg-slate-50/80 p-2 text-center dark:border-white/10 dark:bg-white/5"><Eye className="w-4 h-4 mx-auto text-slate-500 dark:text-slate-300" /><p className="text-xl font-bold text-slate-950 dark:text-white">{viewCount}</p><p className="text-label text-slate-500 dark:text-slate-300">Views</p></div>
-                    <div className="rounded border border-border/60 bg-slate-50/80 p-2 text-center dark:border-white/10 dark:bg-white/5"><Users className="w-4 h-4 mx-auto text-indigo-500 dark:text-indigo-300" /><p className="text-xl font-bold text-indigo-700 dark:text-indigo-200">{signupCount}</p><p className="text-label text-slate-500 dark:text-slate-300">Signups</p></div>
-                    <div className="rounded border border-border/60 bg-slate-50/80 p-2 text-center dark:border-white/10 dark:bg-white/5"><Sparkles className="w-4 h-4 mx-auto text-green-500 dark:text-green-300" /><p className="text-xl font-bold text-green-700 dark:text-green-200">{conversionRate}</p><p className="text-label text-slate-500 dark:text-slate-300">CVR</p></div>
+                    <div className="rounded border border-border/60 bg-muted p-2 text-center dark:border-white/10 dark:bg-white/5"><Eye className="w-4 h-4 mx-auto text-muted-foreground dark:text-muted-foreground" /><p className="text-xl font-bold text-foreground dark:text-white">{viewCount}</p><p className="text-label text-muted-foreground dark:text-muted-foreground">Views</p></div>
+                    <div className="rounded border border-border/60 bg-muted p-2 text-center dark:border-white/10 dark:bg-white/5"><Users className="w-4 h-4 mx-auto text-indigo-500 dark:text-indigo-300" /><p className="text-xl font-bold text-indigo-700 dark:text-indigo-200">{signupCount}</p><p className="text-label text-muted-foreground dark:text-muted-foreground">Signups</p></div>
+                    <div className="rounded border border-border/60 bg-muted p-2 text-center dark:border-white/10 dark:bg-white/5"><Sparkles className="w-4 h-4 mx-auto text-success dark:text-success" /><p className="text-xl font-bold text-success dark:text-success">{conversionRate}</p><p className="text-label text-muted-foreground dark:text-muted-foreground">CVR</p></div>
                   </div>
 
-                  <div className="rounded border border-border/60 bg-slate-50/80 p-3 text-xs space-y-2 dark:border-white/10 dark:bg-white/5">
+                  <div className="rounded border border-border/60 bg-muted p-3 text-xs space-y-2 dark:border-white/10 dark:bg-white/5">
                     <p className="font-medium">A/B performance</p>
                     <p>Variant A: {variantMetrics.A.views} views / {variantMetrics.A.signups} signups</p>
                     <p>Variant B: {variantMetrics.B.views} views / {variantMetrics.B.signups} signups</p>
@@ -2188,15 +2188,15 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                     </div>
 
                     {recentSignups.length === 0 ? (
-                      <p className="text-xs text-slate-500 rounded border border-dashed border-border/60 bg-slate-50/80 p-3 dark:border-white/15 dark:bg-white/5 dark:text-slate-300">No signups yet. Publish and share your link.</p>
+                      <p className="text-xs text-muted-foreground rounded border border-dashed border-border/60 bg-muted p-3 dark:border-white/15 dark:bg-white/5 dark:text-muted-foreground">No signups yet. Publish and share your link.</p>
                     ) : (
                       <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
                         {recentSignups.map((signup) => (
-                          <div key={signup.id} className="rounded border border-border/60 bg-slate-50/80 p-2 text-xs dark:border-white/10 dark:bg-white/5">
+                          <div key={signup.id} className="rounded border border-border/60 bg-muted p-2 text-xs dark:border-white/10 dark:bg-white/5">
                             <p className="font-mono">{maskEmail(signup.email)}</p>
-                            <p className="text-slate-500 dark:text-slate-300">{signup.first_name ? `${signup.first_name} - ` : ''}{new Date(signup.created_at).toLocaleDateString()}</p>
+                            <p className="text-muted-foreground dark:text-muted-foreground">{signup.first_name ? `${signup.first_name} - ` : ''}{new Date(signup.created_at).toLocaleDateString()}</p>
                             {signup.custom_fields && signup.custom_fields.length > 0 ? (
-                              <div className="mt-1 text-slate-500 space-y-0.5 dark:text-slate-300">
+                              <div className="mt-1 text-muted-foreground space-y-0.5 dark:text-muted-foreground">
                                 {signup.custom_fields.slice(0, 3).map((field) => <p key={`${signup.id}-${field.id}`}>{field.label}: {field.value || '-'}</p>)}
                               </div>
                             ) : null}
@@ -2212,11 +2212,11 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
 
           <section className="relative overflow-auto bg-[radial-gradient(rgba(15,23,42,0.08)_1px,transparent_1px),linear-gradient(180deg,rgba(255,255,255,0.55),rgba(248,250,252,0.88))] bg-[length:22px_22px,100%_100%] p-4 md:p-8 dark:bg-[radial-gradient(rgba(148,163,184,0.14)_1px,transparent_1px),linear-gradient(180deg,rgba(15,23,42,0.94),rgba(2,6,23,0.98))]">
             <div className="mx-auto max-w-[1180px] space-y-4">
-              <div className="flex flex-col gap-3 rounded-4xl border border-border/60 bg-white/80 px-5 py-4 text-slate-950 shadow-sm backdrop-blur md:flex-row md:items-center md:justify-between dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.88))] dark:text-white dark:shadow-[0_18px_60px_rgba(2,6,23,0.28)]">
+              <div className="flex flex-col gap-3 rounded-4xl border border-border/60 bg-white/80 px-5 py-4 text-foreground shadow-sm backdrop-blur md:flex-row md:items-center md:justify-between dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.88))] dark:text-white dark:shadow-[0_18px_60px_rgba(2,6,23,0.28)]">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600 dark:text-sky-200">Preview canvas</p>
-                  <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">Review the public page before publishing.</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-300">This stage mirrors the public waitlist. Switch frames to test how the landing page reads on desktop and mobile.</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-info dark:text-info">Preview canvas</p>
+                  <p className="mt-2 text-sm font-medium text-foreground dark:text-white">Review the public page before publishing.</p>
+                  <p className="text-xs text-muted-foreground dark:text-muted-foreground">This stage mirrors the public waitlist. Switch frames to test how the landing page reads on desktop and mobile.</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button size="sm" variant={previewDevice === 'desktop' ? 'default' : 'outline'} onClick={() => setPreviewDevice('desktop')} className={previewDevice === 'desktop' ? primaryButtonClass : actionButtonClass}>
@@ -2232,19 +2232,19 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
 
               <div className={previewDevice === 'mobile' ? 'mx-auto max-w-[420px]' : ''}>
                 <div className="rounded-5xl border border-border/60 bg-white p-3 shadow-[0_28px_100px_rgba(15,23,42,0.16)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(30,41,59,0.92))] dark:shadow-[0_28px_100px_rgba(2,6,23,0.4)]">
-                  <div className="mb-3 flex items-center justify-between rounded-3xl border border-border/60 bg-slate-50/90 px-4 py-3 text-slate-950 dark:border-white/10 dark:bg-slate-950/70 dark:text-white">
+                  <div className="mb-3 flex items-center justify-between rounded-3xl border border-border/60 bg-muted px-4 py-3 text-foreground dark:border-white/10 dark:bg-slate-950/70 dark:text-white">
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1.5">
-                        <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
-                        <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
-                        <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-destructive" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-warning" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-success" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-slate-950 dark:text-white">{productName.trim() || 'Untitled waitlist'}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-300">{previewDevice === 'mobile' ? 'Mobile artboard' : 'Desktop artboard'}</p>
+                        <p className="text-sm font-medium text-foreground dark:text-white">{productName.trim() || 'Untitled waitlist'}</p>
+                        <p className="text-xs text-muted-foreground dark:text-muted-foreground">{previewDevice === 'mobile' ? 'Mobile artboard' : 'Desktop artboard'}</p>
                       </div>
                     </div>
-                    <Badge variant="outline" className="border-border/60 bg-white text-slate-600 dark:border-white/15 dark:bg-white/5 dark:text-slate-200">
+                    <Badge variant="outline" className="border-border/60 bg-white text-muted-foreground dark:border-white/15 dark:bg-white/5 dark:text-muted-foreground">
                       {status === 'published' ? 'Live-ready' : 'Draft preview'}
                     </Badge>
                   </div>

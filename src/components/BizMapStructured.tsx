@@ -201,7 +201,7 @@ export const BizMapStructured = ({ sessionId: initialSessionId, onComplete }: Bi
   const getStatusIcon = (componentStatus: string) => {
     switch (componentStatus) {
       case 'complete':
-        return <CheckCircle2 className="w-4 h-4 text-green-500" />;
+        return <CheckCircle2 className="w-4 h-4 text-success" />;
       case 'current':
         return <Progress className="w-4 h-4 text-primary animate-spin" />;
       default:
@@ -247,7 +247,7 @@ export const BizMapStructured = ({ sessionId: initialSessionId, onComplete }: Bi
                     key={component}
                     className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
                       componentStatus === 'current' ? 'bg-primary/10 border border-primary/20' :
-                      componentStatus === 'complete' ? 'bg-green-500/10' :
+                      componentStatus === 'complete' ? 'bg-success/10' :
                       'bg-muted/50'
                     }`}
                   >
@@ -363,7 +363,7 @@ export const BizMapStructured = ({ sessionId: initialSessionId, onComplete }: Bi
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <CheckCircle2 className="w-6 h-6 text-green-500" />
+                  <CheckCircle2 className="w-6 h-6 text-success" />
                   Business Map Complete!
                 </CardTitle>
                 <CardDescription>

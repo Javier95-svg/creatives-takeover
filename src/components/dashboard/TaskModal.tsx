@@ -151,7 +151,7 @@ export const TaskModal = ({ open, onOpenChange, selectedDate, onTaskAdded }: Tas
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="medium" id="medium" />
                 <Label htmlFor="medium" className="cursor-pointer font-normal">
-                  <span className="text-orange-500">●</span> Medium
+                  <span className="text-warning">●</span> Medium
                 </Label>
               </div>
               <div className="flex items-center space-x-2">

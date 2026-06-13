@@ -31,10 +31,10 @@ const CreditStatusBanner = () => {
   if (!shouldShowSoftGate) return null;
 
   return (
-    <div className="sticky top-0 z-30 border-b border-amber-300 bg-amber-50 px-4 py-3 text-amber-950 shadow-sm">
+    <div className="sticky top-0 z-30 border-b border-warning bg-warning-subtle px-4 py-3 text-warning shadow-sm">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-2 text-sm font-medium">
-          <AlertTriangle className="mt-0.5 h-4 w-4 flex-none text-amber-700" />
+          <AlertTriangle className="mt-0.5 h-4 w-4 flex-none text-warning" />
           <span>
             You have {totalAvailable} credits left this month — resets {resetDateShort}. Upgrade to Starter for 100 credits/month.
           </span>
@@ -42,7 +42,7 @@ const CreditStatusBanner = () => {
         <Button
           type="button"
           size="sm"
-          className="w-full bg-amber-700 text-white hover:bg-amber-800 sm:w-auto"
+          className="w-full bg-warning text-white hover:bg-warning sm:w-auto"
           onClick={openStarterCheckout}
           disabled={isStarterCheckoutLoading}
         >

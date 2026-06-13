@@ -119,7 +119,7 @@ export function IcpDraftShareBar({
           {isSharing ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
           ) : copied ? (
-            <Check className="h-3.5 w-3.5 text-emerald-500" />
+            <Check className="h-3.5 w-3.5 text-success" />
           ) : (
             <Copy className="h-3.5 w-3.5" />
           )}
@@ -184,7 +184,7 @@ export function IcpDraftShareBar({
               className="gap-2 text-sm"
               onClick={() => void handleSavePdf()}
             >
-              <FileText className="h-3.5 w-3.5 text-red-500" />
+              <FileText className="h-3.5 w-3.5 text-destructive" />
               Download PDF
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -192,7 +192,7 @@ export function IcpDraftShareBar({
               className="gap-2 text-sm"
               onClick={() => void handleSaveDocx()}
             >
-              <FileText className="h-3.5 w-3.5 text-blue-500" />
+              <FileText className="h-3.5 w-3.5 text-info" />
               Download DOCX
             </DropdownMenuItem>
           </DropdownMenuContent>

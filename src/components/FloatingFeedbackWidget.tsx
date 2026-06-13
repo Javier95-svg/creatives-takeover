@@ -15,10 +15,10 @@ import { useFeedbackWidget, FeedbackType } from '@/hooks/useFeedbackWidget';
 import { cn } from '@/lib/utils';
 
 const feedbackTypes = [
-  { type: 'bug' as FeedbackType, label: 'Bug Report', icon: Bug, color: 'text-red-500' },
-  { type: 'feature' as FeedbackType, label: 'Feature Request', icon: Lightbulb, color: 'text-yellow-500' },
-  { type: 'improvement' as FeedbackType, label: 'Improvement', icon: Wrench, color: 'text-blue-500' },
-  { type: 'other' as FeedbackType, label: 'Other', icon: HelpCircle, color: 'text-gray-500' },
+  { type: 'bug' as FeedbackType, label: 'Bug Report', icon: Bug, color: 'text-destructive' },
+  { type: 'feature' as FeedbackType, label: 'Feature Request', icon: Lightbulb, color: 'text-warning' },
+  { type: 'improvement' as FeedbackType, label: 'Improvement', icon: Wrench, color: 'text-info' },
+  { type: 'other' as FeedbackType, label: 'Other', icon: HelpCircle, color: 'text-muted-foreground' },
 ];
 
 const FloatingFeedbackWidget = () => {
@@ -102,7 +102,7 @@ const FloatingFeedbackWidget = () => {
                   <Star
                     className={cn(
                       'h-6 w-6 transition-colors',
-                      star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'
+                      star <= rating ? 'fill-warning text-warning' : 'text-muted-foreground'
                     )}
                   />
                 </Button>

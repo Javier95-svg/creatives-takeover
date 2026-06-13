@@ -18,9 +18,9 @@ interface DayCardProps {
 
 const statusConfig: Record<DayStatus, { icon: typeof Lock; label: string; color: string }> = {
   locked: { icon: Lock, label: 'Locked', color: 'text-muted-foreground' },
-  available: { icon: Circle, label: 'Ready', color: 'text-blue-500' },
-  'in-progress': { icon: Circle, label: 'In Progress', color: 'text-amber-500' },
-  completed: { icon: CheckCircle2, label: 'Complete', color: 'text-emerald-500' },
+  available: { icon: Circle, label: 'Ready', color: 'text-info' },
+  'in-progress': { icon: Circle, label: 'In Progress', color: 'text-warning' },
+  completed: { icon: CheckCircle2, label: 'Complete', color: 'text-success' },
 };
 
 export default function DayCard({ day, status, progress, isSelected, onToggleTask }: DayCardProps) {
@@ -44,11 +44,11 @@ export default function DayCard({ day, status, progress, isSelected, onToggleTas
                   <div
                     className={`flex items-center justify-center w-8 h-8 rounded-full border-2 text-sm font-bold ${
                       status === 'completed'
-                        ? 'border-emerald-500 bg-emerald-500/10 text-emerald-500'
+                        ? 'border-success bg-success/10 text-success'
                         : status === 'in-progress'
-                        ? 'border-amber-500 bg-amber-500/10 text-amber-500'
+                        ? 'border-warning bg-warning/10 text-warning'
                         : status === 'available'
-                        ? 'border-blue-500 bg-blue-500/10 text-blue-500'
+                        ? 'border-info bg-info/10 text-info'
                         : 'border-muted bg-muted/50 text-muted-foreground'
                     }`}
                   >
@@ -101,9 +101,9 @@ export default function DayCard({ day, status, progress, isSelected, onToggleTas
 
               {/* Pro Tip */}
               {day.proTip && (
-                <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/5 border border-amber-500/10">
-                  <Lightbulb className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
-                  <p className="text-xs text-amber-700 dark:text-amber-400">{day.proTip}</p>
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-warning/5 border border-warning/10">
+                  <Lightbulb className="h-4 w-4 text-warning mt-0.5 shrink-0" />
+                  <p className="text-xs text-warning dark:text-warning">{day.proTip}</p>
                 </div>
               )}
 

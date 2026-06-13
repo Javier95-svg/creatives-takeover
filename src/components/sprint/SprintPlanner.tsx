@@ -486,7 +486,7 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
             {generatedTasks.length > 0 && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium text-green-600 dark:text-green-400 flex items-center gap-2">
+                  <Label className="text-sm font-medium text-success dark:text-success flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4" />
                     Generated {generatedTasks.length} Tasks
                   </Label>

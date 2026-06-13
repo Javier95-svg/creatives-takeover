@@ -66,7 +66,7 @@ export function IcpSynthesisLoader({
 
           {showLongHint ? (
             fallbackState === "submitted" ? (
-              <div className="rounded-3xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-4 text-sm text-emerald-800 dark:text-emerald-300">
+              <div className="rounded-3xl border border-success/25 bg-success/10 px-4 py-4 text-sm text-success dark:text-success">
                 We&apos;ll email you a link to resume and unlock this ICP Draft as soon as it&apos;s ready.
               </div>
             ) : (

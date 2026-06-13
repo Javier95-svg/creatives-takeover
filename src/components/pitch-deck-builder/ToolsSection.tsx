@@ -32,10 +32,10 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 const categoryColors: Record<string, string> = {
-  generator: 'bg-blue-100 text-blue-700 border-blue-200',
-  validator: 'bg-green-100 text-green-700 border-green-200',
+  generator: 'bg-info-subtle text-info border-info',
+  validator: 'bg-success-subtle text-success border-success',
   helper: 'bg-purple-100 text-purple-700 border-purple-200',
-  resource: 'bg-orange-100 text-orange-700 border-orange-200'
+  resource: 'bg-warning-subtle text-warning border-warning'
 };
 
 export const ToolsSection: React.FC = () => {

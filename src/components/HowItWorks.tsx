@@ -73,14 +73,14 @@ const HowItWorks = () => {
       <div className="absolute top-20 right-20 w-16 h-16 border-2 border-primary/20 rounded-full animate-spin" style={{ animationDuration: '10s' }}>
         <div className="absolute inset-2 border-2 border-primary/30 rounded-full" />
       </div>
-      <div className="absolute bottom-20 left-20 w-12 h-12 border-2 border-blue-400/20 rounded-full animate-spin" style={{ animationDuration: '15s', animationDirection: 'reverse' }}>
-        <div className="absolute inset-2 border-2 border-blue-400/30 rounded-full" />
+      <div className="absolute bottom-20 left-20 w-12 h-12 border-2 border-info/20 rounded-full animate-spin" style={{ animationDuration: '15s', animationDirection: 'reverse' }}>
+        <div className="absolute inset-2 border-2 border-info/30 rounded-full" />
       </div>
       
       {/* Step Indicators */}
       <div className="absolute top-32 left-1/4 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary text-sm font-bold animate-pulse">1</div>
       <div className="absolute top-48 left-2/4 w-8 h-8 bg-[hsl(var(--blue-primary))]/10 rounded-full flex items-center justify-center text-[hsl(var(--blue-primary))] text-sm font-bold animate-pulse" style={{ animationDelay: '0.5s' }}>2</div>
-      <div className="absolute top-32 left-3/4 w-8 h-8 bg-cyan-400/10 rounded-full flex items-center justify-center text-cyan-400 text-sm font-bold animate-pulse" style={{ animationDelay: '1s' }}>3</div>
+      <div className="absolute top-32 left-3/4 w-8 h-8 bg-info/10 rounded-full flex items-center justify-center text-info text-sm font-bold animate-pulse" style={{ animationDelay: '1s' }}>3</div>
       
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}

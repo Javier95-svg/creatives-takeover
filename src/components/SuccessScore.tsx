@@ -13,7 +13,7 @@ export default function SuccessScore({ score }: SuccessScoreProps) {
 
   const breakdown = score.scoring_breakdown || {};
 
-  const gaugeColor = score.overall_score >= 80 ? 'text-green-600' : score.overall_score >= 65 ? 'text-amber-600' : score.overall_score >= 50 ? 'text-orange-600' : 'text-red-600';
+  const gaugeColor = score.overall_score >= 80 ? 'text-success' : score.overall_score >= 65 ? 'text-warning' : score.overall_score >= 50 ? 'text-warning' : 'text-destructive';
   const riskBadgeVariant = score.risk_assessment === 'low' ? 'secondary' : score.risk_assessment === 'medium' ? 'outline' : 'default';
 
   return (
@@ -73,9 +73,9 @@ export default function SuccessScore({ score }: SuccessScoreProps) {
           <div className="mt-6">
             <div className="flex items-center gap-2 mb-2 text-sm font-medium">
               {score.risk_assessment === 'low' ? (
-                <ShieldCheck className="h-4 w-4 text-green-600" />
+                <ShieldCheck className="h-4 w-4 text-success" />
               ) : (
-                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                <AlertTriangle className="h-4 w-4 text-warning" />
               )}
               Recommendations
             </div>

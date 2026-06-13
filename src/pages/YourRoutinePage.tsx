@@ -110,17 +110,17 @@ function TaskChecklistRow({
     <div
       className={cn(
         'rounded-lg border border-border/70 bg-background/75 p-4',
-        isCompleted && 'border-emerald-500/20 bg-emerald-500/10',
-        isSkipped && 'border-amber-500/20 bg-amber-500/10',
+        isCompleted && 'border-success/20 bg-success/10',
+        isSkipped && 'border-warning/20 bg-warning/10',
       )}
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 gap-3">
           <div className="mt-0.5">
             {isCompleted ? (
-              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+              <CheckCircle2 className="h-5 w-5 text-success" />
             ) : isSkipped ? (
-              <Clock3 className="h-5 w-5 text-amber-500" />
+              <Clock3 className="h-5 w-5 text-warning" />
             ) : (
               <span className="block h-5 w-5 rounded-full border border-muted-foreground/50" />
             )}
@@ -131,7 +131,7 @@ function TaskChecklistRow({
             </p>
             <p className="text-xs capitalize text-muted-foreground">{task.cadence}</p>
             {isSkipped ? (
-              <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">Skipped for this period. You can still mark it done.</p>
+              <p className="mt-1 text-xs text-warning dark:text-warning">Skipped for this period. You can still mark it done.</p>
             ) : null}
           </div>
         </div>

@@ -717,8 +717,8 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                 onClick={handleLike}
                 className={`flex items-center justify-center gap-2 h-11 w-11 sm:h-10 sm:w-auto sm:px-4 rounded-lg min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 ${
                   isLiked 
-                    ? "text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" 
-                    : "text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    ? "text-destructive hover:text-destructive hover:bg-destructive-subtle dark:hover:bg-destructive/20" 
+                    : "text-muted-foreground hover:text-destructive hover:bg-destructive-subtle dark:hover:bg-destructive/20"
                 }`}
                 aria-label={`${isLiked ? 'Unlike' : 'Like'} this post`}
               >

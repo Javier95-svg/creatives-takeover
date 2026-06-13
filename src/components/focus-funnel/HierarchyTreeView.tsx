@@ -52,15 +52,15 @@ export function HierarchyTreeView({ hierarchy, onTaskStatusChange }: HierarchyTr
 
   const getPriorityColor = (priority: number | string) => {
     if (typeof priority === 'number') {
-      if (priority <= 1) return 'text-red-500';
-      if (priority <= 2) return 'text-orange-500';
-      if (priority <= 3) return 'text-yellow-500';
+      if (priority <= 1) return 'text-destructive';
+      if (priority <= 2) return 'text-warning';
+      if (priority <= 3) return 'text-warning';
       return 'text-muted-foreground';
     }
     switch (priority) {
-      case 'urgent': return 'text-red-500';
-      case 'high': return 'text-orange-500';
-      case 'medium': return 'text-yellow-500';
+      case 'urgent': return 'text-destructive';
+      case 'high': return 'text-warning';
+      case 'medium': return 'text-warning';
       default: return 'text-muted-foreground';
     }
   };
@@ -68,11 +68,11 @@ export function HierarchyTreeView({ hierarchy, onTaskStatusChange }: HierarchyTr
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'done':
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+        return <CheckCircle2 className="h-4 w-4 text-success" />;
       case 'in_progress':
-        return <Clock className="h-4 w-4 text-blue-500" />;
+        return <Clock className="h-4 w-4 text-info" />;
       case 'blocked':
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+        return <AlertTriangle className="h-4 w-4 text-destructive" />;
       default:
         return <Circle className="h-4 w-4 text-muted-foreground" />;
     }

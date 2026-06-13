@@ -10,16 +10,16 @@ interface JourneyTimelineProps {
 
 const statusColors: Record<DayStatus, string> = {
   locked: 'border-muted bg-muted/50 text-muted-foreground',
-  available: 'border-blue-500 bg-blue-500/10 text-blue-500',
-  'in-progress': 'border-amber-500 bg-amber-500/10 text-amber-500 ring-2 ring-amber-500/20',
-  completed: 'border-emerald-500 bg-emerald-500/10 text-emerald-500',
+  available: 'border-info bg-info/10 text-info',
+  'in-progress': 'border-warning bg-warning/10 text-warning ring-2 ring-warning/20',
+  completed: 'border-success bg-success/10 text-success',
 };
 
 const lineColors: Record<DayStatus, string> = {
   locked: 'bg-muted',
-  available: 'bg-blue-500/30',
-  'in-progress': 'bg-amber-500/30',
-  completed: 'bg-emerald-500',
+  available: 'bg-info/30',
+  'in-progress': 'bg-warning/30',
+  completed: 'bg-success',
 };
 
 export default function JourneyTimeline({ days, selectedDay, getDayStatus, onSelectDay }: JourneyTimelineProps) {

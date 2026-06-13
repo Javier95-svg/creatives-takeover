@@ -82,42 +82,42 @@ const HeroSnippets = () => {
     const colorMap = {
       planning: {
         glass: 'glass-blue',
-        border: 'border-blue-500/50 hover:border-blue-500/80',
-        shadow: 'hover:shadow-lg hover:shadow-blue-500/30',
-        icon: 'text-blue-600 dark:text-blue-400',
-        bg: 'bg-blue-500/15 hover:bg-blue-500/30',
+        border: 'border-info/50 hover:border-info/80',
+        shadow: 'hover:shadow-lg hover:shadow-info/30',
+        icon: 'text-info dark:text-info',
+        bg: 'bg-info/15 hover:bg-info/30',
         colorName: 'blue'
       },
       dashboard: {
         glass: 'glass-green',
-        border: 'border-yellow-500/50 hover:border-yellow-500/80',
-        shadow: 'hover:shadow-lg hover:shadow-yellow-500/30',
-        icon: 'text-yellow-600 dark:text-yellow-400',
-        bg: 'bg-yellow-500/15 hover:bg-yellow-500/30',
+        border: 'border-warning/50 hover:border-warning/80',
+        shadow: 'hover:shadow-lg hover:shadow-warning/30',
+        icon: 'text-warning dark:text-warning',
+        bg: 'bg-warning/15 hover:bg-warning/30',
         colorName: 'yellow'
       },
       chat: {
         glass: 'glass-green',
-        border: 'border-green-500/50 hover:border-green-500/80',
-        shadow: 'hover:shadow-lg hover:shadow-green-500/30',
-        icon: 'text-green-600 dark:text-green-400',
-        bg: 'bg-green-500/15 hover:bg-green-500/30',
+        border: 'border-success/50 hover:border-success/80',
+        shadow: 'hover:shadow-lg hover:shadow-success/30',
+        icon: 'text-success dark:text-success',
+        bg: 'bg-success/15 hover:bg-success/30',
         colorName: 'green'
       },
       pmf: {
         glass: 'glass-red',
-        border: 'border-orange-500/50 hover:border-orange-500/80',
-        shadow: 'hover:shadow-lg hover:shadow-orange-500/30',
-        icon: 'text-orange-600 dark:text-orange-400',
-        bg: 'bg-orange-500/15 hover:bg-orange-500/30',
+        border: 'border-warning/50 hover:border-warning/80',
+        shadow: 'hover:shadow-lg hover:shadow-warning/30',
+        icon: 'text-warning dark:text-warning',
+        bg: 'bg-warning/15 hover:bg-warning/30',
         colorName: 'orange'
       },
       prompt: {
         glass: 'glass-red',
-        border: 'border-red-500/50 hover:border-red-500/80',
-        shadow: 'hover:shadow-lg hover:shadow-red-500/30',
-        icon: 'text-red-600 dark:text-red-400',
-        bg: 'bg-red-500/15 hover:bg-red-500/30',
+        border: 'border-destructive/50 hover:border-destructive/80',
+        shadow: 'hover:shadow-lg hover:shadow-destructive/30',
+        icon: 'text-destructive dark:text-destructive',
+        bg: 'bg-destructive/15 hover:bg-destructive/30',
         colorName: 'red'
       },
       insighta: {
@@ -138,9 +138,9 @@ const HeroSnippets = () => {
       },
       white: {
         glass: 'glass-blue',
-        border: 'border-gray-300/60 hover:border-gray-400/90 dark:border-gray-500/60 dark:hover:border-gray-400/90',
+        border: 'border-border/60 hover:border-border/90 dark:border-border/60 dark:hover:border-border/90',
         shadow: 'hover:shadow-lg hover:shadow-gray-400/40 dark:hover:shadow-gray-500/40',
-        icon: 'text-gray-600 dark:text-gray-300',
+        icon: 'text-muted-foreground dark:text-muted-foreground',
         bg: 'bg-gray-400/15 hover:bg-gray-400/25 dark:bg-gray-500/15 dark:hover:bg-gray-500/25',
         colorName: 'white'
       }

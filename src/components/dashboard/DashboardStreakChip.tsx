@@ -21,11 +21,11 @@ export function DashboardStreakChip() {
       className={cn(
         "pointer-events-auto inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-sm font-semibold shadow-sm backdrop-blur-md transition-colors",
         active
-          ? "border-amber-500/30 bg-amber-500/10 text-amber-600 hover:bg-amber-500/15 dark:text-amber-300"
+          ? "border-warning/30 bg-warning/10 text-warning hover:bg-warning/15 dark:text-warning"
           : "border-border/70 bg-background/88 text-muted-foreground hover:text-foreground",
       )}
     >
-      <Flame className={cn("h-4 w-4", active ? "text-amber-500" : "text-muted-foreground")} aria-hidden="true" />
+      <Flame className={cn("h-4 w-4", active ? "text-warning" : "text-muted-foreground")} aria-hidden="true" />
       <span className="tabular-nums">{streak}</span>
       <span className="hidden sm:inline">{streak === 1 ? "day" : "days"}</span>
     </Link>

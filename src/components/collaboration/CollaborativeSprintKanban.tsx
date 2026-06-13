@@ -134,10 +134,10 @@ export const CollaborativeSprintKanban: React.FC<CollaborativeSprintKanbanProps>
 
   const getStatusColor = (status: Sprint['status']) => {
     switch (status) {
-      case 'planning': return 'bg-yellow-500';
-      case 'active': return 'bg-green-500';
-      case 'paused': return 'bg-orange-500';
-      case 'completed': return 'bg-blue-500';
+      case 'planning': return 'bg-warning';
+      case 'active': return 'bg-success';
+      case 'paused': return 'bg-warning';
+      case 'completed': return 'bg-info';
       default: return 'bg-gray-500';
     }
   };
@@ -240,7 +240,7 @@ export const CollaborativeSprintKanban: React.FC<CollaborativeSprintKanbanProps>
                 <Button 
                   onClick={() => handleStatusChange('active')}
                   size="sm"
-                  className="bg-green-600 hover:bg-green-700"
+                  className="bg-success hover:bg-success"
                 >
                   <Play className="h-4 w-4 mr-2" />
                   Start Sprint
@@ -259,7 +259,7 @@ export const CollaborativeSprintKanban: React.FC<CollaborativeSprintKanbanProps>
                   <Button 
                     onClick={() => handleStatusChange('completed')}
                     size="sm"
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="bg-info hover:bg-info"
                   >
                     <CheckSquare className="h-4 w-4 mr-2" />
                     Complete Sprint
@@ -270,7 +270,7 @@ export const CollaborativeSprintKanban: React.FC<CollaborativeSprintKanbanProps>
                 <Button 
                   onClick={() => handleStatusChange('active')}
                   size="sm"
-                  className="bg-green-600 hover:bg-green-700"
+                  className="bg-success hover:bg-success"
                 >
                   <Play className="h-4 w-4 mr-2" />
                   Resume Sprint
@@ -311,7 +311,7 @@ export const CollaborativeSprintKanban: React.FC<CollaborativeSprintKanbanProps>
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-sm">
-              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+              <div className="w-3 h-3 rounded-full bg-info"></div>
               In Progress
               <Badge variant="secondary">{inProgressTasks}</Badge>
             </CardTitle>
@@ -335,7 +335,7 @@ export const CollaborativeSprintKanban: React.FC<CollaborativeSprintKanbanProps>
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-sm">
-              <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+              <div className="w-3 h-3 rounded-full bg-warning"></div>
               Review
               <Badge variant="secondary">{reviewTasks}</Badge>
             </CardTitle>
@@ -359,7 +359,7 @@ export const CollaborativeSprintKanban: React.FC<CollaborativeSprintKanbanProps>
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-sm">
-              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              <div className="w-3 h-3 rounded-full bg-success"></div>
               Done
               <Badge variant="secondary">{completedTasks}</Badge>
             </CardTitle>

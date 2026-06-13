@@ -44,7 +44,7 @@ export const StorytellingPlaybookModal: React.FC<StorytellingPlaybookModalProps>
 
             <div className="space-y-4">
               <div className="flex gap-3">
-                <div className="shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">1</div>
+                <div className="shrink-0 w-8 h-8 rounded-full bg-info-subtle flex items-center justify-center text-info font-bold">1</div>
                 <div className="flex-1">
                   <h4 className="font-semibold">The Ordinary World</h4>
                   <p className="text-sm text-muted-foreground mt-1">
@@ -60,7 +60,7 @@ export const StorytellingPlaybookModal: React.FC<StorytellingPlaybookModalProps>
               </div>
 
               <div className="flex gap-3">
-                <div className="shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">2</div>
+                <div className="shrink-0 w-8 h-8 rounded-full bg-info-subtle flex items-center justify-center text-info font-bold">2</div>
                 <div className="flex-1">
                   <h4 className="font-semibold">The Call to Adventure (The Problem)</h4>
                   <p className="text-sm text-muted-foreground mt-1">
@@ -76,7 +76,7 @@ export const StorytellingPlaybookModal: React.FC<StorytellingPlaybookModalProps>
               </div>
 
               <div className="flex gap-3">
-                <div className="shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">3</div>
+                <div className="shrink-0 w-8 h-8 rounded-full bg-info-subtle flex items-center justify-center text-info font-bold">3</div>
                 <div className="flex-1">
                   <h4 className="font-semibold">Meeting the Guide (Your Solution)</h4>
                   <p className="text-sm text-muted-foreground mt-1">
@@ -92,7 +92,7 @@ export const StorytellingPlaybookModal: React.FC<StorytellingPlaybookModalProps>
               </div>
 
               <div className="flex gap-3">
-                <div className="shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">4</div>
+                <div className="shrink-0 w-8 h-8 rounded-full bg-info-subtle flex items-center justify-center text-info font-bold">4</div>
                 <div className="flex-1">
                   <h4 className="font-semibold">The Transformation (Success)</h4>
                   <p className="text-sm text-muted-foreground mt-1">
@@ -108,12 +108,12 @@ export const StorytellingPlaybookModal: React.FC<StorytellingPlaybookModalProps>
               </div>
             </div>
 
-            <Card className="p-4 bg-green-50 border-green-200">
+            <Card className="p-4 bg-success-subtle border-success">
               <div className="flex items-start gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+                <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-green-900 text-sm">When to Use This Framework</p>
-                  <p className="text-sm text-green-700 mt-1">
+                  <p className="font-semibold text-success text-sm">When to Use This Framework</p>
+                  <p className="text-sm text-success mt-1">
                     Best for B2C products, consumer-facing services, or when you have compelling customer stories.
                   </p>
                 </div>
@@ -132,7 +132,7 @@ export const StorytellingPlaybookModal: React.FC<StorytellingPlaybookModalProps>
 
             <div className="space-y-4">
               <div className="flex gap-3">
-                <div className="shrink-0 w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold">1</div>
+                <div className="shrink-0 w-8 h-8 rounded-full bg-warning-subtle flex items-center justify-center text-warning font-bold">1</div>
                 <div className="flex-1">
                   <h4 className="font-semibold">Problem: State It Clearly</h4>
                   <p className="text-sm text-muted-foreground mt-1">
@@ -148,7 +148,7 @@ export const StorytellingPlaybookModal: React.FC<StorytellingPlaybookModalProps>
               </div>
 
               <div className="flex gap-3">
-                <div className="shrink-0 w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold">2</div>
+                <div className="shrink-0 w-8 h-8 rounded-full bg-warning-subtle flex items-center justify-center text-warning font-bold">2</div>
                 <div className="flex-1">
                   <h4 className="font-semibold">Agitate: Make It Painful</h4>
                   <p className="text-sm text-muted-foreground mt-1">
@@ -165,7 +165,7 @@ export const StorytellingPlaybookModal: React.FC<StorytellingPlaybookModalProps>
               </div>
 
               <div className="flex gap-3">
-                <div className="shrink-0 w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold">3</div>
+                <div className="shrink-0 w-8 h-8 rounded-full bg-warning-subtle flex items-center justify-center text-warning font-bold">3</div>
                 <div className="flex-1">
                   <h4 className="font-semibold">Solve: Introduce Your Solution</h4>
                   <p className="text-sm text-muted-foreground mt-1">
@@ -182,12 +182,12 @@ export const StorytellingPlaybookModal: React.FC<StorytellingPlaybookModalProps>
               </div>
             </div>
 
-            <Card className="p-4 bg-green-50 border-green-200">
+            <Card className="p-4 bg-success-subtle border-success">
               <div className="flex items-start gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+                <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-green-900 text-sm">When to Use This Framework</p>
-                  <p className="text-sm text-green-700 mt-1">
+                  <p className="font-semibold text-success text-sm">When to Use This Framework</p>
+                  <p className="text-sm text-success mt-1">
                     Best for B2B solutions, technical products, or when addressing urgent, high-stakes problems.
                   </p>
                 </div>
@@ -205,72 +205,72 @@ export const StorytellingPlaybookModal: React.FC<StorytellingPlaybookModalProps>
             </Card>
 
             <div className="grid md:grid-cols-2 gap-4">
-              <Card className="p-4 border-2 border-red-200 bg-red-50">
+              <Card className="p-4 border-2 border-destructive bg-destructive-subtle">
                 <div className="flex items-center gap-2 mb-3">
                   <Badge variant="destructive">Before</Badge>
-                  <h4 className="font-semibold text-red-900">The Old Way</h4>
+                  <h4 className="font-semibold text-destructive">The Old Way</h4>
                 </div>
-                <ul className="space-y-2 text-sm text-red-700">
+                <ul className="space-y-2 text-sm text-destructive">
                   <li className="flex gap-2">
-                    <span className="text-red-500">×</span>
+                    <span className="text-destructive">×</span>
                     <span>Manual invoicing takes 15 minutes per invoice</span>
                   </li>
                   <li className="flex gap-2">
-                    <span className="text-red-500">×</span>
+                    <span className="text-destructive">×</span>
                     <span>Customers forget to pay, requiring awkward follow-ups</span>
                   </li>
                   <li className="flex gap-2">
-                    <span className="text-red-500">×</span>
+                    <span className="text-destructive">×</span>
                     <span>Cash flow is unpredictable - can't plan ahead</span>
                   </li>
                   <li className="flex gap-2">
-                    <span className="text-red-500">×</span>
+                    <span className="text-destructive">×</span>
                     <span>Lost track of $10K in unpaid invoices</span>
                   </li>
                 </ul>
               </Card>
 
-              <Card className="p-4 border-2 border-green-200 bg-green-50">
+              <Card className="p-4 border-2 border-success bg-success-subtle">
                 <div className="flex items-center gap-2 mb-3">
-                  <Badge className="bg-green-600">After</Badge>
-                  <h4 className="font-semibold text-green-900">With Your Solution</h4>
+                  <Badge className="bg-success">After</Badge>
+                  <h4 className="font-semibold text-success">With Your Solution</h4>
                 </div>
-                <ul className="space-y-2 text-sm text-green-700">
+                <ul className="space-y-2 text-sm text-success">
                   <li className="flex gap-2">
-                    <span className="text-green-500">✓</span>
+                    <span className="text-success">✓</span>
                     <span>Generate invoices in 30 seconds with AI</span>
                   </li>
                   <li className="flex gap-2">
-                    <span className="text-green-500">✓</span>
+                    <span className="text-success">✓</span>
                     <span>Automated reminders sent at optimal times</span>
                   </li>
                   <li className="flex gap-2">
-                    <span className="text-green-500">✓</span>
+                    <span className="text-success">✓</span>
                     <span>Predict cash flow 90 days out with 95% accuracy</span>
                   </li>
                   <li className="flex gap-2">
-                    <span className="text-green-500">✓</span>
+                    <span className="text-success">✓</span>
                     <span>Real-time dashboard shows every dollar owed</span>
                   </li>
                 </ul>
               </Card>
             </div>
 
-            <Card className="p-4 bg-blue-50 border-blue-200">
-              <h4 className="font-semibold text-blue-900 mb-2">The Bridge: How You Get There</h4>
-              <p className="text-sm text-blue-700">
+            <Card className="p-4 bg-info-subtle border-info">
+              <h4 className="font-semibold text-info mb-2">The Bridge: How You Get There</h4>
+              <p className="text-sm text-info">
                 "Our platform connects to your existing accounting software in 60 seconds.
                 AI learns from your invoicing patterns and starts automating within 24 hours.
                 Most customers see results in their first week."
               </p>
             </Card>
 
-            <Card className="p-4 bg-green-50 border-green-200">
+            <Card className="p-4 bg-success-subtle border-success">
               <div className="flex items-start gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+                <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-green-900 text-sm">When to Use This Framework</p>
-                  <p className="text-sm text-green-700 mt-1">
+                  <p className="font-semibold text-success text-sm">When to Use This Framework</p>
+                  <p className="text-sm text-success mt-1">
                     Best for demonstrating transformation, workflow improvements, or when you have clear before/after metrics.
                   </p>
                 </div>
@@ -353,12 +353,12 @@ export const StorytellingPlaybookModal: React.FC<StorytellingPlaybookModalProps>
               </div>
             </div>
 
-            <Card className="p-4 bg-green-50 border-green-200">
+            <Card className="p-4 bg-success-subtle border-success">
               <div className="flex items-start gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+                <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-green-900 text-sm">When to Use This Framework</p>
-                  <p className="text-sm text-green-700 mt-1">
+                  <p className="font-semibold text-success text-sm">When to Use This Framework</p>
+                  <p className="text-sm text-success mt-1">
                     Best for growth-stage companies with strong traction, data-heavy industries, or quantitative investors.
                   </p>
                 </div>

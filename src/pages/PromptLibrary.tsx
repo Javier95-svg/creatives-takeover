@@ -134,10 +134,10 @@ const PromptLibrary = () => {
 
   const _getDifficultyColor = (_difficulty: string) => {
     switch (difficulty) {
-      case "Easy": return "bg-green-100 text-green-800 border-green-200";
-      case "Medium": return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "Hard": return "bg-red-100 text-red-800 border-red-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
+      case "Easy": return "bg-success-subtle text-success border-success";
+      case "Medium": return "bg-warning-subtle text-warning border-warning";
+      case "Hard": return "bg-destructive-subtle text-destructive border-destructive";
+      default: return "bg-muted text-foreground border-border";
     }
   };
 
@@ -282,7 +282,7 @@ const PromptLibrary = () => {
                           className={"flex flex-col items-center cursor-pointer " + (s.step === currentStep ? "opacity-100" : "opacity-50")}
                           onClick={() => setCurrentStep(s.step)}
                         >
-                          <div className={"w-10 h-10 rounded-full flex items-center justify-center mb-2 " + (s.step === currentStep ? "bg-primary text-white" : s.step < currentStep ? "bg-green-500 text-white" : "bg-muted")}>
+                          <div className={"w-10 h-10 rounded-full flex items-center justify-center mb-2 " + (s.step === currentStep ? "bg-primary text-white" : s.step < currentStep ? "bg-success text-white" : "bg-muted")}>
                             {stepLocked && s.step > 1 ? (
                               <Lock className="w-4 h-4" />
                             ) : s.step < currentStep ? (
@@ -318,7 +318,7 @@ const PromptLibrary = () => {
                             <div className="text-center p-6 max-w-md">
                               {TierIcon && (
                                 <div className="flex justify-center mb-4">
-                                  <TierIcon className={`w-12 h-12 ${requiredUpgradePlan === "pro" ? "text-amber-600" : "text-purple-600"}`} />
+                                  <TierIcon className={`w-12 h-12 ${requiredUpgradePlan === "pro" ? "text-warning" : "text-purple-600"}`} />
                                 </div>
                               )}
                               <h4 className="text-lg font-semibold mb-2">

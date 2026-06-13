@@ -123,11 +123,11 @@ export const OneLinerGeneratorModal: React.FC<OneLinerGeneratorModalProps> = ({ 
             </div>
 
             {oneLiner && (
-              <Card className="p-4 bg-green-50 border-green-200">
+              <Card className="p-4 bg-success-subtle border-success">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
-                    <p className="text-xs font-medium text-green-900 mb-1">Your One-Liner</p>
-                    <p className="text-lg font-semibold text-green-700">{oneLiner}</p>
+                    <p className="text-xs font-medium text-success mb-1">Your One-Liner</p>
+                    <p className="text-lg font-semibold text-success">{oneLiner}</p>
                   </div>
                   <Button size="sm" variant="ghost" onClick={() => handleCopy(oneLiner)}>
                     <Copy className="h-4 w-4" />
@@ -196,11 +196,11 @@ export const OneLinerGeneratorModal: React.FC<OneLinerGeneratorModalProps> = ({ 
             </div>
 
             {oneLiner && (
-              <Card className="p-4 bg-green-50 border-green-200">
+              <Card className="p-4 bg-success-subtle border-success">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
-                    <p className="text-xs font-medium text-green-900 mb-1">Your One-Liner</p>
-                    <p className="text-lg font-semibold text-green-700">{oneLiner}</p>
+                    <p className="text-xs font-medium text-success mb-1">Your One-Liner</p>
+                    <p className="text-lg font-semibold text-success">{oneLiner}</p>
                   </div>
                   <Button size="sm" variant="ghost" onClick={() => handleCopy(oneLiner)}>
                     <Copy className="h-4 w-4" />
@@ -269,11 +269,11 @@ export const OneLinerGeneratorModal: React.FC<OneLinerGeneratorModalProps> = ({ 
             </div>
 
             {oneLiner && (
-              <Card className="p-4 bg-green-50 border-green-200">
+              <Card className="p-4 bg-success-subtle border-success">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
-                    <p className="text-xs font-medium text-green-900 mb-1">Your One-Liner</p>
-                    <p className="text-lg font-semibold text-green-700">{oneLiner}</p>
+                    <p className="text-xs font-medium text-success mb-1">Your One-Liner</p>
+                    <p className="text-lg font-semibold text-success">{oneLiner}</p>
                   </div>
                   <Button size="sm" variant="ghost" onClick={() => handleCopy(oneLiner)}>
                     <Copy className="h-4 w-4" />

@@ -16,13 +16,13 @@ import {
 const UserCollaboration = () => {
   const collaborationFeatures = [
     {
-      icon: <MessageSquare className="w-8 h-8 text-blue-500" />,
+      icon: <MessageSquare className="w-8 h-8 text-info" />,
       title: "Real-time Chat",
       description: "Connect instantly with fellow creatives in topic-based channels",
       stats: "10k+ daily messages"
     },
     {
-      icon: <Share2 className="w-8 h-8 text-green-500" />,
+      icon: <Share2 className="w-8 h-8 text-success" />,
       title: "Project Sharing",
       description: "Showcase your work and get constructive feedback from the community",
       stats: "500+ projects shared daily"
@@ -146,7 +146,7 @@ const UserCollaboration = () => {
                     <CardTitle className="text-lg">{collab.title}</CardTitle>
                     <Badge 
                       variant={collab.status === "Active" ? "default" : "secondary"}
-                      className={collab.status === "Active" ? "bg-green-500" : ""}
+                      className={collab.status === "Active" ? "bg-success" : ""}
                     >
                       {collab.status}
                     </Badge>

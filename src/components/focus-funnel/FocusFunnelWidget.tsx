@@ -110,22 +110,22 @@ export function FocusFunnelWidget({ compact = false, onOpenAIPartner }: FocusFun
       <CardContent className="space-y-4">
         {/* Quick Stats */}
         <div className="grid grid-cols-3 gap-3">
-          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20">
-            <Target className="h-4 w-4 text-blue-500" />
+          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-info/10 border border-info/20">
+            <Target className="h-4 w-4 text-info" />
             <div>
               <p className="text-xs text-muted-foreground">Goals</p>
               <p className="text-lg font-semibold">{stats.activeGoals}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-green-500/10 border border-green-500/20">
-            <FolderKanban className="h-4 w-4 text-green-500" />
+          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-success/10 border border-success/20">
+            <FolderKanban className="h-4 w-4 text-success" />
             <div>
               <p className="text-xs text-muted-foreground">Strategy</p>
               <p className="text-lg font-semibold">{stats.inProgressProjects}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-orange-500/10 border border-orange-500/20">
-            <CheckSquare className="h-4 w-4 text-orange-500" />
+          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-warning/10 border border-warning/20">
+            <CheckSquare className="h-4 w-4 text-warning" />
             <div>
               <p className="text-xs text-muted-foreground">Today</p>
               <p className="text-lg font-semibold">{stats.tasksToday}</p>
@@ -147,7 +147,7 @@ export function FocusFunnelWidget({ compact = false, onOpenAIPartner }: FocusFun
         {highPriorityTasks.length > 0 && !expandedView && (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+              <Sparkles className="h-3.5 w-3.5 text-warning" />
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 High Priority
               </span>
@@ -162,7 +162,7 @@ export function FocusFunnelWidget({ compact = false, onOpenAIPartner }: FocusFun
                 >
                   <div className={cn(
                     "h-2 w-2 rounded-full",
-                    task.priority === 'urgent' ? 'bg-red-500' : 'bg-amber-500'
+                    task.priority === 'urgent' ? 'bg-destructive' : 'bg-warning'
                   )} />
                   <span className="text-sm truncate flex-1 text-left">{task.title}</span>
                   <Badge variant="outline" className="text-caption px-1.5">

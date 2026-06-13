@@ -177,7 +177,7 @@ export const FileAttachment: React.FC<FileAttachmentProps> = ({
 
       {/* Error State */}
       {attachedFiles.length >= maxFiles && (
-        <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-500">
+        <div className="flex items-center gap-2 text-xs text-warning dark:text-warning">
           <AlertCircle className="w-4 h-4" />
           <span>Maximum file limit reached</span>
         </div>

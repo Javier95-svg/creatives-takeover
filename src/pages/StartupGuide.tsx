@@ -39,9 +39,9 @@ const STAGES = [
     title: "Prove the problem before you build",
     description:
       "Validation is collecting evidence that real people have a real problem and will take real action to solve it. A waitlist, 15 honest customer interviews, or a presale converts an assumption into a decision.",
-    color: "text-emerald-400",
-    borderColor: "border-emerald-500/30",
-    bgColor: "bg-emerald-500/10",
+    color: "text-success",
+    borderColor: "border-success/30",
+    bgColor: "bg-success/10",
     pages: [
       { slug: "how-to-validate-startup-idea", label: "How to Validate a Startup Idea Before Building" },
       { slug: "waitlist-before-mvp", label: "Waitlist or MVP: What Should You Build First?" },
@@ -61,9 +61,9 @@ const STAGES = [
     title: "Scope and ship your MVP in 6–8 weeks",
     description:
       "An MVP is not a smaller version of the full product. It's the smallest thing that proves your core promise to one customer and generates the learning you need to decide what to build next.",
-    color: "text-blue-400",
-    borderColor: "border-blue-500/30",
-    bgColor: "bg-blue-500/10",
+    color: "text-info",
+    borderColor: "border-info/30",
+    bgColor: "bg-info/10",
     pages: [
       { slug: "mvp-builder-for-startups", label: "MVP Builder for Startups: What to Build First" },
       { slug: "tech-stack-for-startup", label: "How to Choose a Tech Stack for Your Startup" },
@@ -82,9 +82,9 @@ const STAGES = [
     title: "Get your first 100 customers",
     description:
       "Early go-to-market is not a marketing campaign — it's a focused system for reaching one customer segment through one or two channels with a message specific enough to convert attention into signups.",
-    color: "text-orange-400",
-    borderColor: "border-orange-500/30",
-    bgColor: "bg-orange-500/10",
+    color: "text-warning",
+    borderColor: "border-warning/30",
+    bgColor: "bg-warning/10",
     pages: [
       { slug: "go-to-market-strategy-for-startup", label: "Go-to-Market Strategy for an Early-Stage Startup" },
       { slug: "first-users-for-saas", label: "How to Find the First Users for a SaaS Startup" },

@@ -77,7 +77,7 @@ const FirstRunCard = () => {
       )}
 
       {show24hNudge && !nudgeDismissed && onboardingCompleted === false && (
-        <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-amber-400/20 bg-amber-400/8 px-5 py-4 shadow-sm">
+        <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-warning/20 bg-warning/8 px-5 py-4 shadow-sm">
           <p className="text-sm text-muted-foreground">
             You haven&apos;t tried a tool yet.{" "}
             <Link

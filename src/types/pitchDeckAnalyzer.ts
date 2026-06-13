@@ -57,7 +57,7 @@ export const METRIC_DEFINITIONS: AnalysisMetric[] = [
     score: 0,
     weight: 0.15,
     description: 'How fast and clearly investors understand your idea',
-    color: 'text-blue-500',
+    color: 'text-info',
     icon: 'BookOpen'
   },
   {
@@ -66,7 +66,7 @@ export const METRIC_DEFINITIONS: AnalysisMetric[] = [
     score: 0,
     weight: 0.20,
     description: 'Market size, customer definition, and differentiation',
-    color: 'text-green-500',
+    color: 'text-success',
     icon: 'TrendingUp'
   },
   {
@@ -84,7 +84,7 @@ export const METRIC_DEFINITIONS: AnalysisMetric[] = [
     score: 0,
     weight: 0.15,
     description: 'Pricing clarity, unit economics, and scalability',
-    color: 'text-yellow-500',
+    color: 'text-warning',
     icon: 'DollarSign'
   },
   {
@@ -102,7 +102,7 @@ export const METRIC_DEFINITIONS: AnalysisMetric[] = [
     score: 0,
     weight: 0.10,
     description: 'Round appropriateness and investor fit',
-    color: 'text-orange-500',
+    color: 'text-warning',
     icon: 'Target'
   }
 ];
@@ -131,14 +131,14 @@ export const getVerdictFromScore = (score: number): AnalysisVerdict => {
 export const getVerdictColor = (verdict: AnalysisVerdict): string => {
   switch (verdict) {
     case 'Excellent':
-      return 'text-green-600 bg-green-50 border-green-200';
+      return 'text-success bg-success-subtle border-success';
     case 'Strong':
-      return 'text-blue-600 bg-blue-50 border-blue-200';
+      return 'text-info bg-info-subtle border-info';
     case 'Good':
-      return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+      return 'text-warning bg-warning-subtle border-warning';
     case 'Needs Work':
-      return 'text-red-600 bg-red-50 border-red-200';
+      return 'text-destructive bg-destructive-subtle border-destructive';
     default:
-      return 'text-gray-600 bg-gray-50 border-gray-200';
+      return 'text-muted-foreground bg-muted border-border';
   }
 };

@@ -194,13 +194,13 @@ export default function AdminJobApplications() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "accepted":
-        return "bg-green-500";
+        return "bg-success";
       case "rejected":
-        return "bg-red-500";
+        return "bg-destructive";
       case "reviewed":
-        return "bg-blue-500";
+        return "bg-info";
       default:
-        return "bg-yellow-500";
+        return "bg-warning";
     }
   };
 

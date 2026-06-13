@@ -41,7 +41,7 @@ function CopyButton({ value }: { value: string }) {
       title="Copy"
     >
       {copied ? (
-        <Check className="h-3 w-3 text-emerald-500" />
+        <Check className="h-3 w-3 text-success" />
       ) : (
         <Copy className="h-3 w-3 text-muted-foreground" />
       )}
@@ -79,7 +79,7 @@ function DnsRow({
           <span
             className={cn(
               'flex items-center gap-1 text-caption font-medium',
-              verified ? 'text-emerald-600' : 'text-amber-600'
+              verified ? 'text-success' : 'text-warning'
             )}
           >
             {verified ? <Check className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
@@ -208,9 +208,9 @@ export const MVPBuilderDomainPanel: React.FC<MVPBuilderDomainPanelProps> = ({
           <div className="flex items-center justify-between rounded-xl border border-border/50 bg-muted/40 px-3 py-2">
             <div className="flex items-center gap-2">
               {record.status === 'verified' ? (
-                <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-500" />
+                <ShieldCheck className="h-4 w-4 shrink-0 text-success" />
               ) : (
-                <AlertCircle className="h-4 w-4 shrink-0 text-amber-500" />
+                <AlertCircle className="h-4 w-4 shrink-0 text-warning" />
               )}
               <div>
                 <p className="text-xs font-medium text-foreground">{record.domain}</p>
@@ -234,14 +234,14 @@ export const MVPBuilderDomainPanel: React.FC<MVPBuilderDomainPanelProps> = ({
             className={cn(
               'rounded-xl border px-4 py-3',
               statusSummary.tone === 'success'
-                ? 'border-emerald-500/30 bg-emerald-500/8'
-                : 'border-amber-500/30 bg-amber-500/8'
+                ? 'border-success/30 bg-success/8'
+                : 'border-warning/30 bg-warning/8'
             )}
           >
             <p
               className={cn(
                 'text-xs font-semibold',
-                statusSummary.tone === 'success' ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400'
+                statusSummary.tone === 'success' ? 'text-success dark:text-success' : 'text-warning dark:text-warning'
               )}
             >
               {statusSummary.title}
@@ -328,7 +328,7 @@ export const MVPBuilderDomainPanel: React.FC<MVPBuilderDomainPanelProps> = ({
             <div className="rounded-lg border border-border/50 bg-muted/20 p-3 text-xs">
               <div className="flex items-center justify-between gap-2">
                 <span className="font-medium text-foreground">TXT verification</span>
-                <span className={cn('font-medium', record.txtVerified ? 'text-emerald-600' : 'text-amber-600')}>
+                <span className={cn('font-medium', record.txtVerified ? 'text-success' : 'text-warning')}>
                   {record.txtVerified ? 'Verified' : 'Pending'}
                 </span>
               </div>
@@ -344,7 +344,7 @@ export const MVPBuilderDomainPanel: React.FC<MVPBuilderDomainPanelProps> = ({
             <div className="rounded-lg border border-border/50 bg-muted/20 p-3 text-xs">
               <div className="flex items-center justify-between gap-2">
                 <span className="font-medium text-foreground">Routing record</span>
-                <span className={cn('font-medium', record.routingVerified ? 'text-emerald-600' : 'text-amber-600')}>
+                <span className={cn('font-medium', record.routingVerified ? 'text-success' : 'text-warning')}>
                   {record.routingVerified ? 'Verified' : 'Pending'}
                 </span>
               </div>

@@ -48,9 +48,9 @@ function StatusBadge({ status }: { status: MVPIntegrationStatus }) {
       variant={healthy ? 'secondary' : 'outline'}
       className={cn(
         'shrink-0',
-        healthy && 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200',
-        status === 'expired' && 'border-amber-300/30 bg-amber-300/10 text-amber-100',
-        status === 'error' && 'border-rose-300/30 bg-rose-300/10 text-rose-100'
+        healthy && 'border-success/30 bg-success/10 text-success',
+        status === 'expired' && 'border-warning/30 bg-warning/10 text-warning',
+        status === 'error' && 'border-destructive/30 bg-destructive/10 text-destructive'
       )}
     >
       {statusCopy[status]}
@@ -116,11 +116,11 @@ export const MVPBuilderIntegrationGate: React.FC<MVPBuilderIntegrationGateProps>
       <ScrollArea className="h-full">
         <div className="mx-auto flex min-h-[calc(100vh-53px)] w-full max-w-5xl flex-col justify-center px-4 py-8">
           <div className="mb-6 space-y-2">
-            <Badge className="border-sky-300/20 bg-sky-300/10 text-sky-100">MVP Builder setup</Badge>
+            <Badge className="border-info/20 bg-info/10 text-info">MVP Builder setup</Badge>
             <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
               Connect your repo and backend before building
             </h1>
-            <p className="max-w-2xl text-sm leading-relaxed text-slate-400">
+            <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
               The builder syncs code to GitHub main and manages Supabase infrastructure from this workspace. Both connections stay attached to this build session.
             </p>
           </div>
@@ -134,7 +134,7 @@ export const MVPBuilderIntegrationGate: React.FC<MVPBuilderIntegrationGateProps>
                   </span>
                   <div>
                     <h2 className="text-sm font-semibold text-white">GitHub repository</h2>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-muted-foreground">
                       {githubRepoSession ? githubRepoSession.fullName : 'Install the GitHub App and import main.'}
                     </p>
                   </div>
@@ -143,7 +143,7 @@ export const MVPBuilderIntegrationGate: React.FC<MVPBuilderIntegrationGateProps>
               </div>
 
               {githubConnection.lastError && (
-                <div className="mb-3 flex gap-2 rounded-md border border-amber-300/20 bg-amber-300/10 p-2 text-xs text-amber-100">
+                <div className="mb-3 flex gap-2 rounded-md border border-warning/20 bg-warning/10 p-2 text-xs text-warning">
                   <ShieldAlert className="h-4 w-4 shrink-0" />
                   {githubConnection.lastError}
                 </div>
@@ -164,12 +164,12 @@ export const MVPBuilderIntegrationGate: React.FC<MVPBuilderIntegrationGateProps>
                   <>
                     <div className="flex items-end gap-2">
                       <label className="flex-1 space-y-1.5">
-                        <span className="text-label font-medium uppercase text-slate-500">Repository</span>
+                        <span className="text-label font-medium uppercase text-muted-foreground">Repository</span>
                         <select
                           value={selectedRepo}
                           onChange={(event) => setSelectedRepo(event.target.value)}
                           disabled={isGitHubBusy}
-                          className="h-9 w-full rounded-md border border-white/10 bg-card px-3 text-sm text-white outline-none focus:ring-2 focus:ring-sky-300/40"
+                          className="h-9 w-full rounded-md border border-white/10 bg-card px-3 text-sm text-white outline-none focus:ring-2 focus:ring-info/40"
                         >
                           <option value="">Select repository</option>
                           {githubRepositories.map((repo) => (
@@ -190,10 +190,10 @@ export const MVPBuilderIntegrationGate: React.FC<MVPBuilderIntegrationGateProps>
                       </Button>
                     </div>
 
-                    <div className="rounded-md border border-white/10 bg-black/20 p-2 text-xs text-slate-400">
-                      Branch is locked to <span className="font-mono text-slate-200">main</span>. Repositories without a main branch need one before import.
+                    <div className="rounded-md border border-white/10 bg-black/20 p-2 text-xs text-muted-foreground">
+                      Branch is locked to <span className="font-mono text-muted-foreground">main</span>. Repositories without a main branch need one before import.
                       {selectedRepoMeta?.defaultBranch && selectedRepoMeta.defaultBranch !== 'main' && (
-                        <span className="mt-1 block text-amber-100">
+                        <span className="mt-1 block text-warning">
                           Default branch is {selectedRepoMeta.defaultBranch}; import will still require main.
                         </span>
                       )}
@@ -221,7 +221,7 @@ export const MVPBuilderIntegrationGate: React.FC<MVPBuilderIntegrationGateProps>
                   </span>
                   <div>
                     <h2 className="text-sm font-semibold text-white">Supabase project</h2>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-muted-foreground">
                       {supabaseConnection.project?.name ?? 'Connect OAuth and select a project.'}
                     </p>
                   </div>
@@ -230,7 +230,7 @@ export const MVPBuilderIntegrationGate: React.FC<MVPBuilderIntegrationGateProps>
               </div>
 
               {supabaseConnection.lastError && (
-                <div className="mb-3 flex gap-2 rounded-md border border-amber-300/20 bg-amber-300/10 p-2 text-xs text-amber-100">
+                <div className="mb-3 flex gap-2 rounded-md border border-warning/20 bg-warning/10 p-2 text-xs text-warning">
                   <ShieldAlert className="h-4 w-4 shrink-0" />
                   {supabaseConnection.lastError}
                 </div>
@@ -251,12 +251,12 @@ export const MVPBuilderIntegrationGate: React.FC<MVPBuilderIntegrationGateProps>
                   <>
                     <div className="flex items-end gap-2">
                       <label className="flex-1 space-y-1.5">
-                        <span className="text-label font-medium uppercase text-slate-500">Project</span>
+                        <span className="text-label font-medium uppercase text-muted-foreground">Project</span>
                         <select
                           value={selectedProjectRef}
                           onChange={(event) => setSelectedProjectRef(event.target.value)}
                           disabled={isSupabaseBusy}
-                          className="h-9 w-full rounded-md border border-white/10 bg-card px-3 text-sm text-white outline-none focus:ring-2 focus:ring-sky-300/40"
+                          className="h-9 w-full rounded-md border border-white/10 bg-card px-3 text-sm text-white outline-none focus:ring-2 focus:ring-info/40"
                         >
                           <option value="">Select project</option>
                           {supabaseProjects.map((project) => (
@@ -277,7 +277,7 @@ export const MVPBuilderIntegrationGate: React.FC<MVPBuilderIntegrationGateProps>
                       </Button>
                     </div>
 
-                    <div className="rounded-md border border-white/10 bg-black/20 p-2 text-xs text-slate-400">
+                    <div className="rounded-md border border-white/10 bg-black/20 p-2 text-xs text-muted-foreground">
                       Grants cover project metadata, database schema, auth config, storage, and edge functions. Destructive backend changes require confirmation.
                     </div>
 

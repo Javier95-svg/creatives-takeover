@@ -133,7 +133,7 @@ export const TaskCalendar = () => {
             }}
             modifiersClassNames={{
               hasCheckIn: "font-bold text-primary",
-              hasTasks: "ring-1 ring-orange-500/50"
+              hasTasks: "ring-1 ring-warning/50"
             }}
           />
 
@@ -181,7 +181,7 @@ export const TaskCalendar = () => {
                       className={cn(
                         "text-xs",
                         task.priority === 'high' && "border-[hsl(var(--red-primary))]/50 text-[hsl(var(--red-primary))]",
-                        task.priority === 'medium' && "border-orange-500/50 text-orange-500",
+                        task.priority === 'medium' && "border-warning/50 text-warning",
                         task.priority === 'low' && "border-[hsl(var(--blue-primary))]/50 text-[hsl(var(--blue-primary))]"
                       )}
                     >
@@ -207,7 +207,7 @@ export const TaskCalendar = () => {
               <span>Completed</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-orange-500" />
+              <div className="w-2 h-2 rounded-full bg-warning" />
               <span>Pending</span>
             </div>
           </div>

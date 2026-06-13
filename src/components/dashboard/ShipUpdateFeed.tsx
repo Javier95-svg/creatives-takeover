@@ -90,7 +90,7 @@ export function ShipUpdateFeed() {
     <Card className="border-border/60">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
-          <Flame className="h-4 w-4 text-orange-500" />
+          <Flame className="h-4 w-4 text-warning" />
           <CardTitle className="text-base font-semibold">What did you ship this week?</CardTitle>
         </div>
         <p className="text-xs text-muted-foreground">One-line update from the community. One post per day.</p>

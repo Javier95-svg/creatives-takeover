@@ -58,7 +58,7 @@ const CommitmentFeed: React.FC = () => {
                 <p className="text-sm text-muted-foreground">Achieved</p>
                 <p className="text-2xl font-bold">{stats.achieved}</p>
               </div>
-              <Trophy className="w-8 h-8 text-green-500 opacity-20" />
+              <Trophy className="w-8 h-8 text-success opacity-20" />
             </div>
           </CardContent>
         </Card>

@@ -13,22 +13,22 @@ const LeaderboardCard = () => {
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1:
-        return <Crown className="w-5 h-5 text-yellow-500" />;
+        return <Crown className="w-5 h-5 text-warning" />;
       case 2:
-        return <Medal className="w-5 h-5 text-gray-400" />;
+        return <Medal className="w-5 h-5 text-muted-foreground" />;
       case 3:
-        return <Award className="w-5 h-5 text-orange-600" />;
+        return <Award className="w-5 h-5 text-warning" />;
       default:
         return <span className="text-sm font-semibold text-muted-foreground">#{rank}</span>;
     }
   };
 
   const getLevelColor = (level: number) => {
-    if (level >= 6) return 'text-yellow-500';
-    if (level >= 5) return 'text-orange-500';
+    if (level >= 6) return 'text-warning';
+    if (level >= 5) return 'text-warning';
     if (level >= 4) return 'text-purple-500';
-    if (level >= 3) return 'text-green-500';
-    if (level >= 2) return 'text-blue-500';
+    if (level >= 3) return 'text-success';
+    if (level >= 2) return 'text-info';
     return 'text-muted-foreground';
   };
 

@@ -20,16 +20,16 @@ const CommunityInsights = () => {
       value: "Sarah K.",
       description: "Shared 3 success stories",
       icon: Star,
-      color: "text-yellow-500",
-      bgColor: "bg-yellow-500/10"
+      color: "text-warning",
+      bgColor: "bg-warning/10"
     },
     {
       label: "Trending Topic",
       value: "#AI-startup",
       description: "+120% engagement",
       icon: TrendingUp,
-      color: "text-green-500",
-      bgColor: "bg-green-500/10"
+      color: "text-success",
+      bgColor: "bg-success/10"
     },
     {
       label: "Success Story",
@@ -92,7 +92,7 @@ const CommunityInsights = () => {
                 <span className="text-sm text-muted-foreground">{stat.label}</span>
                 <div className="flex items-center gap-2">
                   <span className="font-semibold">{stat.value}</span>
-                  <Badge variant="secondary" className="text-xs bg-green-500/10 text-green-600 border-green-200">
+                  <Badge variant="secondary" className="text-xs bg-success/10 text-success border-success">
                     {stat.change}
                   </Badge>
                 </div>
@@ -136,7 +136,7 @@ const CommunityInsights = () => {
               <span className="text-sm">Reach 1000 interactions</span>
               <div className="flex items-center gap-2">
                 <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
-                  <div className="w-4/5 h-full bg-gradient-to-r from-green-500 to-primary"></div>
+                  <div className="w-4/5 h-full bg-gradient-to-r from-success to-primary"></div>
                 </div>
                 <span className="text-xs text-muted-foreground">850/1000</span>
               </div>

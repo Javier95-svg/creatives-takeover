@@ -100,7 +100,7 @@ const Community = () => {
                 <CardContent className="space-y-3">
                   {["Sarah C.", "Alex R.", "Maya P.", "Jordan S.", "+127 more"].map((member, index) => (
                     <div key={index} className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-success rounded-full"></div>
                       <span className="text-sm">{member}</span>
                     </div>
                   ))}

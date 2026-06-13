@@ -29,10 +29,10 @@ const getChallengeIcon = (type: string) => {
 
 const getChallengeColor = (type: string) => {
   switch (type) {
-    case 'post': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-    case 'comment': return 'bg-green-500/10 text-green-500 border-green-500/20';
+    case 'post': return 'bg-info/10 text-info border-info/20';
+    case 'comment': return 'bg-success/10 text-success border-success/20';
     case 'feedback': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
-    case 'connection': return 'bg-orange-500/10 text-orange-500 border-orange-500/20';
+    case 'connection': return 'bg-warning/10 text-warning border-warning/20';
     case 'share': return 'bg-pink-500/10 text-pink-500 border-pink-500/20';
     default: return 'bg-primary/10 text-primary border-primary/20';
   }
@@ -79,7 +79,7 @@ const DailyChallengeCard = () => {
   return (
     <Card className={`border-2 transition-all ${
       isCompleted 
-        ? 'border-green-500/50 bg-green-500/5' 
+        ? 'border-success/50 bg-success/5' 
         : 'border-primary/30 hover:border-primary/50'
     }`}>
       <CardHeader>
@@ -96,7 +96,7 @@ const DailyChallengeCard = () => {
             </CardDescription>
           </div>
           {isCompleted && (
-            <Badge variant="default" className="bg-green-500 hover:bg-green-600">
+            <Badge variant="default" className="bg-success hover:bg-success">
               <CheckCircle2 className="w-3 h-3 mr-1" />
               Completed
             </Badge>
@@ -111,7 +111,7 @@ const DailyChallengeCard = () => {
         
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-yellow-500" />
+            <Trophy className="w-4 h-4 text-warning" />
             <span className="font-medium">{todaysChallenge.reward_points} points</span>
           </div>
           <div className="text-muted-foreground">

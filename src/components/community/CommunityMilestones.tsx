@@ -90,14 +90,14 @@ const CommunityMilestones = () => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-yellow-500" />
+          <Trophy className="w-5 h-5 text-warning" />
           Community Milestones
         </CardTitle>
       </CardHeader>
       
       <CardContent className="space-y-4">
         {nextMilestone && (
-          <div className="p-4 rounded-lg bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-2 border-yellow-500/20">
+          <div className="p-4 rounded-lg bg-gradient-to-br from-warning/10 to-warning/10 border-2 border-warning/20">
             <div className="flex items-start gap-3 mb-3">
               <div className="p-2 rounded-lg bg-background">
                 {getIcon(nextMilestone.milestone_type)}
@@ -130,8 +130,8 @@ const CommunityMilestones = () => {
               key={milestone.id}
               className="flex items-center gap-3 p-3 rounded-lg bg-muted/50"
             >
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-500/20">
-                <Trophy className="w-4 h-4 text-green-500" />
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-success/20">
+                <Trophy className="w-4 h-4 text-success" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium line-clamp-1">

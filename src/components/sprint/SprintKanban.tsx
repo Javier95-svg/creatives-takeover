@@ -94,7 +94,7 @@ const SprintKanban: React.FC<SprintKanbanProps> = ({ sprint, onStatusChange }) =
       case 'planning': return 'bg-[hsl(var(--blue-primary))]';
       case 'active': return 'bg-[hsl(var(--green-primary))]';
       case 'completed': return 'bg-purple-500';
-      case 'paused': return 'bg-orange-500';
+      case 'paused': return 'bg-warning';
       default: return 'bg-gray-500';
     }
   };
@@ -108,10 +108,10 @@ const SprintKanban: React.FC<SprintKanbanProps> = ({ sprint, onStatusChange }) =
     : 0;
 
   const columns = [
-    { id: 'todo', title: 'To Do', status: 'todo' as const, icon: Clock, color: 'border-gray-200' },
-    { id: 'in_progress', title: 'In Progress', status: 'in_progress' as const, icon: Play, color: 'border-blue-200' },
-    { id: 'review', title: 'Review', status: 'review' as const, icon: AlertCircle, color: 'border-orange-200' },
-    { id: 'done', title: 'Done', status: 'done' as const, icon: CheckCircle, color: 'border-green-200' },
+    { id: 'todo', title: 'To Do', status: 'todo' as const, icon: Clock, color: 'border-border' },
+    { id: 'in_progress', title: 'In Progress', status: 'in_progress' as const, icon: Play, color: 'border-info' },
+    { id: 'review', title: 'Review', status: 'review' as const, icon: AlertCircle, color: 'border-warning' },
+    { id: 'done', title: 'Done', status: 'done' as const, icon: CheckCircle, color: 'border-success' },
   ];
 
   return (
@@ -225,7 +225,7 @@ const SprintKanban: React.FC<SprintKanbanProps> = ({ sprint, onStatusChange }) =
                   : 'No tasks yet'}
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-muted rounded-full h-2">
               <div 
                 className="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-300"
                 style={{ width: `${progressPercentage}%` }}

@@ -108,7 +108,7 @@ export function UpgradeCheckoutDialog({
             continue to checkout—your fields on Stripe will match automatically.
           </DialogDescription>
           {hasSavedAddress ? (
-            <div className="rounded-md bg-emerald-500/10 px-3 py-2 text-xs text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+            <div className="rounded-md bg-success/10 px-3 py-2 text-xs text-success dark:bg-success/10 dark:text-success">
               Billing details loaded from your last upgrade attempt. Review and
               update anything that has changed.
             </div>

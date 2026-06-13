@@ -111,7 +111,7 @@ export const ExitIntentModal = ({ isOpen, onClose }: ExitIntentModalProps) => {
 
               {sent ? (
                 <div className="flex flex-col items-center gap-3 py-6 text-center">
-                  <CheckCircle className="w-10 h-10 text-green-500" />
+                  <CheckCircle className="w-10 h-10 text-success" />
                   <p className="font-semibold text-foreground">Reminder sent ✓</p>
                   <p className="text-sm text-muted-foreground">Check your inbox when you're ready.</p>
                 </div>

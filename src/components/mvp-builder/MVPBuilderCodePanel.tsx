@@ -296,7 +296,7 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
                     </p>
                   </div>
                   {changeStatus && (
-                    <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-caption font-semibold uppercase tracking-[0.12em] text-amber-600">
+                    <span className="rounded-full bg-warning/10 px-2 py-0.5 text-caption font-semibold uppercase tracking-[0.12em] text-warning">
                       {changeStatus}
                     </span>
                   )}
@@ -321,7 +321,7 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
                   </span>
                 )}
                 {isDirty && (
-                  <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-caption font-semibold uppercase tracking-[0.12em] text-amber-600">
+                  <span className="rounded-full bg-warning/10 px-2 py-0.5 text-caption font-semibold uppercase tracking-[0.12em] text-warning">
                     Unsaved
                   </span>
                 )}
@@ -573,7 +573,7 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
                       <p className="truncate text-sm font-medium text-foreground">
                         {change.path}
                       </p>
-                      <p className="text-xs uppercase tracking-[0.12em] text-amber-600">
+                      <p className="text-xs uppercase tracking-[0.12em] text-warning">
                         {change.status}
                       </p>
                     </div>

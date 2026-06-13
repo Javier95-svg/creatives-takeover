@@ -363,21 +363,21 @@ export function getQualityLevelColor(level: AnswerQuality['level']): {
   switch (level) {
     case 'excellent':
       return {
-        bg: 'bg-green-50 dark:bg-green-900/10',
-        text: 'text-green-700 dark:text-green-300',
-        border: 'border-green-200 dark:border-green-800',
+        bg: 'bg-success-subtle dark:bg-success/10',
+        text: 'text-success dark:text-success',
+        border: 'border-success dark:border-success',
       };
     case 'good':
       return {
-        bg: 'bg-yellow-50 dark:bg-yellow-900/10',
-        text: 'text-yellow-700 dark:text-yellow-300',
-        border: 'border-yellow-200 dark:border-yellow-800',
+        bg: 'bg-warning-subtle dark:bg-warning/10',
+        text: 'text-warning dark:text-warning',
+        border: 'border-warning dark:border-warning',
       };
     case 'needs-improvement':
       return {
-        bg: 'bg-orange-50 dark:bg-orange-900/10',
-        text: 'text-orange-700 dark:text-orange-300',
-        border: 'border-orange-200 dark:border-orange-800',
+        bg: 'bg-warning-subtle dark:bg-warning/10',
+        text: 'text-warning dark:text-warning',
+        border: 'border-warning dark:border-warning',
       };
   }
 }
@@ -386,7 +386,7 @@ export function getQualityLevelColor(level: AnswerQuality['level']): {
  * Get score badge color based on score value
  */
 export function getScoreBadgeColor(score: number): string {
-  if (score >= 80) return 'bg-green-500';
-  if (score >= 60) return 'bg-yellow-500';
-  return 'bg-orange-500';
+  if (score >= 80) return 'bg-success';
+  if (score >= 60) return 'bg-warning';
+  return 'bg-warning';
 }

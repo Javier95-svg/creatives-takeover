@@ -8,14 +8,14 @@ import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 import { BIZMAP_STAGES, type BizMapStage } from '@/lib/bizmapStages';
 
 const URGENCY_STYLES: Record<ActionUrgency, string> = {
-  high: 'bg-red-500/10 text-red-600 border-red-500/20',
-  medium: 'bg-orange-500/10 text-orange-600 border-orange-500/20',
+  high: 'bg-destructive/10 text-destructive border-destructive/20',
+  medium: 'bg-warning/10 text-warning border-warning/20',
   low: 'bg-muted text-muted-foreground border-border',
 };
 
 const URGENCY_DOT: Record<ActionUrgency, string> = {
-  high: 'bg-red-500',
-  medium: 'bg-orange-400',
+  high: 'bg-destructive',
+  medium: 'bg-warning',
   low: 'bg-muted-foreground/40',
 };
 

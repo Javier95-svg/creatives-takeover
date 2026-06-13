@@ -10,11 +10,11 @@ interface JourneyCompletionCardProps {
 
 export default function JourneyCompletionCard({ journey }: JourneyCompletionCardProps) {
   return (
-    <Card className="border-emerald-500/20 bg-emerald-500/5">
+    <Card className="border-success/20 bg-success/5">
       <CardContent className="p-6 text-center space-y-4">
         <div className="flex justify-center">
-          <div className="w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center">
-            <Trophy className="h-7 w-7 text-emerald-500" />
+          <div className="w-14 h-14 rounded-full bg-success/10 flex items-center justify-center">
+            <Trophy className="h-7 w-7 text-success" />
           </div>
         </div>
         <div>

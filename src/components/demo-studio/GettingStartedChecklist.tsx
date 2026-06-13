@@ -68,7 +68,7 @@ export default function GettingStartedChecklist({
             >
               <span className="mt-0.5 shrink-0">
                 {step.done ? (
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-success text-white">
                     <Check className="h-3.5 w-3.5" />
                   </span>
                 ) : step.soon ? (

@@ -31,7 +31,7 @@ const cycleSteps: CycleStep[] = [
     description:
       "In this stage, founders clarify the foundation of their startup by answering a few core questions:\n\nWhat specific problem are you solving?\nWho are you solving it for?\nWhat makes your solution different and more efficient?\nWhy are you the right person to build it?\n\nThe goal is to define your Ideal Customer Profile (ICP) and set clear, specific goals for what you want to achieve next.",
     icon: Fingerprint,
-    color: "from-yellow-500/20 to-yellow-600/20"
+    color: "from-warning/20 to-warning/20"
   },
   {
     shortLabel: "Prototyping",
@@ -39,7 +39,7 @@ const cycleSteps: CycleStep[] = [
     description:
       "After defining your identity, the next step is to create a simple landing page that works as your waitlist. This page should clearly explain what your product is, who it is for, and the core problem it solves so visitors quickly understand the value.\n\nIt should also describe the key features you plan to offer and give a simple overview of how the product will work, without building the MVP yet. The goal is to make the idea feel real enough to test interest, collect sign-ups, and confirm there is market demand before investing time and money into development.",
     icon: DraftingCompass,
-    color: "from-blue-500/20 to-blue-600/20"
+    color: "from-info/20 to-info/20"
   },
   {
     shortLabel: "Validation",
@@ -47,7 +47,7 @@ const cycleSteps: CycleStep[] = [
     description:
       "In this stage, founders actively reach out to potential customers and book one-on-one conversations to gather honest feedback on the concept. The goal is to confirm real demand by tracking signals like interview insights and how many people join the waitlist.\n\nThis step is crucial because it helps you avoid building something nobody wants. If validation is strong, you move forward to Step 4; if it’s weak, you iterate by asking your ideal customers what’s missing, what would make it valuable, or what alternatives they would choose instead.",
     icon: CheckCircle,
-    color: "from-green-500/20 to-green-600/20"
+    color: "from-success/20 to-success/20"
   },
   {
     shortLabel: "Building",
@@ -55,7 +55,7 @@ const cycleSteps: CycleStep[] = [
     description:
       "Once validation is confirmed, founders can start building the MVP they’ve been promising. This is where the idea becomes a working product, supported by the tools and guidance available on Creatives Takeover, such as the MVP and Tech Stack Builder, plus access to mentors who have experience launching MVPs.\n\nThe focus at this stage is not to build the “perfect” final product. Instead, founders should develop only the core features that deliver the main value, so they can launch sooner, learn faster, and improve the product steadily as they grow.",
     icon: Hammer,
-    color: "from-orange-500/20 to-orange-600/20"
+    color: "from-warning/20 to-warning/20"
   },
   {
     shortLabel: "Launch",

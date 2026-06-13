@@ -175,7 +175,7 @@ export const DailyGoalModal = ({
               {isMorning ? "What's one thing you'll do today?" : 'How did today go?'}
             </span>
             {isMorning && currentStreak > 0 && (
-              <div className="flex items-center gap-1 text-orange-500">
+              <div className="flex items-center gap-1 text-warning">
                 <Flame className="w-5 h-5" />
                 <span className="text-lg font-bold">{currentStreak}</span>
               </div>
@@ -233,14 +233,14 @@ export const DailyGoalModal = ({
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="true" id="yes" />
                       <Label htmlFor="yes" className="cursor-pointer flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                        <CheckCircle2 className="w-4 h-4 text-success" />
                         Yes, I did it!
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="false" id="no" />
                       <Label htmlFor="no" className="cursor-pointer flex items-center gap-2">
-                        <XCircle className="w-4 h-4 text-orange-500" />
+                        <XCircle className="w-4 h-4 text-warning" />
                         Not quite, but I tried
                       </Label>
                     </div>

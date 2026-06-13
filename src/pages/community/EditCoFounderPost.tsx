@@ -184,11 +184,11 @@ const EditCoFounderPost = () => {
               <span className="text-sm font-medium text-primary">Find Your Co-Founder</span>
             </div>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight">
-              <span className="bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-white via-info to-purple-200 bg-clip-text text-transparent">
                 Edit Your Post
               </span>
             </h1>
-            <p className="text-base md:text-lg text-slate-300 max-w-2xl mx-auto">
+            <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
               Update your co-founder post details
             </p>
           </div>

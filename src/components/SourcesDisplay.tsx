@@ -19,9 +19,9 @@ const SourcesDisplay: React.FC<SourcesDisplayProps> = ({
   const [isOpen, setIsOpen] = React.useState(false);
 
   const qualityConfig = {
-    high: { color: 'bg-green-500/10 text-green-700 border-green-500/20', label: 'High Quality', icon: TrendingUp },
-    medium: { color: 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20', label: 'Medium Quality', icon: BookOpen },
-    low: { color: 'bg-red-500/10 text-red-700 border-red-500/20', label: 'Limited Sources', icon: BookOpen }
+    high: { color: 'bg-success/10 text-success border-success/20', label: 'High Quality', icon: TrendingUp },
+    medium: { color: 'bg-warning/10 text-warning border-warning/20', label: 'Medium Quality', icon: BookOpen },
+    low: { color: 'bg-destructive/10 text-destructive border-destructive/20', label: 'Limited Sources', icon: BookOpen }
   };
 
   const config = qualityConfig[researchQuality];

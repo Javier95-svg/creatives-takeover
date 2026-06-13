@@ -62,8 +62,8 @@ const BlogHero = () => {
         </svg>
 
         {/* Rotating data discs */}
-        <div className="absolute -top-32 right-1/4 w-[32rem] h-[32rem] rounded-full border border-sky-400/20 blur-[1px] animate-[spin_36s_linear_infinite]" />
-        <div className="absolute top-1/3 -left-28 w-[28rem] h-[28rem] rounded-full border border-emerald-300/20 blur-[1px] animate-[spin_28s_linear_infinite_reverse]" />
+        <div className="absolute -top-32 right-1/4 w-[32rem] h-[32rem] rounded-full border border-info/20 blur-[1px] animate-[spin_36s_linear_infinite]" />
+        <div className="absolute top-1/3 -left-28 w-[28rem] h-[28rem] rounded-full border border-success/20 blur-[1px] animate-[spin_28s_linear_infinite_reverse]" />
 
         {/* Pulsing data nodes */}
         {[
@@ -76,7 +76,7 @@ const BlogHero = () => {
         ].map((pos, index) => (
           <div
             key={`insighta-node-${index}`}
-            className="absolute w-2.5 h-2.5 rounded-full bg-cyan-300/80 shadow-[0_0_14px_rgba(56,189,248,0.6)]"
+            className="absolute w-2.5 h-2.5 rounded-full bg-info/80 shadow-[0_0_14px_rgba(56,189,248,0.6)]"
             style={{
               ...pos,
               animation: 'pulse 2.8s ease-in-out infinite',
