@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" role="img" aria-labelledby="title desc">
   <title id="title">Murilo Toledo placeholder portrait</title>
-  <desc id="desc">Initials placeholder for Murilo Toledo</desc>
+  <desc id="desc">Placeholder portrait for Murilo Toledo</desc>
   <defs>
     <linearGradient id="background" x1="120" y1="80" x2="900" y2="920" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#171923"/>
@@ -17,5 +17,4 @@
   <rect width="1000" height="1000" fill="url(#accent)"/>
   <circle cx="500" cy="400" r="165" fill="#f8fafc" opacity="0.92"/>
   <path d="M230 880c34-166 140-264 270-264s236 98 270 264H230Z" fill="#f8fafc" opacity="0.92"/>
-  <text x="500" y="438" text-anchor="middle" fill="#111827" font-family="Inter, Arial, sans-serif" font-size="150" font-weight="800" letter-spacing="0">MT</text>
 </svg>
