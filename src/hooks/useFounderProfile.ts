@@ -61,8 +61,8 @@ export const useFounderProfile = () => {
       return result.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['founder-profile', userId] });
-      queryClient.invalidateQueries({ queryKey: ['aggregated-context', userId] });
+      void queryClient.invalidateQueries({ queryKey: ['founder-profile', userId] });
+      void queryClient.invalidateQueries({ queryKey: ['aggregated-context', userId] });
 
       toast({
         title: 'Profile Created',
@@ -95,8 +95,8 @@ export const useFounderProfile = () => {
       return result.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['founder-profile', userId] });
-      queryClient.invalidateQueries({ queryKey: ['aggregated-context', userId] });
+      void queryClient.invalidateQueries({ queryKey: ['founder-profile', userId] });
+      void queryClient.invalidateQueries({ queryKey: ['aggregated-context', userId] });
 
       toast({
         title: 'Profile Updated',

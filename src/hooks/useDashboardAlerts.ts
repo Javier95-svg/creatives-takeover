@@ -54,7 +54,7 @@ export const useDashboardAlerts = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard-alerts'] });
+      void queryClient.invalidateQueries({ queryKey: ['dashboard-alerts'] });
       toast.success('Alert dismissed');
     },
     onError: (error) => {

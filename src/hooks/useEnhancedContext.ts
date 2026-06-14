@@ -278,10 +278,10 @@ export const useInvalidateContext = () => {
   const { userId } = useAggregatedContext();
 
   const invalidateContext = () => {
-    queryClient.invalidateQueries({ queryKey: ['aggregated-context', userId] });
-    queryClient.invalidateQueries({ queryKey: ['progress-milestones', userId] });
-    queryClient.invalidateQueries({ queryKey: ['progress-blockers', userId] });
-    queryClient.invalidateQueries({ queryKey: ['progress-metrics', userId] });
+    void queryClient.invalidateQueries({ queryKey: ['aggregated-context', userId] });
+    void queryClient.invalidateQueries({ queryKey: ['progress-milestones', userId] });
+    void queryClient.invalidateQueries({ queryKey: ['progress-blockers', userId] });
+    void queryClient.invalidateQueries({ queryKey: ['progress-metrics', userId] });
   };
 
   return { invalidateContext };

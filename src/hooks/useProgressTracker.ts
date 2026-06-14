@@ -68,8 +68,8 @@ export const useProgressMilestones = (userId: string | undefined) => {
       return data as ProgressMilestone;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['progress-milestones', userId] });
-      queryClient.invalidateQueries({ queryKey: ['progress-metrics', userId] });
+      void queryClient.invalidateQueries({ queryKey: ['progress-milestones', userId] });
+      void queryClient.invalidateQueries({ queryKey: ['progress-metrics', userId] });
 
       toast({
         title: 'Milestone Created',
@@ -108,8 +108,8 @@ export const useProgressMilestones = (userId: string | undefined) => {
       return data as ProgressMilestone;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['progress-milestones', userId] });
-      queryClient.invalidateQueries({ queryKey: ['progress-metrics', userId] });
+      void queryClient.invalidateQueries({ queryKey: ['progress-milestones', userId] });
+      void queryClient.invalidateQueries({ queryKey: ['progress-metrics', userId] });
 
       if (data.status === 'completed') {
         toast({
@@ -160,8 +160,8 @@ export const useProgressMilestones = (userId: string | undefined) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['progress-milestones', userId] });
-      queryClient.invalidateQueries({ queryKey: ['progress-metrics', userId] });
+      void queryClient.invalidateQueries({ queryKey: ['progress-milestones', userId] });
+      void queryClient.invalidateQueries({ queryKey: ['progress-metrics', userId] });
 
       toast({
         title: 'Milestone Deleted',
@@ -244,8 +244,8 @@ export const useProgressBlockers = (userId: string | undefined) => {
       return data as ProgressBlocker;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['progress-blockers', userId] });
-      queryClient.invalidateQueries({ queryKey: ['progress-metrics', userId] });
+      void queryClient.invalidateQueries({ queryKey: ['progress-blockers', userId] });
+      void queryClient.invalidateQueries({ queryKey: ['progress-metrics', userId] });
 
       toast({
         title: 'Blocker Identified',
@@ -287,8 +287,8 @@ export const useProgressBlockers = (userId: string | undefined) => {
       return data as ProgressBlocker;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['progress-blockers', userId] });
-      queryClient.invalidateQueries({ queryKey: ['progress-metrics', userId] });
+      void queryClient.invalidateQueries({ queryKey: ['progress-blockers', userId] });
+      void queryClient.invalidateQueries({ queryKey: ['progress-metrics', userId] });
 
       toast({
         title: 'Blocker Resolved! ✅',
@@ -327,7 +327,7 @@ export const useProgressBlockers = (userId: string | undefined) => {
       return data as ProgressBlocker;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['progress-blockers', userId] });
+      void queryClient.invalidateQueries({ queryKey: ['progress-blockers', userId] });
     },
     onError: (error: Error) => {
       toast({
@@ -349,8 +349,8 @@ export const useProgressBlockers = (userId: string | undefined) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['progress-blockers', userId] });
-      queryClient.invalidateQueries({ queryKey: ['progress-metrics', userId] });
+      void queryClient.invalidateQueries({ queryKey: ['progress-blockers', userId] });
+      void queryClient.invalidateQueries({ queryKey: ['progress-metrics', userId] });
 
       toast({
         title: 'Blocker Deleted',

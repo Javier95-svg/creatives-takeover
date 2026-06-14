@@ -53,7 +53,7 @@ export const useKPIGoals = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['kpi-goals'] });
+      void queryClient.invalidateQueries({ queryKey: ['kpi-goals'] });
       toast.success('Goal updated successfully');
     },
     onError: (error) => {
@@ -76,7 +76,7 @@ export const useKPIGoals = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['kpi-goals'] });
+      void queryClient.invalidateQueries({ queryKey: ['kpi-goals'] });
       toast.success('Goal created successfully');
     },
     onError: (error) => {
