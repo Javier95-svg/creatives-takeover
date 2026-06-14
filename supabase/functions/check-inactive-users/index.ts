@@ -393,7 +393,7 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
-    const appBaseUrl = (Deno.env.get("APP_URL") || "https://www.creativestakeover.com")
+    const appBaseUrl = (Deno.env.get("APP_URL") || "https://creatives-takeover.com")
       .replace(/\/$/, "")
       .replace(/\/dashboard$/, "");
 

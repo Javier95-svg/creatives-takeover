@@ -38,7 +38,7 @@ function getAdminRecipient() {
 }
 
 function getAppUrl() {
-  return (Deno.env.get("SITE_URL") || Deno.env.get("APP_URL") || "https://creativestakeover.com").replace(/\/$/, "");
+  return (Deno.env.get("SITE_URL") || Deno.env.get("APP_URL") || "https://creatives-takeover.com").replace(/\/$/, "");
 }
 
 function getEventLabel(eventType: string) {

@@ -493,7 +493,7 @@ serve(async (req: Request): Promise<Response> => {
       });
     }
 
-    const appUrl = normalizeAppUrl(Deno.env.get("APP_URL") || "https://www.creativestakeover.com");
+    const appUrl = normalizeAppUrl(Deno.env.get("APP_URL") || "https://creatives-takeover.com");
     const name = fullName?.trim() || "Founder";
     const finalCtaUrl = ctaUrl || getDefaultCta(activationIntent, appUrl);
     const finalCtaLabel = ctaLabel || getDefaultCtaLabel(activationIntent);

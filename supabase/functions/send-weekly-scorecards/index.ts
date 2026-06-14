@@ -320,7 +320,7 @@ async function sendScorecardEmail(args: {
     body: JSON.stringify({
       ...args,
       sequence: "weekly_scorecard",
-      ctaUrl: `${(Deno.env.get("APP_URL") || "https://www.creativestakeover.com").replace(/\/$/, "")}/dashboard`,
+      ctaUrl: `${(Deno.env.get("APP_URL") || "https://creatives-takeover.com").replace(/\/$/, "")}/dashboard`,
       ctaLabel: "Open Dashboard",
     }),
   });

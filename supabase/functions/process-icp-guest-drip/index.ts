@@ -113,7 +113,7 @@ serve(async (req: Request): Promise<Response> => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  const appUrl = (Deno.env.get("APP_URL") || "https://www.creativestakeover.com").replace(/\/$/, "");
+  const appUrl = (Deno.env.get("APP_URL") || "https://creatives-takeover.com").replace(/\/$/, "");
 
   if (!supabaseUrl || !supabaseKey) {
     return new Response(JSON.stringify({ error: "Missing environment config" }), {

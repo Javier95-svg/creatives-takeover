@@ -52,7 +52,7 @@ serve(async (req: Request): Promise<Response> => {
     const fromName = Deno.env.get("FROM_NAME") || "Creatives Takeover";
     const replyTo = Deno.env.get("REPLY_TO_EMAIL");
 
-    const appUrl = (Deno.env.get("APP_URL") || "https://www.creativestakeover.com").replace(/\/$/, "");
+    const appUrl = (Deno.env.get("APP_URL") || "https://creatives-takeover.com").replace(/\/$/, "");
     const safeName = escapeHtml(name);
     const safeOnboardingUrl = escapeHtml(`${appUrl}/onboarding`);
 

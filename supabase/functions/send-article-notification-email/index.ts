@@ -119,7 +119,7 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     const appUrl = (
-      Deno.env.get("APP_URL") || "https://www.creativestakeover.com"
+      Deno.env.get("APP_URL") || "https://creatives-takeover.com"
     ).replace(/\/$/, "");
     const articleUrl = `${appUrl}/newspaper/${slug}`;
     const fromEmail = Deno.env.get("FROM_EMAIL") || "onboarding@resend.dev";
