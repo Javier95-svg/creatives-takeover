@@ -240,11 +240,16 @@ export default function Pricing() {
             return (
               <div
                 key={plan.key}
-                className={`relative w-full max-w-[480px] rounded-2xl border bg-card/80 p-6 sm:p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col backdrop-blur ${cardStyle.border} ${
-                  isCurrentPlan || isPopular || isPro ? `ring-1 ${cardStyle.ring} shadow-md` : ""
+                className={`group relative w-full max-w-[460px] rounded-3xl border p-7 sm:p-8 flex flex-col backdrop-blur transition-all duration-300 hover:-translate-y-1.5 ${
+                  isPopular
+                    ? "border-primary/40 bg-card shadow-[0_28px_64px_-28px_hsl(var(--primary)/0.45)] lg:scale-[1.035] z-10"
+                    : "border-border bg-card/70 shadow-[0_1px_2px_rgb(2_6_23/0.04),0_14px_32px_-20px_rgb(2_6_23/0.20)] hover:border-primary/25"
                 }`}
                 style={{ animationDelay: `${index * 0.08}s` }}
               >
+                {isPopular && (
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent" />
+                )}
                 {((isCurrentPlan && user) || isPopular || plan.highlight) && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <Badge className={`px-3 py-1 text-xs font-medium ${
@@ -271,7 +276,7 @@ export default function Pricing() {
                   </Badge>
                   <div className="mb-4">
                     <div className="flex items-baseline justify-center gap-1">
-                      <span className="text-4xl sm:text-5xl font-semibold tracking-tight font-space-grotesk tabular-nums">
+                      <span className="text-5xl sm:text-6xl font-bold tracking-tight font-space-grotesk tabular-nums">
                         ${formatPrice(price)}
                       </span>
                       {period && (
@@ -295,14 +300,17 @@ export default function Pricing() {
                   </p>
                 </div>
 
-                <div className="mb-6 flex-1">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+                <div className="mb-7 flex-1">
+                  <div className="mb-6 border-t border-border/70" />
+                  <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-muted-foreground mb-4">
                     Plan highlights
                   </p>
                   <div className="space-y-3">
                     {plan.features.map((feature) => (
                       <div key={feature} className="flex items-start gap-3">
-                        <Check className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                          <Check className="h-3 w-3 text-primary" strokeWidth={3} />
+                        </span>
                         <span className="text-sm text-foreground/90 leading-relaxed">{feature}</span>
                       </div>
                     ))}
@@ -310,6 +318,7 @@ export default function Pricing() {
                 </div>
 
                 <Button
+                  size="lg"
                   className={`w-full ${cardStyle.button}`}
                   disabled={Boolean(pendingPlan)}
                   onClick={(event) => {
