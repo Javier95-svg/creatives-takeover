@@ -18,8 +18,7 @@ import {
   MapPin, 
   MoreHorizontal,
   Send,
-  MoreVertical,
-  Bookmark
+  MoreVertical
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -90,7 +89,6 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
   const [localComments, setLocalComments] = useState(post.commentsCount);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentContent, setEditingCommentContent] = useState("");
-  const [isBookmarked, setIsBookmarked] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
   const timeAgo = (dateString: string) => {
@@ -306,23 +304,6 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
     } catch (error) {
       console.error('Error sharing:', error);
       toast.error('Failed to copy link');
-    }
-  };
-
-  const handleBookmark = async () => {
-    if (!isAuthenticated || !user) {
-      setSignInTriggerAction('comment'); // Reuse sign-in modal
-      setShowSignInModal(true);
-      return;
-    }
-
-    try {
-      // TODO: Implement bookmark functionality when bookmark table exists
-      setIsBookmarked(!isBookmarked);
-      toast.success(isBookmarked ? 'Bookmark removed' : 'Bookmarked!');
-    } catch (error) {
-      console.error('Error bookmarking:', error);
-      toast.error('Failed to bookmark');
     }
   };
 
@@ -756,20 +737,6 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                 <span className="hidden sm:inline text-sm font-medium">Share</span>
               </Button>
               
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleBookmark}
-                className={`flex items-center justify-center gap-2 h-11 w-11 sm:h-10 sm:w-auto sm:px-4 rounded-lg min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 ${
-                  isBookmarked 
-                    ? "text-primary hover:text-primary/80 hover:bg-primary/10" 
-                    : "text-muted-foreground hover:text-primary hover:bg-primary/10"
-                }`}
-                aria-label={`${isBookmarked ? 'Remove bookmark' : 'Bookmark'} this post`}
-              >
-                <Bookmark className={`h-5 w-5 ${isBookmarked ? "fill-current" : ""}`} />
-                <span className="hidden sm:inline text-sm font-medium">Save</span>
-              </Button>
             </div>
           </div>
           

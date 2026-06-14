@@ -214,6 +214,13 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
   // Use calculated aspect ratio or fallback to 256/135
   const containerAspectRatio = gifAspectRatio || 256/135;
 
+  // Visitors never see an empty slot or a "coming soon" placeholder — the media
+  // only appears once a real GIF exists (this also covers the loading window, so
+  // there's no spinner flash). Admins still get the upload affordance below.
+  if (!isAdmin && !gifUrl) {
+    return null;
+  }
+
   if (loading) {
     return (
       <div className={`founder-journey-gif flex items-center justify-center bg-muted/30 rounded-lg border border-border ${className}`} style={{ aspectRatio: containerAspectRatio }}>
@@ -246,20 +253,14 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
           </>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            {isAdmin ? (
-              <div className="text-center p-6">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Image className="w-8 h-8 text-primary/50" />
-                </div>
-                <p className="text-sm text-muted-foreground mb-2">No GIF uploaded</p>
-                <p className="text-xs text-muted-foreground">Click to upload</p>
+            {/* Only admins reach this empty state (visitors return null above). */}
+            <div className="text-center p-6">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Image className="w-8 h-8 text-primary/50" />
               </div>
-            ) : (
-              <div className="text-center p-6">
-                <Image className="w-12 h-12 mx-auto mb-2 text-muted-foreground/50" />
-                <p className="text-sm text-muted-foreground">GIF coming soon</p>
-              </div>
-            )}
+              <p className="text-sm text-muted-foreground mb-2">No GIF uploaded</p>
+              <p className="text-xs text-muted-foreground">Click to upload</p>
+            </div>
           </div>
         )}
       </div>
