@@ -94,7 +94,7 @@ export const TaskOverview = () => {
   useEffect(() => {
     // Only fetch if we haven't loaded before or if user changed
     if (user && !hasLoadedRef.current) {
-      fetchTasks();
+      void fetchTasks();
       hasLoadedRef.current = true;
     }
   }, [user, fetchTasks]);
@@ -110,7 +110,7 @@ export const TaskOverview = () => {
         .eq('id', taskId);
 
       if (error) throw error;
-      fetchTasks();
+      void fetchTasks();
     } catch (error) {
       console.error('Error toggling task:', error);
     }
@@ -222,7 +222,7 @@ export const TaskOverview = () => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggleTaskComplete(task.id);
+                    void toggleTaskComplete(task.id);
                   }}
                   className="mt-0.5 flex-shrink-0 transition-all duration-300 hover:scale-125"
                 >

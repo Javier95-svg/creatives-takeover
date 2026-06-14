@@ -219,7 +219,7 @@ export const useCohortMembership = () => {
 
   useEffect(() => {
     if (user) {
-      fetchCohort();
+      void fetchCohort();
     }
   }, [user]);
 

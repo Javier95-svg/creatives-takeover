@@ -26,7 +26,7 @@ export const MonthlyMilestone = () => {
 
   useEffect(() => {
     if (user) {
-      loadMonthlyMilestone();
+      void loadMonthlyMilestone();
     }
   }, [user]);
 
@@ -92,7 +92,7 @@ export const MonthlyMilestone = () => {
         .update({ status: currentStatus ? 'todo' : 'done' })
         .eq('id', taskId);
 
-      loadMonthlyMilestone();
+      void loadMonthlyMilestone();
     } catch (error) {
       console.error('Error toggling task:', error);
     }

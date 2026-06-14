@@ -53,7 +53,7 @@ export const useBizMapStageTasks = (stage: BizMapStage | null | undefined) => {
 
   useEffect(() => {
     setIsLoading(true);
-    loadTaskProgress();
+    void loadTaskProgress();
   }, [loadTaskProgress]);
 
   const toggleTask = async (taskId: string) => {

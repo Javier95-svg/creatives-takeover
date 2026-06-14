@@ -88,7 +88,7 @@ const ResetPassword = () => {
       }
     };
 
-    checkSession();
+    void checkSession();
 
     return () => subscription.unsubscribe();
   }, []);

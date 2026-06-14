@@ -65,7 +65,7 @@ export const useTrendingPosts = (limit: number = 10) => {
   };
 
   useEffect(() => {
-    fetchTrendingPosts();
+    void fetchTrendingPosts();
     
     // Refresh every 5 minutes
     const interval = setInterval(fetchTrendingPosts, 5 * 60 * 1000);

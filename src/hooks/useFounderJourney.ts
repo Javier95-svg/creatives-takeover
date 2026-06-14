@@ -127,7 +127,7 @@ export const useFounderJourney = () => {
   };
 
   useEffect(() => {
-    loadJourney();
+    void loadJourney();
   }, []);
 
   return {

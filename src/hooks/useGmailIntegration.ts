@@ -21,7 +21,7 @@ export const useGmailIntegration = () => {
 
   useEffect(() => {
     if (user) {
-      loadConnection();
+      void loadConnection();
     }
   }, [user]);
 

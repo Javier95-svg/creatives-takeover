@@ -15,7 +15,7 @@ export const FeedbackSummaryPanel = ({ postId, onContinueInChatbot }: FeedbackSu
 
   const handleProcessFeedback = async () => {
     await processFeedback(postId);
-    refreshFeedback();
+    void refreshFeedback();
   };
 
   if (isLoading) {

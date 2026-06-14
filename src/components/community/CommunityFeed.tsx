@@ -162,7 +162,7 @@ const CommunityFeed: React.FC = () => {
     // Don't show loading state during debounced refetches to prevent component unmounting
     fetchDebounceTimerRef.current = setTimeout(() => {
       if (!isPublishingRef.current) {
-        fetchPosts(false);
+        void fetchPosts(false);
       }
     }, 1000);
   }, [fetchPosts]);
@@ -171,7 +171,7 @@ const CommunityFeed: React.FC = () => {
   useEffect(() => {
     const abortController = new AbortController();
     
-    fetchPosts(true, abortController.signal);
+    void fetchPosts(true, abortController.signal);
 
     const channel = supabase
       .channel('community-posts-changes')
@@ -203,7 +203,7 @@ const CommunityFeed: React.FC = () => {
       if (fetchDebounceTimerRef.current) {
         clearTimeout(fetchDebounceTimerRef.current);
       }
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, [fetchPosts, debouncedFetchPosts]);
 
@@ -342,7 +342,7 @@ const CommunityFeed: React.FC = () => {
       // This ensures the new post appears without triggering the real-time subscription
       // Don't show loading state during this refetch to prevent PostComposer from unmounting
       setTimeout(() => {
-        fetchPosts(false).finally(() => {
+        void fetchPosts(false).finally(() => {
           // Clear the publishing flag after refetch completes
           isPublishingRef.current = false;
         });

@@ -157,7 +157,7 @@ export function UpgradeCheckoutDialog({
           className="grid gap-4 pt-2"
           onSubmit={(event) => {
             event.preventDefault();
-            onSubmit();
+            void onSubmit();
           }}
         >
           <div className="grid gap-4 sm:grid-cols-2">

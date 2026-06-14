@@ -55,8 +55,8 @@ const SprintKanban: React.FC<SprintKanbanProps> = ({ sprint, onStatusChange }) =
 
   useEffect(() => {
     if (sprint.id) {
-      fetchSprintTasks(sprint.id);
-      fetchSprintComments(sprint.id);
+      void fetchSprintTasks(sprint.id);
+      void fetchSprintComments(sprint.id);
     }
   }, [sprint.id, fetchSprintTasks, fetchSprintComments]);
 

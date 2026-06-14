@@ -100,7 +100,7 @@ const AdminAnalytics = () => {
       setIsAdmin(true);
     };
 
-    checkAdmin();
+    void checkAdmin();
   }, [user, navigate]);
 
   const endDate = endOfDay(new Date());

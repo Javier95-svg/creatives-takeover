@@ -59,7 +59,7 @@ export const RelatedTags = ({ currentTag, limit = 5 }: RelatedTagsProps) => {
       }
     };
 
-    loadRelatedTags();
+    void loadRelatedTags();
   }, [currentTag, fetchStories, limit]);
 
   if (relatedTags.length === 0) {

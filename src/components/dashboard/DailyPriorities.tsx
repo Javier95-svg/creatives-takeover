@@ -24,7 +24,7 @@ export const DailyPriorities = () => {
 
   useEffect(() => {
     if (user) {
-      loadTodaysPriorities();
+      void loadTodaysPriorities();
     }
   }, [user]);
 

@@ -57,8 +57,8 @@ export const useCommunityPulse = () => {
   };
 
   useEffect(() => {
-    fetchTodaysPulse();
-    fetchWeekPulse();
+    void fetchTodaysPulse();
+    void fetchWeekPulse();
 
     // Subscribe to updates
     const channel = supabase
@@ -71,14 +71,14 @@ export const useCommunityPulse = () => {
           table: 'community_pulse'
         },
         () => {
-          fetchTodaysPulse();
-          fetchWeekPulse();
+          void fetchTodaysPulse();
+          void fetchWeekPulse();
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, []);
 
@@ -87,8 +87,8 @@ export const useCommunityPulse = () => {
     weekPulse,
     isLoading,
     refetch: () => {
-      fetchTodaysPulse();
-      fetchWeekPulse();
+      void fetchTodaysPulse();
+      void fetchWeekPulse();
     }
   };
 };

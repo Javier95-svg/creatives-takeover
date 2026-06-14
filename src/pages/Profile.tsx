@@ -516,7 +516,7 @@ const Profile = () => {
       }
     };
 
-    loadProfile();
+    void loadProfile();
   }, [username, currentUser?.id]);
 
   // Real-time listener for profile updates
@@ -548,7 +548,7 @@ const Profile = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, [profileId]);
 

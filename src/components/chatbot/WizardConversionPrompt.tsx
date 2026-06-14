@@ -36,7 +36,7 @@ export const WizardConversionPrompt = ({
   // Track trigger view when shown
   useEffect(() => {
     if (show && step === triggerStep) {
-      trackTriggerView(triggerType, {
+      void trackTriggerView(triggerType, {
         variant,
         step,
         progress: context?.progress,
@@ -70,13 +70,13 @@ export const WizardConversionPrompt = ({
   const contextualMsg = getContextualMessage();
 
   const handleSignUpClick = () => {
-    trackEngagement(triggerType, context?.engagementScore);
-    trackSignupStarted(triggerType);
+    void trackEngagement(triggerType, context?.engagementScore);
+    void trackSignupStarted(triggerType);
     onSignUp();
   };
 
   const handleDismiss = () => {
-    trackDismissal(triggerType);
+    void trackDismissal(triggerType);
     onDismiss();
   };
 

@@ -47,7 +47,7 @@ const AdminTools = () => {
       }
     };
 
-    checkAdminStatus();
+    void checkAdminStatus();
   }, [user, authLoading, navigate]);
 
   if (authLoading || checking) {

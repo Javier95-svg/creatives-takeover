@@ -325,7 +325,7 @@ export function useDailyFocus(): UseDailyFocusReturn {
 
   // Fetch recommendation on mount and when user changes
   useEffect(() => {
-    fetchRecommendation();
+    void fetchRecommendation();
   }, [fetchRecommendation]);
 
   return {

@@ -26,7 +26,7 @@ export const QuickWinButton = ({ onWinAdded }: QuickWinButtonProps) => {
     };
 
     function fire(particleRatio: number, opts: confetti.Options) {
-      confetti({
+      void confetti({
         ...defaults,
         ...opts,
         particleCount: Math.floor(count * particleRatio),

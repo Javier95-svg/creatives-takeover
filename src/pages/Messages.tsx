@@ -124,7 +124,7 @@ const Messages = () => {
       }
     };
 
-    resolveUsername();
+    void resolveUsername();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [username, user?.id, isAuthenticated, conversationIdParam]);
 

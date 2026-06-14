@@ -30,7 +30,7 @@ export function CreditAnalytics({ className }: CreditAnalyticsProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
-    fetchTransactionHistory(50);
+    void fetchTransactionHistory(50);
   }, []);
 
   const handleRefresh = async () => {

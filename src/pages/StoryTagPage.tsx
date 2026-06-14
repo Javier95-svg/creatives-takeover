@@ -82,7 +82,7 @@ const StoryTagPage = () => {
       }
     };
 
-    loadStories();
+    void loadStories();
 
     return () => {
       if (abortControllerRef.current) {

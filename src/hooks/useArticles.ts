@@ -95,7 +95,7 @@ export const useArticles = () => {
         toast.success('Article created successfully');
       }
 
-      fetchArticles(); // Refresh the list
+      void fetchArticles(); // Refresh the list
       return true;
     } catch (error) {
       console.error('Error saving article:', error);
@@ -119,7 +119,7 @@ export const useArticles = () => {
       if (error) throw error;
       
       toast.success('Article deleted successfully');
-      fetchArticles(); // Refresh the list
+      void fetchArticles(); // Refresh the list
       return true;
     } catch (error) {
       console.error('Error deleting article:', error);
@@ -133,7 +133,7 @@ export const useArticles = () => {
   };
 
   useEffect(() => {
-    fetchArticles();
+    void fetchArticles();
   }, [user]);
 
   return {

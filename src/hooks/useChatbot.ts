@@ -665,7 +665,7 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
 
   const rateSectionCompletion = useCallback((section: string, rating: number) => {
     setSectionCompletionFeedback(prev => ({ ...prev, [section]: rating }));
-    collectFeedback({
+    void collectFeedback({
       type: 'section_completion',
       rating,
       section
@@ -676,7 +676,7 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (conversationState.messageCount > 5 && !conversationState.conversationFlow?.isCompleted) {
-        collectFeedback({
+        void collectFeedback({
           type: 'exit_intent',
           comment: 'User left before completing conversation'
         });

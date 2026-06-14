@@ -19,7 +19,7 @@ export const FounderHealthCheck = () => {
 
   useEffect(() => {
     if (user) {
-      assessHealth();
+      void assessHealth();
     }
   }, [user]);
 

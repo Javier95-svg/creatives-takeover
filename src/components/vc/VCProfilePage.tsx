@@ -47,7 +47,7 @@ const VCProfilePage = () => {
       setIsAdmin(user?.email?.toLowerCase() === "admin@creatives-takeover.com");
     };
 
-    checkAdmin();
+    void checkAdmin();
   }, []);
 
   useEffect(() => {
@@ -82,7 +82,7 @@ const VCProfilePage = () => {
       setLoading(false);
     };
 
-    fetchVC();
+    void fetchVC();
   }, [slug, trackVCView, navigate]);
 
   const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {

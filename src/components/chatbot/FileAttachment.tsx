@@ -132,7 +132,7 @@ export const FileAttachment: React.FC<FileAttachmentProps> = ({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    handleFiles(e.dataTransfer.files);
+    void handleFiles(e.dataTransfer.files);
   };
 
   const getFileIcon = (file: File) => {

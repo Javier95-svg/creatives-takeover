@@ -85,7 +85,7 @@ const AdminMentorEditor = () => {
     }
 
     if (id && id !== "new") {
-      loadMentor(id);
+      void loadMentor(id);
     }
   }, [adminLoading, authLoading, id, isAdmin, navigate]);
 

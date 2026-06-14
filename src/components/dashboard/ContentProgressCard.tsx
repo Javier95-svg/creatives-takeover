@@ -22,7 +22,7 @@ export function ContentProgressCard() {
         .eq('user_id', user.id);
       if (!error && count !== null) setBookmarkCount(count);
     };
-    fetchBookmarks();
+    void fetchBookmarks();
   }, [user]);
 
   const trendingTopics: string[] = (todaysPulse as any)?.trending_topics?.slice(0, 3) ?? [];

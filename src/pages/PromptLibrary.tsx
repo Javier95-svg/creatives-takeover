@@ -37,7 +37,7 @@ const PromptLibrary = () => {
 
   // Fetch custom prompt chains on mount
   useEffect(() => {
-    fetchPublishedChains();
+    void fetchPublishedChains();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -104,7 +104,7 @@ const PromptLibrary = () => {
       if (!deducted) return;
     }
     
-    navigator.clipboard.writeText(prompt);
+    void navigator.clipboard.writeText(prompt);
     toast.success("Prompt copied to clipboard!");
   };
 
@@ -127,7 +127,7 @@ const PromptLibrary = () => {
     }
 
     localStorage.setItem("bizmap_prompt", prompt);
-    navigator.clipboard.writeText(prompt);
+    void navigator.clipboard.writeText(prompt);
     window.open("/bizmap-ai/chat", "_blank");
     toast.success("Opening BizMap AI with your prompt!");
   };

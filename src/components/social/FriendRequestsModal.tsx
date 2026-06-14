@@ -15,11 +15,11 @@ export const FriendRequestsModal = ({ open, onOpenChange }: FriendRequestsModalP
   const { pendingFriendRequests, respondToFriendRequest, loading } = useSocial();
 
   const handleAccept = (requestId: string) => {
-    respondToFriendRequest(requestId, 'accept');
+    void respondToFriendRequest(requestId, 'accept');
   };
 
   const handleDecline = (requestId: string) => {
-    respondToFriendRequest(requestId, 'decline');
+    void respondToFriendRequest(requestId, 'decline');
   };
 
   return (

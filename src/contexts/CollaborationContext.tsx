@@ -135,7 +135,7 @@ export const CollaborationProvider: React.FC<CollaborationProviderProps> = ({ ch
 
       // Clean up channel
       if (presenceChannelRef.current) {
-        supabase.removeChannel(presenceChannelRef.current);
+        void supabase.removeChannel(presenceChannelRef.current);
         presenceChannelRef.current = null;
       }
 
@@ -152,7 +152,7 @@ export const CollaborationProvider: React.FC<CollaborationProviderProps> = ({ ch
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      stopCollaboration();
+      void stopCollaboration();
     };
   }, [stopCollaboration]);
 

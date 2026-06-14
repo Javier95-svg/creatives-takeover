@@ -132,7 +132,7 @@ export default function WaitlistPublicPage() {
       }
     };
 
-    load();
+    void load();
   }, [slug, utm]);
 
   const handleEmailSubmit = async (form: SignupData): Promise<{ ok: boolean; duplicate?: boolean; referralMessage?: string }> => {

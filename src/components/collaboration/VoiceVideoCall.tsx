@@ -161,7 +161,7 @@ export const VoiceVideoCall: React.FC<VoiceVideoCallProps> = ({
       const track = stream.getVideoTracks()[0];
       const handleEnded = () => {
         setIsScreenSharing(false);
-        stopScreenShare();
+        void stopScreenShare();
       };
       track.addEventListener('ended', handleEnded);
       screenShareTrackRef.current = { track, handler: handleEnded };

@@ -22,7 +22,7 @@ export const RecentWins = ({ refreshTrigger }: RecentWinsProps) => {
 
   useEffect(() => {
     if (user) {
-      fetchRecentWins();
+      void fetchRecentWins();
     }
   }, [user, refreshTrigger]);
 

@@ -77,7 +77,7 @@ const PromptLibraryDemo = ({ onNavigateToBizMap }: PromptLibraryDemoProps) => {
   });
 
   const handleCopyPrompt = (prompt: string) => {
-    navigator.clipboard.writeText(prompt);
+    void navigator.clipboard.writeText(prompt);
     toast.success("Prompt copied to clipboard!");
   };
 
@@ -85,7 +85,7 @@ const PromptLibraryDemo = ({ onNavigateToBizMap }: PromptLibraryDemoProps) => {
     // Store prompt in localStorage so Dream2Plan can pick it up
     localStorage.setItem('bizmap_prompt', prompt);
     // Also copy to clipboard as backup
-    navigator.clipboard.writeText(prompt);
+    void navigator.clipboard.writeText(prompt);
     // Navigate to Dream2Plan
     navigate('/bizmap-ai/chat');
     toast.success("Opening BizMap AI with your prompt!", {

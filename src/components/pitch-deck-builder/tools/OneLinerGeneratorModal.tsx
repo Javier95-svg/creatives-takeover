@@ -36,7 +36,7 @@ export const OneLinerGeneratorModal: React.FC<OneLinerGeneratorModalProps> = ({ 
   const oneLiner = generateOneLiner();
 
   const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
+    void navigator.clipboard.writeText(text);
     toast.success('Copied to clipboard!');
   };
 

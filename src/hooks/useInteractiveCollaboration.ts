@@ -428,7 +428,7 @@ export const useInteractiveCollaboration = (sessionId: string) => {
           filter: `session_id=eq.${sessionId}`,
         },
         () => {
-          fetchWhiteboards();
+          void fetchWhiteboards();
         }
       )
       .subscribe();
@@ -446,7 +446,7 @@ export const useInteractiveCollaboration = (sessionId: string) => {
           table: 'whiteboard_objects',
         },
         () => {
-          fetchWhiteboardObjects();
+          void fetchWhiteboardObjects();
         }
       )
       .subscribe();
@@ -465,7 +465,7 @@ export const useInteractiveCollaboration = (sessionId: string) => {
           filter: `session_id=eq.${sessionId}`,
         },
         () => {
-          fetchPolls();
+          void fetchPolls();
         }
       )
       .subscribe();
@@ -483,7 +483,7 @@ export const useInteractiveCollaboration = (sessionId: string) => {
           table: 'poll_votes',
         },
         () => {
-          fetchPollVotes();
+          void fetchPollVotes();
         }
       )
       .subscribe();
@@ -502,7 +502,7 @@ export const useInteractiveCollaboration = (sessionId: string) => {
           filter: `session_id=eq.${sessionId}`,
         },
         () => {
-          fetchFiles();
+          void fetchFiles();
         }
       )
       .subscribe();
@@ -511,7 +511,7 @@ export const useInteractiveCollaboration = (sessionId: string) => {
 
     // Clean up old channels before setting new ones
     realtimeChannelsRef.current.forEach(channel => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     });
     realtimeChannelsRef.current = channels;
   }, [sessionId, fetchWhiteboards, fetchWhiteboardObjects, fetchPolls, fetchPollVotes, fetchFiles]);
@@ -529,13 +529,13 @@ export const useInteractiveCollaboration = (sessionId: string) => {
         setLoading(false);
       };
 
-      initializeData();
+      void initializeData();
       setupRealtimeSubscriptions();
 
       return () => {
         // Clean up channels from ref
         realtimeChannelsRef.current.forEach(channel => {
-          supabase.removeChannel(channel);
+          void supabase.removeChannel(channel);
         });
         realtimeChannelsRef.current = [];
       };
@@ -545,13 +545,13 @@ export const useInteractiveCollaboration = (sessionId: string) => {
   // Fetch dependent data when parent data changes
   useEffect(() => {
     if (whiteboards.length > 0) {
-      fetchWhiteboardObjects();
+      void fetchWhiteboardObjects();
     }
   }, [whiteboards, fetchWhiteboardObjects]);
 
   useEffect(() => {
     if (polls.length > 0) {
-      fetchPollVotes();
+      void fetchPollVotes();
     }
   }, [polls, fetchPollVotes]);
 

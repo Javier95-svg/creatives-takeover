@@ -29,7 +29,7 @@ export const CoreMetrics = () => {
 
   useEffect(() => {
     if (user) {
-      loadMetrics();
+      void loadMetrics();
     }
   }, [user]);
 
@@ -147,7 +147,7 @@ export const CoreMetrics = () => {
           });
       }
 
-      loadMetrics();
+      void loadMetrics();
       setIsEditOpen(false);
       setEditingMetric(null);
     } catch (error) {

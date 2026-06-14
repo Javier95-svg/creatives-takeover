@@ -75,17 +75,17 @@ export const SocialButtons = ({
 
   const handleFollowToggle = () => {
     if (followStatus === 'following') {
-      unfollowUser();
+      void unfollowUser();
     } else {
-      followUser();
+      void followUser();
     }
   };
 
   const handleFriendAction = () => {
     if (friendStatus === 'none') {
-      sendFriendRequest();
+      void sendFriendRequest();
     } else if (friendStatus === 'pending_sent') {
-      cancelFriendRequest();
+      void cancelFriendRequest();
     } else if (friendStatus === 'pending_received') {
       toast.info('You already have a pending connection request from this founder.');
     }

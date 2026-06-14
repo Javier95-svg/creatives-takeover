@@ -154,7 +154,7 @@ export const useAccountabilityPartners = () => {
       if (error) throw error;
 
       toast.success('Partnership request sent!');
-      fetchPartnerships();
+      void fetchPartnerships();
       return { error: null };
     } catch (error: any) {
       console.error('Error sending partnership request:', error);
@@ -187,7 +187,7 @@ export const useAccountabilityPartners = () => {
       if (error) throw error;
 
       toast.success(`Partnership request ${action}ed`);
-      fetchPartnerships();
+      void fetchPartnerships();
       return { error: null };
     } catch (error: any) {
       console.error('Error responding to partnership request:', error);
@@ -261,7 +261,7 @@ export const useAccountabilityPartners = () => {
       if (error) throw error;
 
       toast.success('Partnership ended');
-      fetchPartnerships();
+      void fetchPartnerships();
       return { error: null };
     } catch (error: any) {
       console.error('Error ending partnership:', error);
@@ -272,8 +272,8 @@ export const useAccountabilityPartners = () => {
 
   useEffect(() => {
     if (user) {
-      fetchPartnerships();
-      fetchRecentNudges();
+      void fetchPartnerships();
+      void fetchRecentNudges();
     }
   }, [user, fetchPartnerships, fetchRecentNudges]);
 

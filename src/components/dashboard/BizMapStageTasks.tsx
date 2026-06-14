@@ -109,7 +109,7 @@ export function BizMapStageTasks() {
       setTaskProgress(nextProgress);
     };
 
-    loadTaskProgress();
+    void loadTaskProgress();
   }, [currentStage, currentTasks, user]);
 
   const completedCount = currentTasks.filter((task) => taskProgress[task.id]?.is_completed).length;

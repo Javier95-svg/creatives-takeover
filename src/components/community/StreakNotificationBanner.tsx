@@ -43,7 +43,7 @@ const StreakNotificationBanner = ({ onDismiss }: StreakNotificationBannerProps) 
       }
     };
 
-    checkStreak();
+    void checkStreak();
   }, [user]);
 
   const handleDismiss = () => {

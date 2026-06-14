@@ -147,7 +147,7 @@ export const useTrends = () => {
 
   useEffect(() => {
     console.log('🚀 useTrends: Fetching existing trends from database...');
-    fetchTrends();
+    void fetchTrends();
   }, []);
 
   return {

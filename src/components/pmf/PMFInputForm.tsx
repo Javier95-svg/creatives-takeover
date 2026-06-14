@@ -123,7 +123,7 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
       }
     };
 
-    loadWizardData();
+    void loadWizardData();
   }, [initialData, businessPlanData, toast]);
 
   const addAssumption = () => {

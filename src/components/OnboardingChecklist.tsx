@@ -109,7 +109,7 @@ export const OnboardingChecklist = ({
           await triggerEmailSequenceEvent('onboarding_complete', userId);
 
           // Show celebration
-          confetti({
+          void confetti({
             particleCount: 100,
             spread: 70,
             origin: { y: 0.6 },
@@ -127,7 +127,7 @@ export const OnboardingChecklist = ({
       }
     };
 
-    completeOnboarding();
+    void completeOnboarding();
   }, [allCompleted, userId]);
 
   const handleDismiss = async () => {

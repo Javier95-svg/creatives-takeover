@@ -308,7 +308,7 @@ export const BizMapChat = ({
       }
     };
 
-    fetchAvatar();
+    void fetchAvatar();
   }, [user]);
 
   // 🚀 OPTIMIZATION: Request deduplication - prevent duplicate sends
@@ -338,7 +338,7 @@ export const BizMapChat = ({
         setSearchSourceCount(0);
       }
       
-      sendMessage(message, attachedFiles);
+      void sendMessage(message, attachedFiles);
       setMessage("");
       setAttachedFiles([]);
     } else {

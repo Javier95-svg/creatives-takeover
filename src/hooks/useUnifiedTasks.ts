@@ -67,7 +67,7 @@ export const useUnifiedTasks = () => {
             .from('daily_tasks')
             .update({ is_completed: !row.is_completed, completed_at: !row.is_completed ? new Date().toISOString() : null })
             .eq('id', row.id);
-          fetchDailyTasks();
+          void fetchDailyTasks();
         },
       })),
     );
@@ -99,7 +99,7 @@ export const useUnifiedTasks = () => {
             .from('daily_priorities')
             .update({ is_completed: !row.is_completed })
             .eq('id', row.id);
-          fetchPriorityTasks();
+          void fetchPriorityTasks();
         },
       })),
     );
@@ -157,7 +157,7 @@ export const useUnifiedTasks = () => {
                 },
                 { onConflict: 'user_id,task_id' },
               );
-            fetchBizMapTasks();
+            void fetchBizMapTasks();
           },
         };
       }),
@@ -169,7 +169,7 @@ export const useUnifiedTasks = () => {
     if (!user) return;
 
     setIsLoading(true);
-    Promise.all([fetchDailyTasks(), fetchPriorityTasks(), fetchBizMapTasks()]).finally(() =>
+    void Promise.all([fetchDailyTasks(), fetchPriorityTasks(), fetchBizMapTasks()]).finally(() =>
       setIsLoading(false),
     );
   }, [user, currentStage, fetchDailyTasks, fetchPriorityTasks, fetchBizMapTasks]);
@@ -235,7 +235,7 @@ export const useUnifiedTasks = () => {
         is_completed: false,
       });
 
-      fetchDailyTasks();
+      void fetchDailyTasks();
     },
     [user, fetchDailyTasks],
   );
@@ -252,9 +252,9 @@ export const useUnifiedTasks = () => {
     isLoading,
     createDailyTask,
     refetch: () => {
-      fetchDailyTasks();
-      fetchPriorityTasks();
-      fetchBizMapTasks();
+      void fetchDailyTasks();
+      void fetchPriorityTasks();
+      void fetchBizMapTasks();
     },
   };
 };

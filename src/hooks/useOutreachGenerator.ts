@@ -64,7 +64,7 @@ export const useOutreachGenerator = () => {
       const response: OutreachGenerationResponse = data as OutreachGenerationResponse;
       setGeneratedMaterial(response);
       toast.success(`Generated ${request.material_type.replace('_', ' ')} successfully!`);
-      refreshBalance();
+      void refreshBalance();
       return response;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate material. Please try again.';

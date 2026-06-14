@@ -62,7 +62,7 @@ const FindCoFounder = () => {
   const [messagingPostId, setMessagingPostId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchPosts();
+    void fetchPosts();
   }, []);
 
   const fetchPosts = async () => {

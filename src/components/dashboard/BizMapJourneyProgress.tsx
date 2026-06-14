@@ -464,7 +464,7 @@ export function BizMapJourneyProgress() {
       }
     };
 
-    loadArtifacts();
+    void loadArtifacts();
 
     return () => {
       cancelled = true;

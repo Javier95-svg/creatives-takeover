@@ -25,7 +25,7 @@ export const useVCViewTracking = () => {
   const upgradeTarget = quotaStatus.upgradeTarget;
 
   useEffect(() => {
-    fetchMonthlyViewCount();
+    void fetchMonthlyViewCount();
   }, []);
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);

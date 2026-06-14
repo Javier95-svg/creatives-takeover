@@ -93,7 +93,7 @@ export const useProfileData = (userId: string) => {
       }
     };
 
-    fetchStats();
+    void fetchStats();
   }, [userId]);
 
   return {

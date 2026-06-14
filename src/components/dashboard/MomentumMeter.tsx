@@ -19,7 +19,7 @@ export const MomentumMeter = ({ userId, stats }: MomentumMeterProps) => {
   const [level, setLevel] = useState('Getting Started');
 
   useEffect(() => {
-    calculateMomentum();
+    void calculateMomentum();
   }, [stats]);
 
   const calculateMomentum = async () => {

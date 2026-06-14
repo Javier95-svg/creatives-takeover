@@ -59,7 +59,7 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
       }
     };
 
-    loadGif();
+    void loadGif();
   }, [position]);
 
   const handleGifUpload = async (file: File) => {
@@ -199,7 +199,7 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      handleGifUpload(file);
+      void handleGifUpload(file);
     }
   };
 

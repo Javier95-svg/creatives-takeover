@@ -359,7 +359,7 @@ export function useWeeklyMission(): UseWeeklyMissionReturn {
 
   // Fetch current mission on mount and when user changes
   useEffect(() => {
-    fetchCurrentMission();
+    void fetchCurrentMission();
   }, [fetchCurrentMission]);
 
   return {

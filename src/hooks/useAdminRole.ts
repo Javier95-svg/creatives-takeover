@@ -48,7 +48,7 @@ export const useAdminRole = () => {
       }
     };
 
-    checkAdminRole();
+    void checkAdminRole();
   }, [user]);
 
   return { isAdmin, loading };

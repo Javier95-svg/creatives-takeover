@@ -126,7 +126,7 @@ export const useAcceleratorSearch = (
       }
     };
 
-    fetchAccelerators();
+    void fetchAccelerators();
   }, [
     filters,
     page,

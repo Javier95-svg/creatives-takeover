@@ -263,7 +263,7 @@ export const useLaunchRoadmap = () => {
 
   useEffect(() => {
     if (user) {
-      fetchRoadmap();
+      void fetchRoadmap();
     }
   }, [user]);
 

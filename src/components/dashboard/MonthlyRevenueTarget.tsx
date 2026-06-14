@@ -99,7 +99,7 @@ export const MonthlyRevenueTarget = () => {
       }
     };
 
-    checkAndReset();
+    void checkAndReset();
   }, [user, goals]);
 
   // Load monthly revenue data for selected month
@@ -156,7 +156,7 @@ export const MonthlyRevenueTarget = () => {
       }
     };
 
-    loadMonthlyData();
+    void loadMonthlyData();
   }, [user, selectedDate, baseRevenueGoal.target_value]);
 
   // Load historical data for chart
@@ -218,7 +218,7 @@ export const MonthlyRevenueTarget = () => {
       }
     };
 
-    loadHistoricalData();
+    void loadHistoricalData();
   }, [user]);
 
   const handleSave = async () => {
@@ -318,7 +318,7 @@ export const MonthlyRevenueTarget = () => {
         }
       };
 
-      loadHistoricalData();
+      void loadHistoricalData();
     } catch (error) {
       console.error('Error saving revenue target:', error);
       toast.error('Failed to save revenue target');

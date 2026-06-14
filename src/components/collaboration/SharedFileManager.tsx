@@ -289,7 +289,7 @@ export const SharedFileManager: React.FC<SharedFileManagerProps> = ({
                         isOwner={file.uploaded_by === currentUserId}
                         onDownload={() => onDownloadFile(file.id)}
                         onShare={() => {
-                          navigator.clipboard.writeText(file.filename);
+                          void navigator.clipboard.writeText(file.filename);
                           toast({
                             title: "Link copied",
                             description: "File link copied to clipboard",

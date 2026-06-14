@@ -393,7 +393,7 @@ export const useBizMapProgress = () => {
   }, [syncProgress, user]);
 
   useEffect(() => {
-    initializeProgress();
+    void initializeProgress();
   }, [initializeProgress]);
 
   const refreshProgress = useCallback(async () => {

@@ -171,7 +171,7 @@ const Signup = () => {
       }
     };
 
-    redirectAuthenticatedUser();
+    void redirectAuthenticatedUser();
   }, [user, navigate, conversionSource.returnUrl]);
 
   // Email validation regex
@@ -299,7 +299,7 @@ const Signup = () => {
         source: conversionSource.source,
         returnUrl: conversionSource.returnUrl,
       });
-      trackSignupStarted(triggerType);
+      void trackSignupStarted(triggerType);
       // Mark this as a fresh email signup so AuthContext fires `signup_completed`
       // to PostHog once the resulting SIGNED_IN event is handled.
       persistSignupIntent('email');
@@ -351,7 +351,7 @@ const Signup = () => {
         }
 
         // Track conversion completion
-        trackSignupCompleted(triggerType);
+        void trackSignupCompleted(triggerType);
         formSubmitted.current = true;
 
         const attr = getAttribution();

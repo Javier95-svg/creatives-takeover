@@ -43,7 +43,7 @@ export const usePresence = (userIds: string[]) => {
       }
     };
 
-    loadPresence();
+    void loadPresence();
 
     // Subscribe to presence changes
     const channel = supabase
@@ -69,7 +69,7 @@ export const usePresence = (userIds: string[]) => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, [user, userIds.join(',')]);
 
@@ -96,26 +96,26 @@ export const usePresence = (userIds: string[]) => {
 
   // Auto-update presence on mount/unmount and visibility changes
   useEffect(() => {
-    updatePresence('online');
+    void updatePresence('online');
 
     // Update presence every minute
     const interval = setInterval(() => {
-      updatePresence('online');
+      void updatePresence('online');
     }, 60000);
 
     // Handle visibility changes
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        updatePresence('away');
+        void updatePresence('away');
       } else {
-        updatePresence('online');
+        void updatePresence('online');
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      updatePresence('offline');
+      void updatePresence('offline');
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };

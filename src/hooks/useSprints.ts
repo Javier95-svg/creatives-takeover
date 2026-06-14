@@ -335,7 +335,7 @@ export const useSprints = () => {
 
   useEffect(() => {
     if (user) {
-      fetchSprints();
+      void fetchSprints();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);

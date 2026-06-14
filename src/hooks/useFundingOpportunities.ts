@@ -128,7 +128,7 @@ export const useFundingOpportunities = (filters?: FundingFilters) => {
       }
     };
 
-    fetchOpportunities();
+    void fetchOpportunities();
   }, [filters, useDatabase]);
 
   return { opportunities, loading, error };

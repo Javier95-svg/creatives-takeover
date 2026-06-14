@@ -38,7 +38,7 @@ const CommunityMilestones = () => {
       }
     };
 
-    fetchMilestones();
+    void fetchMilestones();
 
     const channel = supabase
       .channel('milestones')
@@ -50,7 +50,7 @@ const CommunityMilestones = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, []);
 

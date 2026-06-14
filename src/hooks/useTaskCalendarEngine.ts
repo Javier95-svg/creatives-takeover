@@ -289,7 +289,7 @@ export function useTaskCalendarEngine() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, [fetchTasks, user]);
 

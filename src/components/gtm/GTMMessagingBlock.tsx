@@ -11,7 +11,7 @@ interface GTMMessagingBlockProps {
 
 const CopyButton: React.FC<{ text: string }> = ({ text }) => {
   const copy = () => {
-    navigator.clipboard.writeText(text).then(() => toast.success('Copied to clipboard.'));
+    void navigator.clipboard.writeText(text).then(() => toast.success('Copied to clipboard.'));
   };
   return (
     <button

@@ -338,7 +338,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           initAmplitudeWithUser(currentSession.user.id);
           // Use setTimeout(0) to avoid blocking the auth state update
           setTimeout(() => {
-            handleSignIn(currentSession.user, currentSession);
+            void handleSignIn(currentSession.user, currentSession);
           }, 0);
         }
 
@@ -366,7 +366,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // (signInProcessedRef prevents double-execution with onAuthStateChange)
         if (existingSession?.user) {
           initAmplitudeWithUser(existingSession.user.id);
-          handleSignIn(existingSession.user, existingSession);
+          void handleSignIn(existingSession.user, existingSession);
         }
       })
       .catch((error) => {

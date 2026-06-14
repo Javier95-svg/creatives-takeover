@@ -113,7 +113,7 @@ const TechStack: React.FC = () => {
       setReportsLoading(false);
     };
 
-    fetchReports();
+    void fetchReports();
   }, [user?.id, toast]);
 
   const handleProductSelect = (categoryId: string, productId: string) => {

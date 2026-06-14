@@ -87,7 +87,7 @@ export const useCofounderPersonality = () => {
   };
 
   useEffect(() => {
-    loadPreferences();
+    void loadPreferences();
   }, []);
 
   return {

@@ -70,7 +70,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     isInitialLoadRef.current = true;
 
     if (user) {
-      loadUserContextFromDatabase();
+      void loadUserContextFromDatabase();
     } else {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
@@ -98,7 +98,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       clearTimeout(saveTimerRef.current);
     }
     saveTimerRef.current = setTimeout(() => {
-      saveUserContextToDatabase();
+      void saveUserContextToDatabase();
     }, SAVE_DEBOUNCE_MS);
 
     return () => {

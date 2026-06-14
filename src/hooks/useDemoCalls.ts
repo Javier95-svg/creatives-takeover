@@ -272,7 +272,7 @@ export function useDemoCalls() {
   };
 
   useEffect(() => {
-    fetchCalls();
+    void fetchCalls();
   }, [user]);
 
   return {

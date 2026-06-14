@@ -44,7 +44,7 @@ export const useDashboardInitialization = () => {
       }
     };
 
-    checkAndInitialize();
+    void checkAndInitialize();
   }, [user]);
 
   return { isInitializing, isInitialized };

@@ -74,7 +74,7 @@ export const TaskCalendar = () => {
   useEffect(() => {
     // Only fetch if we haven't loaded before or if user changed
     if (user && !hasLoadedRef.current) {
-      fetchData();
+      void fetchData();
       hasLoadedRef.current = true;
     }
   }, [user, fetchData]);
@@ -90,7 +90,7 @@ export const TaskCalendar = () => {
         .eq('id', taskId);
 
       if (error) throw error;
-      fetchData();
+      void fetchData();
     } catch (error) {
       console.error('Error toggling task:', error);
     }

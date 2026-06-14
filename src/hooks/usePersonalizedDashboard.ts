@@ -119,7 +119,7 @@ export const usePersonalizedDashboard = () => {
       
       // Prevent multiple simultaneous loads
       if (!isLoadingRef.current) {
-        loadDashboardData();
+        void loadDashboardData();
       }
     } else {
       setLoading(false);
@@ -137,7 +137,7 @@ export const usePersonalizedDashboard = () => {
         
         // Only refresh if cache is older than 5 minutes
         if (cacheAge > CACHE_DURATION && !isLoadingRef.current) {
-          loadDashboardData();
+          void loadDashboardData();
         }
       }
     };

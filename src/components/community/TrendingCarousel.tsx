@@ -74,7 +74,7 @@ const TrendingCarousel = () => {
       }
     };
 
-    fetchTrendingPosts();
+    void fetchTrendingPosts();
   }, []);
 
   // Auto-scroll effect

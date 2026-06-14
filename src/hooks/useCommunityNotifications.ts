@@ -232,7 +232,7 @@ export const useCommunityNotifications = (userId: string | undefined) => {
   };
 
   useEffect(() => {
-    fetchNotifications();
+    void fetchNotifications();
 
     if (!userId) return;
 
@@ -245,7 +245,7 @@ export const useCommunityNotifications = (userId: string | undefined) => {
         table: 'community_notifications',
         filter: `user_id=eq.${userId}`
       }, (payload) => {
-        fetchNotifications();
+        void fetchNotifications();
         const nextNotification = payload.new as NotificationRow;
         if (shouldShowRealtimeToast(nextNotification)) {
           toast.info(getRealtimeToastMessage(nextNotification));
@@ -254,7 +254,7 @@ export const useCommunityNotifications = (userId: string | undefined) => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, [fetchNotifications, userId]);
 

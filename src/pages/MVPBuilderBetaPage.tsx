@@ -152,7 +152,7 @@ export default function MVPBuilderBetaPage() {
       setIsLoadingArtifact(false);
     };
 
-    loadLatestArtifact();
+    void loadLatestArtifact();
   }, [user]);
 
   const saveArtifact = async (status: 'draft' | 'saved') => {

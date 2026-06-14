@@ -113,7 +113,7 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
     }
     
     debounceTimer.current = window.setTimeout(() => {
-      searchLocations(query);
+      void searchLocations(query);
     }, 300);
   }, [searchLocations]);
 

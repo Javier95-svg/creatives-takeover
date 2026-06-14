@@ -60,7 +60,7 @@ Our realistic revenue target within ${timeframe} years given competition and mar
 
 Key Insight: We're targeting ${formatCurrency(som)} in revenue over ${timeframe} years, which represents ${((som / tam) * 100).toFixed(2)}% of the total ${formatCurrency(tam)} market opportunity.`;
 
-    navigator.clipboard.writeText(text);
+    void navigator.clipboard.writeText(text);
     toast.success('Market analysis copied to clipboard!');
   };
 

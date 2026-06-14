@@ -67,7 +67,7 @@ const MentorProfilePage = () => {
       }
     };
 
-    loadData();
+    void loadData();
 
     return () => {
       cancelled = true;

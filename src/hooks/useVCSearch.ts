@@ -87,7 +87,7 @@ export const useVCSearch = (filters?: VCFilters, page = 1, pageSize = 15) => {
       }
     };
 
-    fetchVCs();
+    void fetchVCs();
   }, [
     filters?.investment_stage,
     filters?.industry,

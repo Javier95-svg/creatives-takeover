@@ -110,7 +110,7 @@ export const useDailyChallenges = (userId?: string) => {
   };
 
   useEffect(() => {
-    fetchTodaysChallenge();
+    void fetchTodaysChallenge();
 
     // Subscribe to challenge updates
     const channel = supabase
@@ -123,13 +123,13 @@ export const useDailyChallenges = (userId?: string) => {
           table: 'daily_challenges'
         },
         () => {
-          fetchTodaysChallenge();
+          void fetchTodaysChallenge();
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, [userId]);
 

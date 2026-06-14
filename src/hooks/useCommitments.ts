@@ -259,8 +259,8 @@ export const useCommitments = (sprintId?: string) => {
 
   useEffect(() => {
     if (user) {
-      fetchCommitments();
-      fetchUserActiveCommitments();
+      void fetchCommitments();
+      void fetchUserActiveCommitments();
     }
   }, [user, sprintId, fetchCommitments, fetchUserActiveCommitments]);
 
@@ -278,14 +278,14 @@ export const useCommitments = (sprintId?: string) => {
           table: 'sprint_commitments'
         },
         () => {
-          fetchCommitments();
-          fetchUserActiveCommitments();
+          void fetchCommitments();
+          void fetchUserActiveCommitments();
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, [user, sprintId, fetchCommitments, fetchUserActiveCommitments]);
 

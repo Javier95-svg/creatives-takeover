@@ -184,7 +184,7 @@ const Navigation = () => {
       setProfileUsername(typeof data?.username === 'string' ? data.username : '');
     };
 
-    fetchProfileSummary();
+    void fetchProfileSummary();
   }, [user]);
 
   const myProfileHref = profileUsername ? `/profile/${profileUsername}` : '/account';
@@ -1011,7 +1011,7 @@ const Navigation = () => {
                         className="w-full justify-start min-h-[48px] touch-manipulation text-base text-destructive hover:text-destructive hover:bg-destructive/10"
                         onClick={() => {
                           setIsOpen(false);
-                          handleSignOut();
+                          void handleSignOut();
                         }}
                       >
                         <LogOut className="w-5 h-5 mr-3" />

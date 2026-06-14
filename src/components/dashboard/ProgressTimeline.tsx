@@ -24,7 +24,7 @@ export const ProgressTimeline = () => {
 
   useEffect(() => {
     if (user) {
-      fetchRecentCheckIns();
+      void fetchRecentCheckIns();
     }
   }, [user]);
 

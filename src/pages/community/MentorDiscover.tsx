@@ -33,7 +33,7 @@ const MentorDiscover = () => {
   });
 
   useEffect(() => {
-    loadMentors();
+    void loadMentors();
     
     // Initialize filters from URL query params
     const expertiseParam = searchParams.get("expertise");

@@ -37,10 +37,10 @@ const AdminAcceleratorManagement = () => {
       }
 
       setIsAdmin(true);
-      fetchAccelerators();
+      void fetchAccelerators();
     };
 
-    checkAdmin();
+    void checkAdmin();
   }, [navigate]);
 
   const fetchAccelerators = async () => {
@@ -114,7 +114,7 @@ const AdminAcceleratorManagement = () => {
       }
 
       setSelected({ ...selected, logo_url: publicUrl });
-      fetchAccelerators();
+      void fetchAccelerators();
 
       toast.success("Logo uploaded and saved!", { id: "upload-logo" });
     } catch (error: any) {

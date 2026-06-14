@@ -25,7 +25,7 @@ const StoriesRSS = () => {
       }
     };
 
-    generateFeed();
+    void generateFeed();
   }, [fetchStories]);
 
   // Return XML content with proper meta tags

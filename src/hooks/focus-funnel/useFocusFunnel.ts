@@ -573,9 +573,9 @@ export function useFocusFunnel(): UseFocusFunnelReturn {
 
   useEffect(() => {
     if (user) {
-      fetchGoals();
-      fetchProjects();
-      fetchTasks();
+      void fetchGoals();
+      void fetchProjects();
+      void fetchTasks();
     } else {
       setGoals([]);
       setProjects([]);

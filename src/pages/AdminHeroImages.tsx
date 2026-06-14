@@ -48,11 +48,11 @@ const AdminHeroImages = () => {
       setChecking(false);
 
       if (adminCheck) {
-        loadHeroImages();
+        void loadHeroImages();
       }
     };
 
-    checkAdminStatus();
+    void checkAdminStatus();
   }, [user, authLoading, navigate]);
 
   const loadHeroImages = async () => {
@@ -421,7 +421,7 @@ const AdminHeroImages = () => {
                               className="absolute top-2 right-2 z-10"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleRemoveImage(position);
+                                void handleRemoveImage(position);
                               }}
                               disabled={isUploading}
                             >
@@ -478,7 +478,7 @@ const AdminHeroImages = () => {
                               const file = e.target.files?.[0];
                               if (file) {
                                 console.log('📄 File selected:', file.name, file.type, file.size);
-                                handleImageUpload(position, file, e);
+                                void handleImageUpload(position, file, e);
                               } else {
                                 console.warn('⚠️ No file selected');
                               }

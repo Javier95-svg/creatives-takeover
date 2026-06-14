@@ -116,7 +116,7 @@ export const useBookmarks = () => {
 
   useEffect(() => {
     if (user) {
-      fetchBookmarks();
+      void fetchBookmarks();
     } else {
       setBookmarks([]);
     }

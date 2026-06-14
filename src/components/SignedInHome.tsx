@@ -61,7 +61,7 @@ const SignedInHome = () => {
         .single();
       if (data) setProfile(data);
     };
-    fetchProfile();
+    void fetchProfile();
   }, [user]);
 
   const firstName =

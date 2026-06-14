@@ -195,7 +195,7 @@ const Account = () => {
       }
     };
 
-    fetchProfile();
+    void fetchProfile();
   }, [user]);
 
   // Real-time listener for profile updates
@@ -223,7 +223,7 @@ const Account = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, [user]);
 

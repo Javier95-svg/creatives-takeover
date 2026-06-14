@@ -124,7 +124,7 @@ export const useCollaboration = (resourceType: string, resourceId: string) => {
           filter: `session_id=eq.${sessionId}`,
         },
         () => {
-          fetchActiveUsers(sessionId);
+          void fetchActiveUsers(sessionId);
         }
       )
       .subscribe();
@@ -141,14 +141,14 @@ export const useCollaboration = (resourceType: string, resourceId: string) => {
           filter: `session_id=eq.${sessionId}`,
         },
         () => {
-          fetchComments(sessionId);
+          void fetchComments(sessionId);
         }
       )
       .subscribe();
 
     // Clean up old channels before setting new ones
     realtimeChannelsRef.current.forEach(channel => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     });
     realtimeChannelsRef.current = [presenceChannel, commentsChannel];
   }, []);
@@ -255,7 +255,7 @@ export const useCollaboration = (resourceType: string, resourceId: string) => {
 
     // Clean up realtime subscriptions
     realtimeChannelsRef.current.forEach(channel => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     });
     realtimeChannelsRef.current = [];
 
@@ -267,19 +267,19 @@ export const useCollaboration = (resourceType: string, resourceId: string) => {
   // Initialize collaboration when component mounts
   useEffect(() => {
     if (user && resourceType && resourceId) {
-      startCollaboration();
+      void startCollaboration();
     }
 
     return () => {
-      leaveCollaboration();
+      void leaveCollaboration();
     };
   }, [user, resourceType, resourceId, startCollaboration, leaveCollaboration]);
 
   // Fetch initial data when session is established
   useEffect(() => {
     if (session) {
-      fetchActiveUsers(session.id);
-      fetchComments(session.id);
+      void fetchActiveUsers(session.id);
+      void fetchComments(session.id);
     }
   }, [session, fetchActiveUsers, fetchComments]);
 

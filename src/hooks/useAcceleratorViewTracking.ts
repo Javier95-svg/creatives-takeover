@@ -26,7 +26,7 @@ export const useAcceleratorViewTracking = () => {
   const upgradeTarget = quotaStatus.upgradeTarget;
 
   useEffect(() => {
-    fetchMonthlyViewCount();
+    void fetchMonthlyViewCount();
   }, []);
 
   const fetchMonthlyViewCount = async () => {

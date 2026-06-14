@@ -88,7 +88,7 @@ export const useMarketValidation = () => {
     },
     onSuccess: (data) => {
       void queryClient.invalidateQueries({ queryKey: ['market-validation'] });
-      refreshBalance();
+      void refreshBalance();
       showCreditReceipt(
         'MARKET_VALIDATION',
         typeof data?.creditsUsed === 'number' ? data.creditsUsed : CREDIT_COSTS.MARKET_VALIDATION,

@@ -14,7 +14,7 @@ export const BusinessHealthSummary = () => {
 
   useEffect(() => {
     if (user) {
-      fetchHealthScore();
+      void fetchHealthScore();
     }
   }, [user]);
 

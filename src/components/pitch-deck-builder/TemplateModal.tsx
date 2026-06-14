@@ -21,7 +21,7 @@ export const TemplateModal: React.FC<TemplateModalProps> = ({ templateId, onClos
     const structure = template.slides
       .map(slide => `Slide ${slide.slideNumber}: ${slide.title}\n${slide.purpose}\n${slide.contentGuidelines.join('\n')}`)
       .join('\n\n');
-    navigator.clipboard.writeText(structure);
+    void navigator.clipboard.writeText(structure);
     toast.success('Template structure copied to clipboard!');
   };
 

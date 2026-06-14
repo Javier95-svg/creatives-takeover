@@ -133,7 +133,7 @@ const ValuePropositionCards = () => {
       }
     };
 
-    fetchCardImages();
+    void fetchCardImages();
   }, []);
 
   const handleImageUpload = async (
@@ -441,7 +441,7 @@ const ValuePropositionCards = () => {
                                   onChange={(e) => {
                                     const file = e.target.files?.[0];
                                     if (file) {
-                                      handleImageUpload(card.position, file, e);
+                                      void handleImageUpload(card.position, file, e);
                                     }
                                   }}
                                   disabled={isUploadingPosition}

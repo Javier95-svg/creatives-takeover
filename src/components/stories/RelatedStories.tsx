@@ -22,7 +22,7 @@ export const RelatedStories = ({ currentStory, limit = 4 }: RelatedStoriesProps)
       }
     };
 
-    loadStories();
+    void loadStories();
   }, [fetchStories]);
 
   // Pick related stories by shared hashtags, then backfill with the most recent

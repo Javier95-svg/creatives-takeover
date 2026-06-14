@@ -38,7 +38,7 @@ export const usePageAnalytics = (pagePath?: string, pageTitle?: string) => {
   useEffect(() => {
     if (!pageViewTracked.current) {
       pageViewTracked.current = true;
-      trackEvent({ event_type: 'page_view' });
+      void trackEvent({ event_type: 'page_view' });
     }
   }, [trackEvent]);
 
@@ -53,7 +53,7 @@ export const usePageAnalytics = (pagePath?: string, pageTitle?: string) => {
       [25, 50, 75, 100].forEach(depth => {
         if (scrollPercent >= depth && !scrollDepths.current.has(depth)) {
           scrollDepths.current.add(depth);
-          trackEvent({
+          void trackEvent({
             event_type: 'scroll',
             event_data: { scroll_depth: depth }
           });
@@ -70,7 +70,7 @@ export const usePageAnalytics = (pagePath?: string, pageTitle?: string) => {
     const handleMouseLeave = (e: MouseEvent) => {
       if (e.clientY <= 0 && !exitIntentTracked.current) {
         exitIntentTracked.current = true;
-        trackEvent({ event_type: 'exit_intent' });
+        void trackEvent({ event_type: 'exit_intent' });
       }
     };
 
@@ -81,7 +81,7 @@ export const usePageAnalytics = (pagePath?: string, pageTitle?: string) => {
   // Track time on page before leaving
   useEffect(() => {
     const handleBeforeUnload = () => {
-      trackEvent({ event_type: 'time_on_page' });
+      void trackEvent({ event_type: 'time_on_page' });
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -90,7 +90,7 @@ export const usePageAnalytics = (pagePath?: string, pageTitle?: string) => {
 
   // Track CTA clicks
   const trackClick = useCallback((ctaName: string, ctaLocation: string, additionalData?: Record<string, unknown>) => {
-    trackEvent({
+    void trackEvent({
       event_type: 'click',
       event_data: {
         cta_name: ctaName,

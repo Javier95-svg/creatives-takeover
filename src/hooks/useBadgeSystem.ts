@@ -66,7 +66,7 @@ export const useBadgeSystem = (userId?: string) => {
   };
 
   useEffect(() => {
-    fetchBadgeDefinitions();
+    void fetchBadgeDefinitions();
   }, []);
 
   return {

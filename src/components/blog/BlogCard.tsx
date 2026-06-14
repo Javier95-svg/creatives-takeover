@@ -21,7 +21,7 @@ const BlogCard = ({ post, className = "" }: BlogCardProps) => {
   const [engagement] = useState(Math.floor(Math.random() * 50) + 10); // Mock engagement
 
   const handleCardClick = () => {
-    trackReadingEvent({
+    void trackReadingEvent({
       articleId: post.id,
       articleTitle: post.title,
       action: 'click',
@@ -36,7 +36,7 @@ const BlogCard = ({ post, className = "" }: BlogCardProps) => {
   const handleBookmark = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    toggleBookmark(post.id);
+    void toggleBookmark(post.id);
   };
 
   return (

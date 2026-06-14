@@ -89,7 +89,7 @@ export const useSocial = (targetUserId?: string) => {
       }
     };
 
-    checkRelationship();
+    void checkRelationship();
   }, [user, targetUserId]);
 
   // Load pending friend requests
@@ -129,7 +129,7 @@ export const useSocial = (targetUserId?: string) => {
       }
     };
 
-    loadFriendRequests();
+    void loadFriendRequests();
   }, [user]);
 
   // Load pending follow requests
@@ -169,7 +169,7 @@ export const useSocial = (targetUserId?: string) => {
       }
     };
 
-    loadFollowRequests();
+    void loadFollowRequests();
   }, [user]);
 
   const followUser = async () => {

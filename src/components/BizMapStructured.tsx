@@ -71,9 +71,9 @@ export const BizMapStructured = ({ sessionId: initialSessionId, onComplete }: Bi
   // Initialize session
   useEffect(() => {
     if (!sessionId) {
-      initializeSession();
+      void initializeSession();
     } else {
-      loadSessionStatus();
+      void loadSessionStatus();
     }
   }, [sessionId]);
 

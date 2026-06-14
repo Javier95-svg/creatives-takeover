@@ -53,7 +53,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    handleFileSelect(e.dataTransfer.files);
+    void handleFileSelect(e.dataTransfer.files);
   };
 
   const formatFileSize = (bytes: number): string => {

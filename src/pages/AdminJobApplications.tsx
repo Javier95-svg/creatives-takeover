@@ -43,12 +43,12 @@ export default function AdminJobApplications() {
   const [selectedApp, setSelectedApp] = useState<JobApplication | null>(null);
 
   useEffect(() => {
-    checkAdminAccess();
+    void checkAdminAccess();
   }, [user]);
 
   useEffect(() => {
     if (isAdmin) {
-      fetchApplications();
+      void fetchApplications();
     }
   }, [isAdmin]);
 
@@ -176,7 +176,7 @@ export default function AdminJobApplications() {
         title: "Success",
         description: "Application status updated.",
       });
-      fetchApplications();
+      void fetchApplications();
     }
   };
 

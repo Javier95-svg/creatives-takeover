@@ -82,7 +82,7 @@ const BlogGrid = () => {
     if (deletingArticleId) {
       await deleteArticle(deletingArticleId);
       setDeletingArticleId(null);
-      refetch();
+      void refetch();
     }
   };
 

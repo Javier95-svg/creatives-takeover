@@ -115,7 +115,7 @@ const FindYourAngel = () => {
 
 
   useEffect(() => {
-    loadAngels();
+    void loadAngels();
   }, []);
 
   const loadAngels = async () => {

@@ -307,7 +307,7 @@ export const useEnhancedCollaboration = (sessionId: string) => {
           filter: `session_id=eq.${sessionId}`,
         },
         () => {
-          fetchMessages();
+          void fetchMessages();
         }
       )
       .subscribe();
@@ -325,7 +325,7 @@ export const useEnhancedCollaboration = (sessionId: string) => {
           table: 'user_status',
         },
         () => {
-          fetchUserStatuses();
+          void fetchUserStatuses();
         }
       )
       .subscribe();
@@ -345,7 +345,7 @@ export const useEnhancedCollaboration = (sessionId: string) => {
             filter: `user_id=eq.${user.id}`,
           },
           () => {
-            fetchNotifications();
+            void fetchNotifications();
           }
         )
         .subscribe();
@@ -365,7 +365,7 @@ export const useEnhancedCollaboration = (sessionId: string) => {
           filter: `session_id=eq.${sessionId}`,
         },
         () => {
-          fetchActivities();
+          void fetchActivities();
         }
       )
       .subscribe();
@@ -384,7 +384,7 @@ export const useEnhancedCollaboration = (sessionId: string) => {
           filter: `session_id=eq.${sessionId}`,
         },
         () => {
-          fetchActiveCall();
+          void fetchActiveCall();
         }
       )
       .subscribe();
@@ -393,7 +393,7 @@ export const useEnhancedCollaboration = (sessionId: string) => {
 
     // Clean up old channels before setting new ones
     realtimeChannelsRef.current.forEach(channel => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     });
     realtimeChannelsRef.current = channels;
   }, [sessionId, user, fetchMessages, fetchUserStatuses, fetchNotifications, fetchActivities, fetchActiveCall]);
@@ -426,17 +426,17 @@ export const useEnhancedCollaboration = (sessionId: string) => {
       }
     };
 
-    initializeData();
+    void initializeData();
     setupRealtimeSubscriptions();
 
     // Update user status to online
-    updateUserStatus('online');
+    void updateUserStatus('online');
 
     return () => {
       abortController.abort();
       // Clean up channels from ref
       realtimeChannelsRef.current.forEach(channel => {
-        supabase.removeChannel(channel);
+        void supabase.removeChannel(channel);
       });
       realtimeChannelsRef.current = [];
     };
@@ -445,7 +445,7 @@ export const useEnhancedCollaboration = (sessionId: string) => {
   // Update activity on user interaction
   useEffect(() => {
     const updateActivity = () => {
-      updateUserStatus('online');
+      void updateUserStatus('online');
     };
 
     window.addEventListener('mousemove', updateActivity);

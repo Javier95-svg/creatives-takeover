@@ -263,7 +263,7 @@ const AdminAngelEditor = () => {
     }
 
     if (id && id !== "new") {
-      loadAngel(id);
+      void loadAngel(id);
     }
   }, [adminLoading, authLoading, id, isAdmin, loadAngel, navigate]);
 

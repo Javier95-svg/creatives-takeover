@@ -119,7 +119,7 @@ export const MVPBuilderDomainPanel: React.FC<MVPBuilderDomainPanelProps> = ({
   const handleSave = () => {
     const value = inputDomain.trim();
     if (!value) return;
-    saveDomain(value);
+    void saveDomain(value);
     setInputDomain('');
   };
 

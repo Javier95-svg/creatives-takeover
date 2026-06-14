@@ -143,7 +143,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
       }
     };
 
-    loadUserStatus();
+    void loadUserStatus();
   }, [isAuthenticated, user, post.id]);
 
   // Load comments
@@ -459,7 +459,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
       
       setNewComment("");
       setLocalComments(prev => prev + 1);
-      loadComments();
+      void loadComments();
       toast.success('Comment added!');
       
       // Auto-complete daily challenge if applicable
@@ -735,7 +735,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                   const newShowComments = !showComments;
                   setShowComments(newShowComments);
                   if (newShowComments) {
-                    loadComments();
+                    void loadComments();
                   }
                 }}
                 className="flex items-center justify-center gap-2 h-11 w-11 sm:h-10 sm:w-auto sm:px-4 rounded-lg min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 text-muted-foreground hover:text-primary hover:bg-primary/10"
@@ -821,7 +821,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                             e.preventDefault();
                             e.stopPropagation();
                             console.log('Comment button clicked');
-                            handleAddComment();
+                            void handleAddComment();
                           }}
                           disabled={!newComment.trim()}
                           className="h-8"

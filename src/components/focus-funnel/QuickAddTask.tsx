@@ -32,7 +32,7 @@ export function QuickAddTask({ onAdd, onCancel }: QuickAddTaskProps) {
         onKeyDown={(event) => {
           if (event.key === 'Enter') {
             event.preventDefault();
-            handleSubmit();
+            void handleSubmit();
           }
         }}
       />

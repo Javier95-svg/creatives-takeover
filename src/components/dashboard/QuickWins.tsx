@@ -48,7 +48,7 @@ export const QuickWins = () => {
 
   useEffect(() => {
     if (user) {
-      loadQuickWins();
+      void loadQuickWins();
     }
   }, [user]);
 

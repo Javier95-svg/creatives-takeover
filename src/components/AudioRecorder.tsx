@@ -71,7 +71,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription, d
   const playRecording = useCallback(() => {
     if (audioBlob) {
       const audio = new Audio(URL.createObjectURL(audioBlob));
-      audio.play();
+      void audio.play();
     }
   }, [audioBlob]);
 

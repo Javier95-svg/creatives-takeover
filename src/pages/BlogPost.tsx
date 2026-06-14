@@ -66,7 +66,7 @@ const BlogPost = () => {
 
   const sharePost = () => {
     const url = window.location.href;
-    navigator.clipboard.writeText(url).then(() => {
+    void navigator.clipboard.writeText(url).then(() => {
       toast.success("Link copied to clipboard!");
     });
   };

@@ -33,7 +33,7 @@ export const useTopicPreferences = () => {
       }
     };
 
-    loadPreferences();
+    void loadPreferences();
   }, [user]);
 
   // Save topic preference

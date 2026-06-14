@@ -74,7 +74,7 @@ const MentorMarketplaceHub = () => {
   });
 
   useEffect(() => {
-    loadMentors();
+    void loadMentors();
   }, []);
 
   useEffect(() => {

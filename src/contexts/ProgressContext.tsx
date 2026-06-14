@@ -97,7 +97,7 @@ export const ProgressProvider = ({ children }: { children: ReactNode }) => {
     isInitialLoadRef.current = true;
 
     if (user) {
-      loadProgressFromDatabase();
+      void loadProgressFromDatabase();
     } else {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
@@ -125,7 +125,7 @@ export const ProgressProvider = ({ children }: { children: ReactNode }) => {
         clearTimeout(saveTimerRef.current);
       }
       saveTimerRef.current = setTimeout(() => {
-        saveProgressToDatabase();
+        void saveProgressToDatabase();
       }, SAVE_DEBOUNCE_MS);
     } else {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));

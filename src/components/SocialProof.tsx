@@ -50,7 +50,7 @@ export const SocialProof = ({
       setRecentSignups(recent);
     };
 
-    fetchUserCount();
+    void fetchUserCount();
     simulateRecentSignups();
 
     // Update recent signups periodically

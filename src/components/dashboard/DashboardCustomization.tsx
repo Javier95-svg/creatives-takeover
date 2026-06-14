@@ -123,7 +123,7 @@ export const DashboardCustomization = () => {
   }, [user]);
 
   useEffect(() => {
-    loadPreferences();
+    void loadPreferences();
   }, [loadPreferences]);
 
   const savePreferences = async () => {

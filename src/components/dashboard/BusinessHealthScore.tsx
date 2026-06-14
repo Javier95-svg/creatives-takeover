@@ -14,7 +14,7 @@ export const BusinessHealthScore = ({ userId }: BusinessHealthScoreProps) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadScoreData();
+    void loadScoreData();
   }, [userId]);
 
   const loadScoreData = async () => {

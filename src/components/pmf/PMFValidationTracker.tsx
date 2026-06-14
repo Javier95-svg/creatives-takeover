@@ -52,7 +52,7 @@ export default function PMFValidationTracker({ onSaved }: PMFValidationTrackerPr
       setSurveyCount(Number(row.survey_results_count || 0));
     };
 
-    loadEvidence();
+    void loadEvidence();
   }, [user]);
 
   const toggleChecklist = (value: string) => {

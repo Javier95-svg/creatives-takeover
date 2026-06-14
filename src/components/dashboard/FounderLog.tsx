@@ -23,7 +23,7 @@ export const FounderLog = () => {
 
   useEffect(() => {
     if (user) {
-      loadCurrentWeekEntry();
+      void loadCurrentWeekEntry();
     }
   }, [user]);
 

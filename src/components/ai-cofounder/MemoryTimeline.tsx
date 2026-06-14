@@ -13,9 +13,9 @@ export const MemoryTimeline = () => {
 
   useEffect(() => {
     if (filter === 'all') {
-      getRecentMemories(50);
+      void getRecentMemories(50);
     } else {
-      getMemoriesByType(filter, 50);
+      void getMemoriesByType(filter, 50);
     }
   }, [filter]);
 

@@ -66,7 +66,7 @@ export const CollaborativeWhiteboard: React.FC<CollaborativeWhiteboardProps> = (
     setFabricCanvas(canvas);
 
     return () => {
-      canvas.dispose();
+      void canvas.dispose();
     };
   }, [whiteboard.width, whiteboard.height, whiteboard.background_color]);
 

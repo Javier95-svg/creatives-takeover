@@ -164,7 +164,7 @@ export const usePitchDeckAnalyzer = () => {
 
       setAnalysis(analysisResult);
       setAnalyzing(false);
-      refreshBalance();
+      void refreshBalance();
       showCreditReceipt('PITCH_DECK_ANALYZER', requiredCredits, undefined, { featureName: 'Pitch Deck Analyzer' });
       fireJourneyUpgradePrompt('rising_pitch_deck_heavy');
 

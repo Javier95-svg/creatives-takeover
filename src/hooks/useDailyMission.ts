@@ -68,7 +68,7 @@ export const useDailyMission = () => {
   }, [user]);
 
   useEffect(() => {
-    loadMission();
+    void loadMission();
   }, [loadMission]);
 
   const markAsDone = useCallback(async () => {

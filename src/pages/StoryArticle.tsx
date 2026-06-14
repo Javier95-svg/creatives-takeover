@@ -58,7 +58,7 @@ const StoryArticle = () => {
       }
     };
 
-    loadArticle();
+    void loadArticle();
   }, [slug, fetchStoryBySlug, navigate]);
 
   // Sharing is reserved for signed-in users. Guests see the buttons but are

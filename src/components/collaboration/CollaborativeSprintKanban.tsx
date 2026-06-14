@@ -76,7 +76,7 @@ export const CollaborativeSprintKanban: React.FC<CollaborativeSprintKanbanProps>
   // Set up real-time task updates
   useEffect(() => {
     if (sprint.id) {
-      fetchSprintTasks(sprint.id);
+      void fetchSprintTasks(sprint.id);
 
       // Subscribe to task changes via Supabase realtime
       const channel = supabase
@@ -90,13 +90,13 @@ export const CollaborativeSprintKanban: React.FC<CollaborativeSprintKanbanProps>
             filter: `sprint_id=eq.${sprint.id}`,
           },
           () => {
-            fetchSprintTasks(sprint.id);
+            void fetchSprintTasks(sprint.id);
           }
         )
         .subscribe();
 
       return () => {
-        supabase.removeChannel(channel);
+        void supabase.removeChannel(channel);
       };
     }
   }, [sprint.id]);

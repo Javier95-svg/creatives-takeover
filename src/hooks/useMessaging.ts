@@ -1040,7 +1040,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
   useEffect(() => {
     if (!user || !autoLoad) return;
 
-    loadConversationsFromServer();
+    void loadConversationsFromServer();
 
     const conversationSubscription = supabase
       .channel(`user-conversations-${user.id}`)
@@ -1053,13 +1053,13 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
           filter: `participants.cs.{${user.id}}`
         },
         () => {
-          loadConversationsFromServer();
+          void loadConversationsFromServer();
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(conversationSubscription);
+      void supabase.removeChannel(conversationSubscription);
     };
   }, [user, autoLoad, loadConversationsFromServer, loadUnreadCounts]);
 
@@ -1079,11 +1079,11 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
             filter: `conversation_id=eq.${conversation.id}`
           },
           (payload) => {
-            loadUnreadCounts([conversation.id]);
+            void loadUnreadCounts([conversation.id]);
 
             // Keep sidebar ordering synchronized when conversations receive/lose messages.
             if (payload.eventType === 'INSERT' || payload.eventType === 'DELETE') {
-              loadConversationsFromServer();
+              void loadConversationsFromServer();
             }
           }
         )
@@ -1092,7 +1092,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
 
     return () => {
       scopedChannels.forEach((channel) => {
-        supabase.removeChannel(channel);
+        void supabase.removeChannel(channel);
       });
     };
   }, [user, autoLoad, scopedConversationIds, loadUnreadCounts, loadConversationsFromServer]);
@@ -1329,8 +1329,8 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
 
     return () => {
       isMounted = false;
-      supabase.removeChannel(messageSubscription);
-      supabase.removeChannel(attachmentSubscription);
+      void supabase.removeChannel(messageSubscription);
+      void supabase.removeChannel(attachmentSubscription);
     };
   }, [activeConversationId, user?.id, loadUnreadCounts, loadMessages, mapMessagesWithRelatedData]);
 

@@ -63,7 +63,7 @@ export const DailyCheckIn: React.FC<DailyCheckInProps> = ({
   // Fetch today's check-in and recent check-ins
   useEffect(() => {
     if (user && sprintId) {
-      fetchCheckIns();
+      void fetchCheckIns();
     }
   }, [user, sprintId]);
 
@@ -152,7 +152,7 @@ export const DailyCheckIn: React.FC<DailyCheckInProps> = ({
       });
 
       setIsOpen(false);
-      fetchCheckIns();
+      void fetchCheckIns();
       onCheckInComplete?.();
     } catch (error) {
       console.error('Error submitting check-in:', error);

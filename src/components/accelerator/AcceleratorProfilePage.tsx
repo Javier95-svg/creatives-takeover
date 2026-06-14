@@ -50,7 +50,7 @@ const AcceleratorProfilePage = () => {
       const { data: { user } } = await supabase.auth.getUser();
       setIsAdmin(user?.email?.toLowerCase() === "admin@creatives-takeover.com");
     };
-    checkAdmin();
+    void checkAdmin();
   }, []);
 
   useEffect(() => {
@@ -92,7 +92,7 @@ const AcceleratorProfilePage = () => {
       setLoading(false);
     };
 
-    fetchAccelerator();
+    void fetchAccelerator();
   }, [slug, trackAcceleratorView]);
 
   const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {

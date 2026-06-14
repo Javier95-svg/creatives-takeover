@@ -23,7 +23,7 @@ export const CommunityCheckInsFeed: React.FC<CommunityCheckInsFeedProps> = ({
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    fetchPublicCheckIns(limit);
+    void fetchPublicCheckIns(limit);
   }, [limit]);
 
   const handleRefresh = async () => {

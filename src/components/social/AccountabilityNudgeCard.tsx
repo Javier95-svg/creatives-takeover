@@ -51,7 +51,7 @@ export const AccountabilityNudgeCard = ({ nudge }: AccountabilityNudgeCardProps)
   };
 
   const handleAcknowledge = () => {
-    acknowledgeNudge(nudge.id);
+    void acknowledgeNudge(nudge.id);
   };
 
   return (

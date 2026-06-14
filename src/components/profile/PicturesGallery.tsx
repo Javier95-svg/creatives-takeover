@@ -31,7 +31,7 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
   const [editCaption, setEditCaption] = useState<string>('');
 
   useEffect(() => {
-    loadPhotos();
+    void loadPhotos();
   }, [userId]);
 
   const loadPhotos = async () => {
@@ -109,7 +109,7 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
       setSelectedFile(null);
       setPreviewUrl(null);
       setCaption('');
-      loadPhotos();
+      void loadPhotos();
     } catch (error: any) {
       console.error('Error uploading photo:', error);
       toast.error(error.message || 'Failed to upload photo');
@@ -130,7 +130,7 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
       toast.success('Caption updated');
       setEditingPhotoId(null);
       setEditCaption('');
-      loadPhotos();
+      void loadPhotos();
     } catch (error: any) {
       console.error('Error updating caption:', error);
       toast.error('Failed to update caption');
@@ -166,7 +166,7 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
       if (error) throw error;
 
       toast.success('Photo deleted');
-      loadPhotos();
+      void loadPhotos();
     } catch (error: any) {
       console.error('Error deleting photo:', error);
       toast.error('Failed to delete photo');
@@ -261,7 +261,7 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
                         autoFocus
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
-                            handleUpdateCaption(photo.id);
+                            void handleUpdateCaption(photo.id);
                           } else if (e.key === 'Escape') {
                             cancelEditing();
                           }

@@ -142,7 +142,7 @@ const Stories = () => {
       }
     };
 
-    loadStories();
+    void loadStories();
 
     return () => {
       isMountedRef.current = false;

@@ -219,7 +219,7 @@ const BizMapAI = () => {
     setMessage(trimmedIdea);
     // Small delay so the UI renders first
     const timer = setTimeout(() => {
-      handleSendMessage(trimmedIdea);
+      void handleSendMessage(trimmedIdea);
     }, 800);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -386,7 +386,7 @@ const BizMapAI = () => {
               action: {
                 label: 'Copy link',
                 onClick: () => {
-                  navigator.clipboard.writeText(shareUrl).then(() => {
+                  void navigator.clipboard.writeText(shareUrl).then(() => {
                     toast.success('Link copied to clipboard');
                   });
                 },
@@ -437,7 +437,7 @@ const BizMapAI = () => {
     try {
       const key = 'ct_first_chatbot_use_tracked';
       if (!localStorage.getItem(key)) {
-        trackActivity('chatbot:first_use', {});
+        void trackActivity('chatbot:first_use', {});
         localStorage.setItem(key, '1');
       }
     } catch {}
@@ -1212,19 +1212,19 @@ Subject: "Quick question about [their pain point]"
 
   const handleAudioTranscription = (text: string) => {
     setMessage(text);
-    handleSendMessage(text);
+    void handleSendMessage(text);
   };
 
   const handleQuickAction = (action: string) => {
     switch (action) {
       case 'outreach':
-        generateAsset('outreach');
+        void generateAsset('outreach');
         break;
       case 'social':
-        generateAsset('social');
+        void generateAsset('social');
         break;
       case 'landing':
-        generateAsset('landing');
+        void generateAsset('landing');
         break;
       default:
         break;
@@ -1255,7 +1255,7 @@ Subject: "Quick question about [their pain point]"
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      void handleSendMessage();
     }
   };
 
@@ -1422,7 +1422,7 @@ Subject: "Quick question about [their pain point]"
                           }
                           
                           // Still call backend for success score (existing functionality)
-                          generateLaunchReport(finalAnswers);
+                          void generateLaunchReport(finalAnswers);
                         }}
                         currentStep={currentStep}
                         answers={userAnswers}
@@ -1599,7 +1599,7 @@ Subject: "Quick question about [their pain point]"
           setTimeout(() => {
             if (currentStep === wizardSteps.length) {
               const completeAnswers = { ...userAnswers };
-              generateLaunchReport(completeAnswers, true).then(report => {
+              void generateLaunchReport(completeAnswers, true).then(report => {
                 if (report) {
                   setLaunchReport(report);
                   setMessages(prev => [...prev, {

@@ -229,7 +229,7 @@ export function useAppBuilderDomain(projectId: string) {
   }, [projectId]);
 
   useEffect(() => {
-    load();
+    void load();
   }, [load]);
 
   const saveDomain = useCallback(

@@ -122,7 +122,7 @@ const Hero = ({
         entries.forEach((entry) => {
           if (entry.isIntersecting && !hasTrackedView.current) {
             hasTrackedView.current = true;
-            trackTriggerView("hero-primary-cta", {
+            void trackTriggerView("hero-primary-cta", {
               ctaType: "primary",
               authenticated: isAuthenticated,
             });
@@ -144,25 +144,25 @@ const Hero = ({
   }, [trackTriggerView, isAuthenticated]);
 
   const handleCtaClick = () => {
-    trackEngagement("hero-primary-cta", 85);
+    void trackEngagement("hero-primary-cta", 85);
     setAttribution('hero_start_free', location.pathname);
     onCtaClick?.();
   };
 
   const handleProfileCtaClick = () => {
-    trackEngagement("hero-profile-cta", 80);
+    void trackEngagement("hero-profile-cta", 80);
   };
 
   const handleDashboardCtaClick = () => {
-    trackEngagement("hero-dashboard-cta", 90);
+    void trackEngagement("hero-dashboard-cta", 90);
   };
 
   const handleEyebrowClick = () => {
-    trackEngagement("hero-referral-banner", 55);
+    void trackEngagement("hero-referral-banner", 55);
   };
 
   const handlePreviewClick = () => {
-    trackEngagement("hero-dashboard-preview", 65);
+    void trackEngagement("hero-dashboard-preview", 65);
   };
 
   return (

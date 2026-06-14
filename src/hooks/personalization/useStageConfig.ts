@@ -264,7 +264,7 @@ export function useStageConfig(): UseStageConfigReturn {
       }
     };
 
-    fetchStage();
+    void fetchStage();
   }, [user]);
 
   /**

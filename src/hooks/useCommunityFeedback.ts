@@ -71,7 +71,7 @@ export const useCommunityFeedback = (postId?: string) => {
   };
 
   useEffect(() => {
-    fetchFeedbackSummary();
+    void fetchFeedbackSummary();
   }, [postId]);
 
   return {

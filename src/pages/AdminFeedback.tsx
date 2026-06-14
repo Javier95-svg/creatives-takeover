@@ -53,7 +53,7 @@ export default function AdminFeedback() {
       }
     }
 
-    checkAdminRole();
+    void checkAdminRole();
   }, [user, navigate]);
 
   if (isLoading || isAdmin === null) {

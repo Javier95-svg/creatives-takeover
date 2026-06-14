@@ -270,7 +270,7 @@ export const useDailyCheckIns = (sprintId?: string) => {
   // Auto-fetch check-ins when sprint changes
   useEffect(() => {
     if (sprintId) {
-      fetchCheckIns();
+      void fetchCheckIns();
     }
   }, [user, sprintId]);
 

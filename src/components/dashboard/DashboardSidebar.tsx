@@ -177,7 +177,7 @@ export const DashboardSidebar = () => {
       );
     };
 
-    loadPreferences();
+    void loadPreferences();
   }, [user]);
 
   const handleNavClick = () => {
@@ -366,7 +366,7 @@ export const DashboardSidebar = () => {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        removeTool(item.prefKey);
+                        void removeTool(item.prefKey);
                       }}
                       className="opacity-0 group-hover/tool:opacity-100 p-1 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all mr-1 group-data-[collapsible=icon]:hidden"
                       title={`Remove ${item.label}`}

@@ -64,7 +64,7 @@ export const useReadingAnalytics = () => {
 
   // Track page visit
   const trackPageVisit = (pageName: string) => {
-    trackReadingEvent({
+    void trackReadingEvent({
       articleId: `page_${pageName}`,
       articleTitle: `Page Visit: ${pageName}`,
       action: 'view',

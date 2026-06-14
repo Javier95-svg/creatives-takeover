@@ -28,7 +28,7 @@ const Careers = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchJobPositions();
+    void fetchJobPositions();
   }, []);
 
   const fetchJobPositions = async () => {

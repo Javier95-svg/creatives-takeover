@@ -21,7 +21,7 @@ export const KeyMilestones = () => {
 
   useEffect(() => {
     if (user) {
-      fetchMilestones();
+      void fetchMilestones();
     }
   }, [user]);
 

@@ -146,8 +146,8 @@ export const useReputation = (userId?: string) => {
   };
 
   useEffect(() => {
-    fetchReputation();
-    fetchRecentTransactions();
+    void fetchReputation();
+    void fetchRecentTransactions();
 
     // Subscribe to reputation updates
     const channel = supabase
@@ -161,7 +161,7 @@ export const useReputation = (userId?: string) => {
           filter: `user_id=eq.${userId}`
         },
         () => {
-          fetchReputation();
+          void fetchReputation();
         }
       )
       .on(
@@ -173,13 +173,13 @@ export const useReputation = (userId?: string) => {
           filter: `user_id=eq.${userId}`
         },
         () => {
-          fetchRecentTransactions();
+          void fetchRecentTransactions();
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, [userId]);
 
@@ -289,8 +289,8 @@ export const useLeaderboard = (limit: number = 10) => {
       }
     };
 
-    fetchLeaderboard();
-    fetchUserRank();
+    void fetchLeaderboard();
+    void fetchUserRank();
   }, [limit, user?.id]);
 
   const isInTopN = userRank !== null && userRank <= limit;

@@ -39,10 +39,10 @@ const AdminVCManagement = () => {
       }
 
       setIsAdmin(true);
-      fetchVCs();
+      void fetchVCs();
     };
 
-    checkAdmin();
+    void checkAdmin();
   }, [navigate]);
 
   const fetchVCs = async () => {
@@ -132,7 +132,7 @@ const AdminVCManagement = () => {
       setSelectedVC({ ...selectedVC, [updateField]: publicUrl });
 
       // Refresh VCs list to show updated logo badge
-      fetchVCs();
+      void fetchVCs();
 
       toast.success(`${type === 'logo' ? 'Logo' : 'Header image'} uploaded and saved successfully!`, { id: `upload-${type}` });
     } catch (error: any) {
@@ -160,7 +160,7 @@ const AdminVCManagement = () => {
       if (error) throw error;
 
       toast.success("Social media link updated!");
-      fetchVCs();
+      void fetchVCs();
     } catch (error: any) {
       toast.error("Update failed: " + error.message);
     }

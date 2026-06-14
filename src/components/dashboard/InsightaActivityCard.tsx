@@ -21,7 +21,7 @@ export function InsightaActivityCard() {
         .eq('user_id', user.id);
       if (!error && count !== null) setPitchDeckCount(count);
     };
-    fetchPitchDecks();
+    void fetchPitchDecks();
   }, [user]);
 
   const stats = [

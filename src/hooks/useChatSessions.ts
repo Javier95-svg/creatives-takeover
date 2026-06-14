@@ -249,7 +249,7 @@ export const useChatSessions = () => {
   useEffect(() => {
     // Only load if user changed or we haven't loaded before
     if (user && (!hasLoadedRef.current || lastUserIdRef.current !== user.id)) {
-      loadSessions();
+      void loadSessions();
       hasLoadedRef.current = true;
       lastUserIdRef.current = user.id;
     } else if (!user) {

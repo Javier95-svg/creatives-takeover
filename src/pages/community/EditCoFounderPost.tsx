@@ -80,7 +80,7 @@ const EditCoFounderPost = () => {
       }
     };
 
-    fetchPost();
+    void fetchPost();
   }, [postId, user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {

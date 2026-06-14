@@ -337,13 +337,13 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
       }
     };
 
-    fetchCurrentUserMentorAvatar();
+    void fetchCurrentUserMentorAvatar();
   }, [user]);
 
   // Mark messages as read when conversation is opened
   useEffect(() => {
     if (activeConversationId) {
-      markAsRead(activeConversationId);
+      void markAsRead(activeConversationId);
       // Focus input when conversation is active and ready, without scrolling
       setTimeout(() => {
         if (inputRef.current) {
@@ -396,7 +396,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, [activeConversationId, user?.id]);
 
@@ -488,7 +488,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
       }
     };
 
-    loadReactions();
+    void loadReactions();
 
     // Subscribe to reaction changes
     const channel = supabase
@@ -506,12 +506,12 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
           return;
         }
 
-        loadReactions();
+        void loadReactions();
       })
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, [activeConversationId, currentUserId, messageIdsKey]);
 
@@ -618,7 +618,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     }
 
     lastTypingBroadcastAtRef.current = now;
-    typingChannelRef.current?.send({
+    void typingChannelRef.current?.send({
       type: 'broadcast',
       event: 'typing',
       payload: { user_id: user?.id }
@@ -723,7 +723,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
       }
     };
 
-    fetchProfiles();
+    void fetchProfiles();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversations, user]);
 
@@ -777,7 +777,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 
   const handleConversationSelect = (conversationId: string) => {
     setActiveConversationId(conversationId);
-    markAsRead(conversationId);
+    void markAsRead(conversationId);
     if (isMobile) {
       setMobileSheetOpen(false);
     }
@@ -1311,7 +1311,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                         className="h-8 w-8 rounded-full text-base transition-transform hover:scale-110 active:scale-95"
                         onClick={(event) => {
                           event.stopPropagation();
-                          handleQuickReactionSelect(message.id, emoji);
+                          void handleQuickReactionSelect(message.id, emoji);
                         }}
                         aria-label={`React with ${emoji}`}
                       >

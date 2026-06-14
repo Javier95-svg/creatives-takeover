@@ -56,7 +56,7 @@ export function ShipUpdateFeed() {
   };
 
   useEffect(() => {
-    fetchUpdates();
+    void fetchUpdates();
   }, [user?.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
