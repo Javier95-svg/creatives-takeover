@@ -64,7 +64,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
 
   // Group sessions by date (Today, Yesterday, This Week, Older)
   const groupedSessions = useMemo(() => {
-    let filtered = sessions.filter(session =>
+    const filtered = sessions.filter(session =>
       session.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
 

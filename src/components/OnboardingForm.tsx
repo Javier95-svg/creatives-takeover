@@ -269,7 +269,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         });
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   // Drop a stale fundraising answer if the blocker is no longer fundraising,

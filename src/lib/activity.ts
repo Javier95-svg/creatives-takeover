@@ -8,7 +8,7 @@ export async function trackActivity(event: string, properties: Record<string, an
     );
   } catch (e) {
     // Non-blocking
-    // eslint-disable-next-line no-console
+     
     console.warn('trackActivity failed', e);
   }
 }

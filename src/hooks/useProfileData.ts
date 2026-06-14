@@ -58,7 +58,7 @@ export const useProfileData = (userId: string) => {
           const today = new Date();
           today.setHours(0, 0, 0, 0);
           
-          let currentDate = new Date(today);
+          const currentDate = new Date(today);
           const activityDates = recentActivity.map(a => {
             const d = new Date(a.created_at);
             d.setHours(0, 0, 0, 0);

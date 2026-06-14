@@ -241,7 +241,7 @@ const TemplateLibrary = () => {
     return matchesSearch && matchesCategory && matchesDifficulty;
   });
 
-  const useTemplate = (template: BusinessTemplate) => {
+  const applyTemplate = (template: BusinessTemplate) => {
     // Store template data in localStorage for Dream2Plan page
     localStorage.setItem('bizmap_template', JSON.stringify(template));
     navigate('/bizmap-ai');
@@ -417,7 +417,7 @@ const TemplateLibrary = () => {
 
                   {/* Action Button */}
                   <Button 
-                    onClick={() => useTemplate(template)}
+                    onClick={() => applyTemplate(template)}
                     className="w-full mt-4"
                     size="sm"
                   >

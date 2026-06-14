@@ -55,40 +55,7 @@ export default function MVPBuilderBetaPage() {
 
   const mvpAccess = checkFeatureAccess('mvp_builder');
 
-  // Gate access for unauthenticated or insufficient-tier users
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <Navigation />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-center space-y-4 px-6">
-            <h2 className="text-2xl font-bold">Sign in to access MVP Builder</h2>
-            <p className="text-muted-foreground">Create an account to scope and save your MVP.</p>
-            <Button asChild><Link to="/signup?source=mvp-scope&return=/mvp-scope">Get Started</Link></Button>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  if (!mvpAccess.isLoading && !mvpAccess.hasAccess) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <Navigation />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-center space-y-4 px-6">
-            <h2 className="text-2xl font-bold">MVP Builder requires Rising or higher</h2>
-            <p className="text-muted-foreground">{mvpAccess.message || 'Upgrade to access this tool.'}</p>
-            <Button onClick={() => openUpgradePrompt({ reason: 'feature', featureName: 'MVP Builder', requiredTier: 'rising' })}>
-              Upgrade Plan
-            </Button>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+  // All hooks must run unconditionally, before any early return (Rules of Hooks).
   const [artifactId, setArtifactId] = useState<string | null>(null);
   const [artifactStatus, setArtifactStatus] = useState<'draft' | 'saved' | null>(null);
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
@@ -154,6 +121,41 @@ export default function MVPBuilderBetaPage() {
 
     void loadLatestArtifact();
   }, [user]);
+
+  // Gate access for unauthenticated or insufficient-tier users
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Navigation />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center space-y-4 px-6">
+            <h2 className="text-2xl font-bold">Sign in to access MVP Builder</h2>
+            <p className="text-muted-foreground">Create an account to scope and save your MVP.</p>
+            <Button asChild><Link to="/signup?source=mvp-scope&return=/mvp-scope">Get Started</Link></Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!mvpAccess.isLoading && !mvpAccess.hasAccess) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Navigation />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center space-y-4 px-6">
+            <h2 className="text-2xl font-bold">MVP Builder requires Rising or higher</h2>
+            <p className="text-muted-foreground">{mvpAccess.message || 'Upgrade to access this tool.'}</p>
+            <Button onClick={() => openUpgradePrompt({ reason: 'feature', featureName: 'MVP Builder', requiredTier: 'rising' })}>
+              Upgrade Plan
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   const saveArtifact = async (status: 'draft' | 'saved') => {
     if (!user) {

@@ -229,7 +229,7 @@ export const useDailyCheckIns = (sprintId?: string) => {
     );
     
     let streak = 0;
-    let currentDate = new Date();
+    const currentDate = new Date();
     currentDate.setDate(currentDate.getDate() - 1); // Start from yesterday
     
     for (const checkIn of sortedCheckIns) {
