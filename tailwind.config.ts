@@ -164,6 +164,9 @@ export default {
 			boxShadow: {
 				// Modern, subtle shadows - Professional SaaS quality
 				'sm': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+				// Cohesive card elevation (two-layer: crisp contact + soft ambient)
+				'card': '0 1px 2px 0 rgb(2 6 23 / 0.04), 0 12px 28px -16px rgb(2 6 23 / 0.16)',
+				'card-hover': '0 2px 6px -1px rgb(2 6 23 / 0.06), 0 22px 44px -20px rgb(2 6 23 / 0.24)',
 				'DEFAULT': '0 2px 4px -1px rgb(0 0 0 / 0.08), 0 2px 4px -1px rgb(0 0 0 / 0.04)',
 				'md': '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06)',
 				'lg': '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05)',
