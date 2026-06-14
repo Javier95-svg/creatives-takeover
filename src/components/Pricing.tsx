@@ -86,29 +86,28 @@ const PLAN_CONFIG: Array<{
 ];
 
 const PLAN_CARD_STYLES: Record<PlanKey, { border: string; ring: string; button: string; buttonVariant: "default" | "outline" }> = {
-  // Single-accent system: cards stay neutral; only the recommended tier
-  // (starter) carries the brand primary emphasis. Tier identity is conveyed
-  // by name/price/badge, not by a per-tier color (see DESIGN_SYSTEM.md).
+  // Per-tier border colour identity (token-based, theme-aware); the recommended
+  // tier (starter) still carries the strongest emphasis via its glow + scale.
   rookie: {
-    border: "border-border",
+    border: "border-success/55",
     ring: "ring-border",
     button: "",
     buttonVariant: "outline",
   },
   starter: {
-    border: "border-2 border-primary/80",
+    border: "border-2 border-primary/70",
     ring: "ring-primary/30",
     button: "bg-primary text-primary-foreground hover:bg-primary/90",
     buttonVariant: "default",
   },
   rising: {
-    border: "border-border",
+    border: "border-warning/55",
     ring: "ring-border",
     button: "",
     buttonVariant: "outline",
   },
   pro: {
-    border: "border-border",
+    border: "border-destructive/50",
     ring: "ring-border",
     button: "",
     buttonVariant: "outline",
@@ -240,10 +239,10 @@ export default function Pricing() {
             return (
               <div
                 key={plan.key}
-                className={`group relative w-full max-w-[460px] rounded-3xl border p-7 sm:p-8 flex flex-col backdrop-blur transition-all duration-300 hover:-translate-y-1.5 ${
+                className={`group relative w-full max-w-[516px] rounded-3xl border ${cardStyle.border} p-7 sm:p-8 flex flex-col backdrop-blur transition-all duration-300 hover:-translate-y-1.5 ${
                   isPopular
-                    ? "border-primary/40 bg-card shadow-[0_28px_64px_-28px_hsl(var(--primary)/0.45)] lg:scale-[1.035] z-10"
-                    : "border-border bg-card/70 shadow-[0_1px_2px_rgb(2_6_23/0.04),0_14px_32px_-20px_rgb(2_6_23/0.20)] hover:border-primary/25"
+                    ? "bg-card shadow-[0_28px_64px_-28px_hsl(var(--primary)/0.45)] lg:scale-[1.035] z-10"
+                    : "bg-card/70 shadow-[0_1px_2px_rgb(2_6_23/0.04),0_14px_32px_-20px_rgb(2_6_23/0.20)]"
                 }`}
                 style={{ animationDelay: `${index * 0.08}s` }}
               >
