@@ -13,7 +13,7 @@ export function useAssignedStage() {
     }
 
     let cancelled = false;
-    (async () => {
+    void (async () => {
       const { data, error } = await supabase
         .from("profiles")
         .select("assigned_stage")

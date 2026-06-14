@@ -115,7 +115,7 @@ const AdminAnalytics = () => {
   const { data: referrerStats } = useReferrerStats(startDate, endDate);
 
   useEffect(() => {
-    (async () => {
+    void (async () => {
       const { data } = await safe.select(async () =>
         await supabase
           .from('activity_events')
@@ -128,7 +128,7 @@ const AdminAnalytics = () => {
   }, [dateRange]);
 
   useEffect(() => {
-    (async () => {
+    void (async () => {
       const fromIso = startDate.toISOString();
       const toIso = endDate.toISOString();
 
@@ -182,7 +182,7 @@ const AdminAnalytics = () => {
   }, [endDate, startDate]);
 
   useEffect(() => {
-    (async () => {
+    void (async () => {
       const fromIso = startDate.toISOString();
       const toIso = endDate.toISOString();
 

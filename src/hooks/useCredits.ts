@@ -162,7 +162,7 @@ export function useCredits() {
     if (grantedMonthlyCredits.has(user.id)) return;
 
     grantedMonthlyCredits.add(user.id);
-    (async () => {
+    void (async () => {
       try {
         await supabase.rpc('grant_monthly_credits');
       } catch (error) {

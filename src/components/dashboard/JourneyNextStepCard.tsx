@@ -94,7 +94,7 @@ export function JourneyNextStepCard() {
     let cancelled = false;
     setLoading(true);
 
-    (async () => {
+    void (async () => {
       const [
         hasIcp,
         hasWaitlist,

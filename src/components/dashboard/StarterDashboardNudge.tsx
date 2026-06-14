@@ -51,7 +51,7 @@ export const StarterDashboardNudge = () => {
     }
 
     let cancelled = false;
-    (async () => {
+    void (async () => {
       const { data, error } = await supabase
         .from("profiles")
         .select("onboarding_completed")

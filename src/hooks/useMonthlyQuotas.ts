@@ -68,7 +68,7 @@ export function useMonthlyQuotas() {
     }
   }, [user]);
 
-  useEffect(() => { fetchQuotas(); }, [fetchQuotas]);
+  useEffect(() => { void fetchQuotas(); }, [fetchQuotas]);
 
   return { quotas, loading, refreshQuotas: fetchQuotas, cycleStart };
 }

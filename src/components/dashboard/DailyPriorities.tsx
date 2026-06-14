@@ -210,7 +210,7 @@ export const DailyPriorities = () => {
                 maxLength={100}
                 autoFocus
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') addPriority();
+                  if (e.key === 'Enter') void addPriority();
                   if (e.key === 'Escape') {
                     setIsAdding(false);
                     setNewPriorityText('');

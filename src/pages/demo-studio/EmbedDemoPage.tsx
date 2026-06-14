@@ -14,7 +14,7 @@ export default function EmbedDemoPage() {
   useEffect(() => {
     if (!publicId) return;
     let active = true;
-    (async () => {
+    void (async () => {
       try {
         const result = await getPublicDemo(publicId);
         if (!active) return;
