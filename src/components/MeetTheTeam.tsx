@@ -4,6 +4,9 @@ import { Linkedin, Mail } from "lucide-react";
 import javierPhoto from "@/assets/team-javier-pena.webp";
 import domagojPhoto from "@/assets/team-domagoj-markota.webp";
 import danielaPhoto from "@/assets/team-daniela-hagg.webp";
+import jelenaPhoto from "@/assets/team-jelena-dabovic.webp";
+import evaggelosPhoto from "@/assets/team-evaggelos-michalopoulos.webp";
+import muriloPhoto from "@/assets/team-murilo-toledo-placeholder.svg";
 
 type TeamMember = {
   name: string;
@@ -37,6 +40,24 @@ const teamMembers: TeamMember[] = [
     bio: "Daniela is a growth-driven operations leader who helps startups scale efficiently by building the systems, processes, and execution frameworks that enable teams to move faster and grow sustainably.",
     linkedin: "https://www.linkedin.com/in/daniela-h-72752914b/",
     photo: danielaPhoto,
+  },
+  {
+    name: "Jelena Dabovic",
+    role: "Business Development Assistant",
+    bio: "Jelena supports business development by identifying growth opportunities, strengthening partner relationships, and helping founders move from conversation to execution.",
+    photo: jelenaPhoto,
+  },
+  {
+    name: "Evaggelos Michalopoulos",
+    role: "Sales Development Representative",
+    bio: "Evaggelos helps founders and partners connect with the right opportunities through thoughtful outreach, qualification, and relationship-building.",
+    photo: evaggelosPhoto,
+  },
+  {
+    name: "Murilo Toledo",
+    role: "Sales Development Representative",
+    bio: "Murilo supports sales development by opening new conversations, qualifying opportunities, and helping promising founders connect with Creatives Takeover.",
+    photo: muriloPhoto,
   },
 ];
 
