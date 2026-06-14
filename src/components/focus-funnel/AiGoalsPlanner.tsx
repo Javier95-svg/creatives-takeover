@@ -389,7 +389,7 @@ export function AiGoalsPlanner() {
 
       const lines = fullResponse
         .split('\n')
-        .map((line) => line.replace(/^\d+[\.\)]\s*/, '').trim())
+        .map((line) => line.replace(/^\d+[.)]\s*/, '').trim())
         .filter((line) => line.length > 3 && line.length < 120);
 
       setSuggestedActions(lines.slice(0, 5));

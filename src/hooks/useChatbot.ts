@@ -2197,10 +2197,11 @@ What specific aspect of your business would you like to focus on first?`;
         clearConversation();
         break;
       
-      default:
+      default: {
         // For any other action, send it as a message
         const actionText = action.replace(/_/g, ' ');
         await sendMessage(`Help me with ${actionText}`);
+      }
     }
   }, [sendMessage, navigate]);
 
@@ -2511,7 +2512,7 @@ What specific aspect of your business would you like to focus on first?`;
       setChatMode('wizard');
     }, []),
     switchToPlanningMode: useCallback(() => {
-      const newMode: 'wizard' = 'wizard';
+      const newMode = 'wizard' as const;
       // Save current mode's messages before switching
       setMessagesByMode(prev => ({
         ...prev,

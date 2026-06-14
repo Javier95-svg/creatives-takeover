@@ -440,7 +440,7 @@ const BizMapAI = () => {
         void trackActivity('chatbot:first_use', {});
         localStorage.setItem(key, '1');
       }
-    } catch {}
+    } catch { /* non-critical: activity tracking is best-effort */ }
     const savedPrompt = localStorage.getItem('bizmap_prompt');
     const savedTemplate = localStorage.getItem('bizmap_template');
     
@@ -899,54 +899,61 @@ Subject: "Quick question about [their pain point]"
     
     // Check for step-specific requirements
     switch (stepKey) {
-      case 'overview':
+      case 'overview': {
         // Need specific what they're building with clear value proposition
         const hasSpecificSolution = !tooGeneral.test(t) && /(mobile|web|saas|marketplace|tool|system|software)/i.test(t);
         const hasValueProp = /(save|reduce|increase|improve|automate|connect|enable|help)/i.test(t);
         return wordCount < 20 || !hasSpecificSolution || !hasValueProp || vague.test(t);
+      }
         
-      case 'market':
+      case 'market': {
         // Need specific demographics, psychographics, and behaviors
         const hasMarketSpecifics = /(age|years old|parents|professionals|students|small business|women|men|teens|seniors)/i.test(t);
         const hasLocation = /(urban|rural|city|country|global|local|region|state)/i.test(t);
         const hasBehavior = /(use|buy|spend|work|struggle|need|want|prefer)/i.test(t);
         return !hasMarketSpecifics || !hasBehavior || wordCount < 25 || vague.test(t);
+      }
         
-      case 'problem':
+      case 'problem': {
         // Need concrete pain points with impact and frequency
         const hasPainPoints = /(waste time|expensive|difficult|frustrating|slow|manual|hard to|takes hours|costs too much|break down|fail)/i.test(t);
         const hasImpact = /(money|time|stress|productivity|revenue|customers|growth)/i.test(t);
         const hasFrequency = /(daily|weekly|monthly|always|often|frequently|every|constantly)/i.test(t);
         return !hasPainPoints || !hasImpact || wordCount < 30 || generic.test(t);
+      }
         
-      case 'solution': 
+      case 'solution': {
         // Need clear differentiation and unique approach
         const hasDifferentiation = /(faster|cheaper|easier|better|automated|simple|instant|unique|innovative|first)/i.test(t);
         const hasFeatures = /(dashboard|algorithm|integration|api|mobile|cloud|ai|ml|automation)/i.test(t);
         const hasApproach = /(by|through|using|via|with|unlike|instead of|rather than)/i.test(t);
         return !hasDifferentiation || !hasApproach || wordCount < 25;
+      }
         
-      case 'channels':
+      case 'channels': {
         // Need specific marketing tactics with budget and timeline
         const hasTactics = /(ads|social|email|seo|content|referral|partnership|direct|influencer|linkedin|facebook|google)/i.test(t);
         const hasBudget = /(\$|budget|cost|spend|free|organic)/i.test(t);
         const hasStrategy = /(first|start|begin|launch|target|reach|acquire)/i.test(t);
         return !hasTactics || !hasStrategy || wordCount < 20;
+      }
         
-      case 'pricing':
+      case 'pricing': {
         // Need numbers, revenue model, and cost structure
         const hasNumbers = /[\d$%]/;
         const hasModel = /(subscription|monthly|yearly|one-time|freemium|commission|revenue|tier)/i.test(t);
         const hasCosts = /(cost|expense|overhead|margin|profit|break-even)/i.test(t);
         return !hasNumbers.test(t) || !hasModel || wordCount < 25;
+      }
         
-      case 'goals':
+      case 'goals': {
         // Need SMART goals with specific metrics and timelines
         const hasGoalSpecifics = /\d/.test(t) && /(users|customers|revenue|sales|downloads|signups)/i.test(t);
         const hasTimeframe = /(week|month|day|launch|by|within|next|first)/i.test(t);
         const hasActions = /(build|launch|grow|acquire|reach|achieve|complete)/i.test(t);
         const hasMeasurable = /(goal|target|milestone|metric|kpi)/i.test(t);
         return !hasGoalSpecifics || !hasTimeframe || !hasActions || wordCount < 25;
+      }
         
       default:
         return wordCount < 15;
@@ -1028,14 +1035,16 @@ Subject: "Quick question about [their pain point]"
       case 'market':
         return `Great start! I need to understand their behavior better. Could you tell me: where do these specific people spend most of their time online, and what's their typical decision-making process when they need solutions like yours?`;
         
-      case 'problem':
-        const problemContext = businessType === 'tech' ? 'inefficiency' : 
+      case 'problem': {
+        const problemContext = businessType === 'tech' ? 'inefficiency' :
                               businessType === 'service' ? 'frustration' : 'cost or time waste';
         return `I can see this is a real issue. To help you build a compelling solution, could you quantify the impact? For example: How much time, money, or ${problemContext} does this problem typically cause your target customers each week or month?`;
+      }
         
-      case 'solution':
+      case 'solution': {
         const competitorContext = prev.problem ? `given the problem of "${String(prev.problem).slice(0, 80)}..."` : 'in this space';
         return `That sounds promising! I need to understand your competitive advantage clearly. What makes your approach fundamentally different from existing solutions ${competitorContext}? What's your "unfair advantage"?`;
+      }
         
       case 'channels':
         return `Good thinking on channels! But I need specifics: How exactly will you get your first 10 customers through your top 2 channels? What's your step-by-step approach?`;

@@ -59,20 +59,24 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
         return `${userName} joined the collaboration session`;
       case 'left':
         return `${userName} left the collaboration session`;
-      case 'message':
+      case 'message': {
         const messageContent = activity.activity_data?.content;
         return `${userName} sent a message${messageContent ? `: "${messageContent.substring(0, 50)}${messageContent.length > 50 ? '...' : ''}"` : ''}`;
+      }
       case 'comment':
         return `${userName} added a comment`;
-      case 'edit':
+      case 'edit': {
         const editType = activity.activity_data?.edit_type;
         return `${userName} made ${editType ? `a ${editType} edit` : 'an edit'}`;
-      case 'call_started':
+      }
+      case 'call_started': {
         const callType = activity.activity_data?.call_type;
         return `${userName} started a ${callType || 'voice'} call`;
-      case 'call_ended':
+      }
+      case 'call_ended': {
         const duration = activity.activity_data?.duration_seconds;
         return `${userName} ended the call${duration ? ` (${formatDuration(duration)})` : ''}`;
+      }
       case 'screen_share_started':
         return `${userName} started sharing their screen`;
       case 'screen_share_ended':
@@ -223,20 +227,24 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
         return `${userName} joined the collaboration session`;
       case 'left':
         return `${userName} left the collaboration session`;
-      case 'message':
+      case 'message': {
         const messageContent = activity.activity_data?.content;
         return `${userName} sent a message${messageContent ? `: "${messageContent.substring(0, 50)}${messageContent.length > 50 ? '...' : ''}"` : ''}`;
+      }
       case 'comment':
         return `${userName} added a comment`;
-      case 'edit':
+      case 'edit': {
         const editType = activity.activity_data?.edit_type;
         return `${userName} made ${editType ? `a ${editType} edit` : 'an edit'}`;
-      case 'call_started':
+      }
+      case 'call_started': {
         const callType = activity.activity_data?.call_type;
         return `${userName} started a ${callType || 'voice'} call`;
-      case 'call_ended':
+      }
+      case 'call_ended': {
         const duration = activity.activity_data?.duration_seconds;
         return `${userName} ended the call${duration ? ` (${formatDuration(duration)})` : ''}`;
+      }
       case 'screen_share_started':
         return `${userName} started sharing their screen`;
       case 'screen_share_ended':

@@ -25,8 +25,7 @@ const BottomSheetOverlay = React.forwardRef<
 ));
 BottomSheetOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
-interface BottomSheetContentProps
-  extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {}
+type BottomSheetContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>;
 
 const BottomSheetContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
