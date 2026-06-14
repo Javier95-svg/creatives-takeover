@@ -51,12 +51,14 @@ const teamMembers: TeamMember[] = [
     name: "Evaggelos Michalopoulos",
     role: "Sales Development Representative",
     bio: "Evaggelos helps founders and partners connect with the right opportunities through thoughtful outreach, qualification, and relationship-building.",
+    linkedin: "https://www.linkedin.com/in/evaggelos-michalopoulos-b367ab373/",
     photo: evaggelosPhoto,
   },
   {
     name: "Murilo Toledo",
     role: "Sales Development Representative",
     bio: "Murilo supports sales development by opening new conversations, qualifying opportunities, and helping promising founders connect with Creatives Takeover.",
+    linkedin: "https://www.linkedin.com/in/murilo-toledoremote/",
     photo: muriloPhoto,
   },
 ];
