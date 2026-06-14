@@ -85,10 +85,12 @@ const designSystem = {
 };
 
 export default tseslint.config(
-  { ignores: ["dist"] },
+  // Only these dirs are covered by tsconfig.app.json; linting type-aware rules
+  // outside them throws "parserOptions.project" parse errors. Lint the app source.
+  { ignores: ["dist", "api/**", "bizmap-chatbot-package/**", "scripts/**", "supabase/**", "tests/**", "*.config.{ts,js}", "middleware.ts"] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
-    files: ["**/*.{ts,tsx}"],
+    files: ["src/**/*.{ts,tsx}"],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
