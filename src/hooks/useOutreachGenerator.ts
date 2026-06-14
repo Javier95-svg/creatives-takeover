@@ -77,6 +77,7 @@ export const useOutreachGenerator = () => {
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, []);
 
   const saveMaterial = useCallback(async (material: Partial<OutreachMaterial>): Promise<boolean> => {

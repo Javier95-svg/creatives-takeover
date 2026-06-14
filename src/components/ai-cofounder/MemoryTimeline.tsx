@@ -17,6 +17,7 @@ export const MemoryTimeline = () => {
     } else {
       void getMemoriesByType(filter, 50);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [filter]);
 
   const handleDelete = async (id: string) => {

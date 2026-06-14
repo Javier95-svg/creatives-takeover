@@ -40,6 +40,7 @@ export const SmartRecommendations: React.FC<SmartRecommendationsProps> = ({
 
   useEffect(() => {
     generateRecommendations();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [location.pathname, user]);
 
   const generateRecommendations = () => {

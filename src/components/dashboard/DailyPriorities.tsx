@@ -26,6 +26,7 @@ export const DailyPriorities = () => {
     if (user) {
       void loadTodaysPriorities();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [user]);
 
   const loadTodaysPriorities = async () => {

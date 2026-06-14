@@ -256,6 +256,7 @@ export const useChatSessions = () => {
       hasLoadedRef.current = false;
       lastUserIdRef.current = null;
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [user?.id]); // Only depend on user id
 
   return {

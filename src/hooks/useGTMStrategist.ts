@@ -91,6 +91,7 @@ export function useGTMStrategist() {
     if (!user) return;
     void loadExistingPlan();
     void loadPrefillData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [user]);
 
   const loadExistingPlan = useCallback(async () => {

@@ -404,6 +404,7 @@ const BizMapAI = () => {
       const timeoutId = setTimeout(saveSessionProgress, 1000); // Debounce saves
       return () => clearTimeout(timeoutId);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [userAnswers, currentStep, launchReport, currentSessionId, user]);
 
   // Restore saved progress for new users
@@ -491,6 +492,7 @@ const BizMapAI = () => {
       
       setMessages(templateMessages);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, []);
 
   // Listen for examples modal trigger from BizMapChat

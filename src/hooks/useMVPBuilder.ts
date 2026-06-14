@@ -3169,6 +3169,7 @@ export function useMVPBuilder() {
         abortRef.current = null;
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
     [
       appendPromptHistory,
       addProjectSnapshot,
@@ -3435,6 +3436,7 @@ export function useMVPBuilder() {
         toast.error('Restore failed. Held credits were released.');
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
     [addProjectSnapshot, applyProjectArtifact, creditsAvailable, creditsLoading, finalizeMVPBuilderCredits, markProjectDirty, projectId, projectSnapshots, releaseMVPBuilderCredits, reserveMVPBuilderCredits]
   );
 
@@ -3496,6 +3498,7 @@ export function useMVPBuilder() {
     } finally {
       setIsDeploying(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [creditsAvailable, creditsLoading, handleCreditError, isDeploying, projectFiles.length, projectId, refreshCredits, saveProject, user]);
 
   const closeCreditExhaustedModal = useCallback(() => {

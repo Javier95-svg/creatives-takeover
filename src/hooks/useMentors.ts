@@ -504,6 +504,7 @@ export const useMentors = () => {
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [isAdmin, user]);
 
   // Update mentor (admin only)

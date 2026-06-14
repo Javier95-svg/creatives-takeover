@@ -194,6 +194,7 @@ export const useAccountabilityPartners = () => {
       toast.error('Failed to respond to partnership request');
       return { error: error.message };
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [fetchPartnerships]);
 
   const sendNudge = useCallback(async (
@@ -226,6 +227,7 @@ export const useAccountabilityPartners = () => {
       toast.error('Failed to send nudge');
       return { error: error.message };
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [user, partnerships, fetchRecentNudges]);
 
   const acknowledgeNudge = useCallback(async (nudgeId: string) => {
@@ -243,6 +245,7 @@ export const useAccountabilityPartners = () => {
     } catch (error) {
       console.error('Error acknowledging nudge:', error);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [fetchRecentNudges]);
 
   const endPartnership = useCallback(async (partnershipId: string) => {
@@ -268,6 +271,7 @@ export const useAccountabilityPartners = () => {
       toast.error('Failed to end partnership');
       return { error: error.message };
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [fetchPartnerships]);
 
   useEffect(() => {

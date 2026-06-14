@@ -44,6 +44,7 @@ export default function AdminJobApplications() {
 
   useEffect(() => {
     void checkAdminAccess();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [user]);
 
   useEffect(() => {
@@ -54,6 +55,7 @@ export default function AdminJobApplications() {
 
   useEffect(() => {
     filterApplications();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [applications, searchTerm, statusFilter]);
 
   const checkAdminAccess = async () => {

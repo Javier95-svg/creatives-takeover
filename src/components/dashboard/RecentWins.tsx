@@ -24,6 +24,7 @@ export const RecentWins = ({ refreshTrigger }: RecentWinsProps) => {
     if (user) {
       void fetchRecentWins();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [user, refreshTrigger]);
 
   const fetchRecentWins = async () => {

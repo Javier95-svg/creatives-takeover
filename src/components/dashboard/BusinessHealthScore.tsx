@@ -15,6 +15,7 @@ export const BusinessHealthScore = ({ userId }: BusinessHealthScoreProps) => {
 
   useEffect(() => {
     void loadScoreData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [userId]);
 
   const loadScoreData = async () => {

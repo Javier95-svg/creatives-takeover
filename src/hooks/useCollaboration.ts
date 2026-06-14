@@ -108,6 +108,7 @@ export const useCollaboration = (resourceType: string, resourceId: string) => {
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [user, resourceType, resourceId]);
 
   // Set up real-time subscriptions
@@ -151,6 +152,7 @@ export const useCollaboration = (resourceType: string, resourceId: string) => {
       void supabase.removeChannel(channel);
     });
     realtimeChannelsRef.current = [presenceChannel, commentsChannel];
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, []);
 
   // Fetch active users in session

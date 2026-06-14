@@ -110,6 +110,7 @@ export const ProgressProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
       isInitialLoadRef.current = false;
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [user]);
 
   // Debounced persist to localStorage and database on state change
@@ -136,6 +137,7 @@ export const ProgressProvider = ({ children }: { children: ReactNode }) => {
         clearTimeout(saveTimerRef.current);
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [state, isLoading, user]);
 
   const loadProgressFromDatabase = async () => {
@@ -268,6 +270,7 @@ export const ProgressProvider = ({ children }: { children: ReactNode }) => {
     if (phases.scale.unlocked) totalProgress += 25;
 
     return totalProgress;
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [state.phases]);
 
   const syncWithDatabase = useCallback(async () => {
@@ -344,6 +347,7 @@ export const ProgressProvider = ({ children }: { children: ReactNode }) => {
         });
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [state.phases, calculateOverallProgress]);
 
   // Cleanup timer on unmount

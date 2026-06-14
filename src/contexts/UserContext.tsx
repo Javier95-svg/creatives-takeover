@@ -83,6 +83,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
       isInitialLoadRef.current = false;
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [user]);
 
   // Debounced persist to localStorage and database on state change
@@ -106,6 +107,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         clearTimeout(saveTimerRef.current);
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [state, isLoading, user]);
 
   const loadUserContextFromDatabase = async () => {

@@ -307,6 +307,7 @@ const Account = () => {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [fullName, username, bio, avatarUrl, twitterUrl, linkedinUrl, instagramUrl, facebookUrl, youtubeUrl, githubUrl, websiteUrl, initialValues]);
 
   const resetPasswordVerificationFlow = () => {

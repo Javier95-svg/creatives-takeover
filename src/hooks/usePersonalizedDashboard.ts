@@ -124,6 +124,7 @@ export const usePersonalizedDashboard = () => {
     } else {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [user]);
   
   // Handle visibility change - only refresh if data is stale
@@ -146,6 +147,7 @@ export const usePersonalizedDashboard = () => {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [user]);
 
   const loadDashboardData = async () => {

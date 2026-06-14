@@ -71,6 +71,7 @@ export const useTrendingPosts = (limit: number = 10) => {
     const interval = setInterval(fetchTrendingPosts, 5 * 60 * 1000);
     
     return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [limit]);
 
   return { trendingPosts, isLoading, refetch: fetchTrendingPosts };

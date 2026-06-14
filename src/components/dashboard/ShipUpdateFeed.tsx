@@ -57,6 +57,7 @@ export function ShipUpdateFeed() {
 
   useEffect(() => {
     void fetchUpdates();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [user?.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {

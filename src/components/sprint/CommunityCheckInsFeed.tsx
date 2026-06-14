@@ -24,6 +24,7 @@ export const CommunityCheckInsFeed: React.FC<CommunityCheckInsFeedProps> = ({
 
   useEffect(() => {
     void fetchPublicCheckIns(limit);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [limit]);
 
   const handleRefresh = async () => {

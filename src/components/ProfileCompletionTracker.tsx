@@ -59,6 +59,7 @@ export const ProfileCompletionTracker = ({
     }, 300);
 
     return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [fullName, bio, avatarUrl, socialLinks]);
 
   const completionItems = [

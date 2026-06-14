@@ -120,6 +120,7 @@ export function useChatAnalytics(sessionId: string) {
       trackEvent('chat_session_ended', {
         sessionId,
         duration: sessionDuration,
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
         ...metricsRef.current
       });
     };

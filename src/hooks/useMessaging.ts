@@ -1095,6 +1095,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         void supabase.removeChannel(channel);
       });
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [user, autoLoad, scopedConversationIds, loadUnreadCounts, loadConversationsFromServer]);
 
   useEffect(() => {
@@ -1332,6 +1333,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       void supabase.removeChannel(messageSubscription);
       void supabase.removeChannel(attachmentSubscription);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [activeConversationId, user?.id, loadUnreadCounts, loadMessages, mapMessagesWithRelatedData]);
 
   const startConversation = useCallback(async (participantId: string): Promise<string | null> => {

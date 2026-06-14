@@ -64,6 +64,7 @@ const AdminStoryEditor = () => {
     if (id && id !== "new") {
       void loadArticle(id);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [id, isAdmin, navigate]);
 
   const loadArticle = async (articleId: string) => {

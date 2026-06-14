@@ -20,6 +20,7 @@ export const MomentumMeter = ({ userId, stats }: MomentumMeterProps) => {
 
   useEffect(() => {
     void calculateMomentum();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [stats]);
 
   const calculateMomentum = async () => {

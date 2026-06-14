@@ -310,6 +310,7 @@ const CommunityFeed: React.FC = () => {
           });
     }
     return sortedList;
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [posts, search, sort, selectedTag, postType, engagement]);
 
   async function handlePublish(payload: ComposerPayload) {

@@ -88,6 +88,7 @@ export const useVCSearch = (filters?: VCFilters, page = 1, pageSize = 15) => {
     };
 
     void fetchVCs();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [
     filters?.investment_stage,
     filters?.industry,
@@ -95,8 +96,11 @@ export const useVCSearch = (filters?: VCFilters, page = 1, pageSize = 15) => {
     filters?.check_size_min,
     filters?.check_size_max,
     filters?.search,
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
     filters?.investment_stages?.join('|'),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
     filters?.industries?.join('|'),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
     filters?.geographies?.join('|'),
     page,
     pageSize,

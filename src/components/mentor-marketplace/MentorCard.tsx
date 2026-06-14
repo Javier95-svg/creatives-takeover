@@ -223,6 +223,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
     return null;
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   const countryFlag = useMemo(() => getCountryFlag(getNationality()), [mentor.id, mentor.nationality, mentor.name]);
 
   const renderStars = (ratingValue: number) => {

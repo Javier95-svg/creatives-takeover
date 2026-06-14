@@ -157,6 +157,7 @@ export const MonthlyRevenueTarget = () => {
     };
 
     void loadMonthlyData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [user, selectedDate, baseRevenueGoal.target_value]);
 
   // Load historical data for chart

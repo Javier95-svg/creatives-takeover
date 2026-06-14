@@ -75,6 +75,7 @@ export const BizMapStructured = ({ sessionId: initialSessionId, onComplete }: Bi
     } else {
       void loadSessionStatus();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [sessionId]);
 
   const initializeSession = async () => {

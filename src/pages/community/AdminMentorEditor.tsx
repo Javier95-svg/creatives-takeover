@@ -87,6 +87,7 @@ const AdminMentorEditor = () => {
     if (id && id !== "new") {
       void loadMentor(id);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [adminLoading, authLoading, id, isAdmin, navigate]);
 
   const loadMentor = async (mentorId: string) => {

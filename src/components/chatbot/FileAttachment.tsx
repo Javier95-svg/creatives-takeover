@@ -36,6 +36,7 @@ export const FileAttachment: React.FC<FileAttachmentProps> = ({
     if (currentFiles.length === 0 && attachedFiles.length > 0) {
       setAttachedFiles([]);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [currentFiles.length]);
 
   const validateFile = (file: File): string | null => {

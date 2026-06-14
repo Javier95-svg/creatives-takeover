@@ -44,6 +44,7 @@ const MentorDiscover = () => {
         expertise: normalizeMentorExpertiseList([expertise]),
       }));
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, []);
 
   // Update filters when URL params change

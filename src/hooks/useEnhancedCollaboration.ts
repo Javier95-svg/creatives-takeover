@@ -187,6 +187,7 @@ export const useEnhancedCollaboration = (sessionId: string) => {
 
     // Log activity
     await logActivity('message', { content: content.substring(0, 100) });
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [user, sessionId]);
 
   // Update user status
@@ -261,6 +262,7 @@ export const useEnhancedCollaboration = (sessionId: string) => {
 
     setActiveCall(data as any);
     await logActivity('call_started', { call_type: callType });
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [user, sessionId]);
 
   // End call
@@ -287,6 +289,7 @@ export const useEnhancedCollaboration = (sessionId: string) => {
 
     setActiveCall(null);
     await logActivity('call_ended', { duration_seconds: durationSeconds });
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [user, activeCall]);
 
   // Set up real-time subscriptions

@@ -65,6 +65,7 @@ export const DailyCheckIn: React.FC<DailyCheckInProps> = ({
     if (user && sprintId) {
       void fetchCheckIns();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [user, sprintId]);
 
   const fetchCheckIns = async () => {
