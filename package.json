@@ -14,7 +14,8 @@
     "test:mvp-builder": "node --experimental-strip-types --test tests/mvp-builder-project.test.ts",
     "test:waitlist": "node --experimental-strip-types --test tests/waitlist-model.test.ts",
     "typecheck": "tsc --noEmit",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "test:smoke": "playwright test"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.23.6",
@@ -98,6 +99,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/typography": "^0.5.15",
     "@types/node": "^22.5.5",
     "@types/react": "^19.1.11",
