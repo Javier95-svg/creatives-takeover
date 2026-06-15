@@ -47,14 +47,21 @@ const ForgotPassword = () => {
 
     try {
       const redirectUrl = `${window.location.origin}/reset-password`;
-      
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl,
-      });
 
-      if (resetError) {
-        setError(resetError.message || "Failed to send password reset email. Please try again.");
-        toast.error(resetError.message || "Failed to send password reset email");
+      // Use our custom sender (Resend HTTP API via the send-password-reset edge
+      // function) instead of Supabase Auth's built-in recovery email, which
+      // depends on the project's SMTP config and silently breaks if those
+      // credentials go stale.
+      const { data, error: fnError } = await supabase.functions.invoke(
+        "send-password-reset",
+        { body: { email: email.trim().toLowerCase(), redirectTo: redirectUrl } },
+      );
+
+      if (fnError || !(data as { success?: boolean } | null)?.success) {
+        const message =
+          "We couldn't send the reset email right now. Please try again in a moment.";
+        setError(message);
+        toast.error(message);
       } else {
         setIsSuccess(true);
         toast.success("Password reset email sent! Check your inbox.");
