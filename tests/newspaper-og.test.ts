@@ -81,3 +81,61 @@ test('newspaper OG handler injects article-specific social metadata', async (t) 
   assert.match(html, /<link rel="canonical" href="https:\/\/creatives-takeover\.com\/newspaper\/saas-pricing-is-dying-founders-who-see-it-coming-are-already" \/>/);
   assert.doesNotMatch(html, /<meta property="og:title" content="AI Startup Builder \| Creatives Takeover" \/>/);
 });
+
+test('routes WebP Supabase banners through the image-transform endpoint as a 1200x630 JPEG', async (t) => {
+  process.env.VITE_SUPABASE_URL = 'https://example.supabase.co';
+  process.env.VITE_SUPABASE_KEY = 'test-anon-key';
+
+  const originalFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  globalThis.fetch = async (input) => {
+    const url = input.toString();
+
+    if (url.endsWith('/index.html')) {
+      return new Response(shellHtml, {
+        status: 200,
+        headers: { 'content-type': 'text/html; charset=utf-8' },
+      });
+    }
+
+    if (url.startsWith('https://example.supabase.co/rest/v1/stories_articles')) {
+      return Response.json([
+        {
+          slug: 'webp-banner-article',
+          title: 'WebP Banner Article',
+          banner_image_url:
+            'https://rcjlaybjnozqbsoxzboa.supabase.co/storage/v1/object/public/story-banners/temp/1781299719271.webp',
+          excerpt: 'An article whose banner is an auto-generated WebP image.',
+          meta_title: null,
+          meta_description:
+            'An article whose banner is an auto-generated WebP image stored in Supabase Storage for social previews.',
+          hashtags: ['#Founders'],
+          published_at: '2026-06-12T12:00:00.000Z',
+          updated_at: '2026-06-12T12:00:00.000Z',
+          body_content: 'Body content.',
+        },
+      ]);
+    }
+
+    throw new Error(`Unexpected fetch: ${url}`);
+  };
+
+  const { default: handler } = await import('../api/newspaper-og.ts');
+  const response = await handler(
+    new Request('https://creatives-takeover.com/api/newspaper-og?slug=webp-banner-article'),
+  );
+  const html = await response.text();
+
+  // Ampersands are HTML-escaped to &amp; in the attribute (crawlers decode them back).
+  const expectedImage =
+    'https://rcjlaybjnozqbsoxzboa.supabase.co/storage/v1/render/image/public/story-banners/temp/1781299719271.webp?width=1200&amp;height=630&amp;resize=cover&amp;quality=80';
+
+  assert.equal(response.status, 200);
+  // og:image and twitter:image must point at the transform (JPEG) endpoint, never the raw .webp object.
+  assert.ok(html.includes(`<meta property="og:image" content="${expectedImage}" />`));
+  assert.ok(html.includes(`<meta name="twitter:image" content="${expectedImage}" />`));
+  assert.doesNotMatch(html, /object\/public\/story-banners\/temp\/1781299719271\.webp/);
+});

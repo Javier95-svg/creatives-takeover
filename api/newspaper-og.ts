@@ -144,6 +144,20 @@ function markdownToHtml(markdown: string): string {
   return out.join('\n');
 }
 
+// Normalize a banner into a crawler-safe social card image. Auto-generated banners
+// are arbitrary sizes and frequently WebP, which X/Twitter renders unreliably (the
+// preview comes back blank). For Supabase Storage banners, route through the image
+// transform (render) endpoint to force a 1200x630 JPEG that every crawler accepts;
+// non-Supabase URLs are returned unchanged.
+function toSocialCardImage(imageUrl: string): string {
+  const marker = '/storage/v1/object/public/';
+  const idx = imageUrl.indexOf(marker);
+  if (idx === -1) return imageUrl;
+  const base = imageUrl.slice(0, idx);
+  const path = imageUrl.slice(idx + marker.length).split('?')[0];
+  return `${base}/storage/v1/render/image/public/${path}?width=1200&height=630&resize=cover&quality=80`;
+}
+
 // Mirrors the meta-title/description logic in src/pages/StoryArticle.tsx so the
 // crawler preview matches what users see once the SPA hydrates.
 function buildMeta(article: StoryRecord) {
@@ -168,8 +182,11 @@ function buildMeta(article: StoryRecord) {
   }
 
   const banner = article.banner_image_url || '';
-  const ogImageUrl = banner
+  const absoluteBanner = banner
     ? (banner.startsWith('http') ? banner : `${SITE_ORIGIN}${banner}`)
+    : '';
+  const ogImageUrl = absoluteBanner
+    ? toSocialCardImage(absoluteBanner)
     : `${SITE_ORIGIN}/og-image.png`;
 
   return { optimizedMetaTitle, metaDescription, ogImageUrl };
