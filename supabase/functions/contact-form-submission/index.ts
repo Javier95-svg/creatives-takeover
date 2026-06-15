@@ -39,7 +39,7 @@ const handler = async (req: Request): Promise<Response> => {
       hasResendApiKey: !!resendApiKey,
       hasContactAdminEmail: !!contactAdminEmail,
       hasFromEmail: !!fromEmail,
-      adminEmail: contactAdminEmail || "javier@admin-creatives-takeover.com (fallback)",
+      adminEmail: contactAdminEmail || "admin@creatives-takeover.com, javier@creatives-takeover.com (default)",
       fromEmailValue: fromEmail || "onboarding@resend.dev (fallback)"
     });
 
@@ -211,7 +211,7 @@ const handler = async (req: Request): Promise<Response> => {
 
           <p style="color: #555; line-height: 1.6; margin-top: 20px;">
             Have an urgent question? Reply directly to this email or reach us at
-            <a href="mailto:javier@admin-creatives-takeover.com" style="color: #667eea;">javier@admin-creatives-takeover.com</a>
+            <a href="mailto:javier@creatives-takeover.com" style="color: #667eea;">javier@creatives-takeover.com</a>
           </p>
 
           <p style="color: #555; line-height: 1.6;">
@@ -230,12 +230,25 @@ const handler = async (req: Request): Promise<Response> => {
     const fromEmailValue = fromEmail || "onboarding@resend.dev";
     const fromName = Deno.env.get("FROM_NAME") || "Creatives Takeover";
 
-    // Get admin email (use validated value or fallback)
-    const adminEmail = contactAdminEmail || "javier@admin-creatives-takeover.com";
-    
-    if (!contactAdminEmail) {
-      console.warn("[CONTACT-FORM] CONTACT_ADMIN_EMAIL not set, using fallback:", adminEmail);
-    }
+    // Admin notifications must always reach both founders' inboxes. Start from the
+    // two required addresses, then merge in any extra recipients configured via
+    // CONTACT_ADMIN_EMAIL (comma-separated), de-duplicated and validated.
+    const REQUIRED_ADMIN_RECIPIENTS = [
+      "admin@creatives-takeover.com",
+      "javier@creatives-takeover.com",
+    ];
+    const configuredAdminRecipients = (contactAdminEmail || "")
+      .split(",")
+      .map((entry) => entry.trim())
+      .filter((entry) => entry.includes("@") && entry.includes("."));
+    const adminRecipients = Array.from(
+      new Set(
+        [...REQUIRED_ADMIN_RECIPIENTS, ...configuredAdminRecipients].map((entry) =>
+          entry.toLowerCase()
+        )
+      )
+    );
+    const adminEmail = adminRecipients.join(", ");
 
     // Variables to track email delivery status
     let adminEmailSent = false;
@@ -255,7 +268,7 @@ const handler = async (req: Request): Promise<Response> => {
       console.log("[CONTACT-FORM] Attempting to send admin email to:", adminEmail);
       console.log("[CONTACT-FORM] Email configuration:", {
         from: `${fromName} <${fromEmailValue}>`,
-        to: [adminEmail],
+        to: adminRecipients,
         replyTo: email,
         subject: `📬 New Contact: ${reasonLabels[reason] || reason} from ${name}`
       });
@@ -270,7 +283,7 @@ const handler = async (req: Request): Promise<Response> => {
         replyTo?: string;
       } = {
         from: `${fromName} <${fromEmailValue}>`,
-        to: [adminEmail],
+        to: adminRecipients,
         subject: `📬 New Contact: ${reasonLabels[reason] || reason} from ${name}`,
         html: adminEmailHtml,
       };
@@ -426,8 +439,8 @@ const handler = async (req: Request): Promise<Response> => {
         success: false,
         details: errorMessage || "Unknown error occurred while sending email",
         submissionId: dbData?.id || null,
-        fallbackEmail: "javier@admin-creatives-takeover.com",
-        message: "There was an issue sending your message. Please email us directly at javier@admin-creatives-takeover.com"
+        fallbackEmail: "javier@creatives-takeover.com",
+        message: "There was an issue sending your message. Please email us directly at javier@creatives-takeover.com"
       }),
       {
         status: 500,
@@ -448,8 +461,8 @@ const handler = async (req: Request): Promise<Response> => {
         error: error.message || "An unexpected error occurred",
         success: false,
         details: "Please check the function logs for more information",
-        fallbackEmail: "javier@admin-creatives-takeover.com",
-        message: "There was an issue sending your message. Please email us directly at javier@admin-creatives-takeover.com"
+        fallbackEmail: "javier@creatives-takeover.com",
+        message: "There was an issue sending your message. Please email us directly at javier@creatives-takeover.com"
       }),
       {
         status: 500,
