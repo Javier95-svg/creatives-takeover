@@ -81,7 +81,7 @@ const Hero = ({
   titleLine1 = "The founders'",
   titleLine2 = "compass",
   lede = DEFAULT_LEDE,
-  ctaLabel = "Get Your ICP Draft for Free",
+  ctaLabel = "Meet Your Ideal Customer",
   ctaHref = "/icp-builder",
   onCtaClick,
   dashboardUrl = "creatives-takeover.com/dashboard",
