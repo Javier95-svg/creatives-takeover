@@ -108,16 +108,86 @@ export default function PitchDeckAnalyzerPage() {
       <Navigation />
 
       <main className="relative overflow-hidden">
-        {/* Shared Background styling */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Artistic background — an "investor canvas": soft color mesh, a faint
+            blueprint grid, drifting aurora glows, and floating pitch-deck slides. */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+          {/* Base wash */}
           <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
+
+          {/* Soft color field (mesh) */}
           <div
-            className="absolute -top-40 -right-48 w-[55rem] h-[55rem] rounded-full opacity-70 blur-3xl animate-[spin_28s_linear_infinite]"
+            className="absolute inset-0"
             style={{
               background:
-                'radial-gradient(circle at 30% 30%, rgba(56, 189, 248, 0.3), transparent 60%), radial-gradient(circle at 70% 70%, rgba(192, 132, 252, 0.35), transparent 55%)',
-              animationDuration: '28s'
+                'radial-gradient(60% 50% at 15% 8%, rgba(56,189,248,0.18), transparent 60%), radial-gradient(55% 45% at 88% 4%, rgba(192,132,252,0.20), transparent 60%), radial-gradient(60% 55% at 50% 108%, rgba(16,185,129,0.12), transparent 60%)',
             }}
+          />
+
+          {/* Blueprint grid, fading toward the edges */}
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                'linear-gradient(to right, hsl(var(--foreground) / 0.05) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--foreground) / 0.05) 1px, transparent 1px)',
+              backgroundSize: '56px 56px',
+              maskImage: 'radial-gradient(ellipse 78% 62% at 50% 6%, black 32%, transparent 80%)',
+              WebkitMaskImage: 'radial-gradient(ellipse 78% 62% at 50% 6%, black 32%, transparent 80%)',
+            }}
+          />
+
+          {/* Aurora glows */}
+          <div
+            className="absolute rounded-full blur-3xl animate-[spin_34s_linear_infinite] motion-reduce:animate-none"
+            style={{
+              top: '-13rem',
+              right: '-9rem',
+              width: '44rem',
+              height: '44rem',
+              background:
+                'radial-gradient(circle at 30% 30%, rgba(56,189,248,0.30), transparent 60%), radial-gradient(circle at 70% 70%, rgba(192,132,252,0.32), transparent 55%)',
+            }}
+          />
+          <div
+            className="absolute rounded-full blur-3xl animate-float-reverse motion-reduce:animate-none"
+            style={{
+              bottom: '-15rem',
+              left: '-12rem',
+              width: '40rem',
+              height: '40rem',
+              background:
+                'radial-gradient(circle at 40% 40%, rgba(16,185,129,0.22), transparent 60%), radial-gradient(circle at 65% 60%, rgba(56,189,248,0.22), transparent 55%)',
+            }}
+          />
+          <div
+            className="absolute rounded-full blur-3xl animate-float motion-reduce:animate-none"
+            style={{
+              top: '28%',
+              left: '40%',
+              width: '26rem',
+              height: '26rem',
+              background: 'radial-gradient(circle, rgba(244,114,182,0.16), transparent 65%)',
+            }}
+          />
+
+          {/* Floating pitch-deck "slides" motif */}
+          <div className="absolute animate-diagonal-float motion-reduce:animate-none" style={{ top: '24%', left: '8%' }}>
+            <div className="h-20 w-28 -rotate-6 rounded-xl border border-primary/20 bg-primary/5 shadow-xl backdrop-blur-sm" />
+          </div>
+          <div className="absolute hidden animate-float motion-reduce:animate-none md:block" style={{ top: '58%', right: '11%' }}>
+            <div className="h-24 w-32 rotate-6 rounded-xl border border-primary/20 bg-primary/5 shadow-xl backdrop-blur-sm" />
+          </div>
+          <div className="absolute hidden animate-float-reverse motion-reduce:animate-none lg:block" style={{ top: '14%', right: '26%' }}>
+            <div className="h-16 w-24 rotate-3 rounded-lg border border-primary/15 bg-primary/5 shadow-lg backdrop-blur-sm" />
+          </div>
+
+          {/* Top glow + vignette for depth */}
+          <div
+            className="absolute inset-0"
+            style={{ background: 'radial-gradient(120% 80% at 50% -12%, rgba(56,189,248,0.10), transparent 55%)' }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{ boxShadow: 'inset 0 0 220px 70px hsl(var(--background))' }}
           />
         </div>
 
