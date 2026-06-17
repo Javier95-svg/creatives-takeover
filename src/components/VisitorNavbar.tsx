@@ -200,7 +200,7 @@ const VisitorNavbar = () => {
                           Gifts
                           <ChevronDown className="h-3 w-3 opacity-60" aria-hidden="true" />
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-72">
+                        <DropdownMenuContent align="start" className="w-max">
                           <DropdownMenuLabel>From Creatives Takeover with 💙</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           {freeToolsItems.map((tool) => {
