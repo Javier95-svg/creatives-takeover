@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
 import { PitchDeckUploader } from "@/components/pitch-deck-analyzer/PitchDeckUploader";
+import { PitchDeckChecklist } from "@/components/pitch-deck-analyzer/PitchDeckChecklist";
 import { AnalysisResults } from "@/components/pitch-deck-analyzer/AnalysisResults";
 import { PitchDeckBuilder } from "@/components/pitch-deck-builder/PitchDeckBuilder";
 import { usePitchDeckAnalyzer } from "@/hooks/usePitchDeckAnalyzer";
@@ -184,6 +185,8 @@ export default function PitchDeckAnalyzerPage() {
                         </Button>
                       </div>
                     )}
+
+                    <PitchDeckChecklist />
                   </>
                 ) : (
                   <PreviewModeWrapper
@@ -283,6 +286,8 @@ export default function PitchDeckAnalyzerPage() {
                     </div>
                   )}
                 </div>
+
+                <PitchDeckChecklist />
 
                 {/* Pitch Deck Builder - Integrated */}
                 <div className="mt-16">
