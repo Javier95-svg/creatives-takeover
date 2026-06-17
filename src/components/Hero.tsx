@@ -165,6 +165,23 @@ const Hero = ({
     void trackEngagement("hero-dashboard-preview", 65);
   };
 
+  // Smooth-scrolls to the "Startup Development Cycle" section on the homepage.
+  // The id appears in both UserReviews variants, so prefer the visible one.
+  const handleStartupCycleClick = () => {
+    void trackEngagement("hero-startup-cycle-link", 60);
+    const id = "startup-development-cycle";
+    const candidates = Array.from(document.querySelectorAll<HTMLElement>(`#${id}`));
+    const target =
+      candidates.find((element) => {
+        const rect = element.getBoundingClientRect();
+        const style = window.getComputedStyle(element);
+        return style.display !== "none" && style.visibility !== "hidden" && rect.height > 0;
+      }) ?? document.getElementById(id);
+    if (!target) return;
+    const y = target.getBoundingClientRect().top + window.pageYOffset - 100;
+    window.scrollTo({ top: Math.max(y, 0), behavior: "smooth" });
+  };
+
   return (
     <section
       ref={heroRef}
@@ -212,12 +229,20 @@ const Hero = ({
               </Link>
             </>
           ) : (
-            <Link className="ct-hero__cta" to={ctaHref} onClick={handleCtaClick}>
-              {ctaLabel}
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-            </Link>
+            <>
+              <Link className="ct-hero__cta" to={ctaHref} onClick={handleCtaClick}>
+                {ctaLabel}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </Link>
+              <button type="button" className="ct-hero__cycle-link" onClick={handleStartupCycleClick}>
+                The Startup Development Cycle
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+            </>
           )}
         </div>
 

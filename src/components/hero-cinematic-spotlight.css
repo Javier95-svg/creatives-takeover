@@ -303,6 +303,53 @@
   transform: translateX(3px);
 }
 
+/* Secondary text link under the primary CTA — scrolls to the Startup
+   Development Cycle section. Full-width flex item so it sits on its own line
+   directly beneath the CTA. Smaller and quieter than a CTA, but still clear. */
+.ct-hero__cycle-link {
+  flex: 0 0 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin: 6px auto 0;
+  padding: 4px 8px;
+  background: none;
+  border: 0;
+  color: var(--ct-muted);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  cursor: pointer;
+  transition: color 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+}
+
+.ct-hero__cycle-link:hover {
+  color: var(--ct-fg);
+  transform: translateY(1px);
+}
+
+.ct-hero__cycle-link:focus-visible {
+  outline: 2px solid var(--ct-fg);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.ct-hero__cycle-link svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  opacity: 0.85;
+  transition: transform 0.22s ease;
+}
+
+.ct-hero__cycle-link:hover svg {
+  transform: translateY(2px);
+}
+
 .ct-hero--signed-in .ct-hero__cta-row {
   margin-bottom: 48px;
 }
