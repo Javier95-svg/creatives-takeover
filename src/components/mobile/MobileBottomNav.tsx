@@ -145,7 +145,7 @@ export const MobileBottomNav = () => {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent side="top" align="center" className="mb-2 w-60">
-                    <DropdownMenuLabel>Gifts — no account needed</DropdownMenuLabel>
+                    <DropdownMenuLabel>From Creatives Takeover with 💙</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {freeToolsItems.map((tool) => {
                       const ToolIcon = tool.icon;
