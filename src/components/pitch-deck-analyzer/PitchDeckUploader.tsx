@@ -13,6 +13,8 @@ interface PitchDeckUploaderProps {
   isAnalyzing?: boolean;
   selectedFile?: File | null;
   onClearFile?: () => void;
+  /** Allow logged-out visitors to upload (free-tools public flow). */
+  allowUploadWhenSignedOut?: boolean;
 }
 
 export const PitchDeckUploader: React.FC<PitchDeckUploaderProps> = ({
@@ -20,13 +22,16 @@ export const PitchDeckUploader: React.FC<PitchDeckUploaderProps> = ({
   isUploading = false,
   isAnalyzing = false,
   selectedFile = null,
-  onClearFile
+  onClearFile,
+  allowUploadWhenSignedOut = false
 }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isSignedIn = Boolean(user);
+  // Whether the upload affordance is interactive (signed-in, or the public flow).
+  const canUpload = isSignedIn || allowUploadWhenSignedOut;
 
   const validateFile = (file: File): boolean => {
     if (file.type !== 'application/pdf') {
@@ -44,7 +49,7 @@ export const PitchDeckUploader: React.FC<PitchDeckUploaderProps> = ({
   };
 
   const handleFileSelect = (files: FileList | null) => {
-    if (!isSignedIn) {
+    if (!canUpload) {
       toast.error('Sign in to upload your pitch deck');
       return;
     }
@@ -59,7 +64,7 @@ export const PitchDeckUploader: React.FC<PitchDeckUploaderProps> = ({
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    if (!isSignedIn) {
+    if (!canUpload) {
       setIsDragging(false);
       return;
     }
@@ -75,7 +80,7 @@ export const PitchDeckUploader: React.FC<PitchDeckUploaderProps> = ({
     e.preventDefault();
     setIsDragging(false);
 
-    if (!isSignedIn) {
+    if (!canUpload) {
       toast.error('Sign in to upload your pitch deck');
       return;
     }
@@ -90,16 +95,16 @@ export const PitchDeckUploader: React.FC<PitchDeckUploaderProps> = ({
   };
 
   const isProcessing = isUploading || isAnalyzing;
-  const isUploadDisabled = isProcessing || !isSignedIn;
+  const isUploadDisabled = isProcessing || !canUpload;
 
   return (
     <div className="w-full max-w-4xl mx-auto">
       {!selectedFile ? (
         <Card
           className={`border-2 border-dashed transition-all duration-200 ${
-            isDragging && isSignedIn
+            isDragging && canUpload
               ? 'border-primary bg-primary/5 scale-105'
-              : isSignedIn
+              : canUpload
                 ? 'border-muted-foreground/25 hover:border-primary/50'
                 : 'border-muted-foreground/25 bg-muted/20'
           }`}
@@ -114,14 +119,14 @@ export const PitchDeckUploader: React.FC<PitchDeckUploaderProps> = ({
               </div>
               <div className="text-center">
                 <p className="text-lg font-semibold mb-2">
-                  {isSignedIn
+                  {canUpload
                     ? isDragging
                       ? 'Drop your pitch deck here'
                       : 'Drop your PDF presentation here'
                     : 'Sign in to upload your pitch deck'}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {isSignedIn ? 'or click to browse' : 'upload is available for signed-in users'}
+                  {canUpload ? 'or click to browse' : 'upload is available for signed-in users'}
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">
                   PDF only • Maximum 20MB
@@ -131,7 +136,7 @@ export const PitchDeckUploader: React.FC<PitchDeckUploaderProps> = ({
                 variant="default"
                 size="lg"
                 onClick={() => {
-                  if (!isSignedIn) {
+                  if (!canUpload) {
                     navigate('/login');
                     return;
                   }
@@ -140,7 +145,7 @@ export const PitchDeckUploader: React.FC<PitchDeckUploaderProps> = ({
                 disabled={isProcessing}
                 className="mt-2"
               >
-                {!isSignedIn ? (
+                {!canUpload ? (
                   <>
                     <Lock className="h-4 w-4 mr-2" />
                     Sign In to Upload

@@ -4,14 +4,19 @@ import Footer from "@/components/Footer";
 import AnswerSummary from "@/components/seo/AnswerSummary";
 import PageFAQSection from "@/components/seo/PageFAQSection";
 import RelatedPageLinks from "@/components/seo/RelatedPageLinks";
-import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import FundraisingReadinessToolkitAll from "@/components/blog/FundraisingReadinessToolkitAll";
-import { getPublicTabConfig } from "@/config/publicTabVisibility";
 import { useAuth } from "@/contexts/AuthContext";
+import { captureEvent } from "@/lib/analytics";
+import { useEffect } from "react";
 
 export default function InsightaTestPage() {
   const { user } = useAuth();
-  const publicTab = getPublicTabConfig('/insighta-test');
+
+  // Funnel: a logged-out visitor opened a free tool.
+  useEffect(() => {
+    if (!user) captureEvent('free_tool_opened', { tool: 'insighta_test' });
+  }, [user]);
+
   const faqs = [
     {
       question: "What is fundraising readiness?",
@@ -87,19 +92,10 @@ export default function InsightaTestPage() {
               <RelatedPageLinks title="Related fundraising tools" links={relatedLinks} />
             </div>
 
-            {user ? (
-              <FundraisingReadinessToolkitAll />
-            ) : (
-              publicTab && (
-                <PreviewModeWrapper
-                  featureName={publicTab.featureName}
-                  description={publicTab.description || ''}
-                  showPricingCta={publicTab.showPricingCta}
-                >
-                  <FundraisingReadinessToolkitAll />
-                </PreviewModeWrapper>
-              )
-            )}
+            {/* Logged-out visitors can take the assessment and see a real top-line
+                readiness score for free; the full diagnostic is gated inside the
+                toolkit behind a free-account CTA. */}
+            <FundraisingReadinessToolkitAll />
 
             <div className="mt-10 space-y-8">
               <AnswerSummary

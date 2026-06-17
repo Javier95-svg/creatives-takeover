@@ -11,9 +11,9 @@ import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles, BarChart3, TrendingUp, Target } from "lucide-react";
-import { getPublicTabConfig } from "@/config/publicTabVisibility";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlanAccess } from "@/hooks/usePlanAccess";
+import { captureEvent } from "@/lib/analytics";
 import { toast } from "sonner";
 
 const ALLOWED_EXTENSIONS = ['.pdf', '.pptx', '.ppt'];
@@ -22,15 +22,29 @@ const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 export default function PitchDeckAnalyzerPage() {
   const { user } = useAuth();
-  const publicTab = getPublicTabConfig('/pitch-deck-analyzer');
   const { hasAccess, upgradeTarget } = usePlanAccess('pitch_deck_analyzer');
   const { trackPageVisit } = useReadingAnalytics();
   const { analyzePitchDeck, submitFeedback, resetAnalysis, uploading, analyzing, analysis, error, isProcessing } = usePitchDeckAnalyzer();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  // Logged-out visitors can upload a deck and submit; the score/findings deliverable
+  // is gated behind a free account (no anonymous backend processing).
+  const [publicSubmitted, setPublicSubmitted] = useState(false);
 
   useEffect(() => {
     trackPageVisit('Pitch Deck Analyzer');
   }, [trackPageVisit]);
+
+  // Funnel: a logged-out visitor opened a free tool.
+  useEffect(() => {
+    if (!user) captureEvent('free_tool_opened', { tool: 'pitch_deck_analyzer' });
+  }, [user]);
+
+  const handlePublicAnalyze = () => {
+    if (!selectedFile) return;
+    captureEvent('free_tool_input_submitted', { tool: 'pitch_deck_analyzer', file_size: selectedFile.size });
+    setPublicSubmitted(true);
+    captureEvent('free_tool_partial_result_shown', { tool: 'pitch_deck_analyzer', gated_only: true });
+  };
 
   const handleFileSelected = (file: File) => {
     const ext = '.' + file.name.split('.').pop()?.toLowerCase();
@@ -150,23 +164,59 @@ export default function PitchDeckAnalyzerPage() {
             )}
 
             {!user ? (
-              publicTab && (
-                <PreviewModeWrapper
-                  featureName={publicTab.featureName}
-                  description={publicTab.description || ''}
-                  showPricingCta={publicTab.showPricingCta}
-                >
-                  <div className="space-y-6 animate-fade-in" style={{ animationDelay: '0.6s' }}>
+              // Logged-out visitors can upload a deck and hit Analyze. The score +
+              // findings deliverable is gated behind a free account.
+              <div className="space-y-6 animate-fade-in" style={{ animationDelay: '0.6s' }}>
+                {!publicSubmitted ? (
+                  <>
                     <PitchDeckUploader
                       onFileSelected={handleFileSelected}
-                      uploading={false}
+                      selectedFile={selectedFile}
+                      onClearFile={handleClearFile}
+                      allowUploadWhenSignedOut
                     />
-                    <div className="mt-16">
-                      <PitchDeckBuilder />
+
+                    {selectedFile && (
+                      <div className="flex justify-center">
+                        <Button size="lg" onClick={handlePublicAnalyze} className="px-8 py-6 text-lg">
+                          <Sparkles className="h-5 w-5 mr-2" />
+                          Analyze My Deck
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <PreviewModeWrapper
+                    featureName="Your pitch deck analysis"
+                    headline="Your deck is ready 🎉"
+                    description="Create a free account to unlock your pitch deck score and the findings across all 6 investor dimensions."
+                    ctaLabel="Create free account"
+                    onCtaClick={() => captureEvent('free_tool_signup_gate_cta_clicked', { tool: 'pitch_deck_analyzer' })}
+                  >
+                    <div className="space-y-4">
+                      <div className="rounded-2xl border border-border/60 bg-card p-6 text-center">
+                        <p className="text-sm text-muted-foreground mb-1">Overall Pitch Score</p>
+                        <p className="text-5xl font-bold text-foreground">— / 100</p>
+                      </div>
+                      <div className="grid gap-4 sm:grid-cols-3">
+                        {[
+                          'Story Clarity',
+                          'Market Opportunity',
+                          'Traction Proof',
+                          'Business Model',
+                          'Team Credibility',
+                          'Fundraising Readiness',
+                        ].map((dimension) => (
+                          <div key={dimension} className="rounded-xl border border-border/60 bg-card p-4">
+                            <p className="text-sm font-medium">{dimension}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">Detailed score + findings</p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                </PreviewModeWrapper>
-              )
+                  </PreviewModeWrapper>
+                )}
+              </div>
             ) : !hasAccess ? (
               <BlurredToolPreview
                 featureName="Pitch Deck Analyzer"

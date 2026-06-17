@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from "react";
-import { Rocket, Target, Users, DollarSign, CheckCircle2, AlertCircle, HelpCircle, ChevronDown, ChevronUp, Loader2, LogIn, ArrowRight, ChevronLeft } from "lucide-react";
+import { Rocket, Target, Users, DollarSign, CheckCircle2, AlertCircle, HelpCircle, ChevronDown, ChevronUp, Loader2, ArrowRight, ChevronLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,6 +17,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { PreviewModeWrapper } from "@/components/ui/PreviewModeWrapper";
+import { captureEvent } from "@/lib/analytics";
 import { useCredits } from "@/hooks/useCredits";
 import { useCreditActions } from "@/hooks/useCreditActions";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
@@ -70,6 +72,9 @@ const FundraisingReadinessToolkitAll = () => {
   const [aiAnalysis, setAiAnalysis] = useState<AIAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  // Logged-out visitors get a real, client-side top-line readiness score for free.
+  // The full AI diagnostic stays gated behind a free account.
+  const [publicResult, setPublicResult] = useState(false);
 
   // Get visible questions based on current stage
   const visibleQuestions = useMemo(() => {
@@ -132,6 +137,31 @@ const FundraisingReadinessToolkitAll = () => {
       setAiAnalysis(null);
       setAnalysisError(null);
     }
+    // A changed answer invalidates the free top-line score too.
+    if (publicResult) {
+      setPublicResult(false);
+    }
+  };
+
+  // Logged-out submit: compute the readiness score on the client from the
+  // visitor's own answers (real + personalized) and reveal the free partial.
+  const handlePublicSubmit = () => {
+    if (!allRequiredScored) {
+      toast.error("Please complete all required questions to see your readiness score");
+      return;
+    }
+    const answeredCount = Object.values(scores).filter(
+      (score) => typeof score === "number" && score > 0,
+    ).length;
+    captureEvent("free_tool_input_submitted", {
+      tool: "insighta_test",
+      questions_answered: answeredCount,
+    });
+    setPublicResult(true);
+    captureEvent("free_tool_partial_result_shown", {
+      tool: "insighta_test",
+      readiness_score: Number(averageScore.toFixed(1)),
+    });
   };
 
   const toggleHelp = (criterionId: string) => {
@@ -292,36 +322,17 @@ const FundraisingReadinessToolkitAll = () => {
                       </div>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className={cn(
-                            "relative",
-                            !isAuthenticated && "cursor-not-allowed"
-                          )}>
+                          <div className="relative">
                             <Slider
                               value={[questionScore]}
-                              onValueChange={(value) => {
-                                if (isAuthenticated) {
-                                  handleScoreChange(question.id, value);
-                                }
-                              }}
+                              onValueChange={(value) => handleScoreChange(question.id, value)}
                               min={0}
                               max={10}
                               step={1}
-                              disabled={!isAuthenticated}
-                              className={cn(
-                                "w-full",
-                                !isAuthenticated && "opacity-60"
-                              )}
+                              className="w-full"
                             />
-                            {!isAuthenticated && (
-                              <div className="absolute inset-0 cursor-not-allowed z-10" />
-                            )}
                           </div>
                         </TooltipTrigger>
-                        {!isAuthenticated && (
-                          <TooltipContent>
-                            <p>Sign in to adjust this score</p>
-                          </TooltipContent>
-                        )}
                       </Tooltip>
                       <div className="flex justify-between text-xs text-muted-foreground">
                         <span>0</span>
@@ -360,15 +371,16 @@ const FundraisingReadinessToolkitAll = () => {
                 {!isAuthenticated ? (
                   <div className="space-y-3">
                     <p className="text-sm text-muted-foreground">
-                      Sign in to get AI-powered analysis of your fundraising readiness
+                      Answer the questions above to get your free fundraising readiness score
                     </p>
                     <Button
                       size="lg"
-                      onClick={() => navigate('/login', { state: { returnTo: '/insighta-test' } })}
+                      onClick={handlePublicSubmit}
+                      disabled={!allRequiredScored}
                       className="w-full md:w-auto min-w-[200px]"
                     >
-                      <LogIn className="h-4 w-4 mr-2" />
-                      Sign In to Get Analysis
+                      <Rocket className="h-4 w-4 mr-2" />
+                      Get My Readiness Score
                     </Button>
                   </div>
                 ) : (
@@ -394,6 +406,72 @@ const FundraisingReadinessToolkitAll = () => {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Logged-out free partial: real top-line readiness score + gated full diagnostic */}
+        {!isAuthenticated && publicResult && (
+          <>
+            <Card className="mb-6 border-2 border-primary/30">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <Rocket className="h-6 w-6 text-primary" />
+                  <div>
+                    <CardTitle className="text-2xl">Your Fundraising Readiness</CardTitle>
+                    <CardDescription className="mt-1">
+                      Your free top-line score, based on your answers.
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col items-center text-center gap-3 py-2">
+                  <p className="text-5xl font-bold text-foreground">
+                    {Math.round(averageScore * 10)}
+                    <span className="text-2xl text-muted-foreground">/100</span>
+                  </p>
+                  <Badge variant="secondary" className="text-sm">
+                    {averageScore >= 7 ? "Ready" : averageScore >= 4 ? "Almost Ready" : "Not Ready Yet"}
+                  </Badge>
+                  <p className="text-sm text-muted-foreground">
+                    Average score {averageScore.toFixed(1)} / 10 across the factors you rated.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <PreviewModeWrapper
+              featureName="Full diagnostic"
+              headline="Your results are ready 🎉"
+              description="Create a free account to unlock your full diagnostic — strengths, critical gaps, a prioritized action plan, and your timeline to readiness."
+              ctaLabel="Create free account"
+              onCtaClick={() => captureEvent("free_tool_signup_gate_cta_clicked", { tool: "insighta_test" })}
+            >
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-success" /> Strengths
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm text-muted-foreground">
+                    <p>Your strongest readiness factors and how to leverage them with investors.</p>
+                    <p>Where your current traction already beats the bar for your stage.</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 text-warning" /> Critical gaps &amp; prioritized actions
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm text-muted-foreground">
+                    <p>The specific gaps most likely to stall your raise — ranked by impact.</p>
+                    <p>A prioritized action plan with estimated effort and a timeline to readiness.</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </PreviewModeWrapper>
+          </>
         )}
 
         {/* Error Message */}

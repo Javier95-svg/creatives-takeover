@@ -7,17 +7,15 @@ import { useLeanStartupStore } from "@/store/leanStartupStore";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { usePlanAccess } from "@/hooks/usePlanAccess";
-import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
-import { getPublicTabConfig } from "@/config/publicTabVisibility";
 import { useAuth } from "@/contexts/AuthContext";
+import { captureEvent } from "@/lib/analytics";
 
 // Lazy load the Tech Stack component
 const TechStack = lazy(() => import("@/components/tech-stack/TechStack"));
 
 export default function TechStackPage() {
   const { user } = useAuth();
-  const publicTab = getPublicTabConfig('/tech-stack');
   const { trackPageVisit } = useReadingAnalytics();
   const markToolUsed = useLeanStartupStore(s => s.markToolUsed);
   const { hasAccess, isProgressiveLock } = usePlanAccess('tech_stack');
@@ -28,6 +26,11 @@ export default function TechStackPage() {
   useEffect(() => {
     trackPageVisit('Tech Stack');
   }, [trackPageVisit]);
+
+  // Funnel: a logged-out visitor opened a free tool.
+  useEffect(() => {
+    if (!user) captureEvent('free_tool_opened', { tool: 'tech_stack' });
+  }, [user]);
 
   // Structured data for Tech Stack page
   const structuredData = [
@@ -91,24 +94,19 @@ export default function TechStackPage() {
             </div>
 
             {!user ? (
-              publicTab && (
-                <PreviewModeWrapper
-                  featureName={publicTab.featureName}
-                  description={publicTab.description || ''}
-                  showPricingCta={publicTab.showPricingCta}
-                >
-                  <Suspense
-                    fallback={
-                      <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="text-muted-foreground">Loading Tech Stack Builder...</p>
-                      </div>
-                    }
-                  >
-                    <TechStack />
-                  </Suspense>
-                </PreviewModeWrapper>
-              )
+              // Logged-out visitors can fully use the builder. The tool shows a real
+              // monthly-budget partial and gates the annual cost + full build plan
+              // behind a free-account CTA (handled inside <TechStack />).
+              <Suspense
+                fallback={
+                  <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-muted-foreground">Loading Tech Stack Builder...</p>
+                  </div>
+                }
+              >
+                <TechStack />
+              </Suspense>
             ) : hasAccess ? (
               <Suspense
                 fallback={

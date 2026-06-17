@@ -10,6 +10,12 @@ interface PreviewModeWrapperProps {
   description: string;
   showPricingCta?: boolean;
   isLoading?: boolean;
+  /** Overrides the default "Sign in to unlock" headline (e.g. "Your results are ready"). */
+  headline?: string;
+  /** Overrides the default "Sign up" primary CTA label. */
+  ctaLabel?: string;
+  /** Fired when the primary signup CTA is clicked — used for funnel analytics. */
+  onCtaClick?: () => void;
 }
 
 export function PreviewModeWrapper({
@@ -18,6 +24,9 @@ export function PreviewModeWrapper({
   description,
   showPricingCta = false,
   isLoading = false,
+  headline = "Sign in to unlock",
+  ctaLabel = "Sign up",
+  onCtaClick,
 }: PreviewModeWrapperProps) {
   const location = useLocation();
   const returnPath = `${location.pathname}${location.search}`;
@@ -52,9 +61,9 @@ export function PreviewModeWrapper({
 
               {/* Headline */}
               <h2 className="text-xl font-bold text-foreground sm:text-2xl mb-2">
-                Sign in to unlock
+                {headline}
               </h2>
-              
+
               {/* Value Prop - Single Line */}
               <p className="text-sm leading-relaxed text-muted-foreground mb-6 max-w-xs">
                 {description}
@@ -62,13 +71,13 @@ export function PreviewModeWrapper({
 
               {/* CTA Buttons */}
               <div className="flex flex-col gap-3 w-full sm:flex-row sm:justify-center">
-                <Button 
-                  asChild 
-                  size="lg" 
+                <Button
+                  asChild
+                  size="lg"
                   className="gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 w-full sm:w-auto"
                 >
-                  <Link to={`/signup?return=${encodeURIComponent(returnPath)}`}>
-                    Sign up
+                  <Link to={`/signup?return=${encodeURIComponent(returnPath)}`} onClick={onCtaClick}>
+                    {ctaLabel}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>

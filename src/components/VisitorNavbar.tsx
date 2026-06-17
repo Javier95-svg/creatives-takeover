@@ -1,11 +1,16 @@
 import type { MouseEvent } from "react";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
+  BarChart3,
+  Boxes,
+  ChevronDown,
   DollarSign,
+  FlaskConical,
+  Gift,
   Home,
   Info,
-  Map,
+  type LucideIcon,
   Menu,
   Newspaper,
   Rocket,
@@ -14,15 +19,25 @@ import {
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import ThemeToggle from "@/components/ThemeToggle";
 import ctLogoPolished from "@/assets/ct-logo-polished-borders.webp";
 import { cn } from "@/lib/utils";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
+import { captureEvent } from "@/lib/analytics";
 
-const visitorLinks = [
+type VisitorLink = { label: string; href: string; icon: LucideIcon; sectionId?: string };
+
+const visitorLinks: VisitorLink[] = [
   { label: "Home", href: "/", icon: Home },
-  { label: "How It Works", href: "/", icon: Map, sectionId: "startup-development-cycle" },
   { label: "Build", href: "/build", icon: Zap },
   { label: "Connect", href: "/mentorship", icon: Users },
   { label: "Newspaper", href: "/newspaper", icon: Newspaper },
@@ -30,8 +45,32 @@ const visitorLinks = [
   { label: "Pricing", href: "/pricing", icon: DollarSign },
 ];
 
+// Free Tools menu — logged-out visitors can use these three tools before signing
+// up. Each lands on a usable public experience that gates only the deliverable.
+const freeToolsItems = [
+  {
+    label: "Pitch Deck Analyzer",
+    href: "/pitch-deck-analyzer",
+    icon: BarChart3,
+    description: "Score your deck across 6 investor dimensions.",
+  },
+  {
+    label: "Insighta Test",
+    href: "/insighta-test",
+    icon: FlaskConical,
+    description: "Check your fundraising readiness in minutes.",
+  },
+  {
+    label: "Tech Stack Builder",
+    href: "/tech-stack",
+    icon: Boxes,
+    description: "Plan your startup stack and monthly budget.",
+  },
+];
+
 const VisitorNavbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -79,13 +118,22 @@ const VisitorNavbar = () => {
     navigate("/", { state: { scrollToSection: item.sectionId } });
   };
 
-  const linkClassName = (href: string, sectionId?: string) =>
+  const navItemClass = (active: boolean) =>
     cn(
       "rounded-2xl px-3.5 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-      isActive(href, sectionId)
+      active
         ? "bg-background text-foreground shadow-sm"
         : "text-muted-foreground hover:bg-background/80 hover:text-foreground"
     );
+
+  const linkClassName = (href: string, sectionId?: string) => navItemClass(isActive(href, sectionId));
+
+  const freeToolsActive = freeToolsItems.some((tool) => location.pathname.startsWith(tool.href));
+
+  const handleFreeToolsOpen = (source: "desktop" | "mobile") => {
+    trackNavClick("Free Tools");
+    captureEvent("free_tools_menu_opened", { source: `visitor_navbar_${source}` });
+  };
 
   return (
     <nav
@@ -129,15 +177,54 @@ const VisitorNavbar = () => {
               {visitorLinks.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <Link
-                    key={item.label}
-                    to={item.href}
-                    className={cn(linkClassName(item.href, item.sectionId), "inline-flex items-center gap-2")}
-                    onClick={(event) => handleNavClick(event, item)}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    {item.label}
-                  </Link>
+                  <Fragment key={item.label}>
+                    <Link
+                      to={item.href}
+                      className={cn(linkClassName(item.href, item.sectionId), "inline-flex items-center gap-2")}
+                      onClick={(event) => handleNavClick(event, item)}
+                    >
+                      <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      {item.label}
+                    </Link>
+
+                    {item.label === "Home" && (
+                      <DropdownMenu
+                        onOpenChange={(open) => {
+                          if (open) handleFreeToolsOpen("desktop");
+                        }}
+                      >
+                        <DropdownMenuTrigger
+                          className={cn(navItemClass(freeToolsActive), "inline-flex items-center gap-2")}
+                        >
+                          <Gift className="h-4 w-4 shrink-0" aria-hidden="true" />
+                          Gifts
+                          <ChevronDown className="h-3 w-3 opacity-60" aria-hidden="true" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-72">
+                          <DropdownMenuLabel>Gifts — no account needed</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          {freeToolsItems.map((tool) => {
+                            const ToolIcon = tool.icon;
+                            return (
+                              <DropdownMenuItem key={tool.href} asChild>
+                                <Link
+                                  to={tool.href}
+                                  onClick={() => trackNavClick(`Free Tools - ${tool.label}`)}
+                                  className="cursor-pointer"
+                                >
+                                  <ToolIcon className="mr-2 h-4 w-4 shrink-0" aria-hidden="true" />
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">{tool.label}</span>
+                                    <span className="text-xs text-muted-foreground">{tool.description}</span>
+                                  </div>
+                                </Link>
+                              </DropdownMenuItem>
+                            );
+                          })}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </Fragment>
                 );
               })}
             </div>
@@ -184,20 +271,70 @@ const VisitorNavbar = () => {
                 {visitorLinks.map((item) => {
                   const Icon = item.icon;
                   return (
-                    <Link
-                      key={item.label}
-                      to={item.href}
-                      className={cn(
-                        "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors",
-                        isActive(item.href, item.sectionId)
-                          ? "bg-background text-foreground"
-                          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                    <Fragment key={item.label}>
+                      <Link
+                        to={item.href}
+                        className={cn(
+                          "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors",
+                          isActive(item.href, item.sectionId)
+                            ? "bg-background text-foreground"
+                            : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                        )}
+                        onClick={(event) => handleNavClick(event, item, `Mobile ${item.label}`)}
+                      >
+                        <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        {item.label}
+                      </Link>
+
+                      {item.label === "Home" && (
+                        <div>
+                          <button
+                            type="button"
+                            className={cn(
+                              "flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors",
+                              freeToolsActive
+                                ? "bg-background text-foreground"
+                                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                            )}
+                            aria-expanded={mobileToolsOpen}
+                            onClick={() =>
+                              setMobileToolsOpen((open) => {
+                                const next = !open;
+                                if (next) handleFreeToolsOpen("mobile");
+                                return next;
+                              })
+                            }
+                          >
+                            <span className="flex items-center gap-3">
+                              <Gift className="h-4 w-4 shrink-0" aria-hidden="true" />
+                              Gifts
+                            </span>
+                            <ChevronDown
+                              className={cn("h-4 w-4 transition-transform", mobileToolsOpen && "rotate-180")}
+                              aria-hidden="true"
+                            />
+                          </button>
+                          {mobileToolsOpen && (
+                            <div className="ml-7 mt-1 space-y-1">
+                              {freeToolsItems.map((tool) => {
+                                const ToolIcon = tool.icon;
+                                return (
+                                  <Link
+                                    key={tool.href}
+                                    to={tool.href}
+                                    className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+                                    onClick={() => trackNavClick(`Mobile Free Tools - ${tool.label}`)}
+                                  >
+                                    <ToolIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                                    {tool.label}
+                                  </Link>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       )}
-                      onClick={(event) => handleNavClick(event, item, `Mobile ${item.label}`)}
-                    >
-                      <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                      {item.label}
-                    </Link>
+                    </Fragment>
                   );
                 })}
 

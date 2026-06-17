@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { techStackData, TechStackCategory, TechStackData, TechStackProduct } from '@/data/techStack';
-import { CheckCircle2, Calculator, DollarSign, Monitor, Server, Cloud, BarChart, CreditCard, Mail, Users, Lock, TrendingUp, AlertTriangle, Lightbulb, Target, Link2, Zap, Save, FolderOpen, Trash2 } from 'lucide-react';
+import { CheckCircle2, Calculator, DollarSign, Monitor, Server, Cloud, BarChart, CreditCard, Mail, Users, TrendingUp, AlertTriangle, Lightbulb, Target, Link2, Zap, Save, FolderOpen, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -18,6 +18,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
+import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
+import { captureEvent } from '@/lib/analytics';
 
 // Icon mapping
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -189,10 +191,29 @@ const TechStack: React.FC = () => {
     if (generatingBudget) return;
 
     if (!user) {
-      setLoginRedirectPending(true);
-      startLoginNavigation(() => {
-        navigate('/login');
-      });
+      // Public (logged-out) flow: the budget is computed entirely client-side, so
+      // we show the monthly partial for free — no login wall, no credits. The
+      // annual cost + full build plan are gated inside <BudgetDisplay /> below.
+      if (selectedCount !== techStackData.length) {
+        const firstUnselected = techStackData.find((category) => !selectedProducts[category.id]);
+        if (firstUnselected) {
+          document.getElementById(`tech-stack-category-${firstUnselected.id}`)?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+          });
+        }
+        toast({
+          title: 'Selection Required',
+          description: `Please select one product from all ${techStackData.length} categories to see your monthly budget.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      captureEvent('free_tool_input_submitted', { tool: 'tech_stack', categories: techStackData.length });
+      setShowBudget(true);
+      setGeneratedBudgetKey(selectedProductsKey);
+      captureEvent('free_tool_partial_result_shown', { tool: 'tech_stack', monthly_budget: budget.total });
       return;
     }
 
@@ -396,14 +417,14 @@ const TechStack: React.FC = () => {
 
   const selectedCount = Object.values(selectedProducts).filter(id => id !== null).length;
   const allCategoriesSelected = selectedCount === techStackData.length;
-  const canGenerateBudget = Boolean(user) && allCategoriesSelected;
+  const canGenerateBudget = allCategoriesSelected;
   const canSaveReport = Boolean(user) && showBudget && allCategoriesSelected;
   const previewBreakdown = previewReport?.budget_breakdown || [];
   const firstUnselectedCategory = techStackData.find((category) => !selectedProducts[category.id]);
   const generateButtonLabel = !user
-    ? loginRedirectPending
-      ? 'Opening sign in...'
-      : 'Sign In to View Budget'
+    ? firstUnselectedCategory
+      ? 'Complete selections first'
+      : 'See My Budget'
       : generatingBudget
         ? 'Generating...'
       : subscriptionLoading || creditsLoading
@@ -605,7 +626,7 @@ const TechStack: React.FC = () => {
                 <p className="text-sm text-muted-foreground">
                   {selectedCount} of {techStackData.length} categories selected
                 </p>
-                {!allCategoriesSelected && user && (
+                {!allCategoriesSelected && (
                   <p className="text-xs text-muted-foreground mt-1">
                     {/* FIX(dead-click): /tech-stack — the sticky CTA now names the exact blocker so it does not look like a dead primary action. */}
                     {firstUnselectedCategory
@@ -635,17 +656,8 @@ const TechStack: React.FC = () => {
                   aria-disabled={!canGenerateBudget}
                   disabled={loginRedirectPending || generatingBudget || (Boolean(user) && (subscriptionLoading || creditsLoading))}
                 >
-                  {!user ? (
-                    <>
-                      <Lock className="w-4 h-4 mr-2" />
-                      {generateButtonLabel}
-                    </>
-                  ) : (
-                    <>
-                      <Calculator className="w-4 h-4 mr-2" />
-                      {generateButtonLabel}
-                    </>
-                  )}
+                  <Calculator className="w-4 h-4 mr-2" />
+                  {generateButtonLabel}
                 </Button>
               </div>
             </div>
@@ -653,7 +665,7 @@ const TechStack: React.FC = () => {
         </Card>
       </div>
 
-      {showBudget && user && allCategoriesSelected && (
+      {showBudget && allCategoriesSelected && (
         <BudgetDisplay
           budget={budget}
           selectedProducts={selectedProducts}
@@ -663,6 +675,8 @@ const TechStack: React.FC = () => {
           onSave={handleSaveReport}
           saving={savingReport}
           onClose={() => setShowBudget(false)}
+          isPublic={!user}
+          onGateCtaClick={() => captureEvent('free_tool_signup_gate_cta_clicked', { tool: 'tech_stack' })}
         />
       )}
 
@@ -826,7 +840,31 @@ interface BudgetDisplayProps {
   onSave: () => void;
   saving: boolean;
   onClose: () => void;
+  /** Logged-out preview: show the monthly partial, gate the annual + full build plan. */
+  isPublic?: boolean;
+  onGateCtaClick?: () => void;
 }
+
+// Gate for the full build plan. For signed-in users it renders the deliverable
+// inline; for logged-out visitors it blurs/locks it behind a free-account CTA.
+const PlanGate: React.FC<{ isPublic: boolean; onGateCtaClick?: () => void; children: React.ReactNode }> = ({
+  isPublic,
+  onGateCtaClick,
+  children,
+}) => {
+  if (!isPublic) return <>{children}</>;
+  return (
+    <PreviewModeWrapper
+      featureName="Full build plan"
+      headline="Your stack budget is ready 🎉"
+      description="Create a free account to unlock your annual cost, full build plan, and save & export your stack."
+      ctaLabel="Create free account"
+      onCtaClick={onGateCtaClick}
+    >
+      <div className="space-y-6">{children}</div>
+    </PreviewModeWrapper>
+  );
+};
 
 const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
   budget,
@@ -836,9 +874,21 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
   onSaveNameChange,
   onSave,
   saving,
-  onClose
+  onClose,
+  isPublic = false,
+  onGateCtaClick,
 }) => {
   const { total, breakdown, hasVariable } = budget;
+
+  const annualBlock = (
+    <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg border border-primary/20">
+      <div>
+        <span className="text-base font-semibold text-foreground">Annual Fixed Cost:</span>
+        <p className="text-xs text-muted-foreground mt-1">12-month commitment savings potential</p>
+      </div>
+      <span className="text-2xl font-bold text-primary">${(total * 12).toFixed(2)}</span>
+    </div>
+  );
 
   // Generate strategy plan based on selected products
   const generateStrategy = useMemo(() => {
@@ -1218,21 +1268,23 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
-            <div className="flex-1">
-              <p className="text-xs text-muted-foreground mb-1">Save this report</p>
-              <Input
-                value={saveName}
-                onChange={(event) => onSaveNameChange(event.target.value)}
-                placeholder="Report name (optional)"
-                className="text-sm"
-              />
+          {!isPublic && (
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground mb-1">Save this report</p>
+                <Input
+                  value={saveName}
+                  onChange={(event) => onSaveNameChange(event.target.value)}
+                  placeholder="Report name (optional)"
+                  className="text-sm"
+                />
+              </div>
+              <Button onClick={onSave} disabled={saving}>
+                <Save className="w-4 h-4 mr-2" />
+                {saving ? 'Saving...' : 'Save'}
+              </Button>
             </div>
-            <Button onClick={onSave} disabled={saving}>
-              <Save className="w-4 h-4 mr-2" />
-              {saving ? 'Saving...' : 'Save'}
-            </Button>
-          </div>
+          )}
 
           <div className="space-y-2">
             {breakdown.map((item, idx) => (
@@ -1261,14 +1313,8 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
               <span className="text-2xl font-bold text-foreground">${total.toFixed(2)}</span>
             </div>
 
-            {/* Annual Cost */}
-            <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg border border-primary/20">
-              <div>
-                <span className="text-base font-semibold text-foreground">Annual Fixed Cost:</span>
-                <p className="text-xs text-muted-foreground mt-1">12-month commitment savings potential</p>
-              </div>
-              <span className="text-2xl font-bold text-primary">${(total * 12).toFixed(2)}</span>
-            </div>
+            {/* Annual Cost — gated for logged-out visitors (shown blurred below) */}
+            {!isPublic && annualBlock}
 
             {/* Budget Range Info */}
             <div className="p-3 bg-info-subtle dark:bg-info/20 rounded-lg border border-info dark:border-info">
@@ -1293,6 +1339,13 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
           </div>
         </CardContent>
       </Card>
+
+      <PlanGate isPublic={isPublic} onGateCtaClick={onGateCtaClick}>
+      {isPublic && (
+        <Card className="border-2 border-primary/20">
+          <CardContent className="pt-6">{annualBlock}</CardContent>
+        </Card>
+      )}
 
       {/* Strategy Plan Card */}
       <Card className="border-2 border-primary/20">
@@ -1477,6 +1530,7 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
           </CardContent>
         </Card>
       )}
+      </PlanGate>
     </div>
   );
 };
