@@ -9,10 +9,12 @@ import {
 } from "../_shared/mvp-builder-credit-reservations.ts";
 
 // MVP Builder "Publish" — reserves a clean, globally-unique public subdomain for
-// a project and returns {slug}.creativestakeover.app. Runs with the service role
+// a project and returns {slug}.creatives-takeover.com. Runs with the service role
 // so the uniqueness check spans all users (client RLS only sees the user's own
 // rows). The slug is locked on first publish (see lock-on-rename note below).
-// Every publish is charged the APP_BUILDER_DEPLOY credit cost (5).
+// Every publish is charged the APP_BUILDER_DEPLOY credit cost (5). On publish the
+// subdomain is auto-registered on the Vercel project (one platform-owned token), so
+// users never touch Vercel — the edge middleware/rewrite then serves their site.
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -44,6 +46,49 @@ function slugifyProjectName(value: string): string {
 // deno-lint-ignore no-explicit-any
 function isUniqueViolation(error: any): boolean {
   return error?.code === "23505";
+}
+
+// Vercel project that serves *.creatives-takeover.com (env-overridable).
+const VERCEL_PROJECT_ID = Deno.env.get("VERCEL_PROJECT_ID") || "prj_EAuYf0WriL9QmoV47QpDZXuPsNgf";
+const VERCEL_TEAM_ID = Deno.env.get("VERCEL_TEAM_ID") || "team_LJzh7TuGo84R7r86GqqszhWy";
+
+type VercelDomainResult = { registered: boolean; skipped?: boolean; status?: number; error?: string };
+
+// Attach {slug}.creatives-takeover.com to the Vercel project so it routes + gets
+// HTTPS automatically. Idempotent (a slug already on the project counts as success).
+// Best-effort with a small retry; the caller never fails the publish over this.
+async function ensureVercelDomain(domain: string): Promise<VercelDomainResult> {
+  const token = Deno.env.get("VERCEL_TOKEN");
+  if (!token) return { registered: false, skipped: true, error: "VERCEL_TOKEN not configured" };
+
+  const query = VERCEL_TEAM_ID ? `?teamId=${encodeURIComponent(VERCEL_TEAM_ID)}` : "";
+  const endpoint = `https://api.vercel.com/v10/projects/${VERCEL_PROJECT_ID}/domains${query}`;
+
+  let lastError = "";
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const resp = await fetch(endpoint, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ name: domain }),
+      });
+      if (resp.ok) return { registered: true, status: resp.status };
+
+      // deno-lint-ignore no-explicit-any
+      const data: any = await resp.json().catch(() => ({}));
+      const code = data?.error?.code;
+      // Already attached to this project => idempotent success.
+      if (resp.status === 409 || code === "domain_already_in_use" || code === "domain_already_exists") {
+        return { registered: true, status: resp.status };
+      }
+      lastError = data?.error?.message || `Vercel API ${resp.status}`;
+      // 4xx (other than 409) won't fix on retry; bail out.
+      if (resp.status < 500) break;
+    } catch (e) {
+      lastError = e instanceof Error ? e.message : String(e);
+    }
+  }
+  return { registered: false, error: lastError || "Vercel domain registration failed" };
 }
 
 serve(async (req) => {
@@ -188,11 +233,17 @@ serve(async (req) => {
     }
 
     const url = `https://${slug}.${BASE_DOMAIN}`;
+
+    // Auto-register the subdomain on Vercel (idempotent, best-effort). The slug is
+    // already reserved in the DB; we never fail the publish if this hiccups.
+    const domain = await ensureVercelDomain(`${slug}.${BASE_DOMAIN}`);
+
     const finalized = await finalizeMVPBuilderCredits(reservationId, {
       mvpBuilderActionType: "publish",
       projectId,
       publishUrl: url,
       slug,
+      domainRegistered: domain.registered,
       completionBoundary: "publish_saved",
     });
     if (!finalized.success) {
@@ -204,6 +255,9 @@ serve(async (req) => {
       slug,
       url,
       reused,
+      domainRegistered: domain.registered,
+      domainPending: !domain.registered,
+      domainError: domain.error ?? null,
       reservationId,
       reservationStatus: finalized.reservationStatus,
       listedCreditCost: creditCost,

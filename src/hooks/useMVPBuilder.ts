@@ -1676,8 +1676,8 @@ export function useMVPBuilder() {
           description: file.path === entryFilePath ? 'Primary preview file.' : `Project file ${file.path}.`,
         })),
         versions: projectVersions,
-        deployment_url: deploymentUrl,
-        deployment_status: deploymentUrl ? 'deployed' : 'not_deployed',
+        // deployment_url / deployment_status are owned by the publish edge function;
+        // saving the project must not overwrite (and previously blanked) the live link.
         github_connection_id: githubConnection.connectionId ?? null,
         supabase_connection_id: supabaseConnection.connectionId ?? null,
         metadata: {
