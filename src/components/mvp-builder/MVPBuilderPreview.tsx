@@ -455,7 +455,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                       Publish
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Publish to a public .creativestakeover.app link for {CREDIT_COSTS.APP_BUILDER_DEPLOY} credits</TooltipContent>
+                  <TooltipContent>Publish to a public .creatives-takeover.com link for {CREDIT_COSTS.APP_BUILDER_DEPLOY} credits</TooltipContent>
                 </Tooltip>
               </div>
             </div>

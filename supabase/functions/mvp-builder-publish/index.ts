@@ -19,7 +19,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, idempotency-key",
 };
 
-const BASE_DOMAIN = Deno.env.get("MVP_PUBLISH_BASE_DOMAIN") || "creativestakeover.app";
+const BASE_DOMAIN = Deno.env.get("MVP_PUBLISH_BASE_DOMAIN") || "creatives-takeover.com";
 const MAX_SLUG_LENGTH = 48;
 const MAX_ASSIGN_ATTEMPTS = 5;
 

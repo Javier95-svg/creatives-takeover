@@ -3,7 +3,7 @@
 // in the `mvp-builder-publish` edge function; these helpers cover client-side
 // display (previewing the would-be link) and URL formatting.
 
-export const MVP_PUBLISH_BASE_DOMAIN = 'creativestakeover.app';
+export const MVP_PUBLISH_BASE_DOMAIN = 'creatives-takeover.com';
 
 const MAX_SLUG_LENGTH = 48;
 

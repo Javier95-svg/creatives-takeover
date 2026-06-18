@@ -19,6 +19,11 @@
     { "source": "/waitlist-maker", "destination": "/demo-studio/classic", "permanent": true }
   ],
   "rewrites": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "(?<slug>(?!www)[a-z0-9-]+)\\.creatives-takeover\\.com" }],
+      "destination": "/api/published-site?slug=:slug&p=:path"
+    },
     { "source": "/pricing", "destination": "/pricing/index.html" },
     { "source": "/pricing/", "destination": "/pricing/index.html" },
     { "source": "/resources", "destination": "/resources/index.html" },
