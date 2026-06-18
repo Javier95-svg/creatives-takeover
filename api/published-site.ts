@@ -72,8 +72,11 @@ export default async function handler(req: Request): Promise<Response> {
     return notFound('Publishing is temporarily unavailable.');
   }
 
+  // Path comes from the vercel.json rewrite (?p=:path). Default to index.html for the
+  // root; guard against an unsubstituted ":path" token when the rewrite param is empty.
   const url = new URL(req.url);
-  const requestedPath = url.searchParams.get('p') ?? url.pathname.replace(/^\/+/, '');
+  let requestedPath = url.searchParams.get('p') ?? '';
+  if (requestedPath.startsWith(':')) requestedPath = '';
 
   try {
     const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_published_mvp_file`, {
