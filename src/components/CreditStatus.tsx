@@ -95,7 +95,7 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
     }
     if (featureLower.includes('mvp')) {
       return normalizedTier === 'rising' || normalizedTier === 'pro'
-        ? ` MVP Builder is unlocked on every plan and uses your account credit balance: ${CREDIT_COSTS.APP_BUILDER_GENERATE} credits for a React app, ${CREDIT_COSTS.APP_BUILDER_REFINE} for targeted edits, ${CREDIT_COSTS.APP_BUILDER_DEBUG} for bug fixes, and ${CREDIT_COSTS.APP_BUILDER_DEPLOY} to deploy.`
+        ? ` MVP Builder is unlocked on every plan and uses your account credit balance: ${CREDIT_COSTS.APP_BUILDER_GENERATE} credits for a React app, ${CREDIT_COSTS.APP_BUILDER_REFINE} for targeted edits, ${CREDIT_COSTS.APP_BUILDER_DEBUG} for bug fixes, and ${CREDIT_COSTS.APP_BUILDER_DEPLOY} to publish.`
         : ' MVP Builder is available on every plan and uses account credits per action.';
     }
     if (featureLower.includes('gtm')) {

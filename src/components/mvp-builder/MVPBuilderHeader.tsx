@@ -306,7 +306,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
                             {project.deployment_url && (
                               <>
                                 <span>·</span>
-                                <span className="text-success">Deployed</span>
+                                <span className="text-success">Published</span>
                               </>
                             )}
                             {project.project_files && project.project_files.length > 0 && (

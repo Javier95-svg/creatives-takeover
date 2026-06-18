@@ -60,6 +60,7 @@ import {
   type MVPBuilderIntegrationsHealth,
   type MVPIntegrationStatus,
 } from '@/lib/mvp-builder/integrations';
+import { MVP_PUBLISH_BASE_DOMAIN } from '@/lib/mvp-builder/publish';
 
 export interface MVPMessage {
   id: string;
@@ -631,7 +632,7 @@ function getMVPActionLabel(feature: CreditFeature): string {
     case 'APP_BUILDER_DEBUG':
       return 'MVP Builder - Bug Fix';
     case 'APP_BUILDER_DEPLOY':
-      return 'MVP Builder - Deploy';
+      return 'MVP Builder - Publish';
     case 'APP_BUILDER_RESTORE':
       return 'MVP Builder - Restore';
     case 'APP_BUILDER_EXPORT':
@@ -3455,23 +3456,29 @@ export function useMVPBuilder() {
     toast.success('Exported MVP source ZIP.');
   }, [projectFiles, projectName]);
 
-  const deployProject = useCallback(async () => {
+  // Publish (auto-subdomain). Reserves a clean, globally-unique public link
+  // ({slug}.creativestakeover.app) for projects without a connected custom domain.
+  // The actual slug assignment + uniqueness check runs server-side in the
+  // `mvp-builder-publish` edge function (service role spans all users; the slug is
+  // locked on first publish so renaming the project never breaks shared links).
+  const publishProject = useCallback(async () => {
     if (!user || projectFiles.length === 0 || isDeploying) {
-      if (!user) toast.error('Please sign in to deploy this MVP.');
-      if (projectFiles.length === 0) toast.error('Generate a project before deploying.');
+      if (!user) toast.error('Please sign in to publish this MVP.');
+      if (projectFiles.length === 0) toast.error('Generate a project before publishing.');
       return;
     }
     if (creditsLoading) {
       toast('Loading credit balance...');
       return;
     }
+    // Persist first so the project row exists for the publish function to read/update.
     await saveProject({ silent: true });
     setIsDeploying(true);
     try {
       const session = await getSessionSafely();
       const accessToken = session?.access_token;
-      const idempotencyKey = createIdempotencyKey('mvp-builder-deploy', `${projectId}-${Date.now()}`);
-      const { data, error } = await supabase.functions.invoke('mvp-builder-deploy', {
+      const idempotencyKey = createIdempotencyKey('mvp-builder-publish', `${projectId}-${Date.now()}`);
+      const { data, error } = await supabase.functions.invoke('mvp-builder-publish', {
         headers: {
           'Idempotency-Key': idempotencyKey,
           ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
@@ -3485,21 +3492,22 @@ export function useMVPBuilder() {
         } else {
           handleCreditError(error, data, 'APP_BUILDER_DEPLOY');
         }
-        toast.error(data?.error || 'Deployment failed.');
+        toast.error(data?.error || 'Publishing failed.');
         void refreshCredits();
         return;
       }
 
-      setDeploymentUrl(data.deploymentUrl);
+      setDeploymentUrl(data.url);
       void refreshCredits();
-      toast.success(`MVP deployed for ${Number(data.creditsUsed ?? CREDIT_COSTS.APP_BUILDER_DEPLOY)} credits.`);
+      toast.success(
+        `Published to ${data.slug}.${MVP_PUBLISH_BASE_DOMAIN} for ${Number(data.creditsUsed ?? CREDIT_COSTS.APP_BUILDER_DEPLOY)} credits.`
+      );
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Deployment failed.');
+      toast.error(error instanceof Error ? error.message : 'Publishing failed.');
     } finally {
       setIsDeploying(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
-  }, [creditsAvailable, creditsLoading, handleCreditError, isDeploying, projectFiles.length, projectId, refreshCredits, saveProject, user]);
+  }, [creditsLoading, handleCreditError, isDeploying, projectFiles.length, projectId, refreshCredits, saveProject, user]);
 
   const closeCreditExhaustedModal = useCallback(() => {
     setIsCreditExhaustedModalOpen(false);
@@ -3630,7 +3638,7 @@ export function useMVPBuilder() {
     createManualSnapshot,
     restoreProjectSnapshot,
     exportProjectZip,
-    deployProject,
+    publishProject,
     setSelectedModels,
     sendMessage,
     classifyActionQuote,

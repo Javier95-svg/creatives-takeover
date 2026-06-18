@@ -232,7 +232,7 @@ test('MVP Builder is universal and Phase 2 app builder actions are credit-metere
     APP_BUILDER_ADD_PAGE: 6,
     APP_BUILDER_ADD_FEATURE: 8,
     APP_BUILDER_DESIGN_OVERHAUL: 8,
-    APP_BUILDER_DEPLOY: 3,
+    APP_BUILDER_DEPLOY: 5,
     APP_BUILDER_RESTORE: 1,
     APP_BUILDER_EXPORT: 0,
     APP_BUILDER_CHAT: 1,

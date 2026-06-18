@@ -60,7 +60,7 @@ test('plan-aware credit pricing tightens Rookie waitlist usage and keeps MVP act
   assert.equal(CLIENT_CREDIT_COSTS.APP_BUILDER_ADD_PAGE, 6);
   assert.equal(CLIENT_CREDIT_COSTS.APP_BUILDER_ADD_FEATURE, 8);
   assert.equal(CLIENT_CREDIT_COSTS.APP_BUILDER_DESIGN_OVERHAUL, 8);
-  assert.equal(CLIENT_CREDIT_COSTS.APP_BUILDER_DEPLOY, 3);
+  assert.equal(CLIENT_CREDIT_COSTS.APP_BUILDER_DEPLOY, 5);
   assert.equal(CLIENT_CREDIT_COSTS.APP_BUILDER_RESTORE, 1);
   assert.equal(CLIENT_CREDIT_COSTS.APP_BUILDER_EXPORT, 0);
   assert.equal(CLIENT_CREDIT_COSTS.APP_BUILDER_CHAT, 1);

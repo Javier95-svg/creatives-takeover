@@ -34,7 +34,7 @@ const CREDIT_FEATURE_LABELS: Record<CreditFeature, string> = {
   APP_BUILDER_ADD_PAGE: 'MVP Builder Add Page',
   APP_BUILDER_ADD_FEATURE: 'MVP Builder Add Feature',
   APP_BUILDER_DESIGN_OVERHAUL: 'MVP Builder Design Overhaul',
-  APP_BUILDER_DEPLOY: 'MVP Builder Deploy',
+  APP_BUILDER_DEPLOY: 'MVP Builder Publish',
   APP_BUILDER_RESTORE: 'MVP Builder Restore',
   APP_BUILDER_EXPORT: 'MVP Builder Export',
   APP_BUILDER_CHAT: 'MVP Builder Chat',

@@ -66,7 +66,7 @@ export const MVPBuilder: React.FC = () => {
     createManualSnapshot,
     restoreProjectSnapshot,
     exportProjectZip,
-    deployProject,
+    publishProject,
     setSelectedModels,
     sendMessage,
     classifyActionQuote,
@@ -161,7 +161,7 @@ export const MVPBuilder: React.FC = () => {
       onRestoreSnapshot={restoreProjectSnapshot}
       onSelectEntryFile={setEntryFilePath}
       onExportZip={exportProjectZip}
-      onDeploy={deployProject}
+      onDeploy={publishProject}
       integrations={integrations}
       githubConnection={githubConnection}
       githubRepositories={githubRepositories}

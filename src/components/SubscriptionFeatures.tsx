@@ -45,7 +45,7 @@ const creditBreakdown: {
     },
     {
       name: "MVP Builder",
-      description: `Available on every plan using the user's regular account credit balance: ${CREDIT_COSTS.APP_BUILDER_GENERATE} credits for a React app, ${CREDIT_COSTS.APP_BUILDER_REFINE} for targeted edits, ${CREDIT_COSTS.APP_BUILDER_DEBUG} for bug fixes, and ${CREDIT_COSTS.APP_BUILDER_DEPLOY} to deploy.`,
+      description: `Available on every plan using the user's regular account credit balance: ${CREDIT_COSTS.APP_BUILDER_GENERATE} credits for a React app, ${CREDIT_COSTS.APP_BUILDER_REFINE} for targeted edits, ${CREDIT_COSTS.APP_BUILDER_DEBUG} for bug fixes, and ${CREDIT_COSTS.APP_BUILDER_DEPLOY} to publish.`,
       badge: "All plans",
       badgeVariant: "outline",
       badgeClassName: "bg-info-subtle dark:bg-info/30",

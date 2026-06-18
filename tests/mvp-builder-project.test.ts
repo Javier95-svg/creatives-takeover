@@ -221,7 +221,7 @@ test('phase 2 MVP action credit costs use the regular account credit balance pri
   assert.equal(CREDIT_COSTS.APP_BUILDER_ADD_PAGE, 6);
   assert.equal(CREDIT_COSTS.APP_BUILDER_ADD_FEATURE, 8);
   assert.equal(CREDIT_COSTS.APP_BUILDER_DESIGN_OVERHAUL, 8);
-  assert.equal(CREDIT_COSTS.APP_BUILDER_DEPLOY, 3);
+  assert.equal(CREDIT_COSTS.APP_BUILDER_DEPLOY, 5);
 });
 
 test('MVP Builder integration readiness requires healthy GitHub and Supabase connections', () => {

@@ -24,6 +24,7 @@ import {
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { MVPBuilderDomainPanel } from './MVPBuilderDomainPanel';
+import { MVPBuilderPublishPanel } from './MVPBuilderPublishPanel';
 import { MVPBuilderCodePanel } from './MVPBuilderCodePanel';
 import { MVPBuilderIntegrationPanel } from './MVPBuilderIntegrationPanel';
 import type {
@@ -43,6 +44,7 @@ import type {
   MVPProjectType,
 } from '@/lib/mvp-builder/project';
 import { mvpWebContainerRuntime, type MVPWebContainerState } from '@/lib/mvp-builder/webcontainerRuntime';
+import { CREDIT_COSTS } from '@/config/constants';
 
 const LOADING_STEPS = [
   'Understanding prompt...',
@@ -450,10 +452,10 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                       disabled={(!html && projectFramework !== 'react-vite') || isDeploying}
                     >
                       {isDeploying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Globe className="h-3.5 w-3.5" />}
-                      Deploy
+                      Publish
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Deploy this MVP for 3 credits</TooltipContent>
+                  <TooltipContent>Publish to a public .creativestakeover.app link for {CREDIT_COSTS.APP_BUILDER_DEPLOY} credits</TooltipContent>
                 </Tooltip>
               </div>
             </div>
@@ -468,14 +470,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
 
         {activeTab === 'domain' && (
           <div className="min-h-0 flex-1 overflow-y-auto">
-            {deploymentUrl && (
-              <div className="border-b border-border/50 px-4 py-3 text-xs">
-                <a href={deploymentUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
-                  Open deployed MVP
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </a>
-              </div>
-            )}
+            <MVPBuilderPublishPanel projectId={projectId} publishedUrl={deploymentUrl} />
             <MVPBuilderDomainPanel projectId={projectId} />
           </div>
         )}
