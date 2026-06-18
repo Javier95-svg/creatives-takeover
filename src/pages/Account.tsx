@@ -41,7 +41,7 @@ const Account = () => {
   const [quizSaving, setQuizSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const { pendingFriendRequests } = useSocial();
+  const { connectionNotificationCount } = useSocial();
   
   // Profile state
   const [fullName, setFullName] = useState("");
@@ -1164,7 +1164,7 @@ const Account = () => {
             </CardContent>
           </Card>
 
-          {/* Social Stats & Friend Requests */}
+          {/* Social Stats & Connection Requests */}
           <Card className="backdrop-blur-sm bg-card/80 border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -1172,7 +1172,7 @@ const Account = () => {
                 Social & Connections
               </CardTitle>
               <CardDescription>
-                Your social statistics and manage friend requests.
+                Your social statistics and manage connection requests.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -1196,13 +1196,13 @@ const Account = () => {
                 onClick={() => setFriendRequestsOpen(true)}
                 className="relative"
               >
-                Friend Requests
-                {pendingFriendRequests.length > 0 && (
-                  <Badge 
-                    variant="destructive" 
+                Connection Requests
+                {connectionNotificationCount > 0 && (
+                  <Badge
+                    variant="destructive"
                     className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
                   >
-                    {pendingFriendRequests.length > 9 ? '9+' : pendingFriendRequests.length}
+                    {connectionNotificationCount > 9 ? '9+' : connectionNotificationCount}
                   </Badge>
                 )}
               </Button>

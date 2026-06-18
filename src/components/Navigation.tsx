@@ -53,7 +53,7 @@ const Navigation = () => {
   const [lockedMenuItem, setLockedMenuItem] = useState<{ name: string; reason: string } | null>(null);
   const mobileBarRef = useRef<HTMLDivElement | null>(null);
   const { user, signOut, loading } = useAuth();
-  const { pendingFriendRequests } = useSocial(user?.id || '');
+  const { connectionNotificationCount } = useSocial(user?.id || '');
   const { trackClick } = usePageAnalytics();
   const deviceType = useDeviceType();
   const location = useLocation();
@@ -679,9 +679,9 @@ const Navigation = () => {
                       className={cn(navActionButtonClass, "touch-manipulation")}
                     >
                       <UserPlus className="w-5 h-5" />
-                      {pendingFriendRequests.length > 0 && (
+                      {connectionNotificationCount > 0 && (
                         <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs animate-pulse">
-                          {pendingFriendRequests.length}
+                          {connectionNotificationCount > 9 ? '9+' : connectionNotificationCount}
                         </Badge>
                       )}
                     </Button>

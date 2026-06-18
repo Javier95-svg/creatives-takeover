@@ -3,6 +3,42 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
+// Fired whenever connection-request state changes (a request is answered, or an
+// acceptance notification is acknowledged). Every `useSocial` instance listens
+// for it so the nav badge and the modal stay in sync without sharing a store.
+const CONNECTION_EVENT = 'connection-requests-updated';
+
+const SEEN_ACCEPTED_KEY_PREFIX = 'ct_seen_accepted_connections_';
+
+// Track, per user, which "your connection request was accepted" notifications
+// the sender has already seen. Kept in localStorage so the badge stays cleared
+// across reloads without needing a backend column.
+const getSeenAcceptedIds = (userId: string): string[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(`${SEEN_ACCEPTED_KEY_PREFIX}${userId}`);
+    return raw ? (JSON.parse(raw) as string[]) : [];
+  } catch {
+    return [];
+  }
+};
+
+const addSeenAcceptedIds = (userId: string, ids: string[]) => {
+  if (typeof window === 'undefined' || ids.length === 0) return;
+  try {
+    const merged = new Set([...getSeenAcceptedIds(userId), ...ids]);
+    window.localStorage.setItem(`${SEEN_ACCEPTED_KEY_PREFIX}${userId}`, JSON.stringify([...merged]));
+  } catch {
+    // Storage may be unavailable (private mode); the badge simply won't persist.
+  }
+};
+
+const emitConnectionUpdate = () => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(CONNECTION_EVENT));
+  }
+};
+
 export interface UserFollow {
   id: string;
   follower_id: string;
@@ -36,6 +72,19 @@ export interface PendingFollowRequest {
   } | null;
 }
 
+// A connection request the current user *sent* that the other person accepted,
+// surfaced back to the sender as a notification.
+export interface AcceptedConnectionNotification {
+  id: string;
+  receiver_id: string;
+  updated_at: string;
+  receiver: {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null;
+}
+
 export const useSocial = (targetUserId?: string) => {
   const { user } = useAuth();
   const [followStatus, setFollowStatus] = useState<'none' | 'following' | 'pending' | 'blocked'>('none');
@@ -43,6 +92,17 @@ export const useSocial = (targetUserId?: string) => {
   const [loading, setLoading] = useState(false);
   const [pendingFriendRequests, setPendingFriendRequests] = useState<FriendRequest[]>([]);
   const [pendingFollowRequests, setPendingFollowRequests] = useState<PendingFollowRequest[]>([]);
+  const [acceptedConnectionNotifications, setAcceptedConnectionNotifications] = useState<AcceptedConnectionNotification[]>([]);
+  // Bumped by the CONNECTION_EVENT listener so every hook instance re-reads
+  // pending/accepted state when one of them changes it.
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handler = () => setRefreshTick((tick) => tick + 1);
+    window.addEventListener(CONNECTION_EVENT, handler);
+    return () => window.removeEventListener(CONNECTION_EVENT, handler);
+  }, []);
 
   // Check current relationship status
   useEffect(() => {
@@ -130,7 +190,54 @@ export const useSocial = (targetUserId?: string) => {
     };
 
     void loadFriendRequests();
-  }, [user]);
+  }, [user, refreshTick]);
+
+  // Load accepted connection requests that *this* user sent, so the sender is
+  // notified when the other person accepts. Already-seen ones are filtered out.
+  useEffect(() => {
+    if (!user) {
+      setAcceptedConnectionNotifications([]);
+      return;
+    }
+
+    const loadAcceptedConnections = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('friend_requests')
+          .select('*')
+          .eq('sender_id', user.id)
+          .eq('status', 'accepted');
+
+        if (error) throw error;
+
+        const seenIds = new Set(getSeenAcceptedIds(user.id));
+        const unseen = (data || []).filter((request) => !seenIds.has(request.id));
+
+        const withReceivers = await Promise.all(
+          unseen.map(async (request) => {
+            const { data: receiverData } = await supabase
+              .from('public_profiles')
+              .select('id, full_name, avatar_url')
+              .eq('id', request.receiver_id)
+              .single();
+
+            return {
+              id: request.id,
+              receiver_id: request.receiver_id,
+              updated_at: request.updated_at,
+              receiver: receiverData,
+            };
+          })
+        );
+
+        setAcceptedConnectionNotifications(withReceivers);
+      } catch (error) {
+        console.error('Error loading accepted connections:', error);
+      }
+    };
+
+    void loadAcceptedConnections();
+  }, [user, refreshTick]);
 
   // Load pending follow requests
   useEffect(() => {
@@ -170,7 +277,7 @@ export const useSocial = (targetUserId?: string) => {
     };
 
     void loadFollowRequests();
-  }, [user]);
+  }, [user, refreshTick]);
 
   const followUser = async () => {
     if (!user || !targetUserId || loading) return;
@@ -237,10 +344,10 @@ export const useSocial = (targetUserId?: string) => {
       if (error) throw error;
 
       setFriendStatus('pending_sent');
-      toast.success('Friend request sent');
+      toast.success('Connection request sent');
     } catch (error) {
       console.error('Error sending friend request:', error);
-      toast.error('Failed to send friend request');
+      toast.error('Failed to send connection request');
     } finally {
       setLoading(false);
     }
@@ -262,16 +369,20 @@ export const useSocial = (targetUserId?: string) => {
       if (error) throw error;
 
       setPendingFriendRequests(prev => prev.filter(req => req.id !== requestId));
-      
+
+      // Let other hook instances (e.g. the nav badge) refresh their counts, and
+      // surface the acceptance to the original sender on their next load.
+      emitConnectionUpdate();
+
       if (action === 'accept') {
         setFriendStatus('friends');
-        toast.success('Friend request accepted');
+        toast.success('Connection request accepted');
       } else {
-        toast.success('Friend request declined');
+        toast.success('Connection request declined');
       }
     } catch (error) {
       console.error('Error responding to friend request:', error);
-      toast.error(`Failed to ${action} friend request`);
+      toast.error(`Failed to ${action} connection request`);
     } finally {
       setLoading(false);
     }
@@ -292,10 +403,10 @@ export const useSocial = (targetUserId?: string) => {
       if (error) throw error;
 
       setFriendStatus('none');
-      toast.success('Friend request cancelled');
+      toast.success('Connection request cancelled');
     } catch (error) {
       console.error('Error cancelling friend request:', error);
-      toast.error('Failed to cancel friend request');
+      toast.error('Failed to cancel connection request');
     } finally {
       setLoading(false);
     }
@@ -353,18 +464,30 @@ export const useSocial = (targetUserId?: string) => {
     }
   };
 
+  // Acknowledge "your connection request was accepted" notifications so they
+  // stop counting toward the badge (persisted per user, broadcast to siblings).
+  const markAcceptedConnectionsSeen = () => {
+    if (!user || acceptedConnectionNotifications.length === 0) return;
+    addSeenAcceptedIds(user.id, acceptedConnectionNotifications.map((n) => n.id));
+    setAcceptedConnectionNotifications([]);
+    emitConnectionUpdate();
+  };
+
   return {
     followStatus,
     friendStatus,
     loading,
     pendingFriendRequests,
     pendingFollowRequests,
+    acceptedConnectionNotifications,
+    connectionNotificationCount: pendingFriendRequests.length + acceptedConnectionNotifications.length,
     followUser,
     unfollowUser,
     sendFriendRequest,
     respondToFriendRequest,
     cancelFriendRequest,
     acceptFollowRequest,
-    rejectFollowRequest
+    rejectFollowRequest,
+    markAcceptedConnectionsSeen
   };
 };
