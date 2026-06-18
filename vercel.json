@@ -20,8 +20,8 @@
   ],
   "rewrites": [
     {
-      "source": "/:path*",
-      "has": [{ "type": "host", "value": "(?<slug>(?!www)[a-z0-9-]+)\\.creatives-takeover\\.com" }],
+      "source": "/:path(.*)",
+      "has": [{ "type": "host", "value": "^(?<slug>[a-z0-9-]+)\\.creatives-takeover\\.com$" }],
       "destination": "/api/published-site?slug=:slug&p=:path"
     },
     { "source": "/pricing", "destination": "/pricing/index.html" },
