@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import DemoPlayer from '@/components/demo-studio/player/DemoPlayer';
 import { getPublicDemo } from '@/lib/demoStudio/api';
+import { shouldShowWatermark } from '@/lib/demoStudio/plan';
 import type { PublicDemo } from '@/lib/demoStudio/types';
 
 // Iframe-optimized demo view: no site chrome, fills the embed, tracks events.
@@ -57,7 +58,7 @@ export default function EmbedDemoPage() {
         mode="live"
         projectId={data.demo.project_id}
         demoId={data.demo.id}
-        showWatermark={data.demo.theme?.watermark !== false}
+        showWatermark={shouldShowWatermark(data.demo.theme?.watermark, data.demo.theme?.ownerPlan)}
       />
     </div>
   );

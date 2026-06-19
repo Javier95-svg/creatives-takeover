@@ -116,6 +116,8 @@ export default function DemoPlayer({
 
   const handleExport = async (format: 'mp4' | 'gif') => {
     if (exporting) return;
+    // TODO(billing): charge per export via a dedicated DEMO_EXPORT credit feature.
+    // AI is currently metered generically as WAITLIST_GENERATION; export is free for now.
     setExporting(format);
     try {
       const mod = await import('@/lib/demoStudio/demoExport');

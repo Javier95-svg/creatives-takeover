@@ -493,7 +493,7 @@ export default function DemoEditorPage() {
     }
     setPublishing(true);
     try {
-      const updated = await publishDemo(demo.id);
+      const updated = await publishDemo(demo.id, { ownerId: demo.owner_id, ownerPlan: planTier });
       setDemo(updated);
       toast.success('Demo published!');
       // Trigger 4 (activation complete): publishing a demo is a milestone. For

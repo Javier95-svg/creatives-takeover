@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createLaunchSignup, getPublicLaunchPage } from '@/lib/demoStudio/api';
 import { DEFAULT_DEMO_STUDIO_CTA } from '@/lib/demoStudio/brief';
+import { shouldShowWatermark } from '@/lib/demoStudio/plan';
 import { trackDemoEvent } from '@/lib/demoStudio/events';
 import type { PublicLaunchPage as PublicLaunchPageData } from '@/lib/demoStudio/types';
 
@@ -197,7 +198,7 @@ export default function PublicLaunchPage() {
               demoId={data.demo.demo.id}
               ctaHref="#signup"
               ctaLabel={data.launchPage.cta_label}
-              showWatermark={data.demo.demo.theme?.watermark !== false}
+              showWatermark={shouldShowWatermark(data.demo.demo.theme?.watermark, data.demo.demo.theme?.ownerPlan)}
             />
           </section>
         )}

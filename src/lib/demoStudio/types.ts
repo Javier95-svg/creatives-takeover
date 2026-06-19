@@ -30,6 +30,8 @@ export interface DemoTheme {
   primaryColor?: string;
   buttonStyle?: 'solid' | 'outline';
   watermark?: boolean;
+  /** Snapshot of the owner's plan at publish time; drives public watermark enforcement. */
+  ownerPlan?: string;
   endCtaLabel?: string;
   endCtaHref?: string;
   brief?: {

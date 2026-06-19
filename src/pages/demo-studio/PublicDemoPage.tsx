@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react';
 import SEO from '@/components/SEO';
 import DemoPlayer from '@/components/demo-studio/player/DemoPlayer';
 import { getPublicDemo } from '@/lib/demoStudio/api';
+import { shouldShowWatermark } from '@/lib/demoStudio/plan';
 import type { PublicDemo } from '@/lib/demoStudio/types';
 
 export default function PublicDemoPage() {
@@ -68,7 +69,7 @@ export default function PublicDemoPage() {
           mode="live"
           projectId={data.demo.project_id}
           demoId={data.demo.id}
-          showWatermark={data.demo.theme?.watermark !== false}
+          showWatermark={shouldShowWatermark(data.demo.theme?.watermark, data.demo.theme?.ownerPlan)}
           allowExport
         />
       </div>

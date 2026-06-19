@@ -32,6 +32,8 @@ import {
   getNextVslLabel,
   normalizeLoomUrl,
 } from './vsl';
+import { canPublishDemo, getPublishedDemoCap } from './plan';
+import { normalizePlan } from '@/config/planPermissions';
 
 const PROJECTS = 'demo_studio_projects' as any;
 const DEMOS = 'demo_studio_demos' as any;
@@ -330,12 +332,30 @@ export async function updateDemo(
   if (error) throw new Error(error.message);
 }
 
-export async function publishDemo(id: string): Promise<DemoStudioDemo> {
+export async function publishDemo(
+  id: string,
+  opts?: { ownerId?: string; ownerPlan?: string },
+): Promise<DemoStudioDemo> {
   const existing = await getDemo(id);
+  // Free-tier cap: enforce only when transitioning draft -> published (republish
+  // of an already-public demo is never blocked). Mirrors Arcade's free ceiling.
+  if (existing && existing.status !== 'published' && opts?.ownerId) {
+    const { published } = await getOwnerDemoCounts(opts.ownerId);
+    if (!canPublishDemo(opts.ownerPlan, published)) {
+      const cap = getPublishedDemoCap(opts.ownerPlan);
+      throw new Error(`Your plan allows ${cap} published demos. Upgrade to publish more.`);
+    }
+  }
   const publicId = existing?.public_id || shortId();
+  const update: Record<string, unknown> = { status: 'published', public_id: publicId };
+  // Snapshot the owner's plan so public renders can enforce the watermark without
+  // reading the owner's tier (not exposed to anon). Only write when provided.
+  if (opts?.ownerPlan) {
+    update.theme = { ...(existing?.theme ?? {}), ownerPlan: normalizePlan(opts.ownerPlan) };
+  }
   const result = await supabase
     .from(DEMOS)
-    .update({ status: 'published', public_id: publicId } as any)
+    .update(update as any)
     .eq('id', id)
     .select('*')
     .single();
