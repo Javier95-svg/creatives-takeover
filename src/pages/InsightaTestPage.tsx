@@ -50,7 +50,7 @@ export default function InsightaTestPage() {
   const relatedLinks = [
     { href: "/vc-search", label: "VC Search" },
     { href: "/email-templates", label: "Email Templates" },
-    { href: "/accelerator-hunt", label: "Accelerator Search" },
+    { href: "/accelerator-hunt", label: "Accelerator Hunt" },
     { href: "/pitch-deck-analyzer", label: "Pitch Deck Analyzer" },
   ];
 

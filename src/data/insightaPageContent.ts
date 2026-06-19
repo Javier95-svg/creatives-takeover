@@ -20,9 +20,9 @@ export const insightaPageContent = {
   vcSearch: {
     relatedLinks: [
       { href: "/email-templates", label: "Email Templates" },
-      { href: "/accelerator-hunt", label: "Accelerator Search" },
+      { href: "/accelerator-hunt", label: "Accelerator Hunt" },
       { href: "/pitch-deck-analyzer", label: "Pitch Deck Analyzer" },
-      { href: "/insighta-test", label: "Fundraising Assessment" },
+      { href: "/insighta-test", label: "Insighta Test" },
     ] satisfies InsightaPageLink[],
     answerSummary: {
       title: "How founders use VC Search",
@@ -56,7 +56,7 @@ export const insightaPageContent = {
       { href: "/vc-search", label: "VC Search" },
       { href: "/email-templates", label: "Email Templates" },
       { href: "/pitch-deck-analyzer", label: "Pitch Deck Analyzer" },
-      { href: "/insighta-test", label: "Fundraising Assessment" },
+      { href: "/insighta-test", label: "Insighta Test" },
     ] satisfies InsightaPageLink[],
     answerSummary: {
       title: "How founders use Accelerator Hunt",

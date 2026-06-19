@@ -76,7 +76,7 @@ export default function VCSearchPage() {
               <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
                 Search and filter venture capitalist firms by<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> investment stage, industry, and geography.</span>
               </p>
-              <RelatedPageLinks title="Related fundraising tools" links={relatedLinks} />
+              <RelatedPageLinks title="Related fundraising tools" links={relatedLinks} singleLine />
             </div>
 
             {user ? (
