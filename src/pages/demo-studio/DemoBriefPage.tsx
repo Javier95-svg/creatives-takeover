@@ -37,8 +37,67 @@ import {
   DEMO_STUDIO_PRODUCT_STAGES,
   DEMO_STUDIO_TONES,
   getBriefCompleteness,
+  getDefaultBrief,
 } from '@/lib/demoStudio/brief';
-import type { DemoStudioAiKit, DemoStudioBrief, DemoStudioLaunchCopy, DemoStudioProject } from '@/lib/demoStudio/types';
+import { getDemoReadiness } from '@/lib/demoStudio/readiness';
+import type {
+  DemoStepWithHotspots,
+  DemoStudioAiKit,
+  DemoStudioBrief,
+  DemoStudioLaunchCopy,
+  DemoStudioProject,
+} from '@/lib/demoStudio/types';
+
+// Prefill the four story fields from the project name + tagline (via
+// getDefaultBrief) so a freshly created brief is complete enough to generate in
+// one click. Only fills fields the founder hasn't already written.
+function buildBriefPrefillPatch(
+  project: Pick<DemoStudioProject, 'name' | 'tagline'>,
+  brief: DemoStudioBrief,
+): Partial<DemoStudioBrief> {
+  const defaults = getDefaultBrief({ name: project.name, tagline: project.tagline });
+  const patch: Partial<DemoStudioBrief> = {};
+  if (!brief.audience?.trim() && defaults.audience) patch.audience = defaults.audience;
+  if (!brief.problem?.trim() && defaults.problem) patch.problem = defaults.problem;
+  if (!brief.product_promise?.trim() && defaults.product_promise) patch.product_promise = defaults.product_promise;
+  if (!brief.aha_moment?.trim() && defaults.aha_moment) patch.aha_moment = defaults.aha_moment;
+  return patch;
+}
+
+// Map the generated storyboard into player-step shape so we can score how close
+// the generated kit is to a publishable demo (it will flag the screenshots the
+// founder still needs to add).
+function storyboardToReadinessSteps(storyboard: DemoStudioAiKit['storyboard']): DemoStepWithHotspots[] {
+  return (storyboard ?? []).map((step, index) => ({
+    id: `sb-${index}`,
+    demo_id: 'brief-preview',
+    position: index,
+    asset_url: null,
+    asset_width: null,
+    asset_height: null,
+    title: step.title,
+    caption: step.caption,
+    speaker_notes: step.speaker_notes,
+    created_at: '',
+    hotspots: step.hotspot_label
+      ? [
+          {
+            id: `sb-hs-${index}`,
+            step_id: `sb-${index}`,
+            x: 0.35,
+            y: 0.78,
+            w: 0.3,
+            h: 0.12,
+            type: 'tooltip',
+            label: step.hotspot_label,
+            action: 'next',
+            action_target: null,
+            created_at: '',
+          },
+        ]
+      : [],
+  }));
+}
 
 function getRenderableLaunchCopy(value: unknown): DemoStudioLaunchCopy | null {
   if (!value || typeof value !== 'object') return null;
@@ -82,7 +141,13 @@ export default function DemoBriefPage() {
           navigate('/demo-studio/projects');
           return;
         }
-        const briefRow = await getOrCreateBrief(projectRow, user.id);
+        let briefRow = await getOrCreateBrief(projectRow, user.id);
+        // One-click path: seed empty story fields from the project so the founder
+        // can generate immediately instead of filling a form first.
+        const prefill = buildBriefPrefillPatch(projectRow, briefRow);
+        if (Object.keys(prefill).length > 0) {
+          briefRow = await updateBrief(projectRow.id, user.id, prefill);
+        }
         if (!active) return;
         setProject(projectRow);
         setBrief(briefRow);
@@ -107,6 +172,13 @@ export default function DemoBriefPage() {
     [brief],
   );
   const hasGeneratedKit = Boolean(aiKit.storyboard?.length || aiKit.vsl_scripts?.length || aiKit.launch_copy);
+  const storyboardReadiness = useMemo(
+    () =>
+      getDemoReadiness(storyboardToReadinessSteps(aiKit.storyboard), {
+        endCtaLabel: brief?.primary_cta_label || DEFAULT_DEMO_STUDIO_CTA,
+      }),
+    [aiKit.storyboard, brief?.primary_cta_label],
+  );
   const guideSteps = ['Define the story', 'Build the demo', 'Record the VSL', 'Publish the page', 'Measure interest'];
 
   const patchBrief = async (patch: Partial<DemoStudioBrief>) => {
@@ -140,7 +212,11 @@ export default function DemoBriefPage() {
       if (kit.launch_copy) patch.ai_launch_copy = kit.launch_copy;
       const saved = await updateBrief(projectId, user.id, patch);
       setBrief(saved);
-      toast.success('Demo Studio drafts generated.');
+      toast.success(
+        mode === 'full_kit'
+          ? 'Full kit generated — storyboard, VSL scripts, and launch copy.'
+          : 'Demo Studio drafts generated.',
+      );
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Could not generate drafts.');
     } finally {
@@ -215,8 +291,8 @@ export default function DemoBriefPage() {
       }
     : !hasGeneratedKit
       ? {
-          label: 'Generate storyboard + VSL scripts',
-          description: 'Turn the brief into demo steps, VSL script drafts, and launch page copy.',
+          label: 'Generate full kit',
+          description: 'One click turns the brief into a storyboard, VSL scripts, and launch copy.',
           onClick: () => handleGenerate('full_kit'),
           icon: Sparkles,
         }
@@ -255,19 +331,23 @@ export default function DemoBriefPage() {
             </span>
             <h1 className="creatives-font mt-3 text-3xl font-bold md:text-4xl">Define the proof before the pixels</h1>
             <p className="mt-2 max-w-2xl text-muted-foreground">
-              Lock the audience, pain, promise, aha moment, and CTA. Then generate a storyboard, VSL scripts, and launch copy.
+              We pre-filled your brief from the project. Generate a full kit — storyboard, VSL scripts, and launch copy — in one click, then refine the story.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button variant="outline" onClick={() => handleGenerate('storyboard')} disabled={generating || !completeness.complete} className="gap-2">
-              <Wand2 className="h-4 w-4" /> Storyboard
+              <Wand2 className="h-4 w-4" /> Storyboard only
             </Button>
             <Button onClick={() => handleGenerate('full_kit')} disabled={generating || !completeness.complete} className="gap-2">
               {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              Generate storyboard + VSL scripts
+              Generate full kit
             </Button>
-            {!completeness.complete && (
-              <p className="w-full text-xs text-muted-foreground">
+            {completeness.complete ? (
+              <p className="w-full text-right text-xs text-muted-foreground">
+                One click: storyboard + VSL scripts + launch copy. Uses credits.
+              </p>
+            ) : (
+              <p className="w-full text-right text-xs text-muted-foreground">
                 Complete Audience, Problem, Product promise, Aha moment, and CTA to unlock this.
               </p>
             )}
@@ -356,6 +436,27 @@ export default function DemoBriefPage() {
           </Card>
 
           <div className="space-y-4">
+            {aiKit.storyboard?.length ? (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+                  <CardTitle className="text-base">Demo readiness</CardTitle>
+                  <Badge variant={storyboardReadiness.ready ? 'default' : 'outline'}>{storyboardReadiness.score}%</Badge>
+                </CardHeader>
+                <CardContent>
+                  {storyboardReadiness.missing.length ? (
+                    <ul className="space-y-1 text-xs text-muted-foreground">
+                      {storyboardReadiness.missing.slice(0, 5).map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Your storyboard has the essentials. Add screenshots in the editor to publish.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            ) : null}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
                 <CardTitle className="text-base">AI storyboard</CardTitle>

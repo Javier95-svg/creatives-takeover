@@ -64,11 +64,19 @@ export function normalizeProjectSlug(value: string): string {
 
 export function getDefaultBrief(project: Pick<DemoStudioDemo, 'title'> | { name: string; tagline?: string | null }): Partial<DemoStudioBrief> {
   const name = 'name' in project ? project.name : project.title;
+  const safeName = (name ?? '').trim() || 'this product';
+  const tagline = 'tagline' in project ? project.tagline?.trim() ?? '' : '';
+  // Seed the brief from the only two things we know up front (name + tagline) so a
+  // founder can reach a generated kit in one click. These are starting points the
+  // AI expands and the founder can refine later — they are intentionally concrete
+  // enough to pass brief completeness, not final copy.
   return {
-    audience: null,
-    problem: null,
-    product_promise: 'tagline' in project ? project.tagline ?? null : null,
-    aha_moment: null,
+    audience: `Early adopters and prospective customers evaluating ${safeName}.`,
+    problem: `They are not yet convinced ${safeName} solves their problem or how it works in practice.`,
+    product_promise: tagline || `${safeName} gives its users a clear, fast win.`,
+    aha_moment: tagline
+      ? `By the end, the viewer understands how ${safeName} delivers ${tagline.toLowerCase()} and wants to try it.`
+      : `By the end, the viewer understands exactly how ${safeName} works and wants to try it.`,
     primary_cta_label: DEFAULT_DEMO_STUDIO_CTA,
     primary_cta_url: null,
     tone: 'conversational',
