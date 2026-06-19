@@ -1,8 +1,12 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { checkAndDeductCredits, getUserFromAuth, refundCredits } from "../_shared/credit-deduction.ts";
 import { CREDIT_COSTS } from "../_shared/credit-constants.ts";
 import { resolveCreditIdempotencyKey } from "../_shared/request-idempotency.ts";
+
+// Anonymous "/demo-studio/try" draft previews are uncharged, so cap them per IP.
+const DRAFT_RATE_LIMIT_PER_MIN = 5;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,6 +17,8 @@ type Mode = "full_kit" | "storyboard" | "vsl_scripts" | "launch_copy";
 
 interface DemoStudioGeneratorRequest {
   mode?: Mode;
+  /** When true, run the anonymous lead-magnet path: no auth, no credits, storyboard only. */
+  draft?: boolean;
   project?: {
     id?: string;
     name?: string;
@@ -235,12 +241,86 @@ async function generateKit(openaiApiKey: string, body: DemoStudioGeneratorReques
   return parsed;
 }
 
+function getClientIp(req: Request): string {
+  const forwarded = req.headers.get("x-forwarded-for") || "";
+  return forwarded.split(",")[0].trim() || "unknown";
+}
+
+/**
+ * Anonymous lead-magnet path for /demo-studio/try. No auth, no credit charge,
+ * no DB write of any demo content — storyboard captions are generated and
+ * returned to the browser only. Abuse is bounded by a per-IP rate limit that
+ * reuses the shared assert_rate_limit RPC (its api_rate_limits counter is the
+ * sole write). Output still passes the same quality validation as the paid path.
+ */
+async function handleDraft(req: Request, body: DemoStudioGeneratorRequest): Promise<Response> {
+  if (body.mode && body.mode !== "storyboard") {
+    return new Response(JSON.stringify({ success: false, error: "Draft previews support storyboard mode only", errorCode: "VALIDATION_FAILED" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const mode: Mode = "storyboard";
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (supabaseUrl && serviceRoleKey) {
+    const admin = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+    const { error: rlError } = await admin.rpc("assert_rate_limit", {
+      p_key: `demo_studio_try:${getClientIp(req)}`,
+      p_user_id: null,
+      p_max_per_minute: DRAFT_RATE_LIMIT_PER_MIN,
+    });
+    if (rlError) {
+      const rateLimited = /rate_limit_exceeded/i.test(rlError.message || "");
+      return new Response(JSON.stringify({
+        success: false,
+        error: rateLimited
+          ? "You've hit the free preview limit. Wait a minute or sign up to keep building."
+          : "Could not start the demo preview. Try again in a moment.",
+        errorCode: rateLimited ? "RATE_LIMIT" : "GENERATION_FAILED",
+      }), {
+        status: rateLimited ? 429 : 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  }
+
+  const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
+  if (!openaiApiKey) throw new Error("OpenAI API key not configured");
+
+  try {
+    const kit = await generateKit(openaiApiKey, body, mode);
+    return new Response(JSON.stringify({ success: true, mode, kit, draft: true }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (aiError) {
+    const status = (aiError as { status?: number })?.status === 429 ? 429 : 500;
+    const errorCode = status === 429 ? "RATE_LIMIT" : (aiError as { status?: number })?.status === 422 ? "VALIDATION_FAILED" : "GENERATION_FAILED";
+    return new Response(JSON.stringify({
+      success: false,
+      error: "We couldn't generate your demo preview. Try again in a moment.",
+      errorCode,
+    }), {
+      status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const body: DemoStudioGeneratorRequest = await req.json();
+
+    // Anonymous lead-magnet draft path runs before the auth/credit gate.
+    if (body.draft === true) {
+      return await handleDraft(req, body);
+    }
+
     const user = await getUserFromAuth(req);
     if (!user) {
       return new Response(JSON.stringify({ success: false, error: "Authentication required" }), {
@@ -249,7 +329,6 @@ serve(async (req) => {
       });
     }
 
-    const body: DemoStudioGeneratorRequest = await req.json();
     const validation = validateRequest(body);
     if (validation.errors.length) {
       return new Response(JSON.stringify({ success: false, error: "Invalid Demo Studio brief", errorCode: "VALIDATION_FAILED", details: validation.errors }), {

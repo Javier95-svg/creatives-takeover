@@ -142,6 +142,7 @@ const DemoStudioLaunchComposerPage = lazy(() => import("./pages/demo-studio/Laun
 const PublicDemoPage = lazy(() => import("./pages/demo-studio/PublicDemoPage"));
 const EmbedDemoPage = lazy(() => import("./pages/demo-studio/EmbedDemoPage"));
 const PublicLaunchPage = lazy(() => import("./pages/demo-studio/PublicLaunchPage"));
+const DemoStudioTryPage = lazy(() => import("./pages/demo-studio/TryPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -297,6 +298,8 @@ function App() {
                         <Route path="/demo-studio/projects/:projectId/demos/:demoId/edit" element={<RouteErrorBoundary routeName="Demo Editor"><DemoStudioEditorPage /></RouteErrorBoundary>} />
                         <Route path="/demo-studio/projects/:id/vsl" element={<RouteErrorBoundary routeName="VSL Studio"><DemoStudioVslStudioPage /></RouteErrorBoundary>} />
                         <Route path="/demo-studio/projects/:id/launch" element={<RouteErrorBoundary routeName="Launch Composer"><DemoStudioLaunchComposerPage /></RouteErrorBoundary>} />
+                        {/* Public no-auth lead magnet: produce a demo before signup */}
+                        <Route path="/demo-studio/try" element={<DemoStudioTryPage />} />
                         <Route path="/p/:slug" element={<PublicLaunchPage />} />
                         <Route path="/demo/:publicId" element={<PublicDemoPage />} />
                         <Route path="/embed/demo/:publicId" element={<EmbedDemoPage />} />

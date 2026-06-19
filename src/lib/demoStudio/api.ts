@@ -23,7 +23,7 @@ import type {
   PublicLaunchPage,
   PublicDemo,
 } from './types';
-import { DEFAULT_DEMO_STUDIO_CTA, normalizeAiKit, normalizeProjectSlug } from './brief';
+import { DEFAULT_DEMO_STUDIO_CTA, getDefaultBrief, normalizeAiKit, normalizeProjectSlug, normalizeStoryboard } from './brief';
 import {
   calculateSignupRate,
   canAddVsl,
@@ -227,6 +227,65 @@ export async function generateDemoStudioKit(args: {
   if (error) throw new Error(error.message);
   if (!data?.success) throw new Error(data?.error || 'Could not generate Demo Studio drafts.');
   return normalizeAiKit(data.kit);
+}
+
+// supabase-js wraps non-2xx function responses in a FunctionsHttpError whose
+// `.message` is generic; our structured `{ error }` body (e.g. the rate-limit
+// message) lives on the original Response at `.context`.
+async function readFunctionErrorMessage(error: unknown, fallback: string): Promise<string> {
+  const ctx = (error as { context?: unknown } | null)?.context;
+  if (ctx instanceof Response) {
+    try {
+      const payload = await ctx.clone().json();
+      if (payload && typeof payload.error === 'string' && payload.error) return payload.error;
+    } catch {
+      // Non-JSON body; fall through to the generic message.
+    }
+  }
+  if (error instanceof Error && error.message) return error.message;
+  return fallback;
+}
+
+/**
+ * Anonymous lead-magnet generation for /demo-studio/try. Calls the generator's
+ * draft path (no auth, no credit charge, no persistence) and returns normalized
+ * storyboard steps to render captions/hotspot labels client-side. A pasted URL
+ * is optional context only — visuals come from the visitor's uploaded screenshots.
+ */
+export async function generateDemoStudioDraftStoryboard(args: {
+  contextUrl?: string;
+  productName?: string;
+}): Promise<DemoStudioStoryboardStep[]> {
+  const trimmedUrl = args.contextUrl?.trim() || '';
+  let host = '';
+  if (trimmedUrl) {
+    try {
+      host = new URL(/^https?:\/\//i.test(trimmedUrl) ? trimmedUrl : `https://${trimmedUrl}`)
+        .hostname.replace(/^www\./, '');
+    } catch {
+      host = '';
+    }
+  }
+  const name =
+    args.productName?.trim() ||
+    (host ? host.split('.')[0].replace(/[-_]+/g, ' ').trim() : '') ||
+    'Your product';
+  const brief = getDefaultBrief({ name });
+  if (trimmedUrl) {
+    brief.product_promise = brief.product_promise || `Product shown at ${host || trimmedUrl}`;
+  }
+
+  const { data, error } = await supabase.functions.invoke('demo-studio-generator', {
+    body: {
+      draft: true,
+      mode: 'storyboard',
+      project: { id: 'try', name, tagline: null, category: null },
+      brief,
+    },
+  });
+  if (error) throw new Error(await readFunctionErrorMessage(error, 'Could not generate your demo preview.'));
+  if (!data?.success) throw new Error(data?.error || 'Could not generate your demo preview.');
+  return normalizeStoryboard(data.kit?.storyboard);
 }
 
 /* -------------------------------------------------------------------------- */
