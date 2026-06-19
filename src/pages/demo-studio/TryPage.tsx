@@ -1,35 +1,91 @@
-import { useEffect, useRef, useState } from 'react';
-import { ImagePlus, Loader2, Sparkles, X } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { AlertTriangle, ImagePlus, Loader2, Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner';
 import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import DemoPlayer from '@/components/demo-studio/player/DemoPlayer';
-import { generateDemoStudioDraftStoryboard } from '@/lib/demoStudio/api';
-import type { DemoStepWithHotspots, HotspotAction, HotspotType } from '@/lib/demoStudio/types';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  createDemo,
+  createHotspot,
+  createProject,
+  createStep,
+  generateDemoStudioDraftStoryboard,
+  uploadStepAsset,
+} from '@/lib/demoStudio/api';
+import { trackDemoEvent } from '@/lib/demoStudio/events';
+import {
+  clearTryDraft,
+  dataUrlToFile,
+  fileToDownscaledDataUrl,
+  readTryDraft,
+  saveTryDraft,
+  type TryDraft,
+  type TryDraftStep,
+} from '@/lib/demoStudio/tryDraft';
+import type { DemoStepWithHotspots } from '@/lib/demoStudio/types';
 
 const MAX_SCREENSHOTS = 3;
 const MIN_SCREENSHOTS = 2;
-const SIGNUP_HREF = '/signup?from=demo-try';
+const RETURN_PATH = '/demo-studio/try?hydrate=1';
+const SIGNUP_RETURN_HREF = `/signup?from=demo-try&return=${encodeURIComponent(RETURN_PATH)}`;
+const DEFAULT_HOTSPOT = { x: 0.35, y: 0.78, w: 0.3, h: 0.12 } as const;
 
 interface Shot {
   file: File;
   url: string;
 }
 
+interface HydrateStep {
+  file?: File;
+  dataUrl?: string;
+  title: string;
+  caption: string;
+  speaker_notes: string;
+  hotspot_label: string;
+}
+
+function deriveProductName(contextUrl: string, fallbackTitle?: string): string {
+  const trimmed = contextUrl.trim();
+  if (trimmed) {
+    try {
+      const host = new URL(/^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`)
+        .hostname.replace(/^www\./, '');
+      const base = host.split('.')[0].replace(/[-_]+/g, ' ').trim();
+      if (base) return base.charAt(0).toUpperCase() + base.slice(1);
+    } catch {
+      /* fall through */
+    }
+  }
+  return fallbackTitle?.trim() || 'My product';
+}
+
 export default function TryPage() {
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isReturning = searchParams.get('hydrate') === '1';
+
   const [shots, setShots] = useState<Shot[]>([]);
   const [contextUrl, setContextUrl] = useState('');
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [steps, setSteps] = useState<DemoStepWithHotspots[] | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [hydrateError, setHydrateError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const shotsRef = useRef<Shot[]>([]);
+  const hydratedRef = useRef(false);
+  // Best-effort eager serialization for anonymous visitors so the draft is in
+  // sessionStorage by the time any CTA navigates to signup.
+  const persistPromiseRef = useRef<Promise<boolean> | null>(null);
 
   // Anonymous flow: screenshots live only as in-memory object URLs. Removed
   // shots are revoked individually in removeShot; revoke whatever remains on
-  // unmount so we never leak blobs (nothing is ever uploaded or persisted).
+  // unmount so we never leak blobs.
   useEffect(() => {
     shotsRef.current = shots;
   }, [shots]);
@@ -66,6 +122,41 @@ export default function TryPage() {
     });
   };
 
+  // Downscale the screenshots backing `built` into a sessionStorage-safe draft.
+  const buildDraftSteps = useCallback(
+    async (built: DemoStepWithHotspots[], maxEdge: number, quality: number): Promise<TryDraftStep[]> => {
+      const currentShots = shotsRef.current;
+      const out: TryDraftStep[] = [];
+      for (let i = 0; i < built.length; i += 1) {
+        const file = currentShots[i]?.file;
+        if (!file) continue;
+        const dataUrl = await fileToDownscaledDataUrl(file, maxEdge, quality);
+        out.push({
+          dataUrl,
+          title: built[i].title ?? '',
+          caption: built[i].caption ?? '',
+          speaker_notes: built[i].speaker_notes ?? '',
+          hotspot_label: built[i].hotspots[0]?.label ?? '',
+        });
+      }
+      return out;
+    },
+    [],
+  );
+
+  const persistDraft = useCallback(
+    async (built: DemoStepWithHotspots[]): Promise<boolean> => {
+      const productName = deriveProductName(contextUrl, built[0]?.title ?? undefined);
+      let draftSteps = await buildDraftSteps(built, 1600, 0.85);
+      const draft: TryDraft = { v: 1, productName, contextUrl, steps: draftSteps };
+      if (saveTryDraft(draft)) return true;
+      // Retry once smaller if the first attempt overflowed the quota.
+      draftSteps = await buildDraftSteps(built, 1024, 0.7);
+      return saveTryDraft({ ...draft, steps: draftSteps });
+    },
+    [buildDraftSteps, contextUrl],
+  );
+
   const handleGenerate = async () => {
     if (shots.length < MIN_SCREENSHOTS) {
       toast.error(`Add at least ${MIN_SCREENSHOTS} screenshots first.`);
@@ -98,13 +189,10 @@ export default function TryPage() {
                 {
                   id: `try-hs-${i}`,
                   step_id: `try-${i}`,
-                  x: 0.35,
-                  y: 0.78,
-                  w: 0.3,
-                  h: 0.12,
-                  type: 'tooltip' as HotspotType,
+                  ...DEFAULT_HOTSPOT,
+                  type: 'tooltip',
                   label: step.hotspot_label,
-                  action: 'next' as HotspotAction,
+                  action: 'next',
                   action_target: null,
                   created_at: now,
                 },
@@ -116,6 +204,11 @@ export default function TryPage() {
         throw new Error("We couldn't turn those screenshots into a demo. Try again in a moment.");
       }
       setSteps(built);
+      trackDemoEvent('demo_view', { meta: { source: 'demo_try', step_count: built.length } });
+      // Anonymous visitors: stash the draft now so it survives the auth redirect.
+      if (!user) {
+        persistPromiseRef.current = persistDraft(built).catch(() => false);
+      }
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Could not generate your demo preview.';
       setError(message);
@@ -128,7 +221,157 @@ export default function TryPage() {
   const startOver = () => {
     setSteps(null);
     setError(null);
+    persistPromiseRef.current = null;
+    clearTryDraft();
   };
+
+  // Shared hydration: in-memory draft -> real project + demo + steps, then route
+  // into the builder. Throws on failure so callers can surface a retry.
+  const hydrate = useCallback(
+    async (productName: string, hydrateSteps: HydrateStep[]) => {
+      if (!user) throw new Error('You need to be signed in to save this demo.');
+      const name = productName || 'My product';
+      const project = await createProject(user.id, { name });
+      const demo = await createDemo(project.id, user.id, `${name} demo`);
+      let position = 0;
+      for (const step of hydrateSteps) {
+        const file =
+          step.file ??
+          (step.dataUrl ? await dataUrlToFile(step.dataUrl, `screenshot-${position + 1}.jpg`) : null);
+        if (!file) continue;
+        const asset = await uploadStepAsset(user.id, file);
+        const created = await createStep(demo.id, position, {
+          url: asset.url,
+          width: asset.width,
+          height: asset.height,
+          title: step.title || `Step ${position + 1}`,
+          caption: step.caption || null,
+          speaker_notes: step.speaker_notes || null,
+        });
+        if (step.hotspot_label) {
+          try {
+            await createHotspot(created.id, {
+              ...DEFAULT_HOTSPOT,
+              type: 'tooltip',
+              action: 'next',
+              label: step.hotspot_label,
+            });
+          } catch {
+            /* hotspot is a nicety; never block the save */
+          }
+        }
+        position += 1;
+      }
+      trackDemoEvent('signup', {
+        projectId: project.id,
+        demoId: demo.id,
+        meta: { source: 'demo_try', step_count: position },
+      });
+      clearTryDraft();
+      navigate(`/demo-studio/projects/${project.id}/brief`, { replace: true });
+    },
+    [navigate, user],
+  );
+
+  // Primary CTA on the result view.
+  const handleSave = async () => {
+    if (!steps) return;
+    if (user) {
+      setSaving(true);
+      try {
+        const productName = deriveProductName(contextUrl, steps[0]?.title ?? undefined);
+        const hydrateSteps: HydrateStep[] = steps.map((step, i) => ({
+          file: shots[i]?.file,
+          title: step.title ?? '',
+          caption: step.caption ?? '',
+          speaker_notes: step.speaker_notes ?? '',
+          hotspot_label: step.hotspots[0]?.label ?? '',
+        }));
+        await hydrate(productName, hydrateSteps);
+      } catch (e) {
+        setSaving(false);
+        toast.error(e instanceof Error ? e.message : 'Could not save your demo. Try again.');
+      }
+      return;
+    }
+    // Anonymous: make sure the draft is stored, then send them through signup.
+    setSaving(true);
+    const stored = await (persistPromiseRef.current ?? persistDraft(steps));
+    if (!stored) {
+      toast.error('Your screenshots are large — you may need to re-upload after signing up.');
+    }
+    navigate(SIGNUP_RETURN_HREF);
+  };
+
+  // Hydrate-on-return: the user came back from signup with ?hydrate=1.
+  const runReturnHydration = useCallback(async () => {
+    const draft = readTryDraft();
+    if (!user || !draft) {
+      navigate('/demo-studio/try', { replace: true });
+      return;
+    }
+    hydratedRef.current = true;
+    setSaving(true);
+    setHydrateError(null);
+    try {
+      await hydrate(
+        draft.productName,
+        draft.steps.map((s) => ({
+          dataUrl: s.dataUrl,
+          title: s.title,
+          caption: s.caption,
+          speaker_notes: s.speaker_notes,
+          hotspot_label: s.hotspot_label,
+        })),
+      );
+    } catch (e) {
+      hydratedRef.current = false;
+      setSaving(false);
+      const message = e instanceof Error ? e.message : 'Could not save your demo. Try again.';
+      setHydrateError(message);
+      toast.error(message);
+    }
+  }, [hydrate, navigate, user]);
+
+  useEffect(() => {
+    if (!isReturning || authLoading || hydratedRef.current || hydrateError) return;
+    void runReturnHydration();
+  }, [isReturning, authLoading, hydrateError, runReturnHydration]);
+
+  const showSaving = saving || (isReturning && !hydrateError && !steps);
+
+  if (showSaving) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-slate-950 text-white">
+        <SEO title="Saving your demo — Demo Studio" description="Saving your demo." noindex />
+        <Loader2 className="h-7 w-7 animate-spin text-white/70" />
+        <p className="text-sm text-white/70">Saving your demo…</p>
+      </div>
+    );
+  }
+
+  if (isReturning && hydrateError) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-950 px-6 text-center text-white">
+        <SEO title="Couldn't save your demo — Demo Studio" description="We couldn't save your demo." noindex />
+        <AlertTriangle className="h-7 w-7 text-amber-400" />
+        <div>
+          <h1 className="text-xl font-semibold">We couldn't save your demo</h1>
+          <p className="mt-1 max-w-sm text-sm text-white/60">{hydrateError}</p>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <Button onClick={() => void runReturnHydration()}>Try again</Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/demo-studio/projects')}
+            className="bg-white/10 text-white hover:bg-white/20"
+          >
+            Go to Demo Studio
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 py-10 text-white">
@@ -155,18 +398,24 @@ export default function TryPage() {
               steps={steps}
               mode="preview"
               showWatermark
-              ctaHref={SIGNUP_HREF}
-              ctaLabel="Sign up to build your own"
+              ctaHref={user ? null : SIGNUP_RETURN_HREF}
+              ctaLabel="Save and publish this demo"
             />
             <div className="flex flex-col items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-5 text-center">
               <p className="text-sm text-white/80">
-                Like it? Sign up to add hotspots, record a VSL, and publish a launch page.
+                Keep this demo. Save it to your account to add hotspots, record a VSL, and publish a launch page.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-3">
-                <Button asChild>
-                  <a href={SIGNUP_HREF}>Sign up to build your own</a>
+                <Button onClick={() => void handleSave()} disabled={saving} className="gap-2">
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  Save and publish this demo
                 </Button>
-                <Button variant="outline" onClick={startOver} className="bg-white/10 text-white hover:bg-white/20">
+                <Button
+                  variant="outline"
+                  onClick={startOver}
+                  disabled={saving}
+                  className="bg-white/10 text-white hover:bg-white/20"
+                >
                   Try different screenshots
                 </Button>
               </div>
