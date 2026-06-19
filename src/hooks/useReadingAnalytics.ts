@@ -33,8 +33,8 @@ export const useReadingAnalytics = () => {
       // For now, we'll store in localStorage for anonymous users
       // and in database for authenticated users
       if (user) {
-        // TODO: When we create analytics table, store in database
-        console.log('Tracking authenticated user event:', eventData);
+        // TODO: When we create an analytics table, store authenticated events in the database.
+        // No-op for now — avoids noisy console logging on every tracked event.
       } else {
         // Store anonymous analytics in localStorage
         const raw = localStore.getItem('insighta-analytics') || '[]';
