@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   ArrowLeft,
+  Camera,
   Check,
   Copy,
   CopyPlus,
@@ -10,7 +11,9 @@ import {
   Globe,
   ImagePlus,
   Loader2,
+  Monitor,
   Rocket,
+  X,
 } from 'lucide-react';
 import SEO from '@/components/SEO';
 import { Badge } from '@/components/ui/badge';
@@ -55,6 +58,12 @@ import {
   uploadStepAsset,
 } from '@/lib/demoStudio/api';
 import { getDemoReadiness } from '@/lib/demoStudio/readiness';
+import {
+  captureVideoFrame,
+  isScreenCaptureSupported,
+  mapFramesToStepInputs,
+  type ScreenFrame,
+} from '@/lib/demoStudio/screenCapture';
 import type {
   DemoStudioBrief,
   DemoStepWithHotspots,
@@ -70,7 +79,16 @@ interface Rect {
   h: number;
 }
 
+interface KeptFrame extends ScreenFrame {
+  id: string;
+  previewUrl: string;
+}
+
 const DEFAULT_COLOR = '#6366f1';
+
+function stopStream(stream: MediaStream | null): void {
+  stream?.getTracks().forEach((track) => track.stop());
+}
 
 export default function DemoEditorPage() {
   const { projectId, demoId } = useParams<{ projectId: string; demoId: string }>();
@@ -81,6 +99,10 @@ export default function DemoEditorPage() {
   const { openUpgradePrompt } = useUpgradePrompt();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hotspotPersistTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const captureVideoRef = useRef<HTMLVideoElement>(null);
+  const captureStreamRef = useRef<MediaStream | null>(null);
+  const keptFramesRef = useRef<KeptFrame[]>([]);
+  const captureSupported = useMemo(() => isScreenCaptureSupported(), []);
 
   const [demo, setDemo] = useState<DemoStudioDemo | null>(null);
   const [brief, setBrief] = useState<DemoStudioBrief | null>(null);
@@ -92,6 +114,10 @@ export default function DemoEditorPage() {
   const [publishing, setPublishing] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [captureOpen, setCaptureOpen] = useState(false);
+  const [captureStream, setCaptureStream] = useState<MediaStream | null>(null);
+  const [keptFrames, setKeptFrames] = useState<KeptFrame[]>([]);
+  const [capturing, setCapturing] = useState(false);
 
   const theme = useMemo<DemoTheme>(() => demo?.theme ?? {}, [demo?.theme]);
   const primaryColor = theme.primaryColor || DEFAULT_COLOR;
@@ -193,6 +219,124 @@ export default function DemoEditorPage() {
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  // --- Screen capture (CaptureMethod 'screen', via getDisplayMedia) ---------
+  useEffect(() => {
+    captureStreamRef.current = captureStream;
+  }, [captureStream]);
+  useEffect(() => {
+    keptFramesRef.current = keptFrames;
+  }, [keptFrames]);
+  // Stop sharing + free preview blobs if the editor unmounts mid-capture.
+  useEffect(
+    () => () => {
+      stopStream(captureStreamRef.current);
+      keptFramesRef.current.forEach((frame) => URL.revokeObjectURL(frame.previewUrl));
+    },
+    [],
+  );
+  // Attach the live screen-share stream to the dialog's <video>.
+  useEffect(() => {
+    const video = captureVideoRef.current;
+    if (!captureOpen || !captureStream || !video) return;
+    video.srcObject = captureStream;
+    const play = () => {
+      void video.play().catch(() => {});
+    };
+    if (video.readyState >= 1) play();
+    else video.onloadedmetadata = play;
+    return () => {
+      video.onloadedmetadata = null;
+    };
+  }, [captureOpen, captureStream]);
+
+  const closeCapture = useCallback(() => {
+    stopStream(captureStreamRef.current);
+    captureStreamRef.current = null;
+    setCaptureStream(null);
+    setCaptureOpen(false);
+    setKeptFrames((prev) => {
+      prev.forEach((frame) => URL.revokeObjectURL(frame.previewUrl));
+      return [];
+    });
+  }, []);
+
+  const handleStartCapture = async () => {
+    if (!captureSupported) return;
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      setKeptFrames([]);
+      setCaptureStream(stream);
+      setCaptureOpen(true);
+      // When the user clicks the browser's "Stop sharing", drop the live preview
+      // but keep the dialog so they can still add the frames they already kept.
+      stream.getVideoTracks().forEach((track) => {
+        track.addEventListener('ended', () => {
+          setCaptureStream((current) => (current === stream ? null : current));
+        });
+      });
+    } catch {
+      // User dismissed the OS screen picker — nothing to do.
+    }
+  };
+
+  const handleKeepFrame = async () => {
+    const video = captureVideoRef.current;
+    if (!video) return;
+    try {
+      const frame = await captureVideoFrame(video);
+      setKeptFrames((prev) => [
+        ...prev,
+        { ...frame, id: `${Date.now()}-${prev.length}`, previewUrl: URL.createObjectURL(frame.blob) },
+      ]);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not capture this frame.');
+    }
+  };
+
+  const removeKeptFrame = (id: string) => {
+    setKeptFrames((prev) => {
+      const target = prev.find((frame) => frame.id === id);
+      if (target) URL.revokeObjectURL(target.previewUrl);
+      return prev.filter((frame) => frame.id !== id);
+    });
+  };
+
+  const handleConfirmCapture = async () => {
+    if (!user || !demoId || keptFrames.length === 0) return;
+    setCapturing(true);
+    // We have the frames now — stop the screen share immediately.
+    stopStream(captureStreamRef.current);
+    captureStreamRef.current = null;
+    setCaptureStream(null);
+    try {
+      const inputs = mapFramesToStepInputs(keptFrames, steps.length);
+      const created: DemoStepWithHotspots[] = [];
+      for (const input of inputs) {
+        const file = new File([input.blob], input.fileName, { type: 'image/jpeg' });
+        const asset = await uploadStepAsset(user.id, file);
+        const step = await createStep(demoId, input.position, asset);
+        created.push({ ...step, hotspots: [] });
+      }
+      if (created.length > 0) {
+        setSteps((prev) => [...prev, ...created]);
+        setSelectedStepId((prev) => prev ?? created[0].id);
+        toast.success(`Added ${created.length} step${created.length > 1 ? 's' : ''} from screen capture.`);
+        if (demo && demo.capture_method !== 'screen') {
+          void updateDemo(demo.id, { capture_method: 'screen' })
+            .then(() => setDemo((current) => (current ? { ...current, capture_method: 'screen' } : current)))
+            .catch(() => {});
+        }
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not add captured steps.');
+    } finally {
+      setCapturing(false);
+      keptFrames.forEach((frame) => URL.revokeObjectURL(frame.previewUrl));
+      setKeptFrames([]);
+      setCaptureOpen(false);
     }
   };
 
@@ -483,6 +627,28 @@ export default function DemoEditorPage() {
               <p className="mt-3 text-xs text-muted-foreground">Demo has the essentials for a strong walkthrough.</p>
             )}
           </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-1.5"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading || capturing}
+            >
+              <ImagePlus className="h-4 w-4" /> Upload
+            </Button>
+            {captureSupported && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-1.5"
+                onClick={() => void handleStartCapture()}
+                disabled={uploading || capturing}
+              >
+                <Monitor className="h-4 w-4" /> Capture screen
+              </Button>
+            )}
+          </div>
           <StepThumbnailList
             steps={steps}
             selectedStepId={selectedStepId}
@@ -528,15 +694,29 @@ export default function DemoEditorPage() {
                   ? 'Use the Storyboard panel to apply guided steps, then upload product screenshots for each step.'
                   : "Upload images of your product — each one becomes a step. Next you'll drag clickable hotspots on top to make it interactive."}
               </p>
-              <Button
-                className="mt-5 gap-1.5"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-              >
-                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
-                Upload screenshots
-              </Button>
-              <p className="mt-3 text-xs text-muted-foreground">PNG or JPG, up to 5MB each. Add as many as you like.</p>
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+                <Button
+                  className="gap-1.5"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading || capturing}
+                >
+                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+                  Upload screenshots
+                </Button>
+                {captureSupported && (
+                  <Button
+                    variant="outline"
+                    className="gap-1.5"
+                    onClick={() => void handleStartCapture()}
+                    disabled={uploading || capturing}
+                  >
+                    <Monitor className="h-4 w-4" /> Capture screen
+                  </Button>
+                )}
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">
+                PNG or JPG, up to 5MB each. Add as many as you like{captureSupported ? ', or capture frames from your screen' : ''}.
+              </p>
             </div>
           ) : (
             <HotspotCanvas
@@ -711,6 +891,79 @@ export default function DemoEditorPage() {
           </div>
         </aside>
       </div>
+
+      {/* Screen capture dialog */}
+      <Dialog
+        open={captureOpen}
+        onOpenChange={(open) => {
+          if (!open) closeCapture();
+        }}
+      >
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Capture screen</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="overflow-hidden rounded-lg border border-border bg-black">
+              {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+              <video
+                ref={captureVideoRef}
+                autoPlay
+                muted
+                playsInline
+                className="block max-h-[50vh] w-full object-contain"
+              />
+            </div>
+            {keptFrames.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {keptFrames.map((frame, index) => (
+                  <div key={frame.id} className="relative shrink-0">
+                    <img
+                      src={frame.previewUrl}
+                      alt={`Kept frame ${index + 1}`}
+                      className="h-16 w-28 rounded border border-border object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeKeptFrame(frame.id)}
+                      className="absolute -right-1.5 -top-1.5 rounded-full bg-black/70 p-0.5 text-white"
+                      aria-label={`Remove frame ${index + 1}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Click <strong>Keep frame</strong> at each moment you want to show — each kept frame becomes a step.
+            </p>
+            <div className="flex items-center justify-between gap-2">
+              <Button variant="outline" onClick={closeCapture} disabled={capturing}>
+                Cancel
+              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  className="gap-1.5"
+                  onClick={() => void handleKeepFrame()}
+                  disabled={capturing || !captureStream}
+                >
+                  <Camera className="h-4 w-4" /> Keep frame
+                </Button>
+                <Button
+                  className="gap-1.5"
+                  onClick={() => void handleConfirmCapture()}
+                  disabled={capturing || keptFrames.length === 0}
+                >
+                  {capturing ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  Add {keptFrames.length || ''} step{keptFrames.length === 1 ? '' : 's'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Preview dialog */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>

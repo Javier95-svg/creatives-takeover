@@ -3,6 +3,7 @@
 // with `as any` because the generated DB types don't include these tables yet.
 import { supabase } from '@/integrations/supabase/client';
 import type {
+  CaptureMethod,
   DemoStudioProject,
   DemoStudioAiKit,
   DemoStudioBrief,
@@ -323,7 +324,7 @@ export async function createDemo(
 
 export async function updateDemo(
   id: string,
-  patch: Partial<{ title: string; theme: DemoTheme; status: string }>,
+  patch: Partial<{ title: string; theme: DemoTheme; status: string; capture_method: CaptureMethod }>,
 ): Promise<void> {
   const { error } = await supabase.from(DEMOS).update(patch as any).eq('id', id);
   if (error) throw new Error(error.message);
