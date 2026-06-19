@@ -33,6 +33,31 @@ const addSeenAcceptedIds = (userId: string, ids: string[]) => {
   }
 };
 
+const SEEN_PENDING_KEY_PREFIX = 'ct_seen_pending_requests_';
+
+// Track, per user, which incoming pending connection requests have been
+// acknowledged via "Mark all read". They stop counting toward the badge but stay
+// listed and actionable in the modal. localStorage, mirroring the accepted set.
+const getSeenPendingIds = (userId: string): string[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(`${SEEN_PENDING_KEY_PREFIX}${userId}`);
+    return raw ? (JSON.parse(raw) as string[]) : [];
+  } catch {
+    return [];
+  }
+};
+
+const addSeenPendingIds = (userId: string, ids: string[]) => {
+  if (typeof window === 'undefined' || ids.length === 0) return;
+  try {
+    const merged = new Set([...getSeenPendingIds(userId), ...ids]);
+    window.localStorage.setItem(`${SEEN_PENDING_KEY_PREFIX}${userId}`, JSON.stringify([...merged]));
+  } catch {
+    // Storage may be unavailable (private mode); the badge simply won't persist.
+  }
+};
+
 const emitConnectionUpdate = () => {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new Event(CONNECTION_EVENT));
@@ -96,6 +121,8 @@ export const useSocial = (targetUserId?: string) => {
   // Bumped by the CONNECTION_EVENT listener so every hook instance re-reads
   // pending/accepted state when one of them changes it.
   const [refreshTick, setRefreshTick] = useState(0);
+  // Pending-request IDs the user acknowledged via "Mark all read" (per user).
+  const [seenPendingIds, setSeenPendingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -103,6 +130,16 @@ export const useSocial = (targetUserId?: string) => {
     window.addEventListener(CONNECTION_EVENT, handler);
     return () => window.removeEventListener(CONNECTION_EVENT, handler);
   }, []);
+
+  // Re-read the acknowledged-request set per user and whenever connection state
+  // changes, so the badge clears in every hook instance after "Mark all read".
+  useEffect(() => {
+    if (!user) {
+      setSeenPendingIds(new Set());
+      return;
+    }
+    setSeenPendingIds(new Set(getSeenPendingIds(user.id)));
+  }, [user, refreshTick]);
 
   // Check current relationship status
   useEffect(() => {
@@ -473,6 +510,27 @@ export const useSocial = (targetUserId?: string) => {
     emitConnectionUpdate();
   };
 
+  // "Mark all read" for the Connection Requests modal — like the notification bell.
+  // Acknowledges every current notification (accepted ones + incoming pending
+  // requests) so the badge clears. Pending requests stay listed and actionable.
+  const markAllConnectionsRead = () => {
+    if (!user) return;
+    const pendingIds = pendingFriendRequests.map((req) => req.id);
+    if (pendingIds.length > 0) {
+      addSeenPendingIds(user.id, pendingIds);
+      setSeenPendingIds((prev) => new Set([...prev, ...pendingIds]));
+    }
+    if (acceptedConnectionNotifications.length > 0) {
+      addSeenAcceptedIds(user.id, acceptedConnectionNotifications.map((n) => n.id));
+      setAcceptedConnectionNotifications([]);
+    }
+    emitConnectionUpdate();
+  };
+
+  const unreadPendingRequestCount = pendingFriendRequests.filter(
+    (req) => !seenPendingIds.has(req.id)
+  ).length;
+
   return {
     followStatus,
     friendStatus,
@@ -480,7 +538,7 @@ export const useSocial = (targetUserId?: string) => {
     pendingFriendRequests,
     pendingFollowRequests,
     acceptedConnectionNotifications,
-    connectionNotificationCount: pendingFriendRequests.length + acceptedConnectionNotifications.length,
+    connectionNotificationCount: unreadPendingRequestCount + acceptedConnectionNotifications.length,
     followUser,
     unfollowUser,
     sendFriendRequest,
@@ -488,6 +546,7 @@ export const useSocial = (targetUserId?: string) => {
     cancelFriendRequest,
     acceptFollowRequest,
     rejectFollowRequest,
-    markAcceptedConnectionsSeen
+    markAcceptedConnectionsSeen,
+    markAllConnectionsRead
   };
 };

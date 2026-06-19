@@ -3,9 +3,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Clock, UserCheck } from "lucide-react";
+import { Check, X, Clock, UserCheck, CheckCheck } from "lucide-react";
 import { useSocial, type AcceptedConnectionNotification } from "@/hooks/useSocial";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 
 interface FriendRequestsModalProps {
   open: boolean;
@@ -16,8 +17,10 @@ export const FriendRequestsModal = ({ open, onOpenChange }: FriendRequestsModalP
   const {
     pendingFriendRequests,
     acceptedConnectionNotifications,
+    connectionNotificationCount,
     respondToFriendRequest,
     markAcceptedConnectionsSeen,
+    markAllConnectionsRead,
     loading,
   } = useSocial();
 
@@ -51,6 +54,11 @@ export const FriendRequestsModal = ({ open, onOpenChange }: FriendRequestsModalP
     void respondToFriendRequest(requestId, 'decline');
   };
 
+  const handleMarkAllRead = () => {
+    markAllConnectionsRead();
+    toast.success('Connection requests marked as read');
+  };
+
   const totalCount = pendingFriendRequests.length + acceptedToShow.length;
   const isEmpty = totalCount === 0;
 
@@ -58,14 +66,27 @@ export const FriendRequestsModal = ({ open, onOpenChange }: FriendRequestsModalP
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md max-h-[600px] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            Connection Requests
-            {totalCount > 0 && (
-              <Badge variant="secondary" className="ml-2">
-                {totalCount}
-              </Badge>
+          <div className="flex items-center justify-between gap-2 pr-8">
+            <DialogTitle className="flex items-center gap-2">
+              Connection Requests
+              {totalCount > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  {totalCount}
+                </Badge>
+              )}
+            </DialogTitle>
+            {connectionNotificationCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleMarkAllRead}
+                className="h-auto shrink-0 p-1 text-xs font-normal text-muted-foreground hover:text-foreground"
+              >
+                <CheckCheck className="mr-1 h-3 w-3" />
+                Mark all read
+              </Button>
             )}
-          </DialogTitle>
+          </div>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto">
