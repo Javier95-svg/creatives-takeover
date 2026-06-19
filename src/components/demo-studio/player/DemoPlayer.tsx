@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Download, Loader2, RotateCcw } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { trackDemoEvent } from '@/lib/demoStudio/events';
@@ -16,6 +17,8 @@ interface DemoPlayerProps {
   ctaHref?: string | null;
   ctaLabel?: string;
   className?: string;
+  /** Show MP4/GIF export controls. Off by default; enabled in the editor/viewer. */
+  allowExport?: boolean;
 }
 
 export default function DemoPlayer({
@@ -28,9 +31,11 @@ export default function DemoPlayer({
   ctaHref = null,
   ctaLabel,
   className,
+  allowExport = false,
 }: DemoPlayerProps) {
   const [index, setIndex] = useState(0);
   const [finished, setFinished] = useState(false);
+  const [exporting, setExporting] = useState<null | 'mp4' | 'gif'>(null);
   const primaryColor = theme?.primaryColor || '#6366f1';
   const total = steps.length;
   const current = steps[index];
@@ -107,6 +112,26 @@ export default function DemoPlayer({
   const restart = () => {
     setIndex(0);
     setFinished(false);
+  };
+
+  const handleExport = async (format: 'mp4' | 'gif') => {
+    if (exporting) return;
+    setExporting(format);
+    try {
+      const mod = await import('@/lib/demoStudio/demoExport');
+      const exportSteps = steps.map((s) => ({ asset_url: s.asset_url, title: s.title, caption: s.caption }));
+      const opts = { showWatermark, primaryColor };
+      if (format === 'gif') {
+        mod.downloadBlob(await mod.exportDemoGif(exportSteps, opts), 'demo.gif');
+      } else {
+        const { blob, ext } = await mod.exportDemoVideo(exportSteps, opts);
+        mod.downloadBlob(blob, `demo.${ext}`);
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not export the demo.');
+    } finally {
+      setExporting(null);
+    }
   };
 
   useEffect(() => {
@@ -259,6 +284,32 @@ export default function DemoPlayer({
           Next <ArrowRight className="h-4 w-4" />
         </Button>
       </div>
+
+      {allowExport && (
+        <div className="mt-2 flex items-center gap-2">
+          <span className="mr-auto text-xs text-muted-foreground">Export this walkthrough</span>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => void handleExport('mp4')}
+            disabled={exporting !== null}
+          >
+            {exporting === 'mp4' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+            MP4
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => void handleExport('gif')}
+            disabled={exporting !== null}
+          >
+            {exporting === 'gif' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+            GIF
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

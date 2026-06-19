@@ -69,6 +69,7 @@ export default function PublicDemoPage() {
           projectId={data.demo.project_id}
           demoId={data.demo.id}
           showWatermark={data.demo.theme?.watermark !== false}
+          allowExport
         />
       </div>
     </div>

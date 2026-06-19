@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, Link2 } from 'lucide-react';
+import { ExternalLink, Loader2, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -43,6 +43,25 @@ export default function PasteLoomDialog({ open, label, saving, onOpenChange, onS
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
+          <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+            <p className="font-medium text-foreground">No Loom account? You can still do this in 2 minutes.</p>
+            <ol className="mt-1.5 list-decimal space-y-0.5 pl-4">
+              <li>
+                Go to{' '}
+                <a
+                  href="https://www.loom.com/looms/videos"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-0.5 font-medium text-primary underline-offset-2 hover:underline"
+                >
+                  loom.com <ExternalLink className="h-3 w-3" />
+                </a>{' '}
+                and sign up free (no paid plan needed) or add the browser extension.
+              </li>
+              <li>Record your screen + camera with the teleprompter open, then stop.</li>
+              <li>Click “Copy link” on the video and paste it below.</li>
+            </ol>
+          </div>
           <div className="space-y-1.5">
             <Label htmlFor={`loom-url-${label}`}>Loom share URL</Label>
             <Input
@@ -51,6 +70,7 @@ export default function PasteLoomDialog({ open, label, saving, onOpenChange, onS
               placeholder="https://www.loom.com/share/..."
               onChange={(e) => setUrl(e.target.value)}
             />
+            <p className="text-xs text-muted-foreground">Format: https://www.loom.com/share/&lt;id&gt;</p>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor={`vsl-title-${label}`}>Variation title</Label>

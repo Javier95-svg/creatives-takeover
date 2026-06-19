@@ -976,6 +976,7 @@ export default function DemoEditorPage() {
             theme={theme}
             mode="preview"
             showWatermark={shouldShowWatermark(theme.watermark, planTier)}
+            allowExport
           />
         </DialogContent>
       </Dialog>

@@ -14,8 +14,15 @@ export default function LoomRecorderButton({ disabled, onRecorded }: LoomRecorde
   const mountRef = useRef<HTMLDivElement>(null);
   const instanceRef = useRef<SDKResult | null>(null);
   const buttonRef = useRef<SDKButtonInterface | null>(null);
+  const onRecordedRef = useRef(onRecorded);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
+
+  // Keep the latest callback in a ref so the SDK instance is created once and not
+  // torn down/recreated each render (the parent passes a new inline onRecorded).
+  useEffect(() => {
+    onRecordedRef.current = onRecorded;
+  }, [onRecorded]);
 
   useEffect(() => {
     if (!loomAppId || !mountRef.current || disabled) return;
@@ -46,9 +53,9 @@ export default function LoomRecorderButton({ disabled, onRecorded }: LoomRecorde
         buttonRef.current = instance.configureButton({
           element: mountRef.current,
           hooks: {
-            onInsertClicked: onRecorded,
+            onInsertClicked: (video) => onRecordedRef.current(video),
             onRecordingComplete: () => undefined,
-            onUploadComplete: onRecorded,
+            onUploadComplete: (video) => onRecordedRef.current(video),
             onStart: () => undefined,
             onRecordingStarted: () => undefined,
             onCancel: () => undefined,
@@ -69,7 +76,7 @@ export default function LoomRecorderButton({ disabled, onRecorded }: LoomRecorde
       instanceRef.current?.teardown();
       instanceRef.current = null;
     };
-  }, [disabled, onRecorded]);
+  }, [disabled]);
 
   if (!loomAppId) {
     return (
