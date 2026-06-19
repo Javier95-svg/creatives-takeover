@@ -57,7 +57,7 @@ export function getActivationEntryStageFirstOutputLabel(entryStage: ActivationEn
     case 'stage_i':
       return 'a saved ICP decision';
     case 'stage_ii':
-      return 'a saved waitlist draft';
+      return 'a saved interactive demo';
     case 'stage_iii':
       return 'saved PMF evidence';
     default:
@@ -85,18 +85,18 @@ export function getToolJourneyGuide(route: string): ToolJourneyGuide | null {
         description: 'Use this tool to land on one clear customer segment instead of leaving with broad ideas.',
         doneLabel: 'Done means running the analysis and saving a recommended first ICP you can act on.',
         nextRoute: '/demo-studio',
-        nextLabel: 'Next: Draft your waitlist page',
+        nextLabel: 'Next: Build your interactive demo',
         completedLabel: 'ICP saved. Your next move is turning that segment into a demand test.',
       };
     case '/demo-studio':
       return {
         stageLabel: 'Stage II · Prototype',
         title: 'Turn your ICP into a real demand test',
-        description: 'The goal here is not polish. It is leaving with a waitlist page you can save, share, and iterate on.',
-        doneLabel: 'Done means saving a waitlist draft or publishing a page you can start sending to real users.',
+        description: 'The goal here is not polish. It is leaving with an interactive demo, a VSL, and a public launch page you can save, share, and iterate on.',
+        doneLabel: 'Done means building an interactive demo, recording a VSL, and publishing a launch page you can start sending to real users.',
         nextRoute: '/pmf-lab',
         nextLabel: 'Next: Validate the demand signals',
-        completedLabel: 'Waitlist draft saved. Use PMF Lab to judge whether the demand is strong enough to keep building.',
+        completedLabel: 'Demo, VSL, and launch page saved. Use PMF Lab to judge whether the demand is strong enough to keep building.',
       };
     case '/pmf-lab':
       return {

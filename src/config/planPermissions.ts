@@ -117,6 +117,7 @@ export type FeatureKey =
   | 'dashboard_mode'
   | 'icp_builder'
   | 'waitlist_maker'
+  | 'demo_studio'
   | 'pmf_lab'
   | 'mvp_builder'
   | 'tech_stack'
@@ -300,6 +301,7 @@ export const FEATURE_LABELS: Record<FeatureKey, string> = {
   dashboard_mode: 'Dashboard Mode',
   icp_builder: 'ICP Builder',
   waitlist_maker: 'Demo Studio',
+  demo_studio: 'Demo Studio',
   pmf_lab: 'PMF Lab',
   mvp_builder: 'MVP Builder',
   tech_stack: 'Tech Stack Builder',
@@ -343,6 +345,14 @@ export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitl
     pro: { state: 'full' },
   },
   waitlist_maker: {
+    rookie: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'WAITLIST_GENERATION' },
+    starter: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'WAITLIST_GENERATION' },
+    rising: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'WAITLIST_GENERATION' },
+    pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'WAITLIST_GENERATION' },
+  },
+  // Demo Studio reuses the WAITLIST_GENERATION credit key for now so billing
+  // stays intact while it gets its own entitlement surface.
+  demo_studio: {
     rookie: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'WAITLIST_GENERATION' },
     starter: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'WAITLIST_GENERATION' },
     rising: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'WAITLIST_GENERATION' },
