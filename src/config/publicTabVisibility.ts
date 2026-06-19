@@ -113,8 +113,14 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
     ],
   },
   '/email-templates': {
-    state: 'accessible',
+    state: 'locked',
     featureName: 'Email Templates',
+    description: 'Copy-paste ready fundraising email templates for cold outreach, warm intros, and follow-ups.',
+    previewItems: [
+      'Preview the template library and how each email is structured.',
+      'See the cold outreach, warm intro, and follow-up categories founders use.',
+      'Sign up to copy templates and personalize the variables before sending.',
+    ],
   },
   '/pitch-deck-analyzer': {
     state: 'locked',
@@ -151,8 +157,14 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
     featureName: 'Newspaper',
   },
   '/prompt-library': {
-    state: 'accessible',
+    state: 'locked',
     featureName: 'Prompt Library',
+    description: 'Curated business idea prompts with complete 7-step launch journeys for BizMap AI.',
+    previewItems: [
+      'Preview the prompt catalogue across SaaS, e-commerce, consulting, and more.',
+      'See how each concept maps to a 7-step, 30-day launch journey.',
+      'Sign up to open the full prompt chains and launch them in BizMap AI.',
+    ],
   },
   '/dashboard': {
     state: 'hidden',

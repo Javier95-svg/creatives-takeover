@@ -19,6 +19,8 @@ import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { normalizePlan, type Plan } from "@/config/planPermissions";
 import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
 import { CreditCostNotice } from "@/components/CreditCostNotice";
+import { PreviewModeWrapper } from "@/components/ui/PreviewModeWrapper";
+import { getPublicTabConfig } from "@/config/publicTabVisibility";
 
 const PromptLibrary = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -33,6 +35,7 @@ const PromptLibrary = () => {
   const { deductCredits } = useCreditActions();
   const { openUpgradePrompt } = useUpgradePrompt();
 
+  const publicTab = getPublicTabConfig('/prompt-library');
   const userTier = normalizePlan(subscriptionData.subscription_tier);
 
   // Fetch custom prompt chains on mount
@@ -103,7 +106,7 @@ const PromptLibrary = () => {
       const deducted = await deductCredits('PROMPT_GENERATION', { featureName: 'Prompt Generation' });
       if (!deducted) return;
     }
-    
+
     void navigator.clipboard.writeText(prompt);
     toast.success("Prompt copied to clipboard!");
   };
@@ -148,7 +151,7 @@ const PromptLibrary = () => {
     const lowerPrompt = step1Prompt.toLowerCase();
     const lowerTitle = prompt.conceptTitle.toLowerCase();
     const _lowerDesc = prompt.description.toLowerCase();
-    
+
     // Extract key value proposition elements
     if (lowerPrompt.includes("reduce") || lowerPrompt.includes("cost")) {
       const costMatch = step1Prompt.match(/reduce.*?costs?.*?(\d+%|\$\d+)/i);
@@ -159,62 +162,62 @@ const PromptLibrary = () => {
         return "Automates customer support to reduce operational costs by 60-80%";
       }
     }
-    
+
     if (lowerPrompt.includes("marketplace") || lowerTitle.includes("marketplace")) {
       return "Connects buyers and sellers in a curated marketplace, earning commission on transactions";
     }
-    
+
     if (lowerPrompt.includes("saas") || lowerTitle.includes("saas") || (lowerPrompt.includes("software") && !lowerPrompt.includes("mobile app"))) {
       return "Subscription-based software that solves specific business problems with recurring revenue";
     }
-    
+
     if (lowerPrompt.includes("consulting") || lowerPrompt.includes("consultancy")) {
       return "Expert advisory services that help businesses achieve specific goals through strategic guidance";
     }
-    
+
     if (lowerPrompt.includes("agency") || lowerTitle.includes("agency")) {
       return "Full-service agency delivering specialized solutions for clients on a project basis";
     }
-    
+
     if (lowerPrompt.includes("app") && !lowerPrompt.includes("saas") && !lowerPrompt.includes("platform")) {
       return "Mobile application solving everyday problems for target users";
     }
-    
+
     if (lowerPrompt.includes("subscription box") || lowerTitle.includes("subscription")) {
       return "Recurring revenue model delivering curated products or services monthly to subscribers";
     }
-    
+
     if (lowerPrompt.includes("e-commerce") || lowerTitle.includes("store") || lowerTitle.includes("shop")) {
       return "Online store selling products directly to consumers with digital marketing";
     }
-    
+
     if (lowerPrompt.includes("platform") && !lowerPrompt.includes("marketplace")) {
       return "Digital platform connecting users and providing value through network effects";
     }
-    
+
     if (lowerPrompt.includes("service") && !lowerPrompt.includes("saas")) {
       return "Service-based business delivering specialized solutions to customers";
     }
-    
+
     if (lowerPrompt.includes("course") || lowerTitle.includes("course") || lowerTitle.includes("bootcamp")) {
       return "Educational service teaching specific skills through structured programs";
     }
-    
+
     if (lowerPrompt.includes("rental") || lowerTitle.includes("rental")) {
       return "Rental platform providing access to products or services on a temporary basis";
     }
-    
+
     if (lowerPrompt.includes("monitoring") || lowerTitle.includes("monitoring")) {
       return "Monitoring service that tracks and analyzes data to provide actionable insights";
     }
-    
+
     // Fallback: create description from conceptTitle and description
     if (prompt.description) {
       // Capitalize first letter and ensure it's a complete sentence
       const desc = prompt.description.trim();
       return desc.charAt(0).toLowerCase() + desc.slice(1);
     }
-    
+
     return "A business solution that creates value for customers";
   };
 
@@ -429,6 +432,148 @@ const PromptLibrary = () => {
     );
   }
 
+  const promptLibraryBody = (
+    <>
+      <div className="mb-8 sm:mb-12">
+
+      <div className="max-w-2xl mx-auto space-y-3 sm:space-y-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input
+            placeholder="Search prompts..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 h-11 sm:h-12 text-base touch-manipulation"
+          />
+        </div>
+
+        <div className="flex flex-wrap gap-2 justify-center">
+          {promptCategories.map((category) => {
+            const Icon = category.icon;
+            return (
+              <Button
+                key={category.id}
+                variant={selectedCategory === category.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedCategory(category.id)}
+                className="flex items-center gap-1.5 sm:gap-2 h-9 sm:h-10 px-3 sm:px-4 text-xs sm:text-sm touch-manipulation"
+              >
+                <Icon className="w-3 sm:w-4 h-3 sm:h-4" />
+                <span className="hidden xs:inline">{category.name}</span>
+                <span className="xs:hidden">{category.name.split(" ")[0]}</span>
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
+      {filteredPrompts.map((prompt) => {
+        const isLocked = !hasAccessToPrompt(prompt) && normalizePlan(prompt.requiredTier) !== "rookie";
+
+        return (
+        <Card
+          key={prompt.id}
+          className="glass-card hover:shadow-xl hover:shadow-primary/10 border border-border/50 hover:border-primary/30 transition-all duration-300 hover:scale-[1.01] hover:-translate-y-0.5 group"
+        >
+          <CardHeader className="p-5 sm:p-6 pb-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-lg sm:text-xl font-bold mb-2 leading-tight flex items-center gap-2 group-hover:text-primary transition-colors">
+                  <span className="flex-1">{prompt.conceptTitle}</span>
+                  {isLocked && (
+                    <Lock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  )}
+                </CardTitle>
+                {prompt.is_custom && prompt.author_name && (
+                  <div className="mb-2">
+                    <Badge variant="outline" className="text-xs flex items-center gap-1 w-fit">
+                      <User className="w-3 h-3" />
+                      Created by {prompt.author_name}
+                    </Badge>
+                  </div>
+                )}
+                <p className="text-sm text-foreground/85 mb-2.5 leading-snug">
+                  {prompt.description}
+                </p>
+
+                {/* Business Model Description */}
+                <div className="flex items-start gap-2 pt-2 border-t border-border/40">
+                  <Sparkles className="w-3.5 h-3.5 text-primary/50 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-muted-foreground italic leading-snug">
+                    {getBusinessModelDescription(prompt)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="p-5 sm:p-6 pt-0">
+            <div className="bg-primary/5 hover:bg-primary/10 rounded-lg p-3 mb-3.5 transition-colors border border-primary/10">
+              <p className="text-xs font-semibold mb-2 text-foreground">This Prompt Chain Includes:</p>
+              <ul className="text-xs space-y-1.5 text-muted-foreground">
+                <li className="flex items-center gap-1.5">
+                  <CheckCircle className="w-3 h-3 text-primary flex-shrink-0" />
+                  <span>Business Concept (Days 1-2)</span>
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <CheckCircle className="w-3 h-3 text-primary flex-shrink-0" />
+                  <span>Target Customer (Days 3-4)</span>
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <CheckCircle className="w-3 h-3 text-primary flex-shrink-0" />
+                  <span>Validation Plan (Days 5-7)</span>
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <CheckCircle className="w-3 h-3 text-primary flex-shrink-0" />
+                  <span>And 4 more steps...</span>
+                </li>
+              </ul>
+            </div>
+
+            <Button
+              size="sm"
+              onClick={() => {
+                setSelectedConcept(prompt);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="w-full h-9 text-sm font-medium touch-manipulation group/btn hover:scale-[1.01] transition-transform"
+            >
+              <ArrowRight className="w-4 h-4 mr-2 group-hover/btn:translate-x-1 transition-transform" />
+              View All 7 Prompts
+            </Button>
+          </CardContent>
+        </Card>
+        );
+      })}
+    </div>
+
+    {filteredPrompts.length === 0 && (
+      <div className="text-center py-12">
+        <Lightbulb className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+        <h3 className="text-lg font-medium mb-2">No prompts found</h3>
+        <p className="text-muted-foreground">Try adjusting your search or filter criteria.</p>
+      </div>
+    )}
+
+    <div className="mt-16 text-center">
+      <Card className="glass-card max-w-2xl mx-auto">
+        <CardContent className="p-8">
+          <Rocket className="w-12 h-12 text-primary mx-auto mb-4" />
+          <h3 className="text-2xl font-bold mb-4">Ready to Build Your Business?</h3>
+          <p className="text-muted-foreground mb-6">
+            Each concept includes 7 detailed prompts to guide you through your complete 30-day launch journey with BizMap AI.
+          </p>
+          <Button asChild size="lg" className="w-full sm:w-auto">
+            <a href="/bizmap-ai/chat">Start with BizMap AI</a>
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+    </>
+  );
+
   return (
     <div className="relative min-h-screen overflow-hidden">
       <Helmet>
@@ -447,145 +592,25 @@ const PromptLibrary = () => {
               <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-6 sm:mb-8 px-2">
                 Get inspired with ready-to-use business idea prompts. Each concept includes 7 detailed prompts covering your complete 30-day launch journey with BizMap AI.
               </p>
-
-              <div className="mb-8 sm:mb-12">
-              
-              <div className="max-w-2xl mx-auto space-y-3 sm:space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input
-                    placeholder="Search prompts..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 h-11 sm:h-12 text-base touch-manipulation"
-                  />
-                </div>
-                
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {promptCategories.map((category) => {
-                    const Icon = category.icon;
-                    return (
-                      <Button
-                        key={category.id}
-                        variant={selectedCategory === category.id ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setSelectedCategory(category.id)}
-                        className="flex items-center gap-1.5 sm:gap-2 h-9 sm:h-10 px-3 sm:px-4 text-xs sm:text-sm touch-manipulation"
-                      >
-                        <Icon className="w-3 sm:w-4 h-3 sm:h-4" />
-                        <span className="hidden xs:inline">{category.name}</span>
-                        <span className="xs:hidden">{category.name.split(" ")[0]}</span>
-                      </Button>
-                    );
-                  })}
-                </div>
-              </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
-              {filteredPrompts.map((prompt) => {
-                const isLocked = !hasAccessToPrompt(prompt) && normalizePlan(prompt.requiredTier) !== "rookie";
-
-                return (
-                <Card 
-                  key={prompt.id} 
-                  className="glass-card hover:shadow-xl hover:shadow-primary/10 border border-border/50 hover:border-primary/30 transition-all duration-300 hover:scale-[1.01] hover:-translate-y-0.5 group"
+            {!user ? (
+              publicTab && (
+                <PreviewModeWrapper
+                  featureName={publicTab.featureName}
+                  description={publicTab.description || ''}
+                  showPricingCta={publicTab.showPricingCta}
                 >
-                  <CardHeader className="p-5 sm:p-6 pb-4">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-lg sm:text-xl font-bold mb-2 leading-tight flex items-center gap-2 group-hover:text-primary transition-colors">
-                          <span className="flex-1">{prompt.conceptTitle}</span>
-                          {isLocked && (
-                            <Lock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                          )}
-                        </CardTitle>
-                        {prompt.is_custom && prompt.author_name && (
-                          <div className="mb-2">
-                            <Badge variant="outline" className="text-xs flex items-center gap-1 w-fit">
-                              <User className="w-3 h-3" />
-                              Created by {prompt.author_name}
-                            </Badge>
-                          </div>
-                        )}
-                        <p className="text-sm text-foreground/85 mb-2.5 leading-snug">
-                          {prompt.description}
-                        </p>
-                        
-                        {/* Business Model Description */}
-                        <div className="flex items-start gap-2 pt-2 border-t border-border/40">
-                          <Sparkles className="w-3.5 h-3.5 text-primary/50 flex-shrink-0 mt-0.5" />
-                          <p className="text-xs text-muted-foreground italic leading-snug">
-                            {getBusinessModelDescription(prompt)}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent className="p-5 sm:p-6 pt-0">
-                    <div className="bg-primary/5 hover:bg-primary/10 rounded-lg p-3 mb-3.5 transition-colors border border-primary/10">
-                      <p className="text-xs font-semibold mb-2 text-foreground">This Prompt Chain Includes:</p>
-                      <ul className="text-xs space-y-1.5 text-muted-foreground">
-                        <li className="flex items-center gap-1.5">
-                          <CheckCircle className="w-3 h-3 text-primary flex-shrink-0" />
-                          <span>Business Concept (Days 1-2)</span>
-                        </li>
-                        <li className="flex items-center gap-1.5">
-                          <CheckCircle className="w-3 h-3 text-primary flex-shrink-0" />
-                          <span>Target Customer (Days 3-4)</span>
-                        </li>
-                        <li className="flex items-center gap-1.5">
-                          <CheckCircle className="w-3 h-3 text-primary flex-shrink-0" />
-                          <span>Validation Plan (Days 5-7)</span>
-                        </li>
-                        <li className="flex items-center gap-1.5">
-                          <CheckCircle className="w-3 h-3 text-primary flex-shrink-0" />
-                          <span>And 4 more steps...</span>
-                        </li>
-                      </ul>
-                    </div>
-                    
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        setSelectedConcept(prompt);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                      className="w-full h-9 text-sm font-medium touch-manipulation group/btn hover:scale-[1.01] transition-transform"
-                    >
-                      <ArrowRight className="w-4 h-4 mr-2 group-hover/btn:translate-x-1 transition-transform" />
-                      View All 7 Prompts
-                    </Button>
-                  </CardContent>
-                </Card>
-                );
-              })}
-            </div>
-
-            {filteredPrompts.length === 0 && (
-              <div className="text-center py-12">
-                <Lightbulb className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No prompts found</h3>
-                <p className="text-muted-foreground">Try adjusting your search or filter criteria.</p>
+                  <div className="text-center">
+                    {promptLibraryBody}
+                  </div>
+                </PreviewModeWrapper>
+              )
+            ) : (
+              <div className="text-center">
+                {promptLibraryBody}
               </div>
             )}
-
-            <div className="mt-16 text-center">
-              <Card className="glass-card max-w-2xl mx-auto">
-                <CardContent className="p-8">
-                  <Rocket className="w-12 h-12 text-primary mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold mb-4">Ready to Build Your Business?</h3>
-                  <p className="text-muted-foreground mb-6">
-                    Each concept includes 7 detailed prompts to guide you through your complete 30-day launch journey with BizMap AI.
-                  </p>
-                  <Button asChild size="lg" className="w-full sm:w-auto">
-                    <a href="/bizmap-ai/chat">Start with BizMap AI</a>
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-            </div>
           </div>
         </div>
       </div>
