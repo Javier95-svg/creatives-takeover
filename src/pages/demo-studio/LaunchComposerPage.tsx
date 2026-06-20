@@ -20,6 +20,8 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/hooks/useSubscription';
+import { shouldShowWatermark } from '@/lib/demoStudio/plan';
 import {
   getOrCreateLaunchPage,
   getBrief,
@@ -55,6 +57,8 @@ export default function LaunchComposerPage() {
   const { id: projectId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const { subscriptionData } = useSubscription();
+  const planTier = subscriptionData?.subscription_tier;
   const [project, setProject] = useState<DemoStudioProject | null>(null);
   const [brief, setBrief] = useState<DemoStudioBrief | null>(null);
   const [launchPage, setLaunchPage] = useState<DemoStudioLaunchPage | null>(null);
@@ -522,7 +526,7 @@ export default function LaunchComposerPage() {
               <p className="mt-2 max-w-2xl text-muted-foreground">{launchPage?.subheadline || project?.tagline}</p>
               <div className="mt-6 grid gap-4 xl:grid-cols-2">
                 <LoomEmbed embedUrl={selectedVsl?.loom_embed_url} sharedUrl={selectedVsl?.loom_shared_url} title={selectedVsl?.title} />
-                <DemoPlayer steps={previewSteps} theme={selectedDemo?.theme} mode="preview" showWatermark={selectedDemo?.theme?.watermark !== false} />
+                <DemoPlayer steps={previewSteps} theme={selectedDemo?.theme} mode="preview" showWatermark={shouldShowWatermark(selectedDemo?.theme?.watermark, planTier)} />
               </div>
               <div className="mt-6 flex max-w-md gap-2">
                 <Input readOnly placeholder="founder@example.com" />

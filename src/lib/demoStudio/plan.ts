@@ -1,11 +1,12 @@
-// Demo Studio plan gating. The free (rookie) tier always shows the Creatives
-// Takeover watermark on published demos; paid tiers can remove it. Mirrors where
-// Supademo/Arcade gate (watermark on free). See build spec section 12.
+// Demo Studio plan gating. Rookie and Starter always show the Creatives Takeover
+// watermark on published demos; only Rising and Pro can remove it. Mirrors where
+// Supademo/Arcade gate (watermark on lower tiers). See build spec section 12.
 // Relative import (not the @/ alias) so this module loads under the node test runner.
 import { normalizePlan, type Plan } from '../../config/planPermissions.ts';
 
 export function canRemoveWatermark(planTier: string | null | undefined): boolean {
-  return normalizePlan(planTier) !== 'rookie';
+  const plan = normalizePlan(planTier);
+  return plan === 'rising' || plan === 'pro';
 }
 
 /**

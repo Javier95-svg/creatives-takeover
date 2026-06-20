@@ -20,11 +20,18 @@ test('a missing/unknown owner plan is treated as rookie (watermark on)', () => {
   assert.equal(shouldShowWatermark(false, null), true);
 });
 
-test('paid tiers honor the demo watermark preference', () => {
+test('starter is always watermarked (cannot remove)', () => {
+  assert.equal(shouldShowWatermark(false, 'starter'), true);
+  assert.equal(shouldShowWatermark(true, 'starter'), true);
+  assert.equal(canRemoveWatermark('starter'), false);
+});
+
+test('only rising and pro can remove the watermark', () => {
+  assert.equal(canRemoveWatermark('rising'), true);
+  assert.equal(canRemoveWatermark('pro'), true);
+  assert.equal(shouldShowWatermark(false, 'rising'), false);
   assert.equal(shouldShowWatermark(false, 'pro'), false);
   assert.equal(shouldShowWatermark(undefined, 'pro'), true);
-  assert.equal(shouldShowWatermark(false, 'starter'), false);
-  assert.equal(canRemoveWatermark('pro'), true);
 });
 
 test('published-demo cap is 3 for rookie and uncapped for paid tiers', () => {

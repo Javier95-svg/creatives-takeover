@@ -878,7 +878,7 @@ export default function DemoEditorPage() {
               <div>
                 <Label htmlFor="watermark">Show watermark</Label>
                 {!canRemoveWatermark(planTier) && (
-                  <p className="text-label text-muted-foreground">Upgrade to remove on free plan.</p>
+                  <p className="text-label text-muted-foreground">Upgrade to Rising or Pro to remove.</p>
                 )}
               </div>
               <Switch
