@@ -21,6 +21,24 @@
   --ct-red: #f37575;
   --ct-green: #25cb7a;
   --ct-grad-trinity: linear-gradient(135deg, #5aa2fb, #f37575, #25cb7a);
+
+  /* Dashboard preview panel — light defaults; overridden for dark mode below.
+     The panel surface flips with the theme so its (dark) text stays readable. */
+  --ct-panel-bg: linear-gradient(180deg, #ffffff, #eef3fb);
+  --ct-panel-border: rgba(15, 23, 42, 0.1);
+  --ct-panel-shadow:
+    0 40px 100px -20px rgba(15, 23, 42, 0.22),
+    0 0 0 1px rgba(15, 23, 42, 0.03) inset,
+    0 0 80px rgba(91, 162, 251, 0.1);
+  --ct-panel-shadow-hover:
+    0 44px 110px -20px rgba(15, 23, 42, 0.26),
+    0 0 0 1px rgba(15, 23, 42, 0.04) inset,
+    0 0 90px rgba(91, 162, 251, 0.16);
+  --ct-panel-line: rgba(15, 23, 42, 0.1);
+  --ct-panel-fill: rgba(15, 23, 42, 0.035);
+  --ct-panel-chip: rgba(15, 23, 42, 0.1);
+  --ct-panel-ic: rgba(15, 23, 42, 0.12);
+
   --ct-sans: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
   --ct-display: "Space Grotesk", "Inter", sans-serif;
   --ct-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -53,6 +71,21 @@
   --ct-eyebrow-hover-bg: rgba(255, 255, 255, 0.055);
   --ct-secondary-cta-border: rgba(255, 255, 255, 0.14);
   --ct-secondary-cta-bg: rgba(255, 255, 255, 0.04);
+
+  --ct-panel-bg: linear-gradient(180deg, #131820, #0e1219);
+  --ct-panel-border: rgba(255, 255, 255, 0.08);
+  --ct-panel-shadow:
+    0 40px 100px -20px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 0 80px rgba(91, 162, 251, 0.18);
+  --ct-panel-shadow-hover:
+    0 44px 110px -20px rgba(0, 0, 0, 0.82),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    0 0 90px rgba(91, 162, 251, 0.22);
+  --ct-panel-line: rgba(255, 255, 255, 0.06);
+  --ct-panel-fill: rgba(255, 255, 255, 0.025);
+  --ct-panel-chip: rgba(255, 255, 255, 0.1);
+  --ct-panel-ic: rgba(255, 255, 255, 0.08);
 }
 
 .ct-hero *,
@@ -360,13 +393,10 @@
   max-width: 920px;
   margin: 0 auto;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--ct-panel-border);
   border-radius: 20px;
-  background: linear-gradient(180deg, #131820, #0e1219);
-  box-shadow:
-    0 40px 100px -20px rgba(0, 0, 0, 0.8),
-    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
-    0 0 80px rgba(91, 162, 251, 0.18);
+  background: var(--ct-panel-bg);
+  box-shadow: var(--ct-panel-shadow);
   color: inherit;
   text-decoration: none;
   cursor: pointer;
@@ -375,10 +405,7 @@
 
 .ct-hero__spotlight:hover {
   transform: translateY(-2px);
-  box-shadow:
-    0 44px 110px -20px rgba(0, 0, 0, 0.82),
-    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
-    0 0 90px rgba(91, 162, 251, 0.22);
+  box-shadow: var(--ct-panel-shadow-hover);
 }
 
 .ct-hero__spotlight:focus-visible {
@@ -391,7 +418,7 @@
   align-items: center;
   gap: 12px;
   padding: 14px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--ct-panel-line);
 }
 
 .ct-hero__st-dots {
@@ -403,7 +430,7 @@
   width: 10px;
   height: 10px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--ct-panel-chip);
 }
 
 .ct-hero__st-url {
@@ -412,7 +439,7 @@
   margin: 0 auto;
   padding: 5px 12px;
   border-radius: 7px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--ct-panel-fill);
   color: var(--ct-muted);
   font-family: var(--ct-mono);
   font-size: 11.5px;
@@ -430,7 +457,7 @@
   flex-direction: column;
   gap: 6px;
   padding: 18px 14px;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  border-right: 1px solid var(--ct-panel-line);
 }
 
 .ct-hero__st-nav-item {
@@ -455,7 +482,7 @@
   width: 14px;
   height: 14px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--ct-panel-ic);
 }
 
 .ct-hero__st-nav-item.is-on .ic {
@@ -498,9 +525,9 @@
 
 .ct-hero__st-stat {
   padding: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--ct-panel-line);
   border-radius: 11px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--ct-panel-fill);
 }
 
 .ct-hero__st-stat .v {
@@ -543,9 +570,9 @@
   gap: 6px;
   min-height: 120px;
   padding: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--ct-panel-line);
   border-radius: 11px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--ct-panel-fill);
 }
 
 .ct-hero__st-bar {
@@ -663,7 +690,7 @@
     flex-direction: row;
     overflow-x: auto;
     border-right: 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid var(--ct-panel-line);
   }
 
   .ct-hero__st-row {
