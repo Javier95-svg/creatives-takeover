@@ -557,7 +557,8 @@ export default function DemoEditorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    // Rails stack below lg (see grid below); on touch, every control is a 44px tap target. Desktop unchanged.
+    <div className="min-h-screen bg-background touch:[&_button]:min-h-[44px]">
       <SEO title={`${demo?.title ?? 'Demo'} — Demo Studio`} description="Build your interactive product demo." noindex url="/demo-studio" />
 
       {/* Top bar */}
@@ -571,7 +572,7 @@ export default function DemoEditorPage() {
           <Input
             defaultValue={demo?.title ?? ''}
             onBlur={(e) => handleTitleBlur(e.target.value)}
-            className="h-9 w-48 border-transparent bg-transparent text-sm font-semibold hover:border-border focus:border-border md:w-72"
+            className="h-9 w-full min-w-0 flex-1 border-transparent bg-transparent text-sm font-semibold hover:border-border focus:border-border sm:w-48 sm:flex-none md:w-72"
           />
           {demo?.status === 'published' ? (
             <span className="hidden items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success sm:inline-flex">
@@ -586,7 +587,7 @@ export default function DemoEditorPage() {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setPreviewOpen(true)}>
-            <Eye className="h-4 w-4" /> Preview
+            <Eye className="h-4 w-4" /> <span className="hidden sm:inline">Preview</span>
           </Button>
           <Button size="sm" className="gap-1.5" onClick={handlePublish} disabled={publishing}>
             {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}

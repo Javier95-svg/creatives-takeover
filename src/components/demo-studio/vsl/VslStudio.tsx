@@ -184,7 +184,8 @@ export default function VslStudio({ projectId, ownerId, initialVsls, scriptDraft
   };
 
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
+    // Stacks below lg (desktop unchanged). On touch, enlarge every slot control to a 44px tap target.
+    <div className="grid gap-4 lg:grid-cols-3 touch:[&_button]:min-h-[44px]">
       {VSL_VARIATION_LABELS.map((label) => (
         <VslSlot
           key={label}

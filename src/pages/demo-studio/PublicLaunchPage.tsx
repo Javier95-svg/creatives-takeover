@@ -122,7 +122,7 @@ export default function PublicLaunchPage() {
         type="product"
       />
       <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-8 md:py-12">
-        <header className="mb-8 flex items-center justify-between gap-4">
+        <header className="mb-8 flex flex-wrap items-center justify-between gap-3">
           <Link to="/demo-studio" className="text-sm font-semibold text-white/80 hover:text-white">
             Creatives Takeover Demo Studio
           </Link>

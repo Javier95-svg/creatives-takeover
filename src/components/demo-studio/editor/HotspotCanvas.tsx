@@ -1,7 +1,23 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
+import { Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DemoStepWithHotspots } from '@/lib/demoStudio/types';
+
+// Coarse-pointer devices (phones/tablets) can't place/resize hotspots precisely,
+// so we render a read-only canvas + notice there instead of a broken drag surface.
+function useIsTouch(): boolean {
+  const [isTouch, setIsTouch] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(hover: none) and (pointer: coarse)');
+    const update = () => setIsTouch(mq.matches);
+    update();
+    mq.addEventListener?.('change', update);
+    return () => mq.removeEventListener?.('change', update);
+  }, []);
+  return isTouch;
+}
 
 interface Rect {
   x: number;
@@ -42,6 +58,7 @@ export default function HotspotCanvas({
 }: HotspotCanvasProps) {
   const surfaceRef = useRef<HTMLDivElement>(null);
   const [mode, setMode] = useState<Mode>({ kind: 'idle' });
+  const isTouch = useIsTouch();
 
   const toNorm = (e: ReactPointerEvent) => {
     const el = surfaceRef.current;
@@ -130,6 +147,48 @@ export default function HotspotCanvas({
     return (
       <div className="flex aspect-video w-full items-center justify-center rounded-xl border border-dashed border-muted-foreground/30 bg-muted/20 text-sm text-muted-foreground">
         Select or add a step to start placing hotspots.
+      </div>
+    );
+  }
+
+  // Touch devices: read-only canvas (image + existing hotspots) + a "best on
+  // desktop" notice. Precise drawing/dragging/resizing isn't viable on coarse
+  // pointers, so we avoid a broken drag surface entirely.
+  if (isTouch) {
+    return (
+      <div className="relative w-full overflow-hidden rounded-xl border border-border bg-black/90">
+        {step.asset_url ? (
+          <img src={step.asset_url} alt="Step" className="block h-auto w-full" draggable={false} />
+        ) : (
+          <div className="flex aspect-video w-full items-center justify-center bg-slate-800 text-sm text-white/50">
+            This step has no image.
+          </div>
+        )}
+        {step.hotspots.map((h) => (
+          <div
+            key={h.id}
+            className="absolute rounded-md ring-2 ring-white/60"
+            style={{
+              left: `${h.x * 100}%`,
+              top: `${h.y * 100}%`,
+              width: `${h.w * 100}%`,
+              height: `${h.h * 100}%`,
+              backgroundColor: `${primaryColor}40`,
+            }}
+          >
+            {h.label && (
+              <span className="pointer-events-none absolute left-0 top-0 -translate-y-full rounded bg-slate-900 px-1.5 py-0.5 text-caption text-white">
+                {h.label}
+              </span>
+            )}
+          </div>
+        ))}
+        <div className="absolute inset-x-0 bottom-0 flex justify-center bg-gradient-to-t from-black/85 to-transparent p-3">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-black/85 px-3 py-2 text-center text-xs font-medium text-white shadow-lg">
+            <Monitor className="h-4 w-4 shrink-0" />
+            Hotspots are best edited on a larger screen — open this demo on desktop to add or resize them.
+          </span>
+        </div>
       </div>
     );
   }

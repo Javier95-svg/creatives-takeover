@@ -405,8 +405,8 @@ export default function TryPage() {
               <p className="text-sm text-white/80">
                 Keep this demo. Save it to your account to add hotspots, record a VSL, and publish a launch page.
               </p>
-              <div className="flex flex-wrap items-center justify-center gap-3">
-                <Button onClick={() => void handleSave()} disabled={saving} className="gap-2">
+              <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">
+                <Button onClick={() => void handleSave()} disabled={saving} className="w-full gap-2 sm:w-auto">
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                   Save and publish this demo
                 </Button>
@@ -414,7 +414,7 @@ export default function TryPage() {
                   variant="outline"
                   onClick={startOver}
                   disabled={saving}
-                  className="bg-white/10 text-white hover:bg-white/20"
+                  className="w-full bg-white/10 text-white hover:bg-white/20 sm:w-auto"
                 >
                   Try different screenshots
                 </Button>
@@ -433,7 +433,7 @@ export default function TryPage() {
                     <button
                       type="button"
                       onClick={() => removeShot(shot.url)}
-                      className="absolute right-1.5 top-1.5 rounded-full bg-black/70 p-1 text-white/80 transition hover:text-white"
+                      className="absolute right-1.5 top-1.5 rounded-full bg-black/70 p-1.5 text-white/80 transition hover:text-white touch:p-2.5"
                       aria-label="Remove screenshot"
                     >
                       <X className="h-3.5 w-3.5" />

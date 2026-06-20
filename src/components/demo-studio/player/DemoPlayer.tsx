@@ -171,7 +171,7 @@ export default function DemoPlayer({
           <div className="flex aspect-video w-full flex-col items-center justify-center gap-4 bg-gradient-to-br from-slate-900 to-slate-800 p-8 text-center text-white">
             <h3 className="text-2xl font-semibold">That's the demo 🎬</h3>
             <p className="max-w-sm text-sm text-white/70">Thanks for watching. Want to see more?</p>
-            <div className="flex flex-wrap items-center justify-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-3 touch:[&_button]:min-h-[44px]">
               {resolvedCtaHref && (
                 <Button asChild style={{ backgroundColor: primaryColor }}>
                   <a
@@ -243,19 +243,20 @@ export default function DemoPlayer({
             </div>
 
             {showWatermark && (
+              // Top-right on mobile so it never overlaps the bottom caption; bottom-right on sm+ (desktop unchanged).
               <a
                 href="https://creatives-takeover.com/demo-studio"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="absolute bottom-2 right-2 rounded-full bg-black/60 px-2.5 py-1 text-caption font-medium text-white/80 backdrop-blur hover:text-white"
+                className="absolute right-2 top-2 rounded-full bg-black/60 px-2.5 py-1 text-caption font-medium text-white/80 backdrop-blur hover:text-white sm:bottom-2 sm:top-auto"
               >
                 Made with Creatives Takeover
               </a>
             )}
             {(current?.title || current?.caption) && (
-              <div className="absolute inset-x-3 bottom-3 max-w-xl rounded-lg bg-slate-950/85 p-3 text-white shadow-lg backdrop-blur">
+              <div className="absolute inset-x-2 bottom-2 max-w-xl rounded-lg bg-slate-950/85 p-2.5 text-white shadow-lg backdrop-blur sm:inset-x-3 sm:bottom-3 sm:p-3">
                 {current.title && <h3 className="text-sm font-semibold">{current.title}</h3>}
-                {current.caption && <p className="mt-1 text-xs text-white/75">{current.caption}</p>}
+                {current.caption && <p className="mt-1 line-clamp-3 text-xs text-white/75 sm:line-clamp-none">{current.caption}</p>}
               </div>
             )}
           </div>
@@ -263,7 +264,7 @@ export default function DemoPlayer({
       </div>
 
       {/* Controls */}
-      <div className="mt-3 flex items-center justify-between">
+      <div className="mt-3 flex items-center justify-between touch:[&_button]:min-h-[44px]">
         <Button
           variant="ghost"
           size="sm"
@@ -288,7 +289,7 @@ export default function DemoPlayer({
       </div>
 
       {allowExport && (
-        <div className="mt-2 flex items-center gap-2">
+        <div className="mt-2 flex flex-wrap items-center gap-2 touch:[&_button]:min-h-[44px]">
           <span className="mr-auto text-xs text-muted-foreground">Export this walkthrough</span>
           <Button
             variant="outline"

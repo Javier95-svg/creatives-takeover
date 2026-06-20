@@ -368,7 +368,7 @@ export default function DemoBriefPage() {
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
-          <div className="mt-4 grid gap-2 sm:grid-cols-5">
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
             {guideSteps.map((step, index) => (
               <div key={step} className="rounded-lg border border-border/70 bg-background/70 px-3 py-2">
                 <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">Step {index + 1}</p>
