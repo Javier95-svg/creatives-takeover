@@ -66,7 +66,7 @@ const Index = () => {
       <main>
         {isMobile ? (
           <PullToRefresh onRefresh={handleRefresh}>
-            <Hero ctaHref="/icp-builder" />
+            <Hero ctaHref="/demo-studio" />
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
                 <EntrepreneurProblems />
@@ -98,7 +98,7 @@ const Index = () => {
           </PullToRefresh>
         ) : (
           <>
-            <Hero ctaHref="/icp-builder" />
+            <Hero ctaHref="/demo-studio" />
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
                 <EntrepreneurProblems />
