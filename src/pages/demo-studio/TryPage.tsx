@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import DemoPlayer from '@/components/demo-studio/player/DemoPlayer';
+import DemoStudioWallpaper from '@/components/wallpapers/DemoStudioWallpaper';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   createDemo,
@@ -377,13 +378,14 @@ export default function TryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 py-10 text-white">
+    <div className="dark relative min-h-screen overflow-hidden bg-background py-10 text-white">
       <SEO
         title="Try Demo Studio — build an interactive demo in seconds"
         description="Upload a few screenshots and instantly turn them into an interactive product demo with AI-written captions. No signup required."
         type="product"
       />
-      <div className="mx-auto w-full max-w-3xl px-4">
+      <DemoStudioWallpaper />
+      <div className="relative z-10 mx-auto w-full max-w-3xl px-4">
         <Link
           to="/"
           className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-white/70 transition hover:text-white"
@@ -399,17 +401,6 @@ export default function TryPage() {
             Upload {MIN_SCREENSHOTS} to {MAX_SCREENSHOTS} screenshots of your product. We'll write the
             captions and hand you an interactive walkthrough. No signup needed.
           </p>
-          {!user && (
-            <p className="mt-3 text-xs text-white/50">
-              Already have an account?{' '}
-              <Link
-                to="/login?return=/demo-studio"
-                className="font-medium text-white/80 underline underline-offset-2 hover:text-white"
-              >
-                Log in
-              </Link>
-            </p>
-          )}
         </div>
 
         {steps ? (
@@ -519,6 +510,18 @@ export default function TryPage() {
               )}
             </Button>
           </div>
+        )}
+
+        {!user && (
+          <p className="mt-6 text-center text-xs text-white/50">
+            Already have an account?{' '}
+            <Link
+              to="/login?return=/demo-studio"
+              className="font-medium text-white/80 underline underline-offset-2 hover:text-white"
+            >
+              Log in
+            </Link>
+          </p>
         )}
       </div>
     </div>
