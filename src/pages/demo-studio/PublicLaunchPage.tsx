@@ -71,6 +71,11 @@ export default function PublicLaunchPage() {
         referrer: document.referrer || null,
         vslVariationSeen: data.vsl?.variation_label ?? null,
       });
+      void trackDemoEvent('signup', {
+        projectId: data.project.id,
+        vslId: data.vsl?.id,
+        meta: { variation_label: data.vsl?.variation_label ?? null },
+      });
       setSubmitted(true);
       setEmail('');
     } catch (e) {

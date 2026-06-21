@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Download, Loader2, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,9 @@ interface DemoPlayerProps {
   className?: string;
   /** Show MP4/GIF export controls. Off by default; enabled in the editor/viewer. */
   allowExport?: boolean;
+  /** Fired when the viewer reaches the end of the demo (any mode). Lets hosts
+   *  track completion on surfaces the player doesn't self-track (e.g. /try). */
+  onComplete?: () => void;
 }
 
 export default function DemoPlayer({
@@ -32,10 +35,19 @@ export default function DemoPlayer({
   ctaLabel,
   className,
   allowExport = false,
+  onComplete,
 }: DemoPlayerProps) {
   const [index, setIndex] = useState(0);
   const [finished, setFinished] = useState(false);
   const [exporting, setExporting] = useState<null | 'mp4' | 'gif'>(null);
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+  // Notify the host once whenever the demo reaches the end, regardless of mode.
+  useEffect(() => {
+    if (finished) onCompleteRef.current?.();
+  }, [finished]);
   const primaryColor = theme?.primaryColor || '#6366f1';
   const total = steps.length;
   const current = steps[index];

@@ -204,7 +204,8 @@ export default function TryPage() {
         throw new Error("We couldn't turn those screenshots into a demo. Try again in a moment.");
       }
       setSteps(built);
-      trackDemoEvent('demo_view', { meta: { source: 'demo_try', step_count: built.length } });
+      void trackDemoEvent('demo_view', { meta: { source: 'demo_try', step_count: built.length } });
+      void trackDemoEvent('demo_start', { meta: { source: 'demo_try', step_count: built.length } });
       // Anonymous visitors: stash the draft now so it survives the auth redirect.
       if (!user) {
         persistPromiseRef.current = persistDraft(built).catch(() => false);
@@ -276,6 +277,7 @@ export default function TryPage() {
   // Primary CTA on the result view.
   const handleSave = async () => {
     if (!steps) return;
+    void trackDemoEvent('cta_click', { meta: { source: 'demo_try', placement: 'try_save' } });
     if (user) {
       setSaving(true);
       try {
@@ -296,6 +298,7 @@ export default function TryPage() {
     }
     // Anonymous: make sure the draft is stored, then send them through signup.
     setSaving(true);
+    void trackDemoEvent('signup_attempt', { meta: { source: 'demo_try' } });
     const stored = await (persistPromiseRef.current ?? persistDraft(steps));
     if (!stored) {
       toast.error('Your screenshots are large — you may need to re-upload after signing up.');
@@ -400,6 +403,12 @@ export default function TryPage() {
               showWatermark
               ctaHref={user ? null : SIGNUP_RETURN_HREF}
               ctaLabel="Save and publish this demo"
+              onComplete={() =>
+                void trackDemoEvent('demo_complete', {
+                  meta: { source: 'demo_try' },
+                  dedupeKey: 'demo_complete_try',
+                })
+              }
             />
             <div className="flex flex-col items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-5 text-center">
               <p className="text-sm text-white/80">
