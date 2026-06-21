@@ -442,7 +442,7 @@ const FundraisingReadinessToolkitAll = () => {
             <PreviewModeWrapper
               featureName="Full diagnostic"
               headline="Your results are ready 🎉"
-              description="Create a free account to unlock your full diagnostic — strengths, critical gaps, a prioritized action plan, and your timeline to readiness."
+              description="Create a free account to unlock your full readiness breakdown: the strengths to lead with when you pitch investors, the gaps most likely to stall your raise (ranked by impact), and a prioritized action plan with your timeline to readiness."
               ctaLabel="Create free account"
               onCtaClick={() => captureEvent("free_tool_signup_gate_cta_clicked", { tool: "insighta_test" })}
             >
