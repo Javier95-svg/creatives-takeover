@@ -13,6 +13,7 @@ import {
   createHotspot,
   createProject,
   createStep,
+  deleteProject,
   generateDemoStudioDraftStoryboard,
   uploadStepAsset,
 } from '@/lib/demoStudio/api';
@@ -79,6 +80,12 @@ export default function TryPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const shotsRef = useRef<Shot[]>([]);
   const hydratedRef = useRef(false);
+  // Guards a single in-flight save so concurrent invocations (StrictMode double
+  // effect, double-click, retry overlap) can't create duplicate projects.
+  const hydratingRef = useRef(false);
+  // Monotonic token for the current generation/persistence run. Bumped on
+  // start-over and unmount so late async work from a previous run is ignored.
+  const runIdRef = useRef(0);
   // Best-effort eager serialization for anonymous visitors so the draft is in
   // sessionStorage by the time any CTA navigates to signup.
   const persistPromiseRef = useRef<Promise<boolean> | null>(null);
@@ -91,6 +98,8 @@ export default function TryPage() {
   }, [shots]);
   useEffect(() => {
     return () => {
+      // Invalidate any in-flight generation/persistence so late async work is ignored.
+      runIdRef.current += 1;
       shotsRef.current.forEach((shot) => URL.revokeObjectURL(shot.url));
     };
   }, []);
@@ -145,13 +154,18 @@ export default function TryPage() {
   );
 
   const persistDraft = useCallback(
-    async (built: DemoStepWithHotspots[]): Promise<boolean> => {
+    async (built: DemoStepWithHotspots[], runId?: number): Promise<boolean> => {
+      // When a runId is supplied (background persist), bail if the run was
+      // superseded (start-over/unmount) so we don't re-write a cleared draft.
+      const isStale = () => runId !== undefined && runId !== runIdRef.current;
       const productName = deriveProductName(contextUrl, built[0]?.title ?? undefined);
       let draftSteps = await buildDraftSteps(built, 1600, 0.85);
+      if (isStale()) return false;
       const draft: TryDraft = { v: 1, productName, contextUrl, steps: draftSteps };
       if (saveTryDraft(draft)) return true;
       // Retry once smaller if the first attempt overflowed the quota.
       draftSteps = await buildDraftSteps(built, 1024, 0.7);
+      if (isStale()) return false;
       return saveTryDraft({ ...draft, steps: draftSteps });
     },
     [buildDraftSteps, contextUrl],
@@ -162,10 +176,13 @@ export default function TryPage() {
       toast.error(`Add at least ${MIN_SCREENSHOTS} screenshots first.`);
       return;
     }
+    const runId = ++runIdRef.current;
     setGenerating(true);
     setError(null);
     try {
       const storyboard = await generateDemoStudioDraftStoryboard({ contextUrl });
+      // Ignore the response if the user started over or left during generation.
+      if (runId !== runIdRef.current) return;
       const now = new Date().toISOString();
       const count = Math.min(shots.length, storyboard.length);
       const built: DemoStepWithHotspots[] = [];
@@ -208,18 +225,21 @@ export default function TryPage() {
       void trackDemoEvent('demo_start', { meta: { source: 'demo_try', step_count: built.length } });
       // Anonymous visitors: stash the draft now so it survives the auth redirect.
       if (!user) {
-        persistPromiseRef.current = persistDraft(built).catch(() => false);
+        persistPromiseRef.current = persistDraft(built, runId).catch(() => false);
       }
     } catch (e) {
+      if (runId !== runIdRef.current) return; // stale failure from a superseded run
       const message = e instanceof Error ? e.message : 'Could not generate your demo preview.';
       setError(message);
       toast.error(message);
     } finally {
-      setGenerating(false);
+      if (runId === runIdRef.current) setGenerating(false);
     }
   };
 
   const startOver = () => {
+    // Supersede any in-flight generation/persistence before clearing the draft.
+    runIdRef.current += 1;
     setSteps(null);
     setError(null);
     persistPromiseRef.current = null;
@@ -231,45 +251,58 @@ export default function TryPage() {
   const hydrate = useCallback(
     async (productName: string, hydrateSteps: HydrateStep[]) => {
       if (!user) throw new Error('You need to be signed in to save this demo.');
+      // Re-entrancy guard: a concurrent save (StrictMode double-effect, double
+      // click, retry overlapping an in-flight attempt) must not create a 2nd project.
+      if (hydratingRef.current) return;
+      hydratingRef.current = true;
       const name = productName || 'My product';
       const project = await createProject(user.id, { name });
-      const demo = await createDemo(project.id, user.id, `${name} demo`);
-      let position = 0;
-      for (const step of hydrateSteps) {
-        const file =
-          step.file ??
-          (step.dataUrl ? await dataUrlToFile(step.dataUrl, `screenshot-${position + 1}.jpg`) : null);
-        if (!file) continue;
-        const asset = await uploadStepAsset(user.id, file);
-        const created = await createStep(demo.id, position, {
-          url: asset.url,
-          width: asset.width,
-          height: asset.height,
-          title: step.title || `Step ${position + 1}`,
-          caption: step.caption || null,
-          speaker_notes: step.speaker_notes || null,
-        });
-        if (step.hotspot_label) {
-          try {
-            await createHotspot(created.id, {
-              ...DEFAULT_HOTSPOT,
-              type: 'tooltip',
-              action: 'next',
-              label: step.hotspot_label,
-            });
-          } catch {
-            /* hotspot is a nicety; never block the save */
+      try {
+        const demo = await createDemo(project.id, user.id, `${name} demo`);
+        let position = 0;
+        for (const step of hydrateSteps) {
+          const file =
+            step.file ??
+            (step.dataUrl ? await dataUrlToFile(step.dataUrl, `screenshot-${position + 1}.jpg`) : null);
+          if (!file) continue;
+          const asset = await uploadStepAsset(user.id, file);
+          const created = await createStep(demo.id, position, {
+            url: asset.url,
+            width: asset.width,
+            height: asset.height,
+            title: step.title || `Step ${position + 1}`,
+            caption: step.caption || null,
+            speaker_notes: step.speaker_notes || null,
+          });
+          if (step.hotspot_label) {
+            try {
+              await createHotspot(created.id, {
+                ...DEFAULT_HOTSPOT,
+                type: 'tooltip',
+                action: 'next',
+                label: step.hotspot_label,
+              });
+            } catch {
+              /* hotspot is a nicety; never block the save */
+            }
           }
+          position += 1;
         }
-        position += 1;
+        trackDemoEvent('signup', {
+          projectId: project.id,
+          demoId: demo.id,
+          meta: { source: 'demo_try', step_count: position },
+        });
+        clearTryDraft();
+        navigate(`/demo-studio/projects/${project.id}/brief`, { replace: true });
+      } catch (err) {
+        // Roll back the partial project so a failed save never leaves an orphaned
+        // (or, on retry, duplicated) project. FK cascade removes demo/steps/hotspots.
+        await deleteProject(project.id).catch(() => {});
+        throw err;
+      } finally {
+        hydratingRef.current = false;
       }
-      trackDemoEvent('signup', {
-        projectId: project.id,
-        demoId: demo.id,
-        meta: { source: 'demo_try', step_count: position },
-      });
-      clearTryDraft();
-      navigate(`/demo-studio/projects/${project.id}/brief`, { replace: true });
     },
     [navigate, user],
   );

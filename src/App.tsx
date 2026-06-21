@@ -300,6 +300,8 @@ function App() {
                         <Route path="/demo-studio/projects/:id/launch" element={<RouteErrorBoundary routeName="Launch Composer"><DemoStudioLaunchComposerPage /></RouteErrorBoundary>} />
                         {/* Public no-auth lead magnet: produce a demo before signup */}
                         <Route path="/demo-studio/try" element={<DemoStudioTryPage />} />
+                        {/* Defensive: catch the hyphenated form some external links may use */}
+                        <Route path="/demo-studio-try" element={<Navigate to="/demo-studio/try" replace />} />
                         <Route path="/p/:slug" element={<PublicLaunchPage />} />
                         <Route path="/demo/:publicId" element={<PublicDemoPage />} />
                         <Route path="/embed/demo/:publicId" element={<EmbedDemoPage />} />

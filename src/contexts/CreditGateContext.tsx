@@ -44,7 +44,9 @@ const isToolCreditGateRoute = (pathname: string) => (
 export const CreditGateProvider = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const { totalAvailable, subscriptionTier, currentPeriodEnd } = useCredits();
-  const { createCheckout } = useSubscription();
+  // This provider wraps every route but only needs the checkout action, so skip
+  // the tiers fetch to avoid an avoidable subscription_tiers call on anon routes.
+  const { createCheckout } = useSubscription({ fetchTiers: false });
   const [hardGateOpen, setHardGateOpen] = useState(false);
   const [isStarterCheckoutLoading, setIsStarterCheckoutLoading] = useState(false);
 

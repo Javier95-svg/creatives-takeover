@@ -264,26 +264,38 @@ async function handleDraft(req: Request, body: DemoStudioGeneratorRequest): Prom
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (supabaseUrl && serviceRoleKey) {
-    const admin = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
-    const { error: rlError } = await admin.rpc("assert_rate_limit", {
-      p_key: `demo_studio_try:${getClientIp(req)}`,
-      p_user_id: null,
-      p_max_per_minute: DRAFT_RATE_LIMIT_PER_MIN,
+  // Fail closed: the anonymous draft path must never run uncapped. If the rate-limit
+  // dependencies are missing (a misconfig), refuse rather than bypass the per-IP cap.
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error("demo-studio draft: missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY; refusing uncapped generation");
+    return new Response(JSON.stringify({
+      success: false,
+      error: "Demo preview is temporarily unavailable. Please try again later.",
+      errorCode: "SERVICE_UNAVAILABLE",
+    }), {
+      status: 503,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-    if (rlError) {
-      const rateLimited = /rate_limit_exceeded/i.test(rlError.message || "");
-      return new Response(JSON.stringify({
-        success: false,
-        error: rateLimited
-          ? "You've hit the free preview limit. Wait a minute or sign up to keep building."
-          : "Could not start the demo preview. Try again in a moment.",
-        errorCode: rateLimited ? "RATE_LIMIT" : "GENERATION_FAILED",
-      }), {
-        status: rateLimited ? 429 : 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+  }
+
+  const admin = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+  const { error: rlError } = await admin.rpc("assert_rate_limit", {
+    p_key: `demo_studio_try:${getClientIp(req)}`,
+    p_user_id: null,
+    p_max_per_minute: DRAFT_RATE_LIMIT_PER_MIN,
+  });
+  if (rlError) {
+    const rateLimited = /rate_limit_exceeded/i.test(rlError.message || "");
+    return new Response(JSON.stringify({
+      success: false,
+      error: rateLimited
+        ? "You've hit the free preview limit. Wait a minute or sign up to keep building."
+        : "Could not start the demo preview. Try again in a moment.",
+      errorCode: rateLimited ? "RATE_LIMIT" : "GENERATION_FAILED",
+    }), {
+      status: rateLimited ? 429 : 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   const openaiApiKey = Deno.env.get("OPENAI_API_KEY");

@@ -374,16 +374,18 @@ export async function deleteDemo(id: string): Promise<void> {
 
 /** Owner-wide counts for the "getting started" checklist on the dashboard. */
 export async function getOwnerDemoCounts(ownerId: string): Promise<{ total: number; published: number }> {
-  const totalQuery = await supabase
+  // One round trip: fetch the owner's demo statuses (small, plan-capped set) and
+  // derive both counts client-side instead of issuing two count queries.
+  const { data, error } = await supabase
     .from(DEMOS)
-    .select('id', { count: 'exact', head: true })
+    .select('status')
     .eq('owner_id', ownerId);
-  const publishedQuery = await supabase
-    .from(DEMOS)
-    .select('id', { count: 'exact', head: true })
-    .eq('owner_id', ownerId)
-    .eq('status', 'published');
-  return { total: totalQuery.count ?? 0, published: publishedQuery.count ?? 0 };
+  if (error) {
+    console.error('getOwnerDemoCounts failed:', error.message);
+    return { total: 0, published: 0 };
+  }
+  const rows = (data ?? []) as Array<{ status: string | null }>;
+  return { total: rows.length, published: rows.filter((row) => row.status === 'published').length };
 }
 
 /* -------------------------------------------------------------------------- */

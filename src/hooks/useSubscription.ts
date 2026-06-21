@@ -149,7 +149,12 @@ const resolveCreditPackPaymentLink = (pack: CreditPackRow | null | undefined) =>
   return normalizePaymentLink(pack?.stripe_payment_link);
 };
 
-export function useSubscription() {
+export function useSubscription(options?: { fetchTiers?: boolean }) {
+  // Tiers are only needed by surfaces that render pricing/plan data. Globally
+  // mounted consumers (e.g. CreditGateProvider) that only need actions can pass
+  // { fetchTiers: false } to avoid an avoidable subscription_tiers fetch on every
+  // route, including anonymous ones. Defaults to true for backward compatibility.
+  const fetchTiersEnabled = options?.fetchTiers ?? true;
   const { user } = useAuth();
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -213,6 +218,7 @@ export function useSubscription() {
     queryFn: fetchTiers,
     staleTime: 5 * 60 * 1000,
     retry: 1,
+    enabled: fetchTiersEnabled,
   });
 
   const subscriptionQuery = useQuery({
