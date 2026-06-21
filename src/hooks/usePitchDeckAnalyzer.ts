@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { PitchDeckAnalysis, PitchDeckFreeResult } from '@/types/pitchDeckAnalyzer';
+import type { PitchDeckAnalysis, PitchDeckGuestResult } from '@/types/pitchDeckAnalyzer';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/hooks/useCredits';
@@ -22,7 +22,7 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 // supabase.functions.invoke surfaces non-2xx as a FunctionsHttpError whose body
-// (our structured { error, creditError, requiredCredits, ... }) lives on .context.
+// (our structured { error, creditError, limitReached, ... }) lives on .context.
 async function invokePitchFn(body: Record<string, unknown>): Promise<{ ok: boolean; data: any; errorBody: any }> {
   const { data, error } = await supabase.functions.invoke('pitch-deck-analyzer', { body });
   if (!error) return { ok: true, data, errorBody: null };
@@ -45,14 +45,16 @@ export const usePitchDeckAnalyzer = () => {
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<PitchDeckAnalysis | null>(null);
-  const [freeResult, setFreeResult] = useState<PitchDeckFreeResult | null>(null);
+  const [guestResult, setGuestResult] = useState<PitchDeckGuestResult | null>(null);
+  const [limitReached, setLimitReached] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // --- Anonymous "Quick Score": real but lighter pass, no auth, no credit ----
-  const analyzePublicDeck = async (file: File): Promise<PitchDeckFreeResult | null> => {
+  // --- Anonymous: one free full analysis per IP ------------------------------
+  const analyzePublicDeck = async (file: File): Promise<PitchDeckGuestResult | null> => {
     try {
       setAnalyzing(true);
       setError(null);
+      setLimitReached(false);
       const pdfBase64 = await fileToBase64(file);
       const { ok, data, errorBody } = await invokePitchFn({
         mode: 'free',
@@ -61,18 +63,23 @@ export const usePitchDeckAnalyzer = () => {
         fileSize: file.size,
       });
       if (!ok || !data?.success) {
+        if (errorBody?.limitReached) {
+          setLimitReached(true);
+          return null;
+        }
         throw new Error(errorBody?.error || data?.error || 'We could not analyze your deck. Try again.');
       }
-      const result: PitchDeckFreeResult = {
+      const result: PitchDeckGuestResult = {
         overallScore: data.overallScore,
         verdict: data.verdict,
         subScores: data.subScores,
-        topStrength: data.topStrength ?? null,
-        topFix: data.topFix ?? null,
-        tempPath: data.tempPath ?? null,
+        strengths: data.strengths || [],
+        weaknesses: data.weaknesses || [],
+        recommendations: data.recommendations || [],
+        keyInsights: data.keyInsights || {},
         fileName: data.fileName ?? file.name,
       };
-      setFreeResult(result);
+      setGuestResult(result);
       return result;
     } catch (err: any) {
       const message = err?.message || 'Failed to analyze your deck. Please try again.';
@@ -84,46 +91,48 @@ export const usePitchDeckAnalyzer = () => {
     }
   };
 
-  // Shared deep run: storagePath already points at the uploaded (or carried) PDF.
-  const runDeepAnalysis = async (
-    storagePath: string,
-    fileName: string,
-    fileSize: number,
-  ): Promise<PitchDeckAnalysis | null> => {
+  // --- Authenticated: every analysis is credit-metered -----------------------
+  const analyzePitchDeck = async (file: File): Promise<PitchDeckAnalysis | null> => {
     if (!user) {
-      toast.error('Please sign in to run the full analysis.');
+      toast.error('Please sign in to analyze your pitch deck');
       return null;
     }
-    setAnalyzing(true);
-    setError(null);
     try {
+      setUploading(true);
+      setError(null);
+      const path = `${user.id}/${Date.now()}_${file.name}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from(UPLOAD_BUCKET)
+        .upload(path, file, { cacheControl: '3600', upsert: false });
+      if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
+      setUploading(false);
+
+      setAnalyzing(true);
       const { ok, data, errorBody } = await invokePitchFn({
         mode: 'deep',
         userId: user.id,
-        storagePath,
-        fileName,
-        fileSize,
+        storagePath: uploadData.path,
+        fileName: file.name,
+        fileSize: file.size,
       });
 
       if (!ok || !data?.success) {
         if (errorBody?.creditError) {
           toast.error(
-            `You need ${errorBody.requiredCredits ?? ''} credits to analyze another deck. Your first deck is free.`.trim(),
+            `You need ${errorBody.requiredCredits ?? 10} credits to analyze a deck. Top up to continue.`,
           );
           return null;
         }
         throw new Error(errorBody?.error || data?.error || 'Analysis failed. Please try again.');
       }
 
-      // Persist (client insert; the function counted existing rows before this one
-      // so the first analysis is free and the next counts as #2).
       const { data: saved, error: saveError } = await supabase
         .from('pitch_deck_analyses')
         .insert({
           user_id: user.id,
-          file_name: fileName,
-          file_size: fileSize,
-          storage_path: storagePath,
+          file_name: file.name,
+          file_size: file.size,
+          storage_path: uploadData.path,
           overall_score: data.overallScore,
           verdict: data.verdict,
           story_clarity_score: data.subScores.storyClarity,
@@ -169,7 +178,7 @@ export const usePitchDeckAnalyzer = () => {
       };
 
       setAnalysis(result);
-      if (data.creditsUsed > 0) void refreshBalance();
+      void refreshBalance();
       fireJourneyUpgradePrompt('rising_pitch_deck_heavy');
       return result;
     } catch (err: any) {
@@ -178,37 +187,9 @@ export const usePitchDeckAnalyzer = () => {
       toast.error(message);
       return null;
     } finally {
+      setUploading(false);
       setAnalyzing(false);
     }
-  };
-
-  // --- Authenticated deep analysis from a freshly chosen file ----------------
-  const analyzePitchDeck = async (file: File): Promise<PitchDeckAnalysis | null> => {
-    if (!user) {
-      toast.error('Please sign in to analyze your pitch deck');
-      return null;
-    }
-    try {
-      setUploading(true);
-      const fileName = `${user.id}/${Date.now()}_${file.name}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from(UPLOAD_BUCKET)
-        .upload(fileName, file, { cacheControl: '3600', upsert: false });
-      if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
-      setUploading(false);
-      return await runDeepAnalysis(uploadData.path, file.name, file.size);
-    } catch (err: any) {
-      setUploading(false);
-      const message = err?.message || 'Failed to analyze pitch deck. Please try again.';
-      setError(message);
-      toast.error(message);
-      return null;
-    }
-  };
-
-  // --- Deep analysis on a carried temp path (post-signup, no re-upload) -------
-  const analyzeFromTempPath = async (tempPath: string, fileName: string): Promise<PitchDeckAnalysis | null> => {
-    return runDeepAnalysis(tempPath, fileName, 0);
   };
 
   const submitFeedback = async (analysisId: string, rating: number, feedback?: string) => {
@@ -233,7 +214,8 @@ export const usePitchDeckAnalyzer = () => {
 
   const resetAnalysis = () => {
     setAnalysis(null);
-    setFreeResult(null);
+    setGuestResult(null);
+    setLimitReached(false);
     setError(null);
     setUploading(false);
     setAnalyzing(false);
@@ -242,13 +224,13 @@ export const usePitchDeckAnalyzer = () => {
   return {
     analyzePublicDeck,
     analyzePitchDeck,
-    analyzeFromTempPath,
     submitFeedback,
     resetAnalysis,
     uploading,
     analyzing,
     analysis,
-    freeResult,
+    guestResult,
+    limitReached,
     error,
     isProcessing: uploading || analyzing,
   };

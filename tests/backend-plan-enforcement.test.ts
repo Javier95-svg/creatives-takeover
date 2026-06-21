@@ -275,7 +275,7 @@ test('Pitch Deck Analyzer is credit-metered (charge) on every tier', () => {
   for (const plan of ['rookie', 'starter', 'rising', 'pro'] as const) {
     const access = resolveFeatureEnforcement(plan, 'PITCH_DECK_ANALYZER');
     assert.equal(access.mode, 'charge');
-    assert.equal(access.creditCost, 6);
+    assert.equal(access.creditCost, 10);
   }
 });
 

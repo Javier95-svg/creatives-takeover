@@ -9,16 +9,17 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, idempotency-key",
 };
 
-// Both modes use a PDF-capable Claude vision model so the analyzer reads the
-// actual slides (text, charts, layout), not a regex text scrape. The free pass
-// uses a lighter prompt + smaller output; bounded by an IP rate limit + size cap.
-// (Swap FREE_MODEL to a cheaper PDF-capable model once confirmed.)
-const FREE_MODEL = "claude-sonnet-4-20250514";
-const DEEP_MODEL = "claude-sonnet-4-20250514";
-const FREE_RATE_LIMIT_PER_MIN = 3;
+// One analysis for everyone. A PDF-capable Claude vision model reads the actual
+// slides (text, charts, layout) against the rubric. Haiku 4.5 is the cost-
+// efficient pick (native PDF, ~3x cheaper than Sonnet) and is already used across
+// the MVP Builder. Anonymous visitors get ONE free run per IP; signed-in runs are
+// credit-metered. Swap MODEL if quality ever needs to step up.
+const MODEL = "claude-haiku-4-5-20251001";
+const FREE_ANALYSES_PER_IP = 1;
 const FREE_MAX_PDF_BYTES = 8 * 1024 * 1024; // 8MB; larger decks must sign up
+const ANALYSIS_MAX_TOKENS = 4000;
 const UPLOAD_BUCKET = "pitch-deck-uploads";
-const ICP_RESULTS_TABLE = "pitch_deck_analyses";
+const RESULTS_TABLE = "pitch_deck_analyses";
 
 // Dimension weights (sum to 1.0) — overall score is computed server-side, never
 // trusted from the model.
@@ -115,18 +116,7 @@ Score 6 dimensions 0-100 using these bands. 0-39 = Weak, 40-69 = Developing, 70-
 
 Rules: judge what is actually on the slides; quote the deck as evidence for each finding; do not invent facts; do not use hype words; return ONLY one valid JSON object, no markdown.`;
 
-function buildFreePrompt(): string {
-  return `${RUBRIC}
-
-Output JSON exactly:
-{
-  "subScores": { "storyClarity": <0-100>, "marketOpportunity": <0-100>, "tractionProof": <0-100>, "businessModel": <0-100>, "teamCredibility": <0-100>, "fundraisingReadiness": <0-100> },
-  "topStrength": { "dimension": "<one of the 6 names>", "text": "<the single biggest strength, specific to THIS deck>", "evidence": "<short quote from the deck>" },
-  "topFix": { "dimension": "<one of the 6 names>", "text": "<the single highest-impact fix, specific and actionable>" }
-}`;
-}
-
-function buildDeepPrompt(): string {
+function buildAnalysisPrompt(): string {
   return `${RUBRIC}
 
 Output JSON exactly:
@@ -152,7 +142,7 @@ Output JSON exactly:
 Expected slides for the checklist: problem, solution, product, market, traction, business model, competition, team, ask.`;
 }
 
-async function callClaude(model: string, pdfBase64: string, systemPrompt: string, userPrompt: string, maxTokens: number): Promise<any> {
+async function callClaude(pdfBase64: string, maxTokens: number): Promise<any> {
   const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
   if (!apiKey) throw Object.assign(new Error("ANTHROPIC_API_KEY not configured"), { status: 500 });
 
@@ -161,20 +151,19 @@ async function callClaude(model: string, pdfBase64: string, systemPrompt: string
     headers: {
       "x-api-key": apiKey,
       "anthropic-version": "2023-06-01",
-      "anthropic-beta": "pdfs-2024-09-25",
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model,
+      model: MODEL,
       max_tokens: maxTokens,
       temperature: 0.2,
-      system: systemPrompt,
+      system: buildAnalysisPrompt(),
       messages: [
         {
           role: "user",
           content: [
             { type: "document", source: { type: "base64", media_type: "application/pdf", data: pdfBase64 } },
-            { type: "text", text: userPrompt },
+            { type: "text", text: "Analyze this pitch deck and return the JSON." },
           ],
         },
       ],
@@ -196,20 +185,7 @@ async function callClaude(model: string, pdfBase64: string, systemPrompt: string
   return JSON.parse(match[0]);
 }
 
-function buildFreeResult(parsed: any) {
-  const subScores = normalizeSubScores(parsed?.subScores);
-  const overallScore = calculateOverallScore(subScores);
-  return {
-    mode: "free",
-    overallScore,
-    verdict: getVerdict(overallScore),
-    subScores,
-    topStrength: parsed?.topStrength ?? null,
-    topFix: parsed?.topFix ?? null,
-  };
-}
-
-function buildDeepResult(parsed: any) {
+function buildResult(parsed: any) {
   const subScores = normalizeSubScores(parsed?.subScores);
   const overallScore = calculateOverallScore(subScores);
   return {
@@ -235,7 +211,14 @@ function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
 
-// ---- Free (anonymous) "Quick Score" --------------------------------------
+function getAdmin() {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceRoleKey) return null;
+  return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+}
+
+// ---- Free (anonymous): one full analysis per IP -----------------------------
 async function handleFree(req: Request, body: AnalyzeRequest): Promise<Response> {
   if (!body.pdfBase64) return json({ error: "pdfBase64 is required" }, 400);
   const approxBytes = Math.floor((body.pdfBase64.length * 3) / 4);
@@ -243,46 +226,46 @@ async function handleFree(req: Request, body: AnalyzeRequest): Promise<Response>
     return json({ error: "This deck is large. Create a free account to analyze decks over 8MB.", oversize: true }, 413);
   }
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  const admin = supabaseUrl && serviceRoleKey ? createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } }) : null;
+  const admin = getAdmin();
+  if (!admin) return json({ error: "Service unavailable. Please try again." }, 500);
 
-  if (admin) {
-    const { error: rlError } = await admin.rpc("assert_rate_limit", {
-      p_key: `pitch_deck_free:${getClientIp(req)}`,
-      p_user_id: null,
-      p_max_per_minute: FREE_RATE_LIMIT_PER_MIN,
-    });
-    if (rlError) {
-      const limited = /rate_limit_exceeded/i.test(rlError.message || "");
-      return json(
-        { error: limited ? "You've hit the free analysis limit. Wait a minute or sign up to keep going." : "Could not start the analysis. Try again in a moment.", errorCode: limited ? "RATE_LIMIT" : "ANALYSIS_FAILED" },
-        limited ? 429 : 500,
-      );
-    }
+  const ip = getClientIp(req);
+
+  // Atomically reserve the IP's free attempt; blocks once the cap is reached.
+  const { data: allowed, error: consumeErr } = await admin.rpc("consume_pitch_deck_free_attempt", {
+    p_ip: ip,
+    p_max: FREE_ANALYSES_PER_IP,
+  });
+  if (consumeErr) {
+    console.error("consume_pitch_deck_free_attempt error:", consumeErr);
+    return json({ error: "Could not start the analysis. Try again in a moment." }, 500);
+  }
+  if (allowed === false) {
+    return json(
+      {
+        error: "You've used your free analysis. Sign up to analyze more decks — 10 credits each.",
+        limitReached: true,
+      },
+      403,
+    );
   }
 
-  const parsed = await callClaude(FREE_MODEL, body.pdfBase64, buildFreePrompt(), "Analyze this pitch deck and return the JSON.", 900);
-  const result = buildFreeResult(parsed);
-
-  // Stash the PDF to a service-role temp path so the deep analysis can run on the
-  // same deck after signup (carry-over) without re-upload. Best-effort.
-  let tempPath: string | null = null;
-  if (admin) {
-    try {
-      const path = `_public-temp/${crypto.randomUUID()}.pdf`;
-      const bytes = Uint8Array.from(atob(body.pdfBase64), (c) => c.charCodeAt(0));
-      const { error: upErr } = await admin.storage.from(UPLOAD_BUCKET).upload(path, bytes, { contentType: "application/pdf", upsert: false });
-      if (!upErr) tempPath = path;
-    } catch (e) {
-      console.warn("Temp PDF stash failed (non-fatal):", e);
-    }
+  try {
+    const parsed = await callClaude(body.pdfBase64, ANALYSIS_MAX_TOKENS);
+    const result = buildResult(parsed);
+    return json({ success: true, ...result, fileName: body.fileName ?? null, guest: true });
+  } catch (err) {
+    // Give the free try back so a transient failure doesn't burn it.
+    await admin.rpc("release_pitch_deck_free_attempt", { p_ip: ip });
+    const status = (err as { status?: number })?.status ?? 500;
+    return json(
+      { error: "We couldn't analyze your deck just now. Please try again.", errorCode: "ANALYSIS_FAILED" },
+      status === 429 ? 429 : 500,
+    );
   }
-
-  return json({ success: true, ...result, tempPath, fileName: body.fileName ?? null });
 }
 
-// ---- Deep (authenticated) "Full Investor Audit" ---------------------------
+// ---- Deep (authenticated): every analysis is credit-metered ------------------
 async function handleDeep(req: Request, body: AnalyzeRequest): Promise<Response> {
   if (!body.storagePath) return json({ error: "storagePath is required" }, 400);
 
@@ -290,13 +273,10 @@ async function handleDeep(req: Request, body: AnalyzeRequest): Promise<Response>
   if (!user) return json({ error: "Authentication required" }, 401);
   if (body.userId && body.userId !== user.id) return json({ error: "User mismatch" }, 403);
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const admin = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+  const admin = getAdmin();
+  if (!admin) return json({ error: "Service unavailable. Please try again." }, 500);
 
-  // First deck per account is free; each additional analysis costs credits (ICP-style).
-  const { count } = await admin.from(ICP_RESULTS_TABLE as any).select("id", { count: "exact", head: true }).eq("user_id", user.id);
-  const cost = (count ?? 0) >= 1 ? CREDIT_COSTS.PITCH_DECK_ANALYZER : 0;
+  const cost = CREDIT_COSTS.PITCH_DECK_ANALYZER;
 
   const idempotencyKey = await resolveCreditIdempotencyKey(req, {
     userId: user.id,
@@ -304,33 +284,25 @@ async function handleDeep(req: Request, body: AnalyzeRequest): Promise<Response>
     requestFingerprint: { storagePath: body.storagePath, fileName: body.fileName },
   });
 
-  let chargedCredits = 0;
-  if (cost > 0) {
-    const creditResult = await checkAndDeductCredits(user.id, cost, "Pitch Deck Analyzer", undefined, {
-      idempotencyKey,
-      entitlementFeature: "PITCH_DECK_ANALYZER",
-    });
-    if (!creditResult.success) {
-      return json(
-        { error: creditResult.error || "Insufficient credits", creditError: true, errorCode: creditResult.errorCode, requiredCredits: cost },
-        creditResult.errorCode === "INSUFFICIENT_CREDITS" ? 402 : 400,
-      );
-    }
-    chargedCredits = (creditResult.usedFromQuota ?? 0) + (creditResult.usedFromBalance ?? 0);
+  const creditResult = await checkAndDeductCredits(user.id, cost, "Pitch Deck Analyzer", undefined, {
+    idempotencyKey,
+    entitlementFeature: "PITCH_DECK_ANALYZER",
+  });
+  if (!creditResult.success) {
+    return json(
+      { error: creditResult.error || "Insufficient credits", creditError: true, errorCode: creditResult.errorCode, requiredCredits: cost },
+      creditResult.errorCode === "INSUFFICIENT_CREDITS" ? 402 : 400,
+    );
   }
+  const chargedCredits = (creditResult.usedFromQuota ?? 0) + (creditResult.usedFromBalance ?? 0);
 
   try {
     const { data: fileData, error: dlErr } = await admin.storage.from(UPLOAD_BUCKET).download(body.storagePath);
     if (dlErr || !fileData) throw Object.assign(new Error("Could not read the uploaded deck."), { status: 400 });
     const pdfBase64 = toBase64(new Uint8Array(await fileData.arrayBuffer()));
 
-    const parsed = await callClaude(DEEP_MODEL, pdfBase64, buildDeepPrompt(), "Analyze this pitch deck and return the JSON.", 4000);
-    const result = buildDeepResult(parsed);
-
-    // Best-effort cleanup of carry-over temp files once consumed.
-    if (body.storagePath.startsWith("_public-temp/")) {
-      void admin.storage.from(UPLOAD_BUCKET).remove([body.storagePath]).catch(() => {});
-    }
+    const parsed = await callClaude(pdfBase64, ANALYSIS_MAX_TOKENS);
+    const result = buildResult(parsed);
 
     return json({ success: true, ...result, creditsUsed: chargedCredits });
   } catch (err) {

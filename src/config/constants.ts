@@ -58,7 +58,8 @@ export const CREDIT_COSTS = {
   ADVANCED_ANALYTICS: 5,
 
   // New Features (Phase 3)
-  PITCH_DECK_ANALYZER: 6,
+  // First analysis is free (anonymous, one per IP); every signed-in analysis costs this.
+  PITCH_DECK_ANALYZER: 10,
   EMAIL_TEMPLATE_GENERATION: 3,
   PROMPT_GENERATION: 2,
 

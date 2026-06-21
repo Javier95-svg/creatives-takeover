@@ -4,7 +4,6 @@ import Footer from "@/components/Footer";
 import { PitchDeckUploader } from "@/components/pitch-deck-analyzer/PitchDeckUploader";
 import { PitchDeckChecklist } from "@/components/pitch-deck-analyzer/PitchDeckChecklist";
 import { AnalysisResults } from "@/components/pitch-deck-analyzer/AnalysisResults";
-import { PitchDeckFreeScore } from "@/components/pitch-deck-analyzer/PitchDeckFreeScore";
 import { PitchDeckUnlockGate } from "@/components/pitch-deck-analyzer/PitchDeckUnlockGate";
 import { PitchDeckBuilder } from "@/components/pitch-deck-builder/PitchDeckBuilder";
 import { usePitchDeckAnalyzer } from "@/hooks/usePitchDeckAnalyzer";
@@ -15,12 +14,6 @@ import { Loader2, Sparkles, BarChart3, TrendingUp, Target } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { captureEvent } from "@/lib/analytics";
 import { toast } from "sonner";
-import {
-  clearPitchDeckDraft,
-  readPitchDeckDraft,
-  savePitchDeckDraft,
-  type PitchDeckDraft,
-} from "@/lib/pitchDeckDraft";
 
 const MAX_FILE_SIZE_MB = 20;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -32,20 +25,17 @@ export default function PitchDeckAnalyzerPage() {
   const {
     analyzePublicDeck,
     analyzePitchDeck,
-    analyzeFromTempPath,
     submitFeedback,
     resetAnalysis,
     uploading,
     analyzing,
     analysis,
-    freeResult,
+    guestResult,
+    limitReached,
     error,
     isProcessing,
   } = usePitchDeckAnalyzer();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  // A carried-over anonymous Quick Score (deck temp path + free result), surfaced
-  // once the visitor signs up so the deep audit runs without a re-upload.
-  const [carryOver, setCarryOver] = useState<PitchDeckDraft | null>(null);
 
   useEffect(() => {
     trackPageVisit('Pitch Deck Analyzer');
@@ -54,14 +44,6 @@ export default function PitchDeckAnalyzerPage() {
   // Funnel: a logged-out visitor opened a free tool.
   useEffect(() => {
     if (!user) captureEvent('free_tool_opened', { tool: 'pitch_deck_analyzer' });
-  }, [user]);
-
-  // Post-signup carry-over: if a Quick Score draft is waiting, surface it so the
-  // user can run the full audit on the same deck (their first one is free).
-  useEffect(() => {
-    if (!user) return;
-    const draft = readPitchDeckDraft();
-    if (draft) setCarryOver(draft);
   }, [user]);
 
   const handleFileSelected = (file: File) => {
@@ -80,48 +62,26 @@ export default function PitchDeckAnalyzerPage() {
     setSelectedFile(null);
   };
 
-  // Anonymous "Quick Score" — a real, lighter analysis (no auth, no credit).
+  // Anonymous: one free full analysis (IP-gated).
   const handlePublicAnalyze = async () => {
     if (!selectedFile) return;
     captureEvent('free_tool_input_submitted', { tool: 'pitch_deck_analyzer', file_size: selectedFile.size });
     const result = await analyzePublicDeck(selectedFile);
-    if (result) {
-      if (result.tempPath) {
-        savePitchDeckDraft({
-          v: 1,
-          tempPath: result.tempPath,
-          fileName: result.fileName ?? selectedFile.name,
-          freeResult: result,
-        });
-      }
-      captureEvent('free_tool_partial_result_shown', { tool: 'pitch_deck_analyzer', gated_only: false });
-    }
+    if (result) captureEvent('free_tool_result_shown', { tool: 'pitch_deck_analyzer' });
   };
 
-  // Authenticated deep "Full Investor Audit" on a freshly chosen file.
+  // Authenticated: every analysis is credit-metered (10 credits).
   const handleStartAssessment = async () => {
     if (!selectedFile) return;
     await analyzePitchDeck(selectedFile);
   };
 
-  // Authenticated deep audit on the carried-over deck (no re-upload).
-  const handleRunCarriedOver = async () => {
-    if (!carryOver?.tempPath) return;
-    const result = await analyzeFromTempPath(carryOver.tempPath, carryOver.fileName ?? 'pitch-deck.pdf');
-    if (result) {
-      clearPitchDeckDraft();
-      setCarryOver(null);
-    }
-  };
-
   const handleStartNew = () => {
     resetAnalysis();
     setSelectedFile(null);
-    clearPitchDeckDraft();
-    setCarryOver(null);
   };
 
-  const showHero = !analysis && !freeResult && !carryOver;
+  const showHero = !analysis && !guestResult && !limitReached;
 
   const renderProcessing = () => (
     <div className="text-center space-y-4">
@@ -276,7 +236,7 @@ export default function PitchDeckAnalyzerPage() {
                   Pitch Deck Analyzer
                 </h1>
                 <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
-                  Upload your deck, get a real investor score in minutes.<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> Free, no signup to start.</span>
+                  Upload your deck, get a real investor score in minutes.<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> Your first analysis is free.</span>
                 </p>
 
                 <div className="grid md:grid-cols-3 gap-6 mt-12 text-left">
@@ -303,8 +263,8 @@ export default function PitchDeckAnalyzerPage() {
                       <Target className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-semibold mb-1">Know What to Fix</h3>
-                      <p className="text-sm text-muted-foreground">Your #1 strength and highest-impact fix, free</p>
+                      <h3 className="font-semibold mb-1">Per-Slide Findings</h3>
+                      <p className="text-sm text-muted-foreground">Evidence-backed fixes and a prioritized action plan</p>
                     </div>
                   </div>
                 </div>
@@ -312,17 +272,33 @@ export default function PitchDeckAnalyzerPage() {
             )}
 
             {analysis ? (
-              /* Deep result */
+              /* Signed-in saved result */
               <AnalysisResults
                 analysis={analysis}
                 onSubmitFeedback={(rating, feedback) => submitFeedback(analysis.id, rating, feedback)}
                 onStartNew={handleStartNew}
               />
             ) : !user ? (
-              freeResult ? (
-                /* Real free Quick Score + unlock gate for the deep audit */
-                <div className="space-y-8 animate-fade-in">
-                  <PitchDeckFreeScore result={freeResult} />
+              guestResult ? (
+                /* Anonymous full result + signup CTA for analyzing more */
+                <div className="animate-fade-in">
+                  <AnalysisResults
+                    analysis={guestResult}
+                    isGuest
+                    onStartNew={handleStartNew}
+                    guestCta={<PitchDeckUnlockGate returnPath={RETURN_PATH} />}
+                  />
+                </div>
+              ) : limitReached ? (
+                /* Used their free analysis already (IP-gated) */
+                <div className="space-y-6 animate-fade-in">
+                  <div className="text-center max-w-2xl mx-auto">
+                    <h2 className="text-2xl font-bold mb-2">You've used your free analysis</h2>
+                    <p className="text-muted-foreground">
+                      Create a free account to analyze more decks — 10 credits each — and keep every
+                      analysis saved.
+                    </p>
+                  </div>
                   <PitchDeckUnlockGate returnPath={RETURN_PATH} />
                 </div>
               ) : (
@@ -341,7 +317,7 @@ export default function PitchDeckAnalyzerPage() {
                         <Sparkles className="h-5 w-5 mr-2" />
                         Analyze My Deck — Free
                       </Button>
-                      <p className="text-xs text-muted-foreground">No signup needed for your Quick Score.</p>
+                      <p className="text-xs text-muted-foreground">No signup needed for your first analysis.</p>
                     </div>
                   )}
 
@@ -351,26 +327,8 @@ export default function PitchDeckAnalyzerPage() {
                   <PitchDeckChecklist />
                 </div>
               )
-            ) : carryOver ? (
-              /* Signed in with a carried-over Quick Score → offer the free deep audit */
-              <div className="space-y-8 animate-fade-in">
-                <PitchDeckFreeScore result={carryOver.freeResult} />
-                {isProcessing ? (
-                  renderProcessing()
-                ) : error ? (
-                  renderError()
-                ) : (
-                  <div className="flex flex-col items-center gap-2">
-                    <Button size="lg" onClick={handleRunCarriedOver} className="px-8 py-6 text-lg">
-                      <Sparkles className="h-5 w-5 mr-2" />
-                      Run my Full Investor Audit
-                    </Button>
-                    <p className="text-xs text-muted-foreground">Your first deck is free — runs on the deck you just scored.</p>
-                  </div>
-                )}
-              </div>
             ) : (
-              /* Signed in, fresh upload → deep audit */
+              /* Signed in → credit-metered analysis */
               <>
                 <div className="space-y-6 animate-fade-in" style={{ animationDelay: '0.6s' }}>
                   <PitchDeckUploader
@@ -385,9 +343,9 @@ export default function PitchDeckAnalyzerPage() {
                     <div className="flex flex-col items-center gap-2">
                       <Button size="lg" onClick={handleStartAssessment} className="px-8 py-6 text-lg">
                         <Sparkles className="h-5 w-5 mr-2" />
-                        Start Full Audit
+                        Analyze Deck
                       </Button>
-                      <p className="text-xs text-muted-foreground">Your first deck is free — re-analyses use credits.</p>
+                      <p className="text-xs text-muted-foreground">Costs 10 credits — refunded automatically if the analysis fails.</p>
                     </div>
                   )}
 

@@ -73,14 +73,17 @@ export interface PitchDeckDeepDetail {
   askAmount?: string;
 }
 
-// The free anonymous "Quick Score" — a real but lighter pass (no full findings).
-export interface PitchDeckFreeResult {
+// The anonymous free analysis returns the same full content as a paid run, but it
+// isn't persisted (no DB row / id). This is the in-memory shape the UI renders for
+// a guest result; signed-in results use the full PitchDeckAnalysis (with id).
+export interface PitchDeckGuestResult {
   overallScore: number;
   verdict: AnalysisVerdict;
   subScores: PitchDeckAnalysis['subScores'];
-  topStrength?: { dimension: string; text: string; evidence?: string } | null;
-  topFix?: { dimension: string; text: string } | null;
-  tempPath?: string | null;
+  strengths: string[];
+  weaknesses: string[];
+  recommendations: string[];
+  keyInsights?: Record<string, any>;
   fileName?: string | null;
 }
 

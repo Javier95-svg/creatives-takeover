@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, AlertTriangle, Lightbulb, Star, MessageSquare, ListChecks, Workflow, Award, ClipboardList } from 'lucide-react';
 import {
-  PitchDeckAnalysis,
+  PitchDeckGuestResult,
   PitchDeckDeepDetail,
   METRIC_DEFINITIONS,
   getVerdictColor,
@@ -24,15 +24,22 @@ const severityClasses: Record<string, string> = {
 };
 
 interface AnalysisResultsProps {
-  analysis: PitchDeckAnalysis;
-  onSubmitFeedback: (rating: number, feedback?: string) => Promise<boolean>;
+  // Accepts a saved analysis (with id) or an anonymous guest result (no id).
+  analysis: PitchDeckGuestResult & { id?: string };
+  onSubmitFeedback?: (rating: number, feedback?: string) => Promise<boolean>;
   onStartNew: () => void;
+  // When true, the result belongs to an anonymous visitor: hide the feedback form
+  // and render the signup CTA instead.
+  isGuest?: boolean;
+  guestCta?: React.ReactNode;
 }
 
 export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
   analysis,
   onSubmitFeedback,
-  onStartNew
+  onStartNew,
+  isGuest = false,
+  guestCta,
 }) => {
   const [userRating, setUserRating] = useState<number>(0);
   const [userFeedback, setUserFeedback] = useState<string>('');
@@ -55,6 +62,7 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
       return;
     }
 
+    if (!onSubmitFeedback) return;
     setSubmittingFeedback(true);
     const success = await onSubmitFeedback(userRating, userFeedback);
     if (success) {
@@ -366,7 +374,10 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
         </Card>
       )}
 
-      {/* Feedback Form */}
+      {/* Anonymous visitors see the signup CTA in place of the feedback form. */}
+      {isGuest ? (
+        guestCta ?? null
+      ) : (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -428,6 +439,7 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
           </div>
         </CardContent>
       </Card>
+      )}
     </div>
   );
 };

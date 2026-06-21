@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Lock, Star, FileSearch, ListChecks, Target } from 'lucide-react';
+import { Loader2, Sparkles, Star, History, LineChart, Layers } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,9 +15,9 @@ interface PitchDeckUnlockGateProps {
 
 const SOURCE = 'pitch-deck-unlock';
 
-// Sign-up gate shown directly below the free Quick Score. Creating an account
-// unlocks the Full Investor Audit, and (because the deck is carried over in
-// sessionStorage) the deep analysis runs on the same deck with no re-upload.
+// Sign-up CTA shown after an anonymous visitor's one free analysis (or when they
+// hit the free limit). Creating an account lets them analyze more decks (credit-
+// metered) and keep a saved history.
 export function PitchDeckUnlockGate({ returnPath }: PitchDeckUnlockGateProps) {
   const navigate = useNavigate();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -73,22 +73,22 @@ export function PitchDeckUnlockGate({ returnPath }: PitchDeckUnlockGateProps) {
       <div className="w-full rounded-3xl border border-border/60 bg-card/95 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.45)] backdrop-blur">
         <div className="border-b border-border/50 px-6 py-5 sm:px-8">
           <p className="mb-2 inline-flex items-center gap-2 text-caption font-semibold uppercase tracking-[0.18em] text-accent-teal">
-            <Lock className="h-3.5 w-3.5" />
-            Full Investor Audit
+            <Sparkles className="h-3.5 w-3.5" />
+            Analyze more decks
           </p>
           <h2 className="text-xl font-semibold tracking-tight">
-            You have your score. Now see exactly how to raise it.
+            That was your free analysis. Ready for the next deck?
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Sign up free to unlock the deep audit on this same deck — no re-upload, your first
-            analysis is on us.
+            Create a free account to analyze more decks — 10 credits each — and keep every analysis
+            saved so you can track your score as you iterate.
           </p>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             {[
-              { icon: FileSearch, label: 'Per-slide findings with evidence quotes from your deck' },
-              { icon: ListChecks, label: 'Missing-slide checklist + narrative-flow review' },
-              { icon: Target, label: 'Prioritized action plan + funded-deck benchmark' },
+              { icon: Layers, label: 'Analyze every version of your deck — 10 credits each' },
+              { icon: History, label: 'Save and revisit every analysis in your dashboard' },
+              { icon: LineChart, label: 'Track your investor score as you iterate' },
             ].map(({ icon: Icon, label }) => (
               <div key={label} className="flex items-start gap-2 rounded-2xl border border-border/60 bg-background/70 px-3 py-3">
                 <Icon className="h-4 w-4 shrink-0 text-accent-teal mt-0.5" />
@@ -127,7 +127,7 @@ export function PitchDeckUnlockGate({ returnPath }: PitchDeckUnlockGateProps) {
           </div>
 
           <p className="mt-3 text-center text-xs text-muted-foreground">
-            No credit card. Your Quick Score saves to your account automatically.
+            No credit card. New accounts include free monthly credits to get started.
           </p>
 
           <div className="mt-4 text-center">
