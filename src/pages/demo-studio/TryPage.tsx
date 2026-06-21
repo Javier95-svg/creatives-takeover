@@ -384,14 +384,20 @@ export default function TryPage() {
         type="product"
       />
       <div className="mx-auto w-full max-w-3xl px-4">
+        <Link
+          to="/"
+          className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-white/70 transition hover:text-white"
+        >
+          ← Platform
+        </Link>
         <div className="mb-8 text-center">
           <p className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-caption font-medium text-white/80">
             <Sparkles className="h-3.5 w-3.5" /> Demo Studio
           </p>
           <h1 className="text-3xl font-semibold sm:text-4xl">Turn screenshots into a live demo</h1>
           <p className="mx-auto mt-3 max-w-xl text-sm text-white/70">
-            Upload {MIN_SCREENSHOTS}–{MAX_SCREENSHOTS} screenshots of your product. We'll write the
-            captions and hand you an interactive walkthrough — no signup needed.
+            Upload {MIN_SCREENSHOTS} to {MAX_SCREENSHOTS} screenshots of your product. We'll write the
+            captions and hand you an interactive walkthrough. No signup needed.
           </p>
           {!user && (
             <p className="mt-3 text-xs text-white/50">
@@ -512,7 +518,6 @@ export default function TryPage() {
                 </>
               )}
             </Button>
-            <p className="text-center text-xs text-white/40">Free preview · no signup · nothing saved</p>
           </div>
         )}
       </div>
