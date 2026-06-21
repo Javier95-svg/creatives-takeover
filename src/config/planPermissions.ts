@@ -440,8 +440,10 @@ export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitl
     pro: { state: 'full' },
   },
   pitch_deck_analyzer: {
-    rookie: { state: 'locked', monetizationModel: 'plan_gated', visibility: 'hidden', requiredPlan: 'rising' },
-    starter: { state: 'locked', monetizationModel: 'plan_gated', visibility: 'hidden', requiredPlan: 'rising' },
+    // Open to every tier: anonymous/free get the Quick Score; signed-in users get
+    // the deep audit (1st free, then credit-metered).
+    rookie: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PITCH_DECK_ANALYZER' },
+    starter: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PITCH_DECK_ANALYZER' },
     rising: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PITCH_DECK_ANALYZER' },
     pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PITCH_DECK_ANALYZER' },
   },

@@ -252,7 +252,6 @@ test('Rising and Pro non-MVP generative build tools remain unlocked and credit-m
   const expectedCosts = {
     GTM_ANALYSIS: 5,
     TECH_STACK_GENERATION: 3,
-    PITCH_DECK_ANALYZER: 6,
     PROMPT_GENERATION: 2,
   } as const;
 
@@ -269,6 +268,14 @@ test('Rising and Pro non-MVP generative build tools remain unlocked and credit-m
     assert.equal(resolveFeatureEnforcement('rising', feature).creditCost, expectedCosts[feature]);
     assert.equal(resolveFeatureEnforcement('pro', feature).mode, 'charge');
     assert.equal(resolveFeatureEnforcement('pro', feature).creditCost, expectedCosts[feature]);
+  }
+});
+
+test('Pitch Deck Analyzer is credit-metered (charge) on every tier', () => {
+  for (const plan of ['rookie', 'starter', 'rising', 'pro'] as const) {
+    const access = resolveFeatureEnforcement(plan, 'PITCH_DECK_ANALYZER');
+    assert.equal(access.mode, 'charge');
+    assert.equal(access.creditCost, 6);
   }
 });
 

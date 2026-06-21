@@ -127,8 +127,10 @@ const FEATURE_RULES: Partial<Record<EnforcedFeature, Record<Plan, FeatureRule>>>
     pro: { mode: 'charge' },
   },
   PITCH_DECK_ANALYZER: {
-    rookie: { mode: 'blocked', requiredPlan: 'rising' },
-    starter: { mode: 'blocked', requiredPlan: 'rising' },
+    // Open to every tier: free score is anonymous; the deep audit is 1st-free
+    // then credit-metered for all plans.
+    rookie: { mode: 'charge' },
+    starter: { mode: 'charge' },
     rising: { mode: 'charge' },
     pro: { mode: 'charge' },
   },

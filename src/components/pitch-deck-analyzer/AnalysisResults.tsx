@@ -3,10 +3,25 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, AlertTriangle, Lightbulb, Star, MessageSquare, Download } from 'lucide-react';
-import { PitchDeckAnalysis, getVerdictColor } from '@/types/pitchDeckAnalyzer';
+import { CheckCircle2, AlertTriangle, Lightbulb, Star, MessageSquare, ListChecks, Workflow, Award, ClipboardList } from 'lucide-react';
+import {
+  PitchDeckAnalysis,
+  PitchDeckDeepDetail,
+  METRIC_DEFINITIONS,
+  getVerdictColor,
+} from '@/types/pitchDeckAnalyzer';
 import { MetricsGrid } from './MetricsGrid';
 import { toast } from 'sonner';
+
+const DIMENSION_LABELS: Record<string, string> = Object.fromEntries(
+  METRIC_DEFINITIONS.map((m) => [m.key, m.name]),
+);
+
+const severityClasses: Record<string, string> = {
+  high: 'bg-destructive-subtle text-destructive border-destructive',
+  medium: 'bg-warning-subtle text-warning border-warning',
+  low: 'bg-info-subtle text-info border-border-info',
+};
 
 interface AnalysisResultsProps {
   analysis: PitchDeckAnalysis;
@@ -22,6 +37,17 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
   const [userRating, setUserRating] = useState<number>(0);
   const [userFeedback, setUserFeedback] = useState<string>('');
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
+
+  // Deep ("Full Investor Audit") detail rides in key_insights (jsonb).
+  const deep = (analysis.keyInsights ?? {}) as PitchDeckDeepDetail;
+  const dimensions = deep.dimensions ?? {};
+  const dimensionKeys = (Object.keys(dimensions) as Array<keyof typeof dimensions>).filter(
+    (key) => dimensions[key],
+  );
+  const slideChecklist = deep.slideChecklist;
+  const actionPlan = deep.actionPlan ?? [];
+  const narrativeFlow = deep.narrativeFlow;
+  const benchmark = deep.benchmark;
 
   const handleSubmitFeedback = async () => {
     if (userRating === 0) {
@@ -176,6 +202,166 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
                 </li>
               ))}
             </ul>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Prioritized Action Plan */}
+      {actionPlan.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ClipboardList className="h-5 w-5 text-primary" />
+              Prioritized Action Plan
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ol className="space-y-3">
+              {actionPlan.map((item, idx) => (
+                <li key={idx} className="flex items-start gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                    {item.priority ?? idx + 1}
+                  </span>
+                  <div className="text-sm">
+                    <p className="font-medium">{item.action}</p>
+                    {item.impact && <p className="text-muted-foreground mt-0.5">{item.impact}</p>}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Per-dimension findings */}
+      {dimensionKeys.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <span>Detailed Findings</span>
+              <Badge variant="outline" className="font-normal">Evidence-backed</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            {dimensionKeys.map((key) => {
+              const detail = dimensions[key];
+              if (!detail) return null;
+              return (
+                <div key={String(key)} className="rounded-xl border border-border/60 p-4">
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <h3 className="font-semibold text-sm">{DIMENSION_LABELS[String(key)] ?? String(key)}</h3>
+                    <div className="flex items-center gap-2">
+                      {detail.band && (
+                        <Badge variant="outline" className="font-normal">{detail.band}</Badge>
+                      )}
+                      <span className="text-sm font-bold text-primary">{detail.score}</span>
+                    </div>
+                  </div>
+                  {detail.findings && detail.findings.length > 0 && (
+                    <ul className="space-y-2">
+                      {detail.findings.map((finding, idx) => (
+                        <li key={idx} className="text-sm">
+                          <div className="flex items-start gap-2">
+                            {finding.severity && (
+                              <Badge variant="outline" className={`shrink-0 text-[10px] uppercase ${severityClasses[finding.severity] ?? ''}`}>
+                                {finding.severity}
+                              </Badge>
+                            )}
+                            <span>{finding.text}</span>
+                          </div>
+                          {finding.evidence && (
+                            <p className="text-xs text-muted-foreground italic mt-1 ml-1">"{finding.evidence}"</p>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {detail.fix && (
+                    <p className="mt-3 flex items-start gap-2 text-sm text-info">
+                      <Lightbulb className="h-4 w-4 shrink-0 mt-0.5" />
+                      <span>{detail.fix}</span>
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Slide checklist + narrative flow */}
+      {(slideChecklist || narrativeFlow) && (
+        <div className="grid md:grid-cols-2 gap-6">
+          {slideChecklist && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ListChecks className="h-5 w-5 text-primary" />
+                  Slide Coverage
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {slideChecklist.present && slideChecklist.present.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Present</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {slideChecklist.present.map((slide) => (
+                        <Badge key={slide} variant="outline" className="bg-success-subtle text-success border-success font-normal capitalize">
+                          {slide}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {slideChecklist.missing && slideChecklist.missing.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Missing</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {slideChecklist.missing.map((slide) => (
+                        <Badge key={slide} variant="outline" className="bg-warning-subtle text-warning border-warning font-normal capitalize">
+                          {slide}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {narrativeFlow && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Workflow className="h-5 w-5 text-primary" />
+                  Narrative Flow
+                  {typeof narrativeFlow.score === 'number' && (
+                    <Badge variant="outline" className="font-bold ml-auto">{narrativeFlow.score}</Badge>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">{narrativeFlow.notes}</p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* Benchmark */}
+      {benchmark?.comparison && (
+        <Card className="border-info bg-info-subtle">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-info">
+              <Award className="h-5 w-5" />
+              Benchmark
+              {benchmark.stage && (
+                <Badge variant="outline" className="font-normal capitalize ml-2">{benchmark.stage}</Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm">{benchmark.comparison}</p>
           </CardContent>
         </Card>
       )}

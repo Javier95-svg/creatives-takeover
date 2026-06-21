@@ -40,6 +40,50 @@ export interface PitchDeckAnalysis {
   updatedAt: string;
 }
 
+// Structured detail from the deep ("Full Investor Audit") analysis. Stored in
+// `keyInsights` (jsonb) so there's no schema migration.
+export interface PitchDeckDimensionFinding {
+  text: string;
+  evidence?: string;
+  severity?: 'high' | 'medium' | 'low';
+}
+
+export interface PitchDeckDimensionDetail {
+  score: number;
+  band?: string;
+  findings?: PitchDeckDimensionFinding[];
+  fix?: string;
+}
+
+export interface PitchDeckActionItem {
+  priority?: number;
+  action: string;
+  impact?: string;
+}
+
+export interface PitchDeckDeepDetail {
+  dimensions?: Partial<Record<keyof PitchDeckAnalysis['subScores'], PitchDeckDimensionDetail>>;
+  slideChecklist?: { present?: string[]; missing?: string[] };
+  narrativeFlow?: { score?: number; notes?: string };
+  actionPlan?: PitchDeckActionItem[];
+  benchmark?: { stage?: string; comparison?: string };
+  targetMarket?: string;
+  uniqueValueProp?: string;
+  fundingStage?: string;
+  askAmount?: string;
+}
+
+// The free anonymous "Quick Score" — a real but lighter pass (no full findings).
+export interface PitchDeckFreeResult {
+  overallScore: number;
+  verdict: AnalysisVerdict;
+  subScores: PitchDeckAnalysis['subScores'];
+  topStrength?: { dimension: string; text: string; evidence?: string } | null;
+  topFix?: { dimension: string; text: string } | null;
+  tempPath?: string | null;
+  fileName?: string | null;
+}
+
 export interface AnalysisMetric {
   key: string;
   name: string;

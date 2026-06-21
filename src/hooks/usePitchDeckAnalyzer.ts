@@ -1,183 +1,214 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { PitchDeckAnalysis, calculateOverallScore, getVerdictFromScore } from '@/types/pitchDeckAnalyzer';
+import type { PitchDeckAnalysis, PitchDeckFreeResult } from '@/types/pitchDeckAnalyzer';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCreditActions } from '@/hooks/useCreditActions';
 import { useCredits } from '@/hooks/useCredits';
 import { useJourneyUpgradePrompt } from '@/hooks/useJourneyUpgradePrompt';
 
+const UPLOAD_BUCKET = 'pitch-deck-uploads';
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      const comma = result.indexOf(',');
+      resolve(comma >= 0 ? result.slice(comma + 1) : result);
+    };
+    reader.onerror = () => reject(new Error('Could not read the file.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+// supabase.functions.invoke surfaces non-2xx as a FunctionsHttpError whose body
+// (our structured { error, creditError, requiredCredits, ... }) lives on .context.
+async function invokePitchFn(body: Record<string, unknown>): Promise<{ ok: boolean; data: any; errorBody: any }> {
+  const { data, error } = await supabase.functions.invoke('pitch-deck-analyzer', { body });
+  if (!error) return { ok: true, data, errorBody: null };
+  let errorBody: any = null;
+  const ctx = (error as { context?: unknown } | null)?.context;
+  if (ctx instanceof Response) {
+    try {
+      errorBody = await ctx.clone().json();
+    } catch {
+      /* non-JSON body */
+    }
+  }
+  return { ok: false, data: null, errorBody: errorBody ?? { error: error.message } };
+}
+
 export const usePitchDeckAnalyzer = () => {
   const { user } = useAuth();
-  const { ensureCredits, handleCreditError, showCreditReceipt } = useCreditActions();
   const { refreshBalance } = useCredits();
   const { fireJourneyUpgradePrompt } = useJourneyUpgradePrompt();
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<PitchDeckAnalysis | null>(null);
+  const [freeResult, setFreeResult] = useState<PitchDeckFreeResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const analyzePitchDeck = async (file: File) => {
+  // --- Anonymous "Quick Score": real but lighter pass, no auth, no credit ----
+  const analyzePublicDeck = async (file: File): Promise<PitchDeckFreeResult | null> => {
+    try {
+      setAnalyzing(true);
+      setError(null);
+      const pdfBase64 = await fileToBase64(file);
+      const { ok, data, errorBody } = await invokePitchFn({
+        mode: 'free',
+        pdfBase64,
+        fileName: file.name,
+        fileSize: file.size,
+      });
+      if (!ok || !data?.success) {
+        throw new Error(errorBody?.error || data?.error || 'We could not analyze your deck. Try again.');
+      }
+      const result: PitchDeckFreeResult = {
+        overallScore: data.overallScore,
+        verdict: data.verdict,
+        subScores: data.subScores,
+        topStrength: data.topStrength ?? null,
+        topFix: data.topFix ?? null,
+        tempPath: data.tempPath ?? null,
+        fileName: data.fileName ?? file.name,
+      };
+      setFreeResult(result);
+      return result;
+    } catch (err: any) {
+      const message = err?.message || 'Failed to analyze your deck. Please try again.';
+      setError(message);
+      toast.error(message);
+      return null;
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  // Shared deep run: storagePath already points at the uploaded (or carried) PDF.
+  const runDeepAnalysis = async (
+    storagePath: string,
+    fileName: string,
+    fileSize: number,
+  ): Promise<PitchDeckAnalysis | null> => {
     if (!user) {
-      toast.error('Please sign in to analyze your pitch deck');
+      toast.error('Please sign in to run the full analysis.');
       return null;
     }
-
+    setAnalyzing(true);
+    setError(null);
     try {
-      setUploading(true);
-      setAnalyzing(false);
-      setError(null);
-
-      const requiredCredits = ensureCredits('PITCH_DECK_ANALYZER', { featureName: 'Pitch Deck Analyzer' });
-      if (requiredCredits === null) {
-        setUploading(false);
-        return null;
-      }
-
-      // Step 1: Upload PDF to Supabase Storage
-      const fileName = `${user.id}/${Date.now()}_${file.name}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('pitch-deck-uploads')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (uploadError) {
-        throw new Error(`Upload failed: ${uploadError.message}`);
-      }
-
-      toast.success('Pitch deck uploaded successfully');
-      setUploading(false);
-      setAnalyzing(true);
-
-      // Step 2: Get public URL for the file
-      const { data: { publicUrl } } = supabase.storage
-        .from('pitch-deck-uploads')
-        .getPublicUrl(uploadData.path);
-
-      // Step 3: Parse document to extract text
-      console.log('Parsing document...');
-      const { data: parseData, error: parseError } = await supabase.functions.invoke('document-parser', {
-        body: {
-          file_path: uploadData.path,
-          user_id: user.id,
-          bucket: 'pitch-deck-uploads'
-        }
+      const { ok, data, errorBody } = await invokePitchFn({
+        mode: 'deep',
+        userId: user.id,
+        storagePath,
+        fileName,
+        fileSize,
       });
 
-      if (parseError || !parseData?.success) {
-        console.error('Parse error:', parseError);
-        throw new Error(`Document parsing failed: ${parseError?.message || parseData?.error || 'Unknown error'}`);
-      }
-
-      const extractedText = parseData?.document?.text || '';
-      if (!extractedText) {
-        throw new Error('Could not extract text from PDF');
-      }
-
-      console.log('Document parsed successfully');
-
-      // Step 4: Analyze pitch deck with AI
-      console.log('Analyzing pitch deck...');
-      const { data: analysisData, error: analysisError } = await supabase.functions.invoke('pitch-deck-analyzer', {
-        body: {
-          userId: user.id,
-          fileName: file.name,
-          fileSize: file.size,
-          storagePath: uploadData.path,
-          content: extractedText
-        }
-      });
-
-      if (analysisError) {
-        console.error('Analysis error:', analysisError);
-        if (handleCreditError(analysisError, analysisData, 'PITCH_DECK_ANALYZER', { featureName: 'Pitch Deck Analyzer' })) {
-          setUploading(false);
-          setAnalyzing(false);
+      if (!ok || !data?.success) {
+        if (errorBody?.creditError) {
+          toast.error(
+            `You need ${errorBody.requiredCredits ?? ''} credits to analyze another deck. Your first deck is free.`.trim(),
+          );
           return null;
         }
-        throw new Error(`Analysis failed: ${analysisError.message}`);
+        throw new Error(errorBody?.error || data?.error || 'Analysis failed. Please try again.');
       }
 
-      if (!analysisData) {
-        throw new Error('No analysis data returned');
-      }
-
-      console.log('Analysis complete:', analysisData);
-
-      // Step 5: Save analysis to database
-      const { data: savedAnalysis, error: saveError } = await supabase
+      // Persist (client insert; the function counted existing rows before this one
+      // so the first analysis is free and the next counts as #2).
+      const { data: saved, error: saveError } = await supabase
         .from('pitch_deck_analyses')
         .insert({
           user_id: user.id,
-          file_name: file.name,
-          file_size: file.size,
-          storage_path: uploadData.path,
-          overall_score: analysisData.overallScore,
-          verdict: analysisData.verdict,
-          story_clarity_score: analysisData.subScores.storyClarity,
-          market_opportunity_score: analysisData.subScores.marketOpportunity,
-          traction_proof_score: analysisData.subScores.tractionProof,
-          business_model_score: analysisData.subScores.businessModel,
-          team_credibility_score: analysisData.subScores.teamCredibility,
-          fundraising_readiness_score: analysisData.subScores.fundraisingReadiness,
-          strengths: analysisData.strengths || [],
-          weaknesses: analysisData.weaknesses || [],
-          recommendations: analysisData.recommendations || [],
-          key_insights: analysisData.keyInsights || {},
-          analysis_version: '1.0'
+          file_name: fileName,
+          file_size: fileSize,
+          storage_path: storagePath,
+          overall_score: data.overallScore,
+          verdict: data.verdict,
+          story_clarity_score: data.subScores.storyClarity,
+          market_opportunity_score: data.subScores.marketOpportunity,
+          traction_proof_score: data.subScores.tractionProof,
+          business_model_score: data.subScores.businessModel,
+          team_credibility_score: data.subScores.teamCredibility,
+          fundraising_readiness_score: data.subScores.fundraisingReadiness,
+          strengths: data.strengths || [],
+          weaknesses: data.weaknesses || [],
+          recommendations: data.recommendations || [],
+          key_insights: data.keyInsights || {},
+          analysis_version: '2.0',
         })
         .select()
         .single();
 
-      if (saveError) {
-        console.error('Save error:', saveError);
-        throw new Error(`Failed to save analysis: ${saveError.message}`);
-      }
+      if (saveError) throw new Error(`Failed to save analysis: ${saveError.message}`);
 
-      // Convert database format to frontend format
-      const analysisResult: PitchDeckAnalysis = {
-        id: savedAnalysis.id,
-        userId: savedAnalysis.user_id,
-        fileName: savedAnalysis.file_name,
-        fileSize: savedAnalysis.file_size,
-        storagePath: savedAnalysis.storage_path,
-        overallScore: savedAnalysis.overall_score,
-        verdict: savedAnalysis.verdict as PitchDeckAnalysis['verdict'],
+      const result: PitchDeckAnalysis = {
+        id: saved.id,
+        userId: saved.user_id,
+        fileName: saved.file_name,
+        fileSize: saved.file_size,
+        storagePath: saved.storage_path,
+        overallScore: saved.overall_score,
+        verdict: saved.verdict as PitchDeckAnalysis['verdict'],
         subScores: {
-          storyClarity: savedAnalysis.story_clarity_score,
-          marketOpportunity: savedAnalysis.market_opportunity_score,
-          tractionProof: savedAnalysis.traction_proof_score,
-          businessModel: savedAnalysis.business_model_score,
-          teamCredibility: savedAnalysis.team_credibility_score,
-          fundraisingReadiness: savedAnalysis.fundraising_readiness_score
+          storyClarity: saved.story_clarity_score,
+          marketOpportunity: saved.market_opportunity_score,
+          tractionProof: saved.traction_proof_score,
+          businessModel: saved.business_model_score,
+          teamCredibility: saved.team_credibility_score,
+          fundraisingReadiness: saved.fundraising_readiness_score,
         },
-        strengths: savedAnalysis.strengths,
-        weaknesses: savedAnalysis.weaknesses,
-        recommendations: savedAnalysis.recommendations,
-        keyInsights: savedAnalysis.key_insights,
-        analysisVersion: savedAnalysis.analysis_version,
-        createdAt: savedAnalysis.created_at,
-        updatedAt: savedAnalysis.updated_at
+        strengths: saved.strengths,
+        weaknesses: saved.weaknesses,
+        recommendations: saved.recommendations,
+        keyInsights: saved.key_insights,
+        analysisVersion: saved.analysis_version,
+        createdAt: saved.created_at,
+        updatedAt: saved.updated_at,
       };
 
-      setAnalysis(analysisResult);
-      setAnalyzing(false);
-      void refreshBalance();
-      showCreditReceipt('PITCH_DECK_ANALYZER', requiredCredits, undefined, { featureName: 'Pitch Deck Analyzer' });
+      setAnalysis(result);
+      if (data.creditsUsed > 0) void refreshBalance();
       fireJourneyUpgradePrompt('rising_pitch_deck_heavy');
-
-      return analysisResult;
+      return result;
     } catch (err: any) {
-      console.error('Error analyzing pitch deck:', err);
-      const errorMessage = err.message || 'Failed to analyze pitch deck. Please try again.';
-      setError(errorMessage);
-      toast.error(errorMessage);
-      setUploading(false);
+      const message = err?.message || 'Failed to analyze pitch deck. Please try again.';
+      setError(message);
+      toast.error(message);
+      return null;
+    } finally {
       setAnalyzing(false);
+    }
+  };
+
+  // --- Authenticated deep analysis from a freshly chosen file ----------------
+  const analyzePitchDeck = async (file: File): Promise<PitchDeckAnalysis | null> => {
+    if (!user) {
+      toast.error('Please sign in to analyze your pitch deck');
       return null;
     }
+    try {
+      setUploading(true);
+      const fileName = `${user.id}/${Date.now()}_${file.name}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from(UPLOAD_BUCKET)
+        .upload(fileName, file, { cacheControl: '3600', upsert: false });
+      if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
+      setUploading(false);
+      return await runDeepAnalysis(uploadData.path, file.name, file.size);
+    } catch (err: any) {
+      setUploading(false);
+      const message = err?.message || 'Failed to analyze pitch deck. Please try again.';
+      setError(message);
+      toast.error(message);
+      return null;
+    }
+  };
+
+  // --- Deep analysis on a carried temp path (post-signup, no re-upload) -------
+  const analyzeFromTempPath = async (tempPath: string, fileName: string): Promise<PitchDeckAnalysis | null> => {
+    return runDeepAnalysis(tempPath, fileName, 0);
   };
 
   const submitFeedback = async (analysisId: string, rating: number, feedback?: string) => {
@@ -187,12 +218,10 @@ export const usePitchDeckAnalyzer = () => {
         .update({
           user_rating: rating,
           user_feedback: feedback,
-          feedback_submitted_at: new Date().toISOString()
+          feedback_submitted_at: new Date().toISOString(),
         })
         .eq('id', analysisId);
-
       if (error) throw error;
-
       toast.success('Thank you for your feedback!');
       return true;
     } catch (err: any) {
@@ -204,19 +233,23 @@ export const usePitchDeckAnalyzer = () => {
 
   const resetAnalysis = () => {
     setAnalysis(null);
+    setFreeResult(null);
     setError(null);
     setUploading(false);
     setAnalyzing(false);
   };
 
   return {
+    analyzePublicDeck,
     analyzePitchDeck,
+    analyzeFromTempPath,
     submitFeedback,
     resetAnalysis,
     uploading,
     analyzing,
     analysis,
+    freeResult,
     error,
-    isProcessing: uploading || analyzing
+    isProcessing: uploading || analyzing,
   };
 };
