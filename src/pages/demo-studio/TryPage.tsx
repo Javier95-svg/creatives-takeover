@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AlertTriangle, ImagePlus, Loader2, Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner';
 import SEO from '@/components/SEO';
@@ -393,6 +393,17 @@ export default function TryPage() {
             Upload {MIN_SCREENSHOTS}–{MAX_SCREENSHOTS} screenshots of your product. We'll write the
             captions and hand you an interactive walkthrough — no signup needed.
           </p>
+          {!user && (
+            <p className="mt-3 text-xs text-white/50">
+              Already have an account?{' '}
+              <Link
+                to="/login?return=/demo-studio"
+                className="font-medium text-white/80 underline underline-offset-2 hover:text-white"
+              >
+                Log in
+              </Link>
+            </p>
+          )}
         </div>
 
         {steps ? (

@@ -58,7 +58,10 @@ export default function ProjectsDashboardPage() {
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
-      navigate('/login?return=/demo-studio/projects');
+      // Front door for logged-out visitors: send them to the no-signup "try" flow
+      // so they hit the aha moment before being asked to create an account, instead
+      // of bouncing to a login wall. Deeper project pages stay gated.
+      navigate('/demo-studio/try', { replace: true });
       return;
     }
     let active = true;

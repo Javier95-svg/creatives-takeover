@@ -149,6 +149,10 @@ const Hero = ({
     onCtaClick?.();
   };
 
+  // Send logged-out visitors into the no-signup Demo Studio "try" flow so they
+  // reach the aha moment before any login wall; signed-in users get the dashboard.
+  const resolvedCtaHref = !isAuthenticated && ctaHref === "/demo-studio" ? "/demo-studio/try" : ctaHref;
+
   const handleProfileCtaClick = () => {
     void trackEngagement("hero-profile-cta", 80);
   };
@@ -230,7 +234,7 @@ const Hero = ({
             </>
           ) : (
             <>
-              <Link className="ct-hero__cta" to={ctaHref} onClick={handleCtaClick}>
+              <Link className="ct-hero__cta" to={resolvedCtaHref} onClick={handleCtaClick}>
                 {ctaLabel}
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                   <polyline points="9 18 15 12 9 6" />
