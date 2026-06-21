@@ -12,8 +12,9 @@ interface IcpGuestResultViewProps {
   onEmailLinkRequest?: (email: string) => Promise<void>;
 }
 
-// Full draft shown as a lead magnet — no sections are blurred or hidden.
-// Account creation is driven by the share / save actions.
+// Half-gate is driven by ICP_GUEST_VISIBLE_SECTIONS (Customer + Pain only); the
+// Build + Moat sections aren't rendered for guests, and the signup gate (footer)
+// drives account creation to reveal them.
 const GUEST_LOCKED_SECTIONS: readonly never[] = [];
 
 export function IcpGuestResultView({
@@ -35,6 +36,8 @@ export function IcpGuestResultView({
         <IcpDraftShareBar shareUrl={null} returnPath={returnPath} />
       }
       footer={
+        // Signup gate sits right after the free Customer + Pain sections to drive
+        // account creation, which reveals the Build + Moat sections.
         <div className="border-t border-border/80 pt-8">
           <IcpUnlockGate
             artifact={artifact}

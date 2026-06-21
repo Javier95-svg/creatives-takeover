@@ -167,7 +167,7 @@ export function IcpUnlockGate({
               You know who. Now see exactly what to build for them.
             </h2>
             <p className="text-sm text-muted-foreground">
-              Sign up free to unlock the core pain, the build plan, and your competitive edge — all tailored to your idea.
+              Sign up free to unlock the build plan and your competitive edge — all tailored to your idea.
             </p>
           </div>
 

@@ -479,6 +479,7 @@ serve(async (req) => {
       usedFromBalance?: number;
     } = { success: true, newBalance: 0 };
     let creditsCharged = false;
+    let icpDraftCost = 0;
 
     if (payload.mode === "save") {
       user = await getUserFromAuth(req);
@@ -495,8 +496,15 @@ serve(async (req) => {
         requestFingerprint: payload,
       });
 
-      if (shouldChargeIcpCredits(CREDIT_COSTS.ICP_ANALYSIS)) {
-        creditResult = await checkAndDeductCredits(user.id, CREDIT_COSTS.ICP_ANALYSIS, "ICP Analysis", undefined, {
+      // First ICP draft per account is free; every additional draft costs 5 credits.
+      const { count: existingDraftCount } = await serviceClient
+        .from(ICP_RESULTS_TABLE as any)
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id);
+      icpDraftCost = (existingDraftCount ?? 0) >= 1 ? CREDIT_COSTS.ICP_EXTRA_DRAFT : 0;
+
+      if (icpDraftCost > 0) {
+        creditResult = await checkAndDeductCredits(user.id, icpDraftCost, "ICP Draft", undefined, {
           idempotencyKey,
           entitlementFeature: "ICP_ANALYSIS",
         });
@@ -506,19 +514,16 @@ serve(async (req) => {
             error: creditResult.error || "Credit deduction failed",
             creditError: true,
             errorCode: creditResult.errorCode,
-            requiredCredits: CREDIT_COSTS.ICP_ANALYSIS,
+            requiredCredits: icpDraftCost,
           }), {
             status: 402,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
-        creditsCharged =
-          (creditResult.usedFromQuota ?? 0) + (creditResult.usedFromBalance ?? 0) > 0
-          || (typeof creditResult.usedFromQuota !== "number" && typeof creditResult.usedFromBalance !== "number");
+        creditsCharged = true;
       } else {
-        console.info("Skipping ICP Analysis credit deduction because the configured credit cost is zero.", {
+        console.info("First ICP draft is free for this account; no credits charged.", {
           userId: user.id,
-          feature: "ICP Analysis",
         });
       }
     }
@@ -565,14 +570,14 @@ serve(async (req) => {
         status: generated.status,
         artifact: generated.artifact,
         analysisId,
-        creditsUsed: CREDIT_COSTS.ICP_ANALYSIS,
+        creditsUsed: icpDraftCost,
         newBalance: creditResult.newBalance,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     } catch (error) {
       if (payload.mode === "save" && user && creditsCharged) {
-        await refundCredits(user.id, CREDIT_COSTS.ICP_ANALYSIS, "ICP Analysis", "Refund: ICP draft generation failed", {
+        await refundCredits(user.id, icpDraftCost, "ICP Draft", "Refund: ICP draft generation failed", {
           error: error instanceof Error ? error.message : String(error),
         });
       }

@@ -36,6 +36,8 @@ export const CREDIT_COSTS = {
   BUSINESS_INSIGHTS: 5,
   PMF_ANALYSIS: 6,
   ICP_ANALYSIS: 0,
+  // First ICP draft per account is free; every additional draft costs this.
+  ICP_EXTRA_DRAFT: 5,
 
   // Investor Matching & Outreach
   INVESTOR_MATCHING: 5,

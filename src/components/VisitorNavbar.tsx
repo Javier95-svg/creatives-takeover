@@ -14,6 +14,7 @@ import {
   Menu,
   Newspaper,
   Rocket,
+  Target,
   Users,
   X,
   Zap,
@@ -45,9 +46,15 @@ const visitorLinks: VisitorLink[] = [
   { label: "Pricing", href: "/pricing", icon: DollarSign },
 ];
 
-// Free Tools menu — logged-out visitors can use these three tools before signing
-// up. Each lands on a usable public experience that gates only the deliverable.
+// Free Tools menu — logged-out visitors can use these tools before signing up.
+// Each lands on a usable public experience that gates only the deliverable.
 const freeToolsItems = [
+  {
+    label: "ICP Builder",
+    href: "/icp-builder",
+    icon: Target,
+    description: "Find your ideal customer from two sentences.",
+  },
   {
     label: "Pitch Deck Analyzer",
     href: "/pitch-deck-analyzer",
