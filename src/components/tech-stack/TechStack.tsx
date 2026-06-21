@@ -857,7 +857,7 @@ const PlanGate: React.FC<{ isPublic: boolean; onGateCtaClick?: () => void; child
     <PreviewModeWrapper
       featureName="Full build plan"
       headline="Your stack budget is ready 🎉"
-      description="Create a free account to unlock your annual cost, full build plan, and save & export your stack."
+      description="Create a free account to unlock your annual cost, strategy plan, recommendations, and integration guide, then save and export your stack."
       ctaLabel="Create free account"
       onCtaClick={onGateCtaClick}
     >
