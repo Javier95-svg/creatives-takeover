@@ -236,7 +236,7 @@ export default function PitchDeckAnalyzerPage() {
                   Pitch Deck Analyzer
                 </h1>
                 <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
-                  Upload your deck, get a real investor score in minutes.<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> Your first analysis is free.</span>
+                  Upload your deck, get <span className="gradient-text font-semibold">a real investor score</span> in minutes.
                 </p>
 
                 <div className="grid md:grid-cols-3 gap-6 mt-12 text-left">
