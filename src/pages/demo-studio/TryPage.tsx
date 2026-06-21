@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import DemoPlayer from '@/components/demo-studio/player/DemoPlayer';
-import DemoStudioWallpaper from '@/components/wallpapers/DemoStudioWallpaper';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   createDemo,
@@ -378,14 +377,13 @@ export default function TryPage() {
   }
 
   return (
-    <div className="dark relative min-h-screen overflow-hidden bg-background py-10 text-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 py-10 text-white">
       <SEO
         title="Try Demo Studio — build an interactive demo in seconds"
         description="Upload a few screenshots and instantly turn them into an interactive product demo with AI-written captions. No signup required."
         type="product"
       />
-      <DemoStudioWallpaper />
-      <div className="relative z-10 mx-auto w-full max-w-3xl px-4">
+      <div className="mx-auto w-full max-w-3xl px-4">
         <Link
           to="/"
           className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-white/70 transition hover:text-white"
@@ -396,7 +394,9 @@ export default function TryPage() {
           <p className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-caption font-medium text-white/80">
             <Sparkles className="h-3.5 w-3.5" /> Demo Studio
           </p>
-          <h1 className="text-3xl font-semibold sm:text-4xl">Turn screenshots into a live demo</h1>
+          <h1 className="text-3xl font-semibold sm:text-4xl [text-shadow:0_0_18px_rgba(99,102,241,0.55)]">
+            Turn screenshots into a live demo
+          </h1>
           <p className="mx-auto mt-3 max-w-xl text-sm text-white/70">
             Upload {MIN_SCREENSHOTS} to {MAX_SCREENSHOTS} screenshots of your product. We'll write the
             captions and hand you an interactive walkthrough. No signup needed.
