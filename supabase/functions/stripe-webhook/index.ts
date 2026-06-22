@@ -1362,7 +1362,11 @@ serve(async (req) => {
 
   try {
     const body = await req.text();
-    const event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+    // Deno's Web Crypto (SubtleCrypto) is async-only, so signature verification
+    // MUST use constructEventAsync — the sync constructEvent throws
+    // "SubtleCryptoProvider cannot be used in a synchronous context" and rejects
+    // every delivery before it can be processed.
+    const event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
     eventId = event.id;
 
     console.log(`[Webhook] Received event: ${event.type}`);
