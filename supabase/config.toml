@@ -1,9 +1,11 @@
 project_id = "rcjlaybjnozqbsoxzboa"
 
-# Declared explicitly so `supabase functions deploy` is deterministic and matches
-# the live gateway config (both currently run with JWT verification enabled).
+# Stripe calls this endpoint with only a Stripe-Signature header and no Supabase
+# JWT, so the gateway MUST NOT enforce JWT auth or it 401s before the function
+# runs. The function authenticates Stripe itself via webhooks.constructEvent
+# (signature verification), so disabling verify_jwt does not weaken security.
 [functions.stripe-webhook]
-verify_jwt = true
+verify_jwt = false
 
 [functions.demo-studio-generator]
 verify_jwt = true
