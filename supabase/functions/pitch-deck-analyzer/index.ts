@@ -17,7 +17,10 @@ const corsHeaders = {
 const MODEL = "claude-haiku-4-5-20251001";
 const FREE_ANALYSES_PER_IP = 1;
 const FREE_MAX_PDF_BYTES = 8 * 1024 * 1024; // 8MB; larger decks must sign up
-const ANALYSIS_MAX_TOKENS = 4000;
+// Haiku 4.5 allows up to 64K output. The prompt below bounds the response to a
+// roughly constant size regardless of deck length, but dense decks still need
+// real headroom — 4000 truncated the JSON on a 17-slide deck and broke parsing.
+const ANALYSIS_MAX_TOKENS = 8000;
 const UPLOAD_BUCKET = "pitch-deck-uploads";
 const RESULTS_TABLE = "pitch_deck_analyses";
 
@@ -123,23 +126,31 @@ Output JSON exactly:
 {
   "subScores": { "storyClarity": <0-100>, "marketOpportunity": <0-100>, "tractionProof": <0-100>, "businessModel": <0-100>, "teamCredibility": <0-100>, "fundraisingReadiness": <0-100> },
   "dimensions": {
-    "storyClarity": { "score": <0-100>, "band": "Weak|Developing|Strong", "findings": [ { "text": "<specific observation>", "evidence": "<quote from deck>", "severity": "high|medium|low" } ], "fix": "<one concrete fix>" },
+    "storyClarity": { "score": <0-100>, "band": "Weak|Developing|Strong", "findings": [ { "text": "<specific observation>", "evidence": "<short quote from deck>", "severity": "high|medium|low" } ], "fix": "<one concrete fix>" },
     "marketOpportunity": { ... same shape ... },
     "tractionProof": { ... },
     "businessModel": { ... },
     "teamCredibility": { ... },
     "fundraisingReadiness": { ... }
   },
-  "strengths": ["<specific strength>", ...up to 4],
-  "weaknesses": ["<specific weakness>", ...up to 4],
-  "recommendations": ["<specific recommendation>", ...up to 4],
+  "strengths": ["<specific strength>"],
+  "weaknesses": ["<specific weakness>"],
+  "recommendations": ["<specific recommendation>"],
   "slideChecklist": { "present": ["problem","solution",...], "missing": ["competition",...] },
   "narrativeFlow": { "score": <0-100>, "notes": "<assessment of slide order and story arc>" },
   "actionPlan": [ { "priority": 1, "action": "<the highest-impact change>", "impact": "<why it moves the score>" } ],
   "benchmark": { "stage": "pre-seed|seed|series-a|unknown", "comparison": "<how this compares to a typical funded deck at that stage>" },
   "keyInsights": { "targetMarket": "", "uniqueValueProp": "", "fundingStage": "", "askAmount": "" }
 }
-Expected slides for the checklist: problem, solution, product, market, traction, business model, competition, team, ask.`;
+Expected slides for the checklist: problem, solution, product, market, traction, business model, competition, team, ask.
+
+Length limits — obey these so the JSON stays complete and valid for decks of any length:
+- At most 2 findings per dimension (pick the highest-impact ones).
+- Each "evidence" quote <= 12 words; each "text"/"fix" <= 1 sentence.
+- "strengths", "weaknesses", "recommendations": at most 3 items each, one sentence each.
+- "actionPlan": at most 3 items. "narrativeFlow.notes" and "benchmark.comparison": <= 2 sentences each.
+- Summarize a long or dense deck — never enumerate every slide. Be concise.
+Return ONLY the single complete JSON object — no markdown fences, no prose before or after. Ensure it is fully closed and valid.`;
 }
 
 async function callClaude(pdfBase64: string, maxTokens: number): Promise<any> {
@@ -180,9 +191,29 @@ async function callClaude(pdfBase64: string, maxTokens: number): Promise<any> {
   const data = await response.json();
   const text = data?.content?.[0]?.text;
   if (!text) throw Object.assign(new Error("Empty model response"), { status: 502 });
+
+  // If generation hit the token cap the JSON is cut off mid-stream and won't parse.
+  // Surface it explicitly rather than failing as a generic "malformed JSON".
+  if (data?.stop_reason === "max_tokens") {
+    console.error("pitch-deck: model hit max_tokens; output truncated. textLen=", text.length);
+    throw Object.assign(new Error("Analysis output was truncated"), { status: 502 });
+  }
+
   const match = text.match(/\{[\s\S]*\}/);
-  if (!match) throw Object.assign(new Error("Model did not return JSON"), { status: 502 });
-  return JSON.parse(match[0]);
+  if (!match) {
+    console.error("pitch-deck: no JSON object in response. stop_reason=", data?.stop_reason, "preview=", String(text).slice(0, 600));
+    throw Object.assign(new Error("Model did not return JSON"), { status: 502 });
+  }
+  try {
+    return JSON.parse(match[0]);
+  } catch (parseErr) {
+    console.error(
+      "pitch-deck: JSON.parse failed. stop_reason=", data?.stop_reason,
+      "jsonLen=", match[0].length,
+      "tail=", match[0].slice(-300),
+    );
+    throw Object.assign(new Error("Model returned malformed JSON"), { status: 502 });
+  }
 }
 
 function buildResult(parsed: any) {
@@ -255,6 +286,7 @@ async function handleFree(req: Request, body: AnalyzeRequest): Promise<Response>
     const result = buildResult(parsed);
     return json({ success: true, ...result, fileName: body.fileName ?? null, guest: true });
   } catch (err) {
+    console.error("pitch-deck free analysis failed:", err instanceof Error ? err.message : err);
     // Give the free try back so a transient failure doesn't burn it.
     await admin.rpc("release_pitch_deck_free_attempt", { p_ip: ip });
     const status = (err as { status?: number })?.status ?? 500;
@@ -306,6 +338,7 @@ async function handleDeep(req: Request, body: AnalyzeRequest): Promise<Response>
 
     return json({ success: true, ...result, creditsUsed: chargedCredits });
   } catch (err) {
+    console.error("pitch-deck deep analysis failed:", err instanceof Error ? err.message : err);
     if (chargedCredits > 0) {
       await refundCredits(user.id, chargedCredits, "Pitch Deck Analyzer", "Refund: analysis failed", {
         error: err instanceof Error ? err.message : String(err),
