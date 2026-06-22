@@ -87,16 +87,16 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
           <DropdownMenuContent align="end" className="w-64">
             <DropdownMenuLabel className="flex items-center gap-2">
               <Coins className="h-4 w-4" />
-              Credit Balance
+              Credit Balance (Monthly)
             </DropdownMenuLabel>
 
             <DropdownMenuSeparator />
 
             {/* Section 1: Credit Balance details */}
             <div className="p-3 space-y-3">
-              {/* Monthly Quota — mirrors the user's current plan allocation */}
+              {/* Plan Quota — mirrors the user's current plan allocation */}
               <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Monthly Quota:</span>
+                <span className="text-sm text-muted-foreground">Plan Quota:</span>
                 <Badge variant="outline" className="text-xs">
                   {planMonthlyCredits} credits
                 </Badge>
