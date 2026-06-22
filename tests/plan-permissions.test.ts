@@ -25,64 +25,37 @@ test('normalizePlan keeps legacy creator users on rising', () => {
 
 test('plan highlights match the authoritative four-plan contract', () => {
   assert.deepEqual(PLAN_HIGHLIGHTS.rookie, [
-    'Dashboard Rookie Mode',
-    'ICP Builder (free)',
-    'MVP Builder per-action billing (uses credits)',
-    'Stage 1 guided dashboard',
-    'Stages 4-5 preview cards',
-    'Unlimited Discovery Calls (10 credits per confirmed booking)',
-    '1 Find a Co-Founder post per month',
-    'VC Search & Accelerator Hunt (browse only)',
-    'Prompt Library (free models only)',
-    'Insighta Test',
-    'Newspaper',
+    'Stage 1 guided dashboard (Rookie Mode)',
+    'ICP Builder free + Insighta Test & Newspaper',
+    'MVP Builder, billed per action from credits',
+    'Browse VC Search & Accelerator Hunt',
+    'Unlimited Discovery Calls (10 credits per booking)',
   ]);
 
   assert.deepEqual(PLAN_HIGHLIGHTS.starter, [
-    'Dashboard Starter Mode',
-    'ICP Builder (free)',
-    'Stages 1-3 active',
-    'Demo Studio + PMF Lab (uses credits)',
-    'MVP Builder per-action billing (uses credits)',
-    'Stages 4-5 (preview only)',
-    'Unlimited Discovery Calls (10 credits per confirmed booking)',
+    'Everything in Rookie, with Stages 1-3 unlocked',
+    'Demo Studio + Product-Market Fit Lab',
+    'Full Email Templates library',
+    'VC Search & Accelerator Hunt: 2 profile views/month',
     '2 Find a Co-Founder posts per month',
-    'VC Search & Accelerator Hunt (2 profiles view per month)',
-    'Email Templates (full access)',
-    'Prompt Library (free models only)',
-    'Insighta Test',
-    'Newspaper',
   ]);
 
   assert.deepEqual(PLAN_HIGHLIGHTS.rising, [
-    'Dashboard Rising Mode',
-    'Full BizMap AI tools access (generative tools use credits)',
-    'All five stages available in one cockpit',
-    'MVP Builder per-action billing + GTM Strategist (uses credits)',
-    'Unlimited Discovery Calls (10 credits per confirmed booking)',
-    'Unlimited Find a Co-Founder posts',
-    'VC Search & Accelerator Hunt (10 profile views per month)',
-    'Email Templates (full access)',
+    'Everything in Starter, with all 5 stages active',
+    'GTM Strategist + Tech Stack Builder',
     'Pitch Deck Analyzer (full access)',
-    'Prompt Library (full access)',
-    'Insighta Test',
-    'Newspaper',
+    'Prompt Library (all AI models)',
+    'VC Search & Accelerator Hunt: 10 profile views/month',
+    'Unlimited Find a Co-Founder posts',
   ]);
 
   assert.deepEqual(PLAN_HIGHLIGHTS.pro, [
-    'Dashboard Pro Mode',
-    'Pro War Room with fundraising layer',
-    'Find Your Angel (investors)',
-    'Full BizMap AI tools access (generative tools use credits)',
-    'MVP Builder per-action billing + GTM Strategist (uses credits)',
-    'Unlimited Discovery Calls (10 credits per confirmed booking)',
+    'Everything in Rising, plus the Pro War Room',
+    'Find Your Angel investor matching',
+    'Fundraising-aware dashboard & insights',
+    'Priority founder support',
+    'Unlimited VC Search & Accelerator profile views',
     'Unlimited Find a Co-Founder posts',
-    'VC Search & Accelerator Hunt (unlimited profile views)',
-    'Email Templates (full access)',
-    'Pitch Deck Analyzer (full access)',
-    'Prompt Library (full access)',
-    'Insighta Test',
-    'Newspaper',
   ]);
 });
 
