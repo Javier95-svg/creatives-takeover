@@ -1,4 +1,4 @@
-import { Coins, Loader2, Plus } from "lucide-react";
+import { Calendar, Coins, Loader2, Plus, Zap } from "lucide-react";
 import { CreditPriceList } from "@/components/CreditPriceList";
 import { useCredits } from "@/hooks/useCredits";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
+import { PLAN_MONTHLY_CREDITS, normalizePlan } from "@/config/planPermissions";
 import { useNavigate } from "react-router-dom";
 
 interface CreditDisplayProps {
@@ -36,8 +37,12 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
   const { balance, monthlyQuota, heldCredits, loading, refreshBalance, CREDIT_COSTS } = useCredits();
   const navigate = useNavigate();
   const { user } = useAuth();
-  // We only need the credit-pack checkout action here, so skip the tiers fetch.
-  const { createCreditPackCheckout, actionLoading } = useSubscription({ fetchTiers: false });
+  // We only need the credit-pack checkout action + current plan here, so skip the tiers fetch.
+  const { createCreditPackCheckout, actionLoading, subscriptionData } = useSubscription({ fetchTiers: false });
+  // Monthly Quota mirrors the user's current plan allocation
+  // (Rookie 50 / Starter 100 / Rising 250 / Pro 600), not the mutable remaining quota.
+  const planMonthlyCredits =
+    PLAN_MONTHLY_CREDITS[normalizePlan(subscriptionData.subscription_tier)] ?? PLAN_MONTHLY_CREDITS.rookie;
 
   if (!user) return null;
 
@@ -84,16 +89,15 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
 
             <DropdownMenuSeparator />
 
+            {/* Section 1: Credit Balance details */}
             <div className="p-3 space-y-3">
-              {/* Monthly Quota */}
-              {monthlyQuota > 0 && (
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Monthly Quota:</span>
-                  <Badge variant="outline" className="text-xs">
-                    {monthlyQuota} credits
-                  </Badge>
-                </div>
-              )}
+              {/* Monthly Quota — mirrors the user's current plan allocation */}
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Monthly Quota:</span>
+                <Badge variant="outline" className="text-xs">
+                  {planMonthlyCredits} credits
+                </Badge>
+              </div>
 
               {/* Purchased Balance */}
               <div className="flex justify-between items-center">
@@ -111,34 +115,6 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
                 </Badge>
               </div>
 
-              <div className="pt-2 border-t">
-                <h4 className="text-xs font-semibold mb-2">Quick Top Ups</h4>
-                <div className="grid gap-2">
-                  {QUICK_TOP_UP_PACKS.map((pack) => (
-                    <Button
-                      key={pack.id}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="w-full justify-between gap-2 h-auto py-2"
-                      disabled={actionLoading}
-                      onClick={(event) => {
-                        event.preventDefault();
-                        void createCreditPackCheckout(pack.id);
-                      }}
-                    >
-                      <span className="flex items-center gap-1.5 font-medium">
-                        <Plus className="h-3 w-3" />
-                        {pack.label}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        +{pack.credits} Credits
-                      </span>
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
               {heldCredits > 0 && (
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Temporarily Held:</span>
@@ -147,21 +123,60 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
                   </Badge>
                 </div>
               )}
+            </div>
 
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onSelect={() => navigate('/account#credit-activity')}
-              >
-                View credit activity
-              </DropdownMenuItem>
+            {/* Section 2: Quick Top Ups */}
+            <DropdownMenuSeparator />
 
-              {showPurchaseButton && (
+            <DropdownMenuLabel className="flex items-center gap-2">
+              <Zap className="h-4 w-4" />
+              Quick Top Ups
+            </DropdownMenuLabel>
+
+            <div className="px-3 pb-3 pt-1 grid gap-2">
+              {QUICK_TOP_UP_PACKS.map((pack) => (
+                <Button
+                  key={pack.id}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-between gap-2 h-auto py-2"
+                  disabled={actionLoading}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    void createCreditPackCheckout(pack.id);
+                  }}
+                >
+                  <span className="flex items-center gap-1.5 font-medium">
+                    <Plus className="h-3 w-3" />
+                    {pack.label}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    +{pack.credits} Credits
+                  </span>
+                </Button>
+              ))}
+            </div>
+
+            {/* Section 3: Monthly Plans */}
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem
+              className="flex items-center gap-2 text-sm font-semibold cursor-pointer"
+              onSelect={() => navigate('/pricing')}
+            >
+              <Calendar className="h-4 w-4" />
+              Monthly Plans
+            </DropdownMenuItem>
+
+            {showPurchaseButton && (
+              <div className="px-3 pb-3 pt-1">
                 <Button size="sm" className="w-full gap-2" variant="outline" onClick={() => navigate('/pricing')}>
                   <Plus className="h-3 w-3" />
                   Upgrade Plan
                 </Button>
-              )}
-            </div>
+              </div>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </TooltipProvider>
