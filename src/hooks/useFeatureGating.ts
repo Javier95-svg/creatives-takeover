@@ -23,7 +23,10 @@ export interface FeatureAccess {
 
 export function useFeatureGating() {
   const { user } = useAuth();
-  const { subscriptionData, loading: subscriptionLoading } = useSubscription();
+  // Gating is derived from the user's plan (subscriptionData), never the tiers
+  // list, so skip the tiers fetch — this hook is mounted widely (incl. globally
+  // via UpgradePromptDialog), and the ride-along fetch is pure waste.
+  const { subscriptionData, loading: subscriptionLoading } = useSubscription({ fetchTiers: false });
   const { hasCredits, loading: creditsLoading } = useCredits();
 
   const checkFeatureAccess = (feature: string): FeatureAccess => {

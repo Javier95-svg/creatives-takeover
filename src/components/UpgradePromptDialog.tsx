@@ -101,7 +101,10 @@ const UpgradePromptDialog = ({
 }: UpgradePromptDialogProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { createCheckout, subscriptionData } = useSubscription();
+  // Mounted globally (via UpgradePromptProvider) but only needs the checkout
+  // action + the user's plan, never the tiers list — skip the tiers fetch so it
+  // doesn't fire subscription_tiers on every route (incl. anonymous ones).
+  const { createCheckout, subscriptionData } = useSubscription({ fetchTiers: false });
   const { currentTier } = useFeatureGating();
   const { balance } = useCredits();
   const normalizedCurrentTier = normalizePlan(currentTier);
