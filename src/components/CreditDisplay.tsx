@@ -1,6 +1,7 @@
 import { Calendar, Coins, Loader2, Plus, Zap } from "lucide-react";
 import { CreditPriceList } from "@/components/CreditPriceList";
 import { useCredits } from "@/hooks/useCredits";
+import { useCreditWalletSummary } from "@/hooks/useCreditWalletSummary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,6 +44,8 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
   // (Rookie 50 / Starter 100 / Rising 250 / Pro 600), not the mutable remaining quota.
   const planMonthlyCredits =
     PLAN_MONTHLY_CREDITS[normalizePlan(subscriptionData.subscription_tier)] ?? PLAN_MONTHLY_CREDITS.rookie;
+  // Lifetime top-up credits + credits spent this billing period (navbar dropdown only).
+  const { topUpCredits, creditsSpent } = useCreditWalletSummary(variant === "navigation");
 
   if (!user) return null;
 
@@ -99,11 +102,19 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
                 </Badge>
               </div>
 
-              {/* Purchased Balance */}
+              {/* Top Up Credits — lifetime credits bought via Quick Top Ups */}
               <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Purchased Balance:</span>
+                <span className="text-sm text-muted-foreground">Top Up Credits:</span>
                 <Badge variant="outline" className="text-xs">
-                  {balance} credits
+                  {topUpCredits} credits
+                </Badge>
+              </div>
+
+              {/* Credits Spent — since the current billing period start; resets each cycle */}
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Credits Spent:</span>
+                <Badge variant="outline" className="text-xs">
+                  {creditsSpent} credits
                 </Badge>
               </div>
 
