@@ -44,7 +44,8 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
   // (Rookie 50 / Starter 100 / Rising 250 / Pro 600), not the mutable remaining quota.
   const planMonthlyCredits =
     PLAN_MONTHLY_CREDITS[normalizePlan(subscriptionData.subscription_tier)] ?? PLAN_MONTHLY_CREDITS.rookie;
-  // Lifetime top-up credits + credits spent this billing period (navbar dropdown only).
+  // Top-up credits + credits spent in the current monthly window, anchored to the
+  // account creation day (both reset each month). Navbar dropdown only.
   const { topUpCredits, creditsSpent } = useCreditWalletSummary(variant === "navigation");
 
   if (!user) return null;
@@ -102,7 +103,7 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
                 </Badge>
               </div>
 
-              {/* Top Up Credits — lifetime credits bought via Quick Top Ups */}
+              {/* Top Up Credits — bought via Quick Top Ups this monthly window */}
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Top Up Credits:</span>
                 <Badge variant="outline" className="text-xs">

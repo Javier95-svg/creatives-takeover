@@ -4,13 +4,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { logError } from '@/lib/logger';
 
 export interface CreditWalletSummary {
-  /** Lifetime credits purchased through the Quick Top Ups packs (Starter/Boost/Power). */
+  /** Credits purchased through the Quick Top Ups packs in the current monthly window. */
   topUpCredits: number;
-  /** Net credits spent (deduct minus refund) since the current billing period start. */
+  /** Net credits spent (deduct minus refund) in the current monthly window. */
   creditsSpent: number;
-  /** Start of the current billing period (the plan's monthly anchor day). */
+  /** Start of the current monthly window (anchored to the account creation day). */
   periodStart: string | null;
-  /** When the spent counter rolls back to 0 (next billing period start). */
+  /** When both counters roll back to 0 (next window start). */
   periodEnd: string | null;
 }
 
@@ -30,8 +30,9 @@ const EMPTY_SUMMARY: CreditWalletSummary = {
 
 /**
  * Reads the authenticated user's credit wallet summary from the
- * `get_credit_wallet_summary` RPC (top-ups + credits spent this billing period).
- * Pass `enabled: false` to skip the fetch where the summary is not displayed.
+ * `get_credit_wallet_summary` RPC: top-ups purchased and credits spent within
+ * the current monthly window, anchored to the account creation day (both reset
+ * to 0 on that day each month). Pass `enabled: false` to skip the fetch.
  */
 export function useCreditWalletSummary(enabled = true) {
   const { user } = useAuth();
