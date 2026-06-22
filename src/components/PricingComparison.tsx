@@ -47,7 +47,7 @@ const features: FeatureCategory[] = [
       { feature: "ICP Builder", rookie: "Free on every plan", starter: "Free on every plan", rising: "Free on every plan", pro: "Free on every plan" },
       { feature: "Demo Studio", rookie: "Unlocked; 3 credits/use", starter: "Unlocked; 3 credits/use", rising: "Unlocked; 3 credits/use", pro: "Unlocked; 3 credits/use" },
       { feature: "PMF Lab", rookie: "Preview only", starter: "Unlocked; uses credits", rising: "Unlocked; uses credits", pro: "Unlocked; uses credits" },
-      { feature: "MVP Builder", rookie: "Preview only", starter: "Preview only", rising: "Unlocked; uses credits", pro: "Unlocked; uses credits" },
+      { feature: "MVP Builder", rookie: "Unlocked; uses credits", starter: "Unlocked; uses credits", rising: "Unlocked; uses credits", pro: "Unlocked; uses credits" },
       { feature: "Tech Stack Builder", rookie: "Preview only", starter: "Preview only", rising: "Unlocked; 3 credits/use", pro: "Unlocked; 3 credits/use" },
       { feature: "GTM Strategist", rookie: "Preview only", starter: "Preview only", rising: "Unlocked; 5 credits/use", pro: "Unlocked; 5 credits/use" },
       { feature: "Directories", rookie: "Preview only", starter: "Preview only", rising: "Included", pro: "Included" },
