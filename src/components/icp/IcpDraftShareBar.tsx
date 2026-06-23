@@ -56,10 +56,24 @@ export function IcpDraftShareBar({
 
   const getOrCreateShareUrl = async (): Promise<string | null> => {
     if (resolvedUrl) return resolvedUrl;
-    if (!onShare) return null;
-    const url = await onShare();
-    if (url) setResolvedUrl(url);
-    return url;
+    // Prefer a freshly-minted public share link when the parent supplies one,
+    // but never leave the buttons dead: fall back to the current page URL like
+    // the Newspaper share does, so Copy / X / LinkedIn / Facebook always work.
+    if (onShare) {
+      try {
+        const url = await onShare();
+        if (url) {
+          setResolvedUrl(url);
+          return url;
+        }
+      } catch {
+        // fall through to the current-page fallback below
+      }
+    }
+    if (typeof window !== "undefined") {
+      return window.location.href;
+    }
+    return null;
   };
 
   const handleCopyLink = async () => {

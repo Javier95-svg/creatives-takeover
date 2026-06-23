@@ -142,7 +142,8 @@ export type QuotaFeatureKey =
   | 'discovery_calls'
   | 'cofounder_posts'
   | 'vc_search_profile'
-  | 'accelerator_profile';
+  | 'accelerator_profile'
+  | 'directories';
 
 interface FeatureEntitlementConfig {
   state: GateState;
@@ -254,7 +255,7 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
     previewStages: [4, 5],
     showUpgradeBanner: true,
     navItems: SHARED_DASHBOARD_NAV_ITEMS,
-    visibleTools: ['icp_builder', 'mvp_builder', 'saved_mentors', 'find_mentor', 'find_cofounder'],
+    visibleTools: ['icp_builder', 'pmf_lab', 'mvp_builder', 'tech_stack', 'gtm_strategist', 'directories', 'saved_mentors', 'find_mentor', 'find_cofounder'],
   },
   starter: {
     label: 'Starter Mode',
@@ -265,7 +266,7 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
     previewStages: [4, 5],
     showUpgradeBanner: true,
     navItems: SHARED_DASHBOARD_NAV_ITEMS,
-    visibleTools: ['icp_builder', 'waitlist_maker', 'pmf_lab', 'mvp_builder', 'saved_mentors', 'find_mentor', 'find_cofounder', 'vc_search', 'accelerator_hunt', 'email_templates', 'prompt_library', 'ai_goals'],
+    visibleTools: ['icp_builder', 'waitlist_maker', 'pmf_lab', 'mvp_builder', 'tech_stack', 'gtm_strategist', 'directories', 'saved_mentors', 'find_mentor', 'find_cofounder', 'vc_search', 'accelerator_hunt', 'email_templates', 'prompt_library', 'ai_goals'],
   },
   rising: {
     label: 'Rising Mode',
@@ -330,6 +331,7 @@ export const QUOTA_FEATURE_LABELS: Record<QuotaFeatureKey, { singular: string; p
   cofounder_posts: { singular: 'Find a Co-Founder post', plural: 'Find a Co-Founder posts' },
   vc_search_profile: { singular: 'VC profile view', plural: 'VC profile views' },
   accelerator_profile: { singular: 'accelerator profile view', plural: 'accelerator profile views' },
+  directories: { singular: 'directory visit', plural: 'directory visits' },
 };
 
 export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitlementConfig>> = {
@@ -361,7 +363,7 @@ export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitl
     pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'WAITLIST_GENERATION' },
   },
   pmf_lab: {
-    rookie: { state: 'preview_only', monetizationModel: 'plan_gated', requiredPlan: 'starter' },
+    rookie: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PMF_ANALYSIS' },
     starter: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PMF_ANALYSIS' },
     rising: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PMF_ANALYSIS' },
     pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PMF_ANALYSIS' },
@@ -373,22 +375,24 @@ export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitl
     pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'APP_BUILDER_GENERATE' },
   },
   tech_stack: {
-    rookie: { state: 'preview_only', monetizationModel: 'plan_gated', requiredPlan: 'rising' },
-    starter: { state: 'preview_only', monetizationModel: 'plan_gated', requiredPlan: 'rising' },
+    rookie: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'TECH_STACK_GENERATION' },
+    starter: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'TECH_STACK_GENERATION' },
     rising: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'TECH_STACK_GENERATION' },
     pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'TECH_STACK_GENERATION' },
   },
   gtm_strategist: {
-    rookie: { state: 'preview_only', monetizationModel: 'plan_gated', requiredPlan: 'rising' },
-    starter: { state: 'preview_only', monetizationModel: 'plan_gated', requiredPlan: 'rising' },
+    rookie: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'GTM_ANALYSIS' },
+    starter: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'GTM_ANALYSIS' },
     rising: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'GTM_ANALYSIS' },
     pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'GTM_ANALYSIS' },
   },
+  // Open to every plan, metered like VC Search: a few free directory "Visit"
+  // opens per month, then upgrade for more. Pro is unlimited.
   directories: {
-    rookie: { state: 'preview_only', monetizationModel: 'plan_gated', requiredPlan: 'rising' },
-    starter: { state: 'preview_only', monetizationModel: 'plan_gated', requiredPlan: 'rising' },
-    rising: { state: 'full', monetizationModel: 'plan_gated' },
-    pro: { state: 'full', monetizationModel: 'plan_gated' },
+    rookie: { state: 'quota_limited', monetizationModel: 'quota_limited', monthlyLimit: 3, requiredPlan: 'starter' },
+    starter: { state: 'quota_limited', monetizationModel: 'quota_limited', monthlyLimit: 10, requiredPlan: 'rising' },
+    rising: { state: 'quota_limited', monetizationModel: 'quota_limited', monthlyLimit: 15, requiredPlan: 'pro' },
+    pro: { state: 'full', monetizationModel: 'quota_limited' },
   },
 
   discovery_calls: {
@@ -495,6 +499,7 @@ export const MONTHLY_FREE_QUOTAS: Record<string, Record<Plan, number>> = {
   cofounder_posts: { rookie: 1, starter: 2, rising: Infinity, pro: Infinity },
   vc_profiles: { rookie: 0, starter: 2, rising: 10, pro: Infinity },
   accelerator_profiles: { rookie: 0, starter: 2, rising: 10, pro: Infinity },
+  directory_visits: { rookie: 3, starter: 10, rising: 15, pro: Infinity },
 };
 
 export const PLAN_SUMMARIES: Record<Plan, PlanSummary> = {
@@ -651,6 +656,8 @@ export function getMonthlyQuotaLimit(feature: QuotaFeatureKey, plan: Plan): numb
       return MONTHLY_FREE_QUOTAS.vc_profiles[plan];
     case 'accelerator_profile':
       return MONTHLY_FREE_QUOTAS.accelerator_profiles[plan];
+    case 'directories':
+      return MONTHLY_FREE_QUOTAS.directory_visits[plan];
     default:
       return 0;
   }

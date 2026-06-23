@@ -1,14 +1,18 @@
 import { useState, useMemo } from 'react';
 import { ExternalLink, Search } from 'lucide-react';
+import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   LAUNCH_DIRECTORIES,
   CATEGORY_LABELS,
+  type LaunchDirectory,
   type DirectoryCategory,
   type CostType,
 } from '@/data/launchDirectories';
+import { useDirectoryViewTracking } from '@/hooks/useDirectoryViewTracking';
+import { PLAN_LABELS } from '@/config/planPermissions';
 
 const COST_FILTERS: { label: string; value: CostType | 'all' }[] = [
   { label: 'All', value: 'all' },
@@ -46,6 +50,41 @@ export default function DirectoriesTab() {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<DirectoryCategory | 'all'>('all');
   const [activeCost, setActiveCost] = useState<CostType | 'all'>('all');
+  const {
+    trackDirectoryView,
+    isAuthenticated,
+    hasUnlimited,
+    limit,
+    viewCount,
+    remaining,
+    upgradeTarget,
+  } = useDirectoryViewTracking();
+
+  // Meter directory opens against the monthly quota. Anonymous preview visitors
+  // open links directly. A blank tab is opened synchronously so the quota check
+  // (async) doesn't trip the browser's popup blocker.
+  const handleVisit = async (directory: LaunchDirectory) => {
+    if (isAuthenticated === false) {
+      window.open(directory.url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    const placeholder = window.open('about:blank', '_blank');
+    const result = await trackDirectoryView(directory.name);
+    if (result.success) {
+      if (placeholder) {
+        placeholder.opener = null;
+        placeholder.location.href = directory.url;
+      } else {
+        window.open(directory.url, '_blank', 'noopener,noreferrer');
+      }
+    } else {
+      placeholder?.close();
+      if (result.message) toast.error(result.message);
+    }
+  };
+
+  const quotaExhausted = isAuthenticated === true && !hasUnlimited && remaining <= 0;
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -59,6 +98,22 @@ export default function DirectoriesTab() {
 
   return (
     <div className="space-y-6">
+      {/* Monthly visit quota (authenticated users) */}
+      {isAuthenticated && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-muted/40 px-4 py-2.5 text-xs">
+          <span className="text-muted-foreground">
+            {hasUnlimited
+              ? 'Unlimited directory visits on your plan.'
+              : `Directory visits this month: ${viewCount} of ${limit} used · ${Math.max(0, remaining)} left`}
+          </span>
+          {quotaExhausted && upgradeTarget && (
+            <span className="font-medium text-primary">
+              Upgrade to {PLAN_LABELS[upgradeTarget]} for more visits.
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Filters */}
       <div className="space-y-3">
         {/* Search */}
@@ -131,12 +186,10 @@ export default function DirectoriesTab() {
                 <Button
                   size="sm"
                   variant="outline"
-                  asChild
+                  onClick={() => void handleVisit(dir)}
                   className="flex-shrink-0 h-7 px-2 text-xs gap-1"
                 >
-                  <a href={dir.url} target="_blank" rel="noopener noreferrer">
-                    Visit <ExternalLink className="w-3 h-3" />
-                  </a>
+                  Visit <ExternalLink className="w-3 h-3" />
                 </Button>
               </div>
 
