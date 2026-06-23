@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useRef, useCallback, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { readScopedOrConsumeAnon } from '@/lib/accountScopedStorage';
 
 type PhaseType = 'braindump' | 'roadmap' | 'sprints' | 'scale';
 
@@ -86,6 +87,9 @@ const ProgressContext = createContext<ProgressContextType | undefined>(undefined
 
 export const ProgressProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
+  // Per-account cache key so journey progress never leaks across accounts on a
+  // shared browser. Anonymous progress stays under the base key until claimed.
+  const userScopedKey = user ? `${STORAGE_KEY}:${user.id}` : null;
   const [state, setState] = useState<ProgressContextState>(initialState);
   const [isLoading, setIsLoading] = useState(true);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -119,7 +123,7 @@ export const ProgressProvider = ({ children }: { children: ReactNode }) => {
     if (isLoading || !state.isInitialized || isInitialLoadRef.current) return;
 
     if (user) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      if (userScopedKey) localStorage.setItem(userScopedKey, JSON.stringify(state));
 
       // Debounce database save
       if (saveTimerRef.current) {
@@ -158,8 +162,8 @@ export const ProgressProvider = ({ children }: { children: ReactNode }) => {
         const prefs = profile.user_preferences as any;
         setState(prefs.progressState);
       } else {
-        // No data in database, check localStorage
-        const stored = localStorage.getItem(STORAGE_KEY);
+        // No data in database, check the account-scoped cache (consume anon draft)
+        const stored = userScopedKey ? readScopedOrConsumeAnon(STORAGE_KEY, userScopedKey) : null;
         if (stored) {
           try {
             setState(JSON.parse(stored));
@@ -331,6 +335,7 @@ export const ProgressProvider = ({ children }: { children: ReactNode }) => {
       }
     }
     setState(initialState);
+    if (userScopedKey) localStorage.removeItem(userScopedKey);
     localStorage.removeItem(STORAGE_KEY);
   };
 

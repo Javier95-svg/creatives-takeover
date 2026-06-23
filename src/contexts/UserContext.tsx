@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { readScopedOrConsumeAnon } from '@/lib/accountScopedStorage';
 
 interface SurveyData {
   userRole: string | null;
@@ -59,6 +60,9 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
+  // Per-account cache key. Authenticated reads/writes use this scoped key so one
+  // account can never read another account's context off a shared browser.
+  const userScopedKey = user ? `${STORAGE_KEY}:${user.id}` : null;
   const [state, setState] = useState<UserContextState>(initialState);
   const [isLoading, setIsLoading] = useState(true);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -92,7 +96,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     if (isLoading || !state.isInitialized || isInitialLoadRef.current) return;
     if (!user) return;
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    if (userScopedKey) localStorage.setItem(userScopedKey, JSON.stringify(state));
 
     // Debounce database save
     if (saveTimerRef.current) {
@@ -130,8 +134,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
             isInitialized: true,
           });
         } else {
-          // Fallback to localStorage
-          const stored = localStorage.getItem(STORAGE_KEY);
+          // Fallback to the account-scoped cache (consuming any anonymous draft)
+          const stored = userScopedKey ? readScopedOrConsumeAnon(STORAGE_KEY, userScopedKey) : null;
           if (stored) {
             try {
               setState(JSON.parse(stored));
@@ -141,8 +145,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           }
         }
       } else {
-        // No data in database, check localStorage
-        const stored = localStorage.getItem(STORAGE_KEY);
+        // No data in database, check the account-scoped cache (consume anon draft)
+        const stored = userScopedKey ? readScopedOrConsumeAnon(STORAGE_KEY, userScopedKey) : null;
         if (stored) {
           try {
             setState(JSON.parse(stored));
@@ -215,6 +219,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       }
     }
     setState(initialState);
+    if (userScopedKey) localStorage.removeItem(userScopedKey);
     localStorage.removeItem(STORAGE_KEY);
   };
 

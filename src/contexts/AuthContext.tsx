@@ -27,6 +27,7 @@ import {
 } from '@/lib/analytics';
 import { isAdminEmail } from '@/lib/admin';
 import { triggerEmailSequenceEvent } from '@/lib/emailSequences';
+import { clearAccountScopedStorage } from '@/lib/accountScopedStorage';
 
 interface AuthContextType {
   user: User | null;
@@ -89,6 +90,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signInProcessedRef = useRef<string | null>(null);
   const identifiedUserRef = useRef<string | null>(null);
   const isMountedRef = useRef(true);
+  // Tracks the previously-seen account so we can purge per-account client caches
+  // the moment the active account changes (switch or sign-out), even if the
+  // session was replaced without an explicit signOut() (e.g. token expiry).
+  const previousUserIdRef = useRef<string | null>(null);
 
   /**
    * Handle post-sign-in logic (profile, admin tier, onboarding).
@@ -333,6 +338,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(currentSession?.user ?? null);
         setLoading(false);
 
+        // Data isolation: if the active account changed (A→B, or A→signed-out),
+        // purge the previous account's client-side caches before the new account
+        // hydrates anything. Skips the initial null→user load and token refreshes
+        // for the same user. Runs before the new account's tools read storage.
+        const nextUserId = currentSession?.user?.id ?? null;
+        if (previousUserIdRef.current && previousUserIdRef.current !== nextUserId) {
+          clearAccountScopedStorage();
+        }
+        previousUserIdRef.current = nextUserId;
+
         // Handle sign-in logic asynchronously (won't block state updates)
         if (event === 'SIGNED_IN' && currentSession?.user) {
           initAmplitudeWithUser(currentSession.user.id);
@@ -543,19 +558,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
-    // Clear per-account client caches that are not Supabase-auth-scoped so the
-    // next account signing in on this browser cannot inherit them. The MVP
-    // Builder workspace cache (`ct_app_builder_session[:userId]`) is the key one.
-    try {
-      for (let i = window.localStorage.length - 1; i >= 0; i -= 1) {
-        const key = window.localStorage.key(i);
-        if (key && key.startsWith('ct_app_builder_session')) {
-          window.localStorage.removeItem(key);
-        }
-      }
-    } catch {
-      // best-effort cache cleanup; ignore storage access errors
-    }
+    // Clear every per-account client cache that is not Supabase-auth-scoped so
+    // the next account signing in on this browser cannot inherit them (MVP
+    // Builder, BizMap AI, Insighta tools, contexts, drafts, etc.).
+    clearAccountScopedStorage();
 
     try {
       const { error } = await supabase.auth.signOut();
