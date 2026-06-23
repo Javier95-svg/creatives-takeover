@@ -543,6 +543,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
+    // Clear per-account client caches that are not Supabase-auth-scoped so the
+    // next account signing in on this browser cannot inherit them. The MVP
+    // Builder workspace cache (`ct_app_builder_session[:userId]`) is the key one.
+    try {
+      for (let i = window.localStorage.length - 1; i >= 0; i -= 1) {
+        const key = window.localStorage.key(i);
+        if (key && key.startsWith('ct_app_builder_session')) {
+          window.localStorage.removeItem(key);
+        }
+      }
+    } catch {
+      // best-effort cache cleanup; ignore storage access errors
+    }
+
     try {
       const { error } = await supabase.auth.signOut();
 

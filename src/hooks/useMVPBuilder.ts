@@ -266,6 +266,11 @@ export interface MVPBuildChangeSummary {
 }
 
 interface PersistedSession {
+  /**
+   * Owner of this cached workspace. Stamped on persist and verified on load so
+   * a different account on the same browser can never inherit it (data isolation).
+   */
+  userId?: string;
   messages: MVPMessage[];
   currentHtml: string | null;
   generatedCode?: string | null;
@@ -881,6 +886,10 @@ async function fetchContextRowById(
 
 export function useMVPBuilder() {
   const { user } = useAuth();
+  // Scope the persisted workspace cache to the signed-in account. A single shared
+  // key let one account hydrate another account's MVP Builder workspace on the
+  // same browser — a cross-account data isolation failure.
+  const storageKey = user ? `${STORAGE_KEY}:${user.id}` : null;
   const {
     ensureCredits,
     handleCreditError,
@@ -1138,8 +1147,10 @@ export function useMVPBuilder() {
       actionQuote: MVPActionQuote | null,
       deployUrl: string | null
     ) => {
+      if (!storageKey) return;
       try {
         const session: PersistedSession = {
+          userId: user?.id,
           messages: msgs.map((m) => ({ ...m, isStreaming: false })),
           currentHtml: html,
           generatedCode: code,
@@ -1164,19 +1175,35 @@ export function useMVPBuilder() {
           lastActionQuote: actionQuote,
           deploymentUrl: deployUrl,
         };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+        localStorage.setItem(storageKey, JSON.stringify(session));
       } catch {
         // ignore storage errors
       }
     },
-    []
+    [storageKey, user?.id]
   );
 
   useEffect(() => {
+    // Purge the legacy un-scoped cache so a workspace saved before this fix can
+    // never leak into another account that signs in on the same browser.
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // ignore storage errors
+    }
+
+    if (!storageKey) return;
+
+    try {
+      const raw = localStorage.getItem(storageKey);
       if (!raw) return;
       const session: PersistedSession = JSON.parse(raw);
+      // Defense in depth: if a cached session is somehow not owned by the
+      // current account, discard it rather than hydrate cross-account data.
+      if (session.userId && session.userId !== user?.id) {
+        localStorage.removeItem(storageKey);
+        return;
+      }
       setMessages(
         (session.messages || []).map((message) => ({
           ...message,
@@ -1280,7 +1307,7 @@ export function useMVPBuilder() {
     } catch {
       // ignore corrupt state
     }
-  }, [applyProjectArtifact]);
+  }, [applyProjectArtifact, storageKey, user?.id]);
 
   useEffect(() => {
     persist(
@@ -3568,8 +3595,10 @@ export function useMVPBuilder() {
     setSuggestedGitHubCommitMessage(null);
     setGitHubBranches([]);
 
+    // Clear both the current account's scoped cache and the legacy global key.
+    if (storageKey) localStorage.removeItem(storageKey);
     localStorage.removeItem(STORAGE_KEY);
-  }, [replaceMessages]);
+  }, [replaceMessages, storageKey]);
 
   const codeChanges = lastGeneratedProject
     ? getChangedProjectFiles(projectFiles, lastGeneratedProject.files)
