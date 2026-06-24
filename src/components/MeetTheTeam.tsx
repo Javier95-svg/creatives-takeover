@@ -6,7 +6,7 @@ import domagojPhoto from "@/assets/team-domagoj-markota.webp";
 import danielaPhoto from "@/assets/team-daniela-hagg.webp";
 import jelenaPhoto from "@/assets/team-jelena-dabovic.webp";
 import evaggelosPhoto from "@/assets/team-evaggelos-michalopoulos.webp";
-import muriloPhoto from "@/assets/team-murilo-toledo-placeholder.svg";
+import deliaPhoto from "@/assets/team-delia-meres.jpeg";
 
 type TeamMember = {
   name: string;
@@ -55,11 +55,11 @@ const teamMembers: TeamMember[] = [
     photo: evaggelosPhoto,
   },
   {
-    name: "Murilo Toledo",
-    role: "Sales Development Representative",
-    bio: "Murilo supports sales development by opening new conversations, qualifying opportunities, and helping promising founders connect with Creatives Takeover.",
-    linkedin: "https://www.linkedin.com/in/murilo-toledoremote/",
-    photo: muriloPhoto,
+    name: "Delia Meres",
+    role: "HR Intern",
+    bio: "Delia supports HR operations by helping with recruiting coordination, team communication, and people focused processes that keep Creatives Takeover organized and welcoming.",
+    linkedin: "https://www.linkedin.com/in/delia-meres-6b2408213",
+    photo: deliaPhoto,
   },
 ];
 
