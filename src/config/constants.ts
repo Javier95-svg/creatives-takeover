@@ -11,8 +11,8 @@ export const CREDIT_COSTS = {
   ASSET_GENERATION: 5,
   PREMIUM_FEATURE: 3,
   WAITLIST_GENERATION: 3,
-  PMF_SCORING: 4,
-  GTM_ANALYSIS: 5,
+  PMF_SCORING: 5,
+  GTM_ANALYSIS: 6,
   APP_BUILDER_GENERATE: 15,
   APP_BUILDER_REFINE: 4,
   APP_BUILDER_DEBUG: 3,
@@ -50,8 +50,8 @@ export const CREDIT_COSTS = {
   ROADMAP_GENERATION: 5,
   TRACTION_ENGINE_SCORECARD: 2,
 
-  // Tech Stack Generator
-  TECH_STACK_GENERATION: 3,
+  // Tech Stack Generator (first analysis free per account — see feature_gifts)
+  TECH_STACK_GENERATION: 4,
 
   // Other Premium Features
   PDF_EXPORT: 3,

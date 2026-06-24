@@ -255,7 +255,7 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
     previewStages: [4, 5],
     showUpgradeBanner: true,
     navItems: SHARED_DASHBOARD_NAV_ITEMS,
-    visibleTools: ['icp_builder', 'pmf_lab', 'mvp_builder', 'tech_stack', 'gtm_strategist', 'directories', 'saved_mentors', 'find_mentor', 'find_cofounder'],
+    visibleTools: ['icp_builder', 'mvp_builder', 'saved_mentors', 'find_mentor', 'find_cofounder'],
   },
   starter: {
     label: 'Starter Mode',
@@ -266,7 +266,7 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
     previewStages: [4, 5],
     showUpgradeBanner: true,
     navItems: SHARED_DASHBOARD_NAV_ITEMS,
-    visibleTools: ['icp_builder', 'waitlist_maker', 'pmf_lab', 'mvp_builder', 'tech_stack', 'gtm_strategist', 'directories', 'saved_mentors', 'find_mentor', 'find_cofounder', 'vc_search', 'accelerator_hunt', 'email_templates', 'prompt_library', 'ai_goals'],
+    visibleTools: ['icp_builder', 'waitlist_maker', 'pmf_lab', 'mvp_builder', 'saved_mentors', 'find_mentor', 'find_cofounder', 'vc_search', 'accelerator_hunt', 'email_templates', 'prompt_library', 'ai_goals'],
   },
   rising: {
     label: 'Rising Mode',
@@ -362,11 +362,13 @@ export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitl
     rising: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'WAITLIST_GENERATION' },
     pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'WAITLIST_GENERATION' },
   },
+  // creditFeature is PMF_SCORING — the key the live PMF Lab actually charges
+  // (5 credits) — so the quoted cost matches the charge on every plan.
   pmf_lab: {
-    rookie: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PMF_ANALYSIS' },
-    starter: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PMF_ANALYSIS' },
-    rising: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PMF_ANALYSIS' },
-    pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PMF_ANALYSIS' },
+    rookie: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PMF_SCORING' },
+    starter: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PMF_SCORING' },
+    rising: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PMF_SCORING' },
+    pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PMF_SCORING' },
   },
   mvp_builder: {
     rookie: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'APP_BUILDER_GENERATE' },

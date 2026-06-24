@@ -302,15 +302,35 @@ const TechStack: React.FC = () => {
         }
       }
 
-      const deducted = await deductCredits('TECH_STACK_GENERATION', {
-        featureName: 'Tech Stack Generation',
-        operationId: `tech-stack-${Date.now()}`,
-        metadata: {
-          selectedCategories: techStackData.length,
-          selectedProductsKey,
-        }
-      });
-      if (!deducted) return;
+      // Tech Stack Builder is part of our welcome Gifts: the first analysis per
+      // account is on us. claim_first_use_gift atomically comps exactly one run
+      // (lifetime); every later build bills the normal 4 credits.
+      let firstRunFree = false;
+      try {
+        const { data: claimed, error: giftError } = await supabase.rpc('claim_first_use_gift', {
+          p_feature: 'TECH_STACK_GENERATION',
+        });
+        firstRunFree = !giftError && claimed === true;
+      } catch (error) {
+        console.warn('Failed to check Tech Stack gift', error);
+      }
+
+      if (firstRunFree) {
+        toast({
+          title: 'First Tech Stack build is on us 🎁',
+          description: 'Enjoy your free build — future builds cost 4 credits.',
+        });
+      } else {
+        const deducted = await deductCredits('TECH_STACK_GENERATION', {
+          featureName: 'Tech Stack Generation',
+          operationId: `tech-stack-${Date.now()}`,
+          metadata: {
+            selectedCategories: techStackData.length,
+            selectedProductsKey,
+          }
+        });
+        if (!deducted) return;
+      }
 
       try {
         await supabase.rpc('check_and_increment_usage', {

@@ -208,19 +208,15 @@ test('waitlist maker is credit-metered on every plan', () => {
   }
 });
 
-test('pmf lab is blocked on Rookie and credit-metered on Starter and above', () => {
-  const rookiePmf = resolveFeatureEnforcement('rookie', 'PMF_ANALYSIS');
-  assert.equal(rookiePmf.mode, 'blocked');
-  assert.equal(rookiePmf.requiredPlan, 'starter');
-
+test('pmf lab is credit-metered on every plan', () => {
   assert.equal(CREDIT_COSTS.PMF_ANALYSIS, 6);
-  assert.equal(CREDIT_COSTS.PMF_SCORING, 4);
+  assert.equal(CREDIT_COSTS.PMF_SCORING, 5);
 
-  for (const plan of ['starter', 'rising', 'pro'] as const) {
+  for (const plan of ['rookie', 'starter', 'rising', 'pro'] as const) {
     assert.equal(resolveFeatureEnforcement(plan, 'PMF_ANALYSIS').mode, 'charge');
     assert.equal(resolveFeatureEnforcement(plan, 'PMF_ANALYSIS').creditCost, 6);
     assert.equal(resolveFeatureEnforcement(plan, 'PMF_SCORING').mode, 'charge');
-    assert.equal(resolveFeatureEnforcement(plan, 'PMF_SCORING').creditCost, 4);
+    assert.equal(resolveFeatureEnforcement(plan, 'PMF_SCORING').creditCost, 5);
   }
 });
 
@@ -248,26 +244,31 @@ test('MVP Builder is universal and Phase 2 app builder actions are credit-metere
   }
 });
 
-test('Rising and Pro non-MVP generative build tools remain unlocked and credit-metered', () => {
+test('GTM Strategist and Tech Stack Builder are credit-metered on every plan', () => {
   const expectedCosts = {
-    GTM_ANALYSIS: 5,
-    TECH_STACK_GENERATION: 3,
-    PROMPT_GENERATION: 2,
+    GTM_ANALYSIS: 6,
+    TECH_STACK_GENERATION: 4,
   } as const;
 
   for (const feature of Object.keys(expectedCosts) as Array<keyof typeof expectedCosts>) {
-    const rookieAccess = resolveFeatureEnforcement('rookie', feature);
-    assert.equal(rookieAccess.mode, 'blocked');
-    assert.equal(rookieAccess.requiredPlan, 'rising');
+    for (const plan of ['rookie', 'starter', 'rising', 'pro'] as const) {
+      const access = resolveFeatureEnforcement(plan, feature);
+      assert.equal(access.mode, 'charge');
+      assert.equal(access.creditCost, expectedCosts[feature]);
+    }
+  }
+});
 
-    const starterAccess = resolveFeatureEnforcement('starter', feature);
-    assert.equal(starterAccess.mode, 'blocked');
-    assert.equal(starterAccess.requiredPlan, 'rising');
+test('Prompt Library generation stays Rising-gated and credit-metered', () => {
+  for (const plan of ['rookie', 'starter'] as const) {
+    const access = resolveFeatureEnforcement(plan, 'PROMPT_GENERATION');
+    assert.equal(access.mode, 'blocked');
+    assert.equal(access.requiredPlan, 'rising');
+  }
 
-    assert.equal(resolveFeatureEnforcement('rising', feature).mode, 'charge');
-    assert.equal(resolveFeatureEnforcement('rising', feature).creditCost, expectedCosts[feature]);
-    assert.equal(resolveFeatureEnforcement('pro', feature).mode, 'charge');
-    assert.equal(resolveFeatureEnforcement('pro', feature).creditCost, expectedCosts[feature]);
+  for (const plan of ['rising', 'pro'] as const) {
+    assert.equal(resolveFeatureEnforcement(plan, 'PROMPT_GENERATION').mode, 'charge');
+    assert.equal(resolveFeatureEnforcement(plan, 'PROMPT_GENERATION').creditCost, 2);
   }
 });
 

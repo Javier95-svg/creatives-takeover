@@ -132,15 +132,14 @@ test('core entitlement rules reflect the pricing contract', () => {
   assert.equal(rookieWaitlist.creditCost, 4);
 
   const rookiePmf = resolveEntitlement('pmf_lab', 'rookie');
-  assert.equal(rookiePmf.state, 'preview_only');
-  assert.equal(rookiePmf.upgradeTarget, 'starter');
-  assert.equal(rookiePmf.uiMode, 'preview');
-  assert.equal(rookiePmf.monetizationModel, 'plan_gated');
+  assert.equal(rookiePmf.state, 'full');
+  assert.equal(rookiePmf.monetizationModel, 'credit_metered');
+  assert.equal(rookiePmf.creditCost, 5);
 
   const starterPmf = resolveEntitlement('pmf_lab', 'starter');
   assert.equal(starterPmf.state, 'full');
   assert.equal(starterPmf.monetizationModel, 'credit_metered');
-  assert.equal(starterPmf.creditCost, 6);
+  assert.equal(starterPmf.creditCost, 5);
 
   const rookieMvp = resolveEntitlement('mvp_builder', 'rookie');
   assert.equal(rookieMvp.state, 'full');
@@ -150,7 +149,19 @@ test('core entitlement rules reflect the pricing contract', () => {
   const proGtm = resolveEntitlement('gtm_strategist', 'pro');
   assert.equal(proGtm.state, 'full');
   assert.equal(proGtm.monetizationModel, 'credit_metered');
-  assert.equal(proGtm.creditCost, 5);
+  assert.equal(proGtm.creditCost, 6);
+
+  const rookieGtm = resolveEntitlement('gtm_strategist', 'rookie');
+  assert.equal(rookieGtm.state, 'full');
+  assert.equal(rookieGtm.creditCost, 6);
+
+  const rookieTech = resolveEntitlement('tech_stack', 'rookie');
+  assert.equal(rookieTech.state, 'full');
+  assert.equal(rookieTech.creditCost, 4);
+
+  const rookieDirectories = resolveEntitlement('directories', 'rookie');
+  assert.equal(rookieDirectories.state, 'quota_limited');
+  assert.equal(rookieDirectories.monthlyLimit, 3);
 
   const starterVcProfiles = resolveEntitlement('vc_search_profile', 'starter');
   assert.equal(starterVcProfiles.state, 'quota_limited');
