@@ -1,0 +1,52 @@
+name: Deploy (Vercel hook)
+
+# Safety net for production deploys.
+#
+# Vercel's native GitHub webhook has intermittently *silently skipped* commits on
+# main, leaving them un-deployed (we hit this several times). This workflow
+# guarantees a production build by calling a Vercel Deploy Hook on every push to
+# main, so a dropped webhook can never leave main un-deployed again.
+#
+# One-time setup (requires Vercel + GitHub access):
+#   1. Vercel -> Project (creatives-takeover) -> Settings -> Git -> Deploy Hooks:
+#      create a hook named e.g. "github-main" targeting the `main` branch and copy
+#      its URL (looks like https://api.vercel.com/v1/integrations/deploy/prj_.../...).
+#   2. GitHub -> repo Settings -> Secrets and variables -> Actions -> New repository
+#      secret: name = VERCEL_DEPLOY_HOOK_URL, value = that URL.
+#
+# Until the secret exists this job no-ops (exit 0), so it never blocks anything.
+# Note: while Vercel's native git auto-deploy is also enabled, a push whose webhook
+# DID fire will deploy twice (native + this hook). To make this the single source of
+# deploys (no skips, no duplicates), disable native auto-deploy for main by adding
+#   "git": { "deploymentEnabled": { "main": false } }
+# to vercel.json — do that only after confirming this hook works.
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: vercel-deploy-hook
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Vercel Deploy Hook
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$DEPLOY_HOOK_URL" ]; then
+            echo "::notice::VERCEL_DEPLOY_HOOK_URL secret not set yet — skipping deploy trigger."
+            exit 0
+          fi
+          echo "Triggering Vercel deploy hook for commit ${GITHUB_SHA}…"
+          code=$(curl -sS -o response.txt -w "%{http_code}" -X POST "$DEPLOY_HOOK_URL")
+          echo "Deploy hook responded with HTTP $code"
+          cat response.txt 2>/dev/null || true
+          if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then
+            echo "::error::Deploy hook returned HTTP $code"
+            exit 1
+          fi
+          echo "::notice::Vercel production deploy triggered for ${GITHUB_SHA}."
