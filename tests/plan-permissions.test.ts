@@ -44,7 +44,7 @@ test('plan highlights match the authoritative four-plan contract', () => {
     'Everything in Starter, with all 5 stages active',
     'GTM Strategist + Tech Stack Builder',
     'Pitch Deck Analyzer (full access)',
-    'Prompt Library (all AI models)',
+    'Founders Unleashed podcast + Newspaper exclusives',
     'VC Search & Accelerator Hunt: 10 profile views/month',
     'Unlimited Find a Co-Founder posts',
   ]);
