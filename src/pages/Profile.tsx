@@ -449,64 +449,38 @@ const Profile = () => {
         
         setProfile(finalProfileData);
 
-        // Load user's posts (handle errors gracefully)
-        try {
-          const { data: postsData, error: postsError } = await supabase
+        // The hero (avatar, identity, stats) is ready now, so stop blocking the
+        // render on the below-the-fold data. Posts, pinned posts, and the photo
+        // count are independent of each other, so fetch them together in the
+        // background (parallel) instead of as a serial waterfall, and fill them in
+        // as they arrive. This is the main lever for how fast the profile appears.
+        void Promise.all([
+          supabase
             .from('community_posts')
             .select('*')
             .eq('user_id', finalProfileData.id)
             .order('created_at', { ascending: false })
-            .limit(10);
-
-          if (postsError) {
-            console.error('Error loading posts:', postsError);
-            setPosts([]); // Set empty array on error
-          } else {
-            setPosts(postsData || []);
-          }
-        } catch (postsErr) {
-          console.error('Error loading posts:', postsErr);
-          setPosts([]); // Set empty array on error
-        }
-
-        // Load pinned posts (handle errors gracefully)
-        try {
-          const { data: pinnedData, error: pinnedError } = await supabase
+            .limit(10),
+          supabase
             .from('community_posts')
             .select('*')
             .eq('user_id', finalProfileData.id)
             .eq('is_pinned', true)
             .order('created_at', { ascending: false })
-            .limit(4);
-
-          if (pinnedError) {
-            logError('Error loading pinned posts', pinnedError);
-            setPinnedPosts([]); // Set empty array on error
-          } else {
-            setPinnedPosts(pinnedData || []);
-          }
-        } catch (pinnedErr) {
-          console.error('Error loading pinned posts:', pinnedErr);
-          setPinnedPosts([]); // Set empty array on error
-        }
-
-        // Load picture count (handle errors gracefully)
-        try {
-          const { count, error: photoCountError } = await supabase
+            .limit(4),
+          supabase
             .from('user_photos')
             .select('*', { count: 'exact', head: true })
-            .eq('user_id', finalProfileData.id);
-
-          if (photoCountError) {
-            console.error('Error loading picture count:', photoCountError);
-            setPictureCount(0);
-          } else {
-            setPictureCount(count || 0);
-          }
-        } catch (photoCountErr) {
-          console.error('Error loading picture count:', photoCountErr);
-          setPictureCount(0);
-        }
+            .eq('user_id', finalProfileData.id),
+        ])
+          .then(([postsRes, pinnedRes, photoRes]) => {
+            setPosts(Array.isArray(postsRes.data) ? (postsRes.data as Post[]) : []);
+            setPinnedPosts(Array.isArray(pinnedRes.data) ? (pinnedRes.data as Post[]) : []);
+            setPictureCount(photoRes.count || 0);
+          })
+          .catch((secondaryError) => {
+            logError('Error loading profile secondary data', secondaryError);
+          });
 
       } catch (error) {
         logError('Error loading profile', error);
