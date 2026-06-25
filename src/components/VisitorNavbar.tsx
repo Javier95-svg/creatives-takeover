@@ -16,6 +16,7 @@ import {
   Newspaper,
   Radio,
   Rocket,
+  Rss,
   Target,
   X,
   Zap,
@@ -38,7 +39,7 @@ import { captureEvent } from "@/lib/analytics";
 
 type VisitorLink = { label: string; href: string; icon: LucideIcon; sectionId?: string };
 type VisitorMenuItem = { label: string; href: string; icon: LucideIcon; description: string };
-type VisitorMenu = { label: string; icon: LucideIcon; tagline: string; items: VisitorMenuItem[] };
+type VisitorMenu = { label: string; icon: LucideIcon; tagline: string; taglineIcon?: LucideIcon; items: VisitorMenuItem[] };
 
 // Simple links, in display order. The Gifts menu renders first and the Media menu is
 // injected right after "Learn" (see the render below). Final order:
@@ -91,7 +92,8 @@ const giftsMenu: VisitorMenu = {
 const mediaMenu: VisitorMenu = {
   label: "Media",
   icon: Radio,
-  tagline: "News and stories from the startup world.",
+  tagline: "News & Stories",
+  taglineIcon: Rss,
   items: [
     { label: "Podcast", href: "/podcast", icon: Mic, description: "Founders Unleashed." },
     { label: "Newspaper", href: "/newspaper", icon: Newspaper, description: "What founders learn the hard way." },
@@ -172,6 +174,7 @@ const VisitorNavbar = () => {
 
   const renderDesktopMenu = (menu: VisitorMenu) => {
     const MenuIcon = menu.icon;
+    const TaglineIcon = menu.taglineIcon;
     return (
       <DropdownMenu
         onOpenChange={(open) => {
@@ -184,7 +187,10 @@ const VisitorNavbar = () => {
           <ChevronDown className="h-3 w-3 opacity-60" aria-hidden="true" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-max">
-          <DropdownMenuLabel>{menu.tagline}</DropdownMenuLabel>
+          <DropdownMenuLabel className="flex items-center justify-between gap-6">
+            <span>{menu.tagline}</span>
+            {TaglineIcon && <TaglineIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />}
+          </DropdownMenuLabel>
           <DropdownMenuSeparator />
           {menu.items.map((item) => {
             const ItemIcon = item.icon;
