@@ -91,10 +91,10 @@ const giftsMenu: VisitorMenu = {
 const mediaMenu: VisitorMenu = {
   label: "Media",
   icon: Radio,
-  tagline: "Stories & conversations",
+  tagline: "News and stories from the startup world.",
   items: [
-    { label: "Podcast", href: "/podcast", icon: Mic, description: "Founders Unleashed — founder conversations." },
-    { label: "Newspaper", href: "/newspaper", icon: Newspaper, description: "Business cases & founder stories." },
+    { label: "Podcast", href: "/podcast", icon: Mic, description: "Founders Unleashed." },
+    { label: "Newspaper", href: "/newspaper", icon: Newspaper, description: "What founders learn the hard way." },
   ],
 };
 
