@@ -92,6 +92,11 @@ export const NotificationBell = () => {
       return;
     }
 
+    if (notification.notification_type === 'podcast_episode_published') {
+      navigateTo(metadataRoute || '/podcast');
+      return;
+    }
+
     if (notification.notification_type === 'platform_update') {
       const notificationSlug = typeof notification.metadata?.slug === 'string'
         ? notification.metadata.slug
@@ -192,6 +197,10 @@ export const NotificationBell = () => {
         return metadata?.title
           ? `Newspaper update: ${metadata.title}`
           : 'A new newspaper article was published';
+      case 'podcast_episode_published':
+        return metadata?.title
+          ? `New episode: ${metadata.title}`
+          : 'A new podcast episode was published';
       case 'follow_request':
         return `${actor.name} sent you a follow request`;
       case 'follower_new_picture':
@@ -233,6 +242,10 @@ export const NotificationBell = () => {
 
     if (notification.notification_type === 'newspaper_article_published') {
       return metadata.image_url || metadata.banner_image_url || notification.actor.avatar;
+    }
+
+    if (notification.notification_type === 'podcast_episode_published') {
+      return metadata.image_url || metadata.thumbnail_url || notification.actor.avatar;
     }
 
     if (notification.notification_type === 'platform_update') {
