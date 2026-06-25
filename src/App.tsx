@@ -124,6 +124,7 @@ const WaitlistTemplatesPage = lazy(() => import("./pages/WaitlistTemplatesPage")
 const DirectoriesPage = lazy(() => import("./pages/DirectoriesPage"));
 const FindYourAngel = lazy(() => import("./pages/community/FindYourAngel"));
 const AdminAngelEditor = lazy(() => import("./pages/community/AdminAngelEditor"));
+const Podcast = lazy(() => import("./pages/Podcast"));
 const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
 const ReferralDashboardPage = lazy(() => import("./pages/ReferralDashboardPage"));
 const DemoCalls = lazy(() => import("./pages/DemoCalls"));
@@ -252,6 +253,7 @@ function App() {
                         <Route path="/mentorship/:slug" element={<MentorProfilePage />} />
                         <Route path="/community" element={<LegacyCommunityRedirect />} />
                         <Route path="/community/*" element={<LegacyCommunityRedirect />} />
+                        <Route path="/podcast" element={<Podcast />} />
                         <Route path="/newspaper" element={<Stories />} />
                         <Route path="/newspaper/rss.xml" element={<StoriesRSS />} />
                         <Route path="/newspaper/tags/:tagSlug" element={<StoryTagPage />} />

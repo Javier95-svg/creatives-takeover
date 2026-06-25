@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, Bot, BookOpen, TrendingUp, Users as UsersIcon, FileText, Info, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, Boxes, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles, Lock } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, Bot, BookOpen, TrendingUp, Users as UsersIcon, FileText, Info, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, Boxes, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles, Mic, Lock } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -115,6 +115,7 @@ const Navigation = () => {
     { name: "Find a Mentor", href: "/mentorship", icon: GraduationCap, description: "Connect with experienced startup coaches." },
     { name: "Find a Co-Founder", href: "/co-founder", icon: Handshake, description: "Meet your business soulmate." },
     { name: "Find your Angel", href: "/investors", icon: Sparkles, description: "Angel investor network." },
+    { name: "Podcast", href: "/podcast", icon: Mic, description: "Founders Unleashed — founder conversations." },
   ];
 
   // Resources submenu items

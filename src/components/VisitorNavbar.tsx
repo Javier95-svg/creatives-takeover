@@ -5,13 +5,13 @@ import {
   BarChart3,
   Boxes,
   ChevronDown,
-  DollarSign,
   FlaskConical,
   Gift,
   Home,
   Info,
   type LucideIcon,
   Menu,
+  Mic,
   Newspaper,
   Rocket,
   Target,
@@ -42,8 +42,8 @@ const visitorLinks: VisitorLink[] = [
   { label: "Build", href: "/build", icon: Zap },
   { label: "Connect", href: "/mentorship", icon: Users },
   { label: "Newspaper", href: "/newspaper", icon: Newspaper },
+  { label: "Podcast", href: "/podcast", icon: Mic },
   { label: "About Us", href: "/about", icon: Info },
-  { label: "Pricing", href: "/pricing", icon: DollarSign },
 ];
 
 // Free Tools menu — logged-out visitors can use these tools before signing up.
