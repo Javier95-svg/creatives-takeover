@@ -1,7 +1,16 @@
-import { useEffect } from "react";
+import { useEffect, type IframeHTMLAttributes } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { youtubeEmbedUrl } from "@/lib/podcast";
+
+// The site is cross-origin isolated (COEP: credentialless, set in vercel.json for the
+// MVP Builder's webcontainers). Under that policy a plain cross-origin iframe is blocked,
+// so load the YouTube player as an anonymous/credentialless frame — it satisfies COEP
+// without YouTube needing to send its own COEP header. (Ignored by browsers that don't
+// support it, which also don't enforce the policy, so the plain embed still works there.)
+const credentiallessIframeProp = {
+  credentialless: "",
+} as unknown as IframeHTMLAttributes<HTMLIFrameElement>;
 
 interface PodcastPlayerModalProps {
   videoId: string;
@@ -53,6 +62,7 @@ const PodcastPlayerModal = ({ videoId, title, onClose }: PodcastPlayerModalProps
 
         <div className="aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-black shadow-2xl">
           <iframe
+            {...credentiallessIframeProp}
             src={youtubeEmbedUrl(videoId, true)}
             title={title}
             className="h-full w-full"
