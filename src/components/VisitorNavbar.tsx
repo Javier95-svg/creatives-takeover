@@ -5,8 +5,10 @@ import {
   BarChart3,
   Boxes,
   ChevronDown,
+  DollarSign,
   FlaskConical,
   Gift,
+  GraduationCap,
   Home,
   Info,
   type LucideIcon,
@@ -15,7 +17,6 @@ import {
   Newspaper,
   Rocket,
   Target,
-  Users,
   X,
   Zap,
 } from "lucide-react";
@@ -40,10 +41,11 @@ type VisitorLink = { label: string; href: string; icon: LucideIcon; sectionId?: 
 const visitorLinks: VisitorLink[] = [
   { label: "Home", href: "/", icon: Home },
   { label: "Build", href: "/build", icon: Zap },
-  { label: "Connect", href: "/mentorship", icon: Users },
-  { label: "Newspaper", href: "/newspaper", icon: Newspaper },
+  { label: "Learn", href: "/mentorship", icon: GraduationCap },
   { label: "Podcast", href: "/podcast", icon: Mic },
+  { label: "Newspaper", href: "/newspaper", icon: Newspaper },
   { label: "About Us", href: "/about", icon: Info },
+  { label: "Pricing", href: "/pricing", icon: DollarSign },
 ];
 
 // Free Tools menu — logged-out visitors can use these tools before signing up.
