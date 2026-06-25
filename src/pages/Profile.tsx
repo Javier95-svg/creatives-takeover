@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Linkedin, Instagram, Globe, Settings, MapPin, Briefcase, Rocket, Users2, ExternalLink, FileText, Zap, TrendingUp, Image, Video, Lightbulb } from "lucide-react";
+import { ArrowLeft, Calendar, Linkedin, Instagram, Globe, Settings, MapPin, Briefcase, Rocket, Users2, ExternalLink, FileText, Zap, TrendingUp, Image, Video, Lightbulb } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
@@ -552,6 +552,19 @@ const Profile = () => {
     };
   }, [profileId]);
 
+  // Persistent "back to the platform" CTA shown on every profile view. Signed-in
+  // users return to their dashboard; logged-out visitors to the public home.
+  const platformHref = currentUser ? "/dashboard" : "/";
+  const platformBackCta = (
+    <Link
+      to={platformHref}
+      className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/70 px-3.5 py-1.5 text-sm font-medium text-muted-foreground backdrop-blur-sm transition-colors hover:border-border hover:text-foreground"
+    >
+      <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+      Platform
+    </Link>
+  );
+
   if (loading) {
     return (
       <>
@@ -564,6 +577,7 @@ const Profile = () => {
             <Navigation />
             <main className="container mx-auto px-4 py-20">
               <div className="max-w-4xl mx-auto">
+                {platformBackCta}
                 <div className="animate-pulse space-y-4">
                   <div className="h-32 bg-muted rounded-lg" />
                   <div className="h-64 bg-muted rounded-lg" />
@@ -588,6 +602,7 @@ const Profile = () => {
           <div className="relative z-10">
             <Navigation />
             <main className="container mx-auto px-4 py-20">
+              {platformBackCta}
               <Card className="max-w-md mx-auto p-8 text-center">
                 <h2 className="text-2xl font-bold mb-4">Profile Not Found</h2>
                 <p className="text-muted-foreground mb-6">
@@ -617,6 +632,7 @@ const Profile = () => {
           <Navigation />
           <main className="container mx-auto px-4 pt-header-offset pb-8">
             <div className="max-w-4xl mx-auto">
+              {platformBackCta}
               {/* Founder-First Profile Hero */}
               <Card className="p-6 mb-6">
                 <div className="grid md:grid-cols-2 gap-6 mb-6">
