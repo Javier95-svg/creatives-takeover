@@ -60,7 +60,7 @@ import {
   type MVPBuilderIntegrationsHealth,
   type MVPIntegrationStatus,
 } from '@/lib/mvp-builder/integrations';
-import { MVP_PUBLISH_BASE_DOMAIN } from '@/lib/mvp-builder/publish';
+import { MVP_PUBLISH_BASE_DOMAIN, buildPublicAppUrl } from '@/lib/mvp-builder/publish';
 
 export interface MVPMessage {
   id: string;
@@ -241,12 +241,29 @@ export interface MVPProjectRecord {
   versions?: MVPBuilderVersion[];
   deployment_url?: string | null;
   deployment_slug?: string | null;
+  subdomain_slug?: string | null;
   deployment_status?: 'not_deployed' | 'deploying' | 'deployed' | 'failed';
   github_connection_id?: string | null;
   supabase_connection_id?: string | null;
   metadata?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
+}
+
+/**
+ * The public address to display for a project. `subdomain_slug` is the durable
+ * source of truth — the publish edge function locks it on first publish and never
+ * clears it (the live site is served off it) — so we fall back to a slug-derived
+ * URL whenever `deployment_url` is missing. This guarantees a published project
+ * always shows its address, even if the deployment pointer was ever blanked.
+ */
+function resolvePublishedUrl(record: {
+  deployment_url?: string | null;
+  subdomain_slug?: string | null;
+}): string | null {
+  if (record.deployment_url) return record.deployment_url;
+  if (record.subdomain_slug) return buildPublicAppUrl(record.subdomain_slug);
+  return null;
 }
 
 export type MVPBuilderResponseMode = 'chat' | 'build';
@@ -1406,7 +1423,7 @@ export function useMVPBuilder() {
       setHasUnsavedChanges(false);
       setGeneratedCode(record.generated_code ?? '');
       setProjectVersions(Array.isArray(record.versions) ? record.versions : []);
-      setDeploymentUrl(record.deployment_url ?? null);
+      setDeploymentUrl(resolvePublishedUrl(record));
       setProjectSnapshots([]);
       setSelectedModelsState([MVP_DEFAULT_MODEL]);
       setGitHubRepoSession(null);
@@ -1476,7 +1493,7 @@ export function useMVPBuilder() {
     try {
       const { data, error } = await supabase
         .from(MVP_PROJECTS_TABLE as never)
-        .select('id, title, prompt_history, generated_code, project_type, template, project_files, versions, deployment_url, deployment_slug, deployment_status, github_connection_id, supabase_connection_id, metadata, created_at, updated_at')
+        .select('id, title, prompt_history, generated_code, project_type, template, project_files, versions, deployment_url, deployment_slug, subdomain_slug, deployment_status, github_connection_id, supabase_connection_id, metadata, created_at, updated_at')
         .eq('user_id', user.id)
         .order('updated_at', { ascending: false });
 
@@ -1495,6 +1512,7 @@ export function useMVPBuilder() {
               versions: Array.isArray(record.versions) ? record.versions as MVPBuilderVersion[] : [],
               deployment_url: typeof record.deployment_url === 'string' ? record.deployment_url : null,
               deployment_slug: typeof record.deployment_slug === 'string' ? record.deployment_slug : null,
+              subdomain_slug: typeof record.subdomain_slug === 'string' ? record.subdomain_slug : null,
               deployment_status: record.deployment_status as MVPProjectRecord['deployment_status'],
               github_connection_id: typeof record.github_connection_id === 'string' ? record.github_connection_id : null,
               supabase_connection_id: typeof record.supabase_connection_id === 'string' ? record.supabase_connection_id : null,
@@ -1741,7 +1759,7 @@ export function useMVPBuilder() {
         const { data, error } = await supabase
           .from(MVP_PROJECTS_TABLE as never)
           .upsert(payload)
-          .select('id, title, prompt_history, generated_code, project_type, template, project_files, versions, deployment_url, deployment_slug, deployment_status, github_connection_id, supabase_connection_id, metadata, created_at, updated_at')
+          .select('id, title, prompt_history, generated_code, project_type, template, project_files, versions, deployment_url, deployment_slug, subdomain_slug, deployment_status, github_connection_id, supabase_connection_id, metadata, created_at, updated_at')
           .single();
 
         if (error) throw error;
@@ -1757,6 +1775,7 @@ export function useMVPBuilder() {
           versions: Array.isArray(data.versions) ? data.versions as MVPBuilderVersion[] : projectVersions,
           deployment_url: typeof data.deployment_url === 'string' ? data.deployment_url : deploymentUrl,
           deployment_slug: typeof data.deployment_slug === 'string' ? data.deployment_slug : null,
+          subdomain_slug: typeof data.subdomain_slug === 'string' ? data.subdomain_slug : null,
           deployment_status: data.deployment_status as MVPProjectRecord['deployment_status'],
           github_connection_id: typeof data.github_connection_id === 'string' ? data.github_connection_id : null,
           supabase_connection_id: typeof data.supabase_connection_id === 'string' ? data.supabase_connection_id : null,
@@ -1800,7 +1819,7 @@ export function useMVPBuilder() {
         if (!project) {
           const { data, error } = await supabase
             .from(MVP_PROJECTS_TABLE as never)
-            .select('id, title, prompt_history, generated_code, project_type, template, project_files, versions, deployment_url, deployment_slug, deployment_status, github_connection_id, supabase_connection_id, metadata, created_at, updated_at')
+            .select('id, title, prompt_history, generated_code, project_type, template, project_files, versions, deployment_url, deployment_slug, subdomain_slug, deployment_status, github_connection_id, supabase_connection_id, metadata, created_at, updated_at')
             .eq('id', id)
             .eq('user_id', user.id)
             .maybeSingle();
@@ -1819,6 +1838,7 @@ export function useMVPBuilder() {
             versions: Array.isArray(data.versions) ? data.versions as MVPBuilderVersion[] : [],
             deployment_url: typeof data.deployment_url === 'string' ? data.deployment_url : null,
             deployment_slug: typeof data.deployment_slug === 'string' ? data.deployment_slug : null,
+            subdomain_slug: typeof data.subdomain_slug === 'string' ? data.subdomain_slug : null,
             deployment_status: data.deployment_status as MVPProjectRecord['deployment_status'],
             github_connection_id: typeof data.github_connection_id === 'string' ? data.github_connection_id : null,
             supabase_connection_id: typeof data.supabase_connection_id === 'string' ? data.supabase_connection_id : null,
