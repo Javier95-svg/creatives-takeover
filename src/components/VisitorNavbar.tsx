@@ -9,12 +9,12 @@ import {
   FlaskConical,
   Gift,
   GraduationCap,
-  Home,
   Info,
   type LucideIcon,
   Menu,
   Mic,
   Newspaper,
+  Radio,
   Rocket,
   Target,
   X,
@@ -37,20 +37,23 @@ import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { captureEvent } from "@/lib/analytics";
 
 type VisitorLink = { label: string; href: string; icon: LucideIcon; sectionId?: string };
+type VisitorMenuItem = { label: string; href: string; icon: LucideIcon; description: string };
+type VisitorMenu = { label: string; icon: LucideIcon; tagline: string; items: VisitorMenuItem[] };
 
+// Simple links, in display order. The Gifts menu renders first and the Media menu is
+// injected right after "Learn" (see the render below). Final order:
+// Gifts · Build · Learn · Media · About Us · Pricing. (Home is intentionally omitted —
+// the logo already links home.)
 const visitorLinks: VisitorLink[] = [
-  { label: "Home", href: "/", icon: Home },
   { label: "Build", href: "/build", icon: Zap },
   { label: "Learn", href: "/mentorship", icon: GraduationCap },
-  { label: "Podcast", href: "/podcast", icon: Mic },
-  { label: "Newspaper", href: "/newspaper", icon: Newspaper },
   { label: "About Us", href: "/about", icon: Info },
   { label: "Pricing", href: "/pricing", icon: DollarSign },
 ];
 
 // Free Tools menu — logged-out visitors can use these tools before signing up.
 // Each lands on a usable public experience that gates only the deliverable.
-const freeToolsItems = [
+const freeToolsItems: VisitorMenuItem[] = [
   {
     label: "ICP Builder",
     href: "/icp-builder",
@@ -77,9 +80,27 @@ const freeToolsItems = [
   },
 ];
 
+const giftsMenu: VisitorMenu = {
+  label: "Gifts",
+  icon: Gift,
+  tagline: "From Creatives Takeover with 💙",
+  items: freeToolsItems,
+};
+
+// Media menu — content & conversations under one roof.
+const mediaMenu: VisitorMenu = {
+  label: "Media",
+  icon: Radio,
+  tagline: "Stories & conversations",
+  items: [
+    { label: "Podcast", href: "/podcast", icon: Mic, description: "Founders Unleashed — founder conversations." },
+    { label: "Newspaper", href: "/newspaper", icon: Newspaper, description: "Business cases & founder stories." },
+  ],
+};
+
 const VisitorNavbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
+  const [openMobileMenu, setOpenMobileMenu] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -95,6 +116,7 @@ const VisitorNavbar = () => {
 
   useEffect(() => {
     setMobileOpen(false);
+    setOpenMobileMenu(null);
   }, [location.pathname, location.hash]);
 
   const isActive = (href: string, sectionId?: string) => {
@@ -115,7 +137,7 @@ const VisitorNavbar = () => {
 
   const handleNavClick = (
     event: MouseEvent<HTMLAnchorElement>,
-    item: (typeof visitorLinks)[number],
+    item: VisitorLink,
     trackingLabel = item.label
   ) => {
     trackNavClick(trackingLabel);
@@ -137,11 +159,107 @@ const VisitorNavbar = () => {
 
   const linkClassName = (href: string, sectionId?: string) => navItemClass(isActive(href, sectionId));
 
-  const freeToolsActive = freeToolsItems.some((tool) => location.pathname.startsWith(tool.href));
+  const menuActive = (menu: VisitorMenu) =>
+    menu.items.some((item) => location.pathname.startsWith(item.href));
 
-  const handleFreeToolsOpen = (source: "desktop" | "mobile") => {
-    trackNavClick("Free Tools");
-    captureEvent("free_tools_menu_opened", { source: `visitor_navbar_${source}` });
+  const handleMenuOpen = (menu: VisitorMenu, source: "desktop" | "mobile") => {
+    trackNavClick(menu.label);
+    captureEvent(menu.label === "Gifts" ? "free_tools_menu_opened" : "visitor_menu_opened", {
+      menu: menu.label,
+      source: `visitor_navbar_${source}`,
+    });
+  };
+
+  const renderDesktopMenu = (menu: VisitorMenu) => {
+    const MenuIcon = menu.icon;
+    return (
+      <DropdownMenu
+        onOpenChange={(open) => {
+          if (open) handleMenuOpen(menu, "desktop");
+        }}
+      >
+        <DropdownMenuTrigger className={cn(navItemClass(menuActive(menu)), "inline-flex items-center gap-2")}>
+          <MenuIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
+          {menu.label}
+          <ChevronDown className="h-3 w-3 opacity-60" aria-hidden="true" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-max">
+          <DropdownMenuLabel>{menu.tagline}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {menu.items.map((item) => {
+            const ItemIcon = item.icon;
+            return (
+              <DropdownMenuItem key={item.href} asChild>
+                <Link
+                  to={item.href}
+                  onClick={() => trackNavClick(`${menu.label} - ${item.label}`)}
+                  className="cursor-pointer"
+                >
+                  <ItemIcon className="mr-2 h-4 w-4 shrink-0" aria-hidden="true" />
+                  <div className="flex flex-col">
+                    <span className="font-medium">{item.label}</span>
+                    <span className="text-xs text-muted-foreground">{item.description}</span>
+                  </div>
+                </Link>
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  };
+
+  const renderMobileMenu = (menu: VisitorMenu) => {
+    const MenuIcon = menu.icon;
+    const open = openMobileMenu === menu.label;
+    return (
+      <div>
+        <button
+          type="button"
+          className={cn(
+            "flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors",
+            menuActive(menu)
+              ? "bg-background text-foreground"
+              : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+          )}
+          aria-expanded={open}
+          onClick={() =>
+            setOpenMobileMenu((current) => {
+              const next = current === menu.label ? null : menu.label;
+              if (next) handleMenuOpen(menu, "mobile");
+              return next;
+            })
+          }
+        >
+          <span className="flex items-center gap-3">
+            <MenuIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
+            {menu.label}
+          </span>
+          <ChevronDown
+            className={cn("h-4 w-4 transition-transform", open && "rotate-180")}
+            aria-hidden="true"
+          />
+        </button>
+        {open && (
+          <div className="ml-7 mt-1 space-y-1">
+            {menu.items.map((item) => {
+              const ItemIcon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+                  onClick={() => trackNavClick(`Mobile ${menu.label} - ${item.label}`)}
+                >
+                  <ItemIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -183,6 +301,7 @@ const VisitorNavbar = () => {
             </Link>
 
             <div className="hidden flex-1 items-center justify-center gap-1 lg:flex">
+              {renderDesktopMenu(giftsMenu)}
               {visitorLinks.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -196,43 +315,7 @@ const VisitorNavbar = () => {
                       {item.label}
                     </Link>
 
-                    {item.label === "Home" && (
-                      <DropdownMenu
-                        onOpenChange={(open) => {
-                          if (open) handleFreeToolsOpen("desktop");
-                        }}
-                      >
-                        <DropdownMenuTrigger
-                          className={cn(navItemClass(freeToolsActive), "inline-flex items-center gap-2")}
-                        >
-                          <Gift className="h-4 w-4 shrink-0" aria-hidden="true" />
-                          Gifts
-                          <ChevronDown className="h-3 w-3 opacity-60" aria-hidden="true" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-max">
-                          <DropdownMenuLabel>From Creatives Takeover with 💙</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          {freeToolsItems.map((tool) => {
-                            const ToolIcon = tool.icon;
-                            return (
-                              <DropdownMenuItem key={tool.href} asChild>
-                                <Link
-                                  to={tool.href}
-                                  onClick={() => trackNavClick(`Free Tools - ${tool.label}`)}
-                                  className="cursor-pointer"
-                                >
-                                  <ToolIcon className="mr-2 h-4 w-4 shrink-0" aria-hidden="true" />
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{tool.label}</span>
-                                    <span className="text-xs text-muted-foreground">{tool.description}</span>
-                                  </div>
-                                </Link>
-                              </DropdownMenuItem>
-                            );
-                          })}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
+                    {item.label === "Learn" && renderDesktopMenu(mediaMenu)}
                   </Fragment>
                 );
               })}
@@ -277,6 +360,7 @@ const VisitorNavbar = () => {
           >
             <div className="min-h-0">
               <div className="space-y-2 border-t border-border/70 px-3 py-4 sm:px-4">
+                {renderMobileMenu(giftsMenu)}
                 {visitorLinks.map((item) => {
                   const Icon = item.icon;
                   return (
@@ -295,54 +379,7 @@ const VisitorNavbar = () => {
                         {item.label}
                       </Link>
 
-                      {item.label === "Home" && (
-                        <div>
-                          <button
-                            type="button"
-                            className={cn(
-                              "flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors",
-                              freeToolsActive
-                                ? "bg-background text-foreground"
-                                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-                            )}
-                            aria-expanded={mobileToolsOpen}
-                            onClick={() =>
-                              setMobileToolsOpen((open) => {
-                                const next = !open;
-                                if (next) handleFreeToolsOpen("mobile");
-                                return next;
-                              })
-                            }
-                          >
-                            <span className="flex items-center gap-3">
-                              <Gift className="h-4 w-4 shrink-0" aria-hidden="true" />
-                              Gifts
-                            </span>
-                            <ChevronDown
-                              className={cn("h-4 w-4 transition-transform", mobileToolsOpen && "rotate-180")}
-                              aria-hidden="true"
-                            />
-                          </button>
-                          {mobileToolsOpen && (
-                            <div className="ml-7 mt-1 space-y-1">
-                              {freeToolsItems.map((tool) => {
-                                const ToolIcon = tool.icon;
-                                return (
-                                  <Link
-                                    key={tool.href}
-                                    to={tool.href}
-                                    className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
-                                    onClick={() => trackNavClick(`Mobile Free Tools - ${tool.label}`)}
-                                  >
-                                    <ToolIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                                    {tool.label}
-                                  </Link>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      )}
+                      {item.label === "Learn" && renderMobileMenu(mediaMenu)}
                     </Fragment>
                   );
                 })}
