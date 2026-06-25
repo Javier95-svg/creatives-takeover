@@ -218,6 +218,11 @@ const Hero = ({
         <div className="ct-hero__cta-row">
           {isAuthenticated ? (
             <>
+              <Link className="ct-hero__cta" to="/dashboard" onClick={handleDashboardCtaClick}>
+                <LayoutDashboard aria-hidden="true" />
+                Dashboard
+                <ArrowRight aria-hidden="true" />
+              </Link>
               <Link
                 className="ct-hero__cta ct-hero__cta--secondary"
                 to={userUsername ? `/profile/${userUsername}` : "/dashboard"}
@@ -225,11 +230,6 @@ const Hero = ({
               >
                 <User aria-hidden="true" />
                 My Profile
-              </Link>
-              <Link className="ct-hero__cta" to="/dashboard" onClick={handleDashboardCtaClick}>
-                <LayoutDashboard aria-hidden="true" />
-                Dashboard
-                <ArrowRight aria-hidden="true" />
               </Link>
             </>
           ) : (
