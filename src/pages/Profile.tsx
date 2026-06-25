@@ -552,9 +552,9 @@ const Profile = () => {
     };
   }, [profileId]);
 
-  // Persistent "back to the platform" CTA shown on every profile view. Signed-in
-  // users return to their dashboard; logged-out visitors to the public home.
-  const platformHref = currentUser ? "/dashboard" : "/";
+  // Persistent "back to the platform" CTA shown on every profile view — always
+  // returns to the public home ("/").
+  const platformHref = "/";
   const platformBackCta = (
     <Link
       to={platformHref}
