@@ -632,7 +632,6 @@ const Profile = () => {
           <Navigation />
           <main className="container mx-auto px-4 pt-header-offset pb-8">
             <div className="max-w-4xl mx-auto">
-              {platformBackCta}
               {/* Founder-First Profile Hero */}
               <Card className="p-6 mb-6">
                 <div className="grid md:grid-cols-2 gap-6 mb-6">
@@ -763,8 +762,14 @@ const Profile = () => {
                   </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex gap-2 flex-wrap">
+                {/* Action Buttons — centered under the stats banner, Platform first */}
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <Button asChild variant="outline" size="sm">
+                    <Link to={platformHref}>
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Platform
+                    </Link>
+                  </Button>
                   {!isOwnProfile && profile.id && (
                     <>
                       {isSamuelStarkmanProfile(profile) && (
