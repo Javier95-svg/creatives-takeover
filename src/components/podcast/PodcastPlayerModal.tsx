@@ -1,7 +1,8 @@
-import { useEffect, type IframeHTMLAttributes } from "react";
+import { useEffect, useState, type IframeHTMLAttributes } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
-import { youtubeEmbedUrl } from "@/lib/podcast";
+import { Loader2, X } from "lucide-react";
+import { youtubeEmbedUrl, youtubeThumbnail } from "@/lib/podcast";
+import { cn } from "@/lib/utils";
 
 // The site is cross-origin isolated (COEP: credentialless, set in vercel.json for the
 // MVP Builder's webcontainers). Under that policy a plain cross-origin iframe is blocked,
@@ -24,6 +25,8 @@ interface PodcastPlayerModalProps {
  * a backdrop click, or the Escape key.
  */
 const PodcastPlayerModal = ({ videoId, title, onClose }: PodcastPlayerModalProps) => {
+  const [loaded, setLoaded] = useState(false);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -60,12 +63,29 @@ const PodcastPlayerModal = ({ videoId, title, onClose }: PodcastPlayerModalProps
           <X className="h-5 w-5" />
         </button>
 
-        <div className="aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-black shadow-2xl">
+        <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-black shadow-2xl">
+          {/* Poster + spinner until the player finishes loading, so the modal feels
+              instant instead of showing a black frame while YouTube initializes. */}
+          {!loaded && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center">
+              <img
+                src={youtubeThumbnail(videoId)}
+                alt=""
+                aria-hidden
+                className="absolute inset-0 h-full w-full scale-105 object-cover opacity-40 blur-sm"
+              />
+              <Loader2 className="relative h-9 w-9 animate-spin text-white/90" />
+            </div>
+          )}
           <iframe
             {...credentiallessIframeProp}
             src={youtubeEmbedUrl(videoId, true)}
             title={title}
-            className="h-full w-full"
+            onLoad={() => setLoaded(true)}
+            className={cn(
+              "h-full w-full transition-opacity duration-300",
+              loaded ? "opacity-100" : "opacity-0"
+            )}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
             referrerPolicy="strict-origin-when-cross-origin"

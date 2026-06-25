@@ -78,6 +78,13 @@ const Podcast = () => {
         <meta property="og:site_name" content="Creatives Takeover" />
         <meta name="twitter:card" content="summary_large_image" />
         <link rel="canonical" href="https://creatives-takeover.com/podcast" />
+        {/* Warm up YouTube connections so the in-platform player starts faster on click. */}
+        <link rel="preconnect" href="https://www.youtube-nocookie.com" />
+        <link rel="preconnect" href="https://www.youtube.com" />
+        <link rel="preconnect" href="https://i.ytimg.com" />
+        <link rel="preconnect" href="https://www.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://googlevideo.com" />
+        <link rel="dns-prefetch" href="https://yt3.ggpht.com" />
       </Helmet>
 
       <div className="min-h-screen bg-background">

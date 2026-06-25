@@ -199,7 +199,7 @@ export const NotificationBell = () => {
           : 'A new newspaper article was published';
       case 'podcast_episode_published':
         return metadata?.title
-          ? `New episode: ${metadata.title}`
+          ? `Podcast update: ${metadata.title}`
           : 'A new podcast episode was published';
       case 'follow_request':
         return `${actor.name} sent you a follow request`;
