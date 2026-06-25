@@ -669,7 +669,7 @@ const Navigation = () => {
               {loading ? (
                 <div className="w-8 h-8 animate-pulse bg-muted rounded-full" />
               ) : user ? (
-                <div className="flex items-center gap-2.5 self-center">
+                <div className="flex items-center gap-2 self-center">
                   <CreditDisplay variant="navigation" showPurchaseButton={true} />
                   <div className="flex items-center gap-1">
                     <Button
