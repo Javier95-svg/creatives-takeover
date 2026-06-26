@@ -118,8 +118,39 @@ const MentorBookingPage = () => {
       }
 
       bookingTab.location.href = buildDiscoveryCallRedirectUrl(bookingUrl, bookingIntent.callId);
-      setPendingCallId(bookingIntent.callId);
-      toast.success("Booking calendar opened in a new tab.");
+
+      // Charge the call now — the moment the founder commits to booking — instead
+      // of relying on them returning to click "I've completed my booking" (which
+      // almost never happened, so calls were booked but never charged). finalize is
+      // idempotent (status-guarded), so a later provider webhook or manual confirm
+      // won't double-charge.
+      const confirmResult = await confirmDiscoveryCallBooking(bookingIntent.callId, {
+        source: "mentor_booking_page_proceed",
+      });
+
+      if (confirmResult.success) {
+        setConfirmed(true);
+        toast.success(
+          confirmResult.alreadyConfirmed
+            ? "Booking calendar opened in a new tab."
+            : `Booking confirmed — ${confirmResult.chargedCredits ?? 10} credits used.`,
+        );
+      } else if (confirmResult.errorCode === "INSUFFICIENT_CREDITS") {
+        openUpgradePrompt({
+          reason: "credits",
+          featureName: "Discovery Calls",
+          requiredCredits: confirmResult.requiredCredits ?? 10,
+          description: confirmResult.error || "You need 10 credits to book a discovery call.",
+          contextualTrigger: "mentor_booking_gate",
+          sourceTool: "mentor_booking",
+          contextLine: mentor ? `Booking a discovery call with ${mentor.name}.` : undefined,
+        });
+      } else {
+        // Couldn't charge right now for a non-credit reason — fall back to the
+        // manual "I've completed my booking" confirm step.
+        setPendingCallId(bookingIntent.callId);
+        toast.success("Booking calendar opened in a new tab.");
+      }
     } catch (error) {
       bookingTab.close();
       console.error("Error creating discovery call intent:", error);
@@ -246,7 +277,8 @@ const MentorBookingPage = () => {
                       </Button>
 
                       <p className="text-xs text-center text-muted-foreground">
-                        The calendar opens in a new tab so your place in Creatives Takeover is preserved.
+                        Continuing books your call and uses 10 credits (refunded if you cancel). The
+                        calendar opens in a new tab so your place in Creatives Takeover is preserved.
                       </p>
                     </>
                   ) : (

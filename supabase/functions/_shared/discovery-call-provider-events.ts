@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { logInfo, logWarn } from "./logger.ts";
+import { emitBusinessEvent } from "./analytics.ts";
 
 type SupabaseAdmin = ReturnType<typeof createClient>;
 
@@ -448,6 +449,24 @@ async function handleBookingCreatedOrRescheduled(
     matchStatus: "matched",
     discoveryCallId: call.id,
   });
+
+  // Surface auto-confirmed (provider/email/admin) discovery-call charges in the
+  // same credit_action_completed taxonomy as every other spend. This path charges
+  // inside finalize_discovery_call_booking (SQL) and otherwise bypasses the event.
+  const chargedCredits = Number(data?.chargedCredits ?? 0);
+  if (chargedCredits > 0) {
+    await emitBusinessEvent({
+      eventName: "credit_action_completed",
+      userId: call.founder_id,
+      properties: {
+        feature_key: "DISCOVERY_CALL",
+        credit_cost: chargedCredits,
+        source_tool: "discovery_call",
+        operation_id: call.id,
+      },
+    });
+  }
+
   await invokeDiscoveryCallNotification(supabaseAdmin, call.id, "scheduled", providerEventRecordId);
   return { ok: true, action: "finalized", callId: call.id, result: data };
 }
