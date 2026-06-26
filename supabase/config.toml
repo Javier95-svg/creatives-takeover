@@ -10,6 +10,11 @@ verify_jwt = false
 [functions.demo-studio-generator]
 verify_jwt = true
 
+# Public launch-page signups arrive with the anon JWT that supabase-js attaches
+# automatically (same as demo-studio-generator's /try path), so verify_jwt stays on.
+[functions.demo-studio-lead]
+verify_jwt = true
+
 [functions.check-subscription]
 verify_jwt = true
 

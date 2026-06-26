@@ -8,6 +8,7 @@ import {
   ExternalLink,
   FileText,
   Globe,
+  ImagePlus,
   Loader2,
   MonitorPlay,
   Pencil,
@@ -250,18 +251,26 @@ export default function ProjectOverviewPage() {
                 Your launch page needs one published demo and one recorded VSL. You can create them in either order.
               </p>
             </div>
-            {nextProjectAction.to ? (
-              <Button asChild className="shrink-0 gap-2">
-                <Link to={nextProjectAction.to}>
-                  {nextProjectAction.label} <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            ) : (
-              <Button onClick={nextProjectAction.onClick} disabled={creating} className="shrink-0 gap-2">
-                {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <NextProjectActionIcon className="h-4 w-4" />}
-                {nextProjectAction.label}
-              </Button>
-            )}
+            <div className="flex shrink-0 flex-col items-stretch gap-2">
+              {nextProjectAction.to ? (
+                <Button asChild className="gap-2">
+                  <Link to={nextProjectAction.to}>
+                    {nextProjectAction.label} <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              ) : (
+                <Button onClick={nextProjectAction.onClick} disabled={creating} className="gap-2">
+                  {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <NextProjectActionIcon className="h-4 w-4" />}
+                  {nextProjectAction.label}
+                </Button>
+              )}
+              {/* Brief is enrichment, not a gate: let founders jump straight to screenshots. */}
+              {demos.length === 0 && (
+                <Button variant="ghost" size="sm" className="gap-1.5" onClick={handleCreateBlankDemo} disabled={creating}>
+                  <ImagePlus className="h-4 w-4" /> Skip — start from screenshots
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 

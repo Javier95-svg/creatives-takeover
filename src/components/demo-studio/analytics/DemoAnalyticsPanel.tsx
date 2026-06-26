@@ -7,6 +7,7 @@ import {
   Eye,
   Loader2,
   MousePointerClick,
+  RefreshCw,
   TrendingDown,
   Users,
 } from 'lucide-react';
@@ -72,6 +73,10 @@ export default function DemoAnalyticsPanel({ demoId, publicId, className }: Demo
       ? `${globalThis.window.location.origin}/demo/${publicId}`
       : '';
 
+  const staleDays = metrics?.oldestAssetCapturedAt
+    ? Math.floor((Date.now() - new Date(metrics.oldestAssetCapturedAt).getTime()) / 86_400_000)
+    : 0;
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -126,6 +131,13 @@ export default function DemoAnalyticsPanel({ demoId, publicId, className }: Demo
       {!publicId && (
         <div className="rounded-xl border border-warning/40 bg-warning/5 p-4 text-sm text-muted-foreground">
           This demo is still a draft. Publish it to get a shareable link and start collecting analytics.
+        </div>
+      )}
+
+      {staleDays >= 30 && (
+        <div className="flex items-start gap-2 rounded-xl border border-warning/40 bg-warning/5 p-4 text-sm text-warning">
+          <RefreshCw className="mt-0.5 h-4 w-4 flex-shrink-0" />
+          <span>This demo's screenshots are {staleDays} days old. Open the editor and hit Replace to refresh stale steps.</span>
         </div>
       )}
 

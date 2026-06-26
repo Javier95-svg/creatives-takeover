@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ArrowLeft, ExternalLink, Globe, Loader2, Rocket } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Globe, Loader2, Rocket, Send, Webhook } from 'lucide-react';
 import SEO from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import DemoPlayer from '@/components/demo-studio/player/DemoPlayer';
@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -35,6 +36,7 @@ import {
   publishLaunchPage,
   isLaunchSlugAvailable,
   normalizeProjectSlug,
+  testLeadWebhook,
   updateLaunchPage,
   updateProject,
   unpublishLaunchPage,
@@ -69,6 +71,8 @@ export default function LaunchComposerPage() {
   const [metricsWindow, setMetricsWindow] = useState<DemoStudioMetricsWindow>('all');
   const [slugDraft, setSlugDraft] = useState('');
   const [slugChecking, setSlugChecking] = useState(false);
+  const [webhookDraft, setWebhookDraft] = useState('');
+  const [testingWebhook, setTestingWebhook] = useState(false);
   const [previewSteps, setPreviewSteps] = useState<DemoStepWithHotspots[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -101,6 +105,7 @@ export default function LaunchComposerPage() {
         setProject(projectRow);
         setBrief(briefRow);
         setSlugDraft(projectRow.slug || normalizeProjectSlug(projectRow.name));
+        setWebhookDraft(launchRow.lead_webhook_url ?? '');
         setLaunchPage(launchRow);
         setDemos(demoRows);
         setVsls(vslRows);
@@ -193,6 +198,27 @@ export default function LaunchComposerPage() {
       toast.error(e instanceof Error ? e.message : 'Could not save slug.');
     } finally {
       setSlugChecking(false);
+    }
+  };
+
+  const handleWebhookBlur = async (value: string) => {
+    const trimmed = value.trim();
+    if (trimmed === (launchPage?.lead_webhook_url ?? '')) return;
+    await patchLaunch({ lead_webhook_url: trimmed || null });
+  };
+
+  const handleTestWebhook = async () => {
+    if (!projectId || !webhookDraft.trim()) return;
+    setTestingWebhook(true);
+    try {
+      // Persist first so the test hits what will actually be used.
+      await handleWebhookBlur(webhookDraft);
+      await testLeadWebhook(projectId, webhookDraft.trim());
+      toast.success('Test payload delivered. Check your webhook destination.');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Webhook test failed.');
+    } finally {
+      setTestingWebhook(false);
     }
   };
 
@@ -502,6 +528,53 @@ export default function LaunchComposerPage() {
                 <Metric label="CTA clicks" value={metrics?.ctaClicks ?? 0} />
                 <Metric label="Signup attempts" value={metrics?.signupAttempts ?? 0} />
                 <Metric label="Signups" value={metrics?.signups ?? 0} />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Webhook className="h-4 w-4 text-primary" /> Lead routing
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <Label htmlFor="lead-notify">Email me on new signups</Label>
+                    <p className="text-xs text-muted-foreground">Get an email each time someone joins from this page.</p>
+                  </div>
+                  <Switch
+                    id="lead-notify"
+                    checked={launchPage?.lead_notify_enabled !== false}
+                    onCheckedChange={(checked) => void patchLaunch({ lead_notify_enabled: checked })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="lead-webhook">Webhook URL</Label>
+                  <Input
+                    id="lead-webhook"
+                    type="url"
+                    inputMode="url"
+                    placeholder="https://hooks.slack.com/… or Zapier/Make"
+                    value={webhookDraft}
+                    onChange={(e) => setWebhookDraft(e.target.value)}
+                    onBlur={(e) => void handleWebhookBlur(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Each signup is POSTed as JSON (email, referrer, VSL variation). Sends to Slack, Zapier, Make, or Sheets.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    disabled={testingWebhook || !webhookDraft.trim()}
+                    onClick={() => void handleTestWebhook()}
+                  >
+                    {testingWebhook ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                    Send test
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 

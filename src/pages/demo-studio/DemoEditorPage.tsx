@@ -13,6 +13,7 @@ import {
   ImagePlus,
   Loader2,
   Monitor,
+  RefreshCw,
   Rocket,
   X,
 } from 'lucide-react';
@@ -40,6 +41,7 @@ import HotspotInspector from '@/components/demo-studio/editor/HotspotInspector';
 import DemoPlayer from '@/components/demo-studio/player/DemoPlayer';
 import WhatIsADemoPopover from '@/components/demo-studio/WhatIsADemoPopover';
 import { canRemoveWatermark, shouldShowWatermark } from '@/lib/demoStudio/plan';
+import { trackDemoStudioFunnel } from '@/lib/analytics';
 import {
   applyStoryboardToDemo,
   createHotspot,
@@ -53,6 +55,7 @@ import {
   listSteps,
   persistStepOrder,
   publishDemo,
+  replaceStepAsset,
   updateDemo,
   updateHotspot,
   updateStep,
@@ -99,6 +102,7 @@ export default function DemoEditorPage() {
   const planTier = subscriptionData?.subscription_tier;
   const { openUpgradePrompt } = useUpgradePrompt();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const replaceInputRef = useRef<HTMLInputElement>(null);
   const hotspotPersistTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const captureVideoRef = useRef<HTMLVideoElement>(null);
   const captureStreamRef = useRef<MediaStream | null>(null);
@@ -179,6 +183,13 @@ export default function DemoEditorPage() {
     [selectedStep, selectedHotspotId],
   );
   const demoReadiness = useMemo(() => getDemoReadiness(steps, theme), [steps, theme]);
+  const staleDays = useMemo(() => {
+    const captures = steps.map((s) => s.asset_captured_at).filter(Boolean) as string[];
+    if (captures.length === 0) return 0;
+    const oldest = captures.reduce((a, b) => (a < b ? a : b));
+    return Math.floor((Date.now() - new Date(oldest).getTime()) / 86_400_000);
+  }, [steps]);
+  const screenshotsStale = staleDays >= 30;
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0 || !user || !demoId) return;
@@ -211,6 +222,7 @@ export default function DemoEditorPage() {
       if (created.length > 0) {
         setSteps((prev) => [...prev, ...created]);
         setSelectedStepId((prev) => prev ?? created[0].id);
+        trackDemoStudioFunnel('demo_step_added', { demoId, source: 'upload', count: created.length });
         toast.success(`Added ${created.length} step${created.length > 1 ? 's' : ''}.`);
       } else if (selectedEmptyStep && imageFiles.length > 0) {
         toast.success('Screenshot attached to storyboard step.');
@@ -324,6 +336,7 @@ export default function DemoEditorPage() {
       if (created.length > 0) {
         setSteps((prev) => [...prev, ...created]);
         setSelectedStepId((prev) => prev ?? created[0].id);
+        trackDemoStudioFunnel('demo_step_added', { demoId, source: 'screen_capture', count: created.length });
         toast.success(`Added ${created.length} step${created.length > 1 ? 's' : ''} from screen capture.`);
         if (demo && demo.capture_method !== 'screen') {
           void updateDemo(demo.id, { capture_method: 'screen' })
@@ -382,6 +395,7 @@ export default function DemoEditorPage() {
       const created = await applyStoryboardToDemo(demo.id, brief.ai_storyboard, steps.length);
       setSteps((prev) => [...prev, ...created]);
       setSelectedStepId(created[0]?.id ?? selectedStepId);
+      trackDemoStudioFunnel('demo_step_added', { demoId: demo.id, source: 'storyboard', count: created.length });
       toast.success('Storyboard steps added.');
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Could not apply the storyboard.');
@@ -391,6 +405,26 @@ export default function DemoEditorPage() {
   const patchStepLocal = useCallback((id: string, patch: Partial<DemoStepWithHotspots>) => {
     setSteps((prev) => prev.map((step) => (step.id === id ? { ...step, ...patch } : step)));
   }, []);
+
+  const handleReplaceFile = async (files: FileList | null) => {
+    const file = files?.[0];
+    if (!file || !user || !selectedStep) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please choose an image file.');
+      return;
+    }
+    setUploading(true);
+    try {
+      const asset = await replaceStepAsset(selectedStep.id, user.id, file);
+      patchStepLocal(selectedStep.id, asset);
+      toast.success('Screenshot replaced. Hotspots kept their positions.');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not replace the screenshot.');
+    } finally {
+      setUploading(false);
+      if (replaceInputRef.current) replaceInputRef.current.value = '';
+    }
+  };
 
   const handleStepFieldCommit = async (
     id: string,
@@ -527,11 +561,12 @@ export default function DemoEditorPage() {
     ? `<iframe src="${window.location.origin}/embed/demo/${demo.public_id}" width="100%" height="640" style="border:0;border-radius:12px" allowfullscreen loading="lazy"></iframe>`
     : '';
 
-  const copyShare = async (value: string) => {
+  const copyShare = async (value: string, surface: 'link' | 'embed') => {
     try {
       await navigator.clipboard.writeText(value);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
+      trackDemoStudioFunnel('demo_shared', { demoId: demo?.id, surface });
       toast.success('Copied to clipboard.');
     } catch {
       toast.error('Could not copy.');
@@ -612,6 +647,13 @@ export default function DemoEditorPage() {
         className="hidden"
         onChange={(e) => handleFiles(e.target.files)}
       />
+      <input
+        ref={replaceInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => handleReplaceFile(e.target.files)}
+      />
 
       <div className="grid grid-cols-1 gap-4 p-4 lg:grid-cols-[260px_minmax(0,1fr)_300px]">
         {/* Left: steps */}
@@ -634,6 +676,12 @@ export default function DemoEditorPage() {
               </ul>
             ) : (
               <p className="mt-3 text-xs text-muted-foreground">Demo has the essentials for a strong walkthrough.</p>
+            )}
+            {screenshotsStale && (
+              <div className="mt-3 flex items-start gap-2 rounded-md border border-warning/40 bg-warning/5 px-2.5 py-2 text-xs text-warning">
+                <RefreshCw className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                <span>Screenshots are {staleDays} days old. Select a step and hit Replace to refresh it.</span>
+              </div>
             )}
           </div>
           <div className="flex gap-2">
@@ -745,7 +793,7 @@ export default function DemoEditorPage() {
               </h4>
               <div className="flex items-center gap-2">
                 <Input readOnly value={shareUrl} className="text-xs" />
-                <Button size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={() => copyShare(shareUrl)}>
+                <Button size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={() => copyShare(shareUrl, 'link')}>
                   {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 </Button>
               </div>
@@ -753,7 +801,7 @@ export default function DemoEditorPage() {
                 <Label className="text-xs text-muted-foreground">Embed snippet</Label>
                 <div className="flex items-start gap-2">
                   <code className="block flex-1 overflow-x-auto rounded-md bg-muted p-2 text-label">{embedSnippet}</code>
-                  <Button size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={() => copyShare(embedSnippet)}>
+                  <Button size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={() => copyShare(embedSnippet, 'embed')}>
                     <Copy className="h-4 w-4" />
                   </Button>
                 </div>
@@ -808,9 +856,20 @@ export default function DemoEditorPage() {
             <div className="flex items-center justify-between gap-2">
               <h4 className="text-sm font-semibold">Step script</h4>
               {selectedStep && (
-                <Button size="sm" variant="ghost" className="h-8 gap-1" onClick={() => handleDuplicateStep(selectedStep.id)}>
-                  <CopyPlus className="h-4 w-4" /> Duplicate
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 gap-1"
+                    onClick={() => replaceInputRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    <RefreshCw className="h-4 w-4" /> Replace
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-8 gap-1" onClick={() => handleDuplicateStep(selectedStep.id)}>
+                    <CopyPlus className="h-4 w-4" /> Duplicate
+                  </Button>
+                </div>
               )}
             </div>
             {selectedStep ? (

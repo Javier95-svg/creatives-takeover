@@ -164,6 +164,11 @@ export default function ProjectsDashboardPage() {
                   </Link>
                 </Button>
               )}
+              <Button asChild size="lg" variant="ghost" className="gap-2">
+                <Link to="/demo-studio/try">
+                  Try a 60-second preview <Sparkles className="h-4 w-4" />
+                </Link>
+              </Button>
             </div>
           </div>
         </section>

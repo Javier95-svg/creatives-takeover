@@ -78,6 +78,8 @@ export interface DemoStudioStep {
   title: string | null;
   caption: string | null;
   speaker_notes: string | null;
+  /** When the screenshot was captured/replaced; null for image-less storyboard steps. */
+  asset_captured_at: string | null;
   created_at: string;
 }
 
@@ -199,6 +201,10 @@ export interface DemoStudioLaunchPage {
   primary_vsl_id: string | null;
   primary_demo_id: string | null;
   theme: LaunchPageTheme;
+  /** Outbound webhook POSTed with each signup (Slack/Zapier/Make/Sheets). */
+  lead_webhook_url: string | null;
+  /** When true, the project owner is emailed on each new signup. */
+  lead_notify_enabled: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -277,6 +283,8 @@ export interface DemoMetrics {
   avgStepsViewed: number;
   funnel: DemoStepFunnelRow[];
   lastViewedAt: string | null;
+  /** Oldest step screenshot timestamp; drives the "refresh stale screenshots" prompt. */
+  oldestAssetCapturedAt: string | null;
 }
 
 export interface PublicLaunchPage {

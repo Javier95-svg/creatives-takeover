@@ -653,6 +653,24 @@ export const trackDashboardAccountabilityStateViewed = (properties?: AnalyticsPr
 export const trackDashboardAccountabilityInterventionClicked = (properties?: AnalyticsProperties) =>
   captureEvent('dashboard_accountability_intervention_clicked', properties);
 
+// ─── Demo Studio activation funnel ───────────────────────────────────────────
+// The founder's creation funnel (project → brief → demo → step → publish → share)
+// plus the downstream lead event. Build a PostHog funnel from these to find where
+// founders drop off before sharing a demo. demo_lead_captured fires on the public
+// launch page (a visitor, not the founder), so keep it out of the founder funnel.
+
+export type DemoStudioFunnelEvent =
+  | 'demo_project_created'
+  | 'demo_brief_generated'
+  | 'demo_created'
+  | 'demo_step_added'
+  | 'demo_published'
+  | 'demo_shared'
+  | 'demo_lead_captured';
+
+export const trackDemoStudioFunnel = (event: DemoStudioFunnelEvent, properties?: AnalyticsProperties) =>
+  captureEvent(event, properties);
+
 export const normalizePlanId = (planLike?: string | null): PlanId => {
   const normalized = (planLike || '').trim().toLowerCase();
   if (normalized === 'starter') return 'STARTER';

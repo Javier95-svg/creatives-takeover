@@ -16,7 +16,6 @@ import type {
   DemoStudioMetrics,
   DemoStudioMetricsWindow,
   DemoStudioReadiness,
-  DemoStudioSignup,
   DemoStudioVsl,
   DemoStudioStoryboardStep,
   DemoStepWithHotspots,
@@ -36,6 +35,7 @@ import {
 } from './vsl';
 import { canPublishDemo, getPublishedDemoCap } from './plan';
 import { normalizePlan } from '@/config/planPermissions';
+import { trackDemoStudioFunnel } from '@/lib/analytics';
 
 const PROJECTS = 'demo_studio_projects' as any;
 const DEMOS = 'demo_studio_demos' as any;
@@ -105,7 +105,9 @@ export async function createProject(
     } as any)
     .select('*')
     .single();
-  return unwrap(result) as unknown as DemoStudioProject;
+  const project = unwrap(result) as unknown as DemoStudioProject;
+  trackDemoStudioFunnel('demo_project_created', { projectId: project.id, hasCategory: Boolean(fields.category) });
+  return project;
 }
 
 export async function updateProject(
@@ -231,6 +233,7 @@ export async function generateDemoStudioKit(args: {
   });
   if (error) throw new Error(error.message);
   if (!data?.success) throw new Error(data?.error || 'Could not generate Demo Studio drafts.');
+  trackDemoStudioFunnel('demo_brief_generated', { projectId: args.project.id, mode: args.mode });
   return normalizeAiKit(data.kit);
 }
 
@@ -323,7 +326,9 @@ export async function createDemo(
     .insert({ project_id: projectId, owner_id: ownerId, title } as any)
     .select('*')
     .single();
-  return unwrap(result) as unknown as DemoStudioDemo;
+  const demo = unwrap(result) as unknown as DemoStudioDemo;
+  trackDemoStudioFunnel('demo_created', { projectId, demoId: demo.id });
+  return demo;
 }
 
 export async function updateDemo(
@@ -361,7 +366,11 @@ export async function publishDemo(
     .eq('id', id)
     .select('*')
     .single();
-  return unwrap(result) as unknown as DemoStudioDemo;
+  const published = unwrap(result) as unknown as DemoStudioDemo;
+  if (existing?.status !== 'published') {
+    trackDemoStudioFunnel('demo_published', { demoId: id, projectId: published.project_id });
+  }
+  return published;
 }
 
 export async function unpublishDemo(id: string): Promise<void> {
@@ -417,6 +426,7 @@ export async function createStep(
       asset_url: asset.url ?? null,
       asset_width: asset.width ?? null,
       asset_height: asset.height ?? null,
+      asset_captured_at: asset.url ? new Date().toISOString() : null,
       title: asset.title ?? `Step ${position + 1}`,
       caption: asset.caption ?? null,
       speaker_notes: asset.speaker_notes ?? null,
@@ -447,10 +457,31 @@ export async function applyStoryboardToDemo(
 
 export async function updateStep(
   id: string,
-  patch: Partial<Pick<DemoStudioStep, 'title' | 'caption' | 'speaker_notes' | 'position' | 'asset_url' | 'asset_width' | 'asset_height'>>,
+  patch: Partial<Pick<DemoStudioStep, 'title' | 'caption' | 'speaker_notes' | 'position' | 'asset_url' | 'asset_width' | 'asset_height' | 'asset_captured_at'>>,
 ): Promise<void> {
   const { error } = await supabase.from(STEPS).update(patch as any).eq('id', id);
   if (error) throw new Error(error.message);
+}
+
+/**
+ * Replace a step's screenshot in place (anti-staleness). Uploads the new image and
+ * updates the asset fields + asset_captured_at. Hotspots are stored normalized 0–1,
+ * so they keep their positions over the new image — no rebuild needed.
+ */
+export async function replaceStepAsset(
+  stepId: string,
+  ownerId: string,
+  file: File,
+): Promise<{ asset_url: string; asset_width: number | null; asset_height: number | null; asset_captured_at: string }> {
+  const asset = await uploadStepAsset(ownerId, file);
+  const asset_captured_at = new Date().toISOString();
+  await updateStep(stepId, {
+    asset_url: asset.url,
+    asset_width: asset.width,
+    asset_height: asset.height,
+    asset_captured_at,
+  });
+  return { asset_url: asset.url, asset_width: asset.width, asset_height: asset.height, asset_captured_at };
 }
 
 export async function duplicateStep(step: DemoStepWithHotspots, position: number): Promise<DemoStepWithHotspots> {
@@ -684,7 +715,7 @@ export async function getOrCreateLaunchPage(
 export async function updateLaunchPage(
   projectId: string,
   ownerId: string,
-  patch: Partial<Pick<DemoStudioLaunchPage, 'headline' | 'subheadline' | 'cta_label' | 'primary_demo_id' | 'primary_vsl_id' | 'theme'>>,
+  patch: Partial<Pick<DemoStudioLaunchPage, 'headline' | 'subheadline' | 'cta_label' | 'primary_demo_id' | 'primary_vsl_id' | 'theme' | 'lead_webhook_url' | 'lead_notify_enabled'>>,
 ): Promise<DemoStudioLaunchPage> {
   const existing = await getLaunchPage(projectId);
   if (!existing) {
@@ -824,31 +855,38 @@ export async function getPublicLaunchPage(slug: string): Promise<PublicLaunchPag
   return { project, launchPage, demo, vsl };
 }
 
+/**
+ * Public launch-page signup. Routed through the demo-studio-lead edge function so
+ * the signup insert, the analytics event, the owner email notification, and the
+ * outbound webhook dispatch all happen server-side (the webhook URL is never
+ * exposed to the browser). The function de-dupes repeat emails and never fails the
+ * visitor on a bad/slow webhook.
+ */
 export async function createLaunchSignup(
   projectId: string,
   email: string,
   fields: { referrer?: string | null; vslVariationSeen?: string | null } = {},
-): Promise<DemoStudioSignup> {
-  const result = await supabase
-    .from(SIGNUPS)
-    .insert({
-      project_id: projectId,
+): Promise<void> {
+  const { data, error } = await supabase.functions.invoke('demo-studio-lead', {
+    body: {
+      projectId,
       email: email.trim().toLowerCase(),
       referrer: fields.referrer ?? null,
-      vsl_variation_seen: fields.vslVariationSeen ?? null,
-    } as any)
-    .select('*')
-    .single();
-  const signup = unwrap(result) as unknown as DemoStudioSignup;
-  await supabase.from(EVENTS).insert({
-    project_id: projectId,
-    type: 'signup',
-    meta: {
-      vsl_variation_seen: fields.vslVariationSeen ?? null,
-      referrer: fields.referrer ?? null,
+      vslVariationSeen: fields.vslVariationSeen ?? null,
     },
-  } as any);
-  return signup;
+  });
+  if (error) throw new Error(error.message);
+  if (!data?.success) throw new Error(data?.error || 'Could not record your signup.');
+  trackDemoStudioFunnel('demo_lead_captured', { projectId });
+}
+
+/** Owner-only: send a sample payload to a webhook URL to confirm lead routing works. */
+export async function testLeadWebhook(projectId: string, webhookUrl: string): Promise<void> {
+  const { data, error } = await supabase.functions.invoke('demo-studio-lead', {
+    body: { test: true, projectId, webhookUrl },
+  });
+  if (error) throw new Error(error.message);
+  if (!data?.success) throw new Error(data?.error || 'The webhook did not accept the test.');
 }
 
 function getMetricsWindowStart(window: DemoStudioMetricsWindow): string | null {
@@ -995,6 +1033,11 @@ export async function getDemoMetrics(
     (latest, event) => (!latest || event.created_at > latest ? event.created_at : latest),
     null,
   );
+  const oldestAssetCapturedAt = steps.reduce<string | null>((oldest, step) => {
+    const captured = step.asset_captured_at;
+    if (!captured) return oldest;
+    return !oldest || captured < oldest ? captured : oldest;
+  }, null);
 
   return {
     views: viewEvents.length,
@@ -1007,6 +1050,7 @@ export async function getDemoMetrics(
     avgStepsViewed,
     funnel,
     lastViewedAt,
+    oldestAssetCapturedAt,
   };
 }
 
