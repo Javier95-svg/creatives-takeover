@@ -2,7 +2,23 @@ import { useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import SnapshotFrame from '@/components/demo-studio/SnapshotFrame';
 import type { DemoStepWithHotspots } from '@/lib/demoStudio/types';
+
+/** Render a step's background media: an HTML snapshot (sandboxed iframe) or a screenshot. */
+function StepMedia({ step }: { step: DemoStepWithHotspots }) {
+  if (!step.asset_url) {
+    return (
+      <div className="flex aspect-video w-full items-center justify-center bg-slate-800 text-sm text-white/50">
+        This step has no {step.asset_type === 'html' ? 'captured page' : 'image'}.
+      </div>
+    );
+  }
+  if (step.asset_type === 'html') {
+    return <SnapshotFrame url={step.asset_url} className="block w-full" />;
+  }
+  return <img src={step.asset_url} alt="Step" className="block h-auto w-full" draggable={false} />;
+}
 
 // Coarse-pointer devices (phones/tablets) can't place/resize hotspots precisely,
 // so we render a read-only canvas + notice there instead of a broken drag surface.
@@ -157,13 +173,7 @@ export default function HotspotCanvas({
   if (isTouch) {
     return (
       <div className="relative w-full overflow-hidden rounded-xl border border-border bg-black/90">
-        {step.asset_url ? (
-          <img src={step.asset_url} alt="Step" className="block h-auto w-full" draggable={false} />
-        ) : (
-          <div className="flex aspect-video w-full items-center justify-center bg-slate-800 text-sm text-white/50">
-            This step has no image.
-          </div>
-        )}
+        <StepMedia step={step} />
         {step.hotspots.map((h) => (
           <div
             key={h.id}
@@ -205,13 +215,7 @@ export default function HotspotCanvas({
       role="application"
       aria-label="Hotspot editor canvas"
     >
-      {step.asset_url ? (
-        <img src={step.asset_url} alt="Step" className="block h-auto w-full" draggable={false} />
-      ) : (
-        <div className="flex aspect-video w-full items-center justify-center bg-slate-800 text-sm text-white/50">
-          This step has no image.
-        </div>
-      )}
+      <StepMedia step={step} />
 
       {step.hotspots.map((h) => {
         const selected = h.id === selectedHotspotId;

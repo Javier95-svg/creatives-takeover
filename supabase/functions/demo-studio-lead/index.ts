@@ -70,6 +70,47 @@ async function dispatchWebhook(url: string, payload: unknown): Promise<{ ok: boo
   }
 }
 
+// Backoff schedule (minutes) by attempt count; the retry cron reuses the same idea.
+const BACKOFF_MINUTES = [1, 5, 30, 120, 360];
+function nextAttemptAt(attempts: number): string {
+  const idx = Math.min(Math.max(attempts - 1, 0), BACKOFF_MINUTES.length - 1);
+  return new Date(Date.now() + BACKOFF_MINUTES[idx] * 60_000).toISOString();
+}
+
+/** Log a delivery row, attempt the POST once, and persist the outcome (+backoff on fail). */
+async function recordAndAttemptDelivery(
+  admin: ReturnType<typeof createClient>,
+  args: { projectId: string; signupId: string | null; url: string; payload: Record<string, unknown> },
+): Promise<void> {
+  const { data: row } = await admin
+    .from("demo_studio_webhook_deliveries")
+    .insert({
+      project_id: args.projectId,
+      signup_id: args.signupId,
+      webhook_url: args.url,
+      payload: args.payload,
+      status: "pending",
+    })
+    .select("id, max_attempts")
+    .maybeSingle();
+  if (!row) return;
+
+  const result = await dispatchWebhook(args.url, args.payload);
+  const attempts = 1;
+  const maxAttempts = (row.max_attempts as number) ?? 5;
+  await admin
+    .from("demo_studio_webhook_deliveries")
+    .update({
+      status: result.ok ? "success" : attempts >= maxAttempts ? "exhausted" : "failed",
+      attempts,
+      last_status_code: result.status ?? null,
+      last_error: result.ok ? null : result.error ?? `HTTP ${result.status ?? "error"}`,
+      next_attempt_at: result.ok ? new Date().toISOString() : nextAttemptAt(attempts),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", row.id);
+}
+
 async function notifyOwner(
   admin: ReturnType<typeof createClient>,
   ownerId: string,
@@ -211,14 +252,19 @@ serve(async (req) => {
         ? notifyOwner(admin, project.owner_id, project.name, lead)
         : Promise.resolve(),
       launchPage?.lead_webhook_url
-        ? dispatchWebhook(launchPage.lead_webhook_url, {
+        ? recordAndAttemptDelivery(admin, {
             projectId,
-            projectName: project.name,
-            email,
-            referrer: lead.referrer,
-            vslVariationSeen: lead.vslVariationSeen,
             signupId: signup?.id ?? null,
-            createdAt: new Date().toISOString(),
+            url: launchPage.lead_webhook_url,
+            payload: {
+              projectId,
+              projectName: project.name,
+              email,
+              referrer: lead.referrer,
+              vslVariationSeen: lead.vslVariationSeen,
+              signupId: signup?.id ?? null,
+              createdAt: new Date().toISOString(),
+            },
           })
         : Promise.resolve(),
     ]);

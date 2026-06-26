@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { trackDemoEvent } from '@/lib/demoStudio/events';
+import SnapshotFrame from '@/components/demo-studio/SnapshotFrame';
 import type { DemoStepWithHotspots, DemoStudioHotspot, DemoTheme } from '@/lib/demoStudio/types';
 
 interface DemoPlayerProps {
@@ -210,15 +211,19 @@ export default function DemoPlayer({
         ) : (
           <div className="relative">
             {current?.asset_url ? (
-              <img
-                src={current.asset_url}
-                alt={`Step ${index + 1}`}
-                className="block h-auto w-full"
-                draggable={false}
-              />
+              current.asset_type === 'html' ? (
+                <SnapshotFrame url={current.asset_url} title={current.title ?? `Step ${index + 1}`} className="block w-full" />
+              ) : (
+                <img
+                  src={current.asset_url}
+                  alt={`Step ${index + 1}`}
+                  className="block h-auto w-full"
+                  draggable={false}
+                />
+              )
             ) : (
               <div className="flex aspect-video w-full items-center justify-center bg-slate-800 text-sm text-white/50">
-                No image for this step
+                No content for this step
               </div>
             )}
 

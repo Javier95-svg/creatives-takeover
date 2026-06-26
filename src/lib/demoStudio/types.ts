@@ -72,6 +72,8 @@ export interface DemoStudioStep {
   id: string;
   demo_id: string;
   position: number;
+  /** 'image' = screenshot; 'html' = self-contained HTML snapshot rendered in a sandboxed iframe. */
+  asset_type: 'image' | 'html';
   asset_url: string | null;
   asset_width: number | null;
   asset_height: number | null;
@@ -216,6 +218,21 @@ export interface DemoStudioSignup {
   referrer: string | null;
   vsl_variation_seen: string | null;
   created_at: string;
+}
+
+export interface DemoStudioWebhookDelivery {
+  id: string;
+  project_id: string;
+  signup_id: string | null;
+  webhook_url: string;
+  status: 'pending' | 'success' | 'failed' | 'exhausted';
+  attempts: number;
+  max_attempts: number;
+  last_status_code: number | null;
+  last_error: string | null;
+  next_attempt_at: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface DemoStudioReadiness {

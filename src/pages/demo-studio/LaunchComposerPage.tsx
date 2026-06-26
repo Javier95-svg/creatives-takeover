@@ -22,6 +22,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
+import { cn } from '@/lib/utils';
 import { shouldShowWatermark } from '@/lib/demoStudio/plan';
 import {
   getOrCreateLaunchPage,
@@ -33,6 +34,7 @@ import {
   listHotspotsForDemo,
   listSteps,
   listVsls,
+  getWebhookDeliveries,
   publishLaunchPage,
   isLaunchSlugAvailable,
   normalizeProjectSlug,
@@ -53,6 +55,7 @@ import type {
   DemoStudioProject,
   DemoStudioReadiness,
   DemoStudioVsl,
+  DemoStudioWebhookDelivery,
 } from '@/lib/demoStudio/types';
 
 export default function LaunchComposerPage() {
@@ -73,6 +76,7 @@ export default function LaunchComposerPage() {
   const [slugChecking, setSlugChecking] = useState(false);
   const [webhookDraft, setWebhookDraft] = useState('');
   const [testingWebhook, setTestingWebhook] = useState(false);
+  const [deliveries, setDeliveries] = useState<DemoStudioWebhookDelivery[]>([]);
   const [previewSteps, setPreviewSteps] = useState<DemoStepWithHotspots[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -93,13 +97,14 @@ export default function LaunchComposerPage() {
           navigate('/demo-studio/projects');
           return;
         }
-        const [launchRow, demoRows, vslRows, ready, metricRows, briefRow] = await Promise.all([
+        const [launchRow, demoRows, vslRows, ready, metricRows, briefRow, deliveryRows] = await Promise.all([
           getOrCreateLaunchPage(projectRow, user.id),
           listDemos(projectId),
           listVsls(projectId),
           getProjectReadiness(projectId),
           getProjectMetrics(projectId, metricsWindow),
           getBrief(projectId),
+          getWebhookDeliveries(projectId).catch(() => []),
         ]);
         if (!active) return;
         setProject(projectRow);
@@ -111,6 +116,7 @@ export default function LaunchComposerPage() {
         setVsls(vslRows);
         setReadiness(ready);
         setMetrics(metricRows);
+        setDeliveries(deliveryRows);
       } catch (e) {
         toast.error(e instanceof Error ? e.message : 'Could not load launch composer.');
       } finally {
@@ -575,6 +581,37 @@ export default function LaunchComposerPage() {
                     Send test
                   </Button>
                 </div>
+
+                {deliveries.length > 0 && (
+                  <div className="space-y-2 border-t border-border/60 pt-3">
+                    <p className="text-xs font-medium text-muted-foreground">Recent deliveries</p>
+                    <div className="space-y-1.5">
+                      {deliveries.slice(0, 6).map((d) => (
+                        <div key={d.id} className="flex items-center justify-between gap-2 text-xs">
+                          <span className="text-muted-foreground">
+                            {new Date(d.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                          <span className="flex items-center gap-2">
+                            {d.last_status_code != null && (
+                              <span className="tabular-nums text-muted-foreground">{d.last_status_code}</span>
+                            )}
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                'capitalize',
+                                d.status === 'success' && 'border-success/40 text-success',
+                                d.status === 'failed' && 'border-warning/40 text-warning',
+                                d.status === 'exhausted' && 'border-destructive/40 text-destructive',
+                              )}
+                            >
+                              {d.status}{d.attempts > 1 ? ` ·${d.attempts}` : ''}
+                            </Badge>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

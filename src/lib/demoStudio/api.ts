@@ -17,6 +17,7 @@ import type {
   DemoStudioMetricsWindow,
   DemoStudioReadiness,
   DemoStudioVsl,
+  DemoStudioWebhookDelivery,
   DemoStudioStoryboardStep,
   DemoStepWithHotspots,
   DemoTheme,
@@ -46,6 +47,7 @@ const VSLS = 'demo_studio_vsls' as any;
 const LAUNCH_PAGES = 'demo_studio_launch_pages' as any;
 const SIGNUPS = 'demo_studio_signups' as any;
 const EVENTS = 'demo_studio_events' as any;
+const WEBHOOK_DELIVERIES = 'demo_studio_webhook_deliveries' as any;
 
 const ASSET_BUCKET = 'demo-assets';
 const PUBLIC_ID_ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -416,13 +418,14 @@ export async function listSteps(demoId: string): Promise<DemoStudioStep[]> {
 export async function createStep(
   demoId: string,
   position: number,
-  asset: { url?: string | null; width?: number | null; height?: number | null; title?: string | null; caption?: string | null; speaker_notes?: string | null },
+  asset: { url?: string | null; width?: number | null; height?: number | null; title?: string | null; caption?: string | null; speaker_notes?: string | null; type?: 'image' | 'html' },
 ): Promise<DemoStudioStep> {
   const result = await supabase
     .from(STEPS)
     .insert({
       demo_id: demoId,
       position,
+      asset_type: asset.type ?? 'image',
       asset_url: asset.url ?? null,
       asset_width: asset.width ?? null,
       asset_height: asset.height ?? null,
@@ -457,7 +460,7 @@ export async function applyStoryboardToDemo(
 
 export async function updateStep(
   id: string,
-  patch: Partial<Pick<DemoStudioStep, 'title' | 'caption' | 'speaker_notes' | 'position' | 'asset_url' | 'asset_width' | 'asset_height' | 'asset_captured_at'>>,
+  patch: Partial<Pick<DemoStudioStep, 'title' | 'caption' | 'speaker_notes' | 'position' | 'asset_type' | 'asset_url' | 'asset_width' | 'asset_height' | 'asset_captured_at'>>,
 ): Promise<void> {
   const { error } = await supabase.from(STEPS).update(patch as any).eq('id', id);
   if (error) throw new Error(error.message);
@@ -476,12 +479,13 @@ export async function replaceStepAsset(
   const asset = await uploadStepAsset(ownerId, file);
   const asset_captured_at = new Date().toISOString();
   await updateStep(stepId, {
+    asset_type: 'image',
     asset_url: asset.url,
     asset_width: asset.width,
     asset_height: asset.height,
     asset_captured_at,
   });
-  return { asset_url: asset.url, asset_width: asset.width, asset_height: asset.height, asset_captured_at };
+  return { asset_type: 'image' as const, asset_url: asset.url, asset_width: asset.width, asset_height: asset.height, asset_captured_at };
 }
 
 export async function duplicateStep(step: DemoStepWithHotspots, position: number): Promise<DemoStepWithHotspots> {
@@ -490,9 +494,11 @@ export async function duplicateStep(step: DemoStepWithHotspots, position: number
     .insert({
       demo_id: step.demo_id,
       position,
+      asset_type: step.asset_type ?? 'image',
       asset_url: step.asset_url,
       asset_width: step.asset_width,
       asset_height: step.asset_height,
+      asset_captured_at: step.asset_captured_at ?? null,
       title: step.title ? `${step.title} copy` : `Step ${position + 1}`,
       caption: step.caption,
       speaker_notes: step.speaker_notes,
@@ -889,6 +895,18 @@ export async function testLeadWebhook(projectId: string, webhookUrl: string): Pr
   if (!data?.success) throw new Error(data?.error || 'The webhook did not accept the test.');
 }
 
+/** Recent webhook delivery attempts for a project (owner-read via RLS). */
+export async function getWebhookDeliveries(projectId: string, limit = 10): Promise<DemoStudioWebhookDelivery[]> {
+  const { data, error } = await supabase
+    .from(WEBHOOK_DELIVERIES)
+    .select('*')
+    .eq('project_id', projectId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as unknown as DemoStudioWebhookDelivery[];
+}
+
 function getMetricsWindowStart(window: DemoStudioMetricsWindow): string | null {
   if (window === 'all') return null;
   const days = window === '7d' ? 7 : 30;
@@ -1094,6 +1112,42 @@ export async function uploadStepAsset(
     data: { publicUrl },
   } = supabase.storage.from(ASSET_BUCKET).getPublicUrl(path);
   return { url: publicUrl, width: dims.width, height: dims.height };
+}
+
+export const STEP_HTML_MAX_BYTES = 15 * 1024 * 1024;
+
+/**
+ * Import a self-contained HTML snapshot (e.g. from the free SingleFile tool) as an
+ * 'html' step. The markup is sanitized with DOMPurify (scripts, event handlers,
+ * iframe/object/embed/base, javascript: URLs removed) before storage. It is also
+ * rendered in a sandboxed iframe with no script execution (see SnapshotFrame), so the
+ * sanitizer is defense-in-depth, not the sole control. DOMPurify is imported lazily so
+ * it never runs during SSR/prerender and stays out of the main bundle.
+ */
+export async function uploadStepHtmlSnapshot(ownerId: string, file: File): Promise<{ url: string }> {
+  if (file.size > STEP_HTML_MAX_BYTES) {
+    throw new Error('HTML snapshot must be 15MB or smaller.');
+  }
+  const raw = await file.text();
+  const DOMPurify = (await import('dompurify')).default;
+  const clean = DOMPurify.sanitize(raw, {
+    WHOLE_DOCUMENT: true,
+    FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'base', 'link'],
+    FORBID_ATTR: ['ping'],
+  });
+  if (!clean || clean.trim().length === 0) {
+    throw new Error("That file didn't contain renderable HTML.");
+  }
+  const blob = new Blob([clean], { type: 'text/html' });
+  const path = `${ownerId}/${Date.now()}-${shortId(6)}.html`;
+  const { error } = await supabase.storage
+    .from(ASSET_BUCKET)
+    .upload(path, blob, { cacheControl: '3600', upsert: false, contentType: 'text/html' });
+  if (error) throw new Error(error.message);
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from(ASSET_BUCKET).getPublicUrl(path);
+  return { url: publicUrl };
 }
 
 /* -------------------------------------------------------------------------- */

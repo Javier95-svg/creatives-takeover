@@ -9,6 +9,7 @@ import {
   Copy,
   CopyPlus,
   Eye,
+  FileCode,
   Globe,
   ImagePlus,
   Loader2,
@@ -60,6 +61,7 @@ import {
   updateHotspot,
   updateStep,
   uploadStepAsset,
+  uploadStepHtmlSnapshot,
 } from '@/lib/demoStudio/api';
 import { getDemoReadiness } from '@/lib/demoStudio/readiness';
 import {
@@ -103,6 +105,7 @@ export default function DemoEditorPage() {
   const { openUpgradePrompt } = useUpgradePrompt();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const replaceInputRef = useRef<HTMLInputElement>(null);
+  const htmlInputRef = useRef<HTMLInputElement>(null);
   const hotspotPersistTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const captureVideoRef = useRef<HTMLVideoElement>(null);
   const captureStreamRef = useRef<MediaStream | null>(null);
@@ -120,6 +123,7 @@ export default function DemoEditorPage() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [captureOpen, setCaptureOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [captureStream, setCaptureStream] = useState<MediaStream | null>(null);
   const [keptFrames, setKeptFrames] = useState<KeptFrame[]>([]);
   const [capturing, setCapturing] = useState(false);
@@ -426,6 +430,41 @@ export default function DemoEditorPage() {
     }
   };
 
+  const handleImportHtml = async (files: FileList | null) => {
+    const file = files?.[0];
+    if (!file || !user || !demoId) return;
+    if (!/\.html?$/i.test(file.name) && file.type !== 'text/html') {
+      toast.error('Choose a saved .html page (e.g. exported with SingleFile).');
+      return;
+    }
+    setUploading(true);
+    try {
+      const { url } = await uploadStepHtmlSnapshot(user.id, file);
+      const selectedEmptyStep = selectedStep && !selectedStep.asset_url ? selectedStep : null;
+      if (selectedEmptyStep) {
+        await updateStep(selectedEmptyStep.id, { asset_type: 'html', asset_url: url, asset_captured_at: new Date().toISOString() });
+        patchStepLocal(selectedEmptyStep.id, { asset_type: 'html', asset_url: url });
+      } else {
+        const step = await createStep(demoId, steps.length, { url, type: 'html' });
+        setSteps((prev) => [...prev, { ...step, hotspots: [] }]);
+        setSelectedStepId((prev) => prev ?? step.id);
+      }
+      trackDemoStudioFunnel('demo_step_added', { demoId, source: 'html_import' });
+      if (demo && demo.capture_method !== 'extension') {
+        void updateDemo(demo.id, { capture_method: 'extension' })
+          .then(() => setDemo((current) => (current ? { ...current, capture_method: 'extension' } : current)))
+          .catch(() => {});
+      }
+      toast.success('Webpage imported as a step.');
+      setImportOpen(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not import the page.');
+    } finally {
+      setUploading(false);
+      if (htmlInputRef.current) htmlInputRef.current.value = '';
+    }
+  };
+
   const handleStepFieldCommit = async (
     id: string,
     patch: Partial<Pick<DemoStepWithHotspots, 'title' | 'caption' | 'speaker_notes'>>,
@@ -654,6 +693,13 @@ export default function DemoEditorPage() {
         className="hidden"
         onChange={(e) => handleReplaceFile(e.target.files)}
       />
+      <input
+        ref={htmlInputRef}
+        type="file"
+        accept=".html,.htm,text/html"
+        className="hidden"
+        onChange={(e) => handleImportHtml(e.target.files)}
+      />
 
       <div className="grid grid-cols-1 gap-4 p-4 lg:grid-cols-[260px_minmax(0,1fr)_300px]">
         {/* Left: steps */}
@@ -684,7 +730,7 @@ export default function DemoEditorPage() {
               </div>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -705,6 +751,15 @@ export default function DemoEditorPage() {
                 <Monitor className="h-4 w-4" /> Capture screen
               </Button>
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-1.5"
+              onClick={() => setImportOpen(true)}
+              disabled={uploading || capturing}
+            >
+              <FileCode className="h-4 w-4" /> Import webpage
+            </Button>
           </div>
           <StepThumbnailList
             steps={steps}
@@ -770,6 +825,14 @@ export default function DemoEditorPage() {
                     <Monitor className="h-4 w-4" /> Capture screen
                   </Button>
                 )}
+                <Button
+                  variant="outline"
+                  className="gap-1.5"
+                  onClick={() => setImportOpen(true)}
+                  disabled={uploading || capturing}
+                >
+                  <FileCode className="h-4 w-4" /> Import webpage
+                </Button>
               </div>
               <p className="mt-3 text-xs text-muted-foreground">
                 PNG or JPG, up to 5MB each. Add as many as you like{captureSupported ? ', or capture frames from your screen' : ''}.
@@ -1028,6 +1091,48 @@ export default function DemoEditorPage() {
                   Add {keptFrames.length || ''} step{keptFrames.length === 1 ? '' : 's'}
                 </Button>
               </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import webpage (HTML) dialog */}
+      <Dialog open={importOpen} onOpenChange={setImportOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Import a webpage as a step</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            <p className="text-muted-foreground">
+              Capture your real product page — including logged-in screens — as a single, self-contained
+              file, then upload it here. It renders as a crisp, interactive page (not a screenshot), and you
+              can drop hotspots on top.
+            </p>
+            <ol className="list-decimal space-y-1.5 pl-5 text-muted-foreground">
+              <li>
+                Install the free{' '}
+                <a
+                  href="https://github.com/gildas-lormeau/SingleFile"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline-offset-4 hover:underline"
+                >
+                  SingleFile
+                </a>{' '}
+                browser extension.
+              </li>
+              <li>Open the page you want to demo and click SingleFile to save it as one <code>.html</code> file.</li>
+              <li>Upload that file below — we sanitize it and render it safely (scripts are stripped).</li>
+            </ol>
+            <p className="text-xs text-muted-foreground">Max 15MB. The page is shown static (no live scripts), which is exactly what a demo step needs.</p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setImportOpen(false)} disabled={uploading}>
+                Cancel
+              </Button>
+              <Button className="gap-1.5" onClick={() => htmlInputRef.current?.click()} disabled={uploading}>
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileCode className="h-4 w-4" />}
+                Choose .html file
+              </Button>
             </div>
           </div>
         </DialogContent>

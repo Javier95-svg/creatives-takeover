@@ -15,6 +15,10 @@ verify_jwt = true
 [functions.demo-studio-lead]
 verify_jwt = true
 
+# Invoked by pg_cron via pg_net (no JWT); guarded by a CRON_SECRET header instead.
+[functions.demo-studio-webhook-retry]
+verify_jwt = false
+
 [functions.check-subscription]
 verify_jwt = true
 
