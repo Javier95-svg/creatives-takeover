@@ -70,6 +70,22 @@ export async function finalizeMVPBuilderCredits(
         balance_after: result.balanceAfter,
       },
     });
+    // Canonical credit-spend event so MVP Builder actions appear in the same
+    // credit/margin analytics as every other metered feature (the reservation
+    // path bypasses checkAndDeductCredits). operation_id = reservation id.
+    if (Number(result.creditsUsed) > 0) {
+      await emitBusinessEvent({
+        eventName: "credit_action_completed",
+        userId: result.userId,
+        properties: {
+          feature_key: result.actionFeature,
+          credit_cost: result.creditsUsed,
+          balance_after: result.balanceAfter,
+          source_tool: "mvp_builder",
+          operation_id: result.reservationId,
+        },
+      });
+    }
     if ((result.balanceAfter ?? 0) <= 0) {
       await triggerEmailSequenceEvent("credit_exhausted", result.userId);
     } else if ((result.balanceAfter ?? 0) <= 5) {

@@ -367,6 +367,26 @@ export async function checkAndDeductCredits(
       days_since_signup: analyticsContext.daysSinceSignup,
     };
 
+    // Canonical credit-spend event for EVERY server-side charge (pitch deck, ICP,
+    // chatbot, market validation, GTM, PMF, bizmap, MVP via credit-service, …).
+    // This is the single emit point — the frontend no longer emits
+    // credit_action_completed, so charges are counted exactly once. operation_id
+    // mirrors the deduction's idempotency key so credit revenue can be joined to
+    // the matching $ai_generation cost for per-feature margin (Phase 2.2).
+    await emitBusinessEvent({
+      eventName: 'credit_action_completed',
+      userId,
+      properties: {
+        feature_key: entitlementFeature || metadata?.featureCode || feature,
+        credit_cost: chargeAmount,
+        current_plan: userPlan,
+        balance_after: creditsRemaining,
+        source_tool: feature,
+        operation_id: idempotencyKey ?? metadata?.operationId,
+      },
+      userProperties,
+    });
+
     if (analyticsContext.priorDeductCount === 0) {
       await emitBusinessEvent({
         eventName: 'first_tool_used',

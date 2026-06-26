@@ -10,7 +10,6 @@ import { CREDIT_COSTS, CreditFeature, getCreditCostForPlan } from '@/config/cons
 import { normalizePlan, type Plan } from '@/config/planPermissions';
 import { toast } from 'sonner';
 import { createIdempotencyKey } from '@/lib/idempotency';
-import { trackCreditActionCompleted } from '@/lib/analytics';
 import { trackActivity } from '@/lib/activity';
 import { isMVPBuilderCreditFeature, resolveMVPBuilderChargeAmount } from '@/lib/mvpBuilderCredits';
 
@@ -296,13 +295,10 @@ export const useCreditActions = () => {
       const featureLabel = resolveFeatureLabel(feature, options.featureName);
       const nextBalance = typeof balanceAfter === 'number' ? balanceAfter : Math.max(0, totalAvailable - creditsUsed);
 
-      trackCreditActionCompleted({
-        feature_key: feature,
-        credit_cost: creditsUsed,
-        current_plan: currentTier,
-        balance_after: nextBalance,
-        source_tool: featureLabel,
-      });
+      // NOTE: credit_action_completed is now emitted server-side (single source)
+      // by checkAndDeductCredits / MVP finalize / discovery-call-service, so every
+      // charge is counted exactly once. The frontend only owns the toast + the
+      // tool_completed activity feed entry below.
 
       void trackActivity('tool_completed', {
         feature_key: feature,

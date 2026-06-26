@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { logError, logInfo } from "../_shared/logger.ts";
 import { processDiscoveryCallProviderEvent } from "../_shared/discovery-call-provider-events.ts";
+import { emitBusinessEvent } from "../_shared/analytics.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -111,6 +112,23 @@ serve(async (req: Request) => {
 
       if (error) {
         throw error;
+      }
+
+      // Surface discovery-call credit spend in the same taxonomy as every other
+      // metered action (credit_action_completed) so it shows up in credit/margin
+      // analytics. The charge happens inside the SQL RPC, which otherwise bypasses
+      // the event entirely. Keyed by callId so it stays idempotent per booking.
+      if (data?.success && Number(data?.chargedCredits) > 0) {
+        await emitBusinessEvent({
+          eventName: "credit_action_completed",
+          userId: user.id,
+          properties: {
+            feature_key: "DISCOVERY_CALL",
+            credit_cost: Number(data.chargedCredits),
+            source_tool: "discovery_call",
+            operation_id: callId,
+          },
+        });
       }
 
       const status = data?.success

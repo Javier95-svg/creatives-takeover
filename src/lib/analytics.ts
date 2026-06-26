@@ -768,6 +768,9 @@ export const trackCreditActionCompleted = (properties: {
   current_plan: 'rookie' | 'starter' | 'rising' | 'pro';
   balance_after?: number;
   source_tool?: string;
+  // Correlation id shared with the matching $ai_generation event so credit
+  // revenue can be joined to real model $ cost for per-feature margin (Phase 2.2).
+  operation_id?: string;
 }) => captureEvent('credit_action_completed', properties);
 
 export const trackCreditActivityViewed = (properties?: AnalyticsProperties) =>
