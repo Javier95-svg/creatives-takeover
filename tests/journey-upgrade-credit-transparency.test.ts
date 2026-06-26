@@ -25,7 +25,9 @@ test('credit action quote and receipt helpers are exposed from useCreditActions'
   assert.match(source, /getCreditActionQuote/);
   assert.match(source, /showCreditReceipt/);
   assert.match(source, /status: CreditActionQuoteStatus/);
-  assert.match(source, /trackCreditActionCompleted/);
+  // credit_action_completed is now emitted server-side (single source of truth);
+  // the helper still lives in analytics.ts for any client-side callers.
+  assert.match(analyticsSource, /trackCreditActionCompleted/);
   assert.match(analyticsSource, /journey_upgrade_prompt_shown/);
   assert.match(analyticsSource, /credit_cost_disclosed/);
   assert.match(analyticsSource, /credit_action_completed/);

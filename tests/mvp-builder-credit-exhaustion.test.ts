@@ -27,9 +27,9 @@ test('MVP Builder uses its own dismissible exhaustion dialog', () => {
   assert.match(builder, /errCode === 'INSUFFICIENT_CREDITS'/);
   assert.match(dialog, /Upgrade your plan/);
   assert.match(dialog, /navigate\('\/pricing'\)/);
-  assert.match(dialog, /pack_20/);
-  assert.match(dialog, /pack_40/);
-  assert.match(dialog, /pack_60/);
+  // Top-up packs now come from the shared pricing source of truth.
+  assert.match(dialog, /TOP_UP_PACKS/);
+  assert.match(dialog, /from '@\/config\/pricing'/);
 });
 
 test('server-side MVP charging is authenticated and reservation-owned', () => {
@@ -115,13 +115,14 @@ test('legacy refunds use one atomic idempotent exact-pool RPC', () => {
 
 test('platform top-up catalog restores the requested Stripe payment links', () => {
   const migration = readFileSync(new URL('../supabase/migrations/20260531120000_restore_platform_top_up_packs.sql', import.meta.url), 'utf8');
-  const checkout = readFileSync(new URL('../supabase/functions/create-checkout/index.ts', import.meta.url), 'utf8');
+  const pricing = readFileSync(new URL('../supabase/functions/_shared/pricing.ts', import.meta.url), 'utf8');
   const webhook = readFileSync(new URL('../supabase/functions/stripe-webhook/index.ts', import.meta.url), 'utf8');
 
   assert.match(migration, /pack_20[\s\S]*dRm5kE4Gl9Kv8746zF0VO0h/);
   assert.match(migration, /pack_40[\s\S]*aFa4gAegV8Grafc3nt0VO0i/);
   assert.match(migration, /pack_60[\s\S]*8x29AUc8N1dZevsgaf0VO0j/);
-  assert.match(checkout, /pack_20: \{ amount: 800, credits: 20, name: "Starter Pack" \}/);
-  assert.match(webhook, /pack_20: 20/);
+  // Pack catalog is the shared pricing source of truth; the webhook derives credits from it.
+  assert.match(pricing, /pack_20: \{ amount: 800, credits: 20, name: "Starter Pack" \}/);
+  assert.match(webhook, /TOP_UP_PACKS_CENTS/);
   assert.match(webhook, /increment_credit_balance/);
 });

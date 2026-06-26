@@ -8,6 +8,7 @@ import {
   resolveFeatureEnforcement,
 } from '../supabase/functions/_shared/plan-enforcement.ts';
 import { CREDIT_COSTS } from '../supabase/functions/_shared/credit-constants.ts';
+import { TOP_UP_PACKS_CENTS, PLAN_PRICING_CENTS } from '../supabase/functions/_shared/pricing.ts';
 
 test('normalizePlan preserves canonical and legacy aliases', () => {
   assert.equal(normalizePlan('creator'), 'rising');
@@ -129,9 +130,18 @@ test('discovery call notifications fan out beyond admin-only Calendly emails', (
 test('subscription checkout copy uses the paid plan credit ladder', () => {
   const source = readFileSync(new URL('../supabase/functions/create-checkout/index.ts', import.meta.url), 'utf8');
 
-  assert.match(source, /starter: \{[\s\S]*monthly: \{[\s\S]*credits: 100[\s\S]*PMF Lab credit-metered access/);
-  assert.match(source, /rising: \{[\s\S]*monthly: \{[\s\S]*credits: 250[\s\S]*per-action MVP Builder/);
-  assert.match(source, /pro: \{[\s\S]*monthly: \{[\s\S]*credits: 600[\s\S]*Find Your Angel[\s\S]*unlimited research views/);
+  // Credit ladder is the single source of truth (PLAN_MONTHLY_CREDITS); prices live
+  // in the shared pricing module; create-checkout composes copy from PLAN_VALUE_PROPS.
+  assert.equal(PLAN_MONTHLY_CREDITS.starter, 100);
+  assert.equal(PLAN_MONTHLY_CREDITS.rising, 250);
+  assert.equal(PLAN_MONTHLY_CREDITS.pro, 600);
+  assert.equal(PLAN_PRICING_CENTS.starter.monthly, 900);
+  assert.equal(PLAN_PRICING_CENTS.rising.monthly, 2900);
+  assert.equal(PLAN_PRICING_CENTS.pro.monthly, 6500);
+  assert.match(source, /PMF Lab credit-metered access/);
+  assert.match(source, /per-action MVP Builder/);
+  assert.match(source, /Find Your Angel[\s\S]*unlimited research views/);
+  assert.match(source, /\$\{credits\} \$\{connector\} \$\{PLAN_VALUE_PROPS\[tier\]\}/);
   assert.match(source, /description: `\$\{pricing\.description\} with \$\{billingCycle\} billing`/);
 });
 
@@ -139,14 +149,16 @@ test('platform top-up packs are available through checkout', () => {
   const checkoutSource = readFileSync(new URL('../supabase/functions/create-checkout/index.ts', import.meta.url), 'utf8');
   const webhookSource = readFileSync(new URL('../supabase/functions/stripe-webhook/index.ts', import.meta.url), 'utf8');
 
+  // Pack catalog is the shared pricing source of truth; checkout + webhook derive from it.
   for (const [packId, credits] of [
     ['pack_20', 20],
     ['pack_40', 40],
     ['pack_60', 60],
   ] as const) {
-    assert.match(checkoutSource, new RegExp(`${packId}: \\{[\\s\\S]*credits: ${credits}`));
-    assert.match(webhookSource, new RegExp(`${packId}: ${credits}`));
+    assert.equal(TOP_UP_PACKS_CENTS[packId].credits, credits);
   }
+  assert.match(checkoutSource, /TOP_UP_PACKS_CENTS/);
+  assert.match(webhookSource, /TOP_UP_PACKS_CENTS/);
 });
 
 test('credit audit main inventory follows Compare Our Plans tools only', () => {
