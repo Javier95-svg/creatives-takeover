@@ -245,6 +245,40 @@ export interface DemoStudioMetrics {
   }>;
 }
 
+/** One row of the per-demo step funnel (how far viewers get before dropping off). */
+export interface DemoStepFunnelRow {
+  stepIndex: number;
+  stepId: string | null;
+  title: string;
+  /** Unique sessions that reached this step. */
+  reached: number;
+  /** reached as a percentage of the funnel top (unique viewers). 0-100. */
+  reachedPct: number;
+  /** Drop from the previous step, as a percentage of the funnel top. 0-100. */
+  dropFromPrevPct: number;
+}
+
+/** Per-demo engagement metrics derived from demo_studio_events. */
+export interface DemoMetrics {
+  /** Total demo_view events (raw, not de-duped). */
+  views: number;
+  /** Distinct viewer sessions. */
+  uniqueViewers: number;
+  /** Distinct sessions that started the walkthrough. */
+  starts: number;
+  /** Distinct sessions that reached the end. */
+  completions: number;
+  /** completions / uniqueViewers, 0-100. */
+  completionRate: number;
+  ctaClicks: number;
+  /** ctaClicks / uniqueViewers, 0-100. */
+  ctaClickRate: number;
+  /** Average number of steps a viewer got through. */
+  avgStepsViewed: number;
+  funnel: DemoStepFunnelRow[];
+  lastViewedAt: string | null;
+}
+
 export interface PublicLaunchPage {
   project: DemoStudioProject;
   launchPage: DemoStudioLaunchPage;

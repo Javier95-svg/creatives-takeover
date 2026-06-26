@@ -138,6 +138,7 @@ const DemoStudioProjectsPage = lazy(() => import("./pages/demo-studio/ProjectsDa
 const DemoStudioProjectOverviewPage = lazy(() => import("./pages/demo-studio/ProjectOverviewPage"));
 const DemoStudioBriefPage = lazy(() => import("./pages/demo-studio/DemoBriefPage"));
 const DemoStudioEditorPage = lazy(() => import("./pages/demo-studio/DemoEditorPage"));
+const DemoStudioAnalyticsPage = lazy(() => import("./pages/demo-studio/DemoAnalyticsPage"));
 const DemoStudioVslStudioPage = lazy(() => import("./pages/demo-studio/VslStudioPage"));
 const DemoStudioLaunchComposerPage = lazy(() => import("./pages/demo-studio/LaunchComposerPage"));
 const PublicDemoPage = lazy(() => import("./pages/demo-studio/PublicDemoPage"));
@@ -298,6 +299,7 @@ function App() {
                         <Route path="/demo-studio/projects/:id" element={<RouteErrorBoundary routeName="Demo Studio Project"><DemoStudioProjectOverviewPage /></RouteErrorBoundary>} />
                         <Route path="/demo-studio/projects/:id/brief" element={<RouteErrorBoundary routeName="Demo Brief"><DemoStudioBriefPage /></RouteErrorBoundary>} />
                         <Route path="/demo-studio/projects/:projectId/demos/:demoId/edit" element={<RouteErrorBoundary routeName="Demo Editor"><DemoStudioEditorPage /></RouteErrorBoundary>} />
+                        <Route path="/demo-studio/projects/:projectId/demos/:demoId/analytics" element={<RouteErrorBoundary routeName="Demo Analytics"><DemoStudioAnalyticsPage /></RouteErrorBoundary>} />
                         <Route path="/demo-studio/projects/:id/vsl" element={<RouteErrorBoundary routeName="VSL Studio"><DemoStudioVslStudioPage /></RouteErrorBoundary>} />
                         <Route path="/demo-studio/projects/:id/launch" element={<RouteErrorBoundary routeName="Launch Composer"><DemoStudioLaunchComposerPage /></RouteErrorBoundary>} />
                         {/* Public no-auth lead magnet: produce a demo before signup */}

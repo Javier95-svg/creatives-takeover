@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   ArrowLeft,
+  BarChart3,
   Camera,
   Check,
   Copy,
@@ -586,6 +587,13 @@ export default function DemoEditorPage() {
           <WhatIsADemoPopover className="hidden md:inline-flex" />
         </div>
         <div className="flex items-center gap-2">
+          {demo?.status === 'published' && (
+            <Button asChild variant="ghost" size="sm" className="gap-1.5">
+              <Link to={`/demo-studio/projects/${projectId}/demos/${demoId}/analytics`}>
+                <BarChart3 className="h-4 w-4" /> <span className="hidden sm:inline">Analytics</span>
+              </Link>
+            </Button>
+          )}
           <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setPreviewOpen(true)}>
             <Eye className="h-4 w-4" /> <span className="hidden sm:inline">Preview</span>
           </Button>

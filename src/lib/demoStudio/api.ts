@@ -11,6 +11,8 @@ import type {
   DemoStudioStep,
   DemoStudioHotspot,
   DemoStudioLaunchPage,
+  DemoMetrics,
+  DemoStepFunnelRow,
   DemoStudioMetrics,
   DemoStudioMetricsWindow,
   DemoStudioReadiness,
@@ -908,6 +910,103 @@ export async function getProjectMetrics(projectId: string, window: DemoStudioMet
       signups: row.signups,
       signupRate: calculateSignupRate(row.signups, row.impressions),
     })),
+  };
+}
+
+/**
+ * Per-demo engagement metrics for the analytics view. Reads the demo's event
+ * stream (owner-scoped via RLS) and the demo's steps, then derives unique
+ * viewers, completion rate, and a per-step drop-off funnel client-side. Volumes
+ * are small (one demo's events); aggregating here mirrors getProjectMetrics and
+ * avoids a bespoke RPC. demo_view/demo_start/demo_complete are de-duped per
+ * session at emit time, so counting distinct sessions is the source of truth.
+ */
+export async function getDemoMetrics(
+  demoId: string,
+  window: DemoStudioMetricsWindow = 'all',
+): Promise<DemoMetrics> {
+  const since = getMetricsWindowStart(window);
+  let eventsQuery = supabase.from(EVENTS).select('type, meta, created_at').eq('demo_id', demoId);
+  if (since) eventsQuery = eventsQuery.gte('created_at', since);
+  const [{ data: eventsData, error }, steps] = await Promise.all([eventsQuery, listSteps(demoId)]);
+  if (error) throw new Error(error.message);
+
+  const events = (eventsData ?? []) as Array<{
+    type: string;
+    meta: Record<string, unknown> | null;
+    created_at: string;
+  }>;
+  // Group by session. Older events may predate session tagging, so fall back to
+  // a per-row key (each counts as its own session) rather than collapsing them.
+  const sessionOf = (event: { meta: Record<string, unknown> | null; created_at: string }) =>
+    String(event.meta?.session_id ?? `anon:${event.created_at}`);
+
+  const viewEvents = events.filter((event) => event.type === 'demo_view');
+  const viewerSessions = new Set(viewEvents.map(sessionOf));
+  const startSessions = new Set(events.filter((event) => event.type === 'demo_start').map(sessionOf));
+  const completionSessions = new Set(events.filter((event) => event.type === 'demo_complete').map(sessionOf));
+  const ctaClicks = events.filter((event) => event.type === 'cta_click').length;
+
+  // Furthest step index each session reached, from demo_step events.
+  const maxStepBySession = new Map<string, number>();
+  events
+    .filter((event) => event.type === 'demo_step')
+    .forEach((event) => {
+      const session = sessionOf(event);
+      const rawIndex = Number(event.meta?.step_index);
+      const index = Number.isFinite(rawIndex) ? rawIndex : 0;
+      maxStepBySession.set(session, Math.max(maxStepBySession.get(session) ?? 0, index));
+    });
+
+  const uniqueViewers = viewerSessions.size;
+  // Funnel top: everyone who opened the demo. Guard against viewers who recorded
+  // step events without a demo_view (defensive) so the funnel never exceeds 100%.
+  const funnelTop = Math.max(uniqueViewers, maxStepBySession.size);
+
+  const sessionsReachingStep = (stepIndex: number): number => {
+    if (stepIndex <= 0) return funnelTop;
+    let count = 0;
+    maxStepBySession.forEach((maxIndex) => {
+      if (maxIndex >= stepIndex) count += 1;
+    });
+    return count;
+  };
+
+  let prevReached = funnelTop;
+  const funnel: DemoStepFunnelRow[] = steps.map((step, index) => {
+    const reached = sessionsReachingStep(index);
+    const reachedPct = funnelTop === 0 ? 0 : Math.round((reached / funnelTop) * 100);
+    const dropFromPrevPct = funnelTop === 0 ? 0 : Math.round(((prevReached - reached) / funnelTop) * 100);
+    prevReached = reached;
+    return {
+      stepIndex: index,
+      stepId: step.id,
+      title: step.title?.trim() || `Step ${index + 1}`,
+      reached,
+      reachedPct,
+      dropFromPrevPct: Math.max(0, dropFromPrevPct),
+    };
+  });
+
+  const totalStepsViewed = Array.from(maxStepBySession.values()).reduce((sum, index) => sum + index + 1, 0);
+  const avgStepsViewed =
+    maxStepBySession.size === 0 ? 0 : Math.round((totalStepsViewed / maxStepBySession.size) * 10) / 10;
+  const lastViewedAt = viewEvents.reduce<string | null>(
+    (latest, event) => (!latest || event.created_at > latest ? event.created_at : latest),
+    null,
+  );
+
+  return {
+    views: viewEvents.length,
+    uniqueViewers,
+    starts: startSessions.size,
+    completions: completionSessions.size,
+    completionRate: uniqueViewers === 0 ? 0 : Math.round((completionSessions.size / uniqueViewers) * 100),
+    ctaClicks,
+    ctaClickRate: uniqueViewers === 0 ? 0 : Math.round((ctaClicks / uniqueViewers) * 100),
+    avgStepsViewed,
+    funnel,
+    lastViewedAt,
   };
 }
 

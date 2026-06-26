@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import {
   ArrowLeft,
   ArrowRight,
+  BarChart3,
   ExternalLink,
   FileText,
   Globe,
@@ -357,6 +358,13 @@ export default function ProjectOverviewPage() {
                         <a href={`/demo/${demo.public_id}`} target="_blank" rel="noopener noreferrer">
                           <ExternalLink className="h-4 w-4" /> View
                         </a>
+                      </Button>
+                    )}
+                    {demo.status === 'published' && (
+                      <Button asChild variant="ghost" size="sm" className="gap-1.5">
+                        <Link to={`/demo-studio/projects/${projectId}/demos/${demo.id}/analytics`}>
+                          <BarChart3 className="h-4 w-4" /> Stats
+                        </Link>
                       </Button>
                     )}
                     <Button asChild variant="outline" size="sm" className="gap-1.5">
