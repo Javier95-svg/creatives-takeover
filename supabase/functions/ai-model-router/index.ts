@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
+import { emitAiGenerationCost } from "../_shared/ai-cost.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,6 +22,9 @@ interface ModelRequest {
   function_name?: string;
   cache_key?: string;
   strategy?: 'quality' | 'speed' | 'economy' | 'balanced';
+  // Shared id with the credit_action_completed event so AI cost can be joined to
+  // credit revenue for per-feature margin (see _shared/ai-cost.ts).
+  operation_id?: string;
 }
 
 interface ModelResponse {
@@ -443,7 +447,21 @@ serve(async (req) => {
     const request: ModelRequest = await req.json();
     
     const response = await router.route(request);
-    
+
+    // Cost telemetry for true LLM spend — only for real (non-cached) calls, since
+    // a cache hit costs nothing. Joined to credit revenue via operation_id.
+    if (!response.cached && response.usage) {
+      await emitAiGenerationCost({
+        userId: request.user_id,
+        feature: request.function_name || 'ai-model-router',
+        model: response.model,
+        provider: response.provider,
+        inputTokens: response.usage.prompt_tokens,
+        outputTokens: response.usage.completion_tokens,
+        operationId: request.operation_id,
+      });
+    }
+
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

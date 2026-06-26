@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { checkAndDeductCredits, getUserFromAuth, refundCredits } from "../_shared/credit-deduction.ts";
 import { CREDIT_COSTS } from "../_shared/credit-constants.ts";
 import { resolveCreditIdempotencyKey } from "../_shared/request-idempotency.ts";
+import { emitAiGenerationCost } from "../_shared/ai-cost.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -205,7 +206,7 @@ async function callClaude(pdfBase64: string, maxTokens: number): Promise<any> {
     throw Object.assign(new Error("Model did not return JSON"), { status: 502 });
   }
   try {
-    return JSON.parse(match[0]);
+    return { parsed: JSON.parse(match[0]), usage: data?.usage ?? null };
   } catch (parseErr) {
     console.error(
       "pitch-deck: JSON.parse failed. stop_reason=", data?.stop_reason,
@@ -282,8 +283,16 @@ async function handleFree(req: Request, body: AnalyzeRequest): Promise<Response>
   }
 
   try {
-    const parsed = await callClaude(body.pdfBase64, ANALYSIS_MAX_TOKENS);
+    const { parsed, usage } = await callClaude(body.pdfBase64, ANALYSIS_MAX_TOKENS);
     const result = buildResult(parsed);
+    await emitAiGenerationCost({
+      userId: null,
+      feature: "PITCH_DECK_ANALYZER",
+      model: MODEL,
+      provider: "anthropic",
+      inputTokens: usage?.input_tokens ?? 0,
+      outputTokens: usage?.output_tokens ?? 0,
+    });
     return json({ success: true, ...result, fileName: body.fileName ?? null, guest: true });
   } catch (err) {
     console.error("pitch-deck free analysis failed:", err instanceof Error ? err.message : err);
@@ -333,8 +342,20 @@ async function handleDeep(req: Request, body: AnalyzeRequest): Promise<Response>
     if (dlErr || !fileData) throw Object.assign(new Error("Could not read the uploaded deck."), { status: 400 });
     const pdfBase64 = toBase64(new Uint8Array(await fileData.arrayBuffer()));
 
-    const parsed = await callClaude(pdfBase64, ANALYSIS_MAX_TOKENS);
+    const { parsed, usage } = await callClaude(pdfBase64, ANALYSIS_MAX_TOKENS);
     const result = buildResult(parsed);
+
+    // Cost side of the margin equation. operationId === the credit deduction's
+    // idempotency key, so this $ai_generation joins 1:1 to credit_action_completed.
+    await emitAiGenerationCost({
+      userId: user.id,
+      feature: "PITCH_DECK_ANALYZER",
+      model: MODEL,
+      provider: "anthropic",
+      inputTokens: usage?.input_tokens ?? 0,
+      outputTokens: usage?.output_tokens ?? 0,
+      operationId: idempotencyKey,
+    });
 
     return json({ success: true, ...result, creditsUsed: chargedCredits });
   } catch (err) {
