@@ -3,6 +3,13 @@ import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { withErrorBoundary, logInfo, logError } from "../_shared/logger.ts";
 import { withIdempotency } from "../_shared/idempotency.ts";
+import {
+  PLAN_PRICING_CENTS,
+  PLAN_MONTHLY_CREDITS,
+  TOP_UP_PACKS_CENTS,
+  type BillingCycle as PricingBillingCycle,
+  type PaidPlan,
+} from "../_shared/pricing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,29 +29,39 @@ type PrefillInput = {
   };
 };
 
-type BillingCycle = "monthly" | "yearly";
+type BillingCycle = PricingBillingCycle;
 type PurchaseType = "subscription" | "credit_pack";
 
-const SUBSCRIPTION_PRICING: Record<string, Record<BillingCycle, { amount: number; name: string; credits: number; description: string }>> = {
-  starter: {
-    monthly: { amount: 900, name: "Starter Plan", credits: 100, description: "100 monthly credits, PMF Lab credit-metered access, Email Templates, and 2 VC/Accelerator profile views" },
-    yearly: { amount: 7900, name: "Starter Plan", credits: 100, description: "100 monthly credits, PMF Lab credit-metered access, Email Templates, and 2 VC/Accelerator profile views" },
-  },
-  rising: {
-    monthly: { amount: 2900, name: "Rising Plan", credits: 250, description: "250 monthly credits plus per-action MVP Builder, Tech Stack Builder, GTM Strategist, Pitch Deck Analyzer, and full Prompt Library" },
-    yearly: { amount: 23900, name: "Rising Plan", credits: 250, description: "250 monthly credits plus per-action MVP Builder, Tech Stack Builder, GTM Strategist, Pitch Deck Analyzer, and full Prompt Library" },
-  },
-  pro: {
-    monthly: { amount: 6500, name: "Pro Plan", credits: 600, description: "600 monthly credits, Find Your Angel, unlimited research views, and premium fundraising access" },
-    yearly: { amount: 58900, name: "Pro Plan", credits: 600, description: "600 monthly credits, Find Your Angel, unlimited research views, and premium fundraising access" },
-  },
+// Plan display name + value-prop copy. Prices and credit counts come from the
+// shared pricing module (../_shared/pricing.ts) + PLAN_MONTHLY_CREDITS so a
+// reprice is a one-file edit and the description's credit count can't drift.
+const PLAN_NAMES: Record<PaidPlan, string> = {
+  starter: "Starter Plan",
+  rising: "Rising Plan",
+  pro: "Pro Plan",
 };
 
-const CREDIT_PACKS: Record<string, { amount: number; credits: number; name: string }> = {
-  pack_20: { amount: 800, credits: 20, name: "Starter Pack" },
-  pack_40: { amount: 1600, credits: 40, name: "Boost Pack" },
-  pack_60: { amount: 2400, credits: 60, name: "Power Pack" },
+const PLAN_VALUE_PROPS: Record<PaidPlan, string> = {
+  starter: "PMF Lab credit-metered access, Email Templates, and 2 VC/Accelerator profile views",
+  rising: "per-action MVP Builder, Tech Stack Builder, GTM Strategist, Pitch Deck Analyzer, and full Prompt Library",
+  pro: "Find Your Angel, unlimited research views, and premium fundraising access",
 };
+
+const isPaidPlan = (tier: string | undefined): tier is PaidPlan =>
+  tier === "starter" || tier === "rising" || tier === "pro";
+
+const getSubscriptionPricing = (tier: PaidPlan, cycle: BillingCycle) => {
+  const credits = PLAN_MONTHLY_CREDITS[tier];
+  const connector = tier === "rising" ? "monthly credits plus" : "monthly credits,";
+  return {
+    amount: PLAN_PRICING_CENTS[tier][cycle],
+    name: PLAN_NAMES[tier],
+    credits,
+    description: `${credits} ${connector} ${PLAN_VALUE_PROPS[tier]}`,
+  };
+};
+
+const CREDIT_PACKS = TOP_UP_PACKS_CENTS;
 
 const sanitizeString = (value: unknown): string | undefined => {
   if (typeof value !== "string") return undefined;
@@ -275,11 +292,11 @@ serve(withErrorBoundary(async (req: Request) => {
       });
     }
 
-    if (!requestedTier || !SUBSCRIPTION_PRICING[requestedTier]?.[billingCycle]) {
+    if (!isPaidPlan(requestedTier)) {
       throw new Error("Valid subscription tier is required");
     }
 
-    const pricing = SUBSCRIPTION_PRICING[requestedTier][billingCycle];
+    const pricing = getSubscriptionPricing(requestedTier, billingCycle);
     const metadata = buildMetadata({
       purchase_type: "subscription",
       tier: requestedTier,

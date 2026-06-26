@@ -17,12 +17,9 @@ import {
   trackContextualUpgradeCtaClicked,
   trackContextualUpgradeDismissed,
 } from '@/lib/contextualUpgrade';
+import { TOP_UP_PACKS } from '@/config/pricing';
 
-const CREDIT_PACKS = [
-  { id: 'pack_20', label: 'Starter Pack', credits: 20 },
-  { id: 'pack_40', label: 'Boost Pack', credits: 40 },
-  { id: 'pack_60', label: 'Power Pack', credits: 60 },
-] as const;
+const CREDIT_PACKS = TOP_UP_PACKS;
 
 interface MVPBuilderCreditExhaustedDialogProps {
   open: boolean;

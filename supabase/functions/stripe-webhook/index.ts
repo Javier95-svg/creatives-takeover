@@ -14,6 +14,7 @@ import {
   getStripeSubscriptionBillingCycle,
   getStripeSubscriptionPriceId,
 } from "../_shared/stripe-subscriptions.ts";
+import { TOP_UP_PACKS_CENTS, inferTierFromAmountCents } from "../_shared/pricing.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
@@ -21,11 +22,10 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
 
 const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
 
-const CREDIT_PACK_CREDITS: Record<string, number> = {
-  pack_20: 20,
-  pack_40: 40,
-  pack_60: 60,
-};
+// Derived from the shared pricing source of truth (single platform wallet).
+const CREDIT_PACK_CREDITS: Record<string, number> = Object.fromEntries(
+  Object.entries(TOP_UP_PACKS_CENTS).map(([id, pack]) => [id, pack.credits])
+);
 
 type BillingCycle = "monthly" | "yearly";
 
@@ -41,20 +41,8 @@ const normalizeBillingCycle = (value: unknown): BillingCycle => {
   return normalized === "yearly" || normalized === "year" ? "yearly" : "monthly";
 };
 
-const inferTierFromAmount = (amount: number, interval?: string | null): string => {
-  if (!amount || amount <= 0) return "rookie";
-  if (interval === "year") {
-    if (amount === 7900) return "starter";
-    if (amount === 23900) return "rising";
-    if (amount === 58900) return "pro";
-    return "rookie";
-  }
-
-  if (amount === 900) return "starter";
-  if (amount === 2900) return "rising";
-  if (amount === 6500) return "pro";
-  return "rookie";
-};
+const inferTierFromAmount = (amount: number, interval?: string | null): string =>
+  inferTierFromAmountCents(amount, interval);
 
 const getTierCredits = async (supabaseAdmin: any, tier: string): Promise<number> => {
   const normalizedTier = normalizeSubscriptionTier(tier);

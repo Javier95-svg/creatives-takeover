@@ -10,6 +10,7 @@ import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { useLocation } from "react-router-dom";
 import { PLAN_HIGHLIGHTS, PLAN_MONTHLY_CREDITS } from "@/config/planPermissions";
+import { PLAN_PRICING } from "@/config/pricing";
 import { appendCheckoutIntentParam, redirectToCheckoutUrl, resolveCheckoutIntentUrl } from "@/lib/checkoutRedirect";
 import { RevealGroup } from "@/components/animations/ScrollReveal";
 
@@ -36,8 +37,8 @@ const PLAN_CONFIG: Array<{
     outcomeLabel: "Clarify",
     subtitle: "Just getting started",
     audience: "Explore the platform, define the problem, and get your first traction signal.",
-    monthlyPrice: 0,
-    yearlyPrice: 0,
+    monthlyPrice: PLAN_PRICING.rookie.monthly,
+    yearlyPrice: PLAN_PRICING.rookie.yearly,
     yearlyEquivalent: "Free forever",
     savings: null,
     credits: PLAN_MONTHLY_CREDITS.rookie,
@@ -49,8 +50,8 @@ const PLAN_CONFIG: Array<{
     outcomeLabel: "Validate",
     subtitle: "Building momentum",
     audience: "Bridge the gap between free exploration and full startup-building momentum.",
-    monthlyPrice: 9,
-    yearlyPrice: 79,
+    monthlyPrice: PLAN_PRICING.starter.monthly,
+    yearlyPrice: PLAN_PRICING.starter.yearly,
     yearlyEquivalent: "$6.58/mo",
     savings: "Save 27%",
     credits: PLAN_MONTHLY_CREDITS.starter,
@@ -63,8 +64,8 @@ const PLAN_CONFIG: Array<{
     outcomeLabel: "Build & Launch",
     subtitle: "Actively building",
     audience: "The default plan for founders shipping, validating, and iterating every week.",
-    monthlyPrice: 29,
-    yearlyPrice: 239,
+    monthlyPrice: PLAN_PRICING.rising.monthly,
+    yearlyPrice: PLAN_PRICING.rising.yearly,
     yearlyEquivalent: "$19.92/mo",
     savings: "Save 31%",
     credits: PLAN_MONTHLY_CREDITS.rising,
@@ -76,8 +77,8 @@ const PLAN_CONFIG: Array<{
     outcomeLabel: "Fundraise & Scale",
     subtitle: "Fundraising and scaling",
     audience: "For founders running faster, fundraising actively, and needing priority support.",
-    monthlyPrice: 65,
-    yearlyPrice: 589,
+    monthlyPrice: PLAN_PRICING.pro.monthly,
+    yearlyPrice: PLAN_PRICING.pro.yearly,
     yearlyEquivalent: "$49.08/mo",
     savings: "Save 25%",
     credits: PLAN_MONTHLY_CREDITS.pro,
