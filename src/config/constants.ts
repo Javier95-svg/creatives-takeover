@@ -60,6 +60,9 @@ export const CREDIT_COSTS = {
   // New Features (Phase 3)
   // First analysis is free (anonymous, one per IP); every signed-in analysis costs this.
   PITCH_DECK_ANALYZER: 10,
+  // EMAIL_TEMPLATE_GENERATION is plan-INCLUDED on Starter+ (blocked on Rookie) and
+  // is never actually charged — this value is only a non-charged fallback. Email
+  // Templates are presented as "Included on Starter+", not as a credit cost.
   EMAIL_TEMPLATE_GENERATION: 3,
   PROMPT_GENERATION: 2,
 
@@ -87,19 +90,10 @@ export const MVP_CREDIT_COSTS = {
 
 export type MVPCreditFeature = keyof typeof MVP_CREDIT_COSTS;
 
-export const TIER_MONTHLY_MVP_CREDITS = {
-  rookie: 0,
-  starter: 30,
-  rising: 75,
-  pro: 150,
-} as const;
-
-export const MVP_CREDIT_PACKS = {
-  mvp_pack_micro: { credits: 30, priceCents: 900, label: 'Micro MVP Pack', featured: false },
-  mvp_pack_builder: { credits: 100, priceCents: 2500, label: 'Builder MVP Pack', featured: true },
-  mvp_pack_growth: { credits: 220, priceCents: 4900, label: 'Growth MVP Pack', featured: false },
-  mvp_pack_scale: { credits: 500, priceCents: 9900, label: 'Scale MVP Pack', featured: false },
-} as const;
+// NOTE: The standalone "MVP Builder" credit wallet (separate monthly grants and
+// top-up packs) was retired in favour of a single unified platform credit
+// wallet. MVP Builder actions are billed per action from the platform wallet.
+// MVP_CREDIT_COSTS above is still the source of per-action pricing.
 
 export const PLAN_CREDIT_COST_OVERRIDES: Partial<Record<CreditPlan, Partial<Record<CreditFeature, number>>>> = {
   rookie: {

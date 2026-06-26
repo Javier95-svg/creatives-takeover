@@ -14,17 +14,9 @@ export const MVP_CREDIT_COSTS = {
 
 export type MVPCreditFeature = keyof typeof MVP_CREDIT_COSTS;
 
-export const MVP_MONTHLY_CREDITS_BY_TIER = {
-  rookie: 0,
-  starter: 30,
-  rising: 75,
-  pro: 150,
-} as const;
-
-export const MVP_CREDIT_PACKS = {
-  mvp_pack_micro: { credits: 30, price_cents: 900, label: "Micro MVP Pack", featured: false },
-  mvp_pack_builder: { credits: 100, price_cents: 2500, label: "Builder MVP Pack", featured: true },
-  mvp_pack_growth: { credits: 220, price_cents: 4900, label: "Growth MVP Pack", featured: false },
-  mvp_pack_scale: { credits: 500, price_cents: 9900, label: "Scale MVP Pack", featured: false },
-} as const;
+// NOTE: The standalone "MVP Builder" credit wallet was retired in favour of a
+// single unified platform credit wallet. MVP Builder actions are billed per
+// action from the platform wallet (see mvp-builder-credit-reservations). The
+// per-action MVP_CREDIT_COSTS above are still used for that pricing; the old
+// separate monthly-grant and pack exports have been removed.
 

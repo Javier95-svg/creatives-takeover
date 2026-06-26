@@ -12,7 +12,7 @@ export function CreditPriceList() {
         { name: "VC Search", value: "Profile-view quota" },
         { name: "Accelerator Hunt", value: "Profile-view quota" },
         { name: "Email Templates", value: "Included on Starter+" },
-        { name: "Pitch Deck Analyzer", value: `${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits/use on Rising+` },
+        { name: "Pitch Deck Analyzer", value: `1st analysis free, then ${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits/use on every plan` },
         { name: "Insighta Test", value: "Included on every plan" },
         { name: "Discovery Calls", value: "10 credits per confirmed booking" },
         { name: "Find a Co-Founder Posting", value: "Monthly quota" },

@@ -288,7 +288,8 @@ export function useFeatureGating() {
       case 'investor_browse':
         return { hasAccess: true };
 
-      // Pitch Deck Analyzer (Rising+ only)
+      // Pitch Deck Analyzer (open to every plan; free anonymous first score,
+      // then credit-metered per analysis)
       case 'pitch_deck_analyzer':
         return checkCanonicalFeatureAccess('pitch_deck_analyzer');
 

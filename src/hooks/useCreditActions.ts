@@ -106,9 +106,10 @@ const PLAN_SEQUENCE: Plan[] = ['rookie', 'starter', 'rising', 'pro'];
 
 const FEATURE_MINIMUM_PLAN: Partial<Record<CreditFeature, Plan>> = {
   EMAIL_TEMPLATE_GENERATION: 'starter',
-  // PMF Lab, GTM Strategist & Tech Stack Builder are open to every plan and
-  // billed per generation from credits (no plan floor) — see plan-enforcement.ts.
-  PITCH_DECK_ANALYZER: 'rising',
+  // PMF Lab, GTM Strategist, Tech Stack Builder & Pitch Deck Analyzer are open to
+  // every plan and billed per generation from credits (no plan floor). The Pitch
+  // Deck Analyzer gives a free anonymous first score, then charges every signed-in
+  // analysis on all plans — see plan-enforcement.ts + FEATURE_ENTITLEMENTS.
   PROMPT_GENERATION: 'rising',
 };
 

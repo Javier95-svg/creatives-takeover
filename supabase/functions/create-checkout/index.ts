@@ -3,7 +3,6 @@ import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { withErrorBoundary, logInfo, logError } from "../_shared/logger.ts";
 import { withIdempotency } from "../_shared/idempotency.ts";
-import { MVP_CREDIT_PACKS } from "../_shared/mvp-credit-constants.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,7 +24,6 @@ type PrefillInput = {
 
 type BillingCycle = "monthly" | "yearly";
 type PurchaseType = "subscription" | "credit_pack";
-type CreditWallet = "platform" | "mvp_builder";
 
 const SUBSCRIPTION_PRICING: Record<string, Record<BillingCycle, { amount: number; name: string; credits: number; description: string }>> = {
   starter: {
@@ -47,14 +45,6 @@ const CREDIT_PACKS: Record<string, { amount: number; credits: number; name: stri
   pack_40: { amount: 1600, credits: 40, name: "Boost Pack" },
   pack_60: { amount: 2400, credits: 60, name: "Power Pack" },
 };
-
-const MVP_BUILDER_CREDIT_PACKS: Record<string, { amount: number; credits: number; name: string }> =
-  Object.fromEntries(
-    Object.entries(MVP_CREDIT_PACKS).map(([id, pack]) => [
-      id,
-      { amount: pack.price_cents, credits: pack.credits, name: pack.label },
-    ])
-  );
 
 const sanitizeString = (value: unknown): string | undefined => {
   if (typeof value !== "string") return undefined;
@@ -119,11 +109,6 @@ const normalizePurchaseType = (value: unknown): PurchaseType => {
 const normalizeBillingCycle = (value: unknown): BillingCycle => {
   const normalized = sanitizeString(value)?.toLowerCase();
   return normalized === "yearly" ? "yearly" : "monthly";
-};
-
-const normalizeCreditWallet = (value: unknown): CreditWallet => {
-  const normalized = sanitizeString(value)?.toLowerCase();
-  return normalized === "mvp_builder" ? "mvp_builder" : "platform";
 };
 
 const buildMetadata = (base: Record<string, string | undefined>): Record<string, string> =>
@@ -206,7 +191,6 @@ serve(withErrorBoundary(async (req: Request) => {
     }
 
     const purchaseType = normalizePurchaseType(body.purchaseType);
-    const creditWallet = normalizeCreditWallet(body.wallet);
     const billingCycle = normalizeBillingCycle(body.billingCycle);
     const requestedTier = sanitizeString(body.tier)?.toLowerCase();
     const requestedPackId = sanitizeString(body.packId)?.toLowerCase();
@@ -235,15 +219,14 @@ serve(withErrorBoundary(async (req: Request) => {
       "https://creatives-takeover.com";
 
     if (purchaseType === "credit_pack") {
-      const packCatalog = creditWallet === "mvp_builder" ? MVP_BUILDER_CREDIT_PACKS : CREDIT_PACKS;
-      if (!requestedPackId || !packCatalog[requestedPackId]) {
+      if (!requestedPackId || !CREDIT_PACKS[requestedPackId]) {
         throw new Error("Valid credit pack is required");
       }
 
-      const pack = packCatalog[requestedPackId];
+      const pack = CREDIT_PACKS[requestedPackId];
       const metadata = buildMetadata({
         purchase_type: "credit_pack",
-        wallet: creditWallet,
+        wallet: "platform",
         pack_id: requestedPackId,
         user_id: user.id,
         user_email: user.email,
@@ -264,10 +247,7 @@ serve(withErrorBoundary(async (req: Request) => {
               currency: "usd",
               product_data: {
                 name: `${pack.name} (${pack.credits} Credits)`,
-                description:
-                  creditWallet === "mvp_builder"
-                    ? `${pack.credits} MVP Builder credits`
-                    : `${pack.credits} top-up credits for Creatives Takeover`,
+                description: `${pack.credits} top-up credits for Creatives Takeover`,
               },
               unit_amount: pack.amount,
             },
@@ -278,14 +258,14 @@ serve(withErrorBoundary(async (req: Request) => {
           metadata,
         },
         metadata,
-        success_url: `${origin}/subscription-success?purchase_type=credit_pack&wallet=${creditWallet}&pack_id=${requestedPackId}&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/pricing#${creditWallet === "mvp_builder" ? "mvp-credit-packs" : "credit-packs"}`,
+        success_url: `${origin}/subscription-success?purchase_type=credit_pack&wallet=platform&pack_id=${requestedPackId}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/pricing#credit-packs`,
       });
 
       logInfo("checkout:credit_pack_created", {
         sessionId: session.id,
         packId: requestedPackId,
-        wallet: creditWallet,
+        wallet: "platform",
         userId: user.id,
       });
 
