@@ -1554,6 +1554,15 @@ All colors MUST be HSL.
     letter-spacing: -0.02em;
   }
 
+  /* Podcast hero ("Founders Unleashed") — edgy condensed display type */
+  .podcast-display-font {
+    font-family: 'Anton', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 400; /* Anton ships a single heavy weight */
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    line-height: 0.92;
+  }
+
   /* Hover effects */
   .hover-lift {
     transition: var(--transition-smooth);

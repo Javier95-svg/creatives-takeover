@@ -28,7 +28,7 @@ const PodcastHero = () => {
           </div>
 
           {/* Main Title */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 sm:mb-7 takeover-title creatives-font">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl mb-6 sm:mb-7 podcast-display-font">
             <span className="takeover-gradient">Founders Unleashed</span>
           </h1>
 
