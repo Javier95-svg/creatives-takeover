@@ -11,9 +11,11 @@ import PMFSegmentBreakdown from './PMFSegmentBreakdown';
 import PMFSeanEllisTest from './PMFSeanEllisTest';
 import PMFEvidenceChecklist from './PMFEvidenceChecklist';
 import PMFScoreTrend from './PMFScoreTrend';
+import PMFOutcomeCapture from './PMFOutcomeCapture';
 import { SourceCitation } from '@/components/chatbot/SourceCitation';
 import { ContextualMentorRecommendations } from '@/components/mentor-marketplace/ContextualMentorRecommendations';
 import type { PMFReadinessAnalysis, PMFInterviewLog, PMFValidationEvidence, PMFScoreTrendPoint } from '@/hooks/usePMFLab';
+import type { PMFSurvey, PMFSurveyAggregate } from '@/hooks/usePMFSurvey';
 import { Link } from 'react-router-dom';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 import { BizMapShareDialog } from '@/components/bizmap/BizMapShareDialog';
@@ -34,6 +36,12 @@ interface PMFReadinessReportProps {
   onSaveSeanEllis: (tally: { very: number; somewhat: number; not: number }) => Promise<boolean>;
   onSaveChecklist: (items: string[]) => Promise<boolean>;
   onFindCustomers?: () => void;
+  // Hosted survey
+  survey: PMFSurvey | null;
+  surveyAggregate: PMFSurveyAggregate;
+  surveyShareUrl: string | null;
+  isCreatingSurvey: boolean;
+  onCreateSurvey: () => void;
 }
 
 const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
@@ -50,6 +58,11 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
   onSaveSeanEllis,
   onSaveChecklist,
   onFindCustomers,
+  survey,
+  surveyAggregate,
+  surveyShareUrl,
+  isCreatingSurvey,
+  onCreateSurvey,
 }) => {
   const [interviewPreviewOpen, setInterviewPreviewOpen] = useState(false);
   const isReady = analysis.verdict === 'ready';
@@ -539,8 +552,21 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
             initialSomewhat={evidence?.sean_ellis_somewhat_disappointed}
             initialNot={evidence?.sean_ellis_not_disappointed}
             onSave={onSaveSeanEllis}
+            survey={survey}
+            surveyAggregate={surveyAggregate}
+            shareUrl={surveyShareUrl}
+            isCreatingSurvey={isCreatingSurvey}
+            onCreateSurvey={onCreateSurvey}
           />
         </div>
+
+        {analysisId && (
+          <PMFOutcomeCapture
+            analysisId={analysisId}
+            predictedScore={analysis.overallScore}
+            predictedVerdict={analysis.verdict}
+          />
+        )}
       </div>
 
       {/* Collapsible interview evidence preview */}

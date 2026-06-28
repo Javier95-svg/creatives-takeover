@@ -245,7 +245,11 @@ export function usePMFLab() {
 
   const runAnalysis = useCallback(async (
     answers: PMFEvidenceAnswers,
-    options?: { businessContext?: PMFBusinessContext; previousAnalysisId?: string },
+    options?: {
+      businessContext?: PMFBusinessContext;
+      previousAnalysisId?: string;
+      surveyEvidence?: { total: number; veryDisappointedPct: number; sampleVerbatims: string[] };
+    },
   ) => {
     if (!user) {
       toast.error('Sign in to analyze your PMF evidence.');
@@ -270,6 +274,7 @@ export function usePMFLab() {
           ...answers,
           businessContext: options?.businessContext,
           previousAnalysisId: options?.previousAnalysisId,
+          surveyEvidence: options?.surveyEvidence,
         },
       });
 
@@ -313,9 +318,12 @@ export function usePMFLab() {
     });
   }, [analysis, analysisId, runAnalysis]);
 
-  const saveSeanEllis = useCallback(async (tally: { very: number; somewhat: number; not: number }) => {
+  const saveSeanEllis = useCallback(async (
+    tally: { very: number; somewhat: number; not: number },
+    options?: { silent?: boolean },
+  ) => {
     if (!user) {
-      toast.error('Sign in to save survey results.');
+      if (!options?.silent) toast.error('Sign in to save survey results.');
       return false;
     }
     const very = Math.max(0, Math.floor(tally.very || 0));
@@ -344,12 +352,12 @@ export function usePMFLab() {
         sean_ellis_somewhat_disappointed: somewhat,
         sean_ellis_not_disappointed: notDisappointed,
       }));
-      toast.success('Survey results saved.');
+      if (!options?.silent) toast.success('Survey results saved.');
       await refreshProgress();
       return true;
     } catch (err) {
       console.error('Save Sean Ellis error:', err);
-      toast.error('Unable to save survey results.');
+      if (!options?.silent) toast.error('Unable to save survey results.');
       return false;
     }
   }, [user, refreshProgress]);

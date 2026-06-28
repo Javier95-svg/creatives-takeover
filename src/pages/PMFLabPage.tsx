@@ -8,12 +8,15 @@ import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
 import { usePMFLab } from '@/hooks/usePMFLab';
+import { usePMFSurvey } from '@/hooks/usePMFSurvey';
 import PMFEvidenceForm from '@/components/pmf/PMFEvidenceForm';
 import PMFScoringLoader from '@/components/pmf/PMFScoringLoader';
 import PMFReadinessReport from '@/components/pmf/PMFReadinessReport';
 import PMFCustomerDiscovery from '@/components/pmf/PMFCustomerDiscovery';
+import PMFOutcomeCapture from '@/components/pmf/PMFOutcomeCapture';
 import { PMFContextBanner } from '@/components/pmf/PMFContextBanner';
 import { cn } from '@/lib/utils';
+import { useSearchParams } from 'react-router-dom';
 import { ArrowRight, Rocket } from 'lucide-react';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 import { getPublicTabConfig } from '@/config/publicTabVisibility';
@@ -41,6 +44,8 @@ export default function PMFLabPage() {
   const [waitlistProductName, setWaitlistProductName] = useState<string | null>(null);
   const [contextLoading, setContextLoading] = useState(false);
   const [mode, setMode] = useState<'score' | 'discover'>('score');
+  const [searchParams] = useSearchParams();
+  const outcomeAnalysisId = searchParams.get('outcome');
 
   useEffect(() => {
     if (!user) return;
@@ -121,6 +126,44 @@ export default function PMFLabPage() {
     exportReport,
     resetToIntake,
   } = usePMFLab();
+
+  const {
+    survey,
+    aggregate: surveyAggregate,
+    shareUrl: surveyShareUrl,
+    isCreating: isCreatingSurvey,
+    createAndPublishSurvey,
+  } = usePMFSurvey();
+
+  // Keep the per-user Sean Ellis evidence in sync with real survey responses, so the
+  // 40% metric, the 25-signal count, and the score all reflect verified data silently.
+  useEffect(() => {
+    if (surveyAggregate.total > 0) {
+      void saveSeanEllis(
+        { very: surveyAggregate.very, somewhat: surveyAggregate.somewhat, not: surveyAggregate.not },
+        { silent: true },
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [surveyAggregate.total, surveyAggregate.very, surveyAggregate.somewhat, surveyAggregate.not]);
+
+  const surveyEvidence = surveyAggregate.total > 0
+    ? {
+        total: surveyAggregate.total,
+        veryDisappointedPct: surveyAggregate.veryPct,
+        sampleVerbatims: surveyAggregate.verbatims
+          .map((v) => v.feedback || v.mainBenefit || '')
+          .filter(Boolean)
+          .slice(0, 5),
+      }
+    : undefined;
+
+  const handleCreateSurvey = () => {
+    void createAndPublishSurvey({
+      productName: waitlistProductName ?? undefined,
+      audience: icpPersonaName ?? undefined,
+    });
+  };
   const ruleCards = [
     {
       label: 'Score 75 or higher',
@@ -225,6 +268,14 @@ export default function PMFLabPage() {
               )
             ) : hasAccess ? (
               <>
+                {/* Outcome follow-up deep-link (from the "what happened?" email) */}
+                {outcomeAnalysisId && (
+                  <div className="mb-8">
+                    <h2 className="mb-3 text-lg font-semibold text-foreground">Update what happened with your idea</h2>
+                    <PMFOutcomeCapture analysisId={outcomeAnalysisId} />
+                  </div>
+                )}
+
                 {/* Mode toggle — score existing evidence vs. find customers to talk to */}
                 <div className="mb-6 flex justify-center">
                   <div className="inline-flex rounded-xl border border-border/60 bg-muted/30 p-1">
@@ -264,6 +315,7 @@ export default function PMFLabPage() {
                             productName: waitlistProductName ?? undefined,
                             targetAudience: icpPersonaName ?? undefined,
                           },
+                          surveyEvidence,
                         })}
                         isSubmitting={false}
                       />
@@ -289,6 +341,11 @@ export default function PMFLabPage() {
                           onSaveSeanEllis={saveSeanEllis}
                           onSaveChecklist={saveChecklist}
                           onFindCustomers={() => setMode('discover')}
+                          survey={survey}
+                          surveyAggregate={surveyAggregate}
+                          surveyShareUrl={surveyShareUrl}
+                          isCreatingSurvey={isCreatingSurvey}
+                          onCreateSurvey={handleCreateSurvey}
                         />
                       </div>
                     )}

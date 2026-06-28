@@ -144,6 +144,7 @@ const DemoStudioLaunchComposerPage = lazy(() => import("./pages/demo-studio/Laun
 const PublicDemoPage = lazy(() => import("./pages/demo-studio/PublicDemoPage"));
 const EmbedDemoPage = lazy(() => import("./pages/demo-studio/EmbedDemoPage"));
 const PublicLaunchPage = lazy(() => import("./pages/demo-studio/PublicLaunchPage"));
+const PMFSurveyPage = lazy(() => import("./pages/pmf/PMFSurveyPage"));
 const DemoStudioTryPage = lazy(() => import("./pages/demo-studio/TryPage"));
 
 const queryClient = new QueryClient({
@@ -313,6 +314,7 @@ function App() {
                         <Route path="/waitlist/templates" element={<Navigate to="/demo-studio/classic/templates" replace />} />
                         <Route path="/waitlist-maker" element={<Navigate to="/demo-studio/classic" replace />} />
                         <Route path="/w/:slug" element={<WaitlistPublicPage />} />
+                        <Route path="/pmf-survey/:slug" element={<PMFSurveyPage />} />
                         <Route path="/directories" element={<DirectoriesPage />} />
                         <Route path="/mvp-builder" element={<ToolRouteWithCreditGate><AppBuilderPage /></ToolRouteWithCreditGate>} />
                         <Route path="/mvp-scope" element={<MVPBuilderBetaPage />} />

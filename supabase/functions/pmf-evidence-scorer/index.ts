@@ -40,6 +40,12 @@ interface PMFEvidenceAnswers {
   };
   // When present and owned by the caller, this run is a free re-score (no credit charge)
   previousAnalysisId?: string;
+  // Verified responses from the founder's hosted Sean Ellis survey (real users)
+  surveyEvidence?: {
+    total: number;
+    veryDisappointedPct: number;
+    sampleVerbatims: string[];
+  };
 }
 
 interface MarketEvidenceSource {
@@ -261,6 +267,15 @@ serve(async (req) => {
           .join('\n')
       : 'No external web evidence was retrieved for this run.';
 
+    // Verified responses from the founder's hosted Sean Ellis survey (real users).
+    const survey = body.surveyEvidence;
+    const surveyBlock = survey && survey.total > 0
+      ? `${survey.total} real users completed the founder's product survey. ${survey.veryDisappointedPct}% said they would be VERY disappointed without the product (Sean Ellis PMF benchmark is 40%).` +
+        (survey.sampleVerbatims?.length
+          ? `\nSample verbatims:\n${survey.sampleVerbatims.slice(0, 5).map((v) => `  • "${String(v).slice(0, 220)}"`).join('\n')}`
+          : '')
+      : 'No hosted survey responses were collected for this run.';
+
     const systemPrompt = `You are PMF Lab, a rigorous PMF (Product-Market Fit) evidence evaluator inside a startup development platform. Founders use you in Stage III: Validation, after they already created a landing page in Stage II: Prototyping. Your job is to evaluate the QUALITY of customer-demand evidence — not the idea itself — and produce a PMF score from 0 to 100.
 
 IMPORTANT PRODUCT RULES:
@@ -407,7 +422,10 @@ Confidence level (1–10): ${body.confidenceLevel}
 EXTERNAL DEMAND SIGNAL (live web search, ${marketSources.length} source${marketSources.length === 1 ? '' : 's'}):
 ${externalEvidenceBlock}
 
-When scoring DEMAND PROOF and CONSISTENCY, and when writing the diagnosis, explicitly note whether this external signal corroborates or contradicts the founder's reported evidence, and reference source numbers like [1], [2] where relevant. Populate marketEvidenceSummary accordingly (empty string if no external evidence was retrieved). Do NOT inflate scores solely because external interest exists — the founder's own structured interviews remain the primary source of truth.
+REAL USER SURVEY (hosted Sean Ellis test):
+${surveyBlock}
+
+When scoring DEMAND PROOF and CONSISTENCY, and when writing the diagnosis, explicitly note whether this external signal corroborates or contradicts the founder's reported evidence, and reference source numbers like [1], [2] where relevant. Populate marketEvidenceSummary accordingly (empty string if no external evidence was retrieved). Do NOT inflate scores solely because external interest exists — the founder's own structured interviews remain the primary source of truth. The REAL USER SURVEY, however, IS first-class direct demand evidence: when present, weight it heavily in Demand Proof and Consistency (a survey ≥40% "very disappointed" is a strong positive signal; well below 40% is a strong negative one) and reference the % and verbatims explicitly.
 
 Apply the scoring rubric to this evidence and return the PMF readiness JSON. Make the final recommendation founder-friendly and concrete.`;
 
