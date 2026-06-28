@@ -108,8 +108,13 @@ export default function PMFLabPage() {
     hasSavedReport,
     isSaving,
     isExporting,
+    evidence,
+    trend,
     runAnalysis,
+    reScore,
     saveReport,
+    saveSeanEllis,
+    saveChecklist,
     exportReport,
     resetToIntake,
   } = usePMFLab();
@@ -220,7 +225,12 @@ export default function PMFLabPage() {
                 {/* Phase A — Evidence Form */}
                 {phase === 'intake' && (
                   <PMFEvidenceForm
-                    onSubmit={runAnalysis}
+                    onSubmit={(answers) => runAnalysis(answers, {
+                      businessContext: {
+                        productName: waitlistProductName ?? undefined,
+                        targetAudience: icpPersonaName ?? undefined,
+                      },
+                    })}
                     isSubmitting={false}
                   />
                 )}
@@ -236,9 +246,14 @@ export default function PMFLabPage() {
                       analysisId={analysisId}
                       isSaving={isSaving}
                       isExporting={isExporting}
+                      evidence={evidence}
+                      trend={trend}
                       onSave={saveReport}
                       onExport={exportReport}
                       onReanalyze={resetToIntake}
+                      onReScore={reScore}
+                      onSaveSeanEllis={saveSeanEllis}
+                      onSaveChecklist={saveChecklist}
                     />
                   </div>
                 )}

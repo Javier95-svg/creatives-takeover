@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
@@ -55,6 +55,21 @@ export interface PMFInterviewLog {
   offeredToPay: boolean;
 }
 
+export interface PMFEvidenceSource {
+  title: string;
+  url?: string;
+  sourceType?: 'web' | 'knowledge';
+  snippet?: string;
+  relevance?: number;
+  publishedDate?: string;
+}
+
+export interface PMFBusinessContext {
+  productName?: string;
+  targetAudience?: string;
+  industry?: string;
+}
+
 export interface PMFDimension {
   score: number;
   explanation: string;
@@ -95,6 +110,25 @@ export interface PMFReadinessAnalysis {
   nextExperiment: string;
   evidenceAnswers: PMFEvidenceAnswers;
   generatedAt: string;
+  // Evidence-backed scoring (Section A): live external demand evidence
+  dataSources?: PMFEvidenceSource[];
+  marketEvidenceSummary?: string;
+}
+
+export interface PMFValidationEvidence {
+  validation_checklist: string[];
+  interview_notes_count: number;
+  survey_results_count: number;
+  required_signals: number;
+  sean_ellis_very_disappointed: number;
+  sean_ellis_somewhat_disappointed: number;
+  sean_ellis_not_disappointed: number;
+}
+
+export interface PMFScoreTrendPoint {
+  id: string;
+  score: number;
+  createdAt: string;
 }
 
 type Phase = 'intake' | 'analyzing' | 'results';
@@ -117,6 +151,10 @@ export function usePMFLab() {
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [hasSavedReport, setHasSavedReport] = useState(false);
+  const [evidence, setEvidence] = useState<PMFValidationEvidence | null>(null);
+  const [trend, setTrend] = useState<PMFScoreTrendPoint[]>([]);
+  // Remember the business context of the latest run so re-scores can reuse it
+  const lastContextRef = useRef<{ productName?: string; targetAudience?: string; industry?: string } | undefined>(undefined);
 
   const loadExistingAnalysis = useCallback(async () => {
     if (!user) return;
@@ -151,26 +189,88 @@ export function usePMFLab() {
     }
   }, [user]);
 
-  // On mount: restore existing analysis if found
+  const loadEvidence = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from(PMF_EVIDENCE_TABLE)
+        .select('validation_checklist, interview_notes_count, survey_results_count, required_signals, sean_ellis_very_disappointed, sean_ellis_somewhat_disappointed, sean_ellis_not_disappointed')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (error) {
+        console.warn('Failed to load PMF validation evidence:', error);
+        return;
+      }
+      if (data) setEvidence(data as unknown as PMFValidationEvidence);
+    } catch (err) {
+      console.warn('Failed to load PMF validation evidence:', err);
+    }
+  }, [user]);
+
+  const loadTrend = useCallback(async () => {
+    if (!user) return;
+    if (!isPmfResultsTableAvailable()) return;
+    try {
+      const { data, error } = await supabase
+        .from(PMF_RESULTS_TABLE)
+        .select('id, pmf_score, created_at')
+        .eq('user_id', user.id)
+        .not('pmf_score', 'is', null)
+        .order('created_at', { ascending: true })
+        .limit(50);
+      if (error) {
+        if (handlePmfResultsTableError(error)) return;
+        throw error;
+      }
+      setTrend(
+        (data ?? []).map((row: any) => ({
+          id: row.id,
+          score: Number(row.pmf_score),
+          createdAt: row.created_at,
+        })),
+      );
+    } catch (err) {
+      if (handlePmfResultsTableError(err)) return;
+      console.warn('Failed to load PMF score trend:', err);
+    }
+  }, [user]);
+
+  // On mount: restore existing analysis, validation evidence, and score trend
   useEffect(() => {
     if (!user) return;
     void loadExistingAnalysis();
-  }, [loadExistingAnalysis, user]);
+    void loadEvidence();
+    void loadTrend();
+  }, [loadExistingAnalysis, loadEvidence, loadTrend, user]);
 
-  const runAnalysis = useCallback(async (answers: PMFEvidenceAnswers) => {
+  const runAnalysis = useCallback(async (
+    answers: PMFEvidenceAnswers,
+    options?: { businessContext?: PMFBusinessContext; previousAnalysisId?: string },
+  ) => {
     if (!user) {
       toast.error('Sign in to analyze your PMF evidence.');
       return;
     }
 
-    const credits = ensureCredits('PMF_SCORING');
-    if (credits === null) return;
+    lastContextRef.current = options?.businessContext ?? lastContextRef.current;
+
+    // Re-scores are free (Section C) — only the initial analysis charges credits.
+    const isReScore = Boolean(options?.previousAnalysisId);
+    let credits: number | null = 0;
+    if (!isReScore) {
+      credits = ensureCredits('PMF_SCORING');
+      if (credits === null) return;
+    }
 
     setPhase('analyzing');
 
     try {
       const { data, error } = await supabase.functions.invoke('pmf-evidence-scorer', {
-        body: answers,
+        body: {
+          ...answers,
+          businessContext: options?.businessContext,
+          previousAnalysisId: options?.previousAnalysisId,
+        },
       });
 
       if (error || !data?.success) {
@@ -178,7 +278,7 @@ export function usePMFLab() {
         if (!wasCreditError) {
           toast.error('PMF analysis failed. Please try again.');
         }
-        setPhase('intake');
+        setPhase(analysis ? 'results' : 'intake');
         return;
       }
 
@@ -186,19 +286,105 @@ export function usePMFLab() {
       setAnalysisId(data.analysisId ?? null);
       setHasSavedReport(false);
       setPhase('results');
-      showCreditReceipt(
-        'PMF_SCORING',
-        typeof data?.creditsUsed === 'number' ? data.creditsUsed : credits,
-        typeof data?.newBalance === 'number' ? data.newBalance : undefined,
-        { featureName: 'PMF Evidence Score' }
-      );
-      fireJourneyUpgradePrompt('starter_pmf_complete');
+      void loadTrend();
+      if (isReScore) {
+        toast.success('Re-scored with your latest evidence — no credits used.');
+      } else {
+        showCreditReceipt(
+          'PMF_SCORING',
+          typeof data?.creditsUsed === 'number' ? data.creditsUsed : (credits ?? 0),
+          typeof data?.newBalance === 'number' ? data.newBalance : undefined,
+          { featureName: 'PMF Evidence Score' }
+        );
+        fireJourneyUpgradePrompt('starter_pmf_complete');
+      }
     } catch (err) {
       console.error('PMF analysis error:', err);
       toast.error('Something went wrong. Please try again.');
-      setPhase('intake');
+      setPhase(analysis ? 'results' : 'intake');
     }
-  }, [user, ensureCredits, handleCreditError, showCreditReceipt, fireJourneyUpgradePrompt]);
+  }, [user, analysis, ensureCredits, handleCreditError, showCreditReceipt, fireJourneyUpgradePrompt, loadTrend]);
+
+  const reScore = useCallback(async () => {
+    if (!analysis || !analysisId) return;
+    await runAnalysis(analysis.evidenceAnswers, {
+      businessContext: lastContextRef.current,
+      previousAnalysisId: analysisId,
+    });
+  }, [analysis, analysisId, runAnalysis]);
+
+  const saveSeanEllis = useCallback(async (tally: { very: number; somewhat: number; not: number }) => {
+    if (!user) {
+      toast.error('Sign in to save survey results.');
+      return false;
+    }
+    const very = Math.max(0, Math.floor(tally.very || 0));
+    const somewhat = Math.max(0, Math.floor(tally.somewhat || 0));
+    const notDisappointed = Math.max(0, Math.floor(tally.not || 0));
+    const total = very + somewhat + notDisappointed;
+    try {
+      const { error } = await supabase
+        .from(PMF_EVIDENCE_TABLE)
+        .upsert({
+          user_id: user.id,
+          sean_ellis_very_disappointed: very,
+          sean_ellis_somewhat_disappointed: somewhat,
+          sean_ellis_not_disappointed: notDisappointed,
+          sean_ellis_updated_at: new Date().toISOString(),
+          survey_results_count: total,
+          required_signals: PMF_REQUIRED_SIGNALS,
+        }, { onConflict: 'user_id' });
+      if (error) throw error;
+      setEvidence((prev) => ({
+        validation_checklist: prev?.validation_checklist ?? [],
+        interview_notes_count: prev?.interview_notes_count ?? 0,
+        required_signals: PMF_REQUIRED_SIGNALS,
+        survey_results_count: total,
+        sean_ellis_very_disappointed: very,
+        sean_ellis_somewhat_disappointed: somewhat,
+        sean_ellis_not_disappointed: notDisappointed,
+      }));
+      toast.success('Survey results saved.');
+      await refreshProgress();
+      return true;
+    } catch (err) {
+      console.error('Save Sean Ellis error:', err);
+      toast.error('Unable to save survey results.');
+      return false;
+    }
+  }, [user, refreshProgress]);
+
+  const saveChecklist = useCallback(async (items: string[]) => {
+    if (!user) {
+      toast.error('Sign in to save your checklist.');
+      return false;
+    }
+    try {
+      const { error } = await supabase
+        .from(PMF_EVIDENCE_TABLE)
+        .upsert({
+          user_id: user.id,
+          validation_checklist: items,
+          checklist_saved_at: new Date().toISOString(),
+          required_signals: PMF_REQUIRED_SIGNALS,
+        }, { onConflict: 'user_id' });
+      if (error) throw error;
+      setEvidence((prev) => ({
+        interview_notes_count: prev?.interview_notes_count ?? 0,
+        survey_results_count: prev?.survey_results_count ?? 0,
+        required_signals: PMF_REQUIRED_SIGNALS,
+        sean_ellis_very_disappointed: prev?.sean_ellis_very_disappointed ?? 0,
+        sean_ellis_somewhat_disappointed: prev?.sean_ellis_somewhat_disappointed ?? 0,
+        sean_ellis_not_disappointed: prev?.sean_ellis_not_disappointed ?? 0,
+        validation_checklist: items,
+      }));
+      return true;
+    } catch (err) {
+      console.error('Save checklist error:', err);
+      toast.error('Unable to save your checklist.');
+      return false;
+    }
+  }, [user]);
 
   const saveReport = useCallback(async () => {
     if (!user) {
@@ -221,7 +407,10 @@ export function usePMFLab() {
         }
       }
 
-      // Write to pmf_validation_evidence to trigger Stage III completion
+      // Write to pmf_validation_evidence to trigger Stage III completion.
+      // Only touch interview_notes_count here — the interactive checklist and the
+      // Sean Ellis survey tally are owned by saveChecklist / saveSeanEllis and must
+      // not be clobbered on save.
       const conversationCount = analysis.evidenceAnswers?.interviews?.length
         ?? analysis.evidenceAnswers?.conversationCount
         ?? 0;
@@ -229,21 +418,24 @@ export function usePMFLab() {
         .from(PMF_EVIDENCE_TABLE)
         .upsert({
           user_id: user.id,
-          validation_checklist: [
-            'Problem hypothesis defined',
-            'Target segment identified',
-            'Validation method selected',
-            'Interview script prepared',
-            'Success criteria documented',
-          ],
-          checklist_saved_at: new Date().toISOString(),
           interview_notes_count: conversationCount,
-          survey_results_count: 0,
           required_signals: PMF_REQUIRED_SIGNALS,
         }, { onConflict: 'user_id' });
 
       if (evidenceError) {
         console.warn('Failed to update pmf_validation_evidence:', evidenceError);
+      } else {
+        setEvidence((prev) => prev
+          ? { ...prev, interview_notes_count: conversationCount, required_signals: PMF_REQUIRED_SIGNALS }
+          : {
+              validation_checklist: [],
+              interview_notes_count: conversationCount,
+              survey_results_count: 0,
+              required_signals: PMF_REQUIRED_SIGNALS,
+              sean_ellis_very_disappointed: 0,
+              sean_ellis_somewhat_disappointed: 0,
+              sean_ellis_not_disappointed: 0,
+            });
       }
 
       toast.success(
@@ -351,6 +543,15 @@ export function usePMFLab() {
         addLine(analysis.nextExperiment, 10);
       }
 
+      if (analysis.marketEvidenceSummary || (analysis.dataSources?.length ?? 0) > 0) {
+        addSection('EXTERNAL DEMAND EVIDENCE');
+        if (analysis.marketEvidenceSummary) addLine(analysis.marketEvidenceSummary, 9);
+        (analysis.dataSources ?? []).forEach((s, i) => {
+          addLine(`[${i + 1}] ${s.title}`, 9, true);
+          if (s.url) addLine(`  ${s.url}`, 8, false, '#2563eb');
+        });
+      }
+
       doc.save(`pmf-readiness-report-${analysis.overallScore}.pdf`);
       toast.success('PDF exported.');
       await saveReport();
@@ -376,8 +577,13 @@ export function usePMFLab() {
     hasSavedReport,
     isSaving,
     isExporting,
+    evidence,
+    trend,
     runAnalysis,
+    reScore,
     saveReport,
+    saveSeanEllis,
+    saveChecklist,
     exportReport,
     resetToIntake,
   };

@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_shared/credit-deduction.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
@@ -31,6 +32,22 @@ interface PMFEvidenceAnswers {
   founderUncertainties: string;
   whatWouldChangeMind: string;
   confidenceLevel: number;
+  // Optional context used to fetch external demand evidence (web search)
+  businessContext?: {
+    productName?: string;
+    targetAudience?: string;
+    industry?: string;
+  };
+  // When present and owned by the caller, this run is a free re-score (no credit charge)
+  previousAnalysisId?: string;
+}
+
+interface MarketEvidenceSource {
+  title: string;
+  url?: string;
+  snippet?: string;
+  relevanceScore?: number;
+  publishedDate?: string;
 }
 
 interface PMFInterviewLog {
@@ -79,43 +96,71 @@ serve(async (req) => {
       });
     }
 
-    const creditCost = CREDIT_COSTS.PMF_SCORING;
-    const idempotencyKey = await resolveCreditIdempotencyKey(req, {
-      userId: user.id,
-      feature: 'PMF_SCORING',
-      requestFingerprint: {
-        testTypes: body.testTypes,
-        conversationCount: loggedInterviewCount,
-        peopleReached: body.peopleReached,
-        strongInterestCount: body.strongInterestCount,
-        demandSignals: {
-          askedAboutPricing: body.askedAboutPricing,
-          joinedWaitlist: body.joinedWaitlist,
-          sharedWithSomeone: body.sharedWithSomeone,
-          offeredToPay: body.offeredToPay,
-        },
-      },
-    });
-    const creditResult = await checkAndDeductCredits(
-      user.id,
-      creditCost,
-      'PMF Evidence Analysis',
-      undefined,
-      { testTypes: body.testTypes, idempotencyKey, entitlementFeature: 'PMF_SCORING' }
-    );
-    const chargedCredits = (creditResult.usedFromQuota ?? 0) + (creditResult.usedFromBalance ?? 0);
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    if (!creditResult.success) {
-      return new Response(JSON.stringify({
-        error: creditResult.error || 'Credit deduction failed',
-        creditError: true,
-        errorCode: creditResult.errorCode,
-        requiredTier: creditResult.requiredTier,
-        requiredCredits: creditCost,
-      }), {
-        status: 402,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Free re-score (Section C): if a prior analysis owned by this user is referenced,
+    // skip the credit charge. Ownership is verified server-side so the flag can't be spoofed.
+    let isFreeReScore = false;
+    if (body.previousAnalysisId) {
+      try {
+        const { data: prior } = await supabase
+          .from('pmf_analysis_results' as any)
+          .select('id')
+          .eq('id', body.previousAnalysisId)
+          .eq('user_id', user.id)
+          .maybeSingle();
+        isFreeReScore = Boolean(prior);
+      } catch (ownershipErr) {
+        console.warn('Re-score ownership check failed, charging as a normal run:', ownershipErr);
+        isFreeReScore = false;
+      }
+    }
+
+    const creditCost = CREDIT_COSTS.PMF_SCORING;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let creditResult: any = { success: true };
+    let chargedCredits = 0;
+
+    if (!isFreeReScore) {
+      const idempotencyKey = await resolveCreditIdempotencyKey(req, {
+        userId: user.id,
+        feature: 'PMF_SCORING',
+        requestFingerprint: {
+          testTypes: body.testTypes,
+          conversationCount: loggedInterviewCount,
+          peopleReached: body.peopleReached,
+          strongInterestCount: body.strongInterestCount,
+          demandSignals: {
+            askedAboutPricing: body.askedAboutPricing,
+            joinedWaitlist: body.joinedWaitlist,
+            sharedWithSomeone: body.sharedWithSomeone,
+            offeredToPay: body.offeredToPay,
+          },
+        },
       });
+      creditResult = await checkAndDeductCredits(
+        user.id,
+        creditCost,
+        'PMF Evidence Analysis',
+        undefined,
+        { testTypes: body.testTypes, idempotencyKey, entitlementFeature: 'PMF_SCORING' }
+      );
+      chargedCredits = (creditResult.usedFromQuota ?? 0) + (creditResult.usedFromBalance ?? 0);
+
+      if (!creditResult.success) {
+        return new Response(JSON.stringify({
+          error: creditResult.error || 'Credit deduction failed',
+          creditError: true,
+          errorCode: creditResult.errorCode,
+          requiredTier: creditResult.requiredTier,
+          requiredCredits: creditCost,
+        }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -149,6 +194,72 @@ serve(async (req) => {
           `   Demand behaviors: pricing=${interview.askedAboutPricing ? 'yes' : 'no'}, waitlist=${interview.joinedWaitlist ? 'yes' : 'no'}, referral=${interview.referredSomeone ? 'yes' : 'no'}, pay=${interview.offeredToPay ? 'yes' : 'no'}`
         )).join('\n\n')
       : 'No structured interview records provided.';
+
+    // ─── Evidence-backed scoring: on-demand external demand signal (best-effort) ───
+    // Reuses the existing `web-search` function (Perplexity). Never blocks scoring —
+    // if it fails or PERPLEXITY_API_KEY is unset, we degrade gracefully to "no citations".
+    const ctx = body.businessContext ?? {};
+    const productLabel = ctx.productName || ctx.targetAudience || (body.testTypes?.[0] ?? 'this product');
+    let marketSources: MarketEvidenceSource[] = [];
+    try {
+      const painSeed = (body.mostPainfulQuote || body.urgencyProxy || body.consistencyNote || '').slice(0, 220);
+      if (painSeed.trim().length > 0) {
+        const audience = ctx.targetAudience ? ` among ${ctx.targetAudience}` : '';
+        const searchQuery = `Are people discussing this problem${audience}: "${painSeed}". Real complaints, current workarounds, alternatives they already pay for, and willingness to pay for ${productLabel}.`;
+        const searchResp = await fetch(`${supabaseUrl}/functions/v1/web-search`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseServiceKey}`,
+            'apikey': supabaseServiceKey,
+          },
+          body: JSON.stringify({
+            query: searchQuery,
+            maxResults: 5,
+            searchRecency: 'year',
+            businessContext: ctx.industry ? { industry: ctx.industry } : undefined,
+          }),
+        });
+        if (searchResp.ok) {
+          const searchJson = await searchResp.json();
+          const hostOf = (u: string) => {
+            try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; }
+          };
+          if (searchJson?.success) {
+            const rawSources: MarketEvidenceSource[] = Array.isArray(searchJson.sources) ? searchJson.sources : [];
+            const citationUrls: string[] = Array.isArray(searchJson.citations) ? searchJson.citations : [];
+            marketSources = rawSources
+              .slice(0, 5)
+              .map((s, i) => {
+                const url = s.url || citationUrls[i] || undefined;
+                const isPlaceholderTitle = !s.title || /^Source \d+$/.test(s.title);
+                return {
+                  title: isPlaceholderTitle && url ? hostOf(url) : (s.title || hostOf(url || '')),
+                  url,
+                  snippet: s.snippet,
+                  relevanceScore: s.relevanceScore,
+                  publishedDate: s.publishedDate,
+                };
+              })
+              .filter((s) => Boolean(s.url) || Boolean(s.snippet));
+            // Fall back to raw citation URLs if no structured sources came back
+            if (marketSources.length === 0 && citationUrls.length > 0) {
+              marketSources = citationUrls.slice(0, 5).map((u) => ({ title: hostOf(u), url: u }));
+            }
+          }
+        } else {
+          console.warn('web-search returned non-OK status:', searchResp.status);
+        }
+      }
+    } catch (searchErr) {
+      console.warn('web-search failed, continuing without external evidence:', searchErr);
+    }
+
+    const externalEvidenceBlock = marketSources.length > 0
+      ? marketSources
+          .map((s, i) => `[${i + 1}] ${s.title}${s.url ? ` (${s.url})` : ''}\n    ${(s.snippet || '').slice(0, 240)}`)
+          .join('\n')
+      : 'No external web evidence was retrieved for this run.';
 
     const systemPrompt = `You are PMF Lab, a rigorous PMF (Product-Market Fit) evidence evaluator inside a startup development platform. Founders use you in Stage III: Validation, after they already created a landing page in Stage II: Prototyping. Your job is to evaluate the QUALITY of customer-demand evidence — not the idea itself — and produce a PMF score from 0 to 100.
 
@@ -260,7 +371,8 @@ OUTPUT: Return ONLY valid JSON matching this exact schema:
     }
   ],
   "readyToScope": boolean,
-  "nextExperiment": "string — specific test to run next given the actual product, segments, and gaps found; never generic"
+  "nextExperiment": "string — specific test to run next given the actual product, segments, and gaps found; never generic",
+  "marketEvidenceSummary": "string — 1–2 sentences on whether the live external web signal corroborates or contradicts the founder's reported evidence; cite source numbers like [1], [2]. Empty string if no external evidence was provided."
 }`;
 
     const userPrompt = `EVIDENCE SUBMITTED BY FOUNDER:
@@ -291,6 +403,11 @@ FOUNDER REFLECTION:
 What I'm still unsure about: "${body.founderUncertainties}"
 What would change my mind: "${body.whatWouldChangeMind}"
 Confidence level (1–10): ${body.confidenceLevel}
+
+EXTERNAL DEMAND SIGNAL (live web search, ${marketSources.length} source${marketSources.length === 1 ? '' : 's'}):
+${externalEvidenceBlock}
+
+When scoring DEMAND PROOF and CONSISTENCY, and when writing the diagnosis, explicitly note whether this external signal corroborates or contradicts the founder's reported evidence, and reference source numbers like [1], [2] where relevant. Populate marketEvidenceSummary accordingly (empty string if no external evidence was retrieved). Do NOT inflate scores solely because external interest exists — the founder's own structured interviews remain the primary source of truth.
 
 Apply the scoring rubric to this evidence and return the PMF readiness JSON. Make the final recommendation founder-friendly and concrete.`;
 
@@ -334,14 +451,39 @@ Apply the scoring rubric to this evidence and return the PMF readiness JSON. Mak
         }
       }
 
-      // Attach evidence answers and timestamp
+      // Attach evidence answers, external citations, and timestamp
       analysis.evidenceAnswers = body;
       analysis.generatedAt = new Date().toISOString();
+      analysis.dataSources = marketSources.map((s) => ({
+        title: s.title,
+        url: s.url,
+        sourceType: 'web' as const,
+        snippet: s.snippet,
+        relevance: typeof s.relevanceScore === 'number' ? s.relevanceScore : undefined,
+        publishedDate: s.publishedDate,
+      }));
+      if (typeof analysis.marketEvidenceSummary !== 'string') analysis.marketEvidenceSummary = '';
 
-      // Store to pmf_analysis_results
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-      const supabase = createClient(supabaseUrl, supabaseKey);
+      // Store to pmf_analysis_results (each run inserts a new row → enables score trend)
+      const businessDescription =
+        [ctx.productName, ctx.targetAudience].filter(Boolean).join(' — ') ||
+        (body.mostPainfulQuote ? `Problem: ${body.mostPainfulQuote}`.slice(0, 500) : null);
+      const demandProofScore = analysis?.dimensions?.demandProof?.score;
+      const demandScore =
+        typeof demandProofScore === 'number'
+          ? Math.max(0, Math.min(100, demandProofScore * 5))
+          : null;
+      const dataSourcesPayload = [
+        { name: 'AI Analysis', type: 'ai_inference', reliability_score: 70 },
+        ...marketSources.map((s) => ({
+          title: s.title,
+          url: s.url,
+          sourceType: 'web',
+          type: 'web_search',
+          snippet: s.snippet,
+          relevance: typeof s.relevanceScore === 'number' ? s.relevanceScore : undefined,
+        })),
+      ];
 
       let analysisId: string | null = null;
       try {
@@ -349,9 +491,13 @@ Apply the scoring rubric to this evidence and return the PMF readiness JSON. Mak
           .from('pmf_analysis_results' as any)
           .insert({
             user_id: user.id,
+            business_description: businessDescription,
+            industry: ctx.industry || null,
             analysis_data: analysis,
             pmf_score: analysis.overallScore,
-            target_market: body.testTypes.join(', '),
+            demand_score: demandScore,
+            data_sources: dataSourcesPayload,
+            target_market: ctx.targetAudience || body.testTypes.join(', '),
           })
           .select('id')
           .single();

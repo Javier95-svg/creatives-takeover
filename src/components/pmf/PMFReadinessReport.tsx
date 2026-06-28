@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, Download, RefreshCw, CheckCircle2, XCircle, ArrowRight, AlertTriangle, MessageSquareWarning, Share2, Sparkles, ChevronDown, ChevronUp, Zap, GitFork, TrendingUp } from 'lucide-react';
+import { Save, Download, RefreshCw, CheckCircle2, XCircle, ArrowRight, AlertTriangle, MessageSquareWarning, Share2, Sparkles, ChevronDown, ChevronUp, Zap, GitFork, TrendingUp, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -8,8 +8,12 @@ import PMFScoreCircle from './PMFScoreCircle';
 import PMFDimensionBars from './PMFDimensionBars';
 import PMFRecommendations from './PMFRecommendations';
 import PMFSegmentBreakdown from './PMFSegmentBreakdown';
+import PMFSeanEllisTest from './PMFSeanEllisTest';
+import PMFEvidenceChecklist from './PMFEvidenceChecklist';
+import PMFScoreTrend from './PMFScoreTrend';
+import { SourceCitation } from '@/components/chatbot/SourceCitation';
 import { ContextualMentorRecommendations } from '@/components/mentor-marketplace/ContextualMentorRecommendations';
-import type { PMFReadinessAnalysis, PMFInterviewLog } from '@/hooks/usePMFLab';
+import type { PMFReadinessAnalysis, PMFInterviewLog, PMFValidationEvidence, PMFScoreTrendPoint } from '@/hooks/usePMFLab';
 import { Link } from 'react-router-dom';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 import { BizMapShareDialog } from '@/components/bizmap/BizMapShareDialog';
@@ -21,9 +25,14 @@ interface PMFReadinessReportProps {
   analysisId: string | null;
   isSaving: boolean;
   isExporting: boolean;
+  evidence: PMFValidationEvidence | null;
+  trend: PMFScoreTrendPoint[];
   onSave: () => void;
   onExport: () => void;
   onReanalyze: () => void;
+  onReScore: () => void;
+  onSaveSeanEllis: (tally: { very: number; somewhat: number; not: number }) => Promise<boolean>;
+  onSaveChecklist: (items: string[]) => Promise<boolean>;
 }
 
 const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
@@ -31,9 +40,14 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
   analysisId,
   isSaving,
   isExporting,
+  evidence,
+  trend,
   onSave,
   onExport,
   onReanalyze,
+  onReScore,
+  onSaveSeanEllis,
+  onSaveChecklist,
 }) => {
   const [interviewPreviewOpen, setInterviewPreviewOpen] = useState(false);
   const isReady = analysis.verdict === 'ready';
@@ -276,6 +290,26 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
         </div>
       )}
 
+      {/* External demand evidence (Section A) */}
+      {(Boolean(analysis.marketEvidenceSummary) || (analysis.dataSources?.length ?? 0) > 0) && (
+        <div className="rounded-2xl border border-info/20 bg-info/5 p-5 space-y-3">
+          <div className="flex items-center gap-2">
+            <Globe className="h-4 w-4 text-info shrink-0" />
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-info">External demand evidence</p>
+          </div>
+          {analysis.marketEvidenceSummary && (
+            <p className="text-sm leading-relaxed text-foreground">{analysis.marketEvidenceSummary}</p>
+          )}
+          {(analysis.dataSources?.length ?? 0) > 0 ? (
+            <SourceCitation sources={analysis.dataSources!} />
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              No external web signal was retrieved for this run — your score rests on your own interview evidence.
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Dimension bars */}
       <PMFDimensionBars dimensions={analysis.dimensions} />
 
@@ -465,6 +499,39 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
             : 'These mentors are strongest when your validation is promising but still unclear. Use them to interpret objections, sharpen the offer, and decide what to test next.'
         }
       />
+
+      {/* Validation tracking — evidence checklist, Sean Ellis 40% test, score trend (Sections B & C) */}
+      <Separator />
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-0.5">
+            <h3 className="text-lg font-semibold text-foreground">Keep validating</h3>
+            <p className="text-sm text-muted-foreground">
+              Log new evidence and run the Sean Ellis 40% test, then re-score for free to track your trend toward 75.
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={onReScore}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Re-score (free)
+          </Button>
+        </div>
+
+        <PMFScoreTrend trend={trend} />
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <PMFEvidenceChecklist
+            evidence={evidence}
+            requiredSignals={PMF_REQUIRED_SIGNALS}
+            onSaveChecklist={onSaveChecklist}
+          />
+          <PMFSeanEllisTest
+            initialVery={evidence?.sean_ellis_very_disappointed}
+            initialSomewhat={evidence?.sean_ellis_somewhat_disappointed}
+            initialNot={evidence?.sean_ellis_not_disappointed}
+            onSave={onSaveSeanEllis}
+          />
+        </div>
+      </div>
 
       {/* Collapsible interview evidence preview */}
       {loggedInterviews.length > 0 && (
