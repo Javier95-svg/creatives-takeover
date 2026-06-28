@@ -39,8 +39,14 @@ export default function SnapshotFrame({ url, title = 'Captured page', className,
         const res = await fetch(url);
         if (!res.ok) throw new Error('Snapshot fetch failed');
         const text = await res.text();
+        const DOMPurify = (await import('dompurify')).default;
+        const clean = DOMPurify.sanitize(text, {
+          WHOLE_DOCUMENT: true,
+          FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'base', 'link'],
+          FORBID_ATTR: ['ping'],
+        });
         if (!active) return;
-        created = URL.createObjectURL(new Blob([text], { type: 'text/html' }));
+        created = URL.createObjectURL(new Blob([clean], { type: 'text/html' }));
         setBlobUrl(created);
         setState('ready');
       } catch {
