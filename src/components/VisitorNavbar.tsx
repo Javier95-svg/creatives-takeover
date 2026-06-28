@@ -1,5 +1,5 @@
 import type { MouseEvent } from "react";
-import { Fragment, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   BarChart3,
@@ -14,9 +14,7 @@ import {
   Menu,
   Mic,
   Newspaper,
-  Radio,
   Rocket,
-  Rss,
   Target,
   X,
   Zap,
@@ -41,14 +39,14 @@ type VisitorLink = { label: string; href: string; icon: LucideIcon; sectionId?: 
 type VisitorMenuItem = { label: string; href: string; icon: LucideIcon; description: string };
 type VisitorMenu = { label: string; icon: LucideIcon; tagline: string; taglineIcon?: LucideIcon; items: VisitorMenuItem[] };
 
-// Simple links, in display order. The Gifts menu renders first and the Media menu is
-// injected right after "Learn" (see the render below). Final order:
-// Gifts · Build · Learn · Media · About Us · Pricing. (Home is intentionally omitted —
-// the logo already links home.)
+// Simple links, in display order. The Gifts menu renders first. Final order:
+// Gifts · Build · Learn · Podcast · Newspaper · About · Pricing. Home is covered by the logo.
 const visitorLinks: VisitorLink[] = [
   { label: "Build", href: "/build", icon: Zap },
   { label: "Learn", href: "/mentorship", icon: GraduationCap },
-  { label: "About Us", href: "/about", icon: Info },
+  { label: "Podcast", href: "/podcast", icon: Mic },
+  { label: "Newspaper", href: "/newspaper", icon: Newspaper },
+  { label: "About", href: "/about", icon: Info },
   { label: "Pricing", href: "/pricing", icon: DollarSign },
 ];
 
@@ -86,18 +84,6 @@ const giftsMenu: VisitorMenu = {
   icon: Gift,
   tagline: "From Creatives Takeover with 💙",
   items: freeToolsItems,
-};
-
-// Media menu — content & conversations under one roof.
-const mediaMenu: VisitorMenu = {
-  label: "Media",
-  icon: Radio,
-  tagline: "News & Stories",
-  taglineIcon: Rss,
-  items: [
-    { label: "Podcast", href: "/podcast", icon: Mic, description: "Founders Unleashed." },
-    { label: "Newspaper", href: "/newspaper", icon: Newspaper, description: "What founders learn the hard way." },
-  ],
 };
 
 const VisitorNavbar = () => {
@@ -311,18 +297,15 @@ const VisitorNavbar = () => {
               {visitorLinks.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <Fragment key={item.label}>
-                    <Link
-                      to={item.href}
-                      className={cn(linkClassName(item.href, item.sectionId), "inline-flex items-center gap-2")}
-                      onClick={(event) => handleNavClick(event, item)}
-                    >
-                      <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                      {item.label}
-                    </Link>
-
-                    {item.label === "Learn" && renderDesktopMenu(mediaMenu)}
-                  </Fragment>
+                  <Link
+                    key={item.label}
+                    to={item.href}
+                    className={cn(linkClassName(item.href, item.sectionId), "inline-flex items-center gap-2")}
+                    onClick={(event) => handleNavClick(event, item)}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {item.label}
+                  </Link>
                 );
               })}
             </div>
@@ -370,23 +353,20 @@ const VisitorNavbar = () => {
                 {visitorLinks.map((item) => {
                   const Icon = item.icon;
                   return (
-                    <Fragment key={item.label}>
-                      <Link
-                        to={item.href}
-                        className={cn(
-                          "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors",
-                          isActive(item.href, item.sectionId)
-                            ? "bg-background text-foreground"
-                            : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-                        )}
-                        onClick={(event) => handleNavClick(event, item, `Mobile ${item.label}`)}
-                      >
-                        <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                        {item.label}
-                      </Link>
-
-                      {item.label === "Learn" && renderMobileMenu(mediaMenu)}
-                    </Fragment>
+                    <Link
+                      key={item.label}
+                      to={item.href}
+                      className={cn(
+                        "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors",
+                        isActive(item.href, item.sectionId)
+                          ? "bg-background text-foreground"
+                          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                      )}
+                      onClick={(event) => handleNavClick(event, item, `Mobile ${item.label}`)}
+                    >
+                      <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      {item.label}
+                    </Link>
                   );
                 })}
 
