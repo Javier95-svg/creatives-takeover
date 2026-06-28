@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, Download, RefreshCw, CheckCircle2, XCircle, ArrowRight, AlertTriangle, MessageSquareWarning, Share2, Sparkles, ChevronDown, ChevronUp, Zap, GitFork, TrendingUp, Globe } from 'lucide-react';
+import { Save, Download, RefreshCw, CheckCircle2, XCircle, ArrowRight, AlertTriangle, MessageSquareWarning, Share2, Sparkles, ChevronDown, ChevronUp, Zap, GitFork, TrendingUp, Globe, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -33,6 +33,7 @@ interface PMFReadinessReportProps {
   onReScore: () => void;
   onSaveSeanEllis: (tally: { very: number; somewhat: number; not: number }) => Promise<boolean>;
   onSaveChecklist: (items: string[]) => Promise<boolean>;
+  onFindCustomers?: () => void;
 }
 
 const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
@@ -48,6 +49,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
   onReScore,
   onSaveSeanEllis,
   onSaveChecklist,
+  onFindCustomers,
 }) => {
   const [interviewPreviewOpen, setInterviewPreviewOpen] = useState(false);
   const isReady = analysis.verdict === 'ready';
@@ -510,10 +512,18 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
               Log new evidence and run the Sean Ellis 40% test, then re-score for free to track your trend toward 75.
             </p>
           </div>
-          <Button variant="outline" size="sm" onClick={onReScore}>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Re-score (free)
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {onFindCustomers && (
+              <Button variant="ghost" size="sm" onClick={onFindCustomers}>
+                <Compass className="mr-2 h-4 w-4" />
+                Find people to talk to
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={onReScore}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Re-score (free)
+            </Button>
+          </div>
         </div>
 
         <PMFScoreTrend trend={trend} />

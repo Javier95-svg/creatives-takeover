@@ -11,7 +11,9 @@ import { usePMFLab } from '@/hooks/usePMFLab';
 import PMFEvidenceForm from '@/components/pmf/PMFEvidenceForm';
 import PMFScoringLoader from '@/components/pmf/PMFScoringLoader';
 import PMFReadinessReport from '@/components/pmf/PMFReadinessReport';
+import PMFCustomerDiscovery from '@/components/pmf/PMFCustomerDiscovery';
 import { PMFContextBanner } from '@/components/pmf/PMFContextBanner';
+import { cn } from '@/lib/utils';
 import { ArrowRight, Rocket } from 'lucide-react';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 import { getPublicTabConfig } from '@/config/publicTabVisibility';
@@ -38,6 +40,7 @@ export default function PMFLabPage() {
   const [icpPersonaName, setIcpPersonaName] = useState<string | null>(null);
   const [waitlistProductName, setWaitlistProductName] = useState<string | null>(null);
   const [contextLoading, setContextLoading] = useState(false);
+  const [mode, setMode] = useState<'score' | 'discover'>('score');
 
   useEffect(() => {
     if (!user) return;
@@ -222,40 +225,74 @@ export default function PMFLabPage() {
               )
             ) : hasAccess ? (
               <>
-                {/* Phase A — Evidence Form */}
-                {phase === 'intake' && (
-                  <PMFEvidenceForm
-                    onSubmit={(answers) => runAnalysis(answers, {
-                      businessContext: {
-                        productName: waitlistProductName ?? undefined,
-                        targetAudience: icpPersonaName ?? undefined,
-                      },
-                    })}
-                    isSubmitting={false}
-                  />
-                )}
-
-                {/* Phase B — Scoring Loader */}
-                {phase === 'analyzing' && <PMFScoringLoader />}
-
-                {/* Phase C — PMF Readiness Report */}
-                {phase === 'results' && analysis && (
-                  <div className="space-y-6">
-                    <PMFReadinessReport
-                      analysis={analysis}
-                      analysisId={analysisId}
-                      isSaving={isSaving}
-                      isExporting={isExporting}
-                      evidence={evidence}
-                      trend={trend}
-                      onSave={saveReport}
-                      onExport={exportReport}
-                      onReanalyze={resetToIntake}
-                      onReScore={reScore}
-                      onSaveSeanEllis={saveSeanEllis}
-                      onSaveChecklist={saveChecklist}
-                    />
+                {/* Mode toggle — score existing evidence vs. find customers to talk to */}
+                <div className="mb-6 flex justify-center">
+                  <div className="inline-flex rounded-xl border border-border/60 bg-muted/30 p-1">
+                    {([
+                      { id: 'score' as const, label: 'Score my evidence' },
+                      { id: 'discover' as const, label: 'Find customers to talk to' },
+                    ]).map(({ id, label }) => (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => setMode(id)}
+                        className={cn(
+                          'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+                          mode === id
+                            ? 'bg-background text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground',
+                        )}
+                      >
+                        {label}
+                      </button>
+                    ))}
                   </div>
+                </div>
+
+                {mode === 'discover' ? (
+                  <PMFCustomerDiscovery
+                    defaultProductName={waitlistProductName}
+                    defaultTargetAudience={icpPersonaName}
+                  />
+                ) : (
+                  <>
+                    {/* Phase A — Evidence Form */}
+                    {phase === 'intake' && (
+                      <PMFEvidenceForm
+                        onSubmit={(answers) => runAnalysis(answers, {
+                          businessContext: {
+                            productName: waitlistProductName ?? undefined,
+                            targetAudience: icpPersonaName ?? undefined,
+                          },
+                        })}
+                        isSubmitting={false}
+                      />
+                    )}
+
+                    {/* Phase B — Scoring Loader */}
+                    {phase === 'analyzing' && <PMFScoringLoader />}
+
+                    {/* Phase C — PMF Readiness Report */}
+                    {phase === 'results' && analysis && (
+                      <div className="space-y-6">
+                        <PMFReadinessReport
+                          analysis={analysis}
+                          analysisId={analysisId}
+                          isSaving={isSaving}
+                          isExporting={isExporting}
+                          evidence={evidence}
+                          trend={trend}
+                          onSave={saveReport}
+                          onExport={exportReport}
+                          onReanalyze={resetToIntake}
+                          onReScore={reScore}
+                          onSaveSeanEllis={saveSeanEllis}
+                          onSaveChecklist={saveChecklist}
+                          onFindCustomers={() => setMode('discover')}
+                        />
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             ) : (
