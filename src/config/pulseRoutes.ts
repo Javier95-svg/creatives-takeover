@@ -132,11 +132,19 @@ export const PULSE_ROUTE_CONTEXTS: PulseRouteContext[] = [
   },
 ];
 
+const PULSE_EXCLUDED_PATH_PREFIXES = ["/demo-studio/try"];
+
 function matchesPathPrefix(pathname: string, pathPrefix: string): boolean {
   return pathname === pathPrefix || pathname.startsWith(`${pathPrefix}/`);
 }
 
+function isPulseExcludedPath(pathname: string): boolean {
+  return PULSE_EXCLUDED_PATH_PREFIXES.some((pathPrefix) => matchesPathPrefix(pathname, pathPrefix));
+}
+
 export function getPulseRouteContext(pathname: string): PulseRouteContext | null {
+  if (isPulseExcludedPath(pathname)) return null;
+
   return PULSE_ROUTE_CONTEXTS.find(({ pathPrefix }) => matchesPathPrefix(pathname, pathPrefix)) ?? null;
 }
 
