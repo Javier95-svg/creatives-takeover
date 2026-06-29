@@ -81,7 +81,7 @@ const Hero = ({
   titleLine1 = "The founders'",
   titleLine2 = "compass",
   lede = DEFAULT_LEDE,
-  ctaLabel = "Build Your Demo & VSL",
+  ctaLabel = "Build Your Demo & Pitch Video",
   ctaHref = "/demo-studio",
   onCtaClick,
   dashboardUrl = "creatives-takeover.com/dashboard",
