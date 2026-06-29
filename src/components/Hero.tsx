@@ -64,8 +64,8 @@ const DEFAULT_LEDE = (
     You shouldn&apos;t need the right connections, the right city, or the right background to build a serious startup.
     <br />
     <br />
-    Creatives Takeover gives every founder a structured 7-stage roadmap, access to experienced mentors and investors,
-    and a personalized dashboard that guides you at every step.
+    Build your demo, pitch video, roadmap, and launch plan with guided tools, mentor support,
+    and access to startup resources built for first time founders.
     <br />
     <br />
     <strong>No application. No cohort. No equity.</strong>
