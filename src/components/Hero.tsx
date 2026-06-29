@@ -65,7 +65,7 @@ const DEFAULT_LEDE = (
     <br />
     <br />
     Build your demo, pitch video, landing page, and GTM plan with guided tools, mentor support,
-    and access to tailored resources built for first time founders.
+    and funding guidance built for first time founders.
     <br />
     <br />
     <strong>No application. No cohort. No equity.</strong>
