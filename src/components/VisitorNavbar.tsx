@@ -39,8 +39,8 @@ type VisitorLink = { label: string; href: string; icon: LucideIcon; sectionId?: 
 type VisitorMenuItem = { label: string; href: string; icon: LucideIcon; description: string };
 type VisitorMenu = { label: string; icon: LucideIcon; tagline: string; taglineIcon?: LucideIcon; items: VisitorMenuItem[] };
 
-// Simple links, in display order. The Gifts menu renders first. Final order:
-// Gifts · Build · Learn · Podcast · Newspaper · About · Pricing. Home is covered by the logo.
+// Simple links, in display order. The Free Tools menu renders first. Final order:
+// Free Tools · Build · Learn · Podcast · Newspaper · About · Pricing. Home is covered by the logo.
 const visitorLinks: VisitorLink[] = [
   { label: "Build", href: "/build", icon: Zap },
   { label: "Learn", href: "/mentorship", icon: GraduationCap },
@@ -80,7 +80,7 @@ const freeToolsItems: VisitorMenuItem[] = [
 ];
 
 const giftsMenu: VisitorMenu = {
-  label: "Gifts",
+  label: "Free Tools",
   icon: Gift,
   tagline: "From Creatives Takeover with 💙",
   items: freeToolsItems,
@@ -152,7 +152,7 @@ const VisitorNavbar = () => {
 
   const handleMenuOpen = (menu: VisitorMenu, source: "desktop" | "mobile") => {
     trackNavClick(menu.label);
-    captureEvent(menu.label === "Gifts" ? "free_tools_menu_opened" : "visitor_menu_opened", {
+    captureEvent(menu.label === "Free Tools" ? "free_tools_menu_opened" : "visitor_menu_opened", {
       menu: menu.label,
       source: `visitor_navbar_${source}`,
     });

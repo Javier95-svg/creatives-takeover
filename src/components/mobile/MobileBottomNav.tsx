@@ -131,7 +131,7 @@ export const MobileBottomNav = () => {
                         "min-h-[44px] min-w-[44px]",
                         freeToolsActive ? "text-primary" : "text-muted-foreground active:text-primary"
                       )}
-                      aria-label="Gifts"
+                      aria-label="Free Tools"
                     >
                       <div className={cn("relative p-2 rounded-lg transition-colors", freeToolsActive && "bg-primary/10")}>
                         <Gift className={cn("h-5 w-5 transition-transform", freeToolsActive && "scale-110")} />
@@ -140,7 +140,7 @@ export const MobileBottomNav = () => {
                         "text-caption font-medium transition-colors",
                         freeToolsActive ? "text-primary" : "text-muted-foreground"
                       )}>
-                        Gifts
+                        Free Tools
                       </span>
                     </button>
                   </DropdownMenuTrigger>
@@ -174,4 +174,3 @@ export const MobileBottomNav = () => {
     </nav>
   );
 };
-
