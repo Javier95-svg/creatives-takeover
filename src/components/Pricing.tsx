@@ -209,7 +209,7 @@ export default function Pricing() {
             Choose Your Plan
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-            Start for free. Upgrade to get the capacity that exactly matches your current entrepreneurial needs.
+            Start for free. Upgrade to get the capacity that matches your current entrepreneurial needs.
           </p>
 
           <Tabs value={billingCycle} onValueChange={(value) => setBillingCycle(value as BillingCycle)} className="inline-block">
