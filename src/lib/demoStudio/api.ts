@@ -27,6 +27,7 @@ import type {
   PublicDemo,
 } from './types';
 import { DEFAULT_DEMO_STUDIO_CTA, getDefaultBrief, normalizeAiKit, normalizeProjectSlug, normalizeStoryboard } from './brief';
+import { deriveTryProductName, normalizeTryStepCount, type DemoStudioTryStepCount } from './tryPreview';
 import {
   calculateSignupRate,
   canAddVsl,
@@ -265,6 +266,7 @@ async function readFunctionErrorMessage(error: unknown, fallback: string): Promi
 export async function generateDemoStudioDraftStoryboard(args: {
   contextUrl?: string;
   productName?: string;
+  stepCount?: DemoStudioTryStepCount;
 }): Promise<DemoStudioStoryboardStep[]> {
   const trimmedUrl = args.contextUrl?.trim() || '';
   let host = '';
@@ -276,10 +278,8 @@ export async function generateDemoStudioDraftStoryboard(args: {
       host = '';
     }
   }
-  const name =
-    args.productName?.trim() ||
-    (host ? host.split('.')[0].replace(/[-_]+/g, ' ').trim() : '') ||
-    'Your product';
+  const name = deriveTryProductName(trimmedUrl, args.productName);
+  const stepCount = normalizeTryStepCount(args.stepCount);
   const brief = getDefaultBrief({ name });
   if (trimmedUrl) {
     brief.product_promise = brief.product_promise || `Product shown at ${host || trimmedUrl}`;
@@ -289,6 +289,7 @@ export async function generateDemoStudioDraftStoryboard(args: {
     body: {
       draft: true,
       mode: 'storyboard',
+      stepCount,
       project: { id: 'try', name, tagline: null, category: null },
       brief,
     },

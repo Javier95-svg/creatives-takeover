@@ -27,13 +27,22 @@ import {
   type TryDraft,
   type TryDraftStep,
 } from '@/lib/demoStudio/tryDraft';
+import {
+  DEMO_STUDIO_TRY_HOTSPOT,
+  DEMO_STUDIO_TRY_MAX_SCREENSHOTS,
+  DEMO_STUDIO_TRY_MIN_SCREENSHOTS,
+  buildTryFallbackStoryboard,
+  buildTryPreviewSteps,
+  deriveTryProductName,
+  getUsableTryStoryboard,
+  normalizeTryStepCount,
+} from '@/lib/demoStudio/tryPreview';
 import type { DemoStepWithHotspots } from '@/lib/demoStudio/types';
 
-const MAX_SCREENSHOTS = 3;
-const MIN_SCREENSHOTS = 2;
+const MAX_SCREENSHOTS = DEMO_STUDIO_TRY_MAX_SCREENSHOTS;
+const MIN_SCREENSHOTS = DEMO_STUDIO_TRY_MIN_SCREENSHOTS;
 const RETURN_PATH = '/demo-studio/try?hydrate=1';
 const SIGNUP_RETURN_HREF = `/signup?from=demo-try&return=${encodeURIComponent(RETURN_PATH)}`;
-const DEFAULT_HOTSPOT = { x: 0.35, y: 0.78, w: 0.3, h: 0.12 } as const;
 
 interface Shot {
   file: File;
@@ -47,21 +56,6 @@ interface HydrateStep {
   caption: string;
   speaker_notes: string;
   hotspot_label: string;
-}
-
-function deriveProductName(contextUrl: string, fallbackTitle?: string): string {
-  const trimmed = contextUrl.trim();
-  if (trimmed) {
-    try {
-      const host = new URL(/^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`)
-        .hostname.replace(/^www\./, '');
-      const base = host.split('.')[0].replace(/[-_]+/g, ' ').trim();
-      if (base) return base.charAt(0).toUpperCase() + base.slice(1);
-    } catch {
-      /* fall through */
-    }
-  }
-  return fallbackTitle?.trim() || 'My product';
 }
 
 export default function TryPage() {
@@ -158,7 +152,7 @@ export default function TryPage() {
       // When a runId is supplied (background persist), bail if the run was
       // superseded (start-over/unmount) so we don't re-write a cleared draft.
       const isStale = () => runId !== undefined && runId !== runIdRef.current;
-      const productName = deriveProductName(contextUrl, built[0]?.title ?? undefined);
+      const productName = deriveTryProductName(contextUrl, built[0]?.title ?? undefined);
       let draftSteps = await buildDraftSteps(built, 1600, 0.85);
       if (isStale()) return false;
       const draft: TryDraft = { v: 1, productName, contextUrl, steps: draftSteps };
@@ -180,49 +174,19 @@ export default function TryPage() {
     setGenerating(true);
     setError(null);
     try {
-      const storyboard = await generateDemoStudioDraftStoryboard({ contextUrl });
+      const stepCount = normalizeTryStepCount(shots.length);
+      const storyboard = await generateDemoStudioDraftStoryboard({ contextUrl, stepCount });
       // Ignore the response if the user started over or left during generation.
       if (runId !== runIdRef.current) return;
-      const now = new Date().toISOString();
-      const count = Math.min(shots.length, storyboard.length);
-      const built: DemoStepWithHotspots[] = [];
-      for (let i = 0; i < count; i += 1) {
-        const step = storyboard[i];
-        built.push({
-          id: `try-${i}`,
-          demo_id: 'try',
-          position: i,
-          asset_url: shots[i].url,
-          asset_width: null,
-          asset_height: null,
-          title: step.title,
-          caption: step.caption,
-          speaker_notes: step.speaker_notes,
-          created_at: now,
-          // The generator returns a hotspot label but no coordinates, so we drop
-          // a single default marker that advances the demo when clicked.
-          hotspots: step.hotspot_label
-            ? [
-                {
-                  id: `try-hs-${i}`,
-                  step_id: `try-${i}`,
-                  ...DEFAULT_HOTSPOT,
-                  type: 'tooltip',
-                  label: step.hotspot_label,
-                  action: 'next',
-                  action_target: null,
-                  created_at: now,
-                },
-              ]
-            : [],
-        });
-      }
+      const usableStoryboard = getUsableTryStoryboard(storyboard, { contextUrl, stepCount });
+      const built = buildTryPreviewSteps({ shots, storyboard: usableStoryboard });
       if (built.length === 0) {
         throw new Error("We couldn't turn those screenshots into a demo. Try again in a moment.");
       }
       setSteps(built);
-      void trackDemoEvent('demo_view', { meta: { source: 'demo_try', step_count: built.length } });
-      void trackDemoEvent('demo_start', { meta: { source: 'demo_try', step_count: built.length } });
+      const usedClientFallback = storyboard.length < stepCount;
+      void trackDemoEvent('demo_view', { meta: { source: 'demo_try', step_count: built.length, fallback: usedClientFallback } });
+      void trackDemoEvent('demo_start', { meta: { source: 'demo_try', step_count: built.length, fallback: usedClientFallback } });
       // Anonymous visitors: stash the draft now so it survives the auth redirect.
       if (!user) {
         persistPromiseRef.current = persistDraft(built, runId).catch(() => false);
@@ -230,6 +194,25 @@ export default function TryPage() {
     } catch (e) {
       if (runId !== runIdRef.current) return; // stale failure from a superseded run
       const message = e instanceof Error ? e.message : 'Could not generate your demo preview.';
+      if (/free preview limit|rate limit/i.test(message)) {
+        setError(message);
+        toast.error(message);
+        return;
+      }
+
+      const fallbackStoryboard = buildTryFallbackStoryboard({ contextUrl, stepCount: shots.length });
+      const built = buildTryPreviewSteps({ shots, storyboard: fallbackStoryboard });
+      if (built.length >= MIN_SCREENSHOTS) {
+        setSteps(built);
+        setError(null);
+        void trackDemoEvent('demo_view', { meta: { source: 'demo_try', step_count: built.length, fallback: true } });
+        void trackDemoEvent('demo_start', { meta: { source: 'demo_try', step_count: built.length, fallback: true } });
+        if (!user) {
+          persistPromiseRef.current = persistDraft(built, runId).catch(() => false);
+        }
+        return;
+      }
+
       setError(message);
       toast.error(message);
     } finally {
@@ -277,7 +260,7 @@ export default function TryPage() {
           if (step.hotspot_label) {
             try {
               await createHotspot(created.id, {
-                ...DEFAULT_HOTSPOT,
+                ...DEMO_STUDIO_TRY_HOTSPOT,
                 type: 'tooltip',
                 action: 'next',
                 label: step.hotspot_label,
@@ -314,7 +297,7 @@ export default function TryPage() {
     if (user) {
       setSaving(true);
       try {
-        const productName = deriveProductName(contextUrl, steps[0]?.title ?? undefined);
+        const productName = deriveTryProductName(contextUrl, steps[0]?.title ?? undefined);
         const hydrateSteps: HydrateStep[] = steps.map((step, i) => ({
           file: shots[i]?.file,
           title: step.title ?? '',

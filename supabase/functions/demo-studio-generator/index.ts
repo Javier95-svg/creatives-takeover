@@ -19,6 +19,8 @@ interface DemoStudioGeneratorRequest {
   mode?: Mode;
   /** When true, run the anonymous lead-magnet path: no auth, no credits, storyboard only. */
   draft?: boolean;
+  /** Draft-only: align generated storyboard steps with the visitor's uploaded screenshot count. */
+  stepCount?: number;
   project?: {
     id?: string;
     name?: string;
@@ -57,6 +59,10 @@ function cleanString(value: unknown, max = 300): string {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
 
+function normalizeDraftStepCount(value: unknown): 2 | 3 {
+  return Number(value) >= 3 ? 3 : 2;
+}
+
 function walkStrings(value: unknown, visitor: (text: string, path: string) => void, path = "kit") {
   if (typeof value === "string") {
     visitor(value, path);
@@ -85,21 +91,32 @@ function validateRequest(body: DemoStudioGeneratorRequest): { mode: Mode; errors
   return { mode: mode as Mode, errors };
 }
 
-function validateKitOutput(kit: any, mode: Mode): string[] {
+interface KitValidationOptions {
+  exactStoryboardSteps?: 2 | 3;
+}
+
+function validateKitOutput(kit: any, mode: Mode, options: KitValidationOptions = {}): string[] {
   const errors: string[] = [];
   if (!kit || typeof kit !== "object") return ["output must be an object"];
 
   if (mode === "full_kit" || mode === "storyboard") {
-    if (!Array.isArray(kit.storyboard) || kit.storyboard.length < 3 || kit.storyboard.length > 7) {
+    const storyboardLength = Array.isArray(kit.storyboard) ? kit.storyboard.length : 0;
+    if (options.exactStoryboardSteps) {
+      if (storyboardLength !== options.exactStoryboardSteps) {
+        errors.push(`storyboard must contain exactly ${options.exactStoryboardSteps} steps`);
+      }
+    } else if (storyboardLength < 3 || storyboardLength > 7) {
       errors.push("storyboard must contain 3-7 steps");
     }
-    kit.storyboard?.forEach((step: any, index: number) => {
-      if (!cleanString(step?.title, 80)) errors.push(`storyboard.${index}.title is required`);
-      if (!cleanString(step?.caption, 220)) errors.push(`storyboard.${index}.caption is required`);
-      if (!cleanString(step?.speaker_notes, 700)) errors.push(`storyboard.${index}.speaker_notes is required`);
-      if (!cleanString(step?.hotspot_label, 80)) errors.push(`storyboard.${index}.hotspot_label is required`);
-      if (!["next", "goto", "url"].includes(step?.suggested_action || "next")) errors.push(`storyboard.${index}.suggested_action is invalid`);
-    });
+    if (Array.isArray(kit.storyboard)) {
+      kit.storyboard.forEach((step: any, index: number) => {
+        if (!cleanString(step?.title, 80)) errors.push(`storyboard.${index}.title is required`);
+        if (!cleanString(step?.caption, 220)) errors.push(`storyboard.${index}.caption is required`);
+        if (!cleanString(step?.speaker_notes, 700)) errors.push(`storyboard.${index}.speaker_notes is required`);
+        if (!cleanString(step?.hotspot_label, 80)) errors.push(`storyboard.${index}.hotspot_label is required`);
+        if (!["next", "goto", "url"].includes(step?.suggested_action || "next")) errors.push(`storyboard.${index}.suggested_action is invalid`);
+      });
+    }
   }
 
   if (mode === "full_kit" || mode === "vsl_scripts") {
@@ -156,6 +173,7 @@ Rules:
 function buildUserPrompt(body: DemoStudioGeneratorRequest, mode: Mode): string {
   const project = body.project || {};
   const brief = body.brief || {};
+  const draftStoryboardCount = body.draft === true && mode === "storyboard" ? normalizeDraftStepCount(body.stepCount) : null;
   return `Generate Demo Studio assets.
 
 PROJECT
@@ -198,30 +216,43 @@ OUTPUT SCHEMA
 }
 
 Mode: ${mode}
-For storyboard mode return only storyboard.
+${draftStoryboardCount ? `For storyboard mode return exactly ${draftStoryboardCount} storyboard steps and no other keys.` : "For storyboard mode return only storyboard."}
 For vsl_scripts mode return only vsl_scripts.
 For launch_copy mode return only launch_copy.
 For full_kit mode return all three keys.`;
 }
 
-async function generateKit(openaiApiKey: string, body: DemoStudioGeneratorRequest, mode: Mode) {
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${openaiApiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: buildSystemPrompt(mode) },
-        { role: "user", content: buildUserPrompt(body, mode) },
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.65,
-      max_tokens: mode === "full_kit" ? 5000 : 2400,
-    }),
-  });
+async function generateKit(
+  openaiApiKey: string,
+  body: DemoStudioGeneratorRequest,
+  mode: Mode,
+  options: KitValidationOptions & { timeoutMs?: number } = {},
+) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? 30000);
+  let response: Response;
+  try {
+    response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${openaiApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: buildSystemPrompt(mode) },
+          { role: "user", content: buildUserPrompt(body, mode) },
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.65,
+        max_tokens: mode === "full_kit" ? 5000 : 2400,
+      }),
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -234,7 +265,7 @@ async function generateKit(openaiApiKey: string, body: DemoStudioGeneratorReques
   const content = data?.choices?.[0]?.message?.content;
   if (!content) throw Object.assign(new Error("No content returned from model"), { status: 502 });
   const parsed = JSON.parse(content);
-  const validationErrors = validateKitOutput(parsed, mode);
+  const validationErrors = validateKitOutput(parsed, mode, options);
   if (validationErrors.length) {
     throw Object.assign(new Error(`Demo Studio validation failed: ${validationErrors.join("; ")}`), { status: 422 });
   }
@@ -244,6 +275,57 @@ async function generateKit(openaiApiKey: string, body: DemoStudioGeneratorReques
 function getClientIp(req: Request): string {
   const forwarded = req.headers.get("x-forwarded-for") || "";
   return forwarded.split(",")[0].trim() || "unknown";
+}
+
+function getDraftProductName(body: DemoStudioGeneratorRequest): string {
+  return cleanString(body.project?.name, 60).replace(/\{\{|\[|\]/g, "").trim() || "Your product";
+}
+
+function buildDraftFallbackStoryboard(body: DemoStudioGeneratorRequest, stepCount: 2 | 3) {
+  const productName = getDraftProductName(body);
+  const subject = productName === "Your product" ? "your product" : productName;
+  const twoStepFlow = [
+    {
+      title: `Start with ${productName}`,
+      caption: `This screen introduces ${subject} and the problem the viewer is trying to solve.`,
+      speaker_notes: "Open by naming who this is for and what the viewer should notice first.",
+      hotspot_label: "Show the result",
+      suggested_action: "next",
+    },
+    {
+      title: "Show the useful outcome",
+      caption: "This screen makes the result clear and gives the viewer a reason to keep going.",
+      speaker_notes: "Point to the moment where the product creates value, then invite the viewer to take the next step.",
+      hotspot_label: "Finish the tour",
+      suggested_action: "next",
+    },
+  ];
+
+  if (stepCount === 2) return twoStepFlow;
+
+  return [
+    twoStepFlow[0],
+    {
+      title: "Walk through the key action",
+      caption: `This screen shows the main action a visitor would take inside ${subject}.`,
+      speaker_notes: "Explain the action on screen and why it moves the user closer to the result.",
+      hotspot_label: "Continue the flow",
+      suggested_action: "next",
+    },
+    twoStepFlow[1],
+  ];
+}
+
+function draftSuccessResponse(body: DemoStudioGeneratorRequest, stepCount: 2 | 3, fallbackReason?: string): Response {
+  return new Response(JSON.stringify({
+    success: true,
+    mode: "storyboard",
+    kit: { storyboard: buildDraftFallbackStoryboard(body, stepCount) },
+    draft: true,
+    ...(fallbackReason ? { fallbackReason } : {}),
+  }), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 }
 
 /**
@@ -261,6 +343,7 @@ async function handleDraft(req: Request, body: DemoStudioGeneratorRequest): Prom
     });
   }
   const mode: Mode = "storyboard";
+  const stepCount = normalizeDraftStepCount(body.stepCount);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -299,24 +382,19 @@ async function handleDraft(req: Request, body: DemoStudioGeneratorRequest): Prom
   }
 
   const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
-  if (!openaiApiKey) throw new Error("OpenAI API key not configured");
+  if (!openaiApiKey) {
+    console.warn("demo-studio draft: OPENAI_API_KEY missing; returning fallback storyboard");
+    return draftSuccessResponse(body, stepCount, "openai_missing");
+  }
 
   try {
-    const kit = await generateKit(openaiApiKey, body, mode);
+    const kit = await generateKit(openaiApiKey, body, mode, { exactStoryboardSteps: stepCount, timeoutMs: 15000 });
     return new Response(JSON.stringify({ success: true, mode, kit, draft: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (aiError) {
-    const status = (aiError as { status?: number })?.status === 429 ? 429 : 500;
-    const errorCode = status === 429 ? "RATE_LIMIT" : (aiError as { status?: number })?.status === 422 ? "VALIDATION_FAILED" : "GENERATION_FAILED";
-    return new Response(JSON.stringify({
-      success: false,
-      error: "We couldn't generate your demo preview. Try again in a moment.",
-      errorCode,
-    }), {
-      status,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    console.warn("demo-studio draft: generator failed; returning fallback storyboard", aiError);
+    return draftSuccessResponse(body, stepCount, "generator_fallback");
   }
 }
 
