@@ -64,7 +64,7 @@ const DEFAULT_LEDE = (
     You shouldn&apos;t need the right connections, the right city, or the right background to build a serious startup.
     <br />
     <br />
-    Build your demo, pitch video, landing page, and GTM plan with guided tools, mentor support,
+    Build your demo, pitch video, landing page, and GTM plan with niche tools, mentor support,
     and funding guidance built for first time founders.
     <br />
     <br />
