@@ -43,6 +43,7 @@ import {
   setOAuthAuthIntent,
 } from "@/lib/referral";
 import { getSocialAuthSignupMethod, startSocialOAuth, type SocialAuthProviderId } from "@/lib/socialAuth";
+import { applySignupActivationSource } from "@/lib/retentionSystem";
 
 const signupHeroSlides = [
   {
@@ -119,7 +120,7 @@ const Signup = () => {
     );
 
     return {
-      source: params.get('source') || 'direct',
+      source: params.get('source') || params.get('from') || 'direct',
       returnUrl: safeReturn,
     };
   });
@@ -176,6 +177,30 @@ const Signup = () => {
 
   // Email validation regex
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const buildAutoUsername = () => {
+    const base = normalizeUsernameInput(
+      [formData.firstName, formData.lastName].filter(Boolean).join("_") ||
+        formData.email.split("@")[0] ||
+        "founder",
+    );
+    return base || `founder_${Math.floor(1000 + Math.random() * 9000)}`;
+  };
+
+  const resolveSignupUsername = async () => {
+    const requested = normalizeUsernameInput(formData.username);
+    if (requested) return requested;
+
+    const base = buildAutoUsername();
+    if (await isUsernameAvailable(base)) return base;
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const candidate = `${base}_${Math.floor(1000 + Math.random() * 9000)}`;
+      if (await isUsernameAvailable(candidate)) return candidate;
+    }
+
+    return `${base}_${Date.now().toString().slice(-5)}`;
+  };
 
   useEffect(() => {
     const normalized = normalizeUsernameInput(formData.username);
@@ -246,12 +271,13 @@ const Signup = () => {
       newErrors.lastName = "Last name is required";
     }
 
-    const usernameError = validateUsername(formData.username);
+    const normalizedUsername = normalizeUsernameInput(formData.username);
+    const usernameError = normalizedUsername ? validateUsername(normalizedUsername) : null;
     if (usernameError) {
       newErrors.username = usernameError;
-    } else {
+    } else if (normalizedUsername) {
       try {
-        const available = await isUsernameAvailable(formData.username);
+        const available = await isUsernameAvailable(normalizedUsername);
         if (!available) {
           newErrors.username = "That username is already taken";
         }
@@ -305,6 +331,7 @@ const Signup = () => {
       persistSignupIntent('email');
 
       const fullName = [formData.firstName.trim(), formData.lastName.trim()].filter(Boolean).join(" ");
+      const signupUsername = await resolveSignupUsername();
       const pendingReferralCode = getPendingReferralCode();
       persistOnboardingReturn(conversionSource.returnUrl);
       if (checkoutIntent) {
@@ -316,7 +343,7 @@ const Signup = () => {
         formData.password,
         fullName,
         undefined,
-        normalizeUsernameInput(formData.username),
+        signupUsername,
         pendingReferralCode,
       );
 
@@ -368,6 +395,13 @@ const Signup = () => {
         } catch (activityError) {
           console.warn('Signup activity tracking failed', activityError);
         }
+        await applySignupActivationSource({
+          userId: session.user.id,
+          source: conversionSource.source,
+          returnUrl: conversionSource.returnUrl,
+        }).catch((activationError) => {
+          console.warn('Signup activation source tracking failed', activationError);
+        });
 
         toast.success("Account created successfully! Redirecting...");
 
@@ -652,7 +686,7 @@ const Signup = () => {
                 {/* Username Field */}
                 <div className="space-y-2">
                   <Label htmlFor="username" className="text-sm font-medium">
-                    Username
+                    Username <span className="text-muted-foreground">(optional)</span>
                   </Label>
                   <div className="relative">
                     <Input
@@ -661,14 +695,13 @@ const Signup = () => {
                       type="text"
                       value={formData.username}
                       onChange={handleInputChange}
-                      placeholder="Choose your username"
+                      placeholder="We can create one for you"
                       className={`h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.username ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''}`}
                       disabled={isLoading}
                       autoComplete="username"
                       autoCapitalize="off"
                       autoCorrect="off"
                       spellCheck={false}
-                      required
                     />
                   </div>
                   {!errors.username && formData.username && (
@@ -683,7 +716,7 @@ const Signup = () => {
                     <p className="text-sm text-destructive animate-fade-in">{errors.username}</p>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    Your public profile will be at <span className="font-medium">/profile/{formData.username || "username"}</span>
+                    You can customize this now or change it later in account settings.
                   </p>
                 </div>
 
@@ -806,7 +839,7 @@ const Signup = () => {
                 {/* Hype Text */}
                 <div className="text-center mt-4 space-y-1">
                   <p className="text-sm text-muted-foreground">
-                    Join <span className="font-semibold text-foreground">1,247 entrepreneurs</span> building their businesses.
+                    Create your first startup artifact in minutes.
                   </p>
                   <p className="text-xs text-muted-foreground flex items-center justify-center gap-2">
                     <span
@@ -832,7 +865,7 @@ const Signup = () => {
                       }
                     `}</style>
                     </span>
-                    <span className="font-semibold text-foreground">2 people</span> signed up in the last hour.
+                    Demo, pitch video, ICP, and launch plan tools are ready after onboarding.
                   </p>
                 </div>
 

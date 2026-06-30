@@ -378,7 +378,7 @@ const BizMapAI = () => {
           // Show share prompt the first time a report is saved
           if (!hasShownSharePromptRef.current) {
             hasShownSharePromptRef.current = true;
-            const shareUrl = `${window.location.origin}/bizmap-ai/chat?session=${currentSessionId}`;
+            const shareUrl = `${window.location.origin}/bizmap-ai?session=${currentSessionId}`;
             trackShareLinkCreated({ userId: user?.id, sessionId: currentSessionId });
             toast.success('Your BizMap plan is saved!', {
               description: 'Share it with your co-founder or advisor.',
@@ -1643,7 +1643,7 @@ Subject: "Quick question about [their pain point]"
                 asChild
                 onClick={() => trackBizMapDemoConverted({ idea: demoIdea })}
               >
-                <Link to={`/signup?return=/bizmap-ai/chat&idea=${encodeURIComponent(demoIdea)}`}>
+                <Link to={`/signup?return=/bizmap-ai&idea=${encodeURIComponent(demoIdea)}`}>
                   Build My Full Plan — Free
                   <ArrowRight className="w-4 h-4 ml-1" />
                 </Link>

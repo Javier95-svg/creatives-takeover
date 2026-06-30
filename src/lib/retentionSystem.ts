@@ -6,15 +6,23 @@ import { triggerEmailSequenceEvent } from '@/lib/emailSequences';
 import { mapFounderStageToBizMapStage, STAGES, type FounderStageId } from '@/lib/stageDiagnostic';
 
 export type ActivationIntent =
+  | 'build_demo'
   | 'find_mentor'
   | 'run_icp'
   | 'start_validation'
+  | 'unlock_pitch_deck'
+  | 'unlock_tech_stack'
+  | 'unlock_insighta'
   | 'save_mentor'
   | 'send_message'
   | 'book_call';
 export type ActivationArtifactIntent = 'save_mentor' | 'send_message' | 'book_call';
 export type ActivationGateVariant = 'control' | 'forced_gate';
 export type RetentionArtifactType =
+  | 'demo_studio_draft'
+  | 'pitch_deck_analysis'
+  | 'tech_stack_report'
+  | 'insighta_readiness'
   | 'mentor_saved'
   | 'mentor_message'
   | 'discovery_call'
@@ -103,16 +111,33 @@ export interface ValidationDraftArtifact {
 }
 
 const ACTIVATION_ROUTE_BY_INTENT: Record<ActivationIntent, string> = {
+  build_demo: '/demo-studio/try?activation=1',
   find_mentor: '/mentorship?mentorSource=onboarding&activationIntent=find_mentor',
   run_icp: '/icp-builder?activation=1',
   start_validation: '/decision-sprint?activation=1',
+  unlock_pitch_deck: '/pitch-deck-analyzer?hydrate=1',
+  unlock_tech_stack: '/tech-stack?hydrate=1',
+  unlock_insighta: '/insighta-test?hydrate=1',
   save_mentor: '/mentorship?mentorSource=onboarding&activationIntent=save_mentor',
   send_message: '/mentorship?mentorSource=onboarding&activationIntent=send_message',
   book_call: '/mentorship?mentorSource=onboarding&activationIntent=book_call',
 };
 
+const SIGNUP_SOURCE_ACTIVATION_INTENT: Record<string, ActivationIntent> = {
+  'demo-try': 'build_demo',
+  'pitch-deck-unlock': 'unlock_pitch_deck',
+  'pitch-deck-analyzer': 'unlock_pitch_deck',
+  'tech-stack': 'unlock_tech_stack',
+  'insighta-test': 'unlock_insighta',
+};
+
 export function getActivationRoute(intent: ActivationIntent) {
   return ACTIVATION_ROUTE_BY_INTENT[intent];
+}
+
+export function getActivationIntentFromSignupSource(source?: string | null): ActivationIntent | null {
+  if (!source) return null;
+  return SIGNUP_SOURCE_ACTIVATION_INTENT[source] ?? null;
 }
 
 function hashSeed(seed: string) {
@@ -336,6 +361,46 @@ export async function startActivationJourney(params: StartActivationParams) {
   await triggerEmailSequenceEvent('onboarding_complete', params.userId);
 }
 
+export async function applySignupActivationSource(params: {
+  userId: string;
+  source?: string | null;
+  returnUrl?: string | null;
+}) {
+  const activationIntent = getActivationIntentFromSignupSource(params.source);
+  if (!activationIntent) return null;
+
+  const profileState = await getProfileRetentionState(params.userId);
+  const preferences = profileState?.user_preferences ?? {};
+  const hasFirstArtifact = typeof preferences.firstArtifactType === 'string';
+  if (hasFirstArtifact) return profileState;
+
+  const startedAt = new Date().toISOString();
+  const activationGateVariant =
+    preferences.activationGateVariant === 'control' || preferences.activationGateVariant === 'forced_gate'
+      ? preferences.activationGateVariant
+      : await ensureActivationGateVariant(params.userId);
+
+  const selectedPath = params.returnUrl ?? getActivationRoute(activationIntent);
+  const nextState = await updateUserPreferences(params.userId, {
+    activationIntent,
+    activationGateVariant,
+    activationStartedAt: typeof preferences.activationStartedAt === 'string'
+      ? preferences.activationStartedAt
+      : startedAt,
+    activationSource: params.source ?? 'signup',
+    activationReturnUrl: selectedPath,
+  });
+
+  await trackRetentionEvent('activation_started', {
+    user_id: params.userId,
+    activation_intent: activationIntent,
+    source: params.source ?? 'signup',
+    selected_path: selectedPath,
+  });
+
+  return nextState;
+}
+
 export async function completeActivationJourney(params: CompleteActivationParams) {
   const completedAt = new Date().toISOString();
   const profileState = await getProfileRetentionState(params.user.id);
@@ -397,15 +462,28 @@ export async function completeActivationJourney(params: CompleteActivationParams
     conversation_id: params.conversationId ?? null,
     action_url: params.actionUrl,
   });
+  await trackRetentionEvent('activation_first_artifact_saved', {
+    user_id: params.user.id,
+    activation_intent: params.action,
+    artifact_type:
+      params.action === 'save_mentor'
+        ? 'mentor_saved'
+        : params.action === 'send_message'
+          ? 'mentor_message'
+          : 'discovery_call',
+    artifact_id: params.mentorId ?? params.conversationId ?? null,
+    resume_url: params.actionUrl,
+    source: params.source,
+  });
 
   if (email) {
-    const headlineByAction: Record<ActivationIntent, string> = {
+    const headlineByAction: Record<ActivationArtifactIntent, string> = {
       save_mentor: `You saved ${params.mentorName ?? 'a mentor'} - we will keep this path warm for you`,
       send_message: `Your conversation is open - come back for the reply`,
       book_call: `Your discovery call path is active - use it to unlock your next move`,
     };
 
-    const bodyByAction: Record<ActivationIntent, string> = {
+    const bodyByAction: Record<ActivationArtifactIntent, string> = {
       save_mentor: 'We will bring you back when your saved mentors are the fastest way to make progress.',
       send_message: 'Messages are the stickiest part of the platform. Keep the thread moving and you will always have a reason to return.',
       book_call: 'Use your next call to pressure-test one decision, not ten. The strongest follow-up usually happens right after the booking.',
@@ -437,6 +515,8 @@ export async function completeActivationJourney(params: CompleteActivationParams
 
 export async function markFirstArtifactCreated(params: MarkArtifactCreatedParams) {
   const createdAt = new Date().toISOString();
+  const existingProfileState = await getProfileRetentionState(params.userId);
+  const hadFirstArtifact = typeof existingProfileState?.user_preferences?.firstArtifactType === 'string';
 
   const nextState = await updateUserPreferences(params.userId, {
     activationCompletedAt: createdAt,
@@ -467,6 +547,26 @@ export async function markFirstArtifactCreated(params: MarkArtifactCreatedParams
     activationGateVariant: nextState.user_preferences?.activationGateVariant ?? null,
   });
 
+  await trackRetentionEvent('activation_first_artifact_saved', {
+    user_id: params.userId,
+    artifact_type: params.artifactType,
+    artifact_id: params.artifactId ?? null,
+    resume_url: params.resumeUrl,
+    label: params.label ?? null,
+    source: params.source ?? 'product',
+  });
+
+  if (!hadFirstArtifact) {
+    await trackRetentionEvent('activation_completed', {
+      trigger: 'first_artifact_created',
+      user_id: params.userId,
+      artifact_type: params.artifactType,
+      artifact_id: params.artifactId ?? null,
+      resume_url: params.resumeUrl,
+      source: params.source ?? 'product',
+    });
+  }
+
   return nextState;
 }
 
@@ -475,7 +575,7 @@ export async function saveValidationDraftArtifact(userId: string, draft: Validat
   const existingPreferences = profileState?.user_preferences ?? {};
   const hasFirstArtifact = typeof existingPreferences.firstArtifactType === 'string';
 
-  return updateUserPreferences(userId, {
+  const nextState = await updateUserPreferences(userId, {
     validationDraft: draft,
     ...(hasFirstArtifact ? {} : {
       activationCompletedAt: draft.updatedAt,
@@ -491,6 +591,28 @@ export async function saveValidationDraftArtifact(userId: string, draft: Validat
     lastArtifactLabel: 'Validation sprint draft',
     lastArtifactResumeUrl: '/decision-sprint',
   }, !hasFirstArtifact);
+
+  await trackRetentionEvent('activation_first_artifact_saved', {
+    user_id: userId,
+    artifact_type: 'validation_draft',
+    artifact_id: draft.id,
+    resume_url: '/decision-sprint',
+    label: 'Validation sprint draft',
+    source: 'decision_sprint',
+  });
+
+  if (!hasFirstArtifact) {
+    await trackRetentionEvent('activation_completed', {
+      trigger: 'first_artifact_created',
+      user_id: userId,
+      artifact_type: 'validation_draft',
+      artifact_id: draft.id,
+      resume_url: '/decision-sprint',
+      source: 'decision_sprint',
+    });
+  }
+
+  return nextState;
 }
 
 export async function loadValidationDraftArtifact(userId: string): Promise<ValidationDraftArtifact | null> {
@@ -523,6 +645,13 @@ export async function loadValidationDraftArtifact(userId: string): Promise<Valid
 
 export function buildActivationSummary(intent: ActivationIntent) {
   switch (intent) {
+    case 'build_demo':
+      return {
+        title: 'Build your demo and pitch video',
+        description: 'Turn a few screenshots into a live product demo first, then save it so your dashboard has a real launch asset to build around.',
+        actionUrl: getActivationRoute(intent),
+        priorityLabel: 'First win',
+      };
     case 'find_mentor':
       return {
         title: 'Find one mentor worth returning to',
@@ -541,6 +670,27 @@ export function buildActivationSummary(intent: ActivationIntent) {
       return {
         title: 'Start your validation sprint',
         description: 'Turn the next session into a concrete validation asset instead of another browse-and-bounce visit.',
+        actionUrl: getActivationRoute(intent),
+        priorityLabel: 'First win',
+      };
+    case 'unlock_pitch_deck':
+      return {
+        title: 'Unlock your pitch deck analysis',
+        description: 'Return to the analysis you already generated, save it, and use the full recommendations as your first founder artifact.',
+        actionUrl: getActivationRoute(intent),
+        priorityLabel: 'First win',
+      };
+    case 'unlock_tech_stack':
+      return {
+        title: 'Save your tech stack budget',
+        description: 'Return to your selected stack, save the monthly budget, and unlock the full build plan after signup.',
+        actionUrl: getActivationRoute(intent),
+        priorityLabel: 'First win',
+      };
+    case 'unlock_insighta':
+      return {
+        title: 'Finish your Insighta diagnostic',
+        description: 'Return to your readiness answers and generate the full diagnostic from the context you already entered.',
         actionUrl: getActivationRoute(intent),
         priorityLabel: 'First win',
       };

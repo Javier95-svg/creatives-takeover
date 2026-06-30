@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
+import { Link } from "react-router-dom";
 import {
   Building2,
   CheckCircle2,
@@ -148,6 +149,17 @@ function FieldValue({ label, value }: { label: string; value: string | number | 
     <div className="min-w-0 rounded-md border border-border/70 bg-background/70 p-3">
       <p className="text-xs font-medium uppercase tracking-normal text-muted-foreground">{label}</p>
       <p className="mt-1 break-words text-sm font-medium text-foreground">{value || "Not captured yet"}</p>
+    </div>
+  );
+}
+
+function EmptyAction({ text, href, cta }: { text: string; href: string; cta: string }) {
+  return (
+    <div className="space-y-3">
+      <p className="text-sm leading-6 text-muted-foreground">{text}</p>
+      <Button asChild size="sm" variant="outline">
+        <Link to={href}>{cta}</Link>
+      </Button>
     </div>
   );
 }
@@ -549,9 +561,11 @@ function StartupProfileSection() {
                   </div>
                 </div>
               ) : (
-                <p className="text-sm leading-6 text-muted-foreground">
-                  Complete ICP Builder to automatically populate customer, pain, positioning, and competition fields.
-                </p>
+                <EmptyAction
+                  text="Build your ICP to populate customer, pain, positioning, and competition fields."
+                  href="/icp-builder"
+                  cta="Build your ICP"
+                />
               )}
             </SectionPanel>
 
@@ -590,9 +604,11 @@ function StartupProfileSection() {
                   </div>
                 </div>
               ) : (
-                <p className="text-sm leading-6 text-muted-foreground">
-                  Save a PMF Lab report to show validation score, buying signals, gaps, and next experiments here.
-                </p>
+                <EmptyAction
+                  text="Run PMF Lab to show validation score, buying signals, gaps, and next experiments here."
+                  href="/pmf-lab"
+                  cta="Run PMF score"
+                />
               )}
             </SectionPanel>
 
@@ -619,9 +635,11 @@ function StartupProfileSection() {
                   </div>
                 </div>
               ) : (
-                <p className="text-sm leading-6 text-muted-foreground">
-                  Save a Tech Stack report to make selected tools and budget visible here.
-                </p>
+                <EmptyAction
+                  text="Build a stack report to make selected tools and budget visible here."
+                  href="/tech-stack"
+                  cta="Build tech stack"
+                />
               )}
             </SectionPanel>
           </div>
@@ -629,10 +647,10 @@ function StartupProfileSection() {
           <SectionPanel title="Startup Development Cycle Outputs" icon={FileText}>
             <div className="grid gap-3 md:grid-cols-3">
               {[
-                { label: "Waitlist", item: model.generated.cycle.waitlist, icon: Globe2 },
-                { label: "MVP Scope", item: model.generated.cycle.mvp, icon: Layers3 },
-                { label: "GTM Plan", item: model.generated.cycle.gtm, icon: TrendingUp },
-              ].map(({ label, item, icon: Icon }) => (
+                { label: "Waitlist", item: model.generated.cycle.waitlist, icon: Globe2, href: "/demo-studio", cta: "Create demo" },
+                { label: "MVP Scope", item: model.generated.cycle.mvp, icon: Layers3, href: "/mvp-builder", cta: "Scope MVP" },
+                { label: "GTM Plan", item: model.generated.cycle.gtm, icon: TrendingUp, href: "/go-to-market", cta: "Build GTM plan" },
+              ].map(({ label, item, icon: Icon, href, cta }) => (
                 <div key={label} className="rounded-md border border-border/70 bg-background/70 p-4">
                   <div className="mb-3 flex items-center gap-2">
                     <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
@@ -647,7 +665,9 @@ function StartupProfileSection() {
                       <p className="text-xs text-muted-foreground">{formatFreshness(item.updatedAt)}</p>
                     </div>
                   ) : (
-                    <p className="text-xs leading-5 text-muted-foreground">No saved output yet.</p>
+                    <Button asChild size="sm" variant="outline" className="mt-1 w-full">
+                      <Link to={href}>{cta}</Link>
+                    </Button>
                   )}
                 </div>
               ))}

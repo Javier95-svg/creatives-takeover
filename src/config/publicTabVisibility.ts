@@ -1,4 +1,4 @@
-export type PublicTabVisibilityState = 'accessible' | 'locked' | 'hidden';
+export type PublicTabVisibilityState = 'accessible' | 'preview' | 'locked' | 'hidden';
 
 export interface PublicTabConfig {
   state: PublicTabVisibilityState;
@@ -38,7 +38,7 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
     ],
   },
   '/tech-stack': {
-    state: 'locked',
+    state: 'preview',
     featureName: 'Tech Stack Builder',
     description: 'Compare the best-fit tools, frameworks, and platforms before you start building.',
     previewItems: [
@@ -93,7 +93,7 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
     showPricingCta: true,
   },
   '/vc-search': {
-    state: 'locked',
+    state: 'preview',
     featureName: 'VC Search',
     description: 'Search investor firms by stage, geography, and focus without burning time on low-fit outreach.',
     previewItems: [
@@ -103,7 +103,7 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
     ],
   },
   '/accelerator-hunt': {
-    state: 'locked',
+    state: 'preview',
     featureName: 'Accelerator Hunt',
     description: 'Find accelerators that match your stage, geography, and startup focus before you apply.',
     previewItems: [
@@ -113,7 +113,7 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
     ],
   },
   '/email-templates': {
-    state: 'locked',
+    state: 'preview',
     featureName: 'Email Templates',
     description: 'Copy-paste ready fundraising email templates for cold outreach, warm intros, and follow-ups.',
     previewItems: [
@@ -123,7 +123,7 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
     ],
   },
   '/pitch-deck-analyzer': {
-    state: 'locked',
+    state: 'preview',
     featureName: 'Pitch Deck Analyzer',
     description: 'Upload your deck and get fast feedback on clarity, structure, traction story, and investor readiness.',
     previewItems: [
@@ -143,7 +143,7 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
     ],
   },
   '/insighta-test': {
-    state: 'locked',
+    state: 'preview',
     featureName: 'Insighta Test',
     description: 'Measure your fundraising readiness before you start investor outreach.',
     previewItems: [

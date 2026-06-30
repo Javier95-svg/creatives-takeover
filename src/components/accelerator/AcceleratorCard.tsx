@@ -12,20 +12,13 @@ interface AcceleratorCardProps {
 }
 
 const AcceleratorCard = ({ accelerator, profileLink }: AcceleratorCardProps) => {
-  const getFallbackLogo = (url?: string | null) => {
-    if (!url) return null;
-    try {
-      const normalized = url.startsWith("http") ? url : `https://${url}`;
-      const hostname = new URL(normalized).hostname.replace(/^www\./, "");
-      return hostname ? `https://logo.clearbit.com/${hostname}` : null;
-    } catch {
-      return null;
-    }
-  };
-
-  const [resolvedLogo, setResolvedLogo] = useState<string | null>(
-    accelerator.logo_url || getFallbackLogo(accelerator.website_url || accelerator.url)
-  );
+  const [resolvedLogo, setResolvedLogo] = useState<string | null>(accelerator.logo_url || null);
+  const fallbackInitials = accelerator.title
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
 
   const stageLabel = accelerator.focus_stage?.slice(0, 2).join(", ") || "Founder fit on profile";
   const sectorLabel = accelerator.focus_sectors?.slice(0, 2).join(", ") || accelerator.keywords.slice(0, 2).join(", ");
@@ -74,7 +67,9 @@ const AcceleratorCard = ({ accelerator, profileLink }: AcceleratorCardProps) => 
                 onError={() => setResolvedLogo(null)}
               />
             ) : (
-              <Building2 className="h-6 w-6 text-muted-foreground/50" />
+              <span className="text-xs font-semibold text-muted-foreground">
+                {fallbackInitials || <Building2 className="h-6 w-6 text-muted-foreground/50" />}
+              </span>
             )}
           </div>
         </div>

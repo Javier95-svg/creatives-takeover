@@ -375,7 +375,7 @@ export default function SharedBizMapOutputPage() {
               Build your own plan in 5 minutes — free.
             </p>
             <Button asChild onClick={handleCTA} className="gap-2 rounded-full px-6 ml-auto shrink-0">
-              <Link to={`/signup?returnTo=${encodeURIComponent('/bizmap-ai/chat')}&shared_output=${encodeURIComponent(record.slug)}`}>
+              <Link to={`/signup?returnTo=${encodeURIComponent('/bizmap-ai')}&shared_output=${encodeURIComponent(record.slug)}`}>
                 Start free — no credit card
                 <ArrowRight className="h-4 w-4" />
               </Link>

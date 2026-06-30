@@ -2,11 +2,8 @@ import type { MouseEvent } from "react";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  BarChart3,
-  Boxes,
   ChevronDown,
   DollarSign,
-  FlaskConical,
   Gift,
   GraduationCap,
   Info,
@@ -15,7 +12,6 @@ import {
   Mic,
   Newspaper,
   Rocket,
-  Target,
   X,
   Zap,
 } from "lucide-react";
@@ -34,6 +30,7 @@ import { cn } from "@/lib/utils";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { captureEvent } from "@/lib/analytics";
+import { FREE_TOOLS_NAV_ITEMS } from "@/config/freeTools";
 
 type VisitorLink = { label: string; href: string; icon: LucideIcon; sectionId?: string };
 type VisitorMenuItem = { label: string; href: string; icon: LucideIcon; description: string };
@@ -52,32 +49,7 @@ const visitorLinks: VisitorLink[] = [
 
 // Free Tools menu — logged-out visitors can use these tools before signing up.
 // Each lands on a usable public experience that gates only the deliverable.
-const freeToolsItems: VisitorMenuItem[] = [
-  {
-    label: "ICP Builder",
-    href: "/icp-builder",
-    icon: Target,
-    description: "Find your ideal customer from two sentences.",
-  },
-  {
-    label: "Pitch Deck Analyzer",
-    href: "/pitch-deck-analyzer",
-    icon: BarChart3,
-    description: "Score your deck across 6 investor dimensions.",
-  },
-  {
-    label: "Insighta Test",
-    href: "/insighta-test",
-    icon: FlaskConical,
-    description: "Check your fundraising readiness in minutes.",
-  },
-  {
-    label: "Tech Stack Builder",
-    href: "/tech-stack",
-    icon: Boxes,
-    description: "Plan your startup stack and monthly budget.",
-  },
-];
+const freeToolsItems: VisitorMenuItem[] = FREE_TOOLS_NAV_ITEMS;
 
 const giftsMenu: VisitorMenu = {
   label: "Free Tools",
@@ -184,7 +156,13 @@ const VisitorNavbar = () => {
               <DropdownMenuItem key={item.href} asChild>
                 <Link
                   to={item.href}
-                  onClick={() => trackNavClick(`${menu.label} - ${item.label}`)}
+                  onClick={() => {
+                    trackNavClick(`${menu.label} - ${item.label}`);
+                    captureEvent("free_tool_nav_click", {
+                      tool: item.label,
+                      source: "visitor_navbar_desktop",
+                    });
+                  }}
                   className="cursor-pointer"
                 >
                   <ItemIcon className="mr-2 h-4 w-4 shrink-0" aria-hidden="true" />
@@ -241,7 +219,13 @@ const VisitorNavbar = () => {
                   key={item.href}
                   to={item.href}
                   className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
-                  onClick={() => trackNavClick(`Mobile ${menu.label} - ${item.label}`)}
+                  onClick={() => {
+                    trackNavClick(`Mobile ${menu.label} - ${item.label}`);
+                    captureEvent("free_tool_nav_click", {
+                      tool: item.label,
+                      source: "visitor_navbar_mobile",
+                    });
+                  }}
                 >
                   <ItemIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
                   {item.label}

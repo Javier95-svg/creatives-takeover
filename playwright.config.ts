@@ -3,8 +3,12 @@ import { defineConfig, devices } from '@playwright/test';
 // Smoke tests boot the dev server with DUMMY Supabase env so the app always
 // mounts (independent of CI secrets) — we only assert that public pages render
 // and don't crash, not that data loads.
+// Use 127.0.0.1 (not "localhost") so the test client and the dev server agree
+// on IPv4 — CI runners can resolve localhost to IPv6 (::1) while Vite binds
+// elsewhere, causing connection timeouts.
 const PORT = 8080;
-const baseURL = `http://localhost:${PORT}`;
+const HOST = '127.0.0.1';
+const baseURL = `http://${HOST}:${PORT}`;
 
 export default defineConfig({
   testDir: './e2e',
@@ -23,7 +27,7 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: 'npm run dev',
+    command: `npm run dev -- --host ${HOST} --port ${PORT}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

@@ -3,7 +3,7 @@ import { Play, Pencil, Trash2, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { youtubeThumbnail } from "@/lib/podcast";
+import { warmYouTubeEmbed, youtubeThumbnail } from "@/lib/podcast";
 import type { PodcastEpisode } from "@/hooks/usePodcastEpisodes";
 
 interface PodcastEpisodeBannerProps {
@@ -22,9 +22,13 @@ const PodcastEpisodeBanner = ({
   onDelete,
 }: PodcastEpisodeBannerProps) => {
   const [thumbError, setThumbError] = useState(false);
+  const warmPlayer = () => warmYouTubeEmbed(episode.youtube_video_id);
 
   return (
     <article
+      onPointerEnter={warmPlayer}
+      onFocus={warmPlayer}
+      onTouchStart={warmPlayer}
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/70 shadow-sm backdrop-blur-sm transition-all hover:border-primary/40 hover:shadow-lg sm:flex-row",
         !episode.is_published && "opacity-70"
@@ -43,6 +47,7 @@ const PodcastEpisodeBanner = ({
               src={youtubeThumbnail(episode.youtube_video_id)}
               alt={episode.title}
               loading="lazy"
+              decoding="async"
               onError={() => setThumbError(true)}
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />

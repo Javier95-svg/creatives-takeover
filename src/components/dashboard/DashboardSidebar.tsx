@@ -45,6 +45,7 @@ import {
 import { DashboardCustomization } from './DashboardCustomization';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { getActivationPreferenceState } from '@/lib/activationState';
 import {
   getDashboardModeConfig,
   normalizePlan,
@@ -57,11 +58,25 @@ import {
 import { useSubscription } from '@/hooks/useSubscription';
 import { useDashboardNavigation } from '@/contexts/DashboardNavigationContext';
 import { shouldReduceOnboardingNav } from '@/lib/onboardingPath';
+import type { ActivationIntent } from '@/lib/retentionSystem';
 
 // Task 4: during the forced-onboarding window, collapse the sidebar to the
 // essentials — dashboard home, the daily loop, and the two onboarding paths.
 const ONBOARDING_NAV_PATHS = new Set(['/dashboard', '/dashboard/tasks', '/dashboard/routine']);
-const ONBOARDING_TOOL_KEYS = new Set<DashboardSidebarToolKey>(['icp_builder', 'find_mentor']);
+const DEFAULT_ONBOARDING_TOOL_KEYS = new Set<DashboardSidebarToolKey>(['waitlist_maker']);
+
+const TOOL_KEY_BY_ACTIVATION_INTENT: Partial<Record<ActivationIntent, DashboardSidebarToolKey>> = {
+  build_demo: 'waitlist_maker',
+  run_icp: 'icp_builder',
+  start_validation: 'decision_sprint',
+  find_mentor: 'find_mentor',
+  save_mentor: 'find_mentor',
+  send_message: 'find_mentor',
+  book_call: 'find_mentor',
+  unlock_pitch_deck: 'pitch_deck_analyzer',
+  unlock_tech_stack: 'tech_stack',
+  unlock_insighta: 'insighta_test',
+};
 
 interface SidebarPreferences {
   showICPBuilder: boolean;
@@ -152,6 +167,7 @@ export const DashboardSidebar = () => {
   const { activeSection, setActiveSection } = useDashboardNavigation();
   const [sidebarPreferences, setSidebarPreferences] = useState<SidebarPreferences>(defaultSidebarPreferences);
   const [reduceOnboardingNav, setReduceOnboardingNav] = useState(false);
+  const [activationIntent, setActivationIntent] = useState<ActivationIntent | null>(null);
   const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
   const modeConfig = getDashboardModeConfig(resolveDashboardMode(currentPlan));
 
@@ -169,6 +185,8 @@ export const DashboardSidebar = () => {
         setSidebarPreferences(normalizePreferences(data.sidebar_preferences as LegacySidebarPreferences));
       }
 
+      const activationPreferenceState = getActivationPreferenceState(data?.user_preferences);
+      setActivationIntent(activationPreferenceState.activationIntent);
       setReduceOnboardingNav(
         shouldReduceOnboardingNav(
           { onboarding_completed: data?.onboarding_completed, user_preferences: data?.user_preferences },
@@ -205,6 +223,11 @@ export const DashboardSidebar = () => {
       ...item,
       icon: navIconMap[item.iconKey],
     }));
+  const onboardingToolKeys = new Set(DEFAULT_ONBOARDING_TOOL_KEYS);
+  const selectedActivationTool = activationIntent ? TOOL_KEY_BY_ACTIVATION_INTENT[activationIntent] : null;
+  if (selectedActivationTool) {
+    onboardingToolKeys.add(selectedActivationTool);
+  }
 
   const buildNavTarget = (path: string, sectionId?: string) => {
     if (!sectionId) {
@@ -269,7 +292,7 @@ export const DashboardSidebar = () => {
     { toolKey: 'newspaper', path: '/newspaper', label: 'Newspaper', icon: BookOpen, prefKey: 'showNewspaper', featureKey: 'newspaper' },
     { toolKey: 'prompt_library', path: '/prompt-library', label: 'Prompt Library', icon: Library, prefKey: 'showPromptLibrary', featureKey: 'prompt_library' },
   ].filter((item) => {
-    if (reduceOnboardingNav && !ONBOARDING_TOOL_KEYS.has(item.toolKey)) {
+    if (reduceOnboardingNav && !onboardingToolKeys.has(item.toolKey)) {
       return false;
     }
 

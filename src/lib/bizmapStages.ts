@@ -307,7 +307,7 @@ export function onboardingSelectionToProgress(selection: OnboardingBizMapStageSe
 
 export const BUSINESS_PLANNER_RESOURCE_ITEM = {
   name: 'Business Planner',
-  route: '/bizmap-ai/chat',
-  description: 'AI business planning assistant and launch co-pilot',
+  route: '/bizmap-ai',
+  description: 'Guided startup development cycle and founder workflow',
   icon: Bot,
 };

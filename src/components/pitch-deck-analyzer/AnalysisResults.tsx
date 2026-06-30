@@ -55,6 +55,11 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
   const actionPlan = deep.actionPlan ?? [];
   const narrativeFlow = deep.narrativeFlow;
   const benchmark = deep.benchmark;
+  const guestFindings = [
+    ...analysis.weaknesses,
+    ...analysis.recommendations,
+    ...analysis.strengths,
+  ].filter(Boolean).slice(0, 3);
 
   const handleSubmitFeedback = async () => {
     if (userRating === 0) {
@@ -132,6 +137,38 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
         </CardContent>
       </Card>
 
+      {isGuest && (
+        <>
+          <Card className="border-primary/25">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lightbulb className="h-5 w-5 text-primary" />
+                Top Findings
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {guestFindings.length > 0 ? (
+                <ul className="space-y-3">
+                  {guestFindings.map((finding, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      <span>{finding}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Your full deck breakdown is ready, including slide coverage, narrative flow, and prioritized fixes.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+          {guestCta ?? null}
+        </>
+      )}
+
+      {!isGuest && (
+      <>
       {/* Metrics Breakdown */}
       <Card>
         <CardHeader>
@@ -439,6 +476,8 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
           </div>
         </CardContent>
       </Card>
+      )}
+      </>
       )}
     </div>
   );

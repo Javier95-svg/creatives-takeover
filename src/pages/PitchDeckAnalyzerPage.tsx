@@ -14,17 +14,27 @@ import { Loader2, Sparkles, BarChart3, TrendingUp, Target } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { captureEvent } from "@/lib/analytics";
 import { toast } from "sonner";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { clearAnonymousToolState, readAnonymousToolState, saveAnonymousToolState } from "@/lib/anonymousToolState";
+import type { PitchDeckGuestResult } from "@/types/pitchDeckAnalyzer";
 
 const MAX_FILE_SIZE_MB = 20;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
-const RETURN_PATH = "/pitch-deck-analyzer";
+const RETURN_PATH = "/pitch-deck-analyzer?hydrate=1";
+
+interface PitchDeckAnonymousState {
+  result: PitchDeckGuestResult;
+}
 
 export default function PitchDeckAnalyzerPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { trackPageVisit } = useReadingAnalytics();
   const {
     analyzePublicDeck,
     analyzePitchDeck,
+    saveGuestResultAsAnalysis,
     submitFeedback,
     resetAnalysis,
     uploading,
@@ -36,6 +46,7 @@ export default function PitchDeckAnalyzerPage() {
     isProcessing,
   } = usePitchDeckAnalyzer();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [hydratedPitchDeck, setHydratedPitchDeck] = useState(false);
 
   useEffect(() => {
     trackPageVisit('Pitch Deck Analyzer');
@@ -45,6 +56,22 @@ export default function PitchDeckAnalyzerPage() {
   useEffect(() => {
     if (!user) captureEvent('free_tool_opened', { tool: 'pitch_deck_analyzer' });
   }, [user]);
+
+  useEffect(() => {
+    if (!user || hydratedPitchDeck || searchParams.get('hydrate') !== '1') return;
+
+    const stored = readAnonymousToolState<PitchDeckAnonymousState>('pitch_deck_analyzer');
+    if (!stored?.result) return;
+
+    setHydratedPitchDeck(true);
+    void saveGuestResultAsAnalysis(stored.result).then((saved) => {
+      if (saved) {
+        clearAnonymousToolState('pitch_deck_analyzer');
+        toast.success('Your pitch deck analysis is saved to your account.');
+        navigate('/pitch-deck-analyzer', { replace: true });
+      }
+    });
+  }, [hydratedPitchDeck, navigate, saveGuestResultAsAnalysis, searchParams, user]);
 
   const handleFileSelected = (file: File) => {
     if (file.type !== 'application/pdf') {
@@ -67,7 +94,19 @@ export default function PitchDeckAnalyzerPage() {
     if (!selectedFile) return;
     captureEvent('free_tool_input_submitted', { tool: 'pitch_deck_analyzer', file_size: selectedFile.size });
     const result = await analyzePublicDeck(selectedFile);
-    if (result) captureEvent('free_tool_result_shown', { tool: 'pitch_deck_analyzer' });
+    if (result) {
+      saveAnonymousToolState<PitchDeckAnonymousState>('pitch_deck_analyzer', { result });
+      captureEvent('free_tool_result_shown', { tool: 'pitch_deck_analyzer' });
+      captureEvent('pitch_deck_partial_result_shown', {
+        tool: 'pitch_deck_analyzer',
+        score: result.overallScore,
+        findings_shown: Math.min(3, [
+          ...result.weaknesses,
+          ...result.recommendations,
+          ...result.strengths,
+        ].filter(Boolean).length),
+      });
+    }
   };
 
   // Authenticated: every analysis is credit-metered (10 credits).
@@ -108,6 +147,9 @@ export default function PitchDeckAnalyzerPage() {
       <Button variant="outline" onClick={handleStartNew} className="mt-4">
         Try Again
       </Button>
+      <Button variant="ghost" onClick={() => navigate('/dashboard')} className="ml-2 mt-4">
+        Return to dashboard
+      </Button>
     </div>
   );
 
@@ -145,7 +187,7 @@ export default function PitchDeckAnalyzerPage() {
       <Navigation />
 
       <main className="relative overflow-hidden">
-        {/* Artistic background — an "investor canvas": soft color mesh, a faint
+        {/* Artistic background: an "investor canvas" with soft color mesh, a faint
             blueprint grid, drifting aurora glows, and floating pitch-deck slides. */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
           {/* Base wash */}
@@ -286,7 +328,16 @@ export default function PitchDeckAnalyzerPage() {
                     analysis={guestResult}
                     isGuest
                     onStartNew={handleStartNew}
-                    guestCta={<PitchDeckUnlockGate returnPath={RETURN_PATH} />}
+                    guestCta={
+                      <PitchDeckUnlockGate
+                        returnPath={RETURN_PATH}
+                        onBeforeSignup={() => {
+                          if (guestResult) {
+                            saveAnonymousToolState<PitchDeckAnonymousState>('pitch_deck_analyzer', { result: guestResult });
+                          }
+                        }}
+                      />
+                    }
                   />
                 </div>
               ) : limitReached ? (
@@ -295,7 +346,7 @@ export default function PitchDeckAnalyzerPage() {
                   <div className="text-center max-w-2xl mx-auto">
                     <h2 className="text-2xl font-bold mb-2">You've used your free analysis</h2>
                     <p className="text-muted-foreground">
-                      Create a free account to analyze more decks — 10 credits each — and keep every
+                      Create a free account to analyze more decks, 10 credits each, and keep every
                       analysis saved.
                     </p>
                   </div>
@@ -315,7 +366,7 @@ export default function PitchDeckAnalyzerPage() {
                     <div className="flex flex-col items-center gap-2">
                       <Button size="lg" onClick={handlePublicAnalyze} className="px-8 py-6 text-lg">
                         <Sparkles className="h-5 w-5 mr-2" />
-                        Analyze My Deck — Free
+                        Analyze My Deck - Free
                       </Button>
                       <p className="text-xs text-muted-foreground">No signup needed for your first analysis.</p>
                     </div>
@@ -328,7 +379,7 @@ export default function PitchDeckAnalyzerPage() {
                 </div>
               )
             ) : (
-              /* Signed in → credit-metered analysis */
+              /* Signed in credit-metered analysis */
               <>
                 <div className="space-y-6 animate-fade-in" style={{ animationDelay: '0.6s' }}>
                   <PitchDeckUploader
@@ -345,7 +396,7 @@ export default function PitchDeckAnalyzerPage() {
                         <Sparkles className="h-5 w-5 mr-2" />
                         Analyze Deck
                       </Button>
-                      <p className="text-xs text-muted-foreground">Costs 10 credits — refunded automatically if the analysis fails.</p>
+                      <p className="text-xs text-muted-foreground">Costs 10 credits. Refunded automatically if the analysis fails.</p>
                     </div>
                   )}
 

@@ -11,14 +11,14 @@ import { getPendingReferralCode, persistPendingReferralCode, setOAuthAuthIntent 
 
 interface PitchDeckUnlockGateProps {
   returnPath: string;
+  onBeforeSignup?: () => void;
 }
 
 const SOURCE = 'pitch-deck-unlock';
 
-// Sign-up CTA shown after an anonymous visitor's one free analysis (or when they
-// hit the free limit). Creating an account lets them analyze more decks (credit-
-// metered) and keep a saved history.
-export function PitchDeckUnlockGate({ returnPath }: PitchDeckUnlockGateProps) {
+// Sign-up CTA shown after an anonymous visitor sees the free partial result.
+// Creating an account unlocks the full current analysis and saved history.
+export function PitchDeckUnlockGate({ returnPath, onBeforeSignup }: PitchDeckUnlockGateProps) {
   const navigate = useNavigate();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
@@ -29,6 +29,7 @@ export function PitchDeckUnlockGate({ returnPath }: PitchDeckUnlockGateProps) {
   const handleGoogleContinue = async () => {
     try {
       captureEvent('free_tool_signup_gate_cta_clicked', { tool: 'pitch_deck_analyzer', method: 'google' });
+      onBeforeSignup?.();
       setIsGoogleLoading(true);
       persistOnboardingReturn(returnPath);
       const storage = getSafeLocalStorage();
@@ -58,8 +59,9 @@ export function PitchDeckUnlockGate({ returnPath }: PitchDeckUnlockGateProps) {
 
   const handleSignUpRedirect = () => {
     captureEvent('free_tool_signup_gate_cta_clicked', { tool: 'pitch_deck_analyzer', method: 'email' });
+    onBeforeSignup?.();
     persistOnboardingReturn(returnPath);
-    navigate(`/sign-up?source=${SOURCE}&return=${encodeURIComponent(returnPath)}`);
+    navigate(`/signup?source=${SOURCE}&return=${encodeURIComponent(returnPath)}`);
   };
 
   const handleLoginRedirect = () => {
@@ -74,20 +76,20 @@ export function PitchDeckUnlockGate({ returnPath }: PitchDeckUnlockGateProps) {
         <div className="border-b border-border/50 px-6 py-5 sm:px-8">
           <p className="mb-2 inline-flex items-center gap-2 text-caption font-semibold uppercase tracking-[0.18em] text-accent-teal">
             <Sparkles className="h-3.5 w-3.5" />
-            Analyze more decks
+            Full analysis locked
           </p>
           <h2 className="text-xl font-semibold tracking-tight">
-            That was your free analysis. Ready for the next deck?
+            Create a free account to unlock your full pitch deck analysis.
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Create a free account to analyze more decks — 10 credits each — and keep every analysis
-            saved so you can track your score as you iterate.
+            Your score and top findings are ready. Sign up to open the detailed breakdown,
+            slide coverage, narrative flow, benchmark, and prioritized action plan.
           </p>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             {[
-              { icon: Layers, label: 'Analyze every version of your deck — 10 credits each' },
-              { icon: History, label: 'Save and revisit every analysis in your dashboard' },
+              { icon: Layers, label: 'Unlock the slide-by-slide breakdown' },
+              { icon: History, label: 'Save this analysis in your dashboard' },
               { icon: LineChart, label: 'Track your investor score as you iterate' },
             ].map(({ icon: Icon, label }) => (
               <div key={label} className="flex items-start gap-2 rounded-2xl border border-border/60 bg-background/70 px-3 py-3">

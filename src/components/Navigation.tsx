@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, Bot, BookOpen, TrendingUp, Users as UsersIcon, FileText, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, Boxes, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles, Mic, Lock } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, Bot, BookOpen, TrendingUp, Users as UsersIcon, FileText, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, Boxes, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles, Mic, Lock, LayoutDashboard } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -69,6 +69,7 @@ const Navigation = () => {
   // Icon mapping for navigation items
   const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
     "Home": Home,
+    "Dashboard": LayoutDashboard,
     "BizMap AI": Bot,
     "Insighta": TrendingUp,
     "Community": UsersIcon,
@@ -255,6 +256,7 @@ const Navigation = () => {
 
   const navItems = [
     { name: "Home", href: "/", tooltip: "Return to homepage", icon: Home },
+    { name: "Dashboard", href: "/dashboard", tooltip: "Continue from your founder dashboard", icon: LayoutDashboard },
     { name: "BizMap AI", href: "/bizmap-ai", tooltip: "Validate, build, and launch with guided startup tools", icon: Bot },
     { name: "Community", href: "/mentorship", tooltip: "Mentors, angel investors, and co-founder matchmaking", icon: UsersIcon },
     { name: "Insighta", href: "/insighta", tooltip: "Funding opportunities and investment resources", icon: TrendingUp },

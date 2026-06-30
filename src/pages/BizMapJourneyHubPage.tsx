@@ -1,5 +1,5 @@
-import { useEffect, useMemo } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import SEO, { createBreadcrumbSchema, createFAQSchema, createSoftwareApplicationSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
@@ -8,25 +8,37 @@ import RelatedToolsSection from '@/components/seo/RelatedToolsSection';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Circle } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Circle, Sparkles } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { trackActivationFunnelEvent } from '@/lib/analytics';
+import { getActivationPreferenceState } from '@/lib/activationState';
+import { buildActivationSummary, trackRetentionEvent, type ActivationIntent } from '@/lib/retentionSystem';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 import { BIZMAP_STAGES } from '@/lib/bizmapStages';
 
+interface BizMapPrimaryAction {
+  title: string;
+  description: string;
+  actionUrl: string;
+  activationIntent: ActivationIntent | null;
+  source: string;
+}
+
 export default function BizMapJourneyHubPage() {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const { user } = useAuth();
   const {
     currentStage,
     stageState,
     setCurrentStage,
   } = useBizMapProgress();
-
-  useEffect(() => {
-    const sessionId = searchParams.get('session');
-    if (sessionId) {
-      navigate(`/bizmap-ai/chat?session=${sessionId}`, { replace: true });
-    }
-  }, [navigate, searchParams]);
+  const [primaryAction, setPrimaryAction] = useState<BizMapPrimaryAction>({
+    title: 'Build your demo and pitch video',
+    description: 'Start with the fastest aha moment: turn screenshots into a live demo before exploring the full roadmap.',
+    actionUrl: '/demo-studio/try',
+    activationIntent: 'build_demo',
+    source: 'bizmap_default_demo',
+  });
 
   const currentStageDef = useMemo(
     () => BIZMAP_STAGES.find((stage) => stage.id === currentStage),
@@ -37,6 +49,89 @@ export default function BizMapJourneyHubPage() {
     const completedStages = BIZMAP_STAGES.filter((stage) => stageState[stage.id]?.completed).length;
     return Math.round((completedStages / BIZMAP_STAGES.length) * 100);
   }, [stageState]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const resolvePrimaryAction = async () => {
+      if (!user) {
+        trackActivationFunnelEvent('bizmap_ai_opened', {
+          source: 'bizmap_hub',
+          selected_path: '/demo-studio/try',
+          activation_intent: 'build_demo',
+        });
+        return;
+      }
+
+      const { data } = await supabase
+        .from('profiles')
+        .select('user_preferences')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      const activationState = getActivationPreferenceState(data?.user_preferences);
+      if (activationState.activationIntent && activationState.needsFirstArtifact) {
+        const summary = buildActivationSummary(activationState.activationIntent);
+        setPrimaryAction({
+          title: summary.title,
+          description: summary.description,
+          actionUrl: summary.actionUrl,
+          activationIntent: activationState.activationIntent,
+          source: 'bizmap_activation_continue',
+        });
+        trackActivationFunnelEvent('bizmap_ai_opened', {
+          user_id: user.id,
+          source: 'bizmap_hub',
+          selected_path: summary.actionUrl,
+          activation_intent: activationState.activationIntent,
+          first_result_mode: true,
+        });
+        return;
+      }
+
+      setPrimaryAction({
+        title: activationState.firstArtifactResumeUrl ? 'Resume your latest artifact' : 'Open your dashboard roadmap',
+        description: activationState.firstArtifactResumeUrl
+          ? 'Pick up from the last startup asset you saved and keep building from there.'
+          : 'Use your dashboard to choose the next tool in your startup roadmap.',
+        actionUrl: activationState.firstArtifactResumeUrl ?? '/dashboard',
+        activationIntent: activationState.activationIntent,
+        source: 'bizmap_dashboard_continue',
+      });
+      trackActivationFunnelEvent('bizmap_ai_opened', {
+        user_id: user.id,
+        source: 'bizmap_hub',
+        selected_path: activationState.firstArtifactResumeUrl ?? '/dashboard',
+        activation_intent: activationState.activationIntent,
+        first_artifact_type: activationState.firstArtifactType,
+      });
+    };
+
+    void resolvePrimaryAction();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  const handlePrimaryActionClick = () => {
+    trackActivationFunnelEvent('first_action_opened', {
+      user_id: user?.id ?? null,
+      activation_intent: primaryAction.activationIntent,
+      selected_path: primaryAction.actionUrl,
+      source: primaryAction.source,
+    });
+    if (user?.id) {
+      void trackRetentionEvent('activation_first_action_opened', {
+        user_id: user.id,
+        activation_intent: primaryAction.activationIntent,
+        selected_path: primaryAction.actionUrl,
+        source: primaryAction.source,
+      });
+    }
+  };
 
   const faqs = [
     {
@@ -98,6 +193,24 @@ export default function BizMapJourneyHubPage() {
             <p className="text-muted-foreground max-w-3xl mx-auto">
               Move from idea validation to MVP planning and launch with a structured founder workflow covering customer research, PMF, product scope, and go-to-market.
             </p>
+
+            <div className="mx-auto flex max-w-3xl flex-col items-center gap-3 rounded-xl border border-primary/20 bg-card/80 p-4 text-center sm:flex-row sm:justify-between sm:text-left">
+              <div className="flex items-start gap-3">
+                <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Sparkles className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="font-semibold">{primaryAction.title}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{primaryAction.description}</p>
+                </div>
+              </div>
+              <Button asChild className="w-full shrink-0 gap-2 sm:w-auto" onClick={handlePrimaryActionClick}>
+                <Link to={primaryAction.actionUrl}>
+                  Continue
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
 
             <div className="mx-auto max-w-3xl rounded-xl border border-primary/20 bg-card/80 p-4 text-left">
               <div className="flex items-center justify-between gap-3">

@@ -12,20 +12,13 @@ interface VCCardProps {
 }
 
 const VCCard = ({ vc, canViewProfile = true }: VCCardProps) => {
-  const getFallbackLogo = (website?: string) => {
-    if (!website) return null;
-    try {
-      const normalized = website.startsWith("http") ? website : `https://${website}`;
-      const hostname = new URL(normalized).hostname.replace(/^www\./, "");
-      return hostname ? `https://logo.clearbit.com/${hostname}` : null;
-    } catch {
-      return null;
-    }
-  };
-
-  const [resolvedLogo, setResolvedLogo] = useState<string | null>(
-    vc.logo_url || getFallbackLogo(vc.firm_website)
-  );
+  const [resolvedLogo, setResolvedLogo] = useState<string | null>(vc.logo_url || null);
+  const fallbackInitials = vc.firm_name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
 
   const formatCheckSize = () => {
     if (!vc.typical_check_size_min || !vc.typical_check_size_max) return null;
@@ -67,7 +60,9 @@ const VCCard = ({ vc, canViewProfile = true }: VCCardProps) => {
                 onError={() => setResolvedLogo(null)}
               />
             ) : (
-              <Building2 className="h-6 w-6 text-muted-foreground/50" />
+              <span className="text-xs font-semibold text-muted-foreground">
+                {fallbackInitials || <Building2 className="h-6 w-6 text-muted-foreground/50" />}
+              </span>
             )}
           </div>
         </div>

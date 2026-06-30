@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,10 +11,23 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const EmailTemplatesTab = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { templates, searchQuery, setSearchQuery, selectedCategory, setSelectedCategory } = useEmailTemplates();
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    const templateId = searchParams.get("template");
+    if (!isAuthenticated || !templateId) return;
+    const template = templates.find((item) => item.id === templateId);
+    if (!template) return;
+    setSelectedTemplate(template);
+    setIsModalOpen(true);
+    const next = new URLSearchParams(searchParams);
+    next.delete("template");
+    setSearchParams(next, { replace: true });
+  }, [isAuthenticated, searchParams, setSearchParams, templates]);
 
   const categories: Array<{ id: EmailCategory | 'all'; label: string }> = [
     { id: 'all', label: 'All Templates' },
@@ -27,7 +40,8 @@ const EmailTemplatesTab = () => {
 
   const handleViewTemplate = (template: EmailTemplate) => {
     if (!isAuthenticated) {
-      navigate("/signup");
+      const returnPath = `/email-templates?template=${encodeURIComponent(template.id)}`;
+      navigate(`/signup?from=email-template&source=email-template&return=${encodeURIComponent(returnPath)}`);
       return;
     }
     setSelectedTemplate(template);

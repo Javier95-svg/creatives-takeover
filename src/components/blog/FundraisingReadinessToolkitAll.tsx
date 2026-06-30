@@ -19,6 +19,8 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { PreviewModeWrapper } from "@/components/ui/PreviewModeWrapper";
 import { captureEvent } from "@/lib/analytics";
+import { clearAnonymousToolState, readAnonymousToolState, saveAnonymousToolState } from "@/lib/anonymousToolState";
+import { markFirstArtifactCreated, trackRetentionEvent } from "@/lib/retentionSystem";
 import { useCredits } from "@/hooks/useCredits";
 import { useCreditActions } from "@/hooks/useCreditActions";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
@@ -42,6 +44,12 @@ type AIAnalysis = EnhancedAIAnalysis;
 
 // Assessment flow steps
 type AssessmentStep = 'context-stage' | 'context-business' | 'assessment' | 'results';
+
+interface InsightaAnonymousState {
+  context: Partial<AssessmentContext>;
+  scores: Partial<AssessmentScores>;
+  averageScore: number;
+}
 
 const FundraisingReadinessToolkitAll = () => {
   const { user, isAuthenticated } = useAuth();
@@ -75,6 +83,32 @@ const FundraisingReadinessToolkitAll = () => {
   // Logged-out visitors get a real, client-side top-line readiness score for free.
   // The full AI diagnostic stays gated behind a free account.
   const [publicResult, setPublicResult] = useState(false);
+
+  React.useEffect(() => {
+    captureEvent("insighta_test_context_started", { is_authenticated: isAuthenticated });
+  }, [isAuthenticated]);
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('hydrate') !== '1') return;
+
+    const stored = readAnonymousToolState<InsightaAnonymousState>('insighta_test');
+    if (!stored) return;
+
+    setContext((prev) => ({ ...prev, ...stored.context }));
+    setScores((prev) => ({ ...prev, ...stored.scores }));
+    setCurrentStep('assessment');
+    setPublicResult(!isAuthenticated);
+
+    if (isAuthenticated && user) {
+      void trackRetentionEvent('artifact_resumed', {
+        user_id: user.id,
+        tool: 'insighta_test',
+        source: 'insighta_test_unlock',
+        resume_url: '/insighta-test?hydrate=1',
+      });
+    }
+  }, [isAuthenticated, user]);
 
   // Get visible questions based on current stage
   const visibleQuestions = useMemo(() => {
@@ -157,9 +191,19 @@ const FundraisingReadinessToolkitAll = () => {
       tool: "insighta_test",
       questions_answered: answeredCount,
     });
+    saveAnonymousToolState<InsightaAnonymousState>('insighta_test', {
+      context,
+      scores,
+      averageScore: Number(averageScore.toFixed(1)),
+    });
     setPublicResult(true);
     captureEvent("free_tool_partial_result_shown", {
       tool: "insighta_test",
+      readiness_score: Number(averageScore.toFixed(1)),
+    });
+    captureEvent("insighta_test_result_shown", {
+      tool: "insighta_test",
+      is_authenticated: false,
       readiness_score: Number(averageScore.toFixed(1)),
     });
   };
@@ -182,6 +226,13 @@ const FundraisingReadinessToolkitAll = () => {
       toast.error("Please complete all required questions before analyzing");
       return;
     }
+
+    await trackRetentionEvent('activation_first_input_submitted', {
+      user_id: user.id,
+      tool: 'insighta_test',
+      source: 'insighta_test',
+      questions_answered: Object.values(scores).filter((score) => typeof score === 'number' && score > 0).length,
+    });
 
     // Check feature access and credits
     const requiredCredits = ensureCredits('FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Insighta Test' });
@@ -242,7 +293,27 @@ const FundraisingReadinessToolkitAll = () => {
       }
 
       setAiAnalysis(data as AIAnalysis);
+      clearAnonymousToolState('insighta_test');
       setCurrentStep('results'); // Transition to results step
+      await trackRetentionEvent('activation_first_output_generated', {
+        user_id: user.id,
+        tool: 'insighta_test',
+        source: 'insighta_test',
+        artifact_type: 'insighta_readiness',
+      });
+      await markFirstArtifactCreated({
+        userId: user.id,
+        artifactType: 'insighta_readiness',
+        artifactId: `insighta-readiness-${Date.now()}`,
+        label: `Insighta readiness: ${data?.verdict ?? 'Diagnostic'}`,
+        resumeUrl: '/insighta-test',
+        source: 'insighta_test',
+      });
+      captureEvent("insighta_test_result_shown", {
+        tool: "insighta_test",
+        is_authenticated: true,
+        readiness_score: data?.average_score ?? Number(averageScore.toFixed(1)),
+      });
 
       toast.success(`Analysis complete! (Used ${requiredCredits} credits)`);
       await refreshBalance();
@@ -259,7 +330,182 @@ const FundraisingReadinessToolkitAll = () => {
   };
 
   return (
-    <div>
+    <div className="space-y-6">
+      <Card>
+        <CardContent className="flex flex-wrap items-center gap-2 pt-6 text-sm">
+          {[
+            { id: 'context-stage', label: 'Founder context' },
+            { id: 'context-business', label: 'Business context' },
+            { id: 'assessment', label: 'Readiness score' },
+            { id: 'results', label: 'Diagnostic' },
+          ].map((step, index) => (
+            <Badge
+              key={step.id}
+              variant={currentStep === step.id ? 'default' : 'outline'}
+              className="font-normal"
+            >
+              {index + 1}. {step.label}
+            </Badge>
+          ))}
+        </CardContent>
+      </Card>
+
+      {currentStep === 'context-stage' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Tell us where you are in the journey</CardTitle>
+            <CardDescription>
+              This makes the readiness score compare you against the right stage instead of a generic fundraising checklist.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-3">
+              <Label>Startup stage</Label>
+              <RadioGroup
+                value={context.founder_stage}
+                onValueChange={(value) => setContext((prev) => ({ ...prev, founder_stage: value as FounderStage }))}
+                className="grid gap-3 sm:grid-cols-2"
+              >
+                {[
+                  ['ideation', 'Ideation'],
+                  ['validation', 'Validation'],
+                  ['building', 'Building'],
+                  ['launching', 'Launching'],
+                  ['scaling', 'Scaling'],
+                ].map(([value, label]) => (
+                  <Label key={value} className="flex cursor-pointer items-center gap-3 rounded-xl border border-border/60 p-3">
+                    <RadioGroupItem value={value} />
+                    <span>{label}</span>
+                  </Label>
+                ))}
+              </RadioGroup>
+            </div>
+
+            <div className="space-y-3">
+              <Label>Founder experience</Label>
+              <RadioGroup
+                value={context.founder_experience}
+                onValueChange={(value) => setContext((prev) => ({ ...prev, founder_experience: value as FounderExperience }))}
+                className="grid gap-3 sm:grid-cols-3"
+              >
+                {[
+                  ['first-time', 'First-time founder'],
+                  ['second-time', 'Second-time founder'],
+                  ['experienced', 'Experienced founder'],
+                ].map(([value, label]) => (
+                  <Label key={value} className="flex cursor-pointer items-center gap-3 rounded-xl border border-border/60 p-3">
+                    <RadioGroupItem value={value} />
+                    <span>{label}</span>
+                  </Label>
+                ))}
+              </RadioGroup>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleStageContextSubmit}>
+                Continue
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {currentStep === 'context-business' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Add your business context</CardTitle>
+            <CardDescription>
+              These details help the diagnostic explain what matters for your market, model, and fundraising path.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Industry</Label>
+                <Select
+                  value={context.industry}
+                  onValueChange={(value) => setContext((prev) => ({ ...prev, industry: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select industry" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {INDUSTRY_OPTIONS.map((industry) => (
+                      <SelectItem key={industry} value={industry}>{industry}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Business model</Label>
+                <Select
+                  value={context.business_model}
+                  onValueChange={(value) => setContext((prev) => ({ ...prev, business_model: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select business model" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {BUSINESS_MODEL_OPTIONS.map((model) => (
+                      <SelectItem key={model} value={model}>{model}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Primary market or location</Label>
+                <Input
+                  value={context.primary_location ?? ''}
+                  onChange={(event) => setContext((prev) => ({ ...prev, primary_location: event.target.value }))}
+                  placeholder="Example: US, Colombia, LatAm, remote-first"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Funding needed</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={context.funding_amount_needed ?? ''}
+                  onChange={(event) => setContext((prev) => ({
+                    ...prev,
+                    funding_amount_needed: event.target.value ? Number(event.target.value) : undefined,
+                  }))}
+                  placeholder="Example: 250000"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>One sentence pitch</Label>
+              <Textarea
+                value={context.pitch_summary ?? ''}
+                onChange={(event) => setContext((prev) => ({ ...prev, pitch_summary: event.target.value }))}
+                placeholder="What are you building, for whom, and why now?"
+                rows={3}
+              />
+            </div>
+
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+              <Button variant="outline" onClick={handleBackToContext}>
+                <ChevronLeft className="mr-2 h-4 w-4" />
+                Back
+              </Button>
+              <Button onClick={handleBusinessContextSubmit}>
+                Start assessment
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {(currentStep === 'assessment' || currentStep === 'results') && (
+      <>
       {/* All Questions in Vertical List */}
         <div className="space-y-6 mb-8">
           <TooltipProvider>
@@ -441,10 +687,19 @@ const FundraisingReadinessToolkitAll = () => {
 
             <PreviewModeWrapper
               featureName="Full diagnostic"
-              headline="Your results are ready 🎉"
+              headline="Your results are ready"
               description="Create a free account to unlock your full readiness breakdown: the strengths to lead with when you pitch investors, the gaps most likely to stall your raise (ranked by impact), and a prioritized action plan with your timeline to readiness."
               ctaLabel="Create free account"
-              onCtaClick={() => captureEvent("free_tool_signup_gate_cta_clicked", { tool: "insighta_test" })}
+              signupSource="insighta-test"
+              signupReturnPath="/insighta-test?hydrate=1"
+              onCtaClick={() => {
+                saveAnonymousToolState<InsightaAnonymousState>('insighta_test', {
+                  context,
+                  scores,
+                  averageScore: Number(averageScore.toFixed(1)),
+                });
+                captureEvent("free_tool_signup_gate_cta_clicked", { tool: "insighta_test" });
+              }}
             >
               <div className="space-y-4">
                 <Card>
@@ -465,7 +720,7 @@ const FundraisingReadinessToolkitAll = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2 text-sm text-muted-foreground">
-                    <p>The specific gaps most likely to stall your raise — ranked by impact.</p>
+                    <p>The specific gaps most likely to stall your raise, ranked by impact.</p>
                     <p>A prioritized action plan with estimated effort and a timeline to readiness.</p>
                   </CardContent>
                 </Card>
@@ -491,6 +746,14 @@ const FundraisingReadinessToolkitAll = () => {
                   >
                     Try Again
                   </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate('/dashboard')}
+                    className="ml-2 mt-3"
+                  >
+                    Return to dashboard
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -514,12 +777,12 @@ const FundraisingReadinessToolkitAll = () => {
                 )}
                 <div>
                   <CardTitle className="text-2xl">
-                    {aiAnalysis.verdict === 'Ready' ? "You're Ready! 🎉" :
-                     aiAnalysis.verdict === 'Almost Ready' ? "Almost Ready! ⚡" :
+                    {aiAnalysis.verdict === 'Ready' ? "You're Ready" :
+                     aiAnalysis.verdict === 'Almost Ready' ? "Almost Ready" :
                      "Not Quite Ready Yet"}
                   </CardTitle>
                   <CardDescription className="mt-1">
-                    Confidence: {aiAnalysis.confidence}% • Average Score: {aiAnalysis.average_score?.toFixed(1) || averageScore.toFixed(1)} / 10.0
+                    Confidence: {aiAnalysis.confidence}% - Average Score: {aiAnalysis.average_score?.toFixed(1) || averageScore.toFixed(1)} / 10.0
                   </CardDescription>
                 </div>
               </div>
@@ -688,6 +951,9 @@ const FundraisingReadinessToolkitAll = () => {
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
+      )}
+
+      </>
       )}
 
     </div>

@@ -57,7 +57,6 @@ const Terms = lazy(() => import("./pages/Terms"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const IPPolicy = lazy(() => import("./pages/IPPolicy"));
 const Signup = lazy(() => import("./pages/Signup"));
-const Dream2Plan = lazy(() => import("./pages/Dream2Plan"));
 const BizMapJourneyHubPage = lazy(() => import("./pages/BizMapJourneyHubPage"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 
@@ -279,7 +278,6 @@ function App() {
                         <Route path="/ip-policy" element={<IPPolicy />} />
                         <Route path="/unsubscribe" element={<Unsubscribe />} />
                         <Route path="/bizmap-ai" element={<BizMapJourneyHubPage />} />
-                        <Route path="/bizmap-ai/chat" element={<RouteErrorBoundary routeName="BizMap AI"><ToolRouteWithCreditGate><Dream2Plan /></ToolRouteWithCreditGate></RouteErrorBoundary>} />
                         <Route path="/pmf-lab" element={<RouteErrorBoundary routeName="PMF Lab"><PMFLabPage /></RouteErrorBoundary>} />
                         <Route path="/bizmap-ai/pmf-lab" element={<Navigate to="/pmf-lab" replace />} />
                         <Route path="/tech-stack" element={<TechStackPage />} />

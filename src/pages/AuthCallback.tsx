@@ -22,6 +22,7 @@ import {
   getPendingReferralCode,
 } from '@/lib/referral';
 import { logInfo, logWarn, logError } from '@/lib/logger';
+import { applySignupActivationSource } from '@/lib/retentionSystem';
 
 const NEW_ACCOUNT_MAX_AGE_MS = 10 * 60 * 1000;
 
@@ -191,6 +192,13 @@ const AuthCallback = () => {
 
           // Preserve post-onboarding intent for first-time users.
           persistOnboardingReturn(returnUrl);
+          await applySignupActivationSource({
+            userId: session.user.id,
+            source: oauthSource,
+            returnUrl,
+          }).catch((activationError) => {
+            logWarn('Failed to apply signup activation source', { activationError });
+          });
 
           // Track OAuth signup if source exists
           if (

@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { techStackData, TechStackCategory, TechStackData, TechStackProduct } from '@/data/techStack';
 import { CheckCircle2, Calculator, DollarSign, Monitor, Server, Cloud, BarChart, CreditCard, Mail, Users, TrendingUp, AlertTriangle, Lightbulb, Target, Link2, Zap, Save, FolderOpen, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useFeatureGating } from '@/hooks/useFeatureGating';
 import { useCredits } from '@/hooks/useCredits';
@@ -20,6 +20,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import { captureEvent } from '@/lib/analytics';
+import { clearAnonymousToolState, readAnonymousToolState, saveAnonymousToolState } from '@/lib/anonymousToolState';
+import { markFirstArtifactCreated, trackRetentionEvent } from '@/lib/retentionSystem';
 
 // Icon mapping
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -61,9 +63,22 @@ interface IntegrationSuggestion {
   benefits: string[];
 }
 
+interface TechStackAnonymousState {
+  selectedProducts: SelectedProducts;
+  budget: {
+    total: number;
+    breakdown: BudgetBreakdown[];
+    hasVariable: boolean;
+  };
+}
+
+const buildSelectedProductsKey = (selectedProducts: SelectedProducts) =>
+  techStackData.map((category) => `${category.id}:${selectedProducts[category.id] || ''}`).join('|');
+
 const TechStack: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { subscriptionData, loading: subscriptionLoading } = useSubscription();
   const { checkFeatureAccess } = useFeatureGating();
   const { refreshBalance, loading: creditsLoading } = useCredits();
@@ -84,6 +99,7 @@ const TechStack: React.FC = () => {
   const [loginRedirectPending, setLoginRedirectPending] = useState(false);
   const [generatingBudget, setGeneratingBudget] = useState(false);
   const [generatedBudgetKey, setGeneratedBudgetKey] = useState<string | null>(null);
+  const [hydratedStack, setHydratedStack] = useState(false);
   const [, startLoginNavigation] = useTransition();
 
   const currentTier = (subscriptionData.subscription_tier || 'rookie').toLowerCase();
@@ -183,9 +199,42 @@ const TechStack: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   const budget = useMemo(() => calculateBudget(), [selectedProducts]);
   const selectedProductsKey = useMemo(
-    () => techStackData.map((category) => `${category.id}:${selectedProducts[category.id] || ''}`).join('|'),
+    () => buildSelectedProductsKey(selectedProducts),
     [selectedProducts]
   );
+
+  const persistPublicBudget = () => {
+    if (!showBudget && !allCategoriesSelected) return;
+    saveAnonymousToolState<TechStackAnonymousState>('tech_stack', {
+      selectedProducts,
+      budget: {
+        total: budget.total,
+        breakdown: budget.breakdown,
+        hasVariable: budget.hasVariable,
+      },
+    });
+  };
+
+  useEffect(() => {
+    if (hydratedStack || searchParams.get('hydrate') !== '1') return;
+
+    const stored = readAnonymousToolState<TechStackAnonymousState>('tech_stack');
+    if (!stored?.selectedProducts) return;
+
+    setHydratedStack(true);
+    setSelectedProducts(stored.selectedProducts);
+    setShowBudget(true);
+    setGeneratedBudgetKey(buildSelectedProductsKey(stored.selectedProducts));
+
+    if (user) {
+      void trackRetentionEvent('artifact_resumed', {
+        user_id: user.id,
+        tool: 'tech_stack',
+        source: 'tech_stack_unlock',
+        resume_url: '/tech-stack?hydrate=1',
+      });
+    }
+  }, [hydratedStack, searchParams, user]);
 
   const handleSeeBudget = async () => {
     if (generatingBudget) return;
@@ -213,6 +262,14 @@ const TechStack: React.FC = () => {
       captureEvent('free_tool_input_submitted', { tool: 'tech_stack', categories: techStackData.length });
       setShowBudget(true);
       setGeneratedBudgetKey(selectedProductsKey);
+      saveAnonymousToolState<TechStackAnonymousState>('tech_stack', {
+        selectedProducts,
+        budget: {
+          total: budget.total,
+          breakdown: budget.breakdown,
+          hasVariable: budget.hasVariable,
+        },
+      });
       captureEvent('free_tool_partial_result_shown', { tool: 'tech_stack', monthly_budget: budget.total });
       return;
     }
@@ -242,6 +299,12 @@ const TechStack: React.FC = () => {
       return;
     }
 
+    await trackRetentionEvent('activation_first_input_submitted', {
+      user_id: user.id,
+      tool: 'tech_stack',
+      source: 'tech_stack',
+      selected_categories: techStackData.length,
+    });
     setGeneratingBudget(true);
 
     if (subscriptionLoading || creditsLoading) {
@@ -317,8 +380,8 @@ const TechStack: React.FC = () => {
 
       if (firstRunFree) {
         toast({
-          title: 'First Tech Stack build is on us 🎁',
-          description: 'Enjoy your free build — future builds cost 4 credits.',
+          title: 'First Tech Stack build is on us',
+          description: 'Enjoy your free build. Future builds cost 4 credits.',
         });
       } else {
         const deducted = await deductCredits('TECH_STACK_GENERATION', {
@@ -344,6 +407,12 @@ const TechStack: React.FC = () => {
 
       setShowBudget(true);
       setGeneratedBudgetKey(selectedProductsKey);
+      await trackRetentionEvent('activation_first_output_generated', {
+        user_id: user.id,
+        tool: 'tech_stack',
+        source: 'tech_stack',
+        monthly_budget: budget.total,
+      });
       toast({
         title: "Budget Generated!",
         description: "Scroll down to view your tech stack budget and integration guide.",
@@ -405,6 +474,22 @@ const TechStack: React.FC = () => {
       setReportName('');
       setSaveDialogOpen(false);
       await refreshProgress();
+      clearAnonymousToolState('tech_stack');
+      await trackRetentionEvent('activation_first_output_generated', {
+        user_id: user.id,
+        tool: 'tech_stack',
+        source: 'tech_stack',
+        artifact_type: 'tech_stack_report',
+        artifact_id: data.id,
+      });
+      await markFirstArtifactCreated({
+        userId: user.id,
+        artifactType: 'tech_stack_report',
+        artifactId: data.id,
+        label: name,
+        resumeUrl: '/tech-stack',
+        source: 'tech_stack',
+      });
       toast({
         title: 'Report saved',
         description: 'You can access it anytime from Saved Reports.'
@@ -696,7 +781,10 @@ const TechStack: React.FC = () => {
           saving={savingReport}
           onClose={() => setShowBudget(false)}
           isPublic={!user}
-          onGateCtaClick={() => captureEvent('free_tool_signup_gate_cta_clicked', { tool: 'tech_stack' })}
+          onGateCtaClick={() => {
+            persistPublicBudget();
+            captureEvent('free_tool_signup_gate_cta_clicked', { tool: 'tech_stack' });
+          }}
         />
       )}
 
@@ -876,9 +964,11 @@ const PlanGate: React.FC<{ isPublic: boolean; onGateCtaClick?: () => void; child
   return (
     <PreviewModeWrapper
       featureName="Full build plan"
-      headline="Your stack budget is ready 🎉"
+      headline="Your stack budget is ready"
       description="Create a free account to unlock your annual cost, strategy plan, recommendations, and integration guide, then save and export your stack."
       ctaLabel="Create free account"
+      signupSource="tech-stack"
+      signupReturnPath="/tech-stack?hydrate=1"
       onCtaClick={onGateCtaClick}
     >
       <div className="space-y-6">{children}</div>

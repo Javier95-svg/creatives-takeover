@@ -165,7 +165,7 @@ export const STAGES: Record<FounderStageId, StageMeta> = {
       "You are exploring the idea and need to clarify the customer, pain point, and concept before you build.",
     topFocus: [
       { label: "Define your ICP", href: "/icp-builder" },
-      { label: "Clarify your concept with BizMap AI", href: "/bizmap-ai/chat" },
+      { label: "Clarify your concept with BizMap AI", href: "/bizmap-ai" },
     ],
   },
   2: {

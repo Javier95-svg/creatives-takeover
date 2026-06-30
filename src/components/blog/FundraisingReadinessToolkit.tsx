@@ -596,12 +596,12 @@ const FundraisingReadinessToolkit = () => {
                 )}
                 <div>
                   <CardTitle className="text-2xl">
-                    {aiAnalysis.verdict === 'Ready' ? "You're Ready! 🎉" : 
-                     aiAnalysis.verdict === 'Almost Ready' ? "Almost Ready! ⚡" :
+                    {aiAnalysis.verdict === 'Ready' ? "You're Ready" :
+                     aiAnalysis.verdict === 'Almost Ready' ? "Almost Ready" :
                      "Not Quite Ready Yet"}
                   </CardTitle>
                   <CardDescription className="mt-1">
-                    Confidence: {aiAnalysis.confidence}% • Average Score: {aiAnalysis.average_score?.toFixed(1) || averageScore.toFixed(1)} / 10.0
+                    Confidence: {aiAnalysis.confidence}% - Average Score: {aiAnalysis.average_score?.toFixed(1) || averageScore.toFixed(1)} / 10.0
                   </CardDescription>
                 </div>
               </div>

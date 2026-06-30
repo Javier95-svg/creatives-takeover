@@ -48,6 +48,11 @@ export function shouldRedirectToGuidedOnboarding(
     return false;
   }
 
+  const preferences = getUserPreferencesRecord(profile.user_preferences);
+  if (typeof preferences.firstArtifactType === 'string') {
+    return false;
+  }
+
   if (profile.dashboard_bootstrap_source === 'icp_unlock') {
     return false;
   }

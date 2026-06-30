@@ -38,6 +38,8 @@ import {
   normalizeTryStepCount,
 } from '@/lib/demoStudio/tryPreview';
 import type { DemoStepWithHotspots } from '@/lib/demoStudio/types';
+import { captureEvent } from '@/lib/analytics';
+import { markFirstArtifactCreated, trackRetentionEvent } from '@/lib/retentionSystem';
 
 const MAX_SCREENSHOTS = DEMO_STUDIO_TRY_MAX_SCREENSHOTS;
 const MIN_SCREENSHOTS = DEMO_STUDIO_TRY_MIN_SCREENSHOTS;
@@ -173,6 +175,20 @@ export default function TryPage() {
     const runId = ++runIdRef.current;
     setGenerating(true);
     setError(null);
+    captureEvent('activation_first_input_submitted', {
+      tool: 'demo_studio_try',
+      source: 'demo_try',
+      screenshot_count: shots.length,
+      is_authenticated: Boolean(user),
+    });
+    if (user) {
+      void trackRetentionEvent('activation_first_input_submitted', {
+        user_id: user.id,
+        tool: 'demo_studio_try',
+        source: 'demo_try',
+        screenshot_count: shots.length,
+      });
+    }
     try {
       const stepCount = normalizeTryStepCount(shots.length);
       const storyboard = await generateDemoStudioDraftStoryboard({ contextUrl, stepCount });
@@ -185,6 +201,22 @@ export default function TryPage() {
       }
       setSteps(built);
       const usedClientFallback = storyboard.length < stepCount;
+      captureEvent('activation_first_output_generated', {
+        tool: 'demo_studio_try',
+        source: 'demo_try',
+        step_count: built.length,
+        fallback: usedClientFallback,
+        is_authenticated: Boolean(user),
+      });
+      if (user) {
+        void trackRetentionEvent('activation_first_output_generated', {
+          user_id: user.id,
+          tool: 'demo_studio_try',
+          source: 'demo_try',
+          step_count: built.length,
+          fallback: usedClientFallback,
+        });
+      }
       void trackDemoEvent('demo_view', { meta: { source: 'demo_try', step_count: built.length, fallback: usedClientFallback } });
       void trackDemoEvent('demo_start', { meta: { source: 'demo_try', step_count: built.length, fallback: usedClientFallback } });
       // Anonymous visitors: stash the draft now so it survives the auth redirect.
@@ -205,6 +237,22 @@ export default function TryPage() {
       if (built.length >= MIN_SCREENSHOTS) {
         setSteps(built);
         setError(null);
+        captureEvent('activation_first_output_generated', {
+          tool: 'demo_studio_try',
+          source: 'demo_try',
+          step_count: built.length,
+          fallback: true,
+          is_authenticated: Boolean(user),
+        });
+        if (user) {
+          void trackRetentionEvent('activation_first_output_generated', {
+            user_id: user.id,
+            tool: 'demo_studio_try',
+            source: 'demo_try',
+            step_count: built.length,
+            fallback: true,
+          });
+        }
         void trackDemoEvent('demo_view', { meta: { source: 'demo_try', step_count: built.length, fallback: true } });
         void trackDemoEvent('demo_start', { meta: { source: 'demo_try', step_count: built.length, fallback: true } });
         if (!user) {
@@ -276,6 +324,14 @@ export default function TryPage() {
           demoId: demo.id,
           meta: { source: 'demo_try', step_count: position },
         });
+        await markFirstArtifactCreated({
+          userId: user.id,
+          artifactType: 'demo_studio_draft',
+          artifactId: demo.id,
+          label: `${name} demo`,
+          resumeUrl: `/demo-studio/projects/${project.id}/brief`,
+          source: 'demo_try',
+        });
         clearTryDraft();
         navigate(`/demo-studio/projects/${project.id}/brief`, { replace: true });
       } catch (err) {
@@ -317,7 +373,7 @@ export default function TryPage() {
     void trackDemoEvent('signup_attempt', { meta: { source: 'demo_try' } });
     const stored = await (persistPromiseRef.current ?? persistDraft(steps));
     if (!stored) {
-      toast.error('Your screenshots are large — you may need to re-upload after signing up.');
+      toast.error('Your screenshots are large. You may need to re-upload after signing up.');
     }
     navigate(SIGNUP_RETURN_HREF);
   };
@@ -362,9 +418,9 @@ export default function TryPage() {
   if (showSaving) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-slate-950 text-white">
-        <SEO title="Saving your demo — Demo Studio" description="Saving your demo." noindex />
+        <SEO title="Saving your demo - Demo Studio" description="Saving your demo." noindex />
         <Loader2 className="h-7 w-7 animate-spin text-white/70" />
-        <p className="text-sm text-white/70">Saving your demo…</p>
+        <p className="text-sm text-white/70">Saving your demo...</p>
       </div>
     );
   }
@@ -372,7 +428,7 @@ export default function TryPage() {
   if (isReturning && hydrateError) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-950 px-6 text-center text-white">
-        <SEO title="Couldn't save your demo — Demo Studio" description="We couldn't save your demo." noindex />
+        <SEO title="Couldn't save your demo - Demo Studio" description="We couldn't save your demo." noindex />
         <AlertTriangle className="h-7 w-7 text-amber-400" />
         <div>
           <h1 className="text-xl font-semibold">We couldn't save your demo</h1>
@@ -395,7 +451,7 @@ export default function TryPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 py-10 text-white">
       <SEO
-        title="Try Demo Studio — build an interactive demo in seconds"
+        title="Try Demo Studio - build an interactive demo in seconds"
         description="Upload a few screenshots and instantly turn them into an interactive product demo with AI-written captions. No signup required."
         type="product"
       />
@@ -404,7 +460,7 @@ export default function TryPage() {
           to="/"
           className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-white/70 transition hover:text-white"
         >
-          ← Platform
+          Back to platform
         </Link>
         <div className="mb-8 text-center">
           <p className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-caption font-medium text-white/80">
@@ -499,7 +555,7 @@ export default function TryPage() {
                 Product URL <span className="font-normal text-white/50">(optional)</span>
               </Label>
               <p className="mt-1 text-xs text-white/60">
-                Helps the AI write sharper captions. We don't capture the page — your screenshots are the visuals.
+                Helps the AI write sharper captions. We don't capture the page; your screenshots are the visuals.
               </p>
               <Input
                 id="context-url"
@@ -517,7 +573,7 @@ export default function TryPage() {
             <Button onClick={handleGenerate} disabled={generating || shots.length < MIN_SCREENSHOTS} className="w-full gap-2">
               {generating ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" /> Building your demo…
+                  <Loader2 className="h-4 w-4 animate-spin" /> Building your demo...
                 </>
               ) : (
                 <>

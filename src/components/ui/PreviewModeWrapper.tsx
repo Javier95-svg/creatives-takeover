@@ -16,6 +16,8 @@ interface PreviewModeWrapperProps {
   ctaLabel?: string;
   /** Fired when the primary signup CTA is clicked — used for funnel analytics. */
   onCtaClick?: () => void;
+  signupSource?: string;
+  signupReturnPath?: string;
 }
 
 export function PreviewModeWrapper({
@@ -27,9 +29,18 @@ export function PreviewModeWrapper({
   headline = "Sign in to unlock",
   ctaLabel = "Sign up",
   onCtaClick,
+  signupSource,
+  signupReturnPath,
 }: PreviewModeWrapperProps) {
   const location = useLocation();
-  const returnPath = `${location.pathname}${location.search}`;
+  const returnPath = signupReturnPath ?? `${location.pathname}${location.search}`;
+  const signupHref = `/signup?${
+    new URLSearchParams({
+      ...(signupSource ? { source: signupSource } : {}),
+      return: returnPath,
+    }).toString()
+  }`;
+  const loginHref = `/login?${new URLSearchParams({ return: returnPath }).toString()}`;
 
   return (
     <div className="relative min-h-[600px] w-full">
@@ -76,7 +87,7 @@ export function PreviewModeWrapper({
                   size="lg"
                   className="gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 w-full sm:w-auto"
                 >
-                  <Link to={`/signup?return=${encodeURIComponent(returnPath)}`} onClick={onCtaClick}>
+                  <Link to={signupHref} onClick={onCtaClick}>
                     {ctaLabel}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
@@ -99,7 +110,7 @@ export function PreviewModeWrapper({
               {/* Helper Text */}
               <p className="text-xs text-muted-foreground mt-4">
                 Already have an account? 
-                <Link to={`/login?return=${encodeURIComponent(returnPath)}`} className="ml-1 font-semibold text-primary hover:underline">
+                <Link to={loginHref} className="ml-1 font-semibold text-primary hover:underline">
                   Sign in
                 </Link>
               </p>

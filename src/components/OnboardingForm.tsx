@@ -7,6 +7,7 @@ import {
   Compass,
   Loader2,
   MapPin,
+  Rocket,
   Search,
   Sparkles,
   Target,
@@ -25,6 +26,7 @@ import { ANGEL_SECTOR_OPTIONS } from '@/data/angelSectors';
 import { COUNTRY_OPTIONS } from '@/data/countries';
 import {
   captureEvent,
+  trackActivationFunnelEvent,
   trackOnboardingAbandoned,
   trackOnboardingCompleted,
   trackOnboardingStepCompleted,
@@ -33,7 +35,7 @@ import { trackActivity } from '@/lib/activity';
 import { cn } from '@/lib/utils';
 import { refreshOnboardingMentorRecommendations } from '@/lib/onboardingMentorRecommendations';
 import { seedDefaultRoutineForOnboarding } from '@/lib/onboardingPath';
-import { getActivationRoute, startActivationJourney, type ActivationIntent } from '@/lib/retentionSystem';
+import { getActivationRoute, startActivationJourney, trackRetentionEvent, type ActivationIntent } from '@/lib/retentionSystem';
 import {
   assignFounderStageV3,
   createQuizAnswersV3Payload,
@@ -90,11 +92,11 @@ function deriveSupportAreas(blocker?: FounderBlocker): string[] {
 
 const ACTIVATION_CARDS: ActivationCard[] = [
   {
-    value: 'find_mentor',
-    headline: 'Find a mentor',
-    sub: 'Start with one mentor worth saving, messaging, or booking.',
-    cta: 'Open mentor matches',
-    icon: Users,
+    value: 'build_demo',
+    headline: 'Build demo and pitch video',
+    sub: 'Turn screenshots into a live demo first, then save it as your first launch asset.',
+    cta: 'Open Demo Studio',
+    icon: Rocket,
   },
   {
     value: 'run_icp',
@@ -109,6 +111,13 @@ const ACTIVATION_CARDS: ActivationCard[] = [
     sub: 'Score one idea and choose the next concrete move.',
     cta: 'Start Decision Sprint',
     icon: Zap,
+  },
+  {
+    value: 'find_mentor',
+    headline: 'Find a mentor',
+    sub: 'Start with one mentor worth saving, messaging, or booking.',
+    cta: 'Open mentor matches',
+    icon: Users,
   },
 ];
 
@@ -481,6 +490,18 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         country: formData.country,
         timeMs: Date.now() - startedAt,
         startRoute,
+      });
+      trackActivationFunnelEvent('first_action_opened', {
+        user_id: user.id,
+        activation_intent: selectedIntent,
+        selected_path: startRoute,
+        source: 'onboarding',
+      });
+      void trackRetentionEvent('activation_first_action_opened', {
+        user_id: user.id,
+        activation_intent: selectedIntent,
+        selected_path: startRoute,
+        source: 'onboarding',
       });
       trackOnboardingCompleted({
         quiz_completed: true,

@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 import { captureEvent } from '@/lib/analytics';
+import { getActivationPreferenceState } from '@/lib/activationState';
 import { getUserPreferencesRecord } from '@/lib/guidedOnboarding';
 import { logWarn } from '@/lib/logger';
 import { createRoutineConfig, serializeRoutineConfig } from '@/lib/routineTemplates';
@@ -91,7 +92,7 @@ export function shouldReduceOnboardingNav(
   userCreatedAt: string | null | undefined,
 ): boolean {
   if (!FORCED_ONBOARDING_ENABLED || !profile) return false;
-  if (getOnboardingPathState(profile.user_preferences).completed) return false;
+  if (getActivationPreferenceState(profile.user_preferences).firstArtifactType) return false;
   const age = accountAgeMs(userCreatedAt);
   return age !== null && age < ONBOARDING_NAV_WINDOW_MS;
 }

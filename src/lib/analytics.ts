@@ -26,6 +26,28 @@ export type UpgradeLocation =
 export type UpgradePromptTrigger = 'soft_gate_banner' | 'hard_gate_modal' | 'post_icp_nudge' | 'dashboard_nudge';
 export type IcpBuilderOpenedSource = 'dashboard' | 'onboarding' | 'direct' | 'seed_redirect';
 export type OnboardingStartedSource = 'signup_redirect' | 'dashboard_prompt' | 'direct';
+export type ActivationFunnelEvent =
+  | 'dashboard_viewed'
+  | 'first_action_opened'
+  | 'first_input_submitted'
+  | 'first_output_generated'
+  | 'first_artifact_saved'
+  | 'activation_completed'
+  | 'activation_returned_day_2'
+  | 'activation_returned_day_7'
+  | 'bizmap_ai_opened'
+  | 'insighta_test_context_started'
+  | 'insighta_test_result_shown'
+  | 'pitch_deck_partial_result_shown';
+export interface ActivationFunnelProps extends AnalyticsProperties {
+  user_id?: string | null;
+  activation_intent?: string | null;
+  selected_path?: string | null;
+  source?: string | null;
+  tool?: string | null;
+  plan?: string | null;
+  days_since_signup?: number | null;
+}
 
 export type SignupMethod = 'email' | 'google' | 'github' | 'linkedin';
 export interface SignupCompletedProps { method: SignupMethod; referrer: string | null; }
@@ -473,6 +495,21 @@ export const consumeSignupIntent = (): SignupMethod | null => {
 export const trackActivationCompleted = (
   properties: AnalyticsProperties & { trigger: ActivationCompletedTrigger },
 ) => captureEvent('activation_completed', properties);
+
+const ACTIVATION_EVENT_ALIASES: Partial<Record<ActivationFunnelEvent, string>> = {
+  first_action_opened: 'activation_first_action_opened',
+  first_input_submitted: 'activation_first_input_submitted',
+  first_output_generated: 'activation_first_output_generated',
+  first_artifact_saved: 'activation_first_artifact_saved',
+};
+
+export const trackActivationFunnelEvent = (
+  eventName: ActivationFunnelEvent,
+  properties?: ActivationFunnelProps,
+) => {
+  const canonicalName = ACTIVATION_EVENT_ALIASES[eventName] ?? eventName;
+  captureEvent(canonicalName, properties);
+};
 
 export const trackOnboardingPathSelected = (properties: { path: 'icp' | 'mentor' }) =>
   captureEvent('onboarding_path_selected', properties);

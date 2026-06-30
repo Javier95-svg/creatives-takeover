@@ -261,7 +261,7 @@ async function readFunctionErrorMessage(error: unknown, fallback: string): Promi
  * Anonymous lead-magnet generation for /demo-studio/try. Calls the generator's
  * draft path (no auth, no credit charge, no persistence) and returns normalized
  * storyboard steps to render captions/hotspot labels client-side. A pasted URL
- * is optional context only — visuals come from the visitor's uploaded screenshots.
+ * is optional context only; visuals come from the visitor's uploaded screenshots.
  */
 export async function generateDemoStudioDraftStoryboard(args: {
   contextUrl?: string;

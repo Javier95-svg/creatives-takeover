@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/hooks/useCredits';
 import { useJourneyUpgradePrompt } from '@/hooks/useJourneyUpgradePrompt';
+import { markFirstArtifactCreated, trackRetentionEvent } from '@/lib/retentionSystem';
 
 const UPLOAD_BUCKET = 'pitch-deck-uploads';
 
@@ -97,6 +98,12 @@ export const usePitchDeckAnalyzer = () => {
       toast.error('Please sign in to analyze your pitch deck');
       return null;
     }
+    await trackRetentionEvent('activation_first_input_submitted', {
+      user_id: user.id,
+      tool: 'pitch_deck_analyzer',
+      source: 'pitch_deck_analyzer',
+      file_size: file.size,
+    });
     try {
       setUploading(true);
       setError(null);
@@ -178,6 +185,21 @@ export const usePitchDeckAnalyzer = () => {
       };
 
       setAnalysis(result);
+      await trackRetentionEvent('activation_first_output_generated', {
+        user_id: user.id,
+        tool: 'pitch_deck_analyzer',
+        source: 'pitch_deck_analyzer',
+        artifact_type: 'pitch_deck_analysis',
+        artifact_id: result.id,
+      });
+      await markFirstArtifactCreated({
+        userId: user.id,
+        artifactType: 'pitch_deck_analysis',
+        artifactId: result.id,
+        label: result.fileName,
+        resumeUrl: '/pitch-deck-analyzer',
+        source: 'pitch_deck_analyzer',
+      });
       void refreshBalance();
       fireJourneyUpgradePrompt('rising_pitch_deck_heavy');
       return result;
@@ -188,6 +210,93 @@ export const usePitchDeckAnalyzer = () => {
       return null;
     } finally {
       setUploading(false);
+      setAnalyzing(false);
+    }
+  };
+
+  const saveGuestResultAsAnalysis = async (result: PitchDeckGuestResult): Promise<PitchDeckAnalysis | null> => {
+    if (!user) return null;
+
+    try {
+      setUploading(false);
+      setAnalyzing(true);
+      setError(null);
+
+      const { data: saved, error: saveError } = await supabase
+        .from('pitch_deck_analyses')
+        .insert({
+          user_id: user.id,
+          file_name: result.fileName || 'Pitch deck',
+          file_size: null,
+          storage_path: null,
+          overall_score: result.overallScore,
+          verdict: result.verdict,
+          story_clarity_score: result.subScores.storyClarity,
+          market_opportunity_score: result.subScores.marketOpportunity,
+          traction_proof_score: result.subScores.tractionProof,
+          business_model_score: result.subScores.businessModel,
+          team_credibility_score: result.subScores.teamCredibility,
+          fundraising_readiness_score: result.subScores.fundraisingReadiness,
+          strengths: result.strengths || [],
+          weaknesses: result.weaknesses || [],
+          recommendations: result.recommendations || [],
+          key_insights: result.keyInsights || {},
+          analysis_version: '2.0-public-unlock',
+        })
+        .select()
+        .single();
+
+      if (saveError) throw new Error(`Failed to save analysis: ${saveError.message}`);
+
+      const savedResult: PitchDeckAnalysis = {
+        id: saved.id,
+        userId: saved.user_id,
+        fileName: saved.file_name,
+        fileSize: saved.file_size,
+        storagePath: saved.storage_path,
+        overallScore: saved.overall_score,
+        verdict: saved.verdict as PitchDeckAnalysis['verdict'],
+        subScores: {
+          storyClarity: saved.story_clarity_score,
+          marketOpportunity: saved.market_opportunity_score,
+          tractionProof: saved.traction_proof_score,
+          businessModel: saved.business_model_score,
+          teamCredibility: saved.team_credibility_score,
+          fundraisingReadiness: saved.fundraising_readiness_score,
+        },
+        strengths: saved.strengths,
+        weaknesses: saved.weaknesses,
+        recommendations: saved.recommendations,
+        keyInsights: saved.key_insights,
+        analysisVersion: saved.analysis_version,
+        createdAt: saved.created_at,
+        updatedAt: saved.updated_at,
+      };
+
+      setGuestResult(null);
+      setAnalysis(savedResult);
+      await trackRetentionEvent('activation_first_output_generated', {
+        user_id: user.id,
+        tool: 'pitch_deck_analyzer',
+        source: 'pitch_deck_unlock',
+        artifact_type: 'pitch_deck_analysis',
+        artifact_id: savedResult.id,
+      });
+      await markFirstArtifactCreated({
+        userId: user.id,
+        artifactType: 'pitch_deck_analysis',
+        artifactId: savedResult.id,
+        label: savedResult.fileName,
+        resumeUrl: '/pitch-deck-analyzer',
+        source: 'pitch_deck_unlock',
+      });
+      return savedResult;
+    } catch (err: any) {
+      const message = err?.message || 'Failed to restore your pitch deck analysis. Please try again.';
+      setError(message);
+      toast.error(message);
+      return null;
+    } finally {
       setAnalyzing(false);
     }
   };
@@ -224,6 +333,7 @@ export const usePitchDeckAnalyzer = () => {
   return {
     analyzePublicDeck,
     analyzePitchDeck,
+    saveGuestResultAsAnalysis,
     submitFeedback,
     resetAnalysis,
     uploading,

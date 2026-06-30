@@ -49,9 +49,8 @@ const AdminAnalytics = () => {
   interface ActivityEvent {
     id: string;
     user_id?: string;
-    event_type: string;
-    event_data?: Record<string, unknown>;
-    page_path?: string;
+    event: string;
+    properties?: Record<string, unknown>;
     created_at: string;
   }
   
@@ -61,7 +60,11 @@ const AdminAnalytics = () => {
     signupCompleted: 0,
     onboardingStarted: 0,
     onboardingCompleted: 0,
-    firstValueActions: 0,
+    firstActionOpened: 0,
+    firstInputSubmitted: 0,
+    firstOutputGenerated: 0,
+    firstArtifactSaved: 0,
+    activationCompleted: 0,
   });
   const [retentionExperiment, setRetentionExperiment] = useState<RetentionExperimentSummary>({
     cohortUsers: 0,
@@ -137,7 +140,11 @@ const AdminAnalytics = () => {
         signupCompletedResult,
         onboardingStartedResult,
         onboardingCompletedResult,
-        firstValueActionsResult,
+        firstActionOpenedResult,
+        firstInputSubmittedResult,
+        firstOutputGeneratedResult,
+        firstArtifactSavedResult,
+        activationCompletedResult,
       ] = await Promise.all([
         supabase
           .from('conversion_events')
@@ -166,7 +173,31 @@ const AdminAnalytics = () => {
         supabase
           .from('user_activity_log')
           .select('id', { count: 'exact', head: true })
-          .in('activity_type', ['activation_completed', 'mentor_saved'])
+          .eq('activity_type', 'activation_first_action_opened')
+          .gte('created_at', fromIso)
+          .lte('created_at', toIso),
+        supabase
+          .from('user_activity_log')
+          .select('id', { count: 'exact', head: true })
+          .eq('activity_type', 'activation_first_input_submitted')
+          .gte('created_at', fromIso)
+          .lte('created_at', toIso),
+        supabase
+          .from('user_activity_log')
+          .select('id', { count: 'exact', head: true })
+          .eq('activity_type', 'activation_first_output_generated')
+          .gte('created_at', fromIso)
+          .lte('created_at', toIso),
+        supabase
+          .from('user_activity_log')
+          .select('id', { count: 'exact', head: true })
+          .eq('activity_type', 'activation_first_artifact_saved')
+          .gte('created_at', fromIso)
+          .lte('created_at', toIso),
+        supabase
+          .from('user_activity_log')
+          .select('id', { count: 'exact', head: true })
+          .eq('activity_type', 'activation_completed')
           .gte('created_at', fromIso)
           .lte('created_at', toIso),
       ]);
@@ -176,7 +207,11 @@ const AdminAnalytics = () => {
         signupCompleted: signupCompletedResult.count ?? 0,
         onboardingStarted: onboardingStartedResult.count ?? 0,
         onboardingCompleted: onboardingCompletedResult.count ?? 0,
-        firstValueActions: firstValueActionsResult.count ?? 0,
+        firstActionOpened: firstActionOpenedResult.count ?? 0,
+        firstInputSubmitted: firstInputSubmittedResult.count ?? 0,
+        firstOutputGenerated: firstOutputGeneratedResult.count ?? 0,
+        firstArtifactSaved: firstArtifactSavedResult.count ?? 0,
+        activationCompleted: activationCompletedResult.count ?? 0,
       });
     })();
   }, [endDate, startDate]);
@@ -528,7 +563,7 @@ const AdminAnalytics = () => {
 	            </TabsContent>
 
 	            <TabsContent value="onboarding" className="space-y-6">
-	              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+	              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 	                <Card>
 	                  <CardHeader>
 	                    <CardTitle className="text-sm font-medium">Signup Started</CardTitle>
@@ -563,10 +598,42 @@ const AdminAnalytics = () => {
 	                </Card>
 	                <Card>
 	                  <CardHeader>
-	                    <CardTitle className="text-sm font-medium">First Value Actions</CardTitle>
+	                    <CardTitle className="text-sm font-medium">First Action Opened</CardTitle>
 	                  </CardHeader>
 	                  <CardContent>
-	                    <div className="text-2xl font-bold">{onboardingFunnel.firstValueActions}</div>
+	                    <div className="text-2xl font-bold">{onboardingFunnel.firstActionOpened}</div>
+	                  </CardContent>
+	                </Card>
+	                <Card>
+	                  <CardHeader>
+	                    <CardTitle className="text-sm font-medium">Input Submitted</CardTitle>
+	                  </CardHeader>
+	                  <CardContent>
+	                    <div className="text-2xl font-bold">{onboardingFunnel.firstInputSubmitted}</div>
+	                  </CardContent>
+	                </Card>
+	                <Card>
+	                  <CardHeader>
+	                    <CardTitle className="text-sm font-medium">Output Generated</CardTitle>
+	                  </CardHeader>
+	                  <CardContent>
+	                    <div className="text-2xl font-bold">{onboardingFunnel.firstOutputGenerated}</div>
+	                  </CardContent>
+	                </Card>
+	                <Card>
+	                  <CardHeader>
+	                    <CardTitle className="text-sm font-medium">Artifact Saved</CardTitle>
+	                  </CardHeader>
+	                  <CardContent>
+	                    <div className="text-2xl font-bold">{onboardingFunnel.firstArtifactSaved}</div>
+	                  </CardContent>
+	                </Card>
+	                <Card>
+	                  <CardHeader>
+	                    <CardTitle className="text-sm font-medium">Activation Completed</CardTitle>
+	                  </CardHeader>
+	                  <CardContent>
+	                    <div className="text-2xl font-bold">{onboardingFunnel.activationCompleted}</div>
 	                  </CardContent>
 	                </Card>
 	              </div>

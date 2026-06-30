@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Plus, Mic } from "lucide-react";
 import Navigation from "@/components/Navigation";
@@ -24,6 +24,7 @@ import {
   type PodcastEpisode,
   type PodcastEpisodeInput,
 } from "@/hooks/usePodcastEpisodes";
+import { warmYouTubeEmbed } from "@/lib/podcast";
 
 const Podcast = () => {
   const {
@@ -40,6 +41,13 @@ const Podcast = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<PodcastEpisode | null>(null);
   const [pendingDelete, setPendingDelete] = useState<PodcastEpisode | null>(null);
+  const firstEpisodeVideoId = episodes[0]?.youtube_video_id;
+
+  useEffect(() => {
+    if (!firstEpisodeVideoId) return;
+    const timer = window.setTimeout(() => warmYouTubeEmbed(firstEpisodeVideoId), 1200);
+    return () => window.clearTimeout(timer);
+  }, [firstEpisodeVideoId]);
 
   const openAdd = () => {
     setEditing(null);
@@ -79,7 +87,6 @@ const Podcast = () => {
         <meta name="twitter:card" content="summary_large_image" />
         <link rel="canonical" href="https://creatives-takeover.com/podcast" />
         {/* Warm up YouTube connections so the in-platform player starts faster on click. */}
-        <link rel="preconnect" href="https://www.youtube-nocookie.com" />
         <link rel="preconnect" href="https://www.youtube.com" />
         <link rel="preconnect" href="https://i.ytimg.com" />
         <link rel="preconnect" href="https://www.gstatic.com" crossOrigin="anonymous" />

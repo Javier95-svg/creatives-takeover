@@ -3,6 +3,9 @@
 // in-platform player embed from the id so visitors never leave the platform.
 
 const YT_ID = /^[a-zA-Z0-9_-]{11}$/;
+const YOUTUBE_EMBED_ORIGIN = 'https://www.youtube.com';
+
+const warmedEmbeds = new Set<string>();
 
 /**
  * Extract the 11-character YouTube video id from any common form:
@@ -45,15 +48,50 @@ export function youtubeThumbnail(videoId: string): string {
   return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
 }
 
-/** Privacy-friendly embed URL for the in-platform player. */
+/** Standard YouTube embed URL for the in-platform player. */
 export function youtubeEmbedUrl(videoId: string, autoplay = true): string {
   const params = new URLSearchParams({
     autoplay: autoplay ? '1' : '0',
     rel: '0',
     modestbranding: '1',
     playsinline: '1',
+    iv_load_policy: '3',
   });
-  return `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`;
+
+  if (typeof window !== 'undefined') {
+    params.set('origin', window.location.origin);
+  }
+
+  return `${YOUTUBE_EMBED_ORIGIN}/embed/${videoId}?${params.toString()}`;
+}
+
+function ensureHeadLink(id: string, rel: string, href: string, as?: string): void {
+  if (typeof document === 'undefined' || document.getElementById(id)) return;
+
+  const link = document.createElement('link');
+  link.id = id;
+  link.rel = rel;
+  link.href = href;
+  if (as) link.as = as;
+  document.head.appendChild(link);
+}
+
+/**
+ * Warm the exact YouTube player a visitor is likely to open next.
+ * This keeps the episode list light, then shifts the heavy player boot to idle/hover.
+ */
+export function warmYouTubeEmbed(videoId: string): void {
+  if (!YT_ID.test(videoId) || warmedEmbeds.has(videoId)) return;
+  warmedEmbeds.add(videoId);
+
+  ensureHeadLink('podcast-youtube-preconnect', 'preconnect', YOUTUBE_EMBED_ORIGIN);
+  ensureHeadLink('podcast-ytimg-preconnect', 'preconnect', 'https://i.ytimg.com');
+  ensureHeadLink(
+    `podcast-youtube-prefetch-${videoId}`,
+    'prefetch',
+    youtubeEmbedUrl(videoId, false),
+    'document'
+  );
 }
 
 /** Normalize a free-text hashtag into a `#word` token (letters/digits only). */

@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Users, MessageCircle, LayoutDashboard, User, Gift, BarChart3, FlaskConical, Boxes } from "lucide-react";
+import { Home, Users, MessageCircle, User, Gift, Rocket } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -12,7 +12,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { captureEvent } from "@/lib/analytics";
+import { captureEvent, trackActivationFunnelEvent } from "@/lib/analytics";
+import { supabase } from "@/integrations/supabase/client";
+import { FREE_TOOLS_NAV_ITEMS } from "@/config/freeTools";
+import {
+  getActivationPreferenceState,
+  getDaysSinceSignup,
+  shouldShowFirstResultMode,
+} from "@/lib/activationState";
 
 interface NavItem {
   name: string;
@@ -23,25 +30,34 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { name: "Home", href: "/", icon: Home },
+  { name: "Continue", href: "/dashboard", icon: Rocket, requiresAuth: true },
   { name: "Community", href: "/mentorship", icon: Users },
   { name: "Messages", href: "/messages", icon: MessageCircle, requiresAuth: true },
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, requiresAuth: true },
   { name: "Account", href: "/account", icon: User, requiresAuth: true },
 ];
 
 // Free Tools entry — shown to logged-out visitors only, so the logged-in bottom
 // bar is unchanged. Mirrors the Free Tools menu in VisitorNavbar.
-const freeToolsItems: NavItem[] = [
-  { name: "Pitch Deck Analyzer", href: "/pitch-deck-analyzer", icon: BarChart3 },
-  { name: "Insighta Test", href: "/insighta-test", icon: FlaskConical },
-  { name: "Tech Stack Builder", href: "/tech-stack", icon: Boxes },
-];
+const freeToolsItems: NavItem[] = FREE_TOOLS_NAV_ITEMS.map((tool) => ({
+  name: tool.name,
+  href: tool.href,
+  icon: tool.icon,
+}));
 
 export const MobileBottomNav = () => {
   const location = useLocation();
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const [isScrollingDown, setIsScrollingDown] = React.useState(false);
+  const [continueState, setContinueState] = React.useState<{
+    href: string;
+    activationIntent: string | null;
+    firstResultMode: boolean;
+  }>({
+    href: "/dashboard",
+    activationIntent: null,
+    firstResultMode: false,
+  });
   const lastScrollY = React.useRef(0);
 
   // Hide nav when scrolling down, show when scrolling up
@@ -58,10 +74,49 @@ export const MobileBottomNav = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isMobile]);
 
+  React.useEffect(() => {
+    let cancelled = false;
+
+    const loadContinueState = async () => {
+      if (!user) {
+        setContinueState({ href: "/dashboard", activationIntent: null, firstResultMode: false });
+        return;
+      }
+
+      const { data } = await supabase
+        .from("profiles")
+        .select("onboarding_completed, user_preferences")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      const preferenceState = getActivationPreferenceState(data?.user_preferences);
+      const firstResultMode = shouldShowFirstResultMode({
+        onboardingCompleted: data?.onboarding_completed,
+        userPreferences: data?.user_preferences,
+      });
+
+      setContinueState({
+        href: firstResultMode ? preferenceState.continueUrl : "/dashboard",
+        activationIntent: preferenceState.activationIntent,
+        firstResultMode,
+      });
+    };
+
+    void loadContinueState();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
   if (!isMobile) return null;
   if (location.pathname.startsWith("/share/")) return null;
 
-  const visibleItems = navItems.filter(item => !item.requiresAuth || user);
+  const visibleItems = navItems
+    .filter(item => !item.requiresAuth || user)
+    .map((item) => item.name === "Continue" ? { ...item, href: continueState.href } : item);
   const freeToolsActive = freeToolsItems.some((tool) => location.pathname.startsWith(tool.href));
 
   return (
@@ -78,8 +133,9 @@ export const MobileBottomNav = () => {
       <div className="flex items-center justify-around h-16">
         {visibleItems.map((item) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.href ||
-            (item.href !== "/" && location.pathname.startsWith(item.href));
+          const itemPath = item.href.split("?")[0];
+          const isActive = location.pathname === itemPath ||
+            (itemPath !== "/" && location.pathname.startsWith(itemPath));
 
           return (
             <React.Fragment key={item.href}>
@@ -94,6 +150,17 @@ export const MobileBottomNav = () => {
                     : "text-muted-foreground active:text-primary"
                 )}
                 aria-label={item.name}
+                onClick={() => {
+                  if (item.name !== "Continue") return;
+                  trackActivationFunnelEvent("first_action_opened", {
+                    user_id: user?.id ?? null,
+                    activation_intent: continueState.activationIntent,
+                    selected_path: continueState.href,
+                    source: "mobile_bottom_nav",
+                    days_since_signup: getDaysSinceSignup(user?.created_at ?? null),
+                    first_result_mode: continueState.firstResultMode,
+                  });
+                }}
               >
                 <div className={cn(
                   "relative p-2 rounded-lg transition-colors",
