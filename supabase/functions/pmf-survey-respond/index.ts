@@ -11,6 +11,7 @@ const corsHeaders = {
 };
 
 const RATE_LIMIT_PER_MIN = 10;
+const PMF_REQUIRED_SIGNALS = 25;
 const VALID_ANSWERS = ["very", "somewhat", "not"];
 
 interface RespondRequest {
@@ -92,7 +93,7 @@ serve(async (req) => {
 
     const { data: survey, error: surveyError } = await admin
       .from("pmf_surveys")
-      .select("id, status")
+      .select("id, user_id, status")
       .eq("slug", slug)
       .maybeSingle();
     if (surveyError) throw surveyError;
@@ -115,6 +116,39 @@ serve(async (req) => {
     // A repeat email for the same survey is a no-op, not an error.
     if (insertError && !/duplicate key|unique/i.test(insertError.message || "")) {
       throw insertError;
+    }
+
+    const { data: responseRows, error: responseCountError } = await admin
+      .from("pmf_survey_responses")
+      .select("sean_ellis_answer")
+      .eq("survey_id", survey.id);
+
+    if (responseCountError) {
+      console.error("pmf-survey-respond: response count sync failed:", responseCountError.message);
+    } else {
+      let very = 0;
+      let somewhat = 0;
+      let notDisappointed = 0;
+      for (const row of responseRows || []) {
+        if (row.sean_ellis_answer === "very") very++;
+        else if (row.sean_ellis_answer === "somewhat") somewhat++;
+        else if (row.sean_ellis_answer === "not") notDisappointed++;
+      }
+      const total = very + somewhat + notDisappointed;
+      const { error: evidenceError } = await admin
+        .from("pmf_validation_evidence")
+        .upsert({
+          user_id: survey.user_id,
+          survey_results_count: total,
+          required_signals: PMF_REQUIRED_SIGNALS,
+          sean_ellis_very_disappointed: very,
+          sean_ellis_somewhat_disappointed: somewhat,
+          sean_ellis_not_disappointed: notDisappointed,
+          sean_ellis_updated_at: new Date().toISOString(),
+        }, { onConflict: "user_id" });
+      if (evidenceError) {
+        console.error("pmf-survey-respond: evidence sync failed:", evidenceError.message);
+      }
     }
 
     return json({ success: true });

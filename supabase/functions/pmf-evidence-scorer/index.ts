@@ -529,6 +529,21 @@ Apply the scoring rubric to this evidence and return the PMF readiness JSON. Mak
         console.warn('Error storing PMF analysis:', storeError);
       }
 
+      try {
+        const { error: evidenceError } = await supabase
+          .from('pmf_validation_evidence' as any)
+          .upsert({
+            user_id: user.id,
+            interview_notes_count: loggedInterviewCount,
+            required_signals: MIN_INTERVIEWS_FOR_READY,
+          }, { onConflict: 'user_id' });
+        if (evidenceError) {
+          console.warn('Failed to update PMF validation evidence:', evidenceError);
+        }
+      } catch (evidenceError) {
+        console.warn('Error updating PMF validation evidence:', evidenceError);
+      }
+
       return new Response(JSON.stringify({
         success: true,
         analysis,

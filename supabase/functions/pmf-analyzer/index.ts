@@ -5,6 +5,11 @@ import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_share
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
+// Legacy PMF analysis endpoint.
+// The production /pmf-lab route uses pmf-evidence-scorer because it is grounded in
+// interview logs, Sean Ellis survey responses, and external citations. Keep this
+// endpoint for older callers, but do not use its row counts as the PMF Lab evidence
+// funnel metric.
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, idempotency-key',

@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
+import { captureEvent } from '@/lib/analytics';
 
 export interface PMFSurvey {
   id: string;
@@ -31,6 +33,7 @@ export interface PMFSurveyAggregate {
 
 const SURVEYS = 'pmf_surveys' as never;
 const RESPONSES = 'pmf_survey_responses' as never;
+const EVIDENCE = 'pmf_validation_evidence' as never;
 
 const EMPTY_AGGREGATE: PMFSurveyAggregate = { total: 0, very: 0, somewhat: 0, not: 0, veryPct: 0, verbatims: [] };
 
@@ -125,6 +128,16 @@ export function usePMFSurvey() {
         if (!error && data) {
           setSurvey(data as unknown as PMFSurvey);
           setAggregate(EMPTY_AGGREGATE);
+          await supabase
+            .from(EVIDENCE)
+            .upsert({
+              user_id: user.id,
+              required_signals: PMF_REQUIRED_SIGNALS,
+            } as never, { onConflict: 'user_id' });
+          captureEvent('pmf_survey_created', {
+            has_product_name: Boolean(opts.productName?.trim()),
+            has_audience: Boolean(opts.audience?.trim()),
+          });
           toast.success('Survey published — share the link to collect real feedback.');
           return data as unknown as PMFSurvey;
         }

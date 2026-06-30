@@ -42,6 +42,7 @@ interface PMFReadinessReportProps {
   surveyShareUrl: string | null;
   isCreatingSurvey: boolean;
   onCreateSurvey: () => void;
+  customerDiscoverySignalCount?: number;
 }
 
 const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
@@ -63,6 +64,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
   surveyShareUrl,
   isCreatingSurvey,
   onCreateSurvey,
+  customerDiscoverySignalCount = 0,
 }) => {
   const [interviewPreviewOpen, setInterviewPreviewOpen] = useState(false);
   const isReady = analysis.verdict === 'ready';
@@ -74,6 +76,19 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
   const buyingSignals = analysis.buyingSignals;
   const improvementsBeforeRetest = analysis.improvementsBeforeRetest;
   const loggedInterviews = analysis.evidenceAnswers?.interviews ?? [];
+  const liveSurveyTotal = surveyAggregate.total;
+  const savedSurveyTotal = evidence?.survey_results_count ?? 0;
+  const surveyTotal = liveSurveyTotal || savedSurveyTotal;
+  const savedVery = evidence?.sean_ellis_very_disappointed ?? 0;
+  const savedSomewhat = evidence?.sean_ellis_somewhat_disappointed ?? 0;
+  const savedNot = evidence?.sean_ellis_not_disappointed ?? 0;
+  const savedSeanTotal = savedVery + savedSomewhat + savedNot;
+  const seanEllisPct = liveSurveyTotal > 0
+    ? surveyAggregate.veryPct
+    : savedSeanTotal > 0
+      ? Math.round((savedVery / savedSeanTotal) * 100)
+      : 0;
+  const citationCount = analysis.dataSources?.filter((source) => Boolean(source.url || source.snippet)).length ?? 0;
 
   // Primary Finding — lowest-scoring dimension
   const dimensionEntries = Object.entries(analysis.dimensions) as [string, { score: number; explanation: string }][];
@@ -245,6 +260,31 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
         </div>
       </div>
 
+      <div className="rounded-2xl border border-info/20 bg-info/5 p-5 space-y-4">
+        <div className="flex items-center gap-2">
+          <Globe className="h-4 w-4 text-info shrink-0" />
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-info">Evidence used</p>
+        </div>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          This is an AI interpretation of your evidence. Interview records remain the primary signal; survey data and external sources strengthen or challenge the read.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {[
+            { label: 'Interviews', value: loggedInterviews.length.toString(), note: loggedInterviews.length >= PMF_REQUIRED_SIGNALS ? 'Target reached' : 'Below target' },
+            { label: 'Survey responses', value: surveyTotal.toString(), note: liveSurveyTotal > 0 ? 'Hosted responses' : savedSurveyTotal > 0 ? 'Saved tally' : 'None yet' },
+            { label: 'Sean Ellis', value: surveyTotal > 0 || savedSeanTotal > 0 ? `${seanEllisPct}%` : 'N/A', note: seanEllisPct >= 40 ? '40% line met' : '40% line not met' },
+            { label: 'Citations', value: citationCount.toString(), note: citationCount > 0 ? 'External signal' : 'Interview-only' },
+            { label: 'Discovery', value: customerDiscoverySignalCount > 0 ? customerDiscoverySignalCount.toString() : '0', note: customerDiscoverySignalCount > 0 ? 'Saved signals' : 'Not generated' },
+          ].map((item) => (
+            <div key={item.label} className="rounded-xl border border-border/60 bg-background/70 p-3">
+              <p className="text-xs text-muted-foreground">{item.label}</p>
+              <p className="mt-1 text-xl font-semibold text-foreground">{item.value}</p>
+              <p className="mt-1 text-caption text-muted-foreground">{item.note}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Threshold banner */}
       <div className={cn('flex items-start gap-3 rounded-lg border p-4', thresholdBanner.bg)}>
         <ThresholdIcon className={cn('w-5 h-5 shrink-0 mt-0.5', thresholdBanner.iconColor)} />
@@ -285,7 +325,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
           </p>
         </div>
         <div className="rounded-2xl border border-border/60 bg-muted/20 p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">AI next action</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">AI interpretation of your evidence</p>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             {analysis.nextExperiment ?? (meetsThreshold
               ? 'Move into MVP scope definition and preserve only the features tied to the strongest buying signals.'

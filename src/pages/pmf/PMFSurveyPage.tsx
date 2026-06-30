@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { captureEvent } from '@/lib/analytics';
 
 interface PublicSurvey {
   id: string;
@@ -104,6 +105,12 @@ export default function PMFSurveyPage() {
         toast.error('Could not submit your response. Please try again.');
         return;
       }
+      captureEvent('pmf_survey_response_received', {
+        answer,
+        has_main_benefit: Boolean(mainBenefit.trim()),
+        has_feedback: Boolean(feedback.trim()),
+        has_email: Boolean(email.trim()),
+      });
       setSubmitted(true);
     } catch {
       toast.error('Something went wrong. Please try again.');

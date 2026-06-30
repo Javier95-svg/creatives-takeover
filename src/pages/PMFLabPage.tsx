@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
@@ -10,6 +10,9 @@ import { useLeanStartupStore } from '@/store/leanStartupStore';
 import { usePMFLab } from '@/hooks/usePMFLab';
 import { usePMFSurvey } from '@/hooks/usePMFSurvey';
 import PMFEvidenceForm from '@/components/pmf/PMFEvidenceForm';
+import PMFEvidenceHub from '@/components/pmf/PMFEvidenceHub';
+import PMFEvidenceChecklist from '@/components/pmf/PMFEvidenceChecklist';
+import PMFSeanEllisTest from '@/components/pmf/PMFSeanEllisTest';
 import PMFScoringLoader from '@/components/pmf/PMFScoringLoader';
 import PMFReadinessReport from '@/components/pmf/PMFReadinessReport';
 import PMFCustomerDiscovery from '@/components/pmf/PMFCustomerDiscovery';
@@ -22,6 +25,8 @@ import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 import { getPublicTabConfig } from '@/config/publicTabVisibility';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
+import { useCustomerDiscovery } from '@/hooks/useCustomerDiscovery';
+import { captureEvent } from '@/lib/analytics';
 import { supabase } from '@/integrations/supabase/client';
 
 const structuredData = [
@@ -46,6 +51,13 @@ export default function PMFLabPage() {
   const [mode, setMode] = useState<'score' | 'discover'>('score');
   const [searchParams] = useSearchParams();
   const outcomeAnalysisId = searchParams.get('outcome');
+  const hubViewedRef = useRef(false);
+  const surveyRef = useRef<HTMLDivElement | null>(null);
+  const scoreFormRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollTo = (ref: { current: HTMLDivElement | null }) => {
+    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -107,7 +119,8 @@ export default function PMFLabPage() {
 
   useEffect(() => {
     markToolUsed('pmf-lab');
-  }, [markToolUsed]);
+    captureEvent('pmf_lab_viewed', { is_authenticated: Boolean(user) });
+  }, [markToolUsed, user]);
 
   const {
     phase,
@@ -127,6 +140,8 @@ export default function PMFLabPage() {
     resetToIntake,
   } = usePMFLab();
 
+  // Production PMF Lab path: score evidence via pmf-evidence-scorer.
+  // market-validation-engine is broader market validation, and pmf-analyzer is legacy.
   const {
     survey,
     aggregate: surveyAggregate,
@@ -134,6 +149,28 @@ export default function PMFLabPage() {
     isCreating: isCreatingSurvey,
     createAndPublishSurvey,
   } = usePMFSurvey();
+
+  const {
+    discovery,
+    loadDiscovery,
+  } = useCustomerDiscovery();
+
+  const customerDiscoverySignals =
+    (discovery?.painPoints.length ?? 0) +
+    (discovery?.people.length ?? 0) +
+    (discovery?.communities.length ?? 0) +
+    (discovery?.threads.length ?? 0);
+
+  useEffect(() => {
+    if (!user || !hasAccess || phase !== 'intake' || mode !== 'score' || hubViewedRef.current) return;
+    captureEvent('pmf_evidence_hub_viewed', {
+      saved_interviews: evidence?.interview_notes_count ?? 0,
+      survey_responses: surveyAggregate.total,
+      has_survey: Boolean(survey),
+      customer_discovery_signals: customerDiscoverySignals,
+    });
+    hubViewedRef.current = true;
+  }, [customerDiscoverySignals, evidence?.interview_notes_count, hasAccess, mode, phase, survey, surveyAggregate.total, user]);
 
   // Keep the per-user Sean Ellis evidence in sync with real survey responses, so the
   // 40% metric, the 25-signal count, and the score all reflect verified data silently.
@@ -163,6 +200,19 @@ export default function PMFLabPage() {
       productName: waitlistProductName ?? undefined,
       audience: icpPersonaName ?? undefined,
     });
+  };
+
+  const handleSurveyHubAction = () => {
+    if (!survey) {
+      handleCreateSurvey();
+      return;
+    }
+    scrollTo(surveyRef);
+  };
+
+  const handleModeChange = (nextMode: 'score' | 'discover') => {
+    if (nextMode === 'score') void loadDiscovery();
+    setMode(nextMode);
   };
   const ruleCards = [
     {
@@ -258,11 +308,23 @@ export default function PMFLabPage() {
                   description={publicTab.description || ''}
                   showPricingCta={publicTab.showPricingCta}
                 >
-                  <div className="space-y-6">
-                    <PMFEvidenceForm
-                      onSubmit={() => {}}
-                      isSubmitting={false}
-                    />
+                  <div className="rounded-3xl border border-border/60 bg-background/90 p-6 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">
+                      Evidence-first PMF preview
+                    </p>
+                    <h2 className="mt-3 text-2xl font-semibold text-foreground">
+                      Log interviews, run the 40% test, then score the evidence.
+                    </h2>
+                    <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                      PMF Lab is built to interpret customer proof, not just rate an idea. Create an account to save interviews, publish a Sean Ellis survey, and unlock the full evidence score.
+                    </p>
+                    <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                      {['Interview log', 'Sean Ellis survey', 'Evidence score'].map((item) => (
+                        <div key={item} className="rounded-2xl border border-border/60 bg-muted/20 p-4 text-sm font-medium text-foreground">
+                          {item}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </PreviewModeWrapper>
               )
@@ -286,7 +348,7 @@ export default function PMFLabPage() {
                       <button
                         key={id}
                         type="button"
-                        onClick={() => setMode(id)}
+                        onClick={() => handleModeChange(id)}
                         className={cn(
                           'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
                           mode === id
@@ -304,21 +366,57 @@ export default function PMFLabPage() {
                   <PMFCustomerDiscovery
                     defaultProductName={waitlistProductName}
                     defaultTargetAudience={icpPersonaName}
+                    onCompleted={() => void loadDiscovery()}
                   />
                 ) : (
                   <>
                     {/* Phase A — Evidence Form */}
                     {phase === 'intake' && (
-                      <PMFEvidenceForm
-                        onSubmit={(answers) => runAnalysis(answers, {
-                          businessContext: {
-                            productName: waitlistProductName ?? undefined,
-                            targetAudience: icpPersonaName ?? undefined,
-                          },
-                          surveyEvidence,
-                        })}
-                        isSubmitting={false}
-                      />
+                      <div className="space-y-8">
+                        <PMFEvidenceHub
+                          evidence={evidence}
+                          requiredSignals={PMF_REQUIRED_SIGNALS}
+                          survey={survey}
+                          surveyAggregate={surveyAggregate}
+                          customerDiscoverySignals={customerDiscoverySignals}
+                          onLogInterviews={() => scrollTo(scoreFormRef)}
+                          onCreateOrReviewSurvey={handleSurveyHubAction}
+                          onFindCustomers={() => setMode('discover')}
+                          onRunScore={() => scrollTo(scoreFormRef)}
+                        />
+
+                        <div ref={surveyRef} className="grid gap-4 scroll-mt-28 lg:grid-cols-2">
+                          <PMFEvidenceChecklist
+                            evidence={evidence}
+                            requiredSignals={PMF_REQUIRED_SIGNALS}
+                            onSaveChecklist={saveChecklist}
+                          />
+                          <PMFSeanEllisTest
+                            initialVery={evidence?.sean_ellis_very_disappointed}
+                            initialSomewhat={evidence?.sean_ellis_somewhat_disappointed}
+                            initialNot={evidence?.sean_ellis_not_disappointed}
+                            onSave={saveSeanEllis}
+                            survey={survey}
+                            surveyAggregate={surveyAggregate}
+                            shareUrl={surveyShareUrl}
+                            isCreatingSurvey={isCreatingSurvey}
+                            onCreateSurvey={handleCreateSurvey}
+                          />
+                        </div>
+
+                        <div ref={scoreFormRef} className="scroll-mt-28">
+                          <PMFEvidenceForm
+                            onSubmit={(answers) => runAnalysis(answers, {
+                              businessContext: {
+                                productName: waitlistProductName ?? undefined,
+                                targetAudience: icpPersonaName ?? undefined,
+                              },
+                              surveyEvidence,
+                            })}
+                            isSubmitting={false}
+                          />
+                        </div>
+                      </div>
                     )}
 
                     {/* Phase B — Scoring Loader */}
@@ -346,6 +444,7 @@ export default function PMFLabPage() {
                           surveyShareUrl={surveyShareUrl}
                           isCreatingSurvey={isCreatingSurvey}
                           onCreateSurvey={handleCreateSurvey}
+                          customerDiscoverySignalCount={customerDiscoverySignals}
                         />
                       </div>
                     )}

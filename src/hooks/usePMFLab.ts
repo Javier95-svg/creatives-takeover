@@ -14,6 +14,7 @@ import {
 } from '@/lib/pmfResultsTable';
 import { ensureMentorDemandNotification } from '@/lib/mentorDemandNotifications';
 import { trackActivity } from '@/lib/activity';
+import { captureEvent } from '@/lib/analytics';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -235,6 +236,33 @@ export function usePMFLab() {
     }
   }, [user]);
 
+  const persistInterviewEvidenceCount = useCallback(async (conversationCount: number) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase
+        .from(PMF_EVIDENCE_TABLE)
+        .upsert({
+          user_id: user.id,
+          interview_notes_count: conversationCount,
+          required_signals: PMF_REQUIRED_SIGNALS,
+        }, { onConflict: 'user_id' });
+      if (error) throw error;
+      setEvidence((prev) => prev
+        ? { ...prev, interview_notes_count: conversationCount, required_signals: PMF_REQUIRED_SIGNALS }
+        : {
+            validation_checklist: [],
+            interview_notes_count: conversationCount,
+            survey_results_count: 0,
+            required_signals: PMF_REQUIRED_SIGNALS,
+            sean_ellis_very_disappointed: 0,
+            sean_ellis_somewhat_disappointed: 0,
+            sean_ellis_not_disappointed: 0,
+          });
+    } catch (err) {
+      console.warn('Failed to persist PMF interview evidence count:', err);
+    }
+  }, [user]);
+
   // On mount: restore existing analysis, validation evidence, and score trend
   useEffect(() => {
     if (!user) return;
@@ -266,6 +294,11 @@ export function usePMFLab() {
       if (credits === null) return;
     }
 
+    captureEvent('pmf_analysis_started', {
+      is_rescore: isReScore,
+      interview_count: answers.interviews?.length ?? answers.conversationCount ?? 0,
+      survey_responses: options?.surveyEvidence?.total ?? 0,
+    });
     setPhase('analyzing');
 
     try {
@@ -287,11 +320,24 @@ export function usePMFLab() {
         return;
       }
 
-      setAnalysis(data.analysis as PMFReadinessAnalysis);
+      const nextAnalysis = data.analysis as PMFReadinessAnalysis;
+      setAnalysis(nextAnalysis);
       setAnalysisId(data.analysisId ?? null);
       setHasSavedReport(false);
       setPhase('results');
+      const conversationCount = nextAnalysis.evidenceAnswers?.interviews?.length
+        ?? answers.interviews?.length
+        ?? answers.conversationCount
+        ?? 0;
+      void persistInterviewEvidenceCount(conversationCount);
       void loadTrend();
+      captureEvent('pmf_analysis_completed', {
+        is_rescore: isReScore,
+        score: nextAnalysis.overallScore,
+        verdict: nextAnalysis.verdict,
+        analysis_id_present: Boolean(data.analysisId),
+        external_sources: nextAnalysis.dataSources?.length ?? 0,
+      });
       if (isReScore) {
         toast.success('Re-scored with your latest evidence — no credits used.');
       } else {
@@ -308,10 +354,15 @@ export function usePMFLab() {
       toast.error('Something went wrong. Please try again.');
       setPhase(analysis ? 'results' : 'intake');
     }
-  }, [user, analysis, ensureCredits, handleCreditError, showCreditReceipt, fireJourneyUpgradePrompt, loadTrend]);
+  }, [user, analysis, ensureCredits, handleCreditError, showCreditReceipt, fireJourneyUpgradePrompt, loadTrend, persistInterviewEvidenceCount]);
 
   const reScore = useCallback(async () => {
     if (!analysis || !analysisId) return;
+    captureEvent('pmf_rescore_clicked', {
+      score: analysis.overallScore,
+      verdict: analysis.verdict,
+      analysis_id_present: Boolean(analysisId),
+    });
     await runAnalysis(analysis.evidenceAnswers, {
       businessContext: lastContextRef.current,
       previousAnalysisId: analysisId,
@@ -386,6 +437,9 @@ export function usePMFLab() {
         sean_ellis_not_disappointed: prev?.sean_ellis_not_disappointed ?? 0,
         validation_checklist: items,
       }));
+      captureEvent('pmf_checklist_saved', {
+        checklist_count: items.length,
+      });
       return true;
     } catch (err) {
       console.error('Save checklist error:', err);
@@ -422,29 +476,7 @@ export function usePMFLab() {
       const conversationCount = analysis.evidenceAnswers?.interviews?.length
         ?? analysis.evidenceAnswers?.conversationCount
         ?? 0;
-      const { error: evidenceError } = await supabase
-        .from(PMF_EVIDENCE_TABLE)
-        .upsert({
-          user_id: user.id,
-          interview_notes_count: conversationCount,
-          required_signals: PMF_REQUIRED_SIGNALS,
-        }, { onConflict: 'user_id' });
-
-      if (evidenceError) {
-        console.warn('Failed to update pmf_validation_evidence:', evidenceError);
-      } else {
-        setEvidence((prev) => prev
-          ? { ...prev, interview_notes_count: conversationCount, required_signals: PMF_REQUIRED_SIGNALS }
-          : {
-              validation_checklist: [],
-              interview_notes_count: conversationCount,
-              survey_results_count: 0,
-              required_signals: PMF_REQUIRED_SIGNALS,
-              sean_ellis_very_disappointed: 0,
-              sean_ellis_somewhat_disappointed: 0,
-              sean_ellis_not_disappointed: 0,
-            });
-      }
+      await persistInterviewEvidenceCount(conversationCount);
 
       toast.success(
         conversationCount >= PMF_REQUIRED_SIGNALS
@@ -470,13 +502,19 @@ export function usePMFLab() {
       await refreshProgress();
       await refreshActivation();
       setHasSavedReport(true);
+      captureEvent('pmf_report_saved', {
+        score: analysis.overallScore,
+        verdict: analysis.verdict,
+        interview_count: conversationCount,
+        analysis_id_present: Boolean(analysisId),
+      });
     } catch (err) {
       console.error('Save error:', err);
       toast.error('Unable to save PMF report right now.');
     } finally {
       setIsSaving(false);
     }
-  }, [user, analysis, analysisId, refreshActivation, refreshProgress]);
+  }, [user, analysis, analysisId, refreshActivation, refreshProgress, persistInterviewEvidenceCount]);
 
   const exportReport = useCallback(async () => {
     if (!analysis) return;

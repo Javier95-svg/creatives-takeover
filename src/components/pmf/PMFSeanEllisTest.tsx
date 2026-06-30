@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { PMFSurvey, PMFSurveyAggregate } from '@/hooks/usePMFSurvey';
 
@@ -104,9 +105,16 @@ const PMFSeanEllisTest: React.FC<PMFSeanEllisTestProps> = ({
         </div>
         {survey && shareUrl ? (
           <>
-            <p className="text-xs text-muted-foreground">
-              Share this link with people who've used your product. Responses update your score automatically.
-            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-xs text-muted-foreground">
+                Share this link with people who've used your product. Responses update your score automatically.
+              </p>
+              {surveyAggregate.total > 0 && (
+                <Badge variant="outline" className="border-success/25 bg-success/10 text-success">
+                  Verified hosted evidence
+                </Badge>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <Input readOnly value={shareUrl} className="text-xs" onFocus={(e) => e.currentTarget.select()} />
               <Button variant="outline" size="sm" className="shrink-0" onClick={() => copy(shareUrl, 'l')}>
@@ -189,6 +197,9 @@ const PMFSeanEllisTest: React.FC<PMFSeanEllisTestProps> = ({
       ) : (
         /* Manual fallback: paste a tally from a survey you ran elsewhere */
         <div className="space-y-4">
+          <Badge variant="outline" className="border-warning/25 bg-warning/10 text-warning">
+            Manual fallback
+          </Badge>
           <div className="rounded-xl border border-border/60 bg-muted/30 p-4">
             <div className="flex items-start justify-between gap-3">
               <pre className="whitespace-pre-wrap text-xs leading-relaxed text-foreground font-sans">{SURVEY_QUESTION}</pre>
