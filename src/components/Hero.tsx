@@ -81,7 +81,7 @@ const Hero = ({
   titleLine1 = "The founders'",
   titleLine2 = "compass",
   lede = DEFAULT_LEDE,
-  ctaLabel = "Build Your Demo & Pitch Video",
+  ctaLabel = "Build a live demo — free, no signup",
   ctaHref = "/demo-studio",
   onCtaClick,
   dashboardUrl = "creatives-takeover.com/dashboard",
@@ -144,9 +144,15 @@ const Hero = ({
   }, [trackTriggerView, isAuthenticated]);
 
   const handleCtaClick = () => {
-    void trackEngagement("hero-primary-cta", 85);
-    setAttribution('hero_start_free', location.pathname);
+    void trackEngagement("hero-demo-cta", 85);
+    setAttribution('hero_demo_try', location.pathname);
     onCtaClick?.();
+  };
+
+  // Path B for visitors who don't have a product to screenshot yet.
+  const handleIcpCtaClick = () => {
+    void trackEngagement("hero-icp-cta", 80);
+    setAttribution('hero_icp_builder', location.pathname);
   };
 
   // Send logged-out visitors into the no-signup Demo Studio "try" flow so they
@@ -167,6 +173,7 @@ const Hero = ({
 
   const handlePreviewClick = () => {
     void trackEngagement("hero-dashboard-preview", 65);
+    setAttribution('hero_dashboard_preview', location.pathname);
   };
 
   // Smooth-scrolls to the "Startup Development Cycle" section on the homepage.
@@ -195,14 +202,14 @@ const Hero = ({
     >
       <div className="ct-hero__container">
         {isAuthenticated ? (
-          <a
+          <Link
             className="ct-hero__eyebrow"
-            href="https://creatives-takeover.com/dashboard/referral"
+            to="/dashboard/referral"
             onClick={handleEyebrowClick}
           >
             <span className="ct-hero__eyebrow-pill">{eyebrowPill}</span>
             {eyebrow}
-          </a>
+          </Link>
         ) : null}
 
         <h1 className="ct-hero__title">
@@ -234,12 +241,24 @@ const Hero = ({
             </>
           ) : (
             <>
-              <Link className="ct-hero__cta" to={resolvedCtaHref} onClick={handleCtaClick}>
-                {ctaLabel}
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
-              </Link>
+              <div className="ct-hero__cta-path">
+                <span className="ct-hero__cta-kicker">Have a product?</span>
+                <Link className="ct-hero__cta" to={resolvedCtaHref} onClick={handleCtaClick}>
+                  {ctaLabel}
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </Link>
+              </div>
+              <div className="ct-hero__cta-path">
+                <span className="ct-hero__cta-kicker">Still an idea?</span>
+                <Link className="ct-hero__cta ct-hero__cta--secondary" to="/icp-builder" onClick={handleIcpCtaClick}>
+                  Draft your ideal customer profile
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </Link>
+              </div>
               <button type="button" className="ct-hero__cycle-link" onClick={handleStartupCycleClick}>
                 The Startup Development Cycle
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
@@ -250,9 +269,9 @@ const Hero = ({
           )}
         </div>
 
-        {!isAuthenticated ? <a
+        {!isAuthenticated ? <Link
           className="ct-hero__spotlight"
-          href="https://creatives-takeover.com/signup"
+          to="/signup"
           onClick={handlePreviewClick}
           aria-label="Preview of the Creatives Takeover dashboard. Sign up for Creatives Takeover."
         >
@@ -299,7 +318,7 @@ const Hero = ({
               </div>
             </div>
           </div>
-        </a> : null}
+        </Link> : null}
 
         <div className="ct-hero__stats" aria-label="Founder stats for 2026">
           <div className="ct-hero__stats-track">

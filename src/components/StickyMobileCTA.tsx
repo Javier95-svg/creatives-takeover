@@ -34,15 +34,15 @@ const StickyMobileCTA = () => {
             className="w-full min-h-[52px] rounded-3xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold shadow-[0_18px_32px_-20px_rgba(37,99,235,0.55)] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             asChild
           >
-            {/* FIX(retention): homepage — the sticky mobile CTA now routes directly into ICP quickstart instead of a generic signup step. */}
+            {/* Mobile mirrors the hero's primary bet: the no-signup demo try flow. */}
             <Link
-              to="/icp-builder"
+              to="/demo-studio/try"
               onClick={() => {
                 captureEvent('cta_clicked', { cta_name: 'sticky_mobile_cta', page: location.pathname });
-                setAttribution('sticky_mobile_icp', location.pathname);
+                setAttribution('sticky_mobile_demo_try', location.pathname);
               }}
             >
-              <span>Run ICP Analysis</span>
+              <span>Build a live demo — free</span>
               <ArrowRight className="ml-2 w-5 h-5" />
             </Link>
           </Button>
