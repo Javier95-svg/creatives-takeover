@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-type ActivationIntent = "save_mentor" | "send_message" | "book_call" | "run_icp";
+type ActivationIntent = "save_mentor" | "send_message" | "book_call" | "run_icp" | "build_demo";
 type SequenceType =
   | "activation_day2"
   | "activation_day7"
@@ -71,7 +71,13 @@ function getPreferenceString(preferences: JsonRecord | null, key: string): strin
 }
 
 function getActivationIntent(value: string | null): ActivationIntent | null {
-  if (value === "save_mentor" || value === "send_message" || value === "book_call" || value === "run_icp") {
+  if (
+    value === "save_mentor" ||
+    value === "send_message" ||
+    value === "book_call" ||
+    value === "run_icp" ||
+    value === "build_demo"
+  ) {
     return value;
   }
 
@@ -107,6 +113,8 @@ function getDefaultCta(intent: ActivationIntent, appBaseUrl: string) {
       return `${appBaseUrl}/messages`;
     case "book_call":
       return `${appBaseUrl}/mentorship?mentorSource=booked-call`;
+    case "build_demo":
+      return `${appBaseUrl}/demo-studio/try`;
   }
 }
 
@@ -117,14 +125,23 @@ function buildSequenceDecision(args: {
   assets: UserAssetState;
   firstValueActionAt: string | null;
   lastSeenAt: string | null;
+  artifactResumeUrl: string | null;
+  artifactLabel: string | null;
 }): SequenceDecision | null {
-  const { appBaseUrl, intent, activationCompleted, assets, firstValueActionAt, lastSeenAt } = args;
+  const { appBaseUrl, intent, activationCompleted, assets, firstValueActionAt, lastSeenAt, artifactResumeUrl, artifactLabel } = args;
   const now = Date.now();
   const lastSeenMs = lastSeenAt ? Date.parse(lastSeenAt) : 0;
   const firstValueMs = firstValueActionAt ? Date.parse(firstValueActionAt) : 0;
   const inactiveFor = lastSeenMs > 0 ? now - lastSeenMs : Number.MAX_SAFE_INTEGER;
   const ageSinceValue = firstValueMs > 0 ? now - firstValueMs : 0;
   const latestSavedMentor = assets.latestSavedMentorName || "your saved mentor";
+  // Artifact-aware routing: a saved artifact deep link beats every generic CTA.
+  // Stored URLs are app-relative (e.g. /demo-studio/projects/{id}/brief).
+  const artifactCta = artifactResumeUrl
+    ? (artifactResumeUrl.startsWith("http") ? artifactResumeUrl : `${appBaseUrl}${artifactResumeUrl}`)
+    : null;
+  const artifactName = artifactLabel || "your saved project";
+  const defaultCta = artifactCta ?? getDefaultCta(intent, appBaseUrl);
 
   if (!activationCompleted) {
     if (inactiveFor >= DAY_7_MS) {
@@ -139,6 +156,8 @@ function buildSequenceDecision(args: {
               ? "Start one mentor conversation before you explore the rest of the product. A live thread is still the clearest return trigger in the data."
               : intent === "run_icp"
                 ? "Open ICP Builder, generate one result, and save it before you disappear into passive browsing."
+              : intent === "build_demo"
+                ? "Generate one interactive demo — upload screenshots or just describe your product — and save it before the momentum fades."
               : "Book one discovery call before you keep browsing. It is the highest-intent action in the current funnel.",
       };
     }
@@ -155,6 +174,8 @@ function buildSequenceDecision(args: {
               ? "Send one message now so the product can pull you back with a reply instead of generic reminders."
               : intent === "run_icp"
                 ? "Generate one ICP result now so the product has a real saved asset to bring you back to."
+              : intent === "build_demo"
+                ? "Build one interactive demo now — it takes 60 seconds and gives you a shareable asset to come back to."
               : "Book one discovery call now so you leave with a real next step instead of another passive session.",
       };
     }
@@ -228,6 +249,15 @@ function buildSequenceDecision(args: {
   }
 
   if (inactiveFor >= DAY_7_MS && ageSinceValue >= DAY_7_MS) {
+    // Artifact-first for demo builders: their saved demo is the return anchor.
+    if (intent === "build_demo" && artifactCta) {
+      return {
+        sequence: "activation_day7",
+        ctaUrl: artifactCta,
+        contextHeadline: `Week 2 is where users disappear. ${artifactName} is still saved and one step from shareable.`,
+        contextBody: "Reopen your demo and publish it — a link you can send to anyone beats starting something new.",
+      };
+    }
     return {
       sequence: "activation_day7",
       ctaUrl:
@@ -235,7 +265,7 @@ function buildSequenceDecision(args: {
           ? `${appBaseUrl}/messages`
           : assets.savedMentorCount > 0
             ? `${appBaseUrl}/mentorship?mentorSource=saved`
-            : getDefaultCta(intent, appBaseUrl),
+            : defaultCta,
       contextHeadline:
         assets.unreadMessageCount > 0
           ? "Week 2 is where users disappear. Your open replies are still the best reason to come back."
@@ -256,6 +286,15 @@ function buildSequenceDecision(args: {
   }
 
   if (inactiveFor >= DAY_2_MS && ageSinceValue >= DAY_2_MS) {
+    // Artifact-first for demo builders: point day 2 straight back at their demo.
+    if (intent === "build_demo" && artifactCta) {
+      return {
+        sequence: "activation_day2",
+        ctaUrl: artifactCta,
+        contextHeadline: `${artifactName} is saved and waiting — you're one step from a shareable demo.`,
+        contextBody: "Reopen your demo, add the finishing touches, and publish it to a link you can send to investors and early users.",
+      };
+    }
     return {
       sequence: "activation_day2",
       ctaUrl:
@@ -263,7 +302,7 @@ function buildSequenceDecision(args: {
           ? `${appBaseUrl}/messages`
           : assets.savedMentorCount > 0
             ? `${appBaseUrl}/mentorship?mentorSource=saved`
-            : getDefaultCta(intent, appBaseUrl),
+            : defaultCta,
       contextHeadline:
         assets.unreadMessageCount > 0
           ? `You still have ${assets.unreadMessageCount} message ${assets.unreadMessageCount === 1 ? "reply" : "replies"} waiting.`
@@ -444,12 +483,17 @@ serve(async (req: Request): Promise<Response> => {
           getPreferenceString(preferences, "firstValueActionAt") ||
           getPreferenceString(preferences, "activationCompletedAt");
         const firstArtifactType = getPreferenceString(preferences, "firstArtifactType");
+        const artifactResumeUrl = getPreferenceString(preferences, "firstArtifactResumeUrl");
+        const artifactLabel = getPreferenceString(preferences, "firstArtifactLabel");
         const lastSeenAt = getLastSeenAt(profile);
         const assets = await getUserAssetState(profile.id);
         assets.hasIcpAnalysis = firstArtifactType === "icp_analysis";
+        const hasDemoArtifact = firstArtifactType === "demo_studio_draft";
         const activationIntent =
           explicitIntent ||
-          (assets.hasIcpAnalysis
+          (hasDemoArtifact
+            ? "build_demo"
+            : assets.hasIcpAnalysis
             ? "run_icp"
             :
           (assets.unreadMessageCount > 0
@@ -472,6 +516,8 @@ serve(async (req: Request): Promise<Response> => {
           assets,
           firstValueActionAt,
           lastSeenAt,
+          artifactResumeUrl,
+          artifactLabel,
         });
 
         if (!sequenceDecision) {

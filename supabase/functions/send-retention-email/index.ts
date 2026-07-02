@@ -9,7 +9,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-type ActivationIntent = "save_mentor" | "send_message" | "book_call" | "run_icp";
+type ActivationIntent = "save_mentor" | "send_message" | "book_call" | "run_icp" | "build_demo";
 type SequenceType =
   | "activation_day0"
   | "activation_day2"
@@ -79,6 +79,8 @@ function getDefaultCta(intent: ActivationIntent | undefined, appUrl: string) {
       return `${appUrl}/messages`;
     case "book_call":
       return `${appUrl}/mentorship?mentorSource=retention-call`;
+    case "build_demo":
+      return `${appUrl}/demo-studio`;
     default:
       return `${appUrl}/dashboard`;
   }
@@ -94,6 +96,8 @@ function getDefaultCtaLabel(intent: ActivationIntent | undefined) {
       return "Open Messages";
     case "book_call":
       return "Review Mentor Options";
+    case "build_demo":
+      return "Open my demo";
     default:
       return "Open Dashboard";
   }
@@ -218,6 +222,8 @@ function buildSequenceEmail(args: {
             ? `You still have ${savedCountText} to act on`
             : args.intent === "run_icp"
               ? `Your ICP result is still waiting`
+            : args.intent === "build_demo"
+              ? `Your demo is saved — one step from shareable`
             : `Do not let this discovery call go cold`,
         html: buildEmailShell({
           title: `${args.name}, your first win is still open`,
@@ -244,6 +250,8 @@ function buildSequenceEmail(args: {
             ? `Your saved mentors${nicheText} are still your best next move`
             : args.intent === "run_icp"
               ? `Your ICP analysis${nicheText} is still your cleanest next move`
+            : args.intent === "build_demo"
+              ? `Your saved demo${nicheText} is still your fastest way back in`
             : `Come back with one clear question for your next call`,
         html: buildEmailShell({
           title: `${args.name}, pick the thread back up`,
@@ -255,6 +263,8 @@ function buildSequenceEmail(args: {
                 ? `Revisit ${mentorLabel} and decide who deserves a real follow-up.`
                 : args.intent === "run_icp"
                   ? `Reopen the saved ICP and turn it into one sharper validation move.`
+                : args.intent === "build_demo"
+                  ? `Reopen your saved demo and publish it to a shareable link.`
                 : "Use the next call to pressure-test one decision instead of ten.",
             "You do not need a full reset. One focused session is enough to restart momentum.",
           ],
