@@ -266,6 +266,8 @@ async function readFunctionErrorMessage(error: unknown, fallback: string): Promi
 export async function generateDemoStudioDraftStoryboard(args: {
   contextUrl?: string;
   productName?: string;
+  /** Zero-asset mode: a one-line product description standing in for screenshots. */
+  description?: string;
   stepCount?: DemoStudioTryStepCount;
 }): Promise<DemoStudioStoryboardStep[]> {
   const trimmedUrl = args.contextUrl?.trim() || '';
@@ -281,7 +283,10 @@ export async function generateDemoStudioDraftStoryboard(args: {
   const name = deriveTryProductName(trimmedUrl, args.productName);
   const stepCount = normalizeTryStepCount(args.stepCount);
   const brief = getDefaultBrief({ name });
-  if (trimmedUrl) {
+  const description = args.description?.trim() || '';
+  if (description) {
+    brief.product_promise = description.slice(0, 300);
+  } else if (trimmedUrl) {
     brief.product_promise = brief.product_promise || `Product shown at ${host || trimmedUrl}`;
   }
 

@@ -106,6 +106,114 @@ export function getUsableTryStoryboard(
   return normalized;
 }
 
+/** Wrap a string into lines of roughly `maxChars`, capped at `maxLines`. */
+function wrapText(text: string, maxChars: number, maxLines: number): string[] {
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let current = '';
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (candidate.length > maxChars && current) {
+      lines.push(current);
+      current = word;
+      if (lines.length === maxLines) break;
+    } else {
+      current = candidate;
+    }
+  }
+  if (lines.length < maxLines && current) lines.push(current);
+  if (lines.length === maxLines && words.join(' ').length > lines.join(' ').length) {
+    lines[maxLines - 1] = `${lines[maxLines - 1].replace(/\.*$/, '')}…`;
+  }
+  return lines;
+}
+
+/**
+ * Zero-asset mode: render one styled 1280x720 frame per storyboard step so
+ * visitors without screenshots still get a real interactive demo. Frames are
+ * returned as real JPEG Files, so the whole existing pipeline (Shot state,
+ * sessionStorage draft, post-signup upload) works unchanged.
+ */
+export async function buildPlaceholderShotFiles(args: {
+  productName: string;
+  storyboard: DemoStudioStoryboardStep[];
+}): Promise<File[]> {
+  const width = 1280;
+  const height = 720;
+  const files: File[] = [];
+
+  for (let index = 0; index < args.storyboard.length; index += 1) {
+    const step = args.storyboard[index];
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas not supported');
+
+    // Background: match the try page's slate-950 -> slate-900 gradient with an
+    // indigo glow so placeholder frames feel native to the player.
+    const bg = ctx.createLinearGradient(0, 0, 0, height);
+    bg.addColorStop(0, '#020617');
+    bg.addColorStop(1, '#0f172a');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, height);
+
+    const glow = ctx.createRadialGradient(width * 0.8, height * 0.15, 40, width * 0.8, height * 0.15, 520);
+    glow.addColorStop(0, 'rgba(99, 102, 241, 0.28)');
+    glow.addColorStop(1, 'rgba(99, 102, 241, 0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, width, height);
+
+    // Faux browser chrome so the frame reads as a product screen.
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+    ctx.fillRect(0, 0, width, 56);
+    for (let dot = 0; dot < 3; dot += 1) {
+      ctx.beginPath();
+      ctx.arc(36 + dot * 26, 28, 6, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+      ctx.fill();
+    }
+
+    // Product name (top-left) + step chip (top-right).
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.font = '600 26px "Segoe UI", system-ui, sans-serif';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(args.productName.slice(0, 40), 120, 28);
+    const chip = `Step ${index + 1} of ${args.storyboard.length}`;
+    ctx.font = '500 22px "Segoe UI", system-ui, sans-serif';
+    const chipWidth = ctx.measureText(chip).width;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.fillText(chip, width - chipWidth - 36, 28);
+
+    // Step title, centered.
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = '700 58px "Segoe UI", system-ui, sans-serif';
+    const titleLines = wrapText(step.title, 30, 3);
+    const lineHeight = 74;
+    const startY = height / 2 - ((titleLines.length - 1) * lineHeight) / 2 - 20;
+    titleLines.forEach((line, lineIndex) => {
+      ctx.fillText(line, width / 2, startY + lineIndex * lineHeight);
+    });
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.font = '400 26px "Segoe UI", system-ui, sans-serif';
+    ctx.fillText('Placeholder frame — swap in a real screenshot later', width / 2, height - 72);
+    ctx.textAlign = 'left';
+
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (result) => (result ? resolve(result) : reject(new Error('Could not render placeholder frame'))),
+        'image/jpeg',
+        0.9,
+      );
+    });
+    files.push(new File([blob], `placeholder-${index + 1}.jpg`, { type: 'image/jpeg' }));
+  }
+
+  return files;
+}
+
 export function buildTryPreviewSteps(args: {
   shots: TryPreviewShot[];
   storyboard: DemoStudioStoryboardStep[];
