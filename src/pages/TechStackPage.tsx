@@ -6,8 +6,6 @@ import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useLeanStartupStore } from "@/store/leanStartupStore";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import { usePlanAccess } from "@/hooks/usePlanAccess";
-import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
 import { useAuth } from "@/contexts/AuthContext";
 import { captureEvent } from "@/lib/analytics";
 
@@ -18,7 +16,6 @@ export default function TechStackPage() {
   const { user } = useAuth();
   const { trackPageVisit } = useReadingAnalytics();
   const markToolUsed = useLeanStartupStore(s => s.markToolUsed);
-  const { hasAccess, isProgressiveLock } = usePlanAccess('tech_stack');
 
   useEffect(() => { markToolUsed('tech-stack'); }, [markToolUsed]);
 
@@ -93,45 +90,19 @@ export default function TechStackPage() {
               </p>
             </div>
 
-            {!user ? (
-              // Logged-out visitors can fully use the builder. The tool shows a real
-              // monthly-budget partial and gates the annual cost + full build plan
-              // behind a free-account CTA (handled inside <TechStack />).
-              <Suspense
-                fallback={
-                  <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="text-muted-foreground">Loading Tech Stack Builder...</p>
-                  </div>
-                }
-              >
-                <TechStack />
-              </Suspense>
-            ) : hasAccess ? (
-              <Suspense
-                fallback={
-                  <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="text-muted-foreground">Loading Tech Stack Builder...</p>
-                  </div>
-                }
-              >
-                <TechStack />
-              </Suspense>
-            ) : (
-              <BlurredToolPreview
-                featureName="Tech Stack Builder"
-                unlockCondition={
-                  isProgressiveLock
-                    ? "Complete the PMF Lab (Stage 3) to unlock this tool, or upgrade to Rising to access all 7 tools immediately."
-                    : "Tech Stack Builder is available on the Rising plan and above."
-                }
-                requiredPlan="rising"
-                locked
-              >
-                <div />
-              </BlurredToolPreview>
-            )}
+            {/* Everyone gets the builder: guests use it freely, and signing up must
+                never feel like a downgrade. The tool itself gates only the AI build
+                plan behind credits (handled inside <TechStack />). */}
+            <Suspense
+              fallback={
+                <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-muted-foreground">Loading Tech Stack Builder...</p>
+                </div>
+              }
+            >
+              <TechStack />
+            </Suspense>
           </div>
         </section>
       </main>
