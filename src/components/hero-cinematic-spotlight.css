@@ -249,7 +249,8 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  /* row-gap / column-gap: keep vertical rhythm, breathe more between the CTAs */
+  gap: 12px 24px;
   margin-bottom: 64px;
 }
 
