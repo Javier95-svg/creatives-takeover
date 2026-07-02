@@ -1,8 +1,9 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useRef } from 'react';
 import { Lock, ArrowRight, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation } from 'react-router-dom';
 import { PREVIEW_MODE_CONTENT_BLUR, PREVIEW_MODE_OVERLAY_BACKGROUND } from '@/components/ui/previewOverlayStyles';
+import { captureEvent } from '@/lib/analytics';
 
 interface PreviewModeWrapperProps {
   children: ReactNode;
@@ -18,6 +19,8 @@ interface PreviewModeWrapperProps {
   onCtaClick?: () => void;
   signupSource?: string;
   signupReturnPath?: string;
+  /** When set, fires free_tool_signup_gate_shown once on mount so gate impressions are measurable. */
+  analyticsTool?: string;
 }
 
 export function PreviewModeWrapper({
@@ -31,8 +34,16 @@ export function PreviewModeWrapper({
   onCtaClick,
   signupSource,
   signupReturnPath,
+  analyticsTool,
 }: PreviewModeWrapperProps) {
   const location = useLocation();
+  const hasTrackedGate = useRef(false);
+
+  useEffect(() => {
+    if (!analyticsTool || hasTrackedGate.current) return;
+    hasTrackedGate.current = true;
+    captureEvent('free_tool_signup_gate_shown', { tool: analyticsTool });
+  }, [analyticsTool]);
   const returnPath = signupReturnPath ?? `${location.pathname}${location.search}`;
   const signupHref = `/signup?${
     new URLSearchParams({

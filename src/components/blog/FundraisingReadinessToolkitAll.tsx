@@ -692,6 +692,7 @@ const FundraisingReadinessToolkitAll = () => {
               ctaLabel="Create free account"
               signupSource="insighta-test"
               signupReturnPath="/insighta-test?hydrate=1"
+              analyticsTool="insighta_test"
               onCtaClick={() => {
                 saveAnonymousToolState<InsightaAnonymousState>('insighta_test', {
                   context,

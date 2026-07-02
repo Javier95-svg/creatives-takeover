@@ -969,6 +969,7 @@ const PlanGate: React.FC<{ isPublic: boolean; onGateCtaClick?: () => void; child
       ctaLabel="Create free account"
       signupSource="tech-stack"
       signupReturnPath="/tech-stack?hydrate=1"
+      analyticsTool="tech_stack"
       onCtaClick={onGateCtaClick}
     >
       <div className="space-y-6">{children}</div>
