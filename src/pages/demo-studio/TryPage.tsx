@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { AlertTriangle, ImagePlus, Loader2, Sparkles, X } from 'lucide-react';
+import { AlertTriangle, ImagePlus, Loader2, Mail, Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -70,6 +71,8 @@ export default function TryPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isReturning = searchParams.get('hydrate') === '1';
+  // Resume-email link (?resume=<token>) — hydrate takes precedence if both appear.
+  const resumeToken = isReturning ? null : searchParams.get('resume');
 
   const [shots, setShots] = useState<Shot[]>([]);
   const [contextUrl, setContextUrl] = useState('');
@@ -83,6 +86,10 @@ export default function TryPage() {
   const [steps, setSteps] = useState<DemoStepWithHotspots[] | null>(null);
   const [saving, setSaving] = useState(false);
   const [hydrateError, setHydrateError] = useState<string | null>(null);
+  const [resuming, setResuming] = useState(Boolean(resumeToken));
+  // Recovery-loop email capture on the anonymous result view.
+  const [resumeEmail, setResumeEmail] = useState('');
+  const [resumeEmailState, setResumeEmailState] = useState<'idle' | 'sending' | 'sent'>('idle');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const shotsRef = useRef<Shot[]>([]);
   const hydratedRef = useRef(false);
@@ -320,6 +327,7 @@ export default function TryPage() {
     setSteps(null);
     setError(null);
     persistPromiseRef.current = null;
+    setResumeEmailState('idle');
     if (usedPlaceholders) {
       // Placeholder frames aren't user uploads; drop them so the uploader is clean.
       shotsRef.current.forEach((shot) => URL.revokeObjectURL(shot.url));
@@ -328,6 +336,99 @@ export default function TryPage() {
       setUsedPlaceholders(false);
     }
     clearTryDraft();
+  };
+
+  // Rebuild the result view from a TryDraft (resume-email link or sessionStorage).
+  const restoreFromDraft = useCallback(async (draft: TryDraft) => {
+    const files = await Promise.all(
+      draft.steps.map((step, index) => dataUrlToFile(step.dataUrl, `resume-${index + 1}.jpg`)),
+    );
+    const restoredShots: Shot[] = files.map((file) => ({ file, url: URL.createObjectURL(file) }));
+    shotsRef.current.forEach((shot) => URL.revokeObjectURL(shot.url));
+    shotsRef.current = restoredShots;
+    setShots(restoredShots);
+    setContextUrl(draft.contextUrl ?? '');
+    const storyboard = draft.steps.map((step) => ({
+      title: step.title,
+      caption: step.caption,
+      speaker_notes: step.speaker_notes,
+      hotspot_label: step.hotspot_label,
+      suggested_action: 'next' as const,
+    }));
+    const built = buildTryPreviewSteps({ shots: restoredShots, storyboard });
+    if (built.length === 0) throw new Error('This demo draft could not be restored.');
+    setSteps(built);
+    // The draft is already serialized (sessionStorage), so the signup path is armed.
+    persistPromiseRef.current = Promise.resolve(true);
+  }, []);
+
+  // Resume-email link: fetch the server-stored draft, re-arm sessionStorage, and
+  // show the result view so the visitor lands exactly where they left off.
+  const resumeHandledRef = useRef(false);
+  useEffect(() => {
+    if (!resumeToken || resumeHandledRef.current) return;
+    resumeHandledRef.current = true;
+    const run = async () => {
+      try {
+        const { data, error: fnError } = await supabase.functions.invoke('load-demo-try-draft', {
+          body: { resumeToken },
+        });
+        const payload = data as { success?: boolean; artifact?: TryDraft; error?: string } | null;
+        if (fnError || !payload?.success || !payload.artifact) {
+          throw new Error(payload?.error || 'This demo link is no longer valid.');
+        }
+        saveTryDraft(payload.artifact);
+        await restoreFromDraft(payload.artifact);
+        captureEvent('demo_try_resume_opened', {
+          tool: 'demo_studio_try',
+          source: 'resume_email',
+          is_authenticated: Boolean(user),
+        });
+      } catch (e) {
+        const message = e instanceof Error ? e.message : 'This demo link is no longer valid.';
+        toast.error(message);
+      } finally {
+        setResuming(false);
+        navigate('/demo-studio/try', { replace: true });
+      }
+    };
+    void run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeToken]);
+
+  // Recovery loop: email the anonymous visitor a cross-device resume link.
+  const handleResumeEmailSubmit = async () => {
+    const email = resumeEmail.trim();
+    if (!email || !email.includes('@')) {
+      toast.error('Enter a valid email address.');
+      return;
+    }
+    if (!steps) return;
+    setResumeEmailState('sending');
+    try {
+      // Make sure the draft is serialized, then send the same JSON to the server.
+      const stored = await (persistPromiseRef.current ?? persistDraft(steps));
+      const draft = stored ? readTryDraft() : null;
+      if (!draft) {
+        throw new Error('Your screenshots are too large to save. Try the signup flow instead.');
+      }
+      const { data, error: fnError } = await supabase.functions.invoke('demo-try-resume-email', {
+        body: { email, draft },
+      });
+      const payload = data as { success?: boolean; error?: string } | null;
+      if (fnError || !payload?.success) {
+        throw new Error(payload?.error || 'Could not send the link. Try again in a moment.');
+      }
+      setResumeEmailState('sent');
+      captureEvent('demo_try_resume_email_requested', {
+        tool: 'demo_studio_try',
+        source: 'demo_try',
+        step_count: steps.length,
+      });
+    } catch (e) {
+      setResumeEmailState('idle');
+      toast.error(e instanceof Error ? e.message : 'Could not send the link. Try again in a moment.');
+    }
   };
 
   // Shared hydration: in-memory draft -> real project + demo + steps, then route
@@ -468,6 +569,16 @@ export default function TryPage() {
 
   const showSaving = saving || (isReturning && !hydrateError && !steps);
 
+  if (resuming) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-slate-950 text-white">
+        <SEO title="Restoring your demo - Demo Studio" description="Restoring your demo." noindex />
+        <Loader2 className="h-7 w-7 animate-spin text-white/70" />
+        <p className="text-sm text-white/70">Restoring your demo...</p>
+      </div>
+    );
+  }
+
   if (showSaving) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-slate-950 text-white">
@@ -567,6 +678,49 @@ export default function TryPage() {
                   {usedPlaceholders ? 'Start over' : 'Try different screenshots'}
                 </Button>
               </div>
+
+              {!user && (
+                <div className="mt-2 w-full border-t border-white/10 pt-4">
+                  {resumeEmailState === 'sent' ? (
+                    <p className="text-sm text-emerald-300">
+                      Link sent — check your inbox. It restores this exact demo on any device.
+                    </p>
+                  ) : (
+                    <>
+                      <p className="mb-2 text-xs text-white/60">
+                        Not ready to sign up? Email yourself a link to finish this demo later.
+                      </p>
+                      <div className="mx-auto flex w-full max-w-md flex-col gap-2 sm:flex-row">
+                        <div className="relative flex-1">
+                          <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                          <Input
+                            type="email"
+                            inputMode="email"
+                            placeholder="you@company.com"
+                            value={resumeEmail}
+                            onChange={(e) => setResumeEmail(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key !== 'Enter') return;
+                              e.preventDefault();
+                              void handleResumeEmailSubmit();
+                            }}
+                            className="border-white/15 bg-white/5 pl-9 text-white placeholder:text-white/40"
+                          />
+                        </div>
+                        <Button
+                          variant="outline"
+                          onClick={() => void handleResumeEmailSubmit()}
+                          disabled={resumeEmailState === 'sending'}
+                          className="gap-2 bg-white/10 text-white hover:bg-white/20"
+                        >
+                          {resumeEmailState === 'sending' ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                          Email me the link
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ) : (

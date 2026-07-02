@@ -97,6 +97,12 @@ verify_jwt = false
 [functions.load-icp-email-draft]
 verify_jwt = false
 
+[functions.demo-try-resume-email]
+verify_jwt = false
+
+[functions.load-demo-try-draft]
+verify_jwt = false
+
 [functions.trigger-icp-sprint]
 verify_jwt = false
 
