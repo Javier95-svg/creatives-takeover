@@ -8,6 +8,7 @@ import DashboardTodayCockpit from '@/components/dashboard/DashboardTodayCockpit'
 import EnablePushCard from '@/components/dashboard/EnablePushCard';
 import DashboardTour from '@/components/dashboard/DashboardTour';
 import FirstRunCard from '@/components/dashboard/FirstRunCard';
+import ContinueArtifactCard from '@/components/dashboard/ContinueArtifactCard';
 import { FirstResultActivationCard } from '@/components/dashboard/FirstResultActivationCard';
 import JourneyNextStepCard from '@/components/dashboard/JourneyNextStepCard';
 import StarterDashboardNudge from '@/components/dashboard/StarterDashboardNudge';
@@ -30,6 +31,9 @@ interface DashboardActivationState {
   loading: boolean;
   showFirstResultMode: boolean;
   activationIntent: ActivationIntent | null;
+  continueUrl: string | null;
+  firstArtifactLabel: string | null;
+  firstArtifactType: string | null;
 }
 
 const Dashboard = () => {
@@ -44,6 +48,9 @@ const Dashboard = () => {
     loading: true,
     showFirstResultMode: false,
     activationIntent: null,
+    continueUrl: null,
+    firstArtifactLabel: null,
+    firstArtifactType: null,
   });
 
   useEffect(() => {
@@ -55,6 +62,9 @@ const Dashboard = () => {
           loading: false,
           showFirstResultMode: false,
           activationIntent: null,
+          continueUrl: null,
+          firstArtifactLabel: null,
+          firstArtifactType: null,
         });
         return;
       }
@@ -72,6 +82,9 @@ const Dashboard = () => {
           loading: false,
           showFirstResultMode: false,
           activationIntent: null,
+          continueUrl: null,
+          firstArtifactLabel: null,
+          firstArtifactType: null,
         });
         return;
       }
@@ -86,6 +99,10 @@ const Dashboard = () => {
         loading: false,
         showFirstResultMode,
         activationIntent: preferenceState.activationIntent,
+        // Only surface a resume card when a real artifact deep link exists.
+        continueUrl: preferenceState.firstArtifactResumeUrl,
+        firstArtifactLabel: preferenceState.firstArtifactLabel,
+        firstArtifactType: preferenceState.firstArtifactType,
       });
 
       trackActivationFunnelEvent('dashboard_viewed', {
@@ -162,6 +179,14 @@ const Dashboard = () => {
         </>
       ) : (
       <>
+      {/* Returning users land back in their saved work before anything else. */}
+      {activationState.continueUrl ? (
+        <ContinueArtifactCard
+          continueUrl={activationState.continueUrl}
+          artifactLabel={activationState.firstArtifactLabel}
+          artifactType={activationState.firstArtifactType}
+        />
+      ) : null}
       {/* Accountability first: today's tasks, deadlines, streak, progress. */}
       <EnablePushCard />
       <DashboardTodayCockpit />

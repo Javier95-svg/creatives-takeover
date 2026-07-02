@@ -21,6 +21,7 @@ export interface ActivationPreferenceState {
   firstArtifactType: string | null;
   firstArtifactCreatedAt: string | null;
   firstArtifactResumeUrl: string | null;
+  firstArtifactLabel: string | null;
   needsFirstArtifact: boolean;
   continueUrl: string;
 }
@@ -41,12 +42,14 @@ export function getActivationPreferenceState(userPreferences: unknown): Activati
   const firstArtifactType = typeof prefs.firstArtifactType === 'string' ? prefs.firstArtifactType : null;
   const firstArtifactResumeUrl = typeof prefs.firstArtifactResumeUrl === 'string' ? prefs.firstArtifactResumeUrl : null;
   const firstArtifactCreatedAt = typeof prefs.firstArtifactCreatedAt === 'string' ? prefs.firstArtifactCreatedAt : null;
+  const firstArtifactLabel = typeof prefs.firstArtifactLabel === 'string' ? prefs.firstArtifactLabel : null;
 
   return {
     activationIntent,
     firstArtifactType,
     firstArtifactCreatedAt,
     firstArtifactResumeUrl,
+    firstArtifactLabel,
     needsFirstArtifact: !firstArtifactType,
     continueUrl: firstArtifactResumeUrl || (activationIntent ? getActivationRoute(activationIntent) : '/dashboard'),
   };
