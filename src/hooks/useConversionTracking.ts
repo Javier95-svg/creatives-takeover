@@ -1,6 +1,7 @@
 import { useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { captureEvent } from '@/lib/analytics';
 
 export interface ConversionEvent {
   triggerType: string;
@@ -69,6 +70,13 @@ export const useConversionTracking = () => {
   const trackEvent = useCallback(async (event: ConversionEvent) => {
     if (!trackingEnabled) return;
     try {
+      // Mirror into PostHog so the CTA funnel is queryable alongside product
+      // events; the Supabase insert below stays the system of record.
+      captureEvent(`conversion_cta_${event.eventType}`, {
+        trigger_type: event.triggerType,
+        page_path: event.pagePath || window.location.pathname,
+        engagement_score: event.engagementScore,
+      });
       const now = Date.now();
       const timeToTrigger = event.timeToTrigger ?? 
         (triggerTimes.current.has(event.triggerType) 

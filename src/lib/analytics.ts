@@ -279,6 +279,9 @@ export const initPosthog = () => {
         posthog.init(PH_KEY as string, {
           api_host: PH_HOST,
           autocapture: true,
+          // SPA route changes must emit $pageview; the legacy default only fires
+          // on full page loads, which made every <Link> navigation invisible.
+          capture_pageview: 'history_change',
           persistence: 'localStorage',
           loaded: (client) => {
             posthogClient = client as typeof posthog;
