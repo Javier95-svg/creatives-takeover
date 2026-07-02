@@ -42,7 +42,7 @@ const StickyMobileCTA = () => {
                 setAttribution('sticky_mobile_demo_try', location.pathname);
               }}
             >
-              <span>Build a live demo — free</span>
+              <span>Build your live demo</span>
               <ArrowRight className="ml-2 w-5 h-5" />
             </Link>
           </Button>

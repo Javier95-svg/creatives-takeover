@@ -1,4 +1,4 @@
-import { BarChart3, Boxes, FlaskConical, Target, type LucideIcon } from 'lucide-react';
+import { BarChart3, Boxes, FlaskConical, type LucideIcon } from 'lucide-react';
 
 export interface FreeToolNavItem {
   label: string;
@@ -9,15 +9,9 @@ export interface FreeToolNavItem {
   analyticsTool: string;
 }
 
+// ICP Builder is intentionally not listed here: it's the hero's "Still an idea?"
+// CTA, and duplicating it in this menu would compete with that path.
 export const FREE_TOOLS_NAV_ITEMS: FreeToolNavItem[] = [
-  {
-    label: 'ICP Builder',
-    name: 'ICP Builder',
-    href: '/icp-builder',
-    icon: Target,
-    description: 'Draft your ideal customer profile in ~10 minutes.',
-    analyticsTool: 'icp_builder',
-  },
   {
     label: 'Pitch Deck Analyzer',
     name: 'Pitch Deck Analyzer',
