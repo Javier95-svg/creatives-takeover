@@ -256,7 +256,7 @@ const Navigation = () => {
   const navItems = [
     { name: "Home", href: "/", tooltip: "Return to homepage", icon: Home },
     { name: "BizMap AI", href: "/bizmap-ai", tooltip: "Validate, build, and launch with guided startup tools", icon: Bot },
-    { name: "Community", href: "/mentorship", tooltip: "Mentors, angel investors, and co-founder matchmaking", icon: UsersIcon },
+    { name: "Network", href: "/mentorship", tooltip: "Mentors, angel investors, and co-founder matchmaking", icon: UsersIcon },
     { name: "Insighta", href: "/insighta", tooltip: "Funding opportunities and investment resources", icon: TrendingUp },
     { name: "Podcast", href: "/podcast", tooltip: "Founders Unleashed — founder conversations", icon: Mic },
     { name: "Newspaper", href: "/newspaper", tooltip: "Business cases & founder stories", icon: FileText },
