@@ -71,7 +71,7 @@ const Navigation = () => {
     "Home": Home,
     "BizMap AI": Bot,
     "Insighta": TrendingUp,
-    "Community": UsersIcon,
+    "Network": UsersIcon,
     "Podcast": Mic,
     "Newspaper": FileText,
     "Pricing": DollarSign,
@@ -322,7 +322,7 @@ const Navigation = () => {
                   submenus={{
                     'BizMap AI': bizMapSubmenu,
                     Insighta: insightaSubmenu,
-                    Community: communitySubmenu,
+                    Network: communitySubmenu,
                     More: resourcesSubmenu,
                   }}
                   getItemState={getMenuItemState}
@@ -515,8 +515,8 @@ const Navigation = () => {
                     );
                   }
 
-                  // Special handling for Community with dropdown
-                  if (item.name === 'Community') {
+                  // Special handling for Network with dropdown
+                  if (item.name === 'Network') {
                     return (
                       <DropdownMenu key={item.name}>
                         <Tooltip>
@@ -829,7 +829,7 @@ const Navigation = () => {
                     const submenuMap: Record<string, { items: BizMapMenuItem[] }> = {
                       'BizMap AI': { items: bizMapSubmenu.filter((s): s is SubmenuLinkItem => !('type' in s)) },
                       'Insighta': { items: insightaSubmenu },
-                      'Community': { items: communitySubmenu },
+                      'Network': { items: communitySubmenu },
                       'More': { items: resourcesSubmenu },
                     };
                     const submenu = submenuMap[item.name];
