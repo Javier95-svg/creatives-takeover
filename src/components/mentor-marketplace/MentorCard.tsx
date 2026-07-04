@@ -611,6 +611,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
                 variant="outline"
                 onClick={hasMessagingAccount ? handleSendMessage : undefined}
                 disabled={!hasMessagingAccount}
+                title={hasMessagingAccount ? 'Your first message to this mentor is free; follow-ups cost 3 credits each.' : undefined}
                 className="w-full sm:w-auto h-10 flex-1 hover:shadow-md transition-all duration-200"
               >
                 <MessageCircle className="h-4 w-4 mr-1.5" />

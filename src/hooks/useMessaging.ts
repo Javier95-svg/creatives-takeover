@@ -1808,7 +1808,13 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         senderId: user?.id
       });
 
-      const errorMessage = getUserMessage(error);
+      // The mentor-DM charge trigger raises INSUFFICIENT_CREDITS when the sender
+      // can't afford the 3-credit message; surface that specifically.
+      const rawMessage = error instanceof Error ? error.message : String(error ?? '');
+      const isCreditBlock = /INSUFFICIENT_CREDITS/i.test(rawMessage) || /Messaging a mentor costs/i.test(rawMessage);
+      const errorMessage = isCreditBlock
+        ? 'Messaging a mentor costs 3 credits and your balance is too low. Top up to keep the conversation going.'
+        : getUserMessage(error);
       const failedMessage: Message = {
         ...optimisticMessage,
         id: optimisticId,

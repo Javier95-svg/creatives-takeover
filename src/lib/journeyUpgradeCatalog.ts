@@ -67,7 +67,7 @@ export const JOURNEY_TOOL_UPGRADES: Record<string, JourneyToolUpgrade> = {
     route: "/mentorship?mentorSource=dashboard",
     stage: "identity",
     outcome: "Talk to someone who has built one before you sink weeks into the wrong plan.",
-    previewCopy: "Save a mentor, send one message, or book a discovery call - saving and messaging are free.",
+    previewCopy: "Save a mentor for free and send your first message free - follow-up messages cost 3 credits each.",
     proofCopy: "Mentor conversations are the most common first action founders take on the platform.",
     ctaCopy: "Message one mentor",
   },

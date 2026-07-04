@@ -98,7 +98,7 @@ const ACTIVATION_CARDS: ActivationCard[] = [
   {
     value: 'find_mentor',
     headline: 'Find a mentor',
-    sub: "Talk to someone who's built one — save, message, or book a call. Free.",
+    sub: "Talk to someone who's built one — your first message to any mentor is free.",
     cta: 'Open mentor matches',
     icon: Users,
     badge: 'Most founders start here',
