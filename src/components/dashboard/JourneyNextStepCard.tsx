@@ -31,7 +31,32 @@ const emptySignal: JourneyRecommendationSignal = {
   hasGtm: false,
   hasPitchDeck: false,
   investorPressure: false,
+  // undefined until loaded so the mentor recommendation never flashes for
+  // users who already have a mentor interaction.
+  hasMentorInteraction: undefined,
 };
+
+/** Any mentor interaction: saved a mentor or participates in a conversation. */
+async function hasMentorInteraction(userId: string): Promise<boolean> {
+  const { data: savedMentor, error: savedError } = await supabase
+    .from("mentor_saves")
+    .select("id")
+    .eq("user_id", userId)
+    .limit(1)
+    .maybeSingle();
+  if (!savedError && savedMentor) return true;
+
+  const { data: conversation, error: conversationError } = await supabase
+    .from("conversations")
+    .select("id")
+    .contains("participants", [userId])
+    .limit(1)
+    .maybeSingle();
+  if (conversationError) {
+    console.warn("Unable to read conversations for journey recommendation", conversationError);
+  }
+  return Boolean(conversation);
+}
 
 function getDismissKey(userId: string, recommendationId: string) {
   return `ct_journey_next_step:${userId}:${recommendationId}`;
@@ -104,6 +129,7 @@ export function JourneyNextStepCard() {
         hasTechStack,
         hasGtm,
         hasPitchDeck,
+        hasMentor,
       ] = await Promise.all([
         hasAnyRecord("icp_analysis_results", user.id, "updated_at"),
         hasAnyRecord("waitlist_pages", user.id, "updated_at"),
@@ -113,6 +139,7 @@ export function JourneyNextStepCard() {
         hasAnyRecord("tech_stack_reports", user.id, "updated_at"),
         hasAnyRecord("gtm_plans", user.id, "updated_at"),
         hasAnyRecord("pitch_deck_analyses", user.id, "created_at"),
+        hasMentorInteraction(user.id),
       ]);
 
       if (cancelled) return;
@@ -126,6 +153,7 @@ export function JourneyNextStepCard() {
         hasGtm,
         hasPitchDeck,
         investorPressure: hasPitchDeck,
+        hasMentorInteraction: hasMentor,
       });
       setLoading(false);
     })();

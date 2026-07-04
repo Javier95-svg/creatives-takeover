@@ -37,6 +37,8 @@ export interface JourneyRecommendationSignal {
   hasGtm: boolean;
   hasPitchDeck: boolean;
   investorPressure?: boolean;
+  /** Any mentor interaction: saved a mentor, started a conversation, or booked a call. */
+  hasMentorInteraction?: boolean;
 }
 
 export interface JourneyRecommendation {
@@ -59,6 +61,16 @@ export const PLAN_JOURNEY_PROMISES: Record<Plan, string> = {
 };
 
 export const JOURNEY_TOOL_UPGRADES: Record<string, JourneyToolUpgrade> = {
+  find_mentor: {
+    featureKey: "find_mentor",
+    toolName: "Mentor Marketplace",
+    route: "/mentorship?mentorSource=dashboard",
+    stage: "identity",
+    outcome: "Talk to someone who has built one before you sink weeks into the wrong plan.",
+    previewCopy: "Save a mentor, send one message, or book a discovery call - saving and messaging are free.",
+    proofCopy: "Mentor conversations are the most common first action founders take on the platform.",
+    ctaCopy: "Message one mentor",
+  },
   icp_builder: {
     featureKey: "icp_builder",
     toolName: "ICP Builder",
@@ -171,6 +183,9 @@ export function buildJourneyRecommendation(
   signal: JourneyRecommendationSignal
 ): JourneyRecommendation {
   const tool = (() => {
+    // Human layer first: a mentor conversation is the platform's most common
+    // first artifact, so it leads until the user has one.
+    if (signal.hasMentorInteraction === false) return JOURNEY_TOOL_UPGRADES.find_mentor;
     if (!signal.hasIcp) return JOURNEY_TOOL_UPGRADES.icp_builder;
     if (!signal.hasWaitlist) return JOURNEY_TOOL_UPGRADES.waitlist_maker;
     if (!signal.hasPmf) return JOURNEY_TOOL_UPGRADES.pmf_lab;

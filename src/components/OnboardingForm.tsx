@@ -71,6 +71,8 @@ interface ActivationCard {
   sub: string;
   cta: string;
   icon: LucideIcon;
+  /** Small highlight chip rendered next to the headline (e.g. the default path). */
+  badge?: string;
 }
 
 // Each primary blocker seeds the mentor-expertise areas used for matching, so we
@@ -90,7 +92,17 @@ function deriveSupportAreas(blocker?: FounderBlocker): string[] {
   return Array.from(new Set(BLOCKER_TO_SUPPORT_AREAS[blocker] ?? []));
 }
 
+// Mentor-first on purpose: mentorship actions are the most common first
+// artifact in the data, so the human path leads and the tools follow.
 const ACTIVATION_CARDS: ActivationCard[] = [
+  {
+    value: 'find_mentor',
+    headline: 'Find a mentor',
+    sub: "Talk to someone who's built one — save, message, or book a call. Free.",
+    cta: 'Open mentor matches',
+    icon: Users,
+    badge: 'Most founders start here',
+  },
   {
     value: 'build_demo',
     headline: 'Build demo and pitch video',
@@ -111,13 +123,6 @@ const ACTIVATION_CARDS: ActivationCard[] = [
     sub: 'Score one idea and choose the next concrete move.',
     cta: 'Start Decision Sprint',
     icon: Zap,
-  },
-  {
-    value: 'find_mentor',
-    headline: 'Find a mentor',
-    sub: 'Start with one mentor worth saving, messaging, or booking.',
-    cta: 'Open mentor matches',
-    icon: Users,
   },
 ];
 
@@ -773,7 +778,14 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                 <Icon className="h-5 w-5" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block font-space-grotesk text-base font-semibold">{card.headline}</span>
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="font-space-grotesk text-base font-semibold">{card.headline}</span>
+                  {card.badge ? (
+                    <span className="rounded-full bg-accent-teal/15 px-2 py-0.5 text-xs font-semibold text-accent-teal">
+                      {card.badge}
+                    </span>
+                  ) : null}
+                </span>
                 <span className="mt-1 block text-sm leading-6 text-muted-foreground">{card.sub}</span>
                 {isSelected && selectedRoute ? (
                   <span className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-accent-teal">
