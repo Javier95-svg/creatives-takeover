@@ -495,21 +495,30 @@ Provide a comprehensive market validation analysis.`
             }
           }
         }],
-        tool_choice: { type: 'function', function: { name: 'validate_market' } }
+        tool_choice: { type: 'function', function: { name: 'validate_market' } },
+        // gemini-2.5-flash is a reasoning model: without an explicit output
+        // budget it spends the default allotment on reasoning tokens and returns
+        // an empty tool_calls array, which was failing this call 100% of the
+        // time. The validate_market schema is large, so give it ample room.
+        max_tokens: 4000
       }),
     });
 
     if (!aiResponse.ok) {
       const error = await aiResponse.text();
       console.error('AI API error:', error);
-      throw new Error(`AI API error: ${aiResponse.status}`);
+      throw new Error(`AI API error: ${aiResponse.status} ${error?.slice(0, 300) ?? ''}`);
     }
 
     const aiData = await aiResponse.json();
     const toolCall = aiData.choices[0]?.message?.tool_calls?.[0];
-    
+
     if (!toolCall) {
-      throw new Error('No validation data returned from AI');
+      // Capture WHY there's no tool call (finish_reason/content) so any future
+      // failure records the real reason instead of a generic message.
+      const finishReason = aiData?.choices?.[0]?.finish_reason ?? 'unknown';
+      const snippet = (aiData?.choices?.[0]?.message?.content ?? '').toString().slice(0, 300);
+      throw new Error(`No validation data returned from AI (finish_reason=${finishReason}) ${snippet}`);
     }
 
     const validationData = JSON.parse(toolCall.function.arguments);
