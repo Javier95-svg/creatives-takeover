@@ -124,12 +124,31 @@ serve(async (req) => {
       }
     }
 
+    // First-score gift: every account's first evidence score is free, so
+    // idea-stage founders meet the tool's value before any credit charge.
+    // Atomic insert makes the claim race-safe (same table the Tech Stack
+    // first-build gift uses; server-side because the charge is server-side).
+    let isFirstScoreGift = false;
+    if (!isFreeReScore) {
+      const { data: gift, error: giftError } = await supabase
+        .from('feature_gifts' as any)
+        .insert({ user_id: user.id, feature: 'PMF_SCORING' } as any)
+        .select('user_id')
+        .maybeSingle();
+      if (giftError) {
+        // Conflict (already claimed) or any other failure: charge normally.
+        isFirstScoreGift = false;
+      } else {
+        isFirstScoreGift = Boolean(gift);
+      }
+    }
+
     const creditCost = CREDIT_COSTS.PMF_SCORING;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let creditResult: any = { success: true };
     let chargedCredits = 0;
 
-    if (!isFreeReScore) {
+    if (!isFreeReScore && !isFirstScoreGift) {
       const idempotencyKey = await resolveCreditIdempotencyKey(req, {
         userId: user.id,
         feature: 'PMF_SCORING',
@@ -550,6 +569,7 @@ Apply the scoring rubric to this evidence and return the PMF readiness JSON. Mak
         analysisId,
         creditsUsed: chargedCredits,
         newBalance: creditResult.newBalance,
+        giftUsed: isFirstScoreGift,
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -558,6 +578,14 @@ Apply the scoring rubric to this evidence and return the PMF readiness JSON. Mak
       const err = aiError instanceof Error ? aiError : new Error(String(aiError));
       if (chargedCredits > 0) {
         await refundCredits(user.id, chargedCredits, 'PMF Evidence Analysis', 'Refund: AI processing failed', { error: err.message });
+      }
+      // A failed run must not consume the free first score.
+      if (isFirstScoreGift) {
+        await supabase
+          .from('feature_gifts' as any)
+          .delete()
+          .eq('user_id', user.id)
+          .eq('feature', 'PMF_SCORING');
       }
       throw aiError;
     }

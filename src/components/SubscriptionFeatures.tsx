@@ -38,8 +38,8 @@ const creditBreakdown: {
     },
     {
       name: "Product-Market Fit Lab",
-      description: `Preview only on Rookie. Starter, Rising, and Pro unlock PMF analysis at ${CREDIT_COSTS.PMF_ANALYSIS} credits per full analysis and ${CREDIT_COSTS.PMF_SCORING} credits per evidence score.`,
-      badge: "Unlocked on Starter+",
+      description: `Included on every plan. Your first evidence score is free; after that each score costs ${CREDIT_COSTS.PMF_SCORING} credits. Re-scores of an existing analysis are always free.`,
+      badge: "First score free",
       badgeVariant: "outline",
       badgeClassName: "bg-info-subtle dark:bg-info/30",
     },
@@ -52,8 +52,8 @@ const creditBreakdown: {
     },
     {
       name: "Tech Stack Builder",
-      description: `Preview only on Rookie and Starter. Rising and Pro unlock it at ${CREDIT_COSTS.TECH_STACK_GENERATION} credits per generation.`,
-      badge: "Unlocked on Rising+",
+      description: `Included on every plan. Your first build is free; after that each generation costs ${CREDIT_COSTS.TECH_STACK_GENERATION} credits.`,
+      badge: "First build free",
       badgeVariant: "outline",
       badgeClassName: "bg-info-subtle dark:bg-info/30",
     },

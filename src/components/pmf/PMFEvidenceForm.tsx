@@ -950,6 +950,9 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
             )}
 
             <div className="space-y-3 pt-2">
+              <p className="text-sm font-medium text-success">
+                Your first evidence score is free — no credits needed.
+              </p>
               <CreditCostNotice feature="PMF_SCORING" featureName="PMF Evidence Score" />
               <div className="flex gap-3">
                 <Button type="button" variant="outline" onClick={goBack} className="gap-2">

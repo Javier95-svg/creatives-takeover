@@ -287,11 +287,22 @@ export function usePMFLab() {
     lastContextRef.current = options?.businessContext ?? lastContextRef.current;
 
     // Re-scores are free (Section C) — only the initial analysis charges credits.
+    // The first-ever score is also free (server-side feature_gifts claim), so
+    // skip the client credit gate until the gift has been used.
     const isReScore = Boolean(options?.previousAnalysisId);
     let credits: number | null = 0;
     if (!isReScore) {
-      credits = ensureCredits('PMF_SCORING');
-      if (credits === null) return;
+      const { data: gift } = await supabase
+        .from('feature_gifts' as never)
+        .select('claimed_at')
+        .eq('user_id', user.id)
+        .eq('feature', 'PMF_SCORING')
+        .maybeSingle();
+      const firstScoreFree = !gift;
+      if (!firstScoreFree) {
+        credits = ensureCredits('PMF_SCORING');
+        if (credits === null) return;
+      }
     }
 
     captureEvent('pmf_analysis_started', {

@@ -305,8 +305,11 @@ export const VC_VIEW_LIMITS = {
 export const TIER_USAGE_LIMITS = {
   rookie: {
     bizmap_conversations: 10,
-    tech_stack_generations: 0,
-    pmf_analyses: 0,
+    // Aligned with planPermissions: both tools are credit-metered on every
+    // plan with a free first run via feature_gifts (these limits were dead
+    // code that contradicted the real gates).
+    tech_stack_generations: -1,
+    pmf_analyses: -1,
     icp_analyses: -1,          // Free for all users
     insighta_tests: -1,        // Free for all users
     investor_matches: 0,       // Not available
@@ -320,7 +323,7 @@ export const TIER_USAGE_LIMITS = {
   },
   starter: {
     bizmap_conversations: -1,
-    tech_stack_generations: 0,
+    tech_stack_generations: -1,
     pmf_analyses: -1,
     icp_analyses: -1,
     insighta_tests: -1,
@@ -381,7 +384,7 @@ export const TIER_DETAILS = {
     price: 9,
     credits: 100,
     vcViewLimit: 2,
-    description: 'Unlock PMF Lab, Email Templates, and limited investor profile views',
+    description: 'Double your monthly credits, unlock Email Templates, and get limited investor profile views',
   },
   rising: {
     name: 'Rising',
