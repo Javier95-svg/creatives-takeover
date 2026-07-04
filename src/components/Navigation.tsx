@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, Bot, BookOpen, TrendingUp, Users as UsersIcon, FileText, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, Boxes, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles, Mic, Lock } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, BookOpen, Users as UsersIcon, FileText, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, Boxes, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles, Mic, Lock, Compass, Telescope } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -69,8 +69,8 @@ const Navigation = () => {
   // Icon mapping for navigation items
   const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
     "Home": Home,
-    "BizMap AI": Bot,
-    "Insighta": TrendingUp,
+    "BizMap AI": Compass,
+    "Insighta": Telescope,
     "Network": UsersIcon,
     "Podcast": Mic,
     "Newspaper": FileText,
@@ -255,9 +255,9 @@ const Navigation = () => {
 
   const navItems = [
     { name: "Home", href: "/", tooltip: "Return to homepage", icon: Home },
-    { name: "BizMap AI", href: "/bizmap-ai", tooltip: "Validate, build, and launch with guided startup tools", icon: Bot },
+    { name: "BizMap AI", href: "/bizmap-ai", tooltip: "Validate, build, and launch with guided startup tools", icon: Compass },
     { name: "Network", href: "/mentorship", tooltip: "Mentors, angel investors, and co-founder matchmaking", icon: UsersIcon },
-    { name: "Insighta", href: "/insighta", tooltip: "Funding opportunities and investment resources", icon: TrendingUp },
+    { name: "Insighta", href: "/insighta", tooltip: "Funding opportunities and investment resources", icon: Telescope },
     { name: "Podcast", href: "/podcast", tooltip: "Founders Unleashed — founder conversations", icon: Mic },
     { name: "Newspaper", href: "/newspaper", tooltip: "Business cases & founder stories", icon: FileText },
     { name: "Pricing", href: "/pricing", tooltip: "View plans and pricing options", icon: DollarSign }
