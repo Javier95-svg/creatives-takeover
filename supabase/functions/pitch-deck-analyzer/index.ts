@@ -306,7 +306,7 @@ async function handleFree(req: Request, body: AnalyzeRequest): Promise<Response>
   }
 }
 
-// ---- Deep (authenticated): every analysis is credit-metered ------------------
+// ---- Deep (authenticated): first analysis free (gift), then credit-metered ---
 async function handleDeep(req: Request, body: AnalyzeRequest): Promise<Response> {
   if (!body.storagePath) return json({ error: "storagePath is required" }, 400);
 
@@ -319,23 +319,41 @@ async function handleDeep(req: Request, body: AnalyzeRequest): Promise<Response>
 
   const cost = CREDIT_COSTS.PITCH_DECK_ANALYZER;
 
+  // First signed-in analysis is free: race-safe one-time claim in feature_gifts
+  // (same pattern as the PMF first-score gift). Failures fall through to a
+  // normal charge, and the claim is released if the analysis itself fails.
+  let isFirstAnalysisGift = false;
+  {
+    const { data: gift, error: giftError } = await admin
+      .from("feature_gifts")
+      .insert({ user_id: user.id, feature: "PITCH_DECK_ANALYZER" })
+      .select("user_id")
+      .maybeSingle();
+    isFirstAnalysisGift = !giftError && Boolean(gift);
+  }
+
   const idempotencyKey = await resolveCreditIdempotencyKey(req, {
     userId: user.id,
     feature: "Pitch Deck Analyzer",
     requestFingerprint: { storagePath: body.storagePath, fileName: body.fileName },
   });
 
-  const creditResult = await checkAndDeductCredits(user.id, cost, "Pitch Deck Analyzer", undefined, {
-    idempotencyKey,
-    entitlementFeature: "PITCH_DECK_ANALYZER",
-  });
-  if (!creditResult.success) {
-    return json(
-      { error: creditResult.error || "Insufficient credits", creditError: true, errorCode: creditResult.errorCode, requiredCredits: cost },
-      creditResult.errorCode === "INSUFFICIENT_CREDITS" ? 402 : 400,
-    );
+  let creditResult: Awaited<ReturnType<typeof checkAndDeductCredits>> = { success: true } as never;
+  if (!isFirstAnalysisGift) {
+    creditResult = await checkAndDeductCredits(user.id, cost, "Pitch Deck Analyzer", undefined, {
+      idempotencyKey,
+      entitlementFeature: "PITCH_DECK_ANALYZER",
+    });
+    if (!creditResult.success) {
+      return json(
+        { error: creditResult.error || "Insufficient credits", creditError: true, errorCode: creditResult.errorCode, requiredCredits: cost },
+        creditResult.errorCode === "INSUFFICIENT_CREDITS" ? 402 : 400,
+      );
+    }
   }
-  const chargedCredits = (creditResult.usedFromQuota ?? 0) + (creditResult.usedFromBalance ?? 0);
+  const chargedCredits = isFirstAnalysisGift
+    ? 0
+    : (creditResult.usedFromQuota ?? 0) + (creditResult.usedFromBalance ?? 0);
 
   try {
     const { data: fileData, error: dlErr } = await admin.storage.from(UPLOAD_BUCKET).download(body.storagePath);
@@ -357,13 +375,21 @@ async function handleDeep(req: Request, body: AnalyzeRequest): Promise<Response>
       operationId: idempotencyKey,
     });
 
-    return json({ success: true, ...result, creditsUsed: chargedCredits });
+    return json({ success: true, ...result, creditsUsed: chargedCredits, giftUsed: isFirstAnalysisGift });
   } catch (err) {
     console.error("pitch-deck deep analysis failed:", err instanceof Error ? err.message : err);
     if (chargedCredits > 0) {
       await refundCredits(user.id, chargedCredits, "Pitch Deck Analyzer", "Refund: analysis failed", {
         error: err instanceof Error ? err.message : String(err),
       });
+    }
+    // A failed run must not consume the free first analysis.
+    if (isFirstAnalysisGift) {
+      await admin
+        .from("feature_gifts")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("feature", "PITCH_DECK_ANALYZER");
     }
     const status = (err as { status?: number })?.status ?? 500;
     return json({ error: "We couldn't analyze your deck just now. Please try again.", errorCode: "ANALYSIS_FAILED" }, status === 429 ? 429 : 500);

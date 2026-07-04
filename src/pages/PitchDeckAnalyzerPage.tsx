@@ -109,7 +109,7 @@ export default function PitchDeckAnalyzerPage() {
     }
   };
 
-  // Authenticated: every analysis is credit-metered (10 credits).
+  // Authenticated: first full analysis is free (feature gift), then 10 credits each.
   const handleStartAssessment = async () => {
     if (!selectedFile) return;
     await analyzePitchDeck(selectedFile);
@@ -346,8 +346,8 @@ export default function PitchDeckAnalyzerPage() {
                   <div className="text-center max-w-2xl mx-auto">
                     <h2 className="text-2xl font-bold mb-2">You've used your free analysis</h2>
                     <p className="text-muted-foreground">
-                      Create a free account to analyze more decks, 10 credits each, and keep every
-                      analysis saved.
+                      Create a free account and your first full analysis is on us — with every
+                      analysis saved to your account.
                     </p>
                   </div>
                   <PitchDeckUnlockGate returnPath={RETURN_PATH} />
@@ -396,7 +396,10 @@ export default function PitchDeckAnalyzerPage() {
                         <Sparkles className="h-5 w-5 mr-2" />
                         Analyze Deck
                       </Button>
-                      <p className="text-xs text-muted-foreground">Costs 10 credits. Refunded automatically if the analysis fails.</p>
+                      <p className="text-xs text-muted-foreground">
+                        Your first full analysis is free — no credits needed. After that, 10 credits
+                        each, refunded automatically if the analysis fails.
+                      </p>
                     </div>
                   )}
 
