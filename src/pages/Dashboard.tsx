@@ -9,6 +9,7 @@ import EnablePushCard from '@/components/dashboard/EnablePushCard';
 import DashboardTour from '@/components/dashboard/DashboardTour';
 import FirstRunCard from '@/components/dashboard/FirstRunCard';
 import ContinueArtifactCard from '@/components/dashboard/ContinueArtifactCard';
+import LiveWaitlistCard from '@/components/dashboard/LiveWaitlistCard';
 import { FirstResultActivationCard } from '@/components/dashboard/FirstResultActivationCard';
 import JourneyNextStepCard from '@/components/dashboard/JourneyNextStepCard';
 import StarterDashboardNudge from '@/components/dashboard/StarterDashboardNudge';
@@ -187,6 +188,7 @@ const Dashboard = () => {
           artifactType={activationState.firstArtifactType}
         />
       ) : null}
+      <LiveWaitlistCard />
       {/* Accountability first: today's tasks, deadlines, streak, progress. */}
       <EnablePushCard />
       <DashboardTodayCockpit />

@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { SortableList } from '@/components/ui/sortable-list';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { AlertTriangle, Check, Copy, Download, Eye, FileText, Globe, Info, Loader2, Lock, Mail, Monitor, MonitorSmartphone, Plus, Save, ShieldCheck, Sparkles, Trash2, Unlock, Users } from 'lucide-react';
+import { AlertTriangle, Check, Code2, Copy, Download, Eye, FileText, Globe, Info, Linkedin, Loader2, Lock, Mail, Monitor, MonitorSmartphone, Plus, Save, Share2, ShieldCheck, Sparkles, Trash2, Unlock, Users } from 'lucide-react';
 import WaitlistPageTemplate, { WaitlistContent } from './WaitlistPageTemplate';
 import { WAITLIST_ACCENT_PRESETS, WAITLIST_FONT_PRESETS, WAITLIST_SECTION_ORDER, createWaitlistFieldId, getDefaultWaitlistContent, getWaitlistThemePalette, normalizeWaitlistContent, type WaitlistSectionId } from '@/lib/waitlist';
 import {
@@ -934,6 +934,22 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
       return;
     }
     void navigator.clipboard.writeText(liveUrl).then(() => toast.success('Public link copied.'));
+  };
+
+  // Share text for social intents: best Launch Kit headline when generated,
+  // else the page's own headline, else a plain default.
+  const shareText =
+    launchKit?.output?.headlines?.[0]?.headline?.trim() ||
+    content.headline?.trim() ||
+    'Join the waitlist for what I am building';
+
+  const copyEmbedCode = () => {
+    if (status !== 'published' || !liveUrl) {
+      toast.info('Publish your page first to copy the embed code.');
+      return;
+    }
+    const embed = `<iframe src="${liveUrl}" width="100%" height="720" style="border:0;border-radius:12px;" title="${(content.headline || 'Waitlist').replace(/"/g, '&quot;')}"></iframe>`;
+    void navigator.clipboard.writeText(embed).then(() => toast.success('Embed code copied — paste it into any site.'));
   };
 
   const handleRefineWithAi = async () => {
@@ -2080,13 +2096,37 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                   </div>
 
                   {status === 'published' && liveUrl ? (
-                    <div className="rounded-md border p-3 text-sm space-y-2">
-                      <p className="text-xs text-muted-foreground dark:text-muted-foreground">Live public URL</p>
+                    <div className="rounded-md border p-3 text-sm space-y-3">
+                      <p className="text-xs text-muted-foreground dark:text-muted-foreground">🎉 Your page is live</p>
                       <p className="font-mono text-xs break-all">{liveUrl}</p>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <Button size="sm" variant="outline" className={actionButtonClass} onClick={copyUrl}><Copy className="w-4 h-4 mr-1" />Copy</Button>
                         <Button size="sm" className={primaryButtonClass} asChild><a href={liveUrl} target="_blank" rel="noreferrer"><Eye className="w-4 h-4 mr-1" />Open</a></Button>
+                        <Button size="sm" variant="outline" className={actionButtonClass} asChild>
+                          <a
+                            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${shareText}\n\n${liveUrl}`)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            <Share2 className="w-4 h-4 mr-1" />Share on X
+                          </a>
+                        </Button>
+                        <Button size="sm" variant="outline" className={actionButtonClass} asChild>
+                          <a
+                            href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(liveUrl)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            <Linkedin className="w-4 h-4 mr-1" />LinkedIn
+                          </a>
+                        </Button>
+                        <Button size="sm" variant="outline" className={actionButtonClass} onClick={copyEmbedCode}>
+                          <Code2 className="w-4 h-4 mr-1" />Copy embed
+                        </Button>
                       </div>
+                      <p className="text-xs text-muted-foreground dark:text-muted-foreground">
+                        Need launch copy? The Launch Kit tab has ready-made headlines, emails, and a referral hook.
+                      </p>
                     </div>
                   ) : (
                     <div className="rounded-md border border-dashed border-border/60 bg-muted p-3 text-xs text-muted-foreground space-y-1 dark:border-white/15 dark:bg-white/5 dark:text-muted-foreground">
