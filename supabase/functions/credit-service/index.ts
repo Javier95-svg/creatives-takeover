@@ -420,18 +420,53 @@ serve(withErrorBoundary(async function handler(req: Request) {
 
           const amount = Number(params.amount || 0);
           const reason = (params.reason as string) || 'Credit purchase';
+
+          // SECURITY: this authenticated client action previously accepted an
+          // arbitrary `amount`, letting any signed-in user mint themselves
+          // unlimited credits by calling the endpoint directly. Real purchases
+          // are granted server-side by the Stripe webhook (service role), never
+          // here. The only legitimate client grant is the one-time feedback
+          // survey bonus, so allow ONLY that, capped, and claimed once.
+          const FEEDBACK_BONUS_REASON = 'Feedback survey completion bonus';
+          const FEEDBACK_BONUS_MAX = 5;
+          if (reason !== FEEDBACK_BONUS_REASON || !Number.isFinite(amount) || amount <= 0 || amount > FEEDBACK_BONUS_MAX) {
+            logWarn('credit-service:addCredits_rejected', { userId: effectiveUserId, amount, reason });
+            return new Response(JSON.stringify({ error: 'Credit grants are not permitted through this endpoint.' }), {
+              status: 403,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          // One-time claim so the bonus cannot be replayed for repeated grants.
+          const bonusAdmin = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+          const { data: bonusClaim } = await bonusAdmin
+            .from('feature_gifts')
+            .insert({ user_id: effectiveUserId!, feature: 'FEEDBACK_SURVEY_BONUS' })
+            .select('user_id')
+            .maybeSingle();
+          if (!bonusClaim) {
+            return new Response(JSON.stringify({ success: true, alreadyClaimed: true }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
           const result = await creditService.addCredits({
             user_id: effectiveUserId!,
             amount,
-            tx_type: 'purchase',
+            tx_type: 'grant',
             reason,
-            feature: (params.feature as string) || 'Credit Purchase',
+            feature: 'Feedback Survey Bonus',
             session_id: params.session_id as string | undefined,
             metadata: {
               ...(params.metadata as Record<string, unknown> | undefined),
               idempotencyKey,
             },
           });
+          if (!result.success) {
+            // Grant failed after the claim — release it so the user can retry.
+            await bonusAdmin.from('feature_gifts').delete()
+              .eq('user_id', effectiveUserId!).eq('feature', 'FEEDBACK_SURVEY_BONUS');
+          }
 
           return new Response(JSON.stringify(result), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
