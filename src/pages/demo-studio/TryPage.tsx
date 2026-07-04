@@ -17,8 +17,11 @@ import {
   createStep,
   deleteProject,
   generateDemoStudioDraftStoryboard,
+  publishDemo,
   uploadStepAsset,
 } from '@/lib/demoStudio/api';
+import { useSubscription } from '@/hooks/useSubscription';
+import { normalizePlan } from '@/config/planPermissions';
 import { trackDemoEvent } from '@/lib/demoStudio/events';
 import {
   clearTryDraft,
@@ -68,6 +71,7 @@ interface HydrateStep {
 
 export default function TryPage() {
   const { user, loading: authLoading } = useAuth();
+  const { subscriptionData } = useSubscription();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isReturning = searchParams.get('hydrate') === '1';
@@ -206,9 +210,11 @@ export default function TryPage() {
     built: DemoStepWithHotspots[];
     runId: number;
     fallback: boolean;
+    fallbackReason?: string | null;
     mode: TryInputMode;
   }) => {
     const { built, runId, fallback, mode } = args;
+    const fallbackReason = args.fallbackReason ?? (fallback ? 'client_fallback' : null);
     setSteps(built);
     setError(null);
     setUsedPlaceholders(mode === 'no_assets');
@@ -217,6 +223,7 @@ export default function TryPage() {
       source: 'demo_try',
       step_count: built.length,
       fallback,
+      fallback_reason: fallbackReason,
       input_mode: mode,
       is_authenticated: Boolean(user),
     });
@@ -272,14 +279,14 @@ export default function TryPage() {
     }
     try {
       const stepCount: DemoStudioTryStepCount = isNoAssets ? 3 : normalizeTryStepCount(shots.length);
-      const storyboard = await generateDemoStudioDraftStoryboard({
+      const draftResult = await generateDemoStudioDraftStoryboard({
         contextUrl,
         description: isNoAssets ? trimmedDescription : undefined,
         stepCount,
       });
       // Ignore the response if the user started over or left during generation.
       if (runId !== runIdRef.current) return;
-      const usableStoryboard = getUsableTryStoryboard(storyboard, { contextUrl, stepCount });
+      const usableStoryboard = getUsableTryStoryboard(draftResult.steps, { contextUrl, stepCount });
       const activeShots = isNoAssets ? await createPlaceholderShots(usableStoryboard) : shots;
       if (runId !== runIdRef.current) return;
       const built = buildTryPreviewSteps({ shots: activeShots, storyboard: usableStoryboard });
@@ -290,7 +297,13 @@ export default function TryPage() {
             : "We couldn't turn those screenshots into a demo. Try again in a moment.",
         );
       }
-      finalizeGeneratedSteps({ built, runId, fallback: storyboard.length < stepCount, mode });
+      finalizeGeneratedSteps({
+        built,
+        runId,
+        fallback: Boolean(draftResult.fallbackReason) || draftResult.steps.length < stepCount,
+        fallbackReason: draftResult.fallbackReason,
+        mode,
+      });
     } catch (e) {
       if (runId !== runIdRef.current) return; // stale failure from a superseded run
       const message = e instanceof Error ? e.message : 'Could not generate your demo preview.';
@@ -478,16 +491,38 @@ export default function TryPage() {
           demoId: demo.id,
           meta: { source: 'demo_try', step_count: position },
         });
+        // Publish immediately so the reward for converting is a shareable link,
+        // not another form. Best-effort: the free-tier publish cap or any error
+        // falls back to the original brief-page handoff.
+        let published = false;
+        if (position > 0) {
+          try {
+            const publishedDemo = await publishDemo(demo.id, {
+              ownerId: user.id,
+              ownerPlan: normalizePlan(subscriptionData?.subscription_tier),
+            });
+            published = Boolean(publishedDemo.public_id);
+          } catch {
+            published = false;
+          }
+        }
         await markFirstArtifactCreated({
           userId: user.id,
           artifactType: 'demo_studio_draft',
           artifactId: demo.id,
           label: `${name} demo`,
-          resumeUrl: `/demo-studio/projects/${project.id}/brief`,
+          resumeUrl: published
+            ? `/demo-studio/projects/${project.id}`
+            : `/demo-studio/projects/${project.id}/brief`,
           source: 'demo_try',
         });
         clearTryDraft();
-        navigate(`/demo-studio/projects/${project.id}/brief`, { replace: true });
+        if (published) {
+          toast.success('Your demo is live — grab your share link below.');
+          navigate(`/demo-studio/projects/${project.id}`, { replace: true });
+        } else {
+          navigate(`/demo-studio/projects/${project.id}/brief`, { replace: true });
+        }
       } catch (err) {
         // Roll back the partial project so a failed save never leaves an orphaned
         // (or, on retry, duplicated) project. FK cascade removes demo/steps/hotspots.
@@ -497,7 +532,7 @@ export default function TryPage() {
         hydratingRef.current = false;
       }
     },
-    [navigate, user],
+    [navigate, subscriptionData?.subscription_tier, user],
   );
 
   // Primary CTA on the result view.

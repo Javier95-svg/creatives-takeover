@@ -55,6 +55,17 @@ const forbiddenCopyTerms = [
   "synergy",
 ];
 
+// Explicit placeholder forms only. The previous pattern included `\[.*?\]`,
+// which rejected ANY bracketed text (e.g. "[2024]") and threw away otherwise
+// good generations — a major source of template fallbacks on the draft path.
+const placeholderCopyPattern = /\{\{|\[\s*(your|insert|company|product|name|placeholder|tbd|xx?x?|n)\b/i;
+
+function isCleanCopy(text: string): boolean {
+  if (placeholderCopyPattern.test(text)) return false;
+  const lower = text.toLowerCase();
+  return !forbiddenCopyTerms.some((term) => lower.includes(term));
+}
+
 function cleanString(value: unknown, max = 300): string {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
@@ -149,7 +160,7 @@ function validateKitOutput(kit: any, mode: Mode, options: KitValidationOptions =
   }
 
   walkStrings(kit, (text, path) => {
-    if (/\{\{|\[YOUR|\[INSERT|\[.*?\]/i.test(text)) errors.push(`${path} contains placeholder copy`);
+    if (placeholderCopyPattern.test(text)) errors.push(`${path} contains placeholder copy`);
     const lower = text.toLowerCase();
     if (forbiddenCopyTerms.some((term) => lower.includes(term))) errors.push(`${path} contains forbidden term`);
   });
@@ -226,7 +237,7 @@ async function generateKit(
   openaiApiKey: string,
   body: DemoStudioGeneratorRequest,
   mode: Mode,
-  options: KitValidationOptions & { timeoutMs?: number } = {},
+  options: KitValidationOptions & { timeoutMs?: number; skipValidation?: boolean } = {},
 ) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? 30000);
@@ -265,9 +276,11 @@ async function generateKit(
   const content = data?.choices?.[0]?.message?.content;
   if (!content) throw Object.assign(new Error("No content returned from model"), { status: 502 });
   const parsed = JSON.parse(content);
-  const validationErrors = validateKitOutput(parsed, mode, options);
-  if (validationErrors.length) {
-    throw Object.assign(new Error(`Demo Studio validation failed: ${validationErrors.join("; ")}`), { status: 422 });
+  if (!options.skipValidation) {
+    const validationErrors = validateKitOutput(parsed, mode, options);
+    if (validationErrors.length) {
+      throw Object.assign(new Error(`Demo Studio validation failed: ${validationErrors.join("; ")}`), { status: 422 });
+    }
   }
   return parsed;
 }
@@ -316,6 +329,32 @@ function buildDraftFallbackStoryboard(body: DemoStudioGeneratorRequest, stepCoun
   ];
 }
 
+/**
+ * Draft-only leniency: salvage whatever usable copy the model produced instead
+ * of discarding the whole kit on a validation nit. Each field falls back
+ * individually to the hard-coded storyboard, and the step count is forced to
+ * exactly stepCount — so the visitor always gets the best available captions.
+ */
+function sanitizeDraftStoryboard(kit: any, body: DemoStudioGeneratorRequest, stepCount: 2 | 3) {
+  const fallback = buildDraftFallbackStoryboard(body, stepCount);
+  const aiSteps = Array.isArray(kit?.storyboard) ? kit.storyboard : [];
+  const storyboard = fallback.map((fallbackStep, index) => {
+    const ai = aiSteps[index] ?? {};
+    const pick = (value: unknown, max: number, fb: string) => {
+      const text = cleanString(value, max);
+      return text && isCleanCopy(text) ? text : fb;
+    };
+    return {
+      title: pick(ai.title, 80, fallbackStep.title),
+      caption: pick(ai.caption, 220, fallbackStep.caption),
+      speaker_notes: pick(ai.speaker_notes, 700, fallbackStep.speaker_notes),
+      hotspot_label: pick(ai.hotspot_label, 80, fallbackStep.hotspot_label),
+      suggested_action: ["next", "goto", "url"].includes(ai?.suggested_action) ? ai.suggested_action : "next",
+    };
+  });
+  return { storyboard };
+}
+
 function draftSuccessResponse(body: DemoStudioGeneratorRequest, stepCount: 2 | 3, fallbackReason?: string): Response {
   return new Response(JSON.stringify({
     success: true,
@@ -333,7 +372,8 @@ function draftSuccessResponse(body: DemoStudioGeneratorRequest, stepCount: 2 | 3
  * no DB write of any demo content — storyboard captions are generated and
  * returned to the browser only. Abuse is bounded by a per-IP rate limit that
  * reuses the shared assert_rate_limit RPC (its api_rate_limits counter is the
- * sole write). Output still passes the same quality validation as the paid path.
+ * sole write). Unlike the paid path, output is sanitized per-field rather than
+ * rejected wholesale, so visitors keep the AI copy that IS usable.
  */
 async function handleDraft(req: Request, body: DemoStudioGeneratorRequest): Promise<Response> {
   if (body.mode && body.mode !== "storyboard") {
@@ -388,8 +428,20 @@ async function handleDraft(req: Request, body: DemoStudioGeneratorRequest): Prom
   }
 
   try {
-    const kit = await generateKit(openaiApiKey, body, mode, { exactStoryboardSteps: stepCount, timeoutMs: 15000 });
-    return new Response(JSON.stringify({ success: true, mode, kit, draft: true }), {
+    // Draft path skips the strict 422 validation and sanitizes per-field
+    // instead — a single forbidden word must not cost the visitor the whole
+    // AI generation. 30s budget matches the working icp-draft generator.
+    const kit = await generateKit(openaiApiKey, body, mode, {
+      exactStoryboardSteps: stepCount,
+      timeoutMs: 30000,
+      skipValidation: true,
+    });
+    return new Response(JSON.stringify({
+      success: true,
+      mode,
+      kit: sanitizeDraftStoryboard(kit, body, stepCount),
+      draft: true,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (aiError) {

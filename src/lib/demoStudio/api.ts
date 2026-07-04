@@ -263,13 +263,19 @@ async function readFunctionErrorMessage(error: unknown, fallback: string): Promi
  * storyboard steps to render captions/hotspot labels client-side. A pasted URL
  * is optional context only; visuals come from the visitor's uploaded screenshots.
  */
+export interface DemoStudioDraftStoryboardResult {
+  steps: DemoStudioStoryboardStep[];
+  /** Server-reported reason when the hard-coded fallback storyboard was used. */
+  fallbackReason: string | null;
+}
+
 export async function generateDemoStudioDraftStoryboard(args: {
   contextUrl?: string;
   productName?: string;
   /** Zero-asset mode: a one-line product description standing in for screenshots. */
   description?: string;
   stepCount?: DemoStudioTryStepCount;
-}): Promise<DemoStudioStoryboardStep[]> {
+}): Promise<DemoStudioDraftStoryboardResult> {
   const trimmedUrl = args.contextUrl?.trim() || '';
   let host = '';
   if (trimmedUrl) {
@@ -301,7 +307,10 @@ export async function generateDemoStudioDraftStoryboard(args: {
   });
   if (error) throw new Error(await readFunctionErrorMessage(error, 'Could not generate your demo preview.'));
   if (!data?.success) throw new Error(data?.error || 'Could not generate your demo preview.');
-  return normalizeStoryboard(data.kit?.storyboard);
+  return {
+    steps: normalizeStoryboard(data.kit?.storyboard),
+    fallbackReason: typeof data.fallbackReason === 'string' ? data.fallbackReason : null,
+  };
 }
 
 /* -------------------------------------------------------------------------- */
