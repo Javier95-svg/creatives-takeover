@@ -780,7 +780,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
           )}
 
           {builderMode === 'build' && (
-            <div className="mb-3 flex max-w-full flex-nowrap gap-2 overflow-x-auto pb-1">
+            <div className="mb-3 grid grid-cols-4 gap-1.5">
               {[
                 {
                   label: 'Add Page',
@@ -809,10 +809,10 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                   variant="ghost"
                   size="pill-sm"
                   onClick={() => applyActionPrompt(prompt)}
-                  className="h-9 min-w-[112px] shrink-0 rounded-xl border border-info/20 bg-white/[0.06] px-3 text-xs font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-all hover:-translate-y-0.5 hover:border-info/45 hover:bg-info/15 hover:text-white hover:shadow-[0_10px_28px_rgba(56,189,248,0.14)]"
+                  className="h-8 min-w-0 rounded-lg border border-info/20 bg-white/[0.06] px-1.5 text-[10px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-all hover:border-info/45 hover:bg-info/15 hover:text-white"
                 >
-                  <Icon className="h-3.5 w-3.5 text-info" />
-                  {label}
+                  <Icon className="h-3 w-3 text-info" />
+                  <span className="min-w-0 truncate">{label}</span>
                 </Button>
               ))}
             </div>
