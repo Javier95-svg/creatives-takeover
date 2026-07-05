@@ -607,7 +607,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
               <div className="space-y-2">
                 <h2 className="text-base font-semibold text-white">Ready to build</h2>
                 <p className="text-sm leading-relaxed text-muted-foreground">
-                  Your context is already loaded — target market, pain points, and positioning pulled from your dashboard and onboarding quiz. Just describe what you want to build.
+                  Your context is already loaded. Target market, pain points, and positioning are pulled from your dashboard and onboarding quiz. Just describe what you want to build.
                 </p>
               </div>
               <div className="rounded-lg border border-info/10 bg-info/5 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
