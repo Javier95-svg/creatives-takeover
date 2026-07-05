@@ -226,7 +226,7 @@ export function classifyMVPBuilderAction(input: string, hasProject: boolean): MV
   if (/\b(add|build|create|implement)\b.*\b(feature|flow|component|wizard|form|dashboard|table|chart|modal|settings)\b/.test(normalized)) {
     return 'add_feature';
   }
-  if (/\b(redesign|design overhaul|make it beautiful|modernize|visual refresh|new look|polish the design)\b/.test(normalized)) {
+  if (/\b(redesign|design overhaul|make it beautiful|modernize|visual refresh|new look|polish the design|theme|thematic|tematic|brand|rebrand|palette|colou?r scheme|aesthetic|look and feel|skin care|skincare)\b/.test(normalized)) {
     return 'design_overhaul';
   }
   if (/\b(change|make|replace|remove|update|edit|rewrite|rename|color|headline|button|copy|spacing)\b/.test(normalized)) {
@@ -239,7 +239,52 @@ export function parseMVPBuilderOutput(raw: string): unknown {
   const trimmed = raw.trim();
   const tagged = trimmed.match(/<project-output>\s*([\s\S]*?)\s*<\/project-output>/i)?.[1];
   const jsonCandidate = tagged ?? trimmed.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
-  return JSON.parse(jsonCandidate);
+  try {
+    return JSON.parse(jsonCandidate);
+  } catch (error) {
+    const balancedJson = extractBalancedJsonObject(jsonCandidate);
+    if (balancedJson) return JSON.parse(balancedJson);
+    throw error;
+  }
+}
+
+function extractBalancedJsonObject(value: string): string | null {
+  const start = value.indexOf('{');
+  if (start < 0) return null;
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let i = start; i < value.length; i += 1) {
+    const char = value[i];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (char === '\\') {
+        escaped = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (char === '"') {
+      inString = true;
+      continue;
+    }
+    if (char === '{') {
+      depth += 1;
+      continue;
+    }
+    if (char === '}') {
+      depth -= 1;
+      if (depth === 0) return value.slice(start, i + 1);
+    }
+  }
+
+  return null;
 }
 
 export function validateMVPBuilderOutput(raw: unknown, options: { phase1Only?: boolean } = {}): MVPBuilderValidatedOutput {
@@ -268,10 +313,13 @@ export function validateMVPBuilderOutput(raw: unknown, options: { phase1Only?: b
     const rawPath = typeof item.path === 'string' ? item.path : item.filename;
     const filename = typeof rawPath === 'string' ? normalizeProjectPath(rawPath) : '';
     const content = typeof item.content === 'string' ? item.content : '';
-    const description = typeof item.description === 'string' ? item.description.trim() : '';
+    const description =
+      typeof item.description === 'string' && item.description.trim()
+        ? item.description.trim()
+        : `Project file ${filename || index + 1}.`;
 
-    if (!filename || !content.trim() || !description) {
-      throw new Error(`files[${index}] is missing filename, content, or description.`);
+    if (!filename || !content.trim()) {
+      throw new Error(`files[${index}] is missing filename or content.`);
     }
     if (filename.includes('..')) {
       throw new Error(`files[${index}] has an unsafe path.`);

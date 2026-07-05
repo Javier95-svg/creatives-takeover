@@ -205,12 +205,9 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
   }, []);
 
   useEffect(() => {
-    if (projectFramework !== 'react-vite' || isGenerating || projectFiles.length === 0) return;
-    const timer = window.setTimeout(() => {
-      void mvpWebContainerRuntime.start(projectFiles, { devCommand: 'npm run dev', port: 5173 });
-    }, 500);
-    return () => window.clearTimeout(timer);
-  }, [isGenerating, projectFiles, projectFramework, previewKey]);
+    if (projectFramework !== 'react-vite' || projectFiles.length === 0) return;
+    void mvpWebContainerRuntime.start(projectFiles, { devCommand: 'npm run dev', port: 5173 });
+  }, [projectFiles, projectFramework, previewKey]);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {

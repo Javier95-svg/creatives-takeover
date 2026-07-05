@@ -69,8 +69,8 @@ const LANDING_TEMPLATES = new Set<MVPBuilderTemplateId>([
 // JSON, or the output gets truncated mid-string -> "Unterminated string in JSON".
 const ACTION_CONFIG: Record<MVPBuilderActionType, { feature: CreditFeature; temperature: number; maxTokens: number; model: string }> = {
   generation:      { feature: "APP_BUILDER_GENERATE",        temperature: 0.45, maxTokens: 16000, model: "claude-sonnet-4-6" },
-  targeted_edit:   { feature: "APP_BUILDER_REFINE",          temperature: 0.25, maxTokens: 12000, model: "claude-haiku-4-5-20251001" },
-  debug:           { feature: "APP_BUILDER_DEBUG",           temperature: 0.15, maxTokens: 10000, model: "claude-haiku-4-5-20251001" },
+  targeted_edit:   { feature: "APP_BUILDER_REFINE",          temperature: 0.25, maxTokens: 12000, model: "claude-sonnet-4-6" },
+  debug:           { feature: "APP_BUILDER_DEBUG",           temperature: 0.15, maxTokens: 10000, model: "claude-sonnet-4-6" },
   add_page:        { feature: "APP_BUILDER_ADD_PAGE",        temperature: 0.3,  maxTokens: 16000, model: "claude-sonnet-4-6" },
   add_feature:     { feature: "APP_BUILDER_ADD_FEATURE",     temperature: 0.35, maxTokens: 16000, model: "claude-sonnet-4-6" },
   design_overhaul: { feature: "APP_BUILDER_DESIGN_OVERHAUL", temperature: 0.45, maxTokens: 16000, model: "claude-sonnet-4-6" },
@@ -115,7 +115,7 @@ Core principles:
 
 7. NO REAL BACKEND IN THIS PHASE. If the user requests auth, database, payments, or server-side logic: build a polished mocked frontend UX (simulate loading states, success states, error states in frontend state) and explain exactly what to connect in generation_notes. Never write hardcoded credentials.
 
-8. NEVER BREAK EXISTING CODE. When making targeted edits, modify only what the instruction specifies. Return the rest of each file exactly as it was. Never refactor, rename, or restructure anything not mentioned in the request.
+8. NEVER BREAK EXISTING CODE. When making edits, modify only what the instruction specifies. Return the complete contents of every file you changed. The platform merges changed files back into the existing project, so do not recreate, rename, or restructure anything not mentioned in the request.
 
 9. VISUAL QUALITY STANDARD. Every generated project must look like a polished, modern, production SaaS site — never a generic template. Non-negotiable for html_single:
    - LOAD TAILWIND FIRST: the very first element inside <head> must be <script src="https://cdn.tailwindcss.com"></script>. CRITICAL: never reference the global tailwind object and never emit a tailwind.config assignment script — it runs before the CDN initializes and throws "tailwind is not defined", which breaks the whole page. For custom brand colors, use Tailwind ARBITRARY VALUES directly in classes (e.g. bg-[#0f172a], text-[#3b82f6], from-[#6366f1] to-[#8b5cf6]) and/or CSS variables in an inline <style> block. Never use a tailwind config object.
@@ -172,7 +172,7 @@ Hard rules for the message:
   targeted_edit: `
 You are making a targeted edit to an existing project. Rules:
 1. Modify ONLY what the instruction asks. Do not touch anything else.
-2. Return ONLY the modified file(s). Do not return files that were not changed.
+2. Return ONLY the modified file(s) inside the standard JSON schema. Do not return files that were not changed.
 3. Return each modified file in its entirety — not just the changed lines.
 4. Never introduce new dependencies or change project structure unless explicitly asked.
 5. If the instruction is ambiguous, make the most reasonable interpretation and document it in generation_notes.`,
@@ -183,7 +183,7 @@ You are debugging an existing project. Rules:
 2. Fix only the bug. Do not refactor, improve, or change anything unrelated to the reported issue.
 3. In generation_notes: tell the founder what was wrong and what you fixed, casually, like you are explaining it over Slack. One or two short paragraphs. Never use dashes (no em dash, en dash, or hyphen as a pause). No jargon, no code snippets, no bullet points.
 4. If the bug cannot be definitively diagnosed, state your best hypothesis, apply the most likely fix, and tell the founder what to check if it does not resolve the issue.
-5. Return only the files you modified, in their entirety.`,
+5. Return only the files you modified, in their entirety, inside the standard JSON schema.`,
 
   add_page: `
 You are adding a new page or screen to an existing project. Rules:
@@ -191,7 +191,7 @@ You are adding a new page or screen to an existing project. Rules:
 2. Match the existing visual design exactly: same colors, same spacing, same typography scale.
 3. Wire up navigation to the new page (add nav link, update routing).
 4. No breaking changes to existing functionality.
-5. Return all modified files in their entirety.`,
+5. Return all modified files in their entirety inside the standard JSON schema.`,
 
   add_feature: `
 You are adding a new feature to an existing project. Rules:
@@ -201,7 +201,7 @@ You are adding a new feature to an existing project. Rules:
 4. If the feature requires new dependencies, add them and document them in setup_instructions.
 5. Add appropriate PostHog tracking events for the new feature.
 6. In generation_notes: tell the founder what you added and how to use it, in 1 or 2 casual paragraphs. Conversational tone. Never use dashes (no em dash, en dash, or hyphen as a pause). No bullet points, no technical breakdown.
-7. Return all modified files in their entirety.`,
+7. Return all modified files in their entirety inside the standard JSON schema.`,
 
   design_overhaul: `
 You are redesigning the visual style of an existing project. Rules:
@@ -209,7 +209,7 @@ You are redesigning the visual style of an existing project. Rules:
 2. Do NOT change: functionality, copy/text content, component structure, JavaScript logic, PostHog events, or routing.
 3. All interactive behavior must remain exactly the same.
 4. The result must be visually cohesive — one design language applied consistently across all files.
-5. Return all files that contain visual styling changes, in their entirety.`,
+5. Return all files that contain visual styling changes, in their entirety, inside the standard JSON schema.`,
 
   chat: `
 You are in chat mode. Reply conversationally in plain English.`,
@@ -454,7 +454,7 @@ function classifyAction(input: string, hasProject: boolean): MVPBuilderActionTyp
   if (/\b(auth|database|supabase|stripe|payment|marketplace|backend|server action)\b/.test(normalized)) return "unsupported";
   if (/\b(add|create|build)\b.{0,40}\b(page|route|screen)\b|\b(new page|new route|another screen)\b/.test(normalized)) return "add_page";
   if (/\b(add|build|create|implement)\b.*\b(feature|flow|component|wizard|form|dashboard|table|chart|modal|settings)\b/.test(normalized)) return "add_feature";
-  if (/\b(redesign|design overhaul|make it beautiful|modernize|visual refresh|new look|polish the design)\b/.test(normalized)) return "design_overhaul";
+  if (/\b(redesign|design overhaul|make it beautiful|modernize|visual refresh|new look|polish the design|theme|thematic|tematic|brand|rebrand|palette|colou?r scheme|aesthetic|look and feel|skin care|skincare)\b/.test(normalized)) return "design_overhaul";
   return "targeted_edit";
 }
 
@@ -490,7 +490,154 @@ function parseModelJson(fullText: string): unknown {
     .replace(/^```\s*/i, "")
     .replace(/\s*```$/i, "")
     .trim();
-  return JSON.parse(cleaned);
+  try {
+    return JSON.parse(cleaned);
+  } catch (error) {
+    const jsonObject = extractBalancedJsonObject(cleaned);
+    if (jsonObject) return JSON.parse(jsonObject);
+    throw error;
+  }
+}
+
+function extractBalancedJsonObject(value: string): string | null {
+  const start = value.indexOf("{");
+  if (start < 0) return null;
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let i = start; i < value.length; i += 1) {
+    const char = value[i];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (char === "\\") {
+        escaped = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (char === '"') {
+      inString = true;
+      continue;
+    }
+    if (char === "{") {
+      depth += 1;
+      continue;
+    }
+    if (char === "}") {
+      depth -= 1;
+      if (depth === 0) return value.slice(start, i + 1);
+    }
+  }
+
+  return null;
+}
+
+function inferProjectTypeFromCurrentProject(currentProject: unknown): "html_single" | "react_vite" | null {
+  if (!currentProject || typeof currentProject !== "object") return null;
+  const project = currentProject as Record<string, unknown>;
+  const framework = typeof project.framework === "string" ? project.framework : "";
+  const projectType = typeof project.project_type === "string" ? project.project_type : "";
+  if (framework === "react-vite" || framework === "react_vite" || projectType === "react_vite") {
+    return "react_vite";
+  }
+
+  const files = normalizeCurrentProjectFiles(currentProject);
+  const hasPackage = files.some((file) => file.path === "package.json");
+  const hasReactEntry = files.some((file) => /^(src\/)?main\.(tsx|jsx|ts|js)$/.test(file.path));
+  if (hasPackage && hasReactEntry) return "react_vite";
+  if (files.some((file) => file.path.toLowerCase().endsWith(".html"))) return "html_single";
+  return null;
+}
+
+function normalizeCurrentProjectFiles(currentProject: unknown): Array<{ path: string; content: string; description: string }> {
+  if (!currentProject || typeof currentProject !== "object") return [];
+  const rawFiles = (currentProject as Record<string, unknown>).files;
+  if (!Array.isArray(rawFiles)) return [];
+
+  return rawFiles.flatMap((file, index) => {
+    if (!file || typeof file !== "object") return [];
+    const item = file as Record<string, unknown>;
+    const rawPath = typeof item.path === "string" ? item.path : item.filename;
+    const path = typeof rawPath === "string" ? normalizeProjectPath(rawPath) : "";
+    const content = typeof item.content === "string" ? item.content : "";
+    if (!path || !content) return [];
+    const description =
+      typeof item.description === "string" && item.description.trim()
+        ? item.description.trim()
+        : index === 0
+          ? "Primary project file."
+          : `Existing project file ${path}.`;
+    return [{ path, content, description }];
+  });
+}
+
+function normalizeOutputFile(file: unknown, index: number): { path: string; content: string; description: string } | null {
+  if (!file || typeof file !== "object") return null;
+  const item = file as Record<string, unknown>;
+  const rawPath = typeof item.path === "string" ? item.path : item.filename;
+  const path = typeof rawPath === "string" ? normalizeProjectPath(rawPath) : "";
+  if (!path) return null;
+  const content = typeof item.content === "string" ? item.content : "";
+  const description =
+    typeof item.description === "string" && item.description.trim()
+      ? item.description.trim()
+      : index === 0
+        ? "Primary modified project file."
+        : `Modified project file ${path}.`;
+  return { path, content, description };
+}
+
+function mergeOutputWithCurrentProject(
+  raw: unknown,
+  currentProject: unknown,
+  actionType: MVPBuilderActionType
+): unknown {
+  if (actionType === "generation" || actionType === "chat") return raw;
+  if (!raw || typeof raw !== "object") return raw;
+
+  const currentFiles = normalizeCurrentProjectFiles(currentProject);
+  if (currentFiles.length === 0) return raw;
+
+  const candidate = raw as Record<string, unknown>;
+  if (!Array.isArray(candidate.files) || candidate.files.length === 0) return raw;
+
+  const merged = new Map<string, { path: string; content: string; description: string }>();
+  currentFiles.forEach((file) => merged.set(file.path, file));
+  candidate.files.forEach((file, index) => {
+    const normalized = normalizeOutputFile(file, index);
+    if (normalized) merged.set(normalized.path, normalized);
+  });
+
+  const currentProjectType = inferProjectTypeFromCurrentProject(currentProject);
+  const projectType =
+    currentProjectType ??
+    (candidate.project_type === "html_single" || candidate.project_type === "react_vite"
+      ? candidate.project_type
+      : null);
+
+  return {
+    ...candidate,
+    project_type: projectType ?? candidate.project_type,
+    files: Array.from(merged.values()).map((file) => ({
+      path: file.path,
+      content: file.content,
+      description: file.description,
+    })),
+  };
+}
+
+function parseAndNormalizeModelOutput(
+  fullText: string,
+  currentProject: unknown,
+  actionType: MVPBuilderActionType
+): unknown {
+  return mergeOutputWithCurrentProject(parseModelJson(fullText), currentProject, actionType);
 }
 
 function validateOutput(raw: unknown) {
@@ -506,9 +653,12 @@ function validateOutput(raw: unknown) {
     const rawPath = typeof item.path === "string" ? item.path : item.filename;
     const filename = typeof rawPath === "string" ? normalizeProjectPath(rawPath) : "";
     const content = typeof item.content === "string" ? item.content : "";
-    const description = typeof item.description === "string" ? item.description.trim() : "";
-    if (!filename || !content.trim() || !description) {
-      throw new Error(`File ${index + 1} is missing filename, content, or description`);
+    const description =
+      typeof item.description === "string" && item.description.trim()
+        ? item.description.trim()
+        : `Project file ${filename || index + 1}.`;
+    if (!filename || !content.trim()) {
+      throw new Error(`File ${index + 1} is missing filename or content`);
     }
     for (const pattern of FORBIDDEN_PATTERNS) {
       if (pattern.test(content)) throw new Error(`File ${filename} contains placeholder or incomplete copy`);
@@ -1226,7 +1376,7 @@ serve(async (req: Request) => {
         });
         if (!finalized.success) throw new Error("Unable to finalize MVP Builder chat credits");
         await writer.write(enc({ type: "credit-finalized", ...finalized }));
-        await emitCostTelemetry(Number(finalized.creditsUsed ?? heldCredits));
+        void emitCostTelemetry(Number(finalized.creditsUsed ?? heldCredits));
         await writer.write(enc({ type: "complete", model: selectedModel, requestedModels: selectedModels }));
         await writer.write(encDone());
         return;
@@ -1235,7 +1385,7 @@ serve(async (req: Request) => {
       // Validate and emit the structured project event
       let validated: ReturnType<typeof validateOutput>;
       try {
-        validated = validateOutput(parseModelJson(fullText));
+        validated = validateOutput(parseAndNormalizeModelOutput(fullText, currentProject, classifiedAction));
       } catch (validationError) {
         // Attempt repair with a non-streaming call. If a strong model (Sonnet)
         // generated the page, the failure is usually a small structural miss —
@@ -1251,12 +1401,20 @@ serve(async (req: Request) => {
               ...messages,
               {
                 role: "user",
-                content: `Repair the previous response into valid complete project JSON only. Validation error: ${validationError instanceof Error ? validationError.message : String(validationError)}\n\nPrevious response:\n${fullText}`,
+                content: `Repair the previous response into valid MVP Builder JSON only. Validation error: ${validationError instanceof Error ? validationError.message : String(validationError)}
+
+For edit, debug, add page, add feature, and design overhaul actions, returning only changed files is allowed. Keep each returned file complete. The platform will merge changed files into the current project before validation.
+
+Current project:
+${JSON.stringify(currentProject, null, 2)}
+
+Previous response:
+${fullText}`,
               },
             ],
             { temperature: 0.1, maxTokens: ACTION_CONFIG[classifiedAction].maxTokens + 2000 }
           );
-          validated = validateOutput(parseModelJson(repaired));
+          validated = validateOutput(parseAndNormalizeModelOutput(repaired, currentProject, classifiedAction));
         } catch (repairError) {
           const released = await releaseMVPBuilderCredits(
             reservationId,
@@ -1303,7 +1461,7 @@ serve(async (req: Request) => {
       });
       if (!finalized.success) throw new Error("Unable to finalize MVP Builder credits");
       await writer.write(enc({ type: "credit-finalized", ...finalized }));
-      await emitCostTelemetry(Number(finalized.creditsUsed ?? heldCredits));
+      void emitCostTelemetry(Number(finalized.creditsUsed ?? heldCredits));
       await writer.write(enc({
         type: "project",
         project: outputToProject(validated, productName),

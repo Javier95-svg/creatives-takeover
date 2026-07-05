@@ -155,8 +155,8 @@ export const MVP_DEFAULT_MODEL_WEIGHT = 3;
 
 export const MVP_ACTION_DEFAULT_MODEL: Partial<Record<CreditFeature, string>> = {
   APP_BUILDER_GENERATE: 'claude-sonnet-4-6',
-  APP_BUILDER_REFINE: 'claude-haiku-4-5-20251001',
-  APP_BUILDER_DEBUG: 'claude-haiku-4-5-20251001',
+  APP_BUILDER_REFINE: 'claude-sonnet-4-6',
+  APP_BUILDER_DEBUG: 'claude-sonnet-4-6',
   APP_BUILDER_ADD_PAGE: 'claude-sonnet-4-6',
   APP_BUILDER_ADD_FEATURE: 'claude-sonnet-4-6',
   APP_BUILDER_DESIGN_OVERHAUL: 'claude-sonnet-4-6',

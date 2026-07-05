@@ -42,6 +42,44 @@ function normalizePath(path: string) {
   return path.replace(/\\/g, '/').replace(/^\.\/+/, '');
 }
 
+function buildFilesSignature(files: MVPProjectFile[]) {
+  return [...files]
+    .map((file) => ({
+      path: normalizePath(file.path),
+      content: file.content,
+    }))
+    .sort((a, b) => a.path.localeCompare(b.path))
+    .map((file) => `${file.path}\0${file.content}`)
+    .join('\0\0');
+}
+
+function buildFilePathSignature(files: MVPProjectFile[]) {
+  return [...files]
+    .map((file) => normalizePath(file.path))
+    .sort((a, b) => a.localeCompare(b))
+    .join('\0');
+}
+
+function buildDependencySignature(files: MVPProjectFile[]) {
+  const dependencyFiles = new Set([
+    'package.json',
+    'package-lock.json',
+    'pnpm-lock.yaml',
+    'yarn.lock',
+    'bun.lockb',
+  ]);
+
+  return [...files]
+    .map((file) => ({
+      path: normalizePath(file.path),
+      content: file.content,
+    }))
+    .filter((file) => dependencyFiles.has(file.path))
+    .sort((a, b) => a.path.localeCompare(b.path))
+    .map((file) => `${file.path}\0${file.content}`)
+    .join('\0\0');
+}
+
 function buildFileTree(files: MVPProjectFile[]) {
   const root: Record<string, unknown> = {};
 
@@ -72,6 +110,9 @@ class MVPWebContainerRuntime {
   private devProcess: WebContainerProcess | null = null;
   private listeners = new Set<StateListener>();
   private state: MVPWebContainerState = initialState;
+  private activeFilesSignature: string | null = null;
+  private activeFilePathSignature: string | null = null;
+  private activeDependencySignature: string | null = null;
 
   subscribe(listener: StateListener) {
     this.listeners.add(listener);
@@ -114,6 +155,8 @@ class MVPWebContainerRuntime {
     this.devProcess?.kill();
     this.installProcess = null;
     this.devProcess = null;
+    this.activeFilesSignature = null;
+    this.activeFilePathSignature = null;
     this.setState({ status: 'idle', previewUrl: null, error: null });
   }
 
@@ -127,12 +170,25 @@ class MVPWebContainerRuntime {
       return;
     }
 
-    try {
-      await this.stop();
-      this.setState({ status: 'booting', previewUrl: null, error: null, logs: [] });
-      this.log('info', 'Booting WebContainer...');
+    const nextFilesSignature = buildFilesSignature(files);
+    const nextFilePathSignature = buildFilePathSignature(files);
+    const nextDependencySignature = buildDependencySignature(files);
+    const runtimeIsBusy = ['booting', 'mounting', 'installing', 'starting'].includes(this.state.status);
 
+    if (
+      this.activeFilesSignature === nextFilesSignature &&
+      this.state.status !== 'error' &&
+      (runtimeIsBusy || this.state.previewUrl)
+    ) {
+      return;
+    }
+
+    try {
       if (!this.webcontainer) {
+        await this.stop();
+        this.setState({ status: 'booting', previewUrl: null, error: null, logs: [] });
+        this.log('info', 'Booting WebContainer...');
+
         const { WebContainer } = await import('@webcontainer/api');
         this.webcontainer = await WebContainer.boot();
         this.webcontainer.on('server-ready', (port, url) => {
@@ -141,8 +197,29 @@ class MVPWebContainerRuntime {
         });
       }
 
-      this.setState({ status: 'mounting' });
+      const canHotUpdate =
+        this.devProcess &&
+        this.state.previewUrl &&
+        this.activeFilePathSignature === nextFilePathSignature &&
+        this.activeDependencySignature === nextDependencySignature &&
+        this.state.status !== 'error';
+
+      if (canHotUpdate) {
+        this.setState({ status: 'mounting', error: null });
+        await this.webcontainer.mount(buildFileTree(files));
+        this.activeFilesSignature = nextFilesSignature;
+        this.activeFilePathSignature = nextFilePathSignature;
+        this.log('info', 'Preview files updated without reinstalling dependencies.');
+        this.setState({ status: 'ready', error: null });
+        return;
+      }
+
+      await this.stop();
+      this.setState({ status: 'mounting', previewUrl: null, error: null, logs: [] });
+
       await this.webcontainer.mount(buildFileTree(files));
+      this.activeFilesSignature = nextFilesSignature;
+      this.activeFilePathSignature = nextFilePathSignature;
       this.log('info', 'Project files mounted.');
 
       this.setState({ status: 'installing' });
@@ -152,6 +229,7 @@ class MVPWebContainerRuntime {
       if (installExit !== 0) {
         throw new Error(`npm install failed with exit code ${installExit}`);
       }
+      this.activeDependencySignature = nextDependencySignature;
 
       this.setState({ status: 'starting' });
       const command = options.devCommand || 'npm run dev';
@@ -173,4 +251,3 @@ class MVPWebContainerRuntime {
 }
 
 export const mvpWebContainerRuntime = new MVPWebContainerRuntime();
-

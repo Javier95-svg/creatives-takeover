@@ -2910,6 +2910,7 @@ export function useMVPBuilder() {
         let completedCreditCost = required;
         let completedModel: string | null = null;
         let finalized = false;
+        let liveProjectApplied = false;
 
         const finalizeResponse = () => {
           if (finalized) return;
@@ -3001,12 +3002,16 @@ export function useMVPBuilder() {
               });
               setProjectVersions((prev) => [version, ...prev]);
             }
-            applyProjectArtifact(committedProject, {
-              allowFallback: false,
-              setAsBaseline: true,
-              preserveProjectName: projectName !== DEFAULT_PROJECT_NAME,
-              preserveProjectType: false,
-            });
+            if (liveProjectApplied && committedProject === newProject) {
+              setLastGeneratedProject(normalizeSnapshotArtifact(committedProject));
+            } else {
+              applyProjectArtifact(committedProject, {
+                allowFallback: false,
+                setAsBaseline: true,
+                preserveProjectName: projectName !== DEFAULT_PROJECT_NAME,
+                preserveProjectType: false,
+              });
+            }
             addProjectSnapshot(
               committedProject,
               messages.length === 0 ? 'Initial generated build' : 'Generated refinement',
@@ -3125,6 +3130,13 @@ export function useMVPBuilder() {
                 files: normalizeProjectFiles(nextProject.files || []),
               };
               setGeneratedCode(extractGeneratedCode(newProject.files, newProject.entryFile, null));
+              applyProjectArtifact(newProject, {
+                allowFallback: true,
+                setAsBaseline: false,
+                preserveProjectName: projectName !== DEFAULT_PROJECT_NAME,
+                preserveProjectType: false,
+              });
+              liveProjectApplied = true;
             } else if (event.type === 'complete') {
               completedModel = typeof event.model === 'string' ? event.model : null;
               finalizeResponse();
