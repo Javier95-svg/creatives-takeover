@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   ArrowLeft, Plus, Pencil, Check, Database, Github,
   FolderOpen, Save, Clock, ChevronRight, Loader2, AlertCircle,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +29,9 @@ interface MVPBuilderHeaderProps {
   integrations: MVPBuilderIntegrationsHealth;
   onNewProject: () => void;
   savedProjects: MVPProjectRecord[];
+  currentProjectId: string;
   onLoadProject: (id: string) => void;
+  onDeleteProject: (id: string) => Promise<boolean> | boolean;
   onSaveProject: () => void;
   hasUnsavedChanges: boolean;
   isSavingProject: boolean;
@@ -54,7 +57,9 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
   integrations,
   onNewProject,
   savedProjects,
+  currentProjectId,
   onLoadProject,
+  onDeleteProject,
   onSaveProject,
   hasUnsavedChanges,
   isSavingProject,
@@ -65,9 +70,14 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
   const [draft, setDraft] = useState(projectName);
   const [projectsOpen, setProjectsOpen] = useState(false);
   const [confirmNewOpen, setConfirmNewOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<MVPProjectRecord | null>(null);
+  const [isDeletingProject, setIsDeletingProject] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const primaryModelLabel = getMVPModelLabel(selectedModels[0]) ?? 'AI model';
   const additionalModels = Math.max(selectedModels.length - 1, 0);
+  const deleteTargetTitle = deleteTarget?.title?.trim() || 'Untitled Project';
+  const deletingCurrentProject = deleteTarget?.id === currentProjectId;
+  const deletingPublishedProject = Boolean(deleteTarget?.deployment_url || deleteTarget?.subdomain_slug);
 
   useEffect(() => {
     if (isEditing) {
@@ -106,6 +116,26 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
   const handleLoadProject = (id: string) => {
     onLoadProject(id);
     setProjectsOpen(false);
+  };
+
+  const handleDeleteDialogChange = (open: boolean) => {
+    if (!open && !isDeletingProject) {
+      setDeleteTarget(null);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget || isDeletingProject) return;
+
+    setIsDeletingProject(true);
+    try {
+      const deleted = await onDeleteProject(deleteTarget.id);
+      if (deleted) {
+        setDeleteTarget(null);
+      }
+    } finally {
+      setIsDeletingProject(false);
+    }
   };
 
   const renderStatusChip = (
@@ -292,12 +322,15 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
                   .slice()
                   .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
                   .map((project) => (
-                    <button
+                    <div
                       key={project.id}
-                      onClick={() => handleLoadProject(project.id)}
-                      className="w-full text-left rounded-xl border border-white/8 bg-white/[0.03] p-3.5 hover:bg-white/[0.07] hover:border-white/15 transition-all group"
+                      className="group flex w-full items-center gap-2 rounded-xl border border-white/8 bg-white/[0.03] p-3.5 transition-all hover:border-white/15 hover:bg-white/[0.07]"
                     >
-                      <div className="flex items-center justify-between gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleLoadProject(project.id)}
+                        className="flex min-w-0 flex-1 items-center justify-between gap-2 text-left"
+                      >
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-white truncate">{project.title || 'Untitled Project'}</p>
                           <div className="mt-1 flex items-center gap-2 text-label text-muted-foreground">
@@ -318,8 +351,19 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
                           </div>
                         </div>
                         <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-muted-foreground shrink-0 transition-colors" />
-                      </div>
-                    </button>
+                      </button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        className="h-8 w-8 shrink-0 rounded-lg text-muted-foreground opacity-100 hover:bg-destructive/10 hover:text-destructive focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                        aria-label={`Delete ${project.title || 'Untitled Project'}`}
+                        title="Delete project"
+                        onClick={() => setDeleteTarget(project)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   ))
               )}
             </div>
@@ -345,6 +389,45 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
               onClick={() => { onNewProject(); setConfirmNewOpen(false); }}
             >
               New project
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirm project delete */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
+        <AlertDialogContent className="dark mvp-surface bg-background border-white/10 text-muted-foreground">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white">Delete project?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              This will permanently remove "{deleteTargetTitle}" from Your Projects
+              {deletingCurrentProject ? ' and clear the current workspace' : ''}. This cannot be undone.
+              {deletingPublishedProject ? ' Published links for this project will stop working.' : ''}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={isDeletingProject}
+              className="border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeletingProject}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(event) => {
+                event.preventDefault();
+                void handleConfirmDelete();
+              }}
+            >
+              {isDeletingProject ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Deleting
+                </>
+              ) : (
+                'Delete project'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

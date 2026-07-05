@@ -87,6 +87,7 @@ export const MVPBuilder: React.FC = () => {
     closeCreditExhaustedModal,
     savedProjects,
     loadProject,
+    deleteProject,
     saveProject,
     hasUnsavedChanges,
     isSavingProject,
@@ -95,6 +96,14 @@ export const MVPBuilder: React.FC = () => {
 
   const [mobileTab, setMobileTab] = useState<MobileTab>('chat');
   const isMobile = useIsMobile();
+
+  const handleDeleteProject = async (id: string) => {
+    const deleted = await deleteProject(id);
+    if (deleted && id === projectId) {
+      resetProject();
+    }
+    return deleted;
+  };
 
   const chatPanel = (
     <MVPBuilderChat
@@ -189,7 +198,9 @@ export const MVPBuilder: React.FC = () => {
         integrations={integrations}
         onNewProject={resetProject}
         savedProjects={savedProjects}
+        currentProjectId={projectId}
         onLoadProject={loadProject}
+        onDeleteProject={handleDeleteProject}
         onSaveProject={() => saveProject({ silent: false })}
         hasUnsavedChanges={hasUnsavedChanges}
         isSavingProject={isSavingProject}
