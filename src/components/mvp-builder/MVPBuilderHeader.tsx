@@ -37,6 +37,7 @@ interface MVPBuilderHeaderProps {
   isSavingProject: boolean;
   lastSavedAt: string | null;
   hasActiveProject: boolean;
+  onBuyCredits: () => void;
 }
 
 function formatRelativeTime(iso: string): string {
@@ -65,6 +66,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
   isSavingProject,
   lastSavedAt,
   hasActiveProject,
+  onBuyCredits,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(projectName);
@@ -266,12 +268,15 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
             {creditsAvailable} credits
           </span>
           {creditsAvailable === 0 && (
-            <Link
-              to="/pricing#credit-packs"
-              className="hidden lg:inline-flex h-7 items-center rounded-md border border-warning/25 bg-warning/10 px-2 text-xs font-medium text-warning hover:bg-warning/15"
+            <Button
+              type="button"
+              variant="ghost"
+              size="pill-sm"
+              onClick={onBuyCredits}
+              className="hidden h-7 min-h-0 rounded-md border border-warning/25 bg-warning/10 px-2 text-xs font-medium text-warning hover:bg-warning/15 hover:text-warning lg:inline-flex"
             >
               Buy Credits
-            </Link>
+            </Button>
           )}
           {hasActiveProject && (
             <Button

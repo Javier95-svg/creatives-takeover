@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import {
   Send,
   Loader2,
@@ -288,6 +287,7 @@ interface MVPBuilderChatProps {
   }) => void | Promise<unknown>;
   onRollbackGitHubCommit: (sha: string) => void | Promise<void>;
   onRefreshGitHubCommitHistory: (fullName?: string, branch?: string) => void | Promise<void>;
+  onBuyCredits: () => void;
   isGenerating: boolean;
 }
 
@@ -324,6 +324,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   onCommitGitHubChanges,
   onRollbackGitHubCommit,
   onRefreshGitHubCommitHistory,
+  onBuyCredits,
   isGenerating,
 }) => {
   const [input, setInput] = useState('');
@@ -913,12 +914,13 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                 : `${MVP_BUILDER_ACTION_LABELS[lastActionQuote.actionType]} - ${lastActionQuote.creditCost} credits`}
             </div>
           )}
-          <Link
-            to="/pricing#credit-packs"
+          <button
+            type="button"
+            onClick={onBuyCredits}
             className="text-label font-medium text-info hover:text-info"
           >
             Buy credits
-          </Link>
+          </button>
         </div>
       </div>
 

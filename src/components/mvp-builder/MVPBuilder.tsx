@@ -5,6 +5,7 @@ import { MVPBuilderChat } from './MVPBuilderChat';
 import { MVPBuilderPreview } from './MVPBuilderPreview';
 import { MVPBuilderCreditExhaustedDialog } from './MVPBuilderCreditExhaustedDialog';
 import { MVPBuilderLowCreditBanner } from './MVPBuilderLowCreditBanner';
+import { MVPBuilderTopUpDialog } from './MVPBuilderTopUpDialog';
 
 import { MessageSquare, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -95,6 +96,7 @@ export const MVPBuilder: React.FC = () => {
   } = useMVPBuilder();
 
   const [mobileTab, setMobileTab] = useState<MobileTab>('chat');
+  const [topUpsOpen, setTopUpsOpen] = useState(false);
   const isMobile = useIsMobile();
 
   const handleDeleteProject = async (id: string) => {
@@ -139,6 +141,7 @@ export const MVPBuilder: React.FC = () => {
       onCommitGitHubChanges={commitGitHubChanges}
       onRollbackGitHubCommit={rollbackGitHubCommit}
       onRefreshGitHubCommitHistory={loadGitHubCommitHistory}
+      onBuyCredits={() => setTopUpsOpen(true)}
       isGenerating={isGenerating}
     />
   );
@@ -206,7 +209,9 @@ export const MVPBuilder: React.FC = () => {
         isSavingProject={isSavingProject}
         lastSavedAt={lastSavedAt}
         hasActiveProject={projectFiles.length > 0 || messages.length > 0}
+        onBuyCredits={() => setTopUpsOpen(true)}
       />
+      <MVPBuilderTopUpDialog open={topUpsOpen} onOpenChange={setTopUpsOpen} />
       <MVPBuilderCreditExhaustedDialog
         open={isCreditExhaustedModalOpen}
         onOpenChange={(open) => {
@@ -220,7 +225,12 @@ export const MVPBuilder: React.FC = () => {
         </div>
       )}
 
-      {!isGenerating && <MVPBuilderLowCreditBanner projectName={projectName} />}
+      {!isGenerating && (
+        <MVPBuilderLowCreditBanner
+          projectName={projectName}
+          onGetCredits={() => setTopUpsOpen(true)}
+        />
+      )}
 
 <div className="flex-1 min-h-0 flex flex-col">
         <div className="flex md:hidden items-center justify-center border-b border-border/40 bg-card shrink-0 py-2">

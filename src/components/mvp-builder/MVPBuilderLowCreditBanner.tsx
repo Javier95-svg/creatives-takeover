@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Coins, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useMVPCredits } from '@/hooks/useMVPCredits';
@@ -17,6 +16,7 @@ const LOW_WATER_RATIO = 0.2; // surface at 20% of the monthly allowance remainin
 interface MVPBuilderLowCreditBannerProps {
   /** What the user is currently building — shown so the prompt has context. */
   projectName?: string;
+  onGetCredits: () => void;
 }
 
 /**
@@ -27,8 +27,7 @@ interface MVPBuilderLowCreditBannerProps {
  * the user can keep working or top up. Impression/CTA/dismiss are logged through
  * the unified contextual-upgrade taxonomy.
  */
-export const MVPBuilderLowCreditBanner = ({ projectName }: MVPBuilderLowCreditBannerProps) => {
-  const navigate = useNavigate();
+export const MVPBuilderLowCreditBanner = ({ projectName, onGetCredits }: MVPBuilderLowCreditBannerProps) => {
   const { totalAvailable, monthlyQuota, loading } = useMVPCredits();
   const { subscriptionData } = useSubscription();
   const [dismissed, setDismissed] = useState(false);
@@ -81,7 +80,7 @@ export const MVPBuilderLowCreditBanner = ({ projectName }: MVPBuilderLowCreditBa
           className="bg-white px-3 text-foreground hover:bg-muted hover:text-foreground"
           onClick={() => {
             trackContextualUpgradeCtaClicked({ ...contextualProps, outcome: 'credits' });
-            navigate('/pricing#credit-packs');
+            onGetCredits();
           }}
         >
           Get credits
