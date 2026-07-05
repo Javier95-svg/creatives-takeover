@@ -779,7 +779,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
             </div>
           )}
 
-          {projectVersions.length > 0 && builderMode === 'build' && (
+          {builderMode === 'build' && (
             <div className="mb-3 flex max-w-full flex-nowrap gap-2 overflow-x-auto pb-1">
               {[
                 {
