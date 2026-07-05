@@ -19,6 +19,10 @@ import {
   AtSign,
   ChevronDown,
   ChevronRight,
+  FilePlus2,
+  Sparkles,
+  Bug,
+  Palette,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -776,30 +780,43 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
           )}
 
           {projectVersions.length > 0 && builderMode === 'build' && (
-            <div className="mb-3 flex flex-wrap gap-2">
+            <div className="mb-3 flex max-w-full flex-nowrap gap-2 overflow-x-auto pb-1">
               {[
-                ['Add Page', 'Add a new page/screen that fits the current app and wire it into the navigation.'],
-                ['Add Feature', 'Add a useful frontend feature with realistic state, empty states, and polished interactions.'],
-                ['Fix Bug', 'Find and fix the current runtime or UX bug while preserving the app design.'],
-                ['Redesign', 'Apply a cohesive design overhaul without changing the app functionality.'],
-              ].map(([label, prompt]) => (
+                {
+                  label: 'Add Page',
+                  prompt: 'Add a new page/screen that fits the current app and wire it into the navigation.',
+                  Icon: FilePlus2,
+                },
+                {
+                  label: 'Add Feature',
+                  prompt: 'Add a useful frontend feature with realistic state, empty states, and polished interactions.',
+                  Icon: Sparkles,
+                },
+                {
+                  label: 'Fix Bug',
+                  prompt: 'Find and fix the current runtime or UX bug while preserving the app design.',
+                  Icon: Bug,
+                },
+                {
+                  label: 'Redesign',
+                  prompt: 'Apply a cohesive design overhaul without changing the app functionality.',
+                  Icon: Palette,
+                },
+              ].map(({ label, prompt, Icon }) => (
                 <Button
                   key={label}
                   type="button"
                   variant="ghost"
                   size="pill-sm"
                   onClick={() => applyActionPrompt(prompt)}
-                  className="border border-white/10 bg-white/[0.04] font-medium text-muted-foreground hover:border-info/30 hover:bg-info/10 hover:text-white"
+                  className="h-9 min-w-[112px] shrink-0 rounded-xl border border-info/20 bg-white/[0.06] px-3 text-xs font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-all hover:-translate-y-0.5 hover:border-info/45 hover:bg-info/15 hover:text-white hover:shadow-[0_10px_28px_rgba(56,189,248,0.14)]"
                 >
+                  <Icon className="h-3.5 w-3.5 text-info" />
                   {label}
                 </Button>
               ))}
             </div>
           )}
-
-          <p className="mb-2 px-1 text-caption font-medium text-muted-foreground">
-            Enter to send - Shift+Enter for a new line - Type @ to reference founder context
-          </p>
 
           <div className="flex items-end gap-3">
             <div className="relative flex-1">
