@@ -601,8 +601,8 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
         <div className="p-4">
           {isEmpty ? (
             <div className="flex flex-col gap-5 py-6">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-info/20 bg-white/[0.04]">
-                <img src={ctBrandLogo} alt="Creatives Takeover" className="h-8 w-8 object-contain" />
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-info/20 bg-white/[0.04] shadow-[0_0_24px_rgba(56,189,248,0.18)]">
+                <img src={ctBrandLogo} alt="Creatives Takeover" className="h-8 w-8 object-contain drop-shadow-[0_0_8px_rgba(45,212,191,0.28)]" />
               </div>
               <div className="space-y-2">
                 <h2 className="text-base font-semibold text-white">Ready to build</h2>

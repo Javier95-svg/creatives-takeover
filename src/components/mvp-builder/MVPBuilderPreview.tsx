@@ -540,8 +540,8 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
             >
             {!html && !isGenerating && projectFiles.length === 0 && (
               <div className="select-none px-8 py-12 text-center">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/20 to-primary/5">
-                  <img src={ctBrandLogo} alt="Creatives Takeover" className="h-12 w-12 object-contain" />
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/20 to-primary/5 shadow-[0_0_28px_rgba(56,189,248,0.18)]">
+                  <img src={ctBrandLogo} alt="Creatives Takeover" className="h-12 w-12 object-contain drop-shadow-[0_0_10px_rgba(45,212,191,0.28)]" />
                 </div>
                 <div className="mt-4 space-y-1">
                   <p className="text-sm font-medium text-muted-foreground">
