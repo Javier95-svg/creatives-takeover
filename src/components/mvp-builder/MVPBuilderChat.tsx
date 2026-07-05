@@ -797,6 +797,10 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
             </div>
           )}
 
+          <p className="mb-2 px-1 text-caption font-medium text-muted-foreground">
+            Enter to send - Shift+Enter for a new line - Type @ to reference founder context
+          </p>
+
           <div className="flex items-end gap-3">
             <div className="relative flex-1">
               <Textarea
@@ -870,10 +874,10 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                 size="pill-sm"
                 onClick={() => setBuilderMode(mode)}
                 className={cn(
-                  'px-3.5 text-xs transition-all duration-150',
+                  'px-3.5 text-xs font-semibold transition-all duration-150',
                   builderMode === mode
-                    ? 'bg-white text-foreground shadow-sm hover:bg-white hover:text-foreground'
-                    : 'text-muted-foreground hover:bg-transparent hover:text-white'
+                    ? 'bg-info text-white shadow-sm hover:bg-info hover:text-white'
+                    : 'text-white/85 hover:bg-white/[0.06] hover:text-white'
                 )}
               >
                 {mode === 'chat' ? 'Chat' : 'Build'}
@@ -899,9 +903,6 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
             Buy credits
           </Link>
         </div>
-        <p className="mt-2 text-right text-caption text-muted-foreground">
-          Enter to send - Shift+Enter for a new line - Type @ to reference founder context
-        </p>
       </div>
 
       <Sheet open={modelsOpen} onOpenChange={setModelsOpen}>
