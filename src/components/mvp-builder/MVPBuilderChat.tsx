@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import {
   Send,
   Loader2,
-  Wand2,
   RotateCcw,
   Clock3,
   Bot,
@@ -46,6 +45,7 @@ import type { MVPBuilderSetupInput, MVPBuilderVersion } from '@/lib/mvp-builder/
 import {
   MVP_BUILDER_ACTION_LABELS,
 } from '@/lib/mvp-builder/phase1';
+import ctBrandLogo from '@/assets/ct-brand-logo.png';
 import {
   MVP_DEFAULT_MODEL,
   MVP_MODEL_OPTIONS,
@@ -602,7 +602,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
           {isEmpty ? (
             <div className="flex flex-col gap-5 py-6">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-info/20 bg-white/[0.04]">
-                <Wand2 className="h-5 w-5 text-info" />
+                <img src={ctBrandLogo} alt="Creatives Takeover" className="h-8 w-8 object-contain" />
               </div>
               <div className="space-y-2">
                 <h2 className="text-base font-semibold text-white">Ready to build</h2>

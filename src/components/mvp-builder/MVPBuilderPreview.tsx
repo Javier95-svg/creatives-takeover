@@ -7,7 +7,6 @@ import {
   Smartphone,
   Check,
   Loader2,
-  Wand2,
   Globe,
   Code2,
   TriangleAlert,
@@ -23,6 +22,7 @@ import {
 } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import ctBrandLogo from '@/assets/ct-brand-logo.png';
 import { MVPBuilderDomainPanel } from './MVPBuilderDomainPanel';
 import { MVPBuilderPublishPanel } from './MVPBuilderPublishPanel';
 import { MVPBuilderCodePanel } from './MVPBuilderCodePanel';
@@ -541,7 +541,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
             {!html && !isGenerating && projectFiles.length === 0 && (
               <div className="select-none px-8 py-12 text-center">
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/20 to-primary/5">
-                  <Wand2 className="h-8 w-8 text-primary/50" />
+                  <img src={ctBrandLogo} alt="Creatives Takeover" className="h-12 w-12 object-contain" />
                 </div>
                 <div className="mt-4 space-y-1">
                   <p className="text-sm font-medium text-muted-foreground">
