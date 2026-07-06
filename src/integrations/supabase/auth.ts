@@ -1,5 +1,6 @@
 import { supabase } from './client';
 import { logWarn } from '@/lib/logger';
+import { clearSupabaseAuthStorage } from '@/integrations/supabase/sessionStorage';
 
 const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL ?? '') as string;
 const INVALID_REFRESH_TOKEN_PATTERNS = [
@@ -28,26 +29,8 @@ function isInvalidRefreshTokenError(error: unknown): boolean {
   return INVALID_REFRESH_TOKEN_PATTERNS.some((pattern) => pattern.test(message));
 }
 
-function getAuthStorageKey(): string | null {
-  if (!SUPABASE_URL) {
-    return null;
-  }
-
-  try {
-    const projectRef = new URL(SUPABASE_URL).hostname.split('.')[0];
-    return projectRef ? `sb-${projectRef}-auth-token` : null;
-  } catch {
-    return null;
-  }
-}
-
 async function clearStaleSession(): Promise<void> {
-  if (typeof window !== 'undefined') {
-    const storageKey = getAuthStorageKey();
-    if (storageKey) {
-      window.localStorage.removeItem(storageKey);
-    }
-  }
+  clearSupabaseAuthStorage(SUPABASE_URL);
 
   try {
     await supabase.auth.signOut({ scope: 'local' });
