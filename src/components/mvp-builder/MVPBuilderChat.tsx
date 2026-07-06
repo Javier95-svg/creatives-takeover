@@ -21,6 +21,7 @@ import {
   Sparkles,
   Bug,
   Palette,
+  Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -46,10 +47,12 @@ import {
 } from '@/lib/mvp-builder/phase1';
 import ctBrandLogo from '@/assets/ct-brand-logo.png';
 import {
-  MVP_DEFAULT_MODEL,
   MVP_MODEL_OPTIONS,
+  getMVPDefaultModelForPlan,
   getMVPModelLabel,
+  isMVPModelAllowedForPlan,
 } from '@/data/mvpModels';
+import type { MVPModelPlan } from '@/data/mvpModels';
 import type { MVPProjectType } from '@/lib/mvp-builder/project';
 import { cn } from '@/lib/utils';
 
@@ -249,6 +252,7 @@ interface MVPBuilderChatProps {
   messages: MVPMessage[];
   promptHistory: MVPPromptHistoryItem[];
   selectedModels: string[];
+  currentPlan: MVPModelPlan;
   selectedProjectType: MVPProjectType;
   githubConnection: GitHubConnectionState;
   githubRepositories: GitHubRepositorySummary[];
@@ -295,6 +299,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   messages,
   promptHistory,
   selectedModels,
+  currentPlan,
   selectedProjectType: _selectedProjectType,
   githubConnection,
   githubRepositories,
@@ -354,6 +359,10 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   const selectedModelLabels = useMemo(
     () => selectedModels.map((id) => getMVPModelLabel(id) ?? id),
     [selectedModels]
+  );
+  const planDefaultModel = useMemo(
+    () => getMVPDefaultModelForPlan(currentPlan),
+    [currentPlan]
   );
   const selectedRepoMeta = useMemo(
     () => githubRepositories.find((repo) => repo.fullName === selectedRepo) ?? null,
@@ -554,6 +563,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   };
 
   const toggleModel = (modelId: string) => {
+    if (!isMVPModelAllowedForPlan(modelId, currentPlan)) return;
     const isSelected = selectedModels.includes(modelId);
     const next = isSelected
       ? selectedModels.filter((id) => id !== modelId)
@@ -562,6 +572,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   };
 
   const setSingleModel = (modelId: string) => {
+    if (!isMVPModelAllowedForPlan(modelId, currentPlan)) return;
     onSelectedModelsChange([modelId]);
   };
 
@@ -943,7 +954,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                 size="sm"
                 variant="outline"
                 className="h-7 text-xs"
-                onClick={() => onSelectedModelsChange([MVP_DEFAULT_MODEL])}
+                onClick={() => onSelectedModelsChange([planDefaultModel])}
               >
                 Reset Default
               </Button>
@@ -953,15 +964,19 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
               <div className="p-4 space-y-2">
                 {MVP_MODEL_OPTIONS.map((model) => {
                   const isSelected = selectedModels.includes(model.id);
-                  const isDefault = model.id === MVP_DEFAULT_MODEL;
+                  const isDefault = model.id === planDefaultModel;
+                  const isLocked = !isMVPModelAllowedForPlan(model.id, currentPlan);
                   return (
                     <div
                       key={model.id}
                       role="button"
                       tabIndex={0}
-                      onClick={() => toggleModel(model.id)}
+                      aria-disabled={isLocked}
+                      onClick={() => {
+                        if (!isLocked) toggleModel(model.id);
+                      }}
                       onKeyDown={(event) => {
-                        if (event.key === 'Enter' || event.key === ' ') {
+                        if (!isLocked && (event.key === 'Enter' || event.key === ' ')) {
                           event.preventDefault();
                           toggleModel(model.id);
                         }
@@ -969,6 +984,8 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                       className={`w-full text-left rounded-xl border p-3 transition-colors ${
                         isSelected
                           ? 'border-primary/50 bg-primary/10'
+                          : isLocked
+                          ? 'border-border/50 bg-card/40 opacity-70'
                           : 'border-border/60 bg-card/60 hover:bg-muted/40'
                       }`}
                     >
@@ -986,6 +1003,17 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                           {isDefault && (
                             <span className="text-caption rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-primary">
                               Default
+                            </span>
+                          )}
+                          {model.freeTier && (
+                            <span className="text-caption rounded-full border border-info/25 bg-info/10 px-2 py-0.5 text-info">
+                              Free
+                            </span>
+                          )}
+                          {isLocked && (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-warning/25 bg-warning/10 px-2 py-0.5 text-caption text-warning">
+                              <Lock className="h-3 w-3" />
+                              Rising+
                             </span>
                           )}
                           <span
@@ -1006,6 +1034,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                           size="sm"
                           variant="outline"
                           className="h-6 text-label"
+                          disabled={isLocked}
                           onClick={(event) => {
                             event.stopPropagation();
                             setSingleModel(model.id);

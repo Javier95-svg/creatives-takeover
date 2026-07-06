@@ -145,6 +145,7 @@ test('core entitlement rules reflect the pricing contract', () => {
   assert.equal(rookieMvp.state, 'full');
   assert.equal(rookieMvp.monetizationModel, 'credit_metered');
   assert.equal(rookieMvp.creditCost, 15);
+  assert.equal(rookieMvp.freeModelsOnly, true);
 
   const proGtm = resolveEntitlement('gtm_strategist', 'pro');
   assert.equal(proGtm.state, 'full');

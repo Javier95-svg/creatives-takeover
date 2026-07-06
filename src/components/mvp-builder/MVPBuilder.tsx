@@ -36,6 +36,7 @@ export const MVPBuilder: React.FC = () => {
     projectId,
     promptHistory,
     selectedModels,
+    currentPlan,
     setupInput,
     projectVersions,
     lastActionQuote,
@@ -112,6 +113,7 @@ export const MVPBuilder: React.FC = () => {
       messages={messages}
       promptHistory={promptHistory}
       selectedModels={selectedModels}
+      currentPlan={currentPlan}
       selectedProjectType={selectedProjectType}
       githubConnection={githubConnection}
       githubRepositories={githubRepositories}

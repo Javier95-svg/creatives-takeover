@@ -371,8 +371,8 @@ export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitl
     pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PMF_SCORING' },
   },
   mvp_builder: {
-    rookie: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'APP_BUILDER_GENERATE' },
-    starter: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'APP_BUILDER_GENERATE' },
+    rookie: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'APP_BUILDER_GENERATE', freeModelsOnly: true },
+    starter: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'APP_BUILDER_GENERATE', freeModelsOnly: true },
     rising: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'APP_BUILDER_GENERATE' },
     pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'APP_BUILDER_GENERATE' },
   },

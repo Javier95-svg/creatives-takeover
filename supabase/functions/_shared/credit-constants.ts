@@ -112,32 +112,44 @@ export function getCreditCostForPlan(
  *   Haiku 4.5  $5/M out  -> 1
  *   Sonnet 4.6 $15/M out -> 3
  *   Opus 4.8   $75/M out -> 15
- *   Gemini Flash (cheap) -> 1
+ *   Gemini and DeepSeek Flash (cheap) -> 1
  * IMPORTANT: keep in sync with src/config/constants.ts
  */
 export const MVP_MODEL_COST_WEIGHTS: Record<string, number> = {
   'claude-haiku-4-5-20251001': 1,
   'claude-sonnet-4-6': 3,
   'claude-opus-4-8': 15,
-  'google/gemini-3-flash': 1,
-  'google/gemini-2.5-flash': 1,
+  'gemini-3.5-flash': 1,
+  'gemini-3.1-flash-lite': 1,
+  'deepseek-v4-flash': 1,
 };
 
 // Unknown/unlisted models are treated as Sonnet-class so we never under-charge a
 // premium model that slips through.
 export const MVP_DEFAULT_MODEL_WEIGHT = 3;
+export const MVP_FREE_DEFAULT_MODEL = 'gemini-3.5-flash';
+export const MVP_PREMIUM_DEFAULT_MODEL = 'claude-sonnet-4-6';
 
-// Each MVP action's default model (mirrors ACTION_CONFIG in mvp-builder-generate).
-// The base CREDIT_COSTS are calibrated to these defaults, so default usage is 1x.
+// Each MVP action's premium default model. MVP Builder resolves a plan-specific
+// default at runtime: Gemini for Rookie/Starter, Sonnet for Rising/Pro.
 export const MVP_ACTION_DEFAULT_MODEL: Partial<Record<CreditFeature, string>> = {
-  APP_BUILDER_GENERATE: 'claude-sonnet-4-6',
-  APP_BUILDER_REFINE: 'claude-haiku-4-5-20251001',
-  APP_BUILDER_DEBUG: 'claude-haiku-4-5-20251001',
-  APP_BUILDER_ADD_PAGE: 'claude-sonnet-4-6',
-  APP_BUILDER_ADD_FEATURE: 'claude-sonnet-4-6',
-  APP_BUILDER_DESIGN_OVERHAUL: 'claude-sonnet-4-6',
-  APP_BUILDER_CHAT: 'claude-haiku-4-5-20251001',
+  APP_BUILDER_GENERATE: MVP_PREMIUM_DEFAULT_MODEL,
+  APP_BUILDER_REFINE: MVP_PREMIUM_DEFAULT_MODEL,
+  APP_BUILDER_DEBUG: MVP_PREMIUM_DEFAULT_MODEL,
+  APP_BUILDER_ADD_PAGE: MVP_PREMIUM_DEFAULT_MODEL,
+  APP_BUILDER_ADD_FEATURE: MVP_PREMIUM_DEFAULT_MODEL,
+  APP_BUILDER_DESIGN_OVERHAUL: MVP_PREMIUM_DEFAULT_MODEL,
+  APP_BUILDER_CHAT: MVP_PREMIUM_DEFAULT_MODEL,
 };
+
+export function resolveMVPActionDefaultModelForPlan(
+  _feature: CreditFeature,
+  plan: CreditPlan = 'rookie'
+): string {
+  return plan === 'rising' || plan === 'pro'
+    ? MVP_PREMIUM_DEFAULT_MODEL
+    : MVP_FREE_DEFAULT_MODEL;
+}
 
 export function getMvpModelCostWeight(model?: string | null): number {
   if (!model) return MVP_DEFAULT_MODEL_WEIGHT;

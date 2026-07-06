@@ -1,0 +1,49 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+
+import {
+  MVP_DEEPSEEK_FALLBACK_MODEL,
+  MVP_FREE_DEFAULT_MODEL,
+  MVP_PREMIUM_DEFAULT_MODEL,
+  getMVPDefaultModelForPlan,
+  getSelectableMVPModelOptions,
+  isMVPModelAllowedForPlan,
+  sanitizeMVPModelSelection,
+} from '../src/data/mvpModels.ts';
+
+test('MVP Builder defaults use Gemini for Rookie and Starter, Claude for Rising and Pro', () => {
+  assert.equal(getMVPDefaultModelForPlan('rookie'), MVP_FREE_DEFAULT_MODEL);
+  assert.equal(getMVPDefaultModelForPlan('starter'), MVP_FREE_DEFAULT_MODEL);
+  assert.equal(getMVPDefaultModelForPlan('rising'), MVP_PREMIUM_DEFAULT_MODEL);
+  assert.equal(getMVPDefaultModelForPlan('pro'), MVP_PREMIUM_DEFAULT_MODEL);
+});
+
+test('Rookie and Starter model sanitization removes Claude selections', () => {
+  assert.deepEqual(
+    sanitizeMVPModelSelection(['claude-sonnet-4-6', 'gemini-3.5-flash'], 'rookie'),
+    ['gemini-3.5-flash']
+  );
+  assert.deepEqual(
+    sanitizeMVPModelSelection(['claude-opus-4-8'], 'starter'),
+    [MVP_FREE_DEFAULT_MODEL]
+  );
+});
+
+test('Rising and Pro can select Claude models', () => {
+  assert.deepEqual(
+    sanitizeMVPModelSelection(['claude-sonnet-4-6'], 'rising'),
+    ['claude-sonnet-4-6']
+  );
+  assert.deepEqual(
+    sanitizeMVPModelSelection(['claude-opus-4-8'], 'pro'),
+    ['claude-opus-4-8']
+  );
+});
+
+test('DeepSeek is supported as fallback-only and hidden from selectable models', () => {
+  assert.equal(isMVPModelAllowedForPlan(MVP_DEEPSEEK_FALLBACK_MODEL, 'rookie'), false);
+  assert.equal(
+    getSelectableMVPModelOptions('rookie').some((model) => model.id === MVP_DEEPSEEK_FALLBACK_MODEL),
+    false
+  );
+});

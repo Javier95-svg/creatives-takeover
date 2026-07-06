@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { getUserFromAuth } from "../_shared/credit-deduction.ts";
-import { CREDIT_COSTS, resolveModelAdjustedCreditCost, type CreditFeature } from "../_shared/credit-constants.ts";
+import { CREDIT_COSTS, resolveMVPActionDefaultModelForPlan, resolveModelAdjustedCreditCost, type CreditFeature } from "../_shared/credit-constants.ts";
+import { isPlanAtLeast, normalizePlan, type Plan } from "../_shared/plan-enforcement.ts";
 import {
   finalizeMVPBuilderCredits,
   releaseMVPBuilderCredits,
@@ -8,14 +10,15 @@ import {
 } from "../_shared/mvp-builder-credit-reservations.ts";
 import { emitBusinessEvent } from "../_shared/analytics.ts";
 
-// Per-model Anthropic/Gemini pricing (USD per million tokens) for live margin
+// Per-model provider pricing (USD per million tokens) for live margin
 // measurement. Used only for telemetry, not for charging.
 const MODEL_PRICING_PER_MTOK: Record<string, { input: number; output: number }> = {
   "claude-haiku-4-5-20251001": { input: 1, output: 5 },
   "claude-sonnet-4-6": { input: 3, output: 15 },
   "claude-opus-4-8": { input: 15, output: 75 },
-  "google/gemini-3-flash": { input: 0.3, output: 2.5 },
-  "google/gemini-2.5-flash": { input: 0.3, output: 2.5 },
+  "gemini-3.5-flash": { input: 0.3, output: 2.5 },
+  "gemini-3.1-flash-lite": { input: 0.1, output: 0.4 },
+  "deepseek-v4-flash": { input: 0.14, output: 0.28 },
 };
 // Lowest revenue-per-credit we sell (Starter annual: $79/12/100). Margin is
 // measured against this floor so the alert reflects the worst-case plan.
@@ -30,10 +33,12 @@ const corsHeaders = {
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION = "2023-06-01";
-// Google Gemini models run through the Lovable AI gateway (OpenAI-compatible).
-const AI_GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const DEFAULT_MODEL = "claude-sonnet-4-6";
-const FALLBACK_MODEL = "claude-haiku-4-5-20251001";
+const GEMINI_OPENAI_API_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+const DEEPSEEK_OPENAI_API_URL = "https://api.deepseek.com/chat/completions";
+const FREE_DEFAULT_MODEL = "gemini-3.5-flash";
+const PREMIUM_DEFAULT_MODEL = "claude-sonnet-4-6";
+const DEFAULT_MODEL = FREE_DEFAULT_MODEL;
+const DEEPSEEK_FALLBACK_MODEL = "deepseek-v4-flash";
 const MAX_COMBO_MODELS = 3;
 const MODEL_TIMEOUT_MS = 120000;
 
@@ -41,16 +46,30 @@ const SUPPORTED_MODELS = [
   "claude-sonnet-4-6",
   "claude-opus-4-8",
   "claude-haiku-4-5-20251001",
-  "google/gemini-3-flash",
-  "google/gemini-2.5-flash",
+  "gemini-3.5-flash",
+  "gemini-3.1-flash-lite",
+  "deepseek-v4-flash",
 ] as const;
 
 const SUPPORTED_MODEL_SET = new Set<string>(SUPPORTED_MODELS);
 const HTML_CAPABLE_MODEL_SET = new Set<string>(SUPPORTED_MODELS);
+const SELECTABLE_MODEL_SET = new Set<string>(SUPPORTED_MODELS.filter((model) => model !== DEEPSEEK_FALLBACK_MODEL));
 
-// Provider routing: Claude → Anthropic Messages API; Gemini → Lovable gateway.
+// Provider routing: Claude -> Anthropic, Gemini -> Google, DeepSeek -> DeepSeek.
+function isClaudeModel(model: string): boolean {
+  return model.startsWith("claude-");
+}
+
 function isGeminiModel(model: string): boolean {
-  return model.startsWith("google/") || model.startsWith("gemini");
+  return model.startsWith("gemini-");
+}
+
+function isDeepSeekModel(model: string): boolean {
+  return model.startsWith("deepseek-");
+}
+
+function isOpenAICompatibleModel(model: string): boolean {
+  return isGeminiModel(model) || isDeepSeekModel(model);
 }
 
 type MVPBuilderActionType = "generation" | "targeted_edit" | "debug" | "add_page" | "add_feature" | "design_overhaul" | "chat";
@@ -62,9 +81,9 @@ const LANDING_TEMPLATES = new Set<MVPBuilderTemplateId>([
   "waitlist_landing", "saas_landing", "community_landing", "portfolio", "blank",
 ]);
 
-// model: which Claude to use by default for each action.
-// Sonnet for quality-critical operations; Haiku for constrained, deterministic tasks.
-// If the user explicitly selects a non-default model in the UI, their choice takes precedence.
+// model remains the premium default reference for each action. Runtime defaults
+// are plan-specific: Gemini for Rookie/Starter, Sonnet for Rising/Pro.
+// If the user explicitly selects an allowed model in the UI, their choice takes precedence.
 // maxTokens must comfortably exceed a full ~700-line page embedded (escaped) in
 // JSON, or the output gets truncated mid-string -> "Unterminated string in JSON".
 const ACTION_CONFIG: Record<MVPBuilderActionType, { feature: CreditFeature; temperature: number; maxTokens: number; model: string }> = {
@@ -74,7 +93,7 @@ const ACTION_CONFIG: Record<MVPBuilderActionType, { feature: CreditFeature; temp
   add_page:        { feature: "APP_BUILDER_ADD_PAGE",        temperature: 0.3,  maxTokens: 16000, model: "claude-sonnet-4-6" },
   add_feature:     { feature: "APP_BUILDER_ADD_FEATURE",     temperature: 0.35, maxTokens: 16000, model: "claude-sonnet-4-6" },
   design_overhaul: { feature: "APP_BUILDER_DESIGN_OVERHAUL", temperature: 0.45, maxTokens: 16000, model: "claude-sonnet-4-6" },
-  chat:            { feature: "APP_BUILDER_CHAT",            temperature: 0.4,  maxTokens: 2000,  model: "claude-haiku-4-5-20251001" },
+  chat:            { feature: "APP_BUILDER_CHAT",            temperature: 0.4,  maxTokens: 2000,  model: "claude-sonnet-4-6" },
 };
 
 function getActionFeatureName(feature: CreditFeature): string {
@@ -419,16 +438,82 @@ function errorStream(message: string, errorCode?: string): Response {
 
 // ─── Model helpers ────────────────────────────────────────────────────────────
 
-function normalizeSelectedModels(raw: unknown): string[] {
-  if (!Array.isArray(raw)) return [DEFAULT_MODEL];
-  const unique = Array.from(new Set(raw.filter((item): item is string => typeof item === "string")))
-    .filter((model) => SUPPORTED_MODEL_SET.has(model))
-    .slice(0, MAX_COMBO_MODELS);
-  return unique.length > 0 ? unique : [DEFAULT_MODEL];
+function getPlanDefaultModel(plan: Plan): string {
+  return isPlanAtLeast(plan, "rising") ? PREMIUM_DEFAULT_MODEL : FREE_DEFAULT_MODEL;
 }
 
-function getFallbackCandidates(primaryModel: string): string[] {
-  return Array.from(new Set([primaryModel, DEFAULT_MODEL, FALLBACK_MODEL]));
+function isModelAllowedForPlan(model: string, plan: Plan): boolean {
+  if (!SUPPORTED_MODEL_SET.has(model)) return false;
+  return !isClaudeModel(model) || isPlanAtLeast(plan, "rising");
+}
+
+function normalizeSelectedModels(raw: unknown, plan: Plan): string[] {
+  const defaultModel = getPlanDefaultModel(plan);
+  if (!Array.isArray(raw)) return [defaultModel];
+  const unique = Array.from(new Set(raw.filter((item): item is string => typeof item === "string")))
+    .filter((model) => SELECTABLE_MODEL_SET.has(model) && isModelAllowedForPlan(model, plan))
+    .slice(0, MAX_COMBO_MODELS);
+  return unique.length > 0 ? unique : [defaultModel];
+}
+
+function getFallbackCandidates(primaryModel: string, plan: Plan): string[] {
+  return Array.from(
+    new Set([
+      primaryModel,
+      DEEPSEEK_FALLBACK_MODEL,
+      getPlanDefaultModel(plan),
+      FREE_DEFAULT_MODEL,
+    ])
+  ).filter((model) => isModelAllowedForPlan(model, plan));
+}
+
+function getRepairCandidates(selectedModel: string, plan: Plan): string[] {
+  return getFallbackCandidates(selectedModel, plan).filter((model) => model !== selectedModel);
+}
+
+function getAdminClient() {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceRoleKey) return null;
+  return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+}
+
+async function resolveUserPlan(userId: string): Promise<Plan> {
+  const supabase = getAdminClient();
+  if (!supabase) return "rookie";
+
+  try {
+    const { data: rpcTier } = await supabase.rpc("get_user_normalized_subscription_tier", {
+      p_user_id: userId,
+    });
+    if (typeof rpcTier === "string" && rpcTier.trim()) {
+      return normalizePlan(rpcTier);
+    }
+
+    const [{ data: subscriber }, { data: credits }, { data: profile }] = await Promise.all([
+      supabase
+        .from("subscribers")
+        .select("subscription_tier")
+        .eq("user_id", userId)
+        .eq("subscribed", true)
+        .maybeSingle(),
+      supabase
+        .from("user_credits")
+        .select("subscription_tier")
+        .eq("user_id", userId)
+        .maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("subscription_tier")
+        .eq("id", userId)
+        .maybeSingle(),
+    ]);
+
+    return normalizePlan(subscriber?.subscription_tier || credits?.subscription_tier || profile?.subscription_tier);
+  } catch (error) {
+    console.error("Unable to resolve MVP Builder plan, defaulting to rookie", error);
+    return "rookie";
+  }
 }
 
 // ─── Input normalizers ────────────────────────────────────────────────────────
@@ -894,10 +979,9 @@ ${JSON.stringify(params.currentProject, null, 2)}
 ${founderContext}`;
 }
 
-// ─── Anthropic API functions ──────────────────────────────────────────────────
+// ─── AI provider functions ────────────────────────────────────────────────────
 
 async function requestModelStream(
-  apiKey: string,
   model: string,
   systemPrompt: string,
   messages: Array<{ role: "user" | "assistant"; content: string }>,
@@ -906,25 +990,35 @@ async function requestModelStream(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), MODEL_TIMEOUT_MS);
   try {
-    if (isGeminiModel(model)) {
-      const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-      if (!lovableKey) throw new Error("LOVABLE_API_KEY not configured for Gemini models");
-      return await fetch(AI_GATEWAY_URL, {
+    if (isOpenAICompatibleModel(model)) {
+      const apiKey = isGeminiModel(model)
+        ? Deno.env.get("GEMINI_API_KEY")
+        : Deno.env.get("DEEPSEEK_API_KEY");
+      if (!apiKey) {
+        throw new Error(`${isGeminiModel(model) ? "GEMINI_API_KEY" : "DEEPSEEK_API_KEY"} not configured`);
+      }
+      const body: Record<string, unknown> = {
+        model,
+        messages: [{ role: "system", content: systemPrompt }, ...messages],
+        temperature: config.temperature,
+        max_tokens: config.maxTokens,
+        stream: true,
+      };
+      if (isDeepSeekModel(model)) {
+        body.thinking = { type: "disabled" };
+      }
+      return await fetch(isGeminiModel(model) ? GEMINI_OPENAI_API_URL : DEEPSEEK_OPENAI_API_URL, {
         method: "POST",
         signal: controller.signal,
         headers: {
-          Authorization: `Bearer ${lovableKey}`,
+          Authorization: `Bearer ${apiKey}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          model,
-          messages: [{ role: "system", content: systemPrompt }, ...messages],
-          temperature: config.temperature,
-          max_tokens: config.maxTokens,
-          stream: true,
-        }),
+        body: JSON.stringify(body),
       });
     }
+    const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!apiKey) throw new Error("ANTHROPIC_API_KEY not configured for Claude models");
     return await fetch(ANTHROPIC_API_URL, {
       method: "POST",
       signal: controller.signal,
@@ -950,7 +1044,6 @@ async function requestModelStream(
 }
 
 async function requestModelJson(
-  apiKey: string,
   model: string,
   systemPrompt: string,
   messages: Array<{ role: "user" | "assistant"; content: string }>,
@@ -959,23 +1052,31 @@ async function requestModelJson(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), MODEL_TIMEOUT_MS);
   try {
-    if (isGeminiModel(model)) {
-      const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-      if (!lovableKey) throw new Error("LOVABLE_API_KEY not configured for Gemini models");
-      const response = await fetch(AI_GATEWAY_URL, {
+    if (isOpenAICompatibleModel(model)) {
+      const apiKey = isGeminiModel(model)
+        ? Deno.env.get("GEMINI_API_KEY")
+        : Deno.env.get("DEEPSEEK_API_KEY");
+      if (!apiKey) {
+        throw new Error(`${isGeminiModel(model) ? "GEMINI_API_KEY" : "DEEPSEEK_API_KEY"} not configured`);
+      }
+      const body: Record<string, unknown> = {
+        model,
+        messages: [{ role: "system", content: systemPrompt }, ...messages],
+        temperature: config.temperature,
+        max_tokens: config.maxTokens,
+        stream: false,
+      };
+      if (isDeepSeekModel(model)) {
+        body.thinking = { type: "disabled" };
+      }
+      const response = await fetch(isGeminiModel(model) ? GEMINI_OPENAI_API_URL : DEEPSEEK_OPENAI_API_URL, {
         method: "POST",
         signal: controller.signal,
         headers: {
-          Authorization: `Bearer ${lovableKey}`,
+          Authorization: `Bearer ${apiKey}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          model,
-          messages: [{ role: "system", content: systemPrompt }, ...messages],
-          temperature: config.temperature,
-          max_tokens: config.maxTokens,
-          stream: false,
-        }),
+        body: JSON.stringify(body),
       });
       if (!response.ok) throw new Error(await response.text());
       const json = await response.json();
@@ -987,6 +1088,8 @@ async function requestModelJson(
       return content;
     }
 
+    const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!apiKey) throw new Error("ANTHROPIC_API_KEY not configured for Claude models");
     const response = await fetch(ANTHROPIC_API_URL, {
       method: "POST",
       signal: controller.signal,
@@ -1018,6 +1121,24 @@ async function requestModelJson(
   } finally {
     clearTimeout(timeoutId);
   }
+}
+
+async function requestModelJsonWithFallback(
+  modelCandidates: string[],
+  systemPrompt: string,
+  messages: Array<{ role: "user" | "assistant"; content: string }>,
+  config: { temperature: number; maxTokens: number }
+): Promise<string> {
+  let lastError: unknown = null;
+  for (const candidate of modelCandidates) {
+    try {
+      return await requestModelJson(candidate, systemPrompt, messages, config);
+    } catch (error) {
+      lastError = error;
+      console.error("AI repair model failed:", candidate, error);
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("No repair model produced content");
 }
 
 async function readModelStreamChunk(reader: ReadableStreamDefaultReader<Uint8Array>) {
@@ -1056,17 +1177,17 @@ serve(async (req: Request) => {
   );
   const mode = body.mode === "classify" ? "classify" : "generate";
   const classifiedAction = normalizeAction(body.actionType, userMessage, hasExistingProject);
+  const authUser = await getUserFromAuth(req);
+  const userPlan = authUser ? await resolveUserPlan(authUser.id) : "rookie";
 
   if (mode === "classify") {
     const isActionable = classifiedAction !== "unsupported" && classifiedAction !== "unclear";
     const feature = isActionable ? ACTION_CONFIG[classifiedAction].feature : null;
     let classifyCost = 0;
     if (isActionable && feature) {
-      const actionDefaultModel = ACTION_CONFIG[classifiedAction].model;
-      const classifyModels = normalizeSelectedModels(body.selectedModels).filter((m) => HTML_CAPABLE_MODEL_SET.has(m));
-      const classifyModel = (classifyModels[0] && classifyModels[0] !== DEFAULT_MODEL)
-        ? classifyModels[0]
-        : actionDefaultModel;
+      const actionDefaultModel = resolveMVPActionDefaultModelForPlan(feature, userPlan);
+      const classifyModels = normalizeSelectedModels(body.selectedModels, userPlan).filter((m) => HTML_CAPABLE_MODEL_SET.has(m));
+      const classifyModel = classifyModels[0] ?? actionDefaultModel;
       classifyCost = resolveModelAdjustedCreditCost(CREDIT_COSTS[feature], classifyModel, actionDefaultModel);
     }
     return jsonResponse({
@@ -1077,8 +1198,6 @@ serve(async (req: Request) => {
     });
   }
 
-  const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY");
-  if (!anthropicApiKey) return errorStream("ANTHROPIC_API_KEY not configured", "CONFIGURATION_ERROR");
   if (!userMessage.trim()) return errorStream("userMessage is required", "BAD_REQUEST");
   if (classifiedAction === "unclear") return errorStream("Please clarify what you want MVP Builder to change.", "UNCLEAR_ACTION");
   if (classifiedAction === "unsupported") {
@@ -1088,24 +1207,21 @@ serve(async (req: Request) => {
     );
   }
 
-  const user = await getUserFromAuth(req);
+  const user = authUser;
   if (!user) return errorStream("Authentication required", "UNAUTHORIZED");
 
   const template  = normalizeTemplate(body.template ?? (body.setupInput as Record<string, unknown> | undefined)?.template);
   const palette   = normalizePalette(body.palettePreference ?? (body.setupInput as Record<string, unknown> | undefined)?.palettePreference);
   const userId    = user.id;
   const creditFeature = ACTION_CONFIG[classifiedAction].feature;
-  const defaultModel  = ACTION_CONFIG[classifiedAction].model;
+  const defaultModel  = resolveMVPActionDefaultModelForPlan(creditFeature, userPlan);
 
   // Resolve the model BEFORE reserving so the charge reflects the model choice.
-  const selectedModels = normalizeSelectedModels(body.selectedModels);
+  const selectedModels = normalizeSelectedModels(body.selectedModels, userPlan);
   const textCapableModels = selectedModels.filter((m) => HTML_CAPABLE_MODEL_SET.has(m));
   const userExplicitModel = textCapableModels[0];
-  // Use action-specific default unless the user explicitly picked a non-default model
-  const primaryModel = (userExplicitModel && userExplicitModel !== DEFAULT_MODEL)
-    ? userExplicitModel
-    : defaultModel;
-  const modelCandidates = getFallbackCandidates(primaryModel);
+  const primaryModel = userExplicitModel ?? defaultModel;
+  const modelCandidates = getFallbackCandidates(primaryModel, userPlan);
 
   // Charge the base cost at the action's default model; surcharge proportionally
   // when the user upgrades to a pricier model so cost-per-credit stays bounded
@@ -1194,7 +1310,6 @@ serve(async (req: Request) => {
     selectedModel = candidate;
     try {
       const attempt = await requestModelStream(
-        anthropicApiKey,
         candidate,
         systemPrompt,
         messages,
@@ -1223,7 +1338,7 @@ serve(async (req: Request) => {
   (async () => {
     const reader = aiResponse!.body!.getReader();
     const decoder = new TextDecoder();
-    const usingGemini = isGeminiModel(selectedModel);
+    const usingOpenAICompatible = isOpenAICompatibleModel(selectedModel);
     let buffer = "";
     let fullText = "";
     let sawStop = false;
@@ -1296,7 +1411,7 @@ serve(async (req: Request) => {
           if (!line.startsWith("data: ")) continue;
           const raw = line.slice(6).trim();
           if (!raw) continue;
-          // OpenAI/Lovable-gateway terminator (Gemini)
+          // OpenAI-compatible stream terminator (Gemini and DeepSeek)
           if (raw === "[DONE]") {
             sawStop = true;
             break;
@@ -1309,7 +1424,7 @@ serve(async (req: Request) => {
             continue;
           }
 
-          if (usingGemini) {
+          if (usingOpenAICompatible) {
             // OpenAI-compatible stream: choices[0].delta.content
             const choice = (event.choices as Array<Record<string, unknown>> | undefined)?.[0];
             const delta = choice?.delta as Record<string, unknown> | undefined;
@@ -1387,15 +1502,10 @@ serve(async (req: Request) => {
       try {
         validated = validateOutput(parseAndNormalizeModelOutput(fullText, currentProject, classifiedAction));
       } catch (validationError) {
-        // Attempt repair with a non-streaming call. If a strong model (Sonnet)
-        // generated the page, the failure is usually a small structural miss —
-        // repair with fast Haiku to keep latency down. If a weaker model
-        // generated it, escalate to Sonnet for a quality second pass.
-        const repairModel = selectedModel === DEFAULT_MODEL ? FALLBACK_MODEL : DEFAULT_MODEL;
+        const repairModels = getRepairCandidates(selectedModel, userPlan);
         try {
-          const repaired = await requestModelJson(
-            anthropicApiKey,
-            repairModel,
+          const repaired = await requestModelJsonWithFallback(
+            repairModels,
             systemPrompt,
             [
               ...messages,

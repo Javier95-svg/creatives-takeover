@@ -8,14 +8,18 @@ import { createIdempotencyKey } from '@/lib/idempotency';
 import { toast } from 'sonner';
 import {
   MVP_DEFAULT_MODEL,
+  getMVPDefaultModelForPlan,
   sanitizeMVPModelSelection,
 } from '@/data/mvpModels';
+import type { MVPModelPlan } from '@/data/mvpModels';
 import {
   MVP_DEFAULT_PROJECT_TYPE,
   sanitizeMVPProjectType,
 } from '@/data/mvpProjectTypes';
 import type { CreditFeature } from '@/config/constants';
-import { CREDIT_COSTS, MVP_ACTION_DEFAULT_MODEL, resolveModelAdjustedCreditCost } from '@/config/constants';
+import { CREDIT_COSTS, resolveMVPActionDefaultModelForPlan, resolveModelAdjustedCreditCost } from '@/config/constants';
+import { normalizePlan } from '@/config/planPermissions';
+import { useSubscription } from '@/hooks/useSubscription';
 import {
   buildPreviewFromProject,
   createProjectFromHtml,
@@ -920,6 +924,15 @@ export function useMVPBuilder() {
     refreshBalance: refreshCredits,
     loading: creditsLoading,
   } = useCredits();
+  const { subscriptionData, loading: subscriptionLoading } = useSubscription({ fetchTiers: false });
+  const currentPlan = useMemo<MVPModelPlan>(
+    () => normalizePlan(subscriptionData?.subscription_tier) as MVPModelPlan,
+    [subscriptionData?.subscription_tier]
+  );
+  const defaultModelForPlan = useMemo(
+    () => getMVPDefaultModelForPlan(currentPlan),
+    [currentPlan]
+  );
 
   const [messages, setMessages] = useState<MVPMessage[]>([]);
   const [projectFiles, setProjectFiles] = useState<MVPProjectFile[]>([]);
@@ -957,13 +970,32 @@ export function useMVPBuilder() {
   const [savedProjects, setSavedProjects] = useState<MVPProjectRecord[]>([]);
   const [isProjectsLoading, setIsProjectsLoading] = useState(false);
   const [promptHistory, setPromptHistory] = useState<MVPPromptHistoryItem[]>([]);
-  const [selectedModels, setSelectedModelsState] = useState<string[]>([MVP_DEFAULT_MODEL]);
+  const [selectedModels, setSelectedModelsState] = useState<string[]>(() => [defaultModelForPlan]);
   const [setupInput, setSetupInputState] = useState<MVPBuilderSetupInput>(() => createDefaultSetupInput());
   const [startupContext, setStartupContext] = useState<Record<string, unknown> | null>(null);
   const [projectVersions, setProjectVersions] = useState<MVPBuilderVersion[]>([]);
   const [lastActionQuote, setLastActionQuote] = useState<MVPActionQuote | null>(null);
   const [deploymentUrl, setDeploymentUrl] = useState<string | null>(null);
   const [isDeploying, setIsDeploying] = useState(false);
+  const userChangedModelRef = useRef(false);
+
+  useEffect(() => {
+    setSelectedModelsState((prev) => {
+      const sanitized = sanitizeMVPModelSelection(prev, currentPlan);
+      const shouldApplyFreshPlanDefault =
+        !subscriptionLoading &&
+        !userChangedModelRef.current &&
+        messages.length === 0 &&
+        projectFiles.length === 0 &&
+        prev.length === 1 &&
+        prev[0] === MVP_DEFAULT_MODEL &&
+        defaultModelForPlan !== MVP_DEFAULT_MODEL;
+      const next = shouldApplyFreshPlanDefault ? [defaultModelForPlan] : sanitized;
+      return next.length === prev.length && next.every((model, index) => model === prev[index])
+        ? prev
+        : next;
+    });
+  }, [currentPlan, defaultModelForPlan, messages.length, projectFiles.length, subscriptionLoading]);
 
   const [githubConnection, setGitHubConnection] = useState<GitHubConnectionState>({
     connected: false,
@@ -1247,7 +1279,7 @@ export function useMVPBuilder() {
             )
           : []
       );
-      setSelectedModelsState(sanitizeMVPModelSelection(session.selectedModels));
+      setSelectedModelsState(sanitizeMVPModelSelection(session.selectedModels, currentPlan));
       setSelectedProjectTypeState(sanitizeMVPProjectType(session.selectedProjectType));
       setSetupInputState({
         ...createDefaultSetupInput(),
@@ -1324,7 +1356,7 @@ export function useMVPBuilder() {
     } catch {
       // ignore corrupt state
     }
-  }, [applyProjectArtifact, storageKey, user?.id]);
+  }, [applyProjectArtifact, currentPlan, storageKey, user?.id]);
 
   useEffect(() => {
     persist(
@@ -1425,7 +1457,8 @@ export function useMVPBuilder() {
       setProjectVersions(Array.isArray(record.versions) ? record.versions : []);
       setDeploymentUrl(resolvePublishedUrl(record));
       setProjectSnapshots([]);
-      setSelectedModelsState([MVP_DEFAULT_MODEL]);
+      userChangedModelRef.current = false;
+      setSelectedModelsState([defaultModelForPlan]);
       setGitHubRepoSession(null);
       setGitHubPendingChanges([]);
       setGitHubCommitHistory([]);
@@ -1480,7 +1513,7 @@ export function useMVPBuilder() {
         setLastGeneratedProject(null);
       }
     },
-    [applyProjectArtifact, replaceMessages]
+    [applyProjectArtifact, defaultModelForPlan, replaceMessages]
   );
 
   const loadProjects = useCallback(async () => {
@@ -2599,6 +2632,7 @@ export function useMVPBuilder() {
       markProjectDirty();
 
       try {
+        const sanitizedSelectedModels = sanitizeMVPModelSelection(selectedModels, currentPlan);
         const result = await callGitHubFunction<{
           summary: string;
           commitMessage?: string;
@@ -2609,7 +2643,7 @@ export function useMVPBuilder() {
           prompt,
           repositoryName: githubRepoSession.fullName,
           files: githubRepoSession.files,
-          selectedModels,
+          selectedModels: sanitizedSelectedModels,
         });
 
         const summary = result.summary || 'Prepared repository changes.';
@@ -2680,7 +2714,7 @@ export function useMVPBuilder() {
         setIsGenerating(false);
       }
     },
-    [applyProjectArtifact, callGitHubFunction, entryFilePath, githubRepoSession, handleCreditError, markProjectDirty, refreshCredits, selectedModels]
+    [applyProjectArtifact, callGitHubFunction, currentPlan, entryFilePath, githubRepoSession, handleCreditError, markProjectDirty, refreshCredits, selectedModels]
   );
 
   const classifyActionQuote = useCallback(async (prompt: string) => {
@@ -2701,9 +2735,9 @@ export function useMVPBuilder() {
     }
 
     const localFeature = MVP_BUILDER_ACTION_CREDIT_FEATURE[localActionType] as CreditFeature;
-    const actionDefaultModel = MVP_ACTION_DEFAULT_MODEL[localFeature] ?? MVP_DEFAULT_MODEL;
-    const firstModel = selectedModels[0];
-    const quoteModel = firstModel && firstModel !== MVP_DEFAULT_MODEL ? firstModel : actionDefaultModel;
+    const sanitizedSelectedModels = sanitizeMVPModelSelection(selectedModels, currentPlan);
+    const actionDefaultModel = resolveMVPActionDefaultModelForPlan(localFeature, currentPlan);
+    const quoteModel = sanitizedSelectedModels[0] ?? actionDefaultModel;
     const fallbackQuote: MVPActionQuote = {
       actionType: localActionType,
       creditFeature: localFeature,
@@ -2712,13 +2746,18 @@ export function useMVPBuilder() {
     setLastActionQuote(fallbackQuote);
 
     try {
+      const session = await getSessionSafely();
+      const accessToken = session?.access_token;
       const response = await fetch(STREAM_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
         body: JSON.stringify({
           mode: 'classify',
           userMessage: prompt,
-          selectedModels,
+          selectedModels: sanitizedSelectedModels,
           currentProject:
             projectFiles.length > 0
               ? { files: projectFiles.map((file) => ({ path: file.path, content: file.content })) }
@@ -2737,7 +2776,7 @@ export function useMVPBuilder() {
     } catch {
       return fallbackQuote;
     }
-  }, [projectFiles, selectedModels]);
+  }, [currentPlan, projectFiles, selectedModels]);
 
   const sendMessage = useCallback(
     async (
@@ -2770,6 +2809,7 @@ export function useMVPBuilder() {
             hasMessages: messages.length > 0,
           });
       const featureLabel = getMVPActionLabel(creditFeature);
+      const sanitizedSelectedModels = sanitizeMVPModelSelection(selectedModels, currentPlan);
 
       if (githubRepoSession) {
         const required = ensureCredits(creditFeature, {
@@ -2888,7 +2928,7 @@ export function useMVPBuilder() {
                 : null,
             conversationHistory,
             currentCode,
-            selectedModels,
+            selectedModels: sanitizedSelectedModels,
             preferredProjectType: selectedProjectType,
             preferredFramework,
           }),
@@ -3248,6 +3288,7 @@ export function useMVPBuilder() {
       currentHtml,
       creditsAvailable,
       creditsLoading,
+      currentPlan,
       projectFiles,
       projectId,
       projectDependencies,
@@ -3573,9 +3614,10 @@ export function useMVPBuilder() {
   }, []);
 
   const setSelectedModels = useCallback((models: string[]) => {
-    setSelectedModelsState(sanitizeMVPModelSelection(models));
+    userChangedModelRef.current = true;
+    setSelectedModelsState(sanitizeMVPModelSelection(models, currentPlan));
     markProjectDirty();
-  }, [markProjectDirty]);
+  }, [currentPlan, markProjectDirty]);
 
   const cancelGeneration = useCallback(() => {
     abortRef.current?.abort();
@@ -3617,7 +3659,8 @@ export function useMVPBuilder() {
     setProjectId(newId);
     setLastSavedAt(null);
     setHasUnsavedChanges(false);
-    setSelectedModelsState([MVP_DEFAULT_MODEL]);
+    userChangedModelRef.current = false;
+    setSelectedModelsState([defaultModelForPlan]);
     setIsGenerating(false);
 
     setGitHubRepoSession(null);
@@ -3630,7 +3673,7 @@ export function useMVPBuilder() {
     // Clear both the current account's scoped cache and the legacy global key.
     if (storageKey) localStorage.removeItem(storageKey);
     localStorage.removeItem(STORAGE_KEY);
-  }, [replaceMessages, storageKey]);
+  }, [defaultModelForPlan, replaceMessages, storageKey]);
 
   const codeChanges = lastGeneratedProject
     ? getChangedProjectFiles(projectFiles, lastGeneratedProject.files)
@@ -3666,6 +3709,7 @@ export function useMVPBuilder() {
     isProjectsLoading,
     promptHistory,
     selectedModels,
+    currentPlan,
     setupInput,
     projectVersions,
     lastActionQuote,
