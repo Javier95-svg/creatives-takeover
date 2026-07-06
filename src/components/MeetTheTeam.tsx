@@ -5,7 +5,7 @@ import javierPhoto from "@/assets/team-javier-pena.webp";
 import domagojPhoto from "@/assets/team-domagoj-markota.webp";
 import danielaPhoto from "@/assets/team-daniela-hagg.webp";
 import jelenaPhoto from "@/assets/team-jelena-dabovic.webp";
-import evaggelosPhoto from "@/assets/team-evaggelos-michalopoulos.webp";
+import otiliaPhoto from "@/assets/team-otilia-dogaru.jpg";
 import deliaPhoto from "@/assets/team-delia-meres.jpeg";
 
 type TeamMember = {
@@ -48,11 +48,11 @@ const teamMembers: TeamMember[] = [
     photo: jelenaPhoto,
   },
   {
-    name: "Evaggelos Michalopoulos",
+    name: "Otilia Dogaru",
     role: "Sales Development Representative",
-    bio: "Evaggelos helps founders and partners connect with the right opportunities through thoughtful outreach, qualification, and relationship-building.",
-    linkedin: "https://www.linkedin.com/in/evaggelos-michalopoulos-b367ab373/",
-    photo: evaggelosPhoto,
+    bio: "Otilia helps founders and partners connect with the right opportunities through thoughtful outreach, qualification, and relationship-building.",
+    linkedin: "https://www.linkedin.com/in/otilia-dogaru/",
+    photo: otiliaPhoto,
   },
   {
     name: "Delia Meres",
