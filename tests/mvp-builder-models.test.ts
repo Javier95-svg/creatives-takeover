@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import {
   MVP_DEEPSEEK_FALLBACK_MODEL,
@@ -10,6 +11,11 @@ import {
   isMVPModelAllowedForPlan,
   sanitizeMVPModelSelection,
 } from '../src/data/mvpModels.ts';
+
+const edgeFunctionSource = readFileSync(
+  new URL('../supabase/functions/mvp-builder-generate/index.ts', import.meta.url),
+  'utf8'
+);
 
 test('MVP Builder defaults use Gemini for Rookie and Starter, Claude for Rising and Pro', () => {
   assert.equal(getMVPDefaultModelForPlan('rookie'), MVP_FREE_DEFAULT_MODEL);
@@ -46,4 +52,17 @@ test('DeepSeek is supported as fallback-only and hidden from selectable models',
     getSelectableMVPModelOptions('rookie').some((model) => model.id === MVP_DEEPSEEK_FALLBACK_MODEL),
     false
   );
+});
+
+test('MVP Builder repair validates each repair candidate before accepting it', () => {
+  assert.match(
+    edgeFunctionSource,
+    /function getRepairCandidates[\s\S]*DEEPSEEK_FALLBACK_MODEL[\s\S]*selectedModel/
+  );
+  assert.match(edgeFunctionSource, /async function repairModelOutputWithFallback/);
+  assert.match(
+    edgeFunctionSource,
+    /for \(const candidate of modelCandidates\)[\s\S]*const repaired = await requestModelJson[\s\S]*return validateOutput\(parseAndNormalizeModelOutput\(repaired, currentProject, actionType\)\)/
+  );
+  assert.doesNotMatch(edgeFunctionSource, /const repaired = await requestModelJsonWithFallback/);
 });

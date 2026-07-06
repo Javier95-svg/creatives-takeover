@@ -468,7 +468,14 @@ function getFallbackCandidates(primaryModel: string, plan: Plan): string[] {
 }
 
 function getRepairCandidates(selectedModel: string, plan: Plan): string[] {
-  return getFallbackCandidates(selectedModel, plan).filter((model) => model !== selectedModel);
+  return Array.from(
+    new Set([
+      DEEPSEEK_FALLBACK_MODEL,
+      selectedModel,
+      getPlanDefaultModel(plan),
+      FREE_DEFAULT_MODEL,
+    ])
+  ).filter((model) => isModelAllowedForPlan(model, plan));
 }
 
 function getAdminClient() {
@@ -1123,22 +1130,25 @@ async function requestModelJson(
   }
 }
 
-async function requestModelJsonWithFallback(
+async function repairModelOutputWithFallback(
   modelCandidates: string[],
   systemPrompt: string,
   messages: Array<{ role: "user" | "assistant"; content: string }>,
-  config: { temperature: number; maxTokens: number }
-): Promise<string> {
+  config: { temperature: number; maxTokens: number },
+  currentProject: unknown,
+  actionType: MVPBuilderActionType
+): Promise<ReturnType<typeof validateOutput>> {
   let lastError: unknown = null;
   for (const candidate of modelCandidates) {
     try {
-      return await requestModelJson(candidate, systemPrompt, messages, config);
+      const repaired = await requestModelJson(candidate, systemPrompt, messages, config);
+      return validateOutput(parseAndNormalizeModelOutput(repaired, currentProject, actionType));
     } catch (error) {
       lastError = error;
       console.error("AI repair model failed:", candidate, error);
     }
   }
-  throw lastError instanceof Error ? lastError : new Error("No repair model produced content");
+  throw lastError instanceof Error ? lastError : new Error("No repair model produced a valid project");
 }
 
 async function readModelStreamChunk(reader: ReadableStreamDefaultReader<Uint8Array>) {
@@ -1504,7 +1514,7 @@ serve(async (req: Request) => {
       } catch (validationError) {
         const repairModels = getRepairCandidates(selectedModel, userPlan);
         try {
-          const repaired = await requestModelJsonWithFallback(
+          validated = await repairModelOutputWithFallback(
             repairModels,
             systemPrompt,
             [
@@ -1522,9 +1532,10 @@ Previous response:
 ${fullText}`,
               },
             ],
-            { temperature: 0.1, maxTokens: ACTION_CONFIG[classifiedAction].maxTokens + 2000 }
+            { temperature: 0.1, maxTokens: ACTION_CONFIG[classifiedAction].maxTokens + 2000 },
+            currentProject,
+            classifiedAction
           );
-          validated = validateOutput(parseAndNormalizeModelOutput(repaired, currentProject, classifiedAction));
         } catch (repairError) {
           const released = await releaseMVPBuilderCredits(
             reservationId,
