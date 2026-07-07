@@ -4897,11 +4897,15 @@ export type Database = {
       }
       services: {
         Row: {
+          banner_focal_x: number | null
+          banner_focal_y: number | null
           banner_url: string | null
           booking_provider: string
           booking_url: string | null
           category: string
           created_at: string
+          delivered_by_picture_focal_x: number | null
+          delivered_by_picture_focal_y: number | null
           delivered_by_name: string | null
           delivered_by_picture_url: string | null
           delivered_by_user_id: string | null
@@ -4917,11 +4921,15 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          banner_focal_x?: number | null
+          banner_focal_y?: number | null
           banner_url?: string | null
           booking_provider?: string
           booking_url?: string | null
           category: string
           created_at?: string
+          delivered_by_picture_focal_x?: number | null
+          delivered_by_picture_focal_y?: number | null
           delivered_by_name?: string | null
           delivered_by_picture_url?: string | null
           delivered_by_user_id?: string | null
@@ -4937,11 +4945,15 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          banner_focal_x?: number | null
+          banner_focal_y?: number | null
           banner_url?: string | null
           booking_provider?: string
           booking_url?: string | null
           category?: string
           created_at?: string
+          delivered_by_picture_focal_x?: number | null
+          delivered_by_picture_focal_y?: number | null
           delivered_by_name?: string | null
           delivered_by_picture_url?: string | null
           delivered_by_user_id?: string | null

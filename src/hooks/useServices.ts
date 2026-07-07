@@ -24,6 +24,8 @@ function formatServiceError(error: any, fallback: string) {
 }
 
 function toService(row: any): MarketplaceService {
+  const numberOrDefault = (value: unknown, fallback = 50) => Number(value ?? fallback);
+
   return {
     id: row.id,
     name: row.name,
@@ -32,9 +34,13 @@ function toService(row: any): MarketplaceService {
     description: row.description,
     delivered_by_name: row.delivered_by_name ?? null,
     delivered_by_picture_url: row.delivered_by_picture_url ?? null,
+    delivered_by_picture_focal_x: numberOrDefault(row.delivered_by_picture_focal_x),
+    delivered_by_picture_focal_y: numberOrDefault(row.delivered_by_picture_focal_y),
     delivered_by_user_id: row.delivered_by_user_id ?? null,
     delivered_by_email: row.delivered_by_email ?? null,
     banner_url: row.banner_url ?? null,
+    banner_focal_x: numberOrDefault(row.banner_focal_x),
+    banner_focal_y: numberOrDefault(row.banner_focal_y),
     pitch_deck_url: row.pitch_deck_url ?? null,
     pitch_deck_type: row.pitch_deck_type ?? null,
     booking_url: row.booking_url ?? null,
@@ -58,9 +64,17 @@ function buildServicePayload(input: Partial<CreateServiceInput>) {
   if (input.description !== undefined) payload.description = input.description.trim();
   if (input.delivered_by_name !== undefined) payload.delivered_by_name = input.delivered_by_name?.trim() || null;
   if (input.delivered_by_picture_url !== undefined) payload.delivered_by_picture_url = input.delivered_by_picture_url || null;
+  if (input.delivered_by_picture_focal_x !== undefined) {
+    payload.delivered_by_picture_focal_x = input.delivered_by_picture_focal_x ?? 50;
+  }
+  if (input.delivered_by_picture_focal_y !== undefined) {
+    payload.delivered_by_picture_focal_y = input.delivered_by_picture_focal_y ?? 50;
+  }
   if (input.delivered_by_user_id !== undefined) payload.delivered_by_user_id = input.delivered_by_user_id?.trim() || null;
   if (input.delivered_by_email !== undefined) payload.delivered_by_email = input.delivered_by_email?.trim() || null;
   if (input.banner_url !== undefined) payload.banner_url = input.banner_url || null;
+  if (input.banner_focal_x !== undefined) payload.banner_focal_x = input.banner_focal_x ?? 50;
+  if (input.banner_focal_y !== undefined) payload.banner_focal_y = input.banner_focal_y ?? 50;
   if (input.pitch_deck_url !== undefined) payload.pitch_deck_url = input.pitch_deck_url || null;
   if (input.pitch_deck_type !== undefined) payload.pitch_deck_type = input.pitch_deck_type || null;
   if (input.booking_url !== undefined) payload.booking_url = input.booking_url || null;

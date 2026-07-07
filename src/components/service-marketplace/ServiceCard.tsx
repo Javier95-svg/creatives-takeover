@@ -17,6 +17,8 @@ interface ServiceCardProps {
   className?: string;
 }
 
+const getImagePosition = (x?: number | null, y?: number | null) => `${x ?? 50}% ${y ?? 50}%`;
+
 export function ServiceCard({ service, priority = false, className }: ServiceCardProps) {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
@@ -87,6 +89,7 @@ export function ServiceCard({ service, priority = false, className }: ServiceCar
             loading={priority ? "eager" : "lazy"}
             decoding="async"
             fetchPriority={priority ? "high" : "auto"}
+            style={{ objectPosition: getImagePosition(service.banner_focal_x, service.banner_focal_y) }}
           />
         ) : (
           <div className="flex h-full items-center justify-center bg-gradient-to-br from-slate-950 via-slate-800 to-cyan-900 text-white">
@@ -108,6 +111,12 @@ export function ServiceCard({ service, priority = false, className }: ServiceCar
                 className="h-12 w-12 rounded-md object-cover"
                 loading="lazy"
                 decoding="async"
+                style={{
+                  objectPosition: getImagePosition(
+                    service.delivered_by_picture_focal_x,
+                    service.delivered_by_picture_focal_y,
+                  ),
+                }}
               />
             ) : (
               <div className="flex h-12 w-12 items-center justify-center rounded-md bg-primary/10 text-xs font-semibold text-primary">

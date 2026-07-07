@@ -17,6 +17,8 @@ import type { MarketplaceService } from "@/types/serviceMarketplace";
 import { SERVICE_CATEGORY_LABELS } from "@/types/serviceMarketplace";
 import { getServiceProfilePath } from "@/utils/serviceMarketplace";
 
+const getImagePosition = (x?: number | null, y?: number | null) => `${x ?? 50}% ${y ?? 50}%`;
+
 const ServiceProfilePage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -170,6 +172,12 @@ const ServiceProfilePage = () => {
                           className="h-16 w-16 rounded-md object-cover"
                           loading="eager"
                           decoding="async"
+                          style={{
+                            objectPosition: getImagePosition(
+                              service.delivered_by_picture_focal_x,
+                              service.delivered_by_picture_focal_y,
+                            ),
+                          }}
                         />
                       ) : (
                         <div className="flex h-16 w-16 items-center justify-center rounded-md bg-primary/10 text-sm font-semibold text-primary">
@@ -206,7 +214,12 @@ const ServiceProfilePage = () => {
 
                 <div className="overflow-hidden rounded-lg border border-border bg-muted shadow-sm">
                   {service.banner_url ? (
-                    <img src={service.banner_url} alt={service.name} className="aspect-[4/1] h-full w-full object-cover" />
+                    <img
+                      src={service.banner_url}
+                      alt={service.name}
+                      className="aspect-[4/1] h-full w-full object-cover"
+                      style={{ objectPosition: getImagePosition(service.banner_focal_x, service.banner_focal_y) }}
+                    />
                   ) : (
                     <div className="flex aspect-[4/1] items-center justify-center bg-gradient-to-br from-slate-950 via-slate-800 to-cyan-900 p-8 text-center text-2xl font-semibold text-white">
                       {service.name}

@@ -19,9 +19,13 @@ export interface MarketplaceService {
   description: string;
   delivered_by_name: string | null;
   delivered_by_picture_url: string | null;
+  delivered_by_picture_focal_x: number | null;
+  delivered_by_picture_focal_y: number | null;
   delivered_by_user_id: string | null;
   delivered_by_email: string | null;
   banner_url: string | null;
+  banner_focal_x: number | null;
+  banner_focal_y: number | null;
   pitch_deck_url: string | null;
   pitch_deck_type: ServicePitchDeckType | null;
   booking_url: string | null;
@@ -39,9 +43,13 @@ export interface CreateServiceInput {
   description: string;
   delivered_by_name?: string | null;
   delivered_by_picture_url?: string | null;
+  delivered_by_picture_focal_x?: number | null;
+  delivered_by_picture_focal_y?: number | null;
   delivered_by_user_id?: string | null;
   delivered_by_email?: string | null;
   banner_url?: string | null;
+  banner_focal_x?: number | null;
+  banner_focal_y?: number | null;
   pitch_deck_url?: string | null;
   pitch_deck_type?: ServicePitchDeckType | null;
   booking_url?: string | null;

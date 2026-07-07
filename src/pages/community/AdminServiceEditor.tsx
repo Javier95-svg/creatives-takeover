@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useAdminRole } from "@/hooks/useAdminRole";
@@ -22,6 +23,10 @@ import { generateServiceSlug, getDeckTypeFromFile, getServiceProfilePath } from 
 const BANNER_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
 const MAX_BANNER_BYTES = 5 * 1024 * 1024;
 const MAX_DECK_BYTES = 20 * 1024 * 1024;
+const DEFAULT_IMAGE_FOCAL = 50;
+
+const getImagePosition = (x?: number | null, y?: number | null) =>
+  `${x ?? DEFAULT_IMAGE_FOCAL}% ${y ?? DEFAULT_IMAGE_FOCAL}%`;
 
 const initialForm: CreateServiceInput = {
   name: "",
@@ -30,9 +35,13 @@ const initialForm: CreateServiceInput = {
   description: "",
   delivered_by_name: null,
   delivered_by_picture_url: null,
+  delivered_by_picture_focal_x: DEFAULT_IMAGE_FOCAL,
+  delivered_by_picture_focal_y: DEFAULT_IMAGE_FOCAL,
   delivered_by_user_id: null,
   delivered_by_email: null,
   banner_url: null,
+  banner_focal_x: DEFAULT_IMAGE_FOCAL,
+  banner_focal_y: DEFAULT_IMAGE_FOCAL,
   pitch_deck_url: null,
   pitch_deck_type: null,
   is_active: true,
@@ -79,9 +88,13 @@ const AdminServiceEditor = () => {
       description: found.description,
       delivered_by_name: found.delivered_by_name,
       delivered_by_picture_url: found.delivered_by_picture_url,
+      delivered_by_picture_focal_x: found.delivered_by_picture_focal_x ?? DEFAULT_IMAGE_FOCAL,
+      delivered_by_picture_focal_y: found.delivered_by_picture_focal_y ?? DEFAULT_IMAGE_FOCAL,
       delivered_by_user_id: found.delivered_by_user_id,
       delivered_by_email: found.delivered_by_email,
       banner_url: found.banner_url,
+      banner_focal_x: found.banner_focal_x ?? DEFAULT_IMAGE_FOCAL,
+      banner_focal_y: found.banner_focal_y ?? DEFAULT_IMAGE_FOCAL,
       pitch_deck_url: found.pitch_deck_url,
       pitch_deck_type: found.pitch_deck_type,
       is_active: found.is_active,
@@ -137,7 +150,12 @@ const AdminServiceEditor = () => {
       setUploadingBanner(true);
       toast.loading("Uploading banner...", { id: "service-banner-upload" });
       const publicUrl = await uploadFile("service-banners", file, service?.id || "drafts");
-      setFormData((prev) => ({ ...prev, banner_url: publicUrl }));
+      setFormData((prev) => ({
+        ...prev,
+        banner_url: publicUrl,
+        banner_focal_x: DEFAULT_IMAGE_FOCAL,
+        banner_focal_y: DEFAULT_IMAGE_FOCAL,
+      }));
       toast.success("Banner uploaded", { id: "service-banner-upload" });
     } catch (error: any) {
       console.error("Service banner upload failed:", error);
@@ -168,7 +186,12 @@ const AdminServiceEditor = () => {
       setUploadingByPicture(true);
       toast.loading("Uploading by picture...", { id: "service-by-picture-upload" });
       const publicUrl = await uploadFile("service-banners", file, `delivered-by/${service?.id || "drafts"}`);
-      setFormData((prev) => ({ ...prev, delivered_by_picture_url: publicUrl }));
+      setFormData((prev) => ({
+        ...prev,
+        delivered_by_picture_url: publicUrl,
+        delivered_by_picture_focal_x: DEFAULT_IMAGE_FOCAL,
+        delivered_by_picture_focal_y: DEFAULT_IMAGE_FOCAL,
+      }));
       toast.success("By picture uploaded", { id: "service-by-picture-upload" });
     } catch (error: any) {
       console.error("Service by picture upload failed:", error);
@@ -266,9 +289,13 @@ const AdminServiceEditor = () => {
         description: formData.description.trim(),
         delivered_by_name: formData.delivered_by_name?.trim() || null,
         delivered_by_picture_url: formData.delivered_by_picture_url || null,
+        delivered_by_picture_focal_x: formData.delivered_by_picture_focal_x ?? DEFAULT_IMAGE_FOCAL,
+        delivered_by_picture_focal_y: formData.delivered_by_picture_focal_y ?? DEFAULT_IMAGE_FOCAL,
         delivered_by_user_id: formData.delivered_by_user_id?.trim() || null,
         delivered_by_email: formData.delivered_by_email?.trim() || null,
         banner_url: formData.banner_url || null,
+        banner_focal_x: formData.banner_focal_x ?? DEFAULT_IMAGE_FOCAL,
+        banner_focal_y: formData.banner_focal_y ?? DEFAULT_IMAGE_FOCAL,
         pitch_deck_url: formData.pitch_deck_url || null,
         pitch_deck_type: formData.pitch_deck_type || null,
         is_active: formData.is_active !== false,
@@ -460,23 +487,89 @@ const AdminServiceEditor = () => {
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => setFormData((prev) => ({ ...prev, delivered_by_picture_url: null }))}
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            delivered_by_picture_url: null,
+                            delivered_by_picture_focal_x: DEFAULT_IMAGE_FOCAL,
+                            delivered_by_picture_focal_y: DEFAULT_IMAGE_FOCAL,
+                          }))
+                        }
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
                         Remove Picture
                       </Button>
                     )}
                   </div>
-                  <div className="flex items-center justify-center rounded-lg border border-border bg-muted">
-                    {formData.delivered_by_picture_url ? (
-                      <img
-                        src={formData.delivered_by_picture_url}
-                        alt={formData.delivered_by_name || "Service delivery preview"}
-                        className="aspect-square w-full rounded-md object-cover"
-                      />
-                    ) : (
-                      <div className="flex aspect-square w-full items-center justify-center">
-                        <Image className="h-10 w-10 text-muted-foreground" />
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-center overflow-hidden rounded-lg border border-border bg-muted">
+                      {formData.delivered_by_picture_url ? (
+                        <img
+                          src={formData.delivered_by_picture_url}
+                          alt={formData.delivered_by_name || "Service delivery preview"}
+                          className="aspect-square w-full rounded-md object-cover"
+                          style={{
+                            objectPosition: getImagePosition(
+                              formData.delivered_by_picture_focal_x,
+                              formData.delivered_by_picture_focal_y,
+                            ),
+                          }}
+                        />
+                      ) : (
+                        <div className="flex aspect-square w-full items-center justify-center">
+                          <Image className="h-10 w-10 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+                    {formData.delivered_by_picture_url && (
+                      <div className="space-y-3 rounded-lg border border-border/60 bg-background p-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-sm font-medium">Frame picture</p>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                delivered_by_picture_focal_x: DEFAULT_IMAGE_FOCAL,
+                                delivered_by_picture_focal_y: DEFAULT_IMAGE_FOCAL,
+                              }))
+                            }
+                          >
+                            Center
+                          </Button>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Horizontal</span>
+                            <span>{formData.delivered_by_picture_focal_x ?? DEFAULT_IMAGE_FOCAL}%</span>
+                          </div>
+                          <Slider
+                            value={[formData.delivered_by_picture_focal_x ?? DEFAULT_IMAGE_FOCAL]}
+                            min={0}
+                            max={100}
+                            step={1}
+                            onValueChange={([value]) =>
+                              setFormData((prev) => ({ ...prev, delivered_by_picture_focal_x: value }))
+                            }
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Vertical</span>
+                            <span>{formData.delivered_by_picture_focal_y ?? DEFAULT_IMAGE_FOCAL}%</span>
+                          </div>
+                          <Slider
+                            value={[formData.delivered_by_picture_focal_y ?? DEFAULT_IMAGE_FOCAL]}
+                            min={0}
+                            max={100}
+                            step={1}
+                            onValueChange={([value]) =>
+                              setFormData((prev) => ({ ...prev, delivered_by_picture_focal_y: value }))
+                            }
+                          />
+                        </div>
                       </div>
                     )}
                   </div>
@@ -528,7 +621,14 @@ const AdminServiceEditor = () => {
                   </div>
                   <div className="overflow-hidden rounded-lg border border-border bg-muted">
                     {formData.banner_url ? (
-                      <img src={formData.banner_url} alt="Service banner preview" className="aspect-[4/1] w-full object-cover" />
+                      <img
+                        src={formData.banner_url}
+                        alt="Service banner preview"
+                        className="aspect-[4/1] w-full object-cover"
+                        style={{
+                          objectPosition: getImagePosition(formData.banner_focal_x, formData.banner_focal_y),
+                        }}
+                      />
                     ) : (
                       <div className="flex aspect-[4/1] items-center justify-center">
                         <Image className="h-10 w-10 text-muted-foreground" />
@@ -546,11 +646,69 @@ const AdminServiceEditor = () => {
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => setFormData((prev) => ({ ...prev, banner_url: null }))}
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          banner_url: null,
+                          banner_focal_x: DEFAULT_IMAGE_FOCAL,
+                          banner_focal_y: DEFAULT_IMAGE_FOCAL,
+                        }))
+                      }
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
                       Remove Banner
                     </Button>
+                  )}
+                  {formData.banner_url && (
+                    <div className="space-y-3 rounded-lg border border-border/60 bg-background p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-medium">Frame banner</p>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              banner_focal_x: DEFAULT_IMAGE_FOCAL,
+                              banner_focal_y: DEFAULT_IMAGE_FOCAL,
+                            }))
+                          }
+                        >
+                          Center
+                        </Button>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>Horizontal</span>
+                          <span>{formData.banner_focal_x ?? DEFAULT_IMAGE_FOCAL}%</span>
+                        </div>
+                        <Slider
+                          value={[formData.banner_focal_x ?? DEFAULT_IMAGE_FOCAL]}
+                          min={0}
+                          max={100}
+                          step={1}
+                          onValueChange={([value]) =>
+                            setFormData((prev) => ({ ...prev, banner_focal_x: value }))
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>Vertical</span>
+                          <span>{formData.banner_focal_y ?? DEFAULT_IMAGE_FOCAL}%</span>
+                        </div>
+                        <Slider
+                          value={[formData.banner_focal_y ?? DEFAULT_IMAGE_FOCAL]}
+                          min={0}
+                          max={100}
+                          step={1}
+                          onValueChange={([value]) =>
+                            setFormData((prev) => ({ ...prev, banner_focal_y: value }))
+                          }
+                        />
+                      </div>
+                    </div>
                   )}
                 </div>
 
