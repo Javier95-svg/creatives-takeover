@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, BookOpen, Users as UsersIcon, FileText, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, Boxes, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles, Mic, Lock, Compass, Telescope } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, BookOpen, Users as UsersIcon, FileText, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, BriefcaseBusiness, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles, Mic, Lock, Compass, Telescope } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -113,9 +113,9 @@ const Navigation = () => {
   // Community submenu items
   const communitySubmenu = [
     { name: "Find a Mentor", href: "/mentorship", icon: GraduationCap, description: "Connect with experienced startup coaches." },
-    { name: "Marketplace", href: "/marketplace", icon: Boxes, description: "Browse founder-ready services." },
     { name: "Find a Co-Founder", href: "/co-founder", icon: Handshake, description: "Meet your business soulmate." },
     { name: "Find your Angel", href: "/investors", icon: Sparkles, description: "Angel investor network." },
+    { name: "Marketplace", href: "/marketplace", icon: BriefcaseBusiness, description: "Grow your business with niche services." },
   ];
 
   // Resources submenu items
