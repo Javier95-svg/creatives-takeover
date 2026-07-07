@@ -78,7 +78,7 @@ export function ServiceCard({ service, priority = false, className }: ServiceCar
 
   return (
     <Card className={cn("overflow-hidden rounded-lg border-2 border-border/60 bg-background transition-all duration-300 hover:-translate-y-1 hover:shadow-lg", className)}>
-      <div className="aspect-[16/7] overflow-hidden bg-muted">
+      <div className="aspect-[4/1] overflow-hidden bg-muted">
         {service.banner_url ? (
           <img
             src={service.banner_url}
@@ -105,12 +105,12 @@ export function ServiceCard({ service, priority = false, className }: ServiceCar
               <img
                 src={service.delivered_by_picture_url}
                 alt={service.delivered_by_name}
-                className="h-9 w-9 rounded-full object-cover"
+                className="h-12 w-12 rounded-md object-cover"
                 loading="lazy"
                 decoding="async"
               />
             ) : (
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+              <div className="flex h-12 w-12 items-center justify-center rounded-md bg-primary/10 text-xs font-semibold text-primary">
                 {deliveredByInitials}
               </div>
             )}

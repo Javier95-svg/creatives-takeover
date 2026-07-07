@@ -394,7 +394,7 @@ const AdminServiceEditor = () => {
                 <div className="mb-4">
                   <Label>By</Label>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Show who is delivering this service.
+                    Show who is delivering this service. Use a square image, ideally 400 x 400 px.
                   </p>
                 </div>
                 <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
@@ -472,7 +472,7 @@ const AdminServiceEditor = () => {
                       <img
                         src={formData.delivered_by_picture_url}
                         alt={formData.delivered_by_name || "Service delivery preview"}
-                        className="aspect-square w-full rounded-lg object-cover"
+                        className="aspect-square w-full rounded-md object-cover"
                       />
                     ) : (
                       <div className="flex aspect-square w-full items-center justify-center">
@@ -520,12 +520,17 @@ const AdminServiceEditor = () => {
 
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-3">
-                  <Label>Banner Image *</Label>
+                  <div>
+                    <Label>Banner Image *</Label>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Use a wide banner image, ideally 1584 x 396 px for LinkedIn-style framing.
+                    </p>
+                  </div>
                   <div className="overflow-hidden rounded-lg border border-border bg-muted">
                     {formData.banner_url ? (
-                      <img src={formData.banner_url} alt="Service banner preview" className="aspect-[16/9] w-full object-cover" />
+                      <img src={formData.banner_url} alt="Service banner preview" className="aspect-[4/1] w-full object-cover" />
                     ) : (
-                      <div className="flex aspect-[16/9] items-center justify-center">
+                      <div className="flex aspect-[4/1] items-center justify-center">
                         <Image className="h-10 w-10 text-muted-foreground" />
                       </div>
                     )}

@@ -167,12 +167,12 @@ const ServiceProfilePage = () => {
                         <img
                           src={service.delivered_by_picture_url}
                           alt={service.delivered_by_name}
-                          className="h-11 w-11 rounded-full object-cover"
+                          className="h-16 w-16 rounded-md object-cover"
                           loading="eager"
                           decoding="async"
                         />
                       ) : (
-                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-md bg-primary/10 text-sm font-semibold text-primary">
                           {deliveredByInitials}
                         </div>
                       )}
@@ -206,9 +206,9 @@ const ServiceProfilePage = () => {
 
                 <div className="overflow-hidden rounded-lg border border-border bg-muted shadow-sm">
                   {service.banner_url ? (
-                    <img src={service.banner_url} alt={service.name} className="aspect-[16/10] h-full w-full object-cover" />
+                    <img src={service.banner_url} alt={service.name} className="aspect-[4/1] h-full w-full object-cover" />
                   ) : (
-                    <div className="flex aspect-[16/10] items-center justify-center bg-gradient-to-br from-slate-950 via-slate-800 to-cyan-900 p-8 text-center text-2xl font-semibold text-white">
+                    <div className="flex aspect-[4/1] items-center justify-center bg-gradient-to-br from-slate-950 via-slate-800 to-cyan-900 p-8 text-center text-2xl font-semibold text-white">
                       {service.name}
                     </div>
                   )}
