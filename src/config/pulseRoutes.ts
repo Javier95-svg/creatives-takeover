@@ -71,6 +71,11 @@ export const PULSE_ROUTE_CONTEXTS: PulseRouteContext[] = [
     toolPurpose: "helping the founder find relevant launch, investor, and growth resources",
   },
   {
+    pathPrefix: "/marketplace",
+    toolName: "Service Marketplace",
+    toolPurpose: "helping the founder compare service providers and book discovery calls",
+  },
+  {
     pathPrefix: "/vc-search",
     toolName: "VC Search",
     toolPurpose: "helping the founder identify relevant investors and prepare outreach",

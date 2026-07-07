@@ -63,17 +63,29 @@ serve(async (req: Request) => {
 
     if (action === "createIntent") {
       const mentorId = typeof body.mentorId === "string" ? body.mentorId : "";
+      const serviceId = typeof body.serviceId === "string" ? body.serviceId : "";
       const source = typeof body.source === "string" ? body.source : null;
       const idempotencyKey = typeof body.idempotencyKey === "string" ? body.idempotencyKey : null;
       const metadata = typeof body.metadata === "object" && body.metadata !== null ? body.metadata : {};
 
-      const { data, error } = await supabaseAdmin.rpc("create_discovery_call_intent", {
-        p_founder_id: user.id,
-        p_mentor_id: mentorId,
-        p_source: source,
-        p_idempotency_key: idempotencyKey,
-        p_metadata: metadata,
-      });
+      const rpcName = serviceId ? "create_service_discovery_call_intent" : "create_discovery_call_intent";
+      const rpcPayload = serviceId
+        ? {
+          p_founder_id: user.id,
+          p_service_id: serviceId,
+          p_source: source,
+          p_idempotency_key: idempotencyKey,
+          p_metadata: metadata,
+        }
+        : {
+          p_founder_id: user.id,
+          p_mentor_id: mentorId,
+          p_source: source,
+          p_idempotency_key: idempotencyKey,
+          p_metadata: metadata,
+        };
+
+      const { data, error } = await supabaseAdmin.rpc(rpcName, rpcPayload);
 
       if (error) {
         throw error;
@@ -94,7 +106,11 @@ serve(async (req: Request) => {
         });
       }
 
-      const status = data?.success ? 200 : data?.errorCode === "MENTOR_UNAVAILABLE" ? 404 : 409;
+      const status = data?.success
+        ? 200
+        : data?.errorCode === "MENTOR_UNAVAILABLE" || data?.errorCode === "SERVICE_UNAVAILABLE"
+          ? 404
+          : 409;
       return jsonResponse(data, status);
     }
 
@@ -147,7 +163,7 @@ serve(async (req: Request) => {
       const { data, error } = await supabaseAdmin
         .from("discovery_calls")
         .select(
-          "id, mentor_id, mentor_name_snapshot, status, scheduled_for, duration_minutes, meeting_url, provider_booking_url, credit_charge_amount, consumption_mode, created_at, updated_at, cancelled_at, cancelled_reason"
+          "id, mentor_id, mentor_name_snapshot, service_id, service_name_snapshot, status, scheduled_for, duration_minutes, meeting_url, provider_booking_url, credit_charge_amount, consumption_mode, created_at, updated_at, cancelled_at, cancelled_reason"
         )
         .eq("founder_id", user.id)
         .order("scheduled_for", { ascending: true, nullsFirst: false })
@@ -158,7 +174,9 @@ serve(async (req: Request) => {
       }
 
       const mentorIds = Array.from(new Set((data ?? []).map((row: any) => row.mentor_id).filter(Boolean)));
+      const serviceIds = Array.from(new Set((data ?? []).map((row: any) => row.service_id).filter(Boolean)));
       const mentorPictures = new Map<string, string | null>();
+      const serviceBanners = new Map<string, string | null>();
 
       if (mentorIds.length > 0) {
         const { data: mentorRows, error: mentorError } = await supabaseAdmin
@@ -175,11 +193,32 @@ serve(async (req: Request) => {
         }
       }
 
+      if (serviceIds.length > 0) {
+        const { data: serviceRows, error: serviceError } = await supabaseAdmin
+          .from("services")
+          .select("id, banner_url")
+          .in("id", serviceIds);
+
+        if (serviceError) {
+          throw serviceError;
+        }
+
+        for (const serviceRow of serviceRows ?? []) {
+          serviceBanners.set(serviceRow.id, serviceRow.banner_url ?? null);
+        }
+      }
+
       const bookings = (data ?? []).map((row: any) => ({
         id: row.id,
-        mentorId: row.mentor_id,
-        mentorName: row.mentor_name_snapshot,
-        mentorPicture: mentorPictures.get(row.mentor_id) ?? null,
+        bookingContext: row.service_id ? "service" : "mentor",
+        mentorId: row.mentor_id ?? null,
+        mentorName: row.service_name_snapshot || row.mentor_name_snapshot,
+        mentorPicture: row.service_id
+          ? serviceBanners.get(row.service_id) ?? null
+          : mentorPictures.get(row.mentor_id) ?? null,
+        serviceId: row.service_id ?? null,
+        serviceName: row.service_name_snapshot ?? null,
+        serviceBannerUrl: row.service_id ? serviceBanners.get(row.service_id) ?? null : null,
         status: row.status,
         scheduledFor: row.scheduled_for,
         durationMinutes: row.duration_minutes,

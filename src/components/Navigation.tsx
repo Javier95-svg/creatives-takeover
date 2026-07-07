@@ -113,6 +113,7 @@ const Navigation = () => {
   // Community submenu items
   const communitySubmenu = [
     { name: "Find a Mentor", href: "/mentorship", icon: GraduationCap, description: "Connect with experienced startup coaches." },
+    { name: "Marketplace", href: "/marketplace", icon: Boxes, description: "Browse founder-ready services." },
     { name: "Find a Co-Founder", href: "/co-founder", icon: Handshake, description: "Meet your business soulmate." },
     { name: "Find your Angel", href: "/investors", icon: Sparkles, description: "Angel investor network." },
   ];
@@ -267,6 +268,11 @@ const Navigation = () => {
   const isActive = (href: string) => {
     if (href === "/") {
       return location.pathname === "/";
+    }
+    if (href === "/mentorship") {
+      return ["/mentorship", "/marketplace", "/co-founder", "/investors"].some((path) =>
+        location.pathname.startsWith(path),
+      );
     }
     return location.pathname.startsWith(href);
   };

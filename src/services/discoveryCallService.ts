@@ -28,6 +28,7 @@ export interface DiscoveryCallIntentResponse {
   status?: string;
   providerBookingUrl?: string;
   bookingProvider?: 'calendly' | 'koalendar' | 'other' | 'manual';
+  serviceId?: string;
   quotaStatus?: DiscoveryCallQuotaStatus;
   error?: string;
   errorCode?: string;
@@ -37,9 +38,13 @@ export interface DiscoveryCallIntentResponse {
 
 export interface DiscoveryCallBookingItem {
   id: string;
-  mentorId: string;
+  bookingContext?: 'mentor' | 'service';
+  mentorId: string | null;
   mentorName: string;
   mentorPicture: string | null;
+  serviceId?: string | null;
+  serviceName?: string | null;
+  serviceBannerUrl?: string | null;
   status:
     | 'intent_created'
     | 'scheduled'
@@ -64,6 +69,8 @@ export interface PendingDiscoveryCallRedirect {
   url: string;
   mentorId?: string;
   mentorName?: string;
+  serviceId?: string;
+  serviceName?: string;
   bookingProvider?: 'calendly' | 'koalendar' | 'other' | 'manual';
   source?: string;
 }
@@ -131,6 +138,26 @@ export async function createDiscoveryCallIntent(input: {
   });
 }
 
+export async function createServiceDiscoveryCallIntent(input: {
+  serviceId: string;
+  source: string;
+  serviceName?: string;
+  metadata?: Record<string, unknown>;
+  idempotencyKey?: string;
+}) {
+  const idempotencyKey = input.idempotencyKey || createIdempotencyKey('service-discovery-call-intent');
+  return invokeDiscoveryCallService<DiscoveryCallIntentResponse>({
+    action: 'createIntent',
+    serviceId: input.serviceId,
+    source: input.source,
+    idempotencyKey,
+    metadata: {
+      ...(input.metadata || {}),
+      serviceName: input.serviceName,
+    },
+  });
+}
+
 export interface DiscoveryCallConfirmResponse {
   success: boolean;
   callId?: string;
@@ -156,12 +183,16 @@ export async function listMyDiscoveryCalls() {
   });
 }
 
-export function buildDiscoveryCallProviderRedirectUrl(baseUrl: string, callId: string) {
+export function buildDiscoveryCallProviderRedirectUrl(
+  baseUrl: string,
+  callId: string,
+  options?: { medium?: string },
+) {
   const normalizedUrl = /^https?:\/\//i.test(baseUrl) ? baseUrl : `https://${baseUrl}`;
   const url = new URL(normalizedUrl);
   url.searchParams.set('ct_discovery_call_id', callId);
   url.searchParams.set('utm_source', 'creatives_takeover');
-  url.searchParams.set('utm_medium', 'mentor_marketplace');
+  url.searchParams.set('utm_medium', options?.medium || 'mentor_marketplace');
   url.searchParams.set('utm_campaign', 'discovery_call');
   url.searchParams.set('utm_content', callId);
   return url.toString();
@@ -193,13 +224,33 @@ export async function resumePendingDiscoveryCallRedirect() {
 
   clearPendingDiscoveryCallRedirect();
 
-  if (!pendingRedirect.mentorId) {
+  if (!pendingRedirect.mentorId && !pendingRedirect.serviceId) {
     window.open(pendingRedirect.url, '_blank', 'noopener,noreferrer');
     return true;
   }
 
+  if (pendingRedirect.serviceId) {
+    const intent = await createServiceDiscoveryCallIntent({
+      serviceId: pendingRedirect.serviceId,
+      serviceName: pendingRedirect.serviceName,
+      source: pendingRedirect.source || 'post_auth_redirect',
+      metadata: { resumedAfterAuth: true },
+    });
+
+    if (!intent.success || !intent.callId) {
+      return false;
+    }
+
+    window.open(
+      buildDiscoveryCallProviderRedirectUrl(pendingRedirect.url, intent.callId, { medium: 'service_marketplace' }),
+      '_blank',
+      'noopener,noreferrer',
+    );
+    return true;
+  }
+
   const intent = await createDiscoveryCallIntent({
-    mentorId: pendingRedirect.mentorId,
+    mentorId: pendingRedirect.mentorId!,
     mentorName: pendingRedirect.mentorName,
     source: pendingRedirect.source || 'post_auth_redirect',
     metadata: { resumedAfterAuth: true },

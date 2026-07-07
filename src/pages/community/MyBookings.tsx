@@ -107,7 +107,7 @@ const MyBookings = () => {
     <>
       <Helmet>
         <title>My Bookings | Mentor Marketplace</title>
-        <meta name="description" content="Manage your mentor session bookings" />
+        <meta name="description" content="Manage your discovery call bookings" />
       </Helmet>
       <div className="relative min-h-screen overflow-hidden">
         <div className="relative z-10">
@@ -123,7 +123,7 @@ const MyBookings = () => {
                 </Button>
                 <h1 className="text-3xl font-bold mb-2">My Bookings</h1>
                 <p className="text-muted-foreground">
-                  Manage your upcoming and past mentor sessions
+                  Manage your upcoming and past discovery calls
                 </p>
               </div>
 
@@ -186,9 +186,14 @@ const MyBookings = () => {
                       <p className="text-muted-foreground mb-4">
                         You don't have any upcoming sessions yet.
                       </p>
-                      <Button asChild>
-                        <Link to="/mentorship">Browse Mentors</Link>
-                      </Button>
+                      <div className="flex flex-col justify-center gap-2 sm:flex-row">
+                        <Button asChild>
+                          <Link to="/mentorship">Browse Mentors</Link>
+                        </Button>
+                        <Button asChild variant="outline">
+                          <Link to="/marketplace">Browse Services</Link>
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 )}
@@ -240,4 +245,3 @@ const MyBookings = () => {
 };
 
 export default MyBookings;
-

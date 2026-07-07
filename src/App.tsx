@@ -94,6 +94,8 @@ const CreativesTakeover = lazy(() => import("./pages/CreativesTakeover"));
 const RAGTest = lazy(() => import("./pages/RAGTest"));
 const TestPhase1 = lazy(() => import("./pages/TestPhase1"));
 const MentorProfilePage = lazy(() => import("./pages/community/MentorProfilePage"));
+const ServiceMarketplaceHub = lazy(() => import("./pages/community/ServiceMarketplaceHub"));
+const ServiceProfilePage = lazy(() => import("./pages/community/ServiceProfilePage"));
 const FindCoFounder = lazy(() => import("./pages/community/FindCoFounder"));
 const CreateCoFounderPost = lazy(() => import("./pages/community/CreateCoFounderPost"));
 const EditCoFounderPost = lazy(() => import("./pages/community/EditCoFounderPost"));
@@ -103,6 +105,7 @@ const PitchDeckAnalyzerPage = lazy(() => import("./pages/PitchDeckAnalyzerPage")
 const MentorBookingPage = lazy(() => import("./pages/community/MentorBookingPage"));
 const MyBookings = lazy(() => import("./pages/community/MyBookings"));
 const AdminMentorEditor = lazy(() => import("./pages/community/AdminMentorEditor"));
+const AdminServiceEditor = lazy(() => import("./pages/community/AdminServiceEditor"));
 const PMFLabPage = lazy(() => import("./pages/PMFLabPage"));
 const ICPBuilderPage = lazy(() => import("./pages/IcpBuilderPage"));
 const IcpDraftPage = lazy(() => import("./pages/IcpDraftPage"));
@@ -242,6 +245,10 @@ function App() {
                         <Route path="/mentorship/progress" element={<ProgressCommunityPage />} />
                         <Route path="/mentorship/mentors/:id" element={<MentorProfilePage />} />
                         <Route path="/mentorship/book/:id" element={<MentorBookingPage />} />
+                        <Route path="/marketplace" element={<ServiceMarketplaceHub />} />
+                        <Route path="/marketplace/admin/new" element={<AdminRoute><AdminServiceEditor /></AdminRoute>} />
+                        <Route path="/marketplace/admin/edit/:id" element={<AdminRoute><AdminServiceEditor /></AdminRoute>} />
+                        <Route path="/marketplace/:slug" element={<ServiceProfilePage />} />
                         <Route path="/co-founder" element={<FindCoFounder />} />
                         <Route path="/co-founder/create" element={<CreateCoFounderPost />} />
                         <Route path="/co-founder/edit/:postId" element={<EditCoFounderPost />} />

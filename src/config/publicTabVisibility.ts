@@ -71,6 +71,10 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
     state: 'accessible',
     featureName: 'Find a Mentor',
   },
+  '/marketplace': {
+    state: 'accessible',
+    featureName: 'Marketplace',
+  },
   '/co-founder': {
     state: 'locked',
     featureName: 'Find a Co-Founder',

@@ -4895,6 +4895,57 @@ export type Database = {
           },
         ]
       }
+      services: {
+        Row: {
+          banner_url: string | null
+          booking_provider: string
+          booking_url: string | null
+          category: string
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          is_featured: boolean
+          name: string
+          pitch_deck_type: string | null
+          pitch_deck_url: string | null
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          banner_url?: string | null
+          booking_provider?: string
+          booking_url?: string | null
+          category: string
+          created_at?: string
+          description: string
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          name: string
+          pitch_deck_type?: string | null
+          pitch_deck_url?: string | null
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          banner_url?: string | null
+          booking_provider?: string
+          booking_url?: string | null
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          name?: string
+          pitch_deck_type?: string | null
+          pitch_deck_url?: string | null
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       message_email_notifications: {
         Row: {
           conversation_id: string
