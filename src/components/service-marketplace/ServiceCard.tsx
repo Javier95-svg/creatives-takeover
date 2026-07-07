@@ -1,23 +1,15 @@
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Calendar, Loader2 } from "lucide-react";
+import { Mail, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
-import {
-  buildDiscoveryCallRedirectUrl,
-  confirmDiscoveryCallBooking,
-  createServiceDiscoveryCallIntent,
-  openDeferredExternalTab,
-} from "@/services/discoveryCallService";
-import { createIdempotencyKey } from "@/lib/idempotency";
+import { useMessaging } from "@/hooks/useMessaging";
 import { cn } from "@/lib/utils";
 import type { MarketplaceService } from "@/types/serviceMarketplace";
 import { SERVICE_CATEGORY_LABELS } from "@/types/serviceMarketplace";
-import { getServiceProfilePath, normalizeServiceUrl } from "@/utils/serviceMarketplace";
+import { getServiceProfilePath } from "@/utils/serviceMarketplace";
 
 interface ServiceCardProps {
   service: MarketplaceService;
@@ -28,113 +20,60 @@ interface ServiceCardProps {
 export function ServiceCard({ service, priority = false, className }: ServiceCardProps) {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const { openUpgradePrompt } = useUpgradePrompt();
-  const [booking, setBooking] = useState(false);
+  const { startConversation } = useMessaging({ autoLoad: false });
   const profilePath = getServiceProfilePath(service);
-  const hasBookingUrl = Boolean(service.booking_url?.trim());
+  const hasMessageUser = Boolean(service.delivered_by_user_id?.trim());
+  const hasEmail = Boolean(service.delivered_by_email?.trim());
+  const deliveredByInitials = service.delivered_by_name
+    ? service.delivered_by_name
+        .split(/\s+/)
+        .map((part) => part[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "";
 
-  const handleBook = async () => {
-    if (!hasBookingUrl || !service.booking_url) {
-      toast.error("This service does not have a booking link configured yet.");
+  const handleMessage = async () => {
+    const providerUserId = service.delivered_by_user_id?.trim();
+
+    if (!providerUserId) {
+      toast.error("This service does not have messaging enabled yet.");
       return;
     }
 
     if (!isAuthenticated || !user) {
-      navigate(`/signup?source=book-service-call&return=${encodeURIComponent(profilePath)}`);
+      navigate(`/signup?source=message-service&return=${encodeURIComponent(profilePath)}`);
       return;
     }
 
-    const bookingTab = openDeferredExternalTab();
-    if (!bookingTab) {
-      toast.error("Popup blocked. Please allow popups and try again.");
+    if (providerUserId === user.id) {
+      toast.error("You cannot message yourself.");
       return;
     }
 
-    setBooking(true);
     try {
-      const intent = await createServiceDiscoveryCallIntent({
-        serviceId: service.id,
-        serviceName: service.name,
-        source: "service_card",
-        idempotencyKey: createIdempotencyKey(`service-card-discovery-call-${service.id}`),
-        metadata: {
-          service_id: service.id,
-          service_name: service.name,
-          service_category: service.category,
-        },
-      });
-
-      if (!intent.success || !intent.callId) {
-        bookingTab.close();
-
-        if (intent.errorCode === "INSUFFICIENT_CREDITS") {
-          openUpgradePrompt({
-            reason: "credits",
-            featureName: "Discovery Calls",
-            requiredCredits: intent.requiredCredits ?? 10,
-            description: intent.error || "You need 10 credits to book a discovery call.",
-            contextualTrigger: "service_marketplace_booking_gate",
-            sourceTool: "service_marketplace",
-            contextLine: `Booking a discovery call for ${service.name}.`,
-          });
-          return;
-        }
-
-        if (intent.errorCode === "PLAN_UPGRADE_REQUIRED" && intent.requiredTier) {
-          openUpgradePrompt({
-            reason: "feature",
-            featureName: "Discovery Calls",
-            requiredTier: intent.requiredTier,
-            description: intent.error,
-            contextualTrigger: "service_marketplace_booking_gate",
-            sourceTool: "service_marketplace",
-            contextLine: `Booking a discovery call for ${service.name}.`,
-          });
-          return;
-        }
-
-        toast.error(intent.error || "Unable to process booking. Please try again.");
+      const conversationId = await startConversation(providerUserId);
+      if (conversationId) {
+        navigate(`/messages?conversationId=${conversationId}`);
         return;
       }
 
-      bookingTab.location.href = buildDiscoveryCallRedirectUrl(
-        normalizeServiceUrl(service.booking_url),
-        intent.callId,
-        { medium: "service_marketplace" },
-      );
-
-      const confirmResult = await confirmDiscoveryCallBooking(intent.callId, {
-        source: "service_card_confirm",
-        service_id: service.id,
-        service_name: service.name,
-      });
-
-      if (confirmResult.success) {
-        toast.success(
-          confirmResult.alreadyConfirmed
-            ? "Booking calendar opened in a new tab."
-            : `Booking confirmed. ${confirmResult.chargedCredits ?? 10} credits used.`,
-        );
-      } else if (confirmResult.errorCode === "INSUFFICIENT_CREDITS") {
-        openUpgradePrompt({
-          reason: "credits",
-          featureName: "Discovery Calls",
-          requiredCredits: confirmResult.requiredCredits ?? 10,
-          description: confirmResult.error || "You need 10 credits to book a discovery call.",
-          contextualTrigger: "service_marketplace_booking_gate",
-          sourceTool: "service_marketplace",
-          contextLine: `Booking a discovery call for ${service.name}.`,
-        });
-      } else {
-        toast.success("Booking calendar opened in a new tab.");
-      }
+      toast.error("Failed to start conversation. Please try again.");
     } catch (error) {
-      bookingTab.close();
-      console.error("Error booking service discovery call:", error);
-      toast.error("Unable to process booking. Please try again.");
-    } finally {
-      setBooking(false);
+      console.error("Error starting service conversation:", error);
+      toast.error("Failed to start conversation. Please try again.");
     }
+  };
+
+  const handleEmail = () => {
+    const email = service.delivered_by_email?.trim();
+
+    if (!email) {
+      toast.error("This service does not have an email configured yet.");
+      return;
+    }
+
+    window.location.href = `mailto:${email}`;
   };
 
   return (
@@ -160,6 +99,27 @@ export function ServiceCard({ service, priority = false, className }: ServiceCar
           <Badge variant="secondary">{SERVICE_CATEGORY_LABELS[service.category]}</Badge>
           {service.is_featured && <Badge>Featured</Badge>}
         </div>
+        {service.delivered_by_name && (
+          <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/35 px-3 py-2">
+            {service.delivered_by_picture_url ? (
+              <img
+                src={service.delivered_by_picture_url}
+                alt={service.delivered_by_name}
+                className="h-9 w-9 rounded-full object-cover"
+                loading="lazy"
+                decoding="async"
+              />
+            ) : (
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                {deliveredByInitials}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">By</p>
+              <p className="truncate text-sm font-semibold text-foreground">{service.delivered_by_name}</p>
+            </div>
+          </div>
+        )}
         <div>
           <Link to={profilePath} className="text-xl font-bold leading-tight text-foreground transition-colors hover:text-primary">
             {service.name}
@@ -169,24 +129,13 @@ export function ServiceCard({ service, priority = false, className }: ServiceCar
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Button onClick={handleBook} disabled={!hasBookingUrl || booking} className="flex-1">
-            {booking ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Booking
-              </>
-            ) : (
-              <>
-                <Calendar className="mr-2 h-4 w-4" />
-                Book Discovery Call
-              </>
-            )}
+          <Button onClick={handleMessage} disabled={!hasMessageUser} className="flex-1">
+            <MessageCircle className="mr-2 h-4 w-4" />
+            Message
           </Button>
-          <Button asChild variant="outline" className="flex-1">
-            <Link to={profilePath}>
-              View Profile
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
+          <Button onClick={handleEmail} disabled={!hasEmail} variant="outline" className="flex-1">
+            <Mail className="mr-2 h-4 w-4" />
+            Email
           </Button>
         </div>
       </CardContent>

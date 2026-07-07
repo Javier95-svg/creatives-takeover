@@ -15,9 +15,9 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 import { useAuth } from "@/contexts/AuthContext";
 import { useServices } from "@/hooks/useServices";
 import { supabase } from "@/integrations/supabase/client";
-import type { CreateServiceInput, MarketplaceService, ServiceBookingProvider, ServiceCategory } from "@/types/serviceMarketplace";
+import type { CreateServiceInput, MarketplaceService, ServiceCategory } from "@/types/serviceMarketplace";
 import { SERVICE_CATEGORIES, SERVICE_CATEGORY_LABELS } from "@/types/serviceMarketplace";
-import { generateServiceSlug, getDeckTypeFromFile, getServiceProfilePath, inferServiceBookingProvider } from "@/utils/serviceMarketplace";
+import { generateServiceSlug, getDeckTypeFromFile, getServiceProfilePath } from "@/utils/serviceMarketplace";
 
 const BANNER_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
 const MAX_BANNER_BYTES = 5 * 1024 * 1024;
@@ -28,11 +28,13 @@ const initialForm: CreateServiceInput = {
   slug: "",
   category: "sales",
   description: "",
+  delivered_by_name: null,
+  delivered_by_picture_url: null,
+  delivered_by_user_id: null,
+  delivered_by_email: null,
   banner_url: null,
   pitch_deck_url: null,
   pitch_deck_type: null,
-  booking_url: null,
-  booking_provider: "calendly",
   is_active: true,
   is_featured: false,
 };
@@ -47,6 +49,7 @@ const AdminServiceEditor = () => {
   const [formData, setFormData] = useState<CreateServiceInput>(initialForm);
   const [saving, setSaving] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [uploadingByPicture, setUploadingByPicture] = useState(false);
   const [uploadingDeck, setUploadingDeck] = useState(false);
 
   useEffect(() => {
@@ -74,11 +77,13 @@ const AdminServiceEditor = () => {
       slug: found.slug,
       category: found.category,
       description: found.description,
+      delivered_by_name: found.delivered_by_name,
+      delivered_by_picture_url: found.delivered_by_picture_url,
+      delivered_by_user_id: found.delivered_by_user_id,
+      delivered_by_email: found.delivered_by_email,
       banner_url: found.banner_url,
       pitch_deck_url: found.pitch_deck_url,
       pitch_deck_type: found.pitch_deck_type,
-      booking_url: found.booking_url,
-      booking_provider: found.booking_provider,
       is_active: found.is_active,
       is_featured: found.is_featured,
     });
@@ -143,6 +148,37 @@ const AdminServiceEditor = () => {
     }
   };
 
+  const handleByPictureUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!BANNER_TYPES.includes(file.type)) {
+      toast.error("Upload a JPEG, PNG, WebP, or GIF image.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_BANNER_BYTES) {
+      toast.error("By picture must be 5MB or smaller.");
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      setUploadingByPicture(true);
+      toast.loading("Uploading by picture...", { id: "service-by-picture-upload" });
+      const publicUrl = await uploadFile("service-banners", file, `delivered-by/${service?.id || "drafts"}`);
+      setFormData((prev) => ({ ...prev, delivered_by_picture_url: publicUrl }));
+      toast.success("By picture uploaded", { id: "service-by-picture-upload" });
+    } catch (error: any) {
+      console.error("Service by picture upload failed:", error);
+      toast.error(error?.message || "Failed to upload by picture", { id: "service-by-picture-upload" });
+    } finally {
+      setUploadingByPicture(false);
+      event.target.value = "";
+    }
+  };
+
   const handleDeckUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -195,8 +231,13 @@ const AdminServiceEditor = () => {
       return false;
     }
 
-    if (!formData.booking_url?.trim()) {
-      toast.error("Booking URL is required");
+    if (!formData.delivered_by_user_id?.trim()) {
+      toast.error("Message user ID is required");
+      return false;
+    }
+
+    if (!formData.delivered_by_email?.trim()) {
+      toast.error("Email is required");
       return false;
     }
 
@@ -223,11 +264,13 @@ const AdminServiceEditor = () => {
         slug: generateServiceSlug(formData.slug || formData.name),
         category: formData.category,
         description: formData.description.trim(),
+        delivered_by_name: formData.delivered_by_name?.trim() || null,
+        delivered_by_picture_url: formData.delivered_by_picture_url || null,
+        delivered_by_user_id: formData.delivered_by_user_id?.trim() || null,
+        delivered_by_email: formData.delivered_by_email?.trim() || null,
         banner_url: formData.banner_url || null,
         pitch_deck_url: formData.pitch_deck_url || null,
         pitch_deck_type: formData.pitch_deck_type || null,
-        booking_url: formData.booking_url || null,
-        booking_provider: inferServiceBookingProvider(formData.booking_url, formData.booking_provider),
         is_active: formData.is_active !== false,
         is_featured: formData.is_featured === true,
       };
@@ -301,7 +344,7 @@ const AdminServiceEditor = () => {
                   Delete
                 </Button>
               )}
-              <Button size="sm" onClick={handleSave} disabled={loading || saving || uploadingBanner || uploadingDeck}>
+              <Button size="sm" onClick={handleSave} disabled={loading || saving || uploadingBanner || uploadingByPicture || uploadingDeck}>
                 {saving || loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -347,6 +390,99 @@ const AdminServiceEditor = () => {
                 </div>
               </div>
 
+              <div className="rounded-lg border border-border/60 p-4">
+                <div className="mb-4">
+                  <Label>By</Label>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Show who is delivering this service.
+                  </p>
+                </div>
+                <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="delivered_by_name">Name</Label>
+                      <Input
+                        id="delivered_by_name"
+                        value={formData.delivered_by_name || ""}
+                        onChange={(event) =>
+                          setFormData((prev) => ({ ...prev, delivered_by_name: event.target.value || null }))
+                        }
+                        placeholder="Jane Doe or CT Ops Team"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="delivered_by_picture_url">Picture URL</Label>
+                      <Input
+                        id="delivered_by_picture_url"
+                        type="url"
+                        value={formData.delivered_by_picture_url || ""}
+                        onChange={(event) =>
+                          setFormData((prev) => ({ ...prev, delivered_by_picture_url: event.target.value || null }))
+                        }
+                        placeholder="https://..."
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="delivered_by_user_id">Message User ID *</Label>
+                      <Input
+                        id="delivered_by_user_id"
+                        value={formData.delivered_by_user_id || ""}
+                        onChange={(event) =>
+                          setFormData((prev) => ({ ...prev, delivered_by_user_id: event.target.value || null }))
+                        }
+                        placeholder="Supabase auth user id"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="delivered_by_email">Email *</Label>
+                      <Input
+                        id="delivered_by_email"
+                        type="email"
+                        value={formData.delivered_by_email || ""}
+                        onChange={(event) =>
+                          setFormData((prev) => ({ ...prev, delivered_by_email: event.target.value || null }))
+                        }
+                        placeholder="provider@example.com"
+                        className="mt-1"
+                      />
+                    </div>
+                    <Input
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                      onChange={handleByPictureUpload}
+                      disabled={uploadingByPicture}
+                    />
+                    {formData.delivered_by_picture_url && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setFormData((prev) => ({ ...prev, delivered_by_picture_url: null }))}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Remove Picture
+                      </Button>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-center rounded-lg border border-border bg-muted">
+                    {formData.delivered_by_picture_url ? (
+                      <img
+                        src={formData.delivered_by_picture_url}
+                        alt={formData.delivered_by_name || "Service delivery preview"}
+                        className="aspect-square w-full rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div className="flex aspect-square w-full items-center justify-center">
+                        <Image className="h-10 w-10 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <Label htmlFor="category">Category *</Label>
@@ -368,43 +504,6 @@ const AdminServiceEditor = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label htmlFor="booking_provider">Booking Provider *</Label>
-                  <Select
-                    value={formData.booking_provider || "calendly"}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({ ...prev, booking_provider: value as ServiceBookingProvider }))
-                    }
-                  >
-                    <SelectTrigger id="booking_provider" className="mt-1">
-                      <SelectValue placeholder="Select booking provider" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="calendly">Calendly</SelectItem>
-                      <SelectItem value="koalendar">Koalendar</SelectItem>
-                      <SelectItem value="other">Other booking tool</SelectItem>
-                      <SelectItem value="manual">Manual confirmation only</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="booking_url">Booking URL *</Label>
-                <Input
-                  id="booking_url"
-                  type="url"
-                  value={formData.booking_url || ""}
-                  onChange={(event) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      booking_url: event.target.value || null,
-                      booking_provider: inferServiceBookingProvider(event.target.value, prev.booking_provider),
-                    }))
-                  }
-                  placeholder="https://calendly.com/team/service-discovery"
-                  className="mt-1"
-                />
               </div>
 
               <div>

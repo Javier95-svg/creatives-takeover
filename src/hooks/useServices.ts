@@ -30,6 +30,10 @@ function toService(row: any): MarketplaceService {
     slug: row.slug,
     category: row.category,
     description: row.description,
+    delivered_by_name: row.delivered_by_name ?? null,
+    delivered_by_picture_url: row.delivered_by_picture_url ?? null,
+    delivered_by_user_id: row.delivered_by_user_id ?? null,
+    delivered_by_email: row.delivered_by_email ?? null,
     banner_url: row.banner_url ?? null,
     pitch_deck_url: row.pitch_deck_url ?? null,
     pitch_deck_type: row.pitch_deck_type ?? null,
@@ -52,6 +56,10 @@ function buildServicePayload(input: Partial<CreateServiceInput>) {
   }
   if (input.category !== undefined) payload.category = input.category;
   if (input.description !== undefined) payload.description = input.description.trim();
+  if (input.delivered_by_name !== undefined) payload.delivered_by_name = input.delivered_by_name?.trim() || null;
+  if (input.delivered_by_picture_url !== undefined) payload.delivered_by_picture_url = input.delivered_by_picture_url || null;
+  if (input.delivered_by_user_id !== undefined) payload.delivered_by_user_id = input.delivered_by_user_id?.trim() || null;
+  if (input.delivered_by_email !== undefined) payload.delivered_by_email = input.delivered_by_email?.trim() || null;
   if (input.banner_url !== undefined) payload.banner_url = input.banner_url || null;
   if (input.pitch_deck_url !== undefined) payload.pitch_deck_url = input.pitch_deck_url || null;
   if (input.pitch_deck_type !== undefined) payload.pitch_deck_type = input.pitch_deck_type || null;

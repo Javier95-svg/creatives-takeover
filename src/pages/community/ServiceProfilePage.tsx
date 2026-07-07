@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Calendar, Edit, Loader2 } from "lucide-react";
+import { ArrowLeft, Edit, Loader2, Mail, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import SEO, { createBreadcrumbSchema, createOrganizationSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
@@ -10,32 +10,21 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import { useMessaging } from "@/hooks/useMessaging";
 import { useServices } from "@/hooks/useServices";
-import {
-  buildDiscoveryCallRedirectUrl,
-  confirmDiscoveryCallBooking,
-  createServiceDiscoveryCallIntent,
-  openDeferredExternalTab,
-} from "@/services/discoveryCallService";
-import { createIdempotencyKey } from "@/lib/idempotency";
 import type { MarketplaceService } from "@/types/serviceMarketplace";
 import { SERVICE_CATEGORY_LABELS } from "@/types/serviceMarketplace";
-import { getServiceProfilePath, normalizeServiceUrl } from "@/utils/serviceMarketplace";
+import { getServiceProfilePath } from "@/utils/serviceMarketplace";
 
 const ServiceProfilePage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const { isAdmin } = useAdminRole();
-  const { openUpgradePrompt } = useUpgradePrompt();
+  const { startConversation } = useMessaging({ autoLoad: false });
   const { fetchServiceBySlug, fetchServiceById, loading } = useServices();
   const [service, setService] = useState<MarketplaceService | null>(null);
-  const [booking, setBooking] = useState(false);
-  const [pendingCallId, setPendingCallId] = useState<string | null>(null);
-  const [confirmed, setConfirmed] = useState(false);
-  const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -57,157 +46,59 @@ const ServiceProfilePage = () => {
     };
   }, [fetchServiceById, fetchServiceBySlug, slug]);
 
-  const openBookingGate = () => {
-    if (!service) return;
-    navigate(`/signup?source=book-service-call&return=${encodeURIComponent(getServiceProfilePath(service))}`);
-  };
-
-  const handleBook = async () => {
+  const handleMessage = async () => {
     if (!service) return;
 
-    const bookingUrl = service.booking_url?.trim();
-    if (!bookingUrl) {
-      toast.error("This service does not have a booking link configured yet.");
+    const providerUserId = service.delivered_by_user_id?.trim();
+    if (!providerUserId) {
+      toast.error("This service does not have messaging enabled yet.");
       return;
     }
 
     if (!isAuthenticated || !user) {
-      openBookingGate();
+      navigate(`/signup?source=message-service&return=${encodeURIComponent(getServiceProfilePath(service))}`);
       return;
     }
 
-    const bookingTab = openDeferredExternalTab();
-    if (!bookingTab) {
-      toast.error("Popup blocked. Please allow popups and try again.");
+    if (providerUserId === user.id) {
+      toast.error("You cannot message yourself.");
       return;
     }
 
-    setBooking(true);
     try {
-      const intent = await createServiceDiscoveryCallIntent({
-        serviceId: service.id,
-        serviceName: service.name,
-        source: "service_profile",
-        idempotencyKey: createIdempotencyKey(`service-profile-discovery-call-${service.id}`),
-        metadata: {
-          service_id: service.id,
-          service_name: service.name,
-          service_category: service.category,
-        },
-      });
-
-      if (!intent.success || !intent.callId) {
-        bookingTab.close();
-
-        if (intent.errorCode === "INSUFFICIENT_CREDITS") {
-          openUpgradePrompt({
-            reason: "credits",
-            featureName: "Discovery Calls",
-            requiredCredits: intent.requiredCredits ?? 10,
-            description: intent.error || "You need 10 credits to book a discovery call.",
-            contextualTrigger: "service_profile_booking_gate",
-            sourceTool: "service_marketplace",
-            contextLine: `Booking a discovery call for ${service.name}.`,
-          });
-          return;
-        }
-
-        if (intent.errorCode === "PLAN_UPGRADE_REQUIRED" && intent.requiredTier) {
-          openUpgradePrompt({
-            reason: "feature",
-            featureName: "Discovery Calls",
-            requiredTier: intent.requiredTier,
-            description: intent.error,
-            contextualTrigger: "service_profile_booking_gate",
-            sourceTool: "service_marketplace",
-            contextLine: `Booking a discovery call for ${service.name}.`,
-          });
-          return;
-        }
-
-        toast.error(intent.error || "Unable to process booking. Please try again.");
+      const conversationId = await startConversation(providerUserId);
+      if (conversationId) {
+        navigate(`/messages?conversationId=${conversationId}`);
         return;
       }
 
-      bookingTab.location.href = buildDiscoveryCallRedirectUrl(
-        normalizeServiceUrl(bookingUrl),
-        intent.callId,
-        { medium: "service_marketplace" },
-      );
-
-      const confirmResult = await confirmDiscoveryCallBooking(intent.callId, {
-        source: "service_profile_confirm",
-        service_id: service.id,
-        service_name: service.name,
-      });
-
-      if (confirmResult.success) {
-        setConfirmed(true);
-        setPendingCallId(null);
-        toast.success(
-          confirmResult.alreadyConfirmed
-            ? "Booking calendar opened in a new tab."
-            : `Booking confirmed. ${confirmResult.chargedCredits ?? 10} credits used.`,
-        );
-      } else if (confirmResult.errorCode === "INSUFFICIENT_CREDITS") {
-        openUpgradePrompt({
-          reason: "credits",
-          featureName: "Discovery Calls",
-          requiredCredits: confirmResult.requiredCredits ?? 10,
-          description: confirmResult.error || "You need 10 credits to book a discovery call.",
-          contextualTrigger: "service_profile_booking_gate",
-          sourceTool: "service_marketplace",
-          contextLine: `Booking a discovery call for ${service.name}.`,
-        });
-      } else {
-        setPendingCallId(intent.callId);
-        toast.success("Booking calendar opened in a new tab.");
-      }
+      toast.error("Failed to start conversation. Please try again.");
     } catch (error) {
-      bookingTab.close();
-      console.error("Error booking service discovery call:", error);
-      toast.error("Unable to process booking. Please try again.");
-    } finally {
-      setBooking(false);
+      console.error("Error starting service conversation:", error);
+      toast.error("Failed to start conversation. Please try again.");
     }
   };
 
-  const handleConfirmBooking = async () => {
-    if (!pendingCallId || !service) return;
-    setConfirming(true);
+  const handleEmail = () => {
+    if (!service) return;
 
-    try {
-      const result = await confirmDiscoveryCallBooking(pendingCallId, {
-        source: "service_profile_manual_confirm",
-        service_id: service.id,
-        service_name: service.name,
-      });
-
-      if (result.success) {
-        setConfirmed(true);
-        setPendingCallId(null);
-        toast.success(
-          result.alreadyConfirmed
-            ? "This booking was already confirmed."
-            : `Booking confirmed${result.chargedCredits ? `. ${result.chargedCredits} credits used.` : "."}`,
-        );
-      } else if (result.errorCode === "INSUFFICIENT_CREDITS") {
-        openUpgradePrompt({
-          reason: "credits",
-          featureName: "Discovery Calls",
-          requiredCredits: result.requiredCredits ?? 10,
-          description: result.error || "You need 10 credits to confirm this discovery call.",
-        });
-      } else {
-        toast.error(result.error || "Unable to confirm your booking. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error confirming service discovery call:", error);
-      toast.error("Unable to confirm your booking. Please try again.");
-    } finally {
-      setConfirming(false);
+    const email = service.delivered_by_email?.trim();
+    if (!email) {
+      toast.error("This service does not have an email configured yet.");
+      return;
     }
+
+    window.location.href = `mailto:${email}`;
   };
+
+  const deliveredByInitials = service?.delivered_by_name
+    ? service.delivered_by_name
+        .split(/\s+/)
+        .map((part) => part[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "";
 
   if (loading && !service) {
     return (
@@ -232,6 +123,9 @@ const ServiceProfilePage = () => {
       </>
     );
   }
+
+  const hasMessageUser = Boolean(service.delivered_by_user_id?.trim());
+  const hasEmail = Boolean(service.delivered_by_email?.trim());
 
   return (
     <>
@@ -267,21 +161,37 @@ const ServiceProfilePage = () => {
                     <Badge variant="secondary">{SERVICE_CATEGORY_LABELS[service.category]}</Badge>
                     {service.is_featured && <Badge>Featured</Badge>}
                   </div>
+                  {service.delivered_by_name && (
+                    <div className="mb-5 flex w-fit items-center gap-3 rounded-lg border border-border/60 bg-background/75 px-3 py-2">
+                      {service.delivered_by_picture_url ? (
+                        <img
+                          src={service.delivered_by_picture_url}
+                          alt={service.delivered_by_name}
+                          className="h-11 w-11 rounded-full object-cover"
+                          loading="eager"
+                          decoding="async"
+                        />
+                      ) : (
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                          {deliveredByInitials}
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">By</p>
+                        <p className="text-sm font-semibold text-foreground">{service.delivered_by_name}</p>
+                      </div>
+                    </div>
+                  )}
                   <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">{service.name}</h1>
                   <p className="mt-5 text-lg leading-relaxed text-muted-foreground">{service.description}</p>
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                    <Button onClick={handleBook} disabled={booking || !service.booking_url} size="lg">
-                      {booking ? (
-                        <>
-                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                          Booking
-                        </>
-                      ) : (
-                        <>
-                          <Calendar className="mr-2 h-5 w-5" />
-                          Book Discovery Call
-                        </>
-                      )}
+                    <Button onClick={handleMessage} disabled={!hasMessageUser} size="lg">
+                      <MessageCircle className="mr-2 h-5 w-5" />
+                      Message
+                    </Button>
+                    <Button onClick={handleEmail} disabled={!hasEmail} variant="outline" size="lg">
+                      <Mail className="mr-2 h-5 w-5" />
+                      Email
                     </Button>
                     {isAdmin && (
                       <Button variant="outline" asChild size="lg">
@@ -324,35 +234,19 @@ const ServiceProfilePage = () => {
                 <Card>
                   <CardContent className="space-y-4 p-5">
                     <div>
-                      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Discovery Call</p>
+                      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Contact</p>
                       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                        Booking confirmation uses 10 credits and opens the service calendar in a new tab.
+                        Start a direct message inside Creatives Takeover or open an email to the service provider.
                       </p>
                     </div>
-                    {confirmed ? (
-                      <div className="rounded-lg border border-success/40 bg-success/5 p-3 text-sm text-success">
-                        Booking confirmed.
-                      </div>
-                    ) : pendingCallId ? (
-                      <div className="space-y-3 rounded-lg border border-border p-3">
-                        <p className="text-sm font-medium">Calendar opened</p>
-                        <Button onClick={handleConfirmBooking} disabled={confirming} className="w-full">
-                          {confirming ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Confirming
-                            </>
-                          ) : (
-                            "I've completed my booking"
-                          )}
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button onClick={handleBook} disabled={booking || !service.booking_url} className="w-full">
-                        <Calendar className="mr-2 h-4 w-4" />
-                        Book Discovery Call
-                      </Button>
-                    )}
+                    <Button onClick={handleMessage} disabled={!hasMessageUser} className="w-full">
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      Message
+                    </Button>
+                    <Button onClick={handleEmail} disabled={!hasEmail} variant="outline" className="w-full">
+                      <Mail className="mr-2 h-4 w-4" />
+                      Email
+                    </Button>
                   </CardContent>
                 </Card>
               </aside>

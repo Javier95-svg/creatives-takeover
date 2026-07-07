@@ -4902,6 +4902,10 @@ export type Database = {
           booking_url: string | null
           category: string
           created_at: string
+          delivered_by_name: string | null
+          delivered_by_picture_url: string | null
+          delivered_by_user_id: string | null
+          delivered_by_email: string | null
           description: string
           id: string
           is_active: boolean
@@ -4918,6 +4922,10 @@ export type Database = {
           booking_url?: string | null
           category: string
           created_at?: string
+          delivered_by_name?: string | null
+          delivered_by_picture_url?: string | null
+          delivered_by_user_id?: string | null
+          delivered_by_email?: string | null
           description: string
           id?: string
           is_active?: boolean
@@ -4934,6 +4942,10 @@ export type Database = {
           booking_url?: string | null
           category?: string
           created_at?: string
+          delivered_by_name?: string | null
+          delivered_by_picture_url?: string | null
+          delivered_by_user_id?: string | null
+          delivered_by_email?: string | null
           description?: string
           id?: string
           is_active?: boolean

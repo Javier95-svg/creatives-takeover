@@ -10,7 +10,7 @@ import { useLeanStartupStore } from '@/store/leanStartupStore';
 import { usePMFLab } from '@/hooks/usePMFLab';
 import { usePMFSurvey } from '@/hooks/usePMFSurvey';
 import PMFEvidenceForm from '@/components/pmf/PMFEvidenceForm';
-import PMFEvidenceHub from '@/components/pmf/PMFEvidenceHub';
+import PMFEvidenceHub, { type PMFHubRecommendation } from '@/components/pmf/PMFEvidenceHub';
 import PMFEvidenceChecklist from '@/components/pmf/PMFEvidenceChecklist';
 import PMFSeanEllisTest from '@/components/pmf/PMFSeanEllisTest';
 import PMFScoringLoader from '@/components/pmf/PMFScoringLoader';
@@ -20,7 +20,7 @@ import PMFOutcomeCapture from '@/components/pmf/PMFOutcomeCapture';
 import { PMFContextBanner } from '@/components/pmf/PMFContextBanner';
 import { cn } from '@/lib/utils';
 import { useSearchParams } from 'react-router-dom';
-import { ArrowRight, Rocket } from 'lucide-react';
+import { ArrowRight, ChevronDown, Rocket } from 'lucide-react';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 import { getPublicTabConfig } from '@/config/publicTabVisibility';
 import { useAuth } from '@/contexts/AuthContext';
@@ -49,6 +49,10 @@ export default function PMFLabPage() {
   const [waitlistProductName, setWaitlistProductName] = useState<string | null>(null);
   const [contextLoading, setContextLoading] = useState(false);
   const [mode, setMode] = useState<'score' | 'discover'>('score');
+  // Progressive disclosure: only one detail step is expanded at a time so the
+  // page opens with a single clear focus instead of a wall of stacked sections.
+  const [activeStep, setActiveStep] = useState<'gather' | 'score'>('gather');
+  const stepChosenRef = useRef(false);
   const [searchParams] = useSearchParams();
   const outcomeAnalysisId = searchParams.get('outcome');
   const hubViewedRef = useRef(false);
@@ -57,6 +61,12 @@ export default function PMFLabPage() {
 
   const scrollTo = (ref: { current: HTMLDivElement | null }) => {
     ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const chooseStep = (step: 'gather' | 'score') => {
+    stepChosenRef.current = true;
+    setActiveStep(step);
+    requestAnimationFrame(() => scrollTo(step === 'gather' ? surveyRef : scoreFormRef));
   };
 
   useEffect(() => {
@@ -160,6 +170,26 @@ export default function PMFLabPage() {
     (discovery?.people.length ?? 0) +
     (discovery?.communities.length ?? 0) +
     (discovery?.threads.length ?? 0);
+
+  // The single next action to spotlight, in the canonical evidence order:
+  // get the 40% survey signal → log interviews → save the checklist → score.
+  const savedInterviews = evidence?.interview_notes_count ?? 0;
+  const surveyResponsesCount = surveyAggregate.total || evidence?.survey_results_count || 0;
+  const checklistCount = evidence?.validation_checklist?.length ?? 0;
+  const hubRecommendation: PMFHubRecommendation = (() => {
+    if (surveyResponsesCount === 0 && !survey) return 'survey';
+    if (savedInterviews === 0) return 'interviews';
+    if (checklistCount === 0) return 'checklist';
+    return 'score';
+  })();
+  const recommendedStep: 'gather' | 'score' =
+    hubRecommendation === 'survey' || hubRecommendation === 'checklist' ? 'gather' : 'score';
+
+  // Default the open step to the recommendation until the user picks one themselves.
+  useEffect(() => {
+    if (stepChosenRef.current || phase !== 'intake' || mode !== 'score') return;
+    setActiveStep(recommendedStep);
+  }, [recommendedStep, phase, mode]);
 
   useEffect(() => {
     if (!user || !hasAccess || phase !== 'intake' || mode !== 'score' || hubViewedRef.current) return;
@@ -370,51 +400,91 @@ export default function PMFLabPage() {
                   />
                 ) : (
                   <>
-                    {/* Phase A — Evidence Form */}
+                    {/* Phase A — Evidence hub + guided steps (one open at a time) */}
                     {phase === 'intake' && (
-                      <div className="space-y-8">
+                      <div className="space-y-6">
                         <PMFEvidenceHub
                           evidence={evidence}
                           requiredSignals={PMF_REQUIRED_SIGNALS}
                           survey={survey}
                           surveyAggregate={surveyAggregate}
                           customerDiscoverySignals={customerDiscoverySignals}
-                          onLogInterviews={() => scrollTo(scoreFormRef)}
-                          onCreateOrReviewSurvey={handleSurveyHubAction}
+                          recommended={hubRecommendation}
+                          onLogInterviews={() => chooseStep('score')}
+                          onCreateOrReviewSurvey={() => { chooseStep('gather'); handleSurveyHubAction(); }}
                           onFindCustomers={() => setMode('discover')}
-                          onRunScore={() => scrollTo(scoreFormRef)}
+                          onRunScore={() => chooseStep('score')}
                         />
 
-                        <div ref={surveyRef} className="grid gap-4 scroll-mt-28 lg:grid-cols-2">
-                          <PMFEvidenceChecklist
-                            evidence={evidence}
-                            requiredSignals={PMF_REQUIRED_SIGNALS}
-                            onSaveChecklist={saveChecklist}
-                          />
-                          <PMFSeanEllisTest
-                            initialVery={evidence?.sean_ellis_very_disappointed}
-                            initialSomewhat={evidence?.sean_ellis_somewhat_disappointed}
-                            initialNot={evidence?.sean_ellis_not_disappointed}
-                            onSave={saveSeanEllis}
-                            survey={survey}
-                            surveyAggregate={surveyAggregate}
-                            shareUrl={surveyShareUrl}
-                            isCreatingSurvey={isCreatingSurvey}
-                            onCreateSurvey={handleCreateSurvey}
-                          />
+                        {/* Step 1 — Gather evidence */}
+                        <div ref={surveyRef} className="scroll-mt-28 overflow-hidden rounded-3xl border border-border/60 bg-background/70">
+                          <button
+                            type="button"
+                            onClick={() => chooseStep('gather')}
+                            className="flex w-full items-center justify-between gap-3 p-5 text-left"
+                            aria-expanded={activeStep === 'gather'}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold', activeStep === 'gather' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground')}>1</span>
+                              <div>
+                                <p className="text-base font-semibold text-foreground">Gather your evidence</p>
+                                <p className="text-xs text-muted-foreground">Run the Sean Ellis 40% survey and check off the validation milestones you've hit.</p>
+                              </div>
+                            </div>
+                            <ChevronDown className={cn('h-5 w-5 shrink-0 text-muted-foreground transition-transform', activeStep === 'gather' && 'rotate-180')} />
+                          </button>
+                          <div className={cn('border-t border-border/60 p-5', activeStep !== 'gather' && 'hidden')}>
+                            <div className="grid gap-4 lg:grid-cols-2">
+                              <PMFEvidenceChecklist
+                                evidence={evidence}
+                                requiredSignals={PMF_REQUIRED_SIGNALS}
+                                onSaveChecklist={saveChecklist}
+                              />
+                              <PMFSeanEllisTest
+                                initialVery={evidence?.sean_ellis_very_disappointed}
+                                initialSomewhat={evidence?.sean_ellis_somewhat_disappointed}
+                                initialNot={evidence?.sean_ellis_not_disappointed}
+                                onSave={saveSeanEllis}
+                                survey={survey}
+                                surveyAggregate={surveyAggregate}
+                                shareUrl={surveyShareUrl}
+                                isCreatingSurvey={isCreatingSurvey}
+                                onCreateSurvey={handleCreateSurvey}
+                              />
+                            </div>
+                          </div>
                         </div>
 
-                        <div ref={scoreFormRef} className="scroll-mt-28">
-                          <PMFEvidenceForm
-                            onSubmit={(answers) => runAnalysis(answers, {
-                              businessContext: {
-                                productName: waitlistProductName ?? undefined,
-                                targetAudience: icpPersonaName ?? undefined,
-                              },
-                              surveyEvidence,
-                            })}
-                            isSubmitting={false}
-                          />
+                        {/* Step 2 — Score your evidence */}
+                        <div ref={scoreFormRef} className="scroll-mt-28 overflow-hidden rounded-3xl border border-border/60 bg-background/70">
+                          <button
+                            type="button"
+                            onClick={() => chooseStep('score')}
+                            className="flex w-full items-center justify-between gap-3 p-5 text-left"
+                            aria-expanded={activeStep === 'score'}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold', activeStep === 'score' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground')}>2</span>
+                              <div>
+                                <p className="text-base font-semibold text-foreground">Score your evidence</p>
+                                <p className="text-xs text-muted-foreground">Log your interviews and demand signals, then get your PMF Readiness Score.</p>
+                              </div>
+                            </div>
+                            <ChevronDown className={cn('h-5 w-5 shrink-0 text-muted-foreground transition-transform', activeStep === 'score' && 'rotate-180')} />
+                          </button>
+                          {/* Kept mounted (hidden) when collapsed so in-progress form answers survive. */}
+                          <div className={cn('border-t border-border/60 p-5', activeStep !== 'score' && 'hidden')}>
+                            <PMFEvidenceForm
+                              onSubmit={(answers) => runAnalysis(answers, {
+                                businessContext: {
+                                  productName: waitlistProductName ?? undefined,
+                                  targetAudience: icpPersonaName ?? undefined,
+                                },
+                                surveyEvidence,
+                              })}
+                              isSubmitting={false}
+                            />
+                          </div>
                         </div>
                       </div>
                     )}
