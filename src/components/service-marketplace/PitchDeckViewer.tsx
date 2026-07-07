@@ -9,31 +9,23 @@ interface PitchDeckViewerProps {
   title: string;
 }
 
-type PdfViewerMode = "direct" | "backup";
-
-function buildViewerUrl(url: string, type: ServicePitchDeckType | null, pdfMode: PdfViewerMode) {
+function buildViewerUrl(url: string, type: ServicePitchDeckType | null) {
   const cleanUrl = url.split("#")[0];
 
   if (type === "pptx") {
     return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(cleanUrl)}`;
   }
 
-  if (pdfMode === "backup") {
-    return `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(cleanUrl)}`;
-  }
-
-  return `${cleanUrl}#toolbar=1&navpanes=0&scrollbar=1&view=FitH`;
+  return `${cleanUrl}#toolbar=1&navpanes=0&scrollbar=1&view=FitH&page=1`;
 }
 
 export function PitchDeckViewer({ url, type, title }: PitchDeckViewerProps) {
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
-  const [pdfMode, setPdfMode] = useState<PdfViewerMode>("direct");
 
   useEffect(() => {
     setLoaded(false);
     setFailed(false);
-    setPdfMode("direct");
   }, [type, url]);
 
   if (!url || !type) {
@@ -52,7 +44,7 @@ export function PitchDeckViewer({ url, type, title }: PitchDeckViewerProps) {
     );
   }
 
-  const viewerUrl = buildViewerUrl(url, type, pdfMode);
+  const viewerUrl = buildViewerUrl(url, type);
   const Icon = type === "pptx" ? Presentation : FileText;
   const isPdf = type === "pdf";
 
@@ -68,31 +60,15 @@ export function PitchDeckViewer({ url, type, title }: PitchDeckViewerProps) {
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
-          {isPdf && (
-            <Button
-              type="button"
-              variant={pdfMode === "backup" ? "secondary" : "outline"}
-              size="sm"
-              onClick={() => {
-                setLoaded(false);
-                setFailed(false);
-                setPdfMode((currentMode) => (currentMode === "direct" ? "backup" : "direct"));
-              }}
-            >
-              {pdfMode === "direct" ? "Backup viewer" : "Fast viewer"}
-            </Button>
-          )}
-          <Button variant="outline" size="sm" asChild>
-            <a href={url} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="mr-2 h-4 w-4" />
-              Open in new tab
-            </a>
-          </Button>
-        </div>
+        <Button variant="outline" size="sm" asChild className="self-start sm:self-auto">
+          <a href={url} target="_blank" rel="noopener noreferrer">
+            <ExternalLink className="mr-2 h-4 w-4" />
+            Open in new tab
+          </a>
+        </Button>
       </div>
       <div className="relative min-h-[560px] bg-muted md:min-h-[720px]">
-        {!loaded && !failed && (
+        {!isPdf && !loaded && !failed && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-muted">
             <div className="flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm text-muted-foreground shadow-sm">
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
@@ -101,15 +77,24 @@ export function PitchDeckViewer({ url, type, title }: PitchDeckViewerProps) {
           </div>
         )}
 
-        <iframe
-          src={viewerUrl}
-          title={title}
-          className="h-[560px] w-full bg-muted md:h-[720px]"
-          loading="eager"
-          allow="fullscreen"
-          onLoad={() => setLoaded(true)}
-          onError={() => setFailed(true)}
-        />
+        {isPdf ? (
+          <embed
+            src={viewerUrl}
+            title={title}
+            type="application/pdf"
+            className="h-[560px] w-full bg-muted md:h-[720px]"
+          />
+        ) : (
+          <iframe
+            src={viewerUrl}
+            title={title}
+            className="h-[560px] w-full bg-muted md:h-[720px]"
+            loading="eager"
+            allow="fullscreen"
+            onLoad={() => setLoaded(true)}
+            onError={() => setFailed(true)}
+          />
+        )}
 
         {failed && (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-muted p-6 text-center">
@@ -132,7 +117,7 @@ export function PitchDeckViewer({ url, type, title }: PitchDeckViewerProps) {
         )}
       </div>
       <p className="border-t border-border bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
-        Scroll inside the preview to move through the deck. If a PDF preview stays blank, switch to the backup viewer.
+        Scroll inside the preview to move through the deck.
       </p>
     </div>
   );
