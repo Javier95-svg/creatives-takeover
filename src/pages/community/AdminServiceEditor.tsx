@@ -106,8 +106,34 @@ const AdminServiceEditor = () => {
     setFormData((prev) => ({
       ...prev,
       name: value,
-      slug: prev.slug ? prev.slug : generateServiceSlug(value),
+      slug: service ? prev.slug : generateServiceSlug(value),
     }));
+  };
+
+  const resolveMessageUserIdFromEmail = async (email: string) => {
+    const trimmedEmail = email.trim();
+    const existingUserIdForSameEmail =
+      service?.delivered_by_email?.trim().toLowerCase() === trimmedEmail.toLowerCase()
+        ? service.delivered_by_user_id
+        : null;
+
+    if (!trimmedEmail) return null;
+
+    try {
+      const { data, error } = await supabase.rpc("get_user_id_by_email", {
+        user_email: trimmedEmail,
+      });
+
+      if (error) {
+        console.warn("Could not resolve service message user from email:", error);
+        return existingUserIdForSameEmail;
+      }
+
+      return typeof data === "string" && data.trim() ? data.trim() : existingUserIdForSameEmail;
+    } catch (error) {
+      console.warn("Could not resolve service message user from email:", error);
+      return existingUserIdForSameEmail;
+    }
   };
 
   const uploadFile = async (bucket: string, file: File, folder: string) => {
@@ -244,18 +270,8 @@ const AdminServiceEditor = () => {
       return false;
     }
 
-    if (!formData.slug?.trim()) {
-      toast.error("Service slug is required");
-      return false;
-    }
-
     if (!formData.description.trim()) {
       toast.error("Description is required");
-      return false;
-    }
-
-    if (!formData.delivered_by_user_id?.trim()) {
-      toast.error("Message user ID is required");
       return false;
     }
 
@@ -282,6 +298,7 @@ const AdminServiceEditor = () => {
 
     setSaving(true);
     try {
+      const resolvedMessageUserId = await resolveMessageUserIdFromEmail(formData.delivered_by_email || "");
       const saveData: CreateServiceInput = {
         name: formData.name.trim(),
         slug: generateServiceSlug(formData.slug || formData.name),
@@ -291,7 +308,7 @@ const AdminServiceEditor = () => {
         delivered_by_picture_url: formData.delivered_by_picture_url || null,
         delivered_by_picture_focal_x: formData.delivered_by_picture_focal_x ?? DEFAULT_IMAGE_FOCAL,
         delivered_by_picture_focal_y: formData.delivered_by_picture_focal_y ?? DEFAULT_IMAGE_FOCAL,
-        delivered_by_user_id: formData.delivered_by_user_id?.trim() || null,
+        delivered_by_user_id: resolvedMessageUserId,
         delivered_by_email: formData.delivered_by_email?.trim() || null,
         banner_url: formData.banner_url || null,
         banner_focal_x: formData.banner_focal_x ?? DEFAULT_IMAGE_FOCAL,
@@ -392,29 +409,15 @@ const AdminServiceEditor = () => {
               <CardTitle>Service Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <Label htmlFor="name">Name *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(event) => handleNameChange(event.target.value)}
-                    placeholder="Sales Automation Sprint"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="slug">Slug *</Label>
-                  <Input
-                    id="slug"
-                    value={formData.slug || ""}
-                    onChange={(event) =>
-                      setFormData((prev) => ({ ...prev, slug: generateServiceSlug(event.target.value) }))
-                    }
-                    placeholder="sales-automation-sprint"
-                    className="mt-1"
-                  />
-                </div>
+              <div>
+                <Label htmlFor="name">Name *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(event) => handleNameChange(event.target.value)}
+                  placeholder="Sales Automation Sprint"
+                  className="mt-1"
+                />
               </div>
 
               <div className="rounded-lg border border-border/60 p-4">
@@ -439,31 +442,6 @@ const AdminServiceEditor = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="delivered_by_picture_url">Picture URL</Label>
-                      <Input
-                        id="delivered_by_picture_url"
-                        type="url"
-                        value={formData.delivered_by_picture_url || ""}
-                        onChange={(event) =>
-                          setFormData((prev) => ({ ...prev, delivered_by_picture_url: event.target.value || null }))
-                        }
-                        placeholder="https://..."
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="delivered_by_user_id">Message User ID *</Label>
-                      <Input
-                        id="delivered_by_user_id"
-                        value={formData.delivered_by_user_id || ""}
-                        onChange={(event) =>
-                          setFormData((prev) => ({ ...prev, delivered_by_user_id: event.target.value || null }))
-                        }
-                        placeholder="Supabase auth user id"
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
                       <Label htmlFor="delivered_by_email">Email *</Label>
                       <Input
                         id="delivered_by_email"
@@ -476,12 +454,17 @@ const AdminServiceEditor = () => {
                         className="mt-1"
                       />
                     </div>
-                    <Input
-                      type="file"
-                      accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
-                      onChange={handleByPictureUpload}
-                      disabled={uploadingByPicture}
-                    />
+                    <div>
+                      <Label htmlFor="delivered_by_picture_upload">Picture</Label>
+                      <Input
+                        id="delivered_by_picture_upload"
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                        onChange={handleByPictureUpload}
+                        disabled={uploadingByPicture}
+                        className="mt-1"
+                      />
+                    </div>
                     {formData.delivered_by_picture_url && (
                       <Button
                         type="button"
