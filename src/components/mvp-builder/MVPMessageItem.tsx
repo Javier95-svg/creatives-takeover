@@ -26,6 +26,7 @@ export const MVPMessageItem: React.FC<MVPMessageItemProps> = ({ message }) => {
 
   const showTypingDots = message.isStreaming && !message.content;
   const modelLabel = getMVPModelLabel(message.model);
+  const statusText = message.statusText?.trim();
 
   return (
     <div className="mb-4 flex items-start gap-3">
@@ -41,7 +42,12 @@ export const MVPMessageItem: React.FC<MVPMessageItemProps> = ({ message }) => {
               <span className="h-1 w-1 rounded-full bg-success" />
               <span>Streaming</span>
             </div>
-            <div className="flex gap-1">
+            {statusText && (
+              <p className="mb-2 text-sm leading-relaxed text-foreground/85">
+                {statusText}
+              </p>
+            )}
+            <div className="flex gap-1" aria-hidden="true">
               <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:0ms]" />
               <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:150ms]" />
               <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:300ms]" />

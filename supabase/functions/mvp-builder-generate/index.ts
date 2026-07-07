@@ -411,6 +411,35 @@ function encDone(): Uint8Array {
   return new TextEncoder().encode("data: [DONE]\n\n");
 }
 
+type MVPBuilderStatusPhase =
+  | "reserved"
+  | "deterministic_edit"
+  | "model_attempt"
+  | "streaming"
+  | "local_repair"
+  | "model_repair"
+  | "validating"
+  | "finalizing";
+
+const STATUS_MESSAGES: Record<MVPBuilderStatusPhase, string> = {
+  reserved: "Credits are held while I work.",
+  deterministic_edit: "This is a simple text change. I can apply it directly.",
+  model_attempt: "I am asking the selected model to make the change.",
+  streaming: "The model is drafting the update.",
+  local_repair: "I am cleaning up the output.",
+  model_repair: "The output needs repair. I am fixing it before applying.",
+  validating: "Checking the project before updating the preview.",
+  finalizing: "The preview is ready.",
+};
+
+function statusEvent(phase: MVPBuilderStatusPhase) {
+  return { type: "status", phase, message: STATUS_MESSAGES[phase] };
+}
+
+async function writeStatus(writer: WritableStreamDefaultWriter<Uint8Array>, phase: MVPBuilderStatusPhase) {
+  await writer.write(enc(statusEvent(phase)));
+}
+
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -587,8 +616,33 @@ function parseModelJson(fullText: string): unknown {
   } catch (error) {
     const jsonObject = extractBalancedJsonObject(cleaned);
     if (jsonObject) return JSON.parse(jsonObject);
+    const htmlDocument = extractHtmlDocument(cleaned);
+    if (htmlDocument) {
+      return {
+        project_type: "html_single",
+        files: [{ path: "index.html", content: htmlDocument, description: "Generated HTML page." }],
+      };
+    }
     throw error;
   }
+}
+
+function extractHtmlDocument(value: string): string | null {
+  const trimmed = value.trim();
+  const fullDocument = trimmed.match(/(?:<!doctype\s+html[^>]*>\s*)?<html\b[\s\S]*?<\/html>/i)?.[0];
+  if (fullDocument) return fullDocument.trim();
+  return null;
+}
+
+function modelOutputNeedsLocalRepair(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  return /^```/i.test(trimmed)
+    || /<project-output>/i.test(trimmed)
+    || Boolean(extractHtmlDocument(trimmed))
+    || (trimmed[0] !== "{" && trimmed.includes("{"))
+    || /"\s*filename"\s*:/.test(trimmed)
+    || /"\s*patches"\s*:/.test(trimmed);
 }
 
 function extractBalancedJsonObject(value: string): string | null {
@@ -685,6 +739,79 @@ function normalizeOutputFile(file: unknown, index: number): { path: string; cont
   return { path, content, description };
 }
 
+function normalizeReplaceFilePatch(patch: unknown, index: number): { path: string; content: string; description: string } | null {
+  if (!patch || typeof patch !== "object") return null;
+  const item = patch as Record<string, unknown>;
+  if (item.operation !== "replace_file") return null;
+  const rawPath = typeof item.path === "string" ? item.path : item.filename;
+  const path = typeof rawPath === "string" ? normalizeProjectPath(rawPath) : "";
+  const content = typeof item.content === "string" ? item.content : "";
+  if (!path || !content) return null;
+  return {
+    path,
+    content,
+    description: typeof item.description === "string" && item.description.trim()
+      ? item.description.trim()
+      : index === 0
+        ? "Primary modified project file."
+        : `Modified project file ${path}.`,
+  };
+}
+
+function normalizeProjectTypeValue(value: unknown): "html_single" | "react_vite" | null {
+  if (value === "html_single" || value === "react_vite") return value;
+  if (value === "static-html" || value === "static_html" || value === "html") return "html_single";
+  if (value === "react-vite" || value === "react" || value === "vite") return "react_vite";
+  return null;
+}
+
+function normalizeModelOutputShape(
+  raw: unknown,
+  currentProject: unknown,
+  actionType: MVPBuilderActionType
+): unknown {
+  if (!raw || typeof raw !== "object") return raw;
+  const source = raw as Record<string, unknown>;
+  const projectEnvelope =
+    source.project && typeof source.project === "object"
+      ? source.project as Record<string, unknown>
+      : source;
+  const candidate: Record<string, unknown> = { ...projectEnvelope };
+
+  const rawFiles = Array.isArray(candidate.files)
+    ? candidate.files
+    : Array.isArray(candidate.project_files)
+      ? candidate.project_files
+      : [];
+  const patchFiles = Array.isArray(candidate.patches)
+    ? candidate.patches.flatMap((patch, index) => {
+        const normalized = normalizeReplaceFilePatch(patch, index);
+        return normalized ? [normalized] : [];
+      })
+    : [];
+
+  if (rawFiles.length > 0) {
+    candidate.files = rawFiles;
+  } else if (patchFiles.length > 0) {
+    candidate.files = patchFiles;
+  }
+
+  const inferredProjectType =
+    normalizeProjectTypeValue(candidate.project_type)
+    ?? normalizeProjectTypeValue(candidate.projectType)
+    ?? normalizeProjectTypeValue(candidate.framework)
+    ?? inferProjectTypeFromCurrentProject(currentProject)
+    ?? (Array.isArray(candidate.files) && candidate.files.some((file) => normalizeOutputFile(file, 0)?.path.endsWith(".html"))
+      ? "html_single"
+      : null);
+  if (inferredProjectType) candidate.project_type = inferredProjectType;
+
+  if (actionType !== "generation" && actionType !== "chat") {
+    return mergeOutputWithCurrentProject(candidate, currentProject, actionType);
+  }
+  return candidate;
+}
+
 function mergeOutputWithCurrentProject(
   raw: unknown,
   currentProject: unknown,
@@ -729,7 +856,7 @@ function parseAndNormalizeModelOutput(
   currentProject: unknown,
   actionType: MVPBuilderActionType
 ): unknown {
-  return mergeOutputWithCurrentProject(parseModelJson(fullText), currentProject, actionType);
+  return normalizeModelOutputShape(parseModelJson(fullText), currentProject, actionType);
 }
 
 function validateOutput(raw: unknown) {
@@ -847,6 +974,165 @@ function hasMaterialProjectChange(currentProject: unknown, output: ReturnType<ty
 }
 
 // ─── Context formatting ───────────────────────────────────────────────────────
+
+type SimpleTextEditKind = "hero_title" | "subheadline" | "button_text";
+type SimpleTextEditResult =
+  | { status: "updated"; output: ReturnType<typeof validateOutput> }
+  | { status: "no_change" }
+  | null;
+
+const DASH_TEXT_PATTERN = /[-\u2010-\u2015]+/g;
+
+function promptRequestsDashRemoval(input: string): boolean {
+  return /\b(?:avoid|remove|without|no|do not use|don't use)\b.{0,40}\b(?:dash|dashes|hyphen|hyphens)\b/i.test(input)
+    || /\b(?:dash|hyphen)[ -]?free\b/i.test(input);
+}
+
+function normalizeUserFacingText(input: string, avoidDashes: boolean): string {
+  if (!avoidDashes) return input.trim();
+  return input
+    .replace(DASH_TEXT_PATTERN, " ")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/\s+([.,!?;:])/g, "$1")
+    .trim();
+}
+
+function extractQuotedReplacement(input: string): string | null {
+  const quotedMatches = [
+    ...input.matchAll(/["“]([^"”]+)["”]/g),
+    ...input.matchAll(/[‘']([^‘’']{3,})[’']/g),
+  ];
+  const last = quotedMatches.at(-1)?.[1];
+  return typeof last === "string" && last.trim() ? last.trim() : null;
+}
+
+function getSimpleTextEditKind(input: string): SimpleTextEditKind | null {
+  const normalized = input.toLowerCase();
+  const asksForTextChange = /\b(change|replace|update|set|rename|remove)\b/.test(normalized);
+  if (!asksForTextChange) return null;
+  if (/\b(button|cta)(?:\s+text|\s+copy)?\b/.test(normalized)) return "button_text";
+  if (/\b(subheadline|subheading|subtitle|sub\s+headline)\b/.test(normalized)) return "subheadline";
+  if (/\b(hero(?:\s+section)?\s+(?:title|headline)|headline|title)\b/.test(normalized)) return "hero_title";
+  return null;
+}
+
+function escapeMarkupText(input: string): string {
+  return input
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/{/g, "&#123;")
+    .replace(/}/g, "&#125;");
+}
+
+function replaceFirstTagText(content: string, tags: string[], replacement: string): string | null {
+  const escaped = escapeMarkupText(replacement);
+  for (const tag of tags) {
+    const pattern = new RegExp(`(<${tag}\\b[^>]*>)[\\s\\S]*?(<\\/${tag}>)`, "i");
+    if (pattern.test(content)) return content.replace(pattern, `$1${escaped}$2`);
+  }
+  return null;
+}
+
+function selectDeterministicEditTarget(
+  files: Array<{ path: string; content: string; description: string }>,
+  projectType: "html_single" | "react_vite" | null
+) {
+  if (projectType === "html_single") {
+    return files.find((file) => file.path === "index.html")
+      ?? files.find((file) => file.path.toLowerCase().endsWith(".html"))
+      ?? null;
+  }
+
+  return files.find((file) => file.path === "src/App.tsx")
+    ?? files.find((file) => file.path === "src/App.jsx")
+    ?? files.find((file) => /(^|\/)App\.(tsx|jsx)$/.test(file.path))
+    ?? files.find((file) => /\.(tsx|jsx)$/.test(file.path) && !/(^|\/)main\.(tsx|jsx)$/.test(file.path))
+    ?? null;
+}
+
+function applySimpleTextEditToCurrentProject(
+  userMessage: string,
+  currentProject: unknown,
+  actionType: MVPBuilderActionType
+): SimpleTextEditResult {
+  if (actionType === "generation" || actionType === "chat") return null;
+  const files = normalizeCurrentProjectFiles(currentProject);
+  if (files.length === 0) return null;
+
+  const kind = getSimpleTextEditKind(userMessage);
+  const replacement = extractQuotedReplacement(userMessage);
+  if (!kind || !replacement) return null;
+
+  const projectType =
+    inferProjectTypeFromCurrentProject(currentProject)
+    ?? (files.some((file) => file.path.toLowerCase().endsWith(".html")) ? "html_single" : "react_vite");
+  const target = selectDeterministicEditTarget(files, projectType);
+  if (!target) return null;
+
+  const normalizedReplacement = normalizeUserFacingText(replacement, promptRequestsDashRemoval(userMessage));
+  const tags =
+    kind === "hero_title"
+      ? ["h1"]
+      : kind === "subheadline"
+        ? ["p"]
+        : ["button", "a"];
+  const updatedContent = replaceFirstTagText(target.content, tags, normalizedReplacement);
+  if (!updatedContent) return null;
+  if (updatedContent === target.content) return { status: "no_change" };
+
+  const output = validateOutput({
+    project_type: projectType,
+    files: files.map((file) => ({
+      path: file.path,
+      content: file.path === target.path ? updatedContent : file.content,
+      description: file.path === target.path ? "Updated project text." : file.description,
+    })),
+    generation_notes: "I found the text and updated it. The rest of the project stayed the same.",
+    posthog_events: [],
+  });
+  return { status: "updated", output };
+}
+
+function validationErrorCategory(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  if (/JSON|object|project_type|files|filename|content/i.test(message)) return "schema";
+  if (/title tag|meta description|track|HTML/i.test(message)) return "html_contract";
+  if (/package\.json|React|vite|main entry|App\./i.test(message)) return "react_contract";
+  if (/placeholder|incomplete copy/i.test(message)) return "placeholder_or_incomplete";
+  if (/empty/i.test(message)) return "empty_output";
+  return "unknown";
+}
+
+function logMVPBuilderFailedAttempt(details: {
+  actionType: MVPBuilderActionType;
+  selectedModel: string;
+  repairModel?: string | null;
+  validationErrorCategory: string;
+  deterministicEditAttempted: boolean;
+  creditsReleased: boolean;
+}) {
+  console.warn(JSON.stringify({
+    level: "warn",
+    message: "mvp_builder_failed_attempt",
+    action_type: details.actionType,
+    selected_model: details.selectedModel,
+    repair_model: details.repairModel ?? null,
+    validation_error_category: details.validationErrorCategory,
+    deterministic_edit_attempted: details.deterministicEditAttempted,
+    credits_released: details.creditsReleased,
+  }));
+}
+
+function emitMVPBuilderTelemetry(eventName: string, userId: string, properties: Record<string, unknown>) {
+  void emitBusinessEvent({
+    eventName,
+    userId,
+    properties,
+  }).catch((error) => {
+    console.error("MVP Builder telemetry failed", eventName, error);
+  });
+}
 
 function formatFounderContext(context: Record<string, unknown> | null): string {
   if (!context) return "";
@@ -1136,13 +1422,17 @@ async function repairModelOutputWithFallback(
   messages: Array<{ role: "user" | "assistant"; content: string }>,
   config: { temperature: number; maxTokens: number },
   currentProject: unknown,
-  actionType: MVPBuilderActionType
+  actionType: MVPBuilderActionType,
+  onRepairAccepted?: (model: string, usedLocalRepair: boolean) => void | Promise<void>
 ): Promise<ReturnType<typeof validateOutput>> {
   let lastError: unknown = null;
   for (const candidate of modelCandidates) {
     try {
       const repaired = await requestModelJson(candidate, systemPrompt, messages, config);
-      return validateOutput(parseAndNormalizeModelOutput(repaired, currentProject, actionType));
+      const usedLocalRepair = modelOutputNeedsLocalRepair(repaired);
+      const validated = validateOutput(parseAndNormalizeModelOutput(repaired, currentProject, actionType));
+      await onRepairAccepted?.(candidate, usedLocalRepair);
+      return validated;
     } catch (error) {
       lastError = error;
       console.error("AI repair model failed:", candidate, error);
@@ -1312,6 +1602,129 @@ serve(async (req: Request) => {
 
   const messages = [...recentHistory, { role: "user" as const, content: prompt }];
 
+  const deterministicEditAttempted = Boolean(
+    hasExistingProject &&
+      classifiedAction !== "generation" &&
+      classifiedAction !== "chat" &&
+      getSimpleTextEditKind(userMessage) &&
+      extractQuotedReplacement(userMessage)
+  );
+  let deterministicEdit: SimpleTextEditResult = null;
+  if (deterministicEditAttempted) {
+    try {
+      deterministicEdit = applySimpleTextEditToCurrentProject(userMessage, currentProject, classifiedAction);
+    } catch (error) {
+      console.error("MVP Builder deterministic edit failed before model fallback", {
+        action_type: classifiedAction,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  if (deterministicEdit) {
+    const deterministicResult = deterministicEdit;
+    const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
+    const writer = writable.getWriter();
+
+    (async () => {
+      try {
+        await writer.write(enc({
+          type: "credit-reserved",
+          reservationId,
+          reservationStatus: "pending",
+          listedCreditCost: creditCost,
+          heldCredits,
+          creditsUsed: 0,
+          balanceAfter: reservation.balanceAfter,
+        }));
+        await writeStatus(writer, "reserved");
+        await writeStatus(writer, "deterministic_edit");
+
+        if (deterministicResult.status === "no_change") {
+          const released = await releaseMVPBuilderCredits(reservationId, "MVP Builder deterministic edit produced no material change");
+          await writer.write(enc({ type: "credit-released", ...released, releaseReason: "no_material_change" }));
+          await writer.write(enc({
+            type: "error",
+            error: "No project changes were needed. Held credits have been released.",
+            errorCode: "NO_MATERIAL_CHANGE",
+          }));
+          await writer.write(encDone());
+          return;
+        }
+
+        await writeStatus(writer, "validating");
+        let validated = deterministicResult.output;
+        if (posthogKey) {
+          validated = {
+            ...validated,
+            files: validated.files.map((file) => ({
+              ...file,
+              content: file.content.replace(/POSTHOG_KEY/g, posthogKey),
+            })),
+          };
+        }
+
+        if (!hasMaterialProjectChange(currentProject, validated)) {
+          const released = await releaseMVPBuilderCredits(reservationId, "MVP Builder deterministic edit produced no material change");
+          await writer.write(enc({ type: "credit-released", ...released, releaseReason: "no_material_change" }));
+          await writer.write(enc({
+            type: "error",
+            error: "No project changes were needed. Held credits have been released.",
+            errorCode: "NO_MATERIAL_CHANGE",
+          }));
+          await writer.write(encDone());
+          return;
+        }
+
+        await writeStatus(writer, "finalizing");
+        const finalized = await finalizeMVPBuilderCredits(reservationId, {
+          mvpBuilderActionType: classifiedAction,
+          completionBoundary: "deterministic_edit_accepted",
+        });
+        if (!finalized.success) throw new Error("Unable to finalize MVP Builder credits");
+        await writer.write(enc({ type: "credit-finalized", ...finalized }));
+        emitMVPBuilderTelemetry("mvp_builder_deterministic_edit_used", userId, {
+          action_type: classifiedAction,
+          model: primaryModel,
+        });
+        await writer.write(enc({
+          type: "project",
+          project: outputToProject(validated, productName),
+          output: validated,
+          actionType: classifiedAction,
+          creditFeature,
+          reservationId,
+          reservationStatus: finalized.reservationStatus,
+          heldCredits,
+          creditCost: finalized.creditsUsed,
+          listedCreditCost: creditCost,
+          wallet: "platform",
+        }));
+        await writer.write(enc({ type: "complete", model: primaryModel, requestedModels: selectedModels }));
+        await writer.write(encDone());
+      } catch (err) {
+        console.error("Deterministic edit stream error:", err);
+        const released = await releaseMVPBuilderCredits(reservationId, "Deterministic edit stream error", {
+          error: err instanceof Error ? err.message : String(err),
+        }).catch(() => ({ success: false }));
+        await writer.write(enc({ type: "credit-released", ...released, releaseReason: "stream_error" }));
+        await writer.write(enc({ type: "error", error: "Stream interrupted. Held credits have been released. Please try again.", errorCode: "STREAM_ERROR" }));
+        await writer.write(encDone());
+      } finally {
+        await writer.close().catch(() => {});
+      }
+    })();
+
+    return new Response(readable, {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
+  }
+
   let selectedModel = modelCandidates[0];
   let aiResponse: Response | null = null;
   let lastApiError = "";
@@ -1339,6 +1752,14 @@ serve(async (req: Request) => {
 
   if (!aiResponse) {
     await releaseMVPBuilderCredits(reservationId, "AI API error", { lastApiError }).catch(() => {});
+    logMVPBuilderFailedAttempt({
+      actionType: classifiedAction,
+      selectedModel,
+      repairModel: null,
+      validationErrorCategory: "ai_error",
+      deterministicEditAttempted,
+      creditsReleased: true,
+    });
     return errorStream("AI service temporarily unavailable. Held credits have been released. Please try again.", "AI_ERROR");
   }
 
@@ -1408,6 +1829,9 @@ serve(async (req: Request) => {
         creditsUsed: 0,
         balanceAfter: reservation.balanceAfter,
       }));
+      await writeStatus(writer, "reserved");
+      await writeStatus(writer, "model_attempt");
+      await writeStatus(writer, "streaming");
 
       while (!sawStop) {
         const { done, value } = await readModelStreamChunk(reader);
@@ -1509,10 +1933,20 @@ serve(async (req: Request) => {
 
       // Validate and emit the structured project event
       let validated: ReturnType<typeof validateOutput>;
+      const usedLocalRepair = modelOutputNeedsLocalRepair(fullText);
       try {
+        if (usedLocalRepair) await writeStatus(writer, "local_repair");
+        await writeStatus(writer, "validating");
         validated = validateOutput(parseAndNormalizeModelOutput(fullText, currentProject, classifiedAction));
+        if (usedLocalRepair) {
+          emitMVPBuilderTelemetry("mvp_builder_local_repair_used", userId, {
+            action_type: classifiedAction,
+            model: selectedModel,
+          });
+        }
       } catch (validationError) {
         const repairModels = getRepairCandidates(selectedModel, userPlan);
+        await writeStatus(writer, "model_repair");
         try {
           validated = await repairModelOutputWithFallback(
             repairModels,
@@ -1534,9 +1968,55 @@ ${fullText}`,
             ],
             { temperature: 0.1, maxTokens: ACTION_CONFIG[classifiedAction].maxTokens + 2000 },
             currentProject,
-            classifiedAction
+            classifiedAction,
+            async (repairModel, repairUsedLocalRepair) => {
+              emitMVPBuilderTelemetry("mvp_builder_model_repair_used", userId, {
+                action_type: classifiedAction,
+                selected_model: selectedModel,
+                repair_model: repairModel,
+              });
+              if (repairUsedLocalRepair) {
+                emitMVPBuilderTelemetry("mvp_builder_local_repair_used", userId, {
+                  action_type: classifiedAction,
+                  model: repairModel,
+                  source: "repair_candidate",
+                });
+              }
+            }
           );
         } catch (repairError) {
+          const retry = deterministicEditAttempted
+            ? (() => {
+                try {
+                  return applySimpleTextEditToCurrentProject(userMessage, currentProject, classifiedAction);
+                } catch (error) {
+                  console.error("MVP Builder deterministic retry failed", {
+                    action_type: classifiedAction,
+                    error: error instanceof Error ? error.message : String(error),
+                  });
+                  return null;
+                }
+              })()
+            : null;
+          if (retry?.status === "updated") {
+            await writeStatus(writer, "deterministic_edit");
+            validated = retry.output;
+            emitMVPBuilderTelemetry("mvp_builder_deterministic_edit_used", userId, {
+              action_type: classifiedAction,
+              model: selectedModel,
+              source: "final_retry",
+            });
+          } else if (retry?.status === "no_change") {
+            const released = await releaseMVPBuilderCredits(reservationId, "MVP Builder deterministic retry produced no material change");
+            await writer.write(enc({ type: "credit-released", ...released, releaseReason: "no_material_change" }));
+            await writer.write(enc({
+              type: "error",
+              error: "No project changes were needed. Held credits have been released.",
+              errorCode: "NO_MATERIAL_CHANGE",
+            }));
+            await writer.write(encDone());
+            return;
+          } else {
           const released = await releaseMVPBuilderCredits(
             reservationId,
             "Invalid MVP Builder JSON output",
@@ -1545,6 +2025,21 @@ ${fullText}`,
               repairError: repairError instanceof Error ? repairError.message : String(repairError),
             }
           );
+          logMVPBuilderFailedAttempt({
+            actionType: classifiedAction,
+            selectedModel,
+            repairModel: repairModels.join(","),
+            validationErrorCategory: validationErrorCategory(validationError),
+            deterministicEditAttempted,
+            creditsReleased: true,
+          });
+          emitMVPBuilderTelemetry("mvp_builder_validation_failed_after_all_repair", userId, {
+            action_type: classifiedAction,
+            selected_model: selectedModel,
+            repair_models: repairModels,
+            validation_error_category: validationErrorCategory(validationError),
+            deterministic_edit_attempted: deterministicEditAttempted,
+          });
           await writer.write(enc({ type: "credit-released", ...released, releaseReason: "validation_failed" }));
           await writer.write(enc({
             type: "error",
@@ -1553,6 +2048,7 @@ ${fullText}`,
           }));
           await writer.write(encDone());
           return;
+          }
         }
       }
 
@@ -1566,6 +2062,14 @@ ${fullText}`,
 
       if (!hasMaterialProjectChange(currentProject, validated)) {
         const released = await releaseMVPBuilderCredits(reservationId, "MVP Builder produced no material project change");
+        logMVPBuilderFailedAttempt({
+          actionType: classifiedAction,
+          selectedModel,
+          repairModel: null,
+          validationErrorCategory: "no_material_change",
+          deterministicEditAttempted,
+          creditsReleased: true,
+        });
         await writer.write(enc({ type: "credit-released", ...released, releaseReason: "no_material_change" }));
         await writer.write(enc({
           type: "error",
@@ -1576,6 +2080,7 @@ ${fullText}`,
         return;
       }
 
+      await writeStatus(writer, "finalizing");
       const finalized = await finalizeMVPBuilderCredits(reservationId, {
         mvpBuilderActionType: classifiedAction,
         completionBoundary: "valid_artifact_accepted",

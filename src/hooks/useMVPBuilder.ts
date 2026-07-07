@@ -73,6 +73,8 @@ export interface MVPMessage {
   createdAt?: string;
   isStreaming?: boolean;
   model?: string;
+  statusText?: string;
+  statusPhase?: string;
   type?: 'message' | 'error';
   linkedPrompt?: string;
   retryPrompt?: string;
@@ -327,6 +329,19 @@ type FunctionError = Error & { status?: number };
 
 const DEFAULT_PROJECT_NAME = 'Untitled Project';
 const MVP_PROJECTS_TABLE = 'mvp_projects';
+
+const MVP_BUILDER_HUMAN_ERROR_MESSAGES: Record<string, string> = {
+  VALIDATION_FAILED: 'I understood the request, but the code output was malformed. I restored your credits. Try again and I will simplify the edit.',
+  AI_ERROR: 'The model could not respond right now. I restored your credits. Please try again.',
+  EMPTY_OUTPUT: 'The model came back empty. I restored your credits.',
+  NO_MATERIAL_CHANGE: 'I checked the project and there was nothing new to apply. Your credits were restored.',
+};
+
+function getMVPBuilderHumanErrorMessage(errorCode: string | undefined, fallback: string): string {
+  return errorCode && MVP_BUILDER_HUMAN_ERROR_MESSAGES[errorCode]
+    ? MVP_BUILDER_HUMAN_ERROR_MESSAGES[errorCode]
+    : fallback;
+}
 
 function createMessage(
   role: MVPMessage['role'],
@@ -2968,6 +2983,8 @@ export function useMVPBuilder() {
                       ...message,
                       content: assistantCopy,
                       isStreaming: false,
+                      statusText: undefined,
+                      statusPhase: undefined,
                       linkedPrompt: prompt,
                       type: 'message',
                       ...(completedModel ? { model: completedModel } : {}),
@@ -3022,6 +3039,8 @@ export function useMVPBuilder() {
                     ...message,
                     content: assistantCopy,
                     isStreaming: false,
+                    statusText: undefined,
+                    statusPhase: undefined,
                     linkedPrompt: prompt,
                     type: 'message',
                     ...(completedModel ? { model: completedModel } : {}),
@@ -3094,7 +3113,20 @@ export function useMVPBuilder() {
               continue;
             }
 
-            if (event.type === 'delta' && typeof event.content === 'string') {
+            if (event.type === 'status' && typeof event.message === 'string') {
+              const statusPhase = typeof event.phase === 'string' ? event.phase : undefined;
+              setMessages((prev) =>
+                prev.map((message) =>
+                  message.id === assistantMsg.id
+                    ? {
+                        ...message,
+                        statusText: event.message as string,
+                        statusPhase,
+                      }
+                    : message
+                )
+              );
+            } else if (event.type === 'delta' && typeof event.content === 'string') {
               streamedContent += event.content;
               if (responseMode === 'chat') {
                 setMessages((prev) =>
@@ -3103,6 +3135,8 @@ export function useMVPBuilder() {
                       ? {
                           ...message,
                           content: streamedContent,
+                          statusText: undefined,
+                          statusPhase: undefined,
                         }
                       : message
                   )
@@ -3182,15 +3216,16 @@ export function useMVPBuilder() {
               finalizeResponse();
               return;
             } else if (event.type === 'error') {
-              const errMsg = (event.error as string) ?? 'Something went wrong.';
+              const rawErrMsg = (event.error as string) ?? 'Something went wrong.';
               const errCode = event.errorCode as string | undefined;
+              const errMsg = getMVPBuilderHumanErrorMessage(errCode, rawErrMsg);
               const CREDIT_ERROR_CODES = ['INSUFFICIENT_CREDITS', 'PLAN_UPGRADE_REQUIRED', 'QUOTA_LIMIT_REACHED'];
               if (errCode === 'INSUFFICIENT_CREDITS') {
                 setIsCreditExhaustedModalOpen(true);
               } else if (errCode && CREDIT_ERROR_CODES.includes(errCode)) {
                 handleCreditError(
-                  { message: errMsg, status: 500 },
-                  { error: errMsg, errorCode: errCode },
+                  { message: rawErrMsg, status: 500 },
+                  { error: rawErrMsg, errorCode: errCode },
                   creditFeature
                 );
               } else {
@@ -3207,6 +3242,8 @@ export function useMVPBuilder() {
                         ...message,
                         content: errMsg,
                         isStreaming: false,
+                        statusText: undefined,
+                        statusPhase: undefined,
                         type: 'error',
                         retryPrompt: prompt,
                       }
@@ -3227,6 +3264,8 @@ export function useMVPBuilder() {
                       ...message,
                       content: 'Generation stopped.',
                       isStreaming: false,
+                      statusText: undefined,
+                      statusPhase: undefined,
                     }
                   : message
               )
@@ -3241,6 +3280,8 @@ export function useMVPBuilder() {
                     ...message,
                     content: 'Request timed out. Please try a shorter or simpler prompt.',
                     isStreaming: false,
+                    statusText: undefined,
+                    statusPhase: undefined,
                     type: 'error',
                     retryPrompt: prompt,
                   }
@@ -3257,6 +3298,8 @@ export function useMVPBuilder() {
                   ...message,
                   content: 'Connection error. Please try again.',
                   isStreaming: false,
+                  statusText: undefined,
+                  statusPhase: undefined,
                   type: 'error',
                   retryPrompt: prompt,
                 }
