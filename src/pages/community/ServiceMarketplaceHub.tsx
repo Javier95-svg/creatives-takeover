@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowRight, BriefcaseBusiness, Loader2, Search, Settings2, Sparkles, Wrench } from "lucide-react";
+import { Loader2, Search, Sparkles, Wrench } from "lucide-react";
 import SEO, { createBreadcrumbSchema, createOrganizationSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -15,24 +15,6 @@ import { useServices } from "@/hooks/useServices";
 import type { MarketplaceService, ServiceCategory } from "@/types/serviceMarketplace";
 import { SERVICE_CATEGORIES, SERVICE_CATEGORY_LABELS } from "@/types/serviceMarketplace";
 import { cn } from "@/lib/utils";
-
-const SERVICE_HIGHLIGHTS = [
-  {
-    title: "Founder-ready operators",
-    description: "Services selected for small teams that need execution without enterprise overhead.",
-    icon: BriefcaseBusiness,
-  },
-  {
-    title: "Practical systems",
-    description: "Sales, marketing, ops, and support help designed around the work founders actually repeat.",
-    icon: Settings2,
-  },
-  {
-    title: "Fast discovery calls",
-    description: "Review the deck, pick a service, and book a focused call with 10 credits.",
-    icon: ArrowRight,
-  },
-];
 
 const ALL_CATEGORIES = "all";
 type CategoryFilter = ServiceCategory | typeof ALL_CATEGORIES;
@@ -161,7 +143,7 @@ const ServiceMarketplaceHub = () => {
                         Network Marketplace
                       </p>
                       <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-                        Founder services that move the work forward.
+                        Tailored services that move your business forward.
                       </h1>
                       <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
                         Sales automation, marketing systems, operational support, and technical help curated for founders and small teams.
@@ -173,25 +155,6 @@ const ServiceMarketplaceHub = () => {
                         <Link to="/marketplace/admin/new">Create Service</Link>
                       </Button>
                     )}
-                  </div>
-
-                  <div className="grid gap-3 md:grid-cols-3">
-                    {SERVICE_HIGHLIGHTS.map((item) => {
-                      const Icon = item.icon;
-
-                      return (
-                        <div
-                          key={item.title}
-                          className="rounded-2xl border border-border/60 bg-background/70 p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 dark:bg-slate-900/70"
-                        >
-                          <Icon className="mb-3 h-5 w-5 text-primary" />
-                          <p className="text-sm font-semibold">{item.title}</p>
-                          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                            {item.description}
-                          </p>
-                        </div>
-                      );
-                    })}
                   </div>
 
                   <div className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm dark:bg-slate-900/75 sm:p-5">
