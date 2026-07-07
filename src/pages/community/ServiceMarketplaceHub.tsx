@@ -140,12 +140,12 @@ const ServiceMarketplaceHub = () => {
                   <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                     <div className="max-w-3xl">
                       <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">
-                        Network Marketplace
+                        Service Marketplace
                       </p>
                       <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
                         Tailored services that move your business forward.
                       </h1>
-                      <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
+                      <p className="mt-4 text-base leading-relaxed text-muted-foreground">
                         Sales automation, marketing systems, operational support, and technical help curated for founders and small teams.
                       </p>
                     </div>
