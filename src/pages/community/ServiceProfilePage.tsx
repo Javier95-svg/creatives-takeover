@@ -15,7 +15,7 @@ import { useMessaging } from "@/hooks/useMessaging";
 import { useServices } from "@/hooks/useServices";
 import type { MarketplaceService } from "@/types/serviceMarketplace";
 import { SERVICE_CATEGORY_LABELS } from "@/types/serviceMarketplace";
-import { getServiceProfilePath } from "@/utils/serviceMarketplace";
+import { getServiceProfilePath, resolveServiceMessageUserId } from "@/utils/serviceMarketplace";
 
 const getImagePosition = (x?: number | null, y?: number | null) => `${x ?? 50}% ${y ?? 50}%`;
 
@@ -51,7 +51,7 @@ const ServiceProfilePage = () => {
   const handleMessage = async () => {
     if (!service) return;
 
-    const providerUserId = service.delivered_by_user_id?.trim();
+    const providerUserId = resolveServiceMessageUserId(service);
     if (!providerUserId) {
       toast.error("This service does not have messaging enabled yet.");
       return;
@@ -126,7 +126,7 @@ const ServiceProfilePage = () => {
     );
   }
 
-  const hasMessageUser = Boolean(service.delivered_by_user_id?.trim());
+  const hasMessageUser = Boolean(resolveServiceMessageUserId(service));
   const hasEmail = Boolean(service.delivered_by_email?.trim());
 
   return (

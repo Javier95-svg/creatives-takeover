@@ -1,5 +1,12 @@
 import type { MarketplaceService, ServiceBookingProvider, ServicePitchDeckType } from "@/types/serviceMarketplace";
 
+export const DARYA_GETMARKETING_EMAIL = "darya@getmarketing.team";
+export const DARYA_GETMARKETING_USER_ID = "a4233961-2e68-463a-a6a9-e43d57a836ab";
+
+const SERVICE_MESSAGE_USER_IDS_BY_EMAIL: Record<string, string> = {
+  [DARYA_GETMARKETING_EMAIL]: DARYA_GETMARKETING_USER_ID,
+};
+
 export function generateServiceSlug(value: string) {
   return value
     .trim()
@@ -50,4 +57,22 @@ export function getDeckTypeFromFile(file: File): ServicePitchDeckType | null {
 
 export function getServiceProfilePath(service: Pick<MarketplaceService, "slug" | "id">) {
   return `/marketplace/${service.slug || service.id}`;
+}
+
+export function resolveServiceMessageUserIdFromEmail(email?: string | null, fallback?: string | null) {
+  const normalizedEmail = email?.trim().toLowerCase();
+  const fallbackUserId = fallback?.trim();
+
+  if (!normalizedEmail) return fallbackUserId || null;
+
+  return SERVICE_MESSAGE_USER_IDS_BY_EMAIL[normalizedEmail] || fallbackUserId || null;
+}
+
+export function resolveServiceMessageUserId(
+  service: Pick<MarketplaceService, "delivered_by_user_id" | "delivered_by_email">,
+) {
+  const savedUserId = service.delivered_by_user_id?.trim();
+  if (savedUserId) return savedUserId;
+
+  return resolveServiceMessageUserIdFromEmail(service.delivered_by_email);
 }

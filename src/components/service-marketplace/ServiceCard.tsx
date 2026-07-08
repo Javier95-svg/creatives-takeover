@@ -9,7 +9,7 @@ import { useMessaging } from "@/hooks/useMessaging";
 import { cn } from "@/lib/utils";
 import type { MarketplaceService } from "@/types/serviceMarketplace";
 import { SERVICE_CATEGORY_LABELS } from "@/types/serviceMarketplace";
-import { getServiceProfilePath } from "@/utils/serviceMarketplace";
+import { getServiceProfilePath, resolveServiceMessageUserId } from "@/utils/serviceMarketplace";
 
 interface ServiceCardProps {
   service: MarketplaceService;
@@ -24,7 +24,8 @@ export function ServiceCard({ service, priority = false, className }: ServiceCar
   const { user, isAuthenticated } = useAuth();
   const { startConversation } = useMessaging({ autoLoad: false });
   const profilePath = getServiceProfilePath(service);
-  const hasMessageUser = Boolean(service.delivered_by_user_id?.trim());
+  const messageUserId = resolveServiceMessageUserId(service);
+  const hasMessageUser = Boolean(messageUserId);
   const hasEmail = Boolean(service.delivered_by_email?.trim());
   const deliveredByInitials = service.delivered_by_name
     ? service.delivered_by_name
@@ -36,7 +37,7 @@ export function ServiceCard({ service, priority = false, className }: ServiceCar
     : "";
 
   const handleMessage = async () => {
-    const providerUserId = service.delivered_by_user_id?.trim();
+    const providerUserId = resolveServiceMessageUserId(service);
 
     if (!providerUserId) {
       toast.error("This service does not have messaging enabled yet.");

@@ -18,7 +18,12 @@ import { useServices } from "@/hooks/useServices";
 import { supabase } from "@/integrations/supabase/client";
 import type { CreateServiceInput, MarketplaceService, ServiceCategory } from "@/types/serviceMarketplace";
 import { SERVICE_CATEGORIES, SERVICE_CATEGORY_LABELS } from "@/types/serviceMarketplace";
-import { generateServiceSlug, getDeckTypeFromFile, getServiceProfilePath } from "@/utils/serviceMarketplace";
+import {
+  generateServiceSlug,
+  getDeckTypeFromFile,
+  getServiceProfilePath,
+  resolveServiceMessageUserIdFromEmail,
+} from "@/utils/serviceMarketplace";
 
 const BANNER_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
 const MAX_BANNER_BYTES = 5 * 1024 * 1024;
@@ -118,6 +123,9 @@ const AdminServiceEditor = () => {
         : null;
 
     if (!trimmedEmail) return null;
+
+    const knownUserId = resolveServiceMessageUserIdFromEmail(trimmedEmail);
+    if (knownUserId) return knownUserId;
 
     try {
       const { data, error } = await supabase.rpc("get_user_id_by_email", {
