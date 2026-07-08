@@ -141,6 +141,7 @@ export function useServices() {
         .from("services")
         .select("*")
         .eq("id", id)
+        .eq("is_active", true)
         .maybeSingle();
 
       if (error) throw error;
