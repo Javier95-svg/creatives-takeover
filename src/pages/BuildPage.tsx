@@ -499,7 +499,7 @@ const BuildHowItWorks = () => {
             to { transform: translateX(calc(-50% - 12px)); }
           }
           .mvp-showcase-track {
-            animation: mvp-showcase-scroll 46s linear infinite;
+            animation: mvp-showcase-scroll 58s linear infinite;
           }
           .mvp-showcase-track:hover {
             animation-play-state: paused;
@@ -517,7 +517,7 @@ const BuildHowItWorks = () => {
           <div className="mx-auto mb-10 max-w-[760px] text-center">
             <p className="font-mono text-label uppercase tracking-[0.22em] text-muted-foreground">MVP Builder examples</p>
             <h2 className="mt-4 font-space-grotesk text-[clamp(32px,3.8vw,46px)] font-bold leading-[1.08] tracking-[-0.03em] text-balance">
-              <span className="bg-gradient-rgb bg-clip-text text-transparent">Landing pages made from a prompt.</span>
+              <span className="bg-gradient-rgb bg-clip-text text-transparent">From concept to final product.</span>
             </h2>
           </div>
         </ScrollReveal>
