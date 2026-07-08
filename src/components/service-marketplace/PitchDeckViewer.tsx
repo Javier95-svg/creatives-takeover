@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ExternalLink, FileText, Loader2, Presentation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ServicePitchDeckType } from "@/types/serviceMarketplace";
@@ -9,6 +9,80 @@ interface PitchDeckViewerProps {
   title: string;
 }
 
+interface PdfViewport {
+  width: number;
+  height: number;
+}
+
+interface PdfPage {
+  getViewport: (options: { scale: number }) => PdfViewport;
+  render: (options: {
+    canvasContext: CanvasRenderingContext2D;
+    viewport: PdfViewport;
+    transform?: number[];
+  }) => { promise: Promise<void>; cancel?: () => void };
+}
+
+interface PdfDocument {
+  numPages: number;
+  getPage: (pageNumber: number) => Promise<PdfPage>;
+  destroy?: () => Promise<void> | void;
+}
+
+interface PdfLoadingTask {
+  promise: Promise<PdfDocument>;
+  destroy?: () => Promise<void> | void;
+}
+
+interface PdfJsLib {
+  GlobalWorkerOptions: {
+    workerSrc: string;
+  };
+  getDocument: (options: { url: string; withCredentials?: boolean }) => PdfLoadingTask;
+}
+
+declare global {
+  interface Window {
+    pdfjsLib?: PdfJsLib;
+  }
+}
+
+const PDF_JS_SRC = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+const PDF_JS_WORKER_SRC = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+let pdfJsLoader: Promise<PdfJsLib> | null = null;
+
+function loadPdfJs() {
+  if (typeof window === "undefined") {
+    return Promise.reject(new Error("PDF viewer is only available in the browser."));
+  }
+
+  if (window.pdfjsLib) {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDF_JS_WORKER_SRC;
+    return Promise.resolve(window.pdfjsLib);
+  }
+
+  if (!pdfJsLoader) {
+    pdfJsLoader = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = PDF_JS_SRC;
+      script.async = true;
+      script.onload = () => {
+        if (!window.pdfjsLib) {
+          reject(new Error("PDF renderer did not initialize."));
+          return;
+        }
+
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDF_JS_WORKER_SRC;
+        resolve(window.pdfjsLib);
+      };
+      script.onerror = () => reject(new Error("Could not load the PDF renderer."));
+      document.head.appendChild(script);
+    });
+  }
+
+  return pdfJsLoader;
+}
+
 function buildViewerUrl(url: string, type: ServicePitchDeckType | null) {
   const cleanUrl = url.split("#")[0];
 
@@ -17,6 +91,122 @@ function buildViewerUrl(url: string, type: ServicePitchDeckType | null) {
   }
 
   return `${cleanUrl}#toolbar=1&navpanes=0&scrollbar=1&view=FitH&page=1`;
+}
+
+function PdfCanvasViewer({ url, title }: { url: string; title: string }) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+
+  useEffect(() => {
+    let cancelled = false;
+    let loadingTask: PdfLoadingTask | null = null;
+    let pdfDocument: PdfDocument | null = null;
+
+    const renderPdf = async () => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      setStatus("loading");
+      container.innerHTML = "";
+
+      try {
+        const pdfjs = await loadPdfJs();
+        if (cancelled) return;
+
+        loadingTask = pdfjs.getDocument({ url: url.split("#")[0], withCredentials: false });
+        pdfDocument = await loadingTask.promise;
+        if (cancelled) return;
+
+        const availableWidth = Math.max(container.clientWidth - 32, 320);
+        const outputScale = Math.min(window.devicePixelRatio || 1, 2);
+
+        for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber += 1) {
+          if (cancelled) return;
+
+          const page = await pdfDocument.getPage(pageNumber);
+          const baseViewport = page.getViewport({ scale: 1 });
+          const scale = Math.min(availableWidth / baseViewport.width, 1.6);
+          const viewport = page.getViewport({ scale });
+          const canvas = document.createElement("canvas");
+          const context = canvas.getContext("2d");
+
+          if (!context) {
+            throw new Error("Could not create PDF page canvas.");
+          }
+
+          canvas.width = Math.floor(viewport.width * outputScale);
+          canvas.height = Math.floor(viewport.height * outputScale);
+          canvas.style.width = `${viewport.width}px`;
+          canvas.style.height = `${viewport.height}px`;
+          canvas.className = "block max-w-full rounded-md bg-white shadow-sm";
+
+          const pageShell = document.createElement("div");
+          pageShell.className = "flex flex-col items-center gap-2 px-4 py-5";
+
+          const pageLabel = document.createElement("p");
+          pageLabel.className = "text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground";
+          pageLabel.textContent = `Slide ${pageNumber} of ${pdfDocument.numPages}`;
+
+          pageShell.appendChild(pageLabel);
+          pageShell.appendChild(canvas);
+          container.appendChild(pageShell);
+
+          if (pageNumber === 1) {
+            setStatus("ready");
+          }
+
+          await page.render({
+            canvasContext: context,
+            viewport,
+            transform: outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : undefined,
+          }).promise;
+        }
+
+        setStatus("ready");
+      } catch (error) {
+        console.error("Service pitch deck PDF render failed:", error);
+        if (!cancelled) {
+          setStatus("error");
+        }
+      }
+    };
+
+    void renderPdf();
+
+    return () => {
+      cancelled = true;
+      containerRef.current?.replaceChildren();
+      void loadingTask?.destroy?.();
+      void pdfDocument?.destroy?.();
+    };
+  }, [url]);
+
+  return (
+    <div className="relative h-[560px] overflow-y-auto bg-muted md:h-[720px]" aria-label={title}>
+      {status === "loading" && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-muted">
+          <div className="flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm text-muted-foreground shadow-sm">
+            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+            Rendering PDF slides
+          </div>
+        </div>
+      )}
+      {status === "error" && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-muted p-6 text-center">
+          <div className="max-w-md space-y-3 rounded-lg border border-border bg-background p-6 shadow-sm">
+            <FileText className="mx-auto h-8 w-8 text-primary" />
+            <div>
+              <h3 className="font-semibold">PDF preview unavailable</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                The deck could not be rendered inside the page. Try opening it in a new tab.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      <div ref={containerRef} className="mx-auto w-full max-w-5xl" />
+    </div>
+  );
 }
 
 export function PitchDeckViewer({ url, type, title }: PitchDeckViewerProps) {
@@ -78,12 +268,7 @@ export function PitchDeckViewer({ url, type, title }: PitchDeckViewerProps) {
         )}
 
         {isPdf ? (
-          <embed
-            src={viewerUrl}
-            title={title}
-            type="application/pdf"
-            className="h-[560px] w-full bg-muted md:h-[720px]"
-          />
+          <PdfCanvasViewer url={url} title={title} />
         ) : (
           <iframe
             src={viewerUrl}
