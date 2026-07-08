@@ -19,6 +19,10 @@ import { getServiceProfilePath, resolveServiceMessageUserId } from "@/utils/serv
 
 const getImagePosition = (x?: number | null, y?: number | null) => `${x ?? 50}% ${y ?? 50}%`;
 
+const SERVICE_PROFILE_SLUG_REDIRECTS: Record<string, string> = {
+  "growth-consulting-for-startups": "get-marketing",
+};
+
 const ServiceProfilePage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -33,8 +37,25 @@ const ServiceProfilePage = () => {
     let cancelled = false;
 
     const loadService = async () => {
-      const foundBySlug = await fetchServiceBySlug(slug);
-      const foundService = foundBySlug || await fetchServiceById(slug);
+      const canonicalSlug = SERVICE_PROFILE_SLUG_REDIRECTS[slug] || slug;
+      const foundByCanonicalSlug = await fetchServiceBySlug(canonicalSlug);
+
+      if (foundByCanonicalSlug) {
+        if (!cancelled) {
+          setService(foundByCanonicalSlug);
+
+          if (canonicalSlug !== slug) {
+            navigate(getServiceProfilePath(foundByCanonicalSlug), { replace: true });
+          }
+        }
+        return;
+      }
+
+      const legacyService =
+        canonicalSlug !== slug
+          ? await fetchServiceBySlug(slug)
+          : null;
+      const foundService = legacyService || await fetchServiceById(slug);
 
       if (!cancelled) {
         setService(foundService);
@@ -46,7 +67,7 @@ const ServiceProfilePage = () => {
     return () => {
       cancelled = true;
     };
-  }, [fetchServiceById, fetchServiceBySlug, slug]);
+  }, [fetchServiceById, fetchServiceBySlug, navigate, slug]);
 
   const handleMessage = async () => {
     if (!service) return;
