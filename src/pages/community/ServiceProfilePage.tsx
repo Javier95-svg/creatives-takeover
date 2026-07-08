@@ -197,7 +197,7 @@ const ServiceProfilePage = () => {
                     </div>
                   </div>
 
-                  <div className="overflow-hidden rounded-lg border border-border bg-muted shadow-sm">
+                  <div className="overflow-hidden rounded-lg border border-border bg-muted shadow-sm lg:-translate-y-3">
                     {service.banner_url ? (
                       <img
                         src={service.banner_url}
@@ -213,7 +213,9 @@ const ServiceProfilePage = () => {
                   </div>
                 </div>
 
-                <p className="max-w-3xl text-lg leading-relaxed text-muted-foreground">{service.description}</p>
+                <p className="max-w-none text-[1.0625rem] font-normal leading-8 tracking-normal text-foreground/75 md:text-lg md:leading-9">
+                  {service.description}
+                </p>
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <Button onClick={handleMessage} disabled={!hasMessageUser} size="lg">
                     <MessageCircle className="mr-2 h-5 w-5" />
