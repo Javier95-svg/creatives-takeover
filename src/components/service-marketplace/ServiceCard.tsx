@@ -21,13 +21,11 @@ export function ServiceCard({ service, priority = false, className }: ServiceCar
   const profilePath = getServiceProfilePath(service);
   const {
     chargingAction,
-    emailCredits,
     handleEmail,
     handleMessage,
     hasEmail,
     hasMessageUser,
     isCharging,
-    messageCredits,
   } = useServiceMarketplaceContact(service);
   const deliveredByInitials = service.delivered_by_name
     ? service.delivered_by_name
@@ -104,7 +102,7 @@ export function ServiceCard({ service, priority = false, className }: ServiceCar
             ) : (
               <MessageCircle className="mr-2 h-4 w-4" />
             )}
-            Message ({messageCredits} credits)
+            Message
           </Button>
           <Button onClick={handleEmail} disabled={!hasEmail || isCharging} variant="outline" className="flex-1 whitespace-nowrap text-xs sm:text-sm">
             {chargingAction === "email" ? (
@@ -112,7 +110,7 @@ export function ServiceCard({ service, priority = false, className }: ServiceCar
             ) : (
               <Mail className="mr-2 h-4 w-4" />
             )}
-            Email ({emailCredits} credits)
+            Email
           </Button>
         </div>
       </CardContent>

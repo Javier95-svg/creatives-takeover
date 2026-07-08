@@ -29,13 +29,11 @@ const ServiceProfilePage = () => {
   const [service, setService] = useState<MarketplaceService | null>(null);
   const {
     chargingAction,
-    emailCredits,
     handleEmail,
     handleMessage,
     hasEmail,
     hasMessageUser,
     isCharging,
-    messageCredits,
   } = useServiceMarketplaceContact(service);
 
   useEffect(() => {
@@ -202,7 +200,7 @@ const ServiceProfilePage = () => {
                     ) : (
                       <MessageCircle className="mr-2 h-5 w-5" />
                     )}
-                    Message ({messageCredits} credits)
+                    Message
                   </Button>
                   <Button onClick={handleEmail} disabled={!hasEmail || isCharging} variant="outline" size="lg">
                     {chargingAction === "email" ? (
@@ -210,7 +208,7 @@ const ServiceProfilePage = () => {
                     ) : (
                       <Mail className="mr-2 h-5 w-5" />
                     )}
-                    Email ({emailCredits} credits)
+                    Email
                   </Button>
                   {isAdmin && (
                     <Button variant="outline" asChild size="lg">
@@ -253,7 +251,7 @@ const ServiceProfilePage = () => {
                       ) : (
                         <MessageCircle className="mr-2 h-4 w-4" />
                       )}
-                      Message ({messageCredits} credits)
+                      Message
                     </Button>
                     <Button onClick={handleEmail} disabled={!hasEmail || isCharging} variant="outline" className="w-full">
                       {chargingAction === "email" ? (
@@ -261,7 +259,7 @@ const ServiceProfilePage = () => {
                       ) : (
                         <Mail className="mr-2 h-4 w-4" />
                       )}
-                      Email ({emailCredits} credits)
+                      Email
                     </Button>
                   </CardContent>
                 </Card>
