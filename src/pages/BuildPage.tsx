@@ -3,12 +3,11 @@ import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   Code2,
+  ExternalLink,
   Github,
   Globe,
   LayoutDashboard,
   Mail,
-  Pencil,
-  Rocket,
   ShoppingCart,
   Wrench,
   X,
@@ -50,18 +49,36 @@ const CHIPS = [
   { label: 'Online store', intent: 'An e-commerce store for handmade goods', dot: '#3B82F6' },
 ];
 
-const HOW_STEPS = [
+const SHOWCASE_SITES = [
   {
-    num: '01', color: 'blue' as const, Icon: Pencil, title: 'Describe',
-    body: "Type your idea like you're texting a friend. \"A booking app for a yoga studio\" is all we need.",
+    name: 'IronLog',
+    image: '/mvp-builder-showcase/ironlog.png',
+    url: 'https://ironlog.creatives-takeover.com/',
   },
   {
-    num: '02', color: 'red' as const, Icon: Zap, title: 'Build',
-    body: 'Watch it build, test, and fix itself in real time. "Add a payment flow to my booking app" and it\'s done.',
+    name: 'LinguaExpat',
+    image: '/mvp-builder-showcase/linguaexpat.png',
+    url: 'https://linguaexpact.creatives-takeover.com/',
   },
   {
-    num: '03', color: 'green' as const, Icon: Rocket, title: 'Launch',
-    body: 'Our GTM Strategist and Directories get your app in front of the right people. Make an impact since the beginning.',
+    name: 'SentryNest',
+    image: '/mvp-builder-showcase/sentrynest.png',
+    url: 'https://sentrynest.creatives-takeover.com/',
+  },
+  {
+    name: 'ShiftCode',
+    image: '/mvp-builder-showcase/shiftcode.png',
+    url: 'https://shiftcode.creatives-takeover.com/',
+  },
+  {
+    name: 'Sora Botanicals',
+    image: '/mvp-builder-showcase/sora-botanicals.png',
+    url: 'https://sora-botanicals.creatives-takeover.com/',
+  },
+  {
+    name: 'Steeped',
+    image: '/mvp-builder-showcase/steeped.png',
+    url: 'https://steeped.creatives-takeover.com/',
   },
 ];
 
@@ -468,58 +485,86 @@ const BuildHero = ({ onOpen }: HeroProps) => {
   );
 };
 
-// ─── How it works ─────────────────────────────────────────────────────────────
+// ─── MVP showcase carousel ───────────────────────────────────────────────────
 
-const stepColors = {
-  blue: { tile: 'from-[#3B82F6] to-[#2563EB]', shadow: 'rgba(59,130,246,0.45)' },
-  red:  { tile: 'from-[#EF4444] to-[#DC2626]', shadow: 'rgba(239,68,68,0.45)' },
-  green:{ tile: 'from-[#10B981] to-[#059669]', shadow: 'rgba(16,185,129,0.45)' },
-};
+const BuildHowItWorks = () => {
+  const loopedSites = [...SHOWCASE_SITES, ...SHOWCASE_SITES];
 
-const BuildHowItWorks = () => (
-  <section className="pb-20 pt-8 lg:pb-24">
-    <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
-      <ScrollReveal>
-        <div className="mx-auto mb-14 max-w-[720px] text-center">
-          <p className="font-mono text-label uppercase tracking-[0.22em] text-muted-foreground">How it works</p>
-          <h2 className="mt-4 font-space-grotesk text-[clamp(32px,3.8vw,46px)] font-bold leading-[1.08] tracking-[-0.03em] text-balance">
-            <span className="bg-gradient-rgb bg-clip-text text-transparent">Three steps from sentence to shipped</span>
-          </h2>
-        </div>
-      </ScrollReveal>
+  return (
+    <section className="pb-20 pt-8 lg:pb-24">
+      <style>
+        {`
+          @keyframes mvp-showcase-scroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(calc(-50% - 12px)); }
+          }
+          .mvp-showcase-track {
+            animation: mvp-showcase-scroll 46s linear infinite;
+          }
+          .mvp-showcase-track:hover {
+            animation-play-state: paused;
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .mvp-showcase-track {
+              animation: none;
+            }
+          }
+        `}
+      </style>
 
-      <RevealGroup className="grid gap-6 sm:grid-cols-3">
-        {HOW_STEPS.map((step, i) => {
-          const c = stepColors[step.color];
-          return (
-            <div
-              key={step.num}
-              className="relative rounded-2xl border border-border/60 bg-card/50 p-7 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-border hover:shadow-xl"
-            >
-              <div className="mb-12 flex items-center justify-between">
-                <span className="font-mono text-xs font-bold tracking-[0.12em] text-muted-foreground/60">
-                  {step.num}
-                </span>
-                <span
-                  className={cn('flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br text-white', c.tile)}
-                  style={{ boxShadow: `0 10px 24px -8px ${c.shadow}` }}
-                >
-                  <step.Icon className="h-5 w-5" aria-hidden="true" />
-                </span>
-              </div>
-              {/* connector */}
-              {i < HOW_STEPS.length - 1 && (
-                <div className="absolute right-[-12px] top-[50px] z-10 hidden h-px w-6 bg-border sm:block" aria-hidden="true" />
-              )}
-              <h3 className="font-space-grotesk text-[22px] font-bold tracking-[-0.02em]">{step.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
+      <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
+        <ScrollReveal>
+          <div className="mx-auto mb-10 max-w-[760px] text-center">
+            <p className="font-mono text-label uppercase tracking-[0.22em] text-muted-foreground">MVP Builder examples</p>
+            <h2 className="mt-4 font-space-grotesk text-[clamp(32px,3.8vw,46px)] font-bold leading-[1.08] tracking-[-0.03em] text-balance">
+              <span className="bg-gradient-rgb bg-clip-text text-transparent">Landing pages made from a prompt.</span>
+            </h2>
+          </div>
+        </ScrollReveal>
+
+        <ScrollReveal>
+          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/35 py-5 shadow-[0_30px_90px_-55px_rgba(59,130,246,0.65)] backdrop-blur-sm">
+            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-background via-background/70 to-transparent sm:w-28" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-background via-background/70 to-transparent sm:w-28" />
+
+            <div className="mvp-showcase-track flex w-max gap-6 px-5 will-change-transform">
+              {loopedSites.map((site, index) => {
+                const duplicate = index >= SHOWCASE_SITES.length;
+                return (
+                  <a
+                    key={`${site.name}-${index}`}
+                    href={site.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    tabIndex={duplicate ? -1 : undefined}
+                    aria-hidden={duplicate || undefined}
+                    aria-label={`Open ${site.name} in a new tab`}
+                    className="group block w-[min(82vw,520px)] shrink-0 overflow-hidden rounded-xl border border-border/70 bg-background/80 shadow-[0_18px_50px_-28px_rgba(0,0,0,0.75)] outline-none transition duration-300 hover:-translate-y-1 hover:border-primary/60 hover:shadow-[0_30px_70px_-35px_rgba(59,130,246,0.75)] focus-visible:ring-2 focus-visible:ring-primary sm:w-[560px] lg:w-[620px]"
+                  >
+                    <div className="relative aspect-[16/10] overflow-hidden bg-muted/30">
+                      <img
+                        src={site.image}
+                        alt={`${site.name} landing page screenshot`}
+                        className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+                        loading={duplicate ? 'lazy' : 'eager'}
+                      />
+                      <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/80 via-black/45 to-transparent px-4 pb-4 pt-12 text-white opacity-95">
+                        <span className="font-space-grotesk text-lg font-bold tracking-[-0.02em]">{site.name}</span>
+                        <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/10 backdrop-blur-md transition group-hover:bg-white/20">
+                          <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                        </span>
+                      </div>
+                    </div>
+                  </a>
+                );
+              })}
             </div>
-          );
-        })}
-      </RevealGroup>
-    </div>
-  </section>
-);
+          </div>
+        </ScrollReveal>
+      </div>
+    </section>
+  );
+};
 
 // ─── What you can build ───────────────────────────────────────────────────────
 
