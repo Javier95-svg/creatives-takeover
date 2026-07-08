@@ -53,6 +53,8 @@ const CREDIT_FEATURE_LABELS: Record<CreditFeature, string> = {
   EMAIL_TEMPLATE_GENERATION: 'Email Template Generation',
   PROMPT_GENERATION: 'Prompt Generation',
   DISCOVERY_CALL: 'Discovery Call',
+  SERVICE_MARKETPLACE_MESSAGE: 'Service Marketplace Message',
+  SERVICE_MARKETPLACE_EMAIL: 'Service Marketplace Email',
   ICP_ANALYSIS: 'ICP Analysis',
 };
 
@@ -158,6 +160,8 @@ const ALWAYS_PAID_FEATURES = new Set<string>([
   'PITCH_DECK_ANALYZER',
   'PROMPT_GENERATION',
   'TRACTION_ENGINE_SCORECARD',
+  'SERVICE_MARKETPLACE_MESSAGE',
+  'SERVICE_MARKETPLACE_EMAIL',
 ]);
 
 const ALWAYS_FREE_FEATURES = new Set<string>([

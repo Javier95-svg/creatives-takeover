@@ -1,15 +1,13 @@
-import { Link, useNavigate } from "react-router-dom";
-import { Mail, MessageCircle } from "lucide-react";
-import { toast } from "sonner";
+import { Link } from "react-router-dom";
+import { Loader2, Mail, MessageCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useAuth } from "@/contexts/AuthContext";
-import { useMessaging } from "@/hooks/useMessaging";
+import { useServiceMarketplaceContact } from "@/hooks/useServiceMarketplaceContact";
 import { cn } from "@/lib/utils";
 import type { MarketplaceService } from "@/types/serviceMarketplace";
 import { SERVICE_CATEGORY_LABELS } from "@/types/serviceMarketplace";
-import { getServiceProfilePath, resolveServiceMessageUserId } from "@/utils/serviceMarketplace";
+import { getServiceProfilePath } from "@/utils/serviceMarketplace";
 
 interface ServiceCardProps {
   service: MarketplaceService;
@@ -20,13 +18,17 @@ interface ServiceCardProps {
 const getImagePosition = (x?: number | null, y?: number | null) => `${x ?? 50}% ${y ?? 50}%`;
 
 export function ServiceCard({ service, priority = false, className }: ServiceCardProps) {
-  const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
-  const { startConversation } = useMessaging({ autoLoad: false });
   const profilePath = getServiceProfilePath(service);
-  const messageUserId = resolveServiceMessageUserId(service);
-  const hasMessageUser = Boolean(messageUserId);
-  const hasEmail = Boolean(service.delivered_by_email?.trim());
+  const {
+    chargingAction,
+    emailCredits,
+    handleEmail,
+    handleMessage,
+    hasEmail,
+    hasMessageUser,
+    isCharging,
+    messageCredits,
+  } = useServiceMarketplaceContact(service);
   const deliveredByInitials = service.delivered_by_name
     ? service.delivered_by_name
         .split(/\s+/)
@@ -35,49 +37,6 @@ export function ServiceCard({ service, priority = false, className }: ServiceCar
         .toUpperCase()
         .slice(0, 2)
     : "";
-
-  const handleMessage = async () => {
-    const providerUserId = resolveServiceMessageUserId(service);
-
-    if (!providerUserId) {
-      toast.error("This service does not have messaging enabled yet.");
-      return;
-    }
-
-    if (!isAuthenticated || !user) {
-      navigate(`/signup?source=message-service&return=${encodeURIComponent(profilePath)}`);
-      return;
-    }
-
-    if (providerUserId === user.id) {
-      toast.error("You cannot message yourself.");
-      return;
-    }
-
-    try {
-      const conversationId = await startConversation(providerUserId);
-      if (conversationId) {
-        navigate(`/messages?conversationId=${conversationId}`);
-        return;
-      }
-
-      toast.error("Failed to start conversation. Please try again.");
-    } catch (error) {
-      console.error("Error starting service conversation:", error);
-      toast.error("Failed to start conversation. Please try again.");
-    }
-  };
-
-  const handleEmail = () => {
-    const email = service.delivered_by_email?.trim();
-
-    if (!email) {
-      toast.error("This service does not have an email configured yet.");
-      return;
-    }
-
-    window.location.href = `mailto:${email}`;
-  };
 
   return (
     <Card className={cn("overflow-hidden rounded-lg border-2 border-border/60 bg-background transition-all duration-300 hover:-translate-y-1 hover:shadow-lg", className)}>
@@ -139,13 +98,21 @@ export function ServiceCard({ service, priority = false, className }: ServiceCar
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Button onClick={handleMessage} disabled={!hasMessageUser} className="flex-1">
-            <MessageCircle className="mr-2 h-4 w-4" />
-            Message
+          <Button onClick={handleMessage} disabled={!hasMessageUser || isCharging} className="flex-1 whitespace-nowrap text-xs sm:text-sm">
+            {chargingAction === "message" ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <MessageCircle className="mr-2 h-4 w-4" />
+            )}
+            Message ({messageCredits} credits)
           </Button>
-          <Button onClick={handleEmail} disabled={!hasEmail} variant="outline" className="flex-1">
-            <Mail className="mr-2 h-4 w-4" />
-            Email
+          <Button onClick={handleEmail} disabled={!hasEmail || isCharging} variant="outline" className="flex-1 whitespace-nowrap text-xs sm:text-sm">
+            {chargingAction === "email" ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Mail className="mr-2 h-4 w-4" />
+            )}
+            Email ({emailCredits} credits)
           </Button>
         </div>
       </CardContent>

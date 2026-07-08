@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Edit, Loader2, Mail, MessageCircle } from "lucide-react";
-import { toast } from "sonner";
 import SEO, { createBreadcrumbSchema, createOrganizationSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -9,13 +8,12 @@ import { PitchDeckViewer } from "@/components/service-marketplace/PitchDeckViewe
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useAuth } from "@/contexts/AuthContext";
 import { useAdminRole } from "@/hooks/useAdminRole";
-import { useMessaging } from "@/hooks/useMessaging";
+import { useServiceMarketplaceContact } from "@/hooks/useServiceMarketplaceContact";
 import { useServices } from "@/hooks/useServices";
 import type { MarketplaceService } from "@/types/serviceMarketplace";
 import { SERVICE_CATEGORY_LABELS } from "@/types/serviceMarketplace";
-import { getServiceProfilePath, resolveServiceMessageUserId } from "@/utils/serviceMarketplace";
+import { getServiceProfilePath } from "@/utils/serviceMarketplace";
 
 const getImagePosition = (x?: number | null, y?: number | null) => `${x ?? 50}% ${y ?? 50}%`;
 
@@ -26,11 +24,19 @@ const SERVICE_PROFILE_SLUG_REDIRECTS: Record<string, string> = {
 const ServiceProfilePage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
   const { isAdmin } = useAdminRole();
-  const { startConversation } = useMessaging({ autoLoad: false });
   const { fetchServiceBySlug, fetchServiceById, loading } = useServices();
   const [service, setService] = useState<MarketplaceService | null>(null);
+  const {
+    chargingAction,
+    emailCredits,
+    handleEmail,
+    handleMessage,
+    hasEmail,
+    hasMessageUser,
+    isCharging,
+    messageCredits,
+  } = useServiceMarketplaceContact(service);
 
   useEffect(() => {
     if (!slug) return;
@@ -69,51 +75,6 @@ const ServiceProfilePage = () => {
     };
   }, [fetchServiceById, fetchServiceBySlug, navigate, slug]);
 
-  const handleMessage = async () => {
-    if (!service) return;
-
-    const providerUserId = resolveServiceMessageUserId(service);
-    if (!providerUserId) {
-      toast.error("This service does not have messaging enabled yet.");
-      return;
-    }
-
-    if (!isAuthenticated || !user) {
-      navigate(`/signup?source=message-service&return=${encodeURIComponent(getServiceProfilePath(service))}`);
-      return;
-    }
-
-    if (providerUserId === user.id) {
-      toast.error("You cannot message yourself.");
-      return;
-    }
-
-    try {
-      const conversationId = await startConversation(providerUserId);
-      if (conversationId) {
-        navigate(`/messages?conversationId=${conversationId}`);
-        return;
-      }
-
-      toast.error("Failed to start conversation. Please try again.");
-    } catch (error) {
-      console.error("Error starting service conversation:", error);
-      toast.error("Failed to start conversation. Please try again.");
-    }
-  };
-
-  const handleEmail = () => {
-    if (!service) return;
-
-    const email = service.delivered_by_email?.trim();
-    if (!email) {
-      toast.error("This service does not have an email configured yet.");
-      return;
-    }
-
-    window.location.href = `mailto:${email}`;
-  };
-
   const deliveredByInitials = service?.delivered_by_name
     ? service.delivered_by_name
         .split(/\s+/)
@@ -146,9 +107,6 @@ const ServiceProfilePage = () => {
       </>
     );
   }
-
-  const hasMessageUser = Boolean(resolveServiceMessageUserId(service));
-  const hasEmail = Boolean(service.delivered_by_email?.trim());
 
   return (
     <>
@@ -238,13 +196,21 @@ const ServiceProfilePage = () => {
                   {service.description}
                 </p>
                 <div className="flex flex-col gap-3 sm:flex-row">
-                  <Button onClick={handleMessage} disabled={!hasMessageUser} size="lg">
-                    <MessageCircle className="mr-2 h-5 w-5" />
-                    Message
+                  <Button onClick={handleMessage} disabled={!hasMessageUser || isCharging} size="lg">
+                    {chargingAction === "message" ? (
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    ) : (
+                      <MessageCircle className="mr-2 h-5 w-5" />
+                    )}
+                    Message ({messageCredits} credits)
                   </Button>
-                  <Button onClick={handleEmail} disabled={!hasEmail} variant="outline" size="lg">
-                    <Mail className="mr-2 h-5 w-5" />
-                    Email
+                  <Button onClick={handleEmail} disabled={!hasEmail || isCharging} variant="outline" size="lg">
+                    {chargingAction === "email" ? (
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    ) : (
+                      <Mail className="mr-2 h-5 w-5" />
+                    )}
+                    Email ({emailCredits} credits)
                   </Button>
                   {isAdmin && (
                     <Button variant="outline" asChild size="lg">
@@ -281,13 +247,21 @@ const ServiceProfilePage = () => {
                         Start a direct message inside Creatives Takeover or open an email to the service provider.
                       </p>
                     </div>
-                    <Button onClick={handleMessage} disabled={!hasMessageUser} className="w-full">
-                      <MessageCircle className="mr-2 h-4 w-4" />
-                      Message
+                    <Button onClick={handleMessage} disabled={!hasMessageUser || isCharging} className="w-full">
+                      {chargingAction === "message" ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <MessageCircle className="mr-2 h-4 w-4" />
+                      )}
+                      Message ({messageCredits} credits)
                     </Button>
-                    <Button onClick={handleEmail} disabled={!hasEmail} variant="outline" className="w-full">
-                      <Mail className="mr-2 h-4 w-4" />
-                      Email
+                    <Button onClick={handleEmail} disabled={!hasEmail || isCharging} variant="outline" className="w-full">
+                      {chargingAction === "email" ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Mail className="mr-2 h-4 w-4" />
+                      )}
+                      Email ({emailCredits} credits)
                     </Button>
                   </CardContent>
                 </Card>

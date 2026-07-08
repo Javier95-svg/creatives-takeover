@@ -65,6 +65,8 @@ export const CREDIT_COSTS = {
 
   // Community Features
   DISCOVERY_CALL: 10,
+  SERVICE_MARKETPLACE_MESSAGE: 5,
+  SERVICE_MARKETPLACE_EMAIL: 10,
   // First message to each mentor is free; every message after that costs this.
   // Enforced server-side by the charge_mentor_dm trigger on message insert.
   MENTOR_DM: 3,

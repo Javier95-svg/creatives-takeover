@@ -164,6 +164,18 @@ const FEATURE_RULES: Partial<Record<EnforcedFeature, Record<Plan, FeatureRule>>>
     rising: { mode: 'charge' },
     pro: { mode: 'charge' },
   },
+  SERVICE_MARKETPLACE_MESSAGE: {
+    rookie: { mode: 'charge' },
+    starter: { mode: 'charge' },
+    rising: { mode: 'charge' },
+    pro: { mode: 'charge' },
+  },
+  SERVICE_MARKETPLACE_EMAIL: {
+    rookie: { mode: 'charge' },
+    starter: { mode: 'charge' },
+    rising: { mode: 'charge' },
+    pro: { mode: 'charge' },
+  },
 };
 
 export function normalizePlan(value: string | null | undefined): Plan {
