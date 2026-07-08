@@ -62,6 +62,20 @@ test('DeepSeek is supported as fallback-only and hidden from selectable models',
   );
 });
 
+test('MVP Builder tries the lighter Gemini backup before leaving Google', () => {
+  assert.match(edgeFunctionSource, /const GEMINI_FALLBACK_MODEL = "gemini-3\.1-flash-lite"/);
+  assert.match(
+    edgeFunctionSource,
+    /const candidates = isGeminiModel\(primaryModel\)[\s\S]*\? \[primaryModel, \.\.\.geminiBackups, DEEPSEEK_FALLBACK_MODEL/
+  );
+  assert.match(
+    edgeFunctionSource,
+    /if \(isGeminiModel\(model\)\) \{[\s\S]*body\.reasoning_effort = "low";[\s\S]*\}/
+  );
+  assert.match(edgeFunctionSource, /providerErrors: ModelAttemptFailure\[\]/);
+  assert.match(edgeFunctionSource, /All MVP Builder model attempts failed/);
+});
+
 test('MVP Builder repair validates each repair candidate before accepting it', () => {
   assert.match(
     edgeFunctionSource,

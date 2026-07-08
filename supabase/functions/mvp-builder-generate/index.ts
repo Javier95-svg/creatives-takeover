@@ -36,11 +36,13 @@ const ANTHROPIC_VERSION = "2023-06-01";
 const GEMINI_OPENAI_API_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
 const DEEPSEEK_OPENAI_API_URL = "https://api.deepseek.com/chat/completions";
 const FREE_DEFAULT_MODEL = "gemini-3.5-flash";
+const GEMINI_FALLBACK_MODEL = "gemini-3.1-flash-lite";
 const PREMIUM_DEFAULT_MODEL = "claude-sonnet-4-6";
 const DEFAULT_MODEL = FREE_DEFAULT_MODEL;
 const DEEPSEEK_FALLBACK_MODEL = "deepseek-v4-flash";
 const MAX_COMBO_MODELS = 3;
 const MODEL_TIMEOUT_MS = 120000;
+const PROVIDER_ERROR_TEXT_MAX = 600;
 
 const SUPPORTED_MODELS = [
   "claude-sonnet-4-6",
@@ -70,6 +72,51 @@ function isDeepSeekModel(model: string): boolean {
 
 function isOpenAICompatibleModel(model: string): boolean {
   return isGeminiModel(model) || isDeepSeekModel(model);
+}
+
+type ModelProvider = "anthropic" | "google" | "deepseek";
+type ModelAttemptFailure = {
+  model: string;
+  provider: ModelProvider;
+  status?: number;
+  category: string;
+  message: string;
+};
+
+function getModelProvider(model: string): ModelProvider {
+  if (isGeminiModel(model)) return "google";
+  if (isDeepSeekModel(model)) return "deepseek";
+  return "anthropic";
+}
+
+function compactProviderMessage(value: unknown): string {
+  const text = value instanceof Error ? value.message : String(value ?? "");
+  return text.replace(/\s+/g, " ").trim().slice(0, PROVIDER_ERROR_TEXT_MAX);
+}
+
+function classifyProviderFailure(status: number | null, error: unknown): string {
+  const message = compactProviderMessage(error).toLowerCase();
+  const name = error instanceof Error ? error.name.toLowerCase() : "";
+  if (name === "aborterror" || message.includes("abort")) return "timeout";
+  if (message.includes("not configured")) return "missing_key";
+  if (status === 401 || status === 403) return "auth";
+  if (status === 400) return "invalid_request";
+  if (status === 408 || status === 504) return "timeout";
+  if (status === 429 || message.includes("rate limit") || message.includes("quota") || message.includes("resource_exhausted")) {
+    return "rate_limited";
+  }
+  if (typeof status === "number" && status >= 500) return "provider_unavailable";
+  return "provider_error";
+}
+
+function createModelAttemptFailure(model: string, status: number | null, error: unknown): ModelAttemptFailure {
+  return {
+    model,
+    provider: getModelProvider(model),
+    ...(typeof status === "number" ? { status } : {}),
+    category: classifyProviderFailure(status, error),
+    message: compactProviderMessage(error) || "No provider error body returned",
+  };
 }
 
 type MVPBuilderActionType = "generation" | "targeted_edit" | "debug" | "add_page" | "add_feature" | "design_overhaul" | "chat";
@@ -486,13 +533,13 @@ function normalizeSelectedModels(raw: unknown, plan: Plan): string[] {
 }
 
 function getFallbackCandidates(primaryModel: string, plan: Plan): string[] {
+  const geminiBackups = [FREE_DEFAULT_MODEL, GEMINI_FALLBACK_MODEL].filter((model) => model !== primaryModel);
+  const candidates = isGeminiModel(primaryModel)
+    ? [primaryModel, ...geminiBackups, DEEPSEEK_FALLBACK_MODEL, getPlanDefaultModel(plan)]
+    : [primaryModel, DEEPSEEK_FALLBACK_MODEL, getPlanDefaultModel(plan), ...geminiBackups];
+
   return Array.from(
-    new Set([
-      primaryModel,
-      DEEPSEEK_FALLBACK_MODEL,
-      getPlanDefaultModel(plan),
-      FREE_DEFAULT_MODEL,
-    ])
+    new Set(candidates)
   ).filter((model) => isModelAllowedForPlan(model, plan));
 }
 
@@ -503,6 +550,7 @@ function getRepairCandidates(selectedModel: string, plan: Plan): string[] {
       selectedModel,
       getPlanDefaultModel(plan),
       FREE_DEFAULT_MODEL,
+      GEMINI_FALLBACK_MODEL,
     ])
   ).filter((model) => isModelAllowedForPlan(model, plan));
 }
@@ -1297,6 +1345,9 @@ async function requestModelStream(
         max_tokens: config.maxTokens,
         stream: true,
       };
+      if (isGeminiModel(model)) {
+        body.reasoning_effort = "low";
+      }
       if (isDeepSeekModel(model)) {
         body.thinking = { type: "disabled" };
       }
@@ -1359,6 +1410,9 @@ async function requestModelJson(
         max_tokens: config.maxTokens,
         stream: false,
       };
+      if (isGeminiModel(model)) {
+        body.reasoning_effort = "low";
+      }
       if (isDeepSeekModel(model)) {
         body.thinking = { type: "disabled" };
       }
@@ -1728,6 +1782,7 @@ serve(async (req: Request) => {
   let selectedModel = modelCandidates[0];
   let aiResponse: Response | null = null;
   let lastApiError = "";
+  const providerErrors: ModelAttemptFailure[] = [];
 
   for (const candidate of modelCandidates) {
     selectedModel = candidate;
@@ -1742,16 +1797,28 @@ serve(async (req: Request) => {
         aiResponse = attempt;
         break;
       }
-      lastApiError = await attempt.text();
-      console.error("AI model attempt failed:", candidate, attempt.status, lastApiError);
+      const errorText = await attempt.text();
+      const failure = createModelAttemptFailure(candidate, attempt.status, errorText);
+      providerErrors.push(failure);
+      lastApiError = `${failure.model}:${failure.status ?? "exception"}:${failure.category}:${failure.message}`;
+      console.error("AI model attempt failed:", failure);
     } catch (err) {
-      lastApiError = err instanceof Error ? err.message : String(err);
-      console.error("AI model request failed:", candidate, err);
+      const failure = createModelAttemptFailure(candidate, null, err);
+      providerErrors.push(failure);
+      lastApiError = `${failure.model}:exception:${failure.category}:${failure.message}`;
+      console.error("AI model request failed:", failure);
     }
   }
 
   if (!aiResponse) {
-    await releaseMVPBuilderCredits(reservationId, "AI API error", { lastApiError }).catch(() => {});
+    await releaseMVPBuilderCredits(reservationId, "AI API error", { lastApiError, providerErrors }).catch(() => {});
+    console.error("All MVP Builder model attempts failed", {
+      actionType: classifiedAction,
+      primaryModel,
+      selectedModel,
+      deterministicEditAttempted,
+      providerErrors,
+    });
     logMVPBuilderFailedAttempt({
       actionType: classifiedAction,
       selectedModel,
