@@ -157,12 +157,8 @@ const ServiceProfilePage = () => {
                 </Link>
               </Button>
 
-              <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+              <div className="space-y-6">
                 <div>
-                  <div className="mb-4 flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary">{SERVICE_CATEGORY_LABELS[service.category]}</Badge>
-                    {service.is_featured && <Badge>Featured</Badge>}
-                  </div>
                   {service.delivered_by_name && (
                     <div className="mb-5 flex w-fit items-center gap-3 rounded-lg border border-border/60 bg-background/75 px-3 py-2">
                       {service.delivered_by_picture_url ? (
@@ -190,40 +186,50 @@ const ServiceProfilePage = () => {
                       </div>
                     </div>
                   )}
-                  <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">{service.name}</h1>
-                  <p className="mt-5 text-lg leading-relaxed text-muted-foreground">{service.description}</p>
-                  <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                    <Button onClick={handleMessage} disabled={!hasMessageUser} size="lg">
-                      <MessageCircle className="mr-2 h-5 w-5" />
-                      Message
-                    </Button>
-                    <Button onClick={handleEmail} disabled={!hasEmail} variant="outline" size="lg">
-                      <Mail className="mr-2 h-5 w-5" />
-                      Email
-                    </Button>
-                    {isAdmin && (
-                      <Button variant="outline" asChild size="lg">
-                        <Link to={`/marketplace/admin/edit/${service.id}`}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit Service
-                        </Link>
-                      </Button>
+                </div>
+
+                <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.78fr)] lg:items-center">
+                  <div>
+                    <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">{service.name}</h1>
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                      <Badge variant="secondary">{SERVICE_CATEGORY_LABELS[service.category]}</Badge>
+                      {service.is_featured && <Badge>Featured</Badge>}
+                    </div>
+                  </div>
+
+                  <div className="overflow-hidden rounded-lg border border-border bg-muted shadow-sm">
+                    {service.banner_url ? (
+                      <img
+                        src={service.banner_url}
+                        alt={service.name}
+                        className="aspect-[4/1] h-full w-full object-cover"
+                        style={{ objectPosition: getImagePosition(service.banner_focal_x, service.banner_focal_y) }}
+                      />
+                    ) : (
+                      <div className="flex aspect-[4/1] items-center justify-center bg-gradient-to-br from-slate-950 via-slate-800 to-cyan-900 p-8 text-center text-2xl font-semibold text-white">
+                        {service.name}
+                      </div>
                     )}
                   </div>
                 </div>
 
-                <div className="overflow-hidden rounded-lg border border-border bg-muted shadow-sm">
-                  {service.banner_url ? (
-                    <img
-                      src={service.banner_url}
-                      alt={service.name}
-                      className="aspect-[4/1] h-full w-full object-cover"
-                      style={{ objectPosition: getImagePosition(service.banner_focal_x, service.banner_focal_y) }}
-                    />
-                  ) : (
-                    <div className="flex aspect-[4/1] items-center justify-center bg-gradient-to-br from-slate-950 via-slate-800 to-cyan-900 p-8 text-center text-2xl font-semibold text-white">
-                      {service.name}
-                    </div>
+                <p className="max-w-3xl text-lg leading-relaxed text-muted-foreground">{service.description}</p>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Button onClick={handleMessage} disabled={!hasMessageUser} size="lg">
+                    <MessageCircle className="mr-2 h-5 w-5" />
+                    Message
+                  </Button>
+                  <Button onClick={handleEmail} disabled={!hasEmail} variant="outline" size="lg">
+                    <Mail className="mr-2 h-5 w-5" />
+                    Email
+                  </Button>
+                  {isAdmin && (
+                    <Button variant="outline" asChild size="lg">
+                      <Link to={`/marketplace/admin/edit/${service.id}`}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit Service
+                      </Link>
+                    </Button>
                   )}
                 </div>
               </div>
