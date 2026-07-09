@@ -7,8 +7,10 @@ import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 import {
   addDaysToDateKey,
   buildCalendarDays,
+  findCarryForwardPlatformTask,
   getDayTaskStatus,
   groupTasksByDate,
+  isPlatformTaskExpired,
   selectSmartTaskRecommendation,
   sortTasksForDay,
   toDateKey,
@@ -84,7 +86,8 @@ export function useTaskCalendarEngine() {
     const [
       icpCompleted,
       waitlistCompleted,
-      pmfCompleted,
+      pmfScored,
+      pmfEvidenceCaptured,
       mvpCompleted,
       techStackCompleted,
       gtmCompleted,
@@ -92,6 +95,10 @@ export function useTaskCalendarEngine() {
       countLatest('icp_analysis_results', userId),
       countLatest('waitlist_pages', userId, (query) => query.in('status', ['published', 'exported'])),
       countLatest('pmf_analysis_results', userId),
+      // The live PMF Lab stores captured signals in pmf_validation_evidence;
+      // pmf_analysis_results only fills once an evidence score run completes.
+      // Either one satisfies the "add fresh validation evidence" task.
+      countLatest('pmf_validation_evidence', userId),
       countLatest('mvp_builder_artifacts', userId, (query) => query.eq('status', 'saved')),
       countLatest('tech_stack_reports', userId),
       countLatest('gtm_plans', userId, (query) => query.in('status', ['saved', 'exported'])),
@@ -100,7 +107,7 @@ export function useTaskCalendarEngine() {
     return {
       icpCompleted,
       waitlistCompleted,
-      pmfCompleted,
+      pmfCompleted: pmfScored || pmfEvidenceCaptured,
       mvpCompleted,
       techStackCompleted,
       gtmCompleted,
@@ -178,7 +185,7 @@ export function useTaskCalendarEngine() {
 
   const logRecommendationEvent = useCallback(async (
     task: CalendarTaskRow,
-    eventType: 'accepted' | 'dismissed' | 'rescheduled' | 'completed',
+    eventType: 'suggested' | 'accepted' | 'dismissed' | 'rescheduled' | 'completed',
     metadata: Record<string, unknown> = {},
   ) => {
     if (!user || !task.recommendation_key) return;
@@ -222,42 +229,109 @@ export function useTaskCalendarEngine() {
     const hasAnyPlatformTaskToday = tasks.some((task) => isPlatformTaskForDate(task, today));
     if (hasAnyPlatformTaskToday) return;
 
+    // Carry an open suggestion forward instead of stacking a duplicate row per
+    // day; expire it after CARRY_FORWARD_MAX_AGE_DAYS so a different
+    // recommendation can rotate in.
+    const effectiveEvents = [...events];
+    const carryForwardTask = findCarryForwardPlatformTask(tasks, today);
+
+    if (carryForwardTask && !isPlatformTaskExpired(carryForwardTask, today)) {
+      const { error } = await supabase
+        .from(TASK_TABLE)
+        .update({
+          task_date: today,
+          deadline_time: deadlineForDate(today),
+          rescheduled_from_date: carryForwardTask.task_date,
+          rescheduled_at: new Date().toISOString(),
+        })
+        .eq('id', carryForwardTask.id);
+
+      if (error) {
+        console.warn('Unable to carry forward daily recommendation', error);
+        return;
+      }
+
+      await logRecommendationEvent(carryForwardTask, 'rescheduled', {
+        carryForward: true,
+        from: carryForwardTask.task_date,
+        to: today,
+      });
+      await fetchTasks();
+      return;
+    }
+
+    if (carryForwardTask) {
+      const { error } = await supabase
+        .from(TASK_TABLE)
+        .update({
+          recommendation_status: 'dismissed',
+          dismissed_at: new Date().toISOString(),
+        })
+        .eq('id', carryForwardTask.id);
+
+      if (error) {
+        console.warn('Unable to expire stale daily recommendation', error);
+        return;
+      }
+
+      await logRecommendationEvent(carryForwardTask, 'dismissed', { autoExpired: true });
+      // The freshly logged dismissal is not in state yet — include it so the
+      // selection below does not immediately re-pick the expired key.
+      if (carryForwardTask.recommendation_key) {
+        effectiveEvents.unshift({
+          recommendation_key: carryForwardTask.recommendation_key,
+          event_type: 'dismissed',
+          created_at: new Date().toISOString(),
+        });
+      }
+    }
+
     const recommendation = selectSmartTaskRecommendation({
       currentStage,
       today,
       tasks,
-      events,
+      events: effectiveEvents,
       toolSignals,
       weeklyMission,
     });
 
     if (!recommendation) return;
 
-    const { error } = await supabase.from(TASK_TABLE).insert({
-      user_id: user.id,
-      task_text: recommendation.title,
-      task_description: recommendation.description,
-      task_date: today,
-      deadline_time: deadlineForDate(today),
-      priority: recommendation.priority,
-      is_completed: false,
-      ai_generated: true,
-      task_source: 'platform',
-      recommendation_status: 'suggested',
-      recommendation_key: recommendation.key,
-      recommendation_reason: recommendation.reason,
-      startup_stage_tag: recommendation.stage,
-      source_route: recommendation.sourceRoute ?? null,
-      contributes_to_weekly_mission: recommendation.contributesToWeeklyMission ?? false,
-      business_impact_score: recommendation.priority === 'high' ? 8 : 6,
-      effort_estimate: 2,
-      stage_alignment_score: 8,
-    });
+    const { data: inserted, error } = await supabase
+      .from(TASK_TABLE)
+      .insert({
+        user_id: user.id,
+        task_text: recommendation.title,
+        task_description: recommendation.description,
+        task_date: today,
+        deadline_time: deadlineForDate(today),
+        priority: recommendation.priority,
+        is_completed: false,
+        ai_generated: true,
+        task_source: 'platform',
+        recommendation_status: 'suggested',
+        recommendation_key: recommendation.key,
+        recommendation_reason: recommendation.reason,
+        startup_stage_tag: recommendation.stage,
+        source_route: recommendation.sourceRoute ?? null,
+        contributes_to_weekly_mission: recommendation.contributesToWeeklyMission ?? false,
+        business_impact_score: recommendation.priority === 'high' ? 8 : 6,
+        effort_estimate: 2,
+        stage_alignment_score: 8,
+      })
+      .select('id')
+      .single();
 
     if (error) {
       console.warn('Unable to create daily recommendation', error);
       return;
     }
+
+    // Suggestion history powers the rotation + repeat cooldown in the engine.
+    await logRecommendationEvent(
+      { ...(inserted as { id: string }), recommendation_key: recommendation.key } as CalendarTaskRow,
+      'suggested',
+    );
 
     await fetchTasks();
   }, [currentStage, events, fetchTasks, tasks, toolSignals, user, weeklyMission]);
@@ -284,6 +358,7 @@ export function useTaskCalendarEngine() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'weekly_missions', filter: `user_id=eq.${user.id}` }, refresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'icp_analysis_results', filter: `user_id=eq.${user.id}` }, refresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'pmf_analysis_results', filter: `user_id=eq.${user.id}` }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pmf_validation_evidence', filter: `user_id=eq.${user.id}` }, refresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tech_stack_reports', filter: `user_id=eq.${user.id}` }, refresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bizmap_task_progress', filter: `user_id=eq.${user.id}` }, refresh)
       .subscribe();

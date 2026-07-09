@@ -184,14 +184,38 @@ export function sortTasksForDay(tasks: CalendarTaskRow[], now = new Date()): Cal
     });
 }
 
-function wasRecentlyDismissed(key: string, events: RecommendationEventRow[], today: string, cooldownDays = 14): boolean {
+// Recommendation anti-repetition windows. Dismissal keeps the longest cooldown
+// (explicit "not this"), completion silences a key while the underlying tool
+// signal catches up, and the suggestion cooldown stops the engine from
+// re-suggesting the exact same key on back-to-back days after it resolves.
+export const DISMISSED_KEY_COOLDOWN_DAYS = 14;
+export const COMPLETED_KEY_COOLDOWN_DAYS = 30;
+export const SUGGESTED_KEY_COOLDOWN_DAYS = 2;
+// Open platform suggestions roll forward day to day; after this many days
+// without action they expire so a different recommendation can rotate in.
+export const CARRY_FORWARD_MAX_AGE_DAYS = 3;
+
+function hadRecentEvent(
+  key: string,
+  events: RecommendationEventRow[],
+  today: string,
+  eventType: string,
+  cooldownDays: number,
+): boolean {
   const todayDate = parseDateKey(today);
   return events.some((event) => {
-    if (event.recommendation_key !== key || event.event_type !== 'dismissed') return false;
+    if (event.recommendation_key !== key || event.event_type !== eventType) return false;
     const eventDate = new Date(event.created_at);
     const cutoff = addDays(todayDate, -cooldownDays);
     return isAfter(eventDate, cutoff) || isSameDay(eventDate, cutoff);
   });
+}
+
+function lastSuggestedAt(key: string, events: RecommendationEventRow[]): number {
+  return events.reduce((latest, event) => {
+    if (event.recommendation_key !== key || event.event_type !== 'suggested') return latest;
+    return Math.max(latest, new Date(event.created_at).getTime());
+  }, 0);
 }
 
 function hasActiveRecommendationForToday(tasks: CalendarTaskRow[], today: string): boolean {
@@ -202,12 +226,60 @@ function hasActiveRecommendationForToday(tasks: CalendarTaskRow[], today: string
   ));
 }
 
+/**
+ * Open platform suggestion from a previous day, newest first. The engine
+ * reschedules this task to today instead of stacking a duplicate row.
+ */
+export function findCarryForwardPlatformTask(tasks: CalendarTaskRow[], today: string): CalendarTaskRow | null {
+  const open = tasks
+    .filter((task) => (
+      task.task_date < today &&
+      getTaskSource(task) === 'platform' &&
+      !task.is_completed &&
+      task.recommendation_status !== 'dismissed'
+    ))
+    .sort((a, b) => {
+      if (a.task_date !== b.task_date) return b.task_date.localeCompare(a.task_date);
+      return (b.created_at ?? '').localeCompare(a.created_at ?? '');
+    });
+
+  return open[0] ?? null;
+}
+
+/**
+ * A platform suggestion the user has ignored for CARRY_FORWARD_MAX_AGE_DAYS
+ * should expire (auto-dismiss) instead of rolling forward forever.
+ */
+export function isPlatformTaskExpired(task: CalendarTaskRow, today: string): boolean {
+  const anchor = task.created_at ? toDateKey(new Date(task.created_at)) : task.task_date;
+  const expiryDate = addDays(parseDateKey(anchor), CARRY_FORWARD_MAX_AGE_DAYS);
+  return isBefore(expiryDate, parseDateKey(today));
+}
+
 function firstAllowedRecommendation(
   candidates: TaskRecommendation[],
   events: RecommendationEventRow[],
   today: string,
 ): TaskRecommendation | null {
-  return candidates.find((candidate) => !wasRecentlyDismissed(candidate.key, events, today)) ?? null;
+  const allowed = candidates.filter((candidate) => (
+    !hadRecentEvent(candidate.key, events, today, 'dismissed', DISMISSED_KEY_COOLDOWN_DAYS) &&
+    !hadRecentEvent(candidate.key, events, today, 'completed', COMPLETED_KEY_COOLDOWN_DAYS) &&
+    !hadRecentEvent(candidate.key, events, today, 'suggested', SUGGESTED_KEY_COOLDOWN_DAYS)
+  ));
+
+  if (allowed.length === 0) {
+    // Everything is cooling down; fall back to the least-recently-touched
+    // candidate rather than recommending nothing forever.
+    return candidates.length > 0
+      ? [...candidates].sort((a, b) => lastSuggestedAt(a.key, events) - lastSuggestedAt(b.key, events))[0]
+      : null;
+  }
+
+  // Rotate: prefer candidates never suggested before (in priority order),
+  // then the one whose last suggestion is oldest.
+  return [...allowed]
+    .map((candidate, index) => ({ candidate, index, last: lastSuggestedAt(candidate.key, events) }))
+    .sort((a, b) => (a.last !== b.last ? a.last - b.last : a.index - b.index))[0].candidate;
 }
 
 export function selectSmartTaskRecommendation(context: RecommendationContext): TaskRecommendation | null {

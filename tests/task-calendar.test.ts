@@ -3,9 +3,11 @@ import assert from 'node:assert/strict';
 
 import {
   buildCalendarDays,
+  findCarryForwardPlatformTask,
   getDayTaskStatus,
   getVisibleDateRange,
   groupTasksByDate,
+  isPlatformTaskExpired,
   selectSmartTaskRecommendation,
   toDateKey,
   type CalendarTaskRow,
@@ -99,6 +101,109 @@ test('dismissed recommendation keys are skipped during cooldown', () => {
 
   assert.notEqual(recommendation?.key, 'tool:icp-builder');
   assert.equal(recommendation?.key.startsWith('stage:IDENTITY'), true);
+});
+
+test('completed recommendation keys are silenced during the completion cooldown', () => {
+  const recommendation = selectSmartTaskRecommendation({
+    currentStage: 'IDENTITY',
+    today: '2026-05-07',
+    tasks: [],
+    events: [
+      {
+        recommendation_key: 'tool:icp-builder',
+        event_type: 'completed',
+        created_at: '2026-05-05T10:00:00.000Z',
+      },
+    ],
+    toolSignals: {},
+    weeklyMission: null,
+  });
+
+  assert.ok(recommendation);
+  assert.notEqual(recommendation?.key, 'tool:icp-builder');
+});
+
+test('recently suggested keys rotate out instead of repeating back-to-back', () => {
+  const recommendation = selectSmartTaskRecommendation({
+    currentStage: 'IDENTITY',
+    today: '2026-05-07',
+    tasks: [],
+    events: [
+      {
+        recommendation_key: 'tool:icp-builder',
+        event_type: 'suggested',
+        created_at: '2026-05-06T09:00:00.000Z',
+      },
+    ],
+    toolSignals: {},
+    weeklyMission: null,
+  });
+
+  assert.ok(recommendation);
+  assert.notEqual(recommendation?.key, 'tool:icp-builder');
+});
+
+test('rotation prefers the least recently suggested allowed candidate', () => {
+  const recommendation = selectSmartTaskRecommendation({
+    currentStage: 'IDENTITY',
+    today: '2026-05-07',
+    tasks: [],
+    events: [
+      {
+        recommendation_key: 'tool:icp-builder',
+        event_type: 'suggested',
+        created_at: '2026-05-01T09:00:00.000Z',
+      },
+    ],
+    toolSignals: {},
+    weeklyMission: null,
+  });
+
+  // ICP was suggested (outside the 2-day repeat cooldown) — a never-suggested
+  // candidate should win over re-suggesting it.
+  assert.ok(recommendation);
+  assert.notEqual(recommendation?.key, 'tool:icp-builder');
+});
+
+test('when every candidate is cooling down the least recently suggested one is used', () => {
+  const recommendation = selectSmartTaskRecommendation({
+    currentStage: 'IDENTITY',
+    today: '2026-05-07',
+    tasks: [],
+    events: [
+      { recommendation_key: 'tool:icp-builder', event_type: 'suggested', created_at: '2026-05-06T09:00:00.000Z' },
+      { recommendation_key: 'stage:IDENTITY:identity-icp-profile', event_type: 'suggested', created_at: '2026-05-06T10:00:00.000Z' },
+      { recommendation_key: 'stage:IDENTITY:identity-top-pains', event_type: 'suggested', created_at: '2026-05-06T11:00:00.000Z' },
+      { recommendation_key: 'stage:IDENTITY:identity-segments', event_type: 'suggested', created_at: '2026-05-06T12:00:00.000Z' },
+      { recommendation_key: 'fallback:IDENTITY', event_type: 'suggested', created_at: '2026-05-06T13:00:00.000Z' },
+    ],
+    toolSignals: {},
+    weeklyMission: null,
+  });
+
+  assert.ok(recommendation, 'engine should never return nothing when candidates exist');
+});
+
+test('open platform suggestions carry forward instead of duplicating', () => {
+  const openSuggestion = task({
+    id: 'platform-1',
+    task_text: 'Complete and save your ICP Builder draft',
+    task_date: '2026-05-06',
+    task_source: 'platform',
+    recommendation_status: 'suggested',
+    recommendation_key: 'tool:icp-builder',
+    created_at: '2026-05-06T08:00:00.000Z',
+  });
+
+  const carry = findCarryForwardPlatformTask([
+    openSuggestion,
+    task({ id: 'manual-1', task_date: '2026-05-05', task_source: 'manual' }),
+    task({ id: 'done-1', task_date: '2026-05-06', task_source: 'platform', is_completed: true }),
+  ], '2026-05-07');
+
+  assert.equal(carry?.id, 'platform-1');
+  assert.equal(isPlatformTaskExpired(openSuggestion, '2026-05-07'), false);
+  assert.equal(isPlatformTaskExpired(openSuggestion, '2026-05-10'), true);
 });
 
 test('generated recommendations do not overwrite manual tasks', () => {
