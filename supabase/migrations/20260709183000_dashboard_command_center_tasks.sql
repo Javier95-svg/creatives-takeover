@@ -95,7 +95,7 @@ SET
     WHEN 'tool:gtm-plan' THEN 'gtm-plan'
     ELSE source_tool
   END,
-  is_foundational = recommendation_key LIKE 'tool:%',
+  is_foundational = COALESCE(recommendation_key LIKE 'tool:%', false),
   max_suggestions = CASE
     WHEN recommendation_key LIKE 'tool:%' THEN 1
     ELSE COALESCE(max_suggestions, 5)
