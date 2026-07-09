@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   addMonths,
@@ -36,9 +36,11 @@ import {
   getDayTaskStatus,
   getTaskRuntimeStatus,
   getTaskSource,
+  isFoundationalTask,
   normalizePriority,
   toDateKey,
   type CalendarTaskRow,
+  type RecommendationFeedbackAction,
   type TaskCalendarView,
   type TaskPriority,
 } from '@/lib/taskCalendar';
@@ -92,7 +94,7 @@ function TaskSourceBadge({ task }: { task: CalendarTaskRow }) {
     return (
       <Badge variant="outline" className="border-info/30 bg-info/10 text-info dark:text-info">
         <Sparkles className="mr-1 h-3 w-3" />
-        Platform recommended
+        {isFoundationalTask(task) ? 'Setup milestone' : 'Platform recommended'}
       </Badge>
     );
   }
@@ -113,6 +115,7 @@ function TaskCard({
   onAccept,
   onComplete,
   onDismiss,
+  onFeedback,
   onReschedule,
   task,
 }: {
@@ -121,6 +124,7 @@ function TaskCard({
   onAccept: (task: CalendarTaskRow) => void;
   onComplete: (task: CalendarTaskRow, completed: boolean) => void;
   onDismiss: (task: CalendarTaskRow) => void;
+  onFeedback: (task: CalendarTaskRow, action: RecommendationFeedbackAction) => void;
   onReschedule: (task: CalendarTaskRow, dateKey: string) => void;
   task: CalendarTaskRow;
 }) {
@@ -186,11 +190,27 @@ function TaskCard({
                 <Button size="sm" className="h-8" onClick={() => onAccept(task)} disabled={isMutating}>
                   Accept
                 </Button>
-                <Button size="sm" variant="outline" className="h-8" onClick={() => onDismiss(task)} disabled={isMutating}>
+                <Button size="sm" variant="outline" className="h-8" onClick={() => onFeedback(task, 'remind_later')} disabled={isMutating}>
+                  Remind later
+                </Button>
+                <Button size="sm" variant="outline" className="h-8" onClick={() => onFeedback(task, 'already_done')} disabled={isMutating}>
+                  Already did this
+                </Button>
+                <Button size="sm" variant="ghost" className="h-8" onClick={() => onFeedback(task, 'not_relevant')} disabled={isMutating}>
+                  Not relevant
+                </Button>
+                <Button size="sm" variant="ghost" className="h-8 text-muted-foreground hover:text-destructive" onClick={() => onFeedback(task, 'stop_showing')} disabled={isMutating}>
                   <X className="mr-1 h-3.5 w-3.5" />
-                  Dismiss
+                  Stop showing
                 </Button>
               </>
+            )}
+
+            {source === 'platform' && task.recommendation_status === 'accepted' && (
+              <Button size="sm" variant="outline" className="h-8" onClick={() => onDismiss(task)} disabled={isMutating}>
+                <X className="mr-1 h-3.5 w-3.5" />
+                Dismiss
+              </Button>
             )}
 
             <div className="flex items-center gap-1">
@@ -346,6 +366,8 @@ function SelectedDayPanel({
   onComplete,
   onCreate,
   onDismiss,
+  onFeedback,
+  onSeen,
   onReschedule,
   selectedDate,
   tasks,
@@ -357,10 +379,23 @@ function SelectedDayPanel({
   onComplete: (task: CalendarTaskRow, completed: boolean) => void;
   onCreate: CreateTaskFn;
   onDismiss: (task: CalendarTaskRow) => void;
+  onFeedback: (task: CalendarTaskRow, action: RecommendationFeedbackAction) => void;
+  onSeen: (task: CalendarTaskRow) => void;
   onReschedule: (task: CalendarTaskRow, dateKey: string) => void;
   selectedDate: string;
   tasks: CalendarTaskRow[];
 }) {
+  const seenTaskIds = useRef(new Set<string>());
+
+  useEffect(() => {
+    tasks.forEach((task) => {
+      if (getTaskSource(task) !== 'platform' || task.is_completed || task.recommendation_status === 'dismissed') return;
+      if (seenTaskIds.current.has(task.id)) return;
+      seenTaskIds.current.add(task.id);
+      onSeen(task);
+    });
+  }, [onSeen, tasks]);
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex items-start justify-between gap-3 border-b px-4 py-4">
@@ -393,6 +428,7 @@ function SelectedDayPanel({
                 onAccept={onAccept}
                 onComplete={onComplete}
                 onDismiss={onDismiss}
+                onFeedback={onFeedback}
                 onReschedule={onReschedule}
                 task={task}
               />
@@ -416,6 +452,8 @@ export function TaskCalendarCommandCenter() {
     currentStage,
     dayStatuses,
     dismissRecommendation,
+    markTaskSeen,
+    sendRecommendationFeedback,
     groupedTasks,
     isLoading,
     isMutating,
@@ -592,6 +630,8 @@ export function TaskCalendarCommandCenter() {
             onComplete={completeTask}
             onCreate={createManualTask}
             onDismiss={dismissRecommendation}
+            onFeedback={sendRecommendationFeedback}
+            onSeen={markTaskSeen}
             onReschedule={rescheduleTask}
             selectedDate={selectedDate}
             tasks={selectedTasks}
@@ -620,6 +660,8 @@ export function TaskCalendarCommandCenter() {
             onComplete={completeTask}
             onCreate={createManualTask}
             onDismiss={dismissRecommendation}
+            onFeedback={sendRecommendationFeedback}
+            onSeen={markTaskSeen}
             onReschedule={rescheduleTask}
             selectedDate={selectedDate}
             tasks={selectedTasks}

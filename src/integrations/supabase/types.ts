@@ -2310,14 +2310,20 @@ export type Database = {
           business_impact_score: number | null
           completed_at: string | null
           contributes_to_weekly_mission: boolean | null
+          cooldown_until: string | null
           created_at: string | null
           deadline_reached_popup_shown: boolean | null
           deadline_time: string | null
           dismissed_at: string | null
           effort_estimate: number | null
+          feedback_status: string | null
           id: string
+          intent_type: string | null
+          is_foundational: boolean
           is_completed: boolean | null
+          last_seen_at: string | null
           last_reminder_sent: string | null
+          max_suggestions: number
           overdue_reminder_level: number
           overdue_reminder_sent_at: string | null
           priority: string | null
@@ -2327,6 +2333,7 @@ export type Database = {
           rescheduled_at: string | null
           rescheduled_from_date: string | null
           source_route: string | null
+          source_tool: string | null
           stage_alignment_score: number | null
           startup_stage_tag: string | null
           task_date: string
@@ -2342,14 +2349,20 @@ export type Database = {
           business_impact_score?: number | null
           completed_at?: string | null
           contributes_to_weekly_mission?: boolean | null
+          cooldown_until?: string | null
           created_at?: string | null
           deadline_reached_popup_shown?: boolean | null
           deadline_time?: string | null
           dismissed_at?: string | null
           effort_estimate?: number | null
+          feedback_status?: string | null
           id?: string
+          intent_type?: string | null
+          is_foundational?: boolean
           is_completed?: boolean | null
+          last_seen_at?: string | null
           last_reminder_sent?: string | null
+          max_suggestions?: number
           overdue_reminder_level?: number
           overdue_reminder_sent_at?: string | null
           priority?: string | null
@@ -2359,6 +2372,7 @@ export type Database = {
           rescheduled_at?: string | null
           rescheduled_from_date?: string | null
           source_route?: string | null
+          source_tool?: string | null
           stage_alignment_score?: number | null
           startup_stage_tag?: string | null
           task_date: string
@@ -2374,14 +2388,20 @@ export type Database = {
           business_impact_score?: number | null
           completed_at?: string | null
           contributes_to_weekly_mission?: boolean | null
+          cooldown_until?: string | null
           created_at?: string | null
           deadline_reached_popup_shown?: boolean | null
           deadline_time?: string | null
           dismissed_at?: string | null
           effort_estimate?: number | null
+          feedback_status?: string | null
           id?: string
+          intent_type?: string | null
+          is_foundational?: boolean
           is_completed?: boolean | null
+          last_seen_at?: string | null
           last_reminder_sent?: string | null
+          max_suggestions?: number
           overdue_reminder_level?: number
           overdue_reminder_sent_at?: string | null
           priority?: string | null
@@ -2391,6 +2411,7 @@ export type Database = {
           rescheduled_at?: string | null
           rescheduled_from_date?: string | null
           source_route?: string | null
+          source_tool?: string | null
           stage_alignment_score?: number | null
           startup_stage_tag?: string | null
           task_date?: string

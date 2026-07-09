@@ -6,6 +6,7 @@ import { useDailyChallenges } from '@/hooks/useDailyChallenges';
 import { useCommitments } from '@/hooks/useCommitments';
 import { STAGE_TASKS } from '@/lib/bizmapStages';
 import type { BizMapStage } from '@/lib/bizmapStages';
+import { shouldShowAsDailyCommand, type CalendarTaskRow } from '@/lib/taskCalendar';
 
 export type TaskSource = 'daily' | 'bizmap' | 'challenge' | 'commitment' | 'priority';
 
@@ -46,7 +47,7 @@ export const useUnifiedTasks = () => {
 
     const { data, error } = await supabase
       .from('daily_tasks')
-      .select('id, task_text, priority, is_completed, deadline_time')
+      .select('id, task_text, priority, is_completed, deadline_time, recommendation_status, recommendation_key, contributes_to_weekly_mission, intent_type, source_tool, is_foundational, cooldown_until, feedback_status, source_route')
       .eq('user_id', user.id)
       .eq('task_date', today())
       .order('created_at', { ascending: true });
@@ -54,13 +55,16 @@ export const useUnifiedTasks = () => {
     if (error || !data) return;
 
     setDailyTasks(
-      data.map((row) => ({
+      data
+        .filter((row) => shouldShowAsDailyCommand(row as CalendarTaskRow, today()))
+        .map((row) => ({
         id: row.id,
         title: row.task_text,
         source: 'daily',
         priority: (row.priority as 'high' | 'medium' | 'low') ?? 'medium',
         isCompleted: row.is_completed,
         deadline: row.deadline_time ?? undefined,
+        actionRoute: row.source_route ?? undefined,
         sourceLabel: 'Daily Task',
         onComplete: async () => {
           await supabase

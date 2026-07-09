@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   Circle,
   Flame,
+  Layers3,
   ListChecks,
   Repeat2,
   TrendingUp,
@@ -22,7 +23,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useDailyMission } from "@/hooks/useDailyMission";
 import { useRoutine } from "@/hooks/useRoutine";
 import { useTaskCalendarEngine } from "@/hooks/useTaskCalendarEngine";
-import { getTaskRuntimeStatus, toDateKey, type CalendarTaskRow } from "@/lib/taskCalendar";
+import { getTaskRuntimeStatus, shouldShowAsDailyCommand, toDateKey, type CalendarTaskRow } from "@/lib/taskCalendar";
 import { getCompletionKey, getLocalDateKey, type RoutineTask } from "@/lib/routineTemplates";
 import { cn } from "@/lib/utils";
 
@@ -69,6 +70,7 @@ export default function DashboardTodayCockpit() {
   const {
     groupedTasks,
     completeTask,
+    foundationalMilestones,
     isLoading: tasksLoading,
   } = useTaskCalendarEngine();
 
@@ -79,7 +81,7 @@ export default function DashboardTodayCockpit() {
   const todayKey = toDateKey(new Date());
 
   const deadlineToday = useMemo<CalendarTaskRow[]>(
-    () => (groupedTasks[todayKey] ?? []).filter((task) => !task.is_completed),
+    () => (groupedTasks[todayKey] ?? []).filter((task) => !task.is_completed && shouldShowAsDailyCommand(task, todayKey)),
     [groupedTasks, todayKey],
   );
 
@@ -87,8 +89,13 @@ export default function DashboardTodayCockpit() {
     () =>
       Object.values(groupedTasks)
         .flat()
-        .filter((task) => getTaskRuntimeStatus(task) === "overdue"),
-    [groupedTasks],
+        .filter((task) => getTaskRuntimeStatus(task) === "overdue" && shouldShowAsDailyCommand(task, todayKey)),
+    [groupedTasks, todayKey],
+  );
+
+  const incompleteMilestones = useMemo(
+    () => foundationalMilestones.filter((milestone) => !milestone.completed),
+    [foundationalMilestones],
   );
 
   const routineToday = useMemo<RoutineTask[]>(() => {
@@ -215,6 +222,32 @@ export default function DashboardTodayCockpit() {
           </div>
         ) : null}
 
+        {incompleteMilestones.length > 0 ? (
+          <div className="mt-5 rounded-xl border border-border/60 bg-background/65 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-1">
+                <p className="flex items-center gap-1.5 text-label font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  <Layers3 className="h-3.5 w-3.5 text-primary/70" aria-hidden="true" />
+                  Quiet setup
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Keep these foundation pieces in view without treating them like urgent daily work.
+                </p>
+              </div>
+              <Badge variant="outline">
+                {foundationalMilestones.length - incompleteMilestones.length}/{foundationalMilestones.length} complete
+              </Badge>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {incompleteMilestones.slice(0, 3).map((milestone) => (
+                <Button key={milestone.key} asChild size="sm" variant="outline" className="h-8">
+                  <Link to={milestone.route}>{milestone.title}</Link>
+                </Button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         {!hasAnythingPlanned ? (
           /* Empty state: guide setup */
           <div className="mt-5 rounded-xl border border-dashed border-border/70 bg-background/70 p-5 text-center">
@@ -261,7 +294,7 @@ export default function DashboardTodayCockpit() {
                         className="flex w-full items-center gap-2.5 rounded-lg border border-border/50 bg-background/80 px-3 py-2 text-left transition-colors hover:border-primary/40 hover:bg-primary/[0.03]"
                       >
                         <Circle className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden="true" />
-                        <span className="text-sm text-foreground">{task.title}</span>
+                        <span className="text-sm text-foreground">{task.task_text}</span>
                       </button>
                     </li>
                   ))}
@@ -306,7 +339,7 @@ export default function DashboardTodayCockpit() {
                         className="flex w-full items-center gap-2.5 rounded-lg border border-border/50 bg-background/80 px-3 py-2 text-left transition-colors hover:border-primary/40 hover:bg-primary/[0.03]"
                       >
                         <Circle className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden="true" />
-                        <span className="text-sm text-foreground">{task.title}</span>
+                        <span className="text-sm text-foreground">{task.task_text}</span>
                       </button>
                     </li>
                   ))}

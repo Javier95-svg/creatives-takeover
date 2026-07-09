@@ -9,13 +9,16 @@ import {
   buildCalendarDays,
   findCarryForwardPlatformTask,
   getDayTaskStatus,
+  getFoundationalMilestones,
   groupTasksByDate,
   isPlatformTaskExpired,
   selectSmartTaskRecommendation,
   sortTasksForDay,
   toDateKey,
   type CalendarTaskRow,
+  type RecommendationEventType,
   type RecommendationEventRow,
+  type RecommendationFeedbackAction,
   type TaskCalendarView,
   type TaskPriority,
   type ToolCompletionSignals,
@@ -33,13 +36,32 @@ interface CreateManualTaskInput {
 
 const TASK_TABLE = 'daily_tasks' as any;
 const RECOMMENDATION_EVENTS_TABLE = 'task_recommendation_events' as any;
+const FEEDBACK_COOLDOWN_DAYS: Record<RecommendationFeedbackAction, number> = {
+  remind_later: 7,
+  not_relevant: 30,
+  already_done: 365,
+  stop_showing: 3650,
+};
 
 function deadlineForDate(dateKey: string): string {
   return endOfDay(new Date(`${dateKey}T00:00:00`)).toISOString();
 }
 
 function isPlatformTaskForDate(task: CalendarTaskRow, dateKey: string): boolean {
-  return task.task_date === dateKey && (task.task_source === 'platform' || task.ai_generated === true);
+  return (
+    task.task_date === dateKey &&
+    (task.task_source === 'platform' || task.ai_generated === true) &&
+    task.recommendation_status !== 'dismissed' &&
+    !task.recommendation_key?.startsWith('tool:') &&
+    task.intent_type !== 'foundational' &&
+    task.is_foundational !== true
+  );
+}
+
+function cooldownUntil(days: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return date.toISOString();
 }
 
 async function countLatest(table: string, userId: string, extra?: (query: any) => any): Promise<boolean> {
@@ -81,6 +103,7 @@ export function useTaskCalendarEngine() {
       return acc;
     }, {});
   }, [calendarDays, groupedTasks]);
+  const foundationalMilestones = useMemo(() => getFoundationalMilestones(toolSignals), [toolSignals]);
 
   const fetchToolSignals = useCallback(async (userId: string): Promise<ToolCompletionSignals> => {
     const [
@@ -185,7 +208,7 @@ export function useTaskCalendarEngine() {
 
   const logRecommendationEvent = useCallback(async (
     task: CalendarTaskRow,
-    eventType: 'suggested' | 'accepted' | 'dismissed' | 'rescheduled' | 'completed',
+    eventType: RecommendationEventType,
     metadata: Record<string, unknown> = {},
   ) => {
     if (!user || !task.recommendation_key) return;
@@ -315,6 +338,14 @@ export function useTaskCalendarEngine() {
         startup_stage_tag: recommendation.stage,
         source_route: recommendation.sourceRoute ?? null,
         contributes_to_weekly_mission: recommendation.contributesToWeeklyMission ?? false,
+        intent_type: recommendation.intentType ?? 'daily_momentum',
+        source_tool: recommendation.sourceTool ?? null,
+        is_foundational: recommendation.isFoundational ?? false,
+        cooldown_until: null,
+        max_suggestions: recommendation.maxSuggestions ?? 5,
+        seen_count: 0,
+        last_seen_at: null,
+        feedback_status: null,
         business_impact_score: recommendation.priority === 'high' ? 8 : 6,
         effort_estimate: 2,
         stage_alignment_score: 8,
@@ -360,6 +391,9 @@ export function useTaskCalendarEngine() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'pmf_analysis_results', filter: `user_id=eq.${user.id}` }, refresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'pmf_validation_evidence', filter: `user_id=eq.${user.id}` }, refresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tech_stack_reports', filter: `user_id=eq.${user.id}` }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'waitlist_pages', filter: `user_id=eq.${user.id}` }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'mvp_builder_artifacts', filter: `user_id=eq.${user.id}` }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gtm_plans', filter: `user_id=eq.${user.id}` }, refresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bizmap_task_progress', filter: `user_id=eq.${user.id}` }, refresh)
       .subscribe();
 
@@ -421,6 +455,30 @@ export function useTaskCalendarEngine() {
     await fetchTasks();
   }, [fetchTasks, logRecommendationEvent, syncStageTaskProgress]);
 
+  const markTaskSeen = useCallback(async (task: CalendarTaskRow) => {
+    if (!user || (task.task_source !== 'platform' && task.ai_generated !== true) || task.is_completed || task.recommendation_status === 'dismissed') return;
+    const now = new Date().toISOString();
+    const { error } = await supabase
+      .from(TASK_TABLE)
+      .update({
+        seen_count: Number(task.seen_count ?? 0) + 1,
+        last_seen_at: now,
+      })
+      .eq('id', task.id);
+
+    if (error) {
+      console.warn('Unable to mark recommendation as seen', error);
+      return;
+    }
+
+    setTasks((current) => current.map((item) => (
+      item.id === task.id
+        ? { ...item, seen_count: Number(item.seen_count ?? 0) + 1, last_seen_at: now }
+        : item
+    )));
+    await logRecommendationEvent(task, 'seen');
+  }, [logRecommendationEvent, user]);
+
   const acceptRecommendation = useCallback(async (task: CalendarTaskRow) => {
     setIsMutating(true);
     const { error } = await supabase
@@ -457,6 +515,47 @@ export function useTaskCalendarEngine() {
     await logRecommendationEvent(task, 'dismissed');
     await fetchTasks();
   }, [fetchTasks, logRecommendationEvent]);
+
+  const sendRecommendationFeedback = useCallback(async (
+    task: CalendarTaskRow,
+    action: RecommendationFeedbackAction,
+  ) => {
+    setIsMutating(true);
+    const now = new Date().toISOString();
+    const completed = action === 'already_done';
+    const { error } = await supabase
+      .from(TASK_TABLE)
+      .update({
+        recommendation_status: 'dismissed',
+        dismissed_at: now,
+        feedback_status: action,
+        cooldown_until: cooldownUntil(FEEDBACK_COOLDOWN_DAYS[action]),
+        is_completed: completed ? true : task.is_completed ?? false,
+        completed_at: completed ? now : task.completed_at ?? null,
+      })
+      .eq('id', task.id);
+    setIsMutating(false);
+
+    if (error) {
+      toast.error('Unable to save feedback.');
+      return;
+    }
+
+    await logRecommendationEvent(task, action, { cooldownDays: FEEDBACK_COOLDOWN_DAYS[action] });
+    if (completed) {
+      await logRecommendationEvent(task, 'completed', { feedback: action });
+      await syncStageTaskProgress(task, true);
+    }
+    await fetchTasks();
+
+    const messages: Record<RecommendationFeedbackAction, string> = {
+      remind_later: 'Got it. I will cool this down.',
+      not_relevant: 'Marked not relevant.',
+      already_done: 'Nice, marked as already done.',
+      stop_showing: 'This recommendation will stay hidden.',
+    };
+    toast.success(messages[action]);
+  }, [fetchTasks, logRecommendationEvent, syncStageTaskProgress]);
 
   const rescheduleTask = useCallback(async (task: CalendarTaskRow, nextDate: string) => {
     setIsMutating(true);
@@ -497,6 +596,7 @@ export function useTaskCalendarEngine() {
     calendarDays,
     tasks,
     groupedTasks,
+    foundationalMilestones,
     selectedTasks,
     dayStatuses,
     currentStage,
@@ -506,6 +606,8 @@ export function useTaskCalendarEngine() {
     completeTask,
     acceptRecommendation,
     dismissRecommendation,
+    markTaskSeen,
+    sendRecommendationFeedback,
     rescheduleTask,
     refetch: fetchTasks,
   };

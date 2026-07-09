@@ -22,6 +22,7 @@ import { shouldShowOnboardingPathGate } from '@/lib/onboardingPath';
 import { OnboardingPathGate } from '@/components/onboarding/OnboardingPathGate';
 import { cn } from '@/lib/utils';
 import { DashboardSidebar } from './DashboardSidebar';
+import { DashboardCommandSignalStrip } from './DashboardCommandSignalStrip';
 import { DashboardStreakChip } from './DashboardStreakChip';
 import { DashboardTabsHost } from './DashboardTabsHost';
 import { TaskCountContext } from './TaskCountContext';
@@ -127,6 +128,7 @@ function DashboardFrame() {
               </div>
 
               <div className={cn('relative z-10 container mx-auto p-6 pb-24 pt-24', DASHBOARD_MAX_WIDTH)}>
+                {!isHome ? <DashboardCommandSignalStrip /> : null}
                 <DashboardTabsHost />
               </div>
             </div>

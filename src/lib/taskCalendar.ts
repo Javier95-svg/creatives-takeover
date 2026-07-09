@@ -19,6 +19,23 @@ export type TaskSourceType = 'manual' | 'platform';
 export type RecommendationStatus = 'suggested' | 'accepted' | 'dismissed';
 export type TaskRuntimeStatus = 'completed' | 'pending' | 'overdue' | 'dismissed';
 export type DayTaskStatus = 'empty' | 'completed' | 'pending' | 'overdue';
+export type TaskIntentType = 'daily_momentum' | 'weekly_mission' | 'stage_action' | 'accountability' | 'foundational';
+export type TaskFeedbackStatus = 'remind_later' | 'not_relevant' | 'already_done' | 'stop_showing';
+export type RecommendationEventType =
+  | 'suggested'
+  | 'accepted'
+  | 'dismissed'
+  | 'rescheduled'
+  | 'completed'
+  | 'seen'
+  | 'remind_later'
+  | 'not_relevant'
+  | 'already_done'
+  | 'stop_showing';
+export type RecommendationFeedbackAction = Extract<
+  RecommendationEventType,
+  'remind_later' | 'not_relevant' | 'already_done' | 'stop_showing'
+>;
 
 export interface CalendarTaskRow {
   id: string;
@@ -38,6 +55,14 @@ export interface CalendarTaskRow {
   recommendation_reason?: string | null;
   startup_stage_tag?: string | null;
   source_route?: string | null;
+  intent_type?: string | null;
+  source_tool?: string | null;
+  is_foundational?: boolean | null;
+  cooldown_until?: string | null;
+  max_suggestions?: number | null;
+  seen_count?: number | null;
+  last_seen_at?: string | null;
+  feedback_status?: string | null;
   dismissed_at?: string | null;
   rescheduled_from_date?: string | null;
   rescheduled_at?: string | null;
@@ -84,6 +109,20 @@ export interface TaskRecommendation {
   stage: BizMapStage;
   sourceRoute?: string;
   contributesToWeeklyMission?: boolean;
+  intentType?: TaskIntentType;
+  sourceTool?: string;
+  isFoundational?: boolean;
+  maxSuggestions?: number;
+}
+
+export interface FoundationalMilestone {
+  key: string;
+  title: string;
+  description: string;
+  route: string;
+  sourceTool: string;
+  completed: boolean;
+  stage: BizMapStage;
 }
 
 export function toDateKey(date: Date): string {
@@ -146,6 +185,44 @@ export function getTaskRuntimeStatus(task: CalendarTaskRow, now = new Date()): T
   return 'pending';
 }
 
+export function getTaskIntentType(task: CalendarTaskRow): TaskIntentType {
+  if (
+    task.intent_type === 'daily_momentum' ||
+    task.intent_type === 'weekly_mission' ||
+    task.intent_type === 'stage_action' ||
+    task.intent_type === 'accountability' ||
+    task.intent_type === 'foundational'
+  ) {
+    return task.intent_type;
+  }
+
+  if (task.recommendation_key?.startsWith('tool:')) return 'foundational';
+  if (task.recommendation_key?.startsWith('weekly:') || task.contributes_to_weekly_mission) return 'weekly_mission';
+  if (task.recommendation_key?.startsWith('stage:')) return 'stage_action';
+  if (task.recommendation_key?.startsWith('overdue:')) return 'accountability';
+  return 'daily_momentum';
+}
+
+export function isFoundationalTask(task: CalendarTaskRow): boolean {
+  return task.is_foundational === true || getTaskIntentType(task) === 'foundational';
+}
+
+export function isTaskCoolingDown(task: CalendarTaskRow, today = toDateKey(new Date())): boolean {
+  if (!task.cooldown_until) return false;
+  const cooldownDate = new Date(task.cooldown_until);
+  if (Number.isNaN(cooldownDate.getTime())) return false;
+  return isAfter(cooldownDate, parseDateKey(today)) || isSameDay(cooldownDate, parseDateKey(today));
+}
+
+export function shouldShowAsDailyCommand(task: CalendarTaskRow, today = toDateKey(new Date())): boolean {
+  if (task.recommendation_status === 'dismissed') return false;
+  if (task.feedback_status === 'not_relevant' || task.feedback_status === 'already_done' || task.feedback_status === 'stop_showing') {
+    return false;
+  }
+  if (isTaskCoolingDown(task, today)) return false;
+  return !isFoundationalTask(task);
+}
+
 export function groupTasksByDate(tasks: CalendarTaskRow[]): Record<string, CalendarTaskRow[]> {
   return tasks.reduce<Record<string, CalendarTaskRow[]>>((acc, task) => {
     if (task.recommendation_status === 'dismissed') return acc;
@@ -191,6 +268,11 @@ export function sortTasksForDay(tasks: CalendarTaskRow[], now = new Date()): Cal
 export const DISMISSED_KEY_COOLDOWN_DAYS = 14;
 export const COMPLETED_KEY_COOLDOWN_DAYS = 30;
 export const SUGGESTED_KEY_COOLDOWN_DAYS = 2;
+export const REMIND_LATER_COOLDOWN_DAYS = 7;
+export const NOT_RELEVANT_COOLDOWN_DAYS = 30;
+export const ALREADY_DONE_COOLDOWN_DAYS = 365;
+export const STOP_SHOWING_COOLDOWN_DAYS = 3650;
+export const FOUNDATIONAL_MAX_SUGGESTIONS = 1;
 // Open platform suggestions roll forward day to day; after this many days
 // without action they expire so a different recommendation can rotate in.
 export const CARRY_FORWARD_MAX_AGE_DAYS = 3;
@@ -218,11 +300,35 @@ function lastSuggestedAt(key: string, events: RecommendationEventRow[]): number 
   }, 0);
 }
 
+function eventCount(key: string, events: RecommendationEventRow[], eventType: string): number {
+  return events.reduce((count, event) => (
+    event.recommendation_key === key && event.event_type === eventType ? count + 1 : count
+  ), 0);
+}
+
+function isHardSuppressed(candidate: TaskRecommendation, events: RecommendationEventRow[], today: string): boolean {
+  if (hadRecentEvent(candidate.key, events, today, 'stop_showing', STOP_SHOWING_COOLDOWN_DAYS)) return true;
+  if (hadRecentEvent(candidate.key, events, today, 'already_done', ALREADY_DONE_COOLDOWN_DAYS)) return true;
+  const maxSuggestions = candidate.maxSuggestions ?? (candidate.isFoundational ? FOUNDATIONAL_MAX_SUGGESTIONS : undefined);
+  if (maxSuggestions !== undefined && eventCount(candidate.key, events, 'suggested') >= maxSuggestions) return true;
+  return false;
+}
+
+function isUserSuppressed(candidate: TaskRecommendation, events: RecommendationEventRow[], today: string): boolean {
+  return (
+    isHardSuppressed(candidate, events, today) ||
+    hadRecentEvent(candidate.key, events, today, 'dismissed', DISMISSED_KEY_COOLDOWN_DAYS) ||
+    hadRecentEvent(candidate.key, events, today, 'completed', COMPLETED_KEY_COOLDOWN_DAYS) ||
+    hadRecentEvent(candidate.key, events, today, 'remind_later', REMIND_LATER_COOLDOWN_DAYS) ||
+    hadRecentEvent(candidate.key, events, today, 'not_relevant', NOT_RELEVANT_COOLDOWN_DAYS)
+  );
+}
+
 function hasActiveRecommendationForToday(tasks: CalendarTaskRow[], today: string): boolean {
   return tasks.some((task) => (
     task.task_date === today &&
     getTaskSource(task) === 'platform' &&
-    task.recommendation_status !== 'dismissed'
+    shouldShowAsDailyCommand(task, today)
   ));
 }
 
@@ -236,7 +342,8 @@ export function findCarryForwardPlatformTask(tasks: CalendarTaskRow[], today: st
       task.task_date < today &&
       getTaskSource(task) === 'platform' &&
       !task.is_completed &&
-      task.recommendation_status !== 'dismissed'
+      task.recommendation_status !== 'dismissed' &&
+      shouldShowAsDailyCommand(task, today)
     ))
     .sort((a, b) => {
       if (a.task_date !== b.task_date) return b.task_date.localeCompare(a.task_date);
@@ -251,6 +358,7 @@ export function findCarryForwardPlatformTask(tasks: CalendarTaskRow[], today: st
  * should expire (auto-dismiss) instead of rolling forward forever.
  */
 export function isPlatformTaskExpired(task: CalendarTaskRow, today: string): boolean {
+  if (isFoundationalTask(task) || isTaskCoolingDown(task, today)) return true;
   const anchor = task.created_at ? toDateKey(new Date(task.created_at)) : task.task_date;
   const expiryDate = addDays(parseDateKey(anchor), CARRY_FORWARD_MAX_AGE_DAYS);
   return isBefore(expiryDate, parseDateKey(today));
@@ -262,16 +370,16 @@ function firstAllowedRecommendation(
   today: string,
 ): TaskRecommendation | null {
   const allowed = candidates.filter((candidate) => (
-    !hadRecentEvent(candidate.key, events, today, 'dismissed', DISMISSED_KEY_COOLDOWN_DAYS) &&
-    !hadRecentEvent(candidate.key, events, today, 'completed', COMPLETED_KEY_COOLDOWN_DAYS) &&
+    !isUserSuppressed(candidate, events, today) &&
     !hadRecentEvent(candidate.key, events, today, 'suggested', SUGGESTED_KEY_COOLDOWN_DAYS)
   ));
 
   if (allowed.length === 0) {
+    const fallbackCandidates = candidates.filter((candidate) => !isUserSuppressed(candidate, events, today));
     // Everything is cooling down; fall back to the least-recently-touched
     // candidate rather than recommending nothing forever.
-    return candidates.length > 0
-      ? [...candidates].sort((a, b) => lastSuggestedAt(a.key, events) - lastSuggestedAt(b.key, events))[0]
+    return fallbackCandidates.length > 0
+      ? [...fallbackCandidates].sort((a, b) => lastSuggestedAt(a.key, events) - lastSuggestedAt(b.key, events))[0]
       : null;
   }
 
@@ -287,7 +395,7 @@ export function selectSmartTaskRecommendation(context: RecommendationContext): T
 
   if (hasActiveRecommendationForToday(tasks, today)) return null;
 
-  const incompleteTasks = tasks.filter((task) => !task.is_completed && task.recommendation_status !== 'dismissed');
+  const incompleteTasks = tasks.filter((task) => !task.is_completed && shouldShowAsDailyCommand(task, today));
   const overdueAccountabilityTask = incompleteTasks.find((task) => (
     (getTaskSource(task) === 'manual' || task.recommendation_status === 'accepted') &&
     task.deadline_time &&
@@ -305,6 +413,7 @@ export function selectSmartTaskRecommendation(context: RecommendationContext): T
       priority: 'high',
       stage: currentStage,
       sourceRoute: '/dashboard/tasks',
+      intentType: 'accountability',
     });
   }
 
@@ -325,6 +434,7 @@ export function selectSmartTaskRecommendation(context: RecommendationContext): T
       priority: stageTask.priority,
       stage: currentStage,
       sourceRoute: stageTask.route,
+      intentType: 'stage_action',
     }));
 
   const toolCandidates: TaskRecommendation[] = [
@@ -336,6 +446,10 @@ export function selectSmartTaskRecommendation(context: RecommendationContext): T
       priority: 'high',
       stage: 'IDENTITY' as BizMapStage,
       sourceRoute: '/icp-builder',
+      intentType: 'foundational',
+      sourceTool: 'icp-builder',
+      isFoundational: true,
+      maxSuggestions: FOUNDATIONAL_MAX_SUGGESTIONS,
     },
     currentStage !== 'IDENTITY' && !toolSignals.waitlistCompleted && {
       key: 'tool:waitlist-maker',
@@ -345,6 +459,10 @@ export function selectSmartTaskRecommendation(context: RecommendationContext): T
       priority: 'high',
       stage: 'PROTOTYPE' as BizMapStage,
       sourceRoute: '/demo-studio',
+      intentType: 'foundational',
+      sourceTool: 'waitlist-maker',
+      isFoundational: true,
+      maxSuggestions: FOUNDATIONAL_MAX_SUGGESTIONS,
     },
     currentStage === 'VALIDATING' && !toolSignals.pmfCompleted && {
       key: 'tool:pmf-lab',
@@ -354,6 +472,10 @@ export function selectSmartTaskRecommendation(context: RecommendationContext): T
       priority: 'high',
       stage: 'VALIDATING' as BizMapStage,
       sourceRoute: '/pmf-lab',
+      intentType: 'foundational',
+      sourceTool: 'pmf-lab',
+      isFoundational: true,
+      maxSuggestions: FOUNDATIONAL_MAX_SUGGESTIONS,
     },
     currentStage === 'BUILDING' && !toolSignals.techStackCompleted && {
       key: 'tool:tech-stack',
@@ -363,6 +485,10 @@ export function selectSmartTaskRecommendation(context: RecommendationContext): T
       priority: 'high',
       stage: 'BUILDING' as BizMapStage,
       sourceRoute: '/tech-stack',
+      intentType: 'foundational',
+      sourceTool: 'tech-stack',
+      isFoundational: true,
+      maxSuggestions: FOUNDATIONAL_MAX_SUGGESTIONS,
     },
     currentStage === 'BUILDING' && !toolSignals.mvpCompleted && {
       key: 'tool:mvp-builder',
@@ -372,6 +498,10 @@ export function selectSmartTaskRecommendation(context: RecommendationContext): T
       priority: 'high',
       stage: 'BUILDING' as BizMapStage,
       sourceRoute: '/mvp-builder',
+      intentType: 'foundational',
+      sourceTool: 'mvp-builder',
+      isFoundational: true,
+      maxSuggestions: FOUNDATIONAL_MAX_SUGGESTIONS,
     },
     currentStage === 'LAUNCH' && !toolSignals.gtmCompleted && {
       key: 'tool:gtm-plan',
@@ -381,10 +511,12 @@ export function selectSmartTaskRecommendation(context: RecommendationContext): T
       priority: 'high',
       stage: 'LAUNCH' as BizMapStage,
       sourceRoute: '/go-to-market',
+      intentType: 'foundational',
+      sourceTool: 'gtm-plan',
+      isFoundational: true,
+      maxSuggestions: FOUNDATIONAL_MAX_SUGGESTIONS,
     },
   ].filter(Boolean) as TaskRecommendation[];
-
-  candidates.push(...toolCandidates, ...stageCandidates);
 
   if (weeklyMission && Number(weeklyMission.completion_percentage ?? 0) < 100) {
     candidates.push({
@@ -396,8 +528,11 @@ export function selectSmartTaskRecommendation(context: RecommendationContext): T
       stage: currentStage,
       sourceRoute: '/dashboard/weekly-mission',
       contributesToWeeklyMission: true,
+      intentType: 'weekly_mission',
     });
   }
+
+  candidates.push(...stageCandidates);
 
   candidates.push({
     key: `fallback:${currentStage}`,
@@ -409,7 +544,68 @@ export function selectSmartTaskRecommendation(context: RecommendationContext): T
     priority: stageTasks[0]?.priority ?? 'medium',
     stage: currentStage,
     sourceRoute: stageTasks[0]?.route ?? '/dashboard',
+    intentType: 'daily_momentum',
   });
 
-  return firstAllowedRecommendation(candidates, events, today);
+  return firstAllowedRecommendation(candidates, events, today)
+    ?? firstAllowedRecommendation(toolCandidates, events, today);
+}
+
+export function getFoundationalMilestones(toolSignals: ToolCompletionSignals): FoundationalMilestone[] {
+  return [
+    {
+      key: 'tool:icp-builder',
+      title: 'ICP Builder draft',
+      description: 'Customer, pain, buying trigger, and positioning.',
+      route: '/icp-builder',
+      sourceTool: 'icp-builder',
+      completed: Boolean(toolSignals.icpCompleted),
+      stage: 'IDENTITY',
+    },
+    {
+      key: 'tool:waitlist-maker',
+      title: 'Waitlist page',
+      description: 'A live demand-capture page for early market signals.',
+      route: '/demo-studio',
+      sourceTool: 'waitlist-maker',
+      completed: Boolean(toolSignals.waitlistCompleted),
+      stage: 'PROTOTYPE',
+    },
+    {
+      key: 'tool:pmf-lab',
+      title: 'PMF evidence',
+      description: 'Interview, survey, or validation evidence captured.',
+      route: '/pmf-lab',
+      sourceTool: 'pmf-lab',
+      completed: Boolean(toolSignals.pmfCompleted),
+      stage: 'VALIDATING',
+    },
+    {
+      key: 'tool:tech-stack',
+      title: 'Tech Stack recommendation',
+      description: 'Core tools and budget saved for the build.',
+      route: '/tech-stack',
+      sourceTool: 'tech-stack',
+      completed: Boolean(toolSignals.techStackCompleted),
+      stage: 'BUILDING',
+    },
+    {
+      key: 'tool:mvp-builder',
+      title: 'MVP scope',
+      description: 'A saved smallest-buildable product direction.',
+      route: '/mvp-builder',
+      sourceTool: 'mvp-builder',
+      completed: Boolean(toolSignals.mvpCompleted),
+      stage: 'BUILDING',
+    },
+    {
+      key: 'tool:gtm-plan',
+      title: 'GTM launch plan',
+      description: 'Channels, launch assets, and KPIs selected.',
+      route: '/go-to-market',
+      sourceTool: 'gtm-plan',
+      completed: Boolean(toolSignals.gtmCompleted),
+      stage: 'LAUNCH',
+    },
+  ];
 }

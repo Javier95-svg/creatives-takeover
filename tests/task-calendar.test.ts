@@ -4,11 +4,14 @@ import assert from 'node:assert/strict';
 import {
   buildCalendarDays,
   findCarryForwardPlatformTask,
+  getFoundationalMilestones,
   getDayTaskStatus,
   getVisibleDateRange,
   groupTasksByDate,
+  isFoundationalTask,
   isPlatformTaskExpired,
   selectSmartTaskRecommendation,
+  shouldShowAsDailyCommand,
   toDateKey,
   type CalendarTaskRow,
 } from '../src/lib/taskCalendar.ts';
@@ -81,6 +84,39 @@ test('recommendation engine prioritizes overdue manual tasks first', () => {
 
   assert.equal(recommendation?.key, 'overdue:manual-overdue');
   assert.match(recommendation?.title ?? '', /Book two customer interviews/);
+});
+
+test('weekly missions outrank missing foundational setup tasks', () => {
+  const recommendation = selectSmartTaskRecommendation({
+    currentStage: 'IDENTITY',
+    today: '2026-05-07',
+    tasks: [],
+    events: [],
+    toolSignals: {},
+    weeklyMission: {
+      id: 'mission-1',
+      mission_goal: 'Book three founder interviews',
+      completion_percentage: 20,
+    },
+  });
+
+  assert.equal(recommendation?.key, 'weekly:mission-1');
+  assert.equal(recommendation?.intentType, 'weekly_mission');
+});
+
+test('ICP setup stays quiet when stage momentum is available', () => {
+  const recommendation = selectSmartTaskRecommendation({
+    currentStage: 'IDENTITY',
+    today: '2026-05-07',
+    tasks: [],
+    events: [],
+    toolSignals: {},
+    weeklyMission: null,
+  });
+
+  assert.ok(recommendation);
+  assert.notEqual(recommendation?.key, 'tool:icp-builder');
+  assert.notEqual(recommendation?.intentType, 'foundational');
 });
 
 test('dismissed recommendation keys are skipped during cooldown', () => {
@@ -187,11 +223,12 @@ test('when every candidate is cooling down the least recently suggested one is u
 test('open platform suggestions carry forward instead of duplicating', () => {
   const openSuggestion = task({
     id: 'platform-1',
-    task_text: 'Complete and save your ICP Builder draft',
+    task_text: 'Book two customer interviews',
     task_date: '2026-05-06',
     task_source: 'platform',
     recommendation_status: 'suggested',
-    recommendation_key: 'tool:icp-builder',
+    recommendation_key: 'stage:VALIDATING:validation-interviews',
+    intent_type: 'stage_action',
     created_at: '2026-05-06T08:00:00.000Z',
   });
 
@@ -204,6 +241,61 @@ test('open platform suggestions carry forward instead of duplicating', () => {
   assert.equal(carry?.id, 'platform-1');
   assert.equal(isPlatformTaskExpired(openSuggestion, '2026-05-07'), false);
   assert.equal(isPlatformTaskExpired(openSuggestion, '2026-05-10'), true);
+});
+
+test('foundational setup suggestions do not carry forward as daily work', () => {
+  const foundational = task({
+    id: 'setup-1',
+    task_text: 'Complete and save your ICP Builder draft',
+    task_date: '2026-05-06',
+    task_source: 'platform',
+    recommendation_status: 'suggested',
+    recommendation_key: 'tool:icp-builder',
+    intent_type: 'foundational',
+    is_foundational: true,
+    created_at: '2026-05-06T08:00:00.000Z',
+  });
+
+  assert.equal(isFoundationalTask(foundational), true);
+  assert.equal(shouldShowAsDailyCommand(foundational, '2026-05-07'), false);
+  assert.equal(findCarryForwardPlatformTask([foundational], '2026-05-07'), null);
+  assert.equal(isPlatformTaskExpired(foundational, '2026-05-07'), true);
+});
+
+test('stop showing suppresses a recommendation key during selection', () => {
+  const recommendation = selectSmartTaskRecommendation({
+    currentStage: 'IDENTITY',
+    today: '2026-05-07',
+    tasks: [
+      task({ task_text: 'Define your ICP profile', is_completed: true }),
+    ],
+    events: [
+      {
+        recommendation_key: 'stage:IDENTITY:identity-top-pains',
+        event_type: 'stop_showing',
+        created_at: '2026-05-06T10:00:00.000Z',
+      },
+    ],
+    toolSignals: { icpCompleted: false },
+    weeklyMission: null,
+  });
+
+  assert.notEqual(recommendation?.key, 'stage:IDENTITY:identity-top-pains');
+});
+
+test('foundational milestone list reflects completed setup signals', () => {
+  const milestones = getFoundationalMilestones({
+    icpCompleted: true,
+    waitlistCompleted: false,
+    pmfCompleted: false,
+    mvpCompleted: true,
+    techStackCompleted: false,
+    gtmCompleted: false,
+  });
+
+  assert.equal(milestones.length, 6);
+  assert.equal(milestones.find((item) => item.key === 'tool:icp-builder')?.completed, true);
+  assert.equal(milestones.find((item) => item.key === 'tool:waitlist-maker')?.completed, false);
 });
 
 test('generated recommendations do not overwrite manual tasks', () => {
