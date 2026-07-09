@@ -9,8 +9,8 @@ import {
   FileText,
   FolderOpen,
   Loader2,
+  MoreHorizontal,
   Pencil,
-  ShieldCheck,
   Trash2,
   Upload,
   X,
@@ -21,6 +21,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -510,10 +517,10 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
                 My Files
               </CardTitle>
               <CardDescription>
-                Upload notes, decks, and source docs here. Your ICP Draft stays here automatically as a protected system file.
+                Upload, find, and preview your founder documents.
               </CardDescription>
             </div>
-            <div className="w-full max-w-sm space-y-2 rounded-2xl border border-border/60 bg-background/60 p-4">
+            <div className="w-full max-w-xs space-y-2 rounded-xl border border-border/60 bg-background/60 p-3">
               <div className="flex items-center justify-between gap-3 text-sm">
                 <span className="text-muted-foreground">Storage used</span>
                 <span className="font-medium text-foreground">
@@ -521,9 +528,6 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
                 </span>
               </div>
               <Progress value={storageUsagePercent} className="h-2 bg-background/70" />
-              <p className="text-xs text-muted-foreground">
-                Rookie, Starter, and Rising include 100MB. Pro includes 500MB.
-              </p>
             </div>
           </div>
           <div
@@ -570,7 +574,7 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-foreground">Upload files</p>
                 <p className="text-sm text-muted-foreground">
-                  Drag files here or choose PDF, Word, TXT, or Markdown documents up to 10MB each.
+                  Drag files here or choose PDF, Word, TXT, or Markdown documents.
                 </p>
               </div>
               <Button type="button" variant="outline" className="shrink-0">
@@ -588,7 +592,6 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
           ) : (
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {localFiles.map((file) => {
-                const preview = (file.preview_payload ?? {}) as PreviewPayload;
                 const isSelected = selectedFile?.id === file.id;
                 const typeLabel = getDashboardFileTypeLabel(file.file_extension, file.file_kind);
 
@@ -608,45 +611,25 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
                         <p className="text-sm font-semibold text-foreground">{file.title}</p>
                         <div className="flex flex-wrap items-center gap-2">
                           <Badge variant="outline">{typeLabel}</Badge>
-                          {file.origin === 'system_generated' ? (
-                            <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary">
-                              <ShieldCheck className="mr-1 h-3.5 w-3.5" />
-                              System
-                            </Badge>
-                          ) : null}
                           {file.upload_status === 'processing' ? <Badge variant="outline">{getUploadStage(file)}</Badge> : null}
                           {file.upload_status === 'failed' ? <Badge variant="outline">Preview failed</Badge> : null}
                         </div>
                       </div>
                       <FileText className="h-4.5 w-4.5 shrink-0 text-primary" />
                     </div>
-                    {file.file_kind === 'icp_draft' ? (
+                    {file.upload_status === 'processing' ? (
+                      <div className="mt-3 space-y-2">
+                        <Progress value={getUploadStageProgress(file)} className="h-2 bg-background/70" />
+                        <p className="text-sm text-muted-foreground">{getUploadStage(file)}</p>
+                      </div>
+                    ) : null}
+                    {false ? (
                       <>
-                        {preview.industry ? (
-                          <p className="mt-3 text-xs uppercase tracking-[0.18em] text-muted-foreground">{preview.industry}</p>
-                        ) : null}
-                        {preview.roleLine ? <p className="mt-2 text-sm text-foreground/85">{preview.roleLine}</p> : null}
-                        {preview.painLine ? <p className="mt-2 text-sm text-muted-foreground">{preview.painLine}</p> : null}
-                      </>
-                    ) : (
-                      <>
-                        {file.upload_status === 'processing' ? (
-                          <div className="mt-3 space-y-2">
-                            <Progress value={getUploadStageProgress(file)} className="h-2 bg-background/70" />
-                            <p className="text-sm text-muted-foreground">{getUploadStage(file)}</p>
-                          </div>
-                        ) : (
-                          <p className="mt-3 text-sm text-muted-foreground">
-                            {preview.excerpt ?? file.summary ?? 'Open the full file below.'}
-                          </p>
-                        )}
-                      </>
-                    )}
-                    <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                       <span>{formatFileDate(file.created_at)}</span>
                       <span>•</span>
                       <span>{formatFileSize(file.file_size_bytes)}</span>
-                    </div>
+                      </>
+                    ) : null}
                   </button>
                 );
               })}
@@ -692,13 +675,6 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
                     <>
                       <CardTitle className="text-xl">{selectedFile.title}</CardTitle>
                       <Badge variant="outline">{selectedFileType}</Badge>
-                      {selectedSummary ? <Badge variant="outline">{selectedSummary.suggestedStage}</Badge> : null}
-                      {selectedFile.origin === 'system_generated' ? (
-                        <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary">
-                          <ShieldCheck className="mr-1 h-3.5 w-3.5" />
-                          System-generated
-                        </Badge>
-                      ) : null}
                     </>
                   )}
                 </div>
@@ -720,22 +696,6 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                {selectedFile.origin === 'user_upload' ? (
-                  <>
-                    {editingFileId !== selectedFile.id ? (
-                      <Button type="button" variant="outline" size="sm" onClick={() => handleRenameStart(selectedFile)}>
-                        <Pencil className="h-4 w-4" />
-                        Rename
-                      </Button>
-                    ) : null}
-                    {!selectedFile.is_protected ? (
-                      <Button type="button" variant="outline" size="sm" onClick={() => setDeleteTarget(selectedFile)}>
-                        <Trash2 className="h-4 w-4" />
-                        Delete
-                      </Button>
-                    ) : null}
-                  </>
-                ) : null}
                 {selectedAnalysisId ? (
                   <Button asChild variant="outline" className="shrink-0">
                     <Link to={`/icp/draft/${selectedAnalysisId}`}>
@@ -743,6 +703,35 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
+                ) : null}
+                {selectedFile.origin === 'user_upload' ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button type="button" variant="outline" size="icon" aria-label="More file actions">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {editingFileId !== selectedFile.id ? (
+                        <DropdownMenuItem onSelect={() => handleRenameStart(selectedFile)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Rename
+                        </DropdownMenuItem>
+                      ) : null}
+                      {!selectedFile.is_protected ? (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onSelect={() => setDeleteTarget(selectedFile)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </>
+                      ) : null}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 ) : null}
               </div>
             </div>

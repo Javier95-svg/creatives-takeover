@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
 import { buildReferralLink } from '@/lib/referral';
 
 type ReferralRow = Database['public']['Tables']['referrals']['Row'];
@@ -215,7 +216,10 @@ export function ReferralSubtab() {
         </Card>
       </div>
 
-      {/* Referrals list */}
+      <DashboardDisclosure
+        title="Attributed accounts"
+        summary={`${referrals.length} people created an account through your link.`}
+      >
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Attributed accounts</CardTitle>
@@ -251,8 +255,12 @@ export function ReferralSubtab() {
           )}
         </CardContent>
       </Card>
+      </DashboardDisclosure>
 
-      {/* Rewards history */}
+      <DashboardDisclosure
+        title="Rewards earned"
+        summary={rewards.length > 0 ? `${rewards.length} rewards logged.` : 'Your first reward unlocks at 3 new accounts.'}
+      >
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -282,6 +290,7 @@ export function ReferralSubtab() {
           )}
         </CardContent>
       </Card>
+      </DashboardDisclosure>
     </div>
   );
 }

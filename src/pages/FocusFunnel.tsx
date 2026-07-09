@@ -8,6 +8,7 @@ import { BizMapJourneyProgress } from '@/components/dashboard/BizMapJourneyProgr
 import { InterviewTrackerCard } from '@/components/dashboard/InterviewTrackerCard';
 import { StageMapRail } from '@/components/focus-funnel/StageMapRail';
 import { FundraisingFunnel } from '@/components/focus-funnel/FundraisingFunnel';
+import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 import { useSubscription } from '@/hooks/useSubscription';
 import { normalizePlan } from '@/config/planPermissions';
@@ -47,17 +48,27 @@ const FocusFunnel = () => {
               stageState={stageState}
             />
 
-            {isPro ? <FundraisingFunnel /> : null}
-
             <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
               <BizMapStageTasks />
               <div className="space-y-6">
                 {currentStage === 'VALIDATING' ? <InterviewTrackerCard /> : null}
-                <BizMapJourneyProgress />
               </div>
             </div>
 
-            <div className="rounded-2xl border border-dashed border-border/60 bg-background/60 p-5">
+            <DashboardDisclosure
+              title="Stage details"
+              summary="Inspect journey milestones and saved outputs when you need the deeper map."
+            >
+              <BizMapJourneyProgress />
+            </DashboardDisclosure>
+
+            <DashboardDisclosure
+              title="Advanced planning"
+              summary="Fundraising and broader goal planning stay available without crowding the next stage action."
+            >
+              <div className="space-y-4">
+                {isPro ? <FundraisingFunnel /> : null}
+                <div className="rounded-2xl border border-dashed border-border/60 bg-background/60 p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="space-y-1">
                   <p className="text-sm font-semibold text-foreground">Want to plan beyond the stages?</p>
@@ -69,7 +80,9 @@ const FocusFunnel = () => {
                   <Link to="/ai-goals">Open AI Goals Planner</Link>
                 </Button>
               </div>
-            </div>
+                </div>
+              </div>
+            </DashboardDisclosure>
           </>
         )}
       </div>

@@ -18,12 +18,21 @@ import {
   Circle,
   Clock,
   ExternalLink,
+  MoreHorizontal,
   Plus,
   Sparkles,
   X,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -171,18 +180,23 @@ function TaskCard({
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <TaskSourceBadge task={task} />
-            <TaskStatusBadge task={task} />
-            <Badge variant="outline" className="capitalize">{priority}</Badge>
-            {task.startup_stage_tag && <Badge variant="outline">{task.startup_stage_tag}</Badge>}
-            {task.deadline_time && (
-              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                {format(new Date(task.deadline_time), 'MMM d, h:mm a')}
-              </span>
-            )}
-          </div>
+          <details className="group rounded-lg border border-border/50 bg-background/60 px-3 py-2">
+            <summary className="cursor-pointer list-none text-xs font-medium text-muted-foreground">
+              Details
+            </summary>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <TaskSourceBadge task={task} />
+              <TaskStatusBadge task={task} />
+              <Badge variant="outline" className="capitalize">{priority}</Badge>
+              {task.startup_stage_tag && <Badge variant="outline">{task.startup_stage_tag}</Badge>}
+              {task.deadline_time && (
+                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  {format(new Date(task.deadline_time), 'MMM d, h:mm a')}
+                </span>
+              )}
+            </div>
+          </details>
 
           <div className="flex flex-wrap items-center gap-2">
             {source === 'platform' && task.recommendation_status === 'suggested' && (
@@ -190,19 +204,32 @@ function TaskCard({
                 <Button size="sm" className="h-8" onClick={() => onAccept(task)} disabled={isMutating}>
                   Accept
                 </Button>
-                <Button size="sm" variant="outline" className="h-8" onClick={() => onFeedback(task, 'remind_later')} disabled={isMutating}>
-                  Remind later
-                </Button>
-                <Button size="sm" variant="outline" className="h-8" onClick={() => onFeedback(task, 'already_done')} disabled={isMutating}>
-                  Already did this
-                </Button>
-                <Button size="sm" variant="ghost" className="h-8" onClick={() => onFeedback(task, 'not_relevant')} disabled={isMutating}>
-                  Not relevant
-                </Button>
-                <Button size="sm" variant="ghost" className="h-8 text-muted-foreground hover:text-destructive" onClick={() => onFeedback(task, 'stop_showing')} disabled={isMutating}>
-                  <X className="mr-1 h-3.5 w-3.5" />
-                  Stop showing
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm" variant="outline" className="h-8" disabled={isMutating}>
+                      <MoreHorizontal className="h-4 w-4" />
+                      More
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem onSelect={() => onFeedback(task, 'remind_later')}>
+                      Remind later
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => onFeedback(task, 'already_done')}>
+                      Already did this
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => onFeedback(task, 'not_relevant')}>
+                      Not relevant
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onSelect={() => onFeedback(task, 'stop_showing')}
+                    >
+                      Stop showing
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             )}
 
@@ -213,23 +240,28 @@ function TaskCard({
               </Button>
             )}
 
-            <div className="flex items-center gap-1">
-              <Input
-                type="date"
-                value={rescheduleDate}
-                onChange={(event) => setRescheduleDate(event.target.value)}
-                className="h-8 w-36 text-xs"
-              />
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-8"
-                onClick={() => onReschedule(task, rescheduleDate)}
-                disabled={isMutating || !rescheduleDate || rescheduleDate === task.task_date}
-              >
+            <details className="group">
+              <summary className="flex h-8 cursor-pointer list-none items-center rounded-md border border-input bg-background px-3 text-xs font-medium">
                 Reschedule
-              </Button>
-            </div>
+              </summary>
+              <div className="mt-2 flex items-center gap-1">
+                <Input
+                  type="date"
+                  value={rescheduleDate}
+                  onChange={(event) => setRescheduleDate(event.target.value)}
+                  className="h-8 w-36 text-xs"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8"
+                  onClick={() => onReschedule(task, rescheduleDate)}
+                  disabled={isMutating || !rescheduleDate || rescheduleDate === task.task_date}
+                >
+                  Save
+                </Button>
+              </div>
+            </details>
 
             {task.source_route && (
               <Button size="sm" variant="ghost" className="h-8 gap-1" asChild>
@@ -613,12 +645,14 @@ export function TaskCalendarCommandCenter() {
             })}
           </div>
 
-          <div className="flex flex-wrap gap-4 border-t px-4 py-3 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-success" />Completed</span>
-            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-warning" />Pending</span>
-            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-destructive" />Overdue</span>
-            <span className="inline-flex items-center gap-1.5"><Sparkles className="h-3 w-3 text-info" />Platform task</span>
-          </div>
+          <DashboardDisclosure title="Calendar legend" className="rounded-none border-x-0 border-b-0">
+            <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-success" />Completed</span>
+              <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-warning" />Pending</span>
+              <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-destructive" />Overdue</span>
+              <span className="inline-flex items-center gap-1.5"><Sparkles className="h-3 w-3 text-info" />Platform task</span>
+            </div>
+          </DashboardDisclosure>
         </section>
 
         <aside className="hidden overflow-hidden rounded-lg border bg-card lg:block">

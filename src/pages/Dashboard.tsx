@@ -15,6 +15,7 @@ import JourneyNextStepCard from '@/components/dashboard/JourneyNextStepCard';
 import StarterDashboardNudge from '@/components/dashboard/StarterDashboardNudge';
 import { useExitIntent } from '@/hooks/useExitIntent';
 import { ExitIntentModal } from '@/components/ExitIntentModal';
+import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
@@ -188,15 +189,21 @@ const Dashboard = () => {
           artifactType={activationState.firstArtifactType}
         />
       ) : null}
-      <LiveWaitlistCard />
-      {/* Accountability first: today's tasks, deadlines, streak, progress. */}
-      <EnablePushCard />
       <DashboardTodayCockpit />
-      <FirstRunCard />
-      {/* Profile, network, and growth prompts come after the accountability loop. */}
-      <StartupHomeCommandCenter />
-      <JourneyNextStepCard />
-      <StarterDashboardNudge />
+      <DashboardDisclosure
+        title="More founder signals"
+        summary="Growth, profile, and setup prompts are here when you want extra context."
+        className="mb-6"
+      >
+        <div className="space-y-5">
+          <LiveWaitlistCard />
+          <EnablePushCard />
+          <FirstRunCard />
+          <StartupHomeCommandCenter />
+          <JourneyNextStepCard />
+          <StarterDashboardNudge />
+        </div>
+      </DashboardDisclosure>
       <ExitIntentModal isOpen={showExitIntent} onClose={closeExitIntent} />
       </>
       )}

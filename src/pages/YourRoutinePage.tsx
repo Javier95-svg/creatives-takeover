@@ -22,6 +22,7 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
+import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
 import { useRoutine } from '@/hooks/useRoutine';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
 import { cn } from '@/lib/utils';
@@ -467,23 +468,13 @@ export default function YourRoutinePage() {
                 </Button>
               </div>
             </div>
-            <div className="grid gap-3 md:grid-cols-4">
-              <div className="rounded-lg border border-border/70 bg-background/75 p-3">
-                <p className="text-xs text-muted-foreground">Current period</p>
-                <p className="mt-1 text-xl font-semibold">{stats.completedCurrentCount}/{stats.totalCurrentCount}</p>
-              </div>
-              <div className="rounded-lg border border-border/70 bg-background/75 p-3">
-                <p className="text-xs text-muted-foreground">Progress</p>
-                <p className="mt-1 text-xl font-semibold">{stats.progressPercentage}%</p>
-              </div>
-              <div className="rounded-lg border border-border/70 bg-background/75 p-3">
-                <p className="text-xs text-muted-foreground">Daily streak</p>
-                <p className="mt-1 text-xl font-semibold">{stats.dailyStreak} days</p>
-              </div>
-              <div className="rounded-lg border border-border/70 bg-background/75 p-3">
-                <p className="text-xs text-muted-foreground">Active tasks</p>
-                <p className="mt-1 text-xl font-semibold">{activeTaskCount}</p>
-              </div>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="secondary">
+                {stats.completedCurrentCount}/{stats.totalCurrentCount} this period
+              </Badge>
+              <Badge variant="outline">{stats.progressPercentage}% progress</Badge>
+              <Badge variant="outline">{stats.dailyStreak} day streak</Badge>
+              <Badge variant="outline">{activeTaskCount} active tasks</Badge>
             </div>
             <Progress value={stats.progressPercentage} className="h-2" />
           </CardHeader>
@@ -526,7 +517,12 @@ export default function YourRoutinePage() {
             />
           </div>
 
-          <aside className="space-y-6">
+          <DashboardDisclosure
+            title="Routine settings and history"
+            summary="Reminders, suggestions, templates, and old commitments stay here when you need them."
+            className="xl:col-span-2"
+          >
+            <aside className="grid gap-4 lg:grid-cols-3">
             <Card className="border-border/70 bg-card/80">
               <CardHeader>
                 <CardTitle className="text-lg">Reminder preference</CardTitle>
@@ -597,9 +593,14 @@ export default function YourRoutinePage() {
                 </div>
               </CardContent>
             </Card>
-          </aside>
+            </aside>
+          </DashboardDisclosure>
         </div>
 
+        <DashboardDisclosure
+          title="Past weekly commitments"
+          summary="Read-only history preserved from the old Weekly Mission workspace."
+        >
         <Card className="border-border/70 bg-card/80">
           <CardHeader>
             <CardTitle className="text-lg">Past weekly commitments</CardTitle>
@@ -630,6 +631,7 @@ export default function YourRoutinePage() {
             )}
           </CardContent>
         </Card>
+        </DashboardDisclosure>
       </div>
     </>
   );

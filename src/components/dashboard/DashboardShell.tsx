@@ -30,29 +30,6 @@ import { ModeToggle, type DashboardMode } from './modes/ModeToggle';
 
 const DASHBOARD_MAX_WIDTH = 'max-w-7xl';
 
-const dashboardPageChrome: Record<string, { title: string; subtitle?: string }> = {
-  '/dashboard/files': {
-    title: 'Files',
-    subtitle: 'Saved proof, generated documents, and founder artifacts.',
-  },
-  '/dashboard/tasks': {
-    title: 'Tasks',
-    subtitle: 'Daily commands, manual work, deadlines, and recommendation feedback.',
-  },
-  '/dashboard/routine': {
-    title: 'Routine',
-    subtitle: 'Repeatable habits, weekly rhythm, and founder consistency.',
-  },
-  '/dashboard/referral': {
-    title: 'Referrals',
-    subtitle: 'Share Creatives Takeover once your product foundation is clear.',
-  },
-  '/dashboard/focus-funnel': {
-    title: 'Focus Funnel',
-    subtitle: "Your stage map: what's done, what's active, and what moves next.",
-  },
-};
-
 function DashboardFrame() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -61,7 +38,6 @@ function DashboardFrame() {
   const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
   const dashboardMode = resolveDashboardMode(currentPlan) as DashboardMode;
   const isHome = pathname === '/dashboard';
-  const pageChrome = dashboardPageChrome[pathname];
   const incompleteTaskCount = Math.max(dashboardMetrics.totalTasksToday - dashboardMetrics.tasksCompletedToday, 0);
 
   useEffect(() => {
@@ -86,16 +62,7 @@ function DashboardFrame() {
                       <ModeToggle currentMode={dashboardMode} />
                     ) : null}
                   </div>
-                  {!isHome ? (
-                    <div className="pointer-events-auto min-w-0 px-2 pt-1 text-center">
-                      <h1 className="font-space-grotesk text-xl font-semibold">{pageChrome?.title ?? 'Dashboard'}</h1>
-                      {pageChrome?.subtitle ? (
-                        <p className="mx-auto max-w-2xl text-sm text-muted-foreground">{pageChrome.subtitle}</p>
-                      ) : null}
-                    </div>
-                  ) : (
-                    <div aria-hidden="true" />
-                  )}
+                  <div aria-hidden="true" />
                   <button
                     onClick={() => navigate('/')}
                     className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/88 px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm backdrop-blur-md transition-colors hover:border-primary/30 hover:bg-background hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
