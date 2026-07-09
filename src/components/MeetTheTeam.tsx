@@ -6,7 +6,6 @@ import domagojPhoto from "@/assets/team-domagoj-markota.webp";
 import danielaPhoto from "@/assets/team-daniela-hagg.webp";
 import jelenaPhoto from "@/assets/team-jelena-dabovic.webp";
 import otiliaPhoto from "@/assets/team-otilia-dogaru.jpg";
-import deliaPhoto from "@/assets/team-delia-meres.jpeg";
 
 type TeamMember = {
   name: string;
@@ -53,13 +52,6 @@ const teamMembers: TeamMember[] = [
     bio: "Otilia helps founders and partners connect with the right opportunities through thoughtful outreach, qualification, and relationship-building.",
     linkedin: "https://www.linkedin.com/in/otilia-dogaru/",
     photo: otiliaPhoto,
-  },
-  {
-    name: "Delia Meres",
-    role: "HR Intern",
-    bio: "Delia supports HR operations by helping with recruiting coordination, team communication, and people focused processes that keep Creatives Takeover organized and welcoming.",
-    linkedin: "https://www.linkedin.com/in/delia-meres-6b2408213",
-    photo: deliaPhoto,
   },
 ];
 
