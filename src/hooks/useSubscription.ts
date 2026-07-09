@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { ADMIN_SUBSCRIPTION, isAdminEmail } from '@/lib/admin';
 import { normalizePlan } from '@/config/planPermissions';
+import { captureEvent } from '@/lib/analytics';
 
 const BILLING_STORAGE_KEY = 'ct_billing_details';
 
@@ -475,7 +476,7 @@ export function useSubscription(options?: { fetchTiers?: boolean }) {
     }
   };
 
-  const createCreditPackCheckout = async (packId: string) => {
+  const createCreditPackCheckout = async (packId: string, purchaseSource?: string) => {
     if (!user) {
       toast.error('Please sign in to purchase credits');
       return null;
@@ -483,6 +484,12 @@ export function useSubscription(options?: { fetchTiers?: boolean }) {
 
     try {
       setActionLoading(true);
+      // Funnel start event — pairs with the server-side credit_pack_purchased
+      // emitted by stripe-webhook once payment completes.
+      captureEvent('credit_pack_checkout_started', {
+        pack_id: packId,
+        purchase_source: purchaseSource ?? 'unknown',
+      });
       const creditPack = await fetchCreditPackById(packId);
       const paymentLink = resolveCreditPackPaymentLink(creditPack);
       if (paymentLink) {
@@ -499,6 +506,7 @@ export function useSubscription(options?: { fetchTiers?: boolean }) {
         body: {
           purchaseType: 'credit_pack',
           packId,
+          purchaseSource,
         },
         headers: {
           Authorization: `Bearer ${accessToken}`

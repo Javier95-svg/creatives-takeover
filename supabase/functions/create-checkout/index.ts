@@ -128,6 +128,16 @@ const normalizeBillingCycle = (value: unknown): BillingCycle => {
   return normalized === "yearly" ? "yearly" : "monthly";
 };
 
+// Attribution label for where the checkout was triggered from (e.g.
+// "mvp_builder_top_up"). Round-trips through Stripe metadata so stripe-webhook
+// can attribute the completed purchase to the tool that drove it.
+const normalizePurchaseSource = (value: unknown): string | undefined => {
+  const normalized = sanitizeString(value)?.toLowerCase();
+  if (!normalized) return undefined;
+  const slug = normalized.replace(/[^a-z0-9_-]/g, "_").slice(0, 64);
+  return slug.length > 0 ? slug : undefined;
+};
+
 const buildMetadata = (base: Record<string, string | undefined>): Record<string, string> =>
   Object.fromEntries(
     Object.entries(base).filter((entry): entry is [string, string] => typeof entry[1] === "string" && entry[1].length > 0)
@@ -211,6 +221,7 @@ serve(withErrorBoundary(async (req: Request) => {
     const billingCycle = normalizeBillingCycle(body.billingCycle);
     const requestedTier = sanitizeString(body.tier)?.toLowerCase();
     const requestedPackId = sanitizeString(body.packId)?.toLowerCase();
+    const purchaseSource = normalizePurchaseSource(body.purchaseSource);
 
     let prefillData: PrefillInput = sanitizePrefillInput(body.prefill) ?? {};
     const metadataName = sanitizeString(
@@ -247,6 +258,7 @@ serve(withErrorBoundary(async (req: Request) => {
         pack_id: requestedPackId,
         user_id: user.id,
         user_email: user.email,
+        purchase_source: purchaseSource,
       });
 
       const session = await stripe.checkout.sessions.create({
@@ -306,6 +318,7 @@ serve(withErrorBoundary(async (req: Request) => {
       user_email: user.email,
       billing_name: prefillData.name,
       billing_country: prefillData.address?.country,
+      purchase_source: purchaseSource,
     });
 
     const session = await stripe.checkout.sessions.create({

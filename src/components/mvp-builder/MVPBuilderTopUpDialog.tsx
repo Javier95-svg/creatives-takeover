@@ -26,7 +26,7 @@ export const MVPBuilderTopUpDialog = ({
   const handleCheckout = async (packId: string) => {
     setPendingPackId(packId);
     try {
-      await createCreditPackCheckout(packId);
+      await createCreditPackCheckout(packId, 'mvp_builder_top_up');
     } finally {
       setPendingPackId(null);
     }

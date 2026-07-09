@@ -52,7 +52,7 @@ export const MVPBuilderCreditExhaustedDialog = ({
     trackContextualUpgradeCtaClicked({ ...contextualProps, outcome: 'credits', context: packId });
     setPendingPackId(packId);
     try {
-      await createCreditPackCheckout(packId);
+      await createCreditPackCheckout(packId, 'mvp_builder_credit_exhausted');
     } finally {
       setPendingPackId(null);
     }

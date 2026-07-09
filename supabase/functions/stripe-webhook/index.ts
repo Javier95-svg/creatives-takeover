@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { resolveMonthlyBillingWindow } from "../_shared/billing-period.ts";
+import { emitBusinessEvent } from "../_shared/analytics.ts";
 import { normalizePlan as normalizeSubscriptionTier, PLAN_MONTHLY_CREDITS } from "../_shared/plan-enforcement.ts";
 import {
   buildProActivationIdempotencyKey,
@@ -934,6 +935,13 @@ async function handleCreditPackPurchase({
       }
     }
 
+    // Where the checkout was triggered from (threaded through Stripe metadata by
+    // create-checkout). Static payment links bypass create-checkout, so they get
+    // a fixed "payment_link" label.
+    const purchaseSource =
+      getMetadataString(metadata, ["purchase_source", "purchaseSource"]) ??
+      (paymentLinkId ? "payment_link" : "unknown");
+
     await supabaseAdmin.from("credit_transactions").insert({
       user_id: resolvedUserId,
       amount: purchase.credits,
@@ -946,6 +954,7 @@ async function handleCreditPackPurchase({
         packLabel: purchase.label,
         creditsAdded: purchase.credits,
         priceCents: purchase.price_cents,
+        purchaseSource,
         stripeSessionId: checkoutSessionId,
         stripePaymentIntentId: paymentIntentId,
         stripePaymentLinkId: paymentLinkId,
@@ -953,6 +962,23 @@ async function handleCreditPackPurchase({
         customerId,
         sourceEventType,
         wallet: "platform",
+      },
+    });
+
+    // Canonical purchase event (PostHog + Amplitude) — the buy-side twin of
+    // credit_action_completed, so credit demand can be tracked end to end:
+    // credit_exhausted -> credit_pack_checkout_started -> credit_pack_purchased.
+    await emitBusinessEvent({
+      eventName: "credit_pack_purchased",
+      userId: resolvedUserId,
+      properties: {
+        pack_id: purchase.id,
+        pack_label: purchase.label,
+        credits_added: purchase.credits,
+        price_cents: purchase.price_cents,
+        purchase_source: purchaseSource,
+        source_event_type: sourceEventType,
+        operation_id: idempotencyKey,
       },
     });
 

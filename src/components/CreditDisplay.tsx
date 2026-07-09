@@ -156,7 +156,7 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
                   disabled={actionLoading}
                   onClick={(event) => {
                     event.preventDefault();
-                    void createCreditPackCheckout(pack.id);
+                    void createCreditPackCheckout(pack.id, 'credit_display');
                   }}
                 >
                   <span className="flex items-center gap-1.5 font-medium">
