@@ -82,6 +82,7 @@ export type DashboardSidebarToolKey =
 export interface DashboardNavItem {
   path: string;
   label: string;
+  description?: string;
   iconKey: DashboardNavIconKey;
   sectionId?: string;
 }
@@ -237,12 +238,12 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
 };
 
 const SHARED_DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
-  { path: '/dashboard', label: 'Home', iconKey: 'home' },
-  { path: '/dashboard/files', label: 'My Files', iconKey: 'folder_open' },
-  { path: '/dashboard/tasks', label: 'Your Tasks', iconKey: 'check_square' },
-  { path: '/dashboard/routine', label: 'Your Routine', iconKey: 'repeat_2' },
-  { path: '/dashboard/referral', label: 'Referral Program', iconKey: 'gift' },
-  { path: '/dashboard/focus-funnel', label: 'Focus Funnel', iconKey: 'target' },
+  { path: '/dashboard', label: 'Command Center', description: 'Daily overview', iconKey: 'home' },
+  { path: '/dashboard/files', label: 'Files', description: 'Saved proof and artifacts', iconKey: 'folder_open' },
+  { path: '/dashboard/tasks', label: 'Tasks', description: 'Actions and deadlines', iconKey: 'check_square' },
+  { path: '/dashboard/routine', label: 'Routine', description: 'Habits and weekly rhythm', iconKey: 'repeat_2' },
+  { path: '/dashboard/referral', label: 'Referrals', description: 'Invite and grow', iconKey: 'gift' },
+  { path: '/dashboard/focus-funnel', label: 'Focus Funnel', description: 'Stage map and next step', iconKey: 'target' },
 ];
 
 export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeConfig> = {

@@ -350,14 +350,26 @@ export const DashboardSidebar = () => {
                 const target = buildNavTarget(item.path, item.sectionId);
                 return (
                   <SidebarMenuItem key={target}>
-                    <SidebarMenuButton asChild isActive={isNavItemActive(item.path, item.sectionId)} tooltip={item.label}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isNavItemActive(item.path, item.sectionId)}
+                      tooltip={item.description ? `${item.label}: ${item.description}` : item.label}
+                      className="h-auto py-2"
+                    >
                       <Link
                         to={target}
                         onClick={item.sectionId ? handleDashboardSectionClick(item.sectionId, item.path) : handleNavClick}
-                        className="flex items-center gap-2 w-full"
+                        className="flex w-full items-start gap-2"
                       >
-                        <item.icon className="h-4 w-4 shrink-0" />
-                        <span className="flex-1">{item.label}</span>
+                        <item.icon className="mt-0.5 h-4 w-4 shrink-0" />
+                        <span className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+                          <span className="block text-sm leading-tight">{item.label}</span>
+                          {item.description ? (
+                            <span className="mt-0.5 block truncate text-[11px] leading-4 text-muted-foreground">
+                              {item.description}
+                            </span>
+                          ) : null}
+                        </span>
                         {isTasksItem && incompleteTaskCount > 0 && (
                           <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-caption font-semibold text-primary-foreground group-data-[collapsible=icon]:hidden">
                             {incompleteTaskCount > 99 ? '99+' : incompleteTaskCount}

@@ -32,24 +32,24 @@ const DASHBOARD_MAX_WIDTH = 'max-w-7xl';
 
 const dashboardPageChrome: Record<string, { title: string; subtitle?: string }> = {
   '/dashboard/files': {
-    title: 'My Files',
-    subtitle: 'Your ICP draft, uploads, and platform-generated documents.',
+    title: 'Files',
+    subtitle: 'Saved proof, generated documents, and founder artifacts.',
   },
   '/dashboard/tasks': {
-    title: 'Task Manager',
-    subtitle: 'All your tasks across BizMap, daily goals, community challenges, and commitments.',
+    title: 'Tasks',
+    subtitle: 'Daily commands, manual work, deadlines, and recommendation feedback.',
   },
   '/dashboard/routine': {
-    title: 'Your Routine',
-    subtitle: 'Build and maintain the founder habits that move your startup forward.',
+    title: 'Routine',
+    subtitle: 'Repeatable habits, weekly rhythm, and founder consistency.',
   },
   '/dashboard/referral': {
-    title: 'Referral Program',
-    subtitle: 'Share your link. Every 3 new accounts created through it unlock a reward automatically.',
+    title: 'Referrals',
+    subtitle: 'Share Creatives Takeover once your product foundation is clear.',
   },
   '/dashboard/focus-funnel': {
     title: 'Focus Funnel',
-    subtitle: "Your map across the Startup Development Cycle: what's done, what's active, what's next.",
+    subtitle: "Your stage map: what's done, what's active, and what moves next.",
   },
 };
 
