@@ -223,9 +223,47 @@ export function shouldShowAsDailyCommand(task: CalendarTaskRow, today = toDateKe
   return !isFoundationalTask(task);
 }
 
+function normalizeTaskTitle(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function getTaskSemanticFamily(task: CalendarTaskRow): string {
+  const key = task.recommendation_key ?? '';
+  const title = normalizeTaskTitle(task.task_text ?? '');
+
+  if (
+    key === 'tool:icp-builder' ||
+    key === 'stage:IDENTITY:identity-icp-profile' ||
+    title === 'complete and save your icp builder draft' ||
+    title === 'complete and save your icp profile'
+  ) {
+    return 'foundation:icp';
+  }
+
+  if (key) return key;
+  return `title:${title}`;
+}
+
 export function groupTasksByDate(tasks: CalendarTaskRow[]): Record<string, CalendarTaskRow[]> {
+  const seenPlatformFamilies = new Set<string>();
+
   return tasks.reduce<Record<string, CalendarTaskRow[]>>((acc, task) => {
     if (task.recommendation_status === 'dismissed') return acc;
+
+    if (task.recommendation_status === 'suggested' && isFoundationalTask(task)) {
+      return acc;
+    }
+
+    if (getTaskSource(task) === 'platform') {
+      const familyKey = `${task.task_date}:${getTaskSemanticFamily(task)}`;
+      if (seenPlatformFamilies.has(familyKey)) return acc;
+      seenPlatformFamilies.add(familyKey);
+    }
+
     acc[task.task_date] = [...(acc[task.task_date] ?? []), task];
     return acc;
   }, {});
@@ -332,6 +370,13 @@ function hasActiveRecommendationForToday(tasks: CalendarTaskRow[], today: string
   ));
 }
 
+function isBlockedByMissingFoundation(
+  stageTask: { id: string },
+  toolSignals: ToolCompletionSignals,
+): boolean {
+  return stageTask.id === 'identity-icp-profile' && !toolSignals.icpCompleted;
+}
+
 /**
  * Open platform suggestion from a previous day, newest first. The engine
  * reschedules this task to today instead of stacking a duplicate row.
@@ -424,7 +469,9 @@ export function selectSmartTaskRecommendation(context: RecommendationContext): T
       .map((task) => task.task_text.trim().toLowerCase()),
   );
 
-  const stageCandidates = stageTasks
+  const actionableStageTasks = stageTasks.filter((stageTask) => !isBlockedByMissingFoundation(stageTask, toolSignals));
+
+  const stageCandidates = actionableStageTasks
     .filter((stageTask) => !completedTitles.has(stageTask.title.trim().toLowerCase()))
     .map<TaskRecommendation>((stageTask) => ({
       key: `stage:${currentStage}:${stageTask.id}`,
@@ -536,14 +583,14 @@ export function selectSmartTaskRecommendation(context: RecommendationContext): T
 
   candidates.push({
     key: `fallback:${currentStage}`,
-    title: stageTasks[0]?.title ?? 'Choose one customer-facing action for today',
-    description: stageTasks[0]
+    title: actionableStageTasks[0]?.title ?? 'Choose one customer-facing action for today',
+    description: actionableStageTasks[0]
       ? `Start with the most concrete action in Stage ${currentStage.toLowerCase()} and finish it before opening new work.`
       : 'Pick one action that creates customer evidence, product clarity, or launch momentum.',
     reason: 'A single focused task keeps momentum visible even when the roadmap is still forming.',
-    priority: stageTasks[0]?.priority ?? 'medium',
+    priority: actionableStageTasks[0]?.priority ?? 'medium',
     stage: currentStage,
-    sourceRoute: stageTasks[0]?.route ?? '/dashboard',
+    sourceRoute: actionableStageTasks[0]?.route ?? '/dashboard',
     intentType: 'daily_momentum',
   });
 

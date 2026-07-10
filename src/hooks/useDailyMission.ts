@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,11 +17,17 @@ function getStageLabel(stage: BizMapStage | null | undefined) {
   return `Stage ${match.numeral} - ${match.title}`;
 }
 
-export const useDailyMission = () => {
+interface UseDailyMissionOptions {
+  showErrorToast?: boolean;
+}
+
+export const useDailyMission = (options: UseDailyMissionOptions = {}) => {
   const { user } = useAuth();
   const [mission, setMission] = useState<DailyMission | null>(null);
   const [loading, setLoading] = useState(true);
   const [completing, setCompleting] = useState(false);
+  const errorToastShownRef = useRef(false);
+  const showErrorToast = options.showErrorToast ?? false;
 
   const loadMission = useCallback(async () => {
     if (!user) {
@@ -61,11 +67,14 @@ export const useDailyMission = () => {
       setMission(data?.mission ?? null);
     } catch (error) {
       console.error('Failed to load daily mission:', error);
-      toast.error('Failed to load today\'s mission');
+      if (showErrorToast && !errorToastShownRef.current) {
+        errorToastShownRef.current = true;
+        toast.error('Failed to load today\'s mission');
+      }
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [showErrorToast, user]);
 
   useEffect(() => {
     void loadMission();

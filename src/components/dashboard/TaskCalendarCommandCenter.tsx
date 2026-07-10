@@ -430,7 +430,7 @@ function SelectedDayPanel({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex items-start justify-between gap-3 border-b px-4 py-4">
+      <div className="flex shrink-0 items-start justify-between gap-3 border-b px-4 py-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Selected day</p>
           <h2 className="text-lg font-semibold">{format(parseLocalDate(selectedDate), 'EEEE, MMMM d')}</h2>
@@ -551,8 +551,8 @@ export function TaskCalendarCommandCenter() {
         </div>
       </div>
 
-      <div className="grid min-h-[720px] gap-4 lg:grid-cols-[minmax(0,1fr)_420px]">
-        <section className="overflow-hidden rounded-lg border bg-card">
+      <div className="grid gap-4 lg:h-[720px] lg:grid-cols-[minmax(0,1fr)_420px]">
+        <section className="flex min-h-0 flex-col overflow-hidden rounded-lg border bg-card">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3">
             <div className="flex items-center gap-2">
               <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setAnchorDate(shiftAnchor(anchorDate, view, -1))}>
@@ -589,7 +589,7 @@ export function TaskCalendarCommandCenter() {
             </div>
           )}
 
-          <div className={cn('grid gap-px bg-border/70 p-px', gridColumns)}>
+          <div className={cn('grid flex-1 gap-px overflow-y-auto bg-border/70 p-px', gridColumns)}>
             {calendarDays.map((day) => {
               const dateKey = toDateKey(day);
               const tasks = groupedTasks[dateKey] ?? [];
@@ -655,7 +655,7 @@ export function TaskCalendarCommandCenter() {
           </DashboardDisclosure>
         </section>
 
-        <aside className="hidden overflow-hidden rounded-lg border bg-card lg:block">
+        <aside className="hidden h-full min-h-0 overflow-hidden rounded-lg border bg-card lg:block">
           <SelectedDayPanel
             highlightedTaskId={highlightedTaskId}
             isLoading={isLoading}

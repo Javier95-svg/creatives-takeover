@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet-async';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -40,10 +40,12 @@ interface DashboardActivationState {
 
 const Dashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { pathname } = useLocation();
   const { showExitIntent, closeExitIntent } = useExitIntent();
   const { user } = useAuth();
   const { subscriptionData } = useSubscription();
   const fromIcpBuilder = searchParams.get('from') === 'icp_builder';
+  const isActiveDashboardHome = pathname === '/dashboard';
   const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
   const daysSinceSignup = getDaysSinceSignup(user?.created_at ?? null);
   const [activationState, setActivationState] = useState<DashboardActivationState>({
@@ -189,7 +191,7 @@ const Dashboard = () => {
           artifactType={activationState.firstArtifactType}
         />
       ) : null}
-      <DashboardTodayCockpit />
+      {isActiveDashboardHome ? <DashboardTodayCockpit /> : null}
       <DashboardDisclosure
         title="More founder signals"
         summary="Growth, profile, and setup prompts are here when you want extra context."

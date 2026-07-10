@@ -55,6 +55,31 @@ test('tasks group by date and ignore dismissed recommendations', () => {
   assert.equal(grouped['2026-05-08'].length, 1);
 });
 
+test('tasks group by date without duplicate ICP foundation recommendations', () => {
+  const grouped = groupTasksByDate([
+    task({
+      id: 'icp-tool',
+      task_text: 'Complete and save your ICP Builder draft',
+      task_date: '2026-05-07',
+      task_source: 'platform',
+      recommendation_status: 'accepted',
+      recommendation_key: 'tool:icp-builder',
+      intent_type: 'foundational',
+    }),
+    task({
+      id: 'icp-stage',
+      task_text: 'Complete and save your ICP profile',
+      task_date: '2026-05-07',
+      task_source: 'platform',
+      recommendation_status: 'accepted',
+      recommendation_key: 'stage:IDENTITY:identity-icp-profile',
+      intent_type: 'stage_action',
+    }),
+  ]);
+
+  assert.deepEqual(grouped['2026-05-07'].map((item) => item.id), ['icp-tool']);
+});
+
 test('day status distinguishes empty, completed, pending, and overdue', () => {
   const now = new Date('2026-05-07T12:00:00.000Z');
 
@@ -116,6 +141,8 @@ test('ICP setup stays quiet when stage momentum is available', () => {
 
   assert.ok(recommendation);
   assert.notEqual(recommendation?.key, 'tool:icp-builder');
+  assert.notEqual(recommendation?.key, 'stage:IDENTITY:identity-icp-profile');
+  assert.equal(recommendation?.key, 'stage:IDENTITY:identity-top-pains');
   assert.notEqual(recommendation?.intentType, 'foundational');
 });
 
