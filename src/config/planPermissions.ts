@@ -243,7 +243,6 @@ const SHARED_DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
   { path: '/dashboard/tasks', label: 'Tasks', description: 'Actions and deadlines', iconKey: 'check_square' },
   { path: '/dashboard/routine', label: 'Routine', description: 'Habits and weekly rhythm', iconKey: 'repeat_2' },
   { path: '/dashboard/referral', label: 'Referrals', description: 'Invite and grow', iconKey: 'gift' },
-  { path: '/dashboard/focus-funnel', label: 'Focus Funnel', description: 'Stage map and next step', iconKey: 'target' },
 ];
 
 export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeConfig> = {
@@ -294,7 +293,7 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
 };
 
 const DASHBOARD_SURFACE_PATHS: Record<Exclude<DashboardSurfaceFeature, 'dashboard_access'>, string> = {
-  focus_funnel: '/dashboard/focus-funnel',
+  focus_funnel: '/dashboard/tasks',
   core_metrics: '/core-metrics',
   routine: '/dashboard/routine',
   decision_sprint: '/decision-sprint',

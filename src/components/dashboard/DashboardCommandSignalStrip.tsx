@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ArrowRight, ChevronDown, Compass, FileText, Gift, Repeat2, Target } from 'lucide-react';
+import { ArrowRight, ChevronDown, FileText, Gift, Repeat2, Target } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { useFounderCommandSignals } from '@/hooks/useFounderCommandSignals';
 import { cn } from '@/lib/utils';
 
 const TAB_COPY: Record<string, {
-  icon: typeof Compass;
+  icon: typeof FileText;
   label: string;
   title: string;
   body: string;
@@ -43,13 +43,6 @@ const TAB_COPY: Record<string, {
     title: 'Share your link and track rewards.',
     body: 'Copy the referral link, watch reward progress, and inspect history only when needed.',
     help: 'Referral work is strongest once your product foundation is clear enough to share with other founders.',
-  },
-  '/dashboard/focus-funnel': {
-    icon: Compass,
-    label: 'Focus',
-    title: 'See the stage and choose the next move.',
-    body: 'Use the stage map and active tasks to understand where the business should focus now.',
-    help: 'Focus Funnel is the strategic layer. Use Tasks for daily execution and Files for saved outputs.',
   },
 };
 

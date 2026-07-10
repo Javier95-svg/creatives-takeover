@@ -218,10 +218,10 @@ export function DailyFounderFeed({
               <div className="space-y-2">
                 <h2 className="font-space-grotesk text-lg font-semibold">Your feed is clear for now</h2>
                 <p className="text-sm text-muted-foreground">
-                  Open the Focus Funnel to choose the next founder action, then new feed cards will appear as you make progress.
+                  Open Tasks to choose the next founder action, then new feed cards will appear as you make progress.
                 </p>
-                <Button type="button" size="sm" className="rounded-full" onClick={() => navigate('/dashboard/focus-funnel')}>
-                  Open Focus Funnel
+                <Button type="button" size="sm" className="rounded-full" onClick={() => navigate('/dashboard/tasks')}>
+                  Open Tasks
                   <ArrowUpRight className="ml-2 h-4 w-4" aria-hidden="true" />
                 </Button>
               </div>

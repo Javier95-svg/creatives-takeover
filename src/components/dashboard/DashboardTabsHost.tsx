@@ -3,12 +3,11 @@ import { useLocation } from 'react-router-dom';
 
 import Dashboard from '@/pages/Dashboard';
 import FilesPage from '@/pages/FilesPage';
-import FocusFunnel from '@/pages/FocusFunnel';
 import ReferralDashboardPage from '@/pages/ReferralDashboardPage';
 import TasksPage from '@/pages/TasksPage';
 import YourRoutinePage from '@/pages/YourRoutinePage';
 
-type DashboardTabId = 'home' | 'files' | 'tasks' | 'routine' | 'referral' | 'focusFunnel';
+type DashboardTabId = 'home' | 'files' | 'tasks' | 'routine' | 'referral';
 
 interface DashboardTabDefinition {
   id: DashboardTabId;
@@ -22,12 +21,15 @@ const DASHBOARD_TABS: DashboardTabDefinition[] = [
   { id: 'tasks', path: '/dashboard/tasks', Component: TasksPage },
   { id: 'routine', path: '/dashboard/routine', Component: YourRoutinePage },
   { id: 'referral', path: '/dashboard/referral', Component: ReferralDashboardPage },
-  { id: 'focusFunnel', path: '/dashboard/focus-funnel', Component: FocusFunnel },
 ];
 
 function resolveDashboardTab(pathname: string) {
   if (pathname === '/dashboard/weekly-mission') {
     return DASHBOARD_TABS.find((tab) => tab.id === 'routine') ?? DASHBOARD_TABS[0];
+  }
+
+  if (pathname === '/dashboard/focus-funnel') {
+    return DASHBOARD_TABS.find((tab) => tab.id === 'tasks') ?? DASHBOARD_TABS[0];
   }
 
   return DASHBOARD_TABS.find((tab) => tab.path === pathname) ?? DASHBOARD_TABS[0];

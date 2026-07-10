@@ -39,7 +39,7 @@ const PHASE_JOURNEYS: Record<Phase, JourneySlug> = {
 
 const PHASE_TOOLS: Record<Phase, string[]> = {
   learn: ['decision-sprint', 'pmf-lab'],
-  build: ['tech-stack', 'focus-funnel', 'tasks'],
+  build: ['tech-stack', 'tasks'],
   measure: ['core-metrics', 'weekly-mission'],
 };
 

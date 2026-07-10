@@ -114,7 +114,6 @@ const ValidateJourneyPage = lazy(() => import("./pages/ValidateJourneyPage"));
 const TechStackPage = lazy(() => import("./pages/TechStackPage"));
 const AppBuilderPage = lazy(() => import("./pages/AppBuilderPage"));
 const GTMStrategistPage = lazy(() => import("./pages/GTMStrategistPage"));
-const FocusFunnel = lazy(() => import("./pages/FocusFunnel"));
 const FilesPage = lazy(() => import("./pages/FilesPage"));
 const AiGoalsPage = lazy(() => import("./pages/AiGoalsPage"));
 const CoreMetricsPage = lazy(() => import("./pages/CoreMetricsPage"));
@@ -347,7 +346,7 @@ function App() {
                           <Route path="routine" element={<YourRoutinePage />} />
                           <Route path="weekly-mission" element={<Navigate to="/dashboard/routine" replace />} />
                           <Route path="referral" element={<ReferralDashboardPage />} />
-                          <Route path="focus-funnel" element={<FocusFunnel />} />
+                          <Route path="focus-funnel" element={<Navigate to="/dashboard/tasks" replace />} />
                         </Route>
                         <Route path="/projects-dashboard" element={<ProjectsDashboard />} />
                         <Route path="/referral-program" element={<ReferralProgram />} />
@@ -356,7 +355,7 @@ function App() {
                         <Route path="/account" element={<Account />} />
                         <Route path="/setup-quiz" element={<SetupQuiz />} />
                         <Route path="/files" element={<Navigate to="/dashboard/files" replace />} />
-                        <Route path="/focus-funnel" element={<Navigate to="/dashboard/focus-funnel" replace />} />
+                        <Route path="/focus-funnel" element={<Navigate to="/dashboard/tasks" replace />} />
                         <Route path="/ai-goals" element={<AiGoalsPage />} />
                         <Route path="/core-metrics" element={<CoreMetricsPage />} />
                         <Route path="/routine" element={<Navigate to="/dashboard/routine" replace />} />
