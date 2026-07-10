@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 
 import StartupHomeCommandCenter from '@/components/dashboard/StartupHomeCommandCenter';
 import DashboardTodayCockpit from '@/components/dashboard/DashboardTodayCockpit';
+import FounderJourneyPanel from '@/components/dashboard/FounderJourneyPanel';
 import EnablePushCard from '@/components/dashboard/EnablePushCard';
 import DashboardTour from '@/components/dashboard/DashboardTour';
 import FirstRunCard from '@/components/dashboard/FirstRunCard';
@@ -19,7 +20,7 @@ import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure'
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
-import { trackActivationFunnelEvent } from '@/lib/analytics';
+import { trackActivationFunnelEvent, trackDashboardFounderSignalsExpanded } from '@/lib/analytics';
 import {
   getActivationPreferenceState,
   getDaysSinceSignup,
@@ -192,10 +193,14 @@ const Dashboard = () => {
         />
       ) : null}
       {isActiveDashboardHome ? <DashboardTodayCockpit /> : null}
+      {isActiveDashboardHome ? <FounderJourneyPanel /> : null}
       <DashboardDisclosure
         title="More founder signals"
-        summary="Growth, profile, and setup prompts are here when you want extra context."
+        summary="Startup profile editor, growth, and setup prompts are here when you want extra context."
         className="mb-6"
+        onOpenChange={(open) => {
+          if (open) trackDashboardFounderSignalsExpanded();
+        }}
       >
         <div className="space-y-5">
           <LiveWaitlistCard />

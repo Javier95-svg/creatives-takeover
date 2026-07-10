@@ -11,6 +11,7 @@ interface DashboardDisclosureProps {
   children: ReactNode;
   defaultOpen?: boolean;
   className?: string;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function DashboardDisclosure({
@@ -19,13 +20,17 @@ export function DashboardDisclosure({
   children,
   defaultOpen = false,
   className,
+  onOpenChange,
 }: DashboardDisclosureProps) {
   const [open, setOpen] = useState(defaultOpen);
 
   return (
     <Collapsible
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={(next) => {
+        setOpen(next);
+        onOpenChange?.(next);
+      }}
       className={cn('rounded-xl border border-border/60 bg-card/70', className)}
     >
       <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">

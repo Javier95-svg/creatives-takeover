@@ -693,6 +693,24 @@ export const trackDashboardAccountabilityStateViewed = (properties?: AnalyticsPr
 export const trackDashboardAccountabilityInterventionClicked = (properties?: AnalyticsProperties) =>
   captureEvent('dashboard_accountability_intervention_clicked', properties);
 
+// ─── Dashboard founder journey panel ─────────────────────────────────────────
+// The connected command-center view: stage rail + cross-tool progress tiles.
+
+export const trackDashboardJourneyPanelViewed = (properties?: AnalyticsProperties) =>
+  captureEvent('dashboard_journey_panel_viewed', properties);
+
+export const trackDashboardJourneyStageClicked = (properties?: AnalyticsProperties) =>
+  captureEvent('dashboard_journey_stage_clicked', properties);
+
+export const trackDashboardJourneyToolOpened = (properties?: AnalyticsProperties) =>
+  captureEvent('dashboard_journey_tool_opened', properties);
+
+export const trackDashboardJourneyContinueClicked = (properties?: AnalyticsProperties) =>
+  captureEvent('dashboard_journey_continue_clicked', properties);
+
+export const trackDashboardFounderSignalsExpanded = (properties?: AnalyticsProperties) =>
+  captureEvent('dashboard_founder_signals_expanded', properties);
+
 // ─── Demo Studio activation funnel ───────────────────────────────────────────
 // The founder's creation funnel (project → brief → demo → step → publish → share)
 // plus the downstream lead event. Build a PostHog funnel from these to find where

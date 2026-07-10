@@ -43,8 +43,6 @@ function DashboardFrame() {
   useEffect(() => {
     if (pathname === '/dashboard/weekly-mission') {
       navigate('/dashboard/routine', { replace: true });
-    } else if (pathname === '/dashboard/focus-funnel') {
-      navigate('/dashboard/tasks', { replace: true });
     }
   }, [navigate, pathname]);
 

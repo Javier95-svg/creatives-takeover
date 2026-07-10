@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
+import { fetchToolCompletionSignals } from '@/lib/founderSignals';
 import {
   addDaysToDateKey,
   buildCalendarDays,
@@ -64,17 +65,6 @@ function cooldownUntil(days: number): string {
   return date.toISOString();
 }
 
-async function countLatest(table: string, userId: string, extra?: (query: any) => any): Promise<boolean> {
-  let query = supabase.from(table as any).select('id', { count: 'exact', head: true }).eq('user_id', userId);
-  if (extra) query = extra(query);
-  const { count, error } = await query;
-  if (error) {
-    console.warn(`Unable to read ${table} for task recommendation context`, error);
-    return false;
-  }
-  return Number(count ?? 0) > 0;
-}
-
 export function useTaskCalendarEngine() {
   const { user } = useAuth();
   const { currentStage } = useBizMapProgress();
@@ -104,38 +94,6 @@ export function useTaskCalendarEngine() {
     }, {});
   }, [calendarDays, groupedTasks]);
   const foundationalMilestones = useMemo(() => getFoundationalMilestones(toolSignals), [toolSignals]);
-
-  const fetchToolSignals = useCallback(async (userId: string): Promise<ToolCompletionSignals> => {
-    const [
-      icpCompleted,
-      waitlistCompleted,
-      pmfScored,
-      pmfEvidenceCaptured,
-      mvpCompleted,
-      techStackCompleted,
-      gtmCompleted,
-    ] = await Promise.all([
-      countLatest('icp_analysis_results', userId),
-      countLatest('waitlist_pages', userId, (query) => query.in('status', ['published', 'exported'])),
-      countLatest('pmf_analysis_results', userId),
-      // The live PMF Lab stores captured signals in pmf_validation_evidence;
-      // pmf_analysis_results only fills once an evidence score run completes.
-      // Either one satisfies the "add fresh validation evidence" task.
-      countLatest('pmf_validation_evidence', userId),
-      countLatest('mvp_builder_artifacts', userId, (query) => query.eq('status', 'saved')),
-      countLatest('tech_stack_reports', userId),
-      countLatest('gtm_plans', userId, (query) => query.in('status', ['saved', 'exported'])),
-    ]);
-
-    return {
-      icpCompleted,
-      waitlistCompleted,
-      pmfCompleted: pmfScored || pmfEvidenceCaptured,
-      mvpCompleted,
-      techStackCompleted,
-      gtmCompleted,
-    };
-  }, []);
 
   const fetchWeeklyMission = useCallback(async (userId: string): Promise<WeeklyMissionSignal | null> => {
     const today = toDateKey(new Date());
@@ -183,7 +141,7 @@ export function useTaskCalendarEngine() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(100),
-      fetchToolSignals(user.id),
+      fetchToolCompletionSignals(user.id),
       fetchWeeklyMission(user.id),
     ]);
 
@@ -204,7 +162,7 @@ export function useTaskCalendarEngine() {
     setToolSignals(nextSignals);
     setWeeklyMission(nextWeeklyMission);
     setIsLoading(false);
-  }, [fetchToolSignals, fetchWeeklyMission, user]);
+  }, [fetchWeeklyMission, user]);
 
   const logRecommendationEvent = useCallback(async (
     task: CalendarTaskRow,

@@ -6,7 +6,6 @@ import {
   CalendarClock,
   CheckCircle2,
   Circle,
-  Layers3,
   Repeat2,
   Zap,
 } from 'lucide-react';
@@ -16,7 +15,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDailyMission } from '@/hooks/useDailyMission';
 import { useRoutine } from '@/hooks/useRoutine';
@@ -36,7 +34,6 @@ export default function DashboardTodayCockpit() {
   const dailyMission = useDailyMission();
   const {
     completeTask,
-    foundationalMilestones,
     groupedTasks,
     isLoading: tasksLoading,
   } = useTaskCalendarEngine();
@@ -57,11 +54,6 @@ export default function DashboardTodayCockpit() {
         .flat()
         .filter((task) => getTaskRuntimeStatus(task) === 'overdue' && shouldShowAsDailyCommand(task, todayKey)),
     [groupedTasks, todayKey],
-  );
-
-  const incompleteMilestones = useMemo(
-    () => foundationalMilestones.filter((milestone) => !milestone.completed),
-    [foundationalMilestones],
   );
 
   const routineToday = useMemo<RoutineTask[]>(() => {
@@ -150,25 +142,6 @@ export default function DashboardTodayCockpit() {
               )}
             </div>
           </div>
-        ) : null}
-
-        {incompleteMilestones.length > 0 ? (
-          <DashboardDisclosure
-            title="Setup milestones"
-            summary={`${foundationalMilestones.length - incompleteMilestones.length}/${foundationalMilestones.length} foundation pieces complete.`}
-            className="mt-5 bg-background/65"
-          >
-            <div className="flex flex-wrap gap-2">
-              {incompleteMilestones.slice(0, 3).map((milestone) => (
-                <Button key={milestone.key} asChild size="sm" variant="outline" className="h-8">
-                  <Link to={milestone.route}>
-                    <Layers3 className="mr-1.5 h-3.5 w-3.5 text-primary/70" aria-hidden="true" />
-                    {milestone.title}
-                  </Link>
-                </Button>
-              ))}
-            </div>
-          </DashboardDisclosure>
         ) : null}
 
         {!hasAnythingPlanned ? (

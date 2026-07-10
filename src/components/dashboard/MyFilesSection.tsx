@@ -623,13 +623,6 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
                         <p className="text-sm text-muted-foreground">{getUploadStage(file)}</p>
                       </div>
                     ) : null}
-                    {false ? (
-                      <>
-                      <span>{formatFileDate(file.created_at)}</span>
-                      <span>•</span>
-                      <span>{formatFileSize(file.file_size_bytes)}</span>
-                      </>
-                    ) : null}
                   </button>
                 );
               })}

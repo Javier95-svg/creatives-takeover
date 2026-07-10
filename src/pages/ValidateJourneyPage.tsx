@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, ClipboardList, Rocket, Target, ArrowRight, Scale, Star, Save } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Save, Scale, Star, Target } from "lucide-react";
+import { DecisionSprintStepNav, type DecisionSprintStep } from "@/components/decision-sprint/DecisionSprintStepNav";
 import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -176,6 +177,7 @@ export default function ValidateJourneyPage() {
   const [chosenIdeaId, setChosenIdeaId] = useState<string | null>(null);
   const [draftArtifactId, setDraftArtifactId] = useState<string>(`validation-draft-${Date.now()}`);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [step, setStep] = useState<DecisionSprintStep>(1);
   const restoredFromLocal = useRef(false);
   const remoteDraftLoaded = useRef(false);
 
@@ -192,6 +194,7 @@ export default function ValidateJourneyPage() {
         ideas?: IdeaScore[];
         activeIdeaId?: string;
         chosenIdeaId?: string | null;
+        lastStep?: number;
       };
       if (parsed.ideas && parsed.ideas.length > 0) {
         restoredFromLocal.current = true;
@@ -199,6 +202,7 @@ export default function ValidateJourneyPage() {
         setActiveIdeaId(parsed.activeIdeaId || parsed.ideas[0].id);
         setChosenIdeaId(parsed.chosenIdeaId ?? null);
         setDraftArtifactId(parsed.chosenIdeaId || parsed.activeIdeaId || parsed.ideas[0].id);
+        setStep(parsed.lastStep === 2 || parsed.lastStep === 3 ? parsed.lastStep : parsed.chosenIdeaId ? 3 : 1);
       }
     } catch (error) {
       console.error("Failed to load validation sprint data", error);
@@ -207,10 +211,10 @@ export default function ValidateJourneyPage() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const payload = JSON.stringify({ ideas, activeIdeaId, chosenIdeaId });
+    const payload = JSON.stringify({ ideas, activeIdeaId, chosenIdeaId, lastStep: step });
     const storage = getSafeLocalStorage();
     storage.setItem(STORAGE_KEY, payload);
-  }, [ideas, activeIdeaId, chosenIdeaId]);
+  }, [ideas, activeIdeaId, chosenIdeaId, step]);
 
   useEffect(() => {
     if (!user || restoredFromLocal.current || remoteDraftLoaded.current) return;
@@ -230,6 +234,7 @@ export default function ValidateJourneyPage() {
         setActiveIdeaId(remoteDraft.activeIdeaId || restoredIdeas[0].id);
         setChosenIdeaId(remoteDraft.chosenIdeaId ?? null);
         setDraftArtifactId(remoteDraft.id);
+        setStep(remoteDraft.chosenIdeaId ? 3 : 1);
       } catch (error) {
         console.error('Failed to restore validation draft', error);
       }
@@ -386,6 +391,10 @@ export default function ValidateJourneyPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, hasMeaningfulDraft]);
 
+  useEffect(() => {
+    captureEvent('decision_sprint_step_viewed', { step });
+  }, [step]);
+
   return (
     <>
       <SEO
@@ -414,48 +423,22 @@ export default function ValidateJourneyPage() {
 	        subtitle="Score ideas and pick your next build."
 	      >
 	        <div className="space-y-8">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <Button type="button" variant="outline" onClick={handleSaveDraft} disabled={isSavingDraft || !hasMeaningfulDraft}>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="w-full max-w-2xl flex-1">
+              <DecisionSprintStepNav active={step} onSelect={setStep} />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="shrink-0 self-start"
+              onClick={handleSaveDraft}
+              disabled={isSavingDraft || !hasMeaningfulDraft}
+            >
               <Save className="mr-2 h-4 w-4" />
               {isSavingDraft ? 'Saving draft...' : 'Save validation draft'}
             </Button>
           </div>
-	        <div className="grid gap-6 md:grid-cols-3">
-          <Card className="border-primary/20 bg-background/80">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <ClipboardList className="h-5 w-5 text-primary" />
-                Shortlist ideas
-              </CardTitle>
-              <CardDescription>
-                Capture the top 2-3 concepts you are considering building.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-          <Card className="border-primary/20 bg-background/80">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Scale className="h-5 w-5 text-primary" />
-                Score the signal
-              </CardTitle>
-              <CardDescription>
-                Use a simple rubric to compare pain, reachability, and demand evidence.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-          <Card className="border-primary/20 bg-background/80">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Rocket className="h-5 w-5 text-primary" />
-                Choose the winner
-              </CardTitle>
-              <CardDescription>
-                Pick the concept with the strongest signal and move forward with confidence.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
-
+            {step === 1 && (
             <div id="shortlist" className="space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold">Idea shortlist</h2>
@@ -491,9 +474,13 @@ export default function ValidateJourneyPage() {
                             <Button
                               size="sm"
                               variant={isActive ? "default" : "outline"}
-                              onClick={() => setActiveIdeaId(idea.id)}
+                              onClick={() => {
+                                setActiveIdeaId(idea.id);
+                                setStep(2);
+                              }}
                             >
-                              {isActive ? "Active" : "Score this idea"}
+                              Score this idea
+                              <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
                             </Button>
                             {ideas.length > 1 && (
                               <Button
@@ -567,12 +554,29 @@ export default function ValidateJourneyPage() {
                 >
                   Focus highest score
                 </Button>
+                <Button className="ml-auto" onClick={() => setStep(2)} disabled={!activeIdea}>
+                  Score {activeIdea?.name.trim() || "this idea"}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
               </div>
             </div>
+            )}
 
-            {activeIdea && (
-              <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
-                <div className="space-y-6">
+            {step === 2 && activeIdea && (
+              <div className="mx-auto w-full max-w-3xl space-y-6">
+                <div className="sticky top-20 z-10 flex flex-wrap items-center gap-2 rounded-xl border border-border/70 bg-card/95 px-4 py-2.5 shadow-sm backdrop-blur">
+                  <span className="min-w-0 truncate text-sm font-medium">
+                    {activeIdea.name.trim() || "Unnamed idea"}
+                  </span>
+                  <Badge variant="outline">Score {decisionScore}/100</Badge>
+                  <Badge variant="outline">{readinessPercent}% ready</Badge>
+                  <Badge className={cn("ml-auto", decisionLabel.badge)}>{decisionLabel.title}</Badge>
+                </div>
+                {!activeIdea.name.trim() ? (
+                  <p className="text-xs text-muted-foreground">
+                    Name this idea in Shortlist so your scoreboard stays readable.
+                  </p>
+                ) : null}
                   <Card className="border-primary/20 bg-background/90">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
@@ -668,9 +672,27 @@ export default function ValidateJourneyPage() {
                       ))}
                     </CardContent>
                   </Card>
-                </div>
 
-                <div className="space-y-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <Button variant="ghost" onClick={() => setStep(1)}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Shortlist
+                  </Button>
+                  <Button onClick={() => setStep(3)}>
+                    See decision
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {step === 3 && activeIdea && (
+              <div className="space-y-6">
+                <Button variant="ghost" size="sm" onClick={() => setStep(2)}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to scoring
+                </Button>
+                <div className="grid gap-6 lg:grid-cols-2">
                   <Card className="border-primary/20 bg-background/90">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
@@ -707,6 +729,7 @@ export default function ValidateJourneyPage() {
 	                        onClick={() => {
                             setChosenIdeaId(activeIdea.id);
                             setDraftArtifactId(activeIdea.id);
+                            captureEvent('decision_sprint_idea_chosen', { score: decisionScore });
                           }}
 	                        disabled={!activeIdea.name.trim()}
 	                      >
