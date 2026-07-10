@@ -7,7 +7,6 @@ import {
   ArrowRight,
   Check,
   FileText,
-  FolderOpen,
   Loader2,
   MoreHorizontal,
   Pencil,
@@ -19,6 +18,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { DashboardPanelHeader } from '@/components/dashboard/DashboardPanel';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -511,15 +511,11 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
       <Card className="border-border/70 bg-card/80 backdrop-blur-sm">
         <CardHeader className="space-y-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="space-y-2">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <FolderOpen className="h-5 w-5 text-primary" />
-                My Files
-              </CardTitle>
-              <CardDescription>
-                Upload, find, and preview your founder documents.
-              </CardDescription>
-            </div>
+            <DashboardPanelHeader
+              kicker="Artifacts"
+              title="My Files"
+              description="Upload, find, and preview your founder documents."
+            />
             <div className="w-full max-w-xs space-y-2 rounded-xl border border-border/60 bg-background/60 p-3">
               <div className="flex items-center justify-between gap-3 text-sm">
                 <span className="text-muted-foreground">Storage used</span>

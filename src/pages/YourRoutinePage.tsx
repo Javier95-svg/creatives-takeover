@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
+import { DashboardPanelHeader } from '@/components/dashboard/DashboardPanel';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -451,23 +452,17 @@ export default function YourRoutinePage() {
       <div className="space-y-6">
         <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card">
           <CardHeader className="space-y-4">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div className="space-y-2">
-                <Badge variant="outline" className="w-fit">{routineGoalLabel}</Badge>
-                <CardTitle className="flex items-center gap-2 text-2xl">
-                  <Repeat2 className="h-5 w-5 text-primary" />
-                  Your Routine
-                </CardTitle>
-                <CardDescription className="max-w-2xl">
-                  Keep the repeatable actions visible, finishable, and aligned with your current startup goal.
-                </CardDescription>
-              </div>
-              <div className="flex flex-wrap gap-2">
+            <DashboardPanelHeader
+              kicker="Founder routine"
+              title="Your Routine"
+              description="Keep the repeatable actions visible, finishable, and aligned with your current startup goal."
+              badges={<Badge variant="outline" className="w-fit">{routineGoalLabel}</Badge>}
+              action={
                 <Button variant="outline" onClick={() => setIsEditing((value) => !value)}>
                   {isEditing ? 'Close editor' : 'Customize routine'}
                 </Button>
-              </div>
-            </div>
+              }
+            />
             <div className="flex flex-wrap gap-2">
               <Badge variant="secondary">
                 {stats.completedCurrentCount}/{stats.totalCurrentCount} this period

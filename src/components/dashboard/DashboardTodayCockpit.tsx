@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DashboardPanelHeader } from '@/components/dashboard/DashboardPanel';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDailyMission } from '@/hooks/useDailyMission';
 import { useRoutine } from '@/hooks/useRoutine';
@@ -78,29 +79,26 @@ export default function DashboardTodayCockpit() {
   return (
     <Card className="mb-6 overflow-hidden border-primary/25 bg-[radial-gradient(circle_at_top_left,_hsl(var(--primary)/0.14),_transparent_42%),linear-gradient(135deg,hsl(var(--background)),hsl(var(--card))_62%)] shadow-sm">
       <CardContent className="p-5 sm:p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-1">
-            <p className="text-label font-semibold uppercase tracking-[0.18em] text-primary/80">Today</p>
-            <h1 className="font-space-grotesk text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-              Welcome back, {firstName}.
-            </h1>
-            <p className="max-w-xl text-sm leading-6 text-muted-foreground">
-              Close today&apos;s loop before anything else competes for your attention.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2 lg:max-w-md lg:justify-end">
-            <Badge variant="secondary">
-              {streak} {streak === 1 ? 'day' : 'days'} streak
-            </Badge>
-            <Badge variant="outline">
-              {completedCount}/{totalCount} routine
-            </Badge>
-            <Badge variant={overdueTasks.length > 0 ? 'destructive' : 'outline'}>
-              {overdueTasks.length} overdue
-            </Badge>
-          </div>
-        </div>
+        <DashboardPanelHeader
+          as="h1"
+          size="page"
+          kicker="Today"
+          title={`Welcome back, ${firstName}.`}
+          description="Close today's loop before anything else competes for your attention."
+          action={
+            <>
+              <Badge variant="secondary">
+                {streak} {streak === 1 ? 'day' : 'days'} streak
+              </Badge>
+              <Badge variant="outline">
+                {completedCount}/{totalCount} routine
+              </Badge>
+              <Badge variant={overdueTasks.length > 0 ? 'destructive' : 'outline'}>
+                {overdueTasks.length} overdue
+              </Badge>
+            </>
+          }
+        />
 
         {totalCount > 0 ? (
           <div className="mt-5">

@@ -206,8 +206,8 @@ const Dashboard = () => {
           <LiveWaitlistCard />
           <EnablePushCard />
           <FirstRunCard />
-          <StartupHomeCommandCenter />
           <JourneyNextStepCard />
+          <StartupHomeCommandCenter />
           <StarterDashboardNudge />
         </div>
       </DashboardDisclosure>

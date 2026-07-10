@@ -6,9 +6,9 @@ import type { Database } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
+import { DashboardPanelHeader, MetricTile } from '@/components/dashboard/DashboardPanel';
 import { buildReferralLink } from '@/lib/referral';
 
 type ReferralRow = Database['public']['Tables']['referrals']['Row'];
@@ -154,16 +154,11 @@ export function ReferralSubtab() {
       {/* Link hero */}
       <Card className="border-primary/30 bg-primary/5">
         <CardHeader>
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
-            <Gift className="h-4 w-4" />
-            Your referral link
-          </div>
-          <CardTitle className="text-xl sm:text-2xl">
-            Share this link. Every 3 new accounts unlock a reward.
-          </CardTitle>
-          <CardDescription>
-            Rewards apply automatically — you don’t need to claim them.
-          </CardDescription>
+          <DashboardPanelHeader
+            kicker="Your referral link"
+            title="Share this link. Every 3 new accounts unlock a reward."
+            description="Rewards apply automatically — you don’t need to claim them."
+          />
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -191,29 +186,17 @@ export function ReferralSubtab() {
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>New accounts through your link</CardDescription>
-            <CardTitle className="text-3xl">{verifiedCount}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Rewards unlocked</CardDescription>
-            <CardTitle className="text-3xl">{rewardsUnlocked}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Progress to next reward</CardDescription>
-            <CardTitle className="text-3xl">
+        <MetricTile label="New accounts" value={verifiedCount} hint="Created through your link" />
+        <MetricTile label="Rewards unlocked" value={rewardsUnlocked} icon={Gift} />
+        <MetricTile
+          label="Next reward"
+          value={
+            <>
               {towardNext} <span className="text-base font-normal text-muted-foreground">of {BATCH_SIZE}</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Progress value={progressPct} className="h-2" />
-          </CardContent>
-        </Card>
+            </>
+          }
+          progress={progressPct}
+        />
       </div>
 
       <DashboardDisclosure

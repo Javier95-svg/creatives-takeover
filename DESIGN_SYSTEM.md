@@ -92,6 +92,20 @@ Headings should adopt `text-headline-*` / `text-subheading-*` rather than hand-r
 
 ---
 
+## Dashboard hierarchy
+
+Every dashboard surface (the 5 `/dashboard` tabs and dashboard-family pages) follows one three-level pattern so users learn it once. Primitives live in [`src/components/dashboard/DashboardPanel.tsx`](src/components/dashboard/DashboardPanel.tsx).
+
+**L1 — Primary.** Exactly one `DashboardPanelHeader as="h1" size="page"` per tab (kicker `text-label uppercase tracking-[0.18em] text-primary/80` + `font-space-grotesk text-2xl sm:text-3xl` title), plus at most one `MetricTile` row (2–4 tiles). `MetricTile` is the only sanctioned big-number treatment: kicker-style label, `font-space-grotesk text-2xl` value, optional delta arrow (`success`/`destructive`/`muted`), optional `Progress`, optional deep link.
+
+**L2 — Secondary.** Section headers use `DashboardPanelHeader as="h2" size="panel"` (`text-lg`). Badge semantics are fixed: `secondary` = the primary count, `outline` = context (stage, totals), `destructive` = overdue/alerts.
+
+**L3 — Tertiary.** Anything optional or explanatory lives inside `DashboardDisclosure` (collapsed by default).
+
+Card containers: standard panel = `border-border/60 bg-card/70`; inner tiles = `rounded-xl border border-border/60 bg-background/70`. Do not hand-roll new kicker/heading/stat styles on dashboard surfaces — use the primitives.
+
+---
+
 ## Radius ladder
 
 `sm` (6px), `md`/`lg`/`card` (8px), `button` (12px), `large` (16px), `2.5xl` (20px), `4xl` (28px), `5xl` (32px).

@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DashboardPanelHeader } from '@/components/dashboard/DashboardPanel';
 import { useFounderJourneySnapshot } from '@/hooks/useFounderJourneySnapshot';
 import {
   trackDashboardJourneyContinueClicked,
@@ -155,13 +156,11 @@ export default function FounderJourneyPanel() {
     return (
       <Card className="mb-6 border-border/60 bg-card/70">
         <CardContent className="p-5 sm:p-6">
-          <p className="text-label font-semibold uppercase tracking-[0.18em] text-primary/80">Startup journey</p>
-          <h2 className="mt-1 font-space-grotesk text-lg font-semibold text-foreground">
-            Your journey starts with one saved artifact.
-          </h2>
-          <p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
-            Each tool you complete lights up here, so you always know where you stand across the whole journey.
-          </p>
+          <DashboardPanelHeader
+            kicker="Startup journey"
+            title="Your journey starts with one saved artifact."
+            description="Each tool you complete lights up here, so you always know where you stand across the whole journey."
+          />
           <div className="mt-4 flex flex-wrap gap-2">
             <Button asChild size="sm">
               <Link to="/icp-builder">
@@ -184,26 +183,24 @@ export default function FounderJourneyPanel() {
   return (
     <Card className="mb-6 border-border/60 bg-card/70">
       <CardContent className="p-5 sm:p-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0">
-            <p className="text-label font-semibold uppercase tracking-[0.18em] text-primary/80">Startup journey</p>
-            <div className="mt-1.5 flex flex-wrap items-center gap-2">
-              <h2 className="font-space-grotesk text-lg font-semibold text-foreground">Where you stand</h2>
-              <Badge variant="secondary">{snapshot.stagesCompleted}/7 stages</Badge>
-            </div>
-          </div>
-          {snapshot.nextAction ? (
-            <Button asChild size="sm" variant="outline" className="shrink-0">
-              <Link
-                to={snapshot.nextAction.route}
-                onClick={() => trackDashboardJourneyContinueClicked({ milestone_key: snapshot.nextAction?.key })}
-              >
-                Continue: {snapshot.nextAction.label}
-                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-              </Link>
-            </Button>
-          ) : null}
-        </div>
+        <DashboardPanelHeader
+          kicker="Startup journey"
+          title="Where you stand"
+          badges={<Badge variant="secondary">{snapshot.stagesCompleted}/7 stages</Badge>}
+          action={
+            snapshot.nextAction ? (
+              <Button asChild size="sm" variant="outline" className="shrink-0">
+                <Link
+                  to={snapshot.nextAction.route}
+                  onClick={() => trackDashboardJourneyContinueClicked({ milestone_key: snapshot.nextAction?.key })}
+                >
+                  Continue: {snapshot.nextAction.label}
+                  <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            ) : null
+          }
+        />
 
         <Progress value={snapshot.progressPercent} className="mt-4 h-1.5" />
 

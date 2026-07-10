@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DashboardPanelHeader } from '@/components/dashboard/DashboardPanel';
 import { useFounderCommandSignals } from '@/hooks/useFounderCommandSignals';
 import { cn } from '@/lib/utils';
 
@@ -70,48 +71,47 @@ export function DashboardCommandSignalStrip() {
 
   return (
     <section className="mb-5 rounded-xl border border-border/70 bg-card/75 p-4 shadow-sm">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0 space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
+      <DashboardPanelHeader
+        as="h1"
+        size="page"
+        kicker={copy.label}
+        title={copy.title}
+        description={copy.body}
+        badges={
+          <>
             <Badge variant="secondary" className="gap-1.5">
               <Icon className="h-3.5 w-3.5" />
-              {copy.label}
+              {statusLabel}
             </Badge>
-            <Badge variant="outline">{statusLabel}</Badge>
             <Badge variant="outline">
               {completedFoundationCount}/{foundationalMilestones.length} setup
             </Badge>
-          </div>
-          <div>
-            <h1 className="font-space-grotesk text-xl font-semibold tracking-tight text-foreground">
-              {copy.title}
-            </h1>
-            <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">{copy.body}</p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-          {nextFoundation ? (
-            <Button asChild variant="outline" size="sm">
-              <Link to={nextFoundation.route}>
-                Setup: {nextFoundation.title}
-                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-              </Link>
-            </Button>
-          ) : null}
-          <Collapsible open={helpOpen} onOpenChange={setHelpOpen}>
-            <CollapsibleTrigger asChild>
-              <Button type="button" variant="ghost" size="sm">
-                What belongs here?
-                <ChevronDown
-                  className={cn('ml-1.5 h-3.5 w-3.5 transition-transform', helpOpen && 'rotate-180')}
-                  aria-hidden="true"
-                />
+          </>
+        }
+        action={
+          <>
+            {nextFoundation ? (
+              <Button asChild variant="outline" size="sm">
+                <Link to={nextFoundation.route}>
+                  Setup: {nextFoundation.title}
+                  <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                </Link>
               </Button>
-            </CollapsibleTrigger>
-          </Collapsible>
-        </div>
-      </div>
+            ) : null}
+            <Collapsible open={helpOpen} onOpenChange={setHelpOpen}>
+              <CollapsibleTrigger asChild>
+                <Button type="button" variant="ghost" size="sm">
+                  What belongs here?
+                  <ChevronDown
+                    className={cn('ml-1.5 h-3.5 w-3.5 transition-transform', helpOpen && 'rotate-180')}
+                    aria-hidden="true"
+                  />
+                </Button>
+              </CollapsibleTrigger>
+            </Collapsible>
+          </>
+        }
+      />
 
       <Collapsible open={helpOpen} onOpenChange={setHelpOpen}>
         <CollapsibleContent>

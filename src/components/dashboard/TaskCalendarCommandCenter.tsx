@@ -24,6 +24,7 @@ import {
   X,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { DashboardPanelHeader } from '@/components/dashboard/DashboardPanel';
 import { Button } from '@/components/ui/button';
 import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
 import {
@@ -539,17 +540,17 @@ export function TaskCalendarCommandCenter() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">Personalised calendar</p>
-          <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="secondary">{stats.completedToday}/{stats.todayTasks} done today</Badge>
-          {stats.overdueCount > 0 && <Badge variant="destructive">{stats.overdueCount} overdue</Badge>}
-          <Badge variant="outline">Stage {currentStage}</Badge>
-        </div>
-      </div>
+      <DashboardPanelHeader
+        kicker="Personalised calendar"
+        title="Tasks"
+        action={
+          <>
+            <Badge variant="secondary">{stats.completedToday}/{stats.todayTasks} done today</Badge>
+            {stats.overdueCount > 0 && <Badge variant="destructive">{stats.overdueCount} overdue</Badge>}
+            <Badge variant="outline">Stage {currentStage}</Badge>
+          </>
+        }
+      />
 
       <div className="grid gap-4 lg:h-[720px] lg:grid-cols-[minmax(0,1fr)_420px]">
         <section className="flex min-h-0 flex-col overflow-hidden rounded-lg border bg-card">
