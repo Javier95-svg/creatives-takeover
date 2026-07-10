@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { showDashboardReturnToast } from '@/components/dashboard/dashboardReturnToast';
 import { ArrowLeft, ExternalLink, Globe, Loader2, Rocket, Send, Webhook } from 'lucide-react';
 import SEO from '@/components/SEO';
 import Navigation from '@/components/Navigation';
@@ -178,7 +179,12 @@ export default function LaunchComposerPage() {
       const updated = await publishLaunchPage(project, user.id);
       setProject(updated);
       setReadiness(await getProjectReadiness(project.id));
-      toast.success('Launch page published.');
+      showDashboardReturnToast({
+        message: 'Launch page published.',
+        description: 'Signups will show on your command center.',
+        tool: 'demo-studio-launch',
+        navigate,
+      });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Launch page is not ready yet.');
     } finally {
@@ -561,7 +567,7 @@ export default function LaunchComposerPage() {
                     id="lead-webhook"
                     type="url"
                     inputMode="url"
-                    placeholder="https://hooks.slack.com/… or Zapier/Make"
+                    placeholder="https://hooks.slack.com/â€¦ or Zapier/Make"
                     value={webhookDraft}
                     onChange={(e) => setWebhookDraft(e.target.value)}
                     onBlur={(e) => void handleWebhookBlur(e.target.value)}
@@ -604,7 +610,7 @@ export default function LaunchComposerPage() {
                                 d.status === 'exhausted' && 'border-destructive/40 text-destructive',
                               )}
                             >
-                              {d.status}{d.attempts > 1 ? ` ·${d.attempts}` : ''}
+                              {d.status}{d.attempts > 1 ? ` Â·${d.attempts}` : ''}
                             </Badge>
                           </span>
                         </div>

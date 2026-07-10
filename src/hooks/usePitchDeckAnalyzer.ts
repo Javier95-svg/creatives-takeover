@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { PitchDeckAnalysis, PitchDeckGuestResult } from '@/types/pitchDeckAnalyzer';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { showDashboardReturnToast } from '@/components/dashboard/dashboardReturnToast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/hooks/useCredits';
 import { useJourneyUpgradePrompt } from '@/hooks/useJourneyUpgradePrompt';
@@ -40,6 +42,7 @@ async function invokePitchFn(body: Record<string, unknown>): Promise<{ ok: boole
 }
 
 export const usePitchDeckAnalyzer = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { refreshBalance } = useCredits();
   const { fireJourneyUpgradePrompt } = useJourneyUpgradePrompt();
@@ -202,6 +205,12 @@ export const usePitchDeckAnalyzer = () => {
       });
       void refreshBalance();
       fireJourneyUpgradePrompt('rising_pitch_deck_heavy');
+      showDashboardReturnToast({
+        message: 'Pitch deck analyzed.',
+        description: 'Your deck score now shows on your command center.',
+        tool: 'pitch-deck-analyzer',
+        navigate,
+      });
       return result;
     } catch (err: any) {
       const message = err?.message || 'Failed to analyze pitch deck. Please try again.';

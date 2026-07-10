@@ -711,6 +711,9 @@ export const trackDashboardJourneyContinueClicked = (properties?: AnalyticsPrope
 export const trackDashboardFounderSignalsExpanded = (properties?: AnalyticsProperties) =>
   captureEvent('dashboard_founder_signals_expanded', properties);
 
+export const trackToolMilestoneDashboardReturnClicked = (properties?: AnalyticsProperties) =>
+  captureEvent('tool_milestone_dashboard_return_clicked', properties);
+
 // ─── Demo Studio activation funnel ───────────────────────────────────────────
 // The founder's creation funnel (project → brief → demo → step → publish → share)
 // plus the downstream lead event. Build a PostHog funnel from these to find where

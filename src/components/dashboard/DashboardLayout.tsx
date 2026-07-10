@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, LayoutDashboard } from 'lucide-react';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { DashboardNavigationProvider } from '@/contexts/DashboardNavigationContext';
 import { DashboardSidebar } from './DashboardSidebar';
@@ -35,15 +35,26 @@ export const DashboardLayout = ({ children, title, subtitle }: DashboardLayoutPr
                       <p className="mx-auto max-w-2xl text-sm text-muted-foreground">{subtitle}</p>
                     ) : null}
                   </div>
-                  <button
-                    onClick={() => navigate('/')}
-                    className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/88 px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm backdrop-blur-md transition-colors hover:border-primary/30 hover:bg-background hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                    aria-label="Exit dashboard and return to platform"
-                    type="button"
-                  >
-                    <span>Platform</span>
-                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                  </button>
+                  <div className="pointer-events-auto flex items-start gap-2">
+                    <button
+                      onClick={() => navigate('/dashboard')}
+                      className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/88 px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm backdrop-blur-md transition-colors hover:border-primary/30 hover:bg-background hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                      aria-label="Open your command center"
+                      type="button"
+                    >
+                      <LayoutDashboard className="h-4 w-4" aria-hidden="true" />
+                      <span>Command center</span>
+                    </button>
+                    <button
+                      onClick={() => navigate('/')}
+                      className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/88 px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm backdrop-blur-md transition-colors hover:border-primary/30 hover:bg-background hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                      aria-label="Exit dashboard and return to platform"
+                      type="button"
+                    >
+                      <span>Platform</span>
+                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  </div>
                 </div>
               </div>
 

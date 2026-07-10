@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { showDashboardReturnToast } from '@/components/dashboard/dashboardReturnToast';
 import {
   ArrowLeft,
   BarChart3,
@@ -12,6 +13,7 @@ import {
   FileCode,
   Globe,
   ImagePlus,
+  LayoutDashboard,
   Loader2,
   Monitor,
   RefreshCw,
@@ -295,7 +297,7 @@ export default function DemoEditorPage() {
         });
       });
     } catch {
-      // User dismissed the OS screen picker — nothing to do.
+      // User dismissed the OS screen picker â€” nothing to do.
     }
   };
 
@@ -324,7 +326,7 @@ export default function DemoEditorPage() {
   const handleConfirmCapture = async () => {
     if (!user || !demoId || keptFrames.length === 0) return;
     setCapturing(true);
-    // We have the frames now — stop the screen share immediately.
+    // We have the frames now â€” stop the screen share immediately.
     stopStream(captureStreamRef.current);
     captureStreamRef.current = null;
     setCaptureStream(null);
@@ -569,10 +571,15 @@ export default function DemoEditorPage() {
     try {
       const updated = await publishDemo(demo.id, { ownerId: demo.owner_id, ownerPlan: planTier });
       setDemo(updated);
-      toast.success('Demo published!');
+      showDashboardReturnToast({
+        message: 'Demo published!',
+        description: 'It now counts toward your startup journey.',
+        tool: 'demo-studio',
+        navigate,
+      });
       // Trigger 4 (activation complete): publishing a demo is a milestone. For
       // free-tier founders, surface a light prompt for the plan that removes the
-      // watermark and unlocks the next stage — fired after the success toast so
+      // watermark and unlocks the next stage â€” fired after the success toast so
       // it never interrupts the publish flow itself.
       if (normalizePlan(planTier) === 'rookie') {
         setTimeout(() => {
@@ -634,7 +641,7 @@ export default function DemoEditorPage() {
   return (
     // Rails stack below lg (see grid below); on touch, every control is a 44px tap target. Desktop unchanged.
     <div className="min-h-screen bg-background touch:[&_button]:min-h-[44px]">
-      <SEO title={`${demo?.title ?? 'Demo'} — Demo Studio`} description="Build your interactive product demo." noindex url="/demo-studio" />
+      <SEO title={`${demo?.title ?? 'Demo'} â€” Demo Studio`} description="Build your interactive product demo." noindex url="/demo-studio" />
 
       {/* Top bar */}
       <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
@@ -661,6 +668,11 @@ export default function DemoEditorPage() {
           <WhatIsADemoPopover className="hidden md:inline-flex" />
         </div>
         <div className="flex items-center gap-2">
+          <Button asChild variant="ghost" size="sm" className="gap-1.5">
+            <Link to="/dashboard" aria-label="Open your command center">
+              <LayoutDashboard className="h-4 w-4" /> <span className="hidden md:inline">Command center</span>
+            </Link>
+          </Button>
           {demo?.status === 'published' && (
             <Button asChild variant="ghost" size="sm" className="gap-1.5">
               <Link to={`/demo-studio/projects/${projectId}/demos/${demoId}/analytics`}>
@@ -804,7 +816,7 @@ export default function DemoEditorPage() {
               <p className="mt-1 max-w-sm text-sm text-muted-foreground">
                 {hasStoryboard
                   ? 'Use the Storyboard panel to apply guided steps, then upload product screenshots for each step.'
-                  : "Upload images of your product — each one becomes a step. Next you'll drag clickable hotspots on top to make it interactive."}
+                  : "Upload images of your product â€” each one becomes a step. Next you'll drag clickable hotspots on top to make it interactive."}
               </p>
               <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
                 <Button
@@ -1067,7 +1079,7 @@ export default function DemoEditorPage() {
               </div>
             )}
             <p className="text-xs text-muted-foreground">
-              Click <strong>Keep frame</strong> at each moment you want to show — each kept frame becomes a step.
+              Click <strong>Keep frame</strong> at each moment you want to show â€” each kept frame becomes a step.
             </p>
             <div className="flex items-center justify-between gap-2">
               <Button variant="outline" onClick={closeCapture} disabled={capturing}>
@@ -1104,7 +1116,7 @@ export default function DemoEditorPage() {
           </DialogHeader>
           <div className="space-y-4 text-sm">
             <p className="text-muted-foreground">
-              Capture your real product page — including logged-in screens — as a single, self-contained
+              Capture your real product page â€” including logged-in screens â€” as a single, self-contained
               file, then upload it here. It renders as a crisp, interactive page (not a screenshot), and you
               can drop hotspots on top.
             </p>
@@ -1122,7 +1134,7 @@ export default function DemoEditorPage() {
                 browser extension.
               </li>
               <li>Open the page you want to demo and click SingleFile to save it as one <code>.html</code> file.</li>
-              <li>Upload that file below — we sanitize it and render it safely (scripts are stripped).</li>
+              <li>Upload that file below â€” we sanitize it and render it safely (scripts are stripped).</li>
             </ol>
             <p className="text-xs text-muted-foreground">Max 15MB. The page is shown static (no live scripts), which is exactly what a demo step needs.</p>
             <div className="flex justify-end gap-2">
@@ -1142,7 +1154,7 @@ export default function DemoEditorPage() {
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Preview — {demo?.title}</DialogTitle>
+            <DialogTitle>Preview â€” {demo?.title}</DialogTitle>
           </DialogHeader>
           <DemoPlayer
             steps={steps}

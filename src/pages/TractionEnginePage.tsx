@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
 import RelatedToolsSection from '@/components/seo/RelatedToolsSection';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
@@ -53,6 +53,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { showDashboardReturnToast } from '@/components/dashboard/dashboardReturnToast';
 
 const SPRINTS_TABLE = 'traction_engine_sprints' as const;
 const LOGS_TABLE = 'traction_engine_weekly_logs' as const;
@@ -192,6 +193,7 @@ function Field({
 }
 
 function TractionEngineWorkflow({ userId }: { userId?: string }) {
+  const navigate = useNavigate();
   const { deductCredits } = useCreditActions();
   const currentWeekStart = useMemo(() => getCurrentWeekStart(), []);
   const [experiments, setExperiments] = useState<ExperimentDraft[]>(() => {
@@ -446,7 +448,12 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
       if (experimentError) throw experimentError;
 
       localStorage.removeItem('ct_traction_draft');
-      toast.success(score.phaseSevenReady ? 'Saved. Phase 7 readiness unlocked.' : 'Traction week saved.');
+      showDashboardReturnToast({
+        message: score.phaseSevenReady ? 'Saved. Phase 7 readiness unlocked.' : 'Traction week saved.',
+        description: 'Your traction score is live on your command center.',
+        tool: 'traction-engine',
+        navigate,
+      });
       await loadTractionData();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not save Traction Engine log.');

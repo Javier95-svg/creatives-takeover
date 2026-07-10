@@ -5,7 +5,9 @@ import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 import { useActivationJourney } from '@/hooks/useActivationJourney';
 import { useCreditActions } from '@/hooks/useCreditActions';
 import { useJourneyUpgradePrompt } from '@/hooks/useJourneyUpgradePrompt';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { showDashboardReturnToast } from '@/components/dashboard/dashboardReturnToast';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 import {
   getPmfResultsTableName,
@@ -140,6 +142,7 @@ const PMF_EVIDENCE_TABLE = 'pmf_validation_evidence' as any;
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function usePMFLab() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { refreshProgress } = useBizMapProgress();
   const { refreshActivation } = useActivationJourney();
@@ -489,11 +492,14 @@ export function usePMFLab() {
         ?? 0;
       await persistInterviewEvidenceCount(conversationCount);
 
-      toast.success(
-        conversationCount >= PMF_REQUIRED_SIGNALS
-          ? 'PMF report saved. Stage III marked complete.'
-          : `PMF report saved. Add ${PMF_REQUIRED_SIGNALS - conversationCount} more conversations to complete Stage III.`
-      );
+      showDashboardReturnToast({
+        message:
+          conversationCount >= PMF_REQUIRED_SIGNALS
+            ? 'PMF report saved. Stage III marked complete.'
+            : `PMF report saved. Add ${PMF_REQUIRED_SIGNALS - conversationCount} more conversations to complete Stage III.`,
+        tool: 'pmf-lab',
+        navigate,
+      });
 
       await ensureMentorDemandNotification(user.id, 'validation', {
         pmfScore: analysis.overallScore,

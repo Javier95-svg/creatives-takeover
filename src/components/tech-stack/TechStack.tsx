@@ -16,6 +16,7 @@ import { useCreditActions } from '@/hooks/useCreditActions';
 import { useUpgradePrompt } from '@/contexts/UpgradePromptContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { buildDashboardReturnToastAction } from '@/components/dashboard/dashboardReturnToast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
@@ -492,7 +493,8 @@ const TechStack: React.FC = () => {
       });
       toast({
         title: 'Report saved',
-        description: 'You can access it anytime from Saved Reports.'
+        description: 'You can access it anytime from Saved Reports.',
+        action: buildDashboardReturnToastAction('tech-stack', navigate),
       });
     }
 

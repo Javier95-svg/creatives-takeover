@@ -3,7 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 import { useCreditActions } from '@/hooks/useCreditActions';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { showDashboardReturnToast } from '@/components/dashboard/dashboardReturnToast';
 import { ensureMentorDemandNotification } from '@/lib/mentorDemandNotifications';
 import { trackActivity } from '@/lib/activity';
 
@@ -74,6 +76,7 @@ type Phase = 'intake' | 'analyzing' | 'results';
 const GTM_TABLE = 'gtm_plans' as any;
 
 export function useGTMStrategist() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { refreshProgress } = useBizMapProgress();
   const { ensureCredits, handleCreditError, showCreditReceipt } = useCreditActions();
@@ -274,7 +277,11 @@ export function useGTMStrategist() {
       if (status === 'draft') {
         toast.success('GTM draft saved.');
       } else if (status === 'saved') {
-        toast.success('GTM plan saved. Stage V marked complete.');
+        showDashboardReturnToast({
+          message: 'GTM plan saved. Stage V marked complete.',
+          tool: 'gtm-strategist',
+          navigate,
+        });
         await ensureMentorDemandNotification(user.id, 'gtm', {
           summaryInsight: analysis.summaryInsight,
         });
@@ -289,7 +296,11 @@ export function useGTMStrategist() {
         );
         await refreshProgress();
       } else {
-        toast.success('GTM plan exported. Stage V marked complete.');
+        showDashboardReturnToast({
+          message: 'GTM plan exported. Stage V marked complete.',
+          tool: 'gtm-strategist',
+          navigate,
+        });
         await ensureMentorDemandNotification(user.id, 'gtm', {
           summaryInsight: analysis.summaryInsight,
         });

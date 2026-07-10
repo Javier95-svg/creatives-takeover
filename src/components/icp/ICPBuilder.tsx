@@ -33,6 +33,7 @@ import {
   trackICPResumeLinkRequested,
   trackICPResumeRestored,
   trackICPSeedSubmitted,
+  trackToolMilestoneDashboardReturnClicked,
   trackUpgradeClicked,
   trackUpgradePromptShown,
 } from "@/lib/analytics";
@@ -1929,12 +1930,22 @@ const ICPBuilder: React.FC = () => {
               <p className="max-w-sm text-sm text-muted-foreground">
                 Tomorrow's validation step builds on this. Want a nudge when it's ready?
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-center gap-2">
                 <Button onClick={handleEnablePushAfterIcp} disabled={webPush.isBusy}>
                   {webPush.isBusy ? "Enabling…" : "Notify me"}
                 </Button>
                 <Button variant="ghost" onClick={proceedAfterCelebration} disabled={webPush.isBusy}>
                   Continue
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={webPush.isBusy}
+                  onClick={() => {
+                    trackToolMilestoneDashboardReturnClicked({ tool: "icp-builder" });
+                    navigate("/dashboard");
+                  }}
+                >
+                  View command center
                 </Button>
               </div>
             </>

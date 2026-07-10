@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, BookOpen, Users as UsersIcon, FileText, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, BriefcaseBusiness, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles, Mic, Lock, Compass, Telescope } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, BookOpen, Users as UsersIcon, FileText, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, BriefcaseBusiness, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LayoutDashboard, LineChart, CalendarCheck, HeartHandshake, Sparkles, Mic, Lock, Compass, Telescope } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -256,6 +256,7 @@ const Navigation = () => {
 
   const navItems = [
     { name: "Home", href: "/", tooltip: "Return to homepage", icon: Home },
+    { name: "Dashboard", href: "/dashboard", tooltip: "Your command center: tasks, progress, and journey", icon: LayoutDashboard },
     { name: "BizMap AI", href: "/bizmap-ai", tooltip: "Validate, build, and launch with guided startup tools", icon: Compass },
     { name: "Network", href: "/mentorship", tooltip: "Mentors, angel investors, and co-founder matchmaking", icon: UsersIcon },
     { name: "Insighta", href: "/insighta", tooltip: "Funding opportunities and investment resources", icon: Telescope },

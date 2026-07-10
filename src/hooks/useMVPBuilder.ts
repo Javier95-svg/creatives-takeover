@@ -5,7 +5,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCreditActions } from '@/hooks/useCreditActions';
 import { useCredits } from '@/hooks/useCredits';
 import { createIdempotencyKey } from '@/lib/idempotency';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { showDashboardReturnToast } from '@/components/dashboard/dashboardReturnToast';
 import {
   MVP_DEFAULT_MODEL,
   getMVPDefaultModelForPlan,
@@ -921,6 +923,7 @@ async function fetchContextRowById(
 }
 
 export function useMVPBuilder() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   // Scope the persisted workspace cache to the signed-in account. A single shared
   // key let one account hydrate another account's MVP Builder workspace on the
@@ -3642,15 +3645,18 @@ export function useMVPBuilder() {
 
       setDeploymentUrl(data.url);
       void refreshCredits();
-      toast.success(
-        `Published to ${data.slug}.${MVP_PUBLISH_BASE_DOMAIN} for ${Number(data.creditsUsed ?? CREDIT_COSTS.APP_BUILDER_DEPLOY)} credits.`
-      );
+      showDashboardReturnToast({
+        message: `Published to ${data.slug}.${MVP_PUBLISH_BASE_DOMAIN} for ${Number(data.creditsUsed ?? CREDIT_COSTS.APP_BUILDER_DEPLOY)} credits.`,
+        description: 'Your live MVP now shows on your command center.',
+        tool: 'mvp-builder',
+        navigate,
+      });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Publishing failed.');
     } finally {
       setIsDeploying(false);
     }
-  }, [creditsLoading, handleCreditError, isDeploying, projectFiles.length, projectId, refreshCredits, saveProject, user]);
+  }, [creditsLoading, handleCreditError, isDeploying, navigate, projectFiles.length, projectId, refreshCredits, saveProject, user]);
 
   const closeCreditExhaustedModal = useCallback(() => {
     setIsCreditExhaustedModalOpen(false);
