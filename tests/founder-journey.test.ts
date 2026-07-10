@@ -273,6 +273,19 @@ test('fundraising tile surfaces investor research activity', () => {
   assert.equal(snapshot.isEmpty, true);
 });
 
+test('tiles carry their stage and flag the current one', () => {
+  const snapshot = buildFounderJourneySnapshot(makeInputs({ currentStage: 'BUILDING' }));
+
+  assert.deepEqual(
+    snapshot.tools.map((tile) => tile.stage),
+    ['IDENTITY', 'PROTOTYPE', 'VALIDATING', 'BUILDING', 'LAUNCH', 'TRACTION', 'FUNDRAISING'],
+  );
+  assert.deepEqual(
+    snapshot.tools.filter((tile) => tile.isCurrentStage).map((tile) => tile.key),
+    ['mvp-builder'],
+  );
+});
+
 test('lastTouched picks the most recently updated tool', () => {
   const snapshot = buildFounderJourneySnapshot(
     makeInputs({

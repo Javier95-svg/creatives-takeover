@@ -57,6 +57,9 @@ import {
 } from '@/config/planPermissions';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useDashboardNavigation } from '@/contexts/DashboardNavigationContext';
+import { useBizMapProgress } from '@/hooks/useBizMapProgress';
+import { cn } from '@/lib/utils';
+import { groupToolItemsByStage } from '@/lib/sidebarJourneyGroups';
 import { shouldReduceOnboardingNav } from '@/lib/onboardingPath';
 import type { ActivationIntent } from '@/lib/retentionSystem';
 
@@ -164,6 +167,7 @@ export const DashboardSidebar = () => {
   const { user } = useAuth();
   const { subscriptionData } = useSubscription();
   const incompleteTaskCount = useContext(TaskCountContext);
+  const { currentStage } = useBizMapProgress();
   const { activeSection, setActiveSection } = useDashboardNavigation();
   const [sidebarPreferences, setSidebarPreferences] = useState<SidebarPreferences>(defaultSidebarPreferences);
   const [reduceOnboardingNav, setReduceOnboardingNav] = useState(false);
@@ -378,36 +382,40 @@ export const DashboardSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>Tools</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {toolsItems.map((item) => (
-                <SidebarMenuItem key={item.path}>
-                  <div className="flex items-center w-full group/tool">
-                    <SidebarMenuButton asChild tooltip={item.label} className="flex-1">
-                      <Link to={item.path} onClick={handleNavClick}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        void removeTool(item.prefKey);
-                      }}
-                      className="opacity-0 group-hover/tool:opacity-100 p-1 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all mr-1 group-data-[collapsible=icon]:hidden"
-                      title={`Remove ${item.label}`}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {groupToolItemsByStage(toolsItems).map((group) => (
+          <SidebarGroup key={group.id}>
+            <SidebarGroupLabel className={cn(group.id === currentStage && 'text-primary')}>
+              {group.label}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.items.map((item) => (
+                  <SidebarMenuItem key={item.path}>
+                    <div className="flex items-center w-full group/tool">
+                      <SidebarMenuButton asChild tooltip={item.label} className="flex-1">
+                        <Link to={item.path} onClick={handleNavClick}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          void removeTool(item.prefKey);
+                        }}
+                        className="opacity-0 group-hover/tool:opacity-100 p-1 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all mr-1 group-data-[collapsible=icon]:hidden"
+                        title={`Remove ${item.label}`}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
 
         <SidebarGroup>
           <SidebarGroupLabel>Personalize</SidebarGroupLabel>

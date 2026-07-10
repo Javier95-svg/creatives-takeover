@@ -70,6 +70,8 @@ export interface JourneyStageNode {
 export interface JourneyToolTile {
   key: string;
   label: string;
+  stage: BizMapStage;
+  isCurrentStage: boolean;
   status: JourneyToolStatus;
   outputLine: string;
   highlight: string | null;
@@ -169,11 +171,23 @@ function formatSignupSuffix(signupCount: number | null | undefined): string {
   return ` · ${signupCount} signup${signupCount === 1 ? '' : 's'}`;
 }
 
+type JourneyToolTileDraft = Omit<JourneyToolTile, 'stage' | 'isCurrentStage'>;
+
+const TILE_STAGES: Record<string, BizMapStage> = {
+  'icp-builder': 'IDENTITY',
+  'demo-studio': 'PROTOTYPE',
+  'pmf-lab': 'VALIDATING',
+  'mvp-builder': 'BUILDING',
+  'gtm-strategist': 'LAUNCH',
+  'traction-engine': 'TRACTION',
+  'pitch-deck-analyzer': 'FUNDRAISING',
+};
+
 function buildTools(inputs: BuildFounderJourneyInputs): JourneyToolTile[] {
   const { toolSignals, extras, stageState } = inputs;
   const { traction, demoStudio, pmf, pitchDeck, mvpPublished, fundraisingActivity } = extras;
 
-  const demoTile: JourneyToolTile = (() => {
+  const demoTile: JourneyToolTileDraft = (() => {
     const base = {
       key: 'demo-studio',
       label: 'Demo Studio',
@@ -199,7 +213,7 @@ function buildTools(inputs: BuildFounderJourneyInputs): JourneyToolTile[] {
     return { ...base, status: 'not_started' as const, outputLine: 'Publish a demo or waitlist page' };
   })();
 
-  const mvpTile: JourneyToolTile = (() => {
+  const mvpTile: JourneyToolTileDraft = (() => {
     const base = {
       key: 'mvp-builder',
       label: 'MVP Builder',
@@ -232,7 +246,7 @@ function buildTools(inputs: BuildFounderJourneyInputs): JourneyToolTile[] {
     traction && traction.latestScore != null && traction.previousScore != null
       ? traction.latestScore - traction.previousScore
       : null;
-  const tractionTile: JourneyToolTile = {
+  const tractionTile: JourneyToolTileDraft = {
     key: 'traction-engine',
     label: 'Traction Engine',
     status: traction?.phaseSevenReady ? 'done' : traction ? 'started' : 'not_started',
@@ -251,7 +265,7 @@ function buildTools(inputs: BuildFounderJourneyInputs): JourneyToolTile[] {
     updatedAt: traction?.updatedAt ?? null,
   };
 
-  return [
+  const drafts: JourneyToolTileDraft[] = [
     {
       key: 'icp-builder',
       label: 'ICP Builder',
@@ -300,6 +314,11 @@ function buildTools(inputs: BuildFounderJourneyInputs): JourneyToolTile[] {
       updatedAt: pitchDeck?.createdAt ?? null,
     },
   ];
+
+  return drafts.map((draft) => {
+    const stage = TILE_STAGES[draft.key] ?? 'IDENTITY';
+    return { ...draft, stage, isCurrentStage: stage === inputs.currentStage };
+  });
 }
 
 function buildNextAction(inputs: BuildFounderJourneyInputs): JourneyNextAction | null {

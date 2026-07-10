@@ -272,9 +272,16 @@ export function getPreviousStage(stage: BizMapStage): BizMapStage | null {
   return BIZMAP_STAGE_ORDER[index - 1];
 }
 
+// Routes that belong to a stage but are not the stage's BIZMAP_TOOLS entry
+// (the TRACTION tool points at /insighta, while the working surface lives at
+// /traction-engine).
+const EXTRA_STAGE_ROUTES: Record<string, BizMapStage> = {
+  '/traction-engine': 'TRACTION',
+};
+
 export function getStageByRoute(route: string): BizMapStage | null {
   const tool = BIZMAP_TOOLS.find((item) => item.route === route);
-  return tool?.stage ?? null;
+  return tool?.stage ?? EXTRA_STAGE_ROUTES[route] ?? null;
 }
 
 export function getToolByRoute(route: string): BizMapToolDefinition | null {

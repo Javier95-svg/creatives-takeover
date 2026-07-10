@@ -93,7 +93,8 @@ function ToolTile({ tile }: { tile: JourneyToolTile }) {
       onClick={() => trackDashboardJourneyToolOpened({ tool: tile.key, status: tile.status, route: tile.route })}
       className={cn(
         'group flex items-start gap-3 rounded-xl border border-border/60 bg-background/70 p-3.5 transition-colors hover:border-primary/40 hover:bg-primary/[0.03]',
-        tile.status === 'not_started' && 'opacity-75',
+        tile.status === 'not_started' && !tile.isCurrentStage && 'opacity-75',
+        tile.isCurrentStage && 'border-primary/40 ring-1 ring-primary/25',
       )}
     >
       <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-background/80">
