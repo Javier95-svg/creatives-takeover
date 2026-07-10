@@ -181,6 +181,98 @@ test('next action falls through foundations → traction → pitch deck → null
   assert.equal(buildFounderJourneySnapshot(withEverything).nextAction, null);
 });
 
+test('demo tile appends the demand signup count', () => {
+  const snapshot = buildFounderJourneySnapshot(
+    makeInputs({
+      extras: {
+        demoStudio: { projectName: 'IronLog', publishedDemoCount: 2, signupCount: 12, updatedAt: null },
+      },
+    }),
+  );
+
+  assert.equal(snapshot.tools.find((entry) => entry.key === 'demo-studio')?.outputLine, '2 published demos · 12 signups');
+});
+
+test('demand page line appends signups for waitlist founders with a demo project', () => {
+  const snapshot = buildFounderJourneySnapshot(
+    makeInputs({
+      toolSignals: { waitlistCompleted: true },
+      extras: {
+        demoStudio: { projectName: null, publishedDemoCount: 0, signupCount: 1, updatedAt: null },
+      },
+    }),
+  );
+
+  assert.equal(snapshot.tools.find((entry) => entry.key === 'demo-studio')?.outputLine, 'Demand page live · 1 signup');
+});
+
+test('PMF tile prefers the live score over the evidence line', () => {
+  const snapshot = buildFounderJourneySnapshot(
+    makeInputs({
+      toolSignals: { pmfCompleted: true },
+      extras: { pmf: { latestScore: 62, scoredAt: '2026-07-06T00:00:00.000Z' } },
+    }),
+  );
+
+  const tile = snapshot.tools.find((entry) => entry.key === 'pmf-lab');
+  assert.equal(tile?.outputLine, 'PMF score 62');
+  assert.equal(tile?.updatedAt, '2026-07-06T00:00:00.000Z');
+  assert.equal(snapshot.isEmpty, false);
+});
+
+test('traction tile shows a week-over-week delta when a previous score exists', () => {
+  const withDelta = buildFounderJourneySnapshot(
+    makeInputs({
+      extras: {
+        traction: {
+          latestScore: 61,
+          previousScore: 55,
+          weekStartDate: '2026-07-06',
+          phaseSevenReady: false,
+          updatedAt: null,
+        },
+      },
+    }),
+  );
+  assert.equal(withDelta.tools.find((entry) => entry.key === 'traction-engine')?.highlight, '+6 vs last week');
+
+  const firstWeek = buildFounderJourneySnapshot(
+    makeInputs({
+      extras: {
+        traction: { latestScore: 61, weekStartDate: '2026-07-06', phaseSevenReady: false, updatedAt: null },
+      },
+    }),
+  );
+  assert.equal(firstWeek.tools.find((entry) => entry.key === 'traction-engine')?.highlight, null);
+
+  const phaseSevenWins = buildFounderJourneySnapshot(
+    makeInputs({
+      extras: {
+        traction: {
+          latestScore: 80,
+          previousScore: 70,
+          weekStartDate: '2026-07-06',
+          phaseSevenReady: true,
+          updatedAt: null,
+        },
+      },
+    }),
+  );
+  assert.equal(phaseSevenWins.tools.find((entry) => entry.key === 'traction-engine')?.highlight, 'Phase 7 ready');
+});
+
+test('fundraising tile surfaces investor research activity', () => {
+  const snapshot = buildFounderJourneySnapshot(
+    makeInputs({ extras: { fundraisingActivity: { viewsThisMonth: 12 } } }),
+  );
+
+  const tile = snapshot.tools.find((entry) => entry.key === 'pitch-deck-analyzer');
+  assert.equal(tile?.highlight, '12 investor looks this month');
+  assert.equal(snapshot.stages.find((node) => node.stage === 'FUNDRAISING')?.hasActivity, true);
+  // Browsing alone is not an artifact, so the panel still counts as empty.
+  assert.equal(snapshot.isEmpty, true);
+});
+
 test('lastTouched picks the most recently updated tool', () => {
   const snapshot = buildFounderJourneySnapshot(
     makeInputs({

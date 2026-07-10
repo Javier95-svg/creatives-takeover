@@ -3,6 +3,7 @@ import type { FoundationalMilestone, ToolCompletionSignals } from './taskCalenda
 
 export interface TractionJourneySignal {
   latestScore: number | null;
+  previousScore?: number | null;
   weekStartDate: string | null;
   phaseSevenReady: boolean;
   updatedAt: string | null;
@@ -11,7 +12,17 @@ export interface TractionJourneySignal {
 export interface DemoStudioJourneySignal {
   projectName: string | null;
   publishedDemoCount: number;
+  signupCount?: number | null;
   updatedAt: string | null;
+}
+
+export interface PmfJourneySignal {
+  latestScore: number | null;
+  scoredAt: string | null;
+}
+
+export interface FundraisingActivitySignal {
+  viewsThisMonth: number;
 }
 
 export interface PitchDeckJourneySignal {
@@ -29,15 +40,19 @@ export interface MvpPublishedJourneySignal {
 export interface FounderJourneyExtras {
   traction: TractionJourneySignal | null;
   demoStudio: DemoStudioJourneySignal | null;
+  pmf: PmfJourneySignal | null;
   pitchDeck: PitchDeckJourneySignal | null;
   mvpPublished: MvpPublishedJourneySignal | null;
+  fundraisingActivity: FundraisingActivitySignal | null;
 }
 
 export const EMPTY_FOUNDER_JOURNEY_EXTRAS: FounderJourneyExtras = {
   traction: null,
   demoStudio: null,
+  pmf: null,
   pitchDeck: null,
   mvpPublished: null,
+  fundraisingActivity: null,
 };
 
 export type JourneyStageStatus = 'complete' | 'current' | 'upcoming';
@@ -107,7 +122,7 @@ function stageHasActivity(
     case 'PROTOTYPE':
       return Boolean(toolSignals.waitlistCompleted || extras.demoStudio);
     case 'VALIDATING':
-      return Boolean(toolSignals.pmfCompleted);
+      return Boolean(toolSignals.pmfCompleted || extras.pmf);
     case 'BUILDING':
       return Boolean(toolSignals.mvpCompleted || toolSignals.techStackCompleted || extras.mvpPublished);
     case 'LAUNCH':
@@ -115,7 +130,7 @@ function stageHasActivity(
     case 'TRACTION':
       return Boolean(extras.traction);
     case 'FUNDRAISING':
-      return Boolean(extras.pitchDeck);
+      return Boolean(extras.pitchDeck || (extras.fundraisingActivity?.viewsThisMonth ?? 0) > 0);
     default:
       return false;
   }
@@ -149,9 +164,14 @@ function formatDeckLine(pitchDeck: PitchDeckJourneySignal): string {
   return `Deck score ${pitchDeck.overallScore}${verdict}`;
 }
 
+function formatSignupSuffix(signupCount: number | null | undefined): string {
+  if (!signupCount || signupCount <= 0) return '';
+  return ` · ${signupCount} signup${signupCount === 1 ? '' : 's'}`;
+}
+
 function buildTools(inputs: BuildFounderJourneyInputs): JourneyToolTile[] {
   const { toolSignals, extras, stageState } = inputs;
-  const { traction, demoStudio, pitchDeck, mvpPublished } = extras;
+  const { traction, demoStudio, pmf, pitchDeck, mvpPublished, fundraisingActivity } = extras;
 
   const demoTile: JourneyToolTile = (() => {
     const base = {
@@ -161,16 +181,17 @@ function buildTools(inputs: BuildFounderJourneyInputs): JourneyToolTile[] {
       route: '/demo-studio',
       updatedAt: demoStudio?.updatedAt ?? stageState.PROTOTYPE?.completedAt ?? null,
     };
+    const signupSuffix = formatSignupSuffix(demoStudio?.signupCount);
     if (demoStudio && demoStudio.publishedDemoCount > 0) {
       const count = demoStudio.publishedDemoCount;
       return {
         ...base,
         status: 'done' as const,
-        outputLine: `${count} published demo${count === 1 ? '' : 's'}`,
+        outputLine: `${count} published demo${count === 1 ? '' : 's'}${signupSuffix}`,
       };
     }
     if (toolSignals.waitlistCompleted) {
-      return { ...base, status: 'done' as const, outputLine: 'Demand page live' };
+      return { ...base, status: 'done' as const, outputLine: `Demand page live${signupSuffix}` };
     }
     if (demoStudio) {
       return { ...base, status: 'started' as const, outputLine: 'Demo project in progress' };
@@ -207,6 +228,10 @@ function buildTools(inputs: BuildFounderJourneyInputs): JourneyToolTile[] {
     return { ...base, status: 'not_started' as const, outputLine: 'Scope your MVP build' };
   })();
 
+  const tractionDelta =
+    traction && traction.latestScore != null && traction.previousScore != null
+      ? traction.latestScore - traction.previousScore
+      : null;
   const tractionTile: JourneyToolTile = {
     key: 'traction-engine',
     label: 'Traction Engine',
@@ -217,7 +242,11 @@ function buildTools(inputs: BuildFounderJourneyInputs): JourneyToolTile[] {
         : traction
           ? 'Weekly traction log started'
           : 'Log your first traction week',
-    highlight: traction?.phaseSevenReady ? 'Phase 7 ready' : null,
+    highlight: traction?.phaseSevenReady
+      ? 'Phase 7 ready'
+      : tractionDelta != null
+        ? `${tractionDelta >= 0 ? '+' : ''}${tractionDelta} vs last week`
+        : null,
     route: '/traction-engine',
     updatedAt: traction?.updatedAt ?? null,
   };
@@ -237,10 +266,15 @@ function buildTools(inputs: BuildFounderJourneyInputs): JourneyToolTile[] {
       key: 'pmf-lab',
       label: 'PMF Lab',
       status: toolSignals.pmfCompleted ? 'done' : 'not_started',
-      outputLine: toolSignals.pmfCompleted ? 'Validation evidence captured' : 'Capture validation evidence',
+      outputLine:
+        pmf?.latestScore != null
+          ? `PMF score ${pmf.latestScore}`
+          : toolSignals.pmfCompleted
+            ? 'Validation evidence captured'
+            : 'Capture validation evidence',
       highlight: null,
       route: '/pmf-lab',
-      updatedAt: stageState.VALIDATING?.completedAt ?? null,
+      updatedAt: pmf?.scoredAt ?? stageState.VALIDATING?.completedAt ?? null,
     },
     mvpTile,
     {
@@ -258,7 +292,10 @@ function buildTools(inputs: BuildFounderJourneyInputs): JourneyToolTile[] {
       label: 'Fundraising prep',
       status: pitchDeck ? 'done' : 'not_started',
       outputLine: pitchDeck ? formatDeckLine(pitchDeck) : 'Analyze your pitch deck',
-      highlight: null,
+      highlight:
+        fundraisingActivity && fundraisingActivity.viewsThisMonth > 0
+          ? `${fundraisingActivity.viewsThisMonth} investor look${fundraisingActivity.viewsThisMonth === 1 ? '' : 's'} this month`
+          : null,
       route: '/pitch-deck-analyzer',
       updatedAt: pitchDeck?.createdAt ?? null,
     },
@@ -292,6 +329,7 @@ export function buildFounderJourneySnapshot(inputs: BuildFounderJourneyInputs): 
     !Object.values(inputs.toolSignals).some(Boolean) &&
     !inputs.extras.traction &&
     !inputs.extras.demoStudio &&
+    !inputs.extras.pmf &&
     !inputs.extras.pitchDeck &&
     !inputs.extras.mvpPublished;
 

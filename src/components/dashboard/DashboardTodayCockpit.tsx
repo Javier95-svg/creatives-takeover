@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useContext, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -15,7 +15,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DashboardPanelHeader } from '@/components/dashboard/DashboardPanel';
+import { DashboardPanelHeader, MetricTile } from '@/components/dashboard/DashboardPanel';
+import { DashboardMetricsContext } from '@/components/dashboard/TaskCountContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDailyMission } from '@/hooks/useDailyMission';
 import { useRoutine } from '@/hooks/useRoutine';
@@ -71,6 +72,20 @@ export default function DashboardTodayCockpit() {
   const completedCount = routine.stats.completedCurrentCount;
   const totalCount = routine.stats.totalCurrentCount;
   const hasAnythingPlanned = Boolean(routine.config) || Object.values(groupedTasks).some((tasks) => tasks.length > 0);
+
+  const weekly = useContext(DashboardMetricsContext);
+  const completedLast7 = routine.stats.completedLast7 ?? 0;
+  const completedPrev7 = routine.stats.completedPrev7 ?? 0;
+  const routineMomentumVisible = completedLast7 > 0 || completedPrev7 > 0;
+  const weekDelta = completedLast7 - completedPrev7;
+  const routineDelta = routineMomentumVisible
+    ? {
+        direction: weekDelta > 0 ? ('up' as const) : weekDelta < 0 ? ('down' as const) : ('flat' as const),
+        label: `${weekDelta >= 0 ? '+' : ''}${weekDelta} vs prior week`,
+      }
+    : null;
+  const showWeeklyRow =
+    weekly.weeklyMissionProgress != null || weekly.totalTasksThisWeek > 0 || routineMomentumVisible;
 
   if (loading) {
     return <Skeleton className="mb-6 h-64 rounded-xl" />;
@@ -244,6 +259,37 @@ export default function DashboardTodayCockpit() {
             </div>
           </div>
         )}
+
+        {showWeeklyRow ? (
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            {weekly.weeklyMissionProgress != null ? (
+              <MetricTile
+                label="Weekly commitment"
+                value={`${Math.round(weekly.weeklyMissionProgress)}%`}
+                progress={weekly.weeklyMissionProgress}
+                hint={weekly.weeklyMissionGoal ?? undefined}
+                to="/dashboard/routine"
+              />
+            ) : null}
+            {weekly.totalTasksThisWeek > 0 ? (
+              <MetricTile
+                label="Tasks this week"
+                value={`${weekly.tasksCompletedThisWeek}/${weekly.totalTasksThisWeek}`}
+                progress={(weekly.tasksCompletedThisWeek / weekly.totalTasksThisWeek) * 100}
+                to="/dashboard/tasks"
+              />
+            ) : null}
+            {routineMomentumVisible ? (
+              <MetricTile
+                label="Routine momentum"
+                value={completedLast7}
+                delta={routineDelta}
+                hint="Routine actions, last 7 days"
+                to="/dashboard/routine"
+              />
+            ) : null}
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );

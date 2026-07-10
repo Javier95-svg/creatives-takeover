@@ -10,6 +10,8 @@ interface DashboardMetrics {
   weeklyProgress: number;
   tasksCompletedThisWeek: number;
   totalTasksThisWeek: number;
+  weeklyMissionGoal: string | null;
+  weeklyMissionProgress: number | null;
   isLoading: boolean;
 }
 
@@ -150,12 +152,14 @@ export function useDashboardMetrics(): DashboardMetrics {
       weeklyProgress,
       tasksCompletedThisWeek: weeklyTaskSnapshot.completed,
       totalTasksThisWeek: weeklyTaskSnapshot.total,
+      weeklyMissionGoal: currentMission?.mission_goal ?? null,
+      weeklyMissionProgress: currentMission ? (currentMission.completion_percentage ?? 0) : null,
       isLoading: tasksLoading || missionLoading || weeklyTaskSnapshot.loading,
     };
   }, [
     completedToday,
     totalToday,
-    currentMission?.completion_percentage,
+    currentMission,
     weeklyTaskSnapshot.completed,
     weeklyTaskSnapshot.total,
     weeklyTaskSnapshot.loading,

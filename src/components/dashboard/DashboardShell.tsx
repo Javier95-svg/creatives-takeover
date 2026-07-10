@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
@@ -25,7 +25,7 @@ import { DashboardSidebar } from './DashboardSidebar';
 import { DashboardCommandSignalStrip } from './DashboardCommandSignalStrip';
 import { DashboardStreakChip } from './DashboardStreakChip';
 import { DashboardTabsHost } from './DashboardTabsHost';
-import { TaskCountContext } from './TaskCountContext';
+import { DashboardMetricsContext, TaskCountContext, type DashboardWeeklyMetrics } from './TaskCountContext';
 import { ModeToggle, type DashboardMode } from './modes/ModeToggle';
 
 const DASHBOARD_MAX_WIDTH = 'max-w-7xl';
@@ -46,8 +46,24 @@ function DashboardFrame() {
     }
   }, [navigate, pathname]);
 
+  const weeklyMetrics = useMemo<DashboardWeeklyMetrics>(
+    () => ({
+      weeklyMissionGoal: dashboardMetrics.weeklyMissionGoal,
+      weeklyMissionProgress: dashboardMetrics.weeklyMissionProgress,
+      tasksCompletedThisWeek: dashboardMetrics.tasksCompletedThisWeek,
+      totalTasksThisWeek: dashboardMetrics.totalTasksThisWeek,
+    }),
+    [
+      dashboardMetrics.weeklyMissionGoal,
+      dashboardMetrics.weeklyMissionProgress,
+      dashboardMetrics.tasksCompletedThisWeek,
+      dashboardMetrics.totalTasksThisWeek,
+    ],
+  );
+
   return (
     <TaskCountContext.Provider value={incompleteTaskCount}>
+      <DashboardMetricsContext.Provider value={weeklyMetrics}>
       <SidebarProvider>
         <DashboardNavigationProvider>
           <DashboardSidebar />
@@ -102,6 +118,7 @@ function DashboardFrame() {
           </SidebarInset>
         </DashboardNavigationProvider>
       </SidebarProvider>
+      </DashboardMetricsContext.Provider>
     </TaskCountContext.Provider>
   );
 }
