@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PreviewModeWrapper } from "@/components/ui/PreviewModeWrapper";
-import { Handshake, Search, MapPin, Briefcase, Users, Plus, Calendar, CheckCircle, Edit2, Trash2, MessageCircle, Loader2 } from "lucide-react";
+import { Handshake, Search, MapPin, Briefcase, Users, Plus, Calendar, CheckCircle, Edit2, Trash2, MessageCircle, Loader2, Maximize2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMessaging } from "@/hooks/useMessaging";
@@ -25,6 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { sampleCofounderPosts } from "@/data/sampleCofounderPosts";
 import { getPublicTabConfig } from "@/config/publicTabVisibility";
 
@@ -62,6 +63,7 @@ const FindCoFounder = () => {
   const [messagingPostId, setMessagingPostId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [fullPost, setFullPost] = useState<CofounderPost | null>(null);
 
   useEffect(() => {
     void fetchPosts();
@@ -276,10 +278,16 @@ const FindCoFounder = () => {
                       </div>
                     </div>
                   </div>
-                  <Badge variant="outline" className="flex w-fit items-center gap-1 whitespace-nowrap">
-                    <CheckCircle className="w-3 h-3" />
-                    {getStageLabel(post.stage)}
-                  </Badge>
+                  <div className="flex shrink-0 items-center gap-2 sm:flex-col sm:items-end">
+                    <Badge variant="outline" className="flex w-fit items-center gap-1 whitespace-nowrap">
+                      <CheckCircle className="w-3 h-3" />
+                      {getStageLabel(post.stage)}
+                    </Badge>
+                    <Button variant="ghost" size="sm" className="h-9 px-2 text-muted-foreground" onClick={() => setFullPost(post)}>
+                      <Maximize2 className="mr-1.5 h-4 w-4" />
+                      Full post
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="flex flex-1 flex-col space-y-4">
@@ -300,25 +308,25 @@ const FindCoFounder = () => {
 
                 <div className="flex flex-wrap gap-2 border-t pt-4">
                   {post.industry && (
-                    <Badge variant="secondary">
+                    <Badge className="border-transparent bg-sky-700 text-white hover:bg-sky-700">
                       <Briefcase className="w-3 h-3 mr-1" />
                       {post.industry}
                     </Badge>
                   )}
                   {post.location && (
-                    <Badge variant="secondary">
+                    <Badge className="border-transparent bg-violet-700 text-white hover:bg-violet-700">
                       <MapPin className="w-3 h-3 mr-1" />
                       {post.location}
                     </Badge>
                   )}
                   {post.commitment && (
-                    <Badge variant="secondary">
+                    <Badge className="border-transparent bg-emerald-700 text-white hover:bg-emerald-700">
                       <Users className="w-3 h-3 mr-1" />
                       {post.commitment}
                     </Badge>
                   )}
                   {post.equity_range && (
-                    <Badge variant="secondary">
+                    <Badge className="border-transparent bg-amber-700 text-white hover:bg-amber-700">
                       Equity: {post.equity_range}
                     </Badge>
                   )}
@@ -501,6 +509,59 @@ const FindCoFounder = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <Dialog open={Boolean(fullPost)} onOpenChange={(open) => !open && setFullPost(null)}>
+          <DialogContent className="h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] max-w-5xl overflow-y-auto rounded-xl p-6 sm:h-[calc(100dvh-3rem)] sm:w-[calc(100%-3rem)] sm:p-10">
+            {fullPost && (
+              <div className="mx-auto w-full max-w-4xl space-y-8">
+                <DialogHeader className="pr-10 text-left">
+                  <div className="mb-4 flex items-center gap-3">
+                    <Avatar className="h-12 w-12 border">
+                      <AvatarImage src={fullPost.author?.avatar_url} />
+                      <AvatarFallback>{fullPost.author?.full_name?.charAt(0) || 'A'}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <DialogDescription className="text-sm">{fullPost.author?.full_name || 'Founder'} · {formatDistanceToNow(new Date(fullPost.created_at), { addSuffix: true })}</DialogDescription>
+                      <Badge variant="outline" className="mt-1 flex w-fit items-center gap-1">
+                        <CheckCircle className="h-3 w-3" />
+                        {getStageLabel(fullPost.stage)}
+                      </Badge>
+                    </div>
+                  </div>
+                  <DialogTitle className="text-3xl leading-tight sm:text-4xl">{fullPost.project_name}</DialogTitle>
+                </DialogHeader>
+
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">About the project</h3>
+                  <p className="whitespace-pre-wrap text-base leading-8 sm:text-lg">{fullPost.project_description}</p>
+                </div>
+
+                <div>
+                  <h3 className="mb-3 text-sm font-semibold">Looking for:</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {fullPost.looking_for.map((type) => (
+                      <Badge key={type} className="border-primary/20 bg-primary/10 text-primary">{getCofounderTypeLabel(type)}</Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2 border-t pt-5">
+                  {fullPost.industry && <Badge className="border-transparent bg-sky-700 text-white hover:bg-sky-700"><Briefcase className="mr-1 h-3 w-3" />{fullPost.industry}</Badge>}
+                  {fullPost.location && <Badge className="border-transparent bg-violet-700 text-white hover:bg-violet-700"><MapPin className="mr-1 h-3 w-3" />{fullPost.location}</Badge>}
+                  {fullPost.commitment && <Badge className="border-transparent bg-emerald-700 text-white hover:bg-emerald-700"><Users className="mr-1 h-3 w-3" />{fullPost.commitment}</Badge>}
+                  {fullPost.equity_range && <Badge className="border-transparent bg-amber-700 text-white hover:bg-amber-700">Equity: {fullPost.equity_range}</Badge>}
+                </div>
+
+                {fullPost.additional_info && (
+                  <div className="border-t pt-5">
+                    <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Additional details</h3>
+                    <p className="whitespace-pre-wrap text-base leading-7">{fullPost.additional_info}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   );
