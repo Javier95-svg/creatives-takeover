@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PreviewModeWrapper } from "@/components/ui/PreviewModeWrapper";
-import { Handshake, Search, Filter, MapPin, Briefcase, Users, Star, Plus, Calendar, CheckCircle, Edit2, Trash2, MessageCircle, Loader2 } from "lucide-react";
+import { Handshake, Search, MapPin, Briefcase, Users, Plus, Calendar, CheckCircle, Edit2, Trash2, MessageCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMessaging } from "@/hooks/useMessaging";
@@ -60,6 +60,8 @@ const FindCoFounder = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [messagingPostId, setMessagingPostId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
 
   useEffect(() => {
     void fetchPosts();
@@ -156,26 +158,44 @@ const FindCoFounder = () => {
     setDeleteDialogOpen(true);
   };
 
+  const filteredPosts = posts.filter((post) => {
+    const query = searchQuery.trim().toLowerCase();
+    const matchesQuery = !query || [post.project_name, post.project_description, post.industry, post.location, post.author?.full_name, ...post.looking_for]
+      .some((value) => value?.toLowerCase().includes(query));
+    const matchesRole = roleFilter === 'all' || post.looking_for.includes(roleFilter);
+    return matchesQuery && matchesRole;
+  });
+
   const communityContent = (
     <>
       <div className="mb-8">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row gap-4">
+        <Card className="border-border/70 bg-card/90 shadow-sm backdrop-blur-sm">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex flex-col gap-3 lg:flex-row">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="Search by skills, industry, or location..."
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-                  readOnly={!user}
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Search projects, roles, industries, or locations"
+                  className="h-12 w-full rounded-xl border border-border bg-background pl-10 pr-4 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
-              <Button variant="outline" className="md:w-auto">
-                <Filter className="w-4 h-4 mr-2" />
-                Filters
-              </Button>
-              <Button asChild className="bg-gradient-to-r from-info to-purple-600 hover:from-info hover:to-purple-700 md:w-auto">
+              <select
+                aria-label="Filter by co-founder role"
+                value={roleFilter}
+                onChange={(event) => setRoleFilter(event.target.value)}
+                className="h-12 rounded-xl border border-border bg-background px-4 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 lg:w-56"
+              >
+                <option value="all">All roles</option>
+                <option value="technical">Technical</option>
+                <option value="business">Business</option>
+                <option value="marketing">Marketing</option>
+                <option value="design">Design</option>
+                <option value="finance">Finance</option>
+              </select>
+              <Button asChild className="h-12 rounded-xl lg:px-6">
                 <Link to="/co-founder/create">
                   <Plus className="w-4 h-4 mr-2" />
                   Create Post · 5 credits
@@ -186,14 +206,22 @@ const FindCoFounder = () => {
         </Card>
       </div>
 
-      <div className="space-y-6 mb-12">
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-semibold">Founder opportunities</h2>
+          <p className="text-sm text-muted-foreground">Browse community posts and contact founders directly.</p>
+        </div>
+        {!loading && <Badge variant="secondary">{filteredPosts.filter((post) => !post.is_sample).length} live</Badge>}
+      </div>
+
+      <div className="mb-12 grid gap-5 lg:grid-cols-2">
         {loading ? (
           <Card>
             <CardContent className="pt-6 text-center py-12">
               <p className="text-muted-foreground">Loading posts...</p>
             </CardContent>
           </Card>
-        ) : posts.length === 0 ? (
+        ) : filteredPosts.length === 0 ? (
           <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-purple/5">
             <CardContent className="pt-6 text-center py-12">
               <div className="mb-6">
@@ -201,11 +229,11 @@ const FindCoFounder = () => {
                   <Handshake className="w-10 h-10 text-primary" />
                 </div>
               </div>
-              <h2 className="text-3xl font-bold mb-4">No Posts Yet</h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
-                Be the first to post and find your perfect co-founder!
+              <h2 className="mb-3 text-2xl font-bold">No posts found</h2>
+              <p className="mx-auto mb-6 max-w-xl text-muted-foreground">
+                Try another search or publish what you are building and who you need.
               </p>
-              <Button asChild size="lg" className="bg-gradient-to-r from-info to-purple-600 hover:from-info hover:to-purple-700">
+              <Button asChild size="lg">
                 <Link to="/co-founder/create">
                   <Plus className="w-4 h-4 mr-2" />
                   Create Your Post · 5 credits
@@ -214,19 +242,19 @@ const FindCoFounder = () => {
             </CardContent>
           </Card>
         ) : (
-          posts.map((post) => (
-            <Card key={post.id} className="hover:border-primary/50 transition-all">
-              <CardHeader>
-                <div className="flex items-start justify-between gap-4">
+          filteredPosts.map((post) => (
+            <Card key={post.id} className="flex h-full flex-col overflow-hidden border-border/70 bg-card/90 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
+              <CardHeader className="pb-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex items-center gap-3 flex-1">
-                    <Avatar className="w-12 h-12">
+                    <Avatar className="h-11 w-11 border">
                       <AvatarImage src={post.author?.avatar_url} />
                       <AvatarFallback>
                         {post.author?.full_name?.charAt(0) || 'A'}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <CardTitle className="text-xl mb-1">{post.project_name}</CardTitle>
+                      <CardTitle className="mb-1 line-clamp-1 text-lg">{post.project_name}</CardTitle>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         {post.is_sample ? (
                           <span>{post.author?.full_name}</span>
@@ -248,14 +276,14 @@ const FindCoFounder = () => {
                       </div>
                     </div>
                   </div>
-                  <Badge variant="outline" className="flex items-center gap-1">
+                  <Badge variant="outline" className="flex w-fit items-center gap-1 whitespace-nowrap">
                     <CheckCircle className="w-3 h-3" />
                     {getStageLabel(post.stage)}
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <CardDescription className="text-base whitespace-pre-wrap">
+              <CardContent className="flex flex-1 flex-col space-y-4">
+                <CardDescription className="line-clamp-3 whitespace-pre-wrap text-sm leading-6">
                   {post.project_description}
                 </CardDescription>
 
@@ -303,14 +331,14 @@ const FindCoFounder = () => {
                 )}
 
                 {post.is_sample ? (
-                  <div className="flex gap-3 pt-2 items-center">
+                  <div className="mt-auto flex items-center gap-3 border-t pt-4">
                     <Badge variant="outline" className="text-muted-foreground border-muted-foreground/30">
                       Sample Post
                     </Badge>
                     <span className="text-xs text-muted-foreground">Create your own post to connect with real founders</span>
                   </div>
                 ) : post.user_id === user?.id ? (
-                  <div className="flex gap-3 pt-2">
+                  <div className="mt-auto flex gap-3 border-t pt-4">
                     <Button
                       variant="outline"
                       className="flex-1"
@@ -328,7 +356,7 @@ const FindCoFounder = () => {
                     </Button>
                   </div>
                 ) : (
-                  <div className="flex gap-3 pt-2">
+                  <div className="mt-auto flex gap-3 border-t pt-4">
                     <Button
                       variant="default"
                       className="flex-1"
@@ -394,43 +422,13 @@ const FindCoFounder = () => {
         )}
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6 mb-12">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-primary" />
-              Smart Matching
-            </CardTitle>
-            <CardDescription>
-              AI-powered algorithm matches you with co-founders based on complementary skills and shared values
-            </CardDescription>
-          </CardHeader>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Star className="w-5 h-5 text-primary" />
-              Verified Profiles
-            </CardTitle>
-            <CardDescription>
-              All co-founder profiles are verified to ensure authenticity and serious commitment
-            </CardDescription>
-          </CardHeader>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Briefcase className="w-5 h-5 text-primary" />
-              Experience Levels
-            </CardTitle>
-            <CardDescription>
-              Find co-founders from first-time entrepreneurs to serial founders
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
+      <Card className="mb-12 overflow-hidden border-primary/20 bg-primary/[0.04]">
+        <CardContent className="grid gap-5 p-6 sm:grid-cols-3">
+          <div><p className="text-sm font-semibold">1. Publish clearly</p><p className="mt-1 text-sm text-muted-foreground">Explain what you are building and the role you need.</p></div>
+          <div><p className="text-sm font-semibold">2. Review founders</p><p className="mt-1 text-sm text-muted-foreground">Search the current community by role, industry, or location.</p></div>
+          <div><p className="text-sm font-semibold">3. Start a conversation</p><p className="mt-1 text-sm text-muted-foreground">Open a profile or message a founder directly.</p></div>
+        </CardContent>
+      </Card>
     </>
   );
 
@@ -463,20 +461,16 @@ const FindCoFounder = () => {
 	          <Navigation />
 
 	        {/* Hero Section */}
-	        <section className="pt-header-offset pb-16 px-6">
+	        <section className="px-4 pb-16 pt-header-offset sm:px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+          <div className="mb-9 max-w-3xl pt-8 sm:pt-12">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5">
               <Handshake className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Find Your Perfect Match</span>
+              <span className="text-sm font-medium text-primary">Founder community</span>
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-4">
-              <span className="bg-gradient-to-r from-info via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Find a Co-Founder
-              </span>
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Connect with talented entrepreneurs who share your vision and complement your skills
+            <h1 className="mb-4 text-4xl font-bold tracking-tight sm:text-5xl">Find a co-founder</h1>
+            <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
+              Share what you are building, discover founders with complementary skills, and start a direct conversation.
             </p>
           </div>
           {user ? (

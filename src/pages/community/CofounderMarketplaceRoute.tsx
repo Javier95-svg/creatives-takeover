@@ -1,5 +1,5 @@
-import CofounderMarketplacePage from '@/pages/community/CofounderMarketplacePage';
+import FindCoFounder from '@/pages/community/FindCoFounder';
 
 export default function CofounderMarketplaceRoute() {
-  return <CofounderMarketplacePage />;
+  return <FindCoFounder />;
 }

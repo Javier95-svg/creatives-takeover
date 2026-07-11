@@ -1,5 +1,8 @@
-import CofounderListingEditorPage from '@/pages/community/CofounderListingEditorPage';
+import { useParams } from 'react-router-dom';
+import CreateCoFounderPost from '@/pages/community/CreateCoFounderPost';
+import EditCoFounderPost from '@/pages/community/EditCoFounderPost';
 
 export default function CofounderListingEditorRoute() {
-  return <CofounderListingEditorPage />;
+  const { postId } = useParams();
+  return postId ? <EditCoFounderPost /> : <CreateCoFounderPost />;
 }

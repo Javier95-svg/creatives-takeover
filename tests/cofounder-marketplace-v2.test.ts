@@ -54,11 +54,11 @@ test('anonymous browse masks identity and deterministic matching uses the agreed
   assert.doesNotMatch(sql, /gemini|openai|anthropic/i);
 });
 
-test('the upgraded marketplace and listing editor are the default routes', () => {
+test('the low-supply community feed and simple post editor are the default routes', () => {
   const route = read('../src/pages/community/CofounderMarketplaceRoute.tsx');
   const editorRoute = read('../src/pages/community/CofounderListingEditorRoute.tsx');
-  assert.match(route, /return <CofounderMarketplacePage/);
-  assert.match(editorRoute, /return <CofounderListingEditorPage/);
-  assert.doesNotMatch(route, /useFeatureFlagEnabled|FindCoFounder/);
-  assert.doesNotMatch(editorRoute, /useFeatureFlagEnabled|CreateCoFounderPost|EditCoFounderPost/);
+  assert.match(route, /return <FindCoFounder/);
+  assert.match(editorRoute, /postId \? <EditCoFounderPost \/> : <CreateCoFounderPost/);
+  assert.doesNotMatch(route, /CofounderMarketplacePage|useFeatureFlagEnabled/);
+  assert.doesNotMatch(editorRoute, /CofounderListingEditorPage|useFeatureFlagEnabled/);
 });
