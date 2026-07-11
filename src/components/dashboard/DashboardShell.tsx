@@ -10,6 +10,7 @@ import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { DashboardNavigationProvider } from '@/contexts/DashboardNavigationContext';
+import { DashboardDataProvider, useDashboardData } from '@/contexts/DashboardDataContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useActivationGate } from '@/hooks/useActivationGate';
@@ -21,24 +22,39 @@ import { shouldRedirectToGuidedOnboarding } from '@/lib/guidedOnboarding';
 import { shouldShowOnboardingPathGate } from '@/lib/onboardingPath';
 import { OnboardingPathGate } from '@/components/onboarding/OnboardingPathGate';
 import { cn } from '@/lib/utils';
-import { DashboardSidebar } from './DashboardSidebar';
+import { DashboardSidebar, DashboardSidebarContent } from './DashboardSidebar';
 import { DashboardCommandSignalStrip } from './DashboardCommandSignalStrip';
 import { DashboardStreakChip } from './DashboardStreakChip';
 import { DashboardTabsHost } from './DashboardTabsHost';
 import { DashboardMetricsContext, TaskCountContext, type DashboardWeeklyMetrics } from './TaskCountContext';
 import { ModeToggle, type DashboardMode } from './modes/ModeToggle';
+import { isExecutionDashboardEnabled } from '@/lib/dashboardRollout';
+import { BIZMAP_STAGE_ORDER, DEFAULT_CURRENT_STAGE, type BizMapStage } from '@/lib/bizmapStages';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { captureEvent } from '@/lib/analytics';
+import type { DashboardSnapshotV1 } from '@/types/dashboardSnapshot';
 
 const DASHBOARD_MAX_WIDTH = 'max-w-7xl';
 
-function DashboardFrame() {
+interface DashboardFrameContentProps {
+  incompleteTaskCount: number;
+  weeklyMetrics: DashboardWeeklyMetrics;
+  snapshotStage?: BizMapStage;
+  useLegacyStreak?: boolean;
+}
+
+function DashboardFrameContent({
+  incompleteTaskCount,
+  weeklyMetrics,
+  snapshotStage,
+  useLegacyStreak = false,
+}: DashboardFrameContentProps) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const dashboardMetrics = useDashboardMetrics();
   const { subscriptionData } = useSubscription();
   const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
   const dashboardMode = resolveDashboardMode(currentPlan) as DashboardMode;
   const isHome = pathname === '/dashboard';
-  const incompleteTaskCount = Math.max(dashboardMetrics.totalTasksToday - dashboardMetrics.tasksCompletedToday, 0);
 
   useEffect(() => {
     if (pathname === '/dashboard/weekly-mission') {
@@ -46,34 +62,19 @@ function DashboardFrame() {
     }
   }, [navigate, pathname]);
 
-  const weeklyMetrics = useMemo<DashboardWeeklyMetrics>(
-    () => ({
-      weeklyMissionGoal: dashboardMetrics.weeklyMissionGoal,
-      weeklyMissionProgress: dashboardMetrics.weeklyMissionProgress,
-      tasksCompletedThisWeek: dashboardMetrics.tasksCompletedThisWeek,
-      totalTasksThisWeek: dashboardMetrics.totalTasksThisWeek,
-    }),
-    [
-      dashboardMetrics.weeklyMissionGoal,
-      dashboardMetrics.weeklyMissionProgress,
-      dashboardMetrics.tasksCompletedThisWeek,
-      dashboardMetrics.totalTasksThisWeek,
-    ],
-  );
-
   return (
     <TaskCountContext.Provider value={incompleteTaskCount}>
       <DashboardMetricsContext.Provider value={weeklyMetrics}>
       <SidebarProvider>
         <DashboardNavigationProvider>
-          <DashboardSidebar />
+          {snapshotStage ? <DashboardSidebarContent currentStage={snapshotStage} /> : <DashboardSidebar />}
           <SidebarInset>
             <div className="relative min-h-screen overflow-hidden bg-background">
               <div className="pointer-events-none absolute inset-x-0 top-0 z-50">
                 <div className={cn('container mx-auto grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-4 px-6 pt-4', DASHBOARD_MAX_WIDTH)}>
                   <div className="pointer-events-auto flex items-start gap-2">
                     <SidebarTrigger className="rounded-full border border-border/70 bg-background/88 shadow-sm backdrop-blur-md" />
-                    <DashboardStreakChip />
+                    {useLegacyStreak ? <DashboardStreakChip /> : null}
                     {isHome ? (
                       <ModeToggle currentMode={dashboardMode} />
                     ) : null}
@@ -121,6 +122,92 @@ function DashboardFrame() {
       </DashboardMetricsContext.Provider>
     </TaskCountContext.Provider>
   );
+}
+
+function LegacyDashboardFrame({ shadowSnapshot }: { shadowSnapshot?: DashboardSnapshotV1 | null }) {
+  const dashboardMetrics = useDashboardMetrics();
+  const incompleteTaskCount = Math.max(dashboardMetrics.totalTasksToday - dashboardMetrics.tasksCompletedToday, 0);
+  const weeklyMetrics = useMemo<DashboardWeeklyMetrics>(
+    () => ({
+      weeklyMissionGoal: dashboardMetrics.weeklyMissionGoal,
+      weeklyMissionProgress: dashboardMetrics.weeklyMissionProgress,
+      tasksCompletedThisWeek: dashboardMetrics.tasksCompletedThisWeek,
+      totalTasksThisWeek: dashboardMetrics.totalTasksThisWeek,
+    }),
+    [dashboardMetrics],
+  );
+
+  useEffect(() => {
+    if (!shadowSnapshot || dashboardMetrics.isLoading) return;
+    const snapshotOpenToday = shadowSnapshot.focus.dueToday.length;
+    captureEvent('dashboard_snapshot_shadow_compared', {
+      contract_version: shadowSnapshot.version,
+      status: snapshotOpenToday === incompleteTaskCount ? 'match' : 'mismatch',
+      legacy_open_today: incompleteTaskCount,
+      snapshot_open_today: snapshotOpenToday,
+      snapshot_overdue: shadowSnapshot.focus.overdueCount,
+    });
+  }, [dashboardMetrics.isLoading, incompleteTaskCount, shadowSnapshot]);
+
+  return (
+    <DashboardFrameContent
+      incompleteTaskCount={incompleteTaskCount}
+      weeklyMetrics={weeklyMetrics}
+      useLegacyStreak
+    />
+  );
+}
+
+function SnapshotDashboardFrame() {
+  const { snapshot, error } = useDashboardData();
+  const stageValue = snapshot?.journey.currentStage;
+  const snapshotStage = stageValue && BIZMAP_STAGE_ORDER.includes(stageValue as BizMapStage)
+    ? stageValue as BizMapStage
+    : DEFAULT_CURRENT_STAGE;
+  const weeklyMission = snapshot?.focus.weeklyMission;
+  const weeklyMetrics = useMemo<DashboardWeeklyMetrics>(() => ({
+    weeklyMissionGoal: weeklyMission?.title ?? null,
+    weeklyMissionProgress: weeklyMission?.progress ?? null,
+    tasksCompletedThisWeek: 0,
+    totalTasksThisWeek: 0,
+  }), [weeklyMission]);
+  const incompleteTaskCount = (snapshot?.focus.dueToday.length ?? 0) + (snapshot?.focus.overdueCount ?? 0);
+
+  if (error) return <LegacyDashboardFrame />;
+
+  return (
+    <DashboardFrameContent
+      incompleteTaskCount={incompleteTaskCount}
+      weeklyMetrics={weeklyMetrics}
+      snapshotStage={snapshotStage}
+    />
+  );
+}
+
+function ShadowDashboardFrame() {
+  const { snapshot } = useDashboardData();
+  return <LegacyDashboardFrame shadowSnapshot={snapshot} />;
+}
+
+function DashboardFrame() {
+  const { user } = useAuth();
+  const posthogFlag = useFeatureFlagEnabled('dashboard-command-center-v2');
+  const shadowFlag = useFeatureFlagEnabled('dashboard-command-center-shadow');
+  if (isExecutionDashboardEnabled(user?.id, posthogFlag)) {
+    return (
+      <DashboardDataProvider>
+        <SnapshotDashboardFrame />
+      </DashboardDataProvider>
+    );
+  }
+  if (shadowFlag) {
+    return (
+      <DashboardDataProvider>
+        <ShadowDashboardFrame />
+      </DashboardDataProvider>
+    );
+  }
+  return <LegacyDashboardFrame />;
 }
 
 export function DashboardShell() {

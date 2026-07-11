@@ -17,6 +17,7 @@ import StarterDashboardNudge from '@/components/dashboard/StarterDashboardNudge'
 import { useExitIntent } from '@/hooks/useExitIntent';
 import { ExitIntentModal } from '@/components/ExitIntentModal';
 import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
+import ExecutionDashboardHome from '@/components/dashboard/ExecutionDashboardHome';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,6 +30,7 @@ import {
 } from '@/lib/activationState';
 import { normalizePlan } from '@/config/planPermissions';
 import type { ActivationIntent } from '@/lib/retentionSystem';
+import { isExecutionDashboardEnabled } from '@/lib/dashboardRollout';
 
 interface DashboardActivationState {
   loading: boolean;
@@ -49,6 +51,7 @@ const Dashboard = () => {
   const isActiveDashboardHome = pathname === '/dashboard';
   const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
   const daysSinceSignup = getDaysSinceSignup(user?.created_at ?? null);
+  const executionDashboardEnabled = isExecutionDashboardEnabled(user?.id);
   const [activationState, setActivationState] = useState<DashboardActivationState>({
     loading: true,
     showFirstResultMode: false,
@@ -184,6 +187,10 @@ const Dashboard = () => {
         </>
       ) : (
       <>
+      {executionDashboardEnabled ? (
+        isActiveDashboardHome ? <ExecutionDashboardHome /> : null
+      ) : (
+      <>
       {/* Returning users land back in their saved work before anything else. */}
       {activationState.continueUrl ? (
         <ContinueArtifactCard
@@ -211,6 +218,8 @@ const Dashboard = () => {
           <StarterDashboardNudge />
         </div>
       </DashboardDisclosure>
+      </>
+      )}
       <ExitIntentModal isOpen={showExitIntent} onClose={closeExitIntent} />
       </>
       )}

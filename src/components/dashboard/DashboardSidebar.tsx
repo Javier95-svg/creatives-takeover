@@ -3,27 +3,14 @@ import { useState, useEffect, useContext } from 'react';
 import { TaskCountContext } from './TaskCountContext';
 import {
   BookmarkCheck,
-  Brain,
   Target,
   Calendar,
   CheckSquare,
-  Sparkles,
-  Users,
-  BookOpen,
   Command,
-  Zap,
-  FlaskConical,
-  Library,
-  Mail,
-  FileSearch,
   ClipboardList,
   Home,
   BarChart3,
   Trash2,
-  Rocket,
-  LineChart,
-  Filter,
-  Handshake,
   FolderOpen,
   Gift,
   Repeat2,
@@ -62,6 +49,8 @@ import { cn } from '@/lib/utils';
 import { groupToolItemsByStage } from '@/lib/sidebarJourneyGroups';
 import { shouldReduceOnboardingNav } from '@/lib/onboardingPath';
 import type { ActivationIntent } from '@/lib/retentionSystem';
+import { getDashboardTool } from '@/config/dashboardToolRegistry';
+import type { BizMapStage } from '@/lib/bizmapStages';
 
 // Task 4: during the forced-onboarding window, collapse the sidebar to the
 // essentials — dashboard home, the daily loop, and the two onboarding paths.
@@ -160,14 +149,29 @@ interface ToolItem {
   featureKey?: FeatureKey;
 }
 
-export const DashboardSidebar = () => {
+function registryToolItem(
+  toolKey: DashboardSidebarToolKey,
+  prefKey: keyof SidebarPreferences,
+  featureKey?: FeatureKey,
+): ToolItem {
+  const definition = getDashboardTool(toolKey);
+  return {
+    toolKey,
+    path: definition.route,
+    label: definition.label,
+    icon: definition.icon,
+    prefKey,
+    featureKey,
+  };
+}
+
+export const DashboardSidebarContent = ({ currentStage }: { currentStage: BizMapStage }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { setOpenMobile, isMobile } = useSidebar();
   const { user } = useAuth();
   const { subscriptionData } = useSubscription();
   const incompleteTaskCount = useContext(TaskCountContext);
-  const { currentStage } = useBizMapProgress();
   const { activeSection, setActiveSection } = useDashboardNavigation();
   const [sidebarPreferences, setSidebarPreferences] = useState<SidebarPreferences>(defaultSidebarPreferences);
   const [reduceOnboardingNav, setReduceOnboardingNav] = useState(false);
@@ -274,27 +278,27 @@ export const DashboardSidebar = () => {
   };
 
   const toolsItems: ToolItem[] = [
-    { toolKey: 'icp_builder', path: '/icp-builder', label: 'ICP Builder', icon: Target, prefKey: 'showICPBuilder', featureKey: 'icp_builder' },
-    { toolKey: 'waitlist_maker', path: '/demo-studio', label: 'Demo Studio', icon: ClipboardList, prefKey: 'showWaitlistMaker', featureKey: 'waitlist_maker' },
-    { toolKey: 'pmf_lab', path: '/pmf-lab', label: 'PMF Lab', icon: FlaskConical, prefKey: 'showPMFLab', featureKey: 'pmf_lab' },
-    { toolKey: 'mvp_builder', path: '/mvp-builder', label: 'MVP Builder', icon: Rocket, prefKey: 'showMVPBuilder', featureKey: 'mvp_builder' },
-    { toolKey: 'tech_stack', path: '/tech-stack', label: 'Tech Stack', icon: Zap, prefKey: 'showTechStack', featureKey: 'tech_stack' },
-    { toolKey: 'gtm_strategist', path: '/go-to-market', label: 'GTM Strategist', icon: LineChart, prefKey: 'showGTMStrategist', featureKey: 'gtm_strategist' },
-    { toolKey: 'directories', path: '/directories', label: 'Directories', icon: Filter, prefKey: 'showDirectories', featureKey: 'directories' },
-    { toolKey: 'saved_mentors', path: '/saved-mentors', label: 'Saved Mentors', icon: BookmarkCheck, prefKey: 'showSavedMentors' },
-    { toolKey: 'decision_sprint', path: '/decision-sprint', label: 'Decision Sprint', icon: ClipboardList, prefKey: 'showDecisionSprint' },
-    { toolKey: 'core_metrics', path: '/core-metrics', label: 'Core Metrics', icon: BarChart3, prefKey: 'showCoreMetrics' },
-    { toolKey: 'ai_goals', path: '/ai-goals', label: 'AI Goals Planner', icon: Brain, prefKey: 'showAiGoals' },
-    { toolKey: 'find_mentor', path: '/mentorship', label: 'Find a Mentor', icon: Users, prefKey: 'showFindMentor' },
-    { toolKey: 'find_cofounder', path: '/co-founder', label: 'Find a Co-Founder', icon: Handshake, prefKey: 'showFindCoFounder' },
-    { toolKey: 'find_angel', path: '/investors', label: 'Find your Angel', icon: Sparkles, prefKey: 'showFindAngel', featureKey: 'angels_community' },
-    { toolKey: 'vc_search', path: '/vc-search', label: 'VC Search', icon: FileSearch, prefKey: 'showVCSearch', featureKey: 'vc_search_browse' },
-    { toolKey: 'accelerator_hunt', path: '/accelerator-hunt', label: 'Accelerator Hunt', icon: Rocket, prefKey: 'showAcceleratorHunt', featureKey: 'accelerator_browse' },
-    { toolKey: 'email_templates', path: '/email-templates', label: 'Email Templates', icon: Mail, prefKey: 'showEmailTemplates', featureKey: 'email_templates' },
-    { toolKey: 'pitch_deck_analyzer', path: '/pitch-deck-analyzer', label: 'Pitch Deck Analyzer', icon: BarChart3, prefKey: 'showPitchDeckAnalyzer', featureKey: 'pitch_deck_analyzer' },
-    { toolKey: 'insighta_test', path: '/insighta-test', label: 'Insighta Test', icon: Sparkles, prefKey: 'showInsightaTest', featureKey: 'insighta_test' },
-    { toolKey: 'newspaper', path: '/newspaper', label: 'Newspaper', icon: BookOpen, prefKey: 'showNewspaper', featureKey: 'newspaper' },
-    { toolKey: 'prompt_library', path: '/prompt-library', label: 'Prompt Library', icon: Library, prefKey: 'showPromptLibrary', featureKey: 'prompt_library' },
+    registryToolItem('icp_builder', 'showICPBuilder', 'icp_builder'),
+    registryToolItem('waitlist_maker', 'showWaitlistMaker', 'waitlist_maker'),
+    registryToolItem('pmf_lab', 'showPMFLab', 'pmf_lab'),
+    registryToolItem('mvp_builder', 'showMVPBuilder', 'mvp_builder'),
+    registryToolItem('tech_stack', 'showTechStack', 'tech_stack'),
+    registryToolItem('gtm_strategist', 'showGTMStrategist', 'gtm_strategist'),
+    registryToolItem('directories', 'showDirectories', 'directories'),
+    registryToolItem('saved_mentors', 'showSavedMentors'),
+    registryToolItem('decision_sprint', 'showDecisionSprint'),
+    registryToolItem('core_metrics', 'showCoreMetrics'),
+    registryToolItem('ai_goals', 'showAiGoals'),
+    registryToolItem('find_mentor', 'showFindMentor'),
+    registryToolItem('find_cofounder', 'showFindCoFounder'),
+    registryToolItem('find_angel', 'showFindAngel', 'angels_community'),
+    registryToolItem('vc_search', 'showVCSearch', 'vc_search_browse'),
+    registryToolItem('accelerator_hunt', 'showAcceleratorHunt', 'accelerator_browse'),
+    registryToolItem('email_templates', 'showEmailTemplates', 'email_templates'),
+    registryToolItem('pitch_deck_analyzer', 'showPitchDeckAnalyzer', 'pitch_deck_analyzer'),
+    registryToolItem('insighta_test', 'showInsightaTest', 'insighta_test'),
+    registryToolItem('newspaper', 'showNewspaper', 'newspaper'),
+    registryToolItem('prompt_library', 'showPromptLibrary', 'prompt_library'),
   ].filter((item) => {
     if (reduceOnboardingNav && !onboardingToolKeys.has(item.toolKey)) {
       return false;
@@ -439,4 +443,9 @@ export const DashboardSidebar = () => {
       </SidebarFooter>
     </Sidebar>
   );
+};
+
+export const DashboardSidebar = () => {
+  const { currentStage } = useBizMapProgress();
+  return <DashboardSidebarContent currentStage={currentStage} />;
 };

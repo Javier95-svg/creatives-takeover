@@ -136,6 +136,9 @@ verify_jwt = false
 [functions.commitment-manager]
 verify_jwt = true
 
+[functions.rank-dashboard-actions]
+verify_jwt = true
+
 [functions.market-validation-engine]
 verify_jwt = true
 

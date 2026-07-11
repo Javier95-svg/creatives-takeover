@@ -75,7 +75,6 @@ test('dashboard mode config resolves from the canonical plan contract', () => {
     '/dashboard/tasks',
     '/dashboard/routine',
     '/dashboard/referral',
-    '/dashboard/focus-funnel',
   ]);
   assert.deepEqual(rookieMode.visibleTools, ['icp_builder', 'mvp_builder', 'saved_mentors', 'find_mentor', 'find_cofounder']);
 
@@ -83,7 +82,7 @@ test('dashboard mode config resolves from the canonical plan contract', () => {
   assert.equal(proMode.label, 'Pro Mode');
   assert.deepEqual(proMode.activeStages, [1, 2, 3, 4, 5]);
   assert.deepEqual(proMode.previewStages, []);
-  assert.equal(proMode.navItems[0]?.label, 'Home');
+  assert.equal(proMode.navItems[0]?.label, 'Command Center');
   assert.ok(proMode.visibleTools.includes('find_angel'));
 });
 

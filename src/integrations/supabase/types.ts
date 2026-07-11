@@ -2564,6 +2564,36 @@ export type Database = {
           },
         ]
       }
+      dashboard_ranking_cache: {
+        Row: {
+          expires_at: string
+          generated_at: string
+          model: string
+          ordered_candidate_keys: Json
+          rationale_by_key: Json
+          snapshot_hash: string
+          user_id: string
+        }
+        Insert: {
+          expires_at: string
+          generated_at?: string
+          model: string
+          ordered_candidate_keys?: Json
+          rationale_by_key?: Json
+          snapshot_hash: string
+          user_id: string
+        }
+        Update: {
+          expires_at?: string
+          generated_at?: string
+          model?: string
+          ordered_candidate_keys?: Json
+          rationale_by_key?: Json
+          snapshot_hash?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       dashboard_widgets: {
         Row: {
           created_at: string | null
@@ -7163,24 +7193,36 @@ export type Database = {
           activity_data: Json | null
           activity_type: string
           created_at: string | null
+          event_key: string | null
           id: string
           page_path: string | null
+          source_entity_id: string | null
+          source_entity_type: string | null
+          source_tool: string | null
           user_id: string
         }
         Insert: {
           activity_data?: Json | null
           activity_type: string
           created_at?: string | null
+          event_key?: string | null
           id?: string
           page_path?: string | null
+          source_entity_id?: string | null
+          source_entity_type?: string | null
+          source_tool?: string | null
           user_id: string
         }
         Update: {
           activity_data?: Json | null
           activity_type?: string
           created_at?: string | null
+          event_key?: string | null
           id?: string
           page_path?: string | null
+          source_entity_id?: string | null
+          source_entity_type?: string | null
+          source_tool?: string | null
           user_id?: string
         }
         Relationships: []
@@ -7213,6 +7255,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_funding_bookmarks: {
+        Row: {
+          created_at: string
+          funding_opportunity_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          funding_opportunity_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          funding_opportunity_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_challenge_completions: {
         Row: {
@@ -8526,6 +8589,10 @@ export type Database = {
       }
     }
     Functions: {
+      get_dashboard_snapshot_v1: {
+        Args: { p_timezone?: string }
+        Returns: Json
+      }
       archive_old_memories: { Args: { days_old?: number }; Returns: number }
       apply_stripe_subscription_checkout: {
         Args: {
