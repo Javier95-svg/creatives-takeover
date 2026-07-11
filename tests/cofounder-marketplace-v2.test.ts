@@ -5,6 +5,7 @@ import { createEmptyCofounderListing, validateCofounderListing } from '../src/ty
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const sql = read('../supabase/migrations/20260712120000_cofounder_marketplace_v2.sql');
+const targetedNotificationSql = read('../supabase/migrations/20260713120000_target_cofounder_post_notifications.sql');
 
 test('listing validation requires an actionable compatibility profile', () => {
   const empty = createEmptyCofounderListing('America/Bogota');
@@ -61,4 +62,14 @@ test('the low-supply community feed and simple post editor are the default route
   assert.match(editorRoute, /postId \? <EditCoFounderPost \/> : <CreateCoFounderPost/);
   assert.doesNotMatch(route, /CofounderMarketplacePage|useFeatureFlagEnabled/);
   assert.doesNotMatch(editorRoute, /CofounderListingEditorPage|useFeatureFlagEnabled/);
+});
+
+test('new co-founder posts notify only onboarding users who are actively looking', () => {
+  assert.match(targetedNotificationSql, /user_preferences->>'cofounderSituation' = 'actively_looking'/);
+  assert.match(targetedNotificationSql, /recipient\.id <> NEW\.user_id/);
+  assert.match(targetedNotificationSql, /'cofounder_post_created'/);
+  assert.match(targetedNotificationSql, /'route', '\/co-founder'/);
+  assert.match(targetedNotificationSql, /existing\.metadata->>'cofounder_post_id' = NEW\.id::text/);
+  assert.match(targetedNotificationSql, /DROP TRIGGER IF EXISTS on_new_cofounder_post_notify_all_users/);
+  assert.match(targetedNotificationSql, /DROP TRIGGER IF EXISTS sync_cofounder_marketplace_dashboard_task_v1/);
 });
