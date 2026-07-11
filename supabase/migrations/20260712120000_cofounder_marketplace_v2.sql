@@ -628,24 +628,34 @@ STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
-DECLARE v_user uuid := auth.uid(); v_seed public.cofounder_posts; v_profile public.profiles; v_items jsonb;
+DECLARE
+  v_user uuid := auth.uid();
+  v_seed public.cofounder_posts;
+  v_profile public.profiles;
+  v_items jsonb;
+  v_limit integer := LEAST(GREATEST(COALESCE(p_limit, 20), 1), 50);
 BEGIN
   IF v_user IS NULL THEN RAISE EXCEPTION 'Not authenticated' USING ERRCODE='42501'; END IF;
   SELECT * INTO v_seed FROM public.cofounder_posts WHERE user_id=v_user AND (id=p_listing_id OR p_listing_id IS NULL) ORDER BY (status='active') DESC, updated_at DESC LIMIT 1;
   SELECT * INTO v_profile FROM public.profiles WHERE id=v_user;
-  WITH candidates AS (
-    SELECT p.*, pp.full_name, pp.username, pp.avatar_url, public.cofounder_listing_json(p, false) AS listing_json,
-      LEAST(100,
-        CASE WHEN (v_seed.id IS NOT NULL AND ((p.skills_offered && v_seed.skills_sought) OR (p.skills_sought && v_seed.skills_offered)))
-          OR (v_seed.id IS NULL AND (p.skills_sought && ARRAY[COALESCE(v_profile.founder_role,'')] OR p.skills_offered && COALESCE(v_profile.looking_for,'{}'::text[]))) THEN 30 ELSE 0 END +
-        CASE WHEN COALESCE(v_seed.stage,v_profile.startup_stage)=p.stage THEN 20 ELSE 8 END +
-        CASE WHEN v_seed.commitment IS NOT NULL AND lower(v_seed.commitment)=lower(COALESCE(p.commitment,'')) THEN 15 ELSE 5 END +
-        CASE WHEN COALESCE(v_seed.work_mode,'flexible')='flexible' OR p.work_mode='flexible' OR v_seed.work_mode=p.work_mode THEN 6 ELSE 0 END +
-        CASE WHEN COALESCE(v_seed.timezone,'UTC')=p.timezone THEN 4 ELSE 0 END +
-        CASE WHEN COALESCE(v_seed.industries,v_profile.startup_industry,'{}') && p.industries THEN 10 ELSE 0 END +
-        CASE WHEN COALESCE(v_seed.founder_values,'{}') && p.founder_values THEN 10 ELSE 0 END +
-        CASE WHEN p.last_active_at >= now()-interval '7 days' THEN 5 WHEN p.last_active_at >= now()-interval '30 days' THEN 2 ELSE 0 END
-      )::integer score
+  WITH signals AS (
+    SELECT
+      p.*,
+      pp.full_name,
+      pp.username,
+      pp.avatar_url,
+      public.cofounder_listing_json(p, false) AS listing_json,
+      (
+        (v_seed.id IS NOT NULL AND (p.skills_offered && v_seed.skills_sought OR p.skills_sought && v_seed.skills_offered))
+        OR
+        (v_seed.id IS NULL AND (p.skills_sought && ARRAY[COALESCE(v_profile.founder_role,'')] OR p.skills_offered && COALESCE(v_profile.looking_for,'{}'::text[])))
+      ) AS skills_match,
+      COALESCE(v_seed.stage,v_profile.startup_stage)=p.stage AS stage_match,
+      v_seed.commitment IS NOT NULL AND lower(v_seed.commitment)=lower(COALESCE(p.commitment,'')) AS commitment_match,
+      COALESCE(v_seed.work_mode,'flexible')='flexible' OR p.work_mode='flexible' OR v_seed.work_mode=p.work_mode AS work_mode_match,
+      COALESCE(v_seed.timezone,'UTC')=p.timezone AS timezone_match,
+      COALESCE(v_seed.industries,v_profile.startup_industry,'{}'::text[]) && p.industries AS industry_match,
+      COALESCE(v_seed.founder_values,'{}'::text[]) && p.founder_values AS values_match
     FROM public.cofounder_posts p
     LEFT JOIN public.public_profiles pp ON pp.id=p.user_id
     JOIN public.profiles trust ON trust.id=p.user_id AND COALESCE(trust.profile_completion_percentage,0)>=60
@@ -664,18 +674,43 @@ BEGIN
       AND NOT EXISTS (SELECT 1 FROM public.user_blocks b WHERE (b.blocker_id=v_user AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=v_user))
       AND NOT EXISTS (SELECT 1 FROM public.cofounder_interests i WHERE i.sender_id=v_user AND i.listing_id=p.id AND i.stop_recommending)
       AND NOT EXISTS (SELECT 1 FROM public.cofounder_match_feedback f WHERE f.user_id=v_user AND f.listing_id=p.id AND f.feedback='not_relevant')
+  ), scored AS (
+    SELECT
+      signals.*,
+      LEAST(100,
+        CASE WHEN skills_match THEN 30 ELSE 0 END +
+        CASE WHEN stage_match THEN 20 ELSE 8 END +
+        CASE WHEN commitment_match THEN 15 ELSE 5 END +
+        CASE WHEN work_mode_match THEN 6 ELSE 0 END +
+        CASE WHEN timezone_match THEN 4 ELSE 0 END +
+        CASE WHEN industry_match THEN 10 ELSE 0 END +
+        CASE WHEN values_match THEN 10 ELSE 0 END +
+        CASE WHEN last_active_at>=now()-interval '7 days' THEN 5 WHEN last_active_at>=now()-interval '30 days' THEN 2 ELSE 0 END
+      )::integer AS score,
+      array_remove(ARRAY[
+        CASE WHEN skills_match THEN 'complementary_skills' END,
+        CASE WHEN industry_match THEN 'shared_industry' END,
+        CASE WHEN stage_match THEN 'stage_alignment' END,
+        CASE WHEN last_active_at>=now()-interval '7 days' THEN 'recently_active' END
+      ],NULL) AS reason_codes
+    FROM signals
   ), ranked AS (
-    SELECT *, row_number() OVER (ORDER BY score DESC,last_active_at DESC,id DESC) rn FROM candidates
+    SELECT
+      listing_json || jsonb_build_object(
+        'author',jsonb_build_object('fullName',full_name,'username',username,'avatarUrl',avatar_url),
+        'score',score,
+        'reasons',to_jsonb(reason_codes[1:3])
+      ) AS item,
+      score,
+      last_active_at,
+      id,
+      row_number() OVER (ORDER BY score DESC,last_active_at DESC,id DESC) AS rn
+    FROM scored
   )
-  SELECT COALESCE(jsonb_agg(listing_json || jsonb_build_object(
-    'author',jsonb_build_object('fullName',full_name,'username',username,'avatarUrl',avatar_url), 'score',score,
-    'reasons', to_jsonb((array_remove(ARRAY[
-      CASE WHEN (v_seed.id IS NOT NULL AND ((skills_offered && v_seed.skills_sought) OR (skills_sought && v_seed.skills_offered))) OR (v_seed.id IS NULL AND (skills_sought&&ARRAY[COALESCE(v_profile.founder_role,'')] OR skills_offered&&COALESCE(v_profile.looking_for,'{}'::text[]))) THEN 'complementary_skills' END,
-      CASE WHEN COALESCE(v_seed.industries,v_profile.startup_industry,'{}') && industries THEN 'shared_industry' END,
-      CASE WHEN COALESCE(v_seed.stage,v_profile.startup_stage)=stage THEN 'stage_alignment' END,
-      CASE WHEN last_active_at>=now()-interval '7 days' THEN 'recently_active' END
-    ],NULL))[1:3])) ORDER BY score DESC,last_active_at DESC,id DESC), '[]'::jsonb) INTO v_items
-  FROM ranked r WHERE rn<=LEAST(GREATEST(COALESCE(p_limit,20),1),50);
+  SELECT COALESCE(jsonb_agg(item ORDER BY score DESC,last_active_at DESC,id DESC),'[]'::jsonb)
+  INTO v_items
+  FROM ranked
+  WHERE rn<=v_limit;
   RETURN jsonb_build_object('items',v_items,'nextCursor',NULL);
 END;
 $$;
