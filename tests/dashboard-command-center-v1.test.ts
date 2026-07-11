@@ -127,11 +127,11 @@ test('tool registry covers the seven core journey tools and human layer', () => 
 
 test('dashboard tab polish keeps routine sections full-width and removes redundant hero cards', () => {
   const routine = read('../src/pages/YourRoutinePage.tsx');
-  const commandStrip = read('../src/components/dashboard/DashboardCommandSignalStrip.tsx');
+  const shell = read('../src/components/dashboard/DashboardShell.tsx');
   const mentors = read('../src/pages/SavedMentorsPage.tsx');
 
   assert.doesNotMatch(routine, /xl:grid-cols-\[minmax\(0,1\.35fr\)/);
-  assert.doesNotMatch(commandStrip, /Share your link and track rewards/);
+  assert.doesNotMatch(shell, /DashboardCommandSignalStrip/);
   assert.doesNotMatch(mentors, /Queue size|Best use|Community path/i);
 });
 
