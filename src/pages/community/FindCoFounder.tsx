@@ -455,11 +455,11 @@ const FindCoFounder = () => {
           <div className="mb-12 pt-8 text-center sm:pt-12">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2">
               <Handshake className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Founder community</span>
+              <span className="text-sm font-medium text-primary">Founder Community</span>
             </div>
             <h1 className="mb-4 text-4xl font-extrabold tracking-tight md:text-5xl lg:text-6xl">
               <span className="bg-gradient-to-r from-info via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Find a co-founder
+                Find a Co-Founder
               </span>
             </h1>
             <p className="mx-auto max-w-3xl text-xl text-muted-foreground">
