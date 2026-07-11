@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { showDashboardReturnToast } from '@/components/dashboard/dashboardReturnToast';
 import { ensureMentorDemandNotification } from '@/lib/mentorDemandNotifications';
 import { trackActivity } from '@/lib/activity';
+import { markFirstArtifactCreated, trackCurrentActivationJourneyEvent } from '@/lib/retentionSystem';
 
 export interface GTMIntakeAnswers {
   businessType: string;
@@ -227,6 +228,7 @@ export function useGTMStrategist() {
       setAnalysis(data.analysis as GTMAnalysis);
       setPlanId(data.planId ?? null);
       setPhase('results');
+      void trackCurrentActivationJourneyEvent(user.id, 'activation_first_output_generated', { intent: 'plan_gtm', tool: 'gtm_strategist' });
       showCreditReceipt(
         'GTM_ANALYSIS',
         typeof data?.creditsUsed === 'number' ? data.creditsUsed : credits,
@@ -277,6 +279,14 @@ export function useGTMStrategist() {
       if (status === 'draft') {
         toast.success('GTM draft saved.');
       } else if (status === 'saved') {
+        await markFirstArtifactCreated({
+          userId: user.id,
+          artifactType: 'gtm_plan',
+          artifactId: (data as { id?: string })?.id ?? planId,
+          resumeUrl: '/go-to-market',
+          label: analysis.planTitle,
+          source: 'gtm_strategist',
+        });
         showDashboardReturnToast({
           message: 'GTM plan saved. Stage V marked complete.',
           tool: 'gtm-strategist',

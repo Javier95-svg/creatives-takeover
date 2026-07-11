@@ -4,12 +4,17 @@ import { captureEvent } from '@/lib/analytics';
 import { requiresGuidedOnboarding } from '@/lib/guidedOnboarding';
 import { triggerEmailSequenceEvent } from '@/lib/emailSequences';
 import { mapFounderStageToBizMapStage, STAGES, type FounderStageId } from '@/lib/stageDiagnostic';
+import { parseActivationJourney, type ActivationJourneyV2 } from '@/lib/activationJourneyV2';
 
 export type ActivationIntent =
   | 'build_demo'
   | 'find_mentor'
   | 'run_icp'
   | 'start_validation'
+  | 'build_mvp'
+  | 'plan_gtm'
+  | 'log_traction'
+  | 'analyze_pitch_deck'
   | 'unlock_pitch_deck'
   | 'unlock_tech_stack'
   | 'unlock_insighta'
@@ -28,7 +33,10 @@ export type RetentionArtifactType =
   | 'discovery_call'
   | 'icp_analysis'
   | 'validation_draft'
-  | 'pmf_report';
+  | 'pmf_report'
+  | 'mvp_scope'
+  | 'gtm_plan'
+  | 'traction_weekly_log';
 export type RetentionSequence =
   | 'activation_day0'
   | 'activation_day2'
@@ -64,6 +72,7 @@ interface StartActivationParams {
   country?: string;
   assignedStage?: FounderStageId;
   quizAnswersV3?: Record<string, unknown>;
+  activationJourney?: ActivationJourneyV2;
 }
 
 interface CompleteActivationParams {
@@ -115,6 +124,10 @@ const ACTIVATION_ROUTE_BY_INTENT: Record<ActivationIntent, string> = {
   find_mentor: '/mentorship?mentorSource=onboarding&activationIntent=find_mentor',
   run_icp: '/icp-builder?activation=1',
   start_validation: '/decision-sprint?activation=1',
+  build_mvp: '/mvp-scope?activation=1',
+  plan_gtm: '/go-to-market?activation=1',
+  log_traction: '/traction-engine?activation=1',
+  analyze_pitch_deck: '/pitch-deck-analyzer?activation=1',
   unlock_pitch_deck: '/pitch-deck-analyzer?hydrate=1',
   unlock_tech_stack: '/tech-stack?hydrate=1',
   unlock_insighta: '/insighta-test?hydrate=1',
@@ -320,16 +333,7 @@ export async function startActivationJourney(params: StartActivationParams) {
     profileUpdates.quiz_answers_v2 = params.quizAnswersV3;
   }
 
-  const { error } = await supabase
-    .from('profiles')
-    .update(profileUpdates)
-    .eq('id', params.userId);
-
-  if (error) {
-    throw error;
-  }
-
-  await updateUserPreferences(params.userId, {
+  const preferencePatch = {
     activationIntent: params.activationIntent,
     activationGateVariant,
     activationStartedAt: startedAt,
@@ -348,9 +352,25 @@ export async function startActivationJourney(params: StartActivationParams) {
     startupSectors: params.startupSectors ?? [],
     supportAreasNeeded: params.supportAreasNeeded ?? [],
     country: params.country?.trim() || null,
-  }, true);
+    ...(params.activationJourney ? { activationJourney: params.activationJourney } : {}),
+  };
 
-  await trackRetentionEvent('activation_started', {
+  if (params.activationJourney) {
+    const { error } = await supabase.rpc('start_activation_journey_v2', {
+      p_profile_updates: profileUpdates,
+      p_preference_patch: preferencePatch,
+    });
+    if (error) throw error;
+  } else {
+    const { error } = await supabase
+      .from('profiles')
+      .update(profileUpdates)
+      .eq('id', params.userId);
+    if (error) throw error;
+    await updateUserPreferences(params.userId, preferencePatch, true);
+  }
+
+  if (!params.activationJourney) await trackRetentionEvent('activation_started', {
     user_id: params.userId,
     business_stage: params.businessStage,
     primary_pain: params.primaryPain,
@@ -359,6 +379,84 @@ export async function startActivationJourney(params: StartActivationParams) {
   });
 
   await triggerEmailSequenceEvent('onboarding_complete', params.userId);
+}
+
+export type ActivationJourneyEvent =
+  | 'onboarding_completed'
+  | 'activation_destination_viewed'
+  | 'activation_first_input_submitted'
+  | 'activation_first_output_generated'
+  | 'activation_first_artifact_saved'
+  | 'activation_completed'
+  | 'activation_goal_changed'
+  | 'activation_exited';
+
+const activationJourneyEventsSent = new Set<string>();
+
+export async function trackActivationJourneyEvent(params: {
+  userId: string;
+  journey: ActivationJourneyV2;
+  event: ActivationJourneyEvent;
+  properties?: RetentionEventProperties;
+}) {
+  const eventKey = `${params.journey.journeyId}:${params.event}`;
+  const occurredAt = new Date().toISOString();
+  const fieldByEvent: Partial<Record<ActivationJourneyEvent, keyof ActivationJourneyV2>> = {
+    activation_destination_viewed: 'destinationViewedAt',
+    activation_first_input_submitted: 'firstInputAt',
+    activation_first_output_generated: 'firstOutputAt',
+    activation_first_artifact_saved: 'firstArtifactAt',
+    activation_completed: 'completedAt',
+  };
+  const timestampField = fieldByEvent[params.event];
+  const nextJourney: ActivationJourneyV2 = {
+    ...params.journey,
+    ...(timestampField && !params.journey[timestampField] ? { [timestampField]: occurredAt } : {}),
+    ...(params.event === 'activation_completed' ? { status: 'completed' as const } : {}),
+  };
+
+  if (!activationJourneyEventsSent.has(eventKey)) {
+    activationJourneyEventsSent.add(eventKey);
+    captureEvent(params.event, {
+      journey_id: params.journey.journeyId,
+      activation_intent: params.journey.selectedIntent,
+      journey_source: params.journey.source,
+      ...params.properties,
+    });
+  }
+
+  await Promise.all([
+    updateUserPreferences(params.userId, { activationJourney: nextJourney }),
+    supabase.functions.invoke('track-activity', {
+      body: {
+        activity_type: params.event,
+        activity_data: {
+          journey_id: params.journey.journeyId,
+          activation_intent: params.journey.selectedIntent,
+          journey_source: params.journey.source,
+          ...params.properties,
+        },
+        source_tool: 'onboarding',
+        source_entity_type: 'activation_journey',
+        source_entity_id: params.journey.journeyId,
+        event_key: eventKey,
+        page_path: typeof window !== 'undefined' ? window.location.pathname : null,
+      },
+    }),
+  ]);
+
+  return nextJourney;
+}
+
+export async function trackCurrentActivationJourneyEvent(
+  userId: string,
+  event: ActivationJourneyEvent,
+  properties: RetentionEventProperties = {},
+) {
+  const state = await getProfileRetentionState(userId);
+  const journey = parseActivationJourney(state?.user_preferences?.activationJourney);
+  if (!journey || journey.status !== 'active') return null;
+  return trackActivationJourneyEvent({ userId, journey, event, properties });
 }
 
 export async function applySignupActivationSource(params: {
@@ -404,6 +502,7 @@ export async function applySignupActivationSource(params: {
 export async function completeActivationJourney(params: CompleteActivationParams) {
   const completedAt = new Date().toISOString();
   const profileState = await getProfileRetentionState(params.user.id);
+  const activationJourney = parseActivationJourney(profileState?.user_preferences?.activationJourney);
   const email = params.user.email?.trim();
 
   const nextState = await updateUserPreferences(
@@ -452,7 +551,7 @@ export async function completeActivationJourney(params: CompleteActivationParams
     true,
   );
 
-  await trackRetentionEvent('activation_completed', {
+  const completionProperties = {
     trigger: getActivationCompletedTrigger(params.action),
     user_id: params.user.id,
     action: params.action,
@@ -461,8 +560,8 @@ export async function completeActivationJourney(params: CompleteActivationParams
     mentor_name: params.mentorName ?? null,
     conversation_id: params.conversationId ?? null,
     action_url: params.actionUrl,
-  });
-  await trackRetentionEvent('activation_first_artifact_saved', {
+  };
+  const artifactProperties = {
     user_id: params.user.id,
     activation_intent: params.action,
     artifact_type:
@@ -474,7 +573,15 @@ export async function completeActivationJourney(params: CompleteActivationParams
     artifact_id: params.mentorId ?? params.conversationId ?? null,
     resume_url: params.actionUrl,
     source: params.source,
-  });
+  };
+  if (activationJourney) {
+    const completedJourney = { ...activationJourney, firstArtifactAt: completedAt, completedAt, status: 'completed' as const };
+    await trackActivationJourneyEvent({ userId: params.user.id, journey: activationJourney, event: 'activation_first_artifact_saved', properties: artifactProperties });
+    await trackActivationJourneyEvent({ userId: params.user.id, journey: completedJourney, event: 'activation_completed', properties: completionProperties });
+  } else {
+    await trackRetentionEvent('activation_completed', completionProperties);
+    await trackRetentionEvent('activation_first_artifact_saved', artifactProperties);
+  }
 
   if (email) {
     const headlineByAction: Record<ActivationArtifactIntent, string> = {
@@ -517,6 +624,13 @@ export async function markFirstArtifactCreated(params: MarkArtifactCreatedParams
   const createdAt = new Date().toISOString();
   const existingProfileState = await getProfileRetentionState(params.userId);
   const hadFirstArtifact = typeof existingProfileState?.user_preferences?.firstArtifactType === 'string';
+  const activationJourney = parseActivationJourney(existingProfileState?.user_preferences?.activationJourney);
+  const completedJourney = activationJourney ? {
+    ...activationJourney,
+    firstArtifactAt: activationJourney.firstArtifactAt ?? createdAt,
+    completedAt: activationJourney.completedAt ?? createdAt,
+    status: 'completed' as const,
+  } : null;
 
   const nextState = await updateUserPreferences(params.userId, {
     activationCompletedAt: createdAt,
@@ -534,6 +648,7 @@ export async function markFirstArtifactCreated(params: MarkArtifactCreatedParams
     lastArtifactId: params.artifactId ?? null,
     lastArtifactLabel: params.label ?? null,
     lastArtifactResumeUrl: params.resumeUrl,
+    ...(completedJourney ? { activationJourney: completedJourney } : {}),
   }, true);
 
   // FIX(retention): retention-system — first artifact creation now lands in durable activity logs so the admin experiment dashboard can measure signup-to-artifact conversion by variant.
@@ -547,23 +662,22 @@ export async function markFirstArtifactCreated(params: MarkArtifactCreatedParams
     activationGateVariant: nextState.user_preferences?.activationGateVariant ?? null,
   });
 
-  await trackRetentionEvent('activation_first_artifact_saved', {
-    user_id: params.userId,
-    artifact_type: params.artifactType,
-    artifact_id: params.artifactId ?? null,
-    resume_url: params.resumeUrl,
-    label: params.label ?? null,
-    source: params.source ?? 'product',
-  });
-
-  if (!hadFirstArtifact) {
-    await trackRetentionEvent('activation_completed', {
-      trigger: 'first_artifact_created',
+  if (activationJourney) {
+    const eventProperties = { artifact_type: params.artifactType, artifact_id: params.artifactId ?? null, resume_url: params.resumeUrl, label: params.label ?? null, source: params.source ?? 'product' };
+    await trackActivationJourneyEvent({ userId: params.userId, journey: activationJourney, event: 'activation_first_artifact_saved', properties: eventProperties });
+    if (!hadFirstArtifact) await trackActivationJourneyEvent({ userId: params.userId, journey: completedJourney ?? activationJourney, event: 'activation_completed', properties: { ...eventProperties, trigger: 'first_artifact_created' } });
+  } else {
+    await trackRetentionEvent('activation_first_artifact_saved', {
       user_id: params.userId,
       artifact_type: params.artifactType,
       artifact_id: params.artifactId ?? null,
       resume_url: params.resumeUrl,
+      label: params.label ?? null,
       source: params.source ?? 'product',
+    });
+    if (!hadFirstArtifact) await trackRetentionEvent('activation_completed', {
+      trigger: 'first_artifact_created', user_id: params.userId, artifact_type: params.artifactType,
+      artifact_id: params.artifactId ?? null, resume_url: params.resumeUrl, source: params.source ?? 'product',
     });
   }
 
@@ -574,6 +688,10 @@ export async function saveValidationDraftArtifact(userId: string, draft: Validat
   const profileState = await getProfileRetentionState(userId);
   const existingPreferences = profileState?.user_preferences ?? {};
   const hasFirstArtifact = typeof existingPreferences.firstArtifactType === 'string';
+  const activationJourney = parseActivationJourney(existingPreferences.activationJourney);
+  const completedJourney = activationJourney
+    ? { ...activationJourney, firstArtifactAt: draft.updatedAt, completedAt: draft.updatedAt, status: 'completed' as const }
+    : null;
 
   const nextState = await updateUserPreferences(userId, {
     validationDraft: draft,
@@ -590,26 +708,28 @@ export async function saveValidationDraftArtifact(userId: string, draft: Validat
     lastArtifactId: draft.id,
     lastArtifactLabel: 'Validation sprint draft',
     lastArtifactResumeUrl: '/decision-sprint',
+    ...(completedJourney ? { activationJourney: completedJourney } : {}),
   }, !hasFirstArtifact);
 
-  await trackRetentionEvent('activation_first_artifact_saved', {
-    user_id: userId,
-    artifact_type: 'validation_draft',
-    artifact_id: draft.id,
-    resume_url: '/decision-sprint',
-    label: 'Validation sprint draft',
-    source: 'decision_sprint',
-  });
-
-  if (!hasFirstArtifact) {
-    await trackRetentionEvent('activation_completed', {
-      trigger: 'first_artifact_created',
+  if (!activationJourney) {
+    await trackRetentionEvent('activation_first_artifact_saved', {
       user_id: userId,
       artifact_type: 'validation_draft',
       artifact_id: draft.id,
       resume_url: '/decision-sprint',
+      label: 'Validation sprint draft',
       source: 'decision_sprint',
     });
+    if (!hasFirstArtifact) await trackRetentionEvent('activation_completed', {
+      trigger: 'first_artifact_created', user_id: userId, artifact_type: 'validation_draft', artifact_id: draft.id,
+      resume_url: '/decision-sprint', source: 'decision_sprint',
+    });
+  }
+
+  if (activationJourney) {
+    const properties = { artifact_type: 'validation_draft', artifact_id: draft.id, resume_url: '/decision-sprint', source: 'decision_sprint' };
+    await trackActivationJourneyEvent({ userId, journey: activationJourney, event: 'activation_first_artifact_saved', properties });
+    if (!hasFirstArtifact) await trackActivationJourneyEvent({ userId, journey: completedJourney ?? activationJourney, event: 'activation_completed', properties: { ...properties, trigger: 'first_artifact_created' } });
   }
 
   return nextState;

@@ -46,7 +46,7 @@ import {
 } from '@/lib/demoStudio/tryPreview';
 import type { DemoStepWithHotspots, DemoStudioStoryboardStep } from '@/lib/demoStudio/types';
 import { captureEvent } from '@/lib/analytics';
-import { markFirstArtifactCreated, trackRetentionEvent } from '@/lib/retentionSystem';
+import { markFirstArtifactCreated, trackCurrentActivationJourneyEvent, trackRetentionEvent } from '@/lib/retentionSystem';
 
 const MAX_SCREENSHOTS = DEMO_STUDIO_TRY_MAX_SCREENSHOTS;
 const MIN_SCREENSHOTS = DEMO_STUDIO_TRY_MIN_SCREENSHOTS;
@@ -80,7 +80,7 @@ export default function TryPage() {
 
   const [shots, setShots] = useState<Shot[]>([]);
   const [contextUrl, setContextUrl] = useState('');
-  const [inputMode, setInputMode] = useState<TryInputMode>('screenshots');
+  const [inputMode, setInputMode] = useState<TryInputMode>(() => searchParams.get('mode') === 'no_assets' ? 'no_assets' : 'screenshots');
   const [description, setDescription] = useState('');
   // True when the current preview was built from generated placeholder frames
   // (zero-asset mode) rather than the visitor's own screenshots.
@@ -218,7 +218,7 @@ export default function TryPage() {
     setSteps(built);
     setError(null);
     setUsedPlaceholders(mode === 'no_assets');
-    captureEvent('activation_first_output_generated', {
+    const outputProperties = {
       tool: 'demo_studio_try',
       source: 'demo_try',
       step_count: built.length,
@@ -226,8 +226,15 @@ export default function TryPage() {
       fallback_reason: fallbackReason,
       input_mode: mode,
       is_authenticated: Boolean(user),
-    });
+    };
     if (user) {
+      void trackCurrentActivationJourneyEvent(user.id, 'activation_first_output_generated', outputProperties).then((journey) => {
+        if (!journey) captureEvent('activation_first_output_generated', outputProperties);
+      });
+    } else {
+      captureEvent('activation_first_output_generated', outputProperties);
+    }
+    if (user && !new URLSearchParams(window.location.search).get('journey')) {
       void trackRetentionEvent('activation_first_output_generated', {
         user_id: user.id,
         tool: 'demo_studio_try',
@@ -486,7 +493,7 @@ export default function TryPage() {
           }
           position += 1;
         }
-        trackDemoEvent('signup', {
+        void trackDemoEvent('signup', {
           projectId: project.id,
           demoId: demo.id,
           meta: { source: 'demo_try', step_count: position },

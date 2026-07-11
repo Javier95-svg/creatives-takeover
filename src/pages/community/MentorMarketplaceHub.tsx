@@ -66,6 +66,7 @@ const MentorMarketplaceHub = () => {
   const mentorTrack = parseMentorTrack(searchParams.get("mentorTrack"));
   const mentorSource = searchParams.get("mentorSource");
   const activationIntent = searchParams.get("activationIntent") as ActivationIntent | null;
+  const focusedActivation = searchParams.get('activation') === '1' && Boolean(searchParams.get('journey'));
   
   const [filters, setFilters] = useState<MentorFilters>({
     expertise: [],
@@ -390,6 +391,7 @@ const MentorMarketplaceHub = () => {
   const startIndex = (currentPage - 1) * MENTORS_PER_PAGE;
   const endIndex = startIndex + MENTORS_PER_PAGE;
   const paginatedMentors = filteredMentors.slice(startIndex, endIndex);
+  const visibleMentors = focusedActivation ? filteredMentors.slice(0, 3) : paginatedMentors;
 
   // Reset to page 1 if current page is out of bounds
   useEffect(() => {
@@ -440,7 +442,7 @@ const MentorMarketplaceHub = () => {
 	        <Navigation />
 	        <div className="pt-header-offset relative z-10">
 	          {/* Hero Section */}
-	          <section className="relative py-10 lg:py-14">
+	          {!focusedActivation && <section className="relative py-10 lg:py-14">
             <div className="container mx-auto max-w-6xl px-4 sm:px-6">
               <div className="rounded-5xl border border-border/60 bg-white/80 p-5 shadow-sm backdrop-blur dark:bg-slate-950/70 sm:p-8">
                 <div className="flex flex-col gap-6">
@@ -537,7 +539,7 @@ const MentorMarketplaceHub = () => {
                 </div>
               </div>
             </div>
-          </section>
+          </section>}
 
           {/* Mentors Section with Filters */}
           <section id="mentor-grid" className="container mx-auto max-w-6xl px-4 pb-12 pt-2 relative z-10 sm:px-6">
@@ -550,7 +552,7 @@ const MentorMarketplaceHub = () => {
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  {filteredMentors.length} mentor{filteredMentors.length !== 1 ? 's' : ''} ready to support
+                  {focusedActivation ? 'Your top three mentor matches' : `${filteredMentors.length} mentor${filteredMentors.length !== 1 ? 's' : ''} ready to support`}
                 </p>
               )}
               <p className="text-sm text-muted-foreground">
@@ -567,7 +569,7 @@ const MentorMarketplaceHub = () => {
             ) : filteredMentors.length > 0 ? (
               <>
                 <div className="grid grid-cols-1 gap-6">
-	                  {paginatedMentors.map((mentor, index) => (
+	                  {visibleMentors.map((mentor, index) => (
 	                    <MentorCard
 	                      key={mentor.id}
 	                      mentor={mentor}
@@ -577,7 +579,7 @@ const MentorMarketplaceHub = () => {
                 </div>
 
                 {/* Pagination */}
-                {totalPages > 1 && (
+                {!focusedActivation && totalPages > 1 && (
                   <div className="mt-8">
                     <Pagination>
                       <PaginationContent>

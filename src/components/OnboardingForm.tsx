@@ -16,12 +16,14 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { ANGEL_SECTOR_OPTIONS } from '@/data/angelSectors';
 import { COUNTRY_OPTIONS } from '@/data/countries';
 import {
@@ -35,7 +37,22 @@ import { trackActivity } from '@/lib/activity';
 import { cn } from '@/lib/utils';
 import { refreshOnboardingMentorRecommendations } from '@/lib/onboardingMentorRecommendations';
 import { seedDefaultRoutineForOnboarding } from '@/lib/onboardingPath';
-import { getActivationRoute, startActivationJourney, trackRetentionEvent, type ActivationIntent } from '@/lib/retentionSystem';
+import { getActivationRoute, startActivationJourney, trackActivationJourneyEvent, trackRetentionEvent, type ActivationIntent } from '@/lib/retentionSystem';
+import {
+  ACTIVATION_CATALOG,
+  buildActivationJourneyUrl,
+  createActivationJourney,
+  getStageAvailableIntents,
+  normalizeActivationIntent,
+  recommendActivation,
+  type ActivationRecommendation,
+  type ActivationJourneyV2,
+} from '@/lib/activationJourneyV2';
+import { isActivationV2Enabled } from '@/lib/activationRollout';
+import { useFeatureGating } from '@/hooks/useFeatureGating';
+import { normalizePlan } from '@/config/planPermissions';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useCredits } from '@/hooks/useCredits';
 import {
   assignFounderStageV3,
   createQuizAnswersV3Payload,
@@ -126,6 +143,8 @@ const ACTIVATION_CARDS: ActivationCard[] = [
   },
 ];
 
+const V2_ONBOARDING_INTENTS: ActivationIntent[] = ['find_mentor', 'build_demo', 'run_icp', 'start_validation', 'build_mvp', 'plan_gtm', 'log_traction', 'analyze_pitch_deck'];
+
 const emptyOnboardingData: OnboardingData = {
   stageAnswers: {},
   startupSectors: [],
@@ -193,6 +212,15 @@ function appendActivationParams(route: string, intent: ActivationIntent) {
 
 export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   const { user } = useAuth();
+  const activationFlag = useFeatureFlagEnabled('onboarding-activation-v2');
+  const activationV2Enabled = isActivationV2Enabled(activationFlag);
+  const { checkFeatureAccess } = useFeatureGating();
+  const { subscriptionData } = useSubscription({ fetchTiers: false });
+  const { totalAvailable, loading: creditsLoading } = useCredits();
+  const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
+  const [existingPreferences, setExistingPreferences] = useState<Record<string, unknown>>({});
+  const [explicitIntentChoice, setExplicitIntentChoice] = useState(false);
+  const [handoff, setHandoff] = useState<{ journey: ActivationJourneyV2; stageName: string } | null>(null);
   const [countrySearch, setCountrySearch] = useState('');
   const [currentStep, setCurrentStep] = useState(() => {
     try {
@@ -225,6 +253,17 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     }
     return { ...emptyOnboardingData, country: detectCountryFromLocale() ?? '' };
   });
+
+  useEffect(() => {
+    if (!user?.id || !activationV2Enabled) return;
+    let cancelled = false;
+    void supabase.from('profiles').select('user_preferences').eq('id', user.id).maybeSingle().then(({ data }) => {
+      if (!cancelled && data?.user_preferences && typeof data.user_preferences === 'object' && !Array.isArray(data.user_preferences)) {
+        setExistingPreferences(data.user_preferences as Record<string, unknown>);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [activationV2Enabled, user?.id]);
 
   // Steps are dynamic: the fundraising follow-up only appears when the primary
   // blocker is fundraising, so it never taxes the other ~85% of founders.
@@ -329,6 +368,42 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   const diagnostic = useMemo(() => getStageDiagnostic(formData.stageAnswers), [formData.stageAnswers]);
   const assignedStage = diagnostic?.assignedStage ?? null;
   const stageMeta = assignedStage ? STAGES[assignedStage] : null;
+  const availableIntents = useMemo(() => {
+    const planIntents = new Set(getStageAvailableIntents(currentPlan));
+    const originIntent = normalizeActivationIntent(existingPreferences.activationIntent);
+    const candidates = originIntent && !V2_ONBOARDING_INTENTS.includes(originIntent)
+      ? [...V2_ONBOARDING_INTENTS, originIntent]
+      : V2_ONBOARDING_INTENTS;
+    return candidates.filter((intent) => {
+      if (!planIntents.has(intent)) return false;
+      if (!creditsLoading && totalAvailable <= 0 && ['plan_gtm', 'log_traction', 'analyze_pitch_deck'].includes(intent)) return false;
+      const featureKey = ACTIVATION_CATALOG[intent].featureKey;
+      if (!featureKey) return true;
+      try {
+        return checkFeatureAccess(featureKey).hasAccess;
+      } catch {
+        return true;
+      }
+    });
+  }, [checkFeatureAccess, creditsLoading, currentPlan, existingPreferences.activationIntent, totalAvailable]);
+  const recommendation = useMemo<ActivationRecommendation | null>(() => {
+    if (!diagnostic || !formData.stageAnswers.blocker || !formData.stageAnswers.productStatus) return null;
+    return recommendActivation({
+      assignedStage: diagnostic.assignedStage,
+      blocker: formData.stageAnswers.blocker,
+      productStatus: formData.stageAnswers.productStatus,
+      userPreferences: existingPreferences,
+      availableIntents,
+    });
+  }, [availableIntents, diagnostic, existingPreferences, formData.stageAnswers.blocker, formData.stageAnswers.productStatus]);
+
+  useEffect(() => {
+    if (!activationV2Enabled || explicitIntentChoice || !recommendation) return;
+    setFormData((previous) => previous.activationIntent === recommendation.intent
+      ? previous
+      : { ...previous, activationIntent: recommendation.intent });
+  }, [activationV2Enabled, explicitIntentChoice, recommendation]);
+
   const selectedActivationCard = ACTIVATION_CARDS.find((card) => card.value === formData.activationIntent) ?? null;
   const selectedRoute = formData.activationIntent ? getActivationRoute(formData.activationIntent) : null;
   const profileTags = [
@@ -446,6 +521,20 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
       const businessStage = mapFounderStageToBusinessStage(finalAssignedStage);
       const primaryPain = stageAnswers.blocker;
       const supportAreas = deriveSupportAreas(stageAnswers.blocker);
+      const activeRecommendation = recommendation ?? {
+        intent: selectedIntent,
+        source: 'quiz' as const,
+        resumeUrl: ACTIVATION_CATALOG[selectedIntent].route,
+        reason: 'Selected as your first founder win.',
+      };
+      const baseJourney = activationV2Enabled
+        ? createActivationJourney(activeRecommendation, selectedIntent)
+        : null;
+      const activationJourney = baseJourney && selectedIntent === 'build_demo' && stageAnswers.productStatus === 'idea_only'
+        ? { ...baseJourney, resumeUrl: `${ACTIVATION_CATALOG.build_demo.route}?mode=no_assets` }
+        : baseJourney;
+
+      if (activationJourney) setHandoff({ journey: activationJourney, stageName: STAGES[finalAssignedStage].name });
 
       await startActivationJourney({
         userId: user.id,
@@ -457,6 +546,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         country: formData.country,
         assignedStage: finalAssignedStage,
         quizAnswersV3: createQuizAnswersV3Payload(stageAnswers, finalDiagnostic),
+        activationJourney: activationJourney ?? undefined,
       });
 
       await refreshOnboardingMentorRecommendations({
@@ -496,19 +586,21 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         timeMs: Date.now() - startedAt,
         startRoute,
       });
-      trackActivationFunnelEvent('first_action_opened', {
-        user_id: user.id,
-        activation_intent: selectedIntent,
-        selected_path: startRoute,
-        source: 'onboarding',
-      });
-      void trackRetentionEvent('activation_first_action_opened', {
-        user_id: user.id,
-        activation_intent: selectedIntent,
-        selected_path: startRoute,
-        source: 'onboarding',
-      });
-      trackOnboardingCompleted({
+      if (!activationJourney) {
+        trackActivationFunnelEvent('first_action_opened', {
+          user_id: user.id,
+          activation_intent: selectedIntent,
+          selected_path: startRoute,
+          source: 'onboarding',
+        });
+        void trackRetentionEvent('activation_first_action_opened', {
+          user_id: user.id,
+          activation_intent: selectedIntent,
+          selected_path: startRoute,
+          source: 'onboarding',
+        });
+      }
+      const onboardingProperties = {
         quiz_completed: true,
         creative_niche: null,
         business_stage: businessStage || null,
@@ -519,8 +611,17 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         stage_confidence: finalDiagnostic.confidence,
         pain_point: primaryPain,
         activation_intent: selectedIntent,
-      });
-      void trackActivity('onboarding_completed', {
+      };
+      if (activationJourney) {
+        await trackActivationJourneyEvent({
+          userId: user.id,
+          journey: activationJourney,
+          event: 'onboarding_completed',
+          properties: { ...onboardingProperties, assigned_stage: finalAssignedStage, plan: currentPlan, device: window.innerWidth < 768 ? 'mobile' : 'desktop' },
+        });
+      } else {
+        trackOnboardingCompleted(onboardingProperties);
+        void trackActivity('onboarding_completed', {
         stage: businessStage,
         assignedStage: finalAssignedStage,
         stageLabel: STAGES[finalAssignedStage].name,
@@ -531,7 +632,8 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         supportAreasNeeded: supportAreas,
         country: formData.country,
         startRoute,
-      }, user.id);
+        }, user.id);
+      }
 
       toast.success('Your launchpad is ready. Opening your first action now.');
 
@@ -542,8 +644,11 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         /* ignore */
       }
 
-      onComplete?.(appendActivationParams(startRoute, selectedIntent));
+      onComplete?.(activationJourney
+        ? buildActivationJourneyUrl(selectedIntent, activationJourney.journeyId, activationJourney.resumeUrl)
+        : appendActivationParams(startRoute, selectedIntent));
     } catch (error) {
+      setHandoff(null);
       console.error('Failed to save onboarding data:', error);
       toast.error('Failed to save onboarding data. Please try again.');
     } finally {
@@ -749,6 +854,75 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         </div>
       ) : null}
 
+      {activationV2Enabled && recommendation ? (
+        <div className="space-y-4">
+          {(() => {
+            const selectedIntent = (formData.activationIntent || recommendation.intent) as ActivationIntent;
+            const selected = ACTIVATION_CATALOG[selectedIntent];
+            return (
+              <div className="rounded-xl border-2 border-accent-teal bg-accent-teal/10 p-5 shadow-sm shadow-accent-teal/10">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Badge className="rounded-full bg-accent-teal text-white hover:bg-accent-teal">
+                    {recommendation.source === 'resume' && selectedIntent === recommendation.intent
+                      ? 'Continue what you started'
+                      : selectedIntent === recommendation.intent
+                        ? 'Recommended first win'
+                        : 'Your selected first win'}
+                  </Badge>
+                  <span className="text-sm font-medium text-muted-foreground">About {selected.estimatedMinutes} min</span>
+                </div>
+                <h3 className="mt-4 font-space-grotesk text-xl font-semibold">{selected.label}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {selectedIntent === recommendation.intent ? recommendation.reason : selected.description}
+                </p>
+                <div className="mt-4 rounded-lg border border-border/60 bg-background/75 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">You will leave with</p>
+                  <p className="mt-1 text-sm font-semibold text-foreground">{selected.output}</p>
+                </div>
+                <ol className="mt-4 grid gap-2 sm:grid-cols-3" aria-label="First-win steps">
+                  {selected.steps.map((item, index) => (
+                    <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-teal/15 text-xs font-semibold text-accent-teal">{index + 1}</span>
+                      {item}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            );
+          })()}
+
+          <details className="group rounded-lg border border-border/60 bg-background/60">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              Choose another goal
+              <span aria-hidden="true" className="text-muted-foreground transition-transform group-open:rotate-180">⌄</span>
+            </summary>
+            <div className="grid gap-2 border-t border-border/60 p-3 sm:grid-cols-2">
+              {availableIntents
+                .filter((intent) => V2_ONBOARDING_INTENTS.includes(intent))
+                .filter((intent) => intent !== formData.activationIntent)
+                .map((intent) => {
+                  const entry = ACTIVATION_CATALOG[intent];
+                  return (
+                    <button
+                      key={intent}
+                      type="button"
+                      className="min-h-11 rounded-lg border border-border/60 bg-card p-3 text-left transition-colors hover:border-accent-teal/60 hover:bg-accent"
+                      onClick={() => {
+                        setExplicitIntentChoice(true);
+                        setFormData((previous) => ({ ...previous, activationIntent: intent }));
+                        setErrors((previous) => ({ ...previous, activationIntent: undefined }));
+                      }}
+                    >
+                      <span className="block text-sm font-semibold">{entry.label}</span>
+                      <span className="mt-1 block text-xs leading-5 text-muted-foreground">{entry.output} · {entry.estimatedMinutes} min</span>
+                    </button>
+                  );
+                })}
+            </div>
+          </details>
+          {errors.activationIntent ? <p className="text-sm text-destructive">{errors.activationIntent}</p> : null}
+        </div>
+      ) : (
       <div className="grid gap-3">
         {ACTIVATION_CARDS.map((card) => {
           const Icon = card.icon;
@@ -799,6 +973,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         })}
         {errors.activationIntent ? <p className="text-sm text-destructive">{errors.activationIntent}</p> : null}
       </div>
+      )}
     </div>
   );
 
@@ -827,6 +1002,29 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         return null;
     }
   };
+
+  if (handoff) {
+    const entry = ACTIVATION_CATALOG[handoff.journey.selectedIntent];
+    return (
+      <div className="mx-auto flex min-h-[620px] w-full max-w-3xl items-center px-4 py-10" role="status" aria-live="polite">
+        <Card className="w-full border-accent-teal/30 bg-card/95 shadow-2xl">
+          <CardContent className="p-7 text-center sm:p-10">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent-teal/15 text-accent-teal">
+              <Loader2 className="h-7 w-7 animate-spin motion-reduce:animate-none" />
+            </div>
+            <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-accent-teal">Stage assigned</p>
+            <h1 className="mt-2 font-space-grotesk text-3xl font-semibold">{handoff.stageName}</h1>
+            <p className="mt-4 text-sm text-muted-foreground">Preparing your focused first win</p>
+            <p className="mt-1 text-lg font-semibold">{entry.label}</p>
+            <div className="mx-auto mt-6 h-2 max-w-sm overflow-hidden rounded-full bg-muted">
+              <motion.div className="h-full w-3/4 rounded-full bg-accent-teal" initial={{ width: '10%' }} animate={{ width: '82%' }} transition={{ duration: 1.4 }} />
+            </div>
+            <p className="mt-4 text-sm text-muted-foreground">Your quiz and journey are saved before we open the tool.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-5xl px-3 py-4 sm:px-6">
@@ -946,7 +1144,9 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                       </>
                     ) : currentStep === totalSteps - 1 ? (
                       <>
-                        {selectedActivationCard?.cta ?? 'Start first action'}
+                        {activationV2Enabled && formData.activationIntent
+                          ? ACTIVATION_CATALOG[formData.activationIntent].label
+                          : selectedActivationCard?.cta ?? 'Start first action'}
                         <ArrowRight className="h-4 w-4" />
                       </>
                     ) : (

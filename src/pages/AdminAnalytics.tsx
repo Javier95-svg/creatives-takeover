@@ -145,6 +145,7 @@ const AdminAnalytics = () => {
         firstOutputGeneratedResult,
         firstArtifactSavedResult,
         activationCompletedResult,
+        activationV2Result,
       ] = await Promise.all([
         supabase
           .from('conversion_events')
@@ -200,18 +201,24 @@ const AdminAnalytics = () => {
           .eq('activity_type', 'activation_completed')
           .gte('created_at', fromIso)
           .lte('created_at', toIso),
+        supabase.rpc('get_activation_funnel_v2', { p_from: fromIso, p_to: toIso }),
       ]);
+
+      const activationV2 = activationV2Result.data && typeof activationV2Result.data === 'object'
+        ? activationV2Result.data as Record<string, unknown>
+        : null;
+      const count = (key: string, fallback: number) => typeof activationV2?.[key] === 'number' ? activationV2[key] as number : fallback;
 
       setOnboardingFunnel({
         signupStarted: signupStartedResult.count ?? 0,
         signupCompleted: signupCompletedResult.count ?? 0,
         onboardingStarted: onboardingStartedResult.count ?? 0,
-        onboardingCompleted: onboardingCompletedResult.count ?? 0,
-        firstActionOpened: firstActionOpenedResult.count ?? 0,
-        firstInputSubmitted: firstInputSubmittedResult.count ?? 0,
-        firstOutputGenerated: firstOutputGeneratedResult.count ?? 0,
-        firstArtifactSaved: firstArtifactSavedResult.count ?? 0,
-        activationCompleted: activationCompletedResult.count ?? 0,
+        onboardingCompleted: count('cohortJourneys', onboardingCompletedResult.count ?? 0),
+        firstActionOpened: count('destinationViewed', firstActionOpenedResult.count ?? 0),
+        firstInputSubmitted: count('firstInputWithin10Minutes', firstInputSubmittedResult.count ?? 0),
+        firstOutputGenerated: count('firstOutputGenerated', firstOutputGeneratedResult.count ?? 0),
+        firstArtifactSaved: count('artifactWithin30Minutes', firstArtifactSavedResult.count ?? 0),
+        activationCompleted: count('artifactWithin24Hours', activationCompletedResult.count ?? 0),
       });
     })();
   }, [endDate, startDate]);

@@ -17,6 +17,7 @@ const ALLOWED_EVENT_PREFIXES = [
   "first_",
   "mentor_",
   "message_",
+  "onboarding_",
   "saved_mentors_",
   "tool_",
 ] as const;

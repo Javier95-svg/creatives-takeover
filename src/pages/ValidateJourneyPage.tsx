@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, ArrowRight, CheckCircle2, Save, Scale, Star, Target } from "lucide-react";
 import { DecisionSprintStepNav, type DecisionSprintStep } from "@/components/decision-sprint/DecisionSprintStepNav";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -170,6 +170,8 @@ const getDecisionLabel = (score: number) => {
 };
 
 export default function ValidateJourneyPage() {
+  const [searchParams] = useSearchParams();
+  const focusedActivation = searchParams.get('activation') === '1' && Boolean(searchParams.get('journey'));
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [ideas, setIdeas] = useState<IdeaScore[]>([createIdea()]);
@@ -425,9 +427,9 @@ export default function ValidateJourneyPage() {
 	        <div className="space-y-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="w-full max-w-2xl flex-1">
-              <DecisionSprintStepNav active={step} onSelect={setStep} />
+              {!focusedActivation && <DecisionSprintStepNav active={step} onSelect={setStep} />}
             </div>
-            <Button
+            {!focusedActivation && <Button
               type="button"
               variant="outline"
               className="shrink-0 self-start"
@@ -436,7 +438,7 @@ export default function ValidateJourneyPage() {
             >
               <Save className="mr-2 h-4 w-4" />
               {isSavingDraft ? 'Saving draft...' : 'Save validation draft'}
-            </Button>
+            </Button>}
           </div>
             {step === 1 && (
             <div id="shortlist" className="space-y-6">
@@ -470,7 +472,7 @@ export default function ValidateJourneyPage() {
                               </Badge>
                             )}
                           </CardTitle>
-                          <div className="flex items-center gap-2">
+                          {(!focusedActivation || Boolean(idea.name.trim())) && <div className="flex items-center gap-2">
                             <Button
                               size="sm"
                               variant={isActive ? "default" : "outline"}
@@ -491,7 +493,7 @@ export default function ValidateJourneyPage() {
                                 Remove
                               </Button>
                             )}
-                          </div>
+                          </div>}
                         </div>
                       </CardHeader>
                       <CardContent className="space-y-4">
@@ -540,20 +542,20 @@ export default function ValidateJourneyPage() {
               </div>
 
               <div className="flex flex-wrap gap-3">
-                <Button
+                {!focusedActivation && <Button
                   variant="outline"
                   onClick={handleAddIdea}
                   disabled={ideas.length >= MAX_IDEAS}
                 >
                   Add another idea
-                </Button>
-                <Button
+                </Button>}
+                {!focusedActivation && <Button
                   variant="ghost"
                   onClick={() => setActiveIdeaId(rankedIdeas[0]?.id || "")}
                   disabled={ideas.length === 0}
                 >
                   Focus highest score
-                </Button>
+                </Button>}
                 <Button className="ml-auto" onClick={() => setStep(2)} disabled={!activeIdea}>
                   Score {activeIdea?.name.trim() || "this idea"}
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -739,12 +741,12 @@ export default function ValidateJourneyPage() {
                           <Save className="h-4 w-4 mr-2" />
                           {isSavingDraft ? 'Saving draft...' : 'Save and come back later'}
                         </Button>
-	                      <Button variant="outline" className="w-full" asChild>
+	                      {!focusedActivation && <Button variant="outline" className="w-full" asChild>
                         <Link to="/pmf-lab">
                           Continue to Market Need Lab
                           <ArrowRight className="h-4 w-4 ml-2" />
                         </Link>
-                      </Button>
+                      </Button>}
                     </CardContent>
                   </Card>
 

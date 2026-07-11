@@ -22,6 +22,8 @@ import ProUpgradeBanner from "@/components/ProUpgradeBanner";
 import AdminRoute from "@/components/AdminRoute";
 import { useInteractionTelemetry } from "@/hooks/useInteractionTelemetry";
 import { captureReferralFromUrl } from "@/lib/referral";
+import { ActivationFocusShell } from '@/components/activation/ActivationFocusShell';
+import { ActivationResumeBanner } from '@/components/activation/ActivationResumeBanner';
 
 const PulseWidget = lazy(() => import("@/components/pulse/PulseWidget"));
 const MobileBottomNav = lazy(() =>
@@ -220,6 +222,8 @@ function App() {
                     <ScrollToTop />
                     <InteractionTelemetryBridge />
                     <ReferralCaptureBridge />
+                    <ActivationFocusShell />
+                    <ActivationResumeBanner />
                     <UpgradePromptProvider>
                       <CreditGateProvider>
                         <ProUpgradeBanner />

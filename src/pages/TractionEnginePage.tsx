@@ -54,6 +54,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { showDashboardReturnToast } from '@/components/dashboard/dashboardReturnToast';
+import { markFirstArtifactCreated } from '@/lib/retentionSystem';
 
 const SPRINTS_TABLE = 'traction_engine_sprints' as const;
 const LOGS_TABLE = 'traction_engine_weekly_logs' as const;
@@ -446,6 +447,15 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
 
       const { error: experimentError } = await supabase.from(EXPERIMENTS_TABLE).insert(experimentRows);
       if (experimentError) throw experimentError;
+
+      await markFirstArtifactCreated({
+        userId,
+        artifactType: 'traction_weekly_log',
+        artifactId: (log as { id: string }).id,
+        resumeUrl: '/traction-engine',
+        label: `Traction week ${currentWeekStart}`,
+        source: 'traction_engine',
+      });
 
       localStorage.removeItem('ct_traction_draft');
       showDashboardReturnToast({

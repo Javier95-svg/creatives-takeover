@@ -14,8 +14,9 @@ import { useUpgradePrompt } from '@/contexts/UpgradePromptContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowRight, CheckCircle2, CircleDashed, Loader2 } from 'lucide-react';
+import { markFirstArtifactCreated } from '@/lib/retentionSystem';
 
 const MVP_ARTIFACTS_TABLE = 'mvp_builder_artifacts' as any;
 
@@ -48,6 +49,8 @@ function formatDateTime(value: string | null): string | null {
 }
 
 export default function MVPBuilderBetaPage() {
+  const [searchParams] = useSearchParams();
+  const focusedActivation = searchParams.get('activation') === '1' && Boolean(searchParams.get('journey'));
   const { user } = useAuth();
   const { checkFeatureAccess } = useFeatureGating();
   const { openUpgradePrompt } = useUpgradePrompt();
@@ -203,6 +206,14 @@ export default function MVPBuilderBetaPage() {
     setLastSavedAt(payload.saved_at ?? new Date().toISOString());
 
     if (status === 'saved') {
+      await markFirstArtifactCreated({
+        userId: user.id,
+        artifactType: 'mvp_scope',
+        artifactId: (data as { id?: string })?.id ?? artifactId,
+        resumeUrl: '/mvp-scope',
+        label: form.scopeTitle.trim(),
+        source: 'mvp_builder',
+      });
       toast.success('MVP scope saved. Stage IV completion check updated.');
       await refreshProgress();
     } else {
@@ -252,7 +263,7 @@ export default function MVPBuilderBetaPage() {
             </p>
           </div>
 
-          <Card className="border-border/60 bg-muted/20">
+          {!focusedActivation && <Card className="border-border/60 bg-muted/20">
             <CardContent className="flex flex-col gap-4 py-6 md:flex-row md:items-center md:justify-between">
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
@@ -289,7 +300,7 @@ export default function MVPBuilderBetaPage() {
                 </Button>
               </div>
             </CardContent>
-          </Card>
+          </Card>}
 
           <Card className="border-primary/20">
             <CardHeader>
@@ -378,7 +389,7 @@ export default function MVPBuilderBetaPage() {
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" onClick={() => saveArtifact('draft')} disabled={formDisabled}>
+                {!focusedActivation && <Button variant="outline" onClick={() => saveArtifact('draft')} disabled={formDisabled}>
                   {isSaving ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -387,7 +398,7 @@ export default function MVPBuilderBetaPage() {
                   ) : (
                     'Save Draft'
                   )}
-                </Button>
+                </Button>}
                 <Button onClick={() => saveArtifact('saved')} disabled={formDisabled}>
                   {isSaving ? (
                     <>

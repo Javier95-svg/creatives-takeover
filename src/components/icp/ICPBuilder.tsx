@@ -78,7 +78,7 @@ import {
   type IcpPostSaveStep,
 } from "@/lib/icpUnlockFlow";
 import { consumeStoredIcpSeed, normalizeIcpSeed } from "@/lib/icpSeed";
-import { markFirstArtifactCreated, sendRetentionEmail } from "@/lib/retentionSystem";
+import { markFirstArtifactCreated, sendRetentionEmail, trackCurrentActivationJourneyEvent } from "@/lib/retentionSystem";
 
 const ICP_RESULTS_TABLE = "icp_analysis_results";
 const SEED_TIMEOUT_MS = 25000;
@@ -1082,6 +1082,14 @@ const ICPBuilder: React.FC = () => {
       if (!isIcpDraftSaveReady(data)) {
         console.error("ICP draft generation returned no analysis id", data);
         throw new Error(ICP_ANALYZER_ERROR_MESSAGE);
+      }
+
+      if (user) {
+        await trackCurrentActivationJourneyEvent(user.id, "activation_first_output_generated", {
+          intent: "run_icp",
+          tool: "icp_builder",
+          artifact_id: data.analysisId,
+        });
       }
 
       await unlockSavedDraft({

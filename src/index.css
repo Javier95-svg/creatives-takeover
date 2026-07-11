@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+body.activation-focus-mode #root nav,
+body.activation-focus-mode #root footer,
+body.activation-focus-mode #root h1:not([data-activation-focus-title]) {
+  display: none !important;
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */

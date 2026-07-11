@@ -8589,6 +8589,14 @@ export type Database = {
       }
     }
     Functions: {
+      get_activation_funnel_v2: {
+        Args: { p_from: string; p_to: string }
+        Returns: Json
+      }
+      start_activation_journey_v2: {
+        Args: { p_preference_patch: Json; p_profile_updates: Json }
+        Returns: undefined
+      }
       get_dashboard_snapshot_v1: {
         Args: { p_timezone?: string }
         Returns: Json

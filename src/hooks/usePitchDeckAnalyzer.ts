@@ -7,7 +7,7 @@ import { showDashboardReturnToast } from '@/components/dashboard/dashboardReturn
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/hooks/useCredits';
 import { useJourneyUpgradePrompt } from '@/hooks/useJourneyUpgradePrompt';
-import { markFirstArtifactCreated, trackRetentionEvent } from '@/lib/retentionSystem';
+import { markFirstArtifactCreated, trackCurrentActivationJourneyEvent, trackRetentionEvent } from '@/lib/retentionSystem';
 
 const UPLOAD_BUCKET = 'pitch-deck-uploads';
 
@@ -188,13 +188,15 @@ export const usePitchDeckAnalyzer = () => {
       };
 
       setAnalysis(result);
-      await trackRetentionEvent('activation_first_output_generated', {
+      const outputProperties = {
         user_id: user.id,
         tool: 'pitch_deck_analyzer',
         source: 'pitch_deck_analyzer',
         artifact_type: 'pitch_deck_analysis',
         artifact_id: result.id,
-      });
+      };
+      const currentJourney = await trackCurrentActivationJourneyEvent(user.id, 'activation_first_output_generated', outputProperties);
+      if (!currentJourney) await trackRetentionEvent('activation_first_output_generated', outputProperties);
       await markFirstArtifactCreated({
         userId: user.id,
         artifactType: 'pitch_deck_analysis',
