@@ -124,3 +124,24 @@ test('tool registry covers the seven core journey tools and human layer', () => 
     assert.match(source, new RegExp(`key: '${key}'`));
   }
 });
+
+test('dashboard tab polish keeps routine sections full-width and removes redundant hero cards', () => {
+  const routine = read('../src/pages/YourRoutinePage.tsx');
+  const commandStrip = read('../src/components/dashboard/DashboardCommandSignalStrip.tsx');
+  const mentors = read('../src/pages/SavedMentorsPage.tsx');
+
+  assert.doesNotMatch(routine, /xl:grid-cols-\[minmax\(0,1\.35fr\)/);
+  assert.doesNotMatch(commandStrip, /Share your link and track rewards/);
+  assert.doesNotMatch(mentors, /Queue size|Best use|Community path/i);
+});
+
+test('returning to a mounted dashboard tab preserves its home component and completed profile gate', () => {
+  const dashboard = read('../src/pages/Dashboard.tsx');
+  const shell = read('../src/components/dashboard/DashboardShell.tsx');
+  const tabs = read('../src/components/dashboard/DashboardTabsHost.tsx');
+
+  assert.doesNotMatch(dashboard, /isActiveDashboardHome/);
+  assert.match(tabs, /mountedTabIds/);
+  assert.match(shell, /completedDashboardProfileCache/);
+  assert.match(shell, /activationGate\.loading && day1Profile\?\.onboarding_completed !== true/);
+});

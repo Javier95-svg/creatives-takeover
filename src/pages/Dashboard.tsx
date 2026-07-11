@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet-async';
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -31,6 +31,7 @@ import {
 import { normalizePlan } from '@/config/planPermissions';
 import type { ActivationIntent } from '@/lib/retentionSystem';
 import { isExecutionDashboardEnabled } from '@/lib/dashboardRollout';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
 
 interface DashboardActivationState {
   loading: boolean;
@@ -43,15 +44,14 @@ interface DashboardActivationState {
 
 const Dashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { pathname } = useLocation();
   const { showExitIntent, closeExitIntent } = useExitIntent();
   const { user } = useAuth();
   const { subscriptionData } = useSubscription();
   const fromIcpBuilder = searchParams.get('from') === 'icp_builder';
-  const isActiveDashboardHome = pathname === '/dashboard';
   const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
   const daysSinceSignup = getDaysSinceSignup(user?.created_at ?? null);
-  const executionDashboardEnabled = isExecutionDashboardEnabled(user?.id);
+  const executionDashboardFlag = useFeatureFlagEnabled('dashboard-command-center-v2');
+  const executionDashboardEnabled = isExecutionDashboardEnabled(user?.id, executionDashboardFlag);
   const [activationState, setActivationState] = useState<DashboardActivationState>({
     loading: true,
     showFirstResultMode: false,
@@ -188,7 +188,7 @@ const Dashboard = () => {
       ) : (
       <>
       {executionDashboardEnabled ? (
-        isActiveDashboardHome ? <ExecutionDashboardHome /> : null
+        <ExecutionDashboardHome />
       ) : (
       <>
       {/* Returning users land back in their saved work before anything else. */}
@@ -199,8 +199,8 @@ const Dashboard = () => {
           artifactType={activationState.firstArtifactType}
         />
       ) : null}
-      {isActiveDashboardHome ? <DashboardTodayCockpit /> : null}
-      {isActiveDashboardHome ? <FounderJourneyPanel /> : null}
+      <DashboardTodayCockpit />
+      <FounderJourneyPanel />
       <DashboardDisclosure
         title="More founder signals"
         summary="Startup profile editor, growth, and setup prompts are here when you want extra context."

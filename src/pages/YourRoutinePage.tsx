@@ -488,7 +488,7 @@ export default function YourRoutinePage() {
           />
         ) : null}
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.8fr)]">
+        <div className="space-y-6">
           <div className="space-y-6">
             <RoutineTaskSection
               title="Today"
@@ -515,7 +515,6 @@ export default function YourRoutinePage() {
           <DashboardDisclosure
             title="Routine settings and history"
             summary="Reminders, suggestions, templates, and old commitments stay here when you need them."
-            className="xl:col-span-2"
           >
             <aside className="grid gap-4 lg:grid-cols-3">
             <Card className="border-border/70 bg-card/80">

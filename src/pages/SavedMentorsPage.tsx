@@ -102,23 +102,6 @@ const SavedMentorsPage = () => {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
-            <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Queue size</p>
-              <p className="mt-2 text-2xl font-semibold text-foreground">{visibleSavedMentors.length}</p>
-              <p className="mt-2 text-sm text-muted-foreground">A short mentor queue is easier to act on than a crowded War Room widget.</p>
-            </div>
-            <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Best use</p>
-              <p className="mt-2 text-lg font-semibold text-foreground">Move one relationship forward</p>
-              <p className="mt-2 text-sm text-muted-foreground">Use this page to pick a single mentor and take the next step today.</p>
-            </div>
-            <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Community path</p>
-              <p className="mt-2 text-lg font-semibold text-foreground">Saved marketplace view</p>
-              <p className="mt-2 text-sm text-muted-foreground">When you need broader context, jump back into the saved mentors marketplace view.</p>
-            </div>
-          </CardContent>
         </Card>
 
         <div className="grid gap-6 xl:grid-cols-[1.18fr_0.82fr]">

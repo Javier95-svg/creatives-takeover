@@ -35,6 +35,7 @@ import { captureEvent } from '@/lib/analytics';
 import type { DashboardSnapshotV1 } from '@/types/dashboardSnapshot';
 
 const DASHBOARD_MAX_WIDTH = 'max-w-7xl';
+const completedDashboardProfileCache = new Map<string, Day1Profile>();
 
 interface DashboardFrameContentProps {
   incompleteTaskCount: number;
@@ -215,11 +216,12 @@ export function DashboardShell() {
   const { checkFeatureAccess } = useFeatureGating();
   const activationGate = useActivationGate();
   const navigate = useNavigate();
-  const [profileLoading, setProfileLoading] = useState(true);
-  const [day1Profile, setDay1Profile] = useState<Day1Profile | null>(null);
-  const validatedUserIdRef = useRef<string | null>(null);
   const userId = user?.id ?? null;
   const userCreatedAt = user?.created_at ?? null;
+  const cachedProfile = userId ? completedDashboardProfileCache.get(userId) ?? null : null;
+  const [profileLoading, setProfileLoading] = useState(() => Boolean(userId && !cachedProfile));
+  const [day1Profile, setDay1Profile] = useState<Day1Profile | null>(cachedProfile);
+  const validatedUserIdRef = useRef<string | null>(cachedProfile ? userId : null);
 
   useEffect(() => {
     let isCancelled = false;
@@ -258,6 +260,11 @@ export function DashboardShell() {
       }
 
       setDay1Profile(profile);
+      if (profile.onboarding_completed === true) {
+        completedDashboardProfileCache.set(userId, profile);
+      } else {
+        completedDashboardProfileCache.delete(userId);
+      }
       validatedUserIdRef.current = userId;
       setProfileLoading(false);
     };
@@ -270,7 +277,14 @@ export function DashboardShell() {
   }, [userId]);
 
   const handleDay1ProfilePatch = (patch: Partial<Day1Profile>) => {
-    setDay1Profile((current) => (current ? { ...current, ...patch } : current));
+    setDay1Profile((current) => {
+      if (!current) return current;
+      const next = { ...current, ...patch };
+      if (userId && next.onboarding_completed === true) {
+        completedDashboardProfileCache.set(userId, next);
+      }
+      return next;
+    });
   };
 
   useEffect(() => {
@@ -299,7 +313,7 @@ export function DashboardShell() {
     );
   }
 
-  if (activationGate.loading || profileLoading) {
+  if (profileLoading || (activationGate.loading && day1Profile?.onboarding_completed !== true)) {
     return <DashboardSkeleton />;
   }
 

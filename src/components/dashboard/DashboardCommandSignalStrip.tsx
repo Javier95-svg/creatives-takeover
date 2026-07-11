@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ArrowRight, ChevronDown, FileText, Gift, Repeat2, Target } from 'lucide-react';
+import { ArrowRight, ChevronDown, FileText, Repeat2, Target } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -38,13 +38,6 @@ const TAB_COPY: Record<string, {
     body: 'Finish today’s habits, then tune weekly commitments when needed.',
     help: 'Routine is for repeatable behavior. Settings, reminders, templates, and history are tucked away until you need them.',
   },
-  '/dashboard/referral': {
-    icon: Gift,
-    label: 'Referrals',
-    title: 'Share your link and track rewards.',
-    body: 'Copy the referral link, watch reward progress, and inspect history only when needed.',
-    help: 'Referral work is strongest once your product foundation is clear enough to share with other founders.',
-  },
 };
 
 export function DashboardCommandSignalStrip() {
@@ -54,7 +47,6 @@ export function DashboardCommandSignalStrip() {
     completedFoundationCount,
     currentStage,
     foundationalMilestones,
-    hasProductFoundation,
     incompleteFoundations,
     isLoading,
   } = useFounderCommandSignals();
@@ -65,9 +57,7 @@ export function DashboardCommandSignalStrip() {
 
   const Icon = copy.icon;
   const nextFoundation = incompleteFoundations[0];
-  const statusLabel = pathname === '/dashboard/referral'
-    ? hasProductFoundation ? 'Foundation ready' : 'Foundation pending'
-    : `Stage ${currentStage}`;
+  const statusLabel = `Stage ${currentStage}`;
 
   return (
     <section className="mb-5 rounded-xl border border-border/70 bg-card/75 p-4 shadow-sm">
