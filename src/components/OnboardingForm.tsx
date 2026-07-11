@@ -70,10 +70,12 @@ interface OnboardingData {
   stageAnswers: Partial<FounderStageQuizAnswersV3>;
   startupSectors: string[];
   country: string;
+  cofounderSituation: CofounderSituation | '';
   activationIntent: ActivationIntent | '';
 }
 
-type StepKind = 'stage' | 'fundraising' | 'sector' | 'country' | 'activation';
+type CofounderSituation = 'actively_looking' | 'solo_ok';
+type StepKind = 'stage' | 'fundraising' | 'sector' | 'country' | 'cofounder' | 'activation';
 
 interface OnboardingStep {
   id: string;
@@ -149,11 +151,12 @@ const emptyOnboardingData: OnboardingData = {
   stageAnswers: {},
   startupSectors: [],
   country: '',
+  cofounderSituation: '',
   activationIntent: '',
 };
 
 // Increment this whenever the question set changes so PostHog cohorts stay clean.
-const QUIZ_VERSION = 4;
+const QUIZ_VERSION = 5;
 
 interface OnboardingFormProps {
   onComplete?: (startRoute?: string) => void;
@@ -245,6 +248,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
           stageAnswers: parsed.stageAnswers ?? {},
           startupSectors: Array.isArray(parsed.startupSectors) ? parsed.startupSectors : [],
           country: parsed.country ?? '',
+          cofounderSituation: parsed.cofounderSituation ?? '',
           activationIntent: parsed.activationIntent ?? '',
         };
       }
@@ -282,6 +286,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     list.push(
       { id: 'startup_sector', kind: 'sector', chapter: 'Context', label: 'Market' },
       { id: 'country', kind: 'country', chapter: 'Context', label: 'Location' },
+      { id: 'cofounder_situation', kind: 'cofounder', chapter: 'Team', label: 'Co-founder' },
       { id: 'activation_intent', kind: 'activation', chapter: 'First action', label: 'Launchpad' },
     );
 
@@ -344,6 +349,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         stageAnswers: formData.stageAnswers,
         startupSectors: formData.startupSectors,
         country: formData.country,
+        cofounderSituation: formData.cofounderSituation,
         activationIntent: formData.activationIntent,
       }));
     } catch {
@@ -352,6 +358,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   }, [
     currentStep,
     formData.activationIntent,
+    formData.cofounderSituation,
     formData.country,
     formData.stageAnswers,
     formData.startupSectors,
@@ -433,6 +440,9 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         break;
       case 'country':
         if (!formData.country) newErrors.country = 'Select your country';
+        break;
+      case 'cofounder':
+        if (!formData.cofounderSituation) newErrors.cofounderSituation = 'Choose the option that matches your situation';
         break;
       case 'activation':
         if (!formData.activationIntent) newErrors.activationIntent = 'Choose the first action that would help this week';
@@ -545,7 +555,12 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         supportAreasNeeded: supportAreas,
         country: formData.country,
         assignedStage: finalAssignedStage,
-        quizAnswersV3: createQuizAnswersV3Payload(stageAnswers, finalDiagnostic),
+        quizAnswersV3: {
+          ...createQuizAnswersV3Payload(stageAnswers, finalDiagnostic),
+          cofounderSituation: formData.cofounderSituation,
+        },
+        cofounderSituation: formData.cofounderSituation as CofounderSituation,
+        onboardingLocalDate: new Intl.DateTimeFormat('en-CA').format(new Date()),
         activationJourney: activationJourney ?? undefined,
       });
 
@@ -571,6 +586,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         startupSectors: formData.startupSectors,
         supportAreasNeeded: supportAreas,
         country: formData.country,
+        cofounderSituation: formData.cofounderSituation,
         timeMs: Date.now() - startedAt,
         startRoute,
       });
@@ -583,6 +599,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         startupSectors: formData.startupSectors,
         supportAreasNeeded: supportAreas,
         country: formData.country,
+        cofounderSituation: formData.cofounderSituation,
         timeMs: Date.now() - startedAt,
         startRoute,
       });
@@ -611,6 +628,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         stage_confidence: finalDiagnostic.confidence,
         pain_point: primaryPain,
         activation_intent: selectedIntent,
+        cofounder_situation: formData.cofounderSituation,
       };
       if (activationJourney) {
         await trackActivationJourneyEvent({
@@ -631,6 +649,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         startupSectors: formData.startupSectors,
         supportAreasNeeded: supportAreas,
         country: formData.country,
+        cofounderSituation: formData.cofounderSituation,
         startRoute,
         }, user.id);
       }
@@ -977,6 +996,48 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     </div>
   );
 
+  const renderCofounderStep = () => (
+    <div className="space-y-6">
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase text-accent-teal">Team</p>
+        <h2 className="font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
+          What&apos;s your co-founder situation?
+        </h2>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          We use this to add a relevant next action to your dashboard—never to change your founder stage.
+        </p>
+      </div>
+      <div className="grid gap-3">
+        {([
+          { value: 'actively_looking', label: "I'm actively looking for a co-founder.", description: 'Add a focused task to find and publish a co-founder post.' },
+          { value: 'solo_ok', label: "I'm a solo founder and I'm OK with that.", description: 'Keep the dashboard focused on your current product and growth priorities.' },
+        ] as const).map((option) => {
+          const selected = formData.cofounderSituation === option.value;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={selected}
+              className={cn(
+                'min-h-20 rounded-xl border p-4 text-left transition-colors',
+                selected ? 'border-accent-teal bg-accent-teal/10' : 'border-border/60 bg-background/70 hover:border-accent-teal/50 hover:bg-accent/60',
+              )}
+              onClick={() => {
+                setFormData((previous) => ({ ...previous, cofounderSituation: option.value }));
+                setErrors((previous) => ({ ...previous, cofounderSituation: undefined }));
+                queueAutoAdvance();
+              }}
+            >
+              <span className="block font-space-grotesk text-base font-semibold">{option.label}</span>
+              <span className="mt-1 block text-sm leading-6 text-muted-foreground">{option.description}</span>
+            </button>
+          );
+        })}
+        {errors.cofounderSituation ? <p className="text-sm text-destructive">{errors.cofounderSituation}</p> : null}
+      </div>
+    </div>
+  );
+
   const renderStep = () => {
     switch (step.kind) {
       case 'stage': {
@@ -996,6 +1057,8 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         return renderSectorStep();
       case 'country':
         return renderCountryStep();
+      case 'cofounder':
+        return renderCofounderStep();
       case 'activation':
         return renderActivationStep();
       default:

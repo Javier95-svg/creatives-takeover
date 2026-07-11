@@ -965,48 +965,90 @@ export type Database = {
           commitment: string | null
           created_at: string | null
           equity_range: string | null
+          experience_level: string | null
+          expires_at: string | null
+          founder_values: string[]
+          headline: string | null
           id: string
           industry: string | null
+          industries: string[]
+          last_active_at: string
+          listing_type: string
           location: string | null
           looking_for: string[]
           project_description: string
           project_name: string
+          published_at: string | null
+          skills_offered: string[]
+          skills_sought: string[]
           stage: string
+          startup_name: string | null
           status: string | null
+          summary: string | null
+          timezone: string
           updated_at: string | null
           user_id: string
+          work_mode: string
         }
         Insert: {
           additional_info?: string | null
           commitment?: string | null
           created_at?: string | null
           equity_range?: string | null
+          experience_level?: string | null
+          expires_at?: string | null
+          founder_values?: string[]
+          headline?: string | null
           id?: string
           industry?: string | null
+          industries?: string[]
+          last_active_at?: string
+          listing_type?: string
           location?: string | null
           looking_for: string[]
           project_description: string
           project_name: string
+          published_at?: string | null
+          skills_offered?: string[]
+          skills_sought?: string[]
           stage: string
+          startup_name?: string | null
           status?: string | null
+          summary?: string | null
+          timezone?: string
           updated_at?: string | null
           user_id: string
+          work_mode?: string
         }
         Update: {
           additional_info?: string | null
           commitment?: string | null
           created_at?: string | null
           equity_range?: string | null
+          experience_level?: string | null
+          expires_at?: string | null
+          founder_values?: string[]
+          headline?: string | null
           id?: string
           industry?: string | null
+          industries?: string[]
+          last_active_at?: string
+          listing_type?: string
           location?: string | null
           looking_for?: string[]
           project_description?: string
           project_name?: string
+          published_at?: string | null
+          skills_offered?: string[]
+          skills_sought?: string[]
           stage?: string
+          startup_name?: string | null
           status?: string | null
+          summary?: string | null
+          timezone?: string
           updated_at?: string | null
           user_id?: string
+          work_mode?: string
         }
         Relationships: []
       }
@@ -2592,6 +2634,30 @@ export type Database = {
           snapshot_hash?: string
           user_id?: string
         }
+        Relationships: []
+      }
+      cofounder_listing_saves: {
+        Row: { created_at: string; listing_id: string; user_id: string }
+        Insert: { created_at?: string; listing_id: string; user_id: string }
+        Update: { created_at?: string; listing_id?: string; user_id?: string }
+        Relationships: [{ foreignKeyName: "cofounder_listing_saves_listing_id_fkey"; columns: ["listing_id"]; isOneToOne: false; referencedRelation: "cofounder_posts"; referencedColumns: ["id"] }]
+      }
+      cofounder_match_feedback: {
+        Row: { created_at: string; feedback: string; listing_id: string; updated_at: string; user_id: string }
+        Insert: { created_at?: string; feedback: string; listing_id: string; updated_at?: string; user_id: string }
+        Update: { created_at?: string; feedback?: string; listing_id?: string; updated_at?: string; user_id?: string }
+        Relationships: []
+      }
+      cofounder_interests: {
+        Row: { availability_note: string; conversation_id: string | null; created_at: string; expires_at: string; id: string; introduction: string; listing_id: string; reason_code: string; recipient_id: string; responded_at: string | null; sender_id: string; status: string; stop_recommending: boolean; updated_at: string }
+        Insert: { availability_note: string; conversation_id?: string | null; created_at?: string; expires_at?: string; id?: string; introduction: string; listing_id: string; reason_code: string; recipient_id: string; responded_at?: string | null; sender_id: string; status?: string; stop_recommending?: boolean; updated_at?: string }
+        Update: { availability_note?: string; conversation_id?: string | null; created_at?: string; expires_at?: string; id?: string; introduction?: string; listing_id?: string; reason_code?: string; recipient_id?: string; responded_at?: string | null; sender_id?: string; status?: string; stop_recommending?: boolean; updated_at?: string }
+        Relationships: [{ foreignKeyName: "cofounder_interests_listing_id_fkey"; columns: ["listing_id"]; isOneToOne: false; referencedRelation: "cofounder_posts"; referencedColumns: ["id"] }, { foreignKeyName: "cofounder_interests_conversation_id_fkey"; columns: ["conversation_id"]; isOneToOne: false; referencedRelation: "conversations"; referencedColumns: ["id"] }]
+      }
+      cofounder_reports: {
+        Row: { category: string; created_at: string; explanation: string | null; id: string; interest_id: string | null; listing_id: string | null; reported_user_id: string; reporter_id: string; resolution_note: string | null; resolved_at: string | null; resolved_by: string | null; status: string }
+        Insert: { category: string; created_at?: string; explanation?: string | null; id?: string; interest_id?: string | null; listing_id?: string | null; reported_user_id: string; reporter_id: string; resolution_note?: string | null; resolved_at?: string | null; resolved_by?: string | null; status?: string }
+        Update: { category?: string; created_at?: string; explanation?: string | null; id?: string; interest_id?: string | null; listing_id?: string | null; reported_user_id?: string; reporter_id?: string; resolution_note?: string | null; resolved_at?: string | null; resolved_by?: string | null; status?: string }
         Relationships: []
       }
       dashboard_widgets: {
@@ -8589,6 +8655,21 @@ export type Database = {
       }
     }
     Functions: {
+      browse_cofounder_listings_v1: { Args: { p_cursor?: string | null; p_filters?: Json; p_limit?: number }; Returns: Json }
+      get_cofounder_matches_v1: { Args: { p_cursor?: string | null; p_filters?: Json; p_limit?: number; p_listing_id?: string | null }; Returns: Json }
+      get_my_cofounder_listing_v1: { Args: { p_listing_id?: string | null }; Returns: Json }
+      publish_cofounder_listing_v2: { Args: { p_idempotency_key: string; p_listing: Json }; Returns: Json }
+      save_cofounder_listing_draft_v2: { Args: { p_listing: Json }; Returns: Json }
+      update_cofounder_listing_v2: { Args: { p_listing_id: string; p_patch: Json }; Returns: Json }
+      renew_cofounder_listing_v2: { Args: { p_idempotency_key: string; p_listing_id: string }; Returns: Json }
+      set_cofounder_listing_status_v2: { Args: { p_listing_id: string; p_status: string }; Returns: Json }
+      send_cofounder_interest_v1: { Args: { p_availability_note: string; p_introduction: string; p_listing_id: string; p_reason_code: string }; Returns: Json }
+      respond_cofounder_interest_v1: { Args: { p_action: string; p_interest_id: string; p_stop_recommending?: boolean }; Returns: Json }
+      withdraw_cofounder_interest_v1: { Args: { p_interest_id: string }; Returns: undefined }
+      block_cofounder_interest_v1: { Args: { p_interest_id: string }; Returns: undefined }
+      report_cofounder_target_v1: { Args: { p_category?: string; p_explanation?: string | null; p_interest_id?: string | null; p_listing_id?: string | null }; Returns: string }
+      moderate_cofounder_report_v1: { Args: { p_hide_listing?: boolean; p_report_id: string; p_resolution_note?: string | null; p_status: string }; Returns: undefined }
+      get_cofounder_marketplace_admin_v1: { Args: { p_from: string; p_to: string }; Returns: Json }
       get_activation_funnel_v2: {
         Args: { p_from: string; p_to: string }
         Returns: Json

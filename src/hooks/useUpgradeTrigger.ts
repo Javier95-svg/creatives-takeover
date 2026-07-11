@@ -61,9 +61,9 @@ export const UPGRADE_TRIGGER_CONFIGS: Record<UpgradeTriggerKey, UpgradeTriggerCo
   rookie_quota_cofounder: {
     key: 'rookie_quota_cofounder',
     targetPlan: 'starter',
-    headline: 'Co-founder post limit reached.',
-    body: 'Starter doubles your monthly co-founder posts and unlocks structured validation tools.',
-    ctaLabel: 'Upgrade to Starter',
+    headline: 'You need credits for a co-founder post.',
+    body: 'Co-founder posting is open on every plan and costs 5 credits per published post.',
+    ctaLabel: 'Get more credits',
   },
   starter_stage3_complete: {
     key: 'starter_stage3_complete',
@@ -82,9 +82,9 @@ export const UPGRADE_TRIGGER_CONFIGS: Record<UpgradeTriggerKey, UpgradeTriggerCo
   starter_quota_cofounder: {
     key: 'starter_quota_cofounder',
     targetPlan: 'rising',
-    headline: 'Co-founder post limit reached.',
-    body: 'Rising gives you unlimited co-founder posts and the full product cockpit.',
-    ctaLabel: 'Upgrade to Rising',
+    headline: 'You need credits for a co-founder post.',
+    body: 'Co-founder posting is open on every plan and costs 5 credits per published post.',
+    ctaLabel: 'Get more credits',
   },
   starter_tool_mvp: {
     key: 'starter_tool_mvp',

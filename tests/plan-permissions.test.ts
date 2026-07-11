@@ -30,6 +30,7 @@ test('plan highlights match the authoritative four-plan contract', () => {
     'MVP Builder, billed per action from credits',
     'Browse VC Search & Accelerator Hunt',
     'Unlimited Discovery Calls (10 credits per booking)',
+    'Find a Co-Founder posts (5 credits each)',
   ]);
 
   assert.deepEqual(PLAN_HIGHLIGHTS.starter, [
@@ -37,7 +38,7 @@ test('plan highlights match the authoritative four-plan contract', () => {
     'Demo Studio + Product-Market Fit Lab',
     'Full Email Templates library',
     'VC Search & Accelerator Hunt: 2 profile views/month',
-    '2 Find a Co-Founder posts per month',
+    'Find a Co-Founder posts (5 credits each)',
   ]);
 
   assert.deepEqual(PLAN_HIGHLIGHTS.rising, [
@@ -46,7 +47,7 @@ test('plan highlights match the authoritative four-plan contract', () => {
     'Pitch Deck Analyzer (full access)',
     'Founders Unleashed podcast + Newspaper exclusives',
     'VC Search & Accelerator Hunt: 10 profile views/month',
-    'Unlimited Find a Co-Founder posts',
+    'Find a Co-Founder posts (5 credits each)',
   ]);
 
   assert.deepEqual(PLAN_HIGHLIGHTS.pro, [
@@ -55,7 +56,7 @@ test('plan highlights match the authoritative four-plan contract', () => {
     'Fundraising-aware dashboard & insights',
     'Priority founder support',
     'Unlimited VC Search & Accelerator profile views',
-    'Unlimited Find a Co-Founder posts',
+    'Find a Co-Founder posts (5 credits each)',
   ]);
 });
 

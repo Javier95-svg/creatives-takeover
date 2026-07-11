@@ -72,6 +72,8 @@ interface StartActivationParams {
   country?: string;
   assignedStage?: FounderStageId;
   quizAnswersV3?: Record<string, unknown>;
+  cofounderSituation?: 'actively_looking' | 'solo_ok';
+  onboardingLocalDate?: string;
   activationJourney?: ActivationJourneyV2;
 }
 
@@ -352,6 +354,8 @@ export async function startActivationJourney(params: StartActivationParams) {
     startupSectors: params.startupSectors ?? [],
     supportAreasNeeded: params.supportAreasNeeded ?? [],
     country: params.country?.trim() || null,
+    cofounderSituation: params.cofounderSituation ?? null,
+    onboardingLocalDate: params.onboardingLocalDate ?? null,
     ...(params.activationJourney ? { activationJourney: params.activationJourney } : {}),
   };
 

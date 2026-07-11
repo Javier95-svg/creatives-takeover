@@ -211,13 +211,14 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
     'MVP Builder, billed per action from credits',
     'Browse VC Search & Accelerator Hunt',
     'Unlimited Discovery Calls (10 credits per booking)',
+    'Find a Co-Founder posts (5 credits each)',
   ],
   starter: [
     'Everything in Rookie, with Stages 1-3 unlocked',
     'Demo Studio + Product-Market Fit Lab',
     'Full Email Templates library',
     'VC Search & Accelerator Hunt: 2 profile views/month',
-    '2 Find a Co-Founder posts per month',
+    'Find a Co-Founder posts (5 credits each)',
   ],
   rising: [
     'Everything in Starter, with all 5 stages active',
@@ -225,7 +226,7 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
     'Pitch Deck Analyzer (full access)',
     'Founders Unleashed podcast + Newspaper exclusives',
     'VC Search & Accelerator Hunt: 10 profile views/month',
-    'Unlimited Find a Co-Founder posts',
+    'Find a Co-Founder posts (5 credits each)',
   ],
   pro: [
     'Everything in Rising, plus the Pro War Room',
@@ -233,7 +234,7 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
     'Fundraising-aware dashboard & insights',
     'Priority founder support',
     'Unlimited VC Search & Accelerator profile views',
-    'Unlimited Find a Co-Founder posts',
+    'Find a Co-Founder posts (5 credits each)',
   ],
 };
 
@@ -404,10 +405,10 @@ export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitl
     pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'DISCOVERY_CALL' },
   },
   cofounder_posts: {
-    rookie: { state: 'quota_limited', monetizationModel: 'quota_limited', monthlyLimit: 1, requiredPlan: 'starter' },
-    starter: { state: 'quota_limited', monetizationModel: 'quota_limited', monthlyLimit: 2, requiredPlan: 'rising' },
-    rising: { state: 'full', monetizationModel: 'quota_limited' },
-    pro: { state: 'full', monetizationModel: 'quota_limited' },
+    rookie: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'COFOUNDER_POST' },
+    starter: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'COFOUNDER_POST' },
+    rising: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'COFOUNDER_POST' },
+    pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'COFOUNDER_POST' },
   },
   angels_community: {
     rookie: { state: 'locked', monetizationModel: 'plan_gated', visibility: 'hidden', requiredPlan: 'pro' },
@@ -498,7 +499,7 @@ export const PLAN_PERMISSIONS: Record<FeatureKey, Record<Plan, AccessRule>> = Ob
 
 export const MONTHLY_FREE_QUOTAS: Record<string, Record<Plan, number>> = {
   discovery_calls: { rookie: Infinity, starter: Infinity, rising: Infinity, pro: Infinity },
-  cofounder_posts: { rookie: 1, starter: 2, rising: Infinity, pro: Infinity },
+  cofounder_posts: { rookie: Infinity, starter: Infinity, rising: Infinity, pro: Infinity },
   vc_profiles: { rookie: 0, starter: 2, rising: 10, pro: Infinity },
   accelerator_profiles: { rookie: 0, starter: 2, rising: 10, pro: Infinity },
   directory_visits: { rookie: 3, starter: 10, rising: 15, pro: Infinity },

@@ -70,6 +70,8 @@ export const CREDIT_COSTS = {
   // First message to each mentor is free; every message after that costs this.
   // Enforced server-side by the charge_mentor_dm trigger on message insert.
   MENTOR_DM: 3,
+  // Every successful Find a Co-Founder post is charged on insert by a DB trigger.
+  COFOUNDER_POST: 5,
 } as const;
 
 // Type for credit cost feature names

@@ -13,14 +13,14 @@ import { toast } from 'sonner';
 import { Loader2, Handshake, ArrowLeft, Save } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import { AccountWallpaper } from '@/components/AccountWallpaper';
-import { getCurrentUtcMonthStart, useMonthlyQuotas } from '@/hooks/useMonthlyQuotas';
-import { useSubscription } from '@/hooks/useSubscription';
-import { getQuotaStatus, normalizePlan } from '@/config/planPermissions';
+import { useCreditActions } from '@/hooks/useCreditActions';
+import { useCredits } from '@/hooks/useCredits';
+import { CREDIT_COSTS } from '@/config/constants';
 
 const CreateCoFounderPost = () => {
   const { user } = useAuth();
-  const { subscriptionData } = useSubscription();
-  const { cycleStart } = useMonthlyQuotas();
+  const { ensureCredits, getCreditActionQuote, showCreditReceipt } = useCreditActions();
+  const { refreshBalance } = useCredits();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
@@ -43,7 +43,10 @@ const CreateCoFounderPost = () => {
     { id: 'finance', label: 'Finance Co-Founder (CFO)', description: 'Fundraising, financial planning' },
   ];
 
-  const currentPlan = normalizePlan(subscriptionData.subscription_tier);
+  const postQuote = getCreditActionQuote('COFOUNDER_POST', {
+    featureName: 'Co-founder post',
+    requiredCredits: CREDIT_COSTS.COFOUNDER_POST,
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,30 +61,18 @@ const CreateCoFounderPost = () => {
       return;
     }
 
+    const approvedCredits = ensureCredits('COFOUNDER_POST', {
+      featureName: 'Co-founder post',
+      requiredCredits: CREDIT_COSTS.COFOUNDER_POST,
+      description: 'Publishing a co-founder post costs 5 credits on every plan.',
+    });
+    if (approvedCredits === null) return;
+
     setLoading(true);
     try {
-      const cycleAnchor = cycleStart ?? getCurrentUtcMonthStart();
-      const initialQuota = getQuotaStatus('cofounder_posts', currentPlan);
-
-      if (Number.isFinite(initialQuota.limit)) {
-        const { count, error: countError } = await supabase
-          .from('cofounder_posts')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .gte('created_at', cycleAnchor);
-
-        if (countError) throw countError;
-
-        const quota = getQuotaStatus('cofounder_posts', currentPlan, count || 0);
-
-        if (!quota.canUse) {
-          toast.error(`You've reached your ${quota.limit} co-founder post limit for this month.`);
-          return;
-        }
-      }
-
-      // Create co-founder post
-      const { error } = await supabase
+      // The database trigger charges and inserts in one transaction. If the
+      // charge fails, the post is not created; if the insert fails, the charge rolls back.
+      const { data: createdPost, error } = await supabase
         .from('cofounder_posts')
         .insert({
           user_id: user.id,
@@ -95,19 +86,29 @@ const CreateCoFounderPost = () => {
           equity_range: equity,
           additional_info: additionalInfo,
           status: 'active',
-        });
+        })
+        .select('id')
+        .single();
 
       if (error) throw error;
 
-      toast.success('Co-founder post created successfully! Your post is now live.');
+      await refreshBalance();
+      showCreditReceipt('COFOUNDER_POST', CREDIT_COSTS.COFOUNDER_POST, undefined, {
+        featureName: 'Co-founder post',
+        operationId: `cofounder-post:${createdPost.id}`,
+        metadata: { postId: createdPost.id, route: '/co-founder' },
+      });
 
       // Redirect to co-founders page to see the post
       setTimeout(() => {
         navigate('/co-founder');
       }, 1500);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating co-founder post:', error);
-      toast.error('Failed to create post: ' + error.message);
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(message.includes('Insufficient credits')
+        ? 'You need 5 credits to publish a co-founder post.'
+        : `Failed to create post: ${message}`);
     } finally {
       setLoading(false);
     }
@@ -153,6 +154,9 @@ const CreateCoFounderPost = () => {
             </h1>
             <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
               Tell potential co-founders about your project and what you're looking for
+            </p>
+            <p className="text-sm font-medium text-primary">
+              Publishing costs {postQuote.requiredCredits} credits on every plan.
             </p>
           </div>
 
@@ -360,7 +364,7 @@ const CreateCoFounderPost = () => {
                   ) : (
                     <>
                       <Save className="w-4 h-4 mr-2" />
-                      Create Post
+                      Create Post · {CREDIT_COSTS.COFOUNDER_POST} credits
                     </>
                   )}
                 </Button>

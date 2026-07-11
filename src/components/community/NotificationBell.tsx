@@ -87,6 +87,11 @@ export const NotificationBell = () => {
       return;
     }
 
+    if (notification.notification_type.startsWith('cofounder_')) {
+      navigateTo(metadataRoute || '/co-founder');
+      return;
+    }
+
     if (notification.notification_type === 'newspaper_article_published') {
       navigateTo(metadataRoute || '/newspaper');
       return;
@@ -193,6 +198,16 @@ export const NotificationBell = () => {
         return metadata?.project_name
           ? `${actor.name} posted: ${metadata.project_name}`
           : `${actor.name} created a new co-founder post`;
+      case 'cofounder_interest_received':
+        return 'A founder sent you a co-founder interest request';
+      case 'cofounder_interest_accepted':
+        return 'Your co-founder interest request was accepted';
+      case 'cofounder_interest_declined':
+        return 'Your co-founder interest request was declined';
+      case 'cofounder_match_available':
+        return 'A new compatible co-founder listing is available';
+      case 'cofounder_listing_expiring':
+        return `Your co-founder listing expires in ${metadata?.daysRemaining ?? 'a few'} day${metadata?.daysRemaining === 1 ? '' : 's'}`;
       case 'newspaper_article_published':
         return metadata?.title
           ? `Newspaper update: ${metadata.title}`

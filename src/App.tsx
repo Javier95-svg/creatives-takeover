@@ -98,9 +98,10 @@ const TestPhase1 = lazy(() => import("./pages/TestPhase1"));
 const MentorProfilePage = lazy(() => import("./pages/community/MentorProfilePage"));
 const ServiceMarketplaceHub = lazy(() => import("./pages/community/ServiceMarketplaceHub"));
 const ServiceProfilePage = lazy(() => import("./pages/community/ServiceProfilePage"));
-const FindCoFounder = lazy(() => import("./pages/community/FindCoFounder"));
-const CreateCoFounderPost = lazy(() => import("./pages/community/CreateCoFounderPost"));
-const EditCoFounderPost = lazy(() => import("./pages/community/EditCoFounderPost"));
+const CofounderMarketplaceRoute = lazy(() => import("./pages/community/CofounderMarketplaceRoute"));
+const CofounderListingEditorRoute = lazy(() => import("./pages/community/CofounderListingEditorRoute"));
+const CofounderListingDetailPage = lazy(() => import("./pages/community/CofounderListingDetailPage"));
+const AdminCofounderMarketplacePage = lazy(() => import("./pages/community/AdminCofounderMarketplacePage"));
 const VCProfilePage = lazy(() => import("./components/vc/VCProfilePage"));
 const AcceleratorProfilePage = lazy(() => import("./components/accelerator/AcceleratorProfilePage"));
 const PitchDeckAnalyzerPage = lazy(() => import("./pages/PitchDeckAnalyzerPage"));
@@ -252,9 +253,11 @@ function App() {
                         <Route path="/marketplace/admin/new" element={<AdminRoute><AdminServiceEditor /></AdminRoute>} />
                         <Route path="/marketplace/admin/edit/:id" element={<AdminRoute><AdminServiceEditor /></AdminRoute>} />
                         <Route path="/marketplace/:slug" element={<ServiceProfilePage />} />
-                        <Route path="/co-founder" element={<FindCoFounder />} />
-                        <Route path="/co-founder/create" element={<CreateCoFounderPost />} />
-                        <Route path="/co-founder/edit/:postId" element={<EditCoFounderPost />} />
+                        <Route path="/co-founder" element={<CofounderMarketplaceRoute />} />
+                        <Route path="/co-founder/create" element={<CofounderListingEditorRoute />} />
+                        <Route path="/co-founder/edit/:postId" element={<CofounderListingEditorRoute />} />
+                        <Route path="/co-founder/listing/:listingId" element={<CofounderListingDetailPage />} />
+                        <Route path="/admin/cofounder-marketplace" element={<AdminRoute><AdminCofounderMarketplacePage /></AdminRoute>} />
                         <Route path="/investors" element={<FindYourAngel />} />
                         <Route path="/investors/admin/new" element={<AdminRoute><AdminAngelEditor /></AdminRoute>} />
                         <Route path="/investors/admin/edit/:id" element={<AdminRoute><AdminAngelEditor /></AdminRoute>} />

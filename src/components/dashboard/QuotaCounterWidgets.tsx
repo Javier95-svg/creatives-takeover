@@ -1,4 +1,4 @@
-import { Phone, Eye, Building2, Handshake, Infinity as InfinityIcon } from 'lucide-react';
+import { Phone, Eye, Building2, Infinity as InfinityIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
 import { useMonthlyQuotas } from '@/hooks/useMonthlyQuotas';
@@ -27,7 +27,6 @@ export const QuotaCounterWidgets = () => {
   const currentPlan = normalizePlan(subscriptionData.subscription_tier || plan);
 
   const dcLimit = getMonthlyQuotaLimit('discovery_calls', currentPlan);
-  const cofounderLimit = getMonthlyQuotaLimit('cofounder_posts', currentPlan);
   const vcLimit = getMonthlyQuotaLimit('vc_search_profile', currentPlan);
   const accLimit = getMonthlyQuotaLimit('accelerator_profile', currentPlan);
 
@@ -54,13 +53,6 @@ export const QuotaCounterWidgets = () => {
       suffix: '10 credits each',
     },
     {
-      icon: Handshake,
-      label: 'Co-Founder Posts',
-      used: quotas.cofounder_posts_used,
-      max: cofounderLimit,
-      suffix: isUnlimitedQuotaLimit(cofounderLimit) ? 'unlimited' : 'included',
-    },
-    {
       icon: Eye,
       label: 'VC Profiles',
       used: quotas.vc_profiles_viewed,
@@ -76,7 +68,7 @@ export const QuotaCounterWidgets = () => {
     },
   ].filter((counter) => {
     if (currentPlan === 'rookie') {
-      return counter.label === 'Discovery Calls' || counter.label === 'Co-Founder Posts';
+      return counter.label === 'Discovery Calls';
     }
 
     return true;
@@ -85,7 +77,7 @@ export const QuotaCounterWidgets = () => {
   if (loading) return null;
 
   return (
-    <div className={`grid grid-cols-1 gap-3 ${currentPlan === 'rookie' ? 'sm:grid-cols-2' : 'sm:grid-cols-2 xl:grid-cols-4'}`}>
+    <div className={`grid grid-cols-1 gap-3 ${currentPlan === 'rookie' ? '' : 'sm:grid-cols-2 xl:grid-cols-3'}`}>
       {counters.map(({ icon: Icon, label, used, max, suffix }) => (
         <Card key={label} className="bg-card/60 border-border/50 backdrop-blur-sm">
           <CardContent className="p-4">

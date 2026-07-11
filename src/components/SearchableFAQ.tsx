@@ -45,7 +45,7 @@ const SearchableFAQ = () => {
       id: 2,
       category: "Pricing",
       question: "Is there a free plan available?",
-      answer: "Yes. Rookie is completely free forever with no credit card required. You get 50 credits per month, free ICP Builder access, Insighta Test, Newspaper, mentor and co-founder browsing, preview access to later-stage tools, unlimited Discovery Calls at 10 credits per confirmed booking, and 1 co-founder post per billing cycle.",
+      answer: "Yes. Rookie is completely free forever with no credit card required. You get 50 credits per month, free ICP Builder access, Insighta Test, Newspaper, mentor and co-founder browsing, preview access to later-stage tools, unlimited Discovery Calls at 10 credits per confirmed booking, and co-founder posting at 5 credits per published post.",
       popular: true,
       tags: ["free", "rookie", "no credit card", "credits"]
     },

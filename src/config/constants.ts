@@ -74,6 +74,8 @@ export const CREDIT_COSTS = {
   // First message to each mentor is free; every message after that costs this.
   // Enforced server-side by the charge_mentor_dm trigger on message insert.
   MENTOR_DM: 3,
+  // Every successful Find a Co-Founder post is charged on insert by a DB trigger.
+  COFOUNDER_POST: 5,
 } as const;
 
 // Type for credit cost feature names
@@ -336,7 +338,7 @@ export const TIER_USAGE_LIMITS = {
     vc_profile_views: 0,       // List-only, no profile views
     accelerator_profile_views: 0,
     discovery_calls_free: -1,
-    cofounder_posts_free: 1,
+    cofounder_posts_free: -1, // Unlimited creation opportunities; each post costs 5 credits.
   },
   starter: {
     bizmap_conversations: -1,
@@ -351,7 +353,7 @@ export const TIER_USAGE_LIMITS = {
     vc_profile_views: 2,
     accelerator_profile_views: 2,
     discovery_calls_free: -1,
-    cofounder_posts_free: 2,
+    cofounder_posts_free: -1,
   },
   rising: {
     bizmap_conversations: -1,

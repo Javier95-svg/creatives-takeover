@@ -178,7 +178,7 @@ const FindCoFounder = () => {
               <Button asChild className="bg-gradient-to-r from-info to-purple-600 hover:from-info hover:to-purple-700 md:w-auto">
                 <Link to="/co-founder/create">
                   <Plus className="w-4 h-4 mr-2" />
-                  Create Post
+                  Create Post · 5 credits
                 </Link>
               </Button>
             </div>
@@ -208,7 +208,7 @@ const FindCoFounder = () => {
               <Button asChild size="lg" className="bg-gradient-to-r from-info to-purple-600 hover:from-info hover:to-purple-700">
                 <Link to="/co-founder/create">
                   <Plus className="w-4 h-4 mr-2" />
-                  Create Your Post
+                  Create Your Post · 5 credits
                 </Link>
               </Button>
             </CardContent>

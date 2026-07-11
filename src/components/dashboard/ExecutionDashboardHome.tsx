@@ -48,7 +48,7 @@ function ActionButton({ action, compact = false }: { action: DashboardAction; co
   const navigate = useNavigate();
   const mutation = useDashboardAction();
   const tool = getDashboardTool(action.toolKey);
-  const isOpen = action.actionKind === 'open_tool';
+  const isOpen = action.actionKind === 'open_tool' || action.toolKey === 'find_cofounder';
   const actionLabel = isOpen
     ? `Open ${tool.label}`
     : action.actionKind === 'mark_conversation_read'
