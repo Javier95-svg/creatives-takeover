@@ -55,6 +55,15 @@ import {
 import { toast } from 'sonner';
 import { showDashboardReturnToast } from '@/components/dashboard/dashboardReturnToast';
 import { markFirstArtifactCreated } from '@/lib/retentionSystem';
+import {
+  trackToolOpened,
+  trackToolOutputCreated,
+  trackTractionBoundaryDecision,
+  trackTractionExperimentLogged,
+  trackTractionOpened,
+  trackTractionSprintCreated,
+  trackTractionWeeklyLogCompleted,
+} from '@/lib/analytics';
 
 const SPRINTS_TABLE = 'traction_engine_sprints' as const;
 const LOGS_TABLE = 'traction_engine_weekly_logs' as const;
@@ -301,6 +310,11 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
     return { activeByChannel, newChannels };
   };
 
+  useEffect(() => {
+    trackTractionOpened();
+    trackToolOpened('traction_engine');
+  }, []);
+
   const closeSprint = async (sprint: SprintRow) => {
     if (!userId) return;
     const { error } = await supabase
@@ -318,6 +332,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
       return;
     }
 
+    trackTractionBoundaryDecision({ decision: 'sprint_closed', channel: sprint.channel });
     toast.success(`${sprint.channel} sprint closed.`);
     await loadTractionData();
   };
@@ -345,6 +360,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
 
       if (error) throw error;
       const sprint = data as SprintRow;
+      trackTractionSprintCreated({ channel: sprint.channel });
       nextByChannel.set(sprint.channel.trim().toLowerCase(), sprint);
     }
 
@@ -447,6 +463,16 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
 
       const { error: experimentError } = await supabase.from(EXPERIMENTS_TABLE).insert(experimentRows);
       if (experimentError) throw experimentError;
+
+      experiments.forEach((experiment) => {
+        trackTractionExperimentLogged({ channel: experiment.channel.trim(), decision: experiment.decision });
+      });
+      trackTractionWeeklyLogCompleted({
+        combined_score: score.combinedScore,
+        phase_seven_ready: score.phaseSevenReady,
+        experiment_count: experiments.length,
+      });
+      trackToolOutputCreated('traction_engine', 'traction_weekly_log');
 
       await markFirstArtifactCreated({
         userId,

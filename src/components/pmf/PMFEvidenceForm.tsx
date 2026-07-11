@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import type { PMFEvidenceAnswers, PMFInterviewLog } from '@/hooks/usePMFLab';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 import { CreditCostNotice } from '@/components/CreditCostNotice';
+import { trackPMFEvidenceLogged } from '@/lib/analytics';
 
 const TEST_TYPES = [
   'Landing page',
@@ -212,6 +213,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
   };
 
   const saveInterview = () => {
+    trackPMFEvidenceLogged({ evidence_type: 'interview' });
     if (!validInterviewDraft) return;
 
     if (editingInterviewId) {

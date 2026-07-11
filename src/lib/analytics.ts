@@ -732,6 +732,86 @@ export type DemoStudioFunnelEvent =
 export const trackDemoStudioFunnel = (event: DemoStudioFunnelEvent, properties?: AnalyticsProperties) =>
   captureEvent(event, properties);
 
+// ─── Cross-tool journey events ───────────────────────────────────────────────
+// Standardized events so one funnel template (tool_opened → tool_output_created)
+// works across every core tool, without pageview proxies.
+
+export type CoreToolName =
+  | 'icp_builder'
+  | 'pmf_lab'
+  | 'demo_studio'
+  | 'mvp_builder'
+  | 'gtm_strategist'
+  | 'traction_engine';
+
+export const trackToolOpened = (tool: CoreToolName, properties?: AnalyticsProperties) =>
+  captureEvent('tool_opened', { tool, ...properties });
+
+export const trackToolOutputCreated = (tool: CoreToolName, artifactType: string, properties?: AnalyticsProperties) =>
+  captureEvent('tool_output_created', { tool, artifact_type: artifactType, ...properties });
+
+// ─── GTM Strategist funnel ───────────────────────────────────────────────────
+
+export const trackGTMOpened = (properties?: AnalyticsProperties) =>
+  captureEvent('gtm_opened', properties);
+
+export const trackGTMIntakeCompleted = (properties?: AnalyticsProperties) =>
+  captureEvent('gtm_intake_completed', properties);
+
+export const trackGTMPlanGenerated = (properties: { channel_count: number } & AnalyticsProperties) =>
+  captureEvent('gtm_plan_generated', properties);
+
+export const trackGTMPlanSaved = (properties: { status: string } & AnalyticsProperties) =>
+  captureEvent('gtm_plan_saved', properties);
+
+export const trackGTMPlanShared = (properties?: AnalyticsProperties) =>
+  captureEvent('gtm_plan_shared', properties);
+
+// ─── Traction Engine funnel ──────────────────────────────────────────────────
+
+export const trackTractionOpened = (properties?: AnalyticsProperties) =>
+  captureEvent('traction_opened', properties);
+
+export const trackTractionSprintCreated = (properties: { channel: string } & AnalyticsProperties) =>
+  captureEvent('traction_sprint_created', properties);
+
+export const trackTractionExperimentLogged = (
+  properties: { channel: string; decision: string } & AnalyticsProperties
+) => captureEvent('traction_experiment_logged', properties);
+
+export const trackTractionWeeklyLogCompleted = (
+  properties: { combined_score: number; phase_seven_ready: boolean; experiment_count: number } & AnalyticsProperties
+) => captureEvent('traction_weekly_log_completed', properties);
+
+export const trackTractionBoundaryDecision = (
+  properties: { decision: string; channel: string } & AnalyticsProperties
+) => captureEvent('traction_sprint_boundary_decision', properties);
+
+// ─── MVP Builder funnel ──────────────────────────────────────────────────────
+
+export const trackMVPBuilderOpened = (properties?: AnalyticsProperties) =>
+  captureEvent('mvp_builder_opened', properties);
+
+export const trackMVPGenerationCompleted = (properties?: AnalyticsProperties) =>
+  captureEvent('mvp_generation_completed', properties);
+
+export const trackMVPDeployed = (properties?: AnalyticsProperties) =>
+  captureEvent('mvp_deployed', properties);
+
+export const trackMVPIntegrationConnected = (properties: { integration: 'github' | 'supabase' } & AnalyticsProperties) =>
+  captureEvent('mvp_integration_connected', properties);
+
+export const trackMVPCreditsExhausted = (properties?: AnalyticsProperties) =>
+  captureEvent('mvp_credits_exhausted', properties);
+
+// ─── PMF Lab additions ───────────────────────────────────────────────────────
+
+export const trackPMFSurveyShared = (properties?: AnalyticsProperties) =>
+  captureEvent('pmf_survey_shared', properties);
+
+export const trackPMFEvidenceLogged = (properties: { evidence_type: string } & AnalyticsProperties) =>
+  captureEvent('pmf_evidence_logged', properties);
+
 export const normalizePlanId = (planLike?: string | null): PlanId => {
   const normalized = (planLike || '').trim().toLowerCase();
   if (normalized === 'starter') return 'STARTER';

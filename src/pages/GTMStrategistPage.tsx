@@ -28,6 +28,7 @@ import { createGTMSharedPayload } from '@/lib/bizmapSharing';
 import { Share2 } from 'lucide-react';
 import { getPublicTabConfig } from '@/config/publicTabVisibility';
 import { useAuth } from '@/contexts/AuthContext';
+import { trackGTMOpened, trackGTMPlanShared, trackToolOpened } from '@/lib/analytics';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
 
 const structuredData = [
@@ -74,6 +75,8 @@ export default function GTMStrategistPage() {
 
   useEffect(() => {
     markToolUsed('gtm-strategist');
+    trackGTMOpened();
+    trackToolOpened('gtm_strategist');
   }, [markToolUsed]);
 
   const {
@@ -212,7 +215,7 @@ export default function GTMStrategistPage() {
 	                  />
 
 	                  <div className="flex flex-wrap gap-3 rounded-3xl border border-border/60 bg-background/80 px-4 py-4 shadow-sm">
-	                    <Button variant="outline" onClick={openShareDialog} disabled={!planId} className="gap-2">
+	                    <Button variant="outline" onClick={() => { trackGTMPlanShared(); openShareDialog(); }} disabled={!planId} className="gap-2">
 	                      <Share2 className="h-4 w-4" />
 	                      Share strategy brief
 	                    </Button>

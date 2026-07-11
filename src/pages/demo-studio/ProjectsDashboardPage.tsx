@@ -35,6 +35,7 @@ import type { DemoStudioProject } from '@/lib/demoStudio/types';
 import GettingStartedChecklist, { type ChecklistStep } from '@/components/demo-studio/GettingStartedChecklist';
 import WhatIsADemoPopover from '@/components/demo-studio/WhatIsADemoPopover';
 import DemoStudioWallpaper from '@/components/wallpapers/DemoStudioWallpaper';
+import { trackToolOpened } from '@/lib/analytics';
 
 const HOW_IT_WORKS = [
   { icon: Sparkles, step: '1', title: 'Define the story', desc: 'Audience, promise, aha moment, and CTA.' },
@@ -64,6 +65,7 @@ export default function ProjectsDashboardPage() {
       navigate('/demo-studio/try', { replace: true });
       return;
     }
+    trackToolOpened('demo_studio');
     let active = true;
     void (async () => {
       try {

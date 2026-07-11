@@ -1,6 +1,13 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { getAccessTokenSafely, getSessionSafely } from '@/integrations/supabase/auth';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  trackMVPCreditsExhausted,
+  trackMVPDeployed,
+  trackMVPGenerationCompleted,
+  trackMVPIntegrationConnected,
+  trackToolOutputCreated,
+} from '@/lib/analytics';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreditActions } from '@/hooks/useCreditActions';
 import { useCredits } from '@/hooks/useCredits';
@@ -1958,6 +1965,7 @@ export function useMVPBuilder() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('github_connected') === '1') {
       toast.success('GitHub connected successfully.');
+      trackMVPIntegrationConnected({ integration: 'github' });
       params.delete('github_connected');
       const query = params.toString();
       window.history.replaceState(
@@ -1967,6 +1975,7 @@ export function useMVPBuilder() {
       );
     } else if (params.get('supabase_connected') === '1') {
       toast.success('Supabase connected successfully.');
+      trackMVPIntegrationConnected({ integration: 'supabase' });
       params.delete('supabase_connected');
       const query = params.toString();
       window.history.replaceState(
@@ -3054,6 +3063,14 @@ export function useMVPBuilder() {
 
           if (committedProject) {
             setLastBuildChangeSummary(buildChangeSummary(prompt, projectFiles, committedProject));
+            trackMVPGenerationCompleted({
+              action_type: completedActionType ?? 'generation',
+              model: completedModel ?? undefined,
+              project_type: committedProject.projectType ?? undefined,
+              credit_cost: completedCreditCost ?? undefined,
+              is_first_build: messages.length === 0,
+            });
+            trackToolOutputCreated('mvp_builder', 'mvp_project');
             if (validatedOutput && completedActionType) {
               const version = createMVPBuilderVersion({
                 previousVersions: projectVersions,
@@ -3225,6 +3242,7 @@ export function useMVPBuilder() {
               const CREDIT_ERROR_CODES = ['INSUFFICIENT_CREDITS', 'PLAN_UPGRADE_REQUIRED', 'QUOTA_LIMIT_REACHED'];
               if (errCode === 'INSUFFICIENT_CREDITS') {
                 setIsCreditExhaustedModalOpen(true);
+                trackMVPCreditsExhausted();
               } else if (errCode && CREDIT_ERROR_CODES.includes(errCode)) {
                 handleCreditError(
                   { message: rawErrMsg, status: 500 },
@@ -3635,6 +3653,7 @@ export function useMVPBuilder() {
       if (error || !data?.ok) {
         if (data?.errorCode === 'INSUFFICIENT_CREDITS') {
           setIsCreditExhaustedModalOpen(true);
+          trackMVPCreditsExhausted();
         } else {
           handleCreditError(error, data, 'APP_BUILDER_DEPLOY');
         }
@@ -3644,6 +3663,7 @@ export function useMVPBuilder() {
       }
 
       setDeploymentUrl(data.url);
+      trackMVPDeployed({ slug: typeof data.slug === 'string' ? data.slug : undefined });
       void refreshCredits();
       showDashboardReturnToast({
         message: `Published to ${data.slug}.${MVP_PUBLISH_BASE_DOMAIN} for ${Number(data.creditsUsed ?? CREDIT_COSTS.APP_BUILDER_DEPLOY)} credits.`,

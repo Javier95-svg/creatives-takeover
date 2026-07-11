@@ -12,13 +12,21 @@ import { getPublicTabConfig } from '@/config/publicTabVisibility';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
 import { supabase } from '@/integrations/supabase/client';
-import { captureEvent } from '@/lib/analytics';
+import { captureEvent, trackMVPBuilderOpened, trackToolOpened } from '@/lib/analytics';
 
 export default function AppBuilderPage() {
   const { user } = useAuth();
   const publicTab = getPublicTabConfig('/mvp-builder');
   const { hasAccess, upgradeTarget } = usePlanAccess('mvp_builder');
   const giftAttemptedRef = useRef(false);
+  const openedTrackedRef = useRef(false);
+
+  useEffect(() => {
+    if (openedTrackedRef.current) return;
+    openedTrackedRef.current = true;
+    trackMVPBuilderOpened({ is_authenticated: Boolean(user) });
+    trackToolOpened('mvp_builder');
+  }, [user]);
 
   // First MVP generation on us: claim the one-time gift (server grants the
   // generation's credit cost). Idempotent server-side; guard the double-mount.

@@ -2,6 +2,7 @@
 // demo_studio_events (public insert per RLS). Failures are swallowed so tracking
 // never breaks the viewing experience. Events are de-duped per browser session.
 import { supabase } from '@/integrations/supabase/client';
+import { captureEvent } from '@/lib/analytics';
 import type { DemoEventType } from './types';
 
 const EVENTS = 'demo_studio_events' as any;
@@ -33,6 +34,14 @@ export async function trackDemoEvent(type: DemoEventType, args: TrackArgs = {}):
       if (window.sessionStorage.getItem(key)) return;
       window.sessionStorage.setItem(key, '1');
     }
+    // Dual-write to PostHog so demo viewer behavior shows up in funnels,
+    // not just in the Supabase demo_studio_events table.
+    captureEvent(type, {
+      project_id: args.projectId ?? undefined,
+      demo_id: args.demoId ?? undefined,
+      vsl_id: args.vslId ?? undefined,
+      ...(args.meta ?? {}),
+    });
     await supabase.from(EVENTS).insert({
       type,
       project_id: args.projectId ?? null,

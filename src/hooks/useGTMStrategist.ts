@@ -9,6 +9,12 @@ import { showDashboardReturnToast } from '@/components/dashboard/dashboardReturn
 import { ensureMentorDemandNotification } from '@/lib/mentorDemandNotifications';
 import { trackActivity } from '@/lib/activity';
 import { markFirstArtifactCreated, trackCurrentActivationJourneyEvent } from '@/lib/retentionSystem';
+import {
+  trackGTMIntakeCompleted,
+  trackGTMPlanGenerated,
+  trackGTMPlanSaved,
+  trackToolOutputCreated,
+} from '@/lib/analytics';
 
 export interface GTMIntakeAnswers {
   businessType: string;
@@ -186,6 +192,7 @@ export function useGTMStrategist() {
     if (credits === null) return;
 
     setPhase('analyzing');
+    trackGTMIntakeCompleted();
 
     try {
       // Fetch ICP context for enrichment
@@ -228,6 +235,8 @@ export function useGTMStrategist() {
       setAnalysis(data.analysis as GTMAnalysis);
       setPlanId(data.planId ?? null);
       setPhase('results');
+      trackGTMPlanGenerated({ channel_count: (data.analysis as GTMAnalysis)?.channels?.length ?? 0 });
+      trackToolOutputCreated('gtm_strategist', 'gtm_plan');
       void trackCurrentActivationJourneyEvent(user.id, 'activation_first_output_generated', { intent: 'plan_gtm', tool: 'gtm_strategist' });
       showCreditReceipt(
         'GTM_ANALYSIS',
@@ -275,6 +284,8 @@ export function useGTMStrategist() {
       if (!planId) {
         setPlanId((data as any)?.id ?? null);
       }
+
+      trackGTMPlanSaved({ status });
 
       if (status === 'draft') {
         toast.success('GTM draft saved.');

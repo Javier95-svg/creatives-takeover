@@ -12,6 +12,7 @@ import {
   trackActivationCompleted,
   trackICPBuilderOpened,
   trackLandingViewed,
+  trackToolOpened,
   type IcpBuilderOpenedSource,
 } from "@/lib/analytics";
 import { ICP_SEED_STORAGE_KEY } from "@/lib/icpSeed";
@@ -108,6 +109,7 @@ export default function ICPBuilderPage() {
       source: getIcpBuilderOpenedSource(params, seedPrefilled),
       seed_prefilled: seedPrefilled,
     });
+    trackToolOpened('icp_builder');
 
     if (seed?.trim()) {
       trackActivationCompleted({ trigger: 'icp_seed_prefilled', artifact: 'icp_seed_prefilled' });

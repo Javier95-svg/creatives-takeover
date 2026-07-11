@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { PMFSurvey, PMFSurveyAggregate } from '@/hooks/usePMFSurvey';
+import { trackPMFSurveyShared } from '@/lib/analytics';
 
 const SURVEY_QUESTION =
   'How would you feel if you could no longer use [product]?\n' +
@@ -69,7 +70,11 @@ const PMFSeanEllisTest: React.FC<PMFSeanEllisTestProps> = ({
     try {
       await navigator.clipboard.writeText(text);
       if (which === 'q') { setCopiedQuestion(true); setTimeout(() => setCopiedQuestion(false), 2000); }
-      else { setCopiedLink(true); setTimeout(() => setCopiedLink(false), 2000); }
+      else {
+        setCopiedLink(true);
+        setTimeout(() => setCopiedLink(false), 2000);
+        trackPMFSurveyShared({ method: 'copy_link' });
+      }
       toast.success('Copied.');
     } catch {
       toast.error('Could not copy. Select the text manually.');

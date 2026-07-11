@@ -26,7 +26,7 @@ import { getPublicTabConfig } from '@/config/publicTabVisibility';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
 import { useCustomerDiscovery } from '@/hooks/useCustomerDiscovery';
-import { captureEvent } from '@/lib/analytics';
+import { captureEvent, trackToolOpened } from '@/lib/analytics';
 import { supabase } from '@/integrations/supabase/client';
 
 const structuredData = [
@@ -130,6 +130,7 @@ export default function PMFLabPage() {
   useEffect(() => {
     markToolUsed('pmf-lab');
     captureEvent('pmf_lab_viewed', { is_authenticated: Boolean(user) });
+    trackToolOpened('pmf_lab');
   }, [markToolUsed, user]);
 
   const {
