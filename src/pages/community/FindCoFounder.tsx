@@ -198,7 +198,7 @@ const FindCoFounder = () => {
               <Button asChild className="h-12 rounded-xl lg:px-6">
                 <Link to="/co-founder/create">
                   <Plus className="w-4 h-4 mr-2" />
-                  Create Post · 5 credits
+                  Post Here
                 </Link>
               </Button>
             </div>
@@ -236,7 +236,7 @@ const FindCoFounder = () => {
               <Button asChild size="lg">
                 <Link to="/co-founder/create">
                   <Plus className="w-4 h-4 mr-2" />
-                  Create Your Post · 5 credits
+                  Post Here
                 </Link>
               </Button>
             </CardContent>
@@ -463,13 +463,17 @@ const FindCoFounder = () => {
 	        {/* Hero Section */}
 	        <section className="px-4 pb-16 pt-header-offset sm:px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-9 max-w-3xl pt-8 sm:pt-12">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5">
+          <div className="mb-12 pt-8 text-center sm:pt-12">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2">
               <Handshake className="w-4 h-4 text-primary" />
               <span className="text-sm font-medium text-primary">Founder community</span>
             </div>
-            <h1 className="mb-4 text-4xl font-bold tracking-tight sm:text-5xl">Find a co-founder</h1>
-            <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
+            <h1 className="mb-4 text-4xl font-extrabold tracking-tight md:text-5xl lg:text-6xl">
+              <span className="bg-gradient-to-r from-info via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Find a co-founder
+              </span>
+            </h1>
+            <p className="mx-auto max-w-3xl text-xl text-muted-foreground">
               Share what you are building, discover founders with complementary skills, and start a direct conversation.
             </p>
           </div>
