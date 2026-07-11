@@ -674,7 +674,7 @@ BEGIN
       CASE WHEN COALESCE(v_seed.industries,v_profile.startup_industry,'{}') && industries THEN 'shared_industry' END,
       CASE WHEN COALESCE(v_seed.stage,v_profile.startup_stage)=stage THEN 'stage_alignment' END,
       CASE WHEN last_active_at>=now()-interval '7 days' THEN 'recently_active' END
-    ],NULL))[1:3]) ORDER BY score DESC,last_active_at DESC,id DESC), '[]'::jsonb) INTO v_items
+    ],NULL))[1:3])) ORDER BY score DESC,last_active_at DESC,id DESC), '[]'::jsonb) INTO v_items
   FROM ranked r WHERE rn<=LEAST(GREATEST(COALESCE(p_limit,20),1),50);
   RETURN jsonb_build_object('items',v_items,'nextCursor',NULL);
 END;
