@@ -54,12 +54,11 @@ test('anonymous browse masks identity and deterministic matching uses the agreed
   assert.doesNotMatch(sql, /gemini|openai|anthropic/i);
 });
 
-test('all four releases are independently kill-switchable and legacy routes remain', () => {
-  const flags = read('../src/lib/cofounderMarketplaceFlags.ts');
+test('the upgraded marketplace and listing editor are the default routes', () => {
   const route = read('../src/pages/community/CofounderMarketplaceRoute.tsx');
-  assert.match(flags, /cofounder-marketplace-r1/);
-  assert.match(flags, /cofounder-marketplace-matching-r2/);
-  assert.match(flags, /cofounder-marketplace-requests-r3/);
-  assert.match(flags, /cofounder-marketplace-trust-r4/);
-  assert.match(route, /return <FindCoFounder/);
+  const editorRoute = read('../src/pages/community/CofounderListingEditorRoute.tsx');
+  assert.match(route, /return <CofounderMarketplacePage/);
+  assert.match(editorRoute, /return <CofounderListingEditorPage/);
+  assert.doesNotMatch(route, /useFeatureFlagEnabled|FindCoFounder/);
+  assert.doesNotMatch(editorRoute, /useFeatureFlagEnabled|CreateCoFounderPost|EditCoFounderPost/);
 });

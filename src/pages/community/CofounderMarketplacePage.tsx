@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { AlertCircle, Check, Clock3, Filter, Handshake, Inbox, Loader2, Plus, Search, SlidersHorizontal, Users, X } from 'lucide-react';
 import SEO, { createBreadcrumbSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
@@ -23,7 +22,6 @@ import {
   getMyCofounderListing, renewCofounderListing, respondCofounderInterest,
   reportCofounderTarget, sendCofounderInterest, setCofounderListingStatus, submitCofounderMatchFeedback, toggleCofounderSave, withdrawCofounderInterest,
 } from '@/lib/cofounderMarketplace';
-import { COFOUNDER_MARKETPLACE_FLAGS } from '@/lib/cofounderMarketplaceFlags';
 import { trackCofounderMarketplaceEvent, trackCofounderMarketplaceEventOnce } from '@/lib/cofounderMarketplaceAnalytics';
 import { toast } from 'sonner';
 import type { CofounderBrowseFilters, CofounderInterest, CofounderInterestReason, CofounderListing, CofounderListingType, CofounderWorkMode } from '@/types/cofounderMarketplace';
@@ -67,12 +65,11 @@ export default function CofounderMarketplacePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const matchingEnabled = Boolean(useFeatureFlagEnabled(COFOUNDER_MARKETPLACE_FLAGS.matching));
-  const requestsEnabled = Boolean(useFeatureFlagEnabled(COFOUNDER_MARKETPLACE_FLAGS.requests));
-  const trustEnabled = Boolean(useFeatureFlagEnabled(COFOUNDER_MARKETPLACE_FLAGS.trust));
+  const requestsEnabled = true;
+  const trustEnabled = true;
   const [params, setParams] = useSearchParams();
   const requestedTab = params.get('tab') as MarketplaceTab | null;
-  const tab: MarketplaceTab = requestedTab && ['recommended', 'browse', 'requests', 'mine'].includes(requestedTab) ? requestedTab : (user && matchingEnabled ? 'recommended' : 'browse');
+  const tab: MarketplaceTab = requestedTab && ['recommended', 'browse', 'requests', 'mine'].includes(requestedTab) ? requestedTab : (user ? 'recommended' : 'browse');
   const [interestListing, setInterestListing] = useState<CofounderListing | null>(null);
   const filters = useMemo<CofounderBrowseFilters>(() => ({
     query: params.get('q') ?? '', listingType: (params.get('type') ?? '') as CofounderListingType | '', stage: params.get('stage') ?? '',
@@ -82,8 +79,8 @@ export default function CofounderMarketplacePage() {
 
   useEffect(() => { trackCofounderMarketplaceEventOnce(user?.id, 'cofounder_marketplace_viewed', 'cofounder_listing', `marketplace:${tab}`, { authenticated: Boolean(user), tab }); }, [tab, user]);
   const browseQuery = useInfiniteQuery({ queryKey: cofounderKeys.browse(filters), queryFn: ({ pageParam }) => browseCofounderListings(filters, pageParam), initialPageParam: null as string | null, getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined, staleTime: 30_000 });
-  const matchesQuery = useQuery({ queryKey: cofounderKeys.matches(filters), queryFn: () => getCofounderMatches(filters), enabled: Boolean(user && matchingEnabled && tab === 'recommended'), staleTime: 30_000 });
-  const interestsQuery = useQuery({ queryKey: cofounderKeys.interests(user?.id), queryFn: () => getCofounderInterests(user!.id), enabled: Boolean(user && requestsEnabled && tab === 'requests') });
+  const matchesQuery = useQuery({ queryKey: cofounderKeys.matches(filters), queryFn: () => getCofounderMatches(filters), enabled: Boolean(user && tab === 'recommended'), staleTime: 30_000 });
+  const interestsQuery = useQuery({ queryKey: cofounderKeys.interests(user?.id), queryFn: () => getCofounderInterests(user!.id), enabled: Boolean(user && tab === 'requests') });
   const mineQuery = useQuery({ queryKey: cofounderKeys.mine(user?.id), queryFn: () => getMyCofounderListing(user!.id), enabled: Boolean(user && tab === 'mine') });
   const shownData = tab === 'recommended' ? matchesQuery.data?.items : browseQuery.data?.pages.flatMap((page)=>page.items);
   const shownLoading = tab === 'recommended' ? matchesQuery.isLoading : browseQuery.isLoading;
@@ -115,7 +112,7 @@ export default function CofounderMarketplacePage() {
     <section className="flex flex-col gap-5 py-8 lg:flex-row lg:items-end lg:justify-between"><div className="max-w-3xl"><Badge className="mb-3" variant="secondary"><Handshake className="mr-1.5 h-4 w-4" />Founder marketplace</Badge><h1 className="text-3xl font-bold tracking-tight sm:text-5xl">Find the person who makes the company stronger.</h1><p className="mt-3 max-w-2xl text-muted-foreground">Browse real founder opportunities, see transparent compatibility signals, and send qualified interest without cold-message noise.</p></div><Button asChild size="lg" className="h-12 shrink-0"><Link to="/co-founder/create"><Plus className="mr-2 h-5 w-5" />Create listing · 5 credits</Link></Button></section>
     {!user && <Alert className="mb-6 border-primary/30 bg-primary/5"><Users className="h-4 w-4" /><AlertTitle>Real opportunities, identities protected</AlertTitle><AlertDescription>Browse active listing summaries now. Sign up to see founder profiles, compatibility, and express interest.</AlertDescription></Alert>}
     <Tabs value={tab} onValueChange={changeTab}>
-      <TabsList className="mb-5 grid h-auto w-full grid-cols-2 gap-1 p-1 sm:grid-cols-4 lg:w-auto"><TabsTrigger value="recommended" disabled={!user || !matchingEnabled} className="h-11">Recommended</TabsTrigger><TabsTrigger value="browse" className="h-11">Browse</TabsTrigger><TabsTrigger value="requests" disabled={!user} className="h-11">Requests</TabsTrigger><TabsTrigger value="mine" disabled={!user} className="h-11">My listing</TabsTrigger></TabsList>
+      <TabsList className="mb-5 grid h-auto w-full grid-cols-2 gap-1 p-1 sm:grid-cols-4 lg:w-auto"><TabsTrigger value="recommended" disabled={!user} className="h-11">Recommended</TabsTrigger><TabsTrigger value="browse" className="h-11">Browse</TabsTrigger><TabsTrigger value="requests" disabled={!user} className="h-11">Requests</TabsTrigger><TabsTrigger value="mine" disabled={!user} className="h-11">My listing</TabsTrigger></TabsList>
       <TabsContent value="recommended"><p className="mb-4 text-sm text-muted-foreground">Ranked with transparent compatibility rules. No AI and no credits used.</p></TabsContent>
       <TabsContent value="browse" />
       {(tab === 'browse' || tab === 'recommended') && <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]"><aside className="hidden lg:block"><Card className="sticky top-24"><CardContent className="p-4"><FilterFields filters={filters} setFilter={setFilter} clear={clearFilters} /></CardContent></Card></aside><div>
