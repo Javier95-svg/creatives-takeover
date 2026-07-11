@@ -287,7 +287,18 @@ const FindCoFounder = () => {
                   {post.project_description}
                 </CardDescription>
 
-                <div className="flex flex-wrap gap-2">
+                <div>
+                  <p className="mb-2 text-sm font-semibold">Looking for:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {post.looking_for.map((type) => (
+                      <Badge key={type} className="border-primary/20 bg-primary/10 text-primary">
+                        {getCofounderTypeLabel(type)}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2 border-t pt-4">
                   {post.industry && (
                     <Badge variant="secondary">
                       <Briefcase className="w-3 h-3 mr-1" />
@@ -311,17 +322,6 @@ const FindCoFounder = () => {
                       Equity: {post.equity_range}
                     </Badge>
                   )}
-                </div>
-
-                <div>
-                  <p className="text-sm font-medium mb-2">Looking for:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {post.looking_for.map((type) => (
-                      <Badge key={type} className="bg-primary/10 text-primary border-primary/20">
-                        {getCofounderTypeLabel(type)}
-                      </Badge>
-                    ))}
-                  </div>
                 </div>
 
                 {post.additional_info && (
@@ -356,28 +356,9 @@ const FindCoFounder = () => {
                     </Button>
                   </div>
                 ) : (
-                  <div className="mt-auto flex gap-3 border-t pt-4">
+                  <div className="mt-auto flex justify-center border-t pt-4">
                     <Button
-                      variant="default"
-                      className="flex-1"
-                      onClick={() => {
-                        if (!user) {
-                          navigate(`/signup?source=cofounder-connect&return=${encodeURIComponent('/co-founder')}`);
-                          return;
-                        }
-                        if (post.author?.username) {
-                          navigate(`/profile/${post.author.username}`);
-                        } else {
-                          toast.info('View this founder\'s profile to connect with them.');
-                        }
-                      }}
-                    >
-                      <Handshake className="w-4 h-4 mr-2" />
-                      Connect
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex-1"
+                      className="w-full sm:w-48"
                       disabled={messagingPostId === post.id}
                       onClick={async () => {
                         if (!user) {
