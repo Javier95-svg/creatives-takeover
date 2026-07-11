@@ -58,10 +58,15 @@ test('anonymous browse masks identity and deterministic matching uses the agreed
 test('the low-supply community feed and simple post editor are the default routes', () => {
   const route = read('../src/pages/community/CofounderMarketplaceRoute.tsx');
   const editorRoute = read('../src/pages/community/CofounderListingEditorRoute.tsx');
+  const communityPage = read('../src/pages/community/FindCoFounder.tsx');
   assert.match(route, /return <FindCoFounder/);
   assert.match(editorRoute, /postId \? <EditCoFounderPost \/> : <CreateCoFounderPost/);
   assert.doesNotMatch(route, /CofounderMarketplacePage|useFeatureFlagEnabled/);
   assert.doesNotMatch(editorRoute, /CofounderListingEditorPage|useFeatureFlagEnabled/);
+  assert.match(communityPage, /const POSTS_PER_PAGE = 10/);
+  assert.match(communityPage, /filteredPosts\.slice\(pageStart, pageStart \+ POSTS_PER_PAGE\)/);
+  assert.match(communityPage, /aria-label="Co-founder post pages"/);
+  assert.doesNotMatch(communityPage, /1\. Publish clearly|2\. Review founders|3\. Start a conversation/);
 });
 
 test('new co-founder posts notify only onboarding users who are actively looking', () => {

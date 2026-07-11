@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import SEO, { createBreadcrumbSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -26,6 +26,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink } from "@/components/ui/pagination";
 import { sampleCofounderPosts } from "@/data/sampleCofounderPosts";
 import { getPublicTabConfig } from "@/config/publicTabVisibility";
 
@@ -51,9 +52,12 @@ interface CofounderPost {
   };
 }
 
+const POSTS_PER_PAGE = 10;
+
 const FindCoFounder = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const publicTab = getPublicTabConfig('/co-founder');
   const { startConversation } = useMessaging({ autoLoad: false });
   const [posts, setPosts] = useState<CofounderPost[]>([]);
@@ -167,6 +171,29 @@ const FindCoFounder = () => {
     const matchesRole = roleFilter === 'all' || post.looking_for.includes(roleFilter);
     return matchesQuery && matchesRole;
   });
+  const requestedPage = Number.parseInt(searchParams.get('page') || '1', 10);
+  const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
+  const currentPage = Math.min(
+    Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1,
+    Math.max(totalPages, 1),
+  );
+  const pageStart = (currentPage - 1) * POSTS_PER_PAGE;
+  const paginatedPosts = filteredPosts.slice(pageStart, pageStart + POSTS_PER_PAGE);
+
+  const changePage = (page: number) => {
+    const next = new URLSearchParams(searchParams);
+    if (page === 1) next.delete('page');
+    else next.set('page', String(page));
+    setSearchParams(next);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const resetPagination = () => {
+    if (!searchParams.has('page')) return;
+    const next = new URLSearchParams(searchParams);
+    next.delete('page');
+    setSearchParams(next, { replace: true });
+  };
 
   const communityContent = (
     <>
@@ -179,7 +206,10 @@ const FindCoFounder = () => {
                 <input
                   type="text"
                   value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
+                  onChange={(event) => {
+                    setSearchQuery(event.target.value);
+                    resetPagination();
+                  }}
                   placeholder="Search projects, roles, industries, or locations"
                   className="h-12 w-full rounded-xl border border-border bg-background pl-10 pr-4 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
@@ -187,7 +217,10 @@ const FindCoFounder = () => {
               <select
                 aria-label="Filter by co-founder role"
                 value={roleFilter}
-                onChange={(event) => setRoleFilter(event.target.value)}
+                onChange={(event) => {
+                  setRoleFilter(event.target.value);
+                  resetPagination();
+                }}
                 className="h-12 rounded-xl border border-border bg-background px-4 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 lg:w-56"
               >
                 <option value="all">All roles</option>
@@ -244,7 +277,7 @@ const FindCoFounder = () => {
             </CardContent>
           </Card>
         ) : (
-          filteredPosts.map((post) => (
+          paginatedPosts.map((post) => (
             <Card key={post.id} className="flex h-full flex-col overflow-hidden border-border/70 bg-card/90 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
               <CardHeader className="pb-4">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -411,13 +444,28 @@ const FindCoFounder = () => {
         )}
       </div>
 
-      <Card className="mb-12 overflow-hidden border-primary/20 bg-primary/[0.04]">
-        <CardContent className="grid gap-5 p-6 sm:grid-cols-3">
-          <div><p className="text-sm font-semibold">1. Publish clearly</p><p className="mt-1 text-sm text-muted-foreground">Explain what you are building and the role you need.</p></div>
-          <div><p className="text-sm font-semibold">2. Review founders</p><p className="mt-1 text-sm text-muted-foreground">Search the current community by role, industry, or location.</p></div>
-          <div><p className="text-sm font-semibold">3. Start a conversation</p><p className="mt-1 text-sm text-muted-foreground">Open a profile or message a founder directly.</p></div>
-        </CardContent>
-      </Card>
+      {totalPages > 1 && (
+        <Pagination className="mb-12" aria-label="Co-founder post pages">
+          <PaginationContent className="gap-2">
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+              <PaginationItem key={page}>
+                <PaginationLink
+                  href={page === 1 ? '/co-founder' : `/co-founder?page=${page}`}
+                  isActive={page === currentPage}
+                  aria-label={`Go to co-founder posts page ${page}`}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    changePage(page);
+                  }}
+                  className="h-11 w-11 rounded-full"
+                >
+                  {page}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+          </PaginationContent>
+        </Pagination>
+      )}
     </>
   );
 
