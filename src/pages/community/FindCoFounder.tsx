@@ -8,10 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PreviewModeWrapper } from "@/components/ui/PreviewModeWrapper";
-import { Handshake, Search, MapPin, Briefcase, Users, Plus, Calendar, CheckCircle, Edit2, Trash2, MessageCircle, Loader2, Maximize2 } from "lucide-react";
+import { Handshake, Search, MapPin, Briefcase, Users, Plus, Calendar, CheckCircle, Edit2, Trash2, MessageCircle, Loader2, Maximize2, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMessaging } from "@/hooks/useMessaging";
+import { useSocial } from "@/hooks/useSocial";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -54,17 +55,74 @@ interface CofounderPost {
 
 const POSTS_PER_PAGE = 10;
 
+function RealPostActions({ post }: { post: CofounderPost }) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { friendStatus, loading: connectionLoading, sendFriendRequest } = useSocial(post.user_id);
+  const { startConversation } = useMessaging({ autoLoad: false });
+  const [messageLoading, setMessageLoading] = useState(false);
+
+  const connectionLabel = friendStatus === 'friends'
+    ? 'Connected'
+    : friendStatus === 'pending_sent'
+      ? 'Request Sent'
+      : friendStatus === 'pending_received'
+        ? 'Request Received'
+        : 'Connect';
+
+  const connect = () => {
+    if (!user) {
+      navigate(`/signup?source=cofounder-connect&return=${encodeURIComponent('/co-founder')}`);
+      return;
+    }
+    if (friendStatus === 'none') void sendFriendRequest();
+    else if (friendStatus === 'pending_received') toast.info('This founder already sent you a connection request.');
+  };
+
+  const message = async () => {
+    if (!user) {
+      navigate(`/signup?source=cofounder-message&return=${encodeURIComponent('/co-founder')}`);
+      return;
+    }
+    setMessageLoading(true);
+    try {
+      const conversationId = await startConversation(post.user_id);
+      if (conversationId) navigate(`/messages?conversationId=${conversationId}`);
+      else toast.error('Failed to start conversation. Please try again.');
+    } catch {
+      toast.error('Failed to start conversation. Please try again.');
+    } finally {
+      setMessageLoading(false);
+    }
+  };
+
+  return (
+    <div className="mt-auto grid grid-cols-2 gap-3 border-t pt-4">
+      <Button
+        variant="outline"
+        disabled={connectionLoading || friendStatus === 'pending_sent' || friendStatus === 'friends'}
+        onClick={connect}
+      >
+        {connectionLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus className="mr-2 h-4 w-4" />}
+        {connectionLabel}
+      </Button>
+      <Button disabled={messageLoading} onClick={() => void message()}>
+        {messageLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageCircle className="mr-2 h-4 w-4" />}
+        Message
+      </Button>
+    </div>
+  );
+}
+
 const FindCoFounder = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const publicTab = getPublicTabConfig('/co-founder');
-  const { startConversation } = useMessaging({ autoLoad: false });
   const [posts, setPosts] = useState<CofounderPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
-  const [messagingPostId, setMessagingPostId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [fullPost, setFullPost] = useState<CofounderPost | null>(null);
@@ -396,48 +454,7 @@ const FindCoFounder = () => {
                       Delete
                     </Button>
                   </div>
-                ) : (
-                  <div className="mt-auto flex justify-center border-t pt-4">
-                    <Button
-                      className="w-full sm:w-48"
-                      disabled={messagingPostId === post.id}
-                      onClick={async () => {
-                        if (!user) {
-                          navigate(`/signup?source=cofounder-message&return=${encodeURIComponent('/co-founder')}`);
-                          return;
-                        }
-                        if (!post.user_id) {
-                          toast.error('This founder does not have messaging enabled.');
-                          return;
-                        }
-                        if (post.user_id === user.id) {
-                          toast.error('You cannot message yourself.');
-                          return;
-                        }
-                        setMessagingPostId(post.id);
-                        try {
-                          const conversationId = await startConversation(post.user_id);
-                          if (conversationId) {
-                            navigate(`/messages?conversationId=${conversationId}`);
-                          } else {
-                            toast.error('Failed to start conversation. Please try again.');
-                          }
-                        } catch {
-                          toast.error('Failed to start conversation. Please try again.');
-                        } finally {
-                          setMessagingPostId(null);
-                        }
-                      }}
-                    >
-                      {messagingPostId === post.id ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <MessageCircle className="w-4 h-4 mr-2" />
-                      )}
-                      Message
-                    </Button>
-                  </div>
-                )}
+                ) : <RealPostActions post={post} />}
               </CardContent>
             </Card>
           ))
