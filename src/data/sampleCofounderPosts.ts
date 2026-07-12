@@ -59,7 +59,7 @@ If you care about sustainability and want to build something people actually nee
     id: "sample-2",
     user_id: "sample-user-2",
     project_name: "Vaultly",
-    project_description: `I'm Sebastian, a backend engineer with 6 years of experience at fintech companies (worked at Monzo and a YC startup). I've built the core infrastructure for Vaultly, a personal finance tool that helps freelancers and gig workers manage irregular income.
+    project_description: `I'm Sebastian, a London-based backend engineer with 6 years of experience at fintech companies (worked at Monzo and a YC startup). I've built the core infrastructure for Vaultly, a personal finance tool that helps freelancers and gig workers manage irregular income.
 
 The tech is solid. I've got automated income categorization, tax estimation for self-employed people, and a cash flow forecasting engine. What I don't have is anyone who can sell it.
 
@@ -70,7 +70,7 @@ I'm not looking for a "growth hacker" or someone who just wants to run Facebook 
     stage: "mvp-ready",
     looking_for: ["business", "marketing"],
     commitment: "Full-time",
-    location: "Remote (UK/EU timezone preferred)",
+    location: "London, UK (remote within UK/EU)",
     equity_range: "30-40%",
     additional_info: "MVP is live with 50 beta users. Monthly retention is strong but I've done zero marketing beyond asking friends. Bootstrapped so far. Open to fundraising once we nail product-market fit. Ideal person has experience with consumer fintech or subscription products.",
     created_at: new Date(now - 8 * hour).toISOString(),
@@ -111,7 +111,7 @@ What I need is a technical co-founder who can build the marketplace. Bonus point
     id: "sample-4",
     user_id: "sample-user-4",
     project_name: "CareCircle",
-    project_description: `Hi, I'm James. I left my job as a nurse practitioner earlier this year to build something I've wanted for ages: a platform that connects elderly people living alone with local volunteers for simple social visits, errands, and companionship.
+    project_description: `Hi, I'm James, a former nurse practitioner based in Manchester. I left my job earlier this year to build something I've wanted for ages: a platform that connects elderly people living alone with local volunteers for simple social visits, errands, and companionship.
 
 The loneliness epidemic among seniors is real and it's only getting worse. Government programs are slow. Care homes are expensive. What most elderly people actually want is someone to have tea with on a Tuesday afternoon.
 
@@ -137,7 +137,7 @@ I need someone who can help me build a proper platform (matching algorithm, sche
     id: "sample-5",
     user_id: "sample-user-5",
     project_name: "Briefd",
-    project_description: `I'm Soof, a freelance brand strategist. After 5 years of writing creative briefs for agencies and startups, I realized the process is broken. Clients don't know what they want, designers get vague instructions, and everyone wastes time going back and forth.
+    project_description: `I'm Soof, a freelance brand strategist based in Barcelona. After 5 years of writing creative briefs for agencies and startups, I realized the process is broken. Clients don't know what they want, designers get vague instructions, and everyone wastes time going back and forth.
 
 Briefd is an AI tool that helps non-designers create clear, structured creative briefs in minutes. You answer a few guided questions about your brand, goals, and preferences, and it generates a brief that any designer can actually work with. Think of it as the translator between "I want something modern and clean" and actual design specifications.
 
@@ -163,7 +163,7 @@ Looking for a technical co-founder who can rebuild this properly, add integratio
     id: "sample-6",
     user_id: "sample-user-6",
     project_name: "PackTrail",
-    project_description: `What's up, I'm Kai. Full stack dev, been building stuff since I was 14. Currently freelancing but ready to go all in on something.
+    project_description: `What's up, I'm Kai, a full-stack developer based in Singapore. I've been building stuff since I was 14 and I'm currently freelancing, but I'm ready to go all in on something.
 
 PackTrail is a logistics tracking app for small e-commerce brands. The big guys (Shopify, Amazon) have great tracking. But if you're a small brand shipping 50 to 500 orders a month through multiple carriers, tracking is a nightmare. Customers bug you constantly asking "where's my order?"
 
@@ -176,7 +176,7 @@ If you've run an e-commerce brand or worked in logistics, hit me up. Bonus if yo
     stage: "building-mvp",
     looking_for: ["business", "marketing"],
     commitment: "Full-time",
-    location: "Remote (any timezone)",
+    location: "Singapore (remote, flexible hours)",
     equity_range: "40-50%",
     additional_info: "I code fast and ship weekly. Looking for someone who moves at the same pace on the business side. No pitch deck warriors. I want someone who's comfortable cold emailing Shopify store owners and closing deals. Revenue model is straightforward SaaS ($49 to $199/month based on order volume).",
     created_at: new Date(now - 3 * day).toISOString(),
@@ -191,7 +191,7 @@ If you've run an e-commerce brand or worked in logistics, hit me up. Bonus if yo
     id: "sample-7",
     user_id: "sample-user-7",
     project_name: "SkillSwap",
-    project_description: `Hi! I'm Camila, a community builder and former program manager at a coding bootcamp. I spent 3 years watching students graduate with technical skills but zero business sense, and business people with great ideas but no technical ability.
+    project_description: `Hi! I'm Camila, a community builder based in Bogotá and a former program manager at a coding bootcamp. I spent 3 years watching students graduate with technical skills but zero business sense, and business people with great ideas but no technical ability.
 
 SkillSwap is a platform where founders trade skills instead of paying for services. A developer builds your landing page, you write their marketing copy. A designer creates their brand identity, they handle your bookkeeping for a month. No money changes hands, just expertise.
 
@@ -202,7 +202,7 @@ I'm looking for a technical co-founder who gets the community-first approach and
     stage: "early-users",
     looking_for: ["technical", "finance"],
     commitment: "Part-time (15-20 hrs/week)",
-    location: "Lagos, Nigeria (remote first)",
+    location: "Bogotá, Colombia (remote first)",
     equity_range: "30-35% each",
     additional_info: "The community is the product. I have an engaged user base that's growing organically. What I need is people who can help me turn this into a sustainable business without killing the community vibe. I don't want to build another cold, transactional marketplace. If you believe in the power of community-led growth, we should chat.",
     created_at: new Date(now - 3.5 * day).toISOString(),
@@ -245,7 +245,7 @@ I need a technical co-founder to build the platform and a marketing co-founder t
     id: "sample-9",
     user_id: "sample-user-9",
     project_name: "Canopy",
-    project_description: `Hey, I'm Olivia. Former interior designer turned proptech enthusiast. After renovating 20+ apartments and dealing with the chaos of managing contractors, timelines, and budgets, I decided to build the tool I wish I had.
+    project_description: `Hey, I'm Olivia, a London-based former interior designer turned proptech enthusiast. After renovating 20+ apartments and dealing with the chaos of managing contractors, timelines, and budgets, I decided to build the tool I wish I had.
 
 Canopy is a project management platform specifically for home renovations. Not generic PM tools that kind of work. A purpose-built tool where homeowners can plan their renovation, get AI-powered budget estimates, find vetted contractors, track progress with photo timelines, and manage payments with milestone-based releases.
 
@@ -271,7 +271,7 @@ Looking for a technical co-founder to build the platform (web + mobile) and some
     id: "sample-10",
     user_id: "sample-user-10",
     project_name: "RepBot",
-    project_description: `I'm Yusuf, a data scientist with a background in NLP. I've been building RepBot on the side for the past 4 months. It's an AI tool that monitors online reviews across Google, Trustpilot, Yelp, and social media, and helps small businesses respond intelligently and quickly.
+    project_description: `I'm Yusuf, a Dublin-based data scientist with a background in NLP. I've been building RepBot on the side for the past 4 months. It's an AI tool that monitors online reviews across Google, Trustpilot, Yelp, and social media, and helps small businesses respond intelligently and quickly.
 
 For small business owners, managing online reputation is a nightmare. A bad review sits there for days because they're too busy running their shop. RepBot sends instant alerts, drafts personalized responses (not generic "thank you for your feedback" stuff), and gives you a weekly sentiment dashboard.
 
