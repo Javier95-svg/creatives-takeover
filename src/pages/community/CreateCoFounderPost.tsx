@@ -364,7 +364,7 @@ const CreateCoFounderPost = () => {
                   ) : (
                     <>
                       <Save className="w-4 h-4 mr-2" />
-                      Create Post · {CREDIT_COSTS.COFOUNDER_POST} credits
+                      Share Post
                     </>
                   )}
                 </Button>
