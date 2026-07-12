@@ -483,40 +483,6 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
   }, [user, autoLoad, loadConversationsFromServer, loadUnreadCounts]);
 
   useEffect(() => {
-    if (!user || !autoLoad || conversations.length === 0 || !scopedConversationIds) return;
-
-    const scopedChannels = conversations.map((conversation) =>
-      supabase
-        .channel(`user-messages-sync-${user.id}-${conversation.id}`)
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'messages',
-            filter: `conversation_id=eq.${conversation.id}`
-          },
-          (payload) => {
-            void loadUnreadCounts([conversation.id]);
-
-            // Keep sidebar ordering synchronized when conversations receive/lose messages.
-            if (payload.eventType === 'INSERT' || payload.eventType === 'DELETE') {
-              void loadConversationsFromServer();
-            }
-          }
-        )
-        .subscribe()
-    );
-
-    return () => {
-      scopedChannels.forEach((channel) => {
-        void supabase.removeChannel(channel);
-      });
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
-  }, [user, autoLoad, scopedConversationIds, loadUnreadCounts, loadConversationsFromServer]);
-
-  useEffect(() => {
     if (user) return;
     setConversations([]);
     setMessages({});
