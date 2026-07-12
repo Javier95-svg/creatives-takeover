@@ -1568,9 +1568,9 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                   key={conversation.id}
                   className="relative group"
                 >
-                  <Button
-                    variant="ghost"
-                    className={`h-auto min-h-[44px] w-full justify-start overflow-hidden p-3 pr-12 touch-manipulation ${
+                  <button
+                    type="button"
+                    className={`grid min-h-[64px] w-full min-w-0 grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-3 overflow-hidden rounded-lg p-3 pr-12 text-left font-semibold transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                       activeConversationId === conversation.id
                         ? 'border border-primary/30 bg-primary/15 text-foreground hover:bg-primary/20'
                         : 'text-foreground hover:bg-muted/70'
@@ -1580,8 +1580,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                     onFocus={() => void prefetchConversation(conversation.id)}
                     onPointerDown={() => void prefetchConversation(conversation.id)}
                   >
-                    <div className="flex items-center gap-3 w-full">
-                      <div className="relative">
+                      <div className="relative min-w-0">
                         <Avatar className="h-8 w-8 flex-shrink-0">
                           <AvatarImage src={getConversationAvatar(conversation) || undefined} />
                           <AvatarFallback>
@@ -1596,7 +1595,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                         })()}
                       </div>
                       
-	                      <div className="min-w-0 flex-1 overflow-hidden text-left">
+	                      <div className="min-w-0 overflow-hidden text-left">
 	                        <div className="flex min-w-0 items-center gap-1">
 	                          <p className="truncate text-sm font-semibold text-foreground">
 	                            {getConversationName(conversation)}
@@ -1610,7 +1609,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	                          )}
 	                        </div>
 	                        {conversation.last_message_preview && (
-	                          <p className="block w-full overflow-hidden text-ellipsis whitespace-nowrap text-xs text-foreground/90">
+	                          <p data-testid="conversation-preview" className="block min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-xs text-foreground/90">
 	                            {conversation.last_message_preview}
 	                          </p>
 	                        )}
@@ -1626,8 +1625,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                           {unreadCount > 9 ? '9+' : unreadCount}
                         </div>
                       )}
-                    </div>
-                  </Button>
+                  </button>
                   <Button
                     variant="ghost"
                     size="sm"

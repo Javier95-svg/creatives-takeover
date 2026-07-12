@@ -70,7 +70,7 @@ test('long inbox stays within the messages workspace frame', async ({ page }) =>
       participants: [currentUserId, otherUserId],
       otherUser: { id: otherUserId, fullName: `Founder ${index + 1}`, username: `founder${index + 1}`, avatarUrl: null },
       lastMessageAt: new Date(Date.now() - index * 60_000).toISOString(),
-      lastMessagePreview: `Conversation preview ${index + 1}`,
+      lastMessagePreview: `This intentionally long conversation preview ${index + 1} must remain inside the sidebar and finish with a visible ellipsis instead of being cut by the panel boundary`,
       unreadCount: 0,
       requestStatus: 'accepted',
       pinnedAt: null,
@@ -114,6 +114,25 @@ test('long inbox stays within the messages workspace frame', async ({ page }) =>
   });
   expect(layout.isScrollable).toBe(true);
   expect(layout.sidebarBottom).toBeLessThanOrEqual(layout.workspaceBottom + 1);
+  const firstPreview = page.getByTestId('conversation-preview').first();
+  const previewLayout = await firstPreview.evaluate((element) => {
+    const preview = element as HTMLElement;
+    const sidebarElement = preview.closest('.w-80') as HTMLElement;
+    const previewRect = preview.getBoundingClientRect();
+    const sidebarRect = sidebarElement.getBoundingClientRect();
+    const styles = getComputedStyle(preview);
+    return {
+      overflows: preview.scrollWidth > preview.clientWidth,
+      textOverflow: styles.textOverflow,
+      whiteSpace: styles.whiteSpace,
+      previewRight: previewRect.right,
+      sidebarRight: sidebarRect.right,
+    };
+  });
+  expect(previewLayout.overflows).toBe(true);
+  expect(previewLayout.textOverflow).toBe('ellipsis');
+  expect(previewLayout.whiteSpace).toBe('nowrap');
+  expect(previewLayout.previewRight).toBeLessThanOrEqual(previewLayout.sidebarRight - 8);
 });
 
 test('linked mentor identity overrides the generic public profile in messages', async ({ page }) => {
