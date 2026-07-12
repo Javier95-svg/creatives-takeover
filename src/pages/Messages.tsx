@@ -166,7 +166,9 @@ const Messages = () => {
         <div className="relative z-10">
           <Navigation />
           <main className="container mx-auto px-3 pt-20 pb-12 md:px-4 md:pt-header-offset">
-            <h1 className="mb-6 text-center text-4xl font-bold">Chat Room</h1>
+            <h1 className="mb-6 text-center text-4xl font-bold">
+              <span className="gradient-unified animate-flicker">Chat Room</span>
+            </h1>
             <Card className="mx-auto max-w-6xl p-3 md:p-6">
               <MessagingInterface initialConversationId={resolvedConversationId} />
             </Card>

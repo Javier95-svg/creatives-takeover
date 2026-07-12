@@ -126,6 +126,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const hasSetInitialConversation = useRef(false);
   const previousInitialConversationId = useRef<string | undefined>(undefined);
   const [participantProfiles, setParticipantProfiles] = useState<Record<string, ParticipantProfile>>({});
+  const [mentorProfiles, setMentorProfiles] = useState<Record<string, ParticipantProfile>>({});
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState<{ messageId: string; conversationId: string } | null>(null);
@@ -611,6 +612,40 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
       });
   }, [conversations, participantProfiles, user]);
 
+  useEffect(() => {
+    if (!user) {
+      setMentorProfiles({});
+      return;
+    }
+
+    const linkedUserIds = Array.from(new Set([user.id, ...participantIds]));
+    if (linkedUserIds.length === 0) return;
+
+    void supabase
+      .from('mentors')
+      .select('user_id, name, picture')
+      .in('user_id', linkedUserIds)
+      .eq('is_active', true)
+      .then(({ data, error }) => {
+        if (error) {
+          logError('Error loading linked mentor identities for messages', error);
+          return;
+        }
+
+        const linkedMentors: Record<string, ParticipantProfile> = {};
+        (data || []).forEach((mentor) => {
+          if (!mentor.user_id) return;
+          linkedMentors[mentor.user_id] = {
+            full_name: mentor.name,
+            avatar_url: mentor.picture,
+            username: null,
+            mentor_slug: null
+          };
+        });
+        setMentorProfiles(linkedMentors);
+      });
+  }, [participantIds, user]);
+
   const getConversationName = (conversation: Conversation): string => {
     if (conversation.is_group && conversation.name) {
       return conversation.name;
@@ -618,8 +653,10 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     
     // For 1-on-1 chats, get the other participant's name
     const otherParticipantId = getOtherParticipant(conversation);
-    if (otherParticipantId && participantProfiles[otherParticipantId]) {
-      return participantProfiles[otherParticipantId].full_name;
+    if (otherParticipantId) {
+      return mentorProfiles[otherParticipantId]?.full_name ||
+        participantProfiles[otherParticipantId]?.full_name ||
+        "Direct Message";
     }
     
     return "Direct Message";
@@ -631,8 +668,10 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     }
 
     const otherParticipantId = getOtherParticipant(conversation);
-    if (otherParticipantId && participantProfiles[otherParticipantId]) {
-      return participantProfiles[otherParticipantId].avatar_url;
+    if (otherParticipantId) {
+      return mentorProfiles[otherParticipantId]?.avatar_url ||
+        participantProfiles[otherParticipantId]?.avatar_url ||
+        null;
     }
 
     return null;
@@ -1040,13 +1079,14 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
             <Avatar className="h-7 w-7 md:h-8 md:w-8 flex-shrink-0 self-end">
               <AvatarImage
                 src={
+                  mentorProfiles[firstMessage.sender_id]?.avatar_url ||
                   participantProfiles[firstMessage.sender_id]?.avatar_url ||
                   firstMessage.sender?.avatar_url ||
                   undefined
                 }
               />
               <AvatarFallback>
-                {(participantProfiles[firstMessage.sender_id]?.full_name || firstMessage.sender?.full_name || '?').charAt(0)}
+                {(mentorProfiles[firstMessage.sender_id]?.full_name || participantProfiles[firstMessage.sender_id]?.full_name || firstMessage.sender?.full_name || '?').charAt(0)}
               </AvatarFallback>
             </Avatar>
             {/* Presence indicator */}
@@ -1236,7 +1276,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 
         {isOwnMessage && (
           <Avatar className="h-7 w-7 md:h-8 md:w-8 flex-shrink-0 self-end">
-            <AvatarImage src={user?.user_metadata?.avatar_url} />
+            <AvatarImage src={user?.id ? mentorProfiles[user.id]?.avatar_url || user?.user_metadata?.avatar_url : user?.user_metadata?.avatar_url} />
             <AvatarFallback>
               {user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0) || '?'}
             </AvatarFallback>
@@ -1623,7 +1663,9 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	                  if (!activeConversation) return null;
 
                   const otherParticipantId = getOtherParticipant(activeConversation);
-                  const otherParticipant = otherParticipantId ? participantProfiles[otherParticipantId] : null;
+                  const otherParticipant = otherParticipantId
+                    ? mentorProfiles[otherParticipantId] || participantProfiles[otherParticipantId]
+                    : null;
 
                   return (
                     <TypingIndicator

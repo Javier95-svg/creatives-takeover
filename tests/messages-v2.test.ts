@@ -49,6 +49,10 @@ test('the client bundle contains no hard-coded messaging identities', () => {
   assert.doesNotMatch(sources, /(?:SOPHIA|ARTUR|YASMINE|SAMUEL)_[A-Z_]+/);
   assert.doesNotMatch(sources, /getUserIdByEmail/);
   assert.match(messagingHook, /\.from\('mentors'\)[\s\S]*\.eq\('user_id', mentor\.user_id\)/);
+  assert.match(interfaceSource, /\.from\('mentors'\)[\s\S]*\.in\('user_id', linkedUserIds\)/);
+  assert.match(interfaceSource, /mentorProfiles\[otherParticipantId\]\?\.full_name/);
+  assert.match(interfaceSource, /mentorProfiles\[otherParticipantId\]\?\.avatar_url/);
+  assert.doesNotMatch(interfaceSource, /\.eq\('name',/);
 });
 
 test('request, hide, tombstone, mute, and notification safeguards are durable', () => {
@@ -65,6 +69,7 @@ test('request, hide, tombstone, mute, and notification safeguards are durable', 
 test('messages renders as a focused inbox workspace', () => {
   assert.match(pageSource, /messages-inbox-v2/);
   assert.match(pageSource, /VITE_MESSAGES_INBOX_V2_ENABLED/);
+  assert.match(pageSource, /className="gradient-unified animate-flicker">Chat Room/);
   assert.match(pageSource, /aria-label="Messages workspace"/);
   assert.doesNotMatch(interfaceSource, /> New message</);
   assert.match(interfaceSource, /<h2 className="text-center text-lg font-semibold">Messages<\/h2>/);

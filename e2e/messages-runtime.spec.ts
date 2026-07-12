@@ -88,7 +88,6 @@ test('long inbox stays within the messages workspace frame', async ({ page }) =>
   await page.route('**/rest/v1/user_presence*', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
   );
-
   await page.setViewportSize({ width: 1661, height: 765 });
   await page.goto('/messages');
   const workspace = page.locator('[aria-label="Messages workspace"], main .max-w-6xl').first();
@@ -110,4 +109,55 @@ test('long inbox stays within the messages workspace frame', async ({ page }) =>
   });
   expect(layout.isScrollable).toBe(true);
   expect(layout.sidebarBottom).toBeLessThanOrEqual(layout.workspaceBottom + 1);
+});
+
+test('linked mentor identity overrides the generic public profile in messages', async ({ page }) => {
+  await authenticate(page);
+  const currentUserId = '11111111-1111-4111-8111-111111111111';
+  const mentorUserId = '44444444-4444-4444-8444-444444444444';
+  const conversation = {
+    id: '55555555-5555-4555-8555-555555555555',
+    participants: [currentUserId, mentorUserId],
+    otherUser: { id: mentorUserId, fullName: 'Generic Profile Name', username: 'generic', avatarUrl: null },
+    lastMessageAt: new Date().toISOString(),
+    lastMessagePreview: 'Hello from a mentor',
+    unreadCount: 0,
+    requestStatus: 'accepted',
+    pinnedAt: null,
+    mutedUntil: null,
+    archivedAt: null,
+    hiddenAt: null,
+  };
+  const mentorPicture = 'https://images.example.invalid/mentor-profile.jpg';
+
+  await page.route('**/rest/v1/rpc/get_inbox_v1*', async (route) => {
+    const body = route.request().postDataJSON() as { p_section?: string } | null;
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ items: body?.p_section === 'inbox' ? [conversation] : [], nextCursor: null }),
+    });
+  });
+  await page.route('**/rest/v1/mentors*', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([{ user_id: mentorUserId, name: 'Mentor Profile Name', picture: mentorPicture }]),
+    })
+  );
+  await page.route('**/rest/v1/user_presence*', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+  );
+  await page.route(mentorPicture, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'image/gif',
+      body: Buffer.from('R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==', 'base64'),
+    })
+  );
+
+  await page.goto('/messages');
+  await expect(page.getByText('Mentor Profile Name', { exact: true })).toBeVisible();
+  await expect(page.getByText('Generic Profile Name', { exact: true })).toHaveCount(0);
+  await expect(page.locator(`img[src="${mentorPicture}"]`)).toHaveCount(1);
 });
