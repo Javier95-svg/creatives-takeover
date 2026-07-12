@@ -41,6 +41,15 @@ interface RetentionExperimentSummary {
   artifactTypes: Array<{ type: string; users: number }>;
 }
 
+interface MessagePerformanceMetric {
+  event_name: string;
+  samples: number;
+  average_ms: number;
+  p50_ms: number;
+  p95_ms: number;
+  p99_ms: number;
+}
+
 const AdminAnalytics = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -81,6 +90,16 @@ const AdminAnalytics = () => {
     activationIntents: [],
     artifactTypes: [],
   });
+  const [messagePerformance, setMessagePerformance] = useState<MessagePerformanceMetric[]>([]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    void supabase.rpc('get_message_performance_summary_v1', { p_days: Number(dateRange) }).then(({ data, error }) => {
+      if (error || !data || typeof data !== 'object') return;
+      const events = (data as Record<string, unknown>).events;
+      setMessagePerformance(Array.isArray(events) ? events as MessagePerformanceMetric[] : []);
+    });
+  }, [dateRange, isAdmin]);
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -494,6 +513,7 @@ const AdminAnalytics = () => {
 	              <TabsTrigger value="pages">Pages</TabsTrigger>
 	              <TabsTrigger value="ctas">CTAs</TabsTrigger>
 	              <TabsTrigger value="engagement">Engagement</TabsTrigger>
+                <TabsTrigger value="messages">Messages</TabsTrigger>
               <TabsTrigger value="realtime">Real-Time</TabsTrigger>
                 <TabsTrigger value="activity">Activity</TabsTrigger>
             </TabsList>
@@ -911,6 +931,29 @@ const AdminAnalytics = () => {
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="messages" className="space-y-6">
+              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+                {messagePerformance.map((metric) => (
+                  <Card key={metric.event_name}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium">{metric.event_name.replaceAll('_', ' ')}</CardTitle>
+                      <CardDescription>{metric.samples} production samples</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className={metric.p95_ms > 750 ? 'text-2xl font-bold text-destructive' : 'text-2xl font-bold'}>{metric.p95_ms}ms p95</div>
+                      <p className="mt-1 text-xs text-muted-foreground">p50 {metric.p50_ms}ms · p99 {metric.p99_ms}ms</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              {messagePerformance.length === 0 && (
+                <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">Messaging performance data will appear after the upgraded inbox receives production traffic.</CardContent></Card>
+              )}
+              <Card>
+                <CardHeader><CardTitle>Release thresholds</CardTitle><CardDescription>Investigate any messaging event above 750ms p95. Conversation-open rendering should trend below 500ms on warm sessions.</CardDescription></CardHeader>
               </Card>
             </TabsContent>
 

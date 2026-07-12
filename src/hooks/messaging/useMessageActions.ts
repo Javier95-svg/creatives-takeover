@@ -5,5 +5,7 @@ export const useMessageActions = () => ({
   refuse: (conversationId: string) => messagingV2.requestStatus(conversationId, 'refused'),
   markRead: messagingV2.markRead,
   setState: messagingV2.conversationState,
-  deleteForEveryone: messagingV2.softDelete
+  deleteForEveryone: messagingV2.softDelete,
+  edit: messagingV2.edit,
+  createFounderWorkspace: messagingV2.createGroup
 });

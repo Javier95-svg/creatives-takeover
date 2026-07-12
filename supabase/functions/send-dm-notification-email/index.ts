@@ -545,7 +545,7 @@ serve(async (req: Request): Promise<Response> => {
     const messagePreview = escapeHtml(buildSnippet(messageRow.content));
     const senderDisplayEscaped = escapeHtml(senderName);
     const recipientDisplayEscaped = escapeHtml(recipientName);
-    const conversationUrl = `${appUrl}/messages?conversationId=${encodeURIComponent(conversationId)}`;
+    const conversationUrl = `${appUrl}/messages?conversationId=${encodeURIComponent(conversationId)}&messageId=${encodeURIComponent(messageId)}`;
 
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #111827;">

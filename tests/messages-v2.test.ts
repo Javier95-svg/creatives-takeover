@@ -9,6 +9,10 @@ const messagingHook = read('src/hooks/useMessaging.ts');
 const interfaceSource = read('src/components/social/MessagingInterface.tsx');
 const pageSource = read('src/pages/Messages.tsx');
 const messagingService = read('src/lib/messagingV2.ts');
+const upgradeMigration = read('supabase/migrations/20260716120000_messages_9_of_10_upgrade.sql');
+const newConversationDialog = read('src/components/social/NewConversationDialog.tsx');
+const voiceRecorder = read('src/components/social/VoiceNoteRecorder.tsx');
+const contextCard = read('src/components/social/MessageContextCard.tsx');
 
 test('messaging V2 exposes the consolidated authenticated contracts', () => {
   for (const contract of [
@@ -74,7 +78,8 @@ test('messages renders as a focused inbox workspace', () => {
   assert.match(pageSource, /className="gradient-unified animate-flicker">Chat Room/);
   assert.match(pageSource, /aria-label="Messages workspace"/);
   assert.doesNotMatch(interfaceSource, /> New message</);
-  assert.match(interfaceSource, /<h2 className="text-center text-lg font-semibold">Messages<\/h2>/);
+  assert.match(interfaceSource, /text-center text-lg font-semibold">Messages<\/h2>/);
+  assert.match(interfaceSource, /NewConversationDialog/);
   assert.match(interfaceSource, /Archived/);
   assert.match(interfaceSource, /Back to conversations/);
   assert.match(interfaceSource, /first mentor message is free/i);
@@ -82,6 +87,35 @@ test('messages renders as a focused inbox workspace', () => {
   assert.match(interfaceSource, /Hide conversation\?/);
   assert.match(interfaceSource, /<ScrollArea className="min-h-0 flex-1">/);
   assert.match(interfaceSource, /flex h-full min-h-0 flex-shrink-0 flex-col overflow-hidden border-r/);
+});
+
+test('9/10 messaging upgrade includes discovery, voice, editing, contextual cards and founder workspaces', () => {
+  for (const contract of [
+    'edit_direct_message_v1',
+    'set_message_context_v1',
+    'create_message_group_v1',
+    'send_group_message_v1',
+    'send_voice_message_v1',
+    'get_message_page_v2',
+    'get_inbox_v2',
+    'search_message_recipients_v2',
+    'record_message_performance_v1'
+  ]) assert.match(upgradeMigration, new RegExp(`FUNCTION public\\.${contract}`));
+  assert.match(newConversationDialog, /Search founders by name or username/);
+  assert.match(newConversationDialog, /Founder workspace/);
+  assert.match(voiceRecorder, /getUserMedia/);
+  assert.match(voiceRecorder, /MediaRecorder/);
+  assert.match(interfaceSource, /Edit message/);
+  assert.match(interfaceSource, /VoiceNoteRecorder/);
+  assert.match(contextCard, /Co-founder opportunity/);
+  assert.match(upgradeMigration, /created_at >= now\(\) - interval '15 minutes'/);
+  assert.match(upgradeMigration, /Founder workspaces can only include your connections/);
+});
+
+test('message notifications deep-link to an exact conversation message', () => {
+  assert.match(upgradeMigration, /&messageId=/);
+  assert.match(interfaceSource, /searchParams\.get\('messageId'\)/);
+  assert.match(interfaceSource, /anchorMessageId/);
 });
 
 test('conversation selection renders from a cached 30-message page before attachment signing', () => {

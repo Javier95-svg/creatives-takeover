@@ -32,8 +32,10 @@ import {
   Download,
   FileText,
   Image as ImageIcon,
-  Loader2
-  ,ArrowLeft
+  Loader2,
+  ArrowLeft,
+  Pencil,
+  Mic
 } from "lucide-react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMessaging, Conversation, Message } from "@/hooks/useMessaging";
@@ -50,6 +52,10 @@ import { usePresence } from "@/hooks/usePresence";
 import { Link, useSearchParams } from "react-router-dom";
 import { useMessageComposer } from "@/hooks/messaging/useMessageComposer";
 import { captureEvent } from "@/lib/analytics";
+import { messagingV2 } from "@/lib/messagingV2";
+import { NewConversationDialog } from "./NewConversationDialog";
+import { VoiceNoteRecorder } from "./VoiceNoteRecorder";
+import { MessageContextCard } from "./MessageContextCard";
 
 interface MessagingInterfaceProps {
   initialConversationId?: string;
@@ -138,6 +144,22 @@ const LazyMessageImage = ({
   );
 };
 
+const LazyVoiceNote = ({ attachment, getSignedUrl }: {
+  attachment: NonNullable<Message['attachment_rows']>[number];
+  getSignedUrl: (storagePath: string) => Promise<string | null>;
+}) => {
+  const [url, setUrl] = useState(attachment.signed_url || '');
+  useEffect(() => {
+    if (url || !attachment.storage_path) return;
+    let active = true;
+    void getSignedUrl(attachment.storage_path).then((signed) => { if (active && signed) setUrl(signed); });
+    return () => { active = false; };
+  }, [attachment.storage_path, getSignedUrl, url]);
+  return url
+    ? <audio controls preload="metadata" src={url} className="mt-2 h-10 w-full min-w-[220px] max-w-sm" aria-label="Voice note" />
+    : <div className="mt-2 flex h-10 min-w-[220px] items-center justify-center rounded-lg border"><Loader2 className="h-4 w-4 animate-spin" /><span className="ml-2 text-xs">Loading voice note</span></div>;
+};
+
 export const MessagingInterface = ({ initialConversationId }: MessagingInterfaceProps) => {
   const { user } = useAuth();
   const deviceType = useDeviceType();
@@ -157,7 +179,10 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     sending,
     activeConversationId,
     setActiveConversationId,
+    startConversation,
+    startGroupConversation,
     sendMessage,
+    editMessage,
     retryFailedMessage,
     discardFailedMessage,
     loadMessages,
@@ -194,6 +219,9 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState<{ messageId: string; conversationId: string } | null>(null);
+  const [messageToEdit, setMessageToEdit] = useState<Message | null>(null);
+  const [editedContent, setEditedContent] = useState('');
+  const [isEditingMessage, setIsEditingMessage] = useState(false);
   const [messageToReport, setMessageToReport] = useState<string | null>(null);
   const [reportReason, setReportReason] = useState('spam');
   const [reportDetails, setReportDetails] = useState('');
@@ -209,9 +237,11 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const [conversationSection, setConversationSection] = useState<'main' | 'requests' | 'archived'>('main');
   const [online, setOnline] = useState(() => typeof navigator === 'undefined' || navigator.onLine);
   const [searchParams, setSearchParams] = useSearchParams();
+  const anchorMessageId = searchParams.get('messageId');
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const selectionStartedAtRef = useRef<Record<string, number>>({});
   const lastReadMessageKeyRef = useRef<string | null>(null);
+  const loadedAnchorRef = useRef<string | null>(null);
   const { trigger: triggerHaptic } = useHapticFeedback();
   const { quote, refreshQuote } = useMessageComposer(activeConversationId);
 
@@ -322,6 +352,18 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     }
   }, [initialConversationId, conversations, loading, setActiveConversationId]);
 
+  useEffect(() => {
+    if (!activeConversationId || !anchorMessageId) return;
+    const key = `${activeConversationId}:${anchorMessageId}`;
+    if (loadedAnchorRef.current === key) return;
+    loadedAnchorRef.current = key;
+    void loadMessages(activeConversationId, { mode: 'replace', anchorMessageId }).then(() => {
+      requestAnimationFrame(() => {
+        document.querySelector(`[data-message-id="${CSS.escape(anchorMessageId)}"]`)?.scrollIntoView({ block: 'center' });
+      });
+    });
+  }, [activeConversationId, anchorMessageId, loadMessages]);
+
   // Mark read only after the first page is visible. Conversation selection used
   // to issue the same mutation twice and compete with the blocking page read.
   useEffect(() => {
@@ -363,6 +405,12 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     window.dispatchEvent(new CustomEvent('messages:conversation-rendered', {
       detail: { conversationId: activeConversationId, durationMs }
     }));
+    void messagingV2.performance({
+      eventName: 'conversation_opened',
+      durationMs,
+      conversationId: activeConversationId,
+      metadata: { messageCount: activeMessages.length, cacheState: durationMs < 100 ? 'warm' : 'cold' }
+    }).catch(() => undefined);
   }, [activeConversationId, activeMessages.length]);
 
   // Auto-resize textarea as user types
@@ -817,6 +865,19 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     setMessageToDelete(null);
   };
 
+  const handleEditMessage = (message: Message) => {
+    setMessageToEdit(message);
+    setEditedContent(message.content);
+  };
+
+  const handleConfirmEditMessage = async () => {
+    if (!messageToEdit || !activeConversationId || !editedContent.trim()) return;
+    setIsEditingMessage(true);
+    const success = await editMessage(activeConversationId, messageToEdit.id, editedContent);
+    setIsEditingMessage(false);
+    if (success) setMessageToEdit(null);
+  };
+
   const handleRetryFailedMessage = useCallback((message: Message) => {
     if (!activeConversationId || !message.client_message_id) return;
     void retryFailedMessage(activeConversationId, message.client_message_id);
@@ -1031,7 +1092,12 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 
         {attachments.map((attachment, index) => {
           const isImage = attachment.mime_type.startsWith('image/');
+          const isAudio = attachment.mime_type.startsWith('audio/');
           const attachmentKey = `${message.id}-${attachment.storage_path || attachment.file_name}-${index}`;
+
+          if (isAudio) {
+            return <LazyVoiceNote key={attachmentKey} attachment={attachment} getSignedUrl={getAttachmentSignedUrl} />;
+          }
 
           if (isImage) {
             return (
@@ -1199,6 +1265,25 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 
 	                {renderMessageAttachments(message, isOwnMessage)}
 
+	                <MessageContextCard message={message} isOwnMessage={isOwnMessage} />
+
+	                {message.edited_at && !message.deleted_at && (
+	                  <span className="mt-1 block text-[10px] opacity-65">edited</span>
+	                )}
+
+	                {isOwnMessage && !message.deleted_at && !message.id.startsWith('temp-') && Date.now() - new Date(message.created_at).getTime() <= 15 * 60 * 1000 && (
+	                  <Button
+	                    type="button"
+	                    variant="ghost"
+	                    size="sm"
+	                    onClick={(event) => { event.stopPropagation(); handleEditMessage(message); }}
+	                    className="absolute right-8 top-1 h-6 w-6 p-0 opacity-70 transition-opacity hover:bg-primary-foreground/15 hover:text-primary-foreground md:opacity-0 md:group-hover:opacity-100"
+	                    aria-label="Edit message"
+	                  >
+	                    <Pencil className="h-3.5 w-3.5" />
+	                  </Button>
+	                )}
+
 	                {isOwnMessage && !message.deleted_at && !message.id.startsWith('temp-') && (
 	                  <Button
                     type="button"
@@ -1221,7 +1306,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	                      event.stopPropagation();
 	                      handleReportMessage(message);
 	                    }}
-	                    className={`absolute top-1 ${isOwnMessage ? 'right-8' : 'right-1'} h-6 w-6 p-0 opacity-0 transition-opacity md:group-hover:opacity-100 ${
+	                    className={`absolute top-1 ${isOwnMessage ? 'right-16' : 'right-1'} h-6 w-6 p-0 opacity-0 transition-opacity md:group-hover:opacity-100 ${
 	                      isOwnMessage
 	                        ? 'text-primary-foreground/70 hover:bg-primary-foreground/15 hover:text-primary-foreground'
 	                        : 'text-muted-foreground hover:bg-background/80'
@@ -1349,7 +1434,14 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const renderConversationList = (onSelect: (id: string) => void) => (
     <>
       <div className="flex-none space-y-3 border-b p-4">
-        <h2 className="text-center text-lg font-semibold">Messages</h2>
+        <div className="relative flex min-h-9 items-center justify-end">
+          <h2 className="pointer-events-none absolute inset-x-0 text-center text-lg font-semibold">Messages</h2>
+          <NewConversationDialog
+            onStartDirect={startConversation}
+            onStartGroup={startGroupConversation}
+            onCreated={handleConversationSelect}
+          />
+        </div>
         <div className="grid grid-cols-3 gap-1 rounded-md bg-muted p-1">
           <Button
             type="button"
@@ -1663,11 +1755,15 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	                          <Archive className="mr-2 h-4 w-4" />
 	                          Archive
 	                        </DropdownMenuItem>
-	                        <DropdownMenuSeparator />
-	                        <DropdownMenuItem onClick={handleBlockActiveParticipant} className="text-destructive">
-	                          <Ban className="mr-2 h-4 w-4" />
-	                          Block user
-	                        </DropdownMenuItem>
+	                        {!activeConversation.is_group && (
+	                          <>
+	                            <DropdownMenuSeparator />
+	                            <DropdownMenuItem onClick={handleBlockActiveParticipant} className="text-destructive">
+	                              <Ban className="mr-2 h-4 w-4" />
+	                              Block user
+	                            </DropdownMenuItem>
+	                          </>
+	                        )}
 	                      </DropdownMenuContent>
 	                    </DropdownMenu>
 	                  </>
@@ -1795,7 +1891,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	                        key={`${file.name}-${file.size}-${index}`}
 	                        className="flex max-w-full items-center gap-2 rounded-md border border-border/60 bg-background px-2 py-1 text-xs"
 	                      >
-	                        {file.type.startsWith('image/') ? <ImageIcon className="h-3.5 w-3.5" /> : <FileText className="h-3.5 w-3.5" />}
+	                        {file.type.startsWith('image/') ? <ImageIcon className="h-3.5 w-3.5" /> : file.type.startsWith('audio/') ? <Mic className="h-3.5 w-3.5" /> : <FileText className="h-3.5 w-3.5" />}
 	                        <span className="max-w-[180px] truncate">{file.name}</span>
 	                        <Button
 	                          type="button"
@@ -1817,7 +1913,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	                    type="file"
 	                    multiple
 	                    className="hidden"
-	                    accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,text/plain,application/zip"
+	                    accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,text/plain,application/zip,audio/webm,audio/ogg,audio/mp4,audio/mpeg"
 	                    onChange={handleFileSelection}
 	                  />
 	                  <Button
@@ -1829,6 +1925,10 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	                  >
 	                    <Paperclip className="h-4 w-4" />
 	                  </Button>
+	                  <VoiceNoteRecorder
+	                    disabled={sending || quote?.canSend === false}
+	                    onRecorded={(file) => setSelectedFiles([file])}
+	                  />
 	                  <Textarea
 	                    ref={inputRef}
 	                    value={newMessage}
@@ -1925,6 +2025,20 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                 setReportDetails('');
               }
             }}>Submit report</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!messageToEdit} onOpenChange={(open) => !open && setMessageToEdit(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit message</DialogTitle>
+            <DialogDescription>You can edit a sent message for 15 minutes. Recipients will see an edited label.</DialogDescription>
+          </DialogHeader>
+          <Textarea value={editedContent} onChange={(event) => setEditedContent(event.target.value)} maxLength={5000} rows={5} autoFocus />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMessageToEdit(null)}>Cancel</Button>
+            <Button onClick={handleConfirmEditMessage} disabled={isEditingMessage || !editedContent.trim()}>{isEditingMessage ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Pencil className="mr-2 h-4 w-4" />}Save changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

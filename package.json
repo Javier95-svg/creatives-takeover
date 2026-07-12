@@ -15,7 +15,8 @@
     "test:waitlist": "node --experimental-strip-types --test tests/waitlist-model.test.ts",
     "typecheck": "tsc --noEmit",
     "lint:fix": "eslint . --fix",
-    "test:smoke": "playwright test"
+    "test:smoke": "playwright test",
+    "test:messages:performance": "node scripts/check-messages-performance.mjs"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.23.6",

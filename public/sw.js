@@ -24,6 +24,8 @@ self.addEventListener("push", (event) => {
     tag: payload.tag || "ct-notification",
     data: { url: payload.url || "/dashboard" },
     renotify: false,
+    requireInteraction: false,
+    timestamp: Date.now(),
   };
 
   event.waitUntil(self.registration.showNotification(title, options));
@@ -34,9 +36,10 @@ self.addEventListener("notificationclick", (event) => {
   const targetUrl = (event.notification.data && event.notification.data.url) || "/dashboard";
 
   event.waitUntil(
-    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(async (clientList) => {
       for (const client of clientList) {
-        if (client.url.includes(targetUrl) && "focus" in client) {
+        if ("focus" in client) {
+          if ("navigate" in client) await client.navigate(targetUrl);
           return client.focus();
         }
       }

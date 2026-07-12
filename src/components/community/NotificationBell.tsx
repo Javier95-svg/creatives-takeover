@@ -132,6 +132,11 @@ export const NotificationBell = () => {
       return;
     }
 
+    if (notification.notification_type === 'message_group_invite') {
+      navigateTo(metadataRoute || '/messages');
+      return;
+    }
+
     // Navigate to profile for follow requests
     if (notification.notification_type === 'follow_request') {
       navigateTo(actorProfilePath || '/mentorship');
@@ -176,6 +181,8 @@ export const NotificationBell = () => {
     switch (notification_type) {
       case 'message':
         return `${actor.name} sent you a message`;
+      case 'message_group_invite':
+        return metadata?.message || `${actor.name} added you to a founder workspace`;
       case 'comment':
         return `${actor.name} commented on your post`;
       case 'like':

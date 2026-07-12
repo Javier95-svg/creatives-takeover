@@ -18,6 +18,8 @@ export interface Conversation {
   last_message_preview?: string;
   created_at: string;
   updated_at: string;
+  group_purpose?: string | null;
+  context?: Record<string, unknown> | null;
   other_user?: {
     id: string;
     fullName?: string | null;
@@ -57,7 +59,7 @@ export interface Message {
   conversation_id: string;
   sender_id: string;
   content: string;
-  message_type: 'text' | 'image' | 'file';
+  message_type: 'text' | 'image' | 'file' | 'audio';
   attachments?: any;
   attachment_rows?: MessageAttachment[];
   client_message_id?: string | null;
@@ -69,6 +71,8 @@ export interface Message {
   reply_to_id?: string;
   deleted_at?: string | null;
   deleted_by?: string | null;
+  edited_at?: string | null;
+  context?: Record<string, unknown> | null;
   reaction_rows?: Array<{ emoji: string; user_id: string }>;
   created_at: string;
   updated_at: string;
@@ -136,7 +140,11 @@ const ALLOWED_MESSAGE_ATTACHMENT_TYPES = new Set([
   'image/gif',
   'application/pdf',
   'text/plain',
-  'application/zip'
+  'application/zip',
+  'audio/webm',
+  'audio/ogg',
+  'audio/mp4',
+  'audio/mpeg'
 ]);
 
 type StoredFailedMessage = {
@@ -407,6 +415,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
 
   const loadConversationsFromServer = useCallback(async (includeArchived = false) => {
     if (!user) return;
+    const inboxStartedAt = performance.now();
 
     try {
       const pages = await Promise.all([
@@ -435,7 +444,10 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         return {
           id: row.id,
           participants: row.participants || [user.id, row.otherUser?.id].filter(Boolean),
-          is_group: false,
+          is_group: Boolean(row.isGroup),
+          name: row.name || undefined,
+          group_purpose: row.groupPurpose || null,
+          context: row.context || null,
           last_message_at: row.lastMessageAt || undefined,
           last_message_preview: row.lastMessagePreview || '',
           other_user: row.otherUser || undefined,
@@ -447,6 +459,11 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       setConversationSettings(nextSettings);
       setUnreadCounts(nextUnread);
       setConversations(nextConversations);
+      void messagingV2.performance({
+        eventName: 'inbox_loaded',
+        durationMs: performance.now() - inboxStartedAt,
+        metadata: { conversationCount: nextConversations.length, compatibilityFallback: false }
+      }).catch(() => undefined);
       return;
     } catch (rpcError) {
       logWarn('Messaging V2 inbox unavailable; using RLS-safe compatibility reads', {
@@ -524,6 +541,11 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       setConversationSettings(settingsByConversation);
       setUnreadCounts(nextUnread);
       setConversations(visibleConversations);
+      void messagingV2.performance({
+        eventName: 'inbox_loaded',
+        durationMs: performance.now() - inboxStartedAt,
+        metadata: { conversationCount: visibleConversations.length, compatibilityFallback: true }
+      }).catch(() => undefined);
     } catch (fallbackError) {
       logError('Error loading conversations through compatibility reads', fallbackError);
       if (!suppressLoadErrors) {
@@ -772,6 +794,12 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
             }));
 
             if (payload.eventType === 'INSERT' && payload.new.sender_id !== user?.id) {
+              const serverCreatedAt = new Date(payload.new.created_at || Date.now()).getTime();
+              void messagingV2.performance({
+                eventName: 'realtime_received',
+                durationMs: Math.max(0, Date.now() - serverCreatedAt),
+                conversationId: activeConversationId
+              }).catch(() => undefined);
               void trackRetentionEvent('message_reply_received', {
                 user_id: user?.id,
                 conversation_id: activeConversationId,
@@ -977,13 +1005,29 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
           });
       }
 
-        const result = await messagingV2.send({
+        const targetConversation = conversations.find((conversation) => conversation.id === conversationId);
+        const sendStartedAt = performance.now();
+        const result = targetConversation?.is_group
+          ? await messagingV2.sendGroup({
+              conversationId,
+              content: contentForMessage,
+              clientMessageId,
+              replyToId: options.replyToId,
+              attachments: pendingAttachments
+            })
+          : await messagingV2.send({
+              conversationId,
+              content: contentForMessage,
+              clientMessageId,
+              replyToId: options.replyToId,
+              attachments: pendingAttachments
+            });
+        void messagingV2.performance({
+          eventName: 'message_sent',
+          durationMs: performance.now() - sendStartedAt,
           conversationId,
-          content: contentForMessage,
-          clientMessageId,
-          replyToId: options.replyToId,
-          attachments: pendingAttachments
-        });
+          metadata: { attachmentCount: files.length, group: Boolean(targetConversation?.is_group) }
+        }).catch(() => undefined);
         const data = result?.message || result?.savedMessage || result;
         if (!data?.id) throw new Error('The message could not be saved.');
 
@@ -1121,7 +1165,50 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     } finally {
       setSending(false);
     }
-  }, [queryClient, user]);
+  }, [conversations, queryClient, user]);
+
+  const editMessage = useCallback(async (conversationId: string, messageId: string, content: string): Promise<boolean> => {
+    const previous = messagesRef.current[conversationId] || [];
+    const target = previous.find((message) => message.id === messageId);
+    if (!user || !target || target.sender_id !== user.id || target.deleted_at) return false;
+    const nextContent = content.trim();
+    if (!nextContent || nextContent.length > 5000) return false;
+    setMessages((state) => ({
+      ...state,
+      [conversationId]: (state[conversationId] || []).map((message) =>
+        message.id === messageId ? { ...message, content: nextContent, edited_at: new Date().toISOString() } : message
+      )
+    }));
+    try {
+      const updated = await messagingV2.edit(messageId, nextContent);
+      setMessages((state) => ({
+        ...state,
+        [conversationId]: (state[conversationId] || []).map((message) =>
+          message.id === messageId ? { ...message, ...updated } : message
+        )
+      }));
+      return true;
+    } catch (error) {
+      setMessages((state) => ({ ...state, [conversationId]: previous }));
+      toast.error(error instanceof Error ? error.message : 'The message could not be edited.');
+      return false;
+    }
+  }, [user]);
+
+  const startGroupConversation = useCallback(async (input: { name: string; participantIds: string[]; purpose: string }) => {
+    if (!user) return null;
+    try {
+      const conversation = await messagingV2.createGroup(input);
+      if (!conversation?.id) throw new Error('The founder workspace could not be created.');
+      const mapped: Conversation = { ...conversation, is_group: true };
+      setConversations((previous) => [mapped, ...previous.filter((item) => item.id !== mapped.id)]);
+      setActiveConversationId(mapped.id);
+      return mapped.id as string;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'The founder workspace could not be created.');
+      return null;
+    }
+  }, [user]);
 
   const retryFailedMessage = useCallback(async (
     conversationId: string,
@@ -1580,7 +1667,9 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     activeConversationId,
     setActiveConversationId,
     startConversation,
+    startGroupConversation,
     sendMessage,
+    editMessage,
     retryFailedMessage,
     discardFailedMessage,
     loadMessages,

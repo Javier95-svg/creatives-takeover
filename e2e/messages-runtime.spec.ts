@@ -44,6 +44,9 @@ test('authenticated messages route survives unavailable V2 RPCs', async ({ page 
   await page.route('**/rest/v1/rpc/get_inbox_v1*', (route) =>
     route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ message: 'RPC unavailable' }) })
   );
+  await page.route('**/rest/v1/rpc/get_inbox_v2*', (route) =>
+    route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ message: 'RPC unavailable' }) })
+  );
   for (const table of ['conversations', 'conversation_user_settings', 'messages']) {
     await page.route(`**/rest/v1/${table}*`, (route) =>
       route.fulfill({ status: 200, contentType: 'application/json', headers: { 'content-range': '0-0/0' }, body: '[]' })
@@ -77,14 +80,16 @@ test('long inbox stays within the messages workspace frame', async ({ page }) =>
     };
   });
 
-  await page.route('**/rest/v1/rpc/get_inbox_v1*', async (route) => {
+  const fulfillInbox = async (route: import('@playwright/test').Route) => {
     const body = route.request().postDataJSON() as { p_section?: string } | null;
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify(body?.p_section === 'inbox' ? { items, nextCursor: null } : { items: [], nextCursor: null }),
     });
-  });
+  };
+  await page.route('**/rest/v1/rpc/get_inbox_v1*', fulfillInbox);
+  await page.route('**/rest/v1/rpc/get_inbox_v2*', fulfillInbox);
   await page.route('**/rest/v1/user_presence*', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
   );
@@ -130,14 +135,16 @@ test('linked mentor identity overrides the generic public profile in messages', 
   };
   const mentorPicture = 'https://images.example.invalid/mentor-profile.jpg';
 
-  await page.route('**/rest/v1/rpc/get_inbox_v1*', async (route) => {
+  const fulfillMentorInbox = async (route: import('@playwright/test').Route) => {
     const body = route.request().postDataJSON() as { p_section?: string } | null;
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ items: body?.p_section === 'inbox' ? [conversation] : [], nextCursor: null }),
     });
-  });
+  };
+  await page.route('**/rest/v1/rpc/get_inbox_v1*', fulfillMentorInbox);
+  await page.route('**/rest/v1/rpc/get_inbox_v2*', fulfillMentorInbox);
   await page.route('**/rest/v1/mentors*', (route) =>
     route.fulfill({
       status: 200,
