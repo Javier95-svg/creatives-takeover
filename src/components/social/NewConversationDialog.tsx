@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader2, MessageSquarePlus, Search, Users, X } from 'lucide-react';
+import { Loader2, Search, Users, X } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -65,9 +65,8 @@ export const NewConversationDialog = ({ onStartDirect, onStartGroup, onCreated }
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button type="button" size="sm" className="h-9 gap-2" aria-label="Start a new message">
-          <MessageSquarePlus className="h-4 w-4" />
-          <span className="hidden sm:inline">New</span>
+        <Button type="button" size="sm" variant="outline" className="h-8 px-3 font-semibold" aria-label="Start a new chat">
+          + New
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg">

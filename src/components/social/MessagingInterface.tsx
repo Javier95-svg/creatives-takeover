@@ -1434,8 +1434,8 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const renderConversationList = (onSelect: (id: string) => void) => (
     <>
       <div className="flex-none space-y-3 border-b p-4">
-        <div className="relative flex min-h-9 items-center justify-end">
-          <h2 className="pointer-events-none absolute inset-x-0 text-center text-lg font-semibold">Messages</h2>
+        <div className="flex min-h-9 items-center justify-center gap-3">
+          <h2 className="text-center text-lg font-semibold text-foreground">Chats</h2>
           <NewConversationDialog
             onStartDirect={startConversation}
             onStartGroup={startGroupConversation}
@@ -1569,8 +1569,12 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                   className="relative group"
                 >
                   <Button
-                    variant={activeConversationId === conversation.id ? "secondary" : "ghost"}
-                    className="w-full justify-start p-3 h-auto min-h-[44px] touch-manipulation"
+                    variant="ghost"
+                    className={`h-auto min-h-[44px] w-full justify-start overflow-hidden p-3 pr-12 touch-manipulation ${
+                      activeConversationId === conversation.id
+                        ? 'border border-primary/30 bg-primary/15 text-foreground hover:bg-primary/20'
+                        : 'text-foreground hover:bg-muted/70'
+                    }`}
                     onClick={() => onSelect(conversation.id)}
                     onMouseEnter={() => void prefetchConversation(conversation.id)}
                     onFocus={() => void prefetchConversation(conversation.id)}
@@ -1592,9 +1596,9 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                         })()}
                       </div>
                       
-	                      <div className="flex-1 text-left min-w-0">
+	                      <div className="min-w-0 flex-1 overflow-hidden text-left">
 	                        <div className="flex min-w-0 items-center gap-1">
-	                          <p className="font-medium text-sm truncate">
+	                          <p className="truncate text-sm font-semibold text-foreground">
 	                            {getConversationName(conversation)}
 	                          </p>
 	                          {settings?.pinned_at && <Pin className="h-3 w-3 flex-shrink-0 text-primary" />}
@@ -1606,10 +1610,12 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	                          )}
 	                        </div>
 	                        {conversation.last_message_preview && (
-	                          <p className="truncate text-xs text-muted-foreground">{conversation.last_message_preview}</p>
+	                          <p className="block w-full overflow-hidden text-ellipsis whitespace-nowrap text-xs text-foreground/90">
+	                            {conversation.last_message_preview}
+	                          </p>
 	                        )}
 	                        {conversation.last_message_at && (
-	                          <p className="text-xs text-muted-foreground">
+	                          <p className="truncate text-xs text-foreground/65">
                             {formatDistanceToNow(new Date(conversation.last_message_at))} ago
                           </p>
                         )}

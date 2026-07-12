@@ -78,7 +78,9 @@ test('messages renders as a focused inbox workspace', () => {
   assert.match(pageSource, /className="gradient-unified animate-flicker">Chat Room/);
   assert.match(pageSource, /aria-label="Messages workspace"/);
   assert.doesNotMatch(interfaceSource, /> New message</);
-  assert.match(interfaceSource, /text-center text-lg font-semibold">Messages<\/h2>/);
+  assert.match(interfaceSource, /text-center text-lg font-semibold text-foreground">Chats<\/h2>/);
+  assert.match(interfaceSource, /text-ellipsis whitespace-nowrap text-xs text-foreground\/90/);
+  assert.match(interfaceSource, /justify-center gap-3/);
   assert.match(interfaceSource, /NewConversationDialog/);
   assert.match(interfaceSource, /Archived/);
   assert.match(interfaceSource, /Back to conversations/);
