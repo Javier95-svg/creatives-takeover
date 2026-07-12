@@ -33,7 +33,6 @@ import {
   FileText,
   Image as ImageIcon,
   Loader2
-  ,Plus
   ,ArrowLeft
 } from "lucide-react";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -49,7 +48,6 @@ import { TypingIndicator } from "./TypingIndicator";
 import { MessageReactions } from "./MessageReactions";
 import { usePresence } from "@/hooks/usePresence";
 import { Link, useSearchParams } from "react-router-dom";
-import { mapRecipient, messagingV2, type MessageRecipient } from "@/lib/messagingV2";
 import { useMessageComposer } from "@/hooks/messaging/useMessageComposer";
 
 interface MessagingInterfaceProps {
@@ -96,7 +94,6 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     sending,
     activeConversationId,
     setActiveConversationId,
-    startConversation,
     sendMessage,
     retryFailedMessage,
     discardFailedMessage,
@@ -145,10 +142,6 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [messageSearchQuery, setMessageSearchQuery] = useState("");
   const [conversationSection, setConversationSection] = useState<'main' | 'requests' | 'archived'>('main');
-  const [newMessageOpen, setNewMessageOpen] = useState(false);
-  const [recipientQuery, setRecipientQuery] = useState('');
-  const [recipientResults, setRecipientResults] = useState<MessageRecipient[]>([]);
-  const [recipientLoading, setRecipientLoading] = useState(false);
   const [online, setOnline] = useState(() => typeof navigator === 'undefined' || navigator.onLine);
   const [searchParams, setSearchParams] = useSearchParams();
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -195,23 +188,6 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     () => activeMessages.map((message) => message.id).join('|'),
     [activeMessages]
   );
-
-  useEffect(() => {
-    if (!newMessageOpen) return;
-    const timeout = window.setTimeout(async () => {
-      setRecipientLoading(true);
-      try {
-        const rows = await messagingV2.recipients(recipientQuery.trim());
-        setRecipientResults((rows || []).map(mapRecipient));
-      } catch (error) {
-        logError('Recipient search failed', error);
-        setRecipientResults([]);
-      } finally {
-        setRecipientLoading(false);
-      }
-    }, 250);
-    return () => window.clearTimeout(timeout);
-  }, [newMessageOpen, recipientQuery]);
 
   useEffect(() => {
     const update = () => setOnline(navigator.onLine);
@@ -1274,12 +1250,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const renderConversationList = (onSelect: (id: string) => void) => (
     <>
       <div className="flex-none space-y-3 border-b p-4">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="font-semibold text-lg">Messages</h2>
-          <Button type="button" size="sm" className="min-h-[44px] gap-2" onClick={() => setNewMessageOpen(true)}>
-            <Plus className="h-4 w-4" /> New message
-          </Button>
-        </div>
+        <h2 className="text-center text-lg font-semibold">Messages</h2>
         <div className="grid grid-cols-3 gap-1 rounded-md bg-muted p-1">
           <Button
             type="button"
@@ -1787,43 +1758,6 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
           </div>
         )}
       </div>
-
-      <Dialog open={newMessageOpen} onOpenChange={setNewMessageOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>New message</DialogTitle>
-            <DialogDescription>Connections appear first. Other founders receive one introduction request.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input autoFocus value={recipientQuery} onChange={(event) => setRecipientQuery(event.target.value)} placeholder="Search people" className="min-h-[44px] pl-9" />
-            </div>
-            <div className="max-h-80 overflow-y-auto" aria-live="polite">
-              {recipientLoading ? (
-                <div className="flex items-center justify-center gap-2 p-6 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Searching</div>
-              ) : recipientResults.length > 0 ? recipientResults.map((recipient) => (
-                <button
-                  type="button"
-                  key={recipient.userId}
-                  className="flex min-h-[56px] w-full items-center gap-3 rounded-lg p-2 text-left hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  onClick={async () => {
-                    const conversationId = await startConversation(recipient.userId);
-                    if (!conversationId) return;
-                    setNewMessageOpen(false);
-                    setRecipientQuery('');
-                    handleConversationSelect(conversationId);
-                  }}
-                >
-                  <Avatar className="h-10 w-10"><AvatarImage src={recipient.avatarUrl || undefined} /><AvatarFallback>{recipient.fullName.charAt(0)}</AvatarFallback></Avatar>
-                  <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{recipient.fullName}</span><span className="block truncate text-xs text-muted-foreground">{recipient.headline || (recipient.isConnection ? 'Connection' : 'Founder')}</span></span>
-                  {recipient.isConnection && <Badge variant="secondary">Connected</Badge>}
-                </button>
-              )) : <p className="p-6 text-center text-sm text-muted-foreground">Search by name or username.</p>}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!conversationToDelete} onOpenChange={handleCancelDelete}>

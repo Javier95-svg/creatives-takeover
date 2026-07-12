@@ -66,7 +66,8 @@ test('messages renders as a focused inbox workspace', () => {
   assert.match(pageSource, /messages-inbox-v2/);
   assert.match(pageSource, /VITE_MESSAGES_INBOX_V2_ENABLED/);
   assert.match(pageSource, /aria-label="Messages workspace"/);
-  assert.match(interfaceSource, /New message/);
+  assert.doesNotMatch(interfaceSource, /> New message</);
+  assert.match(interfaceSource, /<h2 className="text-center text-lg font-semibold">Messages<\/h2>/);
   assert.match(interfaceSource, /Archived/);
   assert.match(interfaceSource, /Back to conversations/);
   assert.match(interfaceSource, /first mentor message is free/i);
