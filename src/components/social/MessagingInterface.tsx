@@ -1708,14 +1708,12 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	              </div>
 	            ) : (
 	              <form onSubmit={handleSendMessage} className={`p-3 md:p-4 border-t bg-card/50 ${isMobile ? 'sticky bottom-0' : ''}`}>
-	                {quote?.isMentor && (
+	                {quote?.isMentor && (quote.creditsRequired === 0 || !quote.canSend) && (
 	                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs" role="status" aria-live="polite">
-	                    <span className={quote.canSend ? 'text-muted-foreground' : 'text-destructive'}>
-	                      {quote.creditsRequired === 0
-	                        ? 'Your first mentor message is free.'
-	                        : `This message costs ${quote.creditsRequired} credits. Balance: ${quote.balance}.`}
-	                    </span>
-	                    {!quote.canSend && <Link to="/pricing" className="font-medium text-primary underline">Top up credits</Link>}
+	                    {quote.creditsRequired === 0 && (
+	                      <span className="text-muted-foreground">Your first mentor message is free.</span>
+	                    )}
+	                    {!quote.canSend && <Link to="/pricing" className="font-medium text-primary underline">Top up credits to send</Link>}
 	                  </div>
 	                )}
 	                {quote && !quote.isMentor && !quote.canSend && (
