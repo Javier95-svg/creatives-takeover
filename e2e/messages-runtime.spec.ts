@@ -37,7 +37,17 @@ test('authenticated messages route survives unavailable V2 RPCs', async ({ page 
     },
   });
 
+  await page.route('**/rest/v1/rpc/get_inbox_v1*', (route) =>
+    route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ message: 'RPC unavailable' }) })
+  );
+  for (const table of ['conversations', 'conversation_user_settings', 'messages']) {
+    await page.route(`**/rest/v1/${table}*`, (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', headers: { 'content-range': '0-0/0' }, body: '[]' })
+    );
+  }
+
   await page.goto('/messages');
   await expect(page.getByText('Something went wrong')).toHaveCount(0);
+  await expect(page.getByText('Failed to load conversations. Please refresh the page.')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Messages', exact: true })).toBeVisible();
 });

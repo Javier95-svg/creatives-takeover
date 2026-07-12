@@ -33,6 +33,14 @@ test('dangerous direct messaging writes are removed from the client', () => {
   assert.match(messagingHook, /messagingV2\.send/);
   assert.match(messagingHook, /messagingV2\.softDelete/);
   assert.match(messagingHook, /conversationState\(conversationId, 'hide'\)/);
+  assert.doesNotMatch(messagingHook, /scopedConversationIds|user-messages-sync/);
+});
+
+test('read-only compatibility paths keep the inbox available before RPC deployment', () => {
+  assert.match(messagingHook, /Messaging V2 inbox unavailable; using RLS-safe compatibility reads/);
+  assert.match(messagingHook, /Messaging V2 message page unavailable; using RLS-safe compatibility read/);
+  assert.match(messagingHook, /\.from\('conversations'\)[\s\S]*\.contains\('participants', \[user\.id\]\)/);
+  assert.match(messagingHook, /\.from\('messages'\)[\s\S]*\.eq\('conversation_id', conversationId\)/);
 });
 
 test('the client bundle contains no hard-coded messaging identities', () => {

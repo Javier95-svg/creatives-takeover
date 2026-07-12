@@ -442,8 +442,85 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       setConversationSettings(nextSettings);
       setUnreadCounts(nextUnread);
       setConversations(nextConversations);
-    } catch (error) {
-      logError('Error loading consolidated inbox', error);
+      return;
+    } catch (rpcError) {
+      logWarn('Messaging V2 inbox unavailable; using RLS-safe compatibility reads', {
+        error: rpcError instanceof Error ? rpcError.message : String(rpcError)
+      });
+    }
+
+    try {
+      const { data: conversationRows, error: conversationError } = await safe.select(async () =>
+        await supabase
+          .from('conversations')
+          .select('*')
+          .contains('participants', [user.id])
+          .order('last_message_at', { ascending: false, nullsFirst: false })
+      );
+      if (conversationError) throw conversationError;
+
+      const rawConversations = (conversationRows || []) as Conversation[];
+      const conversationIds = rawConversations.map((conversation) => conversation.id);
+      const [{ data: settingRows, error: settingsError }, { data: unreadRows, error: unreadError }] =
+        await Promise.all([
+          conversationIds.length > 0
+            ? (supabase as any)
+                .from('conversation_user_settings')
+                .select('*')
+                .eq('user_id', user.id)
+                .in('conversation_id', conversationIds)
+            : Promise.resolve({ data: [], error: null }),
+          conversationIds.length > 0
+            ? supabase
+                .from('messages')
+                .select('conversation_id')
+                .in('conversation_id', conversationIds)
+                .neq('sender_id', user.id)
+                .eq('is_read', false)
+            : Promise.resolve({ data: [], error: null })
+        ]);
+      if (settingsError) throw settingsError;
+      if (unreadError) throw unreadError;
+
+      const settingsByConversation = ((settingRows || []) as ConversationUserSettings[]).reduce(
+        (accumulator, settings) => {
+          accumulator[settings.conversation_id] = settings;
+          return accumulator;
+        },
+        {} as Record<string, ConversationUserSettings>
+      );
+      const nextUnread = conversationIds.reduce((accumulator, id) => {
+        accumulator[id] = 0;
+        return accumulator;
+      }, {} as Record<string, number>);
+      (unreadRows || []).forEach((row) => {
+        nextUnread[row.conversation_id] = (nextUnread[row.conversation_id] || 0) + 1;
+      });
+
+      const visibleConversations = rawConversations
+        .filter((conversation) => {
+          const settings = settingsByConversation[conversation.id];
+          const lastActivity = new Date(conversation.last_message_at || conversation.created_at).getTime();
+          const hiddenAt = settings?.hidden_at ? new Date(settings.hidden_at).getTime() : 0;
+          if (hiddenAt && lastActivity <= hiddenAt) return false;
+          if (includeArchived) return true;
+          return !settings?.archived_at && settings?.request_status !== 'refused';
+        })
+        .sort((left, right) => {
+          const leftSettings = settingsByConversation[left.id];
+          const rightSettings = settingsByConversation[right.id];
+          const leftPinned = leftSettings?.pinned_at ? new Date(leftSettings.pinned_at).getTime() : 0;
+          const rightPinned = rightSettings?.pinned_at ? new Date(rightSettings.pinned_at).getTime() : 0;
+          if (leftPinned !== rightPinned) return rightPinned - leftPinned;
+          return new Date(right.last_message_at || right.created_at).getTime() -
+            new Date(left.last_message_at || left.created_at).getTime();
+        });
+
+      setConversationSettings(settingsByConversation);
+      setUnreadCounts(nextUnread);
+      setConversations(visibleConversations);
+    } catch (fallbackError) {
+      logError('Error loading conversations through compatibility reads', fallbackError);
       if (!suppressLoadErrors) {
         toast.error('Failed to load conversations. Please refresh the page.');
       }
@@ -505,22 +582,52 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     }
 
     try {
-      const page = await messagingV2.messagePage(
-        conversationId,
-        options.before ? { createdAt: options.before.created_at, id: options.before.id } : undefined,
-        options.anchorMessageId
-      );
-      const rows = (page?.items || []) as any[];
-      const loadedMessages = await Promise.all(rows.map(async (row) => ({
-        ...row,
-        sender: row.sender ? {
-          id: row.sender.id,
-          full_name: row.sender.fullName || row.sender.full_name,
-          avatar_url: row.sender.avatarUrl || row.sender.avatar_url
-        } : undefined,
-        attachment_rows: await Promise.all((row.attachment_rows || []).map(mapAttachmentRow)),
-        delivery_status: row.is_read ? 'read' as const : 'sent' as const
-      })));
+      let page: any;
+      let loadedMessages: Message[];
+
+      try {
+        page = await messagingV2.messagePage(
+          conversationId,
+          options.before ? { createdAt: options.before.created_at, id: options.before.id } : undefined,
+          options.anchorMessageId
+        );
+        const rows = (page?.items || []) as any[];
+        loadedMessages = await Promise.all(rows.map(async (row) => ({
+          ...row,
+          sender: row.sender ? {
+            id: row.sender.id,
+            full_name: row.sender.fullName || row.sender.full_name,
+            avatar_url: row.sender.avatarUrl || row.sender.avatar_url
+          } : undefined,
+          attachment_rows: await Promise.all((row.attachment_rows || []).map(mapAttachmentRow)),
+          delivery_status: row.is_read ? 'read' as const : 'sent' as const
+        })));
+      } catch (rpcError) {
+        logWarn('Messaging V2 message page unavailable; using RLS-safe compatibility read', {
+          conversationId,
+          error: rpcError instanceof Error ? rpcError.message : String(rpcError)
+        });
+
+        let query = supabase
+          .from('messages')
+          .select('*')
+          .eq('conversation_id', conversationId)
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
+          .limit(options.limit || MESSAGE_PAGE_SIZE);
+        if (options.before) {
+          query = query.lt('created_at', options.before.created_at);
+        }
+        const { data: fallbackRows, error: fallbackError } = await safe.select(async () => await query);
+        if (fallbackError) throw fallbackError;
+        const chronologicalRows = [...(fallbackRows || [])].reverse();
+        loadedMessages = await mapMessagesWithRelatedData(chronologicalRows);
+        const oldest = chronologicalRows[0];
+        page = {
+          hasMore: chronologicalRows.length === (options.limit || MESSAGE_PAGE_SIZE),
+          oldestCursor: oldest ? { createdAt: oldest.created_at, id: oldest.id } : null
+        };
+      }
 
       const storedFailedMessages = user
         ? loadStoredFailedMessages(user.id)
@@ -585,7 +692,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       }));
       return [];
     }
-  }, [user]);
+  }, [mapMessagesWithRelatedData, user]);
 
   // Load messages for active conversation and reconcile realtime events by stable IDs.
   useEffect(() => {
