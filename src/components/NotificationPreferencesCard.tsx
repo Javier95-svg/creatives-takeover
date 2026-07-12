@@ -17,6 +17,8 @@ interface Prefs {
   retention_emails: boolean;
   product_updates: boolean;
   investor_updates: boolean;
+  dm_email_enabled: boolean;
+  dm_push_enabled: boolean;
 }
 
 const DEFAULTS: Prefs = {
@@ -26,6 +28,8 @@ const DEFAULTS: Prefs = {
   retention_emails: true,
   product_updates: true,
   investor_updates: false,
+  dm_email_enabled: true,
+  dm_push_enabled: true,
 };
 
 // db typing escape: these tables aren't in the generated types yet.
@@ -46,7 +50,7 @@ export function NotificationPreferencesCard() {
       try {
         const { data } = await db
           .from("notification_preferences")
-          .select("push_enabled, routine_reminders, task_reminders, retention_emails, product_updates, investor_updates")
+          .select("push_enabled, routine_reminders, task_reminders, retention_emails, product_updates, investor_updates, dm_email_enabled, dm_push_enabled")
           .eq("user_id", user.id)
           .maybeSingle();
         if (!cancelled && data) setPrefs({ ...DEFAULTS, ...data });
@@ -99,6 +103,8 @@ export function NotificationPreferencesCard() {
   };
 
   const rows: Array<{ key: keyof Prefs; label: string; desc: string }> = [
+    { key: "dm_email_enabled", label: "Message emails", desc: "Email me when someone sends a direct message." },
+    { key: "dm_push_enabled", label: "Message push notifications", desc: "Send direct-message alerts to subscribed devices." },
     { key: "routine_reminders", label: "Daily routine reminders", desc: "A nudge to check off today's founder habits and keep your streak." },
     { key: "task_reminders", label: "Task & deadline reminders", desc: "Heads-up when a task is due or overdue." },
     { key: "retention_emails", label: "Progress & re-engagement emails", desc: "Weekly progress and occasional come-back nudges by email." },

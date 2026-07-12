@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { logError, logWarn, logInfo } from '@/lib/logger';
 import { handleError, getUserMessage } from '@/lib/errors';
 import { completeActivationJourney, trackRetentionEvent } from '@/lib/retentionSystem';
+import { messagingV2 } from '@/lib/messagingV2';
 
 export interface Conversation {
   id: string;
@@ -13,8 +14,15 @@ export interface Conversation {
   is_group: boolean;
   name?: string;
   last_message_at?: string;
+  last_message_preview?: string;
   created_at: string;
   updated_at: string;
+  other_user?: {
+    id: string;
+    fullName?: string | null;
+    username?: string | null;
+    avatarUrl?: string | null;
+  };
 }
 
 export interface ConversationUserSettings {
@@ -25,6 +33,7 @@ export interface ConversationUserSettings {
   pinned_at?: string | null;
   request_status?: 'accepted' | 'pending' | 'refused' | null;
   request_updated_at?: string | null;
+  hidden_at?: string | null;
 }
 
 export interface MessageAttachment {
@@ -57,6 +66,9 @@ export interface Message {
   local_failed?: boolean;
   is_read: boolean;
   reply_to_id?: string;
+  deleted_at?: string | null;
+  deleted_by?: string | null;
+  reaction_rows?: Array<{ emoji: string; user_id: string }>;
   created_at: string;
   updated_at: string;
   sender?: {
@@ -73,6 +85,7 @@ export interface LoadMessagesOptions {
   };
   limit?: number;
   mode?: 'replace' | 'prepend' | 'append';
+  anchorMessageId?: string;
 }
 
 export interface MessageSearchResult {
@@ -102,69 +115,6 @@ export interface MessagePageState {
     id: string;
   };
 }
-
-// Samuel Starkman's email, user ID, and username constants
-export const SAMUEL_STARKMAN_EMAIL = 'sestarkman@gmail.com';
-export const SAMUEL_STARKMAN_USER_ID = '22fdf3fa-b444-4949-a2c3-a5acc247b390'; // Known user ID from previous conversation
-export const SAMUEL_STARKMAN_USERNAME = 'samuelstarkman'; // Username based on firstname + lastname pattern
-
-// Nic M Rayce's email constant
-export const NIC_M_RAYCE_EMAIL = 'nicmrayce@gmail.com';
-export const SOPHIA_LOPEZ_PIMENTA_EMAIL = 'lopezpimenta@gmail.com';
-export const SOPHIA_LOPEZ_PIMENTA_USER_ID = '50695a54-30c6-4b57-969e-b2de733bcd73';
-export const DELRAJ_SINGH_UPPAL_EMAIL = 'd.singh@khalsa.com';
-export const DELRAJ_SINGH_UPPAL_USER_ID = '2cd4b8ec-5631-4de3-b480-d3c71de5d366';
-export const MATIAS_PANCORVO_EMAIL = 'pancorvomatias@gmail.com';
-export const MATIAS_PANCORVO_USER_ID = 'd4d2ec5d-75ca-482a-8126-2e5a9ff9b98c';
-export const DAIANA_TOKPAYEVA_EMAIL = 'daiana.tokpayeva@outlook.com';
-export const DAIANA_TOKPAYEVA_USER_ID = 'cc157118-0681-4600-a5fc-d37f5f4b4f31';
-export const DAN_ALBAGHDADI_EMAIL = 'albaghdadidan@gmail.com';
-export const DAN_ALBAGHDADI_USER_ID = '0c160536-d5d3-483b-b222-f801c057fde6';
-export const DANIEL_KAZANI_EMAIL = 'danielkazani@gmail.com';
-export const DANIEL_KAZANI_USER_ID = '127434fb-f706-44a5-b230-ac1b9b17dc8c';
-export const KATIE_BRETT_EMAIL = 'katie@pocketplanit.com';
-export const KATIE_BRETT_USER_ID = 'a786507a-b45c-4044-9b92-d9db40340f47';
-export const JOHNNY_BOU_MALHAB_EMAIL = 'johnny@monochrome.digital';
-export const JOHNNY_BOU_MALHAB_USER_ID = 'dd972b4a-7e02-41c4-a722-bacead700c9b';
-export const JULIO_SANCHEZ_REDONDO_EMAIL = 'julio.s.redondo@gmail.com';
-export const JULIO_SANCHEZ_REDONDO_USER_ID = '03c6df3c-40a3-4478-a52b-511605ee988b';
-export const JELENA_DABOVIC_EMAIL = 'jdabovic58@gmail.com';
-export const JELENA_DABOVIC_USER_ID = '3c5c2feb-e1d1-49db-adc6-0b1483431da7';
-export const CAROLINA_BARTHALOT_EMAIL = 'carolinabarthalot@gmail.com';
-export const CAROLINA_BARTHALOT_USER_ID = '1b0d63d2-13b8-4829-b5a9-75a7bb2f313b';
-export const LUCAS_ANNARATTONE_EMAIL = 'lannarattone@gmail.com';
-export const LUCAS_ANNARATTONE_USER_ID = '089e99ca-18d6-43f5-9687-f60c2d76b2f8';
-export const ARTUR_SINDARSKY_EMAIL = 'arturpatser@gmail.com';
-export const ARTUR_SINDARSKY_USER_ID = '1f0fe62a-7744-4153-bfcf-4f20b6e820d3';
-export const SHARON_PRAISE_AKPUNNE_EMAIL = 'sharonpraiseakpunne1@gmail.com';
-export const SHARON_PRAISE_AKPUNNE_USER_ID = '77283f92-7d90-45e2-97aa-3ec500781656';
-export const FELICITY_MUKUNJU_EMAIL = 'felicitymukunju@gmail.com';
-export const FELICITY_MUKUNJU_USER_ID = '681858ab-db84-4930-9bd0-5db759ec5ea4';
-export const AKSHITA_YADAV_EMAIL = 'yadavakshita.2000@gmail.com';
-export const AKSHITA_YADAV_USER_ID = 'b6477549-9eee-4f6b-bde6-ea8a80579acc';
-export const VIVIAN_UBOCHI_EMAIL = 'vivian@gooroconsulting.com';
-export const VIVIAN_UBOCHI_USER_ID = '5e919674-60ba-42b9-bd18-813f484f7c24';
-export const SAKINA_LOKHANDWALA_EMAIL = 'slsakina27@gmail.com';
-export const SAKINA_LOKHANDWALA_USER_ID = '625f9871-b975-40c5-9b71-a093419c69c8';
-export const MATAS_RAMANAUSKAS_EMAIL = 'matt.ramanauskas@gmail.com';
-export const MATAS_RAMANAUSKAS_USER_ID = 'e1db835c-4149-407e-807e-5ff0b99661c0';
-export const PEDRO_MONESTEL_EMAIL = 'monestelp93@gmail.com';
-export const PEDRO_MONESTEL_USER_ID = 'f7d02d67-dd5b-4ce7-95dd-f6f2c9bdbc35';
-export const YASMINE_CAXEIRO_EMAIL = 'mine.caxeiro@n1n3consulting.com';
-export const YASMINE_CAXEIRO_USER_ID = '357b97ca-c578-43b1-8e48-b438142312ec';
-export const MARC_BRIGHT_EMAIL = 'marc_bright@me.com';
-export const MARC_BRIGHT_USER_ID = '4eea3ae6-40ec-4bd0-a373-4005343a9e25';
-export const ALBERT_HOVHANNISYAN_EMAIL = 'albert.hovhannisian@gmail.com';
-export const ALBERT_HOVHANNISYAN_USER_ID = 'e8ddb66e-142b-4d88-9d4f-7ce3cf18ce14';
-export const ANDRII_STAKHOV_EMAIL = 'andrewstahow0@gmail.com';
-export const ANDRII_STAKHOV_USER_ID = '0f4cac90-83df-4cb7-a3a6-e62cd4a7cb9c';
-export const UELMAN_LOU_RUBIO_EMAIL = 'dendysan@gmail.com';
-export const UELMAN_LOU_RUBIO_USER_ID = 'e6248878-3f18-4866-9e2e-7ad39f0339de';
-export const JELENA_OSTROVSKA_EMAIL = 'jelenaostrovskaya@gmail.com';
-export const JELENA_OSTROVSKA_USER_ID = 'be9930e2-5f4b-4a62-80d9-bd1f00c05bfe';
-
-// Karolina Żurawska's email constant
-export const KAROLINA_ZURAWSKA_EMAIL = 'kz.zurawska@gmail.com';
 
 type UseMessagingOptions = {
   autoLoad?: boolean;
@@ -298,23 +248,6 @@ const mapAttachmentRow = async (attachment: any): Promise<MessageAttachment> => 
   };
 };
 
-const normalizeIdentity = (value: string): string =>
-  value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]/g, '');
-
-const tokenizeIdentity = (value: string): string[] =>
-  value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim()
-    .split(/\s+/)
-    .filter((token) => token.length >= 2);
-
 export const useMessaging = (options: UseMessagingOptions = {}) => {
   const { autoLoad = true, suppressLoadErrors = false } = options;
   const { user } = useAuth();
@@ -340,241 +273,6 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
   useEffect(() => {
     conversationIdsRef.current = new Set(conversations.map((conversation) => conversation.id));
   }, [conversations]);
-
-  const scopedConversationIds = conversations.map((conversation) => conversation.id).join('|');
-
-  // Get user ID by email using database function with fallback
-  const getUserIdByEmail = useCallback(async (email: string): Promise<string | null> => {
-    if (!user) {
-      logWarn('getUserIdByEmail: User not authenticated');
-      return null;
-    }
-
-    // Direct lookup for Samuel's email - use known user ID
-    if (email.toLowerCase() === SAMUEL_STARKMAN_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Samuel user ID', { userId: SAMUEL_STARKMAN_USER_ID });
-      return SAMUEL_STARKMAN_USER_ID;
-    }
-
-    // Direct lookup for Nic M Rayce's email
-    if (email.toLowerCase() === NIC_M_RAYCE_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Looking up Nic M Rayce user ID', { email });
-      // Will use RPC function or profile lookup below
-    }
-
-    if (email.toLowerCase() === SOPHIA_LOPEZ_PIMENTA_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Sophia Lopez Pimenta user ID', {
-        userId: SOPHIA_LOPEZ_PIMENTA_USER_ID
-      });
-      return SOPHIA_LOPEZ_PIMENTA_USER_ID;
-    }
-
-    if (email.toLowerCase() === DELRAJ_SINGH_UPPAL_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Delraj Singh Uppal user ID', {
-        userId: DELRAJ_SINGH_UPPAL_USER_ID
-      });
-      return DELRAJ_SINGH_UPPAL_USER_ID;
-    }
-
-    if (email.toLowerCase() === MATIAS_PANCORVO_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Matias Pancorvo user ID', {
-        userId: MATIAS_PANCORVO_USER_ID
-      });
-      return MATIAS_PANCORVO_USER_ID;
-    }
-
-    if (email.toLowerCase() === DAIANA_TOKPAYEVA_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Daiana Tokpayeva user ID', {
-        userId: DAIANA_TOKPAYEVA_USER_ID
-      });
-      return DAIANA_TOKPAYEVA_USER_ID;
-    }
-
-    if (email.toLowerCase() === DAN_ALBAGHDADI_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Dan Albaghdadi user ID', {
-        userId: DAN_ALBAGHDADI_USER_ID
-      });
-      return DAN_ALBAGHDADI_USER_ID;
-    }
-
-    if (email.toLowerCase() === DANIEL_KAZANI_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Daniel Kazani user ID', {
-        userId: DANIEL_KAZANI_USER_ID
-      });
-      return DANIEL_KAZANI_USER_ID;
-    }
-
-    if (email.toLowerCase() === KATIE_BRETT_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Katie Brett user ID', {
-        userId: KATIE_BRETT_USER_ID
-      });
-      return KATIE_BRETT_USER_ID;
-    }
-
-    if (email.toLowerCase() === JOHNNY_BOU_MALHAB_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Johnny Bou Malhab user ID', {
-        userId: JOHNNY_BOU_MALHAB_USER_ID
-      });
-      return JOHNNY_BOU_MALHAB_USER_ID;
-    }
-
-    if (email.toLowerCase() === JULIO_SANCHEZ_REDONDO_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Julio Sanchez Redondo user ID', {
-        userId: JULIO_SANCHEZ_REDONDO_USER_ID
-      });
-      return JULIO_SANCHEZ_REDONDO_USER_ID;
-    }
-
-    if (email.toLowerCase() === JELENA_DABOVIC_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Jelena Dabovic user ID', {
-        userId: JELENA_DABOVIC_USER_ID
-      });
-      return JELENA_DABOVIC_USER_ID;
-    }
-
-    if (email.toLowerCase() === CAROLINA_BARTHALOT_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Carolina Barthalot user ID', {
-        userId: CAROLINA_BARTHALOT_USER_ID
-      });
-      return CAROLINA_BARTHALOT_USER_ID;
-    }
-
-    if (email.toLowerCase() === LUCAS_ANNARATTONE_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Lucas Annarattone user ID', {
-        userId: LUCAS_ANNARATTONE_USER_ID
-      });
-      return LUCAS_ANNARATTONE_USER_ID;
-    }
-
-    if (email.toLowerCase() === ARTUR_SINDARSKY_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Artur Sindarsky user ID', {
-        userId: ARTUR_SINDARSKY_USER_ID
-      });
-      return ARTUR_SINDARSKY_USER_ID;
-    }
-
-    if (email.toLowerCase() === SHARON_PRAISE_AKPUNNE_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Sharon Praise-Akpunne user ID', {
-        userId: SHARON_PRAISE_AKPUNNE_USER_ID
-      });
-      return SHARON_PRAISE_AKPUNNE_USER_ID;
-    }
-
-    if (email.toLowerCase() === FELICITY_MUKUNJU_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Felicity Mukunju user ID', {
-        userId: FELICITY_MUKUNJU_USER_ID
-      });
-      return FELICITY_MUKUNJU_USER_ID;
-    }
-
-    if (email.toLowerCase() === AKSHITA_YADAV_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Akshita Yadav user ID', {
-        userId: AKSHITA_YADAV_USER_ID
-      });
-      return AKSHITA_YADAV_USER_ID;
-    }
-
-    if (email.toLowerCase() === VIVIAN_UBOCHI_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Vivian Ubochi user ID', {
-        userId: VIVIAN_UBOCHI_USER_ID
-      });
-      return VIVIAN_UBOCHI_USER_ID;
-    }
-
-    if (email.toLowerCase() === SAKINA_LOKHANDWALA_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Sakina Lokhandwala user ID', {
-        userId: SAKINA_LOKHANDWALA_USER_ID
-      });
-      return SAKINA_LOKHANDWALA_USER_ID;
-    }
-
-    if (email.toLowerCase() === MATAS_RAMANAUSKAS_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Matas Ramanauskas user ID', {
-        userId: MATAS_RAMANAUSKAS_USER_ID
-      });
-      return MATAS_RAMANAUSKAS_USER_ID;
-    }
-
-    if (email.toLowerCase() === PEDRO_MONESTEL_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Pedro Monestel user ID', {
-        userId: PEDRO_MONESTEL_USER_ID
-      });
-      return PEDRO_MONESTEL_USER_ID;
-    }
-
-    if (email.toLowerCase() === YASMINE_CAXEIRO_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Yasmine Caxeiro user ID', {
-        userId: YASMINE_CAXEIRO_USER_ID
-      });
-      return YASMINE_CAXEIRO_USER_ID;
-    }
-
-    if (email.toLowerCase() === MARC_BRIGHT_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Marc Bright user ID', {
-        userId: MARC_BRIGHT_USER_ID
-      });
-      return MARC_BRIGHT_USER_ID;
-    }
-
-    if (email.toLowerCase() === ALBERT_HOVHANNISYAN_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Albert Hovhannisyan user ID', {
-        userId: ALBERT_HOVHANNISYAN_USER_ID
-      });
-      return ALBERT_HOVHANNISYAN_USER_ID;
-    }
-
-    if (email.toLowerCase() === JELENA_OSTROVSKA_EMAIL.toLowerCase()) {
-      logInfo('getUserIdByEmail: Using known Jelena Ostrovska user ID', {
-        userId: JELENA_OSTROVSKA_USER_ID
-      });
-      return JELENA_OSTROVSKA_USER_ID;
-    }
-
-    try {
-      logInfo('getUserIdByEmail: Looking up user ID for email', { email });
-      
-      // Try RPC function first
-      const { data, error } = await supabase.rpc('get_user_id_by_email', {
-        user_email: email
-      });
-
-      if (error) {
-        logWarn('getUserIdByEmail: RPC function failed, trying direct query', {
-          error: error.message,
-          code: error.code,
-          email
-        });
-        
-        // Fallback: Try querying profiles table if email is stored there
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('email', email.toLowerCase())
-          .single();
-        
-        if (!profileError && profileData?.id) {
-          logInfo('getUserIdByEmail: Found user ID via profiles table', { email, userId: profileData.id });
-          return profileData.id;
-        }
-        
-        return null;
-      }
-
-      if (!data) {
-        logWarn('getUserIdByEmail: No user found for email', { email });
-        return null;
-      }
-
-      logInfo('getUserIdByEmail: Found user ID', { email, userId: data });
-      return data;
-    } catch (error) {
-      logError('getUserIdByEmail: Exception occurred', error, {
-        email,
-        currentUserId: user?.id
-      });
-      return null;
-    }
-  }, [user]);
 
   const loadUnreadCounts = useCallback(async (conversationIds?: string[]) => {
     if (!user) return;
@@ -615,278 +313,26 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
   }, [user]);
 
   const resolveMentorUserId = useCallback(async (mentor: { name: string; user_id?: string | null }): Promise<string | null> => {
-    if (!user) {
-      logWarn('resolveMentorUserId: User not authenticated');
+    if (!user || !mentor.user_id || mentor.user_id === user.id) {
       return null;
     }
 
-    const mentorName = mentor.name?.trim();
-    if (!mentorName) {
-      logWarn('resolveMentorUserId: Missing mentor name');
-      return null;
-    }
+    const { data, error } = await supabase
+      .from('mentors')
+      .select('user_id')
+      .eq('user_id', mentor.user_id)
+      .eq('is_active', true)
+      .maybeSingle();
 
-    const mentorNameNormalized = normalizeIdentity(mentorName);
-    if (
-      mentorNameNormalized.includes('sophia') &&
-      (mentorNameNormalized.includes('pimenta') || mentorNameNormalized.includes('lopez'))
-    ) {
-      return SOPHIA_LOPEZ_PIMENTA_USER_ID;
-    }
-
-    if (
-      mentorNameNormalized.includes('delraj') &&
-      (mentorNameNormalized.includes('uppal') || mentorNameNormalized.includes('singh'))
-    ) {
-      return DELRAJ_SINGH_UPPAL_USER_ID;
-    }
-
-    if (
-      mentorNameNormalized.includes('matias') &&
-      mentorNameNormalized.includes('pancorvo')
-    ) {
-      return MATIAS_PANCORVO_USER_ID;
-    }
-
-    if (
-      mentorNameNormalized.includes('daiana') &&
-      mentorNameNormalized.includes('tokpayeva')
-    ) {
-      return DAIANA_TOKPAYEVA_USER_ID;
-    }
-
-    if (
-      mentorNameNormalized.includes('dan') &&
-      mentorNameNormalized.includes('albaghdadi')
-    ) {
-      return DAN_ALBAGHDADI_USER_ID;
-    }
-
-    if (
-      mentorNameNormalized.includes('daniel') &&
-      mentorNameNormalized.includes('kazani')
-    ) {
-      return DANIEL_KAZANI_USER_ID;
-    }
-
-    if (
-      mentorNameNormalized.includes('katie') &&
-      mentorNameNormalized.includes('brett')
-    ) {
-      return KATIE_BRETT_USER_ID;
-    }
-
-    if (
-      mentorNameNormalized.includes('johnny') &&
-      mentorNameNormalized.includes('malhab')
-    ) {
-      return JOHNNY_BOU_MALHAB_USER_ID;
-    }
-
-    if (
-      mentorNameNormalized.includes('julio') &&
-      mentorNameNormalized.includes('sanchez') &&
-      mentorNameNormalized.includes('redondo')
-    ) {
-      return JULIO_SANCHEZ_REDONDO_USER_ID;
-    }
-
-    if (
-      mentorNameNormalized.includes('jelena') &&
-      mentorNameNormalized.includes('dabovic')
-    ) {
-      return JELENA_DABOVIC_USER_ID;
-    }
-
-    if (
-      mentorNameNormalized.includes('sakina') &&
-      mentorNameNormalized.includes('lokhandwala')
-    ) {
-      return SAKINA_LOKHANDWALA_USER_ID;
-    }
-
-    if (
-      mentorNameNormalized.includes('carolina') &&
-      mentorNameNormalized.includes('barthalot')
-    ) {
-      return CAROLINA_BARTHALOT_USER_ID;
-    }
-
-    if (
-      mentorNameNormalized.includes('lucas') &&
-      mentorNameNormalized.includes('annarattone')
-    ) {
-      return LUCAS_ANNARATTONE_USER_ID;
-    }
-
-    if (
-      mentorNameNormalized.includes('artur') &&
-      mentorNameNormalized.includes('sindarsky')
-    ) {
-      return ARTUR_SINDARSKY_USER_ID;
-    }
-
-    if (
-      mentorNameNormalized.includes('sharon') &&
-      mentorNameNormalized.includes('praise') &&
-      mentorNameNormalized.includes('akpunne')
-    ) {
-      return SHARON_PRAISE_AKPUNNE_USER_ID;
-    }
-
-    if (
-      mentorNameNormalized.includes('felicity') &&
-      mentorNameNormalized.includes('mukunju')
-    ) {
-      return FELICITY_MUKUNJU_USER_ID;
-    }
-
-    if (
-      mentorNameNormalized.includes('vivian') &&
-      mentorNameNormalized.includes('ubochi')
-    ) {
-      return VIVIAN_UBOCHI_USER_ID;
-    }
-
-    if (
-      mentorNameNormalized.includes('matas') &&
-      mentorNameNormalized.includes('ramanauskas')
-    ) {
-      return MATAS_RAMANAUSKAS_USER_ID;
-    }
-
-    if (
-      mentorNameNormalized.includes('pedro') &&
-      mentorNameNormalized.includes('monestel')
-    ) {
-      return PEDRO_MONESTEL_USER_ID;
-    }
-
-    if (
-      mentorNameNormalized.includes('yasmine') &&
-      mentorNameNormalized.includes('caxeiro')
-    ) {
-      return YASMINE_CAXEIRO_USER_ID;
-    }
-
-    if (
-      mentorNameNormalized.includes('marc') &&
-      mentorNameNormalized.includes('bright')
-    ) {
-      return MARC_BRIGHT_USER_ID;
-    }
-
-    if (
-      mentorNameNormalized.includes('albert') &&
-      mentorNameNormalized.includes('hovhannisyan')
-    ) {
-      return ALBERT_HOVHANNISYAN_USER_ID;
-    }
-
-    if (
-      mentorNameNormalized.includes('andrii') &&
-      mentorNameNormalized.includes('stakhov')
-    ) {
-      return ANDRII_STAKHOV_USER_ID;
-    }
-
-    if (
-      mentorNameNormalized.includes('jelena') &&
-      mentorNameNormalized.includes('ostrovska')
-    ) {
-      return JELENA_OSTROVSKA_USER_ID;
-    }
-
-    if (mentor.user_id && mentor.user_id.trim() !== '') {
-      return mentor.user_id;
-    }
-
-    const mentorTokens = tokenizeIdentity(mentorName);
-    if (mentorTokens.length === 0) {
-      logWarn('resolveMentorUserId: Could not tokenize mentor name', { mentorName });
-      return null;
-    }
-
-    const firstToken = mentorTokens[0];
-    const lastToken = mentorTokens[mentorTokens.length - 1];
-    const searchTokens = Array.from(new Set([firstToken, lastToken].filter(Boolean)));
-
-    try {
-      const orClauses = searchTokens.flatMap((token) => [
-        `full_name.ilike.%${token}%`,
-        `username.ilike.%${token}%`
-      ]);
-
-      const { data, error } = await supabase
-        .from('public_profiles')
-        .select('id, full_name, username')
-        .or(orClauses.join(','))
-        .limit(50);
-
-      if (error) {
-        logError('resolveMentorUserId: Error querying profiles', error, {
-          mentorName,
-          searchTokens
-        });
-        return null;
-      }
-
-      if (!data || data.length === 0) {
-        logWarn('resolveMentorUserId: No profile candidates found', { mentorName, searchTokens });
-        return null;
-      }
-
-      const ranked = data
-        .map((profile) => {
-          const profileFullNameNormalized = normalizeIdentity(profile.full_name || '');
-          const profileUsernameNormalized = normalizeIdentity(profile.username || '');
-          const combinedNormalized = `${profileFullNameNormalized} ${profileUsernameNormalized}`;
-
-          const exactNameMatch = profileFullNameNormalized === mentorNameNormalized;
-          const exactUsernameMatch = profileUsernameNormalized === mentorNameNormalized;
-          const hasAllTokens = mentorTokens.every((token) => combinedNormalized.includes(token));
-          const hasFirstLast = combinedNormalized.includes(firstToken) && combinedNormalized.includes(lastToken);
-
-          let score = 0;
-          if (exactNameMatch) score += 120;
-          if (exactUsernameMatch) score += 110;
-          if (hasAllTokens) score += 70;
-          if (hasFirstLast) score += 45;
-          score += mentorTokens.reduce((acc, token) => acc + (combinedNormalized.includes(token) ? 5 : 0), 0);
-
-          return {
-            profileId: profile.id,
-            score
-          };
-        })
-        .filter((candidate) => candidate.score > 0)
-        .sort((a, b) => b.score - a.score);
-
-      if (ranked.length === 0) {
-        logWarn('resolveMentorUserId: No ranked matches found', { mentorName, searchTokens });
-        return null;
-      }
-
-      if (ranked.length > 1 && ranked[0].score - ranked[1].score < 25) {
-        logWarn('resolveMentorUserId: Ambiguous mentor match; refusing auto-link', {
-          mentorName,
-          topScores: ranked.slice(0, 3).map((candidate) => candidate.score)
-        });
-        return null;
-      }
-
-      logInfo('resolveMentorUserId: Resolved mentor user ID via profile matching', {
-        mentorName,
-        resolvedUserId: ranked[0].profileId,
-        score: ranked[0].score
+    if (error) {
+      logError('resolveMentorUserId: Could not validate linked mentor account', error, {
+        mentorUserId: mentor.user_id
       });
-      return ranked[0].profileId;
-    } catch (error) {
-      logError('resolveMentorUserId: Exception occurred', error, { mentorName, searchTokens });
       return null;
     }
-  }, [user]);
 
+    return data?.user_id || null;
+  }, [user]);
   const mapMessagesWithRelatedData = useCallback(async (rows: any[]): Promise<Message[]> => {
     if (rows.length === 0) return [];
 
@@ -954,87 +400,60 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     });
   }, [user?.id]);
 
-  const loadConversationSettings = useCallback(async (conversationIds: string[]): Promise<Record<string, ConversationUserSettings>> => {
-    if (!user || conversationIds.length === 0) {
-      setConversationSettings({});
-      return {};
-    }
-
-    try {
-      const { data, error } = await (supabase as any)
-        .from('conversation_user_settings')
-        .select('*')
-        .eq('user_id', user.id)
-        .in('conversation_id', conversationIds);
-
-      if (error) throw error;
-
-      const settingsByConversation = (data || []).reduce(
-        (acc: Record<string, ConversationUserSettings>, setting: ConversationUserSettings) => {
-          acc[setting.conversation_id] = setting;
-          return acc;
-        },
-        {}
-      );
-
-      setConversationSettings(settingsByConversation);
-      return settingsByConversation;
-    } catch (error) {
-      logError('Error loading conversation settings', error);
-      return {};
-    }
-  }, [user]);
-
-  const loadConversationsFromServer = useCallback(async () => {
+  const loadConversationsFromServer = useCallback(async (includeArchived = false) => {
     if (!user) return;
 
     try {
-      const { data, error } = await safe.select(async () =>
-        await supabase
-          .from('conversations')
-          .select('*')
-          .contains('participants', [user.id])
-          .order('last_message_at', { ascending: false, nullsFirst: false })
-      );
+      const pages = await Promise.all([
+        messagingV2.inbox('inbox', 50),
+        messagingV2.inbox('requests', 50),
+        ...(includeArchived ? [messagingV2.inbox('archived', 50)] : [])
+      ]);
+      const rows = pages.flatMap((page) => page?.items || []);
+      const uniqueRows = Array.from(new Map(rows.map((row: any) => [row.id, row])).values()) as any[];
+      const nextSettings: Record<string, ConversationUserSettings> = {};
+      const nextUnread: Record<string, number> = {};
 
-      if (error) throw error;
-
-      const rawConversations = (data || []) as Conversation[];
-      const conversationIds = rawConversations.map((conversation) => conversation.id);
-      const settingsByConversation = await loadConversationSettings(conversationIds);
-      const failedMessages = loadStoredFailedMessages(user.id);
-      const failedConversationIds = new Set(failedMessages.map((message) => message.conversation_id));
-      const loadedConversations = rawConversations.filter((conversation) => {
-        const settings = settingsByConversation[conversation.id];
-        return (!settings?.archived_at && settings?.request_status !== 'refused') || failedConversationIds.has(conversation.id);
+      const nextConversations: Conversation[] = uniqueRows.map((row) => {
+        nextSettings[row.id] = {
+          conversation_id: row.id,
+          user_id: user.id,
+          request_status: row.requestStatus || 'accepted',
+          request_updated_at: null,
+          archived_at: row.archivedAt || null,
+          hidden_at: row.hiddenAt || null,
+          muted_until: row.mutedUntil || null,
+          pinned_at: row.pinnedAt || null
+        };
+        nextUnread[row.id] = Number(row.unreadCount || 0);
+        const timestamp = row.lastMessageAt || new Date().toISOString();
+        return {
+          id: row.id,
+          participants: row.participants || [user.id, row.otherUser?.id].filter(Boolean),
+          is_group: false,
+          last_message_at: row.lastMessageAt || undefined,
+          last_message_preview: row.lastMessagePreview || '',
+          other_user: row.otherUser || undefined,
+          created_at: timestamp,
+          updated_at: timestamp
+        };
       });
 
-      const sortedConversations = [...loadedConversations].sort((a, b) => {
-        const aSettings = settingsByConversation[a.id];
-        const bSettings = settingsByConversation[b.id];
-        const aPinnedAt = aSettings?.pinned_at ? new Date(aSettings.pinned_at).getTime() : 0;
-        const bPinnedAt = bSettings?.pinned_at ? new Date(bSettings.pinned_at).getTime() : 0;
-
-        if (aPinnedAt || bPinnedAt) {
-          return bPinnedAt - aPinnedAt;
-        }
-
-        const aTime = new Date(a.last_message_at || a.created_at).getTime();
-        const bTime = new Date(b.last_message_at || b.created_at).getTime();
-        return bTime - aTime;
-      });
-
-      setConversations(sortedConversations);
-
-      await loadUnreadCounts(conversationIds);
-
+      setConversationSettings(nextSettings);
+      setUnreadCounts(nextUnread);
+      setConversations(nextConversations);
     } catch (error) {
-      logError('Error loading conversations', error);
+      logError('Error loading consolidated inbox', error);
       if (!suppressLoadErrors) {
         toast.error('Failed to load conversations. Please refresh the page.');
       }
     }
-  }, [user, loadUnreadCounts, suppressLoadErrors, loadConversationSettings]);
+  }, [suppressLoadErrors, user]);
+
+  const loadArchivedConversations = useCallback(
+    () => loadConversationsFromServer(true),
+    [loadConversationsFromServer]
+  );
 
   // Load user's conversations and keep them synced with backend as source of truth
   useEffect(() => {
@@ -1063,7 +482,6 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     };
   }, [user, autoLoad, loadConversationsFromServer, loadUnreadCounts]);
 
-  // Scoped realtime sync: subscribe only to message events for conversations this user participates in.
   useEffect(() => {
     if (!user || !autoLoad || conversations.length === 0 || !scopedConversationIds) return;
 
@@ -1110,8 +528,6 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     conversationId: string,
     options: LoadMessagesOptions = {}
   ): Promise<Message[]> => {
-    const limit = options.limit || MESSAGE_PAGE_SIZE;
-
     if (options.mode === 'prepend') {
       setMessagePageState((prev) => ({
         ...prev,
@@ -1123,23 +539,23 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     }
 
     try {
-      let query = (supabase as any)
-        .from('messages')
-        .select('*')
-        .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: false })
-        .order('id', { ascending: false })
-        .limit(limit);
+      const page = await messagingV2.messagePage(
+        conversationId,
+        options.before ? { createdAt: options.before.created_at, id: options.before.id } : undefined,
+        options.anchorMessageId
+      );
+      const rows = (page?.items || []) as any[];
+      const loadedMessages = await Promise.all(rows.map(async (row) => ({
+        ...row,
+        sender: row.sender ? {
+          id: row.sender.id,
+          full_name: row.sender.fullName || row.sender.full_name,
+          avatar_url: row.sender.avatarUrl || row.sender.avatar_url
+        } : undefined,
+        attachment_rows: await Promise.all((row.attachment_rows || []).map(mapAttachmentRow)),
+        delivery_status: row.is_read ? 'read' as const : 'sent' as const
+      })));
 
-      if (options.before) {
-        query = query.lt('created_at', options.before.created_at);
-      }
-
-      const { data, error } = await safe.select(async () => await query);
-      if (error) throw error;
-
-      const rows = [...(data || [])].reverse();
-      const loadedMessages = await mapMessagesWithRelatedData(rows);
       const storedFailedMessages = user
         ? loadStoredFailedMessages(user.id)
             .filter((message) => message.conversation_id === conversationId)
@@ -1170,12 +586,12 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       setMessagePageState((prev) => ({
         ...prev,
         [conversationId]: {
-          hasMore: rows.length === limit,
+          hasMore: Boolean(page?.hasMore),
           loadingOlder: false,
-          oldestCursor: rows[0]
+          oldestCursor: page?.oldestCursor
             ? {
-                created_at: rows[0].created_at,
-                id: rows[0].id
+                created_at: page.oldestCursor.createdAt,
+                id: page.oldestCursor.id
               }
             : prev[conversationId]?.oldestCursor
         }
@@ -1203,18 +619,13 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       }));
       return [];
     }
-  }, [mapMessagesWithRelatedData, user]);
+  }, [user]);
 
   // Load messages for active conversation and reconcile realtime events by stable IDs.
   useEffect(() => {
     if (!activeConversationId) return;
 
-    let isMounted = true;
-
-    void loadMessages(activeConversationId, { mode: 'replace', limit: MESSAGE_PAGE_SIZE }).then(async () => {
-      if (!isMounted || !user) return;
-      await loadUnreadCounts([activeConversationId]);
-    });
+    void loadMessages(activeConversationId, { mode: 'replace', limit: MESSAGE_PAGE_SIZE });
 
     const messageSubscription = supabase
       .channel(`messages-${activeConversationId}`)
@@ -1266,238 +677,54 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         }
       });
 
-    const attachmentSubscription = supabase
-      .channel(`message-attachments-${activeConversationId}`)
-      .on('postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'message_attachments'
-        },
-        async (payload) => {
-          const attachmentRow = payload.new as any;
-          const storagePath = attachmentRow?.storage_path as string | undefined;
-
-          if (!storagePath?.startsWith(`${activeConversationId}/`)) {
-            return;
-          }
-
-          const mappedAttachment = await mapAttachmentRow(attachmentRow);
-          const currentMessages = messagesRef.current[activeConversationId] || [];
-          const targetMessageExists = currentMessages.some((message) => message.id === mappedAttachment.message_id);
-
-          if (!targetMessageExists) {
-            void loadMessages(activeConversationId, { mode: 'replace', limit: MESSAGE_PAGE_SIZE });
-            return;
-          }
-
-          setMessages((prev) => {
-            const currentMessages = prev[activeConversationId] || [];
-
-            return {
-              ...prev,
-              [activeConversationId]: currentMessages.map((message) => {
-                if (message.id !== mappedAttachment.message_id) {
-                  return message;
-                }
-
-                const existingAttachments = message.attachment_rows || [];
-                const alreadyAttached = existingAttachments.some((attachment) =>
-                  (mappedAttachment.id && attachment.id === mappedAttachment.id) ||
-                  (mappedAttachment.storage_path && attachment.storage_path === mappedAttachment.storage_path)
-                );
-
-                if (alreadyAttached) {
-                  return message;
-                }
-
-                return {
-                  ...message,
-                  attachment_rows: [...existingAttachments, mappedAttachment],
-                  upload_progress: message.upload_progress !== undefined ? 100 : message.upload_progress
-                };
-              })
-            };
-          });
-        }
-      )
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') return;
-        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          void loadMessages(activeConversationId, { mode: 'replace', limit: MESSAGE_PAGE_SIZE });
-        }
-      });
-
     return () => {
-      isMounted = false;
       void supabase.removeChannel(messageSubscription);
-      void supabase.removeChannel(attachmentSubscription);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [activeConversationId, user?.id, loadUnreadCounts, loadMessages, mapMessagesWithRelatedData]);
 
   const startConversation = useCallback(async (participantId: string): Promise<string | null> => {
-    if (!user || loading) {
-      logWarn('startConversation: User not authenticated or already loading');
-      return null;
-    }
-
-    if (participantId === user.id) {
-      toast.error('You cannot start a conversation with yourself.');
+    if (!user || loading || participantId === user.id) {
+      if (participantId === user?.id) toast.error('You cannot start a conversation with yourself.');
       return null;
     }
 
     setLoading(true);
     try {
-      logInfo('startConversation: Starting conversation', {
-        currentUserId: user.id,
-        participantId,
-        email: user.email
-      });
-
-      // First check in-memory state for quick lookup
-      const existingInMemory = conversations.find(conv => 
-        conv.participants.length === 2 && 
-        conv.participants.includes(participantId) && 
-        conv.participants.includes(user.id)
+      const existing = conversations.find((conversation) =>
+        conversation.participants.length === 2 &&
+        conversation.participants.includes(participantId) &&
+        conversation.participants.includes(user.id)
       );
 
-      if (existingInMemory) {
-        logInfo('startConversation: Found existing conversation in memory', { conversationId: existingInMemory.id });
-        setActiveConversationId(existingInMemory.id);
-        return existingInMemory.id;
+      if (existing) {
+        setActiveConversationId(existing.id);
+        return existing.id;
       }
 
-      // Primary path: atomic RPC backed by DB uniqueness.
-      const { data: rpcData, error: rpcError } = await safe.rpc(async () =>
+      const { data, error } = await safe.rpc(async () =>
         await supabase.rpc('create_or_get_direct_conversation', {
           p_other_user_id: participantId
         })
       );
+      if (error) throw error;
 
-      if (!rpcError) {
-        const rpcConversation = rpcData as Conversation | null;
+      const conversation = data as Conversation | null;
+      if (!conversation?.id) throw new Error('The conversation could not be created.');
 
-        if (rpcConversation?.id) {
-          logInfo('startConversation: Resolved via atomic RPC', {
-            conversationId: rpcConversation.id
-          });
-
-          setConversations(prev => {
-            const withoutCurrent = prev.filter(conversation => conversation.id !== rpcConversation.id);
-            const merged = [rpcConversation, ...withoutCurrent];
-            return merged.sort((a, b) => {
-              const aTime = new Date(a.last_message_at || a.created_at).getTime();
-              const bTime = new Date(b.last_message_at || b.created_at).getTime();
-              return bTime - aTime;
-            });
-          });
-
-          setActiveConversationId(rpcConversation.id);
-          return rpcConversation.id;
-        }
-      } else {
-        // Graceful fallback while environments catch up with migrations.
-        logWarn('startConversation: Atomic RPC unavailable, falling back to legacy flow', {
-          code: rpcError.code,
-          message: rpcError.message
-        });
-      }
-
-      // Legacy fallback: query existing conversation.
-      logInfo('startConversation: Checking database for existing conversation');
-      const { data: existingConversations, error: queryError } = await safe.select(async () =>
-        await supabase
-          .from('conversations')
-          .select('*')
-          .eq('is_group', false)
-          .contains('participants', [user.id])
-      );
-
-      if (queryError) {
-        logError('startConversation: Error querying existing conversations', queryError, {
-          code: queryError.code,
-          message: queryError.message
-        });
-        // Continue to create new conversation even if query fails
-      } else if (existingConversations && existingConversations.length > 0) {
-        // Filter to find exact match (both participants)
-        const exactMatch = existingConversations.find(conv => 
-          conv.participants.length === 2 &&
-          conv.participants.includes(user.id) &&
-          conv.participants.includes(participantId)
-        );
-
-        if (exactMatch) {
-          logInfo('startConversation: Found existing conversation in database', { conversationId: exactMatch.id });
-          setConversations(prev => {
-            // Add to state if not already there
-            if (!prev.find(c => c.id === exactMatch.id)) {
-              return [exactMatch, ...prev];
-            }
-            return prev;
-          });
-          setActiveConversationId(exactMatch.id);
-          return exactMatch.id;
-        }
-      }
-
-      // Legacy fallback: create conversation.
-      logInfo('startConversation: Creating new conversation', {
-        participants: [user.id, participantId],
-        is_group: false
-      });
-
-      const { data, error } = await safe.insert(async () =>
-        await supabase
-          .from('conversations')
-          .insert({
-            participants: [user.id, participantId],
-            is_group: false,
-            // Ensure newly created conversations sort to the top immediately.
-            last_message_at: new Date().toISOString()
-          })
-          .select()
-          .single()
-      );
-
-      if (error) {
-        logError('startConversation: Error creating conversation', error, {
-          code: error.code,
-          message: error.message,
-          participants: [user.id, participantId]
-        });
-        throw error;
-      }
-
-      if (!data) {
-        logError('startConversation: No data returned from conversation creation', new Error('No data returned'));
-        throw new Error('Failed to create conversation: No data returned');
-      }
-
-      logInfo('startConversation: Conversation created successfully', {
-        conversationId: data.id,
-        participants: data.participants
-      });
-
-      setConversations(prev => [data, ...prev]);
-      setActiveConversationId(data.id);
-      return data.id;
+      setConversations((previous) => [
+        conversation,
+        ...previous.filter((item) => item.id !== conversation.id)
+      ]);
+      setActiveConversationId(conversation.id);
+      return conversation.id;
     } catch (error) {
-      const appError = handleError(error);
-      logError('startConversation: Error starting conversation', appError, {
-        currentUserId: user?.id,
-        participantId
-      });
-      
-      // Provide more specific error messages
-      const errorMessage = getUserMessage(error);
-      toast.error(errorMessage);
+      logError('startConversation: Safe RPC failed', error, { participantId });
+      toast.error(getUserMessage(error));
       return null;
     } finally {
       setLoading(false);
     }
-  }, [user, loading, conversations, setActiveConversationId]);
+  }, [conversations, loading, user]);
 
   const sendMessage = useCallback(async (
     conversationId: string,
@@ -1602,6 +829,9 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       return [updatedConversation, ...remaining];
     });
 
+    const uploadedPaths: string[] = [];
+    const pendingAttachments: Array<Record<string, unknown>> = [];
+
     try {
       logInfo('sendMessage: Sending message', {
         conversationId,
@@ -1612,117 +842,43 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         fileCount: files.length
       });
 
-      const { data, error } = await safe.insert(async () =>
-        await (supabase as any)
-          .from('messages')
-          .upsert({
-            conversation_id: conversationId,
-            sender_id: user.id,
-            content: contentForMessage,
-            message_type: messageType,
-            reply_to_id: options.replyToId,
-            client_message_id: clientMessageId
-          }, {
-            onConflict: 'conversation_id,sender_id,client_message_id'
-          })
-          .select()
-          .single()
-      );
-
-      if (error) {
-        logError('sendMessage: Error inserting message', error, {
-          code: error.code,
-          message: error.message,
-          conversationId,
-          senderId: user.id
-        });
-        throw error;
-      }
-
-      if (!data) {
-        logError('sendMessage: No data returned from message insertion', new Error('No data returned'));
-        throw new Error('Failed to send message: No data returned');
-      }
-
-      logInfo('sendMessage: Message sent successfully', {
-        messageId: data.id,
-        conversationId
-      });
-
-      const persistedMessage: Message = {
-        id: data.id,
-        conversation_id: data.conversation_id,
-        sender_id: data.sender_id,
-        content: data.content,
-        message_type: data.message_type as 'text' | 'image' | 'file',
-        attachments: data.attachments,
-        attachment_rows: optimisticAttachments,
-        client_message_id: data.client_message_id || clientMessageId,
-        delivery_status: 'sent',
-        upload_progress: files.length > 0 ? 35 : undefined,
-        is_read: data.is_read,
-        reply_to_id: data.reply_to_id,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        sender: optimisticSender
-      };
-
-      if (files.length > 0) {
-        const uploadedAttachments: MessageAttachment[] = [];
-
-        for (const file of files) {
-          const storagePath = `${conversationId}/${data.id}/${Date.now()}-${toSafeStorageName(file.name)}`;
+      for (const file of files) {
+          const storagePath = `${conversationId}/pending/${user.id}/${clientMessageId}/${Date.now()}-${toSafeStorageName(file.name)}`;
           const { error: uploadError } = await supabase.storage
             .from(MESSAGE_ATTACHMENT_BUCKET)
-            .upload(storagePath, file, {
-              contentType: file.type,
-              upsert: false
-            });
-
-          if (uploadError) {
-            throw uploadError;
-          }
-
-          const { data: signedUrlData } = await supabase.storage
-            .from(MESSAGE_ATTACHMENT_BUCKET)
-            .createSignedUrl(storagePath, 60 * 60);
-
-          const attachmentRow = {
-            message_id: data.id,
-            uploader_id: user.id,
+            .upload(storagePath, file, { contentType: file.type, upsert: false });
+          if (uploadError) throw uploadError;
+          uploadedPaths.push(storagePath);
+          pendingAttachments.push({
             storage_path: storagePath,
             file_name: file.name,
             mime_type: file.type,
             file_size: file.size
-          };
-
-          const { data: insertedAttachment, error: attachmentInsertError } = await (supabase as any)
-            .from('message_attachments')
-            .insert(attachmentRow)
-            .select()
-            .single();
-
-          if (attachmentInsertError) {
-            throw attachmentInsertError;
-          }
-
-          uploadedAttachments.push({
-            id: insertedAttachment.id,
-            message_id: insertedAttachment.message_id,
-            uploader_id: insertedAttachment.uploader_id,
-            storage_path: insertedAttachment.storage_path,
-            file_name: insertedAttachment.file_name,
-            mime_type: insertedAttachment.mime_type,
-            file_size: Number(insertedAttachment.file_size || file.size),
-            width: insertedAttachment.width,
-            height: insertedAttachment.height,
-            signed_url: signedUrlData?.signedUrl || null
           });
-        }
-
-        persistedMessage.attachment_rows = uploadedAttachments;
-        persistedMessage.upload_progress = 100;
       }
+
+        const result = await messagingV2.send({
+          conversationId,
+          content: contentForMessage,
+          clientMessageId,
+          replyToId: options.replyToId,
+          attachments: pendingAttachments
+        });
+        const data = result?.message || result?.savedMessage || result;
+        if (!data?.id) throw new Error('The message could not be saved.');
+
+        const attachmentRows = await Promise.all(
+          (result?.attachments || []).map(mapAttachmentRow)
+        );
+        const persistedMessage: Message = {
+          ...data,
+          content: data.deleted_at ? 'Message deleted' : data.content,
+          attachment_rows: attachmentRows,
+          client_message_id: data.client_message_id || clientMessageId,
+          delivery_status: 'sent',
+          upload_progress: files.length > 0 ? 100 : undefined,
+          sender: optimisticSender
+        };
 
       // Replace optimistic message with persisted row and prevent duplicates if realtime already inserted it.
       setMessages(prev => {
@@ -1747,14 +903,6 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       );
       saveStoredFailedMessages(user.id, storedFailures);
 
-      // Update conversation's last message timestamp
-      const { error: updateError } = await safe.update(async () =>
-        await supabase
-          .from('conversations')
-          .update({ last_message_at: new Date().toISOString() })
-          .eq('id', conversationId)
-      );
-
       // Keep local ordering/timestamp in sync regardless of realtime latency.
       setConversations(prev => {
         const index = prev.findIndex(conversation => conversation.id === conversationId);
@@ -1769,14 +917,6 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         const remaining = prev.filter((_, currentIndex) => currentIndex !== index);
         return [updatedConversation, ...remaining];
       });
-
-      if (updateError) {
-        logWarn('sendMessage: Failed to update conversation timestamp', {
-          error: updateError.message,
-          conversationId
-        });
-        // Don't throw - message was sent successfully
-      }
 
       if (!hadUserMessageBefore) {
         try {
@@ -1802,6 +942,9 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
 
       return persistedMessage;
     } catch (error) {
+      if (uploadedPaths.length > 0) {
+        await supabase.storage.from(MESSAGE_ATTACHMENT_BUCKET).remove(uploadedPaths);
+      }
       const appError = handleError(error);
       logError('sendMessage: Error sending message', appError, {
         conversationId,
@@ -1889,293 +1032,128 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     );
   }, [user]);
 
-  const updateConversationSettings = useCallback(async (
+  const applyConversationAction = useCallback(async (
     conversationId: string,
-    patch: Partial<Pick<ConversationUserSettings, 'archived_at' | 'muted_until' | 'pinned_at' | 'request_status' | 'request_updated_at'>>
+    action: 'pin' | 'unpin' | 'mute' | 'unmute' | 'archive' | 'unarchive' | 'hide',
+    mutedUntil?: string
   ): Promise<boolean> => {
-    if (!user) return false;
-
-    const nextSettings: ConversationUserSettings = {
-      conversation_id: conversationId,
-      user_id: user.id,
-      ...(conversationSettings[conversationId] || {}),
-      ...patch
-    };
-
-    setConversationSettings((prev) => ({
-      ...prev,
-      [conversationId]: nextSettings
-    }));
-
     try {
-      const { error } = await (supabase as any)
-        .from('conversation_user_settings')
-        .upsert(nextSettings, { onConflict: 'conversation_id,user_id' });
-
-      if (error) throw error;
-
+      const settings = await messagingV2.conversationState(conversationId, action, mutedUntil);
+      setConversationSettings((previous) => ({ ...previous, [conversationId]: settings }));
       await loadConversationsFromServer();
       return true;
     } catch (error) {
-      logError('Error updating conversation settings', error);
-      toast.error('Failed to update conversation settings.');
+      logError('Conversation action failed', error, { conversationId, action });
+      toast.error('The conversation could not be updated.');
       return false;
     }
-  }, [conversationSettings, loadConversationsFromServer, user]);
+  }, [loadConversationsFromServer]);
 
-  const acceptMessageRequest = useCallback(async (conversationId: string): Promise<boolean> => {
-    const success = await updateConversationSettings(conversationId, {
-      request_status: 'accepted',
-      request_updated_at: new Date().toISOString(),
-      archived_at: null
-    });
-
-    if (success) {
-      toast.success('Message request accepted');
-    }
-
-    return success;
-  }, [updateConversationSettings]);
-
-  const refuseMessageRequest = useCallback(async (conversationId: string): Promise<boolean> => {
-    const success = await updateConversationSettings(conversationId, {
-      request_status: 'refused',
-      request_updated_at: new Date().toISOString(),
-      archived_at: new Date().toISOString()
-    });
-
-    if (success) {
-      if (activeConversationId === conversationId) {
+  const setRequestStatus = useCallback(async (
+    conversationId: string,
+    status: 'accepted' | 'refused'
+  ): Promise<boolean> => {
+    try {
+      const settings = await messagingV2.requestStatus(conversationId, status);
+      setConversationSettings((previous) => ({ ...previous, [conversationId]: settings }));
+      await loadConversationsFromServer();
+      if (status === 'refused' && activeConversationId === conversationId) {
         setActiveConversationId(null);
       }
-      toast.success('Message request refused');
+      toast.success(status === 'accepted' ? 'Message request accepted' : 'Message request refused');
+      return true;
+    } catch (error) {
+      logError('Message request update failed', error, { conversationId, status });
+      toast.error('The request could not be updated.');
+      return false;
     }
+  }, [activeConversationId, loadConversationsFromServer]);
 
-    return success;
-  }, [activeConversationId, setActiveConversationId, updateConversationSettings]);
+  const acceptMessageRequest = useCallback(
+    (conversationId: string) => setRequestStatus(conversationId, 'accepted'),
+    [setRequestStatus]
+  );
 
-  const pinConversation = useCallback((conversationId: string, shouldPin: boolean) =>
-    updateConversationSettings(conversationId, { pinned_at: shouldPin ? new Date().toISOString() : null }),
-  [updateConversationSettings]);
+  const refuseMessageRequest = useCallback(
+    (conversationId: string) => setRequestStatus(conversationId, 'refused'),
+    [setRequestStatus]
+  );
 
-  const muteConversation = useCallback((conversationId: string, shouldMute: boolean) => {
-    const mutedUntil = new Date();
-    mutedUntil.setFullYear(mutedUntil.getFullYear() + 1);
-    return updateConversationSettings(conversationId, { muted_until: shouldMute ? mutedUntil.toISOString() : null });
-  }, [updateConversationSettings]);
+  const pinConversation = useCallback(
+    (conversationId: string, shouldPin: boolean) =>
+      applyConversationAction(conversationId, shouldPin ? 'pin' : 'unpin'),
+    [applyConversationAction]
+  );
 
-  const archiveConversation = useCallback((conversationId: string, shouldArchive = true) =>
-    updateConversationSettings(conversationId, { archived_at: shouldArchive ? new Date().toISOString() : null }),
-  [updateConversationSettings]);
+  const muteConversation = useCallback(
+    (conversationId: string, shouldMute: boolean, durationMs?: number) =>
+      applyConversationAction(
+        conversationId,
+        shouldMute ? 'mute' : 'unmute',
+        shouldMute && durationMs ? new Date(Date.now() + durationMs).toISOString() : undefined
+      ),
+    [applyConversationAction]
+  );
+
+  const archiveConversation = useCallback(
+    (conversationId: string, shouldArchive = true) =>
+      applyConversationAction(conversationId, shouldArchive ? 'archive' : 'unarchive'),
+    [applyConversationAction]
+  );
 
   const deleteMessage = useCallback(async (conversationId: string, messageId: string): Promise<boolean> => {
-    if (!user) {
-      toast.error('You must be logged in to delete messages');
+    if (!user || messageId.startsWith('temp-')) return false;
+
+    const previous = messagesRef.current[conversationId] || [];
+    const target = previous.find((message) => message.id === messageId);
+    if (!target || target.sender_id !== user.id) {
+      toast.error('You can only delete messages you sent.');
       return false;
     }
 
-    if (!conversationId || !messageId || messageId.startsWith('temp-')) {
-      return false;
-    }
-
-    const currentConversationMessages = messagesRef.current[conversationId] || [];
-    const targetMessage = currentConversationMessages.find((message) => message.id === messageId);
-
-    if (!targetMessage) {
-      toast.error('Message not found');
-      return false;
-    }
-
-    if (targetMessage.sender_id !== user.id) {
-      toast.error('You can only delete messages you sent');
-      return false;
-    }
-
-    const nextConversationMessages = currentConversationMessages.filter((message) => message.id !== messageId);
-
-    // Optimistically remove message for immediate feedback.
-    setMessages((prev) => ({
-      ...prev,
-      [conversationId]: nextConversationMessages
-    }));
-    setUnreadCounts((prev) => ({
-      ...prev,
-      [conversationId]: nextConversationMessages.filter(
-        (message) => message.sender_id !== user.id && !message.is_read
-      ).length
+    const tombstone = {
+      ...target,
+      content: 'Message deleted',
+      attachment_rows: [],
+      attachments: null,
+      deleted_at: new Date().toISOString(),
+      deleted_by: user.id
+    };
+    setMessages((state) => ({
+      ...state,
+      [conversationId]: state[conversationId]?.map((message) =>
+        message.id === messageId ? tombstone : message
+      ) || []
     }));
 
     try {
-      const { data: deletedRows, error: deleteError } = await safe.delete(async () =>
-        await supabase
-          .from('messages')
-          .delete()
-          .eq('id', messageId)
-          .eq('conversation_id', conversationId)
-          .eq('sender_id', user.id)
-          .select('id')
-      );
-
-      if (deleteError) {
-        throw deleteError;
-      }
-
-      if (!deletedRows || deletedRows.length === 0) {
-        throw new Error('Message was not deleted');
-      }
-
-      // Keep conversation ordering accurate if the latest message was removed.
-      const { data: latestMessageRow, error: latestMessageError } = await safe.select(async () =>
-        await supabase
-          .from('messages')
-          .select('created_at')
-          .eq('conversation_id', conversationId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle()
-      );
-
-      if (latestMessageError) {
-        logWarn('deleteMessage: Failed to fetch latest message after delete', {
-          conversationId,
-          error: latestMessageError.message
-        });
-      } else {
-        const nextLastMessageAt = latestMessageRow?.created_at ?? null;
-
-        const { error: updateConversationError } = await safe.update(async () =>
-          await supabase
-            .from('conversations')
-            .update({ last_message_at: nextLastMessageAt })
-            .eq('id', conversationId)
-        );
-
-        if (updateConversationError) {
-          logWarn('deleteMessage: Failed to update conversation timestamp', {
-            conversationId,
-            error: updateConversationError.message
-          });
-        }
-
-        setConversations((prev) => {
-          const index = prev.findIndex((conversation) => conversation.id === conversationId);
-          if (index === -1) return prev;
-
-          const updatedConversation = {
-            ...prev[index],
-            last_message_at: nextLastMessageAt || undefined,
-            updated_at: new Date().toISOString()
-          };
-
-          const remaining = prev.filter((_, currentIndex) => currentIndex !== index);
-          const merged = [updatedConversation, ...remaining];
-          return merged.sort((a, b) => {
-            const aTime = new Date(a.last_message_at || a.created_at).getTime();
-            const bTime = new Date(b.last_message_at || b.created_at).getTime();
-            return bTime - aTime;
-          });
-        });
-      }
-
-      await loadUnreadCounts([conversationId]);
-      await loadConversationsFromServer();
+      await messagingV2.softDelete(messageId);
       toast.success('Message deleted');
       return true;
     } catch (error) {
-      // Revert optimistic update on failure.
-      setMessages((prev) => ({
-        ...prev,
-        [conversationId]: currentConversationMessages
-      }));
-      setUnreadCounts((prev) => ({
-        ...prev,
-        [conversationId]: currentConversationMessages.filter(
-          (message) => message.sender_id !== user.id && !message.is_read
-        ).length
-      }));
-
-      const appError = handleError(error);
-      logError('deleteMessage: Error deleting message', appError, {
-        conversationId,
-        messageId,
-        userId: user.id
-      });
-
+      setMessages((state) => ({ ...state, [conversationId]: previous }));
       toast.error(getUserMessage(error));
       return false;
     }
-  }, [user, loadUnreadCounts, loadConversationsFromServer]);
+  }, [user]);
 
   const markAsRead = useCallback(async (conversationId: string) => {
     if (!user) return;
+    setMessages((state) => ({
+      ...state,
+      [conversationId]: (state[conversationId] || []).map((message) =>
+        message.sender_id !== user.id ? { ...message, is_read: true, delivery_status: 'read' } : message
+      )
+    }));
+    setUnreadCounts((state) => ({ ...state, [conversationId]: 0 }));
 
     try {
-      const { error } = await safe.update(async () => {
-        const result = await supabase
-          .from('messages')
-          .update({ is_read: true })
-          .eq('conversation_id', conversationId)
-          .neq('sender_id', user.id)
-          .eq('is_read', false)
-          .select('id');
-        return result;
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      const unreadMessages = (messagesRef.current[conversationId] || []).filter(
-        (message) => message.sender_id !== user.id && !message.is_read && !message.id.startsWith('temp-')
-      );
-
-      if (unreadMessages.length > 0) {
-        const now = new Date().toISOString();
-        const { error: receiptError } = await (supabase as any)
-          .from('message_receipts')
-          .upsert(
-            unreadMessages.map((message) => ({
-              message_id: message.id,
-              user_id: user.id,
-              delivered_at: now,
-              read_at: now
-            })),
-            { onConflict: 'message_id,user_id' }
-          );
-
-        if (receiptError) {
-          logWarn('markAsRead: Failed to update message receipts', {
-            conversationId,
-            error: receiptError.message
-          });
-        }
-      }
-
-      // CRITICAL: Update local state immediately (don't wait for real-time subscription)
-      // This ensures unread badges clear instantly
-      setMessages(prev => {
-        const conversationMessages = prev[conversationId] || [];
-        return {
-          ...prev,
-          [conversationId]: conversationMessages.map(msg =>
-            msg.sender_id !== user.id && !msg.is_read
-              ? { ...msg, is_read: true, delivery_status: 'read' as const }
-              : msg
-          )
-        };
-      });
-
-      setUnreadCounts(prev => ({
-        ...prev,
-        [conversationId]: 0
-      }));
-
-      // Force reload from source of truth to prevent stale badge reappearance.
-      await loadUnreadCounts([conversationId]);
+      await messagingV2.markRead(conversationId);
     } catch (error) {
-      logError('Error marking messages as read', error);
+      logError('Error marking conversation read', error, { conversationId });
+      await loadUnreadCounts([conversationId]);
     }
-  }, [user, loadUnreadCounts]);
+  }, [loadUnreadCounts, user]);
 
   const getUnreadCount = (conversationId: string): number => {
     return unreadCounts[conversationId] || 0;
@@ -2188,14 +1166,26 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
 
   const requestConversations = useMemo(
     () => conversations.filter((conversation) =>
-      conversationSettings[conversation.id]?.request_status === 'pending'
+      conversationSettings[conversation.id]?.request_status === 'pending' &&
+      !conversationSettings[conversation.id]?.archived_at &&
+      !conversationSettings[conversation.id]?.hidden_at
     ),
     [conversations, conversationSettings]
   );
 
   const mainConversations = useMemo(
     () => conversations.filter((conversation) =>
-      conversationSettings[conversation.id]?.request_status !== 'pending'
+      conversationSettings[conversation.id]?.request_status !== 'pending' &&
+      !conversationSettings[conversation.id]?.archived_at &&
+      !conversationSettings[conversation.id]?.hidden_at
+    ),
+    [conversations, conversationSettings]
+  );
+
+  const archivedConversations = useMemo(
+    () => conversations.filter((conversation) =>
+      Boolean(conversationSettings[conversation.id]?.archived_at) &&
+      !conversationSettings[conversation.id]?.hidden_at
     ),
     [conversations, conversationSettings]
   );
@@ -2261,86 +1251,29 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
   }, []);
 
   const deleteConversation = useCallback(async (conversationId: string): Promise<boolean> => {
-    if (!user) {
-      toast.error('You must be logged in to delete conversations');
-      return false;
-    }
-
+    if (!user) return false;
     try {
-      // First, verify the user is a participant in this conversation
-      const conversation = conversations.find(c => c.id === conversationId);
-      if (!conversation || !conversation.participants.includes(user.id)) {
-        toast.error('You do not have permission to delete this conversation');
-        return false;
-      }
-
-      // Try hard delete first and verify the backend actually deleted rows.
-      const { data: deletedRows, error: deleteError } = await safe.delete(async () =>
-        await supabase
-          .from('conversations')
-          .delete()
-          .eq('id', conversationId)
-          .select('id')
-      );
-
-      if (deleteError) {
-        logError('Error deleting conversation', deleteError);
-        toast.error('Failed to delete conversation');
-        return false;
-      }
-
-      const hardDeleteCount = deletedRows?.length || 0;
-
-      if (hardDeleteCount === 0) {
-        // Fallback for environments where DELETE policy is unavailable:
-        // remove current user from participants so the thread stays hidden for this user across sessions/devices.
-        const updatedParticipants = conversation.participants.filter((participantId) => participantId !== user.id);
-
-        const { data: participantUpdateRows, error: participantUpdateError } = await safe.update(async () =>
-          await supabase
-            .from('conversations')
-            .update({ participants: updatedParticipants })
-            .eq('id', conversationId)
-            .select('id, participants')
-        );
-
-        if (participantUpdateError || !participantUpdateRows || participantUpdateRows.length === 0) {
-          logError('Error removing participant from conversation during delete fallback', participantUpdateError);
-          toast.error('Failed to delete conversation');
-          return false;
-        }
-
-      }
-
-      // Remove from local state only after successful database deletion
-      setConversations(prev => prev.filter(c => c.id !== conversationId));
-      setMessages(prev => {
-        const updated = { ...prev };
-        delete updated[conversationId];
-        return updated;
+      await messagingV2.conversationState(conversationId, 'hide');
+      setConversations((previous) => previous.filter((conversation) => conversation.id !== conversationId));
+      setMessages((previous) => {
+        const next = { ...previous };
+        delete next[conversationId];
+        return next;
       });
-      setUnreadCounts(prev => {
-        const updated = { ...prev };
-        delete updated[conversationId];
-        return updated;
+      setUnreadCounts((previous) => {
+        const next = { ...previous };
+        delete next[conversationId];
+        return next;
       });
-
-      // If this was the active conversation, clear it
-      if (activeConversationId === conversationId) {
-        setActiveConversationId(null);
-      }
-
-      // Always re-sync from source of truth after deletion.
-      await loadConversationsFromServer();
-
-      toast.success('Conversation deleted successfully');
+      if (activeConversationId === conversationId) setActiveConversationId(null);
+      toast.success('Conversation hidden for you');
       return true;
     } catch (error) {
-      logError('Error deleting conversation', error);
-      toast.error('Failed to delete conversation');
+      logError('Error hiding conversation', error, { conversationId });
+      toast.error('The conversation could not be hidden.');
       return false;
     }
-  }, [user, conversations, activeConversationId, setActiveConversationId, loadConversationsFromServer]);
+  }, [activeConversationId, user]);
 
   const searchMessages = useCallback(async (
     query: string,
@@ -2512,6 +1445,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     conversations,
     mainConversations,
     requestConversations,
+    archivedConversations,
     messages,
     messagePageState,
     conversationSettings,
@@ -2536,12 +1470,12 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     pinConversation,
     muteConversation,
     archiveConversation,
+    loadArchivedConversations,
     reportMessage,
     blockUser,
     searchMessages,
     clearMessageSearch,
     getAttachmentSignedUrl,
-    getUserIdByEmail,
     resolveMentorUserId,
     getUserIdByUsername,
     getUsernameByUserId,

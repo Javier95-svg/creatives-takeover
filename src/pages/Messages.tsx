@@ -12,6 +12,7 @@ import { useMessaging } from "@/hooks/useMessaging";
 import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
 import { logError } from "@/lib/logger";
+import { useFeatureFlagEnabled } from "posthog-js/react";
 
 const Messages = () => {
   const { isAuthenticated, user } = useAuth();
@@ -22,6 +23,8 @@ const Messages = () => {
   const [resolvedConversationId, setResolvedConversationId] = useState<string | undefined>(conversationIdParam || undefined);
   const [isResolvingUsername, setIsResolvingUsername] = useState(false);
   const [conversationError, setConversationError] = useState<string | null>(null);
+  const inboxV2Flag = useFeatureFlagEnabled('messages-inbox-v2');
+  const inboxV2Enabled = import.meta.env.VITE_MESSAGES_INBOX_V2_ENABLED !== 'false' && inboxV2Flag === true;
   const hasResolvedUsername = useRef<string | null>(null);
 
   // Prevent unwanted scrolling on page load and interactions
@@ -135,9 +138,8 @@ const Messages = () => {
           <title>Creatives Takeover</title>
           <meta name="description" content="Direct messaging for entrepreneurs and creators" />
         </Helmet>
-        <div className="relative min-h-screen overflow-hidden">
-          <MessagesBackground />
-          <div className="relative z-10">
+        <div className="min-h-dvh bg-background">
+          <div>
             <Navigation />
             <main className="container mx-auto px-4 py-20">
               <Card className="max-w-md mx-auto p-8 text-center">
@@ -151,10 +153,27 @@ const Messages = () => {
                 </Button>
               </Card>
             </main>
-            <Footer />
           </div>
         </div>
       </>
+    );
+  }
+
+  if (!inboxV2Enabled) {
+    return (
+      <div className="relative min-h-screen overflow-hidden">
+        <MessagesBackground />
+        <div className="relative z-10">
+          <Navigation />
+          <main className="container mx-auto px-3 pt-20 pb-12 md:px-4 md:pt-header-offset">
+            <h1 className="mb-6 text-center text-4xl font-bold">Chat Room</h1>
+            <Card className="mx-auto max-w-6xl p-3 md:p-6">
+              <MessagingInterface initialConversationId={resolvedConversationId} />
+            </Card>
+          </main>
+          <Footer />
+        </div>
+      </div>
     );
   }
 
@@ -164,19 +183,13 @@ const Messages = () => {
         <title>Creatives Takeover</title>
         <meta name="description" content="Direct messaging for entrepreneurs and creators" />
       </Helmet>
-      <div className="relative min-h-screen overflow-hidden">
-        <MessagesBackground />
-        <div className="relative z-10">
+      <div className="min-h-dvh bg-background overflow-hidden">
+        <div>
           <Navigation />
-          <main className="container mx-auto px-3 md:px-4 pt-20 md:pt-header-offset pb-10 md:pb-16">
-            <div className="max-w-6xl mx-auto">
-              <div className="mb-4 md:mb-6 text-center">
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2">
-                  <span className="gradient-unified animate-flicker">Chat Room</span>
-                </h1>
-              </div>
-              
-              <Card className="p-3 md:p-4 lg:p-6">
+          <main className="mx-auto w-full max-w-[1600px] px-0 md:px-4 pt-16 md:pt-header-offset pb-0 md:pb-4">
+            <div>
+              <h1 className="sr-only">Messages</h1>
+              <section className="border-y md:border rounded-none md:rounded-xl bg-card overflow-hidden" aria-label="Messages workspace">
                 {isResolvingUsername ? (
                   <div className="flex items-center justify-center min-h-[280px] h-[45dvh] md:h-[600px]">
                     <div className="text-center">
@@ -206,10 +219,9 @@ const Messages = () => {
                 ) : (
                   <MessagingInterface initialConversationId={resolvedConversationId} />
                 )}
-              </Card>
+              </section>
             </div>
           </main>
-          <Footer />
         </div>
       </div>
     </>

@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -18,7 +17,6 @@ import {
   Send,
   MessageCircle,
   Trash2,
-  Menu,
   Check,
   CheckCheck,
   Paperclip,
@@ -35,6 +33,8 @@ import {
   FileText,
   Image as ImageIcon,
   Loader2
+  ,Plus
+  ,ArrowLeft
 } from "lucide-react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMessaging, Conversation, Message } from "@/hooks/useMessaging";
@@ -45,10 +45,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDeviceType } from "@/hooks/use-device-type";
 import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 import { logError } from "@/lib/logger";
-import { generateMentorSlug } from "@/utils/mentorSlug";
 import { TypingIndicator } from "./TypingIndicator";
 import { MessageReactions } from "./MessageReactions";
 import { usePresence } from "@/hooks/usePresence";
+import { Link, useSearchParams } from "react-router-dom";
+import { mapRecipient, messagingV2, type MessageRecipient } from "@/lib/messagingV2";
+import { useMessageComposer } from "@/hooks/messaging/useMessageComposer";
 
 interface MessagingInterfaceProps {
   initialConversationId?: string;
@@ -61,14 +63,6 @@ type ParticipantProfile = {
   mentor_slug: string | null;
 };
 
-const SOPHIA_LOPEZ_PIMENTA_USER_ID = '50695a54-30c6-4b57-969e-b2de733bcd73';
-const ARTUR_SINDARSKY_USER_ID = '1f0fe62a-7744-4153-bfcf-4f20b6e820d3';
-const YASMINE_CAXEIRO_USER_ID = '357b97ca-c578-43b1-8e48-b438142312ec';
-type MentorMeta = {
-  user_id: string | null;
-  name: string;
-  picture: string | null;
-};
 type MessageReaction = {
   emoji: string;
   count: number;
@@ -83,63 +77,6 @@ type TypingBroadcastPayload = {
 const QUICK_REACTIONS = ['❤️', '👍', '😂', '😮', '😢', '🙏', '🔥', '👏', '🎉', '🤔', '👀', '💯'] as const;
 const LONG_PRESS_MS = 320;
 
-const isSophiaMentorName = (name: string | null | undefined): boolean => {
-  const normalized = (name || '').toLowerCase();
-  return normalized.includes('sophia') && (normalized.includes('pimenta') || normalized.includes('lopez'));
-};
-
-const isArturMentorName = (name: string | null | undefined): boolean => {
-  const normalized = (name || '').toLowerCase();
-  return normalized.includes('artur') && normalized.includes('sindarsky');
-};
-
-const isYasmineMentorName = (name: string | null | undefined): boolean => {
-  const normalized = (name || '').toLowerCase();
-  return normalized.includes('yasmine') && normalized.includes('caxeiro');
-};
-
-const normalizeIdentity = (value: string | null | undefined): string =>
-  (value || '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]/g, '');
-
-const findMentorMetaForParticipant = (
-  participantId: string,
-  profile: { full_name: string | null; username: string | null } | undefined,
-  mentors: MentorMeta[]
-): MentorMeta | null => {
-  const mentorByUserId = mentors.find((mentor) => mentor.user_id === participantId);
-  if (mentorByUserId) {
-    return mentorByUserId;
-  }
-
-  const normalizedFullName = normalizeIdentity(profile?.full_name);
-  if (normalizedFullName) {
-    const mentorByName = mentors.find(
-      (mentor) => normalizeIdentity(mentor.name) === normalizedFullName
-    );
-    if (mentorByName) {
-      return mentorByName;
-    }
-  }
-
-  const normalizedUsername = normalizeIdentity(profile?.username);
-  if (normalizedUsername) {
-    const mentorByUsername = mentors.find(
-      (mentor) =>
-        normalizeIdentity(mentor.name) === normalizedUsername ||
-        normalizeIdentity(generateMentorSlug(mentor.name)) === normalizedUsername
-    );
-    if (mentorByUsername) {
-      return mentorByUsername;
-    }
-  }
-
-  return null;
-};
-
 export const MessagingInterface = ({ initialConversationId }: MessagingInterfaceProps) => {
   const { user } = useAuth();
   const deviceType = useDeviceType();
@@ -149,6 +86,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     conversations,
     mainConversations,
     requestConversations,
+    archivedConversations,
     messages,
     messagePageState,
     conversationSettings,
@@ -158,6 +96,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     sending,
     activeConversationId,
     setActiveConversationId,
+    startConversation,
     sendMessage,
     retryFailedMessage,
     discardFailedMessage,
@@ -171,6 +110,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     pinConversation,
     muteConversation,
     archiveConversation,
+    loadArchivedConversations,
     reportMessage,
     blockUser,
     searchMessages,
@@ -181,6 +121,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   } = useMessaging();
   
   const [newMessage, setNewMessage] = useState("");
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const scrollViewportRef = useRef<HTMLDivElement>(null);
@@ -188,12 +129,13 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const hasSetInitialConversation = useRef(false);
   const previousInitialConversationId = useRef<string | undefined>(undefined);
   const [participantProfiles, setParticipantProfiles] = useState<Record<string, ParticipantProfile>>({});
-  const [currentUserMentorAvatar, setCurrentUserMentorAvatar] = useState<string | null>(null);
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState<{ messageId: string; conversationId: string } | null>(null);
+  const [messageToReport, setMessageToReport] = useState<string | null>(null);
+  const [reportReason, setReportReason] = useState('spam');
+  const [reportDetails, setReportDetails] = useState('');
   const [isDeletingMessage, setIsDeletingMessage] = useState(false);
-  const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [otherUserTyping, setOtherUserTyping] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
   const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -202,9 +144,16 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const [activeReactionMenuMessageId, setActiveReactionMenuMessageId] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [messageSearchQuery, setMessageSearchQuery] = useState("");
-  const [conversationSection, setConversationSection] = useState<'main' | 'requests'>('main');
+  const [conversationSection, setConversationSection] = useState<'main' | 'requests' | 'archived'>('main');
+  const [newMessageOpen, setNewMessageOpen] = useState(false);
+  const [recipientQuery, setRecipientQuery] = useState('');
+  const [recipientResults, setRecipientResults] = useState<MessageRecipient[]>([]);
+  const [recipientLoading, setRecipientLoading] = useState(false);
+  const [online, setOnline] = useState(() => typeof navigator === 'undefined' || navigator.onLine);
+  const [searchParams, setSearchParams] = useSearchParams();
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { trigger: triggerHaptic } = useHapticFeedback();
+  const { quote, refreshQuote } = useMessageComposer(activeConversationId);
 
   // Get all participant IDs for presence tracking
   const participantIds = useMemo(
@@ -229,7 +178,11 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const activeConversationIsRequest = Boolean(
     activeConversation && conversationSettings[activeConversation.id]?.request_status === 'pending'
   );
-  const displayedConversations = conversationSection === 'requests' ? requestConversations : mainConversations;
+  const displayedConversations = conversationSection === 'requests'
+    ? requestConversations
+    : conversationSection === 'archived'
+      ? archivedConversations
+      : mainConversations;
   const mainUnreadCount = useMemo(
     () => mainConversations.reduce((total, conversation) => total + getUnreadCount(conversation.id), 0),
     [getUnreadCount, mainConversations]
@@ -242,6 +195,39 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     () => activeMessages.map((message) => message.id).join('|'),
     [activeMessages]
   );
+
+  useEffect(() => {
+    if (!newMessageOpen) return;
+    const timeout = window.setTimeout(async () => {
+      setRecipientLoading(true);
+      try {
+        const rows = await messagingV2.recipients(recipientQuery.trim());
+        setRecipientResults((rows || []).map(mapRecipient));
+      } catch (error) {
+        logError('Recipient search failed', error);
+        setRecipientResults([]);
+      } finally {
+        setRecipientLoading(false);
+      }
+    }, 250);
+    return () => window.clearTimeout(timeout);
+  }, [newMessageOpen, recipientQuery]);
+
+  useEffect(() => {
+    const update = () => setOnline(navigator.onLine);
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
+    return () => {
+      window.removeEventListener('online', update);
+      window.removeEventListener('offline', update);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (conversationSection === 'archived') {
+      void loadArchivedConversations();
+    }
+  }, [conversationSection, loadArchivedConversations]);
 
   // Auto-scroll to bottom when new messages arrive (only within ScrollArea, not the page)
   useEffect(() => {
@@ -292,53 +278,6 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
       }
     }
   }, [initialConversationId, conversations, loading, setActiveConversationId]);
-
-  // If the current user is also a mentor, prefer mentor profile picture over auth provider avatar.
-  useEffect(() => {
-    if (!user) {
-      setCurrentUserMentorAvatar(null);
-      return;
-    }
-
-    const fetchCurrentUserMentorAvatar = async () => {
-      try {
-        const { data: mentorByUserId, error } = await supabase
-          .from('mentors')
-          .select('name, picture')
-          .eq('user_id', user.id)
-          .eq('is_active', true)
-          .maybeSingle();
-
-        if (error) throw error;
-
-        if (mentorByUserId?.picture) {
-          setCurrentUserMentorAvatar(mentorByUserId.picture);
-          return;
-        }
-
-        const fallbackFullName = user.user_metadata?.full_name || user.user_metadata?.name || null;
-        if (!fallbackFullName) {
-          setCurrentUserMentorAvatar(null);
-          return;
-        }
-
-        const { data: mentorByName, error: mentorByNameError } = await supabase
-          .from('mentors')
-          .select('picture')
-          .eq('is_active', true)
-          .eq('name', fallbackFullName)
-          .maybeSingle();
-
-        if (mentorByNameError) throw mentorByNameError;
-        setCurrentUserMentorAvatar(mentorByName?.picture || null);
-      } catch (error) {
-        logError('Error fetching current user mentor avatar', error);
-        setCurrentUserMentorAvatar(null);
-      }
-    };
-
-    void fetchCurrentUserMentorAvatar();
-  }, [user]);
 
   // Mark messages as read when conversation is opened
   useEffect(() => {
@@ -488,7 +427,17 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
       }
     };
 
-    void loadReactions();
+    const initialReactions: Record<string, MessageReaction[]> = {};
+    activeMessages.forEach((message) => {
+      const grouped: Record<string, { count: number; userReacted: boolean }> = {};
+      (message.reaction_rows || []).forEach((reaction) => {
+        grouped[reaction.emoji] ||= { count: 0, userReacted: false };
+        grouped[reaction.emoji].count += 1;
+        if (reaction.user_id === currentUserId) grouped[reaction.emoji].userReacted = true;
+      });
+      initialReactions[message.id] = Object.entries(grouped).map(([emoji, value]) => ({ emoji, ...value }));
+    });
+    setMessageReactions(initialReactions);
 
     // Subscribe to reaction changes
     const channel = supabase
@@ -513,7 +462,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [activeConversationId, currentUserId, messageIdsKey]);
+  }, [activeConversationId, activeMessages, currentUserId, messageIdsKey]);
 
   useEffect(() => {
     const query = messageSearchQuery.trim();
@@ -580,6 +529,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     const scrollY = window.scrollY;
 
     setNewMessage("");
+    setDrafts((current) => ({ ...current, [activeConversationId]: '' }));
     setSelectedFiles([]);
 
     try {
@@ -588,6 +538,8 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
       if (!sentMessage) {
         setNewMessage(messageToSend);
         setSelectedFiles(filesToSend);
+      } else {
+        await refreshQuote();
       }
     } catch {
       setNewMessage(messageToSend);
@@ -601,7 +553,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
         window.scrollTo(0, scrollY);
       }
     }, 0);
-  }, [activeConversationId, newMessage, selectedFiles, sendMessage, sending]);
+  }, [activeConversationId, newMessage, refreshQuote, selectedFiles, sendMessage, sending]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -630,102 +582,58 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     return conversation.participants.find((id: string) => id !== user.id);
   }, [user]);
 
-  // Fetch participant profiles for conversations
   useEffect(() => {
     if (!user || conversations.length === 0) return;
 
-    const fetchProfiles = async () => {
-      const participantIds = new Set<string>();
-      
-      // Collect all participant IDs
-      conversations.forEach(conv => {
-        if (!conv.is_group) {
-          const otherParticipant = conv.participants.find((id: string) => id !== user.id);
-          if (otherParticipant) {
-            participantIds.add(otherParticipant);
-          }
-        }
-      });
-
-      // Filter out already fetched profiles
-      const idsToFetch = Array.from(participantIds).filter((id) => {
-        const cachedProfile = participantProfiles[id];
-        return !cachedProfile || !cachedProfile.avatar_url;
-      });
-
-      if (idsToFetch.length === 0) return;
-
-      try {
-        const { data, error } = await supabase
-          .from('public_profiles')
-          .select('id, full_name, avatar_url, username')
-          .in('id', idsToFetch);
-
-        const { data: mentorData, error: mentorError } = await supabase
-          .from('mentors')
-          .select('user_id, name, picture')
-          .eq('is_active', true);
-
-        if (error) throw error;
-        if (mentorError) throw mentorError;
-
-        const mergedMentorData = (mentorData || []) as MentorMeta[];
-
-        const profileById = new Map(
-          (data || []).map((profile) => [profile.id, profile])
+    const seededProfiles: Record<string, ParticipantProfile> = {};
+    const missingIds: string[] = [];
+    conversations.forEach((conversation) => {
+      const participantId = conversation.participants.find((id) => id !== user.id);
+      if (!participantId) return;
+      if (conversation.other_user?.id === participantId) {
+        seededProfiles[participantId] = {
+          full_name: conversation.other_user.fullName || 'Founder',
+          avatar_url: conversation.other_user.avatarUrl || null,
+          username: conversation.other_user.username || null,
+          mentor_slug: conversation.other_user.username || null
+        };
+      } else if (!participantProfiles[participantId]) {
+        missingIds.push(participantId);
+      }
+    });
+    if (Object.keys(seededProfiles).length > 0) {
+      setParticipantProfiles((previous) => {
+        const changed = Object.entries(seededProfiles).some(([id, profile]) =>
+          previous[id]?.full_name !== profile.full_name ||
+          previous[id]?.avatar_url !== profile.avatar_url ||
+          previous[id]?.username !== profile.username
         );
+        return changed ? { ...previous, ...seededProfiles } : previous;
+      });
+    }
+    if (missingIds.length === 0) return;
 
-        const newProfiles: Record<string, ParticipantProfile> = {};
-        idsToFetch.forEach((participantId) => {
-          const profile = profileById.get(participantId);
-          let mentorMeta = findMentorMetaForParticipant(participantId, profile, mergedMentorData);
-
-          if (
-            !mentorMeta &&
-            participantId === SOPHIA_LOPEZ_PIMENTA_USER_ID
-          ) {
-            mentorMeta =
-              mergedMentorData.find((mentor) => isSophiaMentorName(mentor.name)) || null;
-          }
-
-          if (
-            !mentorMeta &&
-            participantId === ARTUR_SINDARSKY_USER_ID
-          ) {
-            mentorMeta =
-              mergedMentorData.find((mentor) => isArturMentorName(mentor.name)) || null;
-          }
-
-          if (
-            !mentorMeta &&
-            participantId === YASMINE_CAXEIRO_USER_ID
-          ) {
-            mentorMeta =
-              mergedMentorData.find((mentor) => isYasmineMentorName(mentor.name)) || null;
-          }
-
-          if (!profile && !mentorMeta) return;
-
-          newProfiles[participantId] = {
-            full_name: profile?.full_name || mentorMeta?.name || 'Unknown User',
-            // Keep avatar aligned with mentor banner picture whenever available.
-            avatar_url: mentorMeta?.picture || profile?.avatar_url || null,
-            username: profile?.username || null,
-            mentor_slug: mentorMeta?.name ? generateMentorSlug(mentorMeta.name) : null
+    void supabase
+      .from('public_profiles')
+      .select('id, full_name, avatar_url, username')
+      .in('id', missingIds)
+      .then(({ data, error }) => {
+        if (error) {
+          logError('Error fetching participant profiles', error);
+          return;
+        }
+        const fallbackProfiles: Record<string, ParticipantProfile> = {};
+        (data || []).forEach((profile) => {
+          fallbackProfiles[profile.id] = {
+            full_name: profile.full_name || 'Founder',
+            avatar_url: profile.avatar_url,
+            username: profile.username,
+            mentor_slug: profile.username
           };
         });
-
-        if (Object.keys(newProfiles).length > 0) {
-          setParticipantProfiles(prev => ({ ...prev, ...newProfiles }));
-        }
-      } catch (error) {
-        logError('Error fetching participant profiles', error);
-      }
-    };
-
-    void fetchProfiles();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversations, user]);
+        setParticipantProfiles((previous) => ({ ...previous, ...fallbackProfiles }));
+      });
+  }, [conversations, participantProfiles, user]);
 
   const getConversationName = (conversation: Conversation): string => {
     if (conversation.is_group && conversation.name) {
@@ -776,11 +684,25 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   };
 
   const handleConversationSelect = (conversationId: string) => {
-    setActiveConversationId(conversationId);
-    void markAsRead(conversationId);
-    if (isMobile) {
-      setMobileSheetOpen(false);
+    if (activeConversationId) {
+      setDrafts((current) => ({ ...current, [activeConversationId]: newMessage }));
     }
+    setNewMessage(drafts[conversationId] || '');
+    setActiveConversationId(conversationId);
+    const next = new URLSearchParams(searchParams);
+    next.set('conversationId', conversationId);
+    setSearchParams(next, { replace: true });
+    void markAsRead(conversationId);
+  };
+
+  const handleMobileBack = () => {
+    if (activeConversationId) {
+      setDrafts((current) => ({ ...current, [activeConversationId]: newMessage }));
+    }
+    setActiveConversationId(null);
+    const next = new URLSearchParams(searchParams);
+    next.delete('conversationId');
+    setSearchParams(next, { replace: true });
   };
 
   const handleDeleteMessageClick = (e: React.MouseEvent, messageId: string) => {
@@ -816,9 +738,9 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   }, [activeConversationId, discardFailedMessage]);
 
   const handleReportMessage = useCallback((message: Message) => {
-    void reportMessage(message.id, 'other');
+    setMessageToReport(message.id);
     setActiveReactionMenuMessageId(null);
-  }, [reportMessage]);
+  }, []);
 
   const handleBlockActiveParticipant = useCallback(() => {
     if (!activeConversationId) return;
@@ -1164,11 +1086,12 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
               <div
                 data-reaction-trigger
                 onContextMenu={(event) => {
+                  if (message.deleted_at) return;
                   event.preventDefault();
                   setActiveReactionMenuMessageId(message.id);
                 }}
-                onClick={(event) => handleReactionMenuTap(event, message.id)}
-                onTouchStart={(event) => handleMessageTouchStart(event, message.id)}
+                onClick={(event) => !message.deleted_at && handleReactionMenuTap(event, message.id)}
+                onTouchStart={(event) => !message.deleted_at && handleMessageTouchStart(event, message.id)}
 	                onTouchMove={clearLongPressTimer}
 	                onTouchEnd={clearLongPressTimer}
 	                onTouchCancel={clearLongPressTimer}
@@ -1201,7 +1124,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 
 	                {renderMessageAttachments(message, isOwnMessage)}
 
-	                {isOwnMessage && !message.id.startsWith('temp-') && (
+	                {isOwnMessage && !message.deleted_at && !message.id.startsWith('temp-') && (
 	                  <Button
                     type="button"
                     variant="ghost"
@@ -1214,7 +1137,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	                  </Button>
 	                )}
 
-	                {!message.id.startsWith('temp-') && (
+	                {!message.deleted_at && !message.id.startsWith('temp-') && (
 	                  <Button
 	                    type="button"
 	                    variant="ghost"
@@ -1323,7 +1246,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
               )}
 
               {/* Message reactions */}
-              {messageReactions[message.id] && messageReactions[message.id].length > 0 && (
+              {!message.deleted_at && messageReactions[message.id] && messageReactions[message.id].length > 0 && (
                 <MessageReactions
                   reactions={messageReactions[message.id]}
                   onAddReaction={(emoji) => handleReactionToggle(message.id, emoji)}
@@ -1337,7 +1260,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 
         {isOwnMessage && (
           <Avatar className="h-7 w-7 md:h-8 md:w-8 flex-shrink-0 self-end">
-            <AvatarImage src={currentUserMentorAvatar || user?.user_metadata?.avatar_url} />
+            <AvatarImage src={user?.user_metadata?.avatar_url} />
             <AvatarFallback>
               {user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0) || '?'}
             </AvatarFallback>
@@ -1351,11 +1274,13 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const renderConversationList = (onSelect: (id: string) => void) => (
     <>
       <div className="space-y-3 border-b p-4">
-        <h3 className="font-semibold flex items-center gap-2">
-          <MessageCircle className="h-5 w-5" />
-          Messages
-        </h3>
-        <div className="grid grid-cols-2 gap-1 rounded-md bg-muted p-1">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="font-semibold text-lg">Messages</h2>
+          <Button type="button" size="sm" className="min-h-[44px] gap-2" onClick={() => setNewMessageOpen(true)}>
+            <Plus className="h-4 w-4" /> New message
+          </Button>
+        </div>
+        <div className="grid grid-cols-3 gap-1 rounded-md bg-muted p-1">
           <Button
             type="button"
             variant={conversationSection === 'main' ? 'secondary' : 'ghost'}
@@ -1363,12 +1288,21 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
             className="h-8 justify-center gap-2 px-2 text-xs"
             onClick={() => setConversationSection('main')}
           >
-            Main
+            Inbox
             {mainUnreadCount > 0 && (
               <Badge variant="secondary" className="h-5 px-1.5 text-caption">
                 {mainUnreadCount > 9 ? '9+' : mainUnreadCount}
               </Badge>
             )}
+          </Button>
+          <Button
+            type="button"
+            variant={conversationSection === 'archived' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-8 justify-center px-2 text-xs"
+            onClick={() => setConversationSection('archived')}
+          >
+            Archived
           </Button>
           <Button
             type="button"
@@ -1426,13 +1360,16 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                       key={result.id}
                       type="button"
                       className="block w-full rounded-md px-3 py-2 text-left hover:bg-muted/60"
-                      onClick={() => {
+                      onClick={async () => {
+                        await loadMessages(result.conversation_id, { mode: 'replace', anchorMessageId: result.id });
                         onSelect(result.conversation_id);
                         setMessageSearchQuery('');
-                        requestAnimationFrame(() => {
+                        window.setTimeout(() => {
                           const element = document.querySelector(`[data-message-id="${result.id}"]`);
                           element?.scrollIntoView({ block: 'center' });
-                        });
+                          element?.classList.add('ring-2', 'ring-primary');
+                          window.setTimeout(() => element?.classList.remove('ring-2', 'ring-primary'), 1800);
+                        }, 100);
                       }}
                     >
                       <p className="truncate text-xs font-medium">
@@ -1451,7 +1388,11 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
           <div className="p-4 text-center text-muted-foreground">
             <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
             <p className="text-sm">
-              {conversationSection === 'requests' ? 'No message requests' : 'No conversations yet'}
+              {conversationSection === 'requests'
+                ? 'No message requests'
+                : conversationSection === 'archived'
+                  ? 'No archived conversations'
+                  : 'No conversations yet'}
             </p>
           </div>
         ) : (
@@ -1499,6 +1440,9 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	                            <Badge variant="outline" className="h-5 px-1.5 text-caption">Request</Badge>
 	                          )}
 	                        </div>
+	                        {conversation.last_message_preview && (
+	                          <p className="truncate text-xs text-muted-foreground">{conversation.last_message_preview}</p>
+	                        )}
 	                        {conversation.last_message_at && (
 	                          <p className="text-xs text-muted-foreground">
                             {formatDistanceToNow(new Date(conversation.last_message_at))} ago
@@ -1517,10 +1461,21 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                     variant="ghost"
                     size="sm"
                     className="absolute right-2 top-1/2 -translate-y-1/2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity h-10 w-10 p-0 min-h-[44px] min-w-[44px] touch-manipulation hover:bg-destructive hover:text-destructive-foreground"
-                    onClick={(e) => handleDeleteClick(e, conversation.id)}
-                    aria-label="Delete conversation"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (conversationSection === 'archived') {
+                        if (settings?.request_status === 'refused') {
+                          void acceptMessageRequest(conversation.id);
+                        } else {
+                          void archiveConversation(conversation.id, false);
+                        }
+                      } else {
+                        handleDeleteClick(e, conversation.id);
+                      }
+                    }}
+                    aria-label={conversationSection === 'archived' ? (settings?.request_status === 'refused' ? 'Restore request' : 'Unarchive conversation') : 'Hide conversation'}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    {conversationSection === 'archived' ? <RotateCcw className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
                   </Button>
                 </div>
               );
@@ -1532,7 +1487,8 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   );
 
   return (
-    <div className={`responsive-messaging-shell flex ${isMobile ? 'flex-col' : ''} border rounded-lg bg-card`}>
+    <div className={`responsive-messaging-shell relative flex ${isMobile ? 'flex-col' : ''} h-[calc(100dvh-4rem)] md:h-[calc(100dvh-6rem)] min-h-[32rem] bg-card`}>
+      {!online && <div className="absolute inset-x-0 top-0 z-30 bg-warning px-3 py-2 text-center text-xs font-medium text-warning-foreground" role="status">You are offline. Drafts are preserved and failed messages can be retried when you reconnect.</div>}
       {/* Desktop & Tablet Conversations List */}
       {!isMobile && (
         <div className={`${isTablet ? 'w-64' : 'w-80'} border-r bg-card/50 flex-shrink-0`}>
@@ -1540,22 +1496,14 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
         </div>
       )}
 
-      {/* Mobile Conversations Sheet */}
-      {isMobile && (
-        <Sheet open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
-          <SheetContent side="left" className="w-[85vw] sm:w-[320px] md:w-[400px] p-0">
-            <SheetHeader className="sr-only">
-              <SheetTitle>Conversations</SheetTitle>
-            </SheetHeader>
-            <div className="h-full bg-card/50">
-              {renderConversationList(handleConversationSelect)}
-            </div>
-          </SheetContent>
-        </Sheet>
+      {isMobile && !activeConversationId && (
+        <div className="h-full w-full bg-card/50">
+          {renderConversationList(handleConversationSelect)}
+        </div>
       )}
 
       {/* Chat Interface */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className={`${isMobile && !activeConversationId ? 'hidden' : 'flex'} flex-1 flex-col min-w-0`}>
         {activeConversationId ? (
           <>
             {/* Chat Header */}
@@ -1565,10 +1513,10 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                   variant="ghost"
                   size="sm"
                   className="h-10 w-10 p-0 min-h-[44px] min-w-[44px] touch-manipulation"
-                  onClick={() => setMobileSheetOpen(true)}
-                  aria-label="Open conversations"
+                  onClick={handleMobileBack}
+                  aria-label="Back to conversations"
                 >
-                  <Menu className="h-5 w-5" />
+                  <ArrowLeft className="h-5 w-5" />
                 </Button>
               )}
               {(() => {
@@ -1626,10 +1574,18 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	                          <Pin className="mr-2 h-4 w-4" />
 	                          {isPinned ? 'Unpin' : 'Pin'}
 	                        </DropdownMenuItem>
-	                        <DropdownMenuItem onClick={() => void muteConversation(activeConversation.id, !isMuted)}>
-	                          <BellOff className="mr-2 h-4 w-4" />
-	                          {isMuted ? 'Unmute' : 'Mute'}
-	                        </DropdownMenuItem>
+	                        {isMuted ? (
+	                          <DropdownMenuItem onClick={() => void muteConversation(activeConversation.id, false)}>
+	                            <BellOff className="mr-2 h-4 w-4" /> Unmute
+	                          </DropdownMenuItem>
+	                        ) : (
+	                          <>
+	                            <DropdownMenuItem onClick={() => void muteConversation(activeConversation.id, true, 60 * 60 * 1000)}><BellOff className="mr-2 h-4 w-4" />Mute for 1 hour</DropdownMenuItem>
+	                            <DropdownMenuItem onClick={() => void muteConversation(activeConversation.id, true, 8 * 60 * 60 * 1000)}><BellOff className="mr-2 h-4 w-4" />Mute for 8 hours</DropdownMenuItem>
+	                            <DropdownMenuItem onClick={() => void muteConversation(activeConversation.id, true, 7 * 24 * 60 * 60 * 1000)}><BellOff className="mr-2 h-4 w-4" />Mute for 1 week</DropdownMenuItem>
+	                            <DropdownMenuItem onClick={() => void muteConversation(activeConversation.id, true)}><BellOff className="mr-2 h-4 w-4" />Mute until I turn it on</DropdownMenuItem>
+	                          </>
+	                        )}
 	                        <DropdownMenuItem onClick={() => void archiveConversation(activeConversation.id, true)}>
 	                          <Archive className="mr-2 h-4 w-4" />
 	                          Archive
@@ -1739,6 +1695,19 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	              </div>
 	            ) : (
 	              <form onSubmit={handleSendMessage} className={`p-3 md:p-4 border-t bg-card/50 ${isMobile ? 'sticky bottom-0' : ''}`}>
+	                {quote?.isMentor && (
+	                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs" role="status" aria-live="polite">
+	                    <span className={quote.canSend ? 'text-muted-foreground' : 'text-destructive'}>
+	                      {quote.creditsRequired === 0
+	                        ? 'Your first mentor message is free.'
+	                        : `This message costs ${quote.creditsRequired} credits. Balance: ${quote.balance}.`}
+	                    </span>
+	                    {!quote.canSend && <Link to="/pricing" className="font-medium text-primary underline">Top up credits</Link>}
+	                  </div>
+	                )}
+	                {quote && !quote.isMentor && !quote.canSend && (
+	                  <p className="mb-2 text-xs text-muted-foreground" role="status">You have sent your introduction. You can send another message after the recipient accepts the request.</p>
+	                )}
 	                {selectedFiles.length > 0 && (
 	                  <div className="mb-2 flex flex-wrap gap-2">
 	                    {selectedFiles.map((file, index) => (
@@ -1800,7 +1769,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	                  />
 	                  <Button
 	                    type="submit"
-	                    disabled={sending || (!newMessage.trim() && selectedFiles.length === 0)}
+	                    disabled={sending || quote?.canSend === false || (!newMessage.trim() && selectedFiles.length === 0)}
 	                    className="min-h-[44px] min-w-[44px] px-3 touch-manipulation"
 	                  >
 	                    <Send className="h-4 w-4" />
@@ -1813,36 +1782,56 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
           <div className="flex-1 flex items-center justify-center text-muted-foreground p-4">
             <div className="text-center">
               <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p className="text-sm md:text-base">
-                {isMobile ? (
-                  <>
-                    <Button
-                      variant="outline"
-                      onClick={() => setMobileSheetOpen(true)}
-                      className="mb-4 min-h-[44px] touch-manipulation"
-                    >
-                      <Menu className="h-4 w-4 mr-2" />
-                      Select a conversation
-                    </Button>
-                    <br />
-                    or start a new one
-                  </>
-                ) : (
-                  "Select a conversation to start messaging"
-                )}
-              </p>
+              <p className="text-sm md:text-base">Select a conversation to start messaging</p>
             </div>
           </div>
         )}
       </div>
 
+      <Dialog open={newMessageOpen} onOpenChange={setNewMessageOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>New message</DialogTitle>
+            <DialogDescription>Connections appear first. Other founders receive one introduction request.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input autoFocus value={recipientQuery} onChange={(event) => setRecipientQuery(event.target.value)} placeholder="Search people" className="min-h-[44px] pl-9" />
+            </div>
+            <div className="max-h-80 overflow-y-auto" aria-live="polite">
+              {recipientLoading ? (
+                <div className="flex items-center justify-center gap-2 p-6 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Searching</div>
+              ) : recipientResults.length > 0 ? recipientResults.map((recipient) => (
+                <button
+                  type="button"
+                  key={recipient.userId}
+                  className="flex min-h-[56px] w-full items-center gap-3 rounded-lg p-2 text-left hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  onClick={async () => {
+                    const conversationId = await startConversation(recipient.userId);
+                    if (!conversationId) return;
+                    setNewMessageOpen(false);
+                    setRecipientQuery('');
+                    handleConversationSelect(conversationId);
+                  }}
+                >
+                  <Avatar className="h-10 w-10"><AvatarImage src={recipient.avatarUrl || undefined} /><AvatarFallback>{recipient.fullName.charAt(0)}</AvatarFallback></Avatar>
+                  <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{recipient.fullName}</span><span className="block truncate text-xs text-muted-foreground">{recipient.headline || (recipient.isConnection ? 'Connection' : 'Founder')}</span></span>
+                  {recipient.isConnection && <Badge variant="secondary">Connected</Badge>}
+                </button>
+              )) : <p className="p-6 text-center text-sm text-muted-foreground">Search by name or username.</p>}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!conversationToDelete} onOpenChange={handleCancelDelete}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Conversation</DialogTitle>
+            <DialogTitle>Hide conversation?</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this conversation? This action cannot be undone and all messages will be permanently deleted.
+              This removes it from your inbox only. The other participant keeps their history, and a new incoming message will show it again.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -1858,8 +1847,41 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
               onClick={handleConfirmDelete}
               disabled={isDeleting}
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting ? "Hiding..." : "Hide conversation"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!messageToReport} onOpenChange={(open) => !open && setMessageToReport(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Report message</DialogTitle>
+            <DialogDescription>Choose the reason that best describes the problem.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <label className="space-y-1 text-sm font-medium">
+              Reason
+              <select className="mt-1 min-h-[44px] w-full rounded-md border bg-background px-3" value={reportReason} onChange={(event) => setReportReason(event.target.value)}>
+                <option value="spam">Spam</option>
+                <option value="harassment">Harassment</option>
+                <option value="scam">Scam or fraud</option>
+                <option value="inappropriate">Inappropriate content</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+            <Textarea value={reportDetails} onChange={(event) => setReportDetails(event.target.value)} placeholder="Add context (optional)" />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMessageToReport(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={async () => {
+              if (!messageToReport) return;
+              const success = await reportMessage(messageToReport, reportReason, reportDetails);
+              if (success) {
+                setMessageToReport(null);
+                setReportDetails('');
+              }
+            }}>Submit report</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1868,9 +1890,9 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
       <Dialog open={!!messageToDelete} onOpenChange={handleCancelDeleteMessage}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Message</DialogTitle>
+            <DialogTitle>Delete message?</DialogTitle>
             <DialogDescription>
-              Do you want to delete this message? This action cannot be undone.
+              The message body and attachments will be replaced with a “Message deleted” tombstone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

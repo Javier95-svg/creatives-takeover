@@ -5188,6 +5188,8 @@ export type Database = {
           content: string
           conversation_id: string
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           id: string
           is_read: boolean
           message_type: string
@@ -5200,6 +5202,8 @@ export type Database = {
           content: string
           conversation_id: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           is_read?: boolean
           message_type?: string
@@ -5212,6 +5216,8 @@ export type Database = {
           content?: string
           conversation_id?: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           is_read?: boolean
           message_type?: string
@@ -8655,6 +8661,15 @@ export type Database = {
       }
     }
     Functions: {
+      get_inbox_v1: { Args: { p_cursor?: string | null; p_limit?: number; p_section?: string }; Returns: Json }
+      get_message_page_v1: { Args: { p_anchor_message_id?: string | null; p_before_created_at?: string | null; p_before_id?: string | null; p_conversation_id: string; p_limit?: number }; Returns: Json }
+      search_message_recipients_v1: { Args: { p_limit?: number; p_query: string }; Returns: Json }
+      get_direct_message_quote_v1: { Args: { p_conversation_id: string }; Returns: Json }
+      send_direct_message_v2: { Args: { p_attachments?: Json; p_client_message_id: string; p_content: string; p_conversation_id: string; p_reply_to_id?: string | null }; Returns: Json }
+      set_message_request_status_v1: { Args: { p_conversation_id: string; p_status: string }; Returns: Json }
+      mark_conversation_read_v1: { Args: { p_conversation_id: string }; Returns: undefined }
+      set_conversation_state_v1: { Args: { p_action: string; p_conversation_id: string; p_muted_until?: string | null }; Returns: Json }
+      soft_delete_message_v1: { Args: { p_message_id: string }; Returns: Json }
       browse_cofounder_listings_v1: { Args: { p_cursor?: string | null; p_filters?: Json; p_limit?: number }; Returns: Json }
       get_cofounder_matches_v1: { Args: { p_cursor?: string | null; p_filters?: Json; p_limit?: number; p_listing_id?: string | null }; Returns: Json }
       get_my_cofounder_listing_v1: { Args: { p_listing_id?: string | null }; Returns: Json }
