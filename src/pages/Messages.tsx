@@ -1,6 +1,5 @@
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
-import Footer from "@/components/Footer";
 import MessagesBackground from "@/components/MessagesBackground";
 import { MessagingInterface } from "@/components/social/MessagingInterface";
 import { useAuth } from "@/contexts/AuthContext";
@@ -45,7 +44,7 @@ const Messages = () => {
     // Prevent unwanted scroll on form submissions
     const handleSubmit = (e: Event) => {
       const form = e.target as HTMLFormElement;
-      if (form && form.closest('[class*="max-w-6xl"]')) {
+      if (form && form.closest('[aria-label="Messages workspace"]')) {
         // Form already has preventDefault in handleSendMessage, but ensure no scroll
         const currentScroll = window.scrollY;
         setTimeout(() => {
@@ -161,19 +160,15 @@ const Messages = () => {
 
   if (!inboxV2Enabled) {
     return (
-      <div className="relative min-h-screen overflow-hidden">
+      <div className="relative min-h-dvh overflow-hidden">
         <MessagesBackground />
         <div className="relative z-10">
           <Navigation />
-          <main className="container mx-auto px-3 pt-20 pb-12 md:px-4 md:pt-header-offset">
-            <h1 className="mb-6 text-center text-4xl font-bold">
-              <span className="gradient-unified animate-flicker">Chat Room</span>
-            </h1>
-            <Card className="mx-auto max-w-6xl p-3 md:p-6">
+          <main className="mx-auto w-full max-w-[1600px] px-0 pt-16 pb-0 md:px-4 md:pt-header-offset md:pb-4">
+            <section className="overflow-hidden rounded-none border-y bg-card md:rounded-xl md:border" aria-label="Messages workspace">
               <MessagingInterface initialConversationId={resolvedConversationId} />
-            </Card>
+            </section>
           </main>
-          <Footer />
         </div>
       </div>
     );
@@ -188,7 +183,7 @@ const Messages = () => {
       <div className="min-h-dvh bg-background overflow-hidden">
         <div>
           <Navigation />
-          <main className="mx-auto w-full max-w-[1600px] px-0 md:px-4 pt-16 md:pt-header-offset pb-0 md:pb-4">
+          <main className="mx-auto w-full max-w-[1600px] px-0 pt-16 pb-0 md:px-4 md:pt-header-offset md:pb-4">
             <div>
               <h1 className="sr-only">Messages</h1>
               <section className="border-y md:border rounded-none md:rounded-xl bg-card overflow-hidden" aria-label="Messages workspace">

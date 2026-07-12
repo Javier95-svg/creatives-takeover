@@ -75,7 +75,9 @@ test('request, hide, tombstone, mute, and notification safeguards are durable', 
 test('messages renders as a focused inbox workspace', () => {
   assert.match(pageSource, /messages-inbox-v2/);
   assert.match(pageSource, /VITE_MESSAGES_INBOX_V2_ENABLED/);
-  assert.match(pageSource, /className="gradient-unified animate-flicker">Chat Room/);
+  assert.doesNotMatch(pageSource, /Chat Room/);
+  assert.doesNotMatch(pageSource, /<Footer/);
+  assert.match(pageSource, /max-w-\[1600px\]/);
   assert.match(pageSource, /aria-label="Messages workspace"/);
   assert.doesNotMatch(interfaceSource, /> New message</);
   assert.match(interfaceSource, /text-center text-lg font-semibold text-foreground">Chats<\/h2>/);
