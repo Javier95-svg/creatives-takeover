@@ -35,7 +35,7 @@ const QUICK_TOP_UP_PACKS = [
 ] as const;
 
 export function CreditDisplay({ variant = "navigation", showPurchaseButton = false }: CreditDisplayProps) {
-  const { balance, monthlyQuota, heldCredits, loading, refreshBalance, CREDIT_COSTS } = useCredits();
+  const { balance, monthlyQuota, heldCredits, totalAvailable, loading, refreshBalance, CREDIT_COSTS } = useCredits();
   const navigate = useNavigate();
   const { user } = useAuth();
   // We only need the credit-pack checkout action + current plan here, so skip the tiers fetch.
@@ -58,8 +58,6 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
       </div>
     );
   }
-
-  const totalAvailable = balance + monthlyQuota;
 
   const getBalanceColor = () => {
     if (totalAvailable <= 0) return "destructive";

@@ -1,7 +1,6 @@
 ﻿import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { safe } from '@/integrations/supabase/safe';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { logError, logWarn } from '@/lib/logger';
@@ -13,8 +12,19 @@ interface CreditBalance {
   balance: number;
   monthly_quota: number;
   held_credits: number;
+  total_available: number;
   subscription_tier: string | null;
   current_period_end: string | null;
+}
+
+interface CreditWalletV1 {
+  walletFound?: boolean;
+  persistentBalance?: number;
+  monthlyQuotaRemaining?: number;
+  heldCredits?: number;
+  totalAvailable?: number;
+  subscriptionTier?: string | null;
+  currentPeriodEnd?: string | null;
 }
 
 interface CreditTransaction {
@@ -61,74 +71,29 @@ export function useCredits() {
 
   const fetchBalance = async (): Promise<CreditBalance> => {
     if (!user) {
-      return { balance: 0, monthly_quota: 0, held_credits: 0, subscription_tier: 'rookie', current_period_end: null };
+      return { balance: 0, monthly_quota: 0, held_credits: 0, total_available: 0, subscription_tier: 'rookie', current_period_end: null };
     }
 
-    const fetchHeldCredits = async () => {
-      const { data } = await supabase.rpc(
-        'get_mvp_builder_held_credits' as never,
-        { p_user_id: user.id } as never
-      );
-      return Number(data ?? 0);
+    const readWallet = async () => {
+      const { data, error } = await supabase.rpc('get_credit_wallet_v1' as never);
+      if (error) throw error;
+      return data as CreditWalletV1;
     };
 
-    const { data, error } = await safe.select(async () =>
-      await safe.client
-        .from('user_credits')
-        .select('balance, monthly_quota, subscription_tier, current_period_end')
-        .eq('user_id', user.id)
-        .maybeSingle()
-    );
-
-    if (error) {
-      const isNotFoundError = error.code === 'PGRST116' || error.message?.includes('not found');
-
-      if (isNotFoundError) {
-        logWarn('No credit record found for user, initializing', { userId: user.id });
-        const initialized = await initializeCredits();
-
-        if (initialized) {
-          const retry = await safe.select(async () =>
-            await safe.client
-              .from('user_credits')
-              .select('balance, monthly_quota, subscription_tier, current_period_end')
-              .eq('user_id', user.id)
-              .maybeSingle()
-          );
-
-          if (retry.data) {
-            return { ...retry.data, held_credits: await fetchHeldCredits() };
-          }
-        }
-
-        return { balance: 0, monthly_quota: 0, held_credits: 0, subscription_tier: 'rookie', current_period_end: null };
-      }
-
-      throw error;
+    let wallet = await readWallet();
+    if (wallet.walletFound === false) {
+      logWarn('No credit wallet found for user, initializing', { userId: user.id });
+      if (await initializeCredits()) wallet = await readWallet();
     }
 
-    if (!data) {
-      logWarn('No credit record found for user (null data), initializing', { userId: user.id });
-      const initialized = await initializeCredits();
-
-      if (initialized) {
-        const retry = await safe.select(async () =>
-          await safe.client
-            .from('user_credits')
-            .select('balance, monthly_quota, subscription_tier, current_period_end')
-            .eq('user_id', user.id)
-            .maybeSingle()
-        );
-
-          if (retry.data) {
-            return { ...retry.data, held_credits: await fetchHeldCredits() };
-        }
-      }
-
-      return { balance: 0, monthly_quota: 0, held_credits: 0, subscription_tier: 'rookie', current_period_end: null };
-    }
-
-    return { ...data, held_credits: await fetchHeldCredits() };
+    return {
+      balance: Number(wallet.persistentBalance ?? 0),
+      monthly_quota: Number(wallet.monthlyQuotaRemaining ?? 0),
+      held_credits: Number(wallet.heldCredits ?? 0),
+      total_available: Number(wallet.totalAvailable ?? 0),
+      subscription_tier: wallet.subscriptionTier ?? 'rookie',
+      current_period_end: wallet.currentPeriodEnd ?? null,
+    };
   };
 
   const creditsQuery = useQuery({
@@ -150,6 +115,7 @@ export function useCredits() {
     balance: 0,
     monthly_quota: 0,
     held_credits: 0,
+    total_available: 0,
     subscription_tier: 'rookie',
     current_period_end: null,
   };
@@ -174,21 +140,26 @@ export function useCredits() {
   const updateBalanceCache = (updater: (prev: CreditBalance) => CreditBalance) => {
     if (!user?.id) return;
     queryClient.setQueryData<CreditBalance>(['credits', user.id], (prev) => {
-      const current = prev ?? { balance: 0, monthly_quota: 0, held_credits: 0, subscription_tier: 'rookie', current_period_end: null };
+      const current = prev ?? { balance: 0, monthly_quota: 0, held_credits: 0, total_available: 0, subscription_tier: 'rookie', current_period_end: null };
       return updater(current);
     });
   };
 
   const hasCredits = (requiredAmount: number): boolean => {
-    const totalAvailable = (balanceData.balance || 0) + (balanceData.monthly_quota || 0);
-    return totalAvailable >= requiredAmount;
+    return balanceData.total_available >= requiredAmount;
   };
 
   const handleCreditDeduction = (amount: number) => {
-    updateBalanceCache((prev) => ({
-      ...prev,
-      balance: Math.max(0, (prev.balance || 0) - amount),
-    }));
+    updateBalanceCache((prev) => {
+      const usedFromQuota = Math.min(prev.monthly_quota, amount);
+      const usedFromBalance = Math.max(0, amount - usedFromQuota);
+      return {
+        ...prev,
+        monthly_quota: prev.monthly_quota - usedFromQuota,
+        balance: Math.max(0, prev.balance - usedFromBalance),
+        total_available: Math.max(0, prev.total_available - amount),
+      };
+    });
   };
 
   const addCredits = async (amount: number, reason: string = 'Credit purchase'): Promise<boolean> => {
@@ -218,6 +189,7 @@ export function useCredits() {
         updateBalanceCache((prev) => ({
           ...prev,
           balance: Number(data.newBalance ?? prev.balance ?? 0),
+          total_available: Number(data.newBalance ?? prev.balance ?? 0) + prev.monthly_quota,
         }));
         toast.success(`${amount} credits added to your account!`);
         return true;
@@ -260,7 +232,7 @@ export function useCredits() {
     balance: balanceData.balance ?? 0,
     monthlyQuota: balanceData.monthly_quota ?? 0,
     heldCredits: balanceData.held_credits ?? 0,
-    totalAvailable: (balanceData.balance ?? 0) + (balanceData.monthly_quota ?? 0),
+    totalAvailable: balanceData.total_available ?? 0,
     subscriptionTier: balanceData.subscription_tier ?? 'rookie',
     currentPeriodEnd: balanceData.current_period_end ?? null,
     loading,

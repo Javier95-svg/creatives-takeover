@@ -58,7 +58,17 @@ serve(async (req) => {
       logStep("Pro override account detected - granting pro tier", { email: user.email });
       const proTier = 'pro';
       const proCredits = PLAN_MONTHLY_CREDITS.pro;
-      const proBillingWindow = resolveMonthlyBillingWindow(new Date().toISOString());
+
+      // Preserve the original billing anchor. Re-anchoring to every page visit
+      // would slide the renewal date forward and prevent a real monthly reset.
+      const { data: creditRow } = await supabaseService
+        .from("user_credits")
+        .select("balance, monthly_quota, billing_anchor_at, current_period_start, current_period_end")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const proBillingWindow = resolveMonthlyBillingWindow(
+        creditRow?.billing_anchor_at ?? creditRow?.current_period_start ?? new Date().toISOString()
+      );
 
       // Update subscribers table
       await supabaseService.from("subscribers").upsert({
@@ -74,23 +84,21 @@ serve(async (req) => {
         updated_at: new Date().toISOString(),
       }, { onConflict: 'email' });
 
-      // Fetch current credits to avoid reducing balances
-      const { data: creditRow } = await supabaseService
-        .from("user_credits")
-        .select("balance, monthly_quota")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      const nextBalance = Math.max(creditRow?.balance ?? 0, proCredits);
-      const nextQuota = Math.max(creditRow?.monthly_quota ?? 0, proCredits);
+      // Preserve only persistent purchased/bonus credits. Plan credits live in
+      // monthly_quota and are replaced only after the billing boundary.
+      const currentBalance = Number(creditRow?.balance ?? 0);
+      const currentQuota = Number(creditRow?.monthly_quota ?? 0);
+      const crossedBillingBoundary = !creditRow?.current_period_end
+        || new Date(creditRow.current_period_end).getTime() <= Date.now();
+      const nextQuota = creditRow ? (crossedBillingBoundary ? proCredits : currentQuota) : proCredits;
 
       // Update user_credits table (tier + credits)
       await supabaseService.from("user_credits").upsert({
         user_id: user.id,
         subscription_tier: proTier,
-        balance: nextBalance,
+        balance: currentBalance,
         monthly_quota: nextQuota,
-        last_credit_grant: new Date().toISOString(),
+        last_credit_grant: crossedBillingBoundary ? new Date().toISOString() : undefined,
         billing_anchor_at: proBillingWindow.anchorAt.toISOString(),
         current_period_start: proBillingWindow.periodStart.toISOString(),
         current_period_end: proBillingWindow.periodEnd.toISOString(),
@@ -217,7 +225,6 @@ serve(async (req) => {
     // Update user_credits table with subscription tier
     await supabaseService.from("user_credits").upsert({
       user_id: user.id,
-      subscription_tier: subscriptionTier,
       billing_anchor_at: monthlyBillingWindow.anchorAt.toISOString(),
       current_period_start: monthlyBillingWindow.periodStart.toISOString(),
       current_period_end: monthlyBillingWindow.periodEnd.toISOString(),

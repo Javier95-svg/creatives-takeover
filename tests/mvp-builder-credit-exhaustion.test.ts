@@ -79,10 +79,12 @@ test('reservation lifecycle emits success and release events for chat and code a
 
 test('held credits appear in the shared wallet and builder processing state', () => {
   const credits = readFileSync(new URL('../src/hooks/useCredits.ts', import.meta.url), 'utf8');
+  const wallet = readFileSync(new URL('../supabase/migrations/20260715120000_credit_wallet_non_rollover_v1.sql', import.meta.url), 'utf8');
   const display = readFileSync(new URL('../src/components/CreditDisplay.tsx', import.meta.url), 'utf8');
   const builder = readFileSync(new URL('../src/components/mvp-builder/MVPBuilder.tsx', import.meta.url), 'utf8');
 
-  assert.match(credits, /get_mvp_builder_held_credits/);
+  assert.match(credits, /get_credit_wallet_v1/);
+  assert.match(wallet, /get_mvp_builder_held_credits/);
   assert.match(credits, /heldCredits/);
   assert.match(display, /Temporarily Held/);
   assert.match(builder, /credits held while MVP Builder works/);
