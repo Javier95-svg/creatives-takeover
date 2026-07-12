@@ -43,12 +43,13 @@ import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useDeviceType } from "@/hooks/use-device-type";
 import { useHapticFeedback } from "@/hooks/useHapticFeedback";
-import { logError } from "@/lib/logger";
+import { logError, logInfo } from "@/lib/logger";
 import { TypingIndicator } from "./TypingIndicator";
 import { MessageReactions } from "./MessageReactions";
 import { usePresence } from "@/hooks/usePresence";
 import { Link, useSearchParams } from "react-router-dom";
 import { useMessageComposer } from "@/hooks/messaging/useMessageComposer";
+import { captureEvent } from "@/lib/analytics";
 
 interface MessagingInterfaceProps {
   initialConversationId?: string;
@@ -75,6 +76,68 @@ type TypingBroadcastPayload = {
 const QUICK_REACTIONS = ['❤️', '👍', '😂', '😮', '😢', '🙏', '🔥', '👏', '🎉', '🤔', '👀', '💯'] as const;
 const LONG_PRESS_MS = 320;
 
+const LazyMessageImage = ({
+  attachment,
+  isOwnMessage,
+  onMeasure,
+  getSignedUrl,
+}: {
+  attachment: NonNullable<Message['attachment_rows']>[number];
+  isOwnMessage: boolean;
+  onMeasure: () => void;
+  getSignedUrl: (storagePath: string) => Promise<string | null>;
+}) => {
+  const [signedUrl, setSignedUrl] = useState<string | null>(attachment.signed_url || null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    if (signedUrl || !attachment.storage_path) return;
+    let active = true;
+    void getSignedUrl(attachment.storage_path).then((url) => {
+      if (!active) return;
+      setSignedUrl(url);
+      setFailed(!url);
+      onMeasure();
+    });
+    return () => { active = false; };
+  }, [attachment.storage_path, getSignedUrl, onMeasure, signedUrl]);
+
+  if (!signedUrl) {
+    return (
+      <div className={`flex min-h-20 w-full max-w-sm items-center justify-center rounded-lg border text-xs ${
+        isOwnMessage ? 'border-primary-foreground/20 bg-primary-foreground/10' : 'border-border/60 bg-background/70'
+      }`} role="status">
+        {failed ? <ImageIcon className="h-5 w-5 opacity-60" /> : <Loader2 className="h-5 w-5 animate-spin opacity-60" />}
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={(event) => {
+        event.stopPropagation();
+        window.open(signedUrl, '_blank', 'noopener,noreferrer');
+      }}
+      className={`block overflow-hidden rounded-lg border transition-colors ${
+        isOwnMessage
+          ? 'border-primary-foreground/20 bg-primary-foreground/10 hover:bg-primary-foreground/15'
+          : 'border-border/60 bg-background/70 hover:bg-background'
+      }`}
+      aria-label={`Open ${attachment.file_name}`}
+    >
+      <img
+        src={signedUrl}
+        alt={attachment.file_name}
+        className="max-h-80 w-full max-w-sm object-contain"
+        loading="lazy"
+        onLoad={onMeasure}
+        onError={onMeasure}
+      />
+    </button>
+  );
+};
+
 export const MessagingInterface = ({ initialConversationId }: MessagingInterfaceProps) => {
   const { user } = useAuth();
   const deviceType = useDeviceType();
@@ -98,6 +161,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     retryFailedMessage,
     discardFailedMessage,
     loadMessages,
+    prefetchConversation,
     deleteMessage,
     markAsRead,
     getUnreadCount,
@@ -146,6 +210,8 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const [online, setOnline] = useState(() => typeof navigator === 'undefined' || navigator.onLine);
   const [searchParams, setSearchParams] = useSearchParams();
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const selectionStartedAtRef = useRef<Record<string, number>>({});
+  const lastReadMessageKeyRef = useRef<string | null>(null);
   const { trigger: triggerHaptic } = useHapticFeedback();
   const { quote, refreshQuote } = useMessageComposer(activeConversationId);
 
@@ -256,24 +322,48 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     }
   }, [initialConversationId, conversations, loading, setActiveConversationId]);
 
-  // Mark messages as read when conversation is opened
+  // Mark read only after the first page is visible. Conversation selection used
+  // to issue the same mutation twice and compete with the blocking page read.
   useEffect(() => {
-    if (activeConversationId) {
-      void markAsRead(activeConversationId);
-      // Focus input when conversation is active and ready, without scrolling
-      setTimeout(() => {
-        if (inputRef.current) {
-          // Store current scroll position
-          const scrollY = window.scrollY;
-          inputRef.current.focus({ preventScroll: true });
-          // Restore scroll position if it changed
-          if (window.scrollY !== scrollY) {
-            window.scrollTo(0, scrollY);
-          }
-        }
-      }, 100);
+    if (activeConversationId && activeMessages.length > 0) {
+      const readKey = `${activeConversationId}:${lastMessage?.id || 'page'}`;
+      if (lastReadMessageKeyRef.current !== readKey) {
+        lastReadMessageKeyRef.current = readKey;
+        void markAsRead(activeConversationId);
+      }
     }
-  }, [activeConversationId, markAsRead]);
+  }, [activeConversationId, activeMessages.length, lastMessage?.id, markAsRead]);
+
+  useEffect(() => {
+    if (!activeConversationId) return;
+    const timeoutId = window.setTimeout(() => {
+      if (inputRef.current) {
+        const scrollY = window.scrollY;
+        inputRef.current.focus({ preventScroll: true });
+        if (window.scrollY !== scrollY) {
+          window.scrollTo(0, scrollY);
+        }
+      }
+    }, 100);
+    return () => window.clearTimeout(timeoutId);
+  }, [activeConversationId]);
+
+  useEffect(() => {
+    if (!activeConversationId || activeMessages.length === 0) return;
+    const startedAt = selectionStartedAtRef.current[activeConversationId];
+    if (startedAt === undefined) return;
+    const durationMs = Math.round(performance.now() - startedAt);
+    delete selectionStartedAtRef.current[activeConversationId];
+    logInfo('messages:conversation-rendered', { conversationId: activeConversationId, durationMs });
+    captureEvent('messages_conversation_rendered', {
+      duration_ms: durationMs,
+      message_count: activeMessages.length,
+      cache_state: durationMs < 100 ? 'warm' : 'cold'
+    });
+    window.dispatchEvent(new CustomEvent('messages:conversation-rendered', {
+      detail: { conversationId: activeConversationId, durationMs }
+    }));
+  }, [activeConversationId, activeMessages.length]);
 
   // Auto-resize textarea as user types
   useEffect(() => {
@@ -355,54 +445,11 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     };
   }, []);
 
-  // Load and subscribe to reactions for active conversation
+  // The message-page RPC already includes reaction_rows. Realtime patches that
+  // seed directly; opening a conversation no longer performs another query.
   useEffect(() => {
     if (!activeConversationId || !currentUserId) return;
     const activeMessageIds = new Set(messageIdsKey ? messageIdsKey.split('|') : []);
-
-    const loadReactions = async () => {
-      const messageIds = messageIdsKey ? messageIdsKey.split('|') : [];
-      if (messageIds.length === 0) {
-        setMessageReactions({});
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('message_reactions')
-          .select('*')
-          .in('message_id', messageIds);
-
-        if (error) throw error;
-
-        // Group reactions by message
-        const reactionsByMessage: Record<string, MessageReaction[]> = {};
-
-        messageIds.forEach((messageId) => {
-          const msgReactions = data?.filter((reaction) => reaction.message_id === messageId) || [];
-          const groupedByEmoji: Record<string, { count: number; userReacted: boolean }> = {};
-
-          msgReactions.forEach((reaction) => {
-            if (!groupedByEmoji[reaction.emoji]) {
-              groupedByEmoji[reaction.emoji] = { count: 0, userReacted: false };
-            }
-            groupedByEmoji[reaction.emoji].count++;
-            if (reaction.user_id === currentUserId) {
-              groupedByEmoji[reaction.emoji].userReacted = true;
-            }
-          });
-
-          reactionsByMessage[messageId] = Object.entries(groupedByEmoji).map(([emoji, data]) => ({
-            emoji,
-            ...data
-          }));
-        });
-
-        setMessageReactions(reactionsByMessage);
-      } catch (error) {
-        logError('Error loading reactions', error);
-      }
-    };
 
     const initialReactions: Record<string, MessageReaction[]> = {};
     activeMessages.forEach((message) => {
@@ -414,7 +461,13 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
       });
       initialReactions[message.id] = Object.entries(grouped).map(([emoji, value]) => ({ emoji, ...value }));
     });
-    setMessageReactions(initialReactions);
+    setMessageReactions((previous) => {
+      const seeded = { ...previous };
+      Object.entries(initialReactions).forEach(([messageId, reactions]) => {
+        if (!seeded[messageId]) seeded[messageId] = reactions;
+      });
+      return seeded;
+    });
 
     // Subscribe to reaction changes
     const channel = supabase
@@ -424,15 +477,33 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
         schema: 'public',
         table: 'message_reactions'
       }, (payload) => {
-        const changedMessageId =
-          (payload.new as { message_id?: string } | null)?.message_id ||
-          (payload.old as { message_id?: string } | null)?.message_id;
+        const row = (payload.eventType === 'DELETE' ? payload.old : payload.new) as {
+          message_id?: string;
+          emoji?: string;
+          user_id?: string;
+        } | null;
+        const changedMessageId = row?.message_id;
 
-        if (!changedMessageId || !activeMessageIds.has(changedMessageId)) {
+        if (!changedMessageId || !row?.emoji || !row.user_id || !activeMessageIds.has(changedMessageId)) {
           return;
         }
-
-        void loadReactions();
+        setMessageReactions((previous) => {
+          const entries = previous[changedMessageId] || [];
+          const existing = entries.find((entry) => entry.emoji === row.emoji);
+          const isCurrentUser = row.user_id === currentUserId;
+          const next = payload.eventType === 'DELETE'
+            ? entries
+                .map((entry) => entry.emoji === row.emoji
+                  ? { ...entry, count: Math.max(0, entry.count - 1), userReacted: isCurrentUser ? false : entry.userReacted }
+                  : entry)
+                .filter((entry) => entry.count > 0)
+            : existing
+              ? entries.map((entry) => entry.emoji === row.emoji
+                  ? { ...entry, count: entry.count + 1, userReacted: entry.userReacted || isCurrentUser }
+                  : entry)
+              : [...entries, { emoji: row.emoji, count: 1, userReacted: isCurrentUser }];
+          return { ...previous, [changedMessageId]: next };
+        });
       })
       .subscribe();
 
@@ -621,12 +692,13 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     const linkedUserIds = Array.from(new Set([user.id, ...participantIds]));
     if (linkedUserIds.length === 0) return;
 
-    void supabase
-      .from('mentors')
-      .select('user_id, name, picture')
-      .in('user_id', linkedUserIds)
-      .eq('is_active', true)
-      .then(({ data, error }) => {
+    const timeoutId = window.setTimeout(() => {
+      void supabase
+        .from('mentors')
+        .select('user_id, name, picture')
+        .in('user_id', linkedUserIds)
+        .eq('is_active', true)
+        .then(({ data, error }) => {
         if (error) {
           logError('Error loading linked mentor identities for messages', error);
           return;
@@ -642,8 +714,10 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
             mentor_slug: null
           };
         });
-        setMentorProfiles(linkedMentors);
-      });
+          setMentorProfiles(linkedMentors);
+        });
+    }, 150);
+    return () => window.clearTimeout(timeoutId);
   }, [participantIds, user]);
 
   const getConversationName = (conversation: Conversation): string => {
@@ -703,11 +777,12 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
       setDrafts((current) => ({ ...current, [activeConversationId]: newMessage }));
     }
     setNewMessage(drafts[conversationId] || '');
+    selectionStartedAtRef.current[conversationId] = performance.now();
+    lastReadMessageKeyRef.current = null;
     setActiveConversationId(conversationId);
     const next = new URLSearchParams(searchParams);
     next.set('conversationId', conversationId);
     setSearchParams(next, { replace: true });
-    void markAsRead(conversationId);
   };
 
   const handleMobileBack = () => {
@@ -958,31 +1033,15 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
           const isImage = attachment.mime_type.startsWith('image/');
           const attachmentKey = `${message.id}-${attachment.storage_path || attachment.file_name}-${index}`;
 
-          if (isImage && attachment.signed_url) {
+          if (isImage) {
             return (
-              <button
+              <LazyMessageImage
                 key={attachmentKey}
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  void handleAttachmentOpen(attachment.storage_path);
-                }}
-                className={`block overflow-hidden rounded-lg border transition-colors ${
-                  isOwnMessage
-                    ? 'border-primary-foreground/20 bg-primary-foreground/10 hover:bg-primary-foreground/15'
-                    : 'border-border/60 bg-background/70 hover:bg-background'
-                }`}
-                aria-label={`Open ${attachment.file_name}`}
-              >
-                <img
-                  src={attachment.signed_url}
-                  alt={attachment.file_name}
-                  className="max-h-80 w-full max-w-sm object-contain"
-                  loading="lazy"
-                  onLoad={() => messageVirtualizer.measure()}
-                  onError={() => messageVirtualizer.measure()}
-                />
-              </button>
+                attachment={attachment}
+                isOwnMessage={isOwnMessage}
+                onMeasure={messageVirtualizer.measure}
+                getSignedUrl={getAttachmentSignedUrl}
+              />
             );
           }
 
@@ -1421,6 +1480,9 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                     variant={activeConversationId === conversation.id ? "secondary" : "ghost"}
                     className="w-full justify-start p-3 h-auto min-h-[44px] touch-manipulation"
                     onClick={() => onSelect(conversation.id)}
+                    onMouseEnter={() => void prefetchConversation(conversation.id)}
+                    onFocus={() => void prefetchConversation(conversation.id)}
+                    onPointerDown={() => void prefetchConversation(conversation.id)}
                   >
                     <div className="flex items-center gap-3 w-full">
                       <div className="relative">
@@ -1615,6 +1677,13 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 
 	            {/* Messages */}
 	            <div ref={scrollViewportRef} className="flex-1 overflow-y-auto p-3 md:p-4">
+	              {activePageState?.loadingInitial && activeMessages.length === 0 && (
+	                <div className="space-y-3" role="status" aria-label="Loading messages">
+	                  {[0, 1, 2, 3].map((item) => (
+	                    <div key={item} className={`h-12 animate-pulse rounded-2xl bg-muted/70 ${item % 2 ? 'ml-auto w-2/3' : 'w-3/4'}`} />
+	                  ))}
+	                </div>
+	              )}
 	              <div className="mb-3 flex justify-center">
 	                {activePageState?.hasMore ? (
 	                  <Button

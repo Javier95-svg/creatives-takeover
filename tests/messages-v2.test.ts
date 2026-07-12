@@ -4,9 +4,11 @@ import test from 'node:test';
 
 const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 const migration = read('supabase/migrations/20260714120000_messages_reliability_safety_v2.sql');
+const performanceMigration = read('supabase/migrations/20260715130000_messages_loading_performance.sql');
 const messagingHook = read('src/hooks/useMessaging.ts');
 const interfaceSource = read('src/components/social/MessagingInterface.tsx');
 const pageSource = read('src/pages/Messages.tsx');
+const messagingService = read('src/lib/messagingV2.ts');
 
 test('messaging V2 exposes the consolidated authenticated contracts', () => {
   for (const contract of [
@@ -80,4 +82,35 @@ test('messages renders as a focused inbox workspace', () => {
   assert.match(interfaceSource, /Hide conversation\?/);
   assert.match(interfaceSource, /<ScrollArea className="min-h-0 flex-1">/);
   assert.match(interfaceSource, /flex h-full min-h-0 flex-shrink-0 flex-col overflow-hidden border-r/);
+});
+
+test('conversation selection renders from a cached 30-message page before attachment signing', () => {
+  assert.match(messagingHook, /const MESSAGE_PAGE_SIZE = 30/);
+  assert.match(messagingService, /p_limit: 30/);
+  assert.match(messagingHook, /queryClient\.fetchQuery/);
+  assert.match(messagingHook, /queryClient\.prefetchQuery/);
+  assert.match(messagingHook, /staleTime: 30_000/);
+  assert.match(messagingHook, /signed_url: null/);
+  assert.doesNotMatch(messagingHook, /signed_url: isImage/);
+  assert.match(interfaceSource, /LazyMessageImage/);
+  assert.match(interfaceSource, /onMouseEnter=\{\(\) => void prefetchConversation/);
+  assert.match(interfaceSource, /messages:conversation-rendered/);
+  assert.match(interfaceSource, /captureEvent\('messages_conversation_rendered'/);
+});
+
+test('conversation opening has no duplicate read or reaction fetch', () => {
+  const selectHandler = interfaceSource.match(/const handleConversationSelect[\s\S]*?\n  \};/)?.[0] || '';
+  assert.doesNotMatch(selectHandler, /markAsRead/);
+  assert.match(interfaceSource, /activeMessages\.length > 0/);
+  assert.doesNotMatch(interfaceSource, /\.from\('message_reactions'\)\s*\n\s*\.select/);
+  assert.match(interfaceSource, /reaction_rows/);
+});
+
+test('message page SQL aggregates related rows once with cursor indexes', () => {
+  assert.match(performanceMigration, /messages_conversation_cursor_v2_idx/);
+  assert.match(performanceMigration, /attachment_groups AS/);
+  assert.match(performanceMigration, /receipt_groups AS/);
+  assert.match(performanceMigration, /reaction_groups AS/);
+  assert.match(performanceMigration, /LIMIT v_limit \+ 1/);
+  assert.match(performanceMigration, /INTO v_items, v_has_more, v_oldest_cursor/);
 });

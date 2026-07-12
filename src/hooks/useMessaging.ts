@@ -7,6 +7,7 @@ import { logError, logWarn, logInfo } from '@/lib/logger';
 import { handleError, getUserMessage } from '@/lib/errors';
 import { completeActivationJourney, trackRetentionEvent } from '@/lib/retentionSystem';
 import { messagingV2 } from '@/lib/messagingV2';
+import { useQueryClient } from '@tanstack/react-query';
 
 export interface Conversation {
   id: string;
@@ -110,6 +111,7 @@ export interface SendMessageOptions {
 export interface MessagePageState {
   hasMore: boolean;
   loadingOlder: boolean;
+  loadingInitial?: boolean;
   oldestCursor?: {
     created_at: string;
     id: string;
@@ -121,7 +123,9 @@ type UseMessagingOptions = {
   suppressLoadErrors?: boolean;
 };
 
-const MESSAGE_PAGE_SIZE = 50;
+const MESSAGE_PAGE_SIZE = 30;
+const messagePageQueryKey = (userId: string, conversationId: string) =>
+  ['messages', 'page-v1', userId, conversationId] as const;
 const FAILED_MESSAGES_STORAGE_KEY = 'ct_failed_direct_messages_v1';
 const MESSAGE_ATTACHMENT_BUCKET = 'message-attachments';
 const MAX_MESSAGE_ATTACHMENT_BYTES = 10 * 1024 * 1024;
@@ -229,10 +233,9 @@ const createAttachmentSignedUrl = async (
   return data?.signedUrl || null;
 };
 
-const mapAttachmentRow = async (attachment: any): Promise<MessageAttachment> => {
+const mapAttachmentRow = (attachment: any): MessageAttachment => {
   const storagePath = attachment.storage_path;
   const mimeType = attachment.mime_type || 'application/octet-stream';
-  const isImage = mimeType.startsWith('image/');
 
   return {
     id: attachment.id,
@@ -244,13 +247,15 @@ const mapAttachmentRow = async (attachment: any): Promise<MessageAttachment> => 
     file_size: Number(attachment.file_size || 0),
     width: attachment.width,
     height: attachment.height,
-    signed_url: isImage && storagePath ? await createAttachmentSignedUrl(storagePath) : null
+    // Storage signing is deferred until a virtualized attachment is visible.
+    signed_url: null
   };
 };
 
 export const useMessaging = (options: UseMessagingOptions = {}) => {
   const { autoLoad = true, suppressLoadErrors = false } = options;
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
@@ -359,7 +364,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     const attachmentsByMessage = new Map<string, MessageAttachment[]>();
     const receiptsByMessage = new Map<string, any[]>();
 
-    const mappedAttachments = await Promise.all((attachmentData || []).map(mapAttachmentRow));
+    const mappedAttachments = (attachmentData || []).map(mapAttachmentRow);
 
     mappedAttachments.forEach((attachment) => {
       if (!attachment.message_id) return;
@@ -576,7 +581,16 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         ...prev,
         [conversationId]: {
           ...(prev[conversationId] || { hasMore: true }),
-          loadingOlder: true
+          loadingOlder: true,
+          loadingInitial: false
+        }
+      }));
+    } else {
+      setMessagePageState((prev) => ({
+        ...prev,
+        [conversationId]: {
+          ...(prev[conversationId] || { hasMore: true, loadingOlder: false }),
+          loadingInitial: !(messagesRef.current[conversationId]?.length > 0)
         }
       }));
     }
@@ -586,11 +600,20 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       let loadedMessages: Message[];
 
       try {
-        page = await messagingV2.messagePage(
-          conversationId,
-          options.before ? { createdAt: options.before.created_at, id: options.before.id } : undefined,
-          options.anchorMessageId
-        );
+        const isInitialPage = !options.before && !options.anchorMessageId && options.mode !== 'prepend';
+        page = isInitialPage && user
+          ? await queryClient.fetchQuery({
+              queryKey: messagePageQueryKey(user.id, conversationId),
+              queryFn: () => messagingV2.messagePage(conversationId),
+              staleTime: 30_000,
+              gcTime: 10 * 60_000,
+              retry: false
+            })
+          : await messagingV2.messagePage(
+              conversationId,
+              options.before ? { createdAt: options.before.created_at, id: options.before.id } : undefined,
+              options.anchorMessageId
+            );
         const rows = (page?.items || []) as any[];
         loadedMessages = await Promise.all(rows.map(async (row) => ({
           ...row,
@@ -599,7 +622,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
             full_name: row.sender.fullName || row.sender.full_name,
             avatar_url: row.sender.avatarUrl || row.sender.avatar_url
           } : undefined,
-          attachment_rows: await Promise.all((row.attachment_rows || []).map(mapAttachmentRow)),
+          attachment_rows: (row.attachment_rows || []).map(mapAttachmentRow),
           delivery_status: row.is_read ? 'read' as const : 'sent' as const
         })));
       } catch (rpcError) {
@@ -661,6 +684,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         [conversationId]: {
           hasMore: Boolean(page?.hasMore),
           loadingOlder: false,
+          loadingInitial: false,
           oldestCursor: page?.oldestCursor
             ? {
                 created_at: page.oldestCursor.createdAt,
@@ -687,12 +711,29 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         ...prev,
         [conversationId]: {
           ...(prev[conversationId] || { hasMore: true }),
-          loadingOlder: false
+          loadingOlder: false,
+          loadingInitial: false
         }
       }));
       return [];
     }
-  }, [mapMessagesWithRelatedData, user]);
+  }, [mapMessagesWithRelatedData, queryClient, user]);
+
+  const prefetchConversation = useCallback((conversationId: string) => {
+    if (!user || !conversationId) return Promise.resolve();
+    return queryClient.prefetchQuery({
+      queryKey: messagePageQueryKey(user.id, conversationId),
+      queryFn: () => messagingV2.messagePage(conversationId),
+      staleTime: 30_000,
+      gcTime: 10 * 60_000,
+      retry: false
+    });
+  }, [queryClient, user]);
+
+  useEffect(() => {
+    if (!user || activeConversationId || conversations.length === 0) return;
+    void prefetchConversation(conversations[0].id);
+  }, [activeConversationId, conversations, prefetchConversation, user]);
 
   // Load messages for active conversation and reconcile realtime events by stable IDs.
   useEffect(() => {
@@ -738,6 +779,12 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
                 source: 'messages_realtime',
               });
             }
+            if (user?.id) {
+              void queryClient.invalidateQueries({
+                queryKey: messagePageQueryKey(user.id, activeConversationId),
+                refetchType: 'none'
+              });
+            }
           }
 
           await loadUnreadCounts([activeConversationId]);
@@ -753,7 +800,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     return () => {
       void supabase.removeChannel(messageSubscription);
     };
-  }, [activeConversationId, user?.id, loadUnreadCounts, loadMessages, mapMessagesWithRelatedData]);
+  }, [activeConversationId, user?.id, loadUnreadCounts, loadMessages, mapMessagesWithRelatedData, queryClient]);
 
   const startConversation = useCallback(async (participantId: string): Promise<string | null> => {
     if (!user || loading || participantId === user.id) {
@@ -952,6 +999,10 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
           upload_progress: files.length > 0 ? 100 : undefined,
           sender: optimisticSender
         };
+        void queryClient.invalidateQueries({
+          queryKey: messagePageQueryKey(user.id, conversationId),
+          refetchType: 'none'
+        });
 
       // Replace optimistic message with persisted row and prevent duplicates if realtime already inserted it.
       setMessages(prev => {
@@ -1070,7 +1121,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     } finally {
       setSending(false);
     }
-  }, [user]);
+  }, [queryClient, user]);
 
   const retryFailedMessage = useCallback(async (
     conversationId: string,
@@ -1533,6 +1584,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     retryFailedMessage,
     discardFailedMessage,
     loadMessages,
+    prefetchConversation,
     deleteMessage,
     markAsRead,
     getUnreadCount,

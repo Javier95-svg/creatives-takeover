@@ -7,6 +7,13 @@ export const useMessageComposer = (conversationId: string | null) => {
     if (!conversationId) return setQuote(null);
     setQuote(mapQuote(await messagingV2.quote(conversationId)));
   }, [conversationId]);
-  useEffect(() => { void refreshQuote().catch(() => setQuote(null)); }, [refreshQuote]);
+  useEffect(() => {
+    // Pricing/request state is ancillary to the transcript. Let the cached
+    // message page win the network slot after conversation selection.
+    const timeoutId = window.setTimeout(() => {
+      void refreshQuote().catch(() => setQuote(null));
+    }, 150);
+    return () => window.clearTimeout(timeoutId);
+  }, [refreshQuote]);
   return { quote, refreshQuote };
 };

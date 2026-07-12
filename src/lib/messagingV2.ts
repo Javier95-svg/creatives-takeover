@@ -33,7 +33,7 @@ export const messagingV2 = {
   messagePage: (conversationId: string, before?: { createdAt: string; id: string }, anchorMessageId?: string) =>
     rpc<any>('get_message_page_v1', {
       p_conversation_id: conversationId,
-      p_limit: 50,
+      p_limit: 30,
       p_before_created_at: before?.createdAt ?? null,
       p_before_id: before?.id ?? null,
       p_anchor_message_id: anchorMessageId ?? null
