@@ -67,7 +67,7 @@ const definitions: DashboardToolDefinition[] = [
   { key: 'vc_search', label: 'VC Search', route: '/vc-search', stage: 'FUNDRAISING', icon: Search, entitlement: 'vc_search_browse', inlineActions: ['toggle_funding_bookmark', 'create_follow_up_task'] },
   { key: 'accelerator_hunt', label: 'Accelerator Hunt', route: '/accelerator-hunt', stage: 'TRACTION', icon: Rocket, entitlement: 'accelerator_browse', inlineActions: ['toggle_funding_bookmark', 'create_follow_up_task'] },
   { key: 'core_metrics', label: 'Core Metrics', route: '/core-metrics', stage: 'TRACTION', icon: BarChart3, inlineActions: ['update_kpi'] },
-  { key: 'ai_goals', label: 'AI Goals Planner', route: '/ai-goals', stage: 'MORE', icon: Brain, inlineActions: ['open_tool'] },
+  { key: 'ai_goals', label: 'Goals Planner', route: '/ai-goals', stage: 'MORE', icon: Brain, inlineActions: ['open_tool'] },
   { key: 'email_templates', label: 'Email Templates', route: '/email-templates', stage: 'LAUNCH', icon: Mail, entitlement: 'email_templates', inlineActions: ['open_tool'] },
   { key: 'prompt_library', label: 'Prompt Library', route: '/prompt-library', stage: 'MORE', icon: Library, entitlement: 'prompt_library', inlineActions: ['toggle_content_bookmark'] },
   { key: 'insighta_test', label: 'Insighta Test', route: '/insighta-test', stage: 'VALIDATING', icon: Sparkles, entitlement: 'insighta_test', inlineActions: ['open_tool'] },

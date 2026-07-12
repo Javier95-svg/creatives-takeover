@@ -239,7 +239,7 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
 };
 
 const SHARED_DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
-  { path: '/dashboard', label: 'Command Center', description: 'Daily overview', iconKey: 'home' },
+  { path: '/dashboard', label: 'Home', description: 'Daily overview', iconKey: 'home' },
   { path: '/dashboard/files', label: 'Files', description: 'Saved proof and artifacts', iconKey: 'folder_open' },
   { path: '/dashboard/tasks', label: 'Tasks', description: 'Actions and deadlines', iconKey: 'check_square' },
   { path: '/dashboard/routine', label: 'Routine', description: 'Habits and weekly rhythm', iconKey: 'repeat_2' },
