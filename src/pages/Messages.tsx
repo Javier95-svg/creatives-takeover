@@ -164,7 +164,7 @@ const Messages = () => {
         <MessagesBackground />
         <div className="relative z-10">
           <Navigation />
-          <main className="mx-auto w-full max-w-[1600px] px-0 pt-16 pb-0 md:px-4 md:pt-header-offset md:pb-4">
+          <main className="mx-auto w-full max-w-[1480px] px-0 pt-16 pb-0 md:px-4 md:pt-header-offset md:pb-4">
             <section className="overflow-hidden rounded-none border-y bg-card md:rounded-xl md:border" aria-label="Messages workspace">
               <MessagingInterface initialConversationId={resolvedConversationId} />
             </section>
@@ -183,7 +183,7 @@ const Messages = () => {
       <div className="min-h-dvh bg-background overflow-hidden">
         <div>
           <Navigation />
-          <main className="mx-auto w-full max-w-[1600px] px-0 pt-16 pb-0 md:px-4 md:pt-header-offset md:pb-4">
+          <main className="mx-auto w-full max-w-[1480px] px-0 pt-16 pb-0 md:px-4 md:pt-header-offset md:pb-4">
             <div>
               <h1 className="sr-only">Messages</h1>
               <section className="border-y md:border rounded-none md:rounded-xl bg-card overflow-hidden" aria-label="Messages workspace">

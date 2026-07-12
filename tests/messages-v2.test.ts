@@ -77,7 +77,7 @@ test('messages renders as a focused inbox workspace', () => {
   assert.match(pageSource, /VITE_MESSAGES_INBOX_V2_ENABLED/);
   assert.doesNotMatch(pageSource, /Chat Room/);
   assert.doesNotMatch(pageSource, /<Footer/);
-  assert.match(pageSource, /max-w-\[1600px\]/);
+  assert.match(pageSource, /max-w-\[1480px\]/);
   assert.match(pageSource, /aria-label="Messages workspace"/);
   assert.doesNotMatch(interfaceSource, /> New message</);
   assert.match(interfaceSource, /text-center text-lg font-semibold text-foreground">Chats<\/h2>/);
