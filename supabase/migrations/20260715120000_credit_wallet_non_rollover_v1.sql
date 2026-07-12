@@ -3,7 +3,8 @@
 -- monthly_quota: remaining plan credits in the current billing period. It is
 -- replaced (never added) at a real billing boundary.
 -- balance: persistent credits purchased or explicitly granted outside the plan.
--- total_available: monthly_quota + balance - active holds.
+-- total_available: monthly_quota + balance. Active holds have already been
+-- removed from those pools and are returned separately for visibility.
 
 CREATE TABLE IF NOT EXISTS public.credit_wallet_reconciliation_audit (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
