@@ -1273,7 +1273,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   // Conversation list renderer (reusable for desktop and mobile)
   const renderConversationList = (onSelect: (id: string) => void) => (
     <>
-      <div className="space-y-3 border-b p-4">
+      <div className="flex-none space-y-3 border-b p-4">
         <div className="flex items-center justify-between gap-2">
           <h2 className="font-semibold text-lg">Messages</h2>
           <Button type="button" size="sm" className="min-h-[44px] gap-2" onClick={() => setNewMessageOpen(true)}>
@@ -1342,7 +1342,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
         </div>
       </div>
       
-      <ScrollArea className={isMobile ? "h-[calc(var(--vh,1vh)*100-120px)]" : "h-[calc(600px-80px)]"}>
+      <ScrollArea className="min-h-0 flex-1">
         {messageSearchQuery.trim() ? (
           <div className="p-2">
             {searchLoading ? (
@@ -1487,23 +1487,23 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   );
 
   return (
-    <div className={`responsive-messaging-shell relative flex ${isMobile ? 'flex-col' : ''} h-[calc(100dvh-4rem)] md:h-[calc(100dvh-6rem)] min-h-[32rem] bg-card`}>
+    <div className={`responsive-messaging-shell relative flex ${isMobile ? 'flex-col' : ''} h-[calc(100dvh-4rem)] md:h-[calc(100dvh-6rem)] min-h-[32rem] overflow-hidden bg-card`}>
       {!online && <div className="absolute inset-x-0 top-0 z-30 bg-warning px-3 py-2 text-center text-xs font-medium text-warning-foreground" role="status">You are offline. Drafts are preserved and failed messages can be retried when you reconnect.</div>}
       {/* Desktop & Tablet Conversations List */}
       {!isMobile && (
-        <div className={`${isTablet ? 'w-64' : 'w-80'} border-r bg-card/50 flex-shrink-0`}>
+        <div className={`${isTablet ? 'w-64' : 'w-80'} flex h-full min-h-0 flex-shrink-0 flex-col overflow-hidden border-r bg-card/50`}>
           {renderConversationList(handleConversationSelect)}
         </div>
       )}
 
       {isMobile && !activeConversationId && (
-        <div className="h-full w-full bg-card/50">
+        <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-card/50">
           {renderConversationList(handleConversationSelect)}
         </div>
       )}
 
       {/* Chat Interface */}
-      <div className={`${isMobile && !activeConversationId ? 'hidden' : 'flex'} flex-1 flex-col min-w-0`}>
+      <div className={`${isMobile && !activeConversationId ? 'hidden' : 'flex'} min-h-0 min-w-0 flex-1 flex-col overflow-hidden`}>
         {activeConversationId ? (
           <>
             {/* Chat Header */}

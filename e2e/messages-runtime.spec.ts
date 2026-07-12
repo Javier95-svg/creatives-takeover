@@ -1,9 +1,9 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 const encode = (value: Record<string, unknown>) =>
   Buffer.from(JSON.stringify(value)).toString('base64url');
 
-test('authenticated messages route survives unavailable V2 RPCs', async ({ page }) => {
+const authenticate = async (page: Page) => {
   const now = Math.floor(Date.now() / 1000);
   const userId = '11111111-1111-4111-8111-111111111111';
   const accessToken = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({
@@ -36,6 +36,10 @@ test('authenticated messages route survives unavailable V2 RPCs', async ({ page 
       },
     },
   });
+};
+
+test('authenticated messages route survives unavailable V2 RPCs', async ({ page }) => {
+  await authenticate(page);
 
   await page.route('**/rest/v1/rpc/get_inbox_v1*', (route) =>
     route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ message: 'RPC unavailable' }) })
@@ -50,4 +54,60 @@ test('authenticated messages route survives unavailable V2 RPCs', async ({ page 
   await expect(page.getByText('Something went wrong')).toHaveCount(0);
   await expect(page.getByText('Failed to load conversations. Please refresh the page.')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Messages', exact: true })).toBeVisible();
+});
+
+test('long inbox stays within the messages workspace frame', async ({ page }) => {
+  await authenticate(page);
+  const currentUserId = '11111111-1111-4111-8111-111111111111';
+  const items = Array.from({ length: 14 }, (_, index) => {
+    const suffix = String(index + 1).padStart(12, '0');
+    const otherUserId = `22222222-2222-4222-8222-${suffix}`;
+    return {
+      id: `33333333-3333-4333-8333-${suffix}`,
+      participants: [currentUserId, otherUserId],
+      otherUser: { id: otherUserId, fullName: `Founder ${index + 1}`, username: `founder${index + 1}`, avatarUrl: null },
+      lastMessageAt: new Date(Date.now() - index * 60_000).toISOString(),
+      lastMessagePreview: `Conversation preview ${index + 1}`,
+      unreadCount: 0,
+      requestStatus: 'accepted',
+      pinnedAt: null,
+      mutedUntil: null,
+      archivedAt: null,
+      hiddenAt: null,
+    };
+  });
+
+  await page.route('**/rest/v1/rpc/get_inbox_v1*', async (route) => {
+    const body = route.request().postDataJSON() as { p_section?: string } | null;
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(body?.p_section === 'inbox' ? { items, nextCursor: null } : { items: [], nextCursor: null }),
+    });
+  });
+  await page.route('**/rest/v1/user_presence*', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+  );
+
+  await page.setViewportSize({ width: 1661, height: 765 });
+  await page.goto('/messages');
+  const workspace = page.locator('[aria-label="Messages workspace"], main .max-w-6xl').first();
+  const lastFounder = page.getByText('Founder 14', { exact: true });
+  await expect(workspace).toBeVisible();
+  await expect(lastFounder).toHaveCount(1);
+  const sidebar = workspace.locator('.w-80').first();
+  const scrollArea = sidebar.locator('.min-h-0.flex-1').first();
+  await expect(sidebar).toHaveCSS('overflow', 'hidden');
+  const layout = await scrollArea.evaluate((element) => {
+    const viewport = element.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+    const sidebarElement = element.parentElement as HTMLElement;
+    const workspaceElement = sidebarElement.closest('[aria-label="Messages workspace"], main .max-w-6xl') as HTMLElement;
+    return {
+      isScrollable: viewport.scrollHeight > viewport.clientHeight,
+      sidebarBottom: sidebarElement.getBoundingClientRect().bottom,
+      workspaceBottom: workspaceElement.getBoundingClientRect().bottom,
+    };
+  });
+  expect(layout.isScrollable).toBe(true);
+  expect(layout.sidebarBottom).toBeLessThanOrEqual(layout.workspaceBottom + 1);
 });

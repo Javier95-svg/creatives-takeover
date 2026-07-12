@@ -72,4 +72,6 @@ test('messages renders as a focused inbox workspace', () => {
   assert.match(interfaceSource, /first mentor message is free/i);
   assert.match(interfaceSource, /This message costs/);
   assert.match(interfaceSource, /Hide conversation\?/);
+  assert.match(interfaceSource, /<ScrollArea className="min-h-0 flex-1">/);
+  assert.match(interfaceSource, /flex h-full min-h-0 flex-shrink-0 flex-col overflow-hidden border-r/);
 });
