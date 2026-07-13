@@ -37,6 +37,7 @@ import {
   type TractionRetentionInput,
 } from '@/lib/tractionEngine';
 import { consumeGTMTractionHandoff } from '@/lib/gtmTractionHandoff';
+import { exportTractionReportPdf } from '@/lib/tractionReport';
 import {
   Activity,
   AlertTriangle,
@@ -226,6 +227,14 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
   const [recentLogs, setRecentLogs] = useState<WeeklyLogRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [platformSnapshot, setPlatformSnapshot] = useState<{
+    newUsers: number;
+    sevenDay: number;
+    thirtyDay: number;
+    totalVisitors: number;
+    trackedSince: string | null;
+  } | null>(null);
+  const [benchmarks, setBenchmarks] = useState<{ cohortUsers: number; p25: number; p50: number; p75: number } | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = (searchParams.get('step') as TractionTab) ?? 'sprint';
   const setActiveTab = (tab: TractionTab) =>
@@ -315,6 +324,74 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
     trackTractionOpened();
     trackToolOpened('traction_engine');
   }, []);
+
+  // Autofill the retention snapshot from platform-verified visits to the
+  // founder's published MVP Builder sites. Only fills pristine (all-zero)
+  // fields — a founder's manual numbers are never overwritten — and the
+  // snapshot stays fully editable.
+  useEffect(() => {
+    if (!userId) return;
+    let active = true;
+    const loadPlatformSnapshot = async () => {
+      const { data, error } = await supabase.rpc('get_mvp_retention_snapshot' as never);
+      if (!active || error || !data) return;
+      const row = (Array.isArray(data) ? data[0] : data) as {
+        new_users_week: number | null;
+        seven_day_active: number | null;
+        thirty_day_active: number | null;
+        total_visitors: number | null;
+        tracked_since: string | null;
+      } | null;
+      if (!row || !row.total_visitors) return;
+      const snapshot = {
+        newUsers: row.new_users_week ?? 0,
+        sevenDay: row.seven_day_active ?? 0,
+        thirtyDay: row.thirty_day_active ?? 0,
+        totalVisitors: row.total_visitors,
+        trackedSince: row.tracked_since,
+      };
+      setPlatformSnapshot(snapshot);
+      setRetention((current) => {
+        const pristine =
+          current.newUsers === 0 && current.sevenDayActiveUsers === 0 && current.thirtyDayActiveUsers === 0;
+        if (!pristine) return current;
+        return {
+          ...current,
+          newUsers: snapshot.newUsers,
+          sevenDayActiveUsers: snapshot.sevenDay,
+          thirtyDayActiveUsers: snapshot.thirtyDay,
+        };
+      });
+    };
+    void loadPlatformSnapshot();
+    return () => {
+      active = false;
+    };
+  }, [userId]);
+
+  // Cross-founder benchmark for the selected product category. The RPC returns
+  // nothing until the anonymized cohort has 10+ founders, so this quietly stays
+  // hidden until the data justifies showing it.
+  useEffect(() => {
+    if (!userId || !retention.productCategory) return;
+    let active = true;
+    void supabase
+      .rpc('get_traction_category_benchmarks' as never, { p_category: retention.productCategory } as never)
+      .then(({ data }) => {
+        if (!active) return;
+        const row = (Array.isArray(data) ? data[0] : data) as
+          | { cohort_users: number; p25: number; p50: number; p75: number }
+          | null;
+        setBenchmarks(
+          row && row.cohort_users >= 10
+            ? { cohortUsers: row.cohort_users, p25: Number(row.p25), p50: Number(row.p50), p75: Number(row.p75) }
+            : null,
+        );
+      });
+    return () => {
+      active = false;
+    };
+  }, [userId, retention.productCategory]);
 
   // Consume a GTM Strategist channel handoff: the recommended channel arrives
   // as a pre-filled experiment so the plan becomes a measured sprint without
@@ -457,6 +534,15 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         phase_seven_ready: score.phaseSevenReady,
         score_breakdown: {
           experimentScores: score.experimentScores,
+          // 'platform' only when the saved numbers still match the verified
+          // autofill exactly — an edited snapshot downgrades to self-reported.
+          retentionSource:
+            platformSnapshot &&
+            retention.newUsers === platformSnapshot.newUsers &&
+            retention.sevenDayActiveUsers === platformSnapshot.sevenDay &&
+            retention.thirtyDayActiveUsers === platformSnapshot.thirtyDay
+              ? 'platform'
+              : 'manual',
         },
       };
 
@@ -826,6 +912,17 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                 <Badge variant="outline" className="shrink-0 text-xs text-muted-foreground">Step 2 of 4</Badge>
               </div>
               <CardDescription>Enter numbers from your product analytics or email tool. Distribution only counts when the users it brings come back.</CardDescription>
+              {platformSnapshot && (
+                <div className="mt-2 flex items-start gap-2 rounded-md border border-success/30 bg-success/5 px-3 py-2 text-xs text-success">
+                  <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                  <span>
+                    Auto-filled from your published MVP — {platformSnapshot.totalVisitors} visitor
+                    {platformSnapshot.totalVisitors === 1 ? '' : 's'} tracked
+                    {platformSnapshot.trackedSince ? ` since ${platformSnapshot.trackedSince}` : ''}. Verified by the
+                    platform; numbers stay editable.
+                  </span>
+                </div>
+              )}
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
               <Field label="New Users This Week">
@@ -905,9 +1002,27 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                   <Clock className="h-5 w-5 text-primary" />
                   Recent Weeks
                 </CardTitle>
-                <Badge variant="outline" className="shrink-0 text-xs text-muted-foreground">Step 3 of 4</Badge>
+                <div className="flex items-center gap-2">
+                  {recentLogs.length > 0 && userId && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={() => {
+                        void exportTractionReportPdf(userId).catch((error) =>
+                          toast.error(error instanceof Error ? error.message : 'Export failed.'),
+                        );
+                      }}
+                    >
+                      <LineChart className="h-3.5 w-3.5" />
+                      Export investor report
+                    </Button>
+                  )}
+                  <Badge variant="outline" className="shrink-0 text-xs text-muted-foreground">Step 3 of 4</Badge>
+                </div>
               </div>
-              <CardDescription>{loading ? 'Loading history...' : 'Your latest saved traction scorecards.'}</CardDescription>
+              <CardDescription>{loading ? 'Loading history...' : 'Your latest saved traction scorecards. The investor report exports your full ledger with platform-verified badges.'}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {recentLogs.length === 0 ? (
@@ -958,6 +1073,24 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
               <ScoreStat label="Channel Efficiency" value={score.channelEfficiencyScore} />
               <ScoreStat label="Experiment Quality" value={score.experimentQualityScore} />
               <ScoreStat label="Retention Health" value={score.retentionHealthScore} />
+              {benchmarks && (
+                <div className="rounded-lg border border-info/25 bg-info/5 p-4">
+                  <p className="text-sm font-semibold">
+                    {PRODUCT_CATEGORY_LABELS[retention.productCategory]} cohort benchmark
+                  </p>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    Across {benchmarks.cohortUsers} founders in your category (last 6 months): median weekly score{' '}
+                    <span className="font-semibold text-foreground">{benchmarks.p50}</span> · top quartile{' '}
+                    <span className="font-semibold text-foreground">{benchmarks.p75}+</span>. Your current week:{' '}
+                    <span className={cn('font-semibold', scoreColor(score.combinedScore))}>{score.combinedScore}</span>
+                    {score.combinedScore >= benchmarks.p75
+                      ? ' — top quartile.'
+                      : score.combinedScore >= benchmarks.p50
+                        ? ' — above the median.'
+                        : ' — below the median; consistency moves this fastest.'}
+                  </p>
+                </div>
+              )}
               <div className="rounded-lg border border-border/70 bg-background/70 p-4">
                 <p className="text-sm font-semibold">Channel quality signal</p>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{score.channelQualitySignal}</p>

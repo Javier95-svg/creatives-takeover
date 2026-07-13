@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
@@ -30,6 +30,10 @@ import { getPublicTabConfig } from '@/config/publicTabVisibility';
 import { useAuth } from '@/contexts/AuthContext';
 import { trackGTMOpened, trackGTMPlanShared, trackToolOpened } from '@/lib/analytics';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
+import {
+  fetchMeasuredChannelPerformance,
+  type MeasuredPerformanceMap,
+} from '@/lib/gtmMeasuredPerformance';
 
 const structuredData = [
   {
@@ -78,6 +82,21 @@ export default function GTMStrategistPage() {
     trackGTMOpened();
     trackToolOpened('gtm_strategist');
   }, [markToolUsed]);
+
+  // Measured channel performance from the founder's Traction Engine logs —
+  // shown next to each channel's predicted fit score so the brief reads as
+  // predicted vs. measured rather than a one-shot document.
+  const [measuredPerformance, setMeasuredPerformance] = useState<MeasuredPerformanceMap>(new Map());
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    void fetchMeasuredChannelPerformance(user.id).then((map) => {
+      if (active) setMeasuredPerformance(map);
+    });
+    return () => {
+      active = false;
+    };
+  }, [user]);
 
   const {
     phase,
@@ -250,7 +269,12 @@ export default function GTMStrategistPage() {
 	                        </h2>
 	                        <div className="space-y-4">
 	                          {analysis.channels.map((ch, i) => (
-	                            <GTMChannelCard key={ch.channel} channel={ch} rank={i + 1} />
+	                            <GTMChannelCard
+	                              key={ch.channel}
+	                              channel={ch}
+	                              rank={i + 1}
+	                              measuredPerformance={measuredPerformance}
+	                            />
 	                          ))}
 	                        </div>
 	                      </section>

@@ -10,6 +10,8 @@ export interface ExportStep {
   asset_url: string | null;
   title: string | null;
   caption: string | null;
+  /** Narration text for the narrated export (storyboard speaker notes). */
+  speaker_notes?: string | null;
 }
 
 export interface DemoExportOptions {
@@ -305,6 +307,97 @@ export async function exportDemoVideo(
     }
   }
   return exportViaMediaRecorder(steps, images, opts, perStepMs);
+}
+
+/**
+ * Narrated MP4/WebM export: AI voiceover (from each step's speaker notes) mixed
+ * with the canvas video via MediaRecorder. Each step is held for the length of
+ * its narration clip (min 2.5s), so the walkthrough paces itself to the voice —
+ * Demo Studio's storyboard generator writes speaker_notes for exactly this.
+ */
+export async function exportNarratedDemoVideo(
+  steps: ExportStep[],
+  opts: DemoExportOptions,
+): Promise<{ blob: Blob; ext: 'mp4' | 'webm' }> {
+  if (steps.length === 0) throw new Error('Nothing to export — add a step first.');
+  const texts = steps.map((s) => (s.speaker_notes ?? s.caption ?? s.title ?? '').trim().slice(0, 600));
+  if (texts.every((t) => !t)) {
+    throw new Error('No narration text found. Add speaker notes or captions to your steps first.');
+  }
+
+  const { supabase } = await import('@/integrations/supabase/client');
+  const { data, error } = await supabase.functions.invoke('demo-voiceover', { body: { texts } });
+  if (error || !data?.success || !Array.isArray(data.clips)) {
+    throw new Error(data?.error || 'Voiceover generation failed. Please try again.');
+  }
+
+  const AudioContextCtor =
+    (globalThis as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext }).AudioContext ??
+    (globalThis as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!AudioContextCtor) throw new Error('Audio is not supported in this browser.');
+  const audioCtx = new AudioContextCtor();
+
+  const buffers: (AudioBuffer | null)[] = [];
+  for (const clip of data.clips as (string | null)[]) {
+    if (!clip) {
+      buffers.push(null);
+      continue;
+    }
+    const binary = atob(clip);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+    buffers.push(await audioCtx.decodeAudioData(bytes.buffer.slice(0)));
+  }
+
+  const images = await Promise.all(steps.map((s) => loadImage(s.asset_url)));
+  const { canvas, ctx } = createCanvas(VIDEO_W, VIDEO_H);
+  const destination = audioCtx.createMediaStreamDestination();
+
+  const mimeType =
+    typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('video/mp4')
+      ? 'video/mp4'
+      : typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+        ? 'video/webm;codecs=vp9'
+        : 'video/webm';
+  const ext: 'mp4' | 'webm' = mimeType.includes('mp4') ? 'mp4' : 'webm';
+
+  const videoStream = canvas.captureStream(30);
+  const mixed = new MediaStream([...videoStream.getVideoTracks(), ...destination.stream.getAudioTracks()]);
+  const chunks: BlobPart[] = [];
+  const recorder = new MediaRecorder(mixed, { mimeType, videoBitsPerSecond: 4_000_000 });
+  recorder.ondataavailable = (e) => {
+    if (e.data.size > 0) chunks.push(e.data);
+  };
+
+  const MIN_STEP_MS = 2500;
+  const NARRATION_PAD_MS = 450;
+
+  drawStepFrame(ctx, VIDEO_W, VIDEO_H, images[0], steps[0], opts, 1 / steps.length);
+  await audioCtx.resume();
+
+  await new Promise<void>((resolve) => {
+    recorder.onstop = () => resolve();
+    recorder.start();
+    void (async () => {
+      for (let i = 0; i < steps.length; i += 1) {
+        if (i > 0) drawStepFrame(ctx, VIDEO_W, VIDEO_H, images[i], steps[i], opts, (i + 1) / steps.length);
+        const buffer = buffers[i];
+        const holdMs = Math.max(MIN_STEP_MS, buffer ? buffer.duration * 1000 + NARRATION_PAD_MS : 0);
+        if (buffer) {
+          const source = audioCtx.createBufferSource();
+          source.buffer = buffer;
+          source.connect(destination);
+          source.start();
+        }
+        await sleep(holdMs);
+      }
+      recorder.stop();
+      mixed.getTracks().forEach((t) => t.stop());
+      void audioCtx.close().catch(() => {});
+    })();
+  });
+
+  return { blob: new Blob(chunks, { type: mimeType }), ext };
 }
 
 export async function exportDemoGif(steps: ExportStep[], opts: DemoExportOptions): Promise<Blob> {

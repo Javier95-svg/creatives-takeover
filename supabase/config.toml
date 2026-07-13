@@ -178,3 +178,16 @@ verify_jwt = false
 # Authenticated founders only; the function re-checks the user via getUserFromAuth.
 [functions.pmf-interview-extract]
 verify_jwt = true
+
+# Anonymous visit beacon from published MVP sites; dedupe + slug validation inside.
+[functions.mvp-app-visit]
+verify_jwt = false
+
+# Anonymous capture upload from published MVP sites; authenticated by the
+# unguessable pending session id created by the owner in the demo editor.
+[functions.demo-capture-ingest]
+verify_jwt = false
+
+# TTS for narrated demo exports; authenticated founders only.
+[functions.demo-voiceover]
+verify_jwt = true

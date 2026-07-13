@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { useMVPBuilder } from '@/hooks/useMVPBuilder';
 import { MVPBuilderHeader } from './MVPBuilderHeader';
 import { MVPBuilderChat } from './MVPBuilderChat';
@@ -99,6 +100,25 @@ export const MVPBuilder: React.FC = () => {
   const [mobileTab, setMobileTab] = useState<MobileTab>('chat');
   const [topUpsOpen, setTopUpsOpen] = useState(false);
   const isMobile = useIsMobile();
+  // Bounded auto-fix: each distinct runtime error gets at most two automatic
+  // debug rounds. The click is the credit consent; the cap stops error loops
+  // from draining the balance.
+  const autoFixAttemptsRef = useRef<Map<string, number>>(new Map());
+  const handleAutoFix = (error: string) => {
+    const signature = error.trim().slice(0, 160);
+    const attempts = autoFixAttemptsRef.current.get(signature) ?? 0;
+    if (attempts >= 2) {
+      toast.info('Auto-fix already tried twice for this error.', {
+        description: 'Describe what you expected in the chat so the builder gets more context.',
+      });
+      return;
+    }
+    autoFixAttemptsRef.current.set(signature, attempts + 1);
+    void sendMessage(
+      `Fix this runtime error without changing the app's design or unrelated behavior. Error (attempt ${attempts + 1} of 2):\n\n${error.trim().slice(0, 1200)}`,
+      { responseMode: 'build' },
+    );
+  };
 
   const handleDeleteProject = async (id: string) => {
     const deleted = await deleteProject(id);
@@ -176,6 +196,7 @@ export const MVPBuilder: React.FC = () => {
       onSelectEntryFile={setEntryFilePath}
       onExportZip={exportProjectZip}
       onDeploy={publishProject}
+      onAutoFix={handleAutoFix}
       integrations={integrations}
       githubConnection={githubConnection}
       githubRepositories={githubRepositories}

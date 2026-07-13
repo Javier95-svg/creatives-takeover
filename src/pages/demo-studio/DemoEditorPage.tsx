@@ -17,6 +17,7 @@ import {
   Loader2,
   Monitor,
   RefreshCw,
+  MousePointerClick,
   Rocket,
   X,
 } from 'lucide-react';
@@ -41,6 +42,7 @@ import StepThumbnailList from '@/components/demo-studio/editor/StepThumbnailList
 import StoryboardRail from '@/components/demo-studio/editor/StoryboardRail';
 import HotspotCanvas from '@/components/demo-studio/editor/HotspotCanvas';
 import HotspotInspector from '@/components/demo-studio/editor/HotspotInspector';
+import LiveCaptureDialog from '@/components/demo-studio/editor/LiveCaptureDialog';
 import DemoPlayer from '@/components/demo-studio/player/DemoPlayer';
 import WhatIsADemoPopover from '@/components/demo-studio/WhatIsADemoPopover';
 import { canRemoveWatermark, shouldShowWatermark } from '@/lib/demoStudio/plan';
@@ -126,6 +128,7 @@ export default function DemoEditorPage() {
   const [copied, setCopied] = useState(false);
   const [captureOpen, setCaptureOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [liveCaptureOpen, setLiveCaptureOpen] = useState(false);
   const [captureStream, setCaptureStream] = useState<MediaStream | null>(null);
   const [keptFrames, setKeptFrames] = useState<KeptFrame[]>([]);
   const [capturing, setCapturing] = useState(false);
@@ -772,6 +775,15 @@ export default function DemoEditorPage() {
             >
               <FileCode className="h-4 w-4" /> Import webpage
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-1.5"
+              onClick={() => setLiveCaptureOpen(true)}
+              disabled={uploading || capturing}
+            >
+              <MousePointerClick className="h-4 w-4" /> Capture live site
+            </Button>
           </div>
           <StepThumbnailList
             steps={steps}
@@ -844,6 +856,14 @@ export default function DemoEditorPage() {
                   disabled={uploading || capturing}
                 >
                   <FileCode className="h-4 w-4" /> Import webpage
+                </Button>
+                <Button
+                  variant="outline"
+                  className="gap-1.5"
+                  onClick={() => setLiveCaptureOpen(true)}
+                  disabled={uploading || capturing}
+                >
+                  <MousePointerClick className="h-4 w-4" /> Capture live site
                 </Button>
               </div>
               <p className="mt-3 text-xs text-muted-foreground">
@@ -1107,6 +1127,27 @@ export default function DemoEditorPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Live click-through capture from the founder's published MVP */}
+      {user && demoId && (
+        <LiveCaptureDialog
+          open={liveCaptureOpen}
+          onOpenChange={setLiveCaptureOpen}
+          userId={user.id}
+          demoId={demoId}
+          existingStepCount={steps.length}
+          onImported={(imported) => {
+            setSteps((prev) => [...prev, ...imported]);
+            setSelectedStepId((prev) => prev ?? imported[0]?.id ?? null);
+            trackDemoStudioFunnel('demo_step_added', { demoId, source: 'live_capture', count: imported.length });
+            if (demo && demo.capture_method !== 'extension') {
+              void updateDemo(demo.id, { capture_method: 'extension' })
+                .then(() => setDemo((current) => (current ? { ...current, capture_method: 'extension' } : current)))
+                .catch(() => {});
+            }
+          }}
+        />
+      )}
 
       {/* Import webpage (HTML) dialog */}
       <Dialog open={importOpen} onOpenChange={setImportOpen}>

@@ -37,6 +37,19 @@ function contentTypeFor(filename: string): string {
   return CONTENT_TYPES[ext] ?? 'text/html; charset=utf-8';
 }
 
+// Platform analytics snippet injected into every served HTML page. Tracks one
+// deduped visit per visitor per day (server-side unique constraint) so the
+// founder's Traction Engine retention snapshot can autofill with verified data.
+// Inline (no external request for the script itself) and fail-silent.
+const VISIT_BEACON_URL = `${SUPABASE_URL}/functions/v1/mvp-app-visit`;
+const ANALYTICS_SNIPPET = `<script>(function(){try{if(/ct-capture=/.test(location.hash)){var s=document.createElement("script");s.src="https://${BASE_DOMAIN}/ct-capture.js";document.head.appendChild(s);}var k="ct_vid";var v=localStorage.getItem(k);if(!v){v=(self.crypto&&crypto.randomUUID)?crypto.randomUUID():Date.now()+"-"+Math.random().toString(36).slice(2);localStorage.setItem(k,v);}var d=new Date().toISOString().slice(0,10);var dk="ct_vd_"+d;if(sessionStorage.getItem(dk))return;sessionStorage.setItem(dk,"1");fetch("${VISIT_BEACON_URL}",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({slug:location.hostname.split(".")[0],visitorId:v}),keepalive:true}).catch(function(){});}catch(e){}})();</script>`;
+
+function injectAnalytics(html: string): string {
+  const idx = html.toLowerCase().lastIndexOf('</body>');
+  if (idx === -1) return html + ANALYTICS_SNIPPET;
+  return html.slice(0, idx) + ANALYTICS_SNIPPET + html.slice(idx);
+}
+
 function notFound(message: string): Response {
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -99,10 +112,13 @@ export default async function handler(req: Request): Promise<Response> {
       return notFound('There is no published page at this address yet.');
     }
 
-    return new Response(file.content, {
+    const contentType = contentTypeFor((file.filename ?? requestedPath) || 'index.html');
+    const body = contentType.startsWith('text/html') ? injectAnalytics(file.content) : file.content;
+
+    return new Response(body, {
       status: 200,
       headers: {
-        'Content-Type': contentTypeFor((file.filename ?? requestedPath) || 'index.html'),
+        'Content-Type': contentType,
         'Cache-Control': 'public, max-age=60, stale-while-revalidate=300',
         'X-Robots-Tag': 'noindex',
       },

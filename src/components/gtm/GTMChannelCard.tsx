@@ -9,11 +9,22 @@ import { cn } from '@/lib/utils';
 import { GTMChannelRecommendation } from '@/hooks/useGTMStrategist';
 import { saveGTMTractionHandoff } from '@/lib/gtmTractionHandoff';
 import { captureEvent } from '@/lib/analytics';
+import {
+  findMeasuredPerformance,
+  type MeasuredPerformanceMap,
+} from '@/lib/gtmMeasuredPerformance';
 
 interface GTMChannelCardProps {
   channel: GTMChannelRecommendation;
   rank: number;
+  measuredPerformance?: MeasuredPerformanceMap;
 }
+
+const DECISION_LABELS: Record<string, string> = {
+  double_down: 'doubling down',
+  iterate: 'iterating',
+  kill: 'killed',
+};
 
 const CHANNEL_COLORS: Record<string, string> = {
   linkedin: 'border-info/40 bg-info/5',
@@ -46,10 +57,11 @@ const getChannelAccent = (channelName: string) => {
   return 'border-primary/40 bg-primary/5';
 };
 
-const GTMChannelCard: React.FC<GTMChannelCardProps> = ({ channel, rank }) => {
+const GTMChannelCard: React.FC<GTMChannelCardProps> = ({ channel, rank, measuredPerformance }) => {
   const [showAntiTactics, setShowAntiTactics] = useState(false);
   const accentClass = getChannelAccent(channel.channel);
   const navigate = useNavigate();
+  const measured = measuredPerformance ? findMeasuredPerformance(measuredPerformance, channel.channel) : null;
 
   // Turn this recommendation into a runnable Traction Engine experiment:
   // the plan's own week-one action becomes the hypothesis, so the founder
@@ -139,15 +151,39 @@ const GTMChannelCard: React.FC<GTMChannelCardProps> = ({ channel, rank }) => {
         </div>
 
         {/* Close the loop: plan → measured weekly experiment */}
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-success/20 bg-success/5 px-3 py-2.5">
-          <p className="text-xs text-muted-foreground">
-            Don't let this stay a document — run it as a measured weekly experiment.
-          </p>
-          <Button type="button" size="sm" variant="outline" className="shrink-0 gap-1.5" onClick={runAsTractionSprint}>
-            <LineChart className="h-3.5 w-3.5" />
-            Run as Traction sprint
-          </Button>
-        </div>
+        {measured ? (
+          <div className="rounded-lg border border-info/25 bg-info/5 px-3 py-2.5 space-y-1.5">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-info">Predicted vs. measured</p>
+              <Button type="button" size="sm" variant="outline" className="shrink-0 gap-1.5" onClick={runAsTractionSprint}>
+                <LineChart className="h-3.5 w-3.5" />
+                Log another week
+              </Button>
+            </div>
+            <p className="text-sm text-foreground">
+              Predicted fit <span className="font-semibold">{channel.fitScore.toFixed(1)}/10</span> · Measured over{' '}
+              <span className="font-semibold">{measured.weeksLogged} logged week{measured.weeksLogged === 1 ? '' : 's'}</span>:{' '}
+              avg efficiency <span className="font-semibold">{measured.avgEfficiency}/100</span>,{' '}
+              {measured.passes}/{measured.weeksLogged} hit target
+              {measured.lastDecision ? <> — currently <span className="font-semibold">{DECISION_LABELS[measured.lastDecision]}</span></> : null}.
+            </p>
+            {measured.weeksLogged >= 3 && measured.passes === 0 && (
+              <p className="text-xs text-warning">
+                Three or more weeks without hitting target — iterate the messaging or kill this channel and promote the next one.
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-success/20 bg-success/5 px-3 py-2.5">
+            <p className="text-xs text-muted-foreground">
+              Don't let this stay a document — run it as a measured weekly experiment.
+            </p>
+            <Button type="button" size="sm" variant="outline" className="shrink-0 gap-1.5" onClick={runAsTractionSprint}>
+              <LineChart className="h-3.5 w-3.5" />
+              Run as Traction sprint
+            </Button>
+          </div>
+        )}
 
         {/* Anti-tactics (collapsible) */}
         {channel.doNotDo && channel.doNotDo.length > 0 && (

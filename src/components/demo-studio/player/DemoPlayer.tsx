@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, Download, Loader2, RotateCcw } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Download, Loader2, Mic, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -40,7 +40,7 @@ export default function DemoPlayer({
 }: DemoPlayerProps) {
   const [index, setIndex] = useState(0);
   const [finished, setFinished] = useState(false);
-  const [exporting, setExporting] = useState<null | 'mp4' | 'gif'>(null);
+  const [exporting, setExporting] = useState<null | 'mp4' | 'gif' | 'narrated'>(null);
   const onCompleteRef = useRef(onComplete);
   useEffect(() => {
     onCompleteRef.current = onComplete;
@@ -127,17 +127,26 @@ export default function DemoPlayer({
     setFinished(false);
   };
 
-  const handleExport = async (format: 'mp4' | 'gif') => {
+  const handleExport = async (format: 'mp4' | 'gif' | 'narrated') => {
     if (exporting) return;
     // TODO(billing): charge per export via a dedicated DEMO_EXPORT credit feature.
     // AI is currently metered generically as WAITLIST_GENERATION; export is free for now.
     setExporting(format);
     try {
       const mod = await import('@/lib/demoStudio/demoExport');
-      const exportSteps = steps.map((s) => ({ asset_url: s.asset_url, title: s.title, caption: s.caption }));
+      const exportSteps = steps.map((s) => ({
+        asset_url: s.asset_url,
+        title: s.title,
+        caption: s.caption,
+        speaker_notes: s.speaker_notes,
+      }));
       const opts = { showWatermark, primaryColor };
       if (format === 'gif') {
         mod.downloadBlob(await mod.exportDemoGif(exportSteps, opts), 'demo.gif');
+      } else if (format === 'narrated') {
+        const { blob, ext } = await mod.exportNarratedDemoVideo(exportSteps, opts);
+        mod.downloadBlob(blob, `demo-narrated.${ext}`);
+        toast.success('Narrated video exported — voiceover generated from your speaker notes.');
       } else {
         const { blob, ext } = await mod.exportDemoVideo(exportSteps, opts);
         mod.downloadBlob(blob, `demo.${ext}`);
@@ -327,6 +336,17 @@ export default function DemoPlayer({
           >
             {exporting === 'gif' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
             GIF
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => void handleExport('narrated')}
+            disabled={exporting !== null}
+            title="AI voiceover generated from each step's speaker notes"
+          >
+            {exporting === 'narrated' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Mic className="h-3.5 w-3.5" />}
+            {exporting === 'narrated' ? 'Narrating…' : 'Narrated MP4'}
           </Button>
         </div>
       )}

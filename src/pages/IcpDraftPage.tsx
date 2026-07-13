@@ -6,6 +6,7 @@ import { IcpShareModal } from "@/components/icp/IcpShareModal";
 import { toast } from "sonner";
 
 import { IcpFolioDocument } from "@/components/icp/IcpFolioDocument";
+import IcpEvidenceCheck from "@/components/icp/IcpEvidenceCheck";
 import { IcpProgressBar } from "@/components/icp/IcpProgressBar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -340,6 +341,12 @@ export default function IcpDraftPage() {
           </div>
         }
       />
+
+      {user ? (
+        <div className="mx-auto max-w-6xl px-4 pb-4 sm:px-6 lg:px-8">
+          <IcpEvidenceCheck userId={user.id} />
+        </div>
+      ) : null}
 
       {shareModalData ? (
         <IcpShareModal

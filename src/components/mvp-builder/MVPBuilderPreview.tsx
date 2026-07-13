@@ -12,6 +12,7 @@ import {
   TriangleAlert,
   TerminalSquare,
   Link2,
+  Wrench,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -89,6 +90,9 @@ interface MVPBuilderPreviewProps {
   onSelectEntryFile: (path: string) => void;
   onExportZip: () => void;
   onDeploy: () => void;
+  /** One-click bounded auto-fix: sends the captured runtime error back into the
+   *  build loop as a debug action. Bounded by the parent (max attempts per error). */
+  onAutoFix?: (error: string) => void;
   // Integrations (optional)
   integrations: MVPBuilderIntegrationsHealth;
   githubConnection: GitHubConnectionState;
@@ -162,6 +166,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
   onSelectEntryFile,
   onExportZip,
   onDeploy,
+  onAutoFix,
   integrations,
   githubConnection,
   githubRepositories,
@@ -676,8 +681,24 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
 
                 {runtimeError && !isGenerating && (
                   <div className="absolute left-4 right-4 top-4 z-20">
-                    <div className="rounded-2xl border border-destructive/25 bg-background/95 px-4 py-3 text-sm text-destructive shadow-lg backdrop-blur">
-                      {runtimeError}
+                    <div className="rounded-2xl border border-destructive/25 bg-background/95 px-4 py-3 shadow-lg backdrop-blur">
+                      <p className="text-sm text-destructive">{runtimeError}</p>
+                      {onAutoFix && (
+                        <div className="mt-2 flex items-center justify-between gap-3">
+                          <p className="text-xs text-muted-foreground">
+                            Sends the error back to the builder as a debug round (normal debug credits apply).
+                          </p>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="shrink-0 gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10"
+                            onClick={() => onAutoFix(runtimeError)}
+                          >
+                            <Wrench className="h-3.5 w-3.5" />
+                            Fix automatically
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
