@@ -136,6 +136,12 @@ test('conversation selection renders from a cached 30-message page before attach
   assert.match(interfaceSource, /captureEvent\('messages_conversation_rendered'/);
 });
 
+test('loaded message images remeasure only their virtual row', () => {
+  assert.match(interfaceSource, /closest<HTMLElement>\('\[data-index\]'\)/);
+  assert.match(interfaceSource, /messageVirtualizer\.measureElement\(virtualRow\)/);
+  assert.doesNotMatch(interfaceSource, /onMeasure=\{messageVirtualizer\.measure\}/);
+});
+
 test('conversation opening has no duplicate read or reaction fetch', () => {
   const selectHandler = interfaceSource.match(/const handleConversationSelect[\s\S]*?\n  \};/)?.[0] || '';
   assert.doesNotMatch(selectHandler, /markAsRead/);

@@ -90,7 +90,7 @@ const LazyMessageImage = ({
 }: {
   attachment: NonNullable<Message['attachment_rows']>[number];
   isOwnMessage: boolean;
-  onMeasure: () => void;
+  onMeasure: (image: HTMLImageElement) => void;
   getSignedUrl: (storagePath: string) => Promise<string | null>;
 }) => {
   const [signedUrl, setSignedUrl] = useState<string | null>(attachment.signed_url || null);
@@ -103,10 +103,9 @@ const LazyMessageImage = ({
       if (!active) return;
       setSignedUrl(url);
       setFailed(!url);
-      onMeasure();
     });
     return () => { active = false; };
-  }, [attachment.storage_path, getSignedUrl, onMeasure, signedUrl]);
+  }, [attachment.storage_path, getSignedUrl, signedUrl]);
 
   if (!signedUrl) {
     return (
@@ -137,8 +136,8 @@ const LazyMessageImage = ({
         alt={attachment.file_name}
         className="max-h-80 w-full max-w-sm object-contain"
         loading="lazy"
-        onLoad={onMeasure}
-        onError={onMeasure}
+        onLoad={(event) => onMeasure(event.currentTarget)}
+        onError={(event) => onMeasure(event.currentTarget)}
       />
     </button>
   );
@@ -1105,7 +1104,10 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                 key={attachmentKey}
                 attachment={attachment}
                 isOwnMessage={isOwnMessage}
-                onMeasure={messageVirtualizer.measure}
+                onMeasure={(image) => {
+                  const virtualRow = image.closest<HTMLElement>('[data-index]');
+                  if (virtualRow) messageVirtualizer.measureElement(virtualRow);
+                }}
                 getSignedUrl={getAttachmentSignedUrl}
               />
             );
