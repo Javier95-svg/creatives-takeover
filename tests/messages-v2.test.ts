@@ -16,6 +16,7 @@ const contextCard = read('src/components/social/MessageContextCard.tsx');
 const errorsSource = read('src/lib/errors.ts');
 const messageCtaRepairMigration = read('supabase/migrations/20260716132000_restore_account_linked_message_ctas.sql');
 const restoredDirectConversationMigration = read('supabase/migrations/20260716133000_restore_pre_upgrade_direct_conversation_rpc.sql');
+const legacySchemaDirectConversationMigration = read('supabase/migrations/20260716134000_restore_legacy_schema_direct_conversation_rpc.sql');
 
 test('messaging V2 exposes the consolidated authenticated contracts', () => {
   for (const contract of [
@@ -60,6 +61,14 @@ test('Marketplace and mentor CTAs use the proven pre-upgrade conversation flow',
   assert.match(restoredDirectConversationMigration, /set_direct_conversation_request_settings/);
   assert.match(restoredDirectConversationMigration, /request_status = 'accepted'/);
   assert.match(restoredDirectConversationMigration, /hidden_at = NULL/);
+});
+
+test('the final CTA repair supports production databases without generated direct-user columns', () => {
+  assert.match(legacySchemaDirectConversationMigration, /participants @> ARRAY\[v_user_a, v_user_b\]::uuid\[\]/);
+  assert.match(legacySchemaDirectConversationMigration, /array_length\(participants, 1\) = 2/);
+  assert.match(legacySchemaDirectConversationMigration, /pg_advisory_xact_lock/);
+  assert.match(legacySchemaDirectConversationMigration, /set_direct_conversation_request_settings/);
+  assert.doesNotMatch(legacySchemaDirectConversationMigration, /direct_user_a|direct_user_b/);
 });
 
 test('PostgREST RPC failures retain their actionable message', () => {
