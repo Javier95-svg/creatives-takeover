@@ -174,3 +174,7 @@ verify_jwt = false
 
 [functions.send-password-reset]
 verify_jwt = false
+
+# Authenticated founders only; the function re-checks the user via getUserFromAuth.
+[functions.pmf-interview-extract]
+verify_jwt = true

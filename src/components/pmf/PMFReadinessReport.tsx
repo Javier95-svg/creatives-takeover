@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, Download, RefreshCw, CheckCircle2, XCircle, ArrowRight, AlertTriangle, MessageSquareWarning, Share2, Sparkles, ChevronDown, ChevronUp, Zap, GitFork, TrendingUp, Globe, Compass } from 'lucide-react';
+import { Save, Download, RefreshCw, CheckCircle2, XCircle, ArrowRight, AlertTriangle, MessageSquareWarning, MonitorPlay, Share2, Sparkles, ChevronDown, ChevronUp, Zap, GitFork, TrendingUp, Globe, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -342,6 +342,33 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">What the evidence pattern means</p>
           </div>
           <p className="text-sm leading-relaxed text-foreground">{analysis.diagnosis}</p>
+        </div>
+      )}
+
+      {/* Verified demo behavior (auto-collected from the founder's Demo Studio) */}
+      {analysis.demoEvidence && (
+        <div className="rounded-2xl border border-success/20 bg-success/5 p-5 space-y-3">
+          <div className="flex items-center gap-2">
+            <MonitorPlay className="h-4 w-4 text-success shrink-0" />
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-success">Verified demo behavior included</p>
+          </div>
+          <p className="text-sm leading-relaxed text-foreground">
+            Your live Demo Studio data from the last {analysis.demoEvidence.windowDays} days was scored as behavioral
+            demand evidence — collected by the platform, not self-reported.
+          </p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {[
+              { label: 'Unique viewers', value: analysis.demoEvidence.uniqueViewers },
+              { label: 'Completion rate', value: `${analysis.demoEvidence.completionRate}%` },
+              { label: 'CTA clicks', value: analysis.demoEvidence.ctaClicks },
+              { label: 'Leads captured', value: analysis.demoEvidence.signups },
+            ].map((stat) => (
+              <div key={stat.label} className="rounded-xl border border-border/60 bg-background/80 px-3 py-2">
+                <p className="text-xs text-muted-foreground">{stat.label}</p>
+                <p className="mt-1 text-sm font-semibold text-foreground">{stat.value}</p>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

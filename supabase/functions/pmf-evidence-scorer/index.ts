@@ -56,6 +56,84 @@ interface MarketEvidenceSource {
   publishedDate?: string;
 }
 
+// Behavioral demand evidence auto-collected from the founder's own Demo Studio
+// demos. Fetched server-side (never client-supplied) so it can't be spoofed.
+interface DemoEvidence {
+  projectCount: number;
+  views: number;
+  uniqueViewers: number;
+  completions: number;
+  completionRate: number;
+  ctaClicks: number;
+  signups: number;
+  windowDays: number;
+}
+
+// deno-lint-ignore no-explicit-any
+async function fetchDemoEvidence(supabase: any, userId: string): Promise<DemoEvidence | null> {
+  try {
+    const { data: projects } = await supabase
+      .from('demo_studio_projects')
+      .select('id')
+      .eq('owner_id', userId)
+      .limit(20);
+    const projectIds = ((projects ?? []) as Array<{ id: string }>).map((p) => p.id);
+    if (projectIds.length === 0) return null;
+
+    const since = new Date();
+    since.setDate(since.getDate() - 90);
+    const sinceIso = since.toISOString();
+
+    const [eventsRes, signupsRes] = await Promise.all([
+      supabase
+        .from('demo_studio_events')
+        .select('type, meta')
+        .in('project_id', projectIds)
+        .gte('created_at', sinceIso)
+        .limit(5000),
+      supabase
+        .from('demo_studio_signups')
+        .select('id', { count: 'exact', head: true })
+        .in('project_id', projectIds)
+        .gte('created_at', sinceIso),
+    ]);
+
+    const events = (eventsRes.data ?? []) as Array<{ type: string; meta: Record<string, unknown> | null }>;
+    const uniqueSessions = (type: string) => {
+      const sessions = new Set<string>();
+      let count = 0;
+      for (const event of events) {
+        if (event.type !== type) continue;
+        count += 1;
+        const sid = event.meta && typeof event.meta['session_id'] === 'string' ? (event.meta['session_id'] as string) : null;
+        if (sid) sessions.add(sid);
+      }
+      return { count, unique: sessions.size || count };
+    };
+
+    const views = uniqueSessions('demo_view');
+    const completions = uniqueSessions('demo_complete');
+    const ctaClicks = events.filter((event) => event.type === 'cta_click').length;
+    const signups = (signupsRes.count as number | null) ?? 0;
+
+    if (views.count === 0 && signups === 0) return null;
+
+    return {
+      projectCount: projectIds.length,
+      views: views.count,
+      uniqueViewers: views.unique,
+      completions: completions.unique,
+      completionRate: views.unique > 0 ? Math.round((completions.unique / views.unique) * 100) : 0,
+      ctaClicks,
+      signups,
+      windowDays: 90,
+    };
+  } catch (err) {
+    console.warn('Demo evidence fetch failed, continuing without it:', err);
+    return null;
+  }
+}
+
 interface PMFInterviewLog {
   id: string;
   intervieweeName: string;
@@ -295,6 +373,17 @@ serve(async (req) => {
           : '')
       : 'No hosted survey responses were collected for this run.';
 
+    // Behavioral demand evidence from the founder's live Demo Studio demos,
+    // fetched server-side so it is verified by the platform rather than typed in.
+    const demoEvidence = await fetchDemoEvidence(supabase, user.id);
+    const demoBlock = demoEvidence
+      ? `Auto-collected from the founder's live Demo Studio demos over the last ${demoEvidence.windowDays} days (${demoEvidence.projectCount} project${demoEvidence.projectCount === 1 ? '' : 's'}):
+• Demo views: ${demoEvidence.views} (${demoEvidence.uniqueViewers} unique viewers)
+• Demo completions: ${demoEvidence.completions} (${demoEvidence.completionRate}% completion rate)
+• CTA clicks after watching: ${demoEvidence.ctaClicks}
+• Leads/signups captured: ${demoEvidence.signups}`
+      : 'No live demo behavioral data was available for this run.';
+
     const systemPrompt = `You are PMF Lab, a rigorous PMF (Product-Market Fit) evidence evaluator inside a startup development platform. Founders use you in Stage III: Validation, after they already created a landing page in Stage II: Prototyping. Your job is to evaluate the QUALITY of customer-demand evidence — not the idea itself — and produce a PMF score from 0 to 100.
 
 IMPORTANT PRODUCT RULES:
@@ -444,7 +533,12 @@ ${externalEvidenceBlock}
 REAL USER SURVEY (hosted Sean Ellis test):
 ${surveyBlock}
 
+LIVE DEMO BEHAVIOR (verified by the platform, not self-reported):
+${demoBlock}
+
 When scoring DEMAND PROOF and CONSISTENCY, and when writing the diagnosis, explicitly note whether this external signal corroborates or contradicts the founder's reported evidence, and reference source numbers like [1], [2] where relevant. Populate marketEvidenceSummary accordingly (empty string if no external evidence was retrieved). Do NOT inflate scores solely because external interest exists — the founder's own structured interviews remain the primary source of truth. The REAL USER SURVEY, however, IS first-class direct demand evidence: when present, weight it heavily in Demand Proof and Consistency (a survey ≥40% "very disappointed" is a strong positive signal; well below 40% is a strong negative one) and reference the % and verbatims explicitly.
+
+LIVE DEMO BEHAVIOR is also first-class BEHAVIORAL evidence — people acted, they didn't just talk. When present: demo completions, CTA clicks, and captured leads/signups strengthen Demand Proof (reference the actual numbers). A low completion rate (<30%) on 20+ unique viewers is a negative signal about solution framing and belongs in gaps or contradictions. Raw demo views alone are reach, not demand — never count views by themselves as demand behavior.
 
 Apply the scoring rubric to this evidence and return the PMF readiness JSON. Make the final recommendation founder-friendly and concrete.`;
 
@@ -491,6 +585,7 @@ Apply the scoring rubric to this evidence and return the PMF readiness JSON. Mak
       // Attach evidence answers, external citations, and timestamp
       analysis.evidenceAnswers = body;
       analysis.generatedAt = new Date().toISOString();
+      if (demoEvidence) analysis.demoEvidence = demoEvidence;
       analysis.dataSources = marketSources.map((s) => ({
         title: s.title,
         url: s.url,

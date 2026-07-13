@@ -116,6 +116,17 @@ export interface PMFReadinessAnalysis {
   // Evidence-backed scoring (Section A): live external demand evidence
   dataSources?: PMFEvidenceSource[];
   marketEvidenceSummary?: string;
+  // Behavioral evidence auto-collected server-side from the founder's Demo Studio demos
+  demoEvidence?: {
+    projectCount: number;
+    views: number;
+    uniqueViewers: number;
+    completions: number;
+    completionRate: number;
+    ctaClicks: number;
+    signups: number;
+    windowDays: number;
+  };
 }
 
 export interface PMFValidationEvidence {

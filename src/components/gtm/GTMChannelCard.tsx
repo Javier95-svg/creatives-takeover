@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { CheckSquare, ChevronDown, ChevronUp, Clock, Calendar } from 'lucide-react';
+import { CheckSquare, ChevronDown, ChevronUp, Clock, Calendar, LineChart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { GTMChannelRecommendation } from '@/hooks/useGTMStrategist';
+import { saveGTMTractionHandoff } from '@/lib/gtmTractionHandoff';
+import { captureEvent } from '@/lib/analytics';
 
 interface GTMChannelCardProps {
   channel: GTMChannelRecommendation;
@@ -45,6 +49,33 @@ const getChannelAccent = (channelName: string) => {
 const GTMChannelCard: React.FC<GTMChannelCardProps> = ({ channel, rank }) => {
   const [showAntiTactics, setShowAntiTactics] = useState(false);
   const accentClass = getChannelAccent(channel.channel);
+  const navigate = useNavigate();
+
+  // Turn this recommendation into a runnable Traction Engine experiment:
+  // the plan's own week-one action becomes the hypothesis, so the founder
+  // starts the sprint from what the brief told them to do — no retyping.
+  const runAsTractionSprint = () => {
+    const primaryAction = channel.weekOneActions?.[0]?.trim();
+    const primaryTactic = channel.tactics?.[0];
+    const hypothesis = primaryAction
+      ? `${primaryAction} — expecting measurable signups from ${channel.channel} this week.`
+      : primaryTactic
+        ? `${primaryTactic.title}: ${primaryTactic.description}`.slice(0, 400)
+        : `Run one focused ${channel.channel} experiment and measure signups this week.`;
+
+    saveGTMTractionHandoff({
+      channel: channel.channel,
+      targetMetric: 'Signups',
+      hypothesis,
+      fitScore: channel.fitScore,
+    });
+    captureEvent('gtm_channel_sprint_started', {
+      channel: channel.channel,
+      fit_score: channel.fitScore,
+      rank,
+    });
+    navigate('/traction-engine?step=sprint');
+  };
 
   return (
     <Card className={cn('border-2 transition-all duration-200', accentClass)}>
@@ -105,6 +136,17 @@ const GTMChannelCard: React.FC<GTMChannelCardProps> = ({ channel, rank }) => {
               </li>
             ))}
           </ul>
+        </div>
+
+        {/* Close the loop: plan → measured weekly experiment */}
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-success/20 bg-success/5 px-3 py-2.5">
+          <p className="text-xs text-muted-foreground">
+            Don't let this stay a document — run it as a measured weekly experiment.
+          </p>
+          <Button type="button" size="sm" variant="outline" className="shrink-0 gap-1.5" onClick={runAsTractionSprint}>
+            <LineChart className="h-3.5 w-3.5" />
+            Run as Traction sprint
+          </Button>
         </div>
 
         {/* Anti-tactics (collapsible) */}

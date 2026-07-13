@@ -36,6 +36,7 @@ import {
   type TractionProductCategory,
   type TractionRetentionInput,
 } from '@/lib/tractionEngine';
+import { consumeGTMTractionHandoff } from '@/lib/gtmTractionHandoff';
 import {
   Activity,
   AlertTriangle,
@@ -313,6 +314,35 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
   useEffect(() => {
     trackTractionOpened();
     trackToolOpened('traction_engine');
+  }, []);
+
+  // Consume a GTM Strategist channel handoff: the recommended channel arrives
+  // as a pre-filled experiment so the plan becomes a measured sprint without
+  // retyping. Runs once on mount; the handoff is single-use.
+  useEffect(() => {
+    const handoff = consumeGTMTractionHandoff();
+    if (!handoff) return;
+    setExperiments((items) => {
+      const imported: ExperimentDraft = {
+        ...createExperimentDraft(),
+        channel: handoff.channel,
+        hypothesis: handoff.hypothesis,
+        targetMetric: handoff.targetMetric || 'Signups',
+      };
+      const isPristine =
+        items.length === 1 &&
+        !items[0].channel.trim() &&
+        !items[0].hypothesis.trim() &&
+        !items[0].actionTaken.trim();
+      if (isPristine) return [imported];
+      if (items.some((item) => item.channel.trim().toLowerCase() === handoff.channel.trim().toLowerCase())) return items;
+      if (items.length >= 2) return items;
+      return [...items, imported];
+    });
+    toast.success(`${handoff.channel} imported from your GTM plan.`, {
+      description: 'Log what you ship this week, then save to see predicted fit vs. measured traction.',
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const closeSprint = async (sprint: SprintRow) => {

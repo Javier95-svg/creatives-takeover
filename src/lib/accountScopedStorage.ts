@@ -39,6 +39,7 @@ export const ACCOUNT_SCOPED_STORAGE_PREFIXES: readonly string[] = [
   'waitlist_builder_guest_draft_v1',
   // Insighta tools
   'ct_traction_draft',
+  'ct_gtm_traction_handoff',
   'ct_assessment_data',
   'ct_lead_email',
   // BizMap AI

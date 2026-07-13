@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import {
   ChevronLeft,
   ChevronRight,
+  ClipboardPaste,
   Edit2,
   FlaskConical,
   Loader2,
@@ -14,11 +15,21 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 import type { PMFEvidenceAnswers, PMFInterviewLog } from '@/hooks/usePMFLab';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 import { CreditCostNotice } from '@/components/CreditCostNotice';
-import { trackPMFEvidenceLogged } from '@/lib/analytics';
+import { captureEvent, trackPMFEvidenceLogged } from '@/lib/analytics';
 
 const TEST_TYPES = [
   'Landing page',
@@ -145,6 +156,9 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
   const [interviews, setInterviews] = useState<PMFInterviewLog[]>([]);
   const [draftInterview, setDraftInterview] = useState<PMFInterviewLog>(createEmptyInterview());
   const [editingInterviewId, setEditingInterviewId] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importNotes, setImportNotes] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
 
   const [wtpDetail, setWtpDetail] = useState('');
   const [mostPainfulQuote, setMostPainfulQuote] = useState('');
@@ -239,6 +253,44 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
     setInterviews((prev) => prev.filter((item) => item.id !== id));
     if (editingInterviewId === id) {
       resetDraft();
+    }
+  };
+
+  // Paste raw notes/transcripts → AI-extracted structured interview entries.
+  // Kills the hand-typing friction in front of the 25-interview threshold.
+  const importFromNotes = async () => {
+    const notes = importNotes.trim();
+    if (notes.length < 80) {
+      toast.error('Paste at least a few sentences of interview notes first.');
+      return;
+    }
+    setIsImporting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('pmf-interview-extract', {
+        body: { notes },
+      });
+      if (error || !data?.success || !Array.isArray(data.interviews)) {
+        toast.error(data?.error || 'Could not extract interviews from these notes. Try adding who you spoke to and what they said.');
+        return;
+      }
+      const extracted: PMFInterviewLog[] = (data.interviews as Array<Partial<PMFInterviewLog>>).map((item) => ({
+        ...createEmptyInterview(),
+        ...item,
+        id: newInterviewId(),
+      }));
+      setInterviews((prev) => [...prev, ...extracted]);
+      extracted.forEach(() => trackPMFEvidenceLogged({ evidence_type: 'interview' }));
+      captureEvent('pmf_interviews_imported', { count: extracted.length, notes_chars: notes.length });
+      toast.success(
+        `${extracted.length} interview${extracted.length === 1 ? '' : 's'} imported.`,
+        { description: 'Review each entry before scoring — edit anything the extraction got wrong.' },
+      );
+      setImportOpen(false);
+      setImportNotes('');
+    } catch {
+      toast.error('Import failed. Please try again.');
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -518,6 +570,50 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
               </div>
             </div>
           </div>
+
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-info/20 bg-info/5 px-4 py-3">
+            <div className="flex items-start gap-2.5">
+              <ClipboardPaste className="mt-0.5 h-4 w-4 shrink-0 text-info" />
+              <div>
+                <p className="text-sm font-semibold text-foreground">Have call notes or transcripts?</p>
+                <p className="text-xs text-muted-foreground">
+                  Paste them and PMF Lab fills in the structured interview log for you — no retyping.
+                </p>
+              </div>
+            </div>
+            <Button type="button" variant="outline" size="sm" className="shrink-0 gap-1.5" onClick={() => setImportOpen(true)}>
+              <ClipboardPaste className="h-3.5 w-3.5" />
+              Import from notes
+            </Button>
+          </div>
+
+          <Dialog open={importOpen} onOpenChange={(open) => { if (!isImporting) setImportOpen(open); }}>
+            <DialogContent className="sm:max-w-xl">
+              <DialogHeader>
+                <DialogTitle>Import interviews from notes</DialogTitle>
+                <DialogDescription>
+                  Paste raw call notes, transcripts, or interview summaries. Each distinct person becomes one
+                  interview entry — review and edit them before scoring.
+                </DialogDescription>
+              </DialogHeader>
+              <Textarea
+                value={importNotes}
+                onChange={(e) => setImportNotes(e.target.value)}
+                placeholder={'Call with Maria (agency owner, 8-person team) — said she loses ~2h every Friday chasing feedback in email threads. Asked what it would cost. Blocker: needs Slack integration…'}
+                className="min-h-[220px] text-sm"
+                disabled={isImporting}
+              />
+              <DialogFooter className="gap-2">
+                <Button type="button" variant="ghost" onClick={() => setImportOpen(false)} disabled={isImporting}>
+                  Cancel
+                </Button>
+                <Button type="button" onClick={() => void importFromNotes()} disabled={isImporting || importNotes.trim().length < 80} className="gap-2">
+                  {isImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardPaste className="h-4 w-4" />}
+                  {isImporting ? 'Extracting…' : 'Extract interviews'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           <div className="rounded-4xl border border-border/60 bg-background/80 p-5 space-y-5">
             <div className="flex items-center justify-between gap-3">
