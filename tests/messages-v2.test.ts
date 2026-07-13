@@ -13,6 +13,7 @@ const upgradeMigration = read('supabase/migrations/20260716120000_messages_9_of_
 const newConversationDialog = read('src/components/social/NewConversationDialog.tsx');
 const voiceRecorder = read('src/components/social/VoiceNoteRecorder.tsx');
 const contextCard = read('src/components/social/MessageContextCard.tsx');
+const messageCtaRepairMigration = read('supabase/migrations/20260716132000_restore_account_linked_message_ctas.sql');
 
 test('messaging V2 exposes the consolidated authenticated contracts', () => {
   for (const contract of [
@@ -40,6 +41,15 @@ test('dangerous direct messaging writes are removed from the client', () => {
   assert.match(messagingHook, /messagingV2\.softDelete/);
   assert.match(messagingHook, /conversationState\(conversationId, 'hide'\)/);
   assert.doesNotMatch(messagingHook, /scopedConversationIds|user-messages-sync/);
+});
+
+test('account-linked Marketplace and mentor CTAs can create conversations safely', () => {
+  assert.match(messageCtaRepairMigration, /FROM auth\.users account/);
+  assert.match(messageCtaRepairMigration, /account\.id = p_other_user_id/);
+  assert.doesNotMatch(messageCtaRepairMigration, /FROM public\.profiles WHERE id = p_other_user_id/);
+  assert.match(messageCtaRepairMigration, /FROM public\.user_blocks block/);
+  assert.match(messageCtaRepairMigration, /ON CONFLICT \(direct_user_a, direct_user_b\)/);
+  assert.match(messageCtaRepairMigration, /GRANT EXECUTE[\s\S]*TO authenticated/);
 });
 
 test('read-only compatibility paths keep the inbox available before RPC deployment', () => {
