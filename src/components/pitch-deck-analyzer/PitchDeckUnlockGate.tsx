@@ -4,10 +4,11 @@ import { Loader2, Sparkles, Star, History, LineChart, Layers } from 'lucide-reac
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { getSafeLocalStorage } from '@/lib/safeStorage';
 import { persistOnboardingReturn } from '@/lib/authRedirect';
 import { captureEvent } from '@/lib/analytics';
-import { getPendingReferralCode, persistPendingReferralCode, setOAuthAuthIntent } from '@/lib/referral';
+import { getPendingReferralCode, persistPendingReferralCode } from '@/lib/referral';
+import { beginAttributedOAuthSignup } from '@/lib/signupAttribution';
+import { trackActivationFunnelEvent } from '@/lib/activationEntry';
 
 interface PitchDeckUnlockGateProps {
   returnPath: string;
@@ -24,19 +25,23 @@ export function PitchDeckUnlockGate({ returnPath, onBeforeSignup }: PitchDeckUnl
 
   useEffect(() => {
     captureEvent('free_tool_signup_gate_shown', { tool: 'pitch_deck_analyzer' });
-  }, []);
+    trackActivationFunnelEvent('activation_gate_shown', {
+      entry_id: 'pitch_deck_analyzer', tool: 'pitch_deck_analyzer', source: SOURCE,
+      step: 'signup_gate', is_authenticated: false, return_path: returnPath,
+    });
+  }, [returnPath]);
 
   const handleGoogleContinue = async () => {
     try {
       captureEvent('free_tool_signup_gate_cta_clicked', { tool: 'pitch_deck_analyzer', method: 'google' });
       onBeforeSignup?.();
       setIsGoogleLoading(true);
-      persistOnboardingReturn(returnPath);
-      const storage = getSafeLocalStorage();
-      storage.setItem('oauth_return_url', returnPath);
-      storage.setItem('oauth_source', SOURCE);
-      storage.setItem('oauth_signup_method', 'google');
-      setOAuthAuthIntent('signup');
+      beginAttributedOAuthSignup({
+        method: 'google',
+        source: SOURCE,
+        returnUrl: returnPath,
+        entryId: 'pitch_deck_analyzer',
+      });
       const pendingReferralCode = getPendingReferralCode();
       if (pendingReferralCode) persistPendingReferralCode(pendingReferralCode);
 

@@ -8,6 +8,7 @@ import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { supabase } from "@/integrations/supabase/client";
 import heroCompass from "@/assets/hero-compass.svg";
 import "./hero-cinematic-spotlight.css";
+import { trackActivationEntry, trackActivationFunnelEvent } from "@/lib/activationEntry";
 
 type HeroNavItem = {
   label: string;
@@ -122,6 +123,24 @@ const Hero = ({
         entries.forEach((entry) => {
           if (entry.isIntersecting && !hasTrackedView.current) {
             hasTrackedView.current = true;
+            trackActivationEntry("activation_entry_opened", {
+              entry_id: "hero_demo_try",
+              tool: "demo_studio",
+              source: "homepage_hero",
+              step: "impression",
+              entry_page: location.pathname,
+              placement: "hero_primary",
+              is_authenticated: isAuthenticated,
+            });
+            trackActivationEntry("activation_entry_opened", {
+              entry_id: "hero_icp_builder",
+              tool: "icp_builder",
+              source: "homepage_hero",
+              step: "impression",
+              entry_page: location.pathname,
+              placement: "hero_secondary",
+              is_authenticated: isAuthenticated,
+            });
             void trackTriggerView("hero-primary-cta", {
               ctaType: "primary",
               authenticated: isAuthenticated,
@@ -141,11 +160,20 @@ const Hero = ({
         observer.unobserve(heroElement);
       }
     };
-  }, [trackTriggerView, isAuthenticated]);
+  }, [trackTriggerView, isAuthenticated, location.pathname]);
 
   const handleCtaClick = () => {
     void trackEngagement("hero-demo-cta", 85);
     setAttribution('hero_demo_try', location.pathname);
+    trackActivationFunnelEvent("activation_step_completed", {
+      entry_id: "hero_demo_try",
+      tool: "demo_studio",
+      source: "homepage_hero",
+      step: "entry_click",
+      entry_page: location.pathname,
+      placement: "hero_primary",
+      is_authenticated: isAuthenticated,
+    });
     onCtaClick?.();
   };
 
@@ -153,6 +181,15 @@ const Hero = ({
   const handleIcpCtaClick = () => {
     void trackEngagement("hero-icp-cta", 80);
     setAttribution('hero_icp_builder', location.pathname);
+    trackActivationFunnelEvent("activation_step_completed", {
+      entry_id: "hero_icp_builder",
+      tool: "icp_builder",
+      source: "homepage_hero",
+      step: "entry_click",
+      entry_page: location.pathname,
+      placement: "hero_secondary",
+      is_authenticated: isAuthenticated,
+    });
   };
 
   // Send logged-out visitors into the no-signup Demo Studio "try" flow so they

@@ -412,9 +412,7 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
       )}
 
       {/* Anonymous visitors see the signup CTA in place of the feedback form. */}
-      {isGuest ? (
-        guestCta ?? null
-      ) : (
+      {!isGuest && (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

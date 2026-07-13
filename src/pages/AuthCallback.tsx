@@ -23,6 +23,7 @@ import {
 } from '@/lib/referral';
 import { logInfo, logWarn, logError } from '@/lib/logger';
 import { applySignupActivationSource } from '@/lib/retentionSystem';
+import { completeAttributedOAuthSignup } from '@/lib/signupAttribution';
 
 const NEW_ACCOUNT_MAX_AGE_MS = 10 * 60 * 1000;
 
@@ -171,6 +172,7 @@ const AuthCallback = () => {
           let returnUrl = sanitizeReturnPath(localStorage.getItem('oauth_return_url') || fallbackReturnUrl, '/dashboard');
           const oauthSource = localStorage.getItem('oauth_source');
           const oauthSignupMethod = localStorage.getItem('oauth_signup_method');
+          completeAttributedOAuthSignup();
           
           // If return URL is a booking flow, redirect to /mentorship instead
           if (returnUrl.startsWith('/mentorship/book/')) {

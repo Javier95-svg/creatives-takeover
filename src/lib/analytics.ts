@@ -5,7 +5,7 @@ import { logWarn } from '@/lib/logger';
 
 type AnalyticsProperties = Record<string, unknown>;
 type PostHogWithLoaded = typeof posthog & { __loaded?: boolean };
-type StoredAuthMethod = 'google' | 'linkedin' | 'email' | 'github';
+type StoredAuthMethod = 'google' | 'linkedin' | 'email' | 'github' | 'x';
 export type ActivationCompletedTrigger =
   | 'icp_completed'
   | 'mentor_saved'
@@ -49,7 +49,7 @@ export interface ActivationFunnelProps extends AnalyticsProperties {
   days_since_signup?: number | null;
 }
 
-export type SignupMethod = 'email' | 'google' | 'github' | 'linkedin';
+export type SignupMethod = 'email' | 'google' | 'github' | 'linkedin' | 'x';
 export interface SignupCompletedProps { method: SignupMethod; referrer: string | null; }
 export interface OnboardingCompletedProps {
   quiz_completed: boolean;
@@ -432,7 +432,7 @@ export const readAuthMethod = (): StoredAuthMethod | null => {
   const method = storage.getItem(AUTH_METHOD_STORAGE_KEY);
   storage.removeItem(AUTH_METHOD_STORAGE_KEY);
 
-  return method === 'google' || method === 'linkedin' || method === 'email' || method === 'github' ? method : null;
+  return method === 'google' || method === 'linkedin' || method === 'email' || method === 'github' || method === 'x' ? method : null;
 };
 
 /**
@@ -487,7 +487,7 @@ export const consumeSignupIntent = (): SignupMethod | null => {
       return null;
     }
     const method = parsed.method;
-    return method === 'email' || method === 'google' || method === 'github' || method === 'linkedin'
+    return method === 'email' || method === 'google' || method === 'github' || method === 'linkedin' || method === 'x'
       ? method
       : null;
   } catch {

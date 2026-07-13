@@ -47,6 +47,8 @@ import {
 import type { DemoStepWithHotspots, DemoStudioStoryboardStep } from '@/lib/demoStudio/types';
 import { captureEvent } from '@/lib/analytics';
 import { markFirstArtifactCreated, trackCurrentActivationJourneyEvent, trackRetentionEvent } from '@/lib/retentionSystem';
+import { trackActivationFunnelEvent } from '@/lib/activationEntry';
+import { useActivationAbandonment } from '@/hooks/useActivationAbandonment';
 
 const MAX_SCREENSHOTS = DEMO_STUDIO_TRY_MAX_SCREENSHOTS;
 const MIN_SCREENSHOTS = DEMO_STUDIO_TRY_MIN_SCREENSHOTS;
@@ -74,9 +76,19 @@ export default function TryPage() {
   const { subscriptionData } = useSubscription();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const entryTrackedRef = useRef(false);
   const isReturning = searchParams.get('hydrate') === '1';
   // Resume-email link (?resume=<token>) — hydrate takes precedence if both appear.
   const resumeToken = isReturning ? null : searchParams.get('resume');
+
+  useEffect(() => {
+    if (entryTrackedRef.current || authLoading) return;
+    entryTrackedRef.current = true;
+    trackActivationFunnelEvent('activation_entry_opened', {
+      entry_id: 'demo_try', tool: 'demo_studio', source: 'demo_try', step: 'opened',
+      entry_page: '/demo-studio/try', is_authenticated: Boolean(user),
+    });
+  }, [authLoading, user]);
 
   const [shots, setShots] = useState<Shot[]>([]);
   const [contextUrl, setContextUrl] = useState('');
@@ -88,6 +100,10 @@ export default function TryPage() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [steps, setSteps] = useState<DemoStepWithHotspots[] | null>(null);
+  useActivationAbandonment({
+    entry_id: 'demo_try', tool: 'demo_studio', source: 'demo_try', step: 'before_result',
+    is_authenticated: Boolean(user),
+  }, Boolean(steps));
   const [saving, setSaving] = useState(false);
   const [hydrateError, setHydrateError] = useState<string | null>(null);
   const [resuming, setResuming] = useState(Boolean(resumeToken));
@@ -218,6 +234,10 @@ export default function TryPage() {
     setSteps(built);
     setError(null);
     setUsedPlaceholders(mode === 'no_assets');
+    trackActivationFunnelEvent('activation_step_completed', {
+      entry_id: 'demo_try', tool: 'demo_studio', source: 'demo_try', step: 'preview_generated',
+      is_authenticated: Boolean(user), artifact_type: 'demo_studio_draft',
+    });
     const outputProperties = {
       tool: 'demo_studio_try',
       source: 'demo_try',
@@ -258,10 +278,18 @@ export default function TryPage() {
     const trimmedDescription = description.trim();
     if (isNoAssets) {
       if (!trimmedDescription && !contextUrl.trim()) {
+        trackActivationFunnelEvent('activation_validation_failed', {
+          entry_id: 'demo_try', tool: 'demo_studio', source: 'demo_try', step: 'input',
+          is_authenticated: Boolean(user), reason: 'missing_description_or_url',
+        });
         toast.error('Describe your product or paste its URL first.');
         return;
       }
     } else if (shots.length < MIN_SCREENSHOTS) {
+      trackActivationFunnelEvent('activation_validation_failed', {
+        entry_id: 'demo_try', tool: 'demo_studio', source: 'demo_try', step: 'input',
+        is_authenticated: Boolean(user), reason: 'too_few_screenshots',
+      });
       toast.error(`Add at least ${MIN_SCREENSHOTS} screenshots first.`);
       return;
     }
@@ -315,6 +343,10 @@ export default function TryPage() {
       if (runId !== runIdRef.current) return; // stale failure from a superseded run
       const message = e instanceof Error ? e.message : 'Could not generate your demo preview.';
       if (/free preview limit|rate limit/i.test(message)) {
+        trackActivationFunnelEvent('activation_generation_failed', {
+          entry_id: 'demo_try', tool: 'demo_studio', source: 'demo_try', step: 'generate',
+          is_authenticated: Boolean(user), reason: 'rate_limit', error_code: 'RATE_LIMITED',
+        });
         setError(message);
         toast.error(message);
         return;
@@ -335,6 +367,10 @@ export default function TryPage() {
       }
 
       setError(message);
+      trackActivationFunnelEvent('activation_generation_failed', {
+        entry_id: 'demo_try', tool: 'demo_studio', source: 'demo_try', step: 'generate',
+        is_authenticated: Boolean(user), reason: message,
+      });
       toast.error(message);
     } finally {
       if (runId === runIdRef.current) setGenerating(false);
@@ -572,6 +608,26 @@ export default function TryPage() {
       toast.error('Your screenshots are large. You may need to re-upload after signing up.');
     }
     navigate(SIGNUP_RETURN_HREF);
+  };
+
+  const handleLogin = async () => {
+    if (saving) return;
+    setSaving(true);
+    captureEvent('free_tool_login_clicked', {
+      tool: 'demo_studio',
+      source: 'demo_try',
+      has_result: Boolean(steps),
+    });
+    let stored = false;
+    if (steps) {
+      stored = await (persistPromiseRef.current ?? persistDraft(steps)).catch(() => false);
+      if (!stored) {
+        toast.warning('We could not preserve this preview. You can still log in and regenerate it.');
+      }
+    }
+    const returnPath = steps && stored ? RETURN_PATH : '/demo-studio/try';
+    navigate(`/login?source=demo-try&return=${encodeURIComponent(returnPath)}`);
+    setSaving(false);
   };
 
   // Hydrate-on-return: the user came back from signup with ?hydrate=1.
@@ -896,12 +952,14 @@ export default function TryPage() {
         {!user && (
           <p className="mt-6 text-center text-xs text-white/50">
             Already have an account?{' '}
-            <Link
-              to="/login?return=/demo-studio"
+            <button
+              type="button"
+              onClick={() => void handleLogin()}
+              disabled={saving}
               className="font-medium text-white/80 underline underline-offset-2 hover:text-white"
             >
-              Log in
-            </Link>
+              {saving ? 'Preparing your login…' : 'Log in'}
+            </button>
           </p>
         )}
       </div>

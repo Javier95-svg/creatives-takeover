@@ -1,15 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { captureEvent } from "@/lib/analytics";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
+import { trackActivationEntry, trackActivationFunnelEvent } from "@/lib/activationEntry";
 
 const StickyMobileCTA = () => {
   const [isVisible, setIsVisible] = useState(false);
   const location = useLocation();
   const isHomepage = location.pathname === "/";
   const { set: setAttribution } = useCTAAttribution();
+  const trackedVisible = useRef(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,6 +24,20 @@ const StickyMobileCTA = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isHomepage]);
+
+  useEffect(() => {
+    if (!isVisible || trackedVisible.current) return;
+    trackedVisible.current = true;
+    trackActivationEntry("activation_entry_opened", {
+      entry_id: "sticky_mobile_demo_try",
+      tool: "demo_studio",
+      source: "sticky_mobile",
+      step: "impression",
+      entry_page: location.pathname,
+      placement: "sticky_mobile",
+      is_authenticated: false,
+    });
+  }, [isVisible, location.pathname]);
 
   if (!isVisible) return null;
 
@@ -40,6 +56,15 @@ const StickyMobileCTA = () => {
               onClick={() => {
                 captureEvent('cta_clicked', { cta_name: 'sticky_mobile_cta', page: location.pathname });
                 setAttribution('sticky_mobile_demo_try', location.pathname);
+                trackActivationFunnelEvent("activation_step_completed", {
+                  entry_id: "sticky_mobile_demo_try",
+                  tool: "demo_studio",
+                  source: "sticky_mobile",
+                  step: "entry_click",
+                  entry_page: location.pathname,
+                  placement: "sticky_mobile",
+                  is_authenticated: false,
+                });
               }}
             >
               <span>Launch a live demo</span>

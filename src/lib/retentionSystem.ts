@@ -144,6 +144,9 @@ const SIGNUP_SOURCE_ACTIVATION_INTENT: Record<string, ActivationIntent> = {
   'pitch-deck-analyzer': 'unlock_pitch_deck',
   'tech-stack': 'unlock_tech_stack',
   'insighta-test': 'unlock_insighta',
+  'icp-draft-unlock': 'run_icp',
+  'icp-draft-share': 'run_icp',
+  'hero-icp-builder': 'run_icp',
 };
 
 export function getActivationRoute(intent: ActivationIntent) {

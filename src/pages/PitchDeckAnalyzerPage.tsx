@@ -17,6 +17,8 @@ import { toast } from "sonner";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { clearAnonymousToolState, readAnonymousToolState, saveAnonymousToolState } from "@/lib/anonymousToolState";
 import type { PitchDeckGuestResult } from "@/types/pitchDeckAnalyzer";
+import { trackActivationFunnelEvent } from "@/lib/activationEntry";
+import { useActivationAbandonment } from "@/hooks/useActivationAbandonment";
 
 const MAX_FILE_SIZE_MB = 20;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -47,6 +49,10 @@ export default function PitchDeckAnalyzerPage() {
   } = usePitchDeckAnalyzer();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [hydratedPitchDeck, setHydratedPitchDeck] = useState(false);
+  useActivationAbandonment({
+    entry_id: 'pitch_deck_analyzer', tool: 'pitch_deck_analyzer', source: 'pitch_deck_analyzer',
+    step: 'before_result', is_authenticated: Boolean(user),
+  }, Boolean(analysis || guestResult));
 
   useEffect(() => {
     trackPageVisit('Pitch Deck Analyzer');
@@ -55,6 +61,10 @@ export default function PitchDeckAnalyzerPage() {
   // Funnel: a logged-out visitor opened a free tool.
   useEffect(() => {
     if (!user) captureEvent('free_tool_opened', { tool: 'pitch_deck_analyzer' });
+    trackActivationFunnelEvent('activation_entry_opened', {
+      entry_id: 'pitch_deck_analyzer', tool: 'pitch_deck_analyzer', source: 'pitch_deck_analyzer',
+      step: 'opened', entry_page: '/pitch-deck-analyzer', is_authenticated: Boolean(user),
+    });
   }, [user]);
 
   useEffect(() => {
@@ -66,6 +76,10 @@ export default function PitchDeckAnalyzerPage() {
     setHydratedPitchDeck(true);
     void saveGuestResultAsAnalysis(stored.result).then((saved) => {
       if (saved) {
+        trackActivationFunnelEvent('activation_resume_succeeded', {
+          entry_id: 'pitch_deck_analyzer', tool: 'pitch_deck_analyzer', source: 'signup_hydrate',
+          step: 'persist_result', is_authenticated: true, artifact_type: 'pitch_deck_analysis',
+        });
         clearAnonymousToolState('pitch_deck_analyzer');
         toast.success('Your pitch deck analysis is saved to your account.');
         navigate('/pitch-deck-analyzer', { replace: true });
@@ -75,10 +89,18 @@ export default function PitchDeckAnalyzerPage() {
 
   const handleFileSelected = (file: File) => {
     if (file.type !== 'application/pdf') {
+      trackActivationFunnelEvent('activation_validation_failed', {
+        entry_id: 'pitch_deck_analyzer', tool: 'pitch_deck_analyzer', source: 'pitch_deck_analyzer',
+        step: 'file_select', is_authenticated: Boolean(user), reason: 'invalid_file_type',
+      });
       toast.error('Please upload a PDF. Export your deck to PDF (Keynote/PowerPoint/Slides all can) and try again.');
       return;
     }
     if (file.size > MAX_FILE_SIZE_BYTES) {
+      trackActivationFunnelEvent('activation_validation_failed', {
+        entry_id: 'pitch_deck_analyzer', tool: 'pitch_deck_analyzer', source: 'pitch_deck_analyzer',
+        step: 'file_select', is_authenticated: Boolean(user), reason: 'file_too_large',
+      });
       toast.error(`File is too large. Maximum size is ${MAX_FILE_SIZE_MB} MB.`);
       return;
     }
@@ -95,6 +117,10 @@ export default function PitchDeckAnalyzerPage() {
     captureEvent('free_tool_input_submitted', { tool: 'pitch_deck_analyzer', file_size: selectedFile.size });
     const result = await analyzePublicDeck(selectedFile);
     if (result) {
+      trackActivationFunnelEvent('activation_step_completed', {
+        entry_id: 'pitch_deck_analyzer', tool: 'pitch_deck_analyzer', source: 'pitch_deck_analyzer',
+        step: 'partial_result_generated', is_authenticated: false, artifact_type: 'pitch_deck_analysis',
+      });
       saveAnonymousToolState<PitchDeckAnonymousState>('pitch_deck_analyzer', { result });
       captureEvent('free_tool_result_shown', { tool: 'pitch_deck_analyzer' });
       captureEvent('pitch_deck_partial_result_shown', {
@@ -105,6 +131,11 @@ export default function PitchDeckAnalyzerPage() {
           ...result.recommendations,
           ...result.strengths,
         ].filter(Boolean).length),
+      });
+    } else {
+      trackActivationFunnelEvent('activation_generation_failed', {
+        entry_id: 'pitch_deck_analyzer', tool: 'pitch_deck_analyzer', source: 'pitch_deck_analyzer',
+        step: 'analyze', is_authenticated: false, reason: limitReached ? 'free_limit_reached' : 'analysis_failed',
       });
     }
   };

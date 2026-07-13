@@ -17,7 +17,7 @@ import MobileFormOptimizer from "@/components/MobileFormOptimizer";
 import { AuthSocialButtons } from "@/components/auth/AuthSocialButtons";
 import { mapSignUpError } from "@/lib/authErrors";
 import { MIN_PASSWORD_LENGTH, PASSWORD_LENGTH_ERROR } from "@/lib/passwordPolicy";
-import { captureEvent, persistAuthMethod, persistSignupIntent, trackSignupCompletedAttributed } from "@/lib/analytics";
+import { captureEvent, persistSignupIntent, trackSignupCompletedAttributed } from "@/lib/analytics";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import {
   isUsernameAvailable,
@@ -40,10 +40,10 @@ import {
   clearPendingReferralCode,
   getPendingReferralCode,
   persistPendingReferralCode,
-  setOAuthAuthIntent,
 } from "@/lib/referral";
 import { getSocialAuthSignupMethod, startSocialOAuth, type SocialAuthProviderId } from "@/lib/socialAuth";
 import { applySignupActivationSource } from "@/lib/retentionSystem";
+import { beginAttributedOAuthSignup } from "@/lib/signupAttribution";
 
 const signupHeroSlides = [
   {
@@ -86,8 +86,9 @@ const Signup = () => {
   const { trackSignupStarted, trackSignupCompleted } = useConversionTracking();
   const { get: getAttribution, clear: clearAttribution } = useCTAAttribution();
   const formSubmitted = useRef(false);
-  const [lastFocused, setLastFocused] = useState<string | null>(null);
-  const [fieldsInteracted, setFieldsInteracted] = useState<Set<string>>(new Set());
+  const abandonmentTracked = useRef(false);
+  const lastFocused = useRef<string | null>(null);
+  const fieldsInteracted = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -97,19 +98,29 @@ const Signup = () => {
     return () => window.clearInterval(timer);
   }, [signupHeroTimerReset]);
 
-  // Fire abandonment event when user leaves without submitting
+  const trackFieldInteraction = (field: string) => {
+    lastFocused.current = field;
+    fieldsInteracted.current.add(field);
+  };
+
+  // Fire abandonment once when the visitor actually leaves an incomplete form.
   useEffect(() => {
-    return () => {
-      if (fieldsInteracted.size > 0 && !formSubmitted.current) {
+    const emitAbandonmentOnce = () => {
+      if (!abandonmentTracked.current && fieldsInteracted.current.size > 0 && !formSubmitted.current) {
+        abandonmentTracked.current = true;
         captureEvent('signup_form_abandoned', {
-          last_field: lastFocused,
-          fields_touched: Array.from(fieldsInteracted),
-          fields_count: fieldsInteracted.size,
+          last_field: lastFocused.current,
+          fields_touched: Array.from(fieldsInteracted.current),
+          fields_count: fieldsInteracted.current.size,
         });
       }
     };
-   
-  }, [lastFocused, fieldsInteracted]);
+    window.addEventListener('pagehide', emitAbandonmentOnce);
+    return () => {
+      window.removeEventListener('pagehide', emitAbandonmentOnce);
+      emitAbandonmentOnce();
+    };
+  }, []);
 
   // Get conversion source from URL
   const [conversionSource] = useState(() => {
@@ -312,6 +323,7 @@ const Signup = () => {
       return;
     }
 
+    formSubmitted.current = true;
     setIsLoading(true);
 
     try {
@@ -379,8 +391,6 @@ const Signup = () => {
 
         // Track conversion completion
         void trackSignupCompleted(triggerType);
-        formSubmitted.current = true;
-
         const attr = getAttribution();
         trackSignupCompletedAttributed({
           method: 'email',
@@ -447,25 +457,17 @@ const Signup = () => {
 
   const handleSocialSignup = async (provider: SocialAuthProviderId) => {
     const signupMethod = getSocialAuthSignupMethod(provider);
+    formSubmitted.current = true;
 
     await startSocialOAuth({
       provider,
       intent: 'signup',
       beforeRedirect: () => {
-        if (signupMethod === 'google' || signupMethod === 'linkedin') {
-          persistAuthMethod(signupMethod);
-        }
-
-        // Mark this as a fresh OAuth signup so AuthContext fires `signup_completed`
-        // to PostHog after the OAuth round-trip resolves to SIGNED_IN.
-        if (signupMethod === 'google' || signupMethod === 'linkedin' || signupMethod === 'github') {
-          persistSignupIntent(signupMethod);
-        }
-
-        localStorage.setItem('oauth_return_url', conversionSource.returnUrl);
-        localStorage.setItem('oauth_source', conversionSource.source);
-        localStorage.setItem('oauth_signup_method', signupMethod);
-        setOAuthAuthIntent('signup');
+        beginAttributedOAuthSignup({
+          method: signupMethod,
+          source: conversionSource.source,
+          returnUrl: conversionSource.returnUrl,
+        });
 
         const pendingReferralCode = getPendingReferralCode();
         if (pendingReferralCode) {
@@ -649,6 +651,7 @@ const Signup = () => {
                         type="text"
                         value={formData.firstName}
                         onChange={handleInputChange}
+                        onBlur={() => trackFieldInteraction('firstName')}
                         placeholder="First name"
                         className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.firstName ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''}`}
                         disabled={isLoading}
@@ -671,6 +674,7 @@ const Signup = () => {
                       type="text"
                       value={formData.lastName}
                       onChange={handleInputChange}
+                      onBlur={() => trackFieldInteraction('lastName')}
                       placeholder="Last name"
                       className={`h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.lastName ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''}`}
                       disabled={isLoading}
@@ -695,6 +699,7 @@ const Signup = () => {
                       type="text"
                       value={formData.username}
                       onChange={handleInputChange}
+                      onBlur={() => trackFieldInteraction('username')}
                       placeholder="We can create one for you"
                       className={`h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.username ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''}`}
                       disabled={isLoading}
@@ -733,7 +738,7 @@ const Signup = () => {
                       type="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      onBlur={() => { setLastFocused('email'); setFieldsInteracted(prev => new Set(prev).add('email')); }}
+                      onBlur={() => trackFieldInteraction('email')}
                       placeholder="Enter your email"
                       className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.email ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''
                         }`}
@@ -763,7 +768,7 @@ const Signup = () => {
                       type={showPassword ? "text" : "password"}
                       value={formData.password}
                       onChange={handleInputChange}
-                      onBlur={() => { setLastFocused('password'); setFieldsInteracted(prev => new Set(prev).add('password')); }}
+                      onBlur={() => trackFieldInteraction('password')}
                       placeholder="Create a password"
                       className={`pl-10 pr-12 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.password ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''
                         }`}

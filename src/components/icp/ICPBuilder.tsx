@@ -52,10 +52,12 @@ import {
 } from "@/lib/icpBuilderSchema";
 import {
   buildIcpUnlockReturnPath,
+  authorizeIcpBuilderSession,
   buildEmptyGuidedAnswers,
   clearIcpBuilderSession,
   createEmptyIcpBuilderSession,
   persistIcpBuilderSession,
+  persistIcpBuilderAuthHandoff,
   readIcpBuilderSession,
   type IcpBuilderMode,
   type IcpBuilderSession,
@@ -79,6 +81,7 @@ import {
 } from "@/lib/icpUnlockFlow";
 import { consumeStoredIcpSeed, normalizeIcpSeed } from "@/lib/icpSeed";
 import { markFirstArtifactCreated, sendRetentionEmail, trackCurrentActivationJourneyEvent } from "@/lib/retentionSystem";
+import { useActivationAbandonment } from "@/hooks/useActivationAbandonment";
 
 const ICP_RESULTS_TABLE = "icp_analysis_results";
 const SEED_TIMEOUT_MS = 25000;
@@ -377,6 +380,10 @@ const ICPBuilder: React.FC = () => {
   const { createCheckout } = useSubscription();
 
   const [session, setSession] = useState<IcpBuilderSession>(() => readIcpBuilderSession() ?? createEmptyIcpBuilderSession());
+  useActivationAbandonment({
+    entry_id: 'icp_draft_unlock', tool: 'icp_builder', source: 'icp_builder',
+    step: 'before_saved_draft', is_authenticated: Boolean(user),
+  }, Boolean(session.savedAnalysisId));
   const [loadingPhase, setLoadingPhase] = useState<LoadingPhase>(null);
   const [loadingStartedAt, setLoadingStartedAt] = useState<number | null>(null);
   const [isPersisting, setIsPersisting] = useState(false);
@@ -440,6 +447,10 @@ const ICPBuilder: React.FC = () => {
   }, [session.draftPreview, session.fastDescription, session.mode, session.personaEditedSignificantly, validatedGuided]);
 
   useEffect(() => {
+    if (session.savedAnalysisId) {
+      clearIcpBuilderSession();
+      return;
+    }
     persistIcpBuilderSession(session);
   }, [session]);
 
@@ -980,6 +991,10 @@ const ICPBuilder: React.FC = () => {
       credits_used: 0,
     });
     trackActivationCompleted({ trigger: 'icp_completed', artifact: 'icp_completed' });
+    captureEvent('activation_step_completed', {
+      entry_id: 'icp_draft_unlock', tool: 'icp_builder', source,
+      step: 'draft_saved', is_authenticated: true, artifact_type: 'icp_analysis',
+    });
     // Task 4: completing the ICP path unlocks the full dashboard nav (flag-gated no-op otherwise).
     if (user?.id) {
       void markOnboardingPathCompleted(user.id, 'icp');
@@ -1239,8 +1254,26 @@ const ICPBuilder: React.FC = () => {
       return;
     }
 
+    const authorizedSession = authorizeIcpBuilderSession(session, user.id);
+    if (!authorizedSession) {
+      captureEvent("activation_resume_failed", {
+        entry_id: "icp_draft_unlock",
+        tool: "icp_builder",
+        source: "auth_handoff",
+        step: "restore",
+        is_authenticated: true,
+        reason: "missing_or_mismatched_handoff",
+      });
+      setSession(createEmptyIcpBuilderSession());
+      return;
+    }
+    if (authorizedSession.ownerUserId !== session.ownerUserId) {
+      setSession(authorizedSession);
+      return;
+    }
+
     void persistDraftAndContinue();
-  }, [isPersisting, persistDraftAndContinue, persistError, session.draftPreview, session.savedAnalysisId, session.unlockRequired, user]);
+  }, [isPersisting, persistDraftAndContinue, persistError, session, user]);
 
   const requestResumeLink = useCallback(async ({
     email,
@@ -2092,7 +2125,10 @@ const ICPBuilder: React.FC = () => {
               artifact={session.draftPreview}
               seed={session.mode === "fast" ? session.fastDescription : session.guided.seed}
               returnPath={unlockPath}
-              onBeforeAuthContinue={() => persistIcpBuilderSession(session)}
+              onBeforeAuthContinue={() => {
+                persistIcpBuilderSession(session);
+                persistIcpBuilderAuthHandoff(session, unlockPath);
+              }}
               onEmailLinkRequest={(email) => requestResumeLink({ email, source: "unlock_gate", includeArtifact: true })}
             />
           </div>

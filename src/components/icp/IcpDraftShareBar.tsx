@@ -29,6 +29,7 @@ interface IcpDraftShareBarProps {
   onSaveDocx?: () => Promise<void>;
   isSaving?: boolean;
   isSharing?: boolean;
+  onBeforeAuthContinue?: () => void;
 }
 
 export function IcpDraftShareBar({
@@ -39,6 +40,7 @@ export function IcpDraftShareBar({
   onSaveDocx,
   isSaving = false,
   isSharing = false,
+  onBeforeAuthContinue,
 }: IcpDraftShareBarProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -50,6 +52,7 @@ export function IcpDraftShareBar({
   const requireAuth = (action: string): boolean => {
     if (user) return true;
     toast.info(`Create a free account to ${action} your ICP Draft.`);
+    onBeforeAuthContinue?.();
     navigate(signUpPath);
     return false;
   };

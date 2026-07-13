@@ -3,11 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Loader2, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { getSafeLocalStorage } from "@/lib/safeStorage";
 import { persistOnboardingReturn } from "@/lib/authRedirect";
 import { normalizeIcpSeed, persistIcpSeed } from "@/lib/icpSeed";
 import {
-  persistAuthMethod,
   trackICPLoginClicked,
   trackICPUnlockClicked,
   trackICPUnlockGateShown,
@@ -15,9 +13,10 @@ import {
 import {
   getPendingReferralCode,
   persistPendingReferralCode,
-  setOAuthAuthIntent,
 } from "@/lib/referral";
 import type { StoredIcpArtifact } from "@/lib/icpBuilderSession";
+import { beginAttributedOAuthSignup } from "@/lib/signupAttribution";
+import { trackActivationFunnelEvent } from "@/lib/activationEntry";
 
 interface IcpUnlockGateProps {
   artifact: StoredIcpArtifact;
@@ -56,7 +55,15 @@ export function IcpUnlockGate({
       layout: "inline",
       locked_after: "pain",
     });
-  }, [artifact.draftDocument.confidence.level, normalizedSeed]);
+    trackActivationFunnelEvent("activation_gate_shown", {
+      entry_id: "icp_draft_unlock",
+      tool: "icp_builder",
+      source: "icp-draft-unlock",
+      step: "signup_gate",
+      is_authenticated: false,
+      return_path: returnPath,
+    });
+  }, [artifact.draftDocument.confidence.level, normalizedSeed, returnPath]);
 
   const handleGoogleContinue = async () => {
     try {
@@ -65,16 +72,19 @@ export function IcpUnlockGate({
         method: "google",
         surface: "inline_lock_block",
       });
+      trackActivationFunnelEvent("activation_gate_clicked", {
+        entry_id: "icp_draft_unlock", tool: "icp_builder", source: "icp-draft-unlock",
+        step: "signup_google", is_authenticated: false, return_path: returnPath,
+      });
       setIsGoogleLoading(true);
-      persistAuthMethod("google");
       onBeforeAuthContinue?.();
       persistIcpSeed(normalizedSeed);
-      persistOnboardingReturn(returnPath);
-      const storage = getSafeLocalStorage();
-      storage.setItem("oauth_return_url", returnPath);
-      storage.setItem("oauth_source", "icp-draft-unlock");
-      storage.setItem("oauth_signup_method", "google");
-      setOAuthAuthIntent("signup");
+      beginAttributedOAuthSignup({
+        method: "google",
+        source: "icp-draft-unlock",
+        returnUrl: returnPath,
+        entryId: "icp_draft_unlock",
+      });
       const pendingReferralCode = getPendingReferralCode();
       if (pendingReferralCode) {
         persistPendingReferralCode(pendingReferralCode);
@@ -106,6 +116,10 @@ export function IcpUnlockGate({
       page_path: "/icp-builder",
       method: "email",
       surface: "inline_lock_block",
+    });
+    trackActivationFunnelEvent("activation_gate_clicked", {
+      entry_id: "icp_draft_unlock", tool: "icp_builder", source: "icp-draft-unlock",
+      step: "signup_email", is_authenticated: false, return_path: returnPath,
     });
     onBeforeAuthContinue?.();
     persistIcpSeed(normalizedSeed);

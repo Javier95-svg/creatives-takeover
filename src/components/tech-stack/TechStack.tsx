@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useTransition } from 'react';
+import React, { useState, useMemo, useEffect, useTransition, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -23,6 +23,8 @@ import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import { captureEvent } from '@/lib/analytics';
 import { clearAnonymousToolState, readAnonymousToolState, saveAnonymousToolState } from '@/lib/anonymousToolState';
 import { markFirstArtifactCreated, trackRetentionEvent } from '@/lib/retentionSystem';
+import { trackActivationFunnelEvent } from '@/lib/activationEntry';
+import { useActivationAbandonment } from '@/hooks/useActivationAbandonment';
 
 // Icon mapping
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -73,6 +75,8 @@ interface TechStackAnonymousState {
   };
 }
 
+type TechStackOutputState = 'preview' | 'unlocking' | 'unlocked' | 'confirmation_required' | 'error';
+
 const buildSelectedProductsKey = (selectedProducts: SelectedProducts) =>
   techStackData.map((category) => `${category.id}:${selectedProducts[category.id] || ''}`).join('|');
 
@@ -101,7 +105,21 @@ const TechStack: React.FC = () => {
   const [generatingBudget, setGeneratingBudget] = useState(false);
   const [generatedBudgetKey, setGeneratedBudgetKey] = useState<string | null>(null);
   const [hydratedStack, setHydratedStack] = useState(false);
+  const [outputState, setOutputState] = useState<TechStackOutputState>('preview');
+  useActivationAbandonment({
+    entry_id: 'tech_stack', tool: 'tech_stack_builder', source: 'tech_stack',
+    step: 'before_full_plan', is_authenticated: Boolean(user),
+  }, outputState === 'unlocked');
+  const hydrationUnlockAttemptedRef = useRef(false);
+  const hydrationAutoSaveAttemptedRef = useRef(false);
   const [, startLoginNavigation] = useTransition();
+
+  useEffect(() => {
+    trackActivationFunnelEvent('activation_entry_opened', {
+      entry_id: 'tech_stack', tool: 'tech_stack_builder', source: 'tech_stack', step: 'opened',
+      entry_page: '/tech-stack', is_authenticated: Boolean(user),
+    });
+  }, [user]);
 
   const currentTier = (subscriptionData.subscription_tier || 'rookie').toLowerCase();
   useEffect(() => {
@@ -225,7 +243,12 @@ const TechStack: React.FC = () => {
     setHydratedStack(true);
     setSelectedProducts(stored.selectedProducts);
     setShowBudget(true);
-    setGeneratedBudgetKey(buildSelectedProductsKey(stored.selectedProducts));
+    setGeneratedBudgetKey(null);
+    setOutputState('preview');
+    trackActivationFunnelEvent('activation_resume_succeeded', {
+      entry_id: 'tech_stack', tool: 'tech_stack_builder', source: 'signup_hydrate',
+      step: 'restore_preview', is_authenticated: Boolean(user), artifact_type: 'tech_stack_report',
+    });
 
     if (user) {
       void trackRetentionEvent('artifact_resumed', {
@@ -237,7 +260,7 @@ const TechStack: React.FC = () => {
     }
   }, [hydratedStack, searchParams, user]);
 
-  const handleSeeBudget = async () => {
+  const handleSeeBudget = async (confirmCreditCharge = false) => {
     if (generatingBudget) return;
 
     if (!user) {
@@ -263,6 +286,7 @@ const TechStack: React.FC = () => {
       captureEvent('free_tool_input_submitted', { tool: 'tech_stack', categories: techStackData.length });
       setShowBudget(true);
       setGeneratedBudgetKey(selectedProductsKey);
+      setOutputState('preview');
       saveAnonymousToolState<TechStackAnonymousState>('tech_stack', {
         selectedProducts,
         budget: {
@@ -307,6 +331,7 @@ const TechStack: React.FC = () => {
       selected_categories: techStackData.length,
     });
     setGeneratingBudget(true);
+    setOutputState('unlocking');
 
     if (subscriptionLoading || creditsLoading) {
       toast({
@@ -314,6 +339,7 @@ const TechStack: React.FC = () => {
         description: "Please wait a moment for your plan and credit balance to finish loading.",
       });
       setGeneratingBudget(false);
+      setOutputState('preview');
       return;
     }
 
@@ -324,6 +350,7 @@ const TechStack: React.FC = () => {
         description: "Please wait a moment for your plan and credit balance to finish loading.",
       });
       setGeneratingBudget(false);
+      setOutputState('preview');
       return;
     }
 
@@ -335,6 +362,7 @@ const TechStack: React.FC = () => {
           description: featureAccess.message || "Upgrade to Rising for full Tech Stack access.",
         });
         setGeneratingBudget(false);
+        setOutputState('error');
         return;
       }
 
@@ -384,6 +412,17 @@ const TechStack: React.FC = () => {
           title: 'First Tech Stack build is on us',
           description: 'Enjoy your free build. Future builds cost 4 credits.',
         });
+      } else if (!confirmCreditCharge) {
+        setOutputState('confirmation_required');
+        captureEvent('activation_gate_shown', {
+          entry_id: 'tech_stack',
+          tool: 'tech_stack_builder',
+          source: hydratedStack ? 'tech_stack_hydrate' : 'tech_stack',
+          step: 'credit_confirmation',
+          is_authenticated: true,
+          credits_required: 4,
+        });
+        return;
       } else {
         const deducted = await deductCredits('TECH_STACK_GENERATION', {
           featureName: 'Tech Stack Generation',
@@ -393,7 +432,10 @@ const TechStack: React.FC = () => {
             selectedProductsKey,
           }
         });
-        if (!deducted) return;
+        if (!deducted) {
+          setOutputState('error');
+          return;
+        }
       }
 
       try {
@@ -408,6 +450,11 @@ const TechStack: React.FC = () => {
 
       setShowBudget(true);
       setGeneratedBudgetKey(selectedProductsKey);
+      setOutputState('unlocked');
+      trackActivationFunnelEvent('activation_step_completed', {
+        entry_id: 'tech_stack', tool: 'tech_stack_builder', source: hydratedStack ? 'tech_stack_hydrate' : 'tech_stack',
+        step: 'full_plan_unlocked', is_authenticated: true, artifact_type: 'tech_stack_report',
+      });
       await trackRetentionEvent('activation_first_output_generated', {
         user_id: user.id,
         tool: 'tech_stack',
@@ -424,7 +471,22 @@ const TechStack: React.FC = () => {
     }
   };
 
-  const handleSaveReport = async () => {
+  useEffect(() => {
+    if (
+      !hydratedStack ||
+      !user ||
+      hydrationUnlockAttemptedRef.current ||
+      subscriptionLoading ||
+      creditsLoading ||
+      selectedProductsKey === buildSelectedProductsKey({})
+    ) return;
+    hydrationUnlockAttemptedRef.current = true;
+    void handleSeeBudget(false);
+  // The ref makes this an idempotent auth/hydration transition, including Strict Mode.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [creditsLoading, hydratedStack, selectedProductsKey, subscriptionLoading, user?.id]);
+
+  const handleSaveReport = async (automatic = false) => {
     if (!user) {
       setLoginRedirectPending(true);
       startLoginNavigation(() => {
@@ -448,7 +510,7 @@ const TechStack: React.FC = () => {
       day: 'numeric',
       year: 'numeric'
     })}`;
-    const name = reportName.trim() || fallbackName;
+    const name = reportName.trim() || (automatic ? 'My first Tech Stack plan' : fallbackName);
 
     const { data, error } = await supabase
       .from('tech_stack_reports')
@@ -492,7 +554,7 @@ const TechStack: React.FC = () => {
         source: 'tech_stack',
       });
       toast({
-        title: 'Report saved',
+        title: automatic ? 'Your Tech Stack plan is unlocked and saved' : 'Report saved',
         description: 'You can access it anytime from Saved Reports.',
         action: buildDashboardReturnToastAction('tech-stack', navigate),
       });
@@ -500,6 +562,14 @@ const TechStack: React.FC = () => {
 
     setSavingReport(false);
   };
+
+  useEffect(() => {
+    if (!hydratedStack || outputState !== 'unlocked' || !user || hydrationAutoSaveAttemptedRef.current) return;
+    hydrationAutoSaveAttemptedRef.current = true;
+    void handleSaveReport(true);
+  // Saving is intentionally keyed to the single successful hydrated unlock.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydratedStack, outputState, user?.id]);
 
   const handleDeleteReport = async (reportId: string) => {
     if (!user) return;
@@ -568,7 +638,7 @@ const TechStack: React.FC = () => {
             <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveReport} disabled={savingReport || !allCategoriesSelected}>
+            <Button onClick={() => void handleSaveReport(false)} disabled={savingReport || !allCategoriesSelected}>
               <Save className="w-4 h-4 mr-2" />
               {savingReport ? 'Saving...' : 'Save Report'}
             </Button>
@@ -756,7 +826,7 @@ const TechStack: React.FC = () => {
                   </Button>
                 )}
                 <Button
-                  onClick={handleSeeBudget}
+                  onClick={() => void handleSeeBudget(false)}
                   size="lg"
                   variant={!allCategoriesSelected && user ? "outline" : "default"}
                   className={`w-full sm:w-auto min-w-[140px] ${loginRedirectPending ? 'pointer-events-none opacity-70' : ''}`}
@@ -779,10 +849,13 @@ const TechStack: React.FC = () => {
           techStackData={techStackData}
           saveName={reportName}
           onSaveNameChange={setReportName}
-          onSave={handleSaveReport}
+          onSave={() => void handleSaveReport(false)}
           saving={savingReport}
           onClose={() => setShowBudget(false)}
           isPublic={!user}
+          fullPlanUnlocked={outputState === 'unlocked'}
+          unlockState={outputState}
+          onUnlock={() => void handleSeeBudget(true)}
           onGateCtaClick={() => {
             persistPublicBudget();
             captureEvent('free_tool_signup_gate_cta_clicked', { tool: 'tech_stack' });
@@ -953,16 +1026,39 @@ interface BudgetDisplayProps {
   /** Logged-out preview: show the monthly partial, gate the annual + full build plan. */
   isPublic?: boolean;
   onGateCtaClick?: () => void;
+  fullPlanUnlocked: boolean;
+  unlockState: TechStackOutputState;
+  onUnlock: () => void;
 }
 
 // Gate for the full build plan. For signed-in users it renders the deliverable
 // inline; for logged-out visitors it blurs/locks it behind a free-account CTA.
-const PlanGate: React.FC<{ isPublic: boolean; onGateCtaClick?: () => void; children: React.ReactNode }> = ({
+const PlanGate: React.FC<{ isPublic: boolean; locked: boolean; unlockState: TechStackOutputState; onUnlock: () => void; onGateCtaClick?: () => void; children: React.ReactNode }> = ({
   isPublic,
+  locked,
+  unlockState,
+  onUnlock,
   onGateCtaClick,
   children,
 }) => {
-  if (!isPublic) return <>{children}</>;
+  if (!locked) return <>{children}</>;
+  if (!isPublic) {
+    return (
+      <Card className="border-2 border-primary/20">
+        <CardContent className="space-y-3 pt-6 text-center">
+          <h3 className="text-xl font-semibold">Your full build plan is ready to unlock</h3>
+          <p className="text-sm text-muted-foreground">
+            {unlockState === 'confirmation_required'
+              ? 'Your free first build has already been used. Generate this full plan for 4 credits.'
+              : 'We are checking your first-build gift. You will never be charged automatically.'}
+          </p>
+          <Button onClick={onUnlock} disabled={unlockState === 'unlocking'}>
+            {unlockState === 'unlocking' ? 'Unlocking…' : 'Generate full plan — 4 credits'}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
   return (
     <PreviewModeWrapper
       featureName="Full build plan"
@@ -990,6 +1086,9 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
   onClose,
   isPublic = false,
   onGateCtaClick,
+  fullPlanUnlocked,
+  unlockState,
+  onUnlock,
 }) => {
   const { total, breakdown, hasVariable } = budget;
 
@@ -1381,7 +1480,7 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {!isPublic && (
+          {fullPlanUnlocked && (
             <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
               <div className="flex-1">
                 <p className="text-xs text-muted-foreground mb-1">Save this report</p>
@@ -1427,7 +1526,7 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
             </div>
 
             {/* Annual Cost — gated for logged-out visitors (shown blurred below) */}
-            {!isPublic && annualBlock}
+            {fullPlanUnlocked && annualBlock}
 
             {/* Budget Range Info */}
             <div className="p-3 bg-info-subtle dark:bg-info/20 rounded-lg border border-info dark:border-info">
@@ -1453,7 +1552,13 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
         </CardContent>
       </Card>
 
-      <PlanGate isPublic={isPublic} onGateCtaClick={onGateCtaClick}>
+      <PlanGate
+        isPublic={isPublic}
+        locked={!fullPlanUnlocked}
+        unlockState={unlockState}
+        onUnlock={onUnlock}
+        onGateCtaClick={onGateCtaClick}
+      >
       {isPublic && (
         <Card className="border-2 border-primary/20">
           <CardContent className="pt-6">{annualBlock}</CardContent>

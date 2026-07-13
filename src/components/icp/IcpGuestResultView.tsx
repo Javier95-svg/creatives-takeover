@@ -33,7 +33,11 @@ export function IcpGuestResultView({
       topBar={
         // Share/save bar sits above the draft so visitors see it without
         // scrolling to the bottom. Buttons are visible but all require sign up.
-        <IcpDraftShareBar shareUrl={null} returnPath={returnPath} />
+        <IcpDraftShareBar
+          shareUrl={null}
+          returnPath={returnPath}
+          onBeforeAuthContinue={onBeforeAuthContinue}
+        />
       }
       footer={
         // Signup gate sits right after the free Customer + Pain sections to drive

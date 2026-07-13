@@ -36,7 +36,8 @@ serve(async (req) => {
       business_model,
       primary_location,
       funding_amount_needed,
-      pitch_summary
+      pitch_summary,
+      allow_credit_charge = false
     } = await req.json();
 
     // Validate required scores (original 4)
@@ -103,16 +104,43 @@ serve(async (req) => {
       },
     });
 
-    // Check and deduct credits before processing
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Race-safe lifetime gift. A duplicate insert means the gift was already
+    // used, so only that path may proceed to the normal credit charge.
+    const { data: gift, error: giftError } = await supabase
+      .from('feature_gifts')
+      .insert({ user_id: user.id, feature: 'FUNDRAISING_READINESS_ANALYSIS' })
+      .select('user_id')
+      .maybeSingle();
+    const giftUsed = !giftError && Boolean(gift);
+
+    if (!giftUsed && allow_credit_charge !== true) {
+      return new Response(
+        JSON.stringify({
+          error: 'Credit confirmation required',
+          errorCode: 'CREDIT_CONFIRMATION_REQUIRED',
+          requiredCredits: CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS,
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    // Check and deduct credits before processing when the gift is unavailable.
     const creditCost = CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS;
-    const creditCheck = await checkAndDeductCredits(
-      user.id,
-      creditCost,
-      'Fundraising Readiness Analysis',
-      undefined,
-      { idempotencyKey, entitlementFeature: 'FUNDRAISING_READINESS_ANALYSIS' }
-    );
-    const chargedCredits = (creditCheck.usedFromQuota ?? 0) + (creditCheck.usedFromBalance ?? 0);
+    let creditCheck: Awaited<ReturnType<typeof checkAndDeductCredits>> = { success: true } as never;
+    if (!giftUsed) {
+      creditCheck = await checkAndDeductCredits(
+        user.id,
+        creditCost,
+        'Fundraising Readiness Analysis',
+        undefined,
+        { idempotencyKey, entitlementFeature: 'FUNDRAISING_READINESS_ANALYSIS' }
+      );
+    }
+    const chargedCredits = giftUsed ? 0 : (creditCheck.usedFromQuota ?? 0) + (creditCheck.usedFromBalance ?? 0);
 
     if (!creditCheck.success) {
       return new Response(
@@ -128,10 +156,6 @@ serve(async (req) => {
         }
       );
     }
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Calculate average score (including optional new questions + investor_network)
     const allScores = [
@@ -206,6 +230,12 @@ serve(async (req) => {
     // Use Lovable AI to analyze the results
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
+      if (chargedCredits > 0) {
+        await refundCredits(user.id, chargedCredits, 'Fundraising Readiness Analysis', 'Refund: service unavailable');
+      }
+      if (giftUsed) {
+        await supabase.from('feature_gifts').delete().eq('user_id', user.id).eq('feature', 'FUNDRAISING_READINESS_ANALYSIS');
+      }
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
@@ -458,11 +488,11 @@ CRITICAL: Judge against ${stage} standards, NOT scaling-stage perfection.`
     const aiData = await aiResponse.json();
     const toolCall = aiData.choices[0]?.message?.tool_calls?.[0];
 
-    if (!toolCall) {
-      // Fallback: parse text response
-      const textResponse = aiData.choices[0]?.message?.content || '';
-      return new Response(
-        JSON.stringify({
+    const analysis = toolCall
+      ? JSON.parse(toolCall.function.arguments)
+      : (() => {
+        const textResponse = aiData.choices[0]?.message?.content || '';
+        return {
           verdict: isReady ? 'Ready' : 'Not Ready',
           confidence: Math.round(averageScore * 20),
           summary: textResponse.substring(0, 500),
@@ -471,17 +501,12 @@ CRITICAL: Judge against ${stage} standards, NOT scaling-stage perfection.`
           prioritized_actions: [],
           timeline_to_readiness: 'Unknown',
           risk_assessment: 'Unable to assess',
-          raw_response: textResponse
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+          raw_response: textResponse,
+        };
+      })();
 
-    const analysis = JSON.parse(toolCall.function.arguments);
-
-    // Save assessment to database (optional)
-    try {
-      await supabase
+    // The promised artifact is not complete until it is durably persisted.
+    const { data: savedAssessment, error: saveError } = await supabase
         .from('fundraising_readiness_assessments')
         .insert({
           user_id: user.id,
@@ -511,16 +536,20 @@ CRITICAL: Judge against ${stage} standards, NOT scaling-stage perfection.`
           meets_investor_threshold: meetsInvestorThreshold,
           verdict: analysis.verdict,
           analysis_data: analysis,
-          created_at: new Date().toISOString()
-        });
-    } catch (dbError) {
-      // Non-critical - log but don't fail
-      console.error('Failed to save assessment:', dbError);
+          created_at: new Date().toISOString(),
+        })
+        .select('id')
+        .single();
+    if (saveError || !savedAssessment?.id) {
+      throw new Error(`Failed to save assessment: ${saveError?.message ?? 'missing assessment id'}`);
     }
 
     return new Response(
       JSON.stringify({
         ...analysis,
+        assessmentId: savedAssessment.id,
+        creditsUsed: chargedCredits,
+        giftUsed,
         average_score: averageScore,
         meets_investor_threshold: meetsInvestorThreshold,
         threshold_message: threshold.message,
@@ -556,6 +585,13 @@ CRITICAL: Judge against ${stage} standards, NOT scaling-stage perfection.`
       const err = aiError instanceof Error ? aiError : new Error(String(aiError));
       if (chargedCredits > 0) {
         await refundCredits(user.id, chargedCredits, 'Fundraising Readiness Analysis', 'Refund: AI processing failed', { error: err.message });
+      }
+      if (giftUsed) {
+        await supabase
+          .from('feature_gifts')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('feature', 'FUNDRAISING_READINESS_ANALYSIS');
       }
       throw aiError;
     }

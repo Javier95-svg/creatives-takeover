@@ -38,6 +38,8 @@ import {
   isQuestionOptional
 } from "@/types/fundraisingAssessment";
 import { ASSESSMENT_QUESTIONS, INDUSTRY_OPTIONS, BUSINESS_MODEL_OPTIONS, SCORE_LABELS } from "@/data/assessmentQuestions";
+import { trackActivationFunnelEvent } from "@/lib/activationEntry";
+import { useActivationAbandonment } from "@/hooks/useActivationAbandonment";
 
 // Legacy interface kept for backwards compatibility
 type AIAnalysis = EnhancedAIAnalysis;
@@ -49,6 +51,16 @@ interface InsightaAnonymousState {
   context: Partial<AssessmentContext>;
   scores: Partial<AssessmentScores>;
   averageScore: number;
+}
+
+interface InsightaAnalysisResponse extends AIAnalysis {
+  assessmentId: string;
+  creditsUsed: number;
+  giftUsed: boolean;
+  average_score?: number;
+  error?: string;
+  errorCode?: string;
+  requiredCredits?: number;
 }
 
 const FundraisingReadinessToolkitAll = () => {
@@ -83,9 +95,20 @@ const FundraisingReadinessToolkitAll = () => {
   // Logged-out visitors get a real, client-side top-line readiness score for free.
   // The full AI diagnostic stays gated behind a free account.
   const [publicResult, setPublicResult] = useState(false);
+  const [hydratedForUnlock, setHydratedForUnlock] = useState(false);
+  const [creditConfirmationRequired, setCreditConfirmationRequired] = useState(false);
+  useActivationAbandonment({
+    entry_id: 'insighta_test', tool: 'insighta_test', source: 'insighta_test',
+    step: 'before_diagnostic', is_authenticated: isAuthenticated,
+  }, Boolean(aiAnalysis));
+  const hydrationAnalysisAttemptedRef = React.useRef(false);
 
   React.useEffect(() => {
     captureEvent("insighta_test_context_started", { is_authenticated: isAuthenticated });
+    trackActivationFunnelEvent('activation_entry_opened', {
+      entry_id: 'insighta_test', tool: 'insighta_test', source: 'insighta_test', step: 'opened',
+      entry_page: '/insighta-test', is_authenticated: isAuthenticated,
+    });
   }, [isAuthenticated]);
 
   React.useEffect(() => {
@@ -99,6 +122,11 @@ const FundraisingReadinessToolkitAll = () => {
     setScores((prev) => ({ ...prev, ...stored.scores }));
     setCurrentStep('assessment');
     setPublicResult(!isAuthenticated);
+    setHydratedForUnlock(isAuthenticated);
+    trackActivationFunnelEvent('activation_resume_succeeded', {
+      entry_id: 'insighta_test', tool: 'insighta_test', source: 'signup_hydrate',
+      step: 'restore_answers', is_authenticated: isAuthenticated, artifact_type: 'insighta_readiness',
+    });
 
     if (isAuthenticated && user) {
       void trackRetentionEvent('artifact_resumed', {
@@ -215,7 +243,7 @@ const FundraisingReadinessToolkitAll = () => {
     }));
   };
 
-  const analyzeReadiness = async () => {
+  const analyzeReadiness = async (confirmCreditCharge = false) => {
     if (!isAuthenticated || !user) {
       toast.error("Please sign in to analyze your readiness");
       navigate('/login', { state: { returnTo: '/insighta-test' } });
@@ -235,7 +263,6 @@ const FundraisingReadinessToolkitAll = () => {
     });
 
     // Check feature access and credits
-    const requiredCredits = ensureCredits('FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Insighta Test' });
     const featureAccess = checkFeatureAccess('insighta_test');
     if (!featureAccess.hasAccess) {
       openUpgradePrompt({
@@ -246,6 +273,9 @@ const FundraisingReadinessToolkitAll = () => {
       });
       return;
     }
+    const requiredCredits = confirmCreditCharge
+      ? ensureCredits('FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Insighta Test' })
+      : 0;
     if (requiredCredits === null) return;
 
     setIsAnalyzing(true);
@@ -274,9 +304,24 @@ const FundraisingReadinessToolkitAll = () => {
           business_model: context.business_model,
           primary_location: context.primary_location,
           funding_amount_needed: context.funding_amount_needed,
-          pitch_summary: context.pitch_summary
+          pitch_summary: context.pitch_summary,
+          allow_credit_charge: confirmCreditCharge,
         }
       });
+
+      const response = data as InsightaAnalysisResponse | null;
+      if (response?.errorCode === 'CREDIT_CONFIRMATION_REQUIRED') {
+        setCreditConfirmationRequired(true);
+        captureEvent('activation_gate_shown', {
+          entry_id: 'insighta_test',
+          tool: 'insighta_test',
+          source: hydratedForUnlock ? 'insighta_hydrate' : 'insighta_test',
+          step: 'credit_confirmation',
+          is_authenticated: true,
+          credits_required: response.requiredCredits ?? 8,
+        });
+        return;
+      }
 
       if (error) {
         if (handleCreditError(error, data, 'FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Insighta Test' })) {
@@ -292,7 +337,13 @@ const FundraisingReadinessToolkitAll = () => {
         throw new Error(data.error);
       }
 
-      setAiAnalysis(data as AIAnalysis);
+      if (!response?.assessmentId) throw new Error('The diagnostic was generated but could not be saved. Please retry.');
+      setAiAnalysis(response);
+      trackActivationFunnelEvent('activation_step_completed', {
+        entry_id: 'insighta_test', tool: 'insighta_test', source: hydratedForUnlock ? 'insighta_hydrate' : 'insighta_test',
+        step: 'diagnostic_saved', is_authenticated: true, artifact_type: 'insighta_readiness',
+      });
+      setCreditConfirmationRequired(false);
       clearAnonymousToolState('insighta_test');
       setCurrentStep('results'); // Transition to results step
       await trackRetentionEvent('activation_first_output_generated', {
@@ -304,7 +355,7 @@ const FundraisingReadinessToolkitAll = () => {
       await markFirstArtifactCreated({
         userId: user.id,
         artifactType: 'insighta_readiness',
-        artifactId: `insighta-readiness-${Date.now()}`,
+        artifactId: response.assessmentId,
         label: `Insighta readiness: ${data?.verdict ?? 'Diagnostic'}`,
         resumeUrl: '/insighta-test',
         source: 'insighta_test',
@@ -315,12 +366,18 @@ const FundraisingReadinessToolkitAll = () => {
         readiness_score: data?.average_score ?? Number(averageScore.toFixed(1)),
       });
 
-      toast.success(`Analysis complete! (Used ${requiredCredits} credits)`);
+      toast.success(response.giftUsed
+        ? 'Your first Insighta diagnostic is unlocked and saved.'
+        : `Analysis complete! (Used ${response.creditsUsed ?? requiredCredits} credits)`);
       await refreshBalance();
     } catch (error) {
       console.error('Analysis error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to analyze readiness. Please try again.';
       setAnalysisError(errorMessage);
+      trackActivationFunnelEvent('activation_generation_failed', {
+        entry_id: 'insighta_test', tool: 'insighta_test', source: hydratedForUnlock ? 'insighta_hydrate' : 'insighta_test',
+        step: 'analyze', is_authenticated: true, reason: errorMessage,
+      });
       if (!errorMessage.includes('credits')) {
         toast.error(errorMessage);
       }
@@ -328,6 +385,20 @@ const FundraisingReadinessToolkitAll = () => {
       setIsAnalyzing(false);
     }
   };
+
+  React.useEffect(() => {
+    if (
+      !hydratedForUnlock ||
+      !isAuthenticated ||
+      !user ||
+      !allRequiredScored ||
+      hydrationAnalysisAttemptedRef.current
+    ) return;
+    hydrationAnalysisAttemptedRef.current = true;
+    void analyzeReadiness(false);
+  // This transition must run once after the restored answers become valid.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allRequiredScored, hydratedForUnlock, isAuthenticated, user?.id]);
 
   return (
     <div className="space-y-6">
@@ -632,7 +703,7 @@ const FundraisingReadinessToolkitAll = () => {
                 ) : (
                   <Button
                     size="lg"
-                    onClick={analyzeReadiness}
+                    onClick={() => void analyzeReadiness(creditConfirmationRequired)}
                     disabled={isAnalyzing || !allRequiredScored}
                     className="w-full md:w-auto min-w-[200px]"
                   >
@@ -644,7 +715,7 @@ const FundraisingReadinessToolkitAll = () => {
                     ) : (
                       <>
                         <Rocket className="h-4 w-4 mr-2" />
-                        Get AI Analysis
+                        {creditConfirmationRequired ? 'Generate full diagnostic — 8 credits' : 'Get AI Analysis'}
                       </>
                     )}
                   </Button>
@@ -742,7 +813,7 @@ const FundraisingReadinessToolkitAll = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={analyzeReadiness}
+                    onClick={() => void analyzeReadiness(creditConfirmationRequired)}
                     className="mt-3"
                   >
                     Try Again
