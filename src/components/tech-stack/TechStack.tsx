@@ -25,6 +25,10 @@ import { clearAnonymousToolState, readAnonymousToolState, saveAnonymousToolState
 import { markFirstArtifactCreated, trackRetentionEvent } from '@/lib/retentionSystem';
 import { trackActivationFunnelEvent } from '@/lib/activationEntry';
 import { useActivationAbandonment } from '@/hooks/useActivationAbandonment';
+import {
+  buildTechStackPublicInsights,
+  type TechStackPublicInsights,
+} from '@/lib/techStackPublicInsights';
 
 // Icon mapping
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -221,6 +225,10 @@ const TechStack: React.FC = () => {
     () => buildSelectedProductsKey(selectedProducts),
     [selectedProducts]
   );
+  const publicStackInsights = useMemo(
+    () => buildTechStackPublicInsights(selectedProducts, techStackData),
+    [selectedProducts]
+  );
 
   const persistPublicBudget = () => {
     if (!showBudget && !allCategoriesSelected) return;
@@ -295,7 +303,20 @@ const TechStack: React.FC = () => {
           hasVariable: budget.hasVariable,
         },
       });
-      captureEvent('free_tool_partial_result_shown', { tool: 'tech_stack', monthly_budget: budget.total });
+      captureEvent('free_tool_partial_result_shown', {
+        tool: 'tech_stack',
+        monthly_budget: budget.total,
+        annual_fixed_cost: publicStackInsights.annualFixedCost,
+        variable_price_tools: publicStackInsights.variableCostTools.length,
+        potential_monthly_savings: publicStackInsights.potentialMonthlySavings,
+      });
+      captureEvent('tech_stack_free_diagnostic_shown', {
+        tool: 'tech_stack',
+        cost_profile: publicStackInsights.costProfile,
+        cost_visibility: publicStackInsights.costVisibility,
+        savings_opportunities: publicStackInsights.savingsOpportunities.length,
+        risk_signals: publicStackInsights.riskSignals.length,
+      });
       return;
     }
 
@@ -847,6 +868,7 @@ const TechStack: React.FC = () => {
           budget={budget}
           selectedProducts={selectedProducts}
           techStackData={techStackData}
+          publicInsights={publicStackInsights}
           saveName={reportName}
           onSaveNameChange={setReportName}
           onSave={() => void handleSaveReport(false)}
@@ -1018,12 +1040,13 @@ interface BudgetDisplayProps {
   budget: { total: number; breakdown: BudgetBreakdown[]; hasVariable: boolean };
   selectedProducts: SelectedProducts;
   techStackData: TechStackData;
+  publicInsights: TechStackPublicInsights;
   saveName: string;
   onSaveNameChange: (value: string) => void;
   onSave: () => void;
   saving: boolean;
   onClose: () => void;
-  /** Logged-out preview: show the monthly partial, gate the annual + full build plan. */
+  /** Logged-out preview: show the cost diagnosis, then gate the full build plan. */
   isPublic?: boolean;
   onGateCtaClick?: () => void;
   fullPlanUnlocked: boolean;
@@ -1062,8 +1085,8 @@ const PlanGate: React.FC<{ isPublic: boolean; locked: boolean; unlockState: Tech
   return (
     <PreviewModeWrapper
       featureName="Full build plan"
-      headline="Your stack budget is ready"
-      description="Create a free account to unlock your annual cost, strategy plan, recommendations, and integration guide, then save and export your stack."
+      headline="Turn this diagnosis into a build plan"
+      description="Create a free account to unlock compatibility analysis, rollout order, detailed recommendations, an integration guide, and a saved report for this exact stack."
       ctaLabel="Create free account"
       signupSource="tech-stack"
       signupReturnPath="/tech-stack?hydrate=1"
@@ -1079,6 +1102,7 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
   budget,
   selectedProducts,
   techStackData,
+  publicInsights,
   saveName,
   onSaveNameChange,
   onSave,
@@ -1096,7 +1120,7 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
     <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg border border-primary/20">
       <div>
         <span className="text-base font-semibold text-foreground">Annual Fixed Cost:</span>
-        <p className="text-xs text-muted-foreground mt-1">12-month commitment savings potential</p>
+        <p className="text-xs text-muted-foreground mt-1">Fixed subscriptions only; excludes usage-based charges</p>
       </div>
       <span className="text-2xl font-bold text-primary">${(total * 12).toFixed(2)}</span>
     </div>
@@ -1525,8 +1549,8 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
               <span className="text-2xl font-bold text-foreground">${total.toFixed(2)}</span>
             </div>
 
-            {/* Annual Cost — gated for logged-out visitors (shown blurred below) */}
-            {fullPlanUnlocked && annualBlock}
+            {/* Annual fixed cost is included in the free diagnosis. */}
+            {annualBlock}
 
             {/* Budget Range Info */}
             <div className="p-3 bg-info-subtle dark:bg-info/20 rounded-lg border border-info dark:border-info">
@@ -1552,6 +1576,93 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
         </CardContent>
       </Card>
 
+      <Card className="border-2 border-accent-teal/30 bg-accent-teal/5">
+        <CardHeader>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-accent-teal">Free stack intelligence</p>
+              <CardTitle className="mt-2 text-2xl">What this stack will cost and where it can bend</CardTitle>
+              <CardDescription className="mt-1">
+                A transparent cost and risk diagnosis based on the tools you selected.
+              </CardDescription>
+            </div>
+            <span className="rounded-full border border-accent-teal/30 bg-background px-3 py-1 text-sm font-semibold">
+              {publicInsights.costProfile} cost profile
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <p className="text-sm leading-6 text-foreground">{publicInsights.summary}</p>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border bg-background p-4">
+              <p className="text-xs text-muted-foreground">Annual fixed cost</p>
+              <p className="mt-1 text-xl font-bold">${publicInsights.annualFixedCost.toFixed(0)}</p>
+            </div>
+            <div className="rounded-xl border bg-background p-4">
+              <p className="text-xs text-muted-foreground">Cost visibility</p>
+              <p className="mt-1 text-xl font-bold">{publicInsights.costVisibility}</p>
+            </div>
+            <div className="rounded-xl border bg-background p-4">
+              <p className="text-xs text-muted-foreground">Variable-price tools</p>
+              <p className="mt-1 text-xl font-bold">{publicInsights.variableCostTools.length}</p>
+            </div>
+            <div className="rounded-xl border bg-background p-4">
+              <p className="text-xs text-muted-foreground">Potential fixed-cost reduction</p>
+              <p className="mt-1 text-xl font-bold">${publicInsights.potentialMonthlySavings.toFixed(0)}/mo</p>
+            </div>
+          </div>
+
+          {publicInsights.variableCostTools.length > 0 && (
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">Variable-pricing watchlist:</span>{' '}
+              {publicInsights.variableCostTools.join(', ')}.
+            </p>
+          )}
+
+          {publicInsights.highestFixedCost && (
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">
+              <span className="font-semibold">Largest fixed-cost driver:</span>{' '}
+              {publicInsights.highestFixedCost.product} at ${publicInsights.highestFixedCost.monthlyCost.toFixed(0)}/month.
+            </div>
+          )}
+
+          {publicInsights.savingsOpportunities.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="flex items-center gap-2 font-semibold">
+                <Lightbulb className="h-4 w-4 text-accent-teal" /> Lower-entry options worth comparing
+              </h3>
+              <div className="grid gap-3 md:grid-cols-2">
+                {publicInsights.savingsOpportunities.map((opportunity) => (
+                  <div key={`${opportunity.category}-${opportunity.selectedProduct}`} className="rounded-xl border bg-background p-4">
+                    <p className="text-sm font-semibold">{opportunity.selectedProduct} → {opportunity.alternativeProduct}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{opportunity.category}: {opportunity.selectedPrice} versus {opportunity.alternativePrice}</p>
+                    <p className="mt-2 text-sm font-medium text-success">Up to ${opportunity.potentialMonthlySavings.toFixed(0)}/month lower listed fixed cost</p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">Compare capabilities and usage limits before switching; lower entry price does not mean identical functionality.</p>
+            </div>
+          )}
+
+          {publicInsights.riskSignals.length > 0 && (
+            <div className="space-y-3 rounded-xl border border-warning/30 bg-warning/5 p-4">
+              <h3 className="flex items-center gap-2 font-semibold">
+                <AlertTriangle className="h-4 w-4 text-warning" /> Cost and adoption watch-outs
+              </h3>
+              <ul className="space-y-2">
+                {publicInsights.riskSignals.map((risk) => (
+                  <li key={risk} className="flex items-start gap-2 text-sm text-foreground/90">
+                    <span className="mt-1 text-warning">•</span>
+                    <span>{risk}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <PlanGate
         isPublic={isPublic}
         locked={!fullPlanUnlocked}
@@ -1559,12 +1670,6 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
         onUnlock={onUnlock}
         onGateCtaClick={onGateCtaClick}
       >
-      {isPublic && (
-        <Card className="border-2 border-primary/20">
-          <CardContent className="pt-6">{annualBlock}</CardContent>
-        </Card>
-      )}
-
       {/* Strategy Plan Card */}
       <Card className="border-2 border-primary/20">
         <CardHeader>

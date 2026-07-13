@@ -33,6 +33,7 @@ import {
   FounderStage,
   FounderExperience,
   QuestionId,
+  READINESS_THRESHOLDS,
   getVisibleQuestions,
   getRequiredQuestions,
   isQuestionOptional
@@ -40,6 +41,7 @@ import {
 import { ASSESSMENT_QUESTIONS, INDUSTRY_OPTIONS, BUSINESS_MODEL_OPTIONS, SCORE_LABELS } from "@/data/assessmentQuestions";
 import { trackActivationFunnelEvent } from "@/lib/activationEntry";
 import { useActivationAbandonment } from "@/hooks/useActivationAbandonment";
+import { buildInsightaPublicInsights } from "@/lib/insightaPublicInsights";
 
 // Legacy interface kept for backwards compatibility
 type AIAnalysis = EnhancedAIAnalysis;
@@ -163,6 +165,23 @@ const FundraisingReadinessToolkitAll = () => {
     });
   }, [scores, context.founder_stage]);
 
+  const publicDiagnostic = useMemo(() => {
+    const stage = (context.founder_stage || 'validation') as FounderStage;
+    const threshold = READINESS_THRESHOLDS[stage];
+    return buildInsightaPublicInsights({
+      questions: visibleQuestions.flatMap((question) => {
+        const score = scores[question.id as QuestionId];
+        return typeof score === 'number' && score > 0
+          ? [{ id: question.id, title: question.title, description: question.description, score }]
+          : [];
+      }),
+      averageScore,
+      stageLabel: stage,
+      threshold: threshold.min_average,
+      criticalMinimums: threshold.critical_minimums,
+    });
+  }, [averageScore, context.founder_stage, scores, visibleQuestions]);
+
   // Context step handlers
   const handleStageContextSubmit = () => {
     if (!context.founder_stage || !context.founder_experience) {
@@ -228,6 +247,9 @@ const FundraisingReadinessToolkitAll = () => {
     captureEvent("free_tool_partial_result_shown", {
       tool: "insighta_test",
       readiness_score: Number(averageScore.toFixed(1)),
+      strengths_revealed: publicDiagnostic.strengths.length,
+      gaps_revealed: publicDiagnostic.gaps.length,
+      stage_delta: publicDiagnostic.deltaFromThreshold,
     });
     captureEvent("insighta_test_result_shown", {
       tool: "insighta_test",
@@ -756,10 +778,68 @@ const FundraisingReadinessToolkitAll = () => {
               </CardContent>
             </Card>
 
+            <Card className="mb-6 border-2 border-accent-teal/30 bg-accent-teal/5">
+              <CardHeader>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-accent-teal">Free diagnostic snapshot</p>
+                    <CardTitle className="mt-2 text-xl">What your score is really saying</CardTitle>
+                    <CardDescription className="mt-1">This is based on your answers and calibrated to your current startup stage.</CardDescription>
+                  </div>
+                  <Badge variant={publicDiagnostic.deltaFromThreshold >= 0 ? 'default' : 'secondary'}>
+                    {publicDiagnostic.deltaFromThreshold > 0
+                      ? 'Above stage threshold'
+                      : publicDiagnostic.deltaFromThreshold < 0
+                        ? 'Below stage threshold'
+                        : 'Meets stage threshold'}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <p className="text-sm font-medium text-foreground">{publicDiagnostic.stageComparison}</p>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-3 rounded-2xl border border-success/30 bg-success/5 p-4">
+                    <h3 className="flex items-center gap-2 font-semibold">
+                      <CheckCircle2 className="h-4 w-4 text-success" /> Strongest signals
+                    </h3>
+                    {publicDiagnostic.strengths.map((signal) => (
+                      <div key={`strength-${signal.id}`} className="space-y-1.5">
+                        <div className="flex items-center justify-between gap-3 text-sm">
+                          <span className="font-medium">{signal.title}</span>
+                          <span className="font-semibold text-success">{signal.score}/10</span>
+                        </div>
+                        <Progress value={signal.score * 10} className="h-1.5" />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="space-y-3 rounded-2xl border border-warning/30 bg-warning/5 p-4">
+                    <h3 className="flex items-center gap-2 font-semibold">
+                      <AlertCircle className="h-4 w-4 text-warning" /> Highest-impact gaps
+                    </h3>
+                    {publicDiagnostic.gaps.map((signal) => (
+                      <div key={`gap-${signal.id}`} className="space-y-1.5">
+                        <div className="flex items-center justify-between gap-3 text-sm">
+                          <span className="font-medium">{signal.title}</span>
+                          <span className="font-semibold text-warning">{signal.score}/10</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{signal.label} for your current stage.</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-primary/25 bg-primary/5 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-primary">Your next best action</p>
+                  <p className="mt-2 text-sm leading-6 text-foreground">{publicDiagnostic.nextAction}</p>
+                </div>
+              </CardContent>
+            </Card>
+
             <PreviewModeWrapper
               featureName="Full diagnostic"
-              headline="Your results are ready"
-              description="Create a free account to unlock your full readiness breakdown: the strengths to lead with when you pitch investors, the gaps most likely to stall your raise (ranked by impact), and a prioritized action plan with your timeline to readiness."
+              headline="Turn this snapshot into your investor-readiness plan"
+              description="Create a free account to unlock why each gap matters, how to use your strongest signals in the pitch, stage-specific benchmarks, a prioritized action plan, and your estimated timeline to readiness."
               ctaLabel="Create free account"
               signupSource="insighta-test"
               signupReturnPath="/insighta-test?hydrate=1"
