@@ -13,7 +13,9 @@ const upgradeMigration = read('supabase/migrations/20260716120000_messages_9_of_
 const newConversationDialog = read('src/components/social/NewConversationDialog.tsx');
 const voiceRecorder = read('src/components/social/VoiceNoteRecorder.tsx');
 const contextCard = read('src/components/social/MessageContextCard.tsx');
+const errorsSource = read('src/lib/errors.ts');
 const messageCtaRepairMigration = read('supabase/migrations/20260716132000_restore_account_linked_message_ctas.sql');
+const restoredDirectConversationMigration = read('supabase/migrations/20260716133000_restore_pre_upgrade_direct_conversation_rpc.sql');
 
 test('messaging V2 exposes the consolidated authenticated contracts', () => {
   for (const contract of [
@@ -50,6 +52,21 @@ test('account-linked Marketplace and mentor CTAs can create conversations safely
   assert.match(messageCtaRepairMigration, /FROM public\.user_blocks block/);
   assert.match(messageCtaRepairMigration, /ON CONFLICT \(direct_user_a, direct_user_b\)/);
   assert.match(messageCtaRepairMigration, /GRANT EXECUTE[\s\S]*TO authenticated/);
+});
+
+test('Marketplace and mentor CTAs use the proven pre-upgrade conversation flow', () => {
+  assert.match(restoredDirectConversationMigration, /SELECT \*[\s\S]*FROM public\.conversations/);
+  assert.match(restoredDirectConversationMigration, /IF NOT FOUND THEN/);
+  assert.match(restoredDirectConversationMigration, /set_direct_conversation_request_settings/);
+  assert.match(restoredDirectConversationMigration, /request_status = 'accepted'/);
+  assert.match(restoredDirectConversationMigration, /hidden_at = NULL/);
+});
+
+test('PostgREST RPC failures retain their actionable message', () => {
+  assert.match(errorsSource, /Supabase\/PostgREST errors are plain objects/);
+  assert.match(errorsSource, /typeof candidate\.message === 'string'/);
+  assert.match(errorsSource, /typeof candidate\.code === 'string'/);
+  assert.match(errorsSource, /error\.message \|\| 'An unexpected error occurred/);
 });
 
 test('read-only compatibility paths keep the inbox available before RPC deployment', () => {

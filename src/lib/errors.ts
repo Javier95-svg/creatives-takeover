@@ -115,8 +115,32 @@ export function handleError(error: unknown): AppError {
       error.message,
       'UNKNOWN_ERROR',
       500,
-      'An unexpected error occurred. Please try again.'
+      error.message || 'An unexpected error occurred. Please try again.'
     );
+  }
+
+  // Supabase/PostgREST errors are plain objects rather than Error instances.
+  // Preserve their controlled RPC message so users see the actionable cause.
+  if (typeof error === 'object' && error !== null) {
+    const candidate = error as {
+      message?: unknown;
+      code?: unknown;
+      status?: unknown;
+      statusCode?: unknown;
+    };
+    const message = typeof candidate.message === 'string'
+      ? candidate.message.trim()
+      : '';
+
+    if (message) {
+      const status = Number(candidate.statusCode ?? candidate.status ?? 500);
+      return new AppError(
+        message,
+        typeof candidate.code === 'string' ? candidate.code : 'UNKNOWN_ERROR',
+        Number.isFinite(status) ? status : 500,
+        message
+      );
+    }
   }
 
   // Unknown error type
