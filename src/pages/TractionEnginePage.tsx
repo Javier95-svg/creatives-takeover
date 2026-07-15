@@ -65,7 +65,9 @@ import {
   trackTractionOpened,
   trackTractionSprintCreated,
   trackTractionWeeklyLogCompleted,
+  captureEvent,
 } from '@/lib/analytics';
+import type { GTMPlay } from '@/lib/gtmV2';
 
 const SPRINTS_TABLE = 'traction_engine_sprints' as const;
 const LOGS_TABLE = 'traction_engine_weekly_logs' as const;
@@ -76,6 +78,8 @@ type SprintRow = {
   channel: string;
   cycle_start_date: string;
   status: 'active' | 'closed';
+  source_gtm_plan_id?: string | null;
+  source_gtm_play_id?: string | null;
 };
 
 type WeeklyLogRow = {
@@ -236,9 +240,15 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
   } | null>(null);
   const [benchmarks, setBenchmarks] = useState<{ cohortUsers: number; p25: number; p50: number; p75: number } | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
+  const gtmPlanId = searchParams.get('planId');
+  const gtmPlayId = searchParams.get('playId');
+  const [gtmSource, setGtmSource] = useState<{ planId: string; playId: string; channel: string } | null>(null);
   const activeTab = (searchParams.get('step') as TractionTab) ?? 'sprint';
-  const setActiveTab = (tab: TractionTab) =>
-    setSearchParams({ step: tab }, { replace: true });
+  const setActiveTab = (tab: TractionTab) => {
+    const next = new URLSearchParams(searchParams);
+    next.set('step', tab);
+    setSearchParams(next, { replace: true });
+  };
 
   const previousLogs = useMemo(
     () => recentLogs.filter((log) => log.week_start_date !== currentWeekStart),
@@ -393,34 +403,50 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
     };
   }, [userId, retention.productCategory]);
 
-  // Consume a GTM Strategist channel handoff: the recommended channel arrives
-  // as a pre-filled experiment so the plan becomes a measured sprint without
-  // retyping. Runs once on mount; the handoff is single-use.
+  // Authenticated V2 handoffs reconnect the saved experiment to the originating
+  // plan/play exactly. The localStorage branch remains only for V1 briefs.
   useEffect(() => {
-    const handoff = consumeGTMTractionHandoff();
-    if (!handoff) return;
-    setExperiments((items) => {
-      const imported: ExperimentDraft = {
-        ...createExperimentDraft(),
-        channel: handoff.channel,
-        hypothesis: handoff.hypothesis,
-        targetMetric: handoff.targetMetric || 'Signups',
-      };
-      const isPristine =
-        items.length === 1 &&
-        !items[0].channel.trim() &&
-        !items[0].hypothesis.trim() &&
-        !items[0].actionTaken.trim();
-      if (isPristine) return [imported];
-      if (items.some((item) => item.channel.trim().toLowerCase() === handoff.channel.trim().toLowerCase())) return items;
-      if (items.length >= 2) return items;
-      return [...items, imported];
-    });
-    toast.success(`${handoff.channel} imported from your GTM plan.`, {
-      description: 'Log what you ship this week, then save to see predicted fit vs. measured traction.',
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    let active = true;
+    const importExperiment = (input: { channel: string; hypothesis: string; targetMetric: string; targetValue?: number }) => {
+      setExperiments((items) => {
+        const imported: ExperimentDraft = { ...createExperimentDraft(), ...input, targetValue: input.targetValue ?? 10 };
+        const pristine = items.length === 1 && !items[0].channel.trim() && !items[0].hypothesis.trim() && !items[0].actionTaken.trim();
+        if (pristine) return [imported];
+        if (items.some((item) => item.channel.trim().toLowerCase() === input.channel.trim().toLowerCase())) return items;
+        return items.length >= 2 ? items : [...items, imported];
+      });
+    };
+    const loadHandoff = async () => {
+      if (userId && gtmPlanId && gtmPlayId) {
+        const { data, error } = await (supabase as any)
+          .from('gtm_plays')
+          .select('play_content')
+          .eq('id', gtmPlayId)
+          .eq('plan_id', gtmPlanId)
+          .eq('user_id', userId)
+          .maybeSingle();
+        if (!active) return;
+        if (error || !data) {
+          toast.error('This GTM play is unavailable or does not belong to your account.');
+          return;
+        }
+        const play = data.play_content as GTMPlay;
+        importExperiment({ channel: play.channelName, hypothesis: play.hypothesis, targetMetric: play.metric, targetValue: play.target });
+        setGtmSource({ planId: gtmPlanId, playId: gtmPlayId, channel: play.channelName });
+        setRetention((current) => ({ ...current, primaryAcquisitionChannel: current.primaryAcquisitionChannel || play.channelName }));
+        captureEvent('gtm_traction_handoff_opened', { plan_id: gtmPlanId, play_id: gtmPlayId, channel_id: play.channelId });
+        toast.success(`${play.channelName} play imported.`, { description: `${play.metric} target: ${play.target}. Results will sync to the weekly GTM review.` });
+        return;
+      }
+      const handoff = consumeGTMTractionHandoff();
+      if (!handoff) return;
+      importExperiment({ channel: handoff.channel, hypothesis: handoff.hypothesis, targetMetric: handoff.targetMetric || 'Signups' });
+      toast.success(`${handoff.channel} imported from your GTM plan.`);
+    };
+    void loadHandoff();
+    return () => { active = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- import each URL handoff once
+  }, [gtmPlanId, gtmPlayId, userId]);
 
   const closeSprint = async (sprint: SprintRow) => {
     if (!userId) return;
@@ -453,6 +479,17 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
     }
 
     const nextByChannel = new Map(activeByChannel);
+    if (gtmSource) {
+      const existing = nextByChannel.get(gtmSource.channel.trim().toLowerCase());
+      if (existing) {
+        const { error } = await supabase
+          .from(SPRINTS_TABLE)
+          .update({ source_gtm_plan_id: gtmSource.planId, source_gtm_play_id: gtmSource.playId })
+          .eq('id', existing.id)
+          .eq('user_id', userId);
+        if (error) throw error;
+      }
+    }
     for (const channel of newChannels) {
       const { data, error } = await supabase
         .from(SPRINTS_TABLE)
@@ -461,6 +498,8 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
           channel,
           cycle_start_date: currentWeekStart,
           status: 'active',
+          source_gtm_plan_id: gtmSource && gtmSource.channel.trim().toLowerCase() === channel.trim().toLowerCase() ? gtmSource.planId : null,
+          source_gtm_play_id: gtmSource && gtmSource.channel.trim().toLowerCase() === channel.trim().toLowerCase() ? gtmSource.playId : null,
         })
         .select('id, channel, cycle_start_date, status')
         .single();

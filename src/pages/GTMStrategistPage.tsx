@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
 import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
@@ -11,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import { useGTMStrategist } from '@/hooks/useGTMStrategist';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
 import GTMIntakeForm from '@/components/gtm/GTMIntakeForm';
+import GTMWorkspaceIntake from '@/components/gtm/GTMWorkspaceIntake';
+import GTMWorkspace from '@/components/gtm/GTMWorkspace';
 import GTMAnalysisLoader from '@/components/gtm/GTMAnalysisLoader';
 import GTMBriefHeader from '@/components/gtm/GTMBriefHeader';
 import GTMBriefSidebar from '@/components/gtm/GTMBriefSidebar';
@@ -30,6 +33,8 @@ import { getPublicTabConfig } from '@/config/publicTabVisibility';
 import { useAuth } from '@/contexts/AuthContext';
 import { trackGTMOpened, trackGTMPlanShared, trackToolOpened } from '@/lib/analytics';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
+import { isGTMPlanV2 } from '@/lib/gtmV2';
+import { isGTMStrategistV2Enabled } from '@/lib/gtmRollout';
 import {
   fetchMeasuredChannelPerformance,
   type MeasuredPerformanceMap,
@@ -40,7 +45,7 @@ const structuredData = [
     '@context': 'https://schema.org',
     '@type': 'WebPage',
     name: 'GTM Strategist',
-    description: 'AI-powered go-to-market strategy tool for early-stage founders. Get opinionated channel recommendations, positioning, messaging, and a 30-day action plan.',
+    description: 'An adaptive go-to-market workspace with researched positioning, focused channel plays, activation, and weekly evidence reviews.',
     url: 'https://creatives-takeover.com/go-to-market',
   },
   createBreadcrumbSchema([
@@ -52,6 +57,8 @@ const structuredData = [
 
 export default function GTMStrategistPage() {
   const { user } = useAuth();
+  const v2Flag = useFeatureFlagEnabled('gtm-strategist-v2');
+  const v2Enabled = isGTMStrategistV2Enabled(user?.id, v2Flag);
   const publicTab = getPublicTabConfig('/go-to-market');
   const { hasAccess, upgradeTarget } = usePlanAccess('gtm_strategist');
   const markToolUsed = useLeanStartupStore(s => s.markToolUsed);
@@ -67,9 +74,9 @@ export default function GTMStrategistPage() {
         'Yes. It is designed to recommend channels based on your product, audience, and stage so you can focus on the tactics most likely to work first.',
     },
     {
-      question: 'Can founders use GTM Strategist before launch?',
+      question: 'When should founders use GTM Strategist?',
       answer:
-        'Yes. Pre-launch and first-launch planning are core use cases because the tool helps structure outreach, messaging, and execution before you waste effort on scattered tactics.',
+        'Use it when your product is launch-ready or already live. It turns launch context into a focused six-week motion, then adapts the plan from measured evidence.',
     },
   ];
   const pageStructuredData = [
@@ -105,12 +112,21 @@ export default function GTMStrategistPage() {
     isSaving,
     isExporting,
     prefillData,
+    prefillV2,
     prefillSource,
+    weeklyReview,
+    isReviewing,
     runAnalysis,
+    runV2Analysis,
+    updatePlay,
+    runWeeklyReview,
     savePlan,
     exportPlan,
+    openDiagnose,
     resetToIntake,
   } = useGTMStrategist();
+  const v2Analysis = analysis && isGTMPlanV2(analysis) ? analysis : null;
+  const legacyAnalysis = analysis && !isGTMPlanV2(analysis) ? analysis : null;
   const getSharePayload = useCallback(
     () => createGTMSharedPayload(
       analysis ?? {
@@ -178,8 +194,8 @@ export default function GTMStrategistPage() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
       <SEO
-        title="GTM Strategist — Creatives Takeover"
-        description="Get an opinionated go-to-market strategy with channel recommendations, positioning, messaging, and a 30-day action plan tailored to your business."
+        title="GTM Strategist — Adaptive Founder GTM System"
+        description="Build a researched six-week go-to-market plan, activate focused plays through Directories and Traction Engine, and adapt through weekly evidence reviews."
         keywords="go to market strategy, gtm channels, startup marketing, first customers, founder marketing"
         url="/go-to-market"
         structuredData={pageStructuredData}
@@ -198,17 +214,20 @@ export default function GTMStrategistPage() {
 	                description={publicTab.description || ''}
 	                showPricingCta={publicTab.showPricingCta}
 	              >
-	                <GTMIntakeForm
-	                  prefillData={{}}
-	                  onSubmit={() => {}}
-	                  isSubmitting={false}
-	                />
+	                <GTMWorkspaceIntake prefill={{}} onSubmit={() => {}} />
 	              </PreviewModeWrapper>
 	            )
 	          ) : hasAccess ? (
 	            <>
 	              {/* Phase A — Intake Wizard */}
-	              {phase === 'intake' && (
+	              {phase === 'intake' && v2Enabled && (
+	                <GTMWorkspaceIntake
+	                  prefill={v2Analysis?.intake ?? prefillV2}
+	                  isRegeneration={Boolean(planId)}
+	                  onSubmit={(intake) => void runV2Analysis(intake, Boolean(planId))}
+	                />
+	              )}
+	              {phase === 'intake' && !v2Enabled && (
 	                <GTMIntakeForm
 	                  prefillData={prefillData}
 	                  prefillSource={prefillSource}
@@ -221,11 +240,33 @@ export default function GTMStrategistPage() {
 	              {phase === 'analyzing' && <GTMAnalysisLoader />}
 
 	              {/* Phase C — GTM Brief Results */}
-	              {phase === 'results' && analysis && (
+	              {phase === 'results' && v2Analysis && planId && (
+	                <GTMWorkspace
+	                  plan={v2Analysis}
+	                  planId={planId}
+	                  weeklyReview={weeklyReview}
+	                  isSaving={isSaving}
+	                  isExporting={isExporting}
+	                  isReviewing={isReviewing}
+	                  onSave={() => void savePlan('saved')}
+	                  onExport={() => void exportPlan()}
+	                  onRegenerate={openDiagnose}
+	                  onUpdatePlay={updatePlay}
+	                  onWeeklyReview={runWeeklyReview}
+	                />
+	              )}
+
+	              {phase === 'results' && legacyAnalysis && (
 	                <div className="space-y-8">
+	                  {v2Enabled && (
+	                    <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-primary/25 bg-primary/5 p-5">
+	                      <div><p className="font-semibold">Upgrade this brief to the adaptive GTM system</p><p className="text-sm text-muted-foreground">Add research, durable plays, activation, and weekly reviews. Full regeneration costs 5 credits.</p></div>
+	                      <Button onClick={openDiagnose}>Upgrade plan</Button>
+	                    </div>
+	                  )}
 	                  <GTMBriefHeader
-	                    planTitle={analysis.planTitle}
-	                    summaryInsight={analysis.summaryInsight}
+	                    planTitle={legacyAnalysis.planTitle}
+	                    summaryInsight={legacyAnalysis.summaryInsight}
 	                    isSaving={isSaving}
 	                    isExporting={isExporting}
 	                    onSave={() => savePlan('saved')}
@@ -234,7 +275,7 @@ export default function GTMStrategistPage() {
 	                  />
 
 	                  <div className="flex flex-wrap gap-3 rounded-3xl border border-border/60 bg-background/80 px-4 py-4 shadow-sm">
-	                    <Button variant="outline" onClick={() => { trackGTMPlanShared(); openShareDialog(); }} disabled={!planId} className="gap-2">
+	                    <Button variant="outline" onClick={() => { trackGTMPlanShared(); void openShareDialog(); }} disabled={!planId} className="gap-2">
 	                      <Share2 className="h-4 w-4" />
 	                      Share strategy brief
 	                    </Button>
@@ -246,13 +287,13 @@ export default function GTMStrategistPage() {
 	                  <ContextualMentorRecommendations
 	                    track="gtm"
 	                    source="gtm-results"
-	                    targetAudience={analysis.intakeAnswers?.targetAudience}
-	                    summaryInsight={analysis.summaryInsight}
+	                    targetAudience={legacyAnalysis.intakeAnswers?.targetAudience}
+	                    summaryInsight={legacyAnalysis.summaryInsight}
 	                    extraKeywords={[
-	                      analysis.positioning?.positioningStatement,
-	                      analysis.messaging?.headline,
-	                      ...analysis.channels.map((channel) => channel.channel),
-	                      ...analysis.channels.flatMap((channel) => channel.weekOneActions),
+	                      legacyAnalysis.positioning?.positioningStatement,
+	                      legacyAnalysis.messaging?.headline,
+	                      ...legacyAnalysis.channels.map((channel) => channel.channel),
+	                      ...legacyAnalysis.channels.flatMap((channel) => channel.weekOneActions),
 	                    ].filter(Boolean)}
 	                  />
 
@@ -265,10 +306,10 @@ export default function GTMStrategistPage() {
 
 	                      <section id="channels" className="space-y-4 scroll-mt-6">
 	                        <h2 className="text-lg font-bold text-muted-foreground uppercase tracking-wider text-xs">
-	                          Recommended Channels ({analysis.channels.length})
+	                          Recommended Channels ({legacyAnalysis.channels.length})
 	                        </h2>
 	                        <div className="space-y-4">
-	                          {analysis.channels.map((ch, i) => (
+	                          {legacyAnalysis.channels.map((ch, i) => (
 	                            <GTMChannelCard
 	                              key={ch.channel}
 	                              channel={ch}
@@ -282,31 +323,31 @@ export default function GTMStrategistPage() {
 	                      <Separator />
 
 	                      <section id="positioning" className="scroll-mt-6">
-	                        <GTMPositioningBlock positioning={analysis.positioning} />
+	                        <GTMPositioningBlock positioning={legacyAnalysis.positioning} />
 	                      </section>
 
 	                      <Separator />
 
 	                      <section id="messaging" className="scroll-mt-6">
-	                        <GTMMessagingBlock messaging={analysis.messaging} />
+	                        <GTMMessagingBlock messaging={legacyAnalysis.messaging} />
 	                      </section>
 
 	                      <Separator />
 
 	                      <section id="action-plan" className="scroll-mt-6">
-	                        <GTMActionPlan actionPlan={analysis.actionPlan} />
+	                        <GTMActionPlan actionPlan={legacyAnalysis.actionPlan} />
 	                      </section>
 
 	                      <Separator />
 
 	                      <section id="checklist" className="scroll-mt-6">
-	                        <GTMLaunchChecklist checklist={analysis.launchChecklist} />
+	                        <GTMLaunchChecklist checklist={legacyAnalysis.launchChecklist} />
 	                      </section>
 
 	                      <Separator />
 
 	                      <section id="metrics" className="scroll-mt-6">
-	                        <GTMMetricsBlock metrics={analysis.metrics} />
+	                        <GTMMetricsBlock metrics={legacyAnalysis.metrics} />
 	                      </section>
 
 	                      {/* Bottom save CTA */}
@@ -348,8 +389,8 @@ export default function GTMStrategistPage() {
             <RelatedToolsSection
               tools={[
                 { name: "Traction Engine", description: "Track distribution experiments and measure repeatable traction.", url: "/traction-engine" },
+                { name: "Directories", description: "Activate the launch surfaces recommended for your selected GTM play.", url: "/directories" },
                 { name: "ICP Builder", description: "Sharpen your target customer before executing your GTM.", url: "/icp-builder" },
-                { name: "BizMap AI", description: "Full founder workflow from idea validation to launch.", url: "/bizmap-ai" },
               ]}
             />
           </div>

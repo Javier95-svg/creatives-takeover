@@ -11,6 +11,9 @@ const corsHeaders = {
 };
 
 interface GTMAnalysisRequest {
+  schemaVersion?: 1 | 2;
+  planId?: string;
+  intake?: GTMIntakeV2;
   businessType: string;
   targetAudience: string;
   audienceOnlineHabits: string[];
@@ -21,6 +24,373 @@ interface GTMAnalysisRequest {
   founderStrengths?: string[];
   icpPositioningStatement?: string;
   icpNicheProfile?: string;
+}
+
+interface GTMIntakeV2 {
+  productName: string;
+  productUrl?: string;
+  lifecycle: 'launch_ready' | 'live';
+  businessModel: 'b2b_saas' | 'b2c_product' | 'marketplace' | 'ecommerce' | 'service' | 'media';
+  targetSegment: string;
+  geography: string;
+  problem: string;
+  solution: string;
+  buyerRole?: string;
+  userRole?: string;
+  buyingTrigger?: string;
+  pricing?: string;
+  averageCustomerValue?: number;
+  currentTraction: string;
+  weeklyTimeHours: number;
+  monthlyBudget: number;
+  founderStrengths: string[];
+  knownCompetitors: string[];
+  sixWeekOutcome: string;
+  salesCycle?: string;
+  averageOrderValue?: number;
+  repeatPurchaseModel?: string;
+  marketplaceSide?: 'supply' | 'demand' | 'both';
+  serviceCapacity?: string;
+  subscriberGoal?: number;
+}
+
+type GTMMotion = 'founder_led_sales' | 'sales_assisted' | 'product_led' | 'transactional' | 'marketplace_liquidity' | 'audience_led';
+
+interface ChannelRule {
+  id: string;
+  name: string;
+  models: GTMIntakeV2['businessModel'][];
+  motions: GTMMotion[];
+  minHours: number;
+  minBudget: number;
+  strengths: string[];
+  metric: string;
+  target: number;
+  prerequisites: string[];
+  directories: string[];
+}
+
+const ALL_MODELS: GTMIntakeV2['businessModel'][] = ['b2b_saas', 'b2c_product', 'marketplace', 'ecommerce', 'service', 'media'];
+const CHANNEL_RULES: ChannelRule[] = [
+  { id: 'founder-outreach', name: 'Founder-led outreach', models: ['b2b_saas', 'service', 'marketplace'], motions: ['founder_led_sales', 'sales_assisted'], minHours: 3, minBudget: 0, strengths: ['Networking', 'Cold outreach'], metric: 'Qualified conversations', target: 5, prerequisites: ['A defined buyer role', 'A clear problem-led message'], directories: ['linkedin', 'wellfound-angellist', 'crunchbase'] },
+  { id: 'cold-email', name: 'Targeted cold email', models: ['b2b_saas', 'service'], motions: ['founder_led_sales', 'sales_assisted'], minHours: 4, minBudget: 50, strengths: ['Writing', 'Cold outreach'], metric: 'Positive replies', target: 5, prerequisites: ['A qualified prospect list', 'A verified sending domain'], directories: ['g2', 'capterra', 'alternativeto'] },
+  { id: 'linkedin', name: 'LinkedIn authority + conversations', models: ['b2b_saas', 'service', 'media'], motions: ['founder_led_sales', 'sales_assisted', 'audience_led'], minHours: 3, minBudget: 0, strengths: ['Writing', 'Networking'], metric: 'Qualified conversations', target: 5, prerequisites: ['A founder profile aligned to the offer'], directories: ['linkedin', 'indie-hackers', 'twitter-x'] },
+  { id: 'communities', name: 'Niche communities', models: ALL_MODELS, motions: ['founder_led_sales', 'product_led', 'transactional', 'marketplace_liquidity', 'audience_led'], minHours: 3, minBudget: 0, strengths: ['Writing', 'Networking'], metric: 'Activated users', target: 10, prerequisites: ['A named community where the ICP is active'], directories: ['indie-hackers', 'hacker-news-show-hn', 'dev-to', 'reddit-r-startups-r-saas-r-entrepreneur'] },
+  { id: 'launch-platforms', name: 'Launch platforms', models: ['b2b_saas', 'b2c_product', 'marketplace', 'ecommerce'], motions: ['product_led', 'transactional', 'marketplace_liquidity'], minHours: 5, minBudget: 0, strengths: ['Writing', 'Design', 'Networking'], metric: 'Activated signups', target: 25, prerequisites: ['A live product', 'A working onboarding path'], directories: ['product-hunt', 'betalist', 'peerlist', 'microlaunch', 'uneed'] },
+  { id: 'content-seo', name: 'Problem-led content + SEO', models: ['b2b_saas', 'b2c_product', 'ecommerce', 'service', 'media'], motions: ['product_led', 'transactional', 'audience_led'], minHours: 5, minBudget: 0, strengths: ['Writing', 'Coding / Technical'], metric: 'Qualified organic visits', target: 100, prerequisites: ['Searchable customer problems', 'A repeatable publishing cadence'], directories: ['dev-to', 'hackernoon', 'saashub', 'alternativeto'] },
+  { id: 'short-form-video', name: 'Short-form video', models: ['b2c_product', 'ecommerce', 'marketplace', 'media'], motions: ['transactional', 'product_led', 'audience_led', 'marketplace_liquidity'], minHours: 5, minBudget: 0, strengths: ['Speaking / Video', 'Design'], metric: 'Activated profile visits', target: 50, prerequisites: ['A visually demonstrable outcome'], directories: ['product-hunt', 'reddit-r-startups-r-saas-r-entrepreneur', 'twitter-x'] },
+  { id: 'partnerships', name: 'Distribution partnerships', models: ['b2b_saas', 'marketplace', 'service', 'media'], motions: ['founder_led_sales', 'sales_assisted', 'marketplace_liquidity', 'audience_led'], minHours: 3, minBudget: 0, strengths: ['Networking'], metric: 'Qualified partner conversations', target: 3, prerequisites: ['A clear partner benefit'], directories: ['wellfound-angellist', 'f6s', 'crunchbase'] },
+  { id: 'paid-acquisition', name: 'Paid acquisition', models: ['b2c_product', 'ecommerce', 'b2b_saas'], motions: ['transactional', 'product_led'], minHours: 3, minBudget: 500, strengths: ['Design'], metric: 'Qualified conversions', target: 20, prerequisites: ['A proven conversion event', 'Known customer value'], directories: [] },
+  { id: 'referrals', name: 'Customer referral loop', models: ALL_MODELS, motions: ['product_led', 'transactional', 'marketplace_liquidity', 'audience_led'], minHours: 2, minBudget: 0, strengths: ['Networking', 'Design'], metric: 'Referred activated users', target: 10, prerequisites: ['Existing satisfied users'], directories: [] },
+];
+
+const clamp = (value: number) => Math.max(0, Math.min(100, Math.round(value)));
+const inferMotion = (intake: GTMIntakeV2): GTMMotion => {
+  if (intake.businessModel === 'marketplace') return 'marketplace_liquidity';
+  if (intake.businessModel === 'ecommerce') return 'transactional';
+  if (intake.businessModel === 'media') return 'audience_led';
+  if (intake.businessModel === 'service') return 'founder_led_sales';
+  if (intake.businessModel === 'b2b_saas') return (intake.averageCustomerValue ?? 0) >= 5000 ? 'sales_assisted' : 'founder_led_sales';
+  return 'product_led';
+};
+
+function rankChannels(intake: GTMIntakeV2) {
+  const motion = inferMotion(intake);
+  return CHANNEL_RULES.map((rule) => {
+    let rejectionReason: string | undefined;
+    if (!rule.models.includes(intake.businessModel)) rejectionReason = 'Does not fit this business model.';
+    else if (!rule.motions.includes(motion)) rejectionReason = 'Does not fit the selected GTM motion.';
+    else if (intake.weeklyTimeHours < rule.minHours) rejectionReason = `Requires at least ${rule.minHours} hours per week.`;
+    else if (intake.monthlyBudget < rule.minBudget) rejectionReason = `Requires at least $${rule.minBudget} per month.`;
+    else if (rule.id === 'launch-platforms' && intake.lifecycle !== 'live') rejectionReason = 'Requires a live product.';
+    else if (rule.id === 'referrals' && /none|no users|pre-launch/i.test(intake.currentTraction)) rejectionReason = 'Requires existing satisfied users.';
+    const breakdown = {
+      audienceEvidence: intake.buyingTrigger?.trim() ? 75 : 55,
+      motionEconomicsFit: rule.motions.includes(motion) ? 90 : 35,
+      tractionEvidence: /none|no users|pre-launch/i.test(intake.currentTraction) ? 35 : 70,
+      founderConstraints: clamp(50 + Math.min(30, (intake.weeklyTimeHours - rule.minHours) * 6) + (intake.monthlyBudget >= rule.minBudget ? 20 : 0)),
+      founderStrengths: rule.strengths.some((strength) => intake.founderStrengths.includes(strength)) ? 85 : 50,
+    };
+    const raw = breakdown.audienceEvidence * .25 + breakdown.motionEconomicsFit * .25 + breakdown.tractionEvidence * .2 + breakdown.founderConstraints * .15 + breakdown.founderStrengths * .15;
+    return { rule, eligible: !rejectionReason, rejectionReason, score: rejectionReason ? Math.min(clamp(raw), 49) : clamp(raw), breakdown };
+  }).sort((a, b) => Number(b.eligible) - Number(a.eligible) || b.score - a.score);
+}
+
+const safeStringArray = (value: unknown, fallback: string[] = []) => Array.isArray(value)
+  ? value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0).slice(0, 12)
+  : fallback;
+
+const safeText = (value: unknown, fallback = '', maxLength = 1200) =>
+  typeof value === 'string' && value.trim() ? value.trim().slice(0, maxLength) : fallback;
+
+function isValidV2Intake(value: GTMIntakeV2 | undefined): value is GTMIntakeV2 {
+  if (!value) return false;
+  const models = ['b2b_saas', 'b2c_product', 'marketplace', 'ecommerce', 'service', 'media'];
+  return safeText(value.productName).length > 0 &&
+    safeText(value.targetSegment).length > 0 &&
+    safeText(value.problem).length > 0 &&
+    safeText(value.solution).length > 0 &&
+    safeText(value.sixWeekOutcome).length > 0 &&
+    (value.lifecycle === 'launch_ready' || value.lifecycle === 'live') &&
+    models.includes(value.businessModel) &&
+    Array.isArray(value.founderStrengths) &&
+    Array.isArray(value.knownCompetitors) &&
+    Number.isFinite(value.weeklyTimeHours) && value.weeklyTimeHours > 0 && value.weeklyTimeHours <= 80 &&
+    Number.isFinite(value.monthlyBudget) && value.monthlyBudget >= 0 && value.monthlyBudget <= 10000000;
+}
+
+function validatedFunnel(value: unknown, model: GTMIntakeV2['businessModel']) {
+  if (!Array.isArray(value) || value.length < 3) return fallbackFunnel(model);
+  return value.slice(0, 6).map((item) => ({
+    stage: safeText(item?.stage, 'Stage', 100),
+    exitCriteria: safeText(item?.exitCriteria, 'A measurable stage outcome is reached.', 300),
+    metric: safeText(item?.metric, 'Completed outcomes', 100),
+  }));
+}
+
+function validatedSixWeekPlan(value: unknown, plays: Array<{ actions: string[] }>) {
+  if (Array.isArray(value) && value.length === 6) {
+    return value.map((item, index) => ({
+      week: index + 1,
+      objective: safeText(item?.objective, 'Run, measure, and improve the active plays.', 240),
+      actions: safeStringArray(item?.actions, ['Log one measurable channel action.']).slice(0, 6),
+    }));
+  }
+  return Array.from({ length: 6 }, (_, index) => ({
+    week: index + 1,
+    objective: index === 0 ? 'Activate the first channel bet' : index === 5 ? 'Decide what to scale, iterate, or kill' : 'Run, measure, and improve the active plays',
+    actions: plays.slice(0, 2).map((play) => play.actions[Math.min(index, play.actions.length - 1)]).filter(Boolean),
+  }));
+}
+
+async function researchGTM(intake: GTMIntakeV2) {
+  const apiKey = Deno.env.get('PERPLEXITY_API_KEY');
+  if (!apiKey) return { status: 'unavailable' as const, answer: '', sources: [] as Array<Record<string, unknown>> };
+  try {
+    const response = await fetch('https://api.perplexity.ai/chat/completions', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'sonar-pro',
+        messages: [
+          { role: 'system', content: 'Research current go-to-market evidence for a launch-ready founder. Prefer primary and reputable sources. Separate evidence from inference.' },
+          { role: 'user', content: `Product: ${intake.productName}\nURL: ${intake.productUrl || 'not supplied'}\nMarket: ${intake.targetSegment}\nGeography: ${intake.geography}\nProblem: ${intake.problem}\nKnown alternatives: ${intake.knownCompetitors.join(', ') || 'unknown'}\nFind current competitors and alternatives, where buyers discover solutions, buying triggers, and channel conditions. Return concise evidence with citations.` },
+        ],
+        temperature: 0.2,
+        max_tokens: 1400,
+        return_citations: true,
+        search_recency_filter: 'year',
+      }),
+    });
+    if (!response.ok) throw new Error(`Research failed: ${response.status}`);
+    const data = await response.json();
+    const citations = Array.isArray(data.citations) ? data.citations.slice(0, 6) : [];
+    const sources = citations.map((citation: any, index: number) => typeof citation === 'string'
+      ? { title: `Source ${index + 1}`, url: citation }
+      : { title: citation.title || citation.name || `Source ${index + 1}`, url: citation.url || citation.source || '', snippet: citation.snippet || citation.summary, publishedDate: citation.published_date || citation.date })
+      .filter((source: any) => /^https?:\/\//.test(source.url));
+    return { status: sources.length >= 3 ? 'complete' as const : sources.length > 0 ? 'limited' as const : 'unavailable' as const, answer: data.choices?.[0]?.message?.content || '', sources };
+  } catch (error) {
+    console.warn('GTM live research unavailable:', error);
+    return { status: 'unavailable' as const, answer: '', sources: [] as Array<Record<string, unknown>> };
+  }
+}
+
+function fallbackFunnel(model: GTMIntakeV2['businessModel']) {
+  if (model === 'b2b_saas' || model === 'service') return [
+    { stage: 'Qualified conversation', exitCriteria: 'Buyer confirms the problem and business impact', metric: 'Conversations held' },
+    { stage: 'Qualified opportunity', exitCriteria: 'Buyer, need, timing, and next step are confirmed', metric: 'Qualified opportunities' },
+    { stage: 'Pilot or proposal', exitCriteria: 'A scoped commercial evaluation begins', metric: 'Pilots or proposals' },
+    { stage: 'Customer', exitCriteria: 'Payment or signed agreement received', metric: 'Closed customers' },
+  ];
+  if (model === 'marketplace') return [
+    { stage: 'Qualified side acquired', exitCriteria: 'Supply or demand profile is complete', metric: 'Qualified profiles' },
+    { stage: 'First match', exitCriteria: 'A relevant match is presented', metric: 'Matches' },
+    { stage: 'Transaction', exitCriteria: 'Both sides complete the core exchange', metric: 'Transactions' },
+    { stage: 'Repeat', exitCriteria: 'A participant returns for another exchange', metric: 'Repeat participants' },
+  ];
+  return [
+    { stage: 'Qualified visit', exitCriteria: 'Visitor matches the target segment', metric: 'Qualified visits' },
+    { stage: 'Activation', exitCriteria: 'User reaches the first-value event', metric: 'Activated users' },
+    { stage: 'Conversion', exitCriteria: 'User purchases or subscribes', metric: 'Conversions' },
+    { stage: 'Retention', exitCriteria: 'User returns in the expected cycle', metric: 'Retained users' },
+  ];
+}
+
+async function generateV2Plan(args: { intake: GTMIntakeV2; userId: string; existingPlanId?: string; openaiApiKey: string }) {
+  const { intake, userId, existingPlanId, openaiApiKey } = args;
+  const ranked = rankChannels(intake);
+  const selected = ranked.filter((item) => item.eligible).slice(0, 3);
+  if (selected.length < 2) throw new Error('The current time and budget constraints leave fewer than two viable channels. Increase one constraint and try again.');
+  const research = await researchGTM(intake);
+  const motion = inferMotion(intake);
+  const prompt = `You are a rigorous early-stage GTM strategist. Build strategic content for the fixed, server-selected channels below. Do not add or replace channels. Separate sourced facts from assumptions. Make every play executable by a founder in the next six weeks.
+
+FOUNDER INTAKE:
+${JSON.stringify(intake, null, 2)}
+
+DETERMINISTIC CHANNEL SELECTION:
+${selected.map((item, index) => `${index + 1}. ${item.rule.id} — ${item.rule.name} (${item.score}/100)`).join('\n')}
+
+LIVE RESEARCH STATUS: ${research.status}
+LIVE RESEARCH:
+${research.answer || 'No live sources were available. Treat market claims as assumptions.'}
+
+Return only JSON with this shape:
+{
+  "summaryInsight":"2-3 sentence thesis",
+  "thesis":{"target":"","buyingTrigger":"","competitiveAlternative":"","value":"","rationale":"","risks":[""]},
+  "positioning":{"competitiveAlternatives":[""],"differentiatedCapabilities":[""],"customerValue":[""],"bestFitSegment":"","marketCategory":"","positioningStatement":"","uniqueValueProposition":"","keyDifferentiators":[""]},
+  "messaging":{"headline":"","hookLine":"","proofPoint":"","ctaCopy":"","toneOfVoice":[""]},
+  "channelNarratives":{"channel-id":{"rationale":"","evidence":[""],"audience":"","buyingTrigger":"","offer":"","message":"","hypothesis":"","actions":[""],"requiredAssets":[""]}},
+  "funnel":[{"stage":"","exitCriteria":"","metric":""}],
+  "growthLoop":{"name":"","input":"","action":"","output":"","reinvestment":""},
+  "sixWeekPlan":[{"week":1,"objective":"","actions":[""]}],
+  "metrics":{"primaryOutcome":"","leading":[{"name":"","target":"","howToMeasure":""}],"lagging":[""]},
+  "assumptions":[""]
+}`;
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${openaiApiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: 'Return valid JSON only. Never invent citations or modify the provided channel selection.' },
+        { role: 'user', content: prompt },
+      ],
+      response_format: { type: 'json_object' },
+      temperature: 0.3,
+      max_tokens: 6000,
+    }),
+  });
+  if (!response.ok) throw new Error(`OpenAI API Error: ${response.status}`);
+  const aiData = await response.json();
+  const content = aiData.choices?.[0]?.message?.content;
+  if (typeof content !== 'string') throw new Error('GTM strategy response was empty');
+  const strategic = JSON.parse(content) as Record<string, any>;
+  const narratives = strategic.channelNarratives && typeof strategic.channelNarratives === 'object' ? strategic.channelNarratives : {};
+  const confidence = research.status === 'complete' && intake.buyingTrigger?.trim() ? 'high' : research.status === 'unavailable' ? 'low' : 'medium';
+  const channels = selected.map((item, index) => ({
+    id: item.rule.id,
+    name: item.rule.name,
+    role: index === 0 ? 'primary' : index === 1 ? 'secondary' : 'deferred',
+    score: item.score,
+    scoreBreakdown: item.breakdown,
+    confidence,
+    rationale: safeText(narratives[item.rule.id]?.rationale, `Fits the ${motion.replaceAll('_', ' ')} motion and current founder constraints.`),
+    evidence: safeStringArray(narratives[item.rule.id]?.evidence),
+    prerequisites: item.rule.prerequisites,
+  }));
+  const excludedChannels = ranked.filter((item) => !item.eligible).slice(0, 6).map((item) => ({
+    id: item.rule.id,
+    name: item.rule.name,
+    role: 'deferred',
+    score: item.score,
+    scoreBreakdown: item.breakdown,
+    confidence: 'high',
+    rationale: 'Excluded by deterministic eligibility rules before AI strategy generation.',
+    evidence: [] as string[],
+    prerequisites: item.rule.prerequisites,
+    rejectionReason: item.rejectionReason || 'Does not meet the current play constraints.',
+  }));
+  const playIds = selected.map(() => crypto.randomUUID());
+  const plays = selected.map((item, index) => {
+    const narrative = narratives[item.rule.id] ?? {};
+    return {
+      id: playIds[index],
+      channelId: item.rule.id,
+      channelName: item.rule.name,
+      status: index < 2 ? 'active' : 'backlog',
+      audience: safeText(narrative.audience, intake.targetSegment),
+      buyingTrigger: safeText(narrative.buyingTrigger, intake.buyingTrigger || 'The problem becomes urgent enough to seek an alternative.'),
+      offer: safeText(narrative.offer, intake.solution),
+      message: safeText(narrative.message, safeText(strategic.messaging?.hookLine, intake.problem)),
+      hypothesis: safeText(narrative.hypothesis, `If we reach ${intake.targetSegment} through ${item.rule.name}, we will generate ${item.rule.target} ${item.rule.metric.toLowerCase()} per week.`),
+      actions: safeStringArray(narrative.actions, [`Launch the first ${item.rule.name} experiment.`, `Log ${item.rule.metric.toLowerCase()} in Traction Engine.`]).slice(0, 6),
+      metric: item.rule.metric,
+      target: item.rule.target,
+      weeklyTimeHours: Math.max(item.rule.minHours, Math.floor(intake.weeklyTimeHours / Math.min(2, selected.length))),
+      weeklyBudget: Math.max(item.rule.minBudget / 4, Math.floor(intake.monthlyBudget / Math.min(2, selected.length) / 4)),
+      requiredAssets: safeStringArray(narrative.requiredAssets),
+      recommendedDirectoryIds: item.rule.directories.slice(0, 5),
+    };
+  });
+  const positioning = strategic.positioning ?? {};
+  const messaging = strategic.messaging ?? {};
+  const plan: Record<string, any> = {
+    schemaVersion: 2,
+    planTitle: `${intake.productName} — Six-week GTM system`,
+    summaryInsight: safeText(strategic.summaryInsight, `Focus on ${channels[0].name} first, use ${channels[1].name} as the controlled secondary bet, and let weekly evidence decide what scales.`),
+    intake,
+    researchStatus: research.status,
+    researchSources: research.sources,
+    assumptions: safeStringArray(strategic.assumptions, research.status === 'unavailable' ? ['Live market research was unavailable; validate channel assumptions through Traction Engine.'] : []),
+    thesis: {
+      motion,
+      target: safeText(strategic.thesis?.target, intake.targetSegment),
+      buyingTrigger: safeText(strategic.thesis?.buyingTrigger, intake.buyingTrigger || ''),
+      competitiveAlternative: safeText(strategic.thesis?.competitiveAlternative, intake.knownCompetitors[0] || 'The status quo'),
+      value: safeText(strategic.thesis?.value, intake.solution),
+      rationale: safeText(strategic.thesis?.rationale, safeText(strategic.summaryInsight)),
+      risks: safeStringArray(strategic.thesis?.risks),
+    },
+    positioning: {
+      competitiveAlternatives: safeStringArray(positioning.competitiveAlternatives, intake.knownCompetitors.length ? intake.knownCompetitors : ['The status quo']),
+      differentiatedCapabilities: safeStringArray(positioning.differentiatedCapabilities),
+      customerValue: safeStringArray(positioning.customerValue),
+      bestFitSegment: safeText(positioning.bestFitSegment, intake.targetSegment),
+      marketCategory: safeText(positioning.marketCategory, 'A focused solution'),
+      positioningStatement: safeText(positioning.positioningStatement, `${intake.productName} helps ${intake.targetSegment} ${intake.solution}`),
+      uniqueValueProposition: safeText(positioning.uniqueValueProposition, intake.solution),
+      keyDifferentiators: safeStringArray(positioning.keyDifferentiators),
+    },
+    messaging: {
+      headline: safeText(messaging.headline, intake.productName, 120),
+      hookLine: safeText(messaging.hookLine, intake.problem, 240),
+      proofPoint: safeText(messaging.proofPoint, 'Validate this claim with the first six-week cohort.', 300),
+      ctaCopy: safeText(messaging.ctaCopy, 'Try it now', 120),
+      toneOfVoice: safeStringArray(messaging.toneOfVoice, ['Clear', 'Specific', 'Credible']),
+    },
+    channels,
+    excludedChannels,
+    plays,
+    funnel: validatedFunnel(strategic.funnel, intake.businessModel),
+    growthLoop: {
+      name: safeText(strategic.growthLoop?.name, 'Customer evidence loop', 120),
+      input: safeText(strategic.growthLoop?.input, 'A focused customer segment', 240),
+      action: safeText(strategic.growthLoop?.action, 'Run one measurable play', 240),
+      output: safeText(strategic.growthLoop?.output, 'Activated users and customer language', 240),
+      reinvestment: safeText(strategic.growthLoop?.reinvestment, 'Use the learning to improve the next play', 240),
+    },
+    sixWeekPlan: validatedSixWeekPlan(strategic.sixWeekPlan, plays),
+    metrics: {
+      primaryOutcome: safeText(strategic.metrics?.primaryOutcome, intake.sixWeekOutcome),
+      leading: Array.isArray(strategic.metrics?.leading) ? strategic.metrics.leading.slice(0, 5).map((metric: any) => ({ name: safeText(metric?.name, 'Leading outcome', 100), target: safeText(metric?.target, 'Track weekly', 100), howToMeasure: safeText(metric?.howToMeasure, 'Log the weekly result in Traction Engine.', 300) })) : plays.slice(0, 2).map((play) => ({ name: play.metric, target: String(play.target), howToMeasure: 'Log the weekly result in Traction Engine.' })),
+      lagging: safeStringArray(strategic.metrics?.lagging),
+    },
+    generatedAt: new Date().toISOString(),
+  };
+
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const admin = createClient(supabaseUrl, supabaseKey);
+  const { data: persisted, error: persistError } = await admin.rpc('persist_gtm_plan_v2', {
+    p_user_id: userId,
+    p_plan_id: existingPlanId ?? null,
+    p_plan_title: plan.planTitle,
+    p_plan_content: plan,
+    p_research_sources: research.sources,
+    p_research_status: research.status,
+    p_plays: plays,
+  });
+  if (persistError) throw persistError;
+  const persistedRow = (Array.isArray(persisted) ? persisted[0] : persisted) as { plan_id?: string; version?: number } | null;
+  const planId = persistedRow?.plan_id;
+  if (!planId) throw new Error('Failed to persist GTM plan');
+  plan.planId = planId;
+  plan.version = Number(persistedRow?.version ?? 1);
+  return { plan, planId };
 }
 
 serve(async (req) => {
@@ -38,9 +408,12 @@ serve(async (req) => {
     }
 
     const body: GTMAnalysisRequest = await req.json();
+    const isV2 = body.schemaVersion === 2 && Boolean(body.intake);
+    const intakeV2 = body.intake;
     const { businessType, targetAudience, problemAndSolution, currentTraction, weeklyTimeForMarketing } = body;
 
-    if (!businessType || !targetAudience || !problemAndSolution || !currentTraction || !weeklyTimeForMarketing) {
+    const v2Valid = isValidV2Intake(intakeV2);
+    if ((isV2 && !v2Valid) || (!isV2 && (!businessType || !targetAudience || !problemAndSolution || !currentTraction || !weeklyTimeForMarketing))) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -50,7 +423,9 @@ serve(async (req) => {
     const idempotencyKey = await resolveCreditIdempotencyKey(req, {
       userId: user.id,
       feature: 'GTM Analysis',
-      requestFingerprint: { businessType, targetAudience, problemAndSolution, currentTraction, weeklyTimeForMarketing },
+      requestFingerprint: isV2
+        ? { schemaVersion: 2, planId: body.planId, intake: intakeV2 }
+        : { businessType, targetAudience, problemAndSolution, currentTraction, weeklyTimeForMarketing },
     });
 
     const creditCost = CREDIT_COSTS.GTM_ANALYSIS;
@@ -59,7 +434,7 @@ serve(async (req) => {
       creditCost,
       'GTM Analysis',
       undefined,
-      { businessType, idempotencyKey, entitlementFeature: 'GTM_ANALYSIS' }
+      { businessType: isV2 ? intakeV2?.businessModel : businessType, schemaVersion: isV2 ? 2 : 1, idempotencyKey, entitlementFeature: 'GTM_ANALYSIS' }
     );
     const chargedCredits = (creditResult.usedFromQuota ?? 0) + (creditResult.usedFromBalance ?? 0);
 
@@ -78,6 +453,25 @@ serve(async (req) => {
 
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) throw new Error('OpenAI API key not configured');
+
+    if (isV2 && intakeV2) {
+      try {
+        const result = await generateV2Plan({ intake: intakeV2, userId: user.id, existingPlanId: body.planId, openaiApiKey });
+        return new Response(JSON.stringify({
+          success: true,
+          analysis: result.plan,
+          planId: result.planId,
+          creditsUsed: chargedCredits,
+          newBalance: creditResult.newBalance,
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      } catch (v2Error) {
+        const error = v2Error instanceof Error ? v2Error : new Error(String(v2Error));
+        if (chargedCredits > 0) {
+          await refundCredits(user.id, chargedCredits, 'GTM Analysis', 'Refund: GTM V2 generation failed', { error: error.message });
+        }
+        throw error;
+      }
+    }
 
     const audienceHabits = (body.audienceOnlineHabits || []).join(', ') || 'Not specified';
     const budget = body.budget || '$0 (time only)';

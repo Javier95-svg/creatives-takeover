@@ -14,7 +14,17 @@ import {
   trackGTMPlanGenerated,
   trackGTMPlanSaved,
   trackToolOutputCreated,
+  captureEvent,
 } from '@/lib/analytics';
+import { createIdempotencyKey } from '@/lib/idempotency';
+import {
+  createLegacyUpgradeIntake,
+  isGTMPlanV2,
+  type GTMIntakeV2,
+  type GTMPlanV2,
+  type GTMPlay,
+  type GTMWeeklyReview,
+} from '@/lib/gtmV2';
 
 export interface GTMIntakeAnswers {
   businessType: string;
@@ -89,12 +99,15 @@ export function useGTMStrategist() {
   const { ensureCredits, handleCreditError, showCreditReceipt } = useCreditActions();
 
   const [phase, setPhase] = useState<Phase>('intake');
-  const [analysis, setAnalysis] = useState<GTMAnalysis | null>(null);
+  const [analysis, setAnalysis] = useState<GTMAnalysis | GTMPlanV2 | null>(null);
   const [planId, setPlanId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [prefillData, setPrefillData] = useState<Partial<GTMIntakeAnswers>>({});
+  const [prefillV2, setPrefillV2] = useState<Partial<GTMIntakeV2>>({});
   const [prefillSource, setPrefillSource] = useState<'waitlist_launch_kit' | 'icp_builder' | null>(null);
+  const [weeklyReview, setWeeklyReview] = useState<GTMWeeklyReview | null>(null);
+  const [isReviewing, setIsReviewing] = useState(false);
 
   // On mount: load existing plan or prefill data
   useEffect(() => {
@@ -121,9 +134,35 @@ export function useGTMStrategist() {
       const content = (data as any).plan_content;
       // Only restore to results if the content has the new rich structure
       if (content && content.channels && content.positioning) {
-        setAnalysis(content as GTMAnalysis);
+        setAnalysis(content as GTMAnalysis | GTMPlanV2);
         setPlanId((data as any).id);
         setPhase('results');
+        if (isGTMPlanV2(content)) {
+          setPrefillV2(content.intake);
+          const { data: reviewData } = await supabase
+            .from('gtm_weekly_reviews')
+            .select('*')
+            .eq('plan_id', (data as any).id)
+            .eq('user_id', user.id)
+            .order('week_start', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (reviewData) {
+            setWeeklyReview({
+              id: reviewData.id,
+              planId: reviewData.plan_id,
+              weekStart: reviewData.week_start,
+              decision: reviewData.decision as GTMWeeklyReview['decision'],
+              nextBestAction: reviewData.next_best_action,
+              evidenceSummary: reviewData.evidence_summary,
+              activePlayId: reviewData.play_id ?? undefined,
+              tractionExperimentId: reviewData.traction_experiment_id ?? undefined,
+              createdAt: reviewData.created_at,
+            });
+          }
+        } else {
+          setPrefillV2(createLegacyUpgradeIntake(content as Record<string, any>));
+        }
       }
     } catch (err) {
       console.warn('Failed to load existing GTM plan:', err);
@@ -133,9 +172,46 @@ export function useGTMStrategist() {
   const loadPrefillData = useCallback(async () => {
     if (!user) return;
     try {
+      const [pmfResult, mvpResult, tractionResult] = await Promise.all([
+        supabase
+          .from('pmf_analysis_results' as any)
+          .select('analysis_data,target_market,pmf_score')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from('mvp_projects' as any)
+          .select('title,deployment_url,deployment_status,metadata')
+          .eq('user_id', user.id)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from('traction_engine_weekly_logs' as any)
+          .select('new_users,primary_acquisition_channel,revenue,combined_score')
+          .eq('user_id', user.id)
+          .order('week_start_date', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      const pmf = pmfResult.data as any;
+      const mvp = mvpResult.data as any;
+      const traction = tractionResult.data as any;
+      setPrefillV2((current) => ({
+        ...current,
+        productName: mvp?.title || current.productName,
+        productUrl: mvp?.deployment_url || current.productUrl,
+        lifecycle: mvp?.deployment_url || mvp?.deployment_status === 'deployed' ? 'live' : current.lifecycle ?? 'launch_ready',
+        targetSegment: pmf?.target_market || current.targetSegment,
+        currentTraction: traction
+          ? `${traction.new_users ?? 0} new users last week via ${traction.primary_acquisition_channel || 'unattributed'}${traction.revenue ? `; $${traction.revenue} revenue` : ''}; traction score ${traction.combined_score ?? 0}/100`
+          : current.currentTraction,
+      }));
+
       const { data: waitlistData } = await (supabase as any)
         .from('waitlist_pages')
-        .select('metadata, ai_content')
+        .select('product_name, metadata, ai_content')
         .eq('user_id', user.id)
         .order('updated_at', { ascending: false })
         .limit(1)
@@ -145,12 +221,18 @@ export function useGTMStrategist() {
       const waitlistPositioning = waitlistMetadata?.projectContext?.positioningStatement;
       if (typeof waitlistPositioning === 'string' && waitlistPositioning.trim()) {
         const waitlistContent = (waitlistData as any)?.ai_content;
+        setPrefillV2((current) => ({
+          ...current,
+          productName: (waitlistData as any)?.product_name || current.productName,
+          targetSegment: typeof waitlistContent?.subheadline === 'string' ? waitlistContent.subheadline : current.targetSegment,
+          problem: waitlistPositioning.trim(),
+          solution: waitlistPositioning.trim(),
+        }));
         setPrefillData({
           targetAudience: typeof waitlistContent?.subheadline === 'string' ? waitlistContent.subheadline : undefined,
           problemAndSolution: waitlistPositioning.trim(),
         });
         setPrefillSource('waitlist_launch_kit');
-        return;
       }
 
       const { data } = await supabase
@@ -176,6 +258,13 @@ export function useGTMStrategist() {
       if (Object.keys(prefill).length > 0) {
         setPrefillData(prefill);
         setPrefillSource('icp_builder');
+        setPrefillV2((current) => ({
+          ...current,
+          targetSegment: prefill.targetAudience || current.targetSegment,
+          problem: prefill.problemAndSolution || current.problem,
+          solution: prefill.problemAndSolution || current.solution,
+          buyingTrigger: analysisData?.behavioralTriggers?.[0] || analysisData?.nicheProfile?.buyingTrigger || current.buyingTrigger,
+        }));
       }
     } catch (err) {
       console.warn('Failed to load ICP prefill data:', err);
@@ -250,6 +339,90 @@ export function useGTMStrategist() {
       setPhase('intake');
     }
   }, [user, ensureCredits, handleCreditError, showCreditReceipt]);
+
+  const runV2Analysis = useCallback(async (intake: GTMIntakeV2, regenerate = false) => {
+    if (!user) {
+      toast.error('Sign in to build your GTM system.');
+      return;
+    }
+    const credits = ensureCredits('GTM_ANALYSIS');
+    if (credits === null) return;
+    setPhase('analyzing');
+    trackGTMIntakeCompleted({ schema_version: 2, business_model: intake.businessModel });
+    try {
+      const idempotencyKey = createIdempotencyKey('gtm-v2', `${user.id}-${regenerate ? planId ?? 'new' : 'new'}`);
+      const { data, error } = await supabase.functions.invoke('gtm-analyzer', {
+        headers: { 'Idempotency-Key': idempotencyKey },
+        body: { schemaVersion: 2, planId: regenerate ? planId : undefined, intake },
+      });
+      if (error || !data?.success || !isGTMPlanV2(data.analysis)) {
+        const wasCreditError = handleCreditError(error, data, 'GTM_ANALYSIS');
+        if (!wasCreditError) toast.error(data?.error || 'GTM system generation failed. Please try again.');
+        setPhase(regenerate && analysis ? 'results' : 'intake');
+        return;
+      }
+      setAnalysis(data.analysis);
+      setPrefillV2(data.analysis.intake);
+      setPlanId(data.planId ?? data.analysis.planId ?? null);
+      setWeeklyReview(null);
+      setPhase('results');
+      trackGTMPlanGenerated({ channel_count: data.analysis.channels.length, schema_version: 2, research_status: data.analysis.researchStatus });
+      captureEvent('gtm_research_completed', { status: data.analysis.researchStatus, source_count: data.analysis.researchSources.length });
+      trackToolOutputCreated('gtm_strategist', 'gtm_plan', { schema_version: 2 });
+      void trackCurrentActivationJourneyEvent(user.id, 'activation_first_output_generated', { intent: 'plan_gtm', tool: 'gtm_strategist' });
+      showCreditReceipt('GTM_ANALYSIS', typeof data.creditsUsed === 'number' ? data.creditsUsed : credits, typeof data.newBalance === 'number' ? data.newBalance : undefined, { featureName: 'GTM Strategist' });
+    } catch (error) {
+      console.error('GTM V2 generation error:', error);
+      toast.error('Something went wrong while building your GTM system.');
+      setPhase(regenerate && analysis ? 'results' : 'intake');
+    }
+  }, [analysis, ensureCredits, handleCreditError, planId, showCreditReceipt, user]);
+
+  const updatePlay = useCallback(async (nextPlay: GTMPlay) => {
+    if (!user || !planId || !analysis || !isGTMPlanV2(analysis)) return;
+    const nextAnalysis: GTMPlanV2 = { ...analysis, plays: analysis.plays.map((play) => play.id === nextPlay.id ? nextPlay : play) };
+    setAnalysis(nextAnalysis);
+    const [{ error: playError }, { error: planError }] = await Promise.all([
+      supabase.from('gtm_plays').update({ status: nextPlay.status, play_content: nextPlay as any }).eq('id', nextPlay.id).eq('user_id', user.id),
+      supabase.from('gtm_plans').update({ plan_content: nextAnalysis as any }).eq('id', planId).eq('user_id', user.id),
+    ]);
+    if (playError || planError) {
+      setAnalysis(analysis);
+      toast.error('Could not save this play.');
+      return;
+    }
+    captureEvent('gtm_play_updated', { plan_id: planId, play_id: nextPlay.id, channel_id: nextPlay.channelId, status: nextPlay.status });
+    toast.success('Play updated.');
+  }, [analysis, planId, user]);
+
+  const runWeeklyReview = useCallback(async () => {
+    if (!planId || !user) return;
+    setIsReviewing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('gtm-plan-review', { body: { planId } });
+      if (error || !data?.success || !data.review) throw error || new Error(data?.error || 'Review failed');
+      const row = data.review as any;
+      const review: GTMWeeklyReview = {
+        id: row.id,
+        planId: row.plan_id,
+        weekStart: row.week_start,
+        decision: row.decision,
+        nextBestAction: row.next_best_action,
+        evidenceSummary: row.evidence_summary,
+        activePlayId: row.play_id ?? undefined,
+        tractionExperimentId: row.traction_experiment_id ?? undefined,
+        createdAt: row.created_at,
+      };
+      setWeeklyReview(review);
+      captureEvent('gtm_weekly_review_completed', { plan_id: planId, decision: review.decision });
+      toast.success('Weekly GTM review saved.');
+    } catch (error) {
+      console.error('Weekly GTM review failed:', error);
+      toast.error('Could not complete the weekly review.');
+    } finally {
+      setIsReviewing(false);
+    }
+  }, [planId, user]);
 
   const savePlan = useCallback(async (status: 'draft' | 'saved' | 'exported') => {
     if (!user) {
@@ -342,7 +515,7 @@ export function useGTMStrategist() {
     } finally {
       setIsSaving(false);
     }
-  }, [user, analysis, planId, refreshProgress]);
+  }, [user, analysis, planId, refreshProgress, navigate]);
 
   const exportPlan = useCallback(async () => {
     if (!analysis) return;
@@ -378,6 +551,47 @@ export function useGTMStrategist() {
       addLine('GTM Strategy Brief — Creatives Takeover', 10, false, '#6b7280');
       y += 4;
       addLine(analysis.summaryInsight, 10);
+
+      if (isGTMPlanV2(analysis)) {
+        addSection('GTM THESIS');
+        addLine(`Motion: ${analysis.thesis.motion.replaceAll('_', ' ')}`, 10, true);
+        addLine(`Target: ${analysis.thesis.target}`, 10);
+        addLine(`Buying trigger: ${analysis.thesis.buyingTrigger}`, 10);
+        addLine(`Competitive alternative: ${analysis.thesis.competitiveAlternative}`, 10);
+        addLine(analysis.thesis.rationale, 10);
+
+        addSection('CHANNEL BETS');
+        analysis.channels.forEach((channel, index) => {
+          addLine(`${index + 1}. ${channel.name} — ${channel.score}/100 (${channel.role})`, 11, true);
+          addLine(channel.rationale, 9);
+          addLine(`Confidence: ${channel.confidence} · prerequisites: ${channel.prerequisites.join(' | ')}`, 9, false, '#374151');
+        });
+
+        addSection('POSITIONING & MESSAGE');
+        addLine(analysis.positioning.positioningStatement, 10);
+        addLine(`Headline: ${analysis.messaging.headline}`, 11, true);
+        addLine(`Hook: ${analysis.messaging.hookLine}`, 10);
+        addLine(`CTA: ${analysis.messaging.ctaCopy}`, 10);
+
+        addSection('SIX-WEEK EXECUTION');
+        analysis.sixWeekPlan.forEach((week) => {
+          addLine(`Week ${week.week}: ${week.objective}`, 10, true);
+          week.actions.forEach((action) => addLine(`  • ${action}`, 9));
+        });
+
+        addSection('MEASUREMENT');
+        addLine(`Primary outcome: ${analysis.metrics.primaryOutcome}`, 10, true);
+        analysis.metrics.leading.forEach((metric) => addLine(`${metric.name}: ${metric.target} — ${metric.howToMeasure}`, 9));
+
+        addSection('RESEARCH SOURCES');
+        addLine(`Research status: ${analysis.researchStatus}`, 10, true);
+        analysis.researchSources.forEach((source, index) => addLine(`${index + 1}. ${source.title} — ${source.url}`, 8));
+
+        doc.save(`${analysis.planTitle.replace(/\s+/g, '-').toLowerCase()}-gtm-system.pdf`);
+        toast.success('PDF exported.');
+        await savePlan('exported');
+        return;
+      }
 
       addSection('RECOMMENDED CHANNELS');
       analysis.channels.forEach((ch, i) => {
@@ -433,17 +647,28 @@ export function useGTMStrategist() {
     setPhase('intake');
   }, []);
 
+  const openDiagnose = useCallback(() => {
+    setPhase('intake');
+  }, []);
+
   return {
     phase,
     analysis,
     planId,
     isSaving,
     isExporting,
+    isReviewing,
     prefillData,
+    prefillV2,
     prefillSource,
+    weeklyReview,
     runAnalysis,
+    runV2Analysis,
+    updatePlay,
+    runWeeklyReview,
     savePlan,
     exportPlan,
+    openDiagnose,
     resetToIntake,
   };
 }

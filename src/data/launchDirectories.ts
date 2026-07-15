@@ -9,6 +9,7 @@ export type DirectoryCategory =
 export type CostType = 'free' | 'freemium' | 'paid';
 
 export interface LaunchDirectory {
+  id: string;
   name: string;
   url: string;
   cost: string;
@@ -17,7 +18,15 @@ export interface LaunchDirectory {
   description: string;
   recommendation: string;
   bestFor: string;
+  businessModels: string[];
+  channelKeys: string[];
+  audiences: string[];
+  regions: string[];
+  prerequisites: string[];
+  lastVerifiedAt: string;
 }
+
+type LaunchDirectorySeed = Omit<LaunchDirectory, 'id' | 'businessModels' | 'channelKeys' | 'audiences' | 'regions' | 'prerequisites' | 'lastVerifiedAt'>;
 
 export const CATEGORY_LABELS: Record<DirectoryCategory, string> = {
   aggregator: 'Aggregator',
@@ -28,7 +37,7 @@ export const CATEGORY_LABELS: Record<DirectoryCategory, string> = {
   'vc-platform': 'VC / Investor',
 };
 
-export const LAUNCH_DIRECTORIES: LaunchDirectory[] = [
+const DIRECTORY_SEEDS: LaunchDirectorySeed[] = [
   // ── Aggregators ──────────────────────────────────────────────────
   {
     name: 'Product Hunt',
@@ -389,3 +398,52 @@ export const LAUNCH_DIRECTORIES: LaunchDirectory[] = [
     bestFor: 'Startups actively applying to accelerators or seeking grants',
   },
 ];
+
+const slugifyDirectory = (name: string) => name
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/^-|-$/g, '');
+
+const deriveBusinessModels = (seed: LaunchDirectorySeed) => {
+  const text = `${seed.description} ${seed.bestFor}`.toLowerCase();
+  const models = new Set<string>();
+  if (/b2b|saas|enterprise|software|developer|api/.test(text)) models.add('b2b_saas');
+  if (/b2c|consumer|app|productivity/.test(text)) models.add('b2c_product');
+  if (/marketplace/.test(text)) models.add('marketplace');
+  if (/e-?commerce|shop|store/.test(text)) models.add('ecommerce');
+  if (/agency|service|consult/.test(text)) models.add('service');
+  if (/content|media|newsletter|creator/.test(text)) models.add('media');
+  return models.size > 0 ? [...models] : ['b2b_saas', 'b2c_product', 'marketplace', 'ecommerce', 'service', 'media'];
+};
+
+const deriveChannelKeys = (seed: LaunchDirectorySeed) => {
+  const text = `${seed.name} ${seed.category} ${seed.description}`.toLowerCase();
+  const keys = new Set<string>();
+  if (seed.category === 'aggregator') keys.add('launch-platforms');
+  if (seed.category === 'community') keys.add('communities');
+  if (seed.category === 'newsletter') keys.add('content-seo');
+  if (seed.category === 'review') keys.add('content-seo');
+  if (/linkedin/.test(text)) keys.add('linkedin');
+  if (/tiktok|instagram|video/.test(text)) keys.add('short-form-video');
+  if (/partner|investor|accelerator/.test(text)) keys.add('partnerships');
+  return [...keys];
+};
+
+export const LAUNCH_DIRECTORIES: LaunchDirectory[] = DIRECTORY_SEEDS.map((seed) => ({
+  ...seed,
+  id: slugifyDirectory(seed.name),
+  businessModels: deriveBusinessModels(seed),
+  channelKeys: deriveChannelKeys(seed),
+  audiences: seed.bestFor.split(',').map((value) => value.trim()).filter(Boolean),
+  regions: /Europe|EU\b/i.test(`${seed.description} ${seed.bestFor}`) ? ['Europe'] : ['Global'],
+  prerequisites: seed.category === 'review'
+    ? ['A live product', 'At least one customer who can review it']
+    : seed.category === 'vc-platform'
+      ? ['A complete company profile']
+      : ['A live or launch-ready product'],
+  lastVerifiedAt: '2026-07-14',
+}));
+
+export function findLaunchDirectory(directoryId: string) {
+  return LAUNCH_DIRECTORIES.find((directory) => directory.id === directoryId) ?? null;
+}

@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
-import { ExternalLink, Search } from 'lucide-react';
+import { useEffect, useState, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { ExternalLink, Search, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +14,12 @@ import {
 } from '@/data/launchDirectories';
 import { useDirectoryViewTracking } from '@/hooks/useDirectoryViewTracking';
 import { PLAN_LABELS } from '@/config/planPermissions';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { captureEvent } from '@/lib/analytics';
+import type { GTMPlay } from '@/lib/gtmV2';
+
+type DirectoryProgress = 'recommended' | 'visited' | 'submitted' | 'live' | 'skipped';
 
 const COST_FILTERS: { label: string; value: CostType | 'all' }[] = [
   { label: 'All', value: 'all' },
@@ -47,9 +54,16 @@ const CATEGORY_BADGE_STYLES: Record<DirectoryCategory, string> = {
 };
 
 export default function DirectoriesTab() {
+  const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const planId = searchParams.get('planId');
+  const playId = searchParams.get('playId');
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<DirectoryCategory | 'all'>('all');
   const [activeCost, setActiveCost] = useState<CostType | 'all'>('all');
+  const [play, setPlay] = useState<GTMPlay | null>(null);
+  const [progress, setProgress] = useState<Record<string, DirectoryProgress>>({});
+  const [showAll, setShowAll] = useState(false);
   const {
     trackDirectoryView,
     isAuthenticated,
@@ -59,6 +73,58 @@ export default function DirectoriesTab() {
     remaining,
     upgradeTarget,
   } = useDirectoryViewTracking();
+
+  useEffect(() => {
+    if (!user || !planId || !playId) return;
+    let active = true;
+    const loadContext = async () => {
+      const [{ data: playRow, error: playError }, { data: actionRows }] = await Promise.all([
+        (supabase as any).from('gtm_plays').select('play_content').eq('id', playId).eq('plan_id', planId).eq('user_id', user.id).maybeSingle(),
+        (supabase as any).from('gtm_directory_actions').select('directory_id,status').eq('plan_id', planId).eq('play_id', playId).eq('user_id', user.id),
+      ]);
+      if (!active) return;
+      if (playError || !playRow) {
+        toast.error('This GTM play is unavailable or does not belong to your account.');
+        return;
+      }
+      const loaded = playRow.play_content as GTMPlay;
+      setPlay(loaded);
+      const next = Object.fromEntries((actionRows ?? []).map((row: { directory_id: string; status: DirectoryProgress }) => [row.directory_id, row.status]));
+      loaded.recommendedDirectoryIds.forEach((id) => { if (!next[id]) next[id] = 'recommended'; });
+      setProgress(next);
+    };
+    void loadContext();
+    return () => { active = false; };
+  }, [planId, playId, user]);
+
+  const recommendedIds = useMemo(() => {
+    if (!play) return new Set<string>();
+    const explicit = play.recommendedDirectoryIds.filter((id) => LAUNCH_DIRECTORIES.some((directory) => directory.id === id));
+    const matching = LAUNCH_DIRECTORIES
+      .filter((directory) => directory.channelKeys.includes(play.channelId))
+      .map((directory) => directory.id);
+    return new Set([...explicit, ...matching].slice(0, 5));
+  }, [play]);
+
+  const updateProgress = async (directoryId: string, status: DirectoryProgress) => {
+    if (!user || !planId || !playId) return;
+    const previous = progress[directoryId];
+    setProgress((current) => ({ ...current, [directoryId]: status }));
+    const { error } = await (supabase as any).from('gtm_directory_actions').upsert({
+      user_id: user.id,
+      plan_id: planId,
+      play_id: playId,
+      directory_id: directoryId,
+      status,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'play_id,directory_id' });
+    if (error) {
+      setProgress((current) => ({ ...current, [directoryId]: previous ?? 'recommended' }));
+      toast.error('Could not update directory progress.');
+      return;
+    }
+    captureEvent('gtm_directory_progress_updated', { plan_id: planId, play_id: playId, directory_id: directoryId, status });
+  };
 
   // Meter directory opens against the monthly quota. Anonymous preview visitors
   // open links directly. A blank tab is opened synchronously so the quota check
@@ -70,8 +136,11 @@ export default function DirectoriesTab() {
     }
 
     const placeholder = window.open('about:blank', '_blank');
-    const result = await trackDirectoryView(directory.name);
+    const result = await trackDirectoryView(directory.id, { planId, playId });
     if (result.success) {
+      if (play && (!progress[directory.id] || progress[directory.id] === 'recommended')) {
+        void updateProgress(directory.id, 'visited');
+      }
       if (placeholder) {
         placeholder.opener = null;
         placeholder.location.href = directory.url;
@@ -88,16 +157,25 @@ export default function DirectoriesTab() {
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return LAUNCH_DIRECTORIES.filter((dir) => {
+    const candidates = play && !showAll ? LAUNCH_DIRECTORIES.filter((directory) => recommendedIds.has(directory.id)) : LAUNCH_DIRECTORIES;
+    return candidates.filter((dir) => {
       if (activeCategory !== 'all' && dir.category !== activeCategory) return false;
       if (activeCost !== 'all' && dir.costType !== activeCost) return false;
       if (q && !dir.name.toLowerCase().includes(q) && !dir.description.toLowerCase().includes(q) && !dir.bestFor.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [search, activeCategory, activeCost]);
+  }, [search, activeCategory, activeCost, play, recommendedIds, showAll]);
 
   return (
     <div className="space-y-6">
+      {play && (
+        <div className="rounded-2xl border border-primary/25 bg-primary/5 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div><p className="flex items-center gap-2 font-semibold"><Sparkles className="h-4 w-4 text-primary" />Recommended for {play.channelName}</p><p className="mt-1 text-sm text-muted-foreground">These launch surfaces match the selected play. Progress is saved back to your GTM workspace.</p></div>
+            <Button variant="outline" size="sm" onClick={() => setShowAll((value) => !value)}>{showAll ? 'Show recommendations' : 'Browse all directories'}</Button>
+          </div>
+        </div>
+      )}
       {/* Monthly visit quota (authenticated users) */}
       {isAuthenticated && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-muted/40 px-4 py-2.5 text-xs">
@@ -174,7 +252,7 @@ export default function DirectoriesTab() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((dir) => (
             <div
-              key={dir.name}
+              key={dir.id}
               className="rounded-xl border border-border bg-card p-4 flex flex-col gap-3 hover:border-primary/30 transition-colors"
             >
               {/* Top row */}
@@ -207,6 +285,7 @@ export default function DirectoriesTab() {
                 >
                   {CATEGORY_LABELS[dir.category]}
                 </Badge>
+                {recommendedIds.has(dir.id) && <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary">Recommended</Badge>}
               </div>
 
               {/* Description */}
@@ -224,6 +303,14 @@ export default function DirectoriesTab() {
               <p className="text-xs text-muted-foreground">
                 <span className="font-medium text-foreground">Best for:</span> {dir.bestFor}
               </p>
+              {play && (
+                <label className="mt-auto flex items-center justify-between gap-3 border-t border-border/60 pt-3 text-xs font-medium">
+                  Progress
+                  <select className="rounded-md border border-border bg-background px-2 py-1 text-xs" value={progress[dir.id] ?? 'recommended'} onChange={(event) => void updateProgress(dir.id, event.target.value as DirectoryProgress)}>
+                    <option value="recommended">Recommended</option><option value="visited">Visited</option><option value="submitted">Submitted</option><option value="live">Live</option><option value="skipped">Skipped</option>
+                  </select>
+                </label>
+              )}
             </div>
           ))}
         </div>

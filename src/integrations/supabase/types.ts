@@ -3993,36 +3993,189 @@ export type Database = {
       gtm_plans: {
         Row: {
           created_at: string
+          current_version: number
           exported_at: string | null
           id: string
           plan_content: Json
           plan_title: string
           saved_at: string | null
+          schema_version: number
           status: string
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          current_version?: number
           exported_at?: string | null
           id?: string
           plan_content?: Json
           plan_title: string
           saved_at?: string | null
+          schema_version?: number
           status?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          current_version?: number
           exported_at?: string | null
           id?: string
           plan_content?: Json
           plan_title?: string
           saved_at?: string | null
+          schema_version?: number
           status?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      gtm_plan_versions: {
+        Row: {
+          created_at: string
+          id: string
+          plan_content: Json
+          plan_id: string
+          research_sources: Json
+          research_status: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          plan_content?: Json
+          plan_id: string
+          research_sources?: Json
+          research_status?: string
+          user_id: string
+          version: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          plan_content?: Json
+          plan_id?: string
+          research_sources?: Json
+          research_status?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      gtm_plays: {
+        Row: {
+          channel_id: string
+          channel_name: string
+          created_at: string
+          id: string
+          plan_id: string
+          plan_version_id: string | null
+          play_content: Json
+          rank: number
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          channel_id: string
+          channel_name: string
+          created_at?: string
+          id?: string
+          plan_id: string
+          plan_version_id?: string | null
+          play_content?: Json
+          rank?: number
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          channel_id?: string
+          channel_name?: string
+          created_at?: string
+          id?: string
+          plan_id?: string
+          plan_version_id?: string | null
+          play_content?: Json
+          rank?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      gtm_directory_actions: {
+        Row: {
+          directory_id: string
+          id: string
+          plan_id: string
+          play_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          directory_id: string
+          id?: string
+          plan_id: string
+          play_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          directory_id?: string
+          id?: string
+          plan_id?: string
+          play_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      gtm_weekly_reviews: {
+        Row: {
+          created_at: string
+          decision: string
+          evidence_summary: string
+          id: string
+          next_best_action: string
+          plan_id: string
+          play_id: string | null
+          traction_experiment_id: string | null
+          updated_at: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          created_at?: string
+          decision: string
+          evidence_summary?: string
+          id?: string
+          next_best_action: string
+          plan_id: string
+          play_id?: string | null
+          traction_experiment_id?: string | null
+          updated_at?: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string
+          decision?: string
+          evidence_summary?: string
+          id?: string
+          next_best_action?: string
+          plan_id?: string
+          play_id?: string | null
+          traction_experiment_id?: string | null
+          updated_at?: string
+          user_id?: string
+          week_start?: string
         }
         Relationships: []
       }

@@ -1,6 +1,7 @@
 import type { ICPAnalysis } from '@/components/icp/types';
 import type { PMFReadinessAnalysis } from '@/hooks/usePMFLab';
 import type { GTMAnalysis } from '@/hooks/useGTMStrategist';
+import { isGTMPlanV2, type GTMPlanV2 } from '@/lib/gtmV2';
 import { supabase } from '@/integrations/supabase/client';
 
 const SHARED_OUTPUTS_TABLE = 'bizmap_shared_outputs' as any;
@@ -214,7 +215,47 @@ export function createPMFSharedPayload(analysis: PMFReadinessAnalysis) {
   return { title, summary, snapshot };
 }
 
-export function createGTMSharedPayload(analysis: GTMAnalysis) {
+export function createGTMSharedPayload(analysis: GTMAnalysis | GTMPlanV2) {
+  if (isGTMPlanV2(analysis)) {
+    const activeWeeks = analysis.sixWeekPlan;
+    const title = analysis.planTitle;
+    const summary = `${analysis.summaryInsight} Includes an evidence-grounded GTM motion, focused channel plays, and a six-week execution plan.`;
+    const snapshot: GTMSharedSnapshot = {
+      generatedAt: analysis.generatedAt || new Date().toISOString(),
+      planTitle: title,
+      summaryInsight: analysis.summaryInsight,
+      positioning: {
+        positioningStatement: analysis.positioning.positioningStatement,
+        uniqueValueProposition: analysis.positioning.uniqueValueProposition,
+        keyDifferentiators: analysis.positioning.keyDifferentiators,
+      },
+      messaging: analysis.messaging,
+      channels: analysis.channels.map((channel) => ({
+        channel: channel.name,
+        fitScore: Math.round(channel.score / 10),
+        fitReason: channel.rationale,
+        weekOneActions: analysis.plays.find((play) => play.channelId === channel.id)?.actions.slice(0, 3) ?? [],
+        doNotDo: channel.rejectionReason ? [channel.rejectionReason] : [],
+      })),
+      actionPlan: {
+        week1: activeWeeks.find((week) => week.week === 1)?.actions ?? [],
+        week2: activeWeeks.find((week) => week.week === 2)?.actions ?? [],
+        weeks3to4: activeWeeks.filter((week) => week.week >= 3 && week.week <= 4).flatMap((week) => week.actions),
+      },
+      metrics: {
+        primary: analysis.metrics.leading.map((metric) => ({
+          name: metric.name,
+          target: metric.target,
+          why: `Leading evidence for ${analysis.metrics.primaryOutcome}`,
+          howToMeasure: metric.howToMeasure,
+        })),
+        laggingIndicators: analysis.metrics.lagging,
+      },
+      targetAudience: analysis.intake.targetSegment,
+    };
+    return { title, summary, snapshot };
+  }
+
   const title = analysis.planTitle;
   const summary = `${analysis.summaryInsight} Includes channel recommendations, positioning, messaging, and the first 30 days of launch actions.`;
   const snapshot: GTMSharedSnapshot = {

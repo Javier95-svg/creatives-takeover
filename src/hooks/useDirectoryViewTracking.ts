@@ -17,6 +17,11 @@ export interface DirectoryViewTrackingResult {
   reason?: 'limit_reached' | 'auth' | 'error';
 }
 
+export interface DirectoryViewContext {
+  planId?: string | null;
+  playId?: string | null;
+}
+
 /**
  * Monthly quota metering for the Directories tool, mirroring useVCViewTracking.
  * Every plan can open a few directories per month (Rookie 3 / Starter 10 /
@@ -69,7 +74,7 @@ export const useDirectoryViewTracking = () => {
   }, [fetchMonthlyViewCount]);
 
   const trackDirectoryView = useCallback(
-    async (directoryKey: string): Promise<DirectoryViewTrackingResult> => {
+    async (directoryKey: string, context: DirectoryViewContext = {}): Promise<DirectoryViewTrackingResult> => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
@@ -108,6 +113,8 @@ export const useDirectoryViewTracking = () => {
           user_id: user.id,
           directory_key: directoryKey,
           subscription_tier: currentTier,
+          gtm_plan_id: context.planId ?? null,
+          gtm_play_id: context.playId ?? null,
         });
         if (insertError) {
           console.error('Error inserting directory view:', insertError);
