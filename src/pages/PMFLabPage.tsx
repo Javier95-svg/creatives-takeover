@@ -3,7 +3,6 @@ import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import PageFAQSection from '@/components/seo/PageFAQSection';
-import RelatedToolsSection from '@/components/seo/RelatedToolsSection';
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
@@ -17,7 +16,6 @@ import PMFScoringLoader from '@/components/pmf/PMFScoringLoader';
 import PMFReadinessReport from '@/components/pmf/PMFReadinessReport';
 import PMFCustomerDiscovery from '@/components/pmf/PMFCustomerDiscovery';
 import PMFOutcomeCapture from '@/components/pmf/PMFOutcomeCapture';
-import { PMFContextBanner } from '@/components/pmf/PMFContextBanner';
 import { cn } from '@/lib/utils';
 import { useSearchParams } from 'react-router-dom';
 import { ArrowRight, ChevronDown, Rocket } from 'lucide-react';
@@ -47,7 +45,6 @@ export default function PMFLabPage() {
 
   const [icpPersonaName, setIcpPersonaName] = useState<string | null>(null);
   const [waitlistProductName, setWaitlistProductName] = useState<string | null>(null);
-  const [contextLoading, setContextLoading] = useState(false);
   const [mode, setMode] = useState<'score' | 'discover'>('score');
   // Progressive disclosure: only one detail step is expanded at a time so the
   // page opens with a single clear focus instead of a wall of stacked sections.
@@ -74,7 +71,6 @@ export default function PMFLabPage() {
 
     let active = true;
     const loadContext = async () => {
-      setContextLoading(true);
       const [icpRes, waitlistRes] = await Promise.all([
         supabase
           .from('icp_analysis_results')
@@ -94,7 +90,6 @@ export default function PMFLabPage() {
       if (!active) return;
       setIcpPersonaName((icpRes.data as { target_audience: string | null } | null)?.target_audience ?? null);
       setWaitlistProductName((waitlistRes.data as { product_name: string | null } | null)?.product_name ?? null);
-      setContextLoading(false);
     };
 
     void loadContext();
@@ -300,15 +295,6 @@ export default function PMFLabPage() {
                   </p>
                 </div>
               </div>
-
-              {phase === 'intake' && user && (
-                <PMFContextBanner
-                  icpPersonaName={icpPersonaName}
-                  waitlistProductName={waitlistProductName}
-                  loading={contextLoading}
-                  className="mb-2"
-                />
-              )}
 
               {phase === 'intake' && (
                 <>
@@ -537,13 +523,6 @@ export default function PMFLabPage() {
               <PageFAQSection
                 title="FAQ"
                 faqs={faqs}
-              />
-              <RelatedToolsSection
-                tools={[
-                  { name: "ICP Builder", description: "Define your ideal customer and sharpen product focus.", url: "/icp-builder" },
-                  { name: "Traction Engine", description: "Track distribution experiments and retention signals weekly.", url: "/traction-engine" },
-                  { name: "BizMap AI", description: "Full founder workflow from idea to launch.", url: "/bizmap-ai" },
-                ]}
               />
             </div>
           </div>
