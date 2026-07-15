@@ -4,6 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
+import { inferMotion, rankChannels, type GTMIntakeV2 } from '../_shared/gtm-channel-engine.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -26,96 +27,6 @@ interface GTMAnalysisRequest {
   icpNicheProfile?: string;
 }
 
-interface GTMIntakeV2 {
-  productName: string;
-  productUrl?: string;
-  lifecycle: 'launch_ready' | 'live';
-  businessModel: 'b2b_saas' | 'b2c_product' | 'marketplace' | 'ecommerce' | 'service' | 'media';
-  targetSegment: string;
-  geography: string;
-  problem: string;
-  solution: string;
-  buyerRole?: string;
-  userRole?: string;
-  buyingTrigger?: string;
-  pricing?: string;
-  averageCustomerValue?: number;
-  currentTraction: string;
-  weeklyTimeHours: number;
-  monthlyBudget: number;
-  founderStrengths: string[];
-  knownCompetitors: string[];
-  sixWeekOutcome: string;
-  salesCycle?: string;
-  averageOrderValue?: number;
-  repeatPurchaseModel?: string;
-  marketplaceSide?: 'supply' | 'demand' | 'both';
-  serviceCapacity?: string;
-  subscriberGoal?: number;
-}
-
-type GTMMotion = 'founder_led_sales' | 'sales_assisted' | 'product_led' | 'transactional' | 'marketplace_liquidity' | 'audience_led';
-
-interface ChannelRule {
-  id: string;
-  name: string;
-  models: GTMIntakeV2['businessModel'][];
-  motions: GTMMotion[];
-  minHours: number;
-  minBudget: number;
-  strengths: string[];
-  metric: string;
-  target: number;
-  prerequisites: string[];
-  directories: string[];
-}
-
-const ALL_MODELS: GTMIntakeV2['businessModel'][] = ['b2b_saas', 'b2c_product', 'marketplace', 'ecommerce', 'service', 'media'];
-const CHANNEL_RULES: ChannelRule[] = [
-  { id: 'founder-outreach', name: 'Founder-led outreach', models: ['b2b_saas', 'service', 'marketplace'], motions: ['founder_led_sales', 'sales_assisted'], minHours: 3, minBudget: 0, strengths: ['Networking', 'Cold outreach'], metric: 'Qualified conversations', target: 5, prerequisites: ['A defined buyer role', 'A clear problem-led message'], directories: ['linkedin', 'wellfound-angellist', 'crunchbase'] },
-  { id: 'cold-email', name: 'Targeted cold email', models: ['b2b_saas', 'service'], motions: ['founder_led_sales', 'sales_assisted'], minHours: 4, minBudget: 50, strengths: ['Writing', 'Cold outreach'], metric: 'Positive replies', target: 5, prerequisites: ['A qualified prospect list', 'A verified sending domain'], directories: ['g2', 'capterra', 'alternativeto'] },
-  { id: 'linkedin', name: 'LinkedIn authority + conversations', models: ['b2b_saas', 'service', 'media'], motions: ['founder_led_sales', 'sales_assisted', 'audience_led'], minHours: 3, minBudget: 0, strengths: ['Writing', 'Networking'], metric: 'Qualified conversations', target: 5, prerequisites: ['A founder profile aligned to the offer'], directories: ['linkedin', 'indie-hackers', 'twitter-x'] },
-  { id: 'communities', name: 'Niche communities', models: ALL_MODELS, motions: ['founder_led_sales', 'product_led', 'transactional', 'marketplace_liquidity', 'audience_led'], minHours: 3, minBudget: 0, strengths: ['Writing', 'Networking'], metric: 'Activated users', target: 10, prerequisites: ['A named community where the ICP is active'], directories: ['indie-hackers', 'hacker-news-show-hn', 'dev-to', 'reddit-r-startups-r-saas-r-entrepreneur'] },
-  { id: 'launch-platforms', name: 'Launch platforms', models: ['b2b_saas', 'b2c_product', 'marketplace', 'ecommerce'], motions: ['product_led', 'transactional', 'marketplace_liquidity'], minHours: 5, minBudget: 0, strengths: ['Writing', 'Design', 'Networking'], metric: 'Activated signups', target: 25, prerequisites: ['A live product', 'A working onboarding path'], directories: ['product-hunt', 'betalist', 'peerlist', 'microlaunch', 'uneed'] },
-  { id: 'content-seo', name: 'Problem-led content + SEO', models: ['b2b_saas', 'b2c_product', 'ecommerce', 'service', 'media'], motions: ['product_led', 'transactional', 'audience_led'], minHours: 5, minBudget: 0, strengths: ['Writing', 'Coding / Technical'], metric: 'Qualified organic visits', target: 100, prerequisites: ['Searchable customer problems', 'A repeatable publishing cadence'], directories: ['dev-to', 'hackernoon', 'saashub', 'alternativeto'] },
-  { id: 'short-form-video', name: 'Short-form video', models: ['b2c_product', 'ecommerce', 'marketplace', 'media'], motions: ['transactional', 'product_led', 'audience_led', 'marketplace_liquidity'], minHours: 5, minBudget: 0, strengths: ['Speaking / Video', 'Design'], metric: 'Activated profile visits', target: 50, prerequisites: ['A visually demonstrable outcome'], directories: ['product-hunt', 'reddit-r-startups-r-saas-r-entrepreneur', 'twitter-x'] },
-  { id: 'partnerships', name: 'Distribution partnerships', models: ['b2b_saas', 'marketplace', 'service', 'media'], motions: ['founder_led_sales', 'sales_assisted', 'marketplace_liquidity', 'audience_led'], minHours: 3, minBudget: 0, strengths: ['Networking'], metric: 'Qualified partner conversations', target: 3, prerequisites: ['A clear partner benefit'], directories: ['wellfound-angellist', 'f6s', 'crunchbase'] },
-  { id: 'paid-acquisition', name: 'Paid acquisition', models: ['b2c_product', 'ecommerce', 'b2b_saas'], motions: ['transactional', 'product_led'], minHours: 3, minBudget: 500, strengths: ['Design'], metric: 'Qualified conversions', target: 20, prerequisites: ['A proven conversion event', 'Known customer value'], directories: [] },
-  { id: 'referrals', name: 'Customer referral loop', models: ALL_MODELS, motions: ['product_led', 'transactional', 'marketplace_liquidity', 'audience_led'], minHours: 2, minBudget: 0, strengths: ['Networking', 'Design'], metric: 'Referred activated users', target: 10, prerequisites: ['Existing satisfied users'], directories: [] },
-];
-
-const clamp = (value: number) => Math.max(0, Math.min(100, Math.round(value)));
-const inferMotion = (intake: GTMIntakeV2): GTMMotion => {
-  if (intake.businessModel === 'marketplace') return 'marketplace_liquidity';
-  if (intake.businessModel === 'ecommerce') return 'transactional';
-  if (intake.businessModel === 'media') return 'audience_led';
-  if (intake.businessModel === 'service') return 'founder_led_sales';
-  if (intake.businessModel === 'b2b_saas') return (intake.averageCustomerValue ?? 0) >= 5000 ? 'sales_assisted' : 'founder_led_sales';
-  return 'product_led';
-};
-
-function rankChannels(intake: GTMIntakeV2) {
-  const motion = inferMotion(intake);
-  return CHANNEL_RULES.map((rule) => {
-    let rejectionReason: string | undefined;
-    if (!rule.models.includes(intake.businessModel)) rejectionReason = 'Does not fit this business model.';
-    else if (!rule.motions.includes(motion)) rejectionReason = 'Does not fit the selected GTM motion.';
-    else if (intake.weeklyTimeHours < rule.minHours) rejectionReason = `Requires at least ${rule.minHours} hours per week.`;
-    else if (intake.monthlyBudget < rule.minBudget) rejectionReason = `Requires at least $${rule.minBudget} per month.`;
-    else if (rule.id === 'launch-platforms' && intake.lifecycle !== 'live') rejectionReason = 'Requires a live product.';
-    else if (rule.id === 'referrals' && /none|no users|pre-launch/i.test(intake.currentTraction)) rejectionReason = 'Requires existing satisfied users.';
-    const breakdown = {
-      audienceEvidence: intake.buyingTrigger?.trim() ? 75 : 55,
-      motionEconomicsFit: rule.motions.includes(motion) ? 90 : 35,
-      tractionEvidence: /none|no users|pre-launch/i.test(intake.currentTraction) ? 35 : 70,
-      founderConstraints: clamp(50 + Math.min(30, (intake.weeklyTimeHours - rule.minHours) * 6) + (intake.monthlyBudget >= rule.minBudget ? 20 : 0)),
-      founderStrengths: rule.strengths.some((strength) => intake.founderStrengths.includes(strength)) ? 85 : 50,
-    };
-    const raw = breakdown.audienceEvidence * .25 + breakdown.motionEconomicsFit * .25 + breakdown.tractionEvidence * .2 + breakdown.founderConstraints * .15 + breakdown.founderStrengths * .15;
-    return { rule, eligible: !rejectionReason, rejectionReason, score: rejectionReason ? Math.min(clamp(raw), 49) : clamp(raw), breakdown };
-  }).sort((a, b) => Number(b.eligible) - Number(a.eligible) || b.score - a.score);
-}
-
 const safeStringArray = (value: unknown, fallback: string[] = []) => Array.isArray(value)
   ? value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0).slice(0, 12)
   : fallback;
@@ -135,6 +46,7 @@ function isValidV2Intake(value: GTMIntakeV2 | undefined): value is GTMIntakeV2 {
     models.includes(value.businessModel) &&
     Array.isArray(value.founderStrengths) &&
     Array.isArray(value.knownCompetitors) &&
+    (!value.firstPartyEvidence || (Array.isArray(value.firstPartyEvidence) && value.firstPartyEvidence.length <= 12)) &&
     Number.isFinite(value.weeklyTimeHours) && value.weeklyTimeHours > 0 && value.weeklyTimeHours <= 80 &&
     Number.isFinite(value.monthlyBudget) && value.monthlyBudget >= 0 && value.monthlyBudget <= 10000000;
 }
@@ -174,7 +86,7 @@ async function researchGTM(intake: GTMIntakeV2) {
         model: 'sonar-pro',
         messages: [
           { role: 'system', content: 'Research current go-to-market evidence for a launch-ready founder. Prefer primary and reputable sources. Separate evidence from inference.' },
-          { role: 'user', content: `Product: ${intake.productName}\nURL: ${intake.productUrl || 'not supplied'}\nMarket: ${intake.targetSegment}\nGeography: ${intake.geography}\nProblem: ${intake.problem}\nKnown alternatives: ${intake.knownCompetitors.join(', ') || 'unknown'}\nFind current competitors and alternatives, where buyers discover solutions, buying triggers, and channel conditions. Return concise evidence with citations.` },
+          { role: 'user', content: `Product: ${intake.productName}\nURL: ${intake.productUrl || 'not supplied'}\nMarket: ${intake.targetSegment}\nGeography: ${intake.geography}\nProblem: ${intake.problem}\nKnown alternatives: ${intake.knownCompetitors.join(', ') || 'unknown'}\nFounder evidence summary: ${(intake.firstPartyEvidence ?? []).map((item) => `${item.title}: ${item.content.slice(0, 800)}`).join('\n').slice(0, 5000) || 'none supplied'}\nFind current competitors and alternatives, pricing, positioning, where buyers discover solutions, buying triggers, and channel conditions. Return concise evidence with citations. Do not treat founder-provided claims as independently verified market facts.` },
         ],
         temperature: 0.2,
         max_tokens: 1400,
@@ -186,13 +98,100 @@ async function researchGTM(intake: GTMIntakeV2) {
     const data = await response.json();
     const citations = Array.isArray(data.citations) ? data.citations.slice(0, 6) : [];
     const sources = citations.map((citation: any, index: number) => typeof citation === 'string'
-      ? { title: `Source ${index + 1}`, url: citation }
-      : { title: citation.title || citation.name || `Source ${index + 1}`, url: citation.url || citation.source || '', snippet: citation.snippet || citation.summary, publishedDate: citation.published_date || citation.date })
+      ? { id: `research-${index + 1}`, title: `Source ${index + 1}`, url: citation, kind: 'external', verifiedAt: new Date().toISOString() }
+      : { id: `research-${index + 1}`, title: citation.title || citation.name || `Source ${index + 1}`, url: citation.url || citation.source || '', snippet: citation.snippet || citation.summary, publishedDate: citation.published_date || citation.date, kind: 'external', verifiedAt: new Date().toISOString() })
       .filter((source: any) => /^https?:\/\//.test(source.url));
     return { status: sources.length >= 3 ? 'complete' as const : sources.length > 0 ? 'limited' as const : 'unavailable' as const, answer: data.choices?.[0]?.message?.content || '', sources };
   } catch (error) {
     console.warn('GTM live research unavailable:', error);
     return { status: 'unavailable' as const, answer: '', sources: [] as Array<Record<string, unknown>> };
+  }
+}
+
+const safePublicUrl = (value: string | undefined) => {
+  if (!value) return undefined;
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+    if (!['http:', 'https:'].includes(url.protocol)) return undefined;
+    if (
+      host === 'localhost' ||
+      host === '0.0.0.0' ||
+      host.endsWith('.local') ||
+      host === '[::1]' ||
+      host.startsWith('[fc') ||
+      host.startsWith('[fd') ||
+      host.startsWith('[fe8') ||
+      /^127\.|^10\.|^192\.168\.|^169\.254\.|^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./.test(host) ||
+      /^172\.(1[6-9]|2\d|3[01])\./.test(host)
+    ) return undefined;
+    return url.toString();
+  } catch {
+    return undefined;
+  }
+};
+
+const normalizeFirstPartyEvidence = (intake: GTMIntakeV2) => (intake.firstPartyEvidence ?? [])
+  .filter((item) => item && typeof item.id === 'string' && typeof item.title === 'string' && typeof item.content === 'string')
+  .slice(0, 12)
+  .map((item, index) => ({
+    id: safeText(item.id, `evidence-${index + 1}`, 100).replace(/[^a-zA-Z0-9_-]/g, '-'),
+    kind: ['website', 'interview', 'document', 'pricing', 'competitor', 'traction', 'founder_note'].includes(item.kind) ? item.kind : 'founder_note',
+    title: safeText(item.title, `Founder evidence ${index + 1}`, 180),
+    content: safeText(item.content, '', 12_000),
+    url: safePublicUrl(item.url),
+    sourceDate: /^\d{4}-\d{2}-\d{2}$/.test(item.sourceDate ?? '') ? item.sourceDate : undefined,
+    verified: Boolean(item.verified),
+    channelIds: safeStringArray(item.channelIds).slice(0, 8),
+    createdAt: item.createdAt || new Date().toISOString(),
+  }))
+  .filter((item) => item.content.length > 0);
+
+async function fetchProductWebsiteEvidence(intake: GTMIntakeV2) {
+  const initialUrl = safePublicUrl(intake.productUrl);
+  if (!initialUrl) return null;
+  try {
+    let url = initialUrl;
+    let response: Response | null = null;
+    for (let redirectCount = 0; redirectCount <= 3; redirectCount += 1) {
+      response = await fetch(url, {
+        headers: { Accept: 'text/html,text/plain', 'User-Agent': 'CreativesTakeover-GTM-Research/2.0' },
+        redirect: 'manual',
+        signal: AbortSignal.timeout(7_000),
+      });
+      if (response.status < 300 || response.status >= 400) break;
+      const location = response.headers.get('location');
+      const redirectedUrl = location ? safePublicUrl(new URL(location, url).toString()) : undefined;
+      if (!redirectedUrl) return null;
+      url = redirectedUrl;
+      response = null;
+    }
+    if (!response) return null;
+    const contentType = response.headers.get('content-type') ?? '';
+    if (!response.ok || (!contentType.includes('text/html') && !contentType.includes('text/plain'))) return null;
+    const raw = (await response.text()).slice(0, 120_000);
+    const text = raw
+      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/&amp;/gi, '&')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 12_000);
+    if (text.length < 120) return null;
+    return {
+      id: 'product-website',
+      kind: 'website' as const,
+      title: `${intake.productName} product website`,
+      content: text,
+      url,
+      verified: true,
+      createdAt: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.warn('GTM product website could not be read:', error);
+    return null;
   }
 }
 
@@ -219,10 +218,32 @@ function fallbackFunnel(model: GTMIntakeV2['businessModel']) {
 
 async function generateV2Plan(args: { intake: GTMIntakeV2; userId: string; existingPlanId?: string; openaiApiKey: string }) {
   const { intake, userId, existingPlanId, openaiApiKey } = args;
-  const ranked = rankChannels(intake);
+  const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  let previousPipelineRows: Array<Record<string, any>> = [];
+  if (existingPlanId) {
+    const { data: ownedPlan, error: planLookupError } = await admin.from('gtm_plans')
+      .select('id').eq('id', existingPlanId).eq('user_id', userId).maybeSingle();
+    if (planLookupError) throw planLookupError;
+    if (!ownedPlan) throw new Error('GTM plan not found');
+    const { data: pipelineRows, error: pipelineLookupError } = await admin.from('gtm_pipeline_entries')
+      .select('id,name,stage,value,source_channel_id,momentum,occurred_at,notes')
+      .eq('plan_id', existingPlanId).eq('user_id', userId);
+    if (pipelineLookupError) throw pipelineLookupError;
+    previousPipelineRows = pipelineRows ?? [];
+  }
+  const suppliedEvidence = normalizeFirstPartyEvidence(intake);
+  const productWebsite = await fetchProductWebsiteEvidence(intake);
+  intake.firstPartyEvidence = [
+    ...suppliedEvidence.filter((item) => item.id !== 'product-website'),
+    ...(productWebsite ? [productWebsite] : []),
+  ];
+  const research = await researchGTM(intake);
+  const ranked = rankChannels(intake, {
+    researchText: research.answer,
+    researchSourceIds: research.sources.map((source: any) => source.id).filter(Boolean),
+  });
   const selected = ranked.filter((item) => item.eligible).slice(0, 3);
   if (selected.length < 2) throw new Error('The current time and budget constraints leave fewer than two viable channels. Increase one constraint and try again.');
-  const research = await researchGTM(intake);
   const motion = inferMotion(intake);
   const prompt = `You are a rigorous early-stage GTM strategist. Build strategic content for the fixed, server-selected channels below. Do not add or replace channels. Separate sourced facts from assumptions. Make every play executable by a founder in the next six weeks.
 
@@ -236,6 +257,14 @@ LIVE RESEARCH STATUS: ${research.status}
 LIVE RESEARCH:
 ${research.answer || 'No live sources were available. Treat market claims as assumptions.'}
 
+ALLOWED SOURCE IDS:
+${JSON.stringify([
+    ...research.sources.map((source: any) => ({ id: source.id, title: source.title, url: source.url, snippet: source.snippet })),
+    ...(intake.firstPartyEvidence ?? []).map((item) => ({ id: item.id, title: item.title, kind: item.kind, content: item.content.slice(0, 1600) })),
+  ], null, 2)}
+
+Every factual market, buyer, channel, positioning, or competitor claim must reference only these source IDs. Claims without a valid source must be marked as assumptions.
+
 Return only JSON with this shape:
 {
   "summaryInsight":"2-3 sentence thesis",
@@ -247,7 +276,10 @@ Return only JSON with this shape:
   "growthLoop":{"name":"","input":"","action":"","output":"","reinvestment":""},
   "sixWeekPlan":[{"week":1,"objective":"","actions":[""]}],
   "metrics":{"primaryOutcome":"","leading":[{"name":"","target":"","howToMeasure":""}],"lagging":[""]},
-  "assumptions":[""]
+  "assumptions":[""],
+  "claimAttributions":[{"claim":"","area":"positioning","sourceIds":["research-1"],"confidence":"medium","assumption":false}],
+  "competitorBriefs":[{"name":"","category":"","positioning":"","bestFitSegment":"","pricing":"","acquisitionChannels":[""],"strengths":[""],"gaps":[""],"proofPoints":[""],"likelyObjection":"","recommendedResponse":"","sourceIds":["research-1"]}],
+  "playAssets":{"channel-id":[{"type":"outreach_sequence","title":"","content":""}]}
 }`;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -277,6 +309,7 @@ Return only JSON with this shape:
     role: index === 0 ? 'primary' : index === 1 ? 'secondary' : 'deferred',
     score: item.score,
     scoreBreakdown: item.breakdown,
+    scoreEvidence: item.scoreEvidence,
     confidence,
     rationale: safeText(narratives[item.rule.id]?.rationale, `Fits the ${motion.replaceAll('_', ' ')} motion and current founder constraints.`),
     evidence: safeStringArray(narratives[item.rule.id]?.evidence),
@@ -288,6 +321,7 @@ Return only JSON with this shape:
     role: 'deferred',
     score: item.score,
     scoreBreakdown: item.breakdown,
+    scoreEvidence: item.scoreEvidence,
     confidence: 'high',
     rationale: 'Excluded by deterministic eligibility rules before AI strategy generation.',
     evidence: [] as string[],
@@ -316,8 +350,44 @@ Return only JSON with this shape:
       recommendedDirectoryIds: item.rule.directories.slice(0, 5),
     };
   });
+  const pipeline = previousPipelineRows.flatMap((entry) => {
+    const play = plays.find((candidate) => candidate.channelId === entry.source_channel_id);
+    if (!play) return [];
+    return [{
+      id: entry.id,
+      playId: play.id,
+      name: safeText(entry.name, 'Attributed outcome', 200),
+      stage: entry.stage,
+      value: Math.max(0, Number(entry.value) || 0),
+      sourceChannelId: entry.source_channel_id,
+      momentum: entry.momentum,
+      occurredAt: entry.occurred_at,
+      notes: safeText(entry.notes, '', 1000) || undefined,
+    }];
+  });
   const positioning = strategic.positioning ?? {};
   const messaging = strategic.messaging ?? {};
+  const evidenceItems = intake.firstPartyEvidence ?? [];
+  const validSourceIds = new Set([
+    ...research.sources.map((source: any) => source.id).filter(Boolean),
+    ...evidenceItems.map((item) => item.id),
+  ]);
+  const claimAttributions = (Array.isArray(strategic.claimAttributions) ? strategic.claimAttributions : [])
+    .slice(0, 30)
+    .map((claim: any, index: number) => {
+      const sourceIds = safeStringArray(claim?.sourceIds).filter((id) => validSourceIds.has(id)).slice(0, 6);
+      const area = ['positioning', 'channel', 'competitor', 'buyer', 'economics'].includes(claim?.area) ? claim.area : 'positioning';
+      const confidence = ['high', 'medium', 'low'].includes(claim?.confidence) ? claim.confidence : sourceIds.length > 0 ? 'medium' : 'low';
+      return {
+        id: `claim-${index + 1}`,
+        claim: safeText(claim?.claim, '', 500),
+        area,
+        sourceIds,
+        confidence,
+        assumption: Boolean(claim?.assumption) || sourceIds.length === 0,
+      };
+    })
+    .filter((claim: any) => claim.claim.length > 0);
   const plan: Record<string, any> = {
     schemaVersion: 2,
     planTitle: `${intake.productName} — Six-week GTM system`,
@@ -325,6 +395,9 @@ Return only JSON with this shape:
     intake,
     researchStatus: research.status,
     researchSources: research.sources,
+    evidenceItems,
+    claimAttributions,
+    pipeline,
     assumptions: safeStringArray(strategic.assumptions, research.status === 'unavailable' ? ['Live market research was unavailable; validate channel assumptions through Traction Engine.'] : []),
     thesis: {
       motion,
@@ -384,33 +457,73 @@ Return only JSON with this shape:
       metric: play?.metric ?? plan.metrics.leading[0]?.name ?? 'Validated signal', status: 'todo',
     };
   }));
-  plan.assets = plays.filter((play) => play.status !== 'paused').flatMap((play) => [
-    { id: `${play.id}-outreach`, playId: play.id, type: 'outreach_message', title: `${play.channelName} conversation starter`, content: `${play.message}\n\nOffer: ${play.offer}\n\nNext step: ${plan.messaging.ctaCopy}`, status: 'draft' },
-    { id: `${play.id}-listing`, playId: play.id, type: 'directory_listing', title: `${intake.productName} directory listing`, content: `${plan.messaging.headline}\n\n${plan.messaging.hookLine}\n\nBest for: ${play.audience}\n\n${plan.positioning.uniqueValueProposition}`, status: 'draft' },
-    { id: `${play.id}-campaign`, playId: play.id, type: 'campaign_brief', title: `${play.channelName} experiment brief`, content: `Audience: ${play.audience}\nTrigger: ${play.buyingTrigger}\nHypothesis: ${play.hypothesis}\nMetric: ${play.metric}\nTarget: ${play.target}`, status: 'draft' },
-  ]);
+  const allowedAssetTypes = new Set(['outreach_message', 'outreach_sequence', 'directory_listing', 'campaign_brief', 'interview_script', 'landing_page_copy', 'content_calendar', 'partnership_pitch', 'paid_test_matrix', 'launch_checklist']);
+  const fallbackAssets = (play: any) => [
+    { type: 'campaign_brief', title: `${play.channelName} measurement brief`, content: `Audience: ${play.audience}\nTrigger: ${play.buyingTrigger}\nOffer: ${play.offer}\nHypothesis: ${play.hypothesis}\nMetric: ${play.metric}\nTarget: ${play.target}\nDecision rule: change one variable at a time and log the result in Traction Engine.` },
+    { type: ['partnerships', 'affiliates', 'creator-partnerships', 'integration-marketplaces'].includes(play.channelId) ? 'partnership_pitch' : 'outreach_sequence', title: `${play.channelName} activation sequence`, content: `Touch 1: ${play.message}\n\nTouch 2: When ${play.buyingTrigger.toLowerCase()}, how do you solve it today?\n\nTouch 3: ${plan.messaging.proofPoint}\n\nTouch 4: ${play.offer}\n\nTouch 5: ${plan.messaging.ctaCopy}` },
+    { type: 'landing_page_copy', title: `${play.channelName} landing page copy`, content: `${plan.messaging.headline}\n\n${plan.messaging.hookLine}\n\nBest for: ${play.audience}\n\n${plan.positioning.uniqueValueProposition}\n\n${plan.messaging.ctaCopy}` },
+    { type: 'interview_script', title: `${play.channelName} buyer interview`, content: `1. What happened the last time ${play.buyingTrigger.toLowerCase()}?\n2. What did you try first?\n3. Which alternatives did you compare?\n4. What made the problem urgent?\n5. What evidence would make ${play.offer.toLowerCase()} credible?\n6. Where did you look for an answer?` },
+  ];
+  plan.assets = plays.filter((play) => play.status !== 'paused').flatMap((play) => {
+    const generated = Array.isArray(strategic.playAssets?.[play.channelId]) ? strategic.playAssets[play.channelId] : [];
+    const candidates = generated.length >= 3 ? generated : fallbackAssets(play);
+    return candidates.slice(0, 4).map((asset: any, index: number) => ({
+      id: `${play.id}-${safeText(asset?.type, `asset-${index + 1}`, 60).replace(/[^a-z0-9_-]/gi, '-')}-${index + 1}`,
+      playId: play.id,
+      type: allowedAssetTypes.has(asset?.type) ? asset.type : 'campaign_brief',
+      title: safeText(asset?.title, `${play.channelName} execution asset`, 180),
+      content: safeText(asset?.content, fallbackAssets(play)[index % 4].content, 6000),
+      status: 'draft',
+    }));
+  });
   const alternatives = Array.from(new Set([...(intake.knownCompetitors ?? []), ...plan.positioning.competitiveAlternatives])).filter(Boolean).slice(0, 5);
-  plan.competitorBriefs = alternatives.map((name: string, index: number) => ({
-    id: `competitor-${index + 1}-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 24)}`,
-    name, category: plan.positioning.marketCategory,
-    positioning: `${name} is an alternative customers may choose instead of changing their current workflow.`,
-    bestFitSegment: plan.positioning.bestFitSegment,
-    strengths: ['Existing familiarity', 'Lower perceived switching risk'],
-    gaps: plan.positioning.differentiatedCapabilities.slice(0, 2),
-    sourceUrls: research.sources.slice(0, 2).map((source: any) => source.url),
-  }));
+  const strategicCompetitors = Array.isArray(strategic.competitorBriefs) ? strategic.competitorBriefs : [];
+  plan.competitorBriefs = alternatives.map((name: string, index: number) => {
+    const generated = strategicCompetitors.find((item: any) => safeText(item?.name).toLowerCase() === name.toLowerCase()) ?? strategicCompetitors[index] ?? {};
+    const sourceIds = safeStringArray(generated?.sourceIds).filter((id) => validSourceIds.has(id));
+    const sourceUrls = sourceIds.map((id) => research.sources.find((source: any) => source.id === id)?.url ?? evidenceItems.find((item) => item.id === id)?.url).filter(Boolean);
+    const verified = sourceIds.length > 0;
+    return {
+      id: `competitor-${crypto.randomUUID()}`,
+      name,
+      category: safeText(generated?.category, plan.positioning.marketCategory, 160),
+      positioning: safeText(generated?.positioning, verified ? `${name} is a researched alternative in this buying decision.` : `Unverified alternative: ${name}. Confirm its positioning before using this brief.`, 600),
+      bestFitSegment: safeText(generated?.bestFitSegment, plan.positioning.bestFitSegment, 300),
+      pricing: safeText(generated?.pricing, verified ? 'Pricing was not found in the available sources.' : 'Unverified', 240),
+      acquisitionChannels: safeStringArray(generated?.acquisitionChannels),
+      strengths: safeStringArray(generated?.strengths, verified ? [] : ['Not yet verified from a primary source']),
+      gaps: safeStringArray(generated?.gaps, verified ? [] : ['No evidence-backed opening has been established']),
+      proofPoints: safeStringArray(generated?.proofPoints),
+      likelyObjection: safeText(generated?.likelyObjection, `Why switch from ${name}?`, 400),
+      recommendedResponse: safeText(generated?.recommendedResponse, `Use verified proof for ${plan.positioning.uniqueValueProposition}; do not make an unsupported competitor claim.`, 600),
+      lastVerifiedAt: verified ? new Date().toISOString() : undefined,
+      sourceUrls,
+    };
+  });
+  const verifiedEvidenceCount = evidenceItems.filter((item) => item.verified).length;
+  const sourcedClaimCount = claimAttributions.filter((claim: any) => !claim.assumption && claim.sourceIds.length > 0).length;
+  const claimCoverage = claimAttributions.length > 0 ? sourcedClaimCount / claimAttributions.length : 0;
+  const positioningConfidence = Math.min(100, Math.round((research.status === 'complete' ? 55 : research.status === 'limited' ? 40 : 20) + Math.min(20, verifiedEvidenceCount * 5) + claimCoverage * 25));
+  const weekOneTasks = plan.tasks.filter((task: any) => task.week === 1).length;
+  const overall = Math.round(positioningConfidence * .25);
   plan.health = {
-    overall: research.status === 'complete' ? 48 : 40,
-    positioningConfidence: research.status === 'complete' ? 85 : research.status === 'limited' ? 62 : 40,
-    channelEvidence: 30, executionConsistency: 30, outcomeProgress: 25, label: 'forming',
-    risks: ['No linked Traction result yet.', 'The execution cadence has not started.'],
+    overall,
+    positioningConfidence,
+    channelEvidence: 0,
+    executionConsistency: 0,
+    outcomeProgress: 0,
+    label: overall >= 45 ? 'forming' : 'fragile',
+    risks: ['No linked Traction result yet.', 'No due GTM task has been completed.'],
     nextActions: [`Run and measure ${plays[0]?.channelName ?? 'the primary play'}.`, 'Complete the first founder-owned task.'],
+    currentWeek: 1,
+    dueTaskCount: weekOneTasks,
+    completedDueTaskCount: 0,
+    measuredPlayCount: 0,
+    attributedPipelineValue: 0,
+    calculation: [`Positioning uses research status, ${verifiedEvidenceCount} verified first-party sources, and ${Math.round(claimCoverage * 100)}% claim coverage.`, 'Channel evidence begins at zero until a play result or attributed pipeline record exists.', `Execution begins at zero across ${weekOneTasks} week-one tasks; future tasks are excluded.`, 'Outcome begins at zero until measured evidence exists.'],
   };
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  const admin = createClient(supabaseUrl, supabaseKey);
-  const { data: persisted, error: persistError } = await admin.rpc('persist_gtm_plan_v2', {
+  const { data: persisted, error: persistError } = await admin.rpc('persist_gtm_competitive_plan', {
     p_user_id: userId,
     p_plan_id: existingPlanId ?? null,
     p_plan_title: plan.planTitle,
@@ -418,6 +531,12 @@ Return only JSON with this shape:
     p_research_sources: research.sources,
     p_research_status: research.status,
     p_plays: plays,
+    p_tasks: plan.tasks,
+    p_assets: plan.assets,
+    p_competitor_briefs: plan.competitorBriefs,
+    p_evidence_items: plan.evidenceItems,
+    p_claim_attributions: plan.claimAttributions,
+    p_pipeline_entries: plan.pipeline,
   });
   if (persistError) throw persistError;
   const persistedRow = (Array.isArray(persisted) ? persisted[0] : persisted) as { plan_id?: string; version?: number } | null;
@@ -425,14 +544,6 @@ Return only JSON with this shape:
   if (!planId) throw new Error('Failed to persist GTM plan');
   plan.planId = planId;
   plan.version = Number(persistedRow?.version ?? 1);
-  const [taskWrite, assetWrite, competitorWrite, snapshotWrite] = await Promise.all([
-    admin.from('gtm_tasks').upsert(plan.tasks.map((task: any) => ({ id: task.id, user_id: userId, plan_id: planId, play_id: task.playId || null, week_number: task.week, title: task.title, detail: task.detail, owner_label: task.owner, time_estimate_minutes: task.timeEstimateMinutes, expected_output: task.output, metric: task.metric, status: task.status }))),
-    admin.from('gtm_play_assets').upsert(plan.assets.map((asset: any) => ({ id: asset.id, user_id: userId, plan_id: planId, play_id: asset.playId, asset_type: asset.type, title: asset.title, content: asset.content, status: asset.status }))),
-    admin.from('gtm_competitor_briefs').upsert(plan.competitorBriefs.map((competitor: any) => ({ id: competitor.id, user_id: userId, plan_id: planId, brief: competitor }))),
-    admin.from('gtm_plans').update({ plan_content: plan }).eq('id', planId).eq('user_id', userId),
-  ]);
-  const executionError = taskWrite.error || assetWrite.error || competitorWrite.error || snapshotWrite.error;
-  if (executionError) throw executionError;
   return { plan, planId };
 }
 
