@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { GTM_STRATEGIST_PRICING } from "@/config/gtmStrategist";
 
 type PlanKey = "rookie" | "starter" | "rising" | "pro";
 type FeatureValue = string | boolean;
@@ -49,7 +50,7 @@ const features: FeatureCategory[] = [
       { feature: "PMF Lab", rookie: "Preview only", starter: "Unlocked; uses credits", rising: "Unlocked; uses credits", pro: "Unlocked; uses credits" },
       { feature: "MVP Builder", rookie: "Unlocked; uses credits", starter: "Unlocked; uses credits", rising: "Unlocked; uses credits", pro: "Unlocked; uses credits" },
       { feature: "Tech Stack Builder", rookie: "Preview only", starter: "Preview only", rising: "Unlocked; 3 credits/use", pro: "Unlocked; 3 credits/use" },
-      { feature: "GTM Strategist", rookie: "Preview only", starter: "Preview only", rising: "Unlocked; 5 credits/use", pro: "Unlocked; 5 credits/use" },
+      { feature: "GTM Strategist", rookie: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation`, starter: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation`, rising: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation`, pro: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation` },
       { feature: "Directories", rookie: "Preview only", starter: "Preview only", rising: "Included", pro: "Included" },
     ],
   },

@@ -386,7 +386,7 @@ export function useFeatureGating() {
       case 'mvp_builder':
         return checkCanonicalFeatureAccess('mvp_builder');
 
-      // GTM Strategist: Rising+ unlocks credit-metered generation
+      // GTM Strategist: credit-metered generation is available on every plan.
       case 'gtm_strategist':
         return checkCanonicalFeatureAccess('gtm_strategist');
 

@@ -26,7 +26,7 @@ const PricingFAQ = () => {
       question: "What are credits and how do they work?",
       answer: `Credits are the usage currency for the AI-powered parts of the platform. Every plan includes a monthly credit grant: Rookie gets 10, Starter 30, Rising 75, and Pro 150.
 
-    Demo Studio is unlocked on every plan and uses credits: 4 credits on Rookie and 3 credits on paid plans. PMF Lab unlocks on Starter and above and uses credits for analyses. Rising and Pro unlock MVP Builder, Tech Stack Builder, GTM Strategist, and Pitch Deck Analyzer; MVP Builder charges per AI action because it behaves like a vibe coding workspace.
+    GTM Strategist is available on every plan and uses 6 credits per researched generation; manual edits and weekly reviews are included. Other plan-gated tools follow the comparison table.
 
     ICP Builder stays free across all four plans. Discovery Calls are available on every plan with no monthly cap and cost 10 credits per confirmed booking.`,
       relatedQuestions: [0, 5],
@@ -70,14 +70,14 @@ That means billing, renewals, and checkout security all run on Stripe's infrastr
       question: "What's included in the Rookie plan?",
       answer: `Rookie is free forever and includes 50 credits per month. You get Dashboard Rookie Mode, ICP Builder for free, Demo Studio with credit usage, MVP Builder with per-action credit usage, Prompt Library access for free models only, Insighta Test, Newspaper, unlimited Discovery Calls at 10 credits per confirmed booking, and Find a Co-Founder posting at 5 credits per published post.
 
-    VC Search and Accelerator Hunt are browse only on Rookie. PMF Lab, MVP Builder, Tech Stack Builder, GTM Strategist, and Directories stay in preview only, and Find Your Angel is not included. Email Templates and Pitch Deck Analyzer are also not included on Rookie.`,
+    VC Search and Accelerator Hunt are browse only on Rookie. GTM Strategist remains available using account credits, while other plan-gated tools follow the comparison table. Find Your Angel is not included.`,
       relatedQuestions: [0, 1],
     },
     {
       question: "What happens to my data if I downgrade?",
       answer: `Downgrading changes what you can create next, not whether your existing work still exists.
 
-    You keep your prior data, but any plan-locked actions follow the limits of your new tier. For example, moving from Rising to Starter drops VC Search and Accelerator Hunt to 2 profile views per month, removes Pitch Deck Analyzer access, and returns MVP Builder, Tech Stack Builder, GTM Strategist, and Directories to preview-only access.`,
+    You keep your prior data, but any plan-locked actions follow the limits of your new tier. GTM Strategist remains available using account credits; researched generations still use 6 credits and saved workspaces remain accessible.`,
       relatedQuestions: [0, 3],
     },
     {

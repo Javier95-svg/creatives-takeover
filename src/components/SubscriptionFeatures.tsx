@@ -6,6 +6,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { CREDIT_COSTS, getCreditCostForPlan } from "@/config/constants";
+import { GTM_STRATEGIST_PRICING } from "@/config/gtmStrategist";
 import { RevealGroup, ScrollReveal } from "@/components/animations/ScrollReveal";
 
 type CreditBreakdownItem = {
@@ -59,8 +60,8 @@ const creditBreakdown: {
     },
     {
       name: "GTM Strategist",
-      description: `Preview only on Rookie and Starter. Rising and Pro unlock it at ${CREDIT_COSTS.GTM_ANALYSIS} credits per strategy.`,
-      badge: "Unlocked on Rising+",
+      description: `Available on every plan. A researched generation costs ${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits; manual edits and weekly reviews are included.`,
+      badge: "All plans",
       badgeVariant: "outline",
       badgeClassName: "bg-info-subtle dark:bg-info/30",
     },

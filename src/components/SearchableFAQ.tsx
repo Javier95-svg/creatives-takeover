@@ -37,7 +37,7 @@ const SearchableFAQ = () => {
       id: 1,
       category: "Pricing",
       question: "What pricing plans do you offer?",
-      answer: "We offer four plans built around the founder journey. Rookie helps you clarify with 50 credits/month. Starter helps you validate with PMF Lab, Email Templates, and 100 credits/month. Rising helps you build and launch with MVP Builder, Tech Stack Builder, GTM Strategist, and 250 credits/month. Pro helps you fundraise and scale with Find Your Angel, unlimited research views, and 600 credits/month. Discovery Calls are unlimited on every plan and cost 10 credits per confirmed booking.",
+      answer: "We offer four plans built around the founder journey. Rookie helps you clarify with 50 credits/month. Starter helps you validate with PMF Lab, Email Templates, and 100 credits/month. Rising adds a larger 250-credit runway plus more build and launch tools. Pro helps you fundraise and scale with Find Your Angel, unlimited research views, and 600 credits/month. GTM Strategist is available on every plan for 6 credits per researched generation; manual edits and weekly reviews are included. Discovery Calls are unlimited on every plan and cost 10 credits per confirmed booking.",
       popular: true,
       tags: ["pricing", "plans", "subscription", "rookie", "starter", "rising", "pro"]
     },
@@ -187,7 +187,7 @@ const SearchableFAQ = () => {
       id: 19,
       category: "Credits",
       question: "How does the credit system work?",
-      answer: "Credits refresh with your plan every billing cycle: Rookie 10, Starter 30, Rising 75, and Pro 150. Plan gates decide which tools you can access, and credits meter generative actions inside those unlocked tools. Demo Studio costs 4 credits on Rookie and 3 credits on paid plans. PMF Lab uses credits on Starter and above. MVP Builder is available on every plan and charges per AI action; Tech Stack Builder, GTM Strategist, and Pitch Deck Analyzer use credits per generation or analysis.",
+      answer: "Credits refresh with your plan every billing cycle. Plan gates decide which tools you can access, and credits meter generative actions inside those tools. Demo Studio costs 4 credits on Rookie and 3 credits on paid plans. PMF Lab uses credits on Starter and above. MVP Builder is available on every plan and charges per AI action. GTM Strategist is also available on every plan, costs 6 credits per researched generation, and includes manual edits and weekly reviews.",
       popular: true,
       tags: ["credits", "costs", "ai features", "monthly"]
     },

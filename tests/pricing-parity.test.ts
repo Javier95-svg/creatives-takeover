@@ -11,6 +11,10 @@ import {
   TOP_UP_PACKS_CENTS as EDGE_TOP_UP_PACKS_CENTS,
   inferTierFromAmountCents,
 } from '../supabase/functions/_shared/pricing.ts';
+import { CREDIT_COSTS as CLIENT_CREDIT_COSTS } from '../src/config/constants.ts';
+import { GTM_STRATEGIST_PRICING } from '../src/config/gtmStrategist.ts';
+import { CREDIT_COSTS as EDGE_CREDIT_COSTS } from '../supabase/functions/_shared/credit-constants.ts';
+import { FEATURE_ENTITLEMENTS } from '../src/config/planPermissions.ts';
 
 const PAID_PLANS: PaidPlan[] = ['starter', 'rising', 'pro'];
 
@@ -47,4 +51,14 @@ test('inferTierFromAmountCents round-trips every plan price', () => {
   }
   assert.equal(inferTierFromAmountCents(0, 'month'), 'rookie');
   assert.equal(inferTierFromAmountCents(12345, 'month'), 'rookie');
+});
+
+test('GTM price and entitlement stay aligned across UI, access, and Edge charging', () => {
+  assert.equal(GTM_STRATEGIST_PRICING.creditsPerResearchGeneration, CLIENT_CREDIT_COSTS.GTM_ANALYSIS);
+  assert.equal(CLIENT_CREDIT_COSTS.GTM_ANALYSIS, EDGE_CREDIT_COSTS.GTM_ANALYSIS);
+  assert.equal(GTM_STRATEGIST_PRICING.availableOn, 'all_plans');
+  for (const plan of ['rookie', 'starter', 'rising', 'pro'] as const) {
+    assert.equal(FEATURE_ENTITLEMENTS.gtm_strategist[plan].state, 'full');
+    assert.equal(FEATURE_ENTITLEMENTS.gtm_strategist[plan].creditFeature, 'GTM_ANALYSIS');
+  }
 });

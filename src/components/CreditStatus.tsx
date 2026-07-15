@@ -99,9 +99,7 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
         : ' MVP Builder is available on every plan and uses account credits per action.';
     }
     if (featureLower.includes('gtm')) {
-      return normalizedTier === 'rising' || normalizedTier === 'pro'
-        ? ` GTM Strategist is unlocked on your plan and costs ${CREDIT_COSTS.GTM_ANALYSIS} credits per strategy.`
-        : ' GTM Strategist unlocks on Rising and Pro.';
+      return ` GTM Strategist is available on every plan and costs ${CREDIT_COSTS.GTM_ANALYSIS} credits per researched generation. Manual edits and weekly reviews are included.`;
     }
     if (featureLower.includes('tech stack')) {
       return normalizedTier === 'rising' || normalizedTier === 'pro'

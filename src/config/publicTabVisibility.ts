@@ -50,11 +50,11 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
   '/go-to-market': {
     state: 'locked',
     featureName: 'GTM Strategist',
-    description: 'Get a structured go-to-market brief with messaging, channels, and a concrete launch plan.',
+    description: 'Build an adaptive GTM workspace with researched positioning, evidence-ranked channels, activation plays, and weekly reviews.',
     previewItems: [
-      'See how the strategist turns your startup context into a launch brief.',
-      'Preview channel recommendations, positioning prompts, and rollout structure.',
-      'Sign up to generate your own GTM plan.',
+      'See how the strategist combines startup context, first-party evidence, and live market research.',
+      'Preview explainable channel scoring, competitive battlecards, assets, and a six-week execution plan.',
+      'Sign up to generate and continuously improve your GTM workspace.',
     ],
   },
   '/directories': {

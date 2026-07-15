@@ -316,7 +316,7 @@ export default function BizMapJourneyHubPage() {
             tools={[
               { name: "ICP Builder", description: "Define your ideal customer before you build.", url: "/icp-builder" },
               { name: "PMF Lab", description: "Score product-market fit signals across six dimensions.", url: "/pmf-lab" },
-              { name: "Go-to-Market Strategist", description: "Build a launch plan and 30-day action checklist.", url: "/go-to-market" },
+              { name: "Go-to-Market Strategist", description: "Build an evidence-ranked six-week GTM system and adapt it from weekly results.", url: "/go-to-market" },
             ]}
           />
         </div>

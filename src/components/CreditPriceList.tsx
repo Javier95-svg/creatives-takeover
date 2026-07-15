@@ -1,4 +1,5 @@
 import { CREDIT_COSTS, getCreditCostForPlan } from "@/config/constants";
+import { GTM_STRATEGIST_PRICING } from "@/config/gtmStrategist";
 
 export function CreditPriceList() {
     const prices = [
@@ -7,7 +8,7 @@ export function CreditPriceList() {
         { name: "PMF Lab", value: `${CREDIT_COSTS.PMF_ANALYSIS} credits/full analysis; ${CREDIT_COSTS.PMF_SCORING} credits/evidence score on Starter+` },
         { name: "MVP Builder", value: `Uses account credits: ${CREDIT_COSTS.APP_BUILDER_GENERATE} new React app, ${CREDIT_COSTS.APP_BUILDER_REFINE} edit, ${CREDIT_COSTS.APP_BUILDER_ADD_FEATURE} add feature, ${CREDIT_COSTS.APP_BUILDER_DEPLOY} publish` },
         { name: "Tech Stack Builder", value: `${CREDIT_COSTS.TECH_STACK_GENERATION} credits/use on Rising+` },
-        { name: "GTM Strategist", value: `${CREDIT_COSTS.GTM_ANALYSIS} credits/use on Rising+` },
+        { name: "GTM Strategist", value: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/researched generation on every plan; edits and reviews included` },
         { name: "Directories", value: "Included on Rising+" },
         { name: "VC Search", value: "Profile-view quota" },
         { name: "Accelerator Hunt", value: "Profile-view quota" },

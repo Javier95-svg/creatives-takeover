@@ -69,7 +69,7 @@ export const UPGRADE_TRIGGER_CONFIGS: Record<UpgradeTriggerKey, UpgradeTriggerCo
     key: 'starter_stage3_complete',
     targetPlan: 'rising',
     headline: 'Validation shipped. Time to build.',
-    body: 'Rising opens all 5 stages in parallel — MVP Builder, Tech Stack, GTM Strategist, and Directories are waiting.',
+    body: 'Rising adds more monthly credits and broader launch access so you can run the full build-and-launch cycle faster.',
     ctaLabel: 'Unlock Rising',
   },
   starter_quota_discovery: {
@@ -104,7 +104,7 @@ export const UPGRADE_TRIGGER_CONFIGS: Record<UpgradeTriggerKey, UpgradeTriggerCo
     key: 'starter_tool_gtm',
     targetPlan: 'rising',
     headline: 'Launch planning is the next layer.',
-    body: 'Rising unlocks GTM Strategist when you are ready to turn validation into repeatable acquisition plays.',
+    body: 'Rising gives GTM Strategist a larger monthly credit runway for researched plan generations.',
     ctaLabel: 'Preview Rising',
   },
   starter_tool_directories: {
