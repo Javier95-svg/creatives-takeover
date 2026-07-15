@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, ArrowRight, CheckCircle2, Database, Globe2, Loader2, ShieldCheck, Sparkles } from 'lucide-react';
 
 import { CreditCostNotice } from '@/components/CreditCostNotice';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -152,9 +151,6 @@ export default function GTMWorkspaceIntake({ prefill, isSubmitting = false, isRe
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="space-y-3 text-center">
-        <Badge variant="outline" className="gap-2 border-primary/30 text-primary">
-          <Sparkles className="h-3.5 w-3.5" /> Adaptive GTM workspace
-        </Badge>
         <h1 className="pb-2 text-3xl font-bold leading-tight creatives-font takeover-gradient sm:text-4xl md:text-5xl">
           Build your GTM system
         </h1>
