@@ -142,7 +142,9 @@ export default function GTMStrategistPage() {
                 <div />
               </BlurredToolPreview>
             )}
-            <PageFAQSection title="Frequent Questions" faqs={faqs} />
+            <div className="pt-8 md:pt-12">
+              <PageFAQSection title="Frequent Questions" faqs={faqs} />
+            </div>
           </div>
         </main>
         <Footer />

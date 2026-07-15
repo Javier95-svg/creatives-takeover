@@ -152,7 +152,7 @@ export default function GTMWorkspaceIntake({ prefill, isSubmitting = false, isRe
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="space-y-3 text-center">
         <h1 className="pb-2 text-3xl font-bold leading-tight creatives-font takeover-gradient sm:text-4xl md:text-5xl">
-          Build your GTM system
+          GTM Strategist
         </h1>
         <p className="mx-auto max-w-3xl text-base leading-relaxed text-muted-foreground sm:text-lg">
           Confirm the context we imported, then get a researched six-week motion connected to Directories and Traction Engine.
