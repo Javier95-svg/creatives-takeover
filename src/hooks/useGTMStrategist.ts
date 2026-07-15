@@ -132,11 +132,11 @@ export function useGTMStrategist() {
       if (!data) return;
 
       const content = (data as any).plan_content;
-      // Only restore to results if the content has the new rich structure
+      // Saved plans are context only on a fresh visit. The founder must review
+      // and submit the intake before any diagnostic is shown.
       if (content && content.channels && content.positioning) {
         setAnalysis(content as GTMAnalysis | GTMPlanV2);
         setPlanId((data as any).id);
-        setPhase('results');
         if (isGTMPlanV2(content)) {
           setPrefillV2(content.intake);
           const { data: reviewData } = await supabase

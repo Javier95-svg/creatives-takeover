@@ -126,3 +126,15 @@ test('migration and handoffs preserve ownership, versions, and exact source IDs'
   assert.match(analyzer, /checkAndDeductCredits/);
   assert.match(analyzer, /resolveCreditIdempotencyKey/);
 });
+
+test('fresh GTM visits require intake and omit the redundant related-tools section', () => {
+  const hook = readFileSync(new URL('../src/hooks/useGTMStrategist.ts', import.meta.url), 'utf8');
+  const page = readFileSync(new URL('../src/pages/GTMStrategistPage.tsx', import.meta.url), 'utf8');
+  const restoreStart = hook.indexOf('const loadExistingPlan');
+  const restoreEnd = hook.indexOf('const loadPrefillData');
+  const restoreFlow = hook.slice(restoreStart, restoreEnd);
+  assert.ok(restoreStart >= 0 && restoreEnd > restoreStart);
+  assert.doesNotMatch(restoreFlow, /setPhase\('results'\)/);
+  assert.match(restoreFlow, /setPrefillV2/);
+  assert.doesNotMatch(page, /RelatedToolsSection/);
+});

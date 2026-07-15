@@ -4,7 +4,6 @@ import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import PageFAQSection from '@/components/seo/PageFAQSection';
-import RelatedToolsSection from '@/components/seo/RelatedToolsSection';
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
 import { Separator } from '@/components/ui/separator';
@@ -385,13 +384,6 @@ export default function GTMStrategistPage() {
 	            <PageFAQSection
 	              title="Frequent Questions"
               faqs={faqs}
-            />
-            <RelatedToolsSection
-              tools={[
-                { name: "Traction Engine", description: "Track distribution experiments and measure repeatable traction.", url: "/traction-engine" },
-                { name: "Directories", description: "Activate the launch surfaces recommended for your selected GTM play.", url: "/directories" },
-                { name: "ICP Builder", description: "Sharpen your target customer before executing your GTM.", url: "/icp-builder" },
-              ]}
             />
           </div>
         </main>
