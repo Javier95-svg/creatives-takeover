@@ -91,6 +91,7 @@ export default function GTMWorkspaceIntake({ prefill, isSubmitting = false, isRe
   const [step, setStep] = useState(0);
   const [intake, setIntake] = useState<GTMIntakeV2>({ ...defaults, ...prefill });
   const [competitors, setCompetitors] = useState((prefill.knownCompetitors ?? []).join(', '));
+  const [evidenceNotes, setEvidenceNotes] = useState((prefill.firstPartyEvidence ?? []).find((item) => item.id === 'founder-research-notes')?.content ?? '');
   const activeSteps = useMemo<IntakeStep[]>(() => {
     const missing = missingForModel(prefill, prefill.businessModel ?? defaults.businessModel);
     return [
@@ -143,10 +144,21 @@ export default function GTMWorkspaceIntake({ prefill, isSubmitting = false, isRe
       : [...intake.founderStrengths, strength]);
   };
 
-  const submit = () => onSubmit({
-    ...intake,
-    knownCompetitors: competitors.split(',').map((value) => value.trim()).filter(Boolean).slice(0, 8),
-  });
+  const submit = () => {
+    const priorEvidence = (intake.firstPartyEvidence ?? []).filter((item) => item.id !== 'founder-research-notes');
+    onSubmit({
+      ...intake,
+      knownCompetitors: competitors.split(',').map((value) => value.trim()).filter(Boolean).slice(0, 8),
+      firstPartyEvidence: evidenceNotes.trim().length >= 20 ? [...priorEvidence, {
+        id: 'founder-research-notes',
+        kind: 'founder_note',
+        title: 'Founder research notes',
+        content: evidenceNotes.trim().slice(0, 12_000),
+        verified: false,
+        createdAt: new Date().toISOString(),
+      }] : priorEvidence,
+    });
+  };
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -252,6 +264,7 @@ export default function GTMWorkspaceIntake({ prefill, isSubmitting = false, isRe
                 </div>
               ))}
             </div>
+            <Field label="First-party research notes (optional)" hint="Paste customer language, interview findings, pricing evidence, or measured channel results. You can add PDFs and more sources inside the workspace."><Textarea rows={5} value={evidenceNotes} onChange={(event) => setEvidenceNotes(event.target.value)} placeholder="Customers repeatedly said… / Our last LinkedIn test produced…" /></Field>
             <div className="grid gap-3 md:grid-cols-2">
               <div className="flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm"><Globe2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><p className="text-muted-foreground">Live research validates alternatives, buyer signals, and channel conditions with cited sources. Sparse evidence is labeled.</p></div>
               <div className="flex items-start gap-3 rounded-2xl border border-success/20 bg-success/5 p-4 text-sm"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success" /><p className="text-muted-foreground">You approve every asset and external action. The system never sends outreach, posts content, or operates external accounts.</p></div>

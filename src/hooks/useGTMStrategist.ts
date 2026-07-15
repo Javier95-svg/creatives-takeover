@@ -24,6 +24,7 @@ import {
   type GTMPlanV2,
   type GTMPlay,
   type GTMWeeklyReview,
+  type GTMWeeklyReviewInput,
 } from '@/lib/gtmV2';
 
 export interface GTMIntakeAnswers {
@@ -108,6 +109,7 @@ export function useGTMStrategist() {
   const [prefillSource, setPrefillSource] = useState<'waitlist_launch_kit' | 'icp_builder' | null>(null);
   const [weeklyReview, setWeeklyReview] = useState<GTMWeeklyReview | null>(null);
   const [isReviewing, setIsReviewing] = useState(false);
+  const [isRestoringPlan, setIsRestoringPlan] = useState(true);
 
   // On mount: load existing plan or prefill data
   useEffect(() => {
@@ -132,13 +134,12 @@ export function useGTMStrategist() {
       if (!data) return;
 
       const content = (data as any).plan_content;
-      // Saved plans are context only on a fresh visit. The founder must review
-      // and submit the intake before any diagnostic is shown.
       if (content && content.channels && content.positioning) {
         setAnalysis(content as GTMAnalysis | GTMPlanV2);
         setPlanId((data as any).id);
         if (isGTMPlanV2(content)) {
           setPrefillV2(content.intake);
+          setPhase('results');
           const { data: reviewData } = await supabase
             .from('gtm_weekly_reviews')
             .select('*')
@@ -163,7 +164,12 @@ export function useGTMStrategist() {
                 previousObjective: latestReview.adaptation.previousObjective ?? undefined,
                 nextObjective: latestReview.adaptation.nextObjective,
                 nextActions: latestReview.adaptation.nextActions ?? [],
+                changedVariables: latestReview.adaptation.changedVariables ?? [],
+                rationale: latestReview.adaptation.rationale ?? undefined,
               } : undefined,
+              reviewInput: latestReview.review_input ?? undefined,
+              signals: latestReview.signals ?? [],
+              changeLog: latestReview.change_log ?? [],
               healthSnapshot: latestReview.health_snapshot ?? undefined,
               createdAt: reviewData.created_at,
             });
@@ -174,6 +180,8 @@ export function useGTMStrategist() {
       }
     } catch (err) {
       console.warn('Failed to load existing GTM plan:', err);
+    } finally {
+      setIsRestoringPlan(false);
     }
   }, [user]);
 
@@ -455,17 +463,6 @@ export function useGTMStrategist() {
     if (!user || !planId || !analysis || !isGTMPlanV2(analysis)) return;
     const previousPlan = analysis;
     setAnalysis(nextPlan);
-    const { error } = await supabase
-      .from('gtm_plans')
-      .update({ plan_content: nextPlan as any })
-      .eq('id', planId)
-      .eq('user_id', user.id);
-    if (error) {
-      setAnalysis(previousPlan);
-      toast.error('Could not save this GTM workspace change.');
-      return;
-    }
-
     const writes: Array<PromiseLike<unknown>> = [];
     if (nextPlan.tasks?.length) writes.push((supabase as any).from('gtm_tasks').upsert(nextPlan.tasks.map((task) => ({
       id: task.id, user_id: user.id, plan_id: planId, play_id: task.playId || null, week_number: task.week,
@@ -479,14 +476,48 @@ export function useGTMStrategist() {
     if (nextPlan.competitorBriefs?.length) writes.push((supabase as any).from('gtm_competitor_briefs').upsert(nextPlan.competitorBriefs.map((competitor) => ({
       id: competitor.id, user_id: user.id, plan_id: planId, brief: competitor,
     }))));
-    await Promise.allSettled(writes);
+    if (nextPlan.evidenceItems?.length) writes.push((supabase as any).from('gtm_evidence_items').upsert(nextPlan.evidenceItems.map((item) => ({
+      id: item.id, user_id: user.id, plan_id: planId, evidence_kind: item.kind, title: item.title,
+      content: item.content, source_url: item.url ?? null, source_date: item.sourceDate ?? null,
+      verified: item.verified, channel_ids: item.channelIds ?? [], created_at: item.createdAt ?? new Date().toISOString(),
+    })), { onConflict: 'plan_id,id' }));
+    if (nextPlan.claimAttributions?.length) writes.push((supabase as any).from('gtm_claim_attributions').upsert(nextPlan.claimAttributions.map((claim) => ({
+      id: claim.id, user_id: user.id, plan_id: planId, claim: claim.claim, area: claim.area,
+      source_ids: claim.sourceIds, confidence: claim.confidence, assumption: claim.assumption,
+    })), { onConflict: 'plan_id,id' }));
+    if (nextPlan.pipeline?.length) writes.push((supabase as any).from('gtm_pipeline_entries').upsert(nextPlan.pipeline.map((entry) => ({
+      id: entry.id, user_id: user.id, plan_id: planId, play_id: entry.playId, name: entry.name,
+      stage: entry.stage, value: entry.value, source_channel_id: entry.sourceChannelId,
+      momentum: entry.momentum, occurred_at: entry.occurredAt, notes: entry.notes ?? null,
+    }))));
+    const removedEvidenceIds = (previousPlan.evidenceItems ?? []).filter((item) => !(nextPlan.evidenceItems ?? []).some((next) => next.id === item.id)).map((item) => item.id);
+    if (removedEvidenceIds.length) writes.push((supabase as any).from('gtm_evidence_items').delete().eq('plan_id', planId).eq('user_id', user.id).in('id', removedEvidenceIds));
+    const removedPipelineIds = (previousPlan.pipeline ?? []).filter((entry) => !(nextPlan.pipeline ?? []).some((next) => next.id === entry.id)).map((entry) => entry.id);
+    if (removedPipelineIds.length) writes.push((supabase as any).from('gtm_pipeline_entries').delete().eq('plan_id', planId).eq('user_id', user.id).in('id', removedPipelineIds));
+    const writeResults = await Promise.allSettled(writes);
+    const normalizedWriteFailed = writeResults.some((result) =>
+      result.status === 'rejected' || Boolean((result.value as { error?: unknown } | undefined)?.error));
+    if (normalizedWriteFailed) {
+      setAnalysis(previousPlan);
+      toast.error('Could not save every GTM workspace record. No snapshot change was committed.');
+      return;
+    }
+    const { error } = await supabase
+      .from('gtm_plans')
+      .update({ plan_content: nextPlan as any })
+      .eq('id', planId)
+      .eq('user_id', user.id);
+    if (error) {
+      setAnalysis(previousPlan);
+      toast.error('Could not save this GTM workspace change.');
+    }
   }, [analysis, planId, user]);
 
-  const runWeeklyReview = useCallback(async () => {
+  const runWeeklyReview = useCallback(async (reviewInput: GTMWeeklyReviewInput) => {
     if (!planId || !user) return;
     setIsReviewing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('gtm-plan-review', { body: { planId } });
+      const { data, error } = await supabase.functions.invoke('gtm-plan-review', { body: { planId, reviewInput } });
       if (error || !data?.success || !data.review) throw error || new Error(data?.error || 'Review failed');
       const row = data.review as any;
       const review: GTMWeeklyReview = {
@@ -503,7 +534,12 @@ export function useGTMStrategist() {
           previousObjective: row.adaptation.previousObjective ?? undefined,
           nextObjective: row.adaptation.nextObjective,
           nextActions: row.adaptation.nextActions ?? [],
+          changedVariables: row.adaptation.changedVariables ?? [],
+          rationale: row.adaptation.rationale ?? undefined,
         } : undefined,
+        reviewInput: row.review_input ?? reviewInput,
+        signals: row.signals ?? [],
+        changeLog: row.change_log ?? [],
         healthSnapshot: row.health_snapshot ?? undefined,
         createdAt: row.created_at,
       };
@@ -746,6 +782,10 @@ export function useGTMStrategist() {
     setPhase('intake');
   }, []);
 
+  const resumeWorkspace = useCallback(() => {
+    if (analysis && isGTMPlanV2(analysis) && planId) setPhase('results');
+  }, [analysis, planId]);
+
   return {
     phase,
     analysis,
@@ -753,6 +793,7 @@ export function useGTMStrategist() {
     isSaving,
     isExporting,
     isReviewing,
+    isRestoringPlan,
     prefillData,
     prefillV2,
     prefillSource,
@@ -766,6 +807,7 @@ export function useGTMStrategist() {
     savePlan,
     exportPlan,
     openDiagnose,
+    resumeWorkspace,
     resetToIntake,
   };
 }

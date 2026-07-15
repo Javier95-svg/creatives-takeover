@@ -63,6 +63,7 @@ export default function GTMStrategistPage() {
     isSaving,
     isExporting,
     isReviewing,
+    isRestoringPlan,
     prefillV2,
     weeklyReview,
     runV2Analysis,
@@ -73,6 +74,7 @@ export default function GTMStrategistPage() {
     savePlan,
     exportPlan,
     openDiagnose,
+    resumeWorkspace,
   } = useGTMStrategist();
   const v2Analysis = analysis && isGTMPlanV2(analysis) ? analysis : null;
 
@@ -110,15 +112,17 @@ export default function GTMStrategistPage() {
               ) : null
             ) : hasAccess ? (
               <>
-                {phase === 'intake' ? (
+                {isRestoringPlan ? <GTMAnalysisLoader /> : null}
+                {!isRestoringPlan && phase === 'intake' ? (
                   <GTMWorkspaceIntake
                     prefill={v2Analysis?.intake ?? prefillV2}
                     isRegeneration={Boolean(planId)}
                     onSubmit={(intake) => void runV2Analysis(intake, Boolean(planId))}
+                    onCancel={v2Analysis && planId ? resumeWorkspace : undefined}
                   />
                 ) : null}
-                {phase === 'analyzing' ? <GTMAnalysisLoader /> : null}
-                {phase === 'results' && v2Analysis && planId ? (
+                {!isRestoringPlan && phase === 'analyzing' ? <GTMAnalysisLoader /> : null}
+                {!isRestoringPlan && phase === 'results' && v2Analysis && planId ? (
                   <GTMWorkspace
                     plan={v2Analysis}
                     planId={planId}
@@ -138,7 +142,7 @@ export default function GTMStrategistPage() {
                 ) : null}
               </>
             ) : (
-              <BlurredToolPreview featureName="GTM Strategist" unlockCondition="GTM Strategist is available on the Rising plan and above." requiredPlan={upgradeTarget} locked>
+              <BlurredToolPreview featureName="GTM Strategist" unlockCondition="GTM Strategist is credit-metered on every plan. Add credits or choose a plan with more monthly credits." requiredPlan={upgradeTarget} locked>
                 <div />
               </BlurredToolPreview>
             )}
