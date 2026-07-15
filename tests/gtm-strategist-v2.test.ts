@@ -181,3 +181,20 @@ test('builds a founder-controlled execution system with durable task and asset s
   assert.match(migration, /CREATE TABLE IF NOT EXISTS public\.gtm_play_assets/);
   assert.match(migration, /auth\.uid\(\) = user_id/);
 });
+
+test('weekly review rewrites the next week from exact Traction evidence without a credit charge', () => {
+  const review = readFileSync(new URL('../supabase/functions/gtm-plan-review/index.ts', import.meta.url), 'utf8');
+  const workspace = readFileSync(new URL('../src/components/gtm/GTMWorkspace.tsx', import.meta.url), 'utf8');
+  const hook = readFileSync(new URL('../src/hooks/useGTMStrategist.ts', import.meta.url), 'utf8');
+  assert.match(review, /source_gtm_play_id/);
+  assert.match(review, /experiment\.decision/);
+  assert.match(review, /analysis\.sixWeekPlan/);
+  assert.match(review, /analysis\.tasks/);
+  assert.match(review, /healthSnapshot/);
+  assert.match(review, /decision === 'kill'/);
+  assert.doesNotMatch(review, /deductCredits|checkAndDeductCredits/);
+  assert.match(workspace, /Week \{weeklyReview\.adaptation\.week\} rewritten/);
+  assert.match(workspace, /Start sprint here/);
+  assert.match(hook, /source_gtm_plan_id: planId, source_gtm_play_id: play\.id/);
+  assert.match(hook, /gtm_directory_actions/);
+});

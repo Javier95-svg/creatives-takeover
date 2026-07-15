@@ -68,6 +68,7 @@ export default function GTMStrategistPage() {
     runV2Analysis,
     updatePlay,
     updateV2Plan,
+    startPlaySprint,
     runWeeklyReview,
     savePlan,
     exportPlan,
@@ -131,6 +132,7 @@ export default function GTMStrategistPage() {
                     onRegenerate={openDiagnose}
                     onUpdatePlay={updatePlay}
                     onUpdatePlan={updateV2Plan}
+                    onStartSprint={startPlaySprint}
                     onWeeklyReview={runWeeklyReview}
                   />
                 ) : null}

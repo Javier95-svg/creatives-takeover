@@ -28,6 +28,7 @@ interface GTMWorkspaceProps {
   onRegenerate: () => void;
   onUpdatePlay: (play: GTMPlay) => Promise<void>;
   onUpdatePlan: (plan: GTMPlanV2) => Promise<void>;
+  onStartSprint: (play: GTMPlay) => Promise<void>;
   onWeeklyReview: () => Promise<void>;
 }
 
@@ -44,7 +45,7 @@ const decisionStyles: Record<string, string> = {
   kill: 'border-destructive/30 bg-destructive/5 text-destructive',
 };
 
-function PlayEditor({ play, planId, onSave }: { play: GTMPlay; planId: string; onSave: (play: GTMPlay) => Promise<void> }) {
+function PlayEditor({ play, planId, onSave, onStartSprint }: { play: GTMPlay; planId: string; onSave: (play: GTMPlay) => Promise<void>; onStartSprint: (play: GTMPlay) => Promise<void> }) {
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(play);
@@ -60,8 +61,8 @@ function PlayEditor({ play, planId, onSave }: { play: GTMPlay; planId: string; o
   };
 
   const startSprint = () => {
-    captureEvent('gtm_play_activated', { plan_id: planId, play_id: play.id, channel_id: play.channelId, destination: 'traction_engine' });
-    navigate(`/traction-engine?step=sprint&planId=${encodeURIComponent(planId)}&playId=${encodeURIComponent(play.id)}`);
+    captureEvent('gtm_play_activated', { plan_id: planId, play_id: play.id, channel_id: play.channelId, destination: 'embedded_traction_sprint' });
+    return onStartSprint(play);
   };
   const openDirectories = () => {
     captureEvent('gtm_play_activated', { plan_id: planId, play_id: play.id, channel_id: play.channelId, destination: 'directories' });
@@ -99,10 +100,11 @@ function PlayEditor({ play, planId, onSave }: { play: GTMPlay; planId: string; o
           <div className="rounded-xl bg-muted/30 p-3"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Traction evidence</p><div className="mt-2 flex items-end justify-between"><div><p className="text-2xl font-bold">{play.actual ?? '—'}</p><p className="text-xs text-muted-foreground">actual {play.metric.toLowerCase()}</p></div><div className="text-right"><p className="text-lg font-semibold">{play.target}</p><p className="text-xs text-muted-foreground">weekly target</p></div></div></div>
           <div className="rounded-xl bg-muted/30 p-3"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sprint state</p><p className="mt-2 font-medium">{play.tractionSprintId ? 'Linked to Traction Engine' : 'Ready to activate'}</p><p className="mt-1 text-xs text-muted-foreground">Metric and target stay attached to this play.</p></div>
         </div>
-        {directories.length > 0 ? <div className="space-y-2"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Directory activation</p>{directories.map((directory) => directory ? <div key={directory.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/60 p-3"><div><a href={directory.url} target="_blank" rel="noreferrer" className="text-sm font-medium hover:text-primary">{directory.name}<ExternalLink className="ml-1 inline h-3.5 w-3.5" /></a><p className="mt-1 text-xs text-muted-foreground">{directory.cost} · verified {directory.lastVerifiedAt}</p></div><Button size="sm" variant="outline" onClick={() => advanceDirectory(directory.id)}>{(play.directoryProgress?.[directory.id] ?? 'recommended').replace('_', ' ')}<ArrowRight className="ml-2 h-3.5 w-3.5" /></Button></div> : null)}</div> : null}
+        {directories.length > 0 ? <div className="space-y-2"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Directory activation</p>{directories.map((directory) => directory ? <div key={directory.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/60 p-3"><div><p className="text-sm font-medium">{directory.name}</p><p className="mt-1 text-xs text-muted-foreground">{directory.cost} · verified {directory.lastVerifiedAt}</p></div><Button size="sm" variant="outline" onClick={() => advanceDirectory(directory.id)}>{(play.directoryProgress?.[directory.id] ?? 'recommended').replace('_', ' ')}<ArrowRight className="ml-2 h-3.5 w-3.5" /></Button></div> : null)}</div> : null}
         <div className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-4">
           {directories.length > 0 ? <Button variant="outline" onClick={openDirectories}><FolderSearch className="mr-2 h-4 w-4" />Open {directories.length} recommended directories</Button> : null}
-          <Button onClick={startSprint}><BarChart3 className="mr-2 h-4 w-4" />Start Traction sprint</Button>
+          <Button disabled={Boolean(play.tractionSprintId)} onClick={() => void startSprint()}><BarChart3 className="mr-2 h-4 w-4" />{play.tractionSprintId ? 'Traction sprint active' : 'Start sprint here'}</Button>
+          <Button variant="ghost" onClick={() => navigate(`/traction-engine?step=sprint&planId=${encodeURIComponent(planId)}&playId=${encodeURIComponent(play.id)}`)}>Open full Traction Engine<ExternalLink className="ml-2 h-4 w-4" /></Button>
           {directories.length > 0 ? <p className="w-full text-xs text-muted-foreground">Recommended: {directories.map((directory) => directory?.name).join(', ')}</p> : null}
         </div>
       </CardContent>
@@ -110,7 +112,7 @@ function PlayEditor({ play, planId, onSave }: { play: GTMPlay; planId: string; o
   );
 }
 
-export default function GTMWorkspace({ plan, planId, weeklyReview, isSaving, isExporting, isReviewing, onSave, onExport, onShare, onRegenerate, onUpdatePlay, onUpdatePlan, onWeeklyReview }: GTMWorkspaceProps) {
+export default function GTMWorkspace({ plan, planId, weeklyReview, isSaving, isExporting, isReviewing, onSave, onExport, onShare, onRegenerate, onUpdatePlay, onUpdatePlan, onStartSprint, onWeeklyReview }: GTMWorkspaceProps) {
   const [tab, setTab] = useState('overview');
   const primaryPlay = plan.plays.find((play) => play.status === 'active') ?? plan.plays[0];
   return (
@@ -148,11 +150,11 @@ export default function GTMWorkspace({ plan, planId, weeklyReview, isSaving, isE
         <TabsContent value="activate" className="mt-6 space-y-4">
           <div><h2 className="text-lg font-semibold">Runnable GTM plays</h2><p className="text-sm text-muted-foreground">Edit the founder-controlled play, then activate it through the right platform. Manual changes are free.</p></div>
           <GTMExecutionOS plan={plan} planId={planId} mode="execute" onUpdatePlan={onUpdatePlan} />
-          {plan.plays.map((play) => <PlayEditor key={play.id} play={play} planId={planId} onSave={onUpdatePlay} />)}
+          {plan.plays.map((play) => <PlayEditor key={play.id} play={play} planId={planId} onSave={onUpdatePlay} onStartSprint={onStartSprint} />)}
         </TabsContent>
 
         <TabsContent value="review" className="mt-6 space-y-5">
-          <Card className={cn('border-2', weeklyReview ? decisionStyles[weeklyReview.decision] : 'border-border/60')}><CardHeader><div className="flex flex-wrap items-start justify-between gap-3"><div><CardTitle>Weekly GTM decision</CardTitle><p className="mt-1 text-sm text-muted-foreground">Traction Engine remains the source of truth. This review does not use credits.</p></div><Button disabled={isReviewing} onClick={() => void onWeeklyReview()}>{isReviewing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}{weeklyReview ? 'Refresh review' : 'Run weekly review'}</Button></div></CardHeader><CardContent>{weeklyReview ? <div className="space-y-3"><Badge variant="outline" className={decisionStyles[weeklyReview.decision]}>{weeklyReview.decision.replace('_', ' ')}</Badge><h3 className="text-xl font-semibold">{weeklyReview.nextBestAction}</h3><p className="text-sm text-muted-foreground">{weeklyReview.evidenceSummary}</p></div> : <div className="rounded-xl bg-muted/30 p-4"><p className="font-medium">Next best action</p><p className="mt-1 text-sm text-muted-foreground">{primaryPlay ? `Run and log the first ${primaryPlay.channelName} experiment.` : 'Activate one focused play.'}</p></div>}</CardContent></Card>
+          <Card className={cn('border-2', weeklyReview ? decisionStyles[weeklyReview.decision] : 'border-border/60')}><CardHeader><div className="flex flex-wrap items-start justify-between gap-3"><div><CardTitle>Weekly GTM decision</CardTitle><p className="mt-1 text-sm text-muted-foreground">Traction Engine remains the source of truth. This review does not use credits.</p></div><Button disabled={isReviewing} onClick={() => void onWeeklyReview()}>{isReviewing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}{weeklyReview ? 'Refresh review' : 'Run weekly review'}</Button></div></CardHeader><CardContent>{weeklyReview ? <div className="space-y-4"><Badge variant="outline" className={decisionStyles[weeklyReview.decision]}>{weeklyReview.decision.replace('_', ' ')}</Badge><h3 className="text-xl font-semibold">{weeklyReview.nextBestAction}</h3><p className="text-sm text-muted-foreground">{weeklyReview.evidenceSummary}</p>{weeklyReview.adaptation ? <div className="rounded-2xl border border-primary/25 bg-primary/5 p-4"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Week {weeklyReview.adaptation.week} rewritten</p>{weeklyReview.adaptation.previousObjective ? <p className="mt-2 text-xs text-muted-foreground line-through">{weeklyReview.adaptation.previousObjective}</p> : null}<p className="mt-2 font-semibold">{weeklyReview.adaptation.nextObjective}</p><ul className="mt-3 space-y-2 text-sm">{weeklyReview.adaptation.nextActions.map((action) => <li key={action} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{action}</li>)}</ul></div> : null}</div> : <div className="rounded-xl bg-muted/30 p-4"><p className="font-medium">Next best action</p><p className="mt-1 text-sm text-muted-foreground">{primaryPlay ? `Run and log the first ${primaryPlay.channelName} experiment.` : 'Activate one focused play.'}</p></div>}</CardContent></Card>
           <Card><CardHeader><CardTitle>{plan.growthLoop.name}</CardTitle></CardHeader><CardContent><div className="grid gap-2 text-sm md:grid-cols-4">{[['Input', plan.growthLoop.input], ['Action', plan.growthLoop.action], ['Output', plan.growthLoop.output], ['Reinvest', plan.growthLoop.reinvestment]].map(([label, value]) => <div key={label} className="rounded-xl bg-muted/30 p-3"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p><p className="mt-2">{value}</p></div>)}</div><div className="mt-4 rounded-xl border border-border/60 p-3"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Primary six-week outcome</p><p className="mt-1 font-medium">{plan.metrics.primaryOutcome}</p></div></CardContent></Card>
           <Card><CardHeader><CardTitle>Motion funnel</CardTitle></CardHeader><CardContent className="space-y-2">{plan.funnel.map((stage, index) => <div key={stage.stage} className="flex items-start gap-3 rounded-xl border border-border/60 p-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">{index + 1}</span><div><p className="font-medium">{stage.stage}</p><p className="text-xs text-muted-foreground">Exit: {stage.exitCriteria} · Measure: {stage.metric}</p></div></div>)}</CardContent></Card>
           <Button variant="outline" onClick={() => setTab('activate')}>Review active plays<ArrowRight className="ml-2 h-4 w-4" /></Button>

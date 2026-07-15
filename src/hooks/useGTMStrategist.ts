@@ -148,6 +148,7 @@ export function useGTMStrategist() {
             .limit(1)
             .maybeSingle();
           if (reviewData) {
+            const latestReview = reviewData as any;
             setWeeklyReview({
               id: reviewData.id,
               planId: reviewData.plan_id,
@@ -157,6 +158,13 @@ export function useGTMStrategist() {
               evidenceSummary: reviewData.evidence_summary,
               activePlayId: reviewData.play_id ?? undefined,
               tractionExperimentId: reviewData.traction_experiment_id ?? undefined,
+              adaptation: latestReview.adaptation ? {
+                week: Number(latestReview.adaptation.week),
+                previousObjective: latestReview.adaptation.previousObjective ?? undefined,
+                nextObjective: latestReview.adaptation.nextObjective,
+                nextActions: latestReview.adaptation.nextActions ?? [],
+              } : undefined,
+              healthSnapshot: latestReview.health_snapshot ?? undefined,
               createdAt: reviewData.created_at,
             });
           }
@@ -402,6 +410,47 @@ export function useGTMStrategist() {
     toast.success('Play updated.');
   }, [analysis, planId, user]);
 
+  const startPlaySprint = useCallback(async (play: GTMPlay) => {
+    if (!user || !planId) return;
+    const { data: activeRows, error: activeError } = await supabase
+      .from('traction_engine_sprints')
+      .select('id,channel,status')
+      .eq('user_id', user.id)
+      .eq('status', 'active');
+    if (activeError) {
+      toast.error('Could not check active Traction sprints.');
+      return;
+    }
+    const existing = activeRows?.find((row) => row.channel.trim().toLowerCase() === play.channelName.trim().toLowerCase());
+    let sprintId = existing?.id;
+    if (existing) {
+      const { error } = await supabase.from('traction_engine_sprints').update({
+        source_gtm_plan_id: planId, source_gtm_play_id: play.id,
+      }).eq('id', existing.id).eq('user_id', user.id);
+      if (error) {
+        toast.error('Could not link the existing sprint.');
+        return;
+      }
+    } else {
+      if ((activeRows?.length ?? 0) >= 2) {
+        toast.error('Traction Engine supports two active channels. Close one before starting this sprint.');
+        return;
+      }
+      const { data, error } = await supabase.from('traction_engine_sprints').insert({
+        user_id: user.id, channel: play.channelName, cycle_start_date: new Date().toISOString().slice(0, 10),
+        status: 'active', source_gtm_plan_id: planId, source_gtm_play_id: play.id,
+      }).select('id').single();
+      if (error || !data) {
+        toast.error('Could not start this Traction sprint.');
+        return;
+      }
+      sprintId = data.id;
+    }
+    await updatePlay({ ...play, tractionSprintId: sprintId });
+    captureEvent('gtm_traction_sprint_started', { plan_id: planId, play_id: play.id, channel_id: play.channelId, sprint_id: sprintId });
+    toast.success(`${play.channelName} sprint is active.`);
+  }, [planId, updatePlay, user]);
+
   const updateV2Plan = useCallback(async (nextPlan: GTMPlanV2) => {
     if (!user || !planId || !analysis || !isGTMPlanV2(analysis)) return;
     const previousPlan = analysis;
@@ -449,9 +498,17 @@ export function useGTMStrategist() {
         evidenceSummary: row.evidence_summary,
         activePlayId: row.play_id ?? undefined,
         tractionExperimentId: row.traction_experiment_id ?? undefined,
+        adaptation: row.adaptation ? {
+          week: Number(row.adaptation.week),
+          previousObjective: row.adaptation.previousObjective ?? undefined,
+          nextObjective: row.adaptation.nextObjective,
+          nextActions: row.adaptation.nextActions ?? [],
+        } : undefined,
+        healthSnapshot: row.health_snapshot ?? undefined,
         createdAt: row.created_at,
       };
       setWeeklyReview(review);
+      if (isGTMPlanV2(data.analysis)) setAnalysis(data.analysis);
       captureEvent('gtm_weekly_review_completed', { plan_id: planId, decision: review.decision });
       toast.success('Weekly GTM review saved.');
     } catch (error) {
@@ -703,6 +760,7 @@ export function useGTMStrategist() {
     runAnalysis,
     runV2Analysis,
     updatePlay,
+    startPlaySprint,
     updateV2Plan,
     runWeeklyReview,
     savePlan,
