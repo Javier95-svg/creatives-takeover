@@ -19,6 +19,9 @@ export type GTMMotion =
 export type GTMPlayStatus = 'backlog' | 'active' | 'paused' | 'completed';
 export type GTMResearchStatus = 'complete' | 'limited' | 'unavailable';
 export type GTMReviewDecision = 'collect_evidence' | 'double_down' | 'iterate' | 'kill';
+export type GTMTaskStatus = 'todo' | 'doing' | 'done' | 'skipped';
+export type GTMAssetStatus = 'draft' | 'approved';
+export type GTMAssetType = 'outreach_message' | 'directory_listing' | 'campaign_brief';
 
 export interface GTMIntakeV2 {
   productName: string;
@@ -93,6 +96,55 @@ export interface GTMPlay {
   weeklyBudget: number;
   requiredAssets: string[];
   recommendedDirectoryIds: string[];
+  actual?: number;
+  tractionSprintId?: string;
+  directoryProgress?: Record<string, 'recommended' | 'visited' | 'submitted' | 'live' | 'skipped'>;
+}
+
+export interface GTMTask {
+  id: string;
+  playId: string;
+  week: number;
+  title: string;
+  detail: string;
+  owner: string;
+  timeEstimateMinutes: number;
+  output: string;
+  metric: string;
+  status: GTMTaskStatus;
+  completedAt?: string;
+}
+
+export interface GTMPlayAsset {
+  id: string;
+  playId: string;
+  type: GTMAssetType;
+  title: string;
+  content: string;
+  status: GTMAssetStatus;
+  updatedAt?: string;
+}
+
+export interface GTMCompetitorBrief {
+  id: string;
+  name: string;
+  category: string;
+  positioning: string;
+  bestFitSegment: string;
+  strengths: string[];
+  gaps: string[];
+  sourceUrls: string[];
+}
+
+export interface GTMHealthScore {
+  overall: number;
+  positioningConfidence: number;
+  channelEvidence: number;
+  executionConsistency: number;
+  outcomeProgress: number;
+  label: 'fragile' | 'forming' | 'healthy' | 'compounding';
+  risks: string[];
+  nextActions: string[];
 }
 
 export interface GTMPlanV2 {
@@ -148,6 +200,10 @@ export interface GTMPlanV2 {
     leading: Array<{ name: string; target: string; howToMeasure: string }>;
     lagging: string[];
   };
+  tasks?: GTMTask[];
+  assets?: GTMPlayAsset[];
+  competitorBriefs?: GTMCompetitorBrief[];
+  health?: GTMHealthScore;
   generatedAt: string;
 }
 
@@ -160,6 +216,13 @@ export interface GTMWeeklyReview {
   evidenceSummary: string;
   activePlayId?: string;
   tractionExperimentId?: string;
+  adaptation?: {
+    week: number;
+    previousObjective?: string;
+    nextObjective: string;
+    nextActions: string[];
+  };
+  healthSnapshot?: GTMHealthScore;
   createdAt?: string;
 }
 
@@ -275,6 +338,93 @@ export function createLegacyUpgradeIntake(value: Record<string, any>): Partial<G
     geography: 'Global',
     sixWeekOutcome: '',
   };
+}
+
+export function buildGTMTasks(plan: GTMPlanV2): GTMTask[] {
+  if (plan.tasks?.length) return plan.tasks;
+  const activePlays = plan.plays.filter((play) => play.status !== 'paused');
+  const weeklyMinutes = Math.max(60, plan.intake.weeklyTimeHours * 60);
+  return plan.sixWeekPlan.flatMap((week) => week.actions.slice(0, 3).map((action, index) => {
+    const play = activePlays[index % Math.max(1, activePlays.length)] ?? plan.plays[0];
+    return {
+      id: `${play?.id ?? 'plan'}-week-${week.week}-task-${index + 1}`,
+      playId: play?.id ?? '',
+      week: week.week,
+      title: action,
+      detail: `Complete this action to advance: ${week.objective}`,
+      owner: 'Founder',
+      timeEstimateMinutes: Math.max(30, Math.round(weeklyMinutes / Math.max(1, week.actions.length))),
+      output: index === 0 ? week.objective : `Evidence logged for ${play?.channelName ?? 'the GTM motion'}`,
+      metric: play?.metric ?? plan.metrics.leading[0]?.name ?? 'Validated signal',
+      status: 'todo' as const,
+    };
+  }));
+}
+
+export function buildGTMAssets(plan: GTMPlanV2): GTMPlayAsset[] {
+  if (plan.assets?.length) return plan.assets;
+  return plan.plays.filter((play) => play.status !== 'paused').flatMap((play) => [
+    {
+      id: `${play.id}-outreach`, playId: play.id, type: 'outreach_message' as const,
+      title: `${play.channelName} conversation starter`,
+      content: `${play.message}\n\nOffer: ${play.offer}\n\nNext step: ${plan.messaging.ctaCopy}`,
+      status: 'draft' as const,
+    },
+    {
+      id: `${play.id}-listing`, playId: play.id, type: 'directory_listing' as const,
+      title: `${plan.intake.productName} directory listing`,
+      content: `${plan.messaging.headline}\n\n${plan.messaging.hookLine}\n\nBest for: ${play.audience}\n\n${plan.positioning.uniqueValueProposition}`,
+      status: 'draft' as const,
+    },
+    {
+      id: `${play.id}-campaign`, playId: play.id, type: 'campaign_brief' as const,
+      title: `${play.channelName} experiment brief`,
+      content: `Audience: ${play.audience}\nTrigger: ${play.buyingTrigger}\nHypothesis: ${play.hypothesis}\nMetric: ${play.metric}\nTarget: ${play.target}`,
+      status: 'draft' as const,
+    },
+  ]);
+}
+
+export function buildCompetitorBriefs(plan: GTMPlanV2): GTMCompetitorBrief[] {
+  if (plan.competitorBriefs?.length) return plan.competitorBriefs;
+  const alternatives = Array.from(new Set([
+    ...plan.intake.knownCompetitors,
+    ...plan.positioning.competitiveAlternatives,
+  ])).filter(Boolean).slice(0, 5);
+  return alternatives.map((name, index) => ({
+    id: `competitor-${index + 1}-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 24)}`,
+    name,
+    category: plan.positioning.marketCategory,
+    positioning: `${name} is an alternative customers may choose instead of changing their current workflow.`,
+    bestFitSegment: plan.positioning.bestFitSegment,
+    strengths: ['Existing familiarity', 'Lower perceived switching risk'],
+    gaps: plan.positioning.differentiatedCapabilities.slice(0, 2),
+    sourceUrls: plan.researchSources.slice(0, 2).map((source) => source.url),
+  }));
+}
+
+export function calculateGTMHealth(plan: GTMPlanV2, tasks = buildGTMTasks(plan)): GTMHealthScore {
+  const positioningConfidence = clamp(plan.researchStatus === 'complete' ? 85 : plan.researchStatus === 'limited' ? 62 : 40);
+  const measuredPlays = plan.plays.filter((play) => typeof play.actual === 'number');
+  const channelEvidence = clamp(measuredPlays.length > 0 ? 55 + measuredPlays.length * 15 : 30);
+  const completed = tasks.filter((task) => task.status === 'done').length;
+  const executionConsistency = clamp(tasks.length > 0 ? 30 + (completed / tasks.length) * 70 : 30);
+  const primary = plan.plays.find((play) => play.status === 'active') ?? plan.plays[0];
+  const outcomeProgress = clamp(primary && typeof primary.actual === 'number' && primary.target > 0
+    ? (primary.actual / primary.target) * 100
+    : 25);
+  const overall = clamp(positioningConfidence * 0.25 + channelEvidence * 0.3 + executionConsistency * 0.25 + outcomeProgress * 0.2);
+  const label = overall >= 80 ? 'compounding' : overall >= 65 ? 'healthy' : overall >= 45 ? 'forming' : 'fragile';
+  const risks = [
+    ...(plan.researchStatus !== 'complete' ? ['Market evidence is still limited.'] : []),
+    ...(measuredPlays.length === 0 ? ['No linked Traction result yet.'] : []),
+    ...(completed === 0 ? ['The execution cadence has not started.'] : []),
+  ].slice(0, 3);
+  const nextActions = [
+    measuredPlays.length === 0 ? `Run and measure ${primary?.channelName ?? 'the primary play'}.` : 'Use the latest Traction decision to set next week.',
+    completed === 0 ? 'Complete the first founder-owned task.' : 'Keep the weekly task completion streak.',
+  ];
+  return { overall, positioningConfidence, channelEvidence, executionConsistency, outcomeProgress, label, risks, nextActions };
 }
 
 export function deriveWeeklyReview(input: {

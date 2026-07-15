@@ -13,6 +13,7 @@ import { findLaunchDirectory } from '@/data/launchDirectories';
 import { captureEvent } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 import type { GTMPlanV2, GTMPlay, GTMWeeklyReview } from '@/lib/gtmV2';
+import GTMExecutionOS from './GTMExecutionOS';
 
 interface GTMWorkspaceProps {
   plan: GTMPlanV2;
@@ -26,6 +27,7 @@ interface GTMWorkspaceProps {
   onShare: () => void;
   onRegenerate: () => void;
   onUpdatePlay: (play: GTMPlay) => Promise<void>;
+  onUpdatePlan: (plan: GTMPlanV2) => Promise<void>;
   onWeeklyReview: () => Promise<void>;
 }
 
@@ -48,6 +50,14 @@ function PlayEditor({ play, planId, onSave }: { play: GTMPlay; planId: string; o
   const [draft, setDraft] = useState(play);
   useEffect(() => setDraft(play), [play]);
   const directories = play.recommendedDirectoryIds.map(findLaunchDirectory).filter(Boolean);
+  const directoryStates = ['recommended', 'visited', 'submitted', 'live', 'skipped'] as const;
+
+  const advanceDirectory = (directoryId: string) => {
+    const current = play.directoryProgress?.[directoryId] ?? 'recommended';
+    const next = directoryStates[Math.min(directoryStates.length - 1, directoryStates.indexOf(current) + 1)];
+    captureEvent('gtm_directory_progress_changed', { plan_id: planId, play_id: play.id, directory_id: directoryId, status: next });
+    void onSave({ ...play, directoryProgress: { ...play.directoryProgress, [directoryId]: next } });
+  };
 
   const startSprint = () => {
     captureEvent('gtm_play_activated', { plan_id: planId, play_id: play.id, channel_id: play.channelId, destination: 'traction_engine' });
@@ -85,6 +95,11 @@ function PlayEditor({ play, planId, onSave }: { play: GTMPlay; planId: string; o
             <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</p><ul className="mt-2 space-y-2">{play.actions.map((action) => <li key={action} className="flex items-start gap-2 text-sm"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{action}</li>)}</ul></div>
           </>
         )}
+        <div className="grid gap-3 border-t border-border/60 pt-4 md:grid-cols-2">
+          <div className="rounded-xl bg-muted/30 p-3"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Traction evidence</p><div className="mt-2 flex items-end justify-between"><div><p className="text-2xl font-bold">{play.actual ?? '—'}</p><p className="text-xs text-muted-foreground">actual {play.metric.toLowerCase()}</p></div><div className="text-right"><p className="text-lg font-semibold">{play.target}</p><p className="text-xs text-muted-foreground">weekly target</p></div></div></div>
+          <div className="rounded-xl bg-muted/30 p-3"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sprint state</p><p className="mt-2 font-medium">{play.tractionSprintId ? 'Linked to Traction Engine' : 'Ready to activate'}</p><p className="mt-1 text-xs text-muted-foreground">Metric and target stay attached to this play.</p></div>
+        </div>
+        {directories.length > 0 ? <div className="space-y-2"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Directory activation</p>{directories.map((directory) => directory ? <div key={directory.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/60 p-3"><div><a href={directory.url} target="_blank" rel="noreferrer" className="text-sm font-medium hover:text-primary">{directory.name}<ExternalLink className="ml-1 inline h-3.5 w-3.5" /></a><p className="mt-1 text-xs text-muted-foreground">{directory.cost} · verified {directory.lastVerifiedAt}</p></div><Button size="sm" variant="outline" onClick={() => advanceDirectory(directory.id)}>{(play.directoryProgress?.[directory.id] ?? 'recommended').replace('_', ' ')}<ArrowRight className="ml-2 h-3.5 w-3.5" /></Button></div> : null)}</div> : null}
         <div className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-4">
           {directories.length > 0 ? <Button variant="outline" onClick={openDirectories}><FolderSearch className="mr-2 h-4 w-4" />Open {directories.length} recommended directories</Button> : null}
           <Button onClick={startSprint}><BarChart3 className="mr-2 h-4 w-4" />Start Traction sprint</Button>
@@ -95,8 +110,8 @@ function PlayEditor({ play, planId, onSave }: { play: GTMPlay; planId: string; o
   );
 }
 
-export default function GTMWorkspace({ plan, planId, weeklyReview, isSaving, isExporting, isReviewing, onSave, onExport, onShare, onRegenerate, onUpdatePlay, onWeeklyReview }: GTMWorkspaceProps) {
-  const [tab, setTab] = useState('strategy');
+export default function GTMWorkspace({ plan, planId, weeklyReview, isSaving, isExporting, isReviewing, onSave, onExport, onShare, onRegenerate, onUpdatePlay, onUpdatePlan, onWeeklyReview }: GTMWorkspaceProps) {
+  const [tab, setTab] = useState('overview');
   const primaryPlay = plan.plays.find((play) => play.status === 'active') ?? plan.plays[0];
   return (
     <div className="space-y-6">
@@ -109,13 +124,14 @@ export default function GTMWorkspace({ plan, planId, weeklyReview, isSaving, isE
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-2xl p-1 md:grid-cols-4">
-          <TabsTrigger value="diagnose" className="gap-2"><Target className="h-4 w-4" />Diagnose</TabsTrigger>
+          <TabsTrigger value="overview" className="gap-2"><Target className="h-4 w-4" />Command center</TabsTrigger>
           <TabsTrigger value="strategy" className="gap-2"><BookOpen className="h-4 w-4" />Strategy</TabsTrigger>
           <TabsTrigger value="activate" className="gap-2"><Rocket className="h-4 w-4" />Activate</TabsTrigger>
           <TabsTrigger value="review" className="gap-2"><BarChart3 className="h-4 w-4" />Weekly review</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="diagnose" className="mt-6 space-y-5">
+        <TabsContent value="overview" className="mt-6 space-y-5">
+          <GTMExecutionOS plan={plan} planId={planId} mode="overview" onUpdatePlan={onUpdatePlan} />
           <Card><CardHeader><CardTitle>Confirmed founder context</CardTitle></CardHeader><CardContent className="grid gap-4 text-sm md:grid-cols-2"><div><p className="text-xs uppercase tracking-wider text-muted-foreground">Product and lifecycle</p><p className="mt-1 font-medium">{plan.intake.productName} · {plan.intake.lifecycle.replace('_', ' ')}</p></div><div><p className="text-xs uppercase tracking-wider text-muted-foreground">Business model</p><p className="mt-1 font-medium">{plan.intake.businessModel.replaceAll('_', ' ')}</p></div><div><p className="text-xs uppercase tracking-wider text-muted-foreground">Target segment</p><p className="mt-1">{plan.intake.targetSegment}</p></div><div><p className="text-xs uppercase tracking-wider text-muted-foreground">Six-week outcome</p><p className="mt-1">{plan.intake.sixWeekOutcome}</p></div></CardContent></Card>
           <Card><CardHeader><CardTitle>Research evidence</CardTitle></CardHeader><CardContent className="space-y-3">{plan.researchSources.length > 0 ? plan.researchSources.map((source, index) => <a key={`${source.url}-${index}`} href={source.url} target="_blank" rel="noreferrer" className="flex items-start justify-between gap-3 rounded-xl border border-border/60 p-3 text-sm hover:border-primary/40"><div><p className="font-medium">{source.title}</p>{source.snippet ? <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{source.snippet}</p> : null}</div><ExternalLink className="h-4 w-4 shrink-0" /></a>) : <p className="text-sm text-muted-foreground">Live research was unavailable. All external market claims are treated as assumptions until validated.</p>}{plan.assumptions.length > 0 ? <div className="rounded-xl border border-warning/30 bg-warning/5 p-3"><p className="text-xs font-semibold uppercase tracking-wider text-warning">Assumptions to validate</p><ul className="mt-2 space-y-1 text-sm">{plan.assumptions.map((item) => <li key={item}>• {item}</li>)}</ul></div> : null}</CardContent></Card>
         </TabsContent>
@@ -125,11 +141,13 @@ export default function GTMWorkspace({ plan, planId, weeklyReview, isSaving, isE
           <div className="space-y-3"><h2 className="text-lg font-semibold">Explainable channel bets</h2>{plan.channels.map((channel) => <Card key={channel.id}><CardContent className="space-y-4 p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div className="flex items-center gap-2"><h3 className="font-semibold">{channel.name}</h3><Badge variant="outline" className={roleStyles[channel.role]}>{channel.role}</Badge></div><div className="text-right"><p className="text-lg font-bold">{channel.score}/100</p><p className="text-xs text-muted-foreground">{channel.confidence} confidence</p></div></div><p className="text-sm text-muted-foreground">{channel.rationale}</p><div className="grid grid-cols-2 gap-2 text-xs md:grid-cols-5">{Object.entries(channel.scoreBreakdown).map(([key, value]) => <div key={key} className="rounded-lg bg-muted/30 p-2"><p className="truncate text-muted-foreground">{key.replace(/([A-Z])/g, ' $1')}</p><p className="mt-1 font-semibold">{value}</p></div>)}</div><p className="text-xs text-muted-foreground">Prerequisites: {channel.prerequisites.join(' · ')}</p></CardContent></Card>)}</div>
           {(plan.excludedChannels ?? []).length > 0 ? <Card><CardHeader><CardTitle>Channels excluded by constraints</CardTitle></CardHeader><CardContent className="space-y-2">{plan.excludedChannels.map((channel) => <div key={channel.id} className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-border/60 p-3"><div><p className="text-sm font-medium">{channel.name}</p><p className="mt-1 text-xs text-muted-foreground">{channel.rejectionReason}</p></div><Badge variant="outline">{channel.score}/100</Badge></div>)}</CardContent></Card> : null}
           <Card><CardHeader><CardTitle>Positioning and message</CardTitle></CardHeader><CardContent className="space-y-4"><blockquote className="border-l-2 border-primary pl-4 text-lg">{plan.positioning.positioningStatement}</blockquote><div className="grid gap-3 md:grid-cols-2"><div className="rounded-xl bg-muted/30 p-3"><p className="text-xs uppercase tracking-wider text-muted-foreground">Headline</p><p className="mt-2 font-semibold">{plan.messaging.headline}</p><p className="mt-1 text-sm text-muted-foreground">{plan.messaging.hookLine}</p></div><div className="rounded-xl bg-muted/30 p-3"><p className="text-xs uppercase tracking-wider text-muted-foreground">Proof + CTA</p><p className="mt-2 text-sm">{plan.messaging.proofPoint}</p><p className="mt-1 font-medium text-primary">{plan.messaging.ctaCopy}</p></div></div></CardContent></Card>
+          <GTMExecutionOS plan={plan} planId={planId} mode="competitors" onUpdatePlan={onUpdatePlan} />
           <Card><CardHeader><CardTitle>Six-week execution cycle</CardTitle></CardHeader><CardContent className="grid gap-3 md:grid-cols-2">{plan.sixWeekPlan.map((week) => <div key={week.week} className="rounded-xl border border-border/60 p-3"><p className="text-xs font-semibold uppercase tracking-wider text-primary">Week {week.week}</p><p className="mt-1 font-medium">{week.objective}</p><ul className="mt-2 space-y-1 text-sm text-muted-foreground">{week.actions.map((action) => <li key={action}>• {action}</li>)}</ul></div>)}</CardContent></Card>
         </TabsContent>
 
         <TabsContent value="activate" className="mt-6 space-y-4">
           <div><h2 className="text-lg font-semibold">Runnable GTM plays</h2><p className="text-sm text-muted-foreground">Edit the founder-controlled play, then activate it through the right platform. Manual changes are free.</p></div>
+          <GTMExecutionOS plan={plan} planId={planId} mode="execute" onUpdatePlan={onUpdatePlan} />
           {plan.plays.map((play) => <PlayEditor key={play.id} play={play} planId={planId} onSave={onUpdatePlay} />)}
         </TabsContent>
 

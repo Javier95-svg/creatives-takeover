@@ -4,6 +4,10 @@ import test from 'node:test';
 
 import {
   GTM_CHANNEL_REGISTRY,
+  buildCompetitorBriefs,
+  buildGTMAssets,
+  buildGTMTasks,
+  calculateGTMHealth,
   createLegacyUpgradeIntake,
   deriveWeeklyReview,
   inferMotion,
@@ -11,6 +15,7 @@ import {
   scoreChannelDefinition,
   type GTMIntakeV2,
   type GTMPlay,
+  type GTMPlanV2,
 } from '../src/lib/gtmV2.ts';
 
 const intake = (overrides: Partial<GTMIntakeV2> = {}): GTMIntakeV2 => ({
@@ -143,4 +148,36 @@ test('fresh GTM visits require intake and omit the redundant related-tools secti
   assert.match(intake, /missingForModel/);
   assert.match(intake, /activeSteps/);
   assert.match(intake, /currentStep === 'confirm'/);
+});
+
+test('builds a founder-controlled execution system with durable task and asset semantics', () => {
+  const play: GTMPlay = {
+    id: 'play-1', channelId: 'founder-outreach', channelName: 'Founder outreach', status: 'active',
+    audience: 'VP Revenue', buyingTrigger: 'Pipeline gap', offer: 'Diagnostic', message: 'Message',
+    hypothesis: 'Five conversations', actions: ['Build list'], metric: 'Qualified conversations', target: 5,
+    weeklyTimeHours: 4, weeklyBudget: 0, requiredAssets: [], recommendedDirectoryIds: ['linkedin'],
+  };
+  const plan = {
+    schemaVersion: 2, planTitle: 'Signal Desk GTM', summaryInsight: 'Focused motion', intake: intake(),
+    researchStatus: 'complete', researchSources: [{ title: 'Source', url: 'https://example.com/source' }], assumptions: [],
+    thesis: { motion: 'sales_assisted', target: 'VP Revenue', buyingTrigger: 'Pipeline gap', competitiveAlternative: 'Spreadsheets', value: 'Faster action', rationale: 'Evidence', risks: [] },
+    positioning: { competitiveAlternatives: ['Spreadsheets'], differentiatedCapabilities: ['Signal ranking'], customerValue: ['Faster pipeline'], bestFitSegment: 'VP Revenue', marketCategory: 'Revenue signals', positioningStatement: 'Statement', uniqueValueProposition: 'Value', keyDifferentiators: [] },
+    messaging: { headline: 'Headline', hookLine: 'Hook', proofPoint: 'Proof', ctaCopy: 'CTA', toneOfVoice: ['Clear'] },
+    channels: [], excludedChannels: [], plays: [play], funnel: [],
+    growthLoop: { name: 'Loop', input: 'Input', action: 'Action', output: 'Output', reinvestment: 'Reinvest' },
+    sixWeekPlan: Array.from({ length: 6 }, (_, index) => ({ week: index + 1, objective: `Objective ${index + 1}`, actions: [`Action ${index + 1}`] })),
+    metrics: { primaryOutcome: '20 demos', leading: [{ name: 'Conversations', target: '5', howToMeasure: 'Traction' }], lagging: [] },
+    generatedAt: '2026-07-15T00:00:00.000Z',
+  } satisfies GTMPlanV2;
+  assert.equal(buildGTMTasks(plan).length, 6);
+  assert.ok(buildGTMTasks(plan).every((task) => task.owner === 'Founder' && task.timeEstimateMinutes > 0 && task.output && task.metric));
+  assert.equal(buildGTMAssets(plan).length, 3);
+  assert.ok(buildGTMAssets(plan).every((asset) => asset.status === 'draft'));
+  assert.equal(buildCompetitorBriefs(plan)[0].name, 'Legacy spreadsheets');
+  assert.equal(calculateGTMHealth(plan).channelEvidence, 30);
+
+  const migration = readFileSync(new URL('../supabase/migrations/20260715120000_gtm_execution_os.sql', import.meta.url), 'utf8');
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS public\.gtm_tasks/);
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS public\.gtm_play_assets/);
+  assert.match(migration, /auth\.uid\(\) = user_id/);
 });

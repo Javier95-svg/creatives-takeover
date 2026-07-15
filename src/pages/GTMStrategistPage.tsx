@@ -67,6 +67,7 @@ export default function GTMStrategistPage() {
     weeklyReview,
     runV2Analysis,
     updatePlay,
+    updateV2Plan,
     runWeeklyReview,
     savePlan,
     exportPlan,
@@ -129,6 +130,7 @@ export default function GTMStrategistPage() {
                     onShare={() => { trackGTMPlanShared(); void sharing.openShareDialog(); }}
                     onRegenerate={openDiagnose}
                     onUpdatePlay={updatePlay}
+                    onUpdatePlan={updateV2Plan}
                     onWeeklyReview={runWeeklyReview}
                   />
                 ) : null}

@@ -372,6 +372,41 @@ Return only JSON with this shape:
     generatedAt: new Date().toISOString(),
   };
 
+  const weeklyMinutes = Math.max(60, Number(intake.weeklyTimeHours || 1) * 60);
+  plan.tasks = plan.sixWeekPlan.flatMap((week: any) => week.actions.slice(0, 3).map((action: string, index: number) => {
+    const play = plays[index % Math.max(1, plays.length)] ?? plays[0];
+    return {
+      id: `${play?.id ?? 'plan'}-week-${week.week}-task-${index + 1}`,
+      playId: play?.id ?? '', week: week.week, title: action,
+      detail: `Complete this action to advance: ${week.objective}`,
+      owner: 'Founder', timeEstimateMinutes: Math.max(30, Math.round(weeklyMinutes / Math.max(1, week.actions.length))),
+      output: index === 0 ? week.objective : `Evidence logged for ${play?.channelName ?? 'the GTM motion'}`,
+      metric: play?.metric ?? plan.metrics.leading[0]?.name ?? 'Validated signal', status: 'todo',
+    };
+  }));
+  plan.assets = plays.filter((play) => play.status !== 'paused').flatMap((play) => [
+    { id: `${play.id}-outreach`, playId: play.id, type: 'outreach_message', title: `${play.channelName} conversation starter`, content: `${play.message}\n\nOffer: ${play.offer}\n\nNext step: ${plan.messaging.ctaCopy}`, status: 'draft' },
+    { id: `${play.id}-listing`, playId: play.id, type: 'directory_listing', title: `${intake.productName} directory listing`, content: `${plan.messaging.headline}\n\n${plan.messaging.hookLine}\n\nBest for: ${play.audience}\n\n${plan.positioning.uniqueValueProposition}`, status: 'draft' },
+    { id: `${play.id}-campaign`, playId: play.id, type: 'campaign_brief', title: `${play.channelName} experiment brief`, content: `Audience: ${play.audience}\nTrigger: ${play.buyingTrigger}\nHypothesis: ${play.hypothesis}\nMetric: ${play.metric}\nTarget: ${play.target}`, status: 'draft' },
+  ]);
+  const alternatives = Array.from(new Set([...(intake.knownCompetitors ?? []), ...plan.positioning.competitiveAlternatives])).filter(Boolean).slice(0, 5);
+  plan.competitorBriefs = alternatives.map((name: string, index: number) => ({
+    id: `competitor-${index + 1}-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 24)}`,
+    name, category: plan.positioning.marketCategory,
+    positioning: `${name} is an alternative customers may choose instead of changing their current workflow.`,
+    bestFitSegment: plan.positioning.bestFitSegment,
+    strengths: ['Existing familiarity', 'Lower perceived switching risk'],
+    gaps: plan.positioning.differentiatedCapabilities.slice(0, 2),
+    sourceUrls: research.sources.slice(0, 2).map((source: any) => source.url),
+  }));
+  plan.health = {
+    overall: research.status === 'complete' ? 48 : 40,
+    positioningConfidence: research.status === 'complete' ? 85 : research.status === 'limited' ? 62 : 40,
+    channelEvidence: 30, executionConsistency: 30, outcomeProgress: 25, label: 'forming',
+    risks: ['No linked Traction result yet.', 'The execution cadence has not started.'],
+    nextActions: [`Run and measure ${plays[0]?.channelName ?? 'the primary play'}.`, 'Complete the first founder-owned task.'],
+  };
+
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const admin = createClient(supabaseUrl, supabaseKey);
@@ -390,6 +425,14 @@ Return only JSON with this shape:
   if (!planId) throw new Error('Failed to persist GTM plan');
   plan.planId = planId;
   plan.version = Number(persistedRow?.version ?? 1);
+  const [taskWrite, assetWrite, competitorWrite, snapshotWrite] = await Promise.all([
+    admin.from('gtm_tasks').upsert(plan.tasks.map((task: any) => ({ id: task.id, user_id: userId, plan_id: planId, play_id: task.playId || null, week_number: task.week, title: task.title, detail: task.detail, owner_label: task.owner, time_estimate_minutes: task.timeEstimateMinutes, expected_output: task.output, metric: task.metric, status: task.status }))),
+    admin.from('gtm_play_assets').upsert(plan.assets.map((asset: any) => ({ id: asset.id, user_id: userId, plan_id: planId, play_id: asset.playId, asset_type: asset.type, title: asset.title, content: asset.content, status: asset.status }))),
+    admin.from('gtm_competitor_briefs').upsert(plan.competitorBriefs.map((competitor: any) => ({ id: competitor.id, user_id: userId, plan_id: planId, brief: competitor }))),
+    admin.from('gtm_plans').update({ plan_content: plan }).eq('id', planId).eq('user_id', userId),
+  ]);
+  const executionError = taskWrite.error || assetWrite.error || competitorWrite.error || snapshotWrite.error;
+  if (executionError) throw executionError;
   return { plan, planId };
 }
 

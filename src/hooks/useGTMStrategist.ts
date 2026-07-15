@@ -382,17 +382,55 @@ export function useGTMStrategist() {
     if (!user || !planId || !analysis || !isGTMPlanV2(analysis)) return;
     const nextAnalysis: GTMPlanV2 = { ...analysis, plays: analysis.plays.map((play) => play.id === nextPlay.id ? nextPlay : play) };
     setAnalysis(nextAnalysis);
-    const [{ error: playError }, { error: planError }] = await Promise.all([
+    const directoryRows = Object.entries(nextPlay.directoryProgress ?? {}).map(([directoryId, status]) => ({
+      user_id: user.id, plan_id: planId, play_id: nextPlay.id, directory_id: directoryId, status,
+      updated_at: new Date().toISOString(),
+    }));
+    const [{ error: playError }, { error: planError }, directoryResult] = await Promise.all([
       supabase.from('gtm_plays').update({ status: nextPlay.status, play_content: nextPlay as any }).eq('id', nextPlay.id).eq('user_id', user.id),
       supabase.from('gtm_plans').update({ plan_content: nextAnalysis as any }).eq('id', planId).eq('user_id', user.id),
+      directoryRows.length > 0
+        ? (supabase as any).from('gtm_directory_actions').upsert(directoryRows, { onConflict: 'play_id,directory_id' })
+        : Promise.resolve({ error: null }),
     ]);
-    if (playError || planError) {
+    if (playError || planError || directoryResult.error) {
       setAnalysis(analysis);
       toast.error('Could not save this play.');
       return;
     }
     captureEvent('gtm_play_updated', { plan_id: planId, play_id: nextPlay.id, channel_id: nextPlay.channelId, status: nextPlay.status });
     toast.success('Play updated.');
+  }, [analysis, planId, user]);
+
+  const updateV2Plan = useCallback(async (nextPlan: GTMPlanV2) => {
+    if (!user || !planId || !analysis || !isGTMPlanV2(analysis)) return;
+    const previousPlan = analysis;
+    setAnalysis(nextPlan);
+    const { error } = await supabase
+      .from('gtm_plans')
+      .update({ plan_content: nextPlan as any })
+      .eq('id', planId)
+      .eq('user_id', user.id);
+    if (error) {
+      setAnalysis(previousPlan);
+      toast.error('Could not save this GTM workspace change.');
+      return;
+    }
+
+    const writes: Array<PromiseLike<unknown>> = [];
+    if (nextPlan.tasks?.length) writes.push((supabase as any).from('gtm_tasks').upsert(nextPlan.tasks.map((task) => ({
+      id: task.id, user_id: user.id, plan_id: planId, play_id: task.playId || null, week_number: task.week,
+      title: task.title, detail: task.detail, owner_label: task.owner, time_estimate_minutes: task.timeEstimateMinutes,
+      expected_output: task.output, metric: task.metric, status: task.status, completed_at: task.completedAt ?? null,
+    }))));
+    if (nextPlan.assets?.length) writes.push((supabase as any).from('gtm_play_assets').upsert(nextPlan.assets.map((asset) => ({
+      id: asset.id, user_id: user.id, plan_id: planId, play_id: asset.playId, asset_type: asset.type,
+      title: asset.title, content: asset.content, status: asset.status,
+    }))));
+    if (nextPlan.competitorBriefs?.length) writes.push((supabase as any).from('gtm_competitor_briefs').upsert(nextPlan.competitorBriefs.map((competitor) => ({
+      id: competitor.id, user_id: user.id, plan_id: planId, brief: competitor,
+    }))));
+    await Promise.allSettled(writes);
   }, [analysis, planId, user]);
 
   const runWeeklyReview = useCallback(async () => {
@@ -665,6 +703,7 @@ export function useGTMStrategist() {
     runAnalysis,
     runV2Analysis,
     updatePlay,
+    updateV2Plan,
     runWeeklyReview,
     savePlan,
     exportPlan,
