@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, CheckCircle2, Database, Globe2, Loader2, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, Database, Globe2, Loader2, ShieldCheck, Sparkles } from 'lucide-react';
 
 import { CreditCostNotice } from '@/components/CreditCostNotice';
 import { Badge } from '@/components/ui/badge';
@@ -29,7 +29,10 @@ const MODELS: Array<{ value: GTMBusinessModel; label: string }> = [
 ];
 
 const STRENGTHS = ['Writing', 'Speaking / Video', 'Networking', 'Coding / Technical', 'Design', 'Cold outreach'];
-const STEPS = ['Product', 'Market', 'Constraints', 'Outcome'];
+type IntakeStep = 'product' | 'market' | 'constraints' | 'outcome' | 'confirm';
+const STEP_LABELS: Record<IntakeStep, string> = {
+  product: 'Product', market: 'Market', constraints: 'Constraints', outcome: 'Outcome', confirm: 'Confirm',
+};
 
 const defaults: GTMIntakeV2 = {
   productName: '',
@@ -61,10 +64,44 @@ const Field = ({ label, hint, children }: { label: string; hint?: string; childr
   </div>
 );
 
+const hasValue = (value: unknown) => {
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === 'number') return value > 0;
+  if (typeof value === 'string') return value.trim().length > 0;
+  return value !== undefined && value !== null;
+};
+
+const missingForModel = (prefill: Partial<GTMIntakeV2>, model: GTMBusinessModel) => {
+  const missing: Record<Exclude<IntakeStep, 'confirm'>, boolean> = {
+    product: !hasValue(prefill.productName) || !hasValue(prefill.lifecycle) || !hasValue(prefill.businessModel)
+      || (!hasValue(prefill.pricing) && !hasValue(prefill.averageCustomerValue)),
+    market: !hasValue(prefill.targetSegment) || !hasValue(prefill.problem) || !hasValue(prefill.solution)
+      || !hasValue(prefill.geography) || !hasValue(prefill.buyingTrigger),
+    constraints: !hasValue(prefill.weeklyTimeHours) || !hasValue(prefill.founderStrengths),
+    outcome: !hasValue(prefill.currentTraction) || !hasValue(prefill.sixWeekOutcome),
+  };
+  if (model === 'b2b_saas') missing.market ||= !hasValue(prefill.salesCycle);
+  if (model === 'marketplace') missing.market ||= !hasValue(prefill.marketplaceSide);
+  if (model === 'ecommerce') missing.market ||= !hasValue(prefill.averageOrderValue) || !hasValue(prefill.repeatPurchaseModel);
+  if (model === 'service') missing.market ||= !hasValue(prefill.serviceCapacity);
+  if (model === 'media') missing.market ||= !hasValue(prefill.subscriberGoal);
+  return missing;
+};
+
 export default function GTMWorkspaceIntake({ prefill, isSubmitting = false, isRegeneration = false, onSubmit, onCancel }: GTMWorkspaceIntakeProps) {
   const [step, setStep] = useState(0);
   const [intake, setIntake] = useState<GTMIntakeV2>({ ...defaults, ...prefill });
   const [competitors, setCompetitors] = useState((prefill.knownCompetitors ?? []).join(', '));
+  const activeSteps = useMemo<IntakeStep[]>(() => {
+    const missing = missingForModel(prefill, prefill.businessModel ?? defaults.businessModel);
+    return [
+      ...(Object.keys(missing) as Array<Exclude<IntakeStep, 'confirm'>>).filter((key) => missing[key]),
+      'confirm',
+    ];
+  }, [prefill]);
+  const currentStep = activeSteps[step] ?? 'confirm';
+  const activeStepsKey = activeSteps.join('|');
+  const importedFieldCount = useMemo(() => Object.values(prefill).filter(hasValue).length, [prefill]);
 
   useEffect(() => {
     setIntake((current) => {
@@ -81,12 +118,21 @@ export default function GTMWorkspaceIntake({ prefill, isSubmitting = false, isRe
     if ((prefill.knownCompetitors?.length ?? 0) > 0) setCompetitors(prefill.knownCompetitors!.join(', '));
   }, [prefill]);
 
+  useEffect(() => {
+    setStep(0);
+  }, [activeStepsKey]);
+
   const canContinue = useMemo(() => {
-    if (step === 0) return intake.productName.trim().length > 1 && Boolean(intake.businessModel) && Boolean(intake.lifecycle);
-    if (step === 1) return intake.targetSegment.trim().length > 10 && intake.problem.trim().length > 10 && intake.solution.trim().length > 10;
-    if (step === 2) return intake.weeklyTimeHours > 0 && intake.monthlyBudget >= 0 && intake.founderStrengths.length > 0;
-    return intake.currentTraction.trim().length > 3 && intake.sixWeekOutcome.trim().length > 10;
-  }, [intake, step]);
+    if (currentStep === 'product') return intake.productName.trim().length > 1 && Boolean(intake.businessModel) && Boolean(intake.lifecycle)
+      && (Boolean(intake.pricing?.trim()) || (intake.averageCustomerValue ?? 0) > 0);
+    if (currentStep === 'market') return intake.targetSegment.trim().length > 10 && intake.problem.trim().length > 10
+      && intake.solution.trim().length > 10 && Boolean(intake.geography.trim()) && Boolean(intake.buyingTrigger?.trim());
+    if (currentStep === 'constraints') return intake.weeklyTimeHours > 0 && intake.monthlyBudget >= 0 && intake.founderStrengths.length > 0;
+    if (currentStep === 'outcome') return intake.currentTraction.trim().length > 3 && intake.sixWeekOutcome.trim().length > 10;
+    return intake.productName.trim().length > 1 && intake.targetSegment.trim().length > 10
+      && intake.problem.trim().length > 10 && intake.solution.trim().length > 10
+      && intake.weeklyTimeHours > 0 && intake.founderStrengths.length > 0 && intake.sixWeekOutcome.trim().length > 10;
+  }, [currentStep, intake]);
 
   const update = <K extends keyof GTMIntakeV2>(key: K, value: GTMIntakeV2[K]) => {
     setIntake((current) => ({ ...current, [key]: value }));
@@ -117,27 +163,27 @@ export default function GTMWorkspaceIntake({ prefill, isSubmitting = false, isRe
         </p>
       </div>
 
-      {Object.keys(prefill).length > 0 ? (
+      {importedFieldCount > 0 ? (
         <div className="flex items-start gap-3 rounded-2xl border border-info/25 bg-info/5 p-4 text-sm">
           <Database className="mt-0.5 h-4 w-4 shrink-0 text-info" />
-          <div><p className="font-medium">Context imported</p><p className="text-muted-foreground">Latest available ICP, PMF, waitlist, MVP, and Traction evidence has been added. Everything remains editable.</p></div>
+          <div><p className="font-medium">{importedFieldCount} context fields imported</p><p className="text-muted-foreground">Only missing decisions are being requested. You will review the complete brief before research begins.</p></div>
         </div>
       ) : null}
 
-      <div className="flex items-center gap-2" aria-label={`Step ${step + 1} of ${STEPS.length}`}>
-        {STEPS.map((label, index) => (
-          <div key={label} className="flex flex-1 items-center gap-2">
+      <div className="flex items-center gap-2" aria-label={`Step ${step + 1} of ${activeSteps.length}`}>
+        {activeSteps.map((stepId, index) => (
+          <div key={stepId} className="flex flex-1 items-center gap-2">
             <button type="button" onClick={() => index < step && setStep(index)} className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold', index < step ? 'bg-primary text-primary-foreground' : index === step ? 'border-2 border-primary bg-primary/10 text-primary' : 'bg-muted text-muted-foreground')}>
               {index < step ? <CheckCircle2 className="h-4 w-4" /> : index + 1}
             </button>
-            <span className="hidden text-xs text-muted-foreground sm:inline">{label}</span>
-            {index < STEPS.length - 1 ? <div className={cn('h-px flex-1', index < step ? 'bg-primary' : 'bg-border')} /> : null}
+            <span className="hidden text-xs text-muted-foreground sm:inline">{STEP_LABELS[stepId]}</span>
+            {index < activeSteps.length - 1 ? <div className={cn('h-px flex-1', index < step ? 'bg-primary' : 'bg-border')} /> : null}
           </div>
         ))}
       </div>
 
       <div className="rounded-3xl border border-border/60 bg-background/85 p-5 shadow-sm sm:p-7">
-        {step === 0 ? (
+        {currentStep === 'product' ? (
           <div className="grid gap-5 md:grid-cols-2">
             <Field label="Product name"><Input value={intake.productName} onChange={(event) => update('productName', event.target.value)} placeholder="Acme" /></Field>
             <Field label="Product URL" hint="Optional for launch-ready products; live products should include the public URL."><Input type="url" value={intake.productUrl ?? ''} onChange={(event) => update('productUrl', event.target.value)} placeholder="https://…" /></Field>
@@ -152,7 +198,7 @@ export default function GTMWorkspaceIntake({ prefill, isSubmitting = false, isRe
           </div>
         ) : null}
 
-        {step === 1 ? (
+        {currentStep === 'market' ? (
           <div className="grid gap-5 md:grid-cols-2">
             <div className="md:col-span-2"><Field label="Best-fit target segment"><Textarea value={intake.targetSegment} onChange={(event) => update('targetSegment', event.target.value)} rows={3} placeholder="Role, company/customer context, and the situation that makes the problem acute." /></Field></div>
             <Field label="Geography"><Input value={intake.geography} onChange={(event) => update('geography', event.target.value)} placeholder="Global, US, Colombia…" /></Field>
@@ -170,7 +216,7 @@ export default function GTMWorkspaceIntake({ prefill, isSubmitting = false, isRe
           </div>
         ) : null}
 
-        {step === 2 ? (
+        {currentStep === 'constraints' ? (
           <div className="space-y-6">
             <div className="grid gap-5 md:grid-cols-2">
               <Field label="Founder hours available per week"><Input type="number" min="1" max="80" value={intake.weeklyTimeHours} onChange={(event) => update('weeklyTimeHours', Number(event.target.value) || 0)} /></Field>
@@ -182,11 +228,38 @@ export default function GTMWorkspaceIntake({ prefill, isSubmitting = false, isRe
           </div>
         ) : null}
 
-        {step === 3 ? (
+        {currentStep === 'outcome' ? (
           <div className="space-y-5">
             <Field label="Current measured traction"><Textarea value={intake.currentTraction} onChange={(event) => update('currentTraction', event.target.value)} rows={4} placeholder="Users, revenue, conversion, retention, channel results, or ‘no measured traction yet’." /></Field>
             <Field label="One outcome for the next six weeks" hint="Make it measurable: qualified calls, activated users, transactions, purchases, or subscribers."><Textarea value={intake.sixWeekOutcome} onChange={(event) => update('sixWeekOutcome', event.target.value)} rows={3} placeholder="e.g. Reach 30 activated teams and retain at least 12 into week two." /></Field>
             <div className="flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm"><Globe2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><p className="text-muted-foreground">Generation includes targeted live research, cited sources, deterministic channel scoring, and durable plays. Sparse research is labeled instead of presented as fact.</p></div>
+          </div>
+        ) : null}
+
+        {currentStep === 'confirm' ? (
+          <div className="space-y-6">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Research brief</p>
+              <h2 className="mt-2 text-2xl font-semibold">Confirm the decisions that shape your motion</h2>
+              <p className="mt-2 text-sm text-muted-foreground">Imported evidence and your answers will become a focused, editable six-week operating plan.</p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              {[
+                ['Product', `${intake.productName} · ${MODELS.find((model) => model.value === intake.businessModel)?.label ?? intake.businessModel}`],
+                ['Best-fit customer', intake.targetSegment],
+                ['Six-week outcome', intake.sixWeekOutcome],
+                ['Operating constraint', `${intake.weeklyTimeHours} founder hours/week · $${intake.monthlyBudget}/month`],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-2xl border border-border/60 bg-muted/20 p-4">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+                  <p className="mt-2 text-sm leading-relaxed">{value || 'Not provided'}</p>
+                </div>
+              ))}
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm"><Globe2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><p className="text-muted-foreground">Live research validates alternatives, buyer signals, and channel conditions with cited sources. Sparse evidence is labeled.</p></div>
+              <div className="flex items-start gap-3 rounded-2xl border border-success/20 bg-success/5 p-4 text-sm"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success" /><p className="text-muted-foreground">You approve every asset and external action. The system never sends outreach, posts content, or operates external accounts.</p></div>
+            </div>
             <CreditCostNotice feature="GTM_ANALYSIS" featureName="GTM Strategist" />
           </div>
         ) : null}
@@ -196,8 +269,8 @@ export default function GTMWorkspaceIntake({ prefill, isSubmitting = false, isRe
         <div className="flex gap-2">
           {step > 0 ? <Button type="button" variant="outline" onClick={() => setStep((current) => current - 1)}><ArrowLeft className="mr-2 h-4 w-4" />Back</Button> : onCancel ? <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button> : null}
         </div>
-        <Button type="button" disabled={!canContinue || isSubmitting} onClick={() => step < STEPS.length - 1 ? setStep((current) => current + 1) : submit()}>
-          {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Building system…</> : step < STEPS.length - 1 ? <>Continue<ArrowRight className="ml-2 h-4 w-4" /></> : <>{isRegeneration ? 'Regenerate GTM system' : 'Build GTM system'}<Sparkles className="ml-2 h-4 w-4" /></>}
+        <Button type="button" disabled={!canContinue || isSubmitting} onClick={() => step < activeSteps.length - 1 ? setStep((current) => current + 1) : submit()}>
+          {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Building system…</> : step < activeSteps.length - 1 ? <>Continue<ArrowRight className="ml-2 h-4 w-4" /></> : <>{isRegeneration ? 'Regenerate GTM system' : 'Build GTM system'}<Sparkles className="ml-2 h-4 w-4" /></>}
         </Button>
       </div>
     </div>

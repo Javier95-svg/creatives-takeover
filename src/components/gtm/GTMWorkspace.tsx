@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, BarChart3, BookOpen, Check, ExternalLink, FileDown, FolderSearch, Loader2, Pencil, RefreshCw, Rocket, Save, Target } from 'lucide-react';
+import { ArrowRight, BarChart3, BookOpen, Check, ExternalLink, FileDown, FolderSearch, Loader2, Pencil, RefreshCw, Rocket, Save, Share2, Target } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,7 @@ interface GTMWorkspaceProps {
   isReviewing: boolean;
   onSave: () => void;
   onExport: () => void;
+  onShare: () => void;
   onRegenerate: () => void;
   onUpdatePlay: (play: GTMPlay) => Promise<void>;
   onWeeklyReview: () => Promise<void>;
@@ -94,7 +95,7 @@ function PlayEditor({ play, planId, onSave }: { play: GTMPlay; planId: string; o
   );
 }
 
-export default function GTMWorkspace({ plan, planId, weeklyReview, isSaving, isExporting, isReviewing, onSave, onExport, onRegenerate, onUpdatePlay, onWeeklyReview }: GTMWorkspaceProps) {
+export default function GTMWorkspace({ plan, planId, weeklyReview, isSaving, isExporting, isReviewing, onSave, onExport, onShare, onRegenerate, onUpdatePlay, onWeeklyReview }: GTMWorkspaceProps) {
   const [tab, setTab] = useState('strategy');
   const primaryPlay = plan.plays.find((play) => play.status === 'active') ?? plan.plays[0];
   return (
@@ -102,7 +103,7 @@ export default function GTMWorkspace({ plan, planId, weeklyReview, isSaving, isE
       <div className="rounded-3xl border border-border/60 bg-background/85 p-5 shadow-sm sm:p-7">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="max-w-3xl space-y-2"><div className="flex flex-wrap items-center gap-2"><Badge variant="outline">Version {plan.version ?? 1}</Badge><Badge variant="outline" className={plan.researchStatus === 'complete' ? 'border-success/30 text-success' : 'border-warning/30 text-warning'}>{plan.researchStatus} research</Badge></div><h1 className="text-2xl font-bold sm:text-3xl">{plan.planTitle}</h1><p className="leading-relaxed text-muted-foreground">{plan.summaryInsight}</p></div>
-          <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={isSaving} onClick={onSave}>{isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}Save</Button><Button variant="outline" disabled={isExporting} onClick={onExport}>{isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}PDF</Button><Button variant="outline" onClick={onRegenerate}><RefreshCw className="mr-2 h-4 w-4" />Regenerate (5 credits)</Button></div>
+          <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={isSaving} onClick={onSave}>{isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}Save</Button><Button variant="outline" onClick={onShare}><Share2 className="mr-2 h-4 w-4" />Share</Button><Button variant="outline" disabled={isExporting} onClick={onExport}>{isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}PDF</Button><Button variant="outline" onClick={onRegenerate}><RefreshCw className="mr-2 h-4 w-4" />Regenerate (5 credits)</Button></div>
         </div>
       </div>
 
