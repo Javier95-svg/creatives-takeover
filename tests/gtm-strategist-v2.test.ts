@@ -163,9 +163,10 @@ test('valid V2 workspaces resume directly while legacy plans still require an ex
   assert.match(intake, /currentStep === 'confirm'/);
 });
 
-test('GTM intake explicitly offers one MVP project import or a blank manual path', () => {
+test('GTM intake starts blank and exposes MVP import from an in-form CTA', () => {
   const hook = readFileSync(new URL('../src/hooks/useGTMStrategist.ts', import.meta.url), 'utf8');
   const page = readFileSync(new URL('../src/pages/GTMStrategistPage.tsx', import.meta.url), 'utf8');
+  const intake = readFileSync(new URL('../src/components/gtm/GTMWorkspaceIntake.tsx', import.meta.url), 'utf8');
   const picker = readFileSync(new URL('../src/components/gtm/GTMContextSourcePicker.tsx', import.meta.url), 'utf8');
   const projectLoadStart = hook.indexOf('const loadMvpProjects');
   const projectLoadEnd = hook.indexOf('const importMvpProject');
@@ -176,12 +177,18 @@ test('GTM intake explicitly offers one MVP project import or a blank manual path
   assert.match(projectLoadFlow, /id,title,deployment_url,deployment_status,metadata,updated_at/);
   assert.doesNotMatch(projectLoadFlow, /\.limit\(1\)/);
   assert.match(hook, /setPrefillV2\(project\.prefill\)/);
-  assert.match(hook, /setPrefillV2\(\{\}\)[\s\S]*setContextSource\('manual'\)/);
-  assert.match(picker, /Import from MVP Builder/);
-  assert.match(picker, /Fill out the form manually/);
-  assert.match(picker, /SelectValue placeholder="Select a project"/);
-  assert.match(page, /GTMContextSourcePicker/);
-  assert.match(page, /contextSource === 'unselected'/);
+  assert.match(hook.slice(hook.indexOf('const loadExistingPlan'), projectLoadStart), /\.in\('status', \['saved', 'exported'\]\)/);
+  assert.doesNotMatch(hook.slice(hook.indexOf('const loadExistingPlan'), projectLoadStart), /'draft'/);
+  assert.match(intake, /productName: ''/);
+  assert.match(intake, /lifecycle: ''/);
+  assert.match(intake, /businessModel: ''/);
+  assert.match(intake, /geography: ''/);
+  assert.match(intake, /currentTraction: ''/);
+  assert.match(intake, /Import Context/);
+  assert.doesNotMatch(intake, /context fields imported/);
+  assert.match(picker, /SelectValue placeholder="Select an MVP Builder project"/);
+  assert.match(page, /phase === 'intake'/);
+  assert.match(page, /onImportProject=\{importMvpProject\}/);
 });
 
 test('builds a founder-controlled execution system with durable task and asset semantics', () => {

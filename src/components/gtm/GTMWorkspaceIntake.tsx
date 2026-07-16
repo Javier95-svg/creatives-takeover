@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, CheckCircle2, Database, Globe2, Loader2, Save, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, FolderInput, Globe2, Loader2, Save, ShieldCheck, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { CreditCostNotice } from '@/components/CreditCostNotice';
+import GTMContextSourcePicker from '@/components/gtm/GTMContextSourcePicker';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
+import type { GTMMVPProjectOption } from '@/hooks/useGTMStrategist';
 import { cn } from '@/lib/utils';
 import type { GTMBusinessModel, GTMIntakeV2 } from '@/lib/gtmV2';
 
@@ -20,6 +23,10 @@ interface GTMWorkspaceIntakeProps {
   onSubmit: (intake: GTMIntakeV2) => void;
   onCancel?: () => void;
   cancelLabel?: string;
+  mvpProjects?: GTMMVPProjectOption[];
+  isLoadingMvpProjects?: boolean;
+  selectedMvpProjectId?: string | null;
+  onImportProject?: (projectId: string) => void;
 }
 
 const MODELS: Array<{ value: GTMBusinessModel; label: string }> = [
@@ -37,33 +44,46 @@ const STEP_LABELS: Record<IntakeStep, string> = {
   product: 'Product', market: 'Market', constraints: 'Constraints', outcome: 'Outcome', confirm: 'Confirm',
 };
 
-const defaults: GTMIntakeV2 = {
+type GTMIntakeFormState = Omit<
+  GTMIntakeV2,
+  'lifecycle' | 'businessModel' | 'averageCustomerValue' | 'weeklyTimeHours' | 'monthlyBudget' | 'averageOrderValue' | 'subscriberGoal'
+> & {
+  lifecycle: GTMIntakeV2['lifecycle'] | '';
+  businessModel: GTMBusinessModel | '';
+  averageCustomerValue: number | '';
+  weeklyTimeHours: number | '';
+  monthlyBudget: number | '';
+  averageOrderValue?: number | '';
+  subscriberGoal?: number | '';
+};
+
+const defaults: GTMIntakeFormState = {
   productName: '',
   productUrl: '',
-  lifecycle: 'launch_ready',
-  businessModel: 'b2b_saas',
+  lifecycle: '',
+  businessModel: '',
   targetSegment: '',
-  geography: 'Global',
+  geography: '',
   problem: '',
   solution: '',
   buyerRole: '',
   userRole: '',
   buyingTrigger: '',
   pricing: '',
-  averageCustomerValue: 0,
-  currentTraction: 'No measured traction yet',
-  weeklyTimeHours: 5,
-  monthlyBudget: 0,
+  averageCustomerValue: '',
+  currentTraction: '',
+  weeklyTimeHours: '',
+  monthlyBudget: '',
   founderStrengths: [],
   knownCompetitors: [],
   sixWeekOutcome: '',
 };
 
-const GTM_INTAKE_DRAFT_VERSION = 1;
+const GTM_INTAKE_DRAFT_VERSION = 2;
 
 interface GTMIntakeDraft {
   version: typeof GTM_INTAKE_DRAFT_VERSION;
-  intake: GTMIntakeV2;
+  intake: GTMIntakeFormState;
   evidenceNotes: string;
   updatedAt: number;
 }
@@ -97,7 +117,7 @@ const hasValue = (value: unknown) => {
   return value !== undefined && value !== null;
 };
 
-const missingForModel = (prefill: Partial<GTMIntakeV2>, model: GTMBusinessModel) => {
+const missingForModel = (prefill: Partial<GTMIntakeFormState>, model: GTMBusinessModel | '') => {
   const missing: Record<Exclude<IntakeStep, 'confirm'>, boolean> = {
     product: !hasValue(prefill.productName) || !hasValue(prefill.lifecycle) || !hasValue(prefill.businessModel)
       || (!hasValue(prefill.pricing) && !hasValue(prefill.averageCustomerValue)),
@@ -114,18 +134,31 @@ const missingForModel = (prefill: Partial<GTMIntakeV2>, model: GTMBusinessModel)
   return missing;
 };
 
-export default function GTMWorkspaceIntake({ prefill, draftScope = 'manual', isSubmitting = false, isRegeneration = false, onSubmit, onCancel, cancelLabel = 'Cancel' }: GTMWorkspaceIntakeProps) {
+export default function GTMWorkspaceIntake({
+  prefill,
+  draftScope = 'manual',
+  isSubmitting = false,
+  isRegeneration = false,
+  onSubmit,
+  onCancel,
+  cancelLabel = 'Cancel',
+  mvpProjects = [],
+  isLoadingMvpProjects = false,
+  selectedMvpProjectId = null,
+  onImportProject,
+}: GTMWorkspaceIntakeProps) {
   const { user } = useAuth();
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const draftStorageKey = `gtm-strategist-intake-draft:${user?.id ?? 'guest'}:${draftScope}`;
   const savedDraft = useMemo(
     () => isRegeneration ? null : readIntakeDraft(draftStorageKey),
     [draftStorageKey, isRegeneration],
   );
-  const effectivePrefill = useMemo<Partial<GTMIntakeV2>>(
+  const effectivePrefill = useMemo<Partial<GTMIntakeFormState>>(
     () => {
       const merged = { ...prefill };
       for (const [key, value] of Object.entries(savedDraft?.intake ?? {})) {
-        const field = key as keyof GTMIntakeV2;
+        const field = key as keyof GTMIntakeFormState;
         const isDefaultValue = !hasValue(value) || JSON.stringify(value) === JSON.stringify(defaults[field]);
         if (!isDefaultValue || !hasValue(merged[field])) {
           (merged as Record<string, unknown>)[field] = value;
@@ -136,7 +169,7 @@ export default function GTMWorkspaceIntake({ prefill, draftScope = 'manual', isS
     [prefill, savedDraft],
   );
   const [step, setStep] = useState(0);
-  const [intake, setIntake] = useState<GTMIntakeV2>({ ...defaults, ...effectivePrefill });
+  const [intake, setIntake] = useState<GTMIntakeFormState>({ ...defaults, ...effectivePrefill });
   const [competitors, setCompetitors] = useState((effectivePrefill.knownCompetitors ?? []).join(', '));
   const [evidenceNotes, setEvidenceNotes] = useState(savedDraft?.evidenceNotes ?? (effectivePrefill.firstPartyEvidence ?? []).find((item) => item.id === 'founder-research-notes')?.content ?? '');
   const activeSteps = useMemo<IntakeStep[]>(() => {
@@ -148,13 +181,11 @@ export default function GTMWorkspaceIntake({ prefill, draftScope = 'manual', isS
   }, [effectivePrefill]);
   const currentStep = activeSteps[step] ?? 'confirm';
   const activeStepsKey = activeSteps.join('|');
-  const importedFieldCount = useMemo(() => Object.values(prefill).filter(hasValue).length, [prefill]);
-
   useEffect(() => {
     setIntake((current) => {
       const next = { ...current };
       for (const [key, value] of Object.entries(effectivePrefill)) {
-        const field = key as keyof GTMIntakeV2;
+        const field = key as keyof GTMIntakeFormState;
         const currentValue = current[field];
         if (value !== undefined && value !== null && (currentValue === '' || currentValue === undefined || currentValue === defaults[field])) {
           (next as Record<string, unknown>)[field] = value;
@@ -173,17 +204,20 @@ export default function GTMWorkspaceIntake({ prefill, draftScope = 'manual', isS
 
   const canContinue = useMemo(() => {
     if (currentStep === 'product') return intake.productName.trim().length > 1 && Boolean(intake.businessModel) && Boolean(intake.lifecycle)
-      && (Boolean(intake.pricing?.trim()) || (intake.averageCustomerValue ?? 0) > 0);
+      && (Boolean(intake.pricing?.trim()) || (typeof intake.averageCustomerValue === 'number' && intake.averageCustomerValue > 0));
     if (currentStep === 'market') return intake.targetSegment.trim().length > 10 && intake.problem.trim().length > 10
       && intake.solution.trim().length > 10 && Boolean(intake.geography.trim()) && Boolean(intake.buyingTrigger?.trim());
-    if (currentStep === 'constraints') return intake.weeklyTimeHours > 0 && intake.monthlyBudget >= 0 && intake.founderStrengths.length > 0;
+    if (currentStep === 'constraints') return typeof intake.weeklyTimeHours === 'number' && intake.weeklyTimeHours > 0
+      && typeof intake.monthlyBudget === 'number' && intake.monthlyBudget >= 0 && intake.founderStrengths.length > 0;
     if (currentStep === 'outcome') return intake.currentTraction.trim().length > 3 && intake.sixWeekOutcome.trim().length > 10;
     return intake.productName.trim().length > 1 && intake.targetSegment.trim().length > 10
       && intake.problem.trim().length > 10 && intake.solution.trim().length > 10
-      && intake.weeklyTimeHours > 0 && intake.founderStrengths.length > 0 && intake.sixWeekOutcome.trim().length > 10;
+      && typeof intake.weeklyTimeHours === 'number' && intake.weeklyTimeHours > 0
+      && typeof intake.monthlyBudget === 'number' && intake.monthlyBudget >= 0
+      && intake.founderStrengths.length > 0 && intake.sixWeekOutcome.trim().length > 10;
   }, [currentStep, intake]);
 
-  const update = <K extends keyof GTMIntakeV2>(key: K, value: GTMIntakeV2[K]) => {
+  const update = <K extends keyof GTMIntakeFormState>(key: K, value: GTMIntakeFormState[K]) => {
     setIntake((current) => ({ ...current, [key]: value }));
   };
 
@@ -193,7 +227,7 @@ export default function GTMWorkspaceIntake({ prefill, draftScope = 'manual', isS
       : [...intake.founderStrengths, strength]);
   };
 
-  const buildIntake = (): GTMIntakeV2 => {
+  const buildDraftIntake = (): GTMIntakeFormState => {
     const priorEvidence = (intake.firstPartyEvidence ?? []).filter((item) => item.id !== 'founder-research-notes');
     return {
       ...intake,
@@ -209,11 +243,25 @@ export default function GTMWorkspaceIntake({ prefill, draftScope = 'manual', isS
     };
   };
 
+  const buildIntake = (): GTMIntakeV2 => {
+    const draft = buildDraftIntake();
+    return {
+      ...draft,
+      lifecycle: draft.lifecycle as GTMIntakeV2['lifecycle'],
+      businessModel: draft.businessModel as GTMBusinessModel,
+      averageCustomerValue: draft.averageCustomerValue === '' ? undefined : draft.averageCustomerValue,
+      weeklyTimeHours: Number(draft.weeklyTimeHours),
+      monthlyBudget: Number(draft.monthlyBudget),
+      averageOrderValue: draft.averageOrderValue === '' ? undefined : draft.averageOrderValue,
+      subscriberGoal: draft.subscriberGoal === '' ? undefined : draft.subscriberGoal,
+    };
+  };
+
   const saveDraft = () => {
     if (typeof window === 'undefined') return;
     const payload: GTMIntakeDraft = {
       version: GTM_INTAKE_DRAFT_VERSION,
-      intake: buildIntake(),
+      intake: buildDraftIntake(),
       evidenceNotes,
       updatedAt: Date.now(),
     };
@@ -230,6 +278,20 @@ export default function GTMWorkspaceIntake({ prefill, draftScope = 'manual', isS
     onSubmit(buildIntake());
   };
 
+  const importProjectContext = (projectId: string) => {
+    const project = mvpProjects.find((item) => item.id === projectId);
+    if (project) {
+      setIntake({ ...defaults, ...project.prefill });
+      setCompetitors((project.prefill.knownCompetitors ?? []).join(', '));
+      setEvidenceNotes(project.prefill.firstPartyEvidence?.find((item) => item.id === 'founder-research-notes')?.content ?? '');
+      setStep(0);
+    }
+    onImportProject?.(projectId);
+    setIsImportOpen(false);
+  };
+
+  const selectedMvpProject = mvpProjects.find((project) => project.id === selectedMvpProjectId) ?? null;
+
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="space-y-3 text-center">
@@ -237,16 +299,36 @@ export default function GTMWorkspaceIntake({ prefill, draftScope = 'manual', isS
           GTM Strategist
         </h1>
         <p className="mx-auto max-w-3xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-          Confirm the context we imported, then get a researched six-week motion connected to Directories and Traction Engine.
+          Add your product context manually or import a saved MVP Builder project, then build a researched six-week motion.
         </p>
       </div>
 
-      {importedFieldCount > 0 ? (
-        <div className="flex items-start gap-3 rounded-2xl border border-info/25 bg-info/5 p-4 text-sm">
-          <Database className="mt-0.5 h-4 w-4 shrink-0 text-info" />
-          <div><p className="font-medium">{importedFieldCount} context fields imported</p><p className="text-muted-foreground">Only missing decisions are being requested. You will review the complete brief before research begins.</p></div>
+      <div className="flex flex-col gap-4 rounded-2xl border border-primary/25 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-3">
+          <FolderInput className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+          <div>
+            <p className="font-medium">{selectedMvpProject ? `Context imported from ${selectedMvpProject.title}` : 'Have an MVP Builder project?'}</p>
+            <p className="mt-1 text-sm text-muted-foreground">Import its saved product context into this GTM form.</p>
+          </div>
         </div>
-      ) : null}
+        <Button type="button" className="shrink-0" onClick={() => setIsImportOpen(true)}>
+          <FolderInput className="mr-2 h-4 w-4" />Import Context
+        </Button>
+      </div>
+
+      <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Import context from MVP Builder</DialogTitle>
+            <DialogDescription>Select one saved MVP Builder project. Nothing is imported until you confirm your selection.</DialogDescription>
+          </DialogHeader>
+          <GTMContextSourcePicker
+            projects={mvpProjects}
+            isLoading={isLoadingMvpProjects}
+            onImportProject={importProjectContext}
+          />
+        </DialogContent>
+      </Dialog>
 
       <div className="flex items-center gap-2" aria-label={`Step ${step + 1} of ${activeSteps.length}`}>
         {activeSteps.map((stepId, index) => (
@@ -266,13 +348,13 @@ export default function GTMWorkspaceIntake({ prefill, draftScope = 'manual', isS
             <Field label="Product name"><Input value={intake.productName} onChange={(event) => update('productName', event.target.value)} placeholder="Acme" /></Field>
             <Field label="Product URL" hint="Optional for launch-ready products; live products should include the public URL."><Input type="url" value={intake.productUrl ?? ''} onChange={(event) => update('productUrl', event.target.value)} placeholder="https://…" /></Field>
             <Field label="Lifecycle">
-              <Select value={intake.lifecycle} onValueChange={(value) => update('lifecycle', value as GTMIntakeV2['lifecycle'])}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="launch_ready">Launch-ready</SelectItem><SelectItem value="live">Live product</SelectItem></SelectContent></Select>
+              <Select value={intake.lifecycle} onValueChange={(value) => update('lifecycle', value as GTMIntakeV2['lifecycle'])}><SelectTrigger><SelectValue placeholder="Select lifecycle" /></SelectTrigger><SelectContent><SelectItem value="launch_ready">Launch-ready</SelectItem><SelectItem value="live">Live product</SelectItem></SelectContent></Select>
             </Field>
             <Field label="Business model">
-              <Select value={intake.businessModel} onValueChange={(value) => update('businessModel', value as GTMBusinessModel)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{MODELS.map((model) => <SelectItem key={model.value} value={model.value}>{model.label}</SelectItem>)}</SelectContent></Select>
+              <Select value={intake.businessModel} onValueChange={(value) => update('businessModel', value as GTMBusinessModel)}><SelectTrigger><SelectValue placeholder="Select business model" /></SelectTrigger><SelectContent>{MODELS.map((model) => <SelectItem key={model.value} value={model.value}>{model.label}</SelectItem>)}</SelectContent></Select>
             </Field>
             <Field label="Pricing or packaging"><Input value={intake.pricing ?? ''} onChange={(event) => update('pricing', event.target.value)} placeholder="$29/month, free trial, project fee…" /></Field>
-            <Field label="Average customer value" hint="Use expected annual value for B2B/services or order value for transactional products."><Input type="number" min="0" value={intake.averageCustomerValue ?? 0} onChange={(event) => update('averageCustomerValue', Number(event.target.value) || 0)} /></Field>
+            <Field label="Average customer value" hint="Use expected annual value for B2B/services or order value for transactional products."><Input type="number" min="0" value={intake.averageCustomerValue} onChange={(event) => update('averageCustomerValue', event.target.value === '' ? '' : Number(event.target.value))} placeholder="Enter value" /></Field>
           </div>
         ) : null}
 
@@ -287,18 +369,18 @@ export default function GTMWorkspaceIntake({ prefill, draftScope = 'manual', isS
             <Field label="Solution and differentiated mechanism"><Textarea value={intake.solution} onChange={(event) => update('solution', event.target.value)} rows={4} placeholder="What changes, and why can your product deliver it?" /></Field>
             <div className="md:col-span-2"><Field label="Known competitors or alternatives" hint="Comma-separated. Include spreadsheets, agencies, manual work, or doing nothing."><Input value={competitors} onChange={(event) => setCompetitors(event.target.value)} placeholder="Competitor A, spreadsheets, internal workflow" /></Field></div>
             {intake.businessModel === 'b2b_saas' ? <Field label="Expected sales cycle"><Input value={intake.salesCycle ?? ''} onChange={(event) => update('salesCycle', event.target.value)} placeholder="Self-serve, 14 days, 2 months…" /></Field> : null}
-            {intake.businessModel === 'marketplace' ? <Field label="Which side needs focus first?"><Select value={intake.marketplaceSide ?? 'both'} onValueChange={(value) => update('marketplaceSide', value as GTMIntakeV2['marketplaceSide'])}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="supply">Supply</SelectItem><SelectItem value="demand">Demand</SelectItem><SelectItem value="both">Both</SelectItem></SelectContent></Select></Field> : null}
-            {intake.businessModel === 'ecommerce' ? <><Field label="Average order value"><Input type="number" min="0" value={intake.averageOrderValue ?? 0} onChange={(event) => update('averageOrderValue', Number(event.target.value) || 0)} /></Field><Field label="Repeat purchase model"><Input value={intake.repeatPurchaseModel ?? ''} onChange={(event) => update('repeatPurchaseModel', event.target.value)} placeholder="Monthly replenishment, one-off…" /></Field></> : null}
+            {intake.businessModel === 'marketplace' ? <Field label="Which side needs focus first?"><Select value={intake.marketplaceSide ?? ''} onValueChange={(value) => update('marketplaceSide', value as GTMIntakeV2['marketplaceSide'])}><SelectTrigger><SelectValue placeholder="Select marketplace side" /></SelectTrigger><SelectContent><SelectItem value="supply">Supply</SelectItem><SelectItem value="demand">Demand</SelectItem><SelectItem value="both">Both</SelectItem></SelectContent></Select></Field> : null}
+            {intake.businessModel === 'ecommerce' ? <><Field label="Average order value"><Input type="number" min="0" value={intake.averageOrderValue ?? ''} onChange={(event) => update('averageOrderValue', event.target.value === '' ? '' : Number(event.target.value))} placeholder="Enter value" /></Field><Field label="Repeat purchase model"><Input value={intake.repeatPurchaseModel ?? ''} onChange={(event) => update('repeatPurchaseModel', event.target.value)} placeholder="Monthly replenishment, one-off…" /></Field></> : null}
             {intake.businessModel === 'service' ? <Field label="Delivery capacity"><Input value={intake.serviceCapacity ?? ''} onChange={(event) => update('serviceCapacity', event.target.value)} placeholder="e.g. 4 new clients/month" /></Field> : null}
-            {intake.businessModel === 'media' ? <Field label="Six-week subscriber goal"><Input type="number" min="0" value={intake.subscriberGoal ?? 0} onChange={(event) => update('subscriberGoal', Number(event.target.value) || 0)} /></Field> : null}
+            {intake.businessModel === 'media' ? <Field label="Six-week subscriber goal"><Input type="number" min="0" value={intake.subscriberGoal ?? ''} onChange={(event) => update('subscriberGoal', event.target.value === '' ? '' : Number(event.target.value))} placeholder="Enter goal" /></Field> : null}
           </div>
         ) : null}
 
         {currentStep === 'constraints' ? (
           <div className="space-y-6">
             <div className="grid gap-5 md:grid-cols-2">
-              <Field label="Founder hours available per week"><Input type="number" min="1" max="80" value={intake.weeklyTimeHours} onChange={(event) => update('weeklyTimeHours', Number(event.target.value) || 0)} /></Field>
-              <Field label="Monthly GTM budget (USD)"><Input type="number" min="0" value={intake.monthlyBudget} onChange={(event) => update('monthlyBudget', Number(event.target.value) || 0)} /></Field>
+              <Field label="Founder hours available per week"><Input type="number" min="1" max="80" value={intake.weeklyTimeHours} onChange={(event) => update('weeklyTimeHours', event.target.value === '' ? '' : Number(event.target.value))} placeholder="Enter hours" /></Field>
+              <Field label="Monthly GTM budget (USD)"><Input type="number" min="0" value={intake.monthlyBudget} onChange={(event) => update('monthlyBudget', event.target.value === '' ? '' : Number(event.target.value))} placeholder="Enter budget" /></Field>
             </div>
             <Field label="Founder advantages" hint="Channel eligibility and scoring use these strengths.">
               <div className="flex flex-wrap gap-2">{STRENGTHS.map((strength) => <button key={strength} type="button" onClick={() => toggleStrength(strength)} className={cn('rounded-full border px-3 py-1.5 text-sm transition-colors', intake.founderStrengths.includes(strength) ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground hover:border-primary/50')}>{strength}</button>)}</div>

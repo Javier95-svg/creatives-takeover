@@ -90,7 +90,6 @@ export interface GTMAnalysis {
 }
 
 type Phase = 'intake' | 'analyzing' | 'results';
-type GTMContextSource = 'unselected' | 'mvp_project' | 'manual';
 
 export interface GTMMVPProjectOption {
   id: string;
@@ -134,7 +133,6 @@ export function useGTMStrategist() {
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [prefillV2, setPrefillV2] = useState<Partial<GTMIntakeV2>>({});
-  const [contextSource, setContextSource] = useState<GTMContextSource>('unselected');
   const [selectedMvpProjectId, setSelectedMvpProjectId] = useState<string | null>(null);
   const [mvpProjects, setMvpProjects] = useState<GTMMVPProjectOption[]>([]);
   const [isLoadingMvpProjects, setIsLoadingMvpProjects] = useState(true);
@@ -142,7 +140,7 @@ export function useGTMStrategist() {
   const [isReviewing, setIsReviewing] = useState(false);
   const [isRestoringPlan, setIsRestoringPlan] = useState(true);
 
-  // On mount: load existing plan or prefill data
+  // On mount: restore explicitly saved GTM work and load available MVP import sources.
   useEffect(() => {
     if (!user) return;
     void loadExistingPlan();
@@ -157,7 +155,7 @@ export function useGTMStrategist() {
         .from(GTM_TABLE)
         .select('id, plan_title, plan_content, status')
         .eq('user_id', user.id)
-        .in('status', ['saved', 'exported', 'draft'])
+        .in('status', ['saved', 'exported'])
         .order('updated_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -254,20 +252,7 @@ export function useGTMStrategist() {
     }
     setSelectedMvpProjectId(project.id);
     setPrefillV2(project.prefill);
-    setContextSource('mvp_project');
   }, [mvpProjects]);
-
-  const startManualIntake = useCallback(() => {
-    setSelectedMvpProjectId(null);
-    setPrefillV2({});
-    setContextSource('manual');
-  }, []);
-
-  const resetContextSource = useCallback(() => {
-    setSelectedMvpProjectId(null);
-    setPrefillV2({});
-    setContextSource('unselected');
-  }, []);
 
   const runAnalysis = useCallback(async (answers: GTMIntakeAnswers) => {
     if (!user) {
@@ -777,7 +762,6 @@ export function useGTMStrategist() {
     isReviewing,
     isRestoringPlan,
     prefillV2,
-    contextSource,
     selectedMvpProjectId,
     mvpProjects,
     isLoadingMvpProjects,
@@ -791,8 +775,6 @@ export function useGTMStrategist() {
     savePlan,
     exportPlan,
     importMvpProject,
-    startManualIntake,
-    resetContextSource,
     openDiagnose,
     resumeWorkspace,
     resetToIntake,
