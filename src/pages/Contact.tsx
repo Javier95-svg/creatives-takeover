@@ -15,9 +15,9 @@ const Contact = () => {
   return (
     <>
       <SEO
-        title="Contact Creatives Takeover - Get In Touch"
-        description="Contact Creatives Takeover. We're here to help with product questions, partnerships, and support. Reach out and we'll get back within 1-2 business days."
-        keywords="contact Creatives Takeover, support, customer service, partnerships, business inquiries, creative platform support"
+        title="Contact Creatives Takeover | Founder Support"
+        description="Contact Creatives Takeover for founder-tool support, product questions, partnerships, or media inquiries."
+        keywords="contact Creatives Takeover, founder support, startup tools, partnerships, media inquiries"
         url="/contact"
         canonical="https://creatives-takeover.com/contact"
         image="/og-image.png"
@@ -33,7 +33,7 @@ const Contact = () => {
           <section className="grid gap-6 md:grid-cols-2">
             <article className="p-6 rounded-lg border bg-card">
               <h2 className="text-xl font-semibold">Email</h2>
-              <a href="mailto:javier@admin-creatives-takeover.com" className="mt-2 text-muted-foreground hover:text-primary transition-colors duration-200 block">javier@admin-creatives-takeover.com</a>
+              <a href="mailto:javier@creatives-takeover.com" className="mt-2 text-muted-foreground hover:text-primary transition-colors duration-200 block">javier@creatives-takeover.com</a>
             </article>
             <article className="p-6 rounded-lg border bg-card">
               <h2 className="text-xl font-semibold">Community</h2>

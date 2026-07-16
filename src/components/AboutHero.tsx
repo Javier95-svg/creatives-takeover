@@ -21,7 +21,7 @@ const AboutHero = () => {
             </div>
               
             <div className="space-y-3 sm:space-y-4">
-              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">The biggest challenge isn't coming up with ideas but moving them from scattered brainstorming into real execution. Creatives Takeover transforms raw thoughts into clear, actionable roadmaps and creates an ecosystem where founders, entrepreneurs, creators, and freelancers collaborate to bring ideas to life.</p>
+              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">The biggest challenge is not coming up with ideas but moving them from scattered brainstorming into real execution. Creatives Takeover is The Founders' Compass: an AI startup builder that helps first-time founders validate, plan, build, launch, and prepare for fundraising.</p>
               <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">This isn't just a tool. It's an ecosystem designed for the next wave of builders who will define their own future instead of waiting for one to be handed to them.</p>
             </div>
 

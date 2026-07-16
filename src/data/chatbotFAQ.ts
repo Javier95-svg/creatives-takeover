@@ -43,7 +43,7 @@ export const chatbotFAQ: FAQItem[] = [
     priority: 9,
     quickActions: [
       { text: 'Start Planning', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/bizmap-ai', priority: 1 },
-      { text: 'Learn More', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/services', priority: 2 }
+      { text: 'Learn More', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/marketplace', priority: 2 }
     ],
     metadata: {
       views: 2847,
@@ -144,7 +144,7 @@ export const chatbotFAQ: FAQItem[] = [
     priority: 6,
     quickActions: [
       { text: 'Find Partners', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/accountability', priority: 1 },
-      { text: 'Learn More', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/services', priority: 2 }
+      { text: 'Learn More', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/marketplace', priority: 2 }
     ],
     metadata: {
       views: 756,
@@ -184,7 +184,7 @@ export const chatbotFAQ: FAQItem[] = [
     priority: 5,
     quickActions: [
       { text: 'See AI in Action', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/bizmap-ai', priority: 1 },
-      { text: 'Learn About Features', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/services', priority: 2 }
+      { text: 'Learn About Features', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/marketplace', priority: 2 }
     ],
     followUpQuestions: ['How does the Startup Development Cycle work?', 'What is Creatives Takeover?'],
     metadata: {
@@ -206,7 +206,7 @@ export const chatbotFAQ: FAQItem[] = [
     priority: 8,
     quickActions: [
       { text: 'Start Building', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/bizmap-ai', priority: 1 },
-      { text: 'View Template', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/services', priority: 2 }
+      { text: 'View Template', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/marketplace', priority: 2 }
     ],
     metadata: {
       views: 1456,
@@ -226,7 +226,7 @@ export const chatbotFAQ: FAQItem[] = [
     priority: 7,
     quickActions: [
       { text: 'Start Market Research', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/bizmap-ai', priority: 1 },
-      { text: 'View Sample Analysis', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/services', priority: 2 }
+      { text: 'View Sample Analysis', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/marketplace', priority: 2 }
     ],
     metadata: {
       views: 1234,
@@ -246,7 +246,7 @@ export const chatbotFAQ: FAQItem[] = [
     priority: 8,
     quickActions: [
       { text: 'Create Financial Model', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/bizmap-ai', priority: 1 },
-      { text: 'Learn More', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/services', priority: 2 }
+      { text: 'Learn More', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/marketplace', priority: 2 }
     ],
     metadata: {
       views: 987,
@@ -285,7 +285,7 @@ export const chatbotFAQ: FAQItem[] = [
     category: FAQCategory.TECHNICAL,
     priority: 6,
     quickActions: [
-      { text: 'View Integrations', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/services', priority: 1 },
+      { text: 'View Integrations', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/marketplace', priority: 1 },
       { text: 'API Documentation', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/api-docs', priority: 2 }
     ],
     metadata: {
@@ -304,7 +304,7 @@ export const getContextualFAQ = (currentPath: string): FAQItem[] => {
     '/pricing': ['pricing', 'free-trial', 'support'],
     '/bizmap-ai': ['how-it-works', 'ai-technology', 'business-plan-sections', 'market-research-tools'],
     '/mentorship': ['community', 'accountability', 'support'],
-    '/services': ['what-is-bizmap', 'accountability', 'ai-technology', 'integration-options'],
+    '/marketplace': ['what-is-bizmap', 'accountability', 'ai-technology', 'integration-options'],
     '/contact': ['support', 'pricing', 'free-trial'],
     '/financial': ['financial-projections', 'pricing', 'support'],
     '/market-research': ['market-research-tools', 'business-plan-sections', 'support'],

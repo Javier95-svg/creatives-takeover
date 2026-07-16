@@ -16,7 +16,14 @@
     { "source": "/community", "destination": "/mentorship", "permanent": true },
     { "source": "/waitlist/templates", "destination": "/demo-studio/classic/templates", "permanent": true },
     { "source": "/waitlist", "destination": "/demo-studio/classic", "permanent": true },
-    { "source": "/waitlist-maker", "destination": "/demo-studio/classic", "permanent": true }
+    { "source": "/waitlist-maker", "destination": "/demo-studio/classic", "permanent": true },
+    { "source": "/insighta/vc-search", "destination": "/vc-search", "permanent": true },
+    { "source": "/insighta/email-templates", "destination": "/email-templates", "permanent": true },
+    { "source": "/insighta/accelerator-hunt", "destination": "/accelerator-hunt", "permanent": true },
+    { "source": "/insighta/pitch-deck-analyzer", "destination": "/pitch-deck-analyzer", "permanent": true },
+    { "source": "/insighta/test", "destination": "/insighta-test", "permanent": true },
+    { "source": "/software", "destination": "/build", "permanent": true },
+    { "source": "/services", "destination": "/marketplace", "permanent": true }
   ],
   "rewrites": [
     {
@@ -34,6 +41,24 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
+    {
+      "source": "/(admin|auth|dashboard|projects-dashboard|messages|profile|account|referral-program|accountability|saved-mentors|files|focus-funnel|ai-goals|core-metrics|routine|weekly-mission|tasks)(.*)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    },
+    {
+      "source": "/(mentorship/(book|my-bookings|admin)|co-founder/(create|edit)|investors/admin|newspaper/admin|stories/admin|w/)(.*)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    },
+    {
+      "source": "/(login|sign-up|signup|forgot-password|reset-password|onboarding|setup-quiz|subscription-success|creatives-takeover|rag-test|test-phase1)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    },
     {
       "source": "/api/og-icp",
       "headers": [

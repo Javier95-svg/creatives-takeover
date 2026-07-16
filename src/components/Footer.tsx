@@ -7,7 +7,7 @@ const Footer = () => {
   return (
     <footer className="relative bg-background border-t border-border/60">
       <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 relative">
-        <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
           <section aria-labelledby="footer-address">
             <p className="text-sm text-muted-foreground">
               Creatives Takeover Ltd is a company registered in England and Wales (Company No. 16741912).
@@ -39,6 +39,26 @@ const Footer = () => {
               admin@creatives-takeover.com
             </a>
           </section>
+
+          <nav aria-labelledby="footer-explore">
+            <h2 id="footer-explore" className="text-sm font-semibold font-space-grotesk tracking-wide text-foreground">Explore</h2>
+            <ul className="mt-3 space-y-0 text-sm">
+              {[
+                ["/answers", "Founder Answers"],
+                ["/build", "MVP Builder"],
+                ["/marketplace", "Service Marketplace"],
+                ["/podcast", "Podcast"],
+                ["/resources", "Resources"],
+                ["/contact", "Contact"],
+              ].map(([to, label]) => (
+                <li key={to}>
+                  <Link className="inline-flex items-center min-h-[40px] py-1.5 hover:underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm transition-colors" to={to}>
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
 
           <nav aria-labelledby="footer-legal">
             <h2 id="footer-legal" className="text-sm font-semibold font-space-grotesk tracking-wide text-foreground">Legal</h2>

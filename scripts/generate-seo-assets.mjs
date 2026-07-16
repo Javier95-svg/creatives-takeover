@@ -12,9 +12,15 @@ const ROBOTS_PATH = path.join(PUBLIC_DIR, "robots.txt");
 // a runtime sitemap (/sitemap-articles.xml -> /api/sitemap-articles) that always
 // reflects the latest published stories without waiting for a rebuild.
 function generatePagesSitemapXml() {
+  const sitemapRoutes = INDEXABLE_ROUTES.filter(
+    (route) => route.indexable && route.prerender && route.path === route.canonicalPath,
+  );
+  if (sitemapRoutes.length !== INDEXABLE_ROUTES.length) {
+    throw new Error("Every configured sitemap route must be indexable, prerendered, and self-canonical.");
+  }
   // Only emit <lastmod> when the route declares a real update date. Stamping the
   // build date on every URL each deploy teaches Google to distrust lastmod sitewide.
-  const urls = INDEXABLE_ROUTES.map((route) => {
+  const urls = sitemapRoutes.map((route) => {
     const lastmod =
       route.lastmod || (route.updatedLabel ? updatedLabelToIso(route.updatedLabel) : null);
     return `  <url>

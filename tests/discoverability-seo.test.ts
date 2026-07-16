@@ -42,7 +42,7 @@ test("answer pages route to tool-specific conversion paths", () => {
 
 test("public routing and sitemap include the answer library", () => {
   const app = read("src/App.tsx");
-  const sitemap = read("public/sitemap.xml");
+  const sitemap = read("public/sitemap-pages.xml");
   const seoConfig = read("scripts/seo-route-config.mjs");
 
   assert.match(app, /path="\/answers"/);

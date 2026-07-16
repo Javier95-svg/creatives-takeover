@@ -35,7 +35,7 @@ const PlatformProcess = () => {
       title: "Track & Optimize",
       description: "Monitor your progress with analytics, market intelligence, and success scoring tools.",
       features: ["Performance tracking", "Market insights", "Success analytics"],
-      link: "/services"
+      link: "/marketplace"
     },
     {
       number: "04",

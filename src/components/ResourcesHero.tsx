@@ -46,44 +46,44 @@ const ResourcesHero = () => {
           <div className="flex items-center justify-center mb-8 animate-fade-in">
             <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 px-4 py-2">
               <Download className="w-4 h-4 mr-2" />
-              100,000+ downloads • Free creative resources
+              Practical startup guides • Free founder resources
             </Badge>
           </div>
 
           {/* Main Heading */}
           <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
             <h1 className="text-5xl lg:text-7xl font-bold mb-6 gradient-text leading-tight">
-              Creative Resources
+              Startup Resources
               <br />
-              <span className="text-primary">For Every Creator</span>
+              <span className="text-primary">For First-Time Founders</span>
             </h1>
           </div>
 
           {/* Value Proposition */}
           <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <p className="text-xl lg:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
-              Access our comprehensive library of <strong className="text-foreground">free creative resources</strong>, 
-              including tutorials, design guides, templates, and downloads to enhance your creative skills.
+              Use practical <strong className="text-foreground">founder guides and templates</strong> for
+              customer discovery, validation, MVP planning, go-to-market execution, and fundraising.
             </p>
           </div>
 
           {/* Resource Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 mb-12 animate-fade-in" style={{ animationDelay: '0.3s' }}>
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">500+</div>
-              <div className="text-muted-foreground">Free Tutorials</div>
+              <div className="text-3xl font-bold text-primary mb-2">25</div>
+              <div className="text-muted-foreground">Founder Answers</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">200+</div>
-              <div className="text-muted-foreground">Design Guides</div>
+              <div className="text-3xl font-bold text-primary mb-2">5</div>
+              <div className="text-muted-foreground">Startup Clusters</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">1000+</div>
-              <div className="text-muted-foreground">Free Downloads</div>
+              <div className="text-3xl font-bold text-primary mb-2">94</div>
+              <div className="text-muted-foreground">Founder Articles</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">100k+</div>
-              <div className="text-muted-foreground">Happy Learners</div>
+              <div className="text-3xl font-bold text-primary mb-2">Free</div>
+              <div className="text-muted-foreground">Answer Library</div>
             </div>
           </div>
 

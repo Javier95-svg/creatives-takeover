@@ -149,7 +149,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     slug: "ideal-customer-profile-template",
     cluster: "icp",
     title: "Ideal Customer Profile Template for Early-Stage Founders",
-    metaTitle: "Ideal Customer Profile Template for Startups | Creatives Takeover",
+    metaTitle: "Ideal Customer Profile Template for Startups",
     metaDescription:
       "Use this ideal customer profile template to clarify your target customer, pain point, urgency, buying trigger, and first validation channel.",
     keyword: "ideal customer profile template",
@@ -304,7 +304,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     slug: "how-to-validate-startup-idea",
     cluster: "validation",
     title: "How to Validate a Startup Idea Before Building",
-    metaTitle: "How to Validate a Startup Idea Before Building | Creatives Takeover",
+    metaTitle: "How to Validate a Startup Idea Before Building",
     metaDescription:
       "Validate a startup idea with ICP clarity, customer evidence, waitlist demand, and product-market fit signals before you build an MVP.",
     keyword: "how to validate startup idea",
@@ -1158,7 +1158,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     slug: "how-to-find-your-target-audience",
     cluster: "icp",
     title: "How to Find Your Target Audience as a Startup",
-    metaTitle: "How to Find Your Target Audience for a Startup | Creatives Takeover",
+    metaTitle: "How to Find Your Target Audience for a Startup",
     metaDescription:
       "Find your startup's target audience by ranking pain, locating where they gather, and testing one segment before you build for everyone.",
     keyword: "how to find your target audience",
@@ -1199,7 +1199,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     slug: "customer-interview-questions",
     cluster: "validation",
     title: "Customer Interview Questions That Reveal Real Demand",
-    metaTitle: "Customer Interview Questions for Startups | Creatives Takeover",
+    metaTitle: "Customer Interview Questions for Startup Validation",
     metaDescription:
       "Use these customer interview questions to uncover real pain, past behavior, and willingness to pay — without leading the witness.",
     keyword: "customer interview questions",
@@ -1240,7 +1240,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     slug: "signs-your-startup-idea-is-good",
     cluster: "validation",
     title: "Signs Your Startup Idea Is Actually Good",
-    metaTitle: "Signs Your Startup Idea Is Good (and When to Drop It) | Creatives Takeover",
+    metaTitle: "Signs Your Startup Idea Is Good—and When to Stop",
     metaDescription:
       "Learn the real signals that a startup idea is worth building — urgency, existing spend, and pull — and the red flags that mean you should stop.",
     keyword: "signs your startup idea is good",
@@ -1281,7 +1281,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     slug: "no-code-vs-code-for-mvp",
     cluster: "build",
     title: "No-Code vs Code for Your MVP",
-    metaTitle: "No-Code vs Code for an MVP: Which Should You Use? | Creatives Takeover",
+    metaTitle: "No-Code vs Code for an MVP: Which Should You Use?",
     metaDescription:
       "Decide between no-code and custom code for your MVP based on speed, your riskiest assumption, and what you actually need to prove first.",
     keyword: "no-code vs code for mvp",
@@ -1322,7 +1322,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     slug: "mvp-feature-prioritization",
     cluster: "build",
     title: "How to Prioritize MVP Features",
-    metaTitle: "How to Prioritize MVP Features (Cut the Rest) | Creatives Takeover",
+    metaTitle: "How to Prioritize MVP Features and Cut the Rest",
     metaDescription:
       "Prioritize MVP features by mapping each one to your riskiest assumption and the single core job — then cut everything that doesn't earn its place.",
     keyword: "mvp feature prioritization",
@@ -1363,7 +1363,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     slug: "how-to-get-first-100-users",
     cluster: "launch",
     title: "How to Get Your First 100 Users",
-    metaTitle: "How to Get Your First 100 Users for a Startup | Creatives Takeover",
+    metaTitle: "How to Get Your First 100 Startup Users",
     metaDescription:
       "Get your first 100 users with manual, unscalable outreach in the communities your ICP already lives in — before you touch paid ads.",
     keyword: "how to get first 100 users",
@@ -1445,7 +1445,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     slug: "cold-email-for-startups",
     cluster: "launch",
     title: "Cold Email for Startups That Gets Replies",
-    metaTitle: "Cold Email for Startups: Templates & Tactics | Creatives Takeover",
+    metaTitle: "Cold Email for Startups: Templates and Tactics",
     metaDescription:
       "Write cold emails that get replies: research the recipient, lead with their problem, keep it short, and make one specific ask.",
     keyword: "cold email for startups",
@@ -1472,7 +1472,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     ],
     cta: {
       label: "Get Outreach Templates",
-      href: "/insighta/email-templates?utm_source=seo&utm_medium=answer_page&utm_campaign=cold_email",
+      href: "/email-templates?utm_source=seo&utm_medium=answer_page&utm_campaign=cold_email",
       description: "Use proven outreach templates for customers and investors.",
     },
     faqs: [
@@ -1513,7 +1513,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     ],
     cta: {
       label: "Search Investors Free",
-      href: "/insighta/vc-search?utm_source=seo&utm_medium=answer_page&utm_campaign=find_investors",
+      href: "/vc-search?utm_source=seo&utm_medium=answer_page&utm_campaign=find_investors",
       description: "Filter a VC database by stage, sector, and check size.",
     },
     faqs: [
@@ -1554,7 +1554,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     ],
     cta: {
       label: "Check Fundraising Readiness",
-      href: "/insighta/test?utm_source=seo&utm_medium=answer_page&utm_campaign=preseed_vs_seed",
+      href: "/insighta-test?utm_source=seo&utm_medium=answer_page&utm_campaign=preseed_vs_seed",
       description: "Assess whether your evidence matches the stage you want to raise at.",
     },
     faqs: [
@@ -1568,7 +1568,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     slug: "startup-pitch-deck-outline",
     cluster: "fundraising",
     title: "Startup Pitch Deck Outline (Slide by Slide)",
-    metaTitle: "Startup Pitch Deck Outline, Slide by Slide | Creatives Takeover",
+    metaTitle: "Startup Pitch Deck Outline: Slide by Slide",
     metaDescription:
       "Use this pitch deck outline to tell a tight investor story: problem, solution, market, traction, business model, team, and the ask.",
     keyword: "startup pitch deck outline",
@@ -1595,7 +1595,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     ],
     cta: {
       label: "Analyze My Pitch Deck",
-      href: "/insighta/pitch-deck-analyzer?utm_source=seo&utm_medium=answer_page&utm_campaign=deck_outline",
+      href: "/pitch-deck-analyzer?utm_source=seo&utm_medium=answer_page&utm_campaign=deck_outline",
       description: "Score your deck on narrative, clarity, traction, and readiness.",
     },
     faqs: [

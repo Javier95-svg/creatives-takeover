@@ -24,6 +24,8 @@ import { useInteractionTelemetry } from "@/hooks/useInteractionTelemetry";
 import { captureReferralFromUrl } from "@/lib/referral";
 import { ActivationFocusShell } from '@/components/activation/ActivationFocusShell';
 import { ActivationResumeBanner } from '@/components/activation/ActivationResumeBanner';
+import RouteRobots from "@/components/RouteRobots";
+import SeoRouteObserver from "@/components/SeoRouteObserver";
 
 const PulseWidget = lazy(() => import("@/components/pulse/PulseWidget"));
 const MobileBottomNav = lazy(() =>
@@ -47,8 +49,6 @@ const Resources = lazy(() => import("./pages/Resources"));
 const FounderAnswerLibrary = lazy(() => import("./pages/FounderAnswerLibrary"));
 const FounderAnswerPage = lazy(() => import("./pages/FounderAnswerPage"));
 const StartupGuide = lazy(() => import("./pages/StartupGuide"));
-const Services = lazy(() => import("./pages/Services"));
-const Software = lazy(() => import("./pages/Software"));
 const CommunityPage = lazy(() => import("./pages/CommunityPage"));
 const ProgressCommunityPage = lazy(() => import("./pages/ProgressCommunityPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -221,6 +221,8 @@ function App() {
                 <BrowserRouter>
                   <Suspense fallback={<div style={{ minHeight: '100vh', background: '#1a1a2e' }} />}>
                     <ScrollToTop />
+                    <RouteRobots />
+                    <SeoRouteObserver />
                     <InteractionTelemetryBridge />
                     <ReferralCaptureBridge />
                     <ActivationFocusShell />
@@ -243,8 +245,8 @@ function App() {
                         <Route path="/answers" element={<FounderAnswerLibrary />} />
                         <Route path="/answers/:slug" element={<FounderAnswerPage />} />
                         <Route path="/startup-guide" element={<StartupGuide />} />
-                        <Route path="/services" element={<Services />} />
-                        <Route path="/software" element={<Software />} />
+                        <Route path="/services" element={<Navigate to="/marketplace" replace />} />
+                        <Route path="/software" element={<Navigate to="/build" replace />} />
                         <Route path="/mentorship" element={<CommunityPage />} />
                         <Route path="/mentorship/progress" element={<ProgressCommunityPage />} />
                         <Route path="/mentorship/mentors/:id" element={<MentorProfilePage />} />

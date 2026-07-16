@@ -55,9 +55,10 @@ const MissionVision = () => {
                     <figure className="relative">
                       <img
                         src={missionImg}
-                        alt="Creators using AI tools to launch startups quickly"
+                        alt="Founders using AI tools to validate and launch startups"
                         className="w-full h-full object-cover"
                         loading="lazy"
+                        decoding="async"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-background/10 to-transparent" />
                     </figure>
@@ -93,6 +94,7 @@ const MissionVision = () => {
                         alt="Future-facing creative technology empowering global founders"
                         className="w-full h-full object-cover"
                         loading="lazy"
+                        decoding="async"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-background/10 to-transparent" />
                     </figure>

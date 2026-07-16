@@ -9,6 +9,10 @@ public_pages:
 - /
 - /startup-guide
 - /pricing
+- /build
+- /contact
+- /marketplace
+- /podcast
 - /about
 - /faq
 - /resources
@@ -31,10 +35,11 @@ public_pages:
 
 # Fundraising Tools (Insighta suite)
 - /insighta
-- /insighta/vc-search
-- /insighta/pitch-deck-analyzer
-- /insighta/email-templates
-- /insighta/accelerator-hunt
+- /vc-search
+- /pitch-deck-analyzer
+- /email-templates
+- /accelerator-hunt
+- /insighta-test
 
 # Community & Mentorship
 - /mentorship

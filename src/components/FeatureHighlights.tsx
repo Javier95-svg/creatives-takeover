@@ -145,7 +145,7 @@ const FeatureHighlights = () => {
               </Link>
             </Button>
             <Button variant="outline" size="lg" className="text-lg px-8 py-6" asChild>
-              <Link to="/services">
+              <Link to="/marketplace">
                 Explore AI Tools
               </Link>
             </Button>

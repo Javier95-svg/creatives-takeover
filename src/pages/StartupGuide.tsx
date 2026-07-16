@@ -112,7 +112,7 @@ const STAGES = [
       { slug: "vc-search-for-startups", label: "VC Search for Startups: Build a Better Investor List" },
       { slug: "accelerator-alternatives", label: "Accelerator Alternatives for Founders Who Want to Build Now" },
     ],
-    cta: { label: "Search Investors", href: "/insighta/vc-search" },
+    cta: { label: "Search Investors", href: "/vc-search" },
     checklist: [
       "Traction evidence documented",
       "Pitch deck narrative audited",
