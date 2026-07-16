@@ -18,7 +18,6 @@ import {
 } from '@/lib/analytics';
 import { createIdempotencyKey } from '@/lib/idempotency';
 import {
-  createLegacyUpgradeIntake,
   isGTMPlanV2,
   type GTMIntakeV2,
   type GTMPlanV2,
@@ -153,9 +152,10 @@ export function useGTMStrategist() {
     try {
       const { data } = await supabase
         .from(GTM_TABLE)
-        .select('id, plan_title, plan_content, status')
+        .select('id, plan_title, plan_content, status, schema_version')
         .eq('user_id', user.id)
         .in('status', ['saved', 'exported'])
+        .eq('schema_version', 2)
         .order('updated_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -163,48 +163,44 @@ export function useGTMStrategist() {
       if (!data) return;
 
       const content = (data as any).plan_content;
-      if (content && content.channels && content.positioning) {
+      if (isGTMPlanV2(content)) {
         setAnalysis(content as GTMAnalysis | GTMPlanV2);
         setPlanId((data as any).id);
-        if (isGTMPlanV2(content)) {
-          setPrefillV2(content.intake);
-          setPhase('results');
-          const { data: reviewData } = await supabase
-            .from('gtm_weekly_reviews')
-            .select('*')
-            .eq('plan_id', (data as any).id)
-            .eq('user_id', user.id)
-            .order('week_start', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          if (reviewData) {
-            const latestReview = reviewData as any;
-            setWeeklyReview({
-              id: reviewData.id,
-              planId: reviewData.plan_id,
-              weekStart: reviewData.week_start,
-              decision: reviewData.decision as GTMWeeklyReview['decision'],
-              nextBestAction: reviewData.next_best_action,
-              evidenceSummary: reviewData.evidence_summary,
-              activePlayId: reviewData.play_id ?? undefined,
-              tractionExperimentId: reviewData.traction_experiment_id ?? undefined,
-              adaptation: latestReview.adaptation ? {
-                week: Number(latestReview.adaptation.week),
-                previousObjective: latestReview.adaptation.previousObjective ?? undefined,
-                nextObjective: latestReview.adaptation.nextObjective,
-                nextActions: latestReview.adaptation.nextActions ?? [],
-                changedVariables: latestReview.adaptation.changedVariables ?? [],
-                rationale: latestReview.adaptation.rationale ?? undefined,
-              } : undefined,
-              reviewInput: latestReview.review_input ?? undefined,
-              signals: latestReview.signals ?? [],
-              changeLog: latestReview.change_log ?? [],
-              healthSnapshot: latestReview.health_snapshot ?? undefined,
-              createdAt: reviewData.created_at,
-            });
-          }
-        } else {
-          setPrefillV2(createLegacyUpgradeIntake(content as Record<string, any>));
+        setPrefillV2(content.intake);
+        setPhase('results');
+        const { data: reviewData } = await supabase
+          .from('gtm_weekly_reviews')
+          .select('*')
+          .eq('plan_id', (data as any).id)
+          .eq('user_id', user.id)
+          .order('week_start', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (reviewData) {
+          const latestReview = reviewData as any;
+          setWeeklyReview({
+            id: reviewData.id,
+            planId: reviewData.plan_id,
+            weekStart: reviewData.week_start,
+            decision: reviewData.decision as GTMWeeklyReview['decision'],
+            nextBestAction: reviewData.next_best_action,
+            evidenceSummary: reviewData.evidence_summary,
+            activePlayId: reviewData.play_id ?? undefined,
+            tractionExperimentId: reviewData.traction_experiment_id ?? undefined,
+            adaptation: latestReview.adaptation ? {
+              week: Number(latestReview.adaptation.week),
+              previousObjective: latestReview.adaptation.previousObjective ?? undefined,
+              nextObjective: latestReview.adaptation.nextObjective,
+              nextActions: latestReview.adaptation.nextActions ?? [],
+              changedVariables: latestReview.adaptation.changedVariables ?? [],
+              rationale: latestReview.adaptation.rationale ?? undefined,
+            } : undefined,
+            reviewInput: latestReview.review_input ?? undefined,
+            signals: latestReview.signals ?? [],
+            changeLog: latestReview.change_log ?? [],
+            healthSnapshot: latestReview.health_snapshot ?? undefined,
+            createdAt: reviewData.created_at,
+          });
         }
       }
     } catch (err) {

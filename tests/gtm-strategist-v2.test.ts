@@ -143,7 +143,7 @@ test('migration and handoffs preserve ownership, versions, and exact source IDs'
   assert.match(analyzer, /resolveCreditIdempotencyKey/);
 });
 
-test('valid V2 workspaces resume directly while legacy plans still require an explicit upgrade', () => {
+test('only explicitly saved V2 workspaces resume; legacy GTM rows cannot prefill a new intake', () => {
   const hook = readFileSync(new URL('../src/hooks/useGTMStrategist.ts', import.meta.url), 'utf8');
   const page = readFileSync(new URL('../src/pages/GTMStrategistPage.tsx', import.meta.url), 'utf8');
   const intake = readFileSync(new URL('../src/components/gtm/GTMWorkspaceIntake.tsx', import.meta.url), 'utf8');
@@ -153,6 +153,8 @@ test('valid V2 workspaces resume directly while legacy plans still require an ex
   assert.ok(restoreStart >= 0 && restoreEnd > restoreStart);
   assert.match(restoreFlow, /isGTMPlanV2\(content\)[\s\S]*setPhase\('results'\)/);
   assert.match(restoreFlow, /setPrefillV2/);
+  assert.match(restoreFlow, /\.eq\('schema_version', 2\)/);
+  assert.doesNotMatch(restoreFlow, /createLegacyUpgradeIntake/);
   assert.match(page, /isRestoringPlan/);
   assert.match(page, /onCancel=\{v2Analysis && planId \? resumeWorkspace/);
   assert.doesNotMatch(page, /RelatedToolsSection/);
