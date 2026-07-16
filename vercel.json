@@ -1,4 +1,5 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "redirects": [
@@ -42,19 +43,37 @@
   ],
   "headers": [
     {
-      "source": "/(admin|auth|dashboard|projects-dashboard|messages|profile|account|referral-program|accountability|saved-mentors|files|focus-funnel|ai-goals|core-metrics|routine|weekly-mission|tasks)(.*)",
+      "source": "/:privateRoot(admin|auth|dashboard|projects-dashboard|messages|profile|account|referral-program|accountability|saved-mentors|files|focus-funnel|ai-goals|core-metrics|routine|weekly-mission|tasks)/:path*",
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
       ]
     },
     {
-      "source": "/(mentorship/(book|my-bookings|admin)|co-founder/(create|edit)|investors/admin|newspaper/admin|stories/admin|w/)(.*)",
+      "source": "/mentorship/:privateArea(book|my-bookings|admin)/:path*",
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
       ]
     },
     {
-      "source": "/(login|sign-up|signup|forgot-password|reset-password|onboarding|setup-quiz|subscription-success|creatives-takeover|rag-test|test-phase1)",
+      "source": "/co-founder/:privateArea(create|edit)/:path*",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    },
+    {
+      "source": "/:privateRoot(investors|newspaper|stories)/admin/:path*",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    },
+    {
+      "source": "/w/:path*",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    },
+    {
+      "source": "/:privatePage(login|sign-up|signup|forgot-password|reset-password|onboarding|setup-quiz|subscription-success|creatives-takeover|rag-test|test-phase1)",
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
       ]
