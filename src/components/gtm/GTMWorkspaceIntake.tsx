@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, CheckCircle2, Database, Globe2, Loader2, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, Database, Globe2, Loader2, Save, ShieldCheck, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { CreditCostNotice } from '@/components/CreditCostNotice';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import type { GTMBusinessModel, GTMIntakeV2 } from '@/lib/gtmV2';
 
@@ -55,6 +57,29 @@ const defaults: GTMIntakeV2 = {
   sixWeekOutcome: '',
 };
 
+const GTM_INTAKE_DRAFT_VERSION = 1;
+
+interface GTMIntakeDraft {
+  version: typeof GTM_INTAKE_DRAFT_VERSION;
+  intake: GTMIntakeV2;
+  evidenceNotes: string;
+  updatedAt: number;
+}
+
+const readIntakeDraft = (storageKey: string): GTMIntakeDraft | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const saved = window.localStorage.getItem(storageKey);
+    if (!saved) return null;
+    const draft = JSON.parse(saved) as Partial<GTMIntakeDraft>;
+    if (draft.version !== GTM_INTAKE_DRAFT_VERSION || !draft.intake || typeof draft.intake !== 'object') return null;
+    return draft as GTMIntakeDraft;
+  } catch (error) {
+    console.warn('Could not restore the saved GTM intake draft.', error);
+    return null;
+  }
+};
+
 const Field = ({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) => (
   <div className="space-y-2">
     <Label>{label}</Label>
@@ -88,17 +113,37 @@ const missingForModel = (prefill: Partial<GTMIntakeV2>, model: GTMBusinessModel)
 };
 
 export default function GTMWorkspaceIntake({ prefill, isSubmitting = false, isRegeneration = false, onSubmit, onCancel }: GTMWorkspaceIntakeProps) {
+  const { user } = useAuth();
+  const draftStorageKey = `gtm-strategist-intake-draft:${user?.id ?? 'guest'}`;
+  const savedDraft = useMemo(
+    () => isRegeneration ? null : readIntakeDraft(draftStorageKey),
+    [draftStorageKey, isRegeneration],
+  );
+  const effectivePrefill = useMemo<Partial<GTMIntakeV2>>(
+    () => {
+      const merged = { ...prefill };
+      for (const [key, value] of Object.entries(savedDraft?.intake ?? {})) {
+        const field = key as keyof GTMIntakeV2;
+        const isDefaultValue = !hasValue(value) || JSON.stringify(value) === JSON.stringify(defaults[field]);
+        if (!isDefaultValue || !hasValue(merged[field])) {
+          (merged as Record<string, unknown>)[field] = value;
+        }
+      }
+      return merged;
+    },
+    [prefill, savedDraft],
+  );
   const [step, setStep] = useState(0);
-  const [intake, setIntake] = useState<GTMIntakeV2>({ ...defaults, ...prefill });
-  const [competitors, setCompetitors] = useState((prefill.knownCompetitors ?? []).join(', '));
-  const [evidenceNotes, setEvidenceNotes] = useState((prefill.firstPartyEvidence ?? []).find((item) => item.id === 'founder-research-notes')?.content ?? '');
+  const [intake, setIntake] = useState<GTMIntakeV2>({ ...defaults, ...effectivePrefill });
+  const [competitors, setCompetitors] = useState((effectivePrefill.knownCompetitors ?? []).join(', '));
+  const [evidenceNotes, setEvidenceNotes] = useState(savedDraft?.evidenceNotes ?? (effectivePrefill.firstPartyEvidence ?? []).find((item) => item.id === 'founder-research-notes')?.content ?? '');
   const activeSteps = useMemo<IntakeStep[]>(() => {
-    const missing = missingForModel(prefill, prefill.businessModel ?? defaults.businessModel);
+    const missing = missingForModel(effectivePrefill, effectivePrefill.businessModel ?? defaults.businessModel);
     return [
       ...(Object.keys(missing) as Array<Exclude<IntakeStep, 'confirm'>>).filter((key) => missing[key]),
       'confirm',
     ];
-  }, [prefill]);
+  }, [effectivePrefill]);
   const currentStep = activeSteps[step] ?? 'confirm';
   const activeStepsKey = activeSteps.join('|');
   const importedFieldCount = useMemo(() => Object.values(prefill).filter(hasValue).length, [prefill]);
@@ -106,7 +151,7 @@ export default function GTMWorkspaceIntake({ prefill, isSubmitting = false, isRe
   useEffect(() => {
     setIntake((current) => {
       const next = { ...current };
-      for (const [key, value] of Object.entries(prefill)) {
+      for (const [key, value] of Object.entries(effectivePrefill)) {
         const field = key as keyof GTMIntakeV2;
         const currentValue = current[field];
         if (value !== undefined && value !== null && (currentValue === '' || currentValue === undefined || currentValue === defaults[field])) {
@@ -115,8 +160,10 @@ export default function GTMWorkspaceIntake({ prefill, isSubmitting = false, isRe
       }
       return next;
     });
-    if ((prefill.knownCompetitors?.length ?? 0) > 0) setCompetitors(prefill.knownCompetitors!.join(', '));
-  }, [prefill]);
+    if ((effectivePrefill.knownCompetitors?.length ?? 0) > 0) setCompetitors(effectivePrefill.knownCompetitors!.join(', '));
+    const importedEvidenceNotes = effectivePrefill.firstPartyEvidence?.find((item) => item.id === 'founder-research-notes')?.content;
+    if (importedEvidenceNotes) setEvidenceNotes((current) => current || importedEvidenceNotes);
+  }, [effectivePrefill]);
 
   useEffect(() => {
     setStep(0);
@@ -144,9 +191,9 @@ export default function GTMWorkspaceIntake({ prefill, isSubmitting = false, isRe
       : [...intake.founderStrengths, strength]);
   };
 
-  const submit = () => {
+  const buildIntake = (): GTMIntakeV2 => {
     const priorEvidence = (intake.firstPartyEvidence ?? []).filter((item) => item.id !== 'founder-research-notes');
-    onSubmit({
+    return {
       ...intake,
       knownCompetitors: competitors.split(',').map((value) => value.trim()).filter(Boolean).slice(0, 8),
       firstPartyEvidence: evidenceNotes.trim().length >= 20 ? [...priorEvidence, {
@@ -157,7 +204,28 @@ export default function GTMWorkspaceIntake({ prefill, isSubmitting = false, isRe
         verified: false,
         createdAt: new Date().toISOString(),
       }] : priorEvidence,
-    });
+    };
+  };
+
+  const saveDraft = () => {
+    if (typeof window === 'undefined') return;
+    const payload: GTMIntakeDraft = {
+      version: GTM_INTAKE_DRAFT_VERSION,
+      intake: buildIntake(),
+      evidenceNotes,
+      updatedAt: Date.now(),
+    };
+    try {
+      window.localStorage.setItem(draftStorageKey, JSON.stringify(payload));
+      toast.success('GTM progress saved on this device.');
+    } catch (error) {
+      console.error('Could not save the GTM intake draft.', error);
+      toast.error('Could not save your GTM progress right now.');
+    }
+  };
+
+  const submit = () => {
+    onSubmit(buildIntake());
   };
 
   return (
@@ -278,9 +346,14 @@ export default function GTMWorkspaceIntake({ prefill, isSubmitting = false, isRe
         <div className="flex gap-2">
           {step > 0 ? <Button type="button" variant="outline" onClick={() => setStep((current) => current - 1)}><ArrowLeft className="mr-2 h-4 w-4" />Back</Button> : onCancel ? <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button> : null}
         </div>
-        <Button type="button" disabled={!canContinue || isSubmitting} onClick={() => step < activeSteps.length - 1 ? setStep((current) => current + 1) : submit()}>
-          {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Building system…</> : step < activeSteps.length - 1 ? <>Continue<ArrowRight className="ml-2 h-4 w-4" /></> : <>{isRegeneration ? 'Regenerate GTM system' : 'Build GTM system'}<Sparkles className="ml-2 h-4 w-4" /></>}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button type="button" variant="outline" disabled={isSubmitting} onClick={saveDraft}>
+            <Save className="mr-2 h-4 w-4" />Save
+          </Button>
+          <Button type="button" disabled={!canContinue || isSubmitting} onClick={() => step < activeSteps.length - 1 ? setStep((current) => current + 1) : submit()}>
+            {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Building system…</> : step < activeSteps.length - 1 ? <>Continue<ArrowRight className="ml-2 h-4 w-4" /></> : <>{isRegeneration ? 'Regenerate GTM system' : 'Build GTM system'}<Sparkles className="ml-2 h-4 w-4" /></>}
+          </Button>
+        </div>
       </div>
     </div>
   );
