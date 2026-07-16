@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import PageFAQSection from '@/components/seo/PageFAQSection';
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
+import GTMContextSourcePicker from '@/components/gtm/GTMContextSourcePicker';
 import GTMWorkspaceIntake from '@/components/gtm/GTMWorkspaceIntake';
 import GTMWorkspace from '@/components/gtm/GTMWorkspace';
 import GTMAnalysisLoader from '@/components/gtm/GTMAnalysisLoader';
@@ -65,6 +66,10 @@ export default function GTMStrategistPage() {
     isReviewing,
     isRestoringPlan,
     prefillV2,
+    contextSource,
+    selectedMvpProjectId,
+    mvpProjects,
+    isLoadingMvpProjects,
     weeklyReview,
     runV2Analysis,
     updatePlay,
@@ -73,6 +78,9 @@ export default function GTMStrategistPage() {
     runWeeklyReview,
     savePlan,
     exportPlan,
+    importMvpProject,
+    startManualIntake,
+    resetContextSource,
     openDiagnose,
     resumeWorkspace,
   } = useGTMStrategist();
@@ -113,12 +121,22 @@ export default function GTMStrategistPage() {
             ) : hasAccess ? (
               <>
                 {isRestoringPlan ? <GTMAnalysisLoader /> : null}
-                {!isRestoringPlan && phase === 'intake' ? (
+                {!isRestoringPlan && phase === 'intake' && !analysis && contextSource === 'unselected' ? (
+                  <GTMContextSourcePicker
+                    projects={mvpProjects}
+                    isLoading={isLoadingMvpProjects}
+                    onImportProject={importMvpProject}
+                    onStartManual={startManualIntake}
+                  />
+                ) : null}
+                {!isRestoringPlan && phase === 'intake' && (Boolean(analysis) || contextSource !== 'unselected') ? (
                   <GTMWorkspaceIntake
                     prefill={v2Analysis?.intake ?? prefillV2}
-                    isRegeneration={Boolean(planId)}
+                    draftScope={selectedMvpProjectId ? `mvp-${selectedMvpProjectId}` : planId ? `plan-${planId}` : 'manual'}
+                    isRegeneration={Boolean(v2Analysis && planId)}
                     onSubmit={(intake) => void runV2Analysis(intake, Boolean(planId))}
-                    onCancel={v2Analysis && planId ? resumeWorkspace : undefined}
+                    onCancel={v2Analysis && planId ? resumeWorkspace : contextSource !== 'unselected' ? resetContextSource : undefined}
+                    cancelLabel={v2Analysis && planId ? 'Cancel' : 'Change source'}
                   />
                 ) : null}
                 {!isRestoringPlan && phase === 'analyzing' ? <GTMAnalysisLoader /> : null}

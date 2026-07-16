@@ -14,10 +14,12 @@ import type { GTMBusinessModel, GTMIntakeV2 } from '@/lib/gtmV2';
 
 interface GTMWorkspaceIntakeProps {
   prefill: Partial<GTMIntakeV2>;
+  draftScope?: string;
   isSubmitting?: boolean;
   isRegeneration?: boolean;
   onSubmit: (intake: GTMIntakeV2) => void;
   onCancel?: () => void;
+  cancelLabel?: string;
 }
 
 const MODELS: Array<{ value: GTMBusinessModel; label: string }> = [
@@ -112,9 +114,9 @@ const missingForModel = (prefill: Partial<GTMIntakeV2>, model: GTMBusinessModel)
   return missing;
 };
 
-export default function GTMWorkspaceIntake({ prefill, isSubmitting = false, isRegeneration = false, onSubmit, onCancel }: GTMWorkspaceIntakeProps) {
+export default function GTMWorkspaceIntake({ prefill, draftScope = 'manual', isSubmitting = false, isRegeneration = false, onSubmit, onCancel, cancelLabel = 'Cancel' }: GTMWorkspaceIntakeProps) {
   const { user } = useAuth();
-  const draftStorageKey = `gtm-strategist-intake-draft:${user?.id ?? 'guest'}`;
+  const draftStorageKey = `gtm-strategist-intake-draft:${user?.id ?? 'guest'}:${draftScope}`;
   const savedDraft = useMemo(
     () => isRegeneration ? null : readIntakeDraft(draftStorageKey),
     [draftStorageKey, isRegeneration],
@@ -344,7 +346,7 @@ export default function GTMWorkspaceIntake({ prefill, isSubmitting = false, isRe
 
       <div className="flex items-center justify-between gap-3">
         <div className="flex gap-2">
-          {step > 0 ? <Button type="button" variant="outline" onClick={() => setStep((current) => current - 1)}><ArrowLeft className="mr-2 h-4 w-4" />Back</Button> : onCancel ? <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button> : null}
+          {step > 0 ? <Button type="button" variant="outline" onClick={() => setStep((current) => current - 1)}><ArrowLeft className="mr-2 h-4 w-4" />Back</Button> : onCancel ? <Button type="button" variant="outline" onClick={onCancel}><ArrowLeft className="mr-2 h-4 w-4" />{cancelLabel}</Button> : null}
         </div>
         <div className="flex items-center gap-2">
           <Button type="button" variant="outline" disabled={isSubmitting} onClick={saveDraft}>

@@ -90,8 +90,37 @@ export interface GTMAnalysis {
 }
 
 type Phase = 'intake' | 'analyzing' | 'results';
+type GTMContextSource = 'unselected' | 'mvp_project' | 'manual';
+
+export interface GTMMVPProjectOption {
+  id: string;
+  title: string;
+  deploymentUrl: string | null;
+  deploymentStatus: string;
+  updatedAt: string;
+  prefill: Partial<GTMIntakeV2>;
+}
 
 const GTM_TABLE = 'gtm_plans' as any;
+
+const asRecord = (value: unknown): Record<string, unknown> =>
+  value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
+
+const textValue = (value: unknown): string => typeof value === 'string' ? value.trim() : '';
+
+const createMvpProjectPrefill = (row: Record<string, unknown>): Partial<GTMIntakeV2> => {
+  const metadata = asRecord(row.metadata);
+  const setupInput = asRecord(metadata.setupInput);
+  const deploymentUrl = textValue(row.deployment_url);
+  return {
+    productName: textValue(setupInput.productName) || textValue(row.title),
+    productUrl: deploymentUrl,
+    lifecycle: deploymentUrl || row.deployment_status === 'deployed' ? 'live' : 'launch_ready',
+    targetSegment: textValue(setupInput.validatedTargetSegment),
+    problem: textValue(setupInput.validatedProblemStatement) || textValue(setupInput.keyPainLanguage),
+    solution: textValue(setupInput.oneLineDescription),
+  };
+};
 
 export function useGTMStrategist() {
   const navigate = useNavigate();
@@ -104,9 +133,11 @@ export function useGTMStrategist() {
   const [planId, setPlanId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [prefillData, setPrefillData] = useState<Partial<GTMIntakeAnswers>>({});
   const [prefillV2, setPrefillV2] = useState<Partial<GTMIntakeV2>>({});
-  const [prefillSource, setPrefillSource] = useState<'waitlist_launch_kit' | 'icp_builder' | null>(null);
+  const [contextSource, setContextSource] = useState<GTMContextSource>('unselected');
+  const [selectedMvpProjectId, setSelectedMvpProjectId] = useState<string | null>(null);
+  const [mvpProjects, setMvpProjects] = useState<GTMMVPProjectOption[]>([]);
+  const [isLoadingMvpProjects, setIsLoadingMvpProjects] = useState(true);
   const [weeklyReview, setWeeklyReview] = useState<GTMWeeklyReview | null>(null);
   const [isReviewing, setIsReviewing] = useState(false);
   const [isRestoringPlan, setIsRestoringPlan] = useState(true);
@@ -115,7 +146,7 @@ export function useGTMStrategist() {
   useEffect(() => {
     if (!user) return;
     void loadExistingPlan();
-    void loadPrefillData();
+    void loadMvpProjects();
   // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [user]);
 
@@ -185,107 +216,58 @@ export function useGTMStrategist() {
     }
   }, [user]);
 
-  const loadPrefillData = useCallback(async () => {
-    if (!user) return;
+  const loadMvpProjects = useCallback(async () => {
+    if (!user) {
+      setMvpProjects([]);
+      setIsLoadingMvpProjects(false);
+      return;
+    }
+    setIsLoadingMvpProjects(true);
     try {
-      const [pmfResult, mvpResult, tractionResult] = await Promise.all([
-        supabase
-          .from('pmf_analysis_results' as any)
-          .select('analysis_data,target_market,pmf_score')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-        supabase
-          .from('mvp_projects' as any)
-          .select('title,deployment_url,deployment_status,metadata')
-          .eq('user_id', user.id)
-          .order('updated_at', { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-        supabase
-          .from('traction_engine_weekly_logs' as any)
-          .select('new_users,primary_acquisition_channel,revenue,combined_score')
-          .eq('user_id', user.id)
-          .order('week_start_date', { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-      ]);
-      const pmf = pmfResult.data as any;
-      const mvp = mvpResult.data as any;
-      const traction = tractionResult.data as any;
-      setPrefillV2((current) => ({
-        ...current,
-        productName: mvp?.title || current.productName,
-        productUrl: mvp?.deployment_url || current.productUrl,
-        lifecycle: mvp?.deployment_url || mvp?.deployment_status === 'deployed' ? 'live' : current.lifecycle ?? 'launch_ready',
-        targetSegment: pmf?.target_market || current.targetSegment,
-        currentTraction: traction
-          ? `${traction.new_users ?? 0} new users last week via ${traction.primary_acquisition_channel || 'unattributed'}${traction.revenue ? `; $${traction.revenue} revenue` : ''}; traction score ${traction.combined_score ?? 0}/100`
-          : current.currentTraction,
-      }));
-
-      const { data: waitlistData } = await (supabase as any)
-        .from('waitlist_pages')
-        .select('product_name, metadata, ai_content')
+      const { data, error } = await supabase
+        .from('mvp_projects' as any)
+        .select('id,title,deployment_url,deployment_status,metadata,updated_at')
         .eq('user_id', user.id)
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      const waitlistMetadata = (waitlistData as any)?.metadata;
-      const waitlistPositioning = waitlistMetadata?.projectContext?.positioningStatement;
-      if (typeof waitlistPositioning === 'string' && waitlistPositioning.trim()) {
-        const waitlistContent = (waitlistData as any)?.ai_content;
-        setPrefillV2((current) => ({
-          ...current,
-          productName: (waitlistData as any)?.product_name || current.productName,
-          targetSegment: typeof waitlistContent?.subheadline === 'string' ? waitlistContent.subheadline : current.targetSegment,
-          problem: waitlistPositioning.trim(),
-          solution: waitlistPositioning.trim(),
-        }));
-        setPrefillData({
-          targetAudience: typeof waitlistContent?.subheadline === 'string' ? waitlistContent.subheadline : undefined,
-          problemAndSolution: waitlistPositioning.trim(),
-        });
-        setPrefillSource('waitlist_launch_kit');
-      }
-
-      const { data } = await supabase
-        .from('icp_analysis_results' as any)
-        .select('analysis_data, target_audience')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (!data) return;
-
-      const analysisData = (data as any).analysis_data;
-      const prefill: Partial<GTMIntakeAnswers> = {};
-
-      if ((data as any).target_audience) {
-        prefill.targetAudience = (data as any).target_audience;
-      }
-      if (analysisData?.positioningStrategy?.uniqueValueProposition) {
-        prefill.problemAndSolution = analysisData.positioningStrategy.uniqueValueProposition;
-      }
-
-      if (Object.keys(prefill).length > 0) {
-        setPrefillData(prefill);
-        setPrefillSource('icp_builder');
-        setPrefillV2((current) => ({
-          ...current,
-          targetSegment: prefill.targetAudience || current.targetSegment,
-          problem: prefill.problemAndSolution || current.problem,
-          solution: prefill.problemAndSolution || current.solution,
-          buyingTrigger: analysisData?.behavioralTriggers?.[0] || analysisData?.nicheProfile?.buyingTrigger || current.buyingTrigger,
-        }));
-      }
-    } catch (err) {
-      console.warn('Failed to load ICP prefill data:', err);
+        .order('updated_at', { ascending: false });
+      if (error) throw error;
+      setMvpProjects((data ?? []).map((row: Record<string, unknown>) => ({
+        id: String(row.id),
+        title: textValue(row.title) || 'Untitled MVP',
+        deploymentUrl: textValue(row.deployment_url) || null,
+        deploymentStatus: textValue(row.deployment_status) || 'not_deployed',
+        updatedAt: textValue(row.updated_at),
+        prefill: createMvpProjectPrefill(row),
+      })));
+    } catch (error) {
+      console.warn('Failed to load MVP Builder projects for GTM import:', error);
+      setMvpProjects([]);
+    } finally {
+      setIsLoadingMvpProjects(false);
     }
   }, [user]);
+
+  const importMvpProject = useCallback((projectId: string) => {
+    const project = mvpProjects.find((item) => item.id === projectId);
+    if (!project) {
+      toast.error('Select an MVP Builder project to continue.');
+      return;
+    }
+    setSelectedMvpProjectId(project.id);
+    setPrefillV2(project.prefill);
+    setContextSource('mvp_project');
+  }, [mvpProjects]);
+
+  const startManualIntake = useCallback(() => {
+    setSelectedMvpProjectId(null);
+    setPrefillV2({});
+    setContextSource('manual');
+  }, []);
+
+  const resetContextSource = useCallback(() => {
+    setSelectedMvpProjectId(null);
+    setPrefillV2({});
+    setContextSource('unselected');
+  }, []);
 
   const runAnalysis = useCallback(async (answers: GTMIntakeAnswers) => {
     if (!user) {
@@ -794,9 +776,11 @@ export function useGTMStrategist() {
     isExporting,
     isReviewing,
     isRestoringPlan,
-    prefillData,
     prefillV2,
-    prefillSource,
+    contextSource,
+    selectedMvpProjectId,
+    mvpProjects,
+    isLoadingMvpProjects,
     weeklyReview,
     runAnalysis,
     runV2Analysis,
@@ -806,6 +790,9 @@ export function useGTMStrategist() {
     runWeeklyReview,
     savePlan,
     exportPlan,
+    importMvpProject,
+    startManualIntake,
+    resetContextSource,
     openDiagnose,
     resumeWorkspace,
     resetToIntake,
