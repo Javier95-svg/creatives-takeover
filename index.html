@@ -40,6 +40,8 @@
           return script;
         };
 
+        loadScript("https://t.contentsquare.net/uxa/3ef0f84e50f77.js", { defer: true });
+
         window.dataLayer = window.dataLayer || [];
         window.gtag = function () {
           window.dataLayer.push(arguments);
@@ -48,17 +50,15 @@
         window.gtag("config", "G-SBVWSWCNX8");
         loadScript("https://www.googletagmanager.com/gtag/js?id=G-SBVWSWCNX8", { async: true });
 
-        var loadNonCriticalAnalytics = function () {
-          loadScript("https://t.contentsquare.net/uxa/3ef0f84e50f77.js", { defer: true });
-          loadScript("https://cloud.umami.is/script.js", {
-            defer: true,
-            attributes: { "data-website-id": "b6a9bcb8-c6ac-41c5-b624-75b3f6957742" },
-          });
+        loadScript("https://cloud.umami.is/script.js", {
+          defer: true,
+          attributes: { "data-website-id": "b6a9bcb8-c6ac-41c5-b624-75b3f6957742" },
+        });
 
         var amplitudeApiKey = "%VITE_AMPLITUDE_API_KEY%";
         var hasAmplitudeApiKey = amplitudeApiKey && amplitudeApiKey.charAt(0) !== "%";
 
-          if (hasAmplitudeApiKey) {
+        if (hasAmplitudeApiKey) {
           var amplitudeInitialized = false;
           var initializeAmplitude = function () {
             if (amplitudeInitialized) {
@@ -80,36 +80,24 @@
           } else {
             window.addEventListener("load", initializeAmplitude, { once: true });
           }
-          }
-        };
-
-        var scheduleNonCriticalAnalytics = function () {
-          if ("requestIdleCallback" in window) {
-            window.requestIdleCallback(loadNonCriticalAnalytics, { timeout: 3000 });
-          } else {
-            window.setTimeout(loadNonCriticalAnalytics, 2000);
-          }
-        };
-
-        if (document.readyState === "complete") {
-          scheduleNonCriticalAnalytics();
-        } else {
-          window.addEventListener("load", scheduleNonCriticalAnalytics, { once: true });
         }
       })();
     </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title data-rh="true">AI Startup Builder for Founders | Creatives Takeover</title>
-    <meta data-rh="true" name="description" content="Build, validate, and launch your startup with AI-powered tools for customer discovery, MVP planning, fundraising prep, and go-to-market execution. Built for first-time founders." />
-    <meta data-rh="true" name="author" content="Javier Alonso" />
-    <meta data-rh="true" name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
-    <link data-rh="true" rel="canonical" href="https://creatives-takeover.com/" />
+    <title>AI Startup Builder for First-Time Founders | Creatives Takeover</title>
+    <meta name="description" content="Build, validate, and launch your startup with AI-powered tools for customer discovery, MVP planning, fundraising prep, and go-to-market execution. Built for first-time founders." />
+    <meta name="author" content="Javier Alonso" />
+    <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+    <link rel="canonical" href="https://creatives-takeover.com/" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://rcjlaybjnozqbsoxzboa.supabase.co" crossorigin />
+    <link rel="preconnect" href="https://cdn.amplitude.com" />
     <link rel="dns-prefetch" href="https://images.unsplash.com" />
     <link rel="dns-prefetch" href="https://rcjlaybjnozqbsoxzboa.supabase.co" />
+    <link rel="dns-prefetch" href="https://t.contentsquare.net" />
+    <link rel="dns-prefetch" href="https://cloud.umami.is" />
     <!-- Load Google Fonts asynchronously to avoid render-blocking (LCP fix) -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" /></noscript>
@@ -122,21 +110,20 @@
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#000000" />
 
-    <meta data-rh="true" property="og:type" content="website" />
-    <meta data-rh="true" property="og:url" content="https://creatives-takeover.com/" />
-    <meta data-rh="true" property="og:image" content="https://creatives-takeover.com/og-image.png" />
-    <meta data-rh="true" property="og:image:width" content="1200" />
-    <meta data-rh="true" property="og:image:height" content="630" />
-    <meta data-rh="true" property="og:title" content="AI Startup Builder for Founders | Creatives Takeover" />
-    <meta data-rh="true" property="og:description" content="Build, validate, and launch your startup with AI-powered tools for customer discovery, MVP planning, fundraising prep, and go-to-market execution. Built for first-time founders." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://creatives-takeover.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:title" content="AI Startup Builder for First-Time Founders | Creatives Takeover" />
+    <meta property="og:description" content="Build, validate, and launch your startup with AI-powered tools for customer discovery, MVP planning, fundraising prep, and go-to-market execution. Built for first-time founders." />
 
-    <meta data-rh="true" name="twitter:card" content="summary_large_image" />
-    <meta data-rh="true" name="twitter:image" content="https://creatives-takeover.com/og-image.png" />
-    <meta data-rh="true" name="twitter:title" content="AI Startup Builder for Founders | Creatives Takeover" />
-    <meta data-rh="true" name="twitter:description" content="Build, validate, and launch your startup with AI-powered tools for customer discovery, MVP planning, fundraising prep, and go-to-market execution. Built for first-time founders." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://creatives-takeover.com/og-image.png" />
+    <meta name="twitter:title" content="AI Startup Builder for First-Time Founders | Creatives Takeover" />
+    <meta name="twitter:description" content="Build, validate, and launch your startup with AI-powered tools for customer discovery, MVP planning, fundraising prep, and go-to-market execution. Built for first-time founders." />
 
     <!-- Structured Data: WebSite + Organization + SoftwareApplication + FAQ -->
-    <script data-rh="true" type="application/ld+json">
+    <script type="application/ld+json">
     [
       {
         "@context": "https://schema.org",
@@ -144,7 +131,12 @@
         "@id": "https://creatives-takeover.com/#website",
         "url": "https://creatives-takeover.com/",
         "name": "Creatives Takeover",
-        "description": "AI-powered startup builder for first-time founders — customer discovery, MVP planning, fundraising prep, and go-to-market execution."
+        "description": "AI-powered startup builder for first-time founders — customer discovery, MVP planning, fundraising prep, and go-to-market execution.",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": { "@type": "EntryPoint", "urlTemplate": "https://creatives-takeover.com/answers?q={search_term_string}" },
+          "query-input": "required name=search_term_string"
+        }
       },
       {
         "@context": "https://schema.org",
@@ -155,9 +147,8 @@
         "logo": { "@type": "ImageObject", "url": "https://creatives-takeover.com/og-image.png", "width": 1200, "height": 630 },
         "founder": { "@type": "Person", "name": "Javier Alonso" },
         "sameAs": [
-          "https://x.com/Creatives_Rule",
-          "https://www.linkedin.com/company/creatives-takeover",
-          "https://www.instagram.com/creativestakeover.official/",
+          "https://twitter.com/CreativesTakeover",
+          "https://linkedin.com/company/creatives-takeover",
           "https://www.youtube.com/@CreativesTakeover"
         ]
       },
@@ -218,11 +209,15 @@
       }
     ]
     </script>
+    <style>
+      .js #seo-fallback {
+        display: none;
+      }
+    </style>
   </head>
 
   <body>
-    <div id="root">
-      <main id="seo-fallback">
+    <main id="seo-fallback">
       <header>
         <p>Creatives Takeover</p>
         <nav aria-label="Primary pages">
@@ -232,9 +227,6 @@
           <a href="/insighta">Insighta</a> |
           <a href="/mentorship">Find a Mentor</a> |
           <a href="/answers">Founder Answers</a> |
-          <a href="/build">MVP Builder</a> |
-          <a href="/marketplace">Founder Marketplace</a> |
-          <a href="/podcast">Podcast</a> |
           <a href="/newspaper">Newspaper</a>
         </nav>
       </header>
@@ -301,9 +293,6 @@
             <li><a href="/insighta">Insighta — Fundraising Preparation for First-Time Founders</a></li>
             <li><a href="/mentorship">Startup Mentor Marketplace</a></li>
             <li><a href="/answers">Founder Answers — Questions Every Founder Asks</a></li>
-            <li><a href="/build">Build and Ship an MVP</a></li>
-            <li><a href="/marketplace">Founder Service Marketplace</a></li>
-            <li><a href="/podcast">Founders Unleashed Podcast</a></li>
             <li><a href="/go-to-market">Go-to-Market Planning</a></li>
             <li><a href="/icp-builder">Ideal Customer Profile Builder</a></li>
             <li><a href="/pricing">Pricing — Free and Paid Plans</a></li>
@@ -311,8 +300,9 @@
           </ul>
         </section>
       </article>
-      </main>
-    </div>
+    </main>
+
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

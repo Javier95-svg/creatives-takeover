@@ -40,32 +40,37 @@ const SEO = ({
   const canonicalUrl = canonical || fullUrl;
   const fullImageUrl = image.startsWith('http') ? image : `${baseUrl}${image}`;
 
+  // Ensure title is optimized length (50-60 chars)
+  const optimizedTitle = title.length > 60 ? `${title.substring(0, 57)}...` : title;
+  
+  // Ensure description is optimized length (150-160 chars)
+  const optimizedDescription = description.length > 160 
+    ? `${description.substring(0, 157)}...` 
+    : description;
+
   return (
     <Helmet>
       {/* Basic Meta Tags */}
-      <title>{title}</title>
-      <meta name="description" content={description} />
+      <title>{optimizedTitle}</title>
+      <meta name="description" content={optimizedDescription} />
       {keywords && <meta name="keywords" content={keywords} />}
       {author && <meta name="author" content={author} />}
-      <meta
-        name="robots"
-        content={noindex ? "noindex,nofollow" : "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"}
-      />
+      {noindex && <meta name="robots" content="noindex,nofollow" />}
       {googleSiteVerification && <meta name="google-site-verification" content={googleSiteVerification} />}
       
       {/* Canonical URL */}
       <link rel="canonical" href={canonicalUrl} />
       
       {/* Open Graph Tags */}
-      <meta property="og:title" content={title} />
-      <meta property="og:description" content={description} />
+      <meta property="og:title" content={optimizedTitle} />
+      <meta property="og:description" content={optimizedDescription} />
       <meta property="og:type" content={type} />
       <meta property="og:url" content={fullUrl} />
       <meta property="og:image" content={fullImageUrl} />
       <meta property="og:image:secure_url" content={fullImageUrl} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
-      <meta property="og:image:alt" content={title} />
+      <meta property="og:image:alt" content={optimizedTitle} />
       <meta property="og:locale" content="en_US" />
       <meta property="og:site_name" content="Creatives Takeover" />
       {publishedTime && <meta property="article:published_time" content={publishedTime} />}
@@ -74,12 +79,12 @@ const SEO = ({
       
       {/* Twitter Card Tags */}
       <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content={title} />
-      <meta name="twitter:description" content={description} />
+      <meta name="twitter:title" content={optimizedTitle} />
+      <meta name="twitter:description" content={optimizedDescription} />
       <meta name="twitter:image" content={fullImageUrl} />
-      <meta name="twitter:image:alt" content={title} />
-      <meta name="twitter:site" content="@Creatives_Rule" />
-      <meta name="twitter:creator" content="@Creatives_Rule" />
+      <meta name="twitter:image:alt" content={optimizedTitle} />
+      <meta name="twitter:site" content="@CreativesTakeover" />
+      <meta name="twitter:creator" content="@CreativesTakeover" />
       
       {/* Structured Data (JSON-LD) */}
       {structuredData && (
@@ -100,27 +105,29 @@ export const createOrganizationSchema = () => ({
   "name": "Creatives Takeover",
   "url": "https://creatives-takeover.com",
   "logo": "https://creatives-takeover.com/favicon-192x192.png",
-  "description": "The Founders' Compass: an AI startup builder for first-time founders moving from idea validation to launch.",
+  "description": "The creative entrepreneur's AI co-founder. Go from scattered ideas to profitable launch in 30 days.",
   "sameAs": [
-    "https://x.com/Creatives_Rule",
-    "https://www.linkedin.com/company/creatives-takeover",
-    "https://www.instagram.com/creativestakeover.official/",
-    "https://www.youtube.com/@CreativesTakeover"
+    "https://twitter.com/CreativesTakeover",
+    "https://linkedin.com/company/creatives-takeover"
   ],
   "contactPoint": {
     "@type": "ContactPoint",
     "contactType": "Customer Support",
-    "email": "admin@creatives-takeover.com"
+    "email": "support@creatives-takeover.com"
   }
 });
 
-// WebSite entity. SearchAction is intentionally omitted until /answers supports
-// a real query-driven search experience.
+// Helper function to create WebSite schema with search
 export const createWebSiteSchema = () => ({
   "@context": "https://schema.org",
   "@type": "WebSite",
   "name": "Creatives Takeover",
-  "url": "https://creatives-takeover.com"
+  "url": "https://creatives-takeover.com",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": { "@type": "EntryPoint", "urlTemplate": "https://creatives-takeover.com/answers?q={search_term_string}" },
+    "query-input": "required name=search_term_string"
+  }
 });
 
 // Helper function to create Breadcrumb schema
@@ -253,7 +260,7 @@ export const createSoftwareSchema = () => ({
   "@type": "SoftwareApplication",
   "name": "Creatives Takeover Dream2Plan",
   "applicationCategory": "BusinessApplication",
-  "description": "AI-powered startup planning tool that helps first-time founders validate ideas, plan an MVP, and prepare to launch.",
+  "description": "AI-powered business planning tool that helps creative entrepreneurs go from scattered ideas to profitable launch in 30 days.",
   "operatingSystem": "Web",
   "offers": {
     "@type": "Offer",
@@ -299,17 +306,17 @@ export const createAboutPageSchema = () => ({
   "@context": "https://schema.org",
   "@type": "AboutPage",
   "name": "About Creatives Takeover",
-  "description": "Learn how Creatives Takeover helps first-time founders validate ideas, plan an MVP, launch, and prepare for fundraising.",
+  "description": "Learn about Creatives Takeover's mission and vision to empower creators and solopreneurs with AI and no-code solutions.",
   "url": "https://creatives-takeover.com/about",
   "mainEntity": {
     "@type": "Organization",
     "name": "Creatives Takeover",
     "url": "https://creatives-takeover.com",
     "logo": "https://creatives-takeover.com/favicon-192x192.png",
-    "description": "The Founders' Compass: an AI startup builder for first-time founders moving from idea validation to launch.",
+    "description": "The creative entrepreneur's AI co-founder. Go from scattered ideas to profitable launch in 30 days.",
     "sameAs": [
-      "https://x.com/Creatives_Rule",
-      "https://www.linkedin.com/company/creatives-takeover",
+      "https://twitter.com/CreativesTakeover",
+      "https://linkedin.com/company/creatives-takeover",
       "https://www.instagram.com/creativestakeover.official/",
       "https://www.youtube.com/@CreativesTakeover"
     ],
@@ -335,9 +342,9 @@ export const createServiceSchema = (services?: Array<{ name: string; description
     return {
       "@context": "https://schema.org",
       "@type": "Service",
-      "serviceType": "Founder Support Service",
-      "name": "Creatives Takeover Founder Services",
-      "description": "Founder-ready services for product, growth, fundraising, operations, and technical execution.",
+      "serviceType": "Creative Subscription Service",
+      "name": "Creatives Takeover Services",
+      "description": "Transform your creative workflow with our creative subscription service. Unlimited design access, AI-powered tools, and premium features for modern creatives.",
       "provider": {
         "@type": "Organization",
         "name": "Creatives Takeover",
@@ -346,11 +353,11 @@ export const createServiceSchema = (services?: Array<{ name: string; description
       "areaServed": "Worldwide",
       "availableChannel": {
         "@type": "ServiceChannel",
-        "serviceUrl": "https://creatives-takeover.com/marketplace"
+        "serviceUrl": "https://creatives-takeover.com/services"
       },
       "hasOfferCatalog": {
         "@type": "OfferCatalog",
-        "name": "Founder Services",
+        "name": "Creative Services",
         "itemListElement": services.map((service, index) => ({
           "@type": "OfferCatalogItem",
           "position": index + 1,
@@ -367,9 +374,9 @@ export const createServiceSchema = (services?: Array<{ name: string; description
   return {
     "@context": "https://schema.org",
     "@type": "Service",
-    "serviceType": "Founder Support Service",
-    "name": "Creatives Takeover Founder Service Marketplace",
-    "description": "Founder-ready services for product, growth, fundraising, operations, and technical execution.",
+    "serviceType": "Creative Subscription Service",
+    "name": "Creatives Takeover Services",
+    "description": "Transform your creative workflow with our creative subscription service. Unlimited design access, AI-powered tools, and premium features for modern creatives.",
     "provider": {
       "@type": "Organization",
       "name": "Creatives Takeover",
@@ -378,20 +385,19 @@ export const createServiceSchema = (services?: Array<{ name: string; description
     "areaServed": "Worldwide",
     "availableChannel": {
       "@type": "ServiceChannel",
-      "serviceUrl": "https://creatives-takeover.com/marketplace"
+      "serviceUrl": "https://creatives-takeover.com/services"
     }
   };
 };
 
-// Kept under the original export name for compatibility. The registered office
-// is not presented as a customer-facing local business, so Organization is the
-// truthful entity type and no opening-hours or geo claims are emitted.
+// Helper function to create LocalBusiness/ContactPage schema
 export const createLocalBusinessSchema = () => ({
   "@context": "https://schema.org",
-  "@type": "Organization",
+  "@type": "LocalBusiness",
   "name": "Creatives Takeover",
   "image": "https://creatives-takeover.com/og-image.png",
   "url": "https://creatives-takeover.com",
+  "telephone": "",
   "email": "admin@creatives-takeover.com",
   "address": {
     "@type": "PostalAddress",
@@ -401,9 +407,26 @@ export const createLocalBusinessSchema = () => ({
     "postalCode": "WC2H 9JQ",
     "addressCountry": "GB"
   },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": "51.5134",
+    "longitude": "-0.1236"
+  },
+  "openingHoursSpecification": {
+    "@type": "OpeningHoursSpecification",
+    "dayOfWeek": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday"
+    ],
+    "opens": "09:00",
+    "closes": "17:00"
+  },
   "sameAs": [
-    "https://x.com/Creatives_Rule",
-    "https://www.linkedin.com/company/creatives-takeover",
+    "https://twitter.com/CreativesTakeover",
+    "https://linkedin.com/company/creatives-takeover",
     "https://www.instagram.com/creativestakeover.official/",
     "https://www.youtube.com/@CreativesTakeover"
   ]

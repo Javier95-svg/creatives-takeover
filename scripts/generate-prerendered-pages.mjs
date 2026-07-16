@@ -7,12 +7,10 @@ const TEMPLATE_PATH = path.join(DIST_DIR, "index.html");
 
 const PRIMARY_NAV = [
   { href: "/", label: "Home" },
-  { href: "/answers", label: "Founder Answers" },
+  { href: "/pricing", label: "Pricing" },
   { href: "/bizmap-ai", label: "BizMap AI" },
-  { href: "/build", label: "MVP Builder" },
   { href: "/insighta", label: "Insighta" },
-  { href: "/marketplace", label: "Marketplace" },
-  { href: "/podcast", label: "Podcast" },
+  { href: "/mentorship", label: "Community" },
   { href: "/newspaper", label: "Newspaper" },
 ];
 
@@ -119,8 +117,8 @@ function replaceTag(html, pattern, replacement) {
 }
 
 function replaceMetaByName(html, name, content) {
-  const pattern = new RegExp(`<meta[^>]+name="${name}"[^>]*>`, "i");
-  const replacement = `<meta data-rh="true" name="${name}" content="${content}" />`;
+  const pattern = new RegExp(`<meta\\s+name="${name}"\\s+content="[^"]*"\\s*/?>`, "i");
+  const replacement = `<meta name="${name}" content="${content}" />`;
   if (pattern.test(html)) {
     return html.replace(pattern, replacement);
   }
@@ -128,8 +126,8 @@ function replaceMetaByName(html, name, content) {
 }
 
 function replaceMetaByProperty(html, property, content) {
-  const pattern = new RegExp(`<meta[^>]+property="${property}"[^>]*>`, "i");
-  const replacement = `<meta data-rh="true" property="${property}" content="${content}" />`;
+  const pattern = new RegExp(`<meta\\s+property="${property}"\\s+content="[^"]*"\\s*/?>`, "i");
+  const replacement = `<meta property="${property}" content="${content}" />`;
   if (pattern.test(html)) {
     return html.replace(pattern, replacement);
   }
@@ -146,6 +144,11 @@ const WEBSITE_SCHEMA = {
   name: SITE_NAME,
   description:
     "AI-powered startup builder for first-time founders — customer discovery, MVP planning, fundraising prep, and go-to-market execution.",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: { "@type": "EntryPoint", urlTemplate: `${BASE_URL}/answers?q={search_term_string}` },
+    "query-input": "required name=search_term_string",
+  },
 };
 
 const ORGANIZATION_SCHEMA = {
@@ -156,11 +159,9 @@ const ORGANIZATION_SCHEMA = {
   url: BASE_URL,
   logo: { "@type": "ImageObject", url: `${BASE_URL}/favicon-192x192.png`, width: 192, height: 192 },
   founder: { "@type": "Person", name: "Javier Alonso" },
-  description: "The Founders' Compass: an AI startup builder for first-time founders moving from idea validation to launch.",
   sameAs: [
-    "https://x.com/Creatives_Rule",
-    "https://www.linkedin.com/company/creatives-takeover",
-    "https://www.instagram.com/creativestakeover.official/",
+    "https://twitter.com/CreativesTakeover",
+    "https://linkedin.com/company/creatives-takeover",
     "https://www.youtube.com/@CreativesTakeover",
   ],
 };
@@ -199,10 +200,26 @@ function buildStructuredData(routeConfig) {
     });
   }
 
-  // Founder answer guides use Article schema. HowTo rich results are deprecated,
-  // so the unsupported type is not emitted.
+  // Founder answer guides mirror FounderAnswerPage.tsx: HowTo + Article.
   if (routeConfig.path.startsWith("/answers/")) {
     const updatedIso = routeConfig.lastmod || new Date().toISOString().split("T")[0];
+    if (routeConfig.sections && routeConfig.sections.length) {
+      data.push({
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        name: routeConfig.heroHeading,
+        description: routeConfig.heroCopy,
+        url: canonical,
+        publisher: { "@type": "Organization", name: SITE_NAME, url: BASE_URL },
+        step: routeConfig.sections.map((section, index) => ({
+          "@type": "HowToStep",
+          position: index + 1,
+          name: section.heading,
+          text: section.copy,
+          url: `${canonical}#step-${index + 1}`,
+        })),
+      });
+    }
     data.push({
       "@context": "https://schema.org",
       "@type": "Article",
@@ -221,35 +238,6 @@ function buildStructuredData(routeConfig) {
     });
   }
 
-  if (routeConfig.path === "/contact") {
-    data.push({
-      "@context": "https://schema.org",
-      "@type": "ContactPage",
-      name: routeConfig.heroHeading,
-      description: routeConfig.description,
-      url: canonical,
-      mainEntity: { "@id": `${BASE_URL}/#organization` },
-    });
-  }
-
-  const softwarePaths = new Set([
-    "/build", "/bizmap-ai", "/pmf-lab", "/tech-stack", "/icp-builder",
-    "/validate", "/mvp-builder", "/go-to-market", "/traction-engine",
-    "/vc-search", "/email-templates", "/accelerator-hunt", "/pitch-deck-analyzer", "/insighta-test",
-  ]);
-  if (softwarePaths.has(routeConfig.path)) {
-    data.push({
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      name: routeConfig.heroHeading,
-      description: routeConfig.description,
-      applicationCategory: "BusinessApplication",
-      operatingSystem: "Web",
-      url: canonical,
-      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-    });
-  }
-
   return data;
 }
 
@@ -258,8 +246,8 @@ function replaceJsonLd(html, routeConfig) {
   if (!data) return html;
   const json = JSON.stringify(data, null, 2).replace(/</g, "\\u003c");
   return html.replace(
-    /<script[^>]+type="application\/ld\+json"[^>]*>[\s\S]*?<\/script>/i,
-    `<script data-rh="true" type="application/ld+json">\n${json}\n    </script>`
+    /<script type="application\/ld\+json">[\s\S]*?<\/script>/i,
+    `<script type="application/ld+json">\n${json}\n    </script>`
   );
 }
 
@@ -278,9 +266,10 @@ function renderRoute(template, routeConfig) {
   const robots = "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1";
   const ogImage = buildOgImage(routeConfig);
   let html = template;
-  html = replaceTag(html, /<title[^>]*>[\s\S]*?<\/title>/i, `<title data-rh="true">${routeConfig.title}</title>`);
+  html = replaceTag(html, /<title>[\s\S]*?<\/title>/i, `<title>${routeConfig.title}</title>`);
   html = replaceMetaByName(html, "description", routeConfig.description);
   html = replaceMetaByName(html, "robots", robots);
+  html = replaceMetaByName(html, "googlebot", robots);
   html = replaceMetaByProperty(html, "og:title", routeConfig.title);
   html = replaceMetaByProperty(html, "og:description", routeConfig.description);
   html = replaceMetaByProperty(html, "og:url", canonical);
@@ -290,8 +279,8 @@ function renderRoute(template, routeConfig) {
   html = replaceMetaByName(html, "twitter:image", ogImage);
   html = replaceTag(
     html,
-    /<link[^>]+rel="canonical"[^>]*>/i,
-    `<link data-rh="true" rel="canonical" href="${canonical}" />`
+    /<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/i,
+    `<link rel="canonical" href="${canonical}" />`
   );
   html = replaceJsonLd(html, routeConfig);
   html = replaceTag(

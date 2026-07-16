@@ -9,7 +9,7 @@ const InternalLinks = () => {
       title: "Our Services",
       description: "Discover how we help creators and solopreneurs build powerful no-code applications from concept to launch.",
       icon: Wrench,
-      href: "/marketplace",
+      href: "/services",
       cta: "Explore Services"
     },
     {

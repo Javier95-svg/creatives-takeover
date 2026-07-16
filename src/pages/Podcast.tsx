@@ -71,16 +71,15 @@ const Podcast = () => {
   return (
     <>
       <Helmet>
-        <title>Founders Unleashed Podcast | Creatives Takeover</title>
+        <title>Founders Unleashed — Podcast | Creatives Takeover</title>
         <meta
           name="description"
-          content="Conversations with founders building real products: unusual paths, contrarian bets, and the hard moments behind their companies."
+          content="Founders Unleashed: conversations with founders building real products, told as stories, not pitches. Unusual paths, contrarian bets, and the hard moments behind the company — watch every episode inside Creatives Takeover."
         />
-        <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
-        <meta property="og:title" content="Founders Unleashed Podcast | Creatives Takeover" />
+        <meta property="og:title" content="Founders Unleashed — Podcast | Creatives Takeover" />
         <meta
           property="og:description"
-          content="Conversations with founders building real products: unusual paths, contrarian bets, and the hard moments behind their companies."
+          content="A series of conversations with founders building real products, told as stories, not pitches."
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://creatives-takeover.com/podcast" />

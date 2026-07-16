@@ -158,17 +158,6 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_APP_VERSION': JSON.stringify(process.env.npm_package_version || new Date().toISOString()),
     },
     build: {
-      modulePreload: {
-        resolveDependencies: (_filename, dependencies, context) =>
-          context.hostType === "html"
-            ? dependencies.filter(
-                (dependency) =>
-                  !dependency.includes("document-tools-") &&
-                  !dependency.includes("pdfjs") &&
-                  !dependency.includes("pdf.worker"),
-              )
-            : dependencies,
-      },
       rollupOptions: {
         output: {
           manualChunks: getManualChunk,

@@ -5,11 +5,16 @@ import {
   founderAnswerPages,
   getRelatedFounderAnswerPages,
 } from "../src/data/founderAnswerPages.ts";
-import { CANONICAL_ROUTE_ALIASES, ROBOTS_DISALLOW_PATHS } from "../src/config/seoRoutePolicy.ts";
 
 export const BASE_URL = "https://creatives-takeover.com";
 export const SITE_NAME = "Creatives Takeover";
 export const OG_IMAGE = `${BASE_URL}/og-image.png`;
+
+// Mirror the truncation rules in src/components/SEO.tsx so the prerendered
+// <title>/<meta description> match what react-helmet renders after hydration.
+const truncateTitle = (title) => (title.length > 60 ? `${title.substring(0, 57)}...` : title);
+const truncateDescription = (description) =>
+  description.length > 160 ? `${description.substring(0, 157)}...` : description;
 
 // Mirror updatedLabelToIso in src/pages/FounderAnswerPage.tsx ("May 2026" -> "2026-05-01").
 const MONTHS = {
@@ -25,14 +30,44 @@ export function updatedLabelToIso(label) {
   return null;
 }
 
-export const ROBOTS_DISALLOW = ROBOTS_DISALLOW_PATHS;
+export const ROBOTS_DISALLOW = [
+  "/admin/",
+  "/auth/",
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+  "/onboarding",
+  "/dashboard",
+  "/account",
+  "/messages",
+  "/profile",
+  "/setup-quiz",
+  "/focus-funnel",
+  "/core-metrics",
+  "/weekly-mission",
+  "/tasks",
+  "/subscription-success",
+  "/mentorship/book/",
+  "/mentorship/my-bookings",
+  "/mentorship/admin/",
+  "/co-founder/create",
+  "/co-founder/edit/",
+  "/investors/admin/",
+  "/newspaper/admin/",
+  "/stories/admin/",
+  "/w/",
+  "/api/",
+  "/rag-test",
+  "/test-phase1",
+];
 
 // Each answer route carries the page's real, hand-written meta and body content
 // so the prerendered HTML is unique per page and matches the hydrated React page.
 const FOUNDER_ANSWER_ROUTES = founderAnswerPages.map((page) => ({
   path: `/answers/${page.slug}`,
-  title: page.metaTitle,
-  description: page.metaDescription,
+  title: truncateTitle(page.metaTitle),
+  description: truncateDescription(page.metaDescription),
   changefreq: "monthly",
   priority: 0.65,
   lastmod: updatedLabelToIso(page.updatedLabel),
@@ -65,12 +100,12 @@ const FOUNDER_ANSWER_ROUTES = founderAnswerPages.map((page) => ({
   ],
 }));
 
-const PUBLIC_ROUTE_DEFINITIONS = [
+export const INDEXABLE_ROUTES = [
   {
     path: "/",
-    title: "AI Startup Builder for Founders | Creatives Takeover",
+    title: "AI Startup Builder | Creatives Takeover",
     description:
-      "Build, validate, and launch your startup with AI-powered tools for customer discovery, MVP planning, fundraising prep, and go-to-market execution. Built for first-time founders.",
+      "Build, validate, and launch faster with AI startup tools for customer research, MVP planning, fundraising prep, and go-to-market execution.",
     changefreq: "daily",
     priority: 1.0,
     heroHeading: "Build your startup. Own your future.",
@@ -89,9 +124,9 @@ const PUBLIC_ROUTE_DEFINITIONS = [
   },
   {
     path: "/about",
-    title: "About Creatives Takeover | The Founders' Compass",
+    title: "About Creatives Takeover",
     description:
-      "Learn how Creatives Takeover helps first-time founders validate ideas, plan an MVP, launch, and prepare for fundraising.",
+      "Learn about Creatives Takeover, our mission to help founders go from idea to execution, and the tools we are building for startup operators.",
     changefreq: "monthly",
     priority: 0.7,
     heroHeading: "About Creatives Takeover",
@@ -117,59 +152,14 @@ const PUBLIC_ROUTE_DEFINITIONS = [
   },
   {
     path: "/resources",
-    title: "Startup Resources for Founders | Creatives Takeover",
+    title: "Resources | Creatives Takeover",
     description:
-      "Explore founder resources, startup guides, templates, and practical learning materials for validation, MVP planning, launch, and fundraising.",
+      "Explore founder resources, startup guides, templates, and practical learning materials from Creatives Takeover.",
     changefreq: "weekly",
     priority: 0.75,
     heroHeading: "Founder resources and guides",
     heroCopy:
       "Browse practical tutorials, downloads, and startup learning resources designed to help founders move faster with less guesswork.",
-  },
-  {
-    path: "/build",
-    title: "MVP Builder — Ship Your Idea This Week | Creatives Takeover",
-    description:
-      "Describe what you want to build. Get a real, deployable web app. The MVP Builder is the fastest line between a validated idea and a product you can ship.",
-    changefreq: "weekly",
-    priority: 0.9,
-    heroHeading: "Stop planning. Start building.",
-    heroCopy: "Turn a validated idea into a working MVP you can ship, test, and improve with real customers.",
-    relatedLinks: [
-      { href: "/mvp-builder", label: "Plan your MVP scope" },
-      { href: "/tech-stack", label: "Choose a startup tech stack" },
-      { href: "/answers/how-to-build-an-mvp", label: "Read the MVP building guide" },
-    ],
-  },
-  {
-    path: "/contact",
-    title: "Contact Creatives Takeover | Founder Support",
-    description:
-      "Contact Creatives Takeover for founder-tool support, product questions, partnerships, or media inquiries.",
-    changefreq: "yearly",
-    priority: 0.55,
-    heroHeading: "Contact Creatives Takeover",
-    heroCopy: "Reach out for founder-tool support, product questions, partnerships, or media inquiries.",
-  },
-  {
-    path: "/marketplace",
-    title: "Founder Service Marketplace | Creatives Takeover",
-    description:
-      "Browse founder-ready services for sales automation, marketing, operations, workflow automation, and technical support. Review service decks and book discovery calls with credits.",
-    changefreq: "weekly",
-    priority: 0.75,
-    heroHeading: "Services built for founder momentum",
-    heroCopy: "Find specialists who can help you validate, build, launch, and grow your startup.",
-  },
-  {
-    path: "/podcast",
-    title: "Founders Unleashed Podcast | Creatives Takeover",
-    description:
-      "Conversations with founders building real products: unusual paths, contrarian bets, and the hard moments behind their companies.",
-    changefreq: "weekly",
-    priority: 0.7,
-    heroHeading: "Founders Unleashed",
-    heroCopy: "Honest conversations with founders building real products, told as stories rather than pitches.",
   },
   {
     path: "/answers",
@@ -181,10 +171,6 @@ const PUBLIC_ROUTE_DEFINITIONS = [
     heroHeading: "Answers founders search for before they build",
     heroCopy:
       "Browse practical startup guides for ICP clarity, validation, MVP scope, go-to-market strategy, and fundraising preparation.",
-    relatedLinks: founderAnswerPages.map((page) => ({
-      href: `/answers/${page.slug}`,
-      label: page.title,
-    })),
   },
   ...FOUNDER_ANSWER_ROUTES,
   {
@@ -676,7 +662,7 @@ const PUBLIC_ROUTE_DEFINITIONS = [
       "Use Insighta to discover investors, research accelerators, prepare outreach, and tighten fundraising execution.",
   },
   {
-    path: "/vc-search",
+    path: "/insighta/vc-search",
     title: "Venture Capital Database & VC Search | Creatives Takeover",
     description:
       "Search a venture capital database by stage, geography, sector, and check size to build a tighter startup investor list.",
@@ -716,7 +702,7 @@ const PUBLIC_ROUTE_DEFINITIONS = [
     ],
   },
   {
-    path: "/email-templates",
+    path: "/insighta/email-templates",
     title: "Fundraising Email Templates | Creatives Takeover",
     description:
       "Use fundraising email templates for investor outreach, warm intros, follow-ups, and startup updates without starting from scratch.",
@@ -727,7 +713,7 @@ const PUBLIC_ROUTE_DEFINITIONS = [
       "Copy, customize, and send fundraising emails for intros, outreach, follow-ups, and investor updates.",
   },
   {
-    path: "/accelerator-hunt",
+    path: "/insighta/accelerator-hunt",
     title: "Startup Accelerator Database | Creatives Takeover",
     description:
       "Search a startup accelerator database by location, focus area, and funding profile to shortlist the right programs faster.",
@@ -738,7 +724,7 @@ const PUBLIC_ROUTE_DEFINITIONS = [
       "Search accelerator programs by location, focus area, funding, and fit to build a stronger application list.",
   },
   {
-    path: "/pitch-deck-analyzer",
+    path: "/insighta/pitch-deck-analyzer",
     title: "Pitch Deck Analyzer & Score Tool | Creatives Takeover",
     description:
       "Upload a pitch deck, get a score, and review actionable feedback on narrative, clarity, traction, business model, and fundraising readiness.",
@@ -778,7 +764,7 @@ const PUBLIC_ROUTE_DEFINITIONS = [
     ],
   },
   {
-    path: "/insighta-test",
+    path: "/insighta/test",
     title: "Fundraising Readiness Assessment | Creatives Takeover",
     description:
       "Assess fundraising readiness, identify gaps, and see what your startup needs to improve before approaching investors.",
@@ -828,33 +814,15 @@ const PUBLIC_ROUTE_DEFINITIONS = [
     heroCopy:
       "Explore an interactive walkthrough of key founder tools including BizMap AI, Prompt Library, Insighta, and Community.",
   },
+  {
+    path: "/creatives-takeover",
+    title: "Creatives Takeover Studio",
+    description:
+      "Explore Creatives Takeover's creative studio page, services vision, and positioning around modern design and AI workflows.",
+    changefreq: "monthly",
+    priority: 0.45,
+    heroHeading: "Creative strategy meets execution",
+    heroCopy:
+      "Explore the broader Creatives Takeover studio positioning around design systems, AI workflows, and creative execution.",
+  },
 ];
-
-const SOFTWARE_PATHS = new Set([
-  "/build", "/bizmap-ai", "/pmf-lab", "/tech-stack", "/icp-builder", "/validate",
-  "/mvp-builder", "/go-to-market", "/traction-engine", "/vc-search", "/email-templates",
-  "/accelerator-hunt", "/pitch-deck-analyzer", "/insighta-test",
-]);
-
-export const ROUTE_SEO_POLICIES = PUBLIC_ROUTE_DEFINITIONS.map((route) => ({
-  ...route,
-  canonicalPath: route.path,
-  matcher: route.path,
-  aliases: CANONICAL_ROUTE_ALIASES
-    .filter((alias) => alias.destination === route.path)
-    .map((alias) => alias.source),
-  indexable: true,
-  prerender: true,
-  robotsPolicy: "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
-  schemaType: route.path.startsWith("/answers/")
-    ? "Article"
-    : route.path === "/contact"
-      ? "ContactPage"
-      : SOFTWARE_PATHS.has(route.path)
-        ? "SoftwareApplication"
-        : "WebPage",
-  lastModifiedSource: route.lastmod ? "content" : "build",
-}));
-
-// Backwards-compatible name consumed by sitemap and prerender generators.
-export const INDEXABLE_ROUTES = ROUTE_SEO_POLICIES;

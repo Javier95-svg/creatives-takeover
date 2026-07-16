@@ -17,7 +17,7 @@ const ResourcesNavigation = () => {
     {
       icon: <Info className="w-8 h-8 text-info" />,
       title: "About Our Mission",
-      description: "Learn about our mission to help first-time founders move from idea to launch",
+      description: "Learn about our story, mission, and commitment to empowering creatives worldwide",
       link: "/about",
       cta: "About Us",
       highlight: false
@@ -25,15 +25,15 @@ const ResourcesNavigation = () => {
     {
       icon: <Settings className="w-8 h-8 text-success" />,
       title: "Our Services",
-      description: "Find founder-ready support for product, growth, operations, and fundraising",
-      link: "/marketplace",
+      description: "Discover our comprehensive creative subscription and platform services",
+      link: "/services",
       cta: "View Services",
       highlight: false
     },
     {
       icon: <Users className="w-8 h-8 text-purple-500" />,
       title: "Join Our Community",
-      description: "Connect with mentors, co-founders, and builders working through similar startup challenges",
+      description: "Connect with 50,000+ creatives in our supportive and inspiring community",
       link: "/mentorship",
       cta: "Join Community",
       highlight: true
@@ -100,7 +100,7 @@ const ResourcesNavigation = () => {
                 </Link>
               </Button>
               <Button variant="outline" size="lg" className="text-lg px-8 py-6" asChild>
-                <Link to="/marketplace">
+                <Link to="/services">
                   Explore Premium Features
                 </Link>
               </Button>

@@ -224,7 +224,7 @@ const SignupModal = ({ open, intent, onClose }: SignupModalProps) => {
           </button>
 
           <div className="flex flex-col items-center text-center">
-            <img src={ctLogoMark} alt="Creatives Takeover" width="56" height="56" loading="lazy" decoding="async" className="mb-4 h-14 w-14 rounded-2xl object-cover shadow-lg" />
+            <img src={ctLogoMark} alt="Creatives Takeover" className="mb-4 h-14 w-14 rounded-2xl object-cover shadow-lg" />
 
             <DialogTitle className="font-space-grotesk text-2xl font-bold tracking-tight">
               Ready to build?{' '}
@@ -546,10 +546,7 @@ const BuildHowItWorks = () => {
                         src={site.image}
                         alt={`${site.name} landing page screenshot`}
                         className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
-                        width="1600"
-                        height="1000"
-                        loading="lazy"
-                        decoding="async"
+                        loading={duplicate ? 'lazy' : 'eager'}
                       />
                       <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/80 via-black/45 to-transparent px-4 pb-4 pt-12 text-white opacity-95">
                         <span className="font-space-grotesk text-lg font-bold tracking-[-0.02em]">{site.name}</span>

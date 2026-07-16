@@ -80,7 +80,6 @@ const MeetTheTeam = () => {
                   alt={`Portrait of ${member.name}`}
                   className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
                   loading="lazy"
-                  decoding="async"
                 />
                 <figcaption className="sr-only">{`${member.name}, ${member.role}`}</figcaption>
               </figure>

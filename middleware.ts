@@ -8,14 +8,10 @@
 //      vercel.json host rewrite -> /api/published-site. Here we proxy the root request
 //      to that same serving function so there is one source of serving logic.
 //
-//   2. Real HTTP 404 responses for unknown application paths.
-//
-//   3. Social-crawler OG meta tags for /icp/:slug/public (original behavior).
-
-import { isKnownAppRoute } from './src/config/seoRoutePolicy';
+//   2. Social-crawler OG meta tags for /icp/:slug/public (original behavior).
 
 export const config = {
-  matcher: ['/:path*'],
+  matcher: ['/', '/index.html', '/icp/:slug*/public'],
 };
 
 const BOT_UA =
@@ -45,32 +41,6 @@ function publishedSlugFromHost(rawHost: string): string | null {
   return label;
 }
 
-function isStaticOrServerPath(pathname: string): boolean {
-  return (
-    pathname.startsWith('/api/') ||
-    pathname.startsWith('/assets/') ||
-    pathname.startsWith('/.well-known/') ||
-    /\.[a-z0-9]{2,8}$/i.test(pathname)
-  );
-}
-
-function buildNotFoundResponse(origin: string): Response {
-  const home = `${origin}/`;
-  const html = `<!doctype html>
-<html lang="en"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Page Not Found | Creatives Takeover</title><meta name="robots" content="noindex,nofollow" />
-<meta name="description" content="The requested page could not be found." /><link rel="canonical" href="${home}" /></head>
-<body><main><h1>Page not found</h1><p>The page you requested does not exist.</p><p><a href="${home}">Return to Creatives Takeover</a></p></main></body></html>`;
-  return new Response(html, {
-    status: 404,
-    headers: {
-      'content-type': 'text/html; charset=utf-8',
-      'cache-control': 'public, max-age=0, must-revalidate',
-      'x-robots-tag': 'noindex, nofollow',
-    },
-  });
-}
-
 export default async function middleware(request: Request): Promise<Response | undefined> {
   const url = new URL(request.url);
 
@@ -95,17 +65,7 @@ export default async function middleware(request: Request): Promise<Response | u
     }
   }
 
-  // The SPA fallback is only valid for routes the application owns. Without
-  // this check Vercel's catch-all rewrite serves homepage HTML with status 200.
-  if (
-    !isStaticOrServerPath(url.pathname) &&
-    (request.method === 'GET' || request.method === 'HEAD') &&
-    !isKnownAppRoute(url.pathname)
-  ) {
-    return buildNotFoundResponse(url.origin);
-  }
-
-  // 3) ICP social-card OG tags for crawlers; humans pass through to the SPA.
+  // 2) ICP social-card OG tags for crawlers; humans pass through to the SPA.
   const ua = request.headers.get('user-agent') ?? '';
   if (!BOT_UA.test(ua)) return undefined;
 

@@ -406,17 +406,6 @@ export const trackLandingViewed = ({ page, exit_intent }: { page: string; exit_i
     ...(typeof exit_intent === 'boolean' ? { exit_intent } : {}),
   });
 
-export const trackSeoLandingView = (properties: {
-  path: string;
-  referrer: string | null;
-}) => captureEvent('seo_landing_view', properties);
-
-export const trackSeoCtaClick = (properties: {
-  source_path: string;
-  destination: string;
-  link_text?: string;
-}) => captureEvent('seo_cta_click', properties);
-
 export const trackSoftGateShown = ({ trigger }: { trigger: string }) =>
   captureEvent('soft_gate_shown', { trigger });
 
