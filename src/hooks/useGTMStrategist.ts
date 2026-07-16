@@ -112,7 +112,7 @@ const createMvpProjectPrefill = (row: Record<string, unknown>): Partial<GTMIntak
   const setupInput = asRecord(metadata.setupInput);
   const deploymentUrl = textValue(row.deployment_url);
   return {
-    productName: textValue(setupInput.productName) || textValue(row.title),
+    productName: textValue(row.title) || textValue(setupInput.productName),
     productUrl: deploymentUrl,
     lifecycle: deploymentUrl || row.deployment_status === 'deployed' ? 'live' : 'launch_ready',
     targetSegment: textValue(setupInput.validatedTargetSegment),

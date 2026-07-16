@@ -177,6 +177,7 @@ test('GTM intake starts blank and exposes MVP import from an in-form CTA', () =>
   assert.match(projectLoadFlow, /id,title,deployment_url,deployment_status,metadata,updated_at/);
   assert.doesNotMatch(projectLoadFlow, /\.limit\(1\)/);
   assert.match(hook, /setPrefillV2\(project\.prefill\)/);
+  assert.match(hook, /productName: textValue\(row\.title\) \|\| textValue\(setupInput\.productName\)/);
   assert.match(hook.slice(hook.indexOf('const loadExistingPlan'), projectLoadStart), /\.in\('status', \['saved', 'exported'\]\)/);
   assert.doesNotMatch(hook.slice(hook.indexOf('const loadExistingPlan'), projectLoadStart), /'draft'/);
   assert.match(intake, /productName: ''/);
