@@ -179,12 +179,24 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
   useEffect(() => {
     if (!initialInterviewLead || seededLeadRef.current === initialInterviewLead.sourceLeadId) return;
     seededLeadRef.current = initialInterviewLead.sourceLeadId;
+    const leadSource = initialInterviewLead.source || 'reddit';
+    const sourceDescriptor = leadSource === 'reddit'
+      ? `Public Reddit participant${initialInterviewLead.subreddit ? ` from r/${initialInterviewLead.subreddit}` : ''}`
+      : leadSource === 'platform'
+        ? 'Founder from the Creatives Takeover validation network'
+        : leadSource === 'hackernews'
+          ? 'Public Hacker News participant'
+          : `Public ${leadSource === 'x' ? 'X' : leadSource === 'linkedin' ? 'LinkedIn' : 'web'} participant`;
     setDraftInterview({
       ...createEmptyInterview(),
       sourceLeadId: initialInterviewLead.sourceLeadId,
-      intervieweeName: `u/${initialInterviewLead.username}`,
-      basicProfile: `Public Reddit participant${initialInterviewLead.subreddit ? ` from r/${initialInterviewLead.subreddit}` : ''}${initialInterviewLead.permalink ? `. Source: ${initialInterviewLead.permalink}` : ''}`,
-      segment: initialInterviewLead.subreddit ? `Reddit community: r/${initialInterviewLead.subreddit}` : 'Reddit customer discovery lead',
+      intervieweeName: leadSource === 'reddit' ? `u/${initialInterviewLead.username}` : initialInterviewLead.username,
+      basicProfile: `${sourceDescriptor}${initialInterviewLead.permalink ? `. Source: ${initialInterviewLead.permalink}` : ''}`,
+      segment: initialInterviewLead.subreddit
+        ? `Reddit community: r/${initialInterviewLead.subreddit}`
+        : leadSource === 'platform'
+          ? 'Platform validation network'
+          : 'Customer discovery lead',
     });
     setEditingInterviewId(null);
     setCurrentStep(1);

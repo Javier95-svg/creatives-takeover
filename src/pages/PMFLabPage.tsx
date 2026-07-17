@@ -45,6 +45,8 @@ export default function PMFLabPage() {
   const markToolUsed = useLeanStartupStore(s => s.markToolUsed);
 
   const [icpPersonaName, setIcpPersonaName] = useState<string | null>(null);
+  const [icpIndustry, setIcpIndustry] = useState<string | null>(null);
+  const [icpProblem, setIcpProblem] = useState<string | null>(null);
   const [waitlistProductName, setWaitlistProductName] = useState<string | null>(null);
   const [mode, setMode] = useState<'score' | 'discover'>('score');
   const [interviewLeadSeed, setInterviewLeadSeed] = useState<PMFInterviewLeadSeed | null>(null);
@@ -76,7 +78,7 @@ export default function PMFLabPage() {
       const [icpRes, waitlistRes] = await Promise.all([
         supabase
           .from('icp_analysis_results')
-          .select('target_audience')
+          .select('target_audience, industry, business_description')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
           .limit(1)
@@ -90,7 +92,10 @@ export default function PMFLabPage() {
           .maybeSingle(),
       ]);
       if (!active) return;
-      setIcpPersonaName((icpRes.data as { target_audience: string | null } | null)?.target_audience ?? null);
+      const icpRow = icpRes.data as { target_audience: string | null; industry: string | null; business_description: string | null } | null;
+      setIcpPersonaName(icpRow?.target_audience ?? null);
+      setIcpIndustry(icpRow?.industry ?? null);
+      setIcpProblem(icpRow?.business_description ?? null);
       setWaitlistProductName((waitlistRes.data as { product_name: string | null } | null)?.product_name ?? null);
     };
 
@@ -385,6 +390,8 @@ export default function PMFLabPage() {
                   <PMFCustomerDiscovery
                     defaultProductName={waitlistProductName}
                     defaultTargetAudience={icpPersonaName}
+                    defaultIndustry={icpIndustry}
+                    defaultProblem={icpProblem}
                     onCompleted={() => void loadDiscovery()}
                     onLogInterview={(seed) => {
                       setInterviewLeadSeed(seed);

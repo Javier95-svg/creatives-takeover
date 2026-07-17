@@ -49,6 +49,8 @@ export interface RedditPost {
   author: string;
   createdUtc: number;
   ageDays: number;
+  /** Originating network; downstream ranking/people code is source-agnostic. */
+  source?: 'reddit' | 'hackernews';
 }
 
 export interface RedditSubreddit {
@@ -175,6 +177,7 @@ function toPost(child: any): RedditPost | null {
     author: String(d.author || ''),
     createdUtc,
     ageDays,
+    source: 'reddit',
   };
 }
 

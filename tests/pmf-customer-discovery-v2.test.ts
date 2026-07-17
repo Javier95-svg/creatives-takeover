@@ -4,10 +4,14 @@ import { readFileSync } from 'node:fs';
 import {
   buildDiscoveryQueries,
   normalizeDiscoveryFilters,
+  normalizeValidationStage,
   rankDiscoveryPosts,
   scoreDiscoveryPost,
 } from '../supabase/functions/_shared/pmf-discovery-search.ts';
 import { retryWithBackoff } from '../supabase/functions/_shared/api-retry.ts';
+import { mapHackerNewsHit } from '../supabase/functions/_shared/hackernews.ts';
+import { buildDeterministicPeople } from '../supabase/functions/_shared/pmf-discovery-contract.ts';
+import { toExternalMention } from '../supabase/functions/_shared/external-mentions.ts';
 
 const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 const post = (overrides: Record<string, unknown> = {}) => ({
@@ -114,6 +118,124 @@ test('edge orchestration gates health, bounds search, and finalizes leads before
   assert.match(edge, /mapWithConcurrency\(searchJobs\.slice\(0, searchVersion === 2 \? 10 : 4\), 3/);
   assert.match(edge, /pmf_customer_discovery_degraded/);
   assert.ok(deductAt > 0 && deductAt < finalizeAt && finalizeAt < completeAt);
+});
+
+test('validation stage normalizes safely and reorders the query plan by intent', () => {
+  assert.equal(normalizeValidationStage('solution_validation'), 'solution_validation');
+  assert.equal(normalizeValidationStage('pricing'), 'pricing');
+  assert.equal(normalizeValidationStage('nonsense'), 'problem_discovery');
+  assert.equal(normalizeValidationStage(undefined), 'problem_discovery');
+
+  const input = { productName: 'invoice automation', targetAudience: 'freelance designers', problem: 'late client payments' };
+  const discoveryQueries = buildDiscoveryQueries(input, 'problem_discovery');
+  const validationQueries = buildDiscoveryQueries(input, 'solution_validation');
+  const pricingQueries = buildDiscoveryQueries(input, 'pricing');
+  assert.equal(discoveryQueries[0], 'late client payments');
+  assert.match(validationQueries[0], /looking for/);
+  assert.match(pricingQueries[0], /cost OR pricing/);
+  for (const queries of [discoveryQueries, validationQueries, pricingQueries]) {
+    assert.equal(new Set(queries).size, queries.length);
+    assert.ok(queries.length <= 5);
+  }
+});
+
+test('stage boost lifts posts matching the stage intent without breaking the 0-100 bound', () => {
+  const queries = ['invoicing tool'];
+  const alternativesPost = post({ id: 'alt', title: 'Alternative to my invoicing tool', body: 'Switching from the current one.' });
+  const neutral = scoreDiscoveryPost(alternativesPost, queries, new Set(), 'problem_discovery');
+  const boosted = scoreDiscoveryPost(alternativesPost, queries, new Set(), 'solution_validation');
+  assert.equal(neutral.inferredCategory, 'seeking_alternatives');
+  assert.ok(boosted.rankScore > neutral.rankScore);
+  assert.ok(boosted.rankScore <= 100);
+
+  const moneyPost = post({ id: 'money', title: 'Invoicing tool pricing is expensive', body: 'The subscription cost is brutal.' });
+  const pricingScore = scoreDiscoveryPost(moneyPost, queries, new Set(), 'pricing');
+  const defaultScore = scoreDiscoveryPost(moneyPost, queries, new Set());
+  assert.ok(pricingScore.rankScore > defaultScore.rankScore);
+});
+
+test('hacker news hits map into the shared post shape and unusable hits are dropped', () => {
+  const mapped = mapHackerNewsHit({
+    objectID: '412345',
+    title: 'Ask HN: How do you chase late invoices?',
+    story_text: '<p>Clients pay late &amp; it hurts cash flow.</p>',
+    author: 'founder_hn',
+    points: 42,
+    num_comments: 17,
+    created_at_i: Math.floor(Date.now() / 1000) - 86_400 * 3,
+  });
+  assert.ok(mapped);
+  assert.equal(mapped?.id, 'hn-412345');
+  assert.equal(mapped?.source, 'hackernews');
+  assert.equal(mapped?.subreddit, '');
+  assert.equal(mapped?.permalink, 'https://news.ycombinator.com/item?id=412345');
+  assert.equal(mapped?.body, 'Clients pay late & it hurts cash flow.');
+  assert.equal(mapped?.ageDays, 3);
+  assert.equal(mapHackerNewsHit({ objectID: '1', title: 'No author' }), null);
+  assert.equal(mapHackerNewsHit({ objectID: '2', author: 'someone' }), null);
+});
+
+test('deterministic people carry per-source profile urls', () => {
+  const people = buildDeterministicPeople([
+    { id: 'r1', title: 'Reddit pain', subreddit: 'freelance', permalink: 'https://reddit.test/r1', author: 'reddit_user', source: 'reddit' },
+    { id: 'hn-2', title: 'HN pain', subreddit: '', permalink: 'https://news.ycombinator.com/item?id=2', author: 'hn_user', source: 'hackernews' },
+  ]);
+  assert.equal(people.length, 2);
+  assert.equal(people[0].source, 'reddit');
+  assert.equal(people[0].profileUrl, 'https://www.reddit.com/user/reddit_user');
+  assert.equal(people[1].source, 'hackernews');
+  assert.equal(people[1].profileUrl, 'https://news.ycombinator.com/user?id=hn_user');
+});
+
+test('external mentions extract handles safely and reject off-platform urls', () => {
+  const xMention = toExternalMention({ title: 'Founder thread', url: 'https://x.com/maker_jane/status/123' }, 'x');
+  assert.equal(xMention?.platform, 'x');
+  assert.equal(xMention?.username, 'maker_jane');
+
+  const reserved = toExternalMention({ title: 'Search page', url: 'https://x.com/search?q=invoices' }, 'x');
+  assert.ok(reserved);
+  assert.equal(reserved?.username, undefined);
+
+  const linkedinProfile = toExternalMention({ title: 'Profile', url: 'https://www.linkedin.com/in/jane-doe-123/' }, 'linkedin');
+  assert.equal(linkedinProfile?.username, 'jane-doe-123');
+  const linkedinPost = toExternalMention({ title: 'Post', url: 'https://www.linkedin.com/posts/jane-doe_invoicing-activity-9' }, 'linkedin');
+  assert.equal(linkedinPost?.username, 'jane-doe');
+
+  assert.equal(toExternalMention({ title: 'Spoof', url: 'https://evil.example/x.com/fake' }, 'x'), null);
+  assert.equal(toExternalMention({ title: 'Spoof', url: 'https://linkedin.com.evil.example/in/fake' }, 'linkedin'), null);
+  assert.equal(toExternalMention({ title: 'No url' }, 'x'), null);
+});
+
+test('multi-source migration widens sources, adds opt-in, and scopes function grants', () => {
+  const migration = read('supabase/migrations/20260716180000_pmf_discovery_multi_source_network.sql');
+  assert.match(migration, /CHECK \(source IN \('reddit', 'platform', 'hackernews', 'x', 'linkedin', 'web'\)\)/);
+  assert.match(migration, /ADD COLUMN IF NOT EXISTS platform_user_id UUID REFERENCES public\.profiles\(id\) ON DELETE SET NULL/);
+  assert.match(migration, /ADD COLUMN IF NOT EXISTS validation_interviews_opt_in BOOLEAN NOT NULL DEFAULT false/);
+  assert.match(migration, /CREATE OR REPLACE FUNCTION public\.match_validation_users/);
+  assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.match_validation_users[\s\S]*TO authenticated, service_role/);
+  assert.match(migration, /REVOKE ALL ON FUNCTION public\.finalize_pmf_discovery_leads[\s\S]*FROM PUBLIC, anon, authenticated/);
+  assert.match(migration, /WHERE p\.validation_interviews_opt_in/);
+  const returnsTable = migration.match(/match_validation_users[\s\S]*?RETURNS TABLE \(([\s\S]*?)\)\s*LANGUAGE/)?.[1] || '';
+  assert.match(returnsTable, /activity_bucket TEXT/);
+  assert.doesNotMatch(returnsTable, /last_active_at/, 'precise last_active_at must not be exposed to callers');
+});
+
+test('client surfaces stage selector, community matches, external mentions, and multi-source pipeline', () => {
+  const discovery = read('src/components/pmf/PMFCustomerDiscovery.tsx');
+  const pipeline = read('src/components/pmf/PMFDiscoveryPipeline.tsx');
+  const matches = read('src/components/pmf/PMFCommunityMatches.tsx');
+  const account = read('src/pages/Account.tsx');
+  assert.match(discovery, /What are you validating right now\?/);
+  assert.match(discovery, /PMFCommunityMatches/);
+  assert.match(discovery, /externalMentions/);
+  assert.match(discovery, /Attach a demo to your outreach/);
+  assert.match(discovery, /aria-label="Scan history"/);
+  assert.match(pipeline, /All sources/);
+  assert.match(pipeline, /LEAD_SOURCE_LABEL/);
+  assert.match(pipeline, /fetchLeadActivities/);
+  assert.match(matches, /match_validation_users|fetchValidationMatches/);
+  assert.match(matches, /startConversation/);
+  assert.match(account, /ValidationNetworkCard/);
 });
 
 test('client surfaces flags, filters, pipeline, export, and interview linkage', () => {

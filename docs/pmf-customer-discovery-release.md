@@ -1,5 +1,19 @@
 # PMF Customer Discovery production release
 
+## v3 additions (multi-source + validation network)
+
+Beyond the v2 Reddit pipeline, the tool now includes:
+
+- **Platform leads**: opted-in members surface as interview matches via `match_validation_users()`; opt-in lives in Account → Validation network (`profiles.validation_interviews_opt_in`). Messaging uses the in-app inbox.
+- **Validation-stage awareness**: `validationStage` (`problem_discovery` | `solution_validation` | `pricing`) reorders search queries, boosts matching thread categories, and shapes the DM template. Solution validation can attach a published demo link.
+- **Hacker News**: free Algolia API, merged into the same ranking and people pipeline (`source = 'hackernews'`).
+- **X/LinkedIn mentions**: low-confidence web-search tier, labeled "verify manually", saveable as leads.
+- Discovery run history, per-lead activity timeline, and multi-source pipeline filters/CSV.
+
+Deploying v3 requires migration `20260716180000_pmf_discovery_multi_source_network.sql` **before** the function deploy. The client degrades gracefully when the migration or function lag behind (platform sections hide, mentions stay absent).
+
+Feature flags `pmf-discovery-search-v2` and `pmf-discovery-pipeline-v1` are now **default-on kill switches**: create them in PostHog only if you need to disable (set to `false`).
+
 ## One-time controls
 
 1. Create a protected GitHub environment named `production` and require a reviewer.

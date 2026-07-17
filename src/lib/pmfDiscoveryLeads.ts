@@ -10,11 +10,27 @@ export type PMFDiscoveryLeadActivityType =
   | 'interview_scheduled'
   | 'interview_logged';
 
+export type PMFDiscoveryLeadSource = 'reddit' | 'platform' | 'hackernews' | 'x' | 'linkedin' | 'web';
+
+export const LEAD_SOURCE_LABEL: Record<PMFDiscoveryLeadSource, string> = {
+  reddit: 'Reddit',
+  platform: 'Community',
+  hackernews: 'Hacker News',
+  x: 'X',
+  linkedin: 'LinkedIn',
+  web: 'Web',
+};
+
+export const leadDisplayHandle = (lead: Pick<PMFDiscoveryLead, 'source' | 'username' | 'display_name'>): string =>
+  lead.source === 'reddit' ? `u/${lead.username}` : (lead.display_name || lead.username);
+
 export interface PMFDiscoveryLead {
   id: string;
   user_id: string;
-  source: 'reddit';
+  source: PMFDiscoveryLeadSource;
   username: string;
+  display_name?: string | null;
+  platform_user_id?: string | null;
   latest_subreddit: string | null;
   profile_url: string | null;
   latest_permalink: string | null;
@@ -87,6 +103,80 @@ export async function saveDiscoveryLeadNotes(userId: string, leadId: string, not
   captureEvent('pmf_discovery_lead_note_added', { note_length: sanitized.length });
 }
 
+export interface ExternalMentionSeed {
+  platform: 'x' | 'linkedin';
+  title: string;
+  url: string;
+  snippet?: string;
+  username?: string;
+}
+
+/**
+ * Save a web-search X/LinkedIn mention as a low-confidence lead. These are
+ * "verify manually" — the URL is the source of truth, the handle best-effort.
+ */
+export async function upsertExternalLead(userId: string, mention: ExternalMentionSeed): Promise<PMFDiscoveryLead> {
+  const username = (mention.username || mention.title).trim().slice(0, 80);
+  const profileUrl = mention.username
+    ? (mention.platform === 'x'
+      ? `https://x.com/${encodeURIComponent(mention.username)}`
+      : `https://www.linkedin.com/in/${encodeURIComponent(mention.username)}`)
+    : mention.url;
+  const { data, error } = await client
+    .from('pmf_discovery_leads')
+    .upsert({
+      user_id: userId,
+      source: mention.platform,
+      normalized_username: username.toLowerCase(),
+      username,
+      profile_url: profileUrl,
+      latest_permalink: mention.url,
+      latest_pain_quote: mention.snippet?.trim() || mention.title,
+      last_seen_at: new Date().toISOString(),
+    }, { onConflict: 'user_id,source,normalized_username' })
+    .select('*')
+    .single();
+  if (error) throw error;
+  captureEvent('pmf_discovery_external_lead_saved', { platform: mention.platform, has_username: Boolean(mention.username) });
+  return data as PMFDiscoveryLead;
+}
+
+export interface PlatformLeadSeed {
+  platformUserId: string;
+  username: string;
+  displayName?: string | null;
+  painQuote?: string | null;
+  rankScore?: number;
+}
+
+/**
+ * Save a validation-network member as a discovery lead (source = 'platform').
+ * Upserts on (user_id, source, normalized_username) so repeat saves refresh
+ * the snapshot instead of duplicating the lead.
+ */
+export async function upsertPlatformLead(userId: string, seed: PlatformLeadSeed): Promise<PMFDiscoveryLead> {
+  const username = seed.username.trim();
+  const { data, error } = await client
+    .from('pmf_discovery_leads')
+    .upsert({
+      user_id: userId,
+      source: 'platform',
+      normalized_username: username.toLowerCase(),
+      username,
+      display_name: seed.displayName?.trim() || null,
+      platform_user_id: seed.platformUserId,
+      profile_url: `/profile/${encodeURIComponent(username)}`,
+      latest_pain_quote: seed.painQuote?.trim() || null,
+      rank_score: Math.max(0, Math.min(100, Math.round(seed.rankScore ?? 0))),
+      last_seen_at: new Date().toISOString(),
+    }, { onConflict: 'user_id,source,normalized_username' })
+    .select('*')
+    .single();
+  if (error) throw error;
+  captureEvent('pmf_discovery_platform_lead_saved', { match_score: seed.rankScore ?? 0 });
+  return data as PMFDiscoveryLead;
+}
+
 export async function markDiscoveryLeadsInterviewed(userId: string, leadIds: string[]) {
   const uniqueIds = Array.from(new Set(leadIds.filter(Boolean)));
   await Promise.all(uniqueIds.map(async (leadId) => {
@@ -98,12 +188,13 @@ export async function markDiscoveryLeadsInterviewed(userId: string, leadIds: str
 const csvCell = (value: unknown) => `"${String(value ?? '').replaceAll('"', '""')}"`;
 
 export function discoveryLeadsCsv(leads: PMFDiscoveryLead[]): string {
-  const headers = ['username', 'status', 'subreddit', 'reddit_url', 'rank_score', 'intent_score', 'occurrences', 'first_seen_at', 'last_seen_at', 'notes'];
+  const headers = ['username', 'source', 'status', 'community', 'source_url', 'rank_score', 'intent_score', 'occurrences', 'first_seen_at', 'last_seen_at', 'notes'];
   const rows = leads.map((lead) => [
     lead.username,
+    lead.source,
     lead.status,
     lead.latest_subreddit,
-    lead.latest_permalink,
+    lead.latest_permalink || lead.profile_url,
     lead.rank_score,
     lead.intent_score,
     lead.occurrence_count,
@@ -112,4 +203,21 @@ export function discoveryLeadsCsv(leads: PMFDiscoveryLead[]): string {
     lead.notes,
   ]);
   return [headers, ...rows].map((row) => row.map(csvCell).join(',')).join('\n');
+}
+
+export async function fetchLeadActivities(userId: string, leadId: string, limit = 20): Promise<Array<{
+  id: string;
+  activity_type: PMFDiscoveryLeadActivityType;
+  metadata: Record<string, unknown>;
+  occurred_at: string;
+}>> {
+  const { data, error } = await client
+    .from('pmf_discovery_lead_activities')
+    .select('id, activity_type, metadata, occurred_at')
+    .eq('user_id', userId)
+    .eq('lead_id', leadId)
+    .order('occurred_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data || [];
 }

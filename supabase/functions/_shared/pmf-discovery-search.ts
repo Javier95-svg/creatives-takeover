@@ -8,6 +8,25 @@ export type DiscoveryThreadCategory =
   | 'seeking_alternatives'
   | 'hot_discussion';
 
+/**
+ * The project's validation stage shapes what a good lead looks like:
+ * problem discovery wants people voicing pain, solution validation wants
+ * people actively shopping (demo audiences), pricing wants money talk.
+ */
+export type ValidationStage = 'problem_discovery' | 'solution_validation' | 'pricing';
+
+export const DEFAULT_VALIDATION_STAGE: ValidationStage = 'problem_discovery';
+
+export function normalizeValidationStage(value: unknown): ValidationStage {
+  return value === 'solution_validation' || value === 'pricing' ? value : DEFAULT_VALIDATION_STAGE;
+}
+
+const STAGE_CATEGORY_BOOST: Record<ValidationStage, Partial<Record<DiscoveryThreadCategory, number>>> = {
+  problem_discovery: { pain_point: 8, hot_discussion: 2 },
+  solution_validation: { solution_request: 8, seeking_alternatives: 8 },
+  pricing: { money_talk: 10, seeking_alternatives: 4 },
+};
+
 export interface DiscoverySearchInput {
   productName?: string;
   targetAudience?: string;
@@ -53,20 +72,26 @@ export function normalizeDiscoveryFilters(value: unknown): DiscoveryFilters {
   };
 }
 
-export function buildDiscoveryQueries(input: DiscoverySearchInput): string[] {
+export function buildDiscoveryQueries(input: DiscoverySearchInput, stage: ValidationStage = DEFAULT_VALIDATION_STAGE): string[] {
   const problem = clean(input.problem);
   const audience = clean(input.targetAudience);
   const product = clean(input.productName);
   const industry = clean(input.industry);
   const topic = problem || product || industry || audience;
   const category = product || industry || topic;
-  return unique([
-    topic,
-    [audience, problem || category].filter(Boolean).join(' '),
-    `("looking for" OR recommend OR "how do you") ${category}`,
-    `("alternative to" OR "switch from" OR replacement) ${category}`,
-    `(cost OR pricing OR expensive OR frustrating OR workaround) ${problem || category}`,
-  ].map((query) => query.slice(0, 250)), 5);
+  const base = topic;
+  const audienceQuery = [audience, problem || category].filter(Boolean).join(' ');
+  const painQuery = `(frustrating OR struggling OR "pain" OR workaround OR "how do you deal with") ${problem || category}`;
+  const shoppingQuery = `("looking for" OR recommend OR "how do you") ${category}`;
+  const switchQuery = `("alternative to" OR "switch from" OR replacement) ${category}`;
+  const moneyQuery = `(cost OR pricing OR expensive OR "worth paying" OR budget) ${problem || category}`;
+  // The first queries get the most search budget, so lead with the stage's intent.
+  const ordered = stage === 'solution_validation'
+    ? [shoppingQuery, switchQuery, base, audienceQuery, moneyQuery]
+    : stage === 'pricing'
+      ? [moneyQuery, switchQuery, base, audienceQuery, shoppingQuery]
+      : [base, audienceQuery, painQuery, shoppingQuery, moneyQuery];
+  return unique(ordered.map((query) => query.slice(0, 250)), 5);
 }
 
 const STOP_WORDS = new Set(['about', 'after', 'also', 'been', 'from', 'have', 'into', 'looking', 'that', 'their', 'there', 'they', 'this', 'what', 'when', 'where', 'which', 'with', 'would', 'your']);
@@ -99,6 +124,7 @@ export function scoreDiscoveryPost(
   post: RedditPost,
   queries: string[],
   seenPostIds: ReadonlySet<string> = new Set(),
+  stage: ValidationStage = DEFAULT_VALIDATION_STAGE,
 ): RankedDiscoveryPost {
   const text = `${post.title} ${post.body}`.toLowerCase();
   let bestCoverage = 0;
@@ -124,7 +150,8 @@ export function scoreDiscoveryPost(
   const authorScore = isUsableAuthor(post.author) ? 5 : 0;
   const spamSignals = /buy now|limited time|discount code|affiliate|sponsored|promo code|dm me for|sign up using/i.test(text);
   const spamPenalty = spamSignals ? 30 : 0;
-  const rankScore = Math.max(0, Math.min(100, relevanceScore + intent.score + freshnessScore + engagementScore + authorScore - spamPenalty));
+  const stageBoost = STAGE_CATEGORY_BOOST[stage][intent.category] ?? 0;
+  const rankScore = Math.max(0, Math.min(100, relevanceScore + intent.score + stageBoost + freshnessScore + engagementScore + authorScore - spamPenalty));
   const freshnessReason = post.ageDays >= 0 && post.ageDays <= 30 ? 'recent ' : '';
   const engagementReason = engagementScore >= 12 ? 'high-engagement ' : '';
   return {
@@ -148,6 +175,7 @@ export function rankDiscoveryPosts(
   queries: string[],
   seenPostIds: ReadonlySet<string> = new Set(),
   limit = 30,
+  stage: ValidationStage = DEFAULT_VALIDATION_STAGE,
 ): RankedDiscoveryPost[] {
   const uniquePosts = new Map<string, RedditPost>();
   for (const post of posts) {
@@ -155,7 +183,7 @@ export function rankDiscoveryPosts(
     if (uniquePosts.size >= 100) break;
   }
   return Array.from(uniquePosts.values())
-    .map((post) => scoreDiscoveryPost(post, queries, seenPostIds))
+    .map((post) => scoreDiscoveryPost(post, queries, seenPostIds, stage))
     .sort((a, b) => b.rankScore - a.rankScore || (b.upvotes + b.comments) - (a.upvotes + a.comments))
     .slice(0, limit);
 }

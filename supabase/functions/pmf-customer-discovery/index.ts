@@ -10,10 +10,14 @@ import { buildDeterministicPeople, hasUsableDiscoveryOutput, totalAvailableCredi
 import {
   buildDiscoveryQueries,
   normalizeDiscoveryFilters,
+  normalizeValidationStage,
   rankDiscoveryPosts,
   type DiscoveryThreadCategory,
   type RankedDiscoveryPost,
+  type ValidationStage,
 } from '../_shared/pmf-discovery-search.ts';
+import { searchHackerNews } from '../_shared/hackernews.ts';
+import { toExternalMention, type ExternalMention } from '../_shared/external-mentions.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -29,6 +33,7 @@ interface DiscoveryRequest {
   industry?: string;
   problem?: string;
   searchVersion?: 1 | 2;
+  validationStage?: string;
   filters?: unknown;
 }
 
@@ -185,6 +190,7 @@ serve(async (req) => {
     const industry = (body.industry || '').trim();
     const problem = (body.problem || '').trim();
     const searchVersion: 1 | 2 = body.searchVersion === 2 ? 2 : 1;
+    const validationStage: ValidationStage = normalizeValidationStage(body.validationStage);
     const filters = normalizeDiscoveryFilters(body.filters);
     if (!problem && !productName && !targetAudience) {
       return jsonResponse({ success: false, error: 'Describe your product, audience, or the problem you solve.', errorCode: 'INVALID_INPUT' }, 400);
@@ -193,7 +199,7 @@ serve(async (req) => {
     operationId = await resolveCreditIdempotencyKey(req, {
       userId: user.id,
       feature: 'PMF_DISCOVERY',
-      requestFingerprint: { productName, targetAudience, industry, problem, searchVersion, filters },
+      requestFingerprint: { productName, targetAudience, industry, problem, searchVersion, validationStage, filters },
     });
 
     const { data: replay } = await serviceClient
@@ -216,12 +222,14 @@ serve(async (req) => {
         dmTemplate: replay.search_meta?.dmTemplate || '',
         sourceMeta: replay.source_meta,
         queryMeta: replay.search_meta?.queryMeta,
+        externalMentions: replay.search_meta?.externalMentions || [],
         creditsUsed: 0,
       });
     }
 
     await emitDiscovery('pmf_customer_discovery_started', {
       search_version: searchVersion,
+      validation_stage: validationStage,
       has_product: Boolean(productName),
       has_audience: Boolean(targetAudience),
       has_problem: Boolean(problem),
@@ -231,7 +239,7 @@ serve(async (req) => {
     const audience = targetAudience || 'the target customers';
     const topic = problem || productName || industry || 'this problem';
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY')?.trim();
-    const deterministicQueries = buildDiscoveryQueries({ productName, targetAudience, industry, problem });
+    const deterministicQueries = buildDiscoveryQueries({ productName, targetAudience, industry, problem }, validationStage);
     let queryVariants = searchVersion === 2 ? deterministicQueries : deterministicQueries.slice(0, 1);
     if (searchVersion === 2 && openaiApiKey && Date.now() < deadlineAt - 8000) {
       try {
@@ -247,6 +255,16 @@ serve(async (req) => {
         console.warn('pmf-customer-discovery: query enrichment failed; using deterministic queries', error instanceof Error ? error.message : String(error));
       }
     }
+
+    // Hacker News runs in parallel with the Reddit searches; it is best-effort
+    // and adds supplementary threads/people without ever failing the scan.
+    const hackerNewsPromise: Promise<RedditPost[][]> = searchVersion === 2
+      ? Promise.all(queryVariants.slice(0, 2).map((query) => searchHackerNews(query, {
+        limit: 15,
+        timeRange: filters.timeRange,
+        deadlineAt,
+      })))
+      : Promise.resolve([]);
 
     const runWebSearch = async (query: string): Promise<{ sources: WebSource[] }> => {
       const controller = new AbortController();
@@ -321,7 +339,8 @@ serve(async (req) => {
       });
     }
 
-    const rawPosts = postArrays.flat().filter((post) => !excluded.has(post.subreddit.toLowerCase()));
+    const hackerNewsPosts = (await hackerNewsPromise).flat();
+    const rawPosts = [...postArrays.flat(), ...hackerNewsPosts].filter((post) => !post.subreddit || !excluded.has(post.subreddit.toLowerCase()));
     if (rawPosts.length === 0) {
       if (successfulSearches === 0) throw sourceFailureFor(sourceState.status === 'available' ? { status: 'api_unavailable', reason: 'all_search_requests_failed' } : sourceState);
       throw new DiscoveryFailure('No matching Reddit discussions were found. Try a broader description; no credits were used.', 'NO_LEADS_FOUND', 'source', 404, false, { status: 'available' });
@@ -339,15 +358,28 @@ serve(async (req) => {
         if (thread?.id) seenPostIds.add(String(thread.id));
       }
     }
-    let posts: RankedDiscoveryPost[] = rankDiscoveryPosts(rawPosts, queryVariants, seenPostIds, 30);
+    let posts: RankedDiscoveryPost[] = rankDiscoveryPosts(rawPosts, queryVariants, seenPostIds, 30, validationStage);
     if (searchVersion === 1) {
       posts = posts.sort((a, b) => (b.upvotes + b.comments) - (a.upvotes + a.comments)).slice(0, 30);
     }
     sourceState = { status: 'available' };
 
-    const webCommunitiesRes = Date.now() < deadlineAt - 5000
-      ? await runWebSearch(`Where do ${audience} gather online outside Reddit to discuss ${topic}? Give specific public community names and URLs.`)
-      : { sources: [] };
+    const emptySearch = { sources: [] as WebSource[] };
+    const [webCommunitiesRes, xMentionsRes, linkedinMentionsRes] = Date.now() < deadlineAt - 5000
+      ? await Promise.all([
+        runWebSearch(`Where do ${audience} gather online outside Reddit to discuss ${topic}? Give specific public community names and URLs.`),
+        searchVersion === 2
+          ? runWebSearch(`Recent public posts on X (formerly Twitter) where ${audience} discuss ${topic}. Link directly to the specific x.com posts.`)
+          : Promise.resolve(emptySearch),
+        searchVersion === 2
+          ? runWebSearch(`Recent public LinkedIn posts where ${audience} discuss ${topic}. Link directly to the specific linkedin.com posts.`)
+          : Promise.resolve(emptySearch),
+      ])
+      : [emptySearch, emptySearch, emptySearch];
+    const externalMentions = [
+      ...xMentionsRes.sources.map((source) => toExternalMention(source, 'x')),
+      ...linkedinMentionsRes.sources.map((source) => toExternalMention(source, 'linkedin')),
+    ].filter((mention): mention is ExternalMention => mention !== null).slice(0, 10);
     const webAllowedUrls = new Set(webCommunitiesRes.sources.map((source) => source.url).filter(Boolean) as string[]);
     const webSourceList = webCommunitiesRes.sources.map((source, index) => `(${index + 1}) ${source.title || hostOf(source.url || '')}${source.url ? ` — ${source.url}` : ''}`).join('\n');
     const byId = new Map(posts.map((post) => [post.id, post]));
@@ -356,10 +388,15 @@ serve(async (req) => {
     let parsed: any = {};
     if (openaiApiKey && Date.now() < deadlineAt - 5000) {
       try {
+        const stageGuidance = validationStage === 'solution_validation'
+          ? 'The founder is validating a solution: the dmTemplate should ask to show a short demo and get honest feedback.'
+          : validationStage === 'pricing'
+            ? 'The founder is validating pricing: the dmTemplate should ask about how they budget for or currently pay to solve this.'
+            : 'The founder is doing problem discovery: the dmTemplate should ask to learn about their experience, with no pitch.';
         parsed = await callOpenAIJson(
           openaiApiKey,
-          `You are a customer-discovery analyst. Use only the supplied Reddit post ids and web URLs. Categories: ${VALID_CATEGORIES.join(', ')}. Return JSON with threadEnrichments, painPoints, peopleIds, communities, and dmTemplate. Never invent a source or person.`,
-          `PRODUCT: ${productName || '(n/a)'}\nAUDIENCE: ${targetAudience || '(n/a)'}\nPROBLEM: ${problem || '(n/a)'}\n\nREDDIT POSTS:\n${postsDigest}\n\nWEB SOURCES:\n${webSourceList || '(none)'}`,
+          `You are a customer-discovery analyst. Use only the supplied post ids and web URLs. Categories: ${VALID_CATEGORIES.join(', ')}. Return JSON with threadEnrichments, painPoints, peopleIds, communities, and dmTemplate. ${stageGuidance} Never invent a source or person.`,
+          `PRODUCT: ${productName || '(n/a)'}\nAUDIENCE: ${targetAudience || '(n/a)'}\nPROBLEM: ${problem || '(n/a)'}\nVALIDATION STAGE: ${validationStage}\n\nPOSTS (Reddit and Hacker News):\n${postsDigest}\n\nWEB SOURCES:\n${webSourceList || '(none)'}`,
           3500,
           Math.min(10_000, deadlineAt - Date.now()),
         );
@@ -383,6 +420,7 @@ serve(async (req) => {
       title: post.title,
       snippet: post.body.slice(0, 280),
       url: post.permalink,
+      source: post.source || 'reddit',
       subreddit: post.subreddit,
       upvotes: post.upvotes,
       comments: post.comments,
@@ -444,6 +482,7 @@ serve(async (req) => {
     const dmTemplate = typeof parsed?.dmTemplate === 'string' ? parsed.dmTemplate.slice(0, 1000) : '';
     const queryMeta = {
       searchVersion,
+      validationStage,
       queryVariants,
       requestsAttempted: diagnostics.requestsAttempted,
       requestsSucceeded: diagnostics.requestsSucceeded,
@@ -457,7 +496,9 @@ serve(async (req) => {
     const sourceMeta = {
       redditAvailable: true,
       redditStatus: sourceState.status,
-      redditThreads: threads.length,
+      redditThreads: threads.filter((thread) => thread.source !== 'hackernews').length,
+      hackernewsThreads: threads.filter((thread) => thread.source === 'hackernews').length,
+      externalMentions: externalMentions.length,
       subreddits: topSubs.length,
       webCommunities: webCommunities.length,
       peopleCount: people.length,
@@ -480,7 +521,7 @@ serve(async (req) => {
         threads,
         pain_points: painPoints,
         people,
-        search_meta: { dmTemplate, operationId, queryMeta },
+        search_meta: { dmTemplate, operationId, queryMeta, externalMentions },
         source_meta: sourceMeta,
       })
       .select('id')
@@ -529,6 +570,8 @@ serve(async (req) => {
     const balanceAfter = totalAvailableCredits(creditResult.newBalance, creditResult.newQuota);
     await emitDiscovery('pmf_customer_discovery_completed', {
       search_version: searchVersion,
+      validation_stage: validationStage,
+      hackernews_threads: threads.filter((thread) => thread.source === 'hackernews').length,
       reddit_status: sourceState.status,
       requests_attempted: diagnostics.requestsAttempted,
       requests_succeeded: diagnostics.requestsSucceeded,
@@ -553,6 +596,7 @@ serve(async (req) => {
       dmTemplate,
       sourceMeta,
       queryMeta,
+      externalMentions,
       creditsUsed: chargedCredits,
       newBalance: balanceAfter,
       walletBalance: creditResult.newBalance ?? 0,

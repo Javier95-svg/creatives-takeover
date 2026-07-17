@@ -1,9 +1,12 @@
+export type DiscoveryPersonSource = 'reddit' | 'hackernews';
+
 export interface DiscoveryPostCandidate {
   id: string;
   title: string;
   subreddit: string;
   permalink: string;
   author: string;
+  source?: DiscoveryPersonSource;
 }
 
 export interface DiscoveryPerson {
@@ -12,9 +15,16 @@ export interface DiscoveryPerson {
   permalink: string;
   painQuote: string;
   category: string;
+  source: DiscoveryPersonSource;
+  profileUrl: string;
 }
 
 const SKIP_AUTHORS = new Set(['', '[deleted]', 'automoderator']);
+
+export const profileUrlFor = (source: DiscoveryPersonSource, username: string): string =>
+  source === 'hackernews'
+    ? `https://news.ycombinator.com/user?id=${encodeURIComponent(username)}`
+    : `https://www.reddit.com/user/${encodeURIComponent(username)}`;
 
 export function buildDeterministicPeople(
   posts: DiscoveryPostCandidate[],
@@ -34,12 +44,15 @@ export function buildDeterministicPeople(
     const normalizedAuthor = author.toLowerCase();
     if (SKIP_AUTHORS.has(normalizedAuthor) || usedAuthors.has(normalizedAuthor)) continue;
     usedAuthors.add(normalizedAuthor);
+    const source: DiscoveryPersonSource = post.source === 'hackernews' ? 'hackernews' : 'reddit';
     people.push({
       username: author,
       subreddit: post.subreddit,
       permalink: post.permalink,
       painQuote: post.title,
       category: categoryByPostId.get(post.id) || 'pain_point',
+      source,
+      profileUrl: profileUrlFor(source, author),
     });
     if (people.length >= limit) break;
   }

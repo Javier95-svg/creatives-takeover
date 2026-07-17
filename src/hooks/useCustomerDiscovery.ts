@@ -19,11 +19,13 @@ export interface PMFCommunity {
   howToEngage?: string;
 }
 
+export type PMFDiscoverySourceNetwork = 'reddit' | 'hackernews';
+
 export interface PMFThread {
   id?: string;
   title: string;
   url?: string;
-  source?: string;
+  source?: PMFDiscoverySourceNetwork | string;
   subreddit?: string;
   snippet?: string;
   painQuote?: string;
@@ -58,6 +60,8 @@ export interface PMFPerson {
   permalink: string;
   painQuote: string;
   category?: PMFThreadCategory;
+  source?: PMFDiscoverySourceNetwork | string;
+  profileUrl?: string;
   rankScore?: number;
   intentScore?: number;
   isNew?: boolean;
@@ -65,6 +69,14 @@ export interface PMFPerson {
   leadStatus?: PMFDiscoveryLeadStatus;
   occurrenceCount?: number;
   isRepeat?: boolean;
+}
+
+export interface PMFExternalMention {
+  platform: 'x' | 'linkedin';
+  title: string;
+  url: string;
+  snippet?: string;
+  username?: string;
 }
 
 export type PMFDiscoveryLeadStatus = 'new' | 'saved' | 'contacted' | 'interview_scheduled' | 'interviewed' | 'dismissed';
@@ -75,6 +87,8 @@ export interface PMFSourceMeta {
   redditHttpStatus?: number;
   reason?: string;
   redditThreads?: number;
+  hackernewsThreads?: number;
+  externalMentions?: number;
   subreddits?: number;
   webCommunities?: number;
   peopleCount?: number;
@@ -86,8 +100,11 @@ export interface PMFSourceMeta {
   durationMs?: number;
 }
 
+export type PMFValidationStage = 'problem_discovery' | 'solution_validation' | 'pricing';
+
 export interface PMFDiscoveryQueryMeta {
   searchVersion: 1 | 2;
+  validationStage?: PMFValidationStage;
   queryVariants: string[];
   requestsAttempted: number;
   requestsSucceeded: number;
@@ -111,6 +128,7 @@ export interface PMFDiscoveryError {
 
 export interface PMFDiscovery {
   id: string | null;
+  createdAt?: string;
   productName: string;
   targetAudience: string;
   problem: string;
@@ -118,9 +136,17 @@ export interface PMFDiscovery {
   threads: PMFThread[];
   painPoints: PMFPainPoint[];
   people: PMFPerson[];
+  externalMentions: PMFExternalMention[];
   dmTemplate: string;
   sourceMeta: PMFSourceMeta;
   queryMeta?: PMFDiscoveryQueryMeta;
+}
+
+export interface PMFDiscoveryRunSummary {
+  id: string;
+  createdAt: string;
+  productName: string;
+  targetAudience: string;
 }
 
 export interface DiscoveryInput {
@@ -129,6 +155,7 @@ export interface DiscoveryInput {
   industry?: string;
   problem: string;
   searchVersion?: 1 | 2;
+  validationStage?: PMFValidationStage;
   filters?: {
     timeRange?: 'month' | 'year' | 'all';
     includeSubreddits?: string[];
@@ -151,6 +178,31 @@ const readFunctionErrorPayload = async (error: unknown, data: unknown): Promise<
   }
 };
 
+const DISCOVERY_ROW_COLUMNS = 'id, created_at, product_name, target_audience, problem, communities, threads, pain_points, people, search_meta, source_meta';
+
+const mapDiscoveryRow = (row: Record<string, unknown>): PMFDiscovery => {
+  const searchMeta = row.search_meta as {
+    dmTemplate?: string;
+    queryMeta?: PMFDiscoveryQueryMeta;
+    externalMentions?: PMFExternalMention[];
+  } | null;
+  return {
+    id: (row.id as string) ?? null,
+    createdAt: (row.created_at as string) ?? undefined,
+    productName: (row.product_name as string) ?? '',
+    targetAudience: (row.target_audience as string) ?? '',
+    problem: (row.problem as string) ?? '',
+    communities: asArray<PMFCommunity>(row.communities),
+    threads: asArray<PMFThread>(row.threads),
+    painPoints: asArray<PMFPainPoint>(row.pain_points),
+    people: asArray<PMFPerson>(row.people),
+    externalMentions: asArray<PMFExternalMention>(searchMeta?.externalMentions),
+    dmTemplate: searchMeta?.dmTemplate ?? '',
+    sourceMeta: (row.source_meta as PMFSourceMeta) ?? {},
+    queryMeta: searchMeta?.queryMeta,
+  };
+};
+
 // ─── Hook ───────────────────────────────────────────────────────────────────
 export function useCustomerDiscovery() {
   const { user } = useAuth();
@@ -158,14 +210,38 @@ export function useCustomerDiscovery() {
   const [discovery, setDiscovery] = useState<PMFDiscovery | null>(null);
   const [discoveryError, setDiscoveryError] = useState<PMFDiscoveryError | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [runs, setRuns] = useState<PMFDiscoveryRunSummary[]>([]);
 
-  const loadDiscovery = useCallback(async () => {
+  const listRuns = useCallback(async () => {
     if (!user) return;
     try {
       const { data, error } = await supabase
         .from(PMF_DISCOVERY_TABLE)
-        .select('id, product_name, target_audience, problem, communities, threads, pain_points, people, search_meta, source_meta')
+        .select('id, created_at, product_name, target_audience')
         .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      if (error || !data) return;
+      setRuns((data as Array<Record<string, unknown>>).map((row) => ({
+        id: String(row.id),
+        createdAt: String(row.created_at ?? ''),
+        productName: (row.product_name as string) ?? '',
+        targetAudience: (row.target_audience as string) ?? '',
+      })));
+    } catch (err) {
+      console.warn('Failed to list discovery runs:', err);
+    }
+  }, [user]);
+
+  const loadDiscovery = useCallback(async (runId?: string) => {
+    if (!user) return;
+    try {
+      let query = supabase
+        .from(PMF_DISCOVERY_TABLE)
+        .select(DISCOVERY_ROW_COLUMNS)
+        .eq('user_id', user.id);
+      if (runId) query = query.eq('id', runId);
+      const { data, error } = await query
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -173,22 +249,7 @@ export function useCustomerDiscovery() {
         console.warn('Failed to load customer discovery:', error);
         return;
       }
-      if (data) {
-        const row = data as Record<string, unknown>;
-        setDiscovery({
-          id: (row.id as string) ?? null,
-          productName: (row.product_name as string) ?? '',
-          targetAudience: (row.target_audience as string) ?? '',
-          problem: (row.problem as string) ?? '',
-          communities: asArray<PMFCommunity>(row.communities),
-          threads: asArray<PMFThread>(row.threads),
-          painPoints: asArray<PMFPainPoint>(row.pain_points),
-          people: asArray<PMFPerson>(row.people),
-          dmTemplate: ((row.search_meta as { dmTemplate?: string })?.dmTemplate) ?? '',
-          sourceMeta: (row.source_meta as PMFSourceMeta) ?? {},
-          queryMeta: (row.search_meta as { queryMeta?: PMFDiscoveryQueryMeta })?.queryMeta,
-        });
-      }
+      if (data) setDiscovery(mapDiscoveryRow(data as Record<string, unknown>));
     } catch (err) {
       console.warn('Failed to load customer discovery:', err);
     }
@@ -197,7 +258,8 @@ export function useCustomerDiscovery() {
   useEffect(() => {
     if (!user) return;
     void loadDiscovery();
-  }, [user, loadDiscovery]);
+    void listRuns();
+  }, [user, loadDiscovery, listRuns]);
 
   const generateDiscovery = useCallback(async (input: DiscoveryInput) => {
     if (!user) {
@@ -222,6 +284,7 @@ export function useCustomerDiscovery() {
           industry: input.industry,
           problem: input.problem,
           searchVersion: input.searchVersion,
+          validationStage: input.validationStage,
           filters: input.filters,
         },
       });
@@ -261,10 +324,12 @@ export function useCustomerDiscovery() {
         threads,
         painPoints,
         people,
+        externalMentions: asArray<PMFExternalMention>(data.externalMentions),
         dmTemplate: typeof data.dmTemplate === 'string' ? data.dmTemplate : '',
         sourceMeta: (data.sourceMeta as PMFSourceMeta) ?? {},
         queryMeta: data.queryMeta as PMFDiscoveryQueryMeta | undefined,
       });
+      void listRuns();
 
       showCreditReceipt(
         'PMF_DISCOVERY',
@@ -295,7 +360,7 @@ export function useCustomerDiscovery() {
     } finally {
       setIsGenerating(false);
     }
-  }, [user, ensureCredits, handleCreditError, showCreditReceipt]);
+  }, [user, ensureCredits, handleCreditError, showCreditReceipt, listRuns]);
 
-  return { discovery, discoveryError, isGenerating, generateDiscovery, loadDiscovery };
+  return { discovery, discoveryError, isGenerating, generateDiscovery, loadDiscovery, runs, listRuns };
 }
