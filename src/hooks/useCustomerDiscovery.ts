@@ -4,7 +4,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCreditActions } from '@/hooks/useCreditActions';
 import { toast } from 'sonner';
 import { trackActivity } from '@/lib/activity';
-import { captureEvent } from '@/lib/analytics';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 export type PMFThreadCategory =
@@ -56,10 +55,23 @@ export interface PMFPerson {
 
 export interface PMFSourceMeta {
   redditAvailable?: boolean;
+  redditStatus?: 'missing_credentials' | 'authentication_failed' | 'rate_limited' | 'api_unavailable' | 'available';
+  redditHttpStatus?: number;
+  reason?: string;
   redditThreads?: number;
   subreddits?: number;
   webCommunities?: number;
   peopleCount?: number;
+}
+
+export interface PMFDiscoveryError {
+  message: string;
+  errorCode: string;
+  stage?: 'configuration' | 'source' | 'generation' | 'credits' | 'persistence';
+  retryable: boolean;
+  creditsUsed: number;
+  refunded: boolean;
+  sourceMeta?: PMFSourceMeta;
 }
 
 export interface PMFDiscovery {
@@ -86,11 +98,23 @@ const PMF_DISCOVERY_TABLE = 'pmf_customer_discovery' as never;
 
 const asArray = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
 
+const readFunctionErrorPayload = async (error: unknown, data: unknown): Promise<Record<string, unknown>> => {
+  if (data && typeof data === 'object') return data as Record<string, unknown>;
+  const response = (error as { context?: { clone?: () => Response } } | null)?.context;
+  if (!response || typeof response.clone !== 'function') return {};
+  try {
+    return await response.clone().json() as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+};
+
 // ─── Hook ───────────────────────────────────────────────────────────────────
 export function useCustomerDiscovery() {
   const { user } = useAuth();
   const { ensureCredits, handleCreditError, showCreditReceipt } = useCreditActions();
   const [discovery, setDiscovery] = useState<PMFDiscovery | null>(null);
+  const [discoveryError, setDiscoveryError] = useState<PMFDiscoveryError | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
   const loadDiscovery = useCallback(async () => {
@@ -145,11 +169,7 @@ export function useCustomerDiscovery() {
     const credits = ensureCredits('PMF_DISCOVERY');
     if (credits === null) return false;
 
-    captureEvent('pmf_customer_discovery_started', {
-      has_product: Boolean(input.product?.trim()),
-      has_audience: Boolean(input.audience?.trim()),
-      has_problem: Boolean(input.problem?.trim()),
-    });
+    setDiscoveryError(null);
     setIsGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke('pmf-customer-discovery', {
@@ -162,9 +182,22 @@ export function useCustomerDiscovery() {
       });
 
       if (error || !data?.success) {
-        const wasCreditError = handleCreditError(error, data, 'PMF_DISCOVERY');
+        const payload = await readFunctionErrorPayload(error, data);
+        const wasCreditError = handleCreditError(error, payload, 'PMF_DISCOVERY');
         if (!wasCreditError) {
-          toast.error('Could not generate your discovery list. Please try again.');
+          const message = typeof payload.error === 'string'
+            ? payload.error
+            : 'Could not generate your discovery list. Please try again.';
+          setDiscoveryError({
+            message,
+            errorCode: typeof payload.errorCode === 'string' ? payload.errorCode : 'DISCOVERY_FAILED',
+            stage: payload.stage as PMFDiscoveryError['stage'],
+            retryable: Boolean(payload.retryable),
+            creditsUsed: typeof payload.creditsUsed === 'number' ? payload.creditsUsed : 0,
+            refunded: Boolean(payload.refunded),
+            sourceMeta: payload.sourceMeta as PMFSourceMeta | undefined,
+          });
+          toast.error(message);
         }
         return false;
       }
@@ -200,23 +233,23 @@ export function useCustomerDiscovery() {
         people: people.length,
         redditAvailable: Boolean(data.sourceMeta?.redditAvailable),
       }, user.id);
-
-      captureEvent('pmf_customer_discovery_completed', {
-        communities: communities.length,
-        threads: threads.length,
-        pain_points: painPoints.length,
-        people: people.length,
-        reddit_available: Boolean(data.sourceMeta?.redditAvailable),
-      });
       return true;
     } catch (err) {
       console.error('Discovery error:', err);
-      toast.error('Something went wrong. Please try again.');
+      const message = 'Something went wrong while contacting customer discovery. Please try again.';
+      setDiscoveryError({
+        message,
+        errorCode: 'DISCOVERY_REQUEST_FAILED',
+        retryable: true,
+        creditsUsed: 0,
+        refunded: false,
+      });
+      toast.error(message);
       return false;
     } finally {
       setIsGenerating(false);
     }
   }, [user, ensureCredits, handleCreditError, showCreditReceipt]);
 
-  return { discovery, isGenerating, generateDiscovery, loadDiscovery };
+  return { discovery, discoveryError, isGenerating, generateDiscovery, loadDiscovery };
 }

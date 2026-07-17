@@ -1,10 +1,20 @@
 // Reddit data layer for evidence-rich customer discovery.
-// Returns real posts (upvotes, comments, permalinks, authors) and subreddits.
-// Uses app-only OAuth when REDDIT_CLIENT_ID/REDDIT_CLIENT_SECRET are set (more reliable
-// from datacenter IPs), otherwise the public *.json endpoints. Every call is best-effort:
-// on a block/error it returns [] and leaves `available` false so callers can degrade.
+// OAuth is required: anonymous Reddit traffic is not reliable from edge datacenters.
 
 const USER_AGENT = "CreativesTakeover-PMFLab/1.0 (Customer Discovery)";
+
+export type RedditClientStatus =
+  | "missing_credentials"
+  | "authentication_failed"
+  | "rate_limited"
+  | "api_unavailable"
+  | "available";
+
+export interface RedditSourceState {
+  status: RedditClientStatus;
+  httpStatus?: number;
+  reason?: string;
+}
 
 export interface RedditPost {
   id: string;
@@ -13,14 +23,14 @@ export interface RedditPost {
   subreddit: string;
   upvotes: number;
   comments: number;
-  permalink: string; // absolute URL
+  permalink: string;
   author: string;
   createdUtc: number;
   ageDays: number;
 }
 
 export interface RedditSubreddit {
-  name: string; // display_name, without "r/"
+  name: string;
   title: string;
   subscribers: number;
   url: string;
@@ -35,12 +45,14 @@ export interface SearchOptions {
 }
 
 export interface RedditClient {
-  readonly available: boolean;
+  readonly sourceState: RedditSourceState;
   searchReddit(query: string, opts?: SearchOptions): Promise<RedditPost[]>;
   discoverSubreddits(query: string, limit?: number): Promise<RedditSubreddit[]>;
 }
 
-async function getAppToken(clientId: string, clientSecret: string): Promise<string | null> {
+type TokenResult = { token: string | null; state: RedditSourceState };
+
+async function getAppToken(clientId: string, clientSecret: string): Promise<TokenResult> {
   try {
     const res = await fetch("https://www.reddit.com/api/v1/access_token", {
       method: "POST",
@@ -52,14 +64,24 @@ async function getAppToken(clientId: string, clientSecret: string): Promise<stri
       body: "grant_type=client_credentials",
     });
     if (!res.ok) {
-      console.warn("reddit: token request failed", res.status);
-      return null;
+      const status: RedditClientStatus = res.status === 429
+        ? "rate_limited"
+        : res.status === 401 || res.status === 403
+          ? "authentication_failed"
+          : "api_unavailable";
+      console.warn("reddit: OAuth token request failed", { status: res.status, sourceStatus: status });
+      return { token: null, state: { status, httpStatus: res.status, reason: "oauth_token_request_failed" } };
     }
     const json = await res.json();
-    return json?.access_token ?? null;
-  } catch (e) {
-    console.warn("reddit: token request error", e);
-    return null;
+    const token = typeof json?.access_token === "string" ? json.access_token : null;
+    if (!token) {
+      console.warn("reddit: OAuth response did not include an access token");
+      return { token: null, state: { status: "authentication_failed", reason: "oauth_token_missing" } };
+    }
+    return { token, state: { status: "available" } };
+  } catch (error) {
+    console.warn("reddit: OAuth token request error", error);
+    return { token: null, state: { status: "api_unavailable", reason: "oauth_network_error" } };
   }
 }
 
@@ -83,44 +105,58 @@ function toPost(child: any): RedditPost | null {
 }
 
 export async function createRedditClient(): Promise<RedditClient> {
-  const clientId = Deno.env.get("REDDIT_CLIENT_ID");
-  const clientSecret = Deno.env.get("REDDIT_CLIENT_SECRET");
+  const clientId = Deno.env.get("REDDIT_CLIENT_ID")?.trim();
+  const clientSecret = Deno.env.get("REDDIT_CLIENT_SECRET")?.trim();
+  const state: RedditSourceState = { status: "missing_credentials", reason: "reddit_oauth_not_configured" };
 
   let token: string | null = null;
   if (clientId && clientSecret) {
-    token = await getAppToken(clientId, clientSecret);
+    const tokenResult = await getAppToken(clientId, clientSecret);
+    token = tokenResult.token;
+    Object.assign(state, tokenResult.state);
   }
-  const base = token ? "https://oauth.reddit.com" : "https://www.reddit.com";
-  const suffix = token ? "" : ".json";
+
   const headers: Record<string, string> = token
     ? { "User-Agent": USER_AGENT, "Authorization": `Bearer ${token}` }
     : { "User-Agent": USER_AGENT };
 
-  const state = { available: false };
-
   const fetchChildren = async (url: string): Promise<any[]> => {
+    if (!token) return [];
     try {
       const res = await fetch(url, { headers });
       if (!res.ok) {
-        console.warn("reddit: fetch non-ok", res.status, url);
+        state.status = res.status === 429
+          ? "rate_limited"
+          : res.status === 401 || res.status === 403
+            ? "authentication_failed"
+            : "api_unavailable";
+        state.httpStatus = res.status;
+        state.reason = "reddit_api_request_failed";
+        console.warn("reddit: API request failed", { status: res.status, sourceStatus: state.status });
         return [];
       }
       const data = await res.json();
       const children = data?.data?.children;
       if (Array.isArray(children)) {
-        state.available = true;
+        state.status = "available";
+        delete state.httpStatus;
+        delete state.reason;
         return children;
       }
+      state.status = "api_unavailable";
+      state.reason = "reddit_api_invalid_payload";
       return [];
-    } catch (e) {
-      console.warn("reddit: fetch error", url, e);
+    } catch (error) {
+      state.status = "api_unavailable";
+      state.reason = "reddit_api_network_error";
+      console.warn("reddit: API request error", error);
       return [];
     }
   };
 
   return {
-    get available() {
-      return state.available;
+    get sourceState() {
+      return { ...state };
     },
 
     async searchReddit(query: string, opts: SearchOptions = {}): Promise<RedditPost[]> {
@@ -135,21 +171,20 @@ export async function createRedditClient(): Promise<RedditClient> {
       let url: string;
       if (subreddit) {
         params.set("restrict_sr", "1");
-        url = `${base}/r/${encodeURIComponent(subreddit)}/search${suffix}?${params.toString()}`;
+        url = `https://oauth.reddit.com/r/${encodeURIComponent(subreddit)}/search?${params.toString()}`;
       } else {
-        url = `${base}/search${suffix}?${params.toString()}`;
+        url = `https://oauth.reddit.com/search?${params.toString()}`;
       }
       const children = await fetchChildren(url);
-      return children.map(toPost).filter((p): p is RedditPost => p !== null);
+      return children.map(toPost).filter((post): post is RedditPost => post !== null);
     },
 
     async discoverSubreddits(query: string, limit = 10): Promise<RedditSubreddit[]> {
       const params = new URLSearchParams({ q: query, limit: String(limit), raw_json: "1" });
-      const url = `${base}/subreddits/search${suffix}?${params.toString()}`;
-      const children = await fetchChildren(url);
+      const children = await fetchChildren(`https://oauth.reddit.com/subreddits/search?${params.toString()}`);
       return children
-        .map((c: any): RedditSubreddit | null => {
-          const d = c?.data;
+        .map((child: any): RedditSubreddit | null => {
+          const d = child?.data;
           if (!d?.display_name) return null;
           return {
             name: String(d.display_name),
@@ -159,7 +194,7 @@ export async function createRedditClient(): Promise<RedditClient> {
             description: String(d.public_description || "").slice(0, 300),
           };
         })
-        .filter((s): s is RedditSubreddit => s !== null);
+        .filter((subreddit): subreddit is RedditSubreddit => subreddit !== null);
     },
   };
 }

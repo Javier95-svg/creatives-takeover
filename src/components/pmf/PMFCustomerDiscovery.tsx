@@ -72,7 +72,7 @@ const buildMarkdown = (d: PMFDiscovery): string => {
 };
 
 const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({ defaultProductName, defaultTargetAudience, onCompleted }) => {
-  const { discovery, isGenerating, generateDiscovery } = useCustomerDiscovery();
+  const { discovery, discoveryError, isGenerating, generateDiscovery } = useCustomerDiscovery();
   const [product, setProduct] = useState('');
   const [audience, setAudience] = useState('');
   const [problem, setProblem] = useState('');
@@ -175,6 +175,39 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({ defaultProd
           )}
         </div>
       </div>
+
+      {discoveryError && (
+        <div className="rounded-xl border border-warning/30 bg-warning-subtle p-4 flex items-start gap-2" role="alert">
+          <Info className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">
+              {discoveryError.errorCode === 'NO_LEADS_FOUND' || discoveryError.errorCode === 'NO_USABLE_LEADS'
+                ? 'No matching leads found'
+                : discoveryError.errorCode.startsWith('REDDIT_')
+                  ? 'Reddit scan unavailable'
+                  : 'Customer discovery could not finish'}
+            </p>
+            <p className="text-xs leading-relaxed text-muted-foreground">{discoveryError.message}</p>
+            <p className="text-caption text-muted-foreground">
+              {discoveryError.creditsUsed > 0 && !discoveryError.refunded
+                ? `${discoveryError.creditsUsed} credits require support review.`
+                : 'No credits were used for this run.'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {!discoveryError && discovery && !hasResults && (
+        <div className="rounded-xl border border-warning/30 bg-warning-subtle p-4 flex items-start gap-2" role="status">
+          <Info className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">This saved run contains no usable leads</p>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Run the scan again. Empty results are no longer treated as completed or charged work.
+            </p>
+          </div>
+        </div>
+      )}
 
       {hasResults && discovery && (
         <div className="space-y-6">
