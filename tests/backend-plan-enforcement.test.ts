@@ -339,8 +339,8 @@ test('shared credit deduction treats zero-credit operations as no-op success', (
 test('ICP analyzer skips free saves and preserves ICP entitlement metadata for future charges', () => {
   const source = readFileSync(new URL('../supabase/functions/icp-analyzer/index.ts', import.meta.url), 'utf8');
 
-  assert.match(source, /if \(shouldChargeIcpCredits\(CREDIT_COSTS\.ICP_ANALYSIS\)\)/);
+  assert.match(source, /if \(shouldChargeIcpCredits\(icpDraftCost\)\)/);
   assert.match(source, /entitlementFeature: "ICP_ANALYSIS"/);
-  assert.match(source, /Skipping ICP Analysis credit deduction because the configured credit cost is zero/);
+  assert.match(source, /First ICP draft is free for this account; no credits charged/);
   assert.match(source, /payload\.mode === "save" && user && creditsCharged/);
 });

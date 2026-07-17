@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Shield, AlertTriangle, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { PMFDiscoveryHealthCard } from '@/components/admin/PMFDiscoveryHealthCard';
 
 const AdminTools = () => {
   const { user, loading: authLoading } = useAuth();
@@ -124,6 +125,8 @@ const AdminTools = () => {
               </CardContent>
             </Card>
           </div>
+
+          <PMFDiscoveryHealthCard />
 
           <ArticleGenerator />
         </div>

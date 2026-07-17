@@ -45,6 +45,8 @@ test('pmf funnel analytics events are wired on client actions', () => {
   assert.match(discoveryEdge, /pmf_customer_discovery_started/);
   assert.match(discoveryEdge, /pmf_customer_discovery_completed/);
   assert.match(discoveryEdge, /pmf_customer_discovery_failed/);
+  assert.match(discoveryEdge, /pmf_customer_discovery_degraded/);
+  assert.match(discoveryEdge, /pmf_customer_discovery_health_checked/);
 });
 
 test('pmf evidence persistence is updated by scoring and survey responses', () => {

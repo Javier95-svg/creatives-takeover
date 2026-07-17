@@ -33,6 +33,13 @@ export interface PMFThread {
   comments?: number;
   ageDays?: number;
   author?: string;
+  relevanceScore?: number;
+  intentScore?: number;
+  freshnessScore?: number;
+  rankScore?: number;
+  matchedQueries?: string[];
+  rankingReason?: string;
+  isNew?: boolean;
 }
 
 export interface PMFPainPoint {
@@ -51,7 +58,16 @@ export interface PMFPerson {
   permalink: string;
   painQuote: string;
   category?: PMFThreadCategory;
+  rankScore?: number;
+  intentScore?: number;
+  isNew?: boolean;
+  leadId?: string;
+  leadStatus?: PMFDiscoveryLeadStatus;
+  occurrenceCount?: number;
+  isRepeat?: boolean;
 }
+
+export type PMFDiscoveryLeadStatus = 'new' | 'saved' | 'contacted' | 'interview_scheduled' | 'interviewed' | 'dismissed';
 
 export interface PMFSourceMeta {
   redditAvailable?: boolean;
@@ -62,6 +78,25 @@ export interface PMFSourceMeta {
   subreddits?: number;
   webCommunities?: number;
   peopleCount?: number;
+  requestsAttempted?: number;
+  requestsSucceeded?: number;
+  requestsFailed?: number;
+  retryCount?: number;
+  partial?: boolean;
+  durationMs?: number;
+}
+
+export interface PMFDiscoveryQueryMeta {
+  searchVersion: 1 | 2;
+  queryVariants: string[];
+  requestsAttempted: number;
+  requestsSucceeded: number;
+  requestsFailed: number;
+  retryCount: number;
+  rawCandidates: number;
+  returnedThreads: number;
+  partial: boolean;
+  durationMs: number;
 }
 
 export interface PMFDiscoveryError {
@@ -85,6 +120,7 @@ export interface PMFDiscovery {
   people: PMFPerson[];
   dmTemplate: string;
   sourceMeta: PMFSourceMeta;
+  queryMeta?: PMFDiscoveryQueryMeta;
 }
 
 export interface DiscoveryInput {
@@ -92,6 +128,12 @@ export interface DiscoveryInput {
   audience?: string;
   industry?: string;
   problem: string;
+  searchVersion?: 1 | 2;
+  filters?: {
+    timeRange?: 'month' | 'year' | 'all';
+    includeSubreddits?: string[];
+    excludeSubreddits?: string[];
+  };
 }
 
 const PMF_DISCOVERY_TABLE = 'pmf_customer_discovery' as never;
@@ -144,6 +186,7 @@ export function useCustomerDiscovery() {
           people: asArray<PMFPerson>(row.people),
           dmTemplate: ((row.search_meta as { dmTemplate?: string })?.dmTemplate) ?? '',
           sourceMeta: (row.source_meta as PMFSourceMeta) ?? {},
+          queryMeta: (row.search_meta as { queryMeta?: PMFDiscoveryQueryMeta })?.queryMeta,
         });
       }
     } catch (err) {
@@ -178,6 +221,8 @@ export function useCustomerDiscovery() {
           targetAudience: input.audience,
           industry: input.industry,
           problem: input.problem,
+          searchVersion: input.searchVersion,
+          filters: input.filters,
         },
       });
 
@@ -218,6 +263,7 @@ export function useCustomerDiscovery() {
         people,
         dmTemplate: typeof data.dmTemplate === 'string' ? data.dmTemplate : '',
         sourceMeta: (data.sourceMeta as PMFSourceMeta) ?? {},
+        queryMeta: data.queryMeta as PMFDiscoveryQueryMeta | undefined,
       });
 
       showCreditReceipt(

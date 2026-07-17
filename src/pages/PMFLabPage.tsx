@@ -26,6 +26,7 @@ import { usePlanAccess } from '@/hooks/usePlanAccess';
 import { useCustomerDiscovery } from '@/hooks/useCustomerDiscovery';
 import { captureEvent, trackToolOpened } from '@/lib/analytics';
 import { supabase } from '@/integrations/supabase/client';
+import type { PMFInterviewLeadSeed } from '@/components/pmf/PMFDiscoveryPipeline';
 
 const structuredData = [
   {
@@ -46,6 +47,7 @@ export default function PMFLabPage() {
   const [icpPersonaName, setIcpPersonaName] = useState<string | null>(null);
   const [waitlistProductName, setWaitlistProductName] = useState<string | null>(null);
   const [mode, setMode] = useState<'score' | 'discover'>('score');
+  const [interviewLeadSeed, setInterviewLeadSeed] = useState<PMFInterviewLeadSeed | null>(null);
   // Progressive disclosure: only one detail step is expanded at a time so the
   // page opens with a single clear focus instead of a wall of stacked sections.
   const [activeStep, setActiveStep] = useState<'gather' | 'score'>('gather');
@@ -384,6 +386,12 @@ export default function PMFLabPage() {
                     defaultProductName={waitlistProductName}
                     defaultTargetAudience={icpPersonaName}
                     onCompleted={() => void loadDiscovery()}
+                    onLogInterview={(seed) => {
+                      setInterviewLeadSeed(seed);
+                      setMode('score');
+                      setActiveStep('score');
+                      requestAnimationFrame(() => scrollTo(scoreFormRef));
+                    }}
                   />
                 ) : (
                   <>
@@ -462,6 +470,7 @@ export default function PMFLabPage() {
                           {/* Kept mounted (hidden) when collapsed so in-progress form answers survive. */}
                           <div className={cn('border-t border-border/60 p-5', activeStep !== 'score' && 'hidden')}>
                             <PMFEvidenceForm
+                              initialInterviewLead={interviewLeadSeed}
                               onSubmit={(answers) => runAnalysis(answers, {
                                 businessContext: {
                                   productName: waitlistProductName ?? undefined,

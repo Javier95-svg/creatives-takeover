@@ -30,6 +30,7 @@ import type { PMFEvidenceAnswers, PMFInterviewLog } from '@/hooks/usePMFLab';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 import { CreditCostNotice } from '@/components/CreditCostNotice';
 import { captureEvent, trackPMFEvidenceLogged } from '@/lib/analytics';
+import type { PMFInterviewLeadSeed } from '@/components/pmf/PMFDiscoveryPipeline';
 
 const TEST_TYPES = [
   'Landing page',
@@ -147,9 +148,10 @@ interface PMFEvidenceFormProps {
   onSubmit: (answers: PMFEvidenceAnswers) => void;
   isSubmitting?: boolean;
   belowThresholdOverride?: boolean;
+  initialInterviewLead?: PMFInterviewLeadSeed | null;
 }
 
-const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmitting = false }) => {
+const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmitting = false, initialInterviewLead }) => {
   const [testTypes, setTestTypes] = useState<string[]>([]);
   const [peopleReached, setPeopleReached] = useState(0);
   const [belowThresholdAcknowledged, setBelowThresholdAcknowledged] = useState(false);
@@ -171,7 +173,23 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
   const [currentStep, setCurrentStep] = useState(0);
   const validationSetupRef = useRef<HTMLDivElement | null>(null);
   const interviewStepRef = useRef<HTMLDivElement | null>(null);
+  const seededLeadRef = useRef<string | null>(null);
   const [stepFeedback, setStepFeedback] = useState<{ step: number; message: string } | null>(null);
+
+  useEffect(() => {
+    if (!initialInterviewLead || seededLeadRef.current === initialInterviewLead.sourceLeadId) return;
+    seededLeadRef.current = initialInterviewLead.sourceLeadId;
+    setDraftInterview({
+      ...createEmptyInterview(),
+      sourceLeadId: initialInterviewLead.sourceLeadId,
+      intervieweeName: `u/${initialInterviewLead.username}`,
+      basicProfile: `Public Reddit participant${initialInterviewLead.subreddit ? ` from r/${initialInterviewLead.subreddit}` : ''}${initialInterviewLead.permalink ? `. Source: ${initialInterviewLead.permalink}` : ''}`,
+      segment: initialInterviewLead.subreddit ? `Reddit community: r/${initialInterviewLead.subreddit}` : 'Reddit customer discovery lead',
+    });
+    setEditingInterviewId(null);
+    setCurrentStep(1);
+    requestAnimationFrame(() => interviewStepRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  }, [initialInterviewLead]);
 
   const conversationCount = interviews.length;
   const strongInterestCount = interviews.filter(

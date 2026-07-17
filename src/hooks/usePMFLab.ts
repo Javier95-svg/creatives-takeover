@@ -17,6 +17,7 @@ import {
 import { ensureMentorDemandNotification } from '@/lib/mentorDemandNotifications';
 import { trackActivity } from '@/lib/activity';
 import { captureEvent } from '@/lib/analytics';
+import { markDiscoveryLeadsInterviewed } from '@/lib/pmfDiscoveryLeads';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -42,6 +43,7 @@ export interface PMFEvidenceAnswers {
 
 export interface PMFInterviewLog {
   id: string;
+  sourceLeadId?: string;
   intervieweeName: string;
   basicProfile: string;
   segment: string;
@@ -355,6 +357,12 @@ export function usePMFLab() {
         ?? answers.conversationCount
         ?? 0;
       void persistInterviewEvidenceCount(conversationCount);
+      const sourceLeadIds = (answers.interviews || []).map((interview) => interview.sourceLeadId).filter((id): id is string => Boolean(id));
+      if (sourceLeadIds.length > 0) {
+        void markDiscoveryLeadsInterviewed(user.id, sourceLeadIds).catch((error) => {
+          console.warn('Failed to mark discovery leads interviewed:', error);
+        });
+      }
       void loadTrend();
       captureEvent('pmf_analysis_completed', {
         is_rescore: isReScore,

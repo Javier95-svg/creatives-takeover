@@ -503,7 +503,7 @@ serve(async (req) => {
         .eq("user_id", user.id);
       icpDraftCost = (existingDraftCount ?? 0) >= 1 ? CREDIT_COSTS.ICP_EXTRA_DRAFT : 0;
 
-      if (icpDraftCost > 0) {
+      if (shouldChargeIcpCredits(icpDraftCost)) {
         creditResult = await checkAndDeductCredits(user.id, icpDraftCost, "ICP Draft", undefined, {
           idempotencyKey,
           entitlementFeature: "ICP_ANALYSIS",

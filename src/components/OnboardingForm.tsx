@@ -84,6 +84,19 @@ interface OnboardingStep {
   label: string;
 }
 
+const ONBOARDING_STEPS: OnboardingStep[] = [
+  ...FOUNDER_STAGE_QUESTIONS.map((question) => ({
+    id: question.id,
+    kind: 'stage' as const,
+    chapter: 'Stage',
+    label: 'Founder stage',
+  })),
+  { id: 'startup_sector', kind: 'sector', chapter: 'Context', label: 'Market' },
+  { id: 'country', kind: 'country', chapter: 'Context', label: 'Location' },
+  { id: 'cofounder_situation', kind: 'cofounder', chapter: 'Team', label: 'Co-founder' },
+  { id: 'activation_intent', kind: 'activation', chapter: 'First action', label: 'Launchpad' },
+];
+
 interface ActivationCard {
   value: ActivationIntent;
   headline: string;
@@ -272,23 +285,13 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   // Steps are dynamic: the fundraising follow-up only appears when the primary
   // blocker is fundraising, so it never taxes the other ~85% of founders.
   const steps = useMemo<OnboardingStep[]>(() => {
-    const list: OnboardingStep[] = FOUNDER_STAGE_QUESTIONS.map((question) => ({
-      id: question.id,
-      kind: 'stage' as const,
-      chapter: 'Stage',
-      label: 'Founder stage',
-    }));
+    const list: OnboardingStep[] = ONBOARDING_STEPS.filter((item) => item.kind === 'stage');
 
     if (formData.stageAnswers.blocker === 'fundraising') {
       list.push({ id: 'fundraisingStatus', kind: 'fundraising', chapter: 'Stage', label: 'Fundraising' });
     }
 
-    list.push(
-      { id: 'startup_sector', kind: 'sector', chapter: 'Context', label: 'Market' },
-      { id: 'country', kind: 'country', chapter: 'Context', label: 'Location' },
-      { id: 'cofounder_situation', kind: 'cofounder', chapter: 'Team', label: 'Co-founder' },
-      { id: 'activation_intent', kind: 'activation', chapter: 'First action', label: 'Launchpad' },
-    );
+    list.push(...ONBOARDING_STEPS.filter((item) => item.kind !== 'stage'));
 
     return list;
   }, [formData.stageAnswers.blocker]);

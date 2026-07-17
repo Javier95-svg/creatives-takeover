@@ -179,6 +179,14 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
               Monthly Plans
             </DropdownMenuItem>
 
+            <DropdownMenuItem
+              className="flex items-center gap-2 text-sm cursor-pointer"
+              onSelect={() => navigate('/account#credit-activity')}
+            >
+              <Coins className="h-4 w-4" />
+              View credit activity
+            </DropdownMenuItem>
+
             {showPurchaseButton && (
               <div className="px-3 pb-3 pt-1">
                 <Button size="sm" className="w-full gap-2" variant="outline" onClick={() => navigate('/pricing')}>
@@ -274,6 +282,10 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
               Upgrade Plan
             </Button>
           )}
+
+          <Button className="w-full" variant="ghost" onClick={() => navigate('/account#credit-activity')}>
+            View credit activity
+          </Button>
         </div>
       </div>
     );

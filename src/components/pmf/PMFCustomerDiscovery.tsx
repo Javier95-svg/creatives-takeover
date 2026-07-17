@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Users, MessagesSquare, ExternalLink, Copy, Check, Search, RefreshCw, Compass,
-  Flame, UserPlus, Info,
+  Flame, UserPlus, Info, SlidersHorizontal,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,11 +14,16 @@ import { CreditCostNotice } from '@/components/CreditCostNotice';
 import {
   useCustomerDiscovery, type PMFDiscovery, type PMFPerson, type PMFThreadCategory,
 } from '@/hooks/useCustomerDiscovery';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { useAuth } from '@/contexts/AuthContext';
+import { logDiscoveryLeadActivity } from '@/lib/pmfDiscoveryLeads';
+import PMFDiscoveryPipeline, { type PMFInterviewLeadSeed } from '@/components/pmf/PMFDiscoveryPipeline';
 
 interface PMFCustomerDiscoveryProps {
   defaultProductName?: string | null;
   defaultTargetAudience?: string | null;
   onCompleted?: () => void;
+  onLogInterview?: (seed: PMFInterviewLeadSeed) => void;
 }
 
 const CATEGORY_LABEL: Record<PMFThreadCategory, string> = {
@@ -71,7 +76,10 @@ const buildMarkdown = (d: PMFDiscovery): string => {
   return lines.join('\n');
 };
 
-const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({ defaultProductName, defaultTargetAudience, onCompleted }) => {
+const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({ defaultProductName, defaultTargetAudience, onCompleted, onLogInterview }) => {
+  const { user } = useAuth();
+  const searchV2Enabled = useFeatureFlagEnabled('pmf-discovery-search-v2') === true;
+  const pipelineEnabled = useFeatureFlagEnabled('pmf-discovery-pipeline-v1') === true;
   const { discovery, discoveryError, isGenerating, generateDiscovery } = useCustomerDiscovery();
   const [product, setProduct] = useState('');
   const [audience, setAudience] = useState('');
@@ -79,6 +87,9 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({ defaultProd
   const [copiedAll, setCopiedAll] = useState(false);
   const [copiedDm, setCopiedDm] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<'all' | PMFThreadCategory>('all');
+  const [timeRange, setTimeRange] = useState<'month' | 'year' | 'all'>('year');
+  const [includeSubreddits, setIncludeSubreddits] = useState('');
+  const [excludeSubreddits, setExcludeSubreddits] = useState('');
 
   useEffect(() => {
     if (discovery) {
@@ -110,7 +121,18 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({ defaultProd
   }, [discovery, categoryFilter]);
 
   const handleGenerate = async () => {
-    const result = await generateDiscovery({ product, audience, problem });
+    const splitSubreddits = (value: string) => value.split(',').map((item) => item.trim()).filter(Boolean);
+    const result = await generateDiscovery({
+      product,
+      audience,
+      problem,
+      searchVersion: searchV2Enabled ? 2 : 1,
+      filters: searchV2Enabled ? {
+        timeRange,
+        includeSubreddits: splitSubreddits(includeSubreddits).slice(0, 5),
+        excludeSubreddits: splitSubreddits(excludeSubreddits).slice(0, 20),
+      } : undefined,
+    });
     if (result) onCompleted?.();
   };
 
@@ -123,6 +145,16 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({ defaultProd
     (discovery?.dmTemplate || DEFAULT_DM)
       .replace(/\{\{\s*subreddit\s*\}\}/gi, p.subreddit ? `r/${p.subreddit}` : 'your community')
       .replace(/\{\{\s*name\s*\}\}/gi, `u/${p.username}`);
+
+  const copyDm = (person: PMFPerson) => copy(dmFor(person), () => {
+    setCopiedDm(person.username);
+    setTimeout(() => setCopiedDm(null), 2000);
+    if (user && person.leadId) {
+      void logDiscoveryLeadActivity(user.id, person.leadId, 'outreach_copied').catch((error) => {
+        console.warn('Failed to log discovery outreach copy:', error);
+      });
+    }
+  });
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -159,6 +191,30 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({ defaultProd
           <Textarea id="cd-problem" value={problem} onChange={(e) => setProblem(e.target.value)} rows={3}
             placeholder="Describe the specific pain in your customers' words — the more specific, the better the matches." />
         </div>
+
+        {searchV2Enabled && (
+          <details className="rounded-xl border border-border/60 bg-muted/20 p-3">
+            <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium">
+              <SlidersHorizontal className="h-4 w-4" /> Search filters
+            </summary>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="cd-time" className="text-xs">Time range</Label>
+                <select id="cd-time" className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={timeRange} onChange={(event) => setTimeRange(event.target.value as typeof timeRange)}>
+                  <option value="month">Past month</option><option value="year">Past year</option><option value="all">All time</option>
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="cd-include" className="text-xs">Include subreddits</Label>
+                <Input id="cd-include" value={includeSubreddits} onChange={(event) => setIncludeSubreddits(event.target.value)} placeholder="startups, saas" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="cd-exclude" className="text-xs">Exclude subreddits</Label>
+                <Input id="cd-exclude" value={excludeSubreddits} onChange={(event) => setExcludeSubreddits(event.target.value)} placeholder="jobs, selfpromo" />
+              </div>
+            </div>
+          </details>
+        )}
 
         <CreditCostNotice feature="PMF_DISCOVERY" featureName="PMF Customer Discovery" />
 
@@ -211,6 +267,14 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({ defaultProd
 
       {hasResults && discovery && (
         <div className="space-y-6">
+          {discovery.queryMeta && (
+            <div className="flex flex-wrap gap-2 text-caption text-muted-foreground">
+              <Badge variant="outline">Search v{discovery.queryMeta.searchVersion}</Badge>
+              <Badge variant="outline">{discovery.queryMeta.requestsSucceeded}/{discovery.queryMeta.requestsAttempted} source requests</Badge>
+              <Badge variant="outline">{(discovery.queryMeta.durationMs / 1000).toFixed(1)}s</Badge>
+              {discovery.queryMeta.partial && <Badge variant="outline" className="border-warning/30 text-warning">Partial source coverage</Badge>}
+            </div>
+          )}
           {!redditAvailable && (
             <div className="rounded-xl border border-warning/25 bg-warning-subtle p-4 flex items-start gap-2">
               <Info className="h-4 w-4 text-warning shrink-0 mt-0.5" />
@@ -277,7 +341,7 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({ defaultProd
                       )}
                       <button type="button"
                         className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                        onClick={() => copy(dmFor(p), () => { setCopiedDm(p.username); setTimeout(() => setCopiedDm(null), 2000); })}>
+                        onClick={() => copyDm(p)}>
                         {copiedDm === p.username ? <Check className="h-3 w-3 text-success" /> : <Copy className="h-3 w-3" />}
                         {copiedDm === p.username ? 'Copied' : 'Copy DM'}
                       </button>
@@ -350,9 +414,11 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({ defaultProd
                   <div key={t.id || i} className="rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-sm font-medium text-foreground">{t.title}</p>
-                      {t.category && (
-                        <Badge variant="outline" className="text-caption shrink-0">{CATEGORY_LABEL[t.category]}</Badge>
-                      )}
+                      <div className="flex shrink-0 gap-1">
+                        {t.isNew && <Badge variant="outline" className="text-caption border-success/30 text-success">New</Badge>}
+                        {typeof t.rankScore === 'number' && <Badge variant="outline" className="text-caption">Score {t.rankScore}</Badge>}
+                        {t.category && <Badge variant="outline" className="text-caption">{CATEGORY_LABEL[t.category]}</Badge>}
+                      </div>
                     </div>
                     <p className="text-caption text-muted-foreground">
                       {t.subreddit ? `r/${t.subreddit} · ` : ''}
@@ -361,6 +427,7 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({ defaultProd
                       {typeof t.ageDays === 'number' && t.ageDays >= 0 ? ` · ${t.ageDays}d ago` : ''}
                     </p>
                     {t.snippet && <p className="text-xs leading-relaxed text-muted-foreground line-clamp-2">{t.snippet}</p>}
+                    {t.rankingReason && <p className="text-caption font-medium text-primary/80">Why it ranks: {t.rankingReason}</p>}
                     {t.outreachAngle && (
                       <p className="text-xs leading-relaxed text-foreground">
                         <span className="font-medium text-primary/80">Your angle: </span>{t.outreachAngle}
@@ -383,6 +450,7 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({ defaultProd
           </p>
         </div>
       )}
+      {pipelineEnabled && <PMFDiscoveryPipeline key={discovery?.id || 'pipeline'} onLogInterview={onLogInterview} />}
     </div>
   );
 };

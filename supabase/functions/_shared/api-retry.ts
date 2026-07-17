@@ -5,14 +5,28 @@ export interface RetryOptions {
   maxDelay?: number;
   backoffMultiplier?: number;
   retryableStatuses?: number[];
+  respectRetryAfter?: boolean;
+  jitterRatio?: number;
+  onRetry?: (details: { attempt: number; delayMs: number; status?: number }) => void;
 }
 
-const DEFAULT_OPTIONS: Required<RetryOptions> = {
+const DEFAULT_OPTIONS = {
   maxAttempts: 3,
   initialDelay: 1000, // 1 second
   maxDelay: 4000, // 4 seconds
   backoffMultiplier: 2,
   retryableStatuses: [429, 500, 502, 503, 504], // Rate limits and server errors
+  respectRetryAfter: false,
+  jitterRatio: 0,
+};
+
+const retryAfterMs = (error: any, maxDelay: number): number | null => {
+  const header = error?.response?.headers?.get?.('Retry-After');
+  if (!header) return null;
+  const seconds = Number(header);
+  if (Number.isFinite(seconds)) return Math.min(maxDelay, Math.max(0, seconds * 1000));
+  const date = Date.parse(header);
+  return Number.isFinite(date) ? Math.min(maxDelay, Math.max(0, date - Date.now())) : null;
 };
 
 export async function retryWithBackoff<T>(
@@ -41,10 +55,15 @@ export async function retryWithBackoff<T>(
       }
       
       // Calculate delay with exponential backoff
-      const delay = Math.min(
+      const exponentialDelay = Math.min(
         opts.initialDelay * Math.pow(opts.backoffMultiplier, attempt - 1),
         opts.maxDelay
       );
+      const headerDelay = opts.respectRetryAfter ? retryAfterMs(error, opts.maxDelay) : null;
+      const baseDelay = headerDelay ?? exponentialDelay;
+      const jitter = baseDelay * opts.jitterRatio * ((Math.random() * 2) - 1);
+      const delay = Math.max(0, Math.round(baseDelay + jitter));
+      opts.onRetry?.({ attempt, delayMs: delay, status });
       
       console.log(`Retry attempt ${attempt}/${opts.maxAttempts} after ${delay}ms`);
       await new Promise(resolve => setTimeout(resolve, delay));
