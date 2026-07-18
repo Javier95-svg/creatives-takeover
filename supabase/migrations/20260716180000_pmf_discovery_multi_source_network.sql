@@ -66,9 +66,11 @@ BEGIN
     SELECT DISTINCT lower(trim(item)) FROM unnest(COALESCE(p_industries, '{}')) AS item
     WHERE length(trim(item)) BETWEEN 2 AND 60 LIMIT 10
   );
-  -- Escape ILIKE wildcards so keyword matching stays literal.
+  -- Escape ILIKE wildcards so keyword matching stays literal. E-string syntax
+  -- (E'\\') keeps naive statement splitters (e.g. the Dashboard SQL editor)
+  -- from misreading '\' as an escaped quote and mangling the batch.
   v_keywords := ARRAY(
-    SELECT DISTINCT replace(replace(replace(lower(trim(item)), '\', '\\'), '%', '\%'), '_', '\_')
+    SELECT DISTINCT replace(replace(replace(lower(trim(item)), E'\\', E'\\\\'), '%', E'\\%'), '_', E'\\_')
     FROM unnest(COALESCE(p_keywords, '{}')) AS item
     WHERE length(trim(item)) BETWEEN 3 AND 40 LIMIT 8
   );
