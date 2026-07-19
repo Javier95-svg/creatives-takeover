@@ -24,8 +24,8 @@ const PRICING_SUMMARY = [
 function buildFallbackHtml(routeConfig) {
   const nav = PRIMARY_NAV.map((item) => `<a href="${item.href}">${item.label}</a>`).join(" | ");
   const heroContent = routeConfig.path === "/"
-    ? `<p>You shouldn't need the right connections, the right city, or the right background to build a serious startup.</p>
-          <p>Turn your idea into a validated startup through one connected path. Define your customer, prove demand, build your MVP, launch it, and find traction.</p>
+    ? `<p>Business Development platform for startup founders &amp; first-time business owners.</p>
+          <p>Turn your idea into a validated startup through one proven path. Define your customer, prove demand, build your MVP, launch it, and find traction.</p>
           <p><strong>No application. No cohort. No equity.</strong></p>
           <p><a href="/demo-studio/try">Launch a live demo</a> <a href="/icp-builder">Draft your ICP</a></p>`
     : `<p>${routeConfig.heroCopy || routeConfig.description}</p>`;

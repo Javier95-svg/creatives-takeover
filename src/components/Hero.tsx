@@ -62,10 +62,10 @@ const DEFAULT_STATS: HeroStat[] = [
 
 const DEFAULT_LEDE = (
   <>
-    You shouldn&apos;t need the right connections, the right city, or the right background to build a serious startup.
+    Business Development platform for startup founders &amp; first-time business owners.
     <br />
     <br />
-    Turn your idea into a validated startup through one connected path. Define your customer, prove demand, build your MVP, launch it, and find traction.
+    Turn your idea into a validated startup through one proven path. Define your customer, prove demand, build your MVP, launch it, and find traction.
     <br />
     <br />
     <strong>No application. No cohort. No equity.</strong>

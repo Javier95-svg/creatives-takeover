@@ -78,15 +78,16 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
   const fallback = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   const prerender = readFileSync(new URL('../scripts/generate-prerendered-pages.mjs', import.meta.url), 'utf8');
   const paragraphs = [
-    "You shouldn't need the right connections, the right city, or the right background to build a serious startup.",
-    'Turn your idea into a validated startup through one connected path. Define your customer, prove demand, build your MVP, launch it, and find traction.',
+    'Business Development platform for startup founders & first-time business owners.',
+    'Turn your idea into a validated startup through one proven path. Define your customer, prove demand, build your MVP, launch it, and find traction.',
     'No application. No cohort. No equity.',
   ];
+  const renderedSources = [hero, fallback, prerender].map((source) =>
+    source.replaceAll('&apos;', "'").replaceAll('&amp;', '&'),
+  );
   paragraphs.forEach((copy) => {
-    const heroCopy = hero.replaceAll('&apos;', "'");
-    assert.match(heroCopy, new RegExp(copy.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-    assert.match(fallback, new RegExp(copy.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-    assert.match(prerender, new RegExp(copy.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    const copyPattern = new RegExp(copy.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    renderedSources.forEach((source) => assert.match(source, copyPattern));
   });
   assert.match(hero, /Launch a live demo/);
   assert.match(hero, /Draft your ICP/);
@@ -96,7 +97,7 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
   assert.match(prerender, /Pro[\s\S]*\$65[\s\S]*Accelerate and Fundraise/);
 });
 
-test('Pro expert support has a protected queue, attributable responses, and SLA reporting', () => {
+test('Pro expert support has a protected queue while the restored mentorship hero remains intact', () => {
   const migration = readFileSync(new URL('../supabase/migrations/20260719090000_journey_outcomes.sql', import.meta.url), 'utf8');
   const panel = readFileSync(new URL('../src/components/expert-support/ExpertReviewPanel.tsx', import.meta.url), 'utf8');
   const marketplace = readFileSync(new URL('../src/pages/community/MentorMarketplaceHub.tsx', import.meta.url), 'utf8');
@@ -109,5 +110,5 @@ test('Pro expert support has a protected queue, attributable responses, and SLA 
   assert.match(panel, /journey_expert_review_requested/);
   assert.match(panel, /journey_expert_review_responded/);
   assert.match(panel, /status: 'reviewed'/);
-  assert.match(marketplace, /Expert Support and Founder Network/);
+  assert.match(marketplace, /Connect\. Learn\. Grow\./);
 });
