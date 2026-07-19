@@ -236,7 +236,21 @@
   color: var(--ct-muted);
   font-size: 16.5px;
   line-height: 1.48;
+  display: grid;
+  gap: 28px;
   text-wrap: balance;
+}
+
+.ct-hero__lede-block {
+  display: block;
+  width: 100%;
+  max-width: 500px;
+  margin-inline: auto;
+  text-wrap: balance;
+}
+
+.ct-hero__lede-final {
+  display: block;
 }
 
 .ct-hero__lede strong {

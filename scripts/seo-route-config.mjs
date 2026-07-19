@@ -110,7 +110,7 @@ export const INDEXABLE_ROUTES = [
     priority: 1.0,
     heroHeading: "The Founders Compass",
     heroCopy:
-      "Turn your idea into a validated startup through one proven path. Define your customer, prove demand, build your MVP, launch it, and find traction.",
+      "Define your ideal customer, prove demand, build your MVP, launch it, and find investment.",
     sections: [
       {
         heading: "Reach value before signup",

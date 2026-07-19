@@ -62,13 +62,13 @@ const DEFAULT_STATS: HeroStat[] = [
 
 const DEFAULT_LEDE = (
   <>
-    Business Development platform for startup founders &amp; first-time business owners.
-    <br />
-    <br />
-    Turn your idea into a validated startup through one proven path. Define your customer, prove demand, build your MVP, launch it, and find traction.
-    <br />
-    <br />
-    <strong>No application. No cohort. No equity.</strong>
+    <span className="ct-hero__lede-block">
+      Business Development platform for startup founders &amp; first-time business owners.
+    </span>
+    <span className="ct-hero__lede-block">
+      Define your ideal customer, prove demand, build your MVP, launch it, and find investment.
+    </span>
+    <strong className="ct-hero__lede-final">No application. No cohort. No equity.</strong>
   </>
 );
 
