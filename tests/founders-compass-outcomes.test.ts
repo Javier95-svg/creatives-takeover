@@ -97,6 +97,14 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
   assert.match(prerender, /Pro[\s\S]*\$65[\s\S]*Accelerate and Fundraise/);
 });
 
+test('hero scrolling cards retain the restored market data', () => {
+  const hero = readFileSync(new URL('../src/components/Hero.tsx', import.meta.url), 'utf8');
+  assert.match(hero, /value: "5", unit: "×", label: "Faster idea → MVP than pre-AI builders"/);
+  assert.match(hero, /value: "\$680B", unit: "\+", label: "Into AI-native startups since 2024"/);
+  assert.match(hero, /value: "1 in 4", label: "New 2026 launches are solo founders"/);
+  assert.match(hero, /value: "~18", unit: "mo", label: "Before incumbents close the AI-native gap"/);
+});
+
 test('Pro expert support has a protected queue while the restored mentorship hero remains intact', () => {
   const migration = readFileSync(new URL('../supabase/migrations/20260719090000_journey_outcomes.sql', import.meta.url), 'utf8');
   const panel = readFileSync(new URL('../src/components/expert-support/ExpertReviewPanel.tsx', import.meta.url), 'utf8');

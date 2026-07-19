@@ -54,10 +54,10 @@ const DEFAULT_NAV: HeroNavItem[] = [
 ];
 
 const DEFAULT_STATS: HeroStat[] = [
-  { value: "6", label: "Connected founder outcomes" },
-  { value: "2", label: "Ways to reach value before signup" },
-  { value: "48", unit: "hr", label: "Pro expert response commitment" },
-  { value: "1", label: "Evidence trail from idea to traction" },
+  { value: "5", unit: "×", label: "Faster idea → MVP than pre-AI builders" },
+  { value: "$680B", unit: "+", label: "Into AI-native startups since 2024" },
+  { value: "1 in 4", label: "New 2026 launches are solo founders" },
+  { value: "~18", unit: "mo", label: "Before incumbents close the AI-native gap" },
 ];
 
 const DEFAULT_LEDE = (
