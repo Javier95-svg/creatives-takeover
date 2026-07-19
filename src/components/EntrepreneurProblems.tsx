@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import {
+  ArrowUpRight,
   Boxes,
   FlaskConical,
   GraduationCap,
@@ -31,6 +32,7 @@ type JourneyStep = {
 type JourneyAction = {
   to: string;
   title: string;
+  outcome: string;
   description: string;
   icon: LucideIcon;
   accentName: string;
@@ -74,7 +76,7 @@ const journeySteps: JourneyStep[] = [
   },
   {
     phase: "Working Smartly",
-    challenge: "Task prioritization and resources management",
+    challenge: "Task prioritization and resource management",
     pathway: "BizMap AI helps define your ICP, select the right channels, and craft a go-to-market strategy based on proven frameworks—no more guessing.",
     icon: Map,
     accentColor: "blue",
@@ -88,14 +90,14 @@ const journeySteps: JourneyStep[] = [
   },
   {
     phase: "Tech Stack Selection",
-    challenge: "The Teck Stack Dilemma",
+    challenge: "The Tech Stack Dilemma",
     pathway: "Build your Tech Stack",
     icon: Code,
     accentColor: "blue",
   },
   {
     phase: "Founder's Mental Tax",
-    challenge: "High chance of burnout",
+    challenge: "High risk of burnout",
     pathway: "Find a Co-Founder",
     icon: LayoutDashboard,
     accentColor: "green",
@@ -105,8 +107,9 @@ const journeySteps: JourneyStep[] = [
 const journeyActions: JourneyAction[] = [
   {
     to: "/icp-builder",
-    title: "Define your ICP",
-    description: "ICP Builder guides you to define your ideal customer profile and niche market with actionable positioning strategies and pain point analysis.",
+    title: "Define Your ICP",
+    outcome: "Customer clarity",
+    description: "Identify who to serve, what they need, and how to position your offer.",
     icon: Target,
     accentName: "cobalt",
     accent: "218 89% 60%",
@@ -126,8 +129,9 @@ const journeyActions: JourneyAction[] = [
   },
   {
     to: "/pmf-lab",
-    title: "Try PMF Lab",
-    description: "PMF Lab assesses feedback from founders' landing page or waitlist shares, scoring 1-100 on market embrace probability.",
+    title: "Validate Demand",
+    outcome: "Evidence decision",
+    description: "Turn customer evidence into a clear Build, Narrow, Pivot, or Stop decision.",
     icon: FlaskConical,
     accentName: "teal",
     accent: "183 75% 42%",
@@ -148,7 +152,8 @@ const journeyActions: JourneyAction[] = [
   {
     to: "/mentorship",
     title: "Find a Mentor",
-    description: "Community gives you access to our global mentorship network, ideal for founders seeking expert advice to grow faster and avoid common mistakes.",
+    outcome: "Expert guidance",
+    description: "Get focused feedback from experienced founders and leave with clear next steps.",
     icon: GraduationCap,
     accentName: "coral",
     accent: "13 84% 63%",
@@ -167,10 +172,11 @@ const journeyActions: JourneyAction[] = [
     delay: "0.3s",
   },
   {
-    to: "/mvp-builder",
-    title: "Build Your MVP",
-    description: "Describe your idea and MVP Builder generates a working app with live preview — iterate in plain English. Your first generation is free.",
-    icon: Rocket,
+    to: "/dashboard",
+    title: "Open Your Dashboard",
+    outcome: "Weekly focus",
+    description: "Prioritize tasks, track weekly progress, and stay accountable in one workspace.",
+    icon: LayoutDashboard,
     accentName: "amber",
     accent: "42 92% 57%",
     accentSoft: "46 100% 95%",
@@ -189,8 +195,9 @@ const journeyActions: JourneyAction[] = [
   },
   {
     to: "/investors",
-    title: "Meet your Investor",
-    description: "Angels gives you access to investors across all stages and sectors, helping you find the right backers for your startup and start real conversations.",
+    title: "Find Investors",
+    outcome: "Targeted fundraising",
+    description: "Find relevant investors by stage and sector, then start targeted conversations.",
     icon: Users,
     accentName: "emerald",
     accent: "154 59% 43%",
@@ -210,8 +217,9 @@ const journeyActions: JourneyAction[] = [
   },
   {
     to: "/tech-stack",
-    title: "Tech Stack Builder",
-    description: "Pick the best tools across 8 product categories, each with 4 options, while estimating your monthly and annual budget.",
+    title: "Build Your Tech Stack",
+    outcome: "Stack and budget",
+    description: "Choose the right tools for your MVP and see the cost before you build.",
     icon: Boxes,
     accentName: "indigo-steel",
     accent: "226 31% 57%",
@@ -232,7 +240,8 @@ const journeyActions: JourneyAction[] = [
   {
     to: "/co-founder",
     title: "Find a Co-Founder",
-    description: "The Co-Founder tab lets you post when you’re seeking a co-founder, instantly notifying all platform users to spark quick matches.",
+    outcome: "Shared execution",
+    description: "Find a complementary founder to share responsibilities and move faster together.",
     icon: Handshake,
     accentName: "raspberry",
     accent: "338 72% 58%",
@@ -296,49 +305,38 @@ const EntrepreneurProblems = () => {
 
     const ActionIcon = action.icon;
     const actionStyle = {
-      aspectRatio: 256 / 135,
       "--journey-accent": action.accent,
       "--journey-accent-soft": action.accentSoft,
-      "--journey-accent-glow": action.accentGlow,
-      "--journey-accent-border": action.accentBorder,
       "--journey-accent-strong": action.accentStrong,
-      "--journey-panel-tint": action.panelTint,
-      "--journey-mesh-tint": action.meshTint,
-      "--journey-shimmer-angle": action.shimmerAngle,
-      "--journey-float-distance": action.floatDistance,
-      "--journey-hover-lift": action.hoverLift,
-      "--journey-hover-scale": action.hoverScale,
-      "--journey-sweep-duration": action.sweepDuration,
-      "--journey-delay": action.delay,
     } as CSSProperties;
 
     return (
       <Link
         to={action.to}
-        className={`journey-action-card group relative block w-full overflow-hidden rounded-3xl touch-manipulation ${className}`}
+        className={`journey-action-card group block w-full touch-manipulation ${className}`}
         data-accent={action.accentName}
-        data-idle={action.idleVariant}
         style={actionStyle}
       >
-        <span aria-hidden="true" className="journey-action-card__aurora" />
-        <span aria-hidden="true" className="journey-action-card__mesh" />
-        <div className="journey-action-card__surface relative h-full p-5 sm:p-6">
-          <span aria-hidden="true" className="journey-action-card__scanline" />
-
-          <div className="journey-action-card__content flex h-full flex-col items-center justify-center gap-4 text-center">
-            <div className="journey-action-card__copy-wrap w-full space-y-2">
-              <div className="journey-action-card__title-row flex items-center justify-center gap-3">
-                <h4 className="journey-action-card__title font-space-grotesk font-semibold leading-tight">
-                  {action.title}
-                </h4>
-                <div className="journey-action-card__icon-shell rounded-2xl p-2 text-[hsl(var(--journey-accent-strong))] sm:p-2.5">
-                  <ActionIcon className="h-5 w-5" />
-                </div>
+        <div className="journey-action-card__surface">
+          <div className="journey-action-card__content">
+            <div className="journey-action-card__meta">
+              <span className="journey-action-card__outcome">{action.outcome}</span>
+              <div className="journey-action-card__icon-shell">
+                <ActionIcon className="h-5 w-5" aria-hidden="true" />
               </div>
-              <p className="journey-action-card__copy line-clamp-3 leading-relaxed">
+            </div>
+            <div className="journey-action-card__copy-wrap">
+              <h4 className="journey-action-card__title font-space-grotesk font-semibold">
+                {action.title}
+              </h4>
+              <p className="journey-action-card__copy">
                 {action.description}
               </p>
             </div>
+            <span className="journey-action-card__cta">
+              Open tool
+              <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+            </span>
           </div>
         </div>
       </Link>
@@ -482,5 +480,3 @@ const EntrepreneurProblems = () => {
 };
 
 export default EntrepreneurProblems;
-
-
