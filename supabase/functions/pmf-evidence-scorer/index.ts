@@ -6,6 +6,25 @@ import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_share
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
 const MIN_INTERVIEWS_FOR_READY = 25;
+const DIRECTIONAL_SIGNAL_THRESHOLD = 5;
+const EMERGING_SIGNAL_THRESHOLD = 10;
+const DECISION_GRADE_SIGNAL_THRESHOLD = 25;
+
+type EvidenceGrade = 'insufficient' | 'directional' | 'emerging' | 'decision_grade';
+
+function resolveEvidenceGrade(signalCount: number): EvidenceGrade {
+  if (signalCount >= DECISION_GRADE_SIGNAL_THRESHOLD) return 'decision_grade';
+  if (signalCount >= EMERGING_SIGNAL_THRESHOLD) return 'emerging';
+  if (signalCount >= DIRECTIONAL_SIGNAL_THRESHOLD) return 'directional';
+  return 'insufficient';
+}
+
+function resolvePmfDecision(score: number): 'build' | 'narrow' | 'pivot' | 'stop' {
+  if (score >= 75) return 'build';
+  if (score >= 60) return 'narrow';
+  if (score >= 40) return 'pivot';
+  return 'stop';
+}
 
 // ─── CORS headers ─────────────────────────────────────────────────────────────
 const corsHeaders = {
@@ -384,14 +403,38 @@ serve(async (req) => {
 • Leads/signups captured: ${demoEvidence.signups}`
       : 'No live demo behavioral data was available for this run.';
 
+    // Evidence sources have different strength. Interviews are the unit weight;
+    // hosted survey responses and verified product behavior carry 0.75 each;
+    // corroborating research carries 0.25 and can never substitute for direct proof.
+    const surveySignalCount = survey?.total ?? 0;
+    const demoBehaviorSignalCount = demoEvidence
+      ? Math.min(10, Math.max(demoEvidence.completions, demoEvidence.ctaClicks, demoEvidence.signups))
+      : 0;
+    const researchSignalCount = marketSources.length;
+    const weightedEvidenceSignalCount = Math.floor(
+      loggedInterviewCount
+      + surveySignalCount * 0.75
+      + demoBehaviorSignalCount * 0.75
+      + researchSignalCount * 0.25
+    );
+    const evidenceGrade = resolveEvidenceGrade(weightedEvidenceSignalCount);
+    const scoreCap = evidenceGrade === 'decision_grade'
+      ? 100
+      : evidenceGrade === 'emerging'
+        ? 74
+        : evidenceGrade === 'directional'
+          ? 59
+          : 49;
+
     const systemPrompt = `You are PMF Lab, a rigorous PMF (Product-Market Fit) evidence evaluator inside a startup development platform. Founders use you in Stage III: Validation, after they already created a landing page in Stage II: Prototyping. Your job is to evaluate the QUALITY of customer-demand evidence — not the idea itself — and produce a PMF score from 0 to 100.
 
 IMPORTANT PRODUCT RULES:
 • PMF Lab is designed around real founder interviews plus landing-page feedback.
 • Use the structured interview log as the PRIMARY source of truth. Treat high-level founder summaries as supporting context only.
-• The founder should complete at least ${MIN_INTERVIEWS_FOR_READY} interviews before moving to Building.
-• If conversationCount is below ${MIN_INTERVIEWS_FOR_READY}, the result may still be useful directionally, but you MUST NOT recommend moving to Building.
-• If conversationCount is below ${MIN_INTERVIEWS_FOR_READY}, overallScore MUST be capped at 74 and recommendedAction MUST be "iterate_before_building".
+• Use the weighted evidence ladder: 5 signals are directional, 10 reveal emerging patterns, and 25 are decision grade.
+• This run has ${weightedEvidenceSignalCount} weighted signals and is ${evidenceGrade.replace('_', ' ')}.
+• The score cap for this evidence grade is ${scoreCap}. Never recommend moving to Building before decision grade.
+• Interviews remain the strongest individual source, but hosted surveys, verified demo behavior, and corroborating research must influence the report with the weights supplied below.
 • If the founder logs many interviews but the records are thin, vague, repetitive, or missing objections/missing-feature detail, lower the score for evidence quality.
 
 SPECIFICITY RULES — these are non-negotiable:
@@ -439,8 +482,12 @@ VERDICT RULES:
 • 0–49: verdict = "weak", verdictLabel = "Insufficient Evidence"
 
 DECISION RULES:
-• If overallScore >= 75 and conversationCount >= ${MIN_INTERVIEWS_FOR_READY}: recommendedAction = "move_to_building", recommendedActionTitle = "Move to Building"
-• Otherwise: recommendedAction = "iterate_before_building", recommendedActionTitle = "Iterate Before Building"
+• Choose one decision from Build, Narrow, Pivot, or Stop based on the dimension pattern.
+• Build requires overallScore >= 75 and at least ${DECISION_GRADE_SIGNAL_THRESHOLD} weighted signals.
+• Narrow fits a validated pain with an overly broad segment or inconsistent pattern.
+• Pivot fits evidence that the pain or solution framing is materially wrong but a better direction is visible.
+• Stop fits weak urgency and demand with no credible adjacent direction after decision-grade evidence.
+• Before decision grade, the decision is explicitly provisional and recommendedAction remains "iterate_before_building".
 
 RECOMMENDATION RULES:
 • Generate 3–5 recommendations ordered by urgency
@@ -471,6 +518,10 @@ OUTPUT: Return ONLY valid JSON matching this exact schema:
   "diagnosis": "string — 3–5 sentence paragraph synthesizing the dimension pattern into a specific product/founder interpretation",
   "recommendedAction": "move_to_building" | "iterate_before_building",
   "recommendedActionTitle": "Move to Building" | "Iterate Before Building",
+  "decision": "build" | "narrow" | "pivot" | "stop",
+  "evidenceGrade": "insufficient" | "directional" | "emerging" | "decision_grade",
+  "evidenceSignalCount": number,
+  "decisionProvisional": boolean,
   "dimensions": {
     "painClarity":          { "score": number, "explanation": "string — 1–2 sentences on what specific evidence supports or hurts this score" },
     "urgency":              { "score": number, "explanation": "string" },
@@ -506,6 +557,10 @@ Actual conversations/responses: ${loggedInterviewCount}
 People expressing strong interest: ${strongInterestCount}
 Willingness to pay signal: ${wtpDetail}
 Minimum interview threshold to move to Building: ${MIN_INTERVIEWS_FOR_READY}
+Weighted evidence signals: ${weightedEvidenceSignalCount}
+Evidence grade: ${evidenceGrade.replace('_', ' ')}
+Signal ladder: ${DIRECTIONAL_SIGNAL_THRESHOLD} directional, ${EMERGING_SIGNAL_THRESHOLD} emerging patterns, ${DECISION_GRADE_SIGNAL_THRESHOLD} decision grade
+Source weights in this run: ${loggedInterviewCount} interviews × 1.0, ${surveySignalCount} hosted survey responses × 0.75, ${demoBehaviorSignalCount} verified demo behaviors × 0.75, ${researchSignalCount} research sources × 0.25
 
 STRUCTURED INTERVIEW LOG:
 ${interviewLogSummary}
@@ -581,6 +636,43 @@ Apply the scoring rubric to this evidence and return the PMF readiness JSON. Mak
           throw new Error('Failed to parse AI response as JSON');
         }
       }
+
+      // Enforce the evidence ladder deterministically after generation. The
+      // model explains the evidence; it cannot promote a provisional sample to
+      // decision grade or bypass the score cap.
+      const rawScore = typeof analysis.overallScore === 'number'
+        ? Math.max(0, Math.min(100, Math.round(analysis.overallScore)))
+        : 0;
+      analysis.overallScore = Math.min(rawScore, scoreCap);
+      analysis.evidenceGrade = evidenceGrade;
+      analysis.evidenceSignalCount = weightedEvidenceSignalCount;
+      analysis.decisionProvisional = evidenceGrade !== 'decision_grade';
+      analysis.evidenceBreakdown = {
+        interviews: { count: loggedInterviewCount, weight: 1 },
+        hostedSurveyResponses: { count: surveySignalCount, weight: 0.75 },
+        verifiedDemoBehaviors: { count: demoBehaviorSignalCount, weight: 0.75 },
+        corroboratingResearch: { count: researchSignalCount, weight: 0.25 },
+      };
+      analysis.decision = resolvePmfDecision(analysis.overallScore);
+      analysis.verdict = analysis.overallScore >= 75 ? 'ready' : analysis.overallScore >= 50 ? 'partial' : 'weak';
+      analysis.verdictLabel = analysis.verdict === 'ready'
+        ? 'Strong Validation'
+        : analysis.verdict === 'partial'
+          ? 'Partial Validation'
+          : 'Insufficient Evidence';
+      const decisionTitles = {
+        build: 'Build from Validated Evidence',
+        narrow: 'Narrow the Customer or Promise',
+        pivot: 'Pivot the Problem or Solution',
+        stop: 'Stop and Reassess the Opportunity',
+      } as const;
+      analysis.recommendedAction = analysis.decision === 'build' && evidenceGrade === 'decision_grade'
+        ? 'move_to_building'
+        : 'iterate_before_building';
+      analysis.recommendedActionTitle = evidenceGrade === 'decision_grade'
+        ? decisionTitles[analysis.decision as keyof typeof decisionTitles]
+        : `Provisional: ${decisionTitles[analysis.decision as keyof typeof decisionTitles]}`;
+      analysis.readyToScope = analysis.recommendedAction === 'move_to_building';
 
       // Attach evidence answers, external citations, and timestamp
       analysis.evidenceAnswers = body;

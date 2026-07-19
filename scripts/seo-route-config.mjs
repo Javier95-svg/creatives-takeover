@@ -103,22 +103,22 @@ const FOUNDER_ANSWER_ROUTES = founderAnswerPages.map((page) => ({
 export const INDEXABLE_ROUTES = [
   {
     path: "/",
-    title: "AI Startup Builder | Creatives Takeover",
+    title: "The Founders Compass | Creatives Takeover",
     description:
-      "Build, validate, and launch faster with AI startup tools for customer research, MVP planning, fundraising prep, and go-to-market execution.",
+      "Turn your idea into a validated startup through one evidence backed path for customer clarity, proof, PMF decisions, MVP building, GTM, and traction.",
     changefreq: "daily",
     priority: 1.0,
-    heroHeading: "Build your startup. Own your future.",
+    heroHeading: "The Founders Compass",
     heroCopy:
-      "Creatives Takeover gives first-time founders practical AI tools, structured workflows, and founder resources to move from idea to launch.",
+      "Turn your idea into a validated startup through one connected path. Define your customer, prove demand, build your MVP, launch it, and find traction.",
     sections: [
       {
-        heading: "Validate before you build",
-        copy: "Clarify the problem, define your ideal customer, and pressure-test demand before spending time on development.",
+        heading: "Reach value before signup",
+        copy: "Launch a personalized live demo or draft an evidence backed customer decision before creating an account.",
       },
       {
-        heading: "Build with practical startup tools",
-        copy: "Use founder workflows for MVP scoping, waitlist creation, pitch preparation, and go-to-market planning.",
+        heading: "Complete six connected outcomes",
+        copy: "Move from ICP Builder through Demo Studio, PMF Lab, MVP Builder, GTM Strategist, and Traction Engine without losing the evidence behind each decision.",
       },
     ],
   },
@@ -135,18 +135,18 @@ export const INDEXABLE_ROUTES = [
   },
   {
     path: "/pricing",
-    title: "Pricing For AI Startup Tools | Creatives Takeover",
+    title: "Founder Outcomes and Pricing | Creatives Takeover",
     description:
-      "Compare pricing for Creatives Takeover's AI startup tools, founder workflows, fundraising resources, and MVP planning features.",
+      "Compare Rookie, Starter, Rising, and Pro by the founder outcome each plan enables, from customer clarity to expert backed fundraising.",
     changefreq: "weekly",
     priority: 0.9,
-    heroHeading: "Choose your plan",
+    heroHeading: "Choose the outcome you need now",
     heroCopy:
-      "Compare free and paid plans for startup validation, AI builder tools, Insighta fundraising workflows, and community features.",
+      "Every plan keeps your evidence and decisions connected as you move from clarity to validation, launch, traction, and fundraising.",
     sections: [
       {
-        heading: "Plans for every founder stage",
-        copy: "Start free, then upgrade when you need more credits, deeper tool access, and premium founder workflows.",
+        heading: "Transparent credits and stable entitlements",
+        copy: "See the credit cost before every metered action and upgrade only when you need more capacity, expert accountability, or deeper fundraising support.",
       },
     ],
   },

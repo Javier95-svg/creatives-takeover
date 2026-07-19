@@ -67,8 +67,8 @@ const creditBreakdown: {
     },
     {
       name: "Directories",
-      description: "Preview only on Rookie and Starter. Included on Rising and Pro.",
-      badge: "Included on Rising+",
+      description: "Every plan can open directory records. Rookie gets 3 visits monthly, Starter 10, Rising 15, and Pro has unlimited visits.",
+      badge: "3 to unlimited visits",
       badgeVariant: "outline",
       badgeClassName: "bg-info-subtle dark:bg-info/30",
     },
@@ -97,8 +97,8 @@ const creditBreakdown: {
     },
     {
       name: "Pitch Deck Analyzer",
-      description: `Unlocked on Rising and Pro at ${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits per analysis. Rookie and Starter do not include it.`,
-      badge: "Unlocked on Rising+",
+      description: `Available on every plan. The anonymous Quick Score is free, and each signed in deep analysis costs ${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits.`,
+      badge: `${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits`,
       badgeVariant: "outline",
       badgeClassName: "bg-info-subtle dark:bg-info/30",
     },
@@ -120,8 +120,8 @@ const creditBreakdown: {
     },
     {
       name: "Find a Co-Founder Posting",
-      description: "Rookie gets 1 post/monthly, Starter 2, and Rising plus Pro are unlimited.",
-      badge: "Monthly quotas",
+      description: `Available on every plan. Each successfully published cofounder post costs ${CREDIT_COSTS.COFOUNDER_POST} credits.`,
+      badge: `${CREDIT_COSTS.COFOUNDER_POST} credits`,
       badgeVariant: "outline",
       badgeClassName: "bg-info-subtle dark:bg-info/30",
     },

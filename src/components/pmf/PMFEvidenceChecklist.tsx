@@ -4,6 +4,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import type { PMFValidationEvidence } from '@/hooks/usePMFLab';
+import { getPmfConfidence } from '@/lib/pmfConfidence';
 
 // Canonical qualitative validation signals (persisted by label in validation_checklist).
 const PMF_CHECKLIST_ITEMS = [
@@ -35,6 +36,7 @@ const PMFEvidenceChecklist: React.FC<PMFEvidenceChecklistProps> = ({
   const signals = (evidence?.interview_notes_count ?? 0) + (evidence?.survey_results_count ?? 0);
   const pct = requiredSignals > 0 ? Math.min(100, Math.round((signals / requiredSignals) * 100)) : 0;
   const meetsSignals = signals >= requiredSignals;
+  const confidence = getPmfConfidence(signals);
 
   const toggle = async (item: string, next: boolean) => {
     const updated = next
@@ -66,7 +68,7 @@ const PMFEvidenceChecklist: React.FC<PMFEvidenceChecklistProps> = ({
         </div>
         <Progress value={pct} className="h-2" />
         <p className="text-xs text-muted-foreground">
-          Counts your logged interviews plus saved survey responses. PMF Lab expects {requiredSignals} before moving to Building.
+          <span className="font-semibold text-foreground">{confidence.label}.</span> {confidence.description}
         </p>
       </div>
 

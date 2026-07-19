@@ -82,6 +82,11 @@ import {
 import { consumeStoredIcpSeed, normalizeIcpSeed } from "@/lib/icpSeed";
 import { markFirstArtifactCreated, sendRetentionEmail, trackCurrentActivationJourneyEvent } from "@/lib/retentionSystem";
 import { useActivationAbandonment } from "@/hooks/useActivationAbandonment";
+import {
+  createJourneyEvidenceManifest,
+  trackJourneyEvent,
+  upsertJourneyOutcome,
+} from "@/lib/journeyOutcomes";
 
 const ICP_RESULTS_TABLE = "icp_analysis_results";
 const SEED_TIMEOUT_MS = 25000;
@@ -995,6 +1000,67 @@ const ICPBuilder: React.FC = () => {
       entry_id: 'icp_draft_unlock', tool: 'icp_builder', source,
       step: 'draft_saved', is_authenticated: true, artifact_type: 'icp_analysis',
     });
+    if (user?.id) {
+      const brief = artifact.draftDocument.decisionBrief;
+      const qualityChecks = {
+        primary_segment: Boolean(brief?.primarySegment),
+        non_fit_segment: Boolean(brief?.nonFitSegment),
+        three_ranked_pains: (brief?.rankedPains.length ?? 0) >= 3,
+        buying_trigger: Boolean(brief?.buyingTrigger),
+        current_alternative: Boolean(brief?.currentAlternative),
+        reachable_channels: (brief?.reachableChannels.length ?? 0) > 0,
+        cited_evidence: (artifact.draftDocument.sources?.length ?? 0) > 0,
+        confidence_level: Boolean(artifact.draftDocument.confidence.level),
+        five_interview_plan: (brief?.interviewValidationPlan.length ?? 0) === 5,
+      };
+      const passedChecks = Object.values(qualityChecks).filter(Boolean).length;
+      const completionScore = Math.round((passedChecks / Object.keys(qualityChecks).length) * 100);
+      void upsertJourneyOutcome({
+        userId: user.id,
+        tool: 'icp_builder',
+        artifactType: 'customer_decision_brief',
+        artifactId: analysisId,
+        status: 'ready',
+        completionScore,
+        qualityChecks,
+        evidenceManifest: createJourneyEvidenceManifest(
+          (artifact.draftDocument.sources ?? []).map((evidenceSource, index) => ({
+            sourceId: evidenceSource.url || `icp:${analysisId}:source:${index + 1}`,
+            sourceType: evidenceSource.type,
+            version: String(artifact.version),
+            capturedAt: artifact.generatedAt,
+            confidence: artifact.draftDocument.confidence.level === 'high'
+              ? 0.85
+              : artifact.draftDocument.confidence.level === 'medium'
+                ? 0.65
+                : 0.4,
+            provenance: 'icp_analyzer',
+            label: evidenceSource.title,
+            url: evidenceSource.url,
+          })),
+          artifact.generatedAt,
+        ),
+      }).catch((outcomeError) => console.error('Could not update journey outcome', outcomeError));
+      trackJourneyEvent('journey_stage_outcome_completed', {
+        tool: 'icp_builder',
+        artifact_type: 'customer_decision_brief',
+        artifact_id: analysisId,
+        outcome_status: 'ready',
+        source,
+        completion_score: completionScore,
+        confidence: artifact.draftDocument.confidence.level,
+      });
+      if (source === 'unlock_gate') {
+        trackJourneyEvent('journey_artifact_restored', {
+          tool: 'icp_builder',
+          artifact_type: 'customer_decision_brief',
+          artifact_id: analysisId,
+          outcome_status: 'ready',
+          source: 'signup_return',
+          success: true,
+        });
+      }
+    }
     // Task 4: completing the ICP path unlocks the full dashboard nav (flag-gated no-op otherwise).
     if (user?.id) {
       void markOnboardingPathCompleted(user.id, 'icp');
@@ -1044,9 +1110,19 @@ const ICPBuilder: React.FC = () => {
 
     setSynthesisError(null);
     setLoadingPhase("synthesis");
-    setLoadingStartedAt(Date.now());
+    const generationStartedAt = Date.now();
+    setLoadingStartedAt(generationStartedAt);
     setFallbackEmailError(null);
     setFallbackEmailState("idle");
+    if (!persist) {
+      trackJourneyEvent('journey_aha_started', {
+        tool: 'icp_builder',
+        artifact_type: 'customer_decision_preview',
+        outcome_status: 'draft',
+        source: 'icp_builder',
+        mode,
+      });
+    }
 
     const invokeWithRetry = async () => {
       try {
@@ -1084,6 +1160,18 @@ const ICPBuilder: React.FC = () => {
           is_authenticated: Boolean(user),
           preview_variant: "partial_before_signup",
           revealed_sections: 2,
+        });
+        trackJourneyEvent('journey_aha_output_generated', {
+          tool: 'icp_builder',
+          artifact_type: 'customer_decision_preview',
+          outcome_status: 'draft',
+          source: 'icp_builder',
+          duration_ms: Math.max(0, Date.now() - generationStartedAt),
+          mode,
+          confidence: artifact.draftDocument.confidence.level,
+          cited_signal_count: artifact.draftDocument.sources?.length ?? 0,
+          assumption_count: artifact.draftDocument.confidence.missingSignals.length,
+          success: true,
         });
         setSession((previous) => ({
           ...previous,

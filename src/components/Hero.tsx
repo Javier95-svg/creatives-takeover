@@ -54,10 +54,10 @@ const DEFAULT_NAV: HeroNavItem[] = [
 ];
 
 const DEFAULT_STATS: HeroStat[] = [
-  { value: "5", unit: "×", label: "Faster idea → MVP than pre-AI builders" },
-  { value: "$680B", unit: "+", label: "Into AI-native startups since 2024" },
-  { value: "1 in 4", label: "New 2026 launches are solo founders" },
-  { value: "~18", unit: "mo", label: "Before incumbents close the AI-native gap" },
+  { value: "6", label: "Connected founder outcomes" },
+  { value: "2", label: "Ways to reach value before signup" },
+  { value: "48", unit: "hr", label: "Pro expert response commitment" },
+  { value: "1", label: "Evidence trail from idea to traction" },
 ];
 
 const DEFAULT_LEDE = (
@@ -65,8 +65,7 @@ const DEFAULT_LEDE = (
     You shouldn&apos;t need the right connections, the right city, or the right background to build a serious startup.
     <br />
     <br />
-    Build your demo, pitch video, landing page, and GTM plan with niche tools, mentor support,
-    and funding guidance built for first time founders.
+    Turn your idea into a validated startup through one connected path. Define your customer, prove demand, build your MVP, launch it, and find traction.
     <br />
     <br />
     <strong>No application. No cohort. No equity.</strong>
@@ -79,8 +78,8 @@ const SIGNED_IN_LEDE =
 const Hero = ({
   eyebrow = "Referral program available in your dashboard — invite friends and earn a free plan upgrade.",
   eyebrowPill = "New",
-  titleLine1 = "The founders'",
-  titleLine2 = "compass",
+  titleLine1 = "The Founders",
+  titleLine2 = "Compass",
   lede = DEFAULT_LEDE,
   ctaLabel = "Launch a live demo",
   ctaHref = "/demo-studio",

@@ -7,15 +7,28 @@ const TEMPLATE_PATH = path.join(DIST_DIR, "index.html");
 
 const PRIMARY_NAV = [
   { href: "/", label: "Home" },
+  { href: "/#startup-development-cycle", label: "How It Works" },
+  { href: "/build", label: "Tools and Outcomes" },
+  { href: "/mentorship", label: "Expert Support" },
+  { href: "/stories", label: "Founder Proof" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/bizmap-ai", label: "BizMap AI" },
-  { href: "/insighta", label: "Insighta" },
-  { href: "/mentorship", label: "Community" },
-  { href: "/newspaper", label: "Newspaper" },
+];
+
+const PRICING_SUMMARY = [
+  { name: "Rookie", price: "$0/month", outcome: "Clarify", credits: "50 monthly credits", description: "Create the first customer decision and understand the connected journey." },
+  { name: "Starter", price: "$9/month", outcome: "Validate", credits: "100 monthly credits", description: "Publish proof, collect evidence, and make the first PMF decision." },
+  { name: "Rising", price: "$29/month", outcome: "Build and Launch", credits: "250 monthly credits", description: "Build the evidence backed MVP, launch assets, and begin measuring traction." },
+  { name: "Pro", price: "$65/month", outcome: "Accelerate and Fundraise", credits: "600 monthly credits", description: "Add expert accountability within 48 hours, deeper research, and fundraising workflows." },
 ];
 
 function buildFallbackHtml(routeConfig) {
   const nav = PRIMARY_NAV.map((item) => `<a href="${item.href}">${item.label}</a>`).join(" | ");
+  const heroContent = routeConfig.path === "/"
+    ? `<p>You shouldn't need the right connections, the right city, or the right background to build a serious startup.</p>
+          <p>Turn your idea into a validated startup through one connected path. Define your customer, prove demand, build your MVP, launch it, and find traction.</p>
+          <p><strong>No application. No cohort. No equity.</strong></p>
+          <p><a href="/demo-studio/try">Launch a live demo</a> <a href="/icp-builder">Draft your ICP</a></p>`
+    : `<p>${routeConfig.heroCopy || routeConfig.description}</p>`;
   const quickAnswer = routeConfig.quickAnswer
     ? `        <section>
           <h2>Quick answer: ${routeConfig.quickAnswer.title}</h2>
@@ -58,6 +71,16 @@ ${routeConfig.checklist.map((item) => `            <li>${item}</li>`).join("\n")
           <p><a href="${routeConfig.cta.href}">${routeConfig.cta.label}</a></p>
         </section>`
     : "";
+  const pricingSummary = routeConfig.path === "/pricing"
+    ? `        <section aria-labelledby="plan-outcomes-heading">
+          <h2 id="plan-outcomes-heading">Monthly plans and principal outcomes</h2>
+${PRICING_SUMMARY.map((plan) => `          <article>
+            <h3>${plan.name}: ${plan.price}</h3>
+            <p><strong>${plan.outcome}</strong></p>
+            <p>${plan.description} Includes ${plan.credits}.</p>
+          </article>`).join("\n")}
+        </section>`
+    : "";
 
   // Answer pages interlink within their topic cluster; other pages fall back to
   // the generic cross-links.
@@ -83,10 +106,11 @@ ${routeConfig.checklist.map((item) => `            <li>${item}</li>`).join("\n")
       <article>
         <section>
           <h1>${routeConfig.heroHeading || routeConfig.title}</h1>
-          <p>${routeConfig.heroCopy || routeConfig.description}</p>
+          ${heroContent}
           ${routeConfig.updatedLabel ? `<p>Last updated ${routeConfig.updatedLabel}</p>` : ""}
         </section>
 ${quickAnswer}
+${pricingSummary}
 ${sections}
 ${checklist}
         ${faqs ? `        <section>
@@ -143,7 +167,7 @@ const WEBSITE_SCHEMA = {
   url: `${BASE_URL}/`,
   name: SITE_NAME,
   description:
-    "AI-powered startup builder for first-time founders — customer discovery, MVP planning, fundraising prep, and go-to-market execution.",
+    "An evidence backed founder system connecting customer clarity, proof, PMF decisions, MVP building, GTM execution, and verified traction.",
   potentialAction: {
     "@type": "SearchAction",
     target: { "@type": "EntryPoint", urlTemplate: `${BASE_URL}/answers?q={search_term_string}` },

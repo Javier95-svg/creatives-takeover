@@ -58,6 +58,7 @@ import { fetchJourneyEvidenceBrief } from '@/lib/mvp-builder/journeyEvidence';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { trackJourneyEvent } from '@/lib/journeyOutcomes';
 
 // ── Quick-start templates ────────────────────────────────────────────────────
 
@@ -318,7 +319,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   projectVersions,
   lastActionQuote,
   onSelectedModelsChange,
-  onSetupInputChange: _onSetupInputChange,
+  onSetupInputChange,
   onProjectTypeChange: _onProjectTypeChange,
   onSend,
   onClassifyAction,
@@ -340,38 +341,54 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   const [selectedReferences, setSelectedReferences] = useState<BuilderReferenceId[]>([]);
   const [isLoadingEvidence, setIsLoadingEvidence] = useState(false);
   const { user } = useAuth();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const evidencePrefillAttemptedRef = useRef(false);
 
   // Journey-context compiler: draft the build prompt from the founder's saved
-  // ICP draft, PMF readiness analysis, and GTM plan. Editable before sending.
-  const handleBuildFromEvidence = async () => {
+  // ICP decision, Demo proof, PMF report, and GTM plan. Editable before sending.
+  const handleBuildFromEvidence = useCallback(async ({ quiet = false }: { quiet?: boolean } = {}) => {
     if (!user) {
-      toast.error('Sign in to build from your saved evidence.');
+      if (!quiet) toast.error('Sign in to build from your saved evidence.');
       return;
     }
     setIsLoadingEvidence(true);
     try {
       const result = await fetchJourneyEvidenceBrief(user.id);
       if (!result) {
-        toast.info('No saved evidence yet.', {
-          description: 'Run ICP Builder, PMF Lab, or GTM Strategist first — their outputs become your build brief.',
-        });
+        if (!quiet) {
+          toast.info('No saved evidence yet.', {
+            description: 'Run ICP Builder, Demo Studio, or PMF Lab first. Their outputs become your build brief.',
+          });
+        }
         return;
       }
       setInput(result.brief);
       setBuilderMode('build');
+      onSetupInputChange({
+        customPrompt: result.brief,
+        prefillSource: 'journey_evidence',
+        evidenceManifest: result.manifest,
+      });
       requestAnimationFrame(() => textareaRef.current?.focus());
-      const used = [result.sources.icp && 'ICP', result.sources.pmf && 'PMF Lab', result.sources.gtm && 'GTM plan']
+      const used = [result.sources.icp && 'ICP', result.sources.demo && 'Demo', result.sources.pmf && 'PMF Lab', result.sources.gtm && 'GTM plan']
         .filter(Boolean)
         .join(' + ');
-      toast.success(`Build brief drafted from your ${used} evidence.`, {
-        description: 'Edit anything, then hit Build.',
+      if (!quiet) toast.success(`Build brief drafted from your ${used} evidence.`, {
+        description: 'Review the evidence manifest, edit anything, then hit Build.',
+      });
+      trackJourneyEvent('journey_next_stage_started', {
+        tool: 'mvp_builder',
+        artifact_type: 'evidence_backed_mvp',
+        outcome_status: 'draft',
+        source: quiet ? 'automatic_evidence_prefill' : 'manual_evidence_prefill',
+        evidence_source_count: result.manifest.sources.length,
       });
     } catch {
       toast.error('Could not load your journey evidence. Please try again.');
     } finally {
       setIsLoadingEvidence(false);
     }
-  };
+  }, [onSetupInputChange, user]);
   const [queuedSubmissions, setQueuedSubmissions] = useState<QueuedSubmission[]>([]);
   const [changeCards, setChangeCards] = useState<MVPBuildChangeSummary[]>([]);
   const [expandedChangeCards, setExpandedChangeCards] = useState<Record<string, boolean>>({});
@@ -383,9 +400,14 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   const [prBranchName, setPrBranchName] = useState('');
   const [commitMessage, setCommitMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const previousGeneratingRef = useRef(isGenerating);
   const isEmpty = messages.length === 0;
+
+  useEffect(() => {
+    if (!user || !isEmpty || input.trim() || isGenerating || evidencePrefillAttemptedRef.current) return;
+    evidencePrefillAttemptedRef.current = true;
+    void handleBuildFromEvidence({ quiet: true });
+  }, [handleBuildFromEvidence, input, isEmpty, isGenerating, user]);
   const sortedHistory = useMemo(
     () =>
       [...promptHistory].sort(
@@ -656,7 +678,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
               <div className="space-y-2">
                 <h2 className="text-base font-semibold text-white">Ready to build</h2>
                 <p className="text-sm leading-relaxed text-muted-foreground">
-                  Your context is already loaded. Target market, pain points, and positioning are pulled from your dashboard and onboarding quiz. Just describe what you want to build.
+                  Your latest customer decision, proof, PMF evidence, and approved positioning are loaded into an editable evidence manifest before the first build.
                 </p>
               </div>
               <Button
@@ -669,7 +691,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                 {isLoadingEvidence ? 'Compiling your evidence…' : 'Build from my validated evidence'}
               </Button>
               <p className="-mt-2 text-xs leading-relaxed text-muted-foreground">
-                Drafts your build prompt from your saved ICP, PMF interview findings, and GTM positioning — the
+                Drafts your build prompt from your saved ICP, Demo proof, PMF findings, and GTM positioning — the
                 features and copy real prospects asked for, not a blank guess.
               </p>
               <div className="rounded-lg border border-info/10 bg-info/5 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">

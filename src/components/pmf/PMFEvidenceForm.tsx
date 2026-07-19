@@ -557,7 +557,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
               <NumberInput label="How many people did you reach or contact?" value={peopleReached} onChange={setPeopleReached} />
             </div>
             <p className="text-xs text-muted-foreground">
-              The AI score becomes reliable after {PMF_REQUIRED_SIGNALS} logged interviews.
+              Five weighted signals are directional, ten reveal patterns, and {PMF_REQUIRED_SIGNALS} support a decision grade recommendation.
             </p>
           </CardContent>
         </Card>
@@ -572,7 +572,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
               <div>
                 <p className="font-semibold text-foreground">Interview completion tracker</p>
                 <p className="text-muted-foreground">
-                  PMF Lab unlocks a reliable build versus iterate recommendation only after {PMF_REQUIRED_SIGNALS} logged interviews.
+                  Interviews carry full weight. Hosted survey responses and verified Demo behavior also strengthen the evidence grade.
                 </p>
               </div>
               <div className="text-right">
@@ -1060,7 +1060,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
                       You have {conversationCount} of {PMF_REQUIRED_SIGNALS} recommended interviews
                     </p>
                     <p className="text-sm leading-relaxed text-muted-foreground">
-                      PMF Lab can still run, but the score reliability is reduced with fewer than {PMF_REQUIRED_SIGNALS} interviews. We recommend reaching the full target before analyzing.
+                      PMF Lab can still run. The report will combine these interviews with hosted survey responses, verified demo behavior, and cited research, then label the recommendation as directional, emerging, or decision grade.
                     </p>
                   </div>
                 </div>
@@ -1072,7 +1072,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
                     onChange={(e) => setBelowThresholdAcknowledged(e.target.checked)}
                     className="h-4 w-4 rounded border-border accent-warning"
                   />
-                  I understand the results may be less accurate with fewer interviews
+                  I understand an early recommendation remains provisional
                 </label>
               </div>
             )}
@@ -1132,7 +1132,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
           Before you start
         </p>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Run at least <span className="font-semibold text-foreground">{PMF_REQUIRED_SIGNALS} one-to-one customer interviews</span> before using PMF Lab. Results based on fewer interviews will be flagged as potentially inaccurate.
+          Begin with at least one structured customer interview. PMF Lab will combine it with hosted survey responses, verified Demo Studio behavior, and cited research while keeping early conclusions explicitly provisional.
         </p>
       </div>
 

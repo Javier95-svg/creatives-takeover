@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import type { PMFValidationEvidence } from '@/hooks/usePMFLab';
 import type { PMFSurvey, PMFSurveyAggregate } from '@/hooks/usePMFSurvey';
+import { getPmfConfidence, PMF_SIGNAL_THRESHOLDS } from '@/lib/pmfConfidence';
 
 export type PMFHubRecommendation = 'interviews' | 'survey' | 'checklist' | 'discovery' | 'score';
 
@@ -54,6 +55,7 @@ const PMFEvidenceHub = ({
   const checklistCount = evidence?.validation_checklist?.length ?? 0;
   const hasSurvey = Boolean(survey);
   const hasDiscovery = customerDiscoverySignals > 0;
+  const confidence = getPmfConfidence(totalSignals);
 
   const cards: Array<{ key: PMFHubRecommendation; label: string; value: string; description: string; icon: typeof UsersRound; ready: boolean }> = [
     {
@@ -114,10 +116,26 @@ const PMFEvidenceHub = ({
             <Target className="h-6 w-6 text-primary" />
           </div>
           <Progress value={progress} className="mt-3 h-2" />
-          <p className="mt-2 text-xs text-muted-foreground">
-            You can score early, but build decisions stay conservative until the evidence target is reached.
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">
+            <span className="font-semibold text-foreground">{confidence.label}.</span> {confidence.description}
           </p>
         </div>
+      </div>
+
+      <div className="mt-5 grid grid-cols-3 overflow-hidden rounded-2xl border border-border/60 bg-background/70">
+        {[
+          { value: PMF_SIGNAL_THRESHOLDS.directional, label: 'Directional' },
+          { value: PMF_SIGNAL_THRESHOLDS.emerging, label: 'Patterns' },
+          { value: PMF_SIGNAL_THRESHOLDS.decisionGrade, label: 'Decision grade' },
+        ].map((milestone) => {
+          const reached = totalSignals >= milestone.value;
+          return (
+            <div key={milestone.value} className={cn('px-3 py-3 text-center', reached ? 'bg-success/10 text-success' : 'text-muted-foreground')}>
+              <p className="text-lg font-semibold">{milestone.value}</p>
+              <p className="text-caption font-medium uppercase tracking-wide">{milestone.label}</p>
+            </div>
+          );
+        })}
       </div>
 
       {/* Single, unmistakable "do this first" banner so the page has one clear entry point. */}

@@ -21,6 +21,7 @@ import { normalizeMentorExpertiseList } from "@/utils/mentorExpertise";
 import { isMentorInExactTimezone, parseTimezoneOffset } from "@/utils/mentorTimezone";
 import { trackActivity } from "@/lib/activity";
 import { getMentorTrackExpertise, parseMentorTrack } from "@/lib/mentorDemand";
+import ExpertReviewPanel from "@/components/expert-support/ExpertReviewPanel";
 
 import {
   Pagination,
@@ -37,8 +38,8 @@ type ActivationIntent = "find_mentor" | "save_mentor" | "send_message" | "book_c
 
 const MENTOR_HIGHLIGHTS = [
   {
-    title: "Startup experts",
-    description: "Talk with advisors who have already shipped, raised, or coached at the earliest stages.",
+    title: "Expert outcome reviews",
+    description: "Pro founders receive a substantive response on completed journey evidence within 48 hours.",
     icon: GraduationCap,
   },
   {
@@ -451,7 +452,7 @@ const MentorMarketplaceHub = () => {
                       <div className="max-w-3xl lg:mx-auto">
                         <h1 className="text-center text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
                           <span className="gradient-unified creatives-font">
-                            Connect. Learn. Grow.
+                            Expert Support and Founder Network
                           </span>
                         </h1>
                       </div>
@@ -484,6 +485,8 @@ const MentorMarketplaceHub = () => {
                       );
                     })}
 	                    </div>
+
+                    <ExpertReviewPanel isAdmin={isAdmin} />
 
                     {activationBanner && ActivationBannerIcon && (
                       <div className="rounded-4xl border border-accent-teal/30 bg-accent-teal/10 p-4 shadow-sm sm:p-5">

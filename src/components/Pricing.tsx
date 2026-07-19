@@ -35,8 +35,8 @@ const PLAN_CONFIG: Array<{
     key: "rookie",
     title: "Rookie",
     outcomeLabel: "Clarify",
-    subtitle: "Just getting started",
-    audience: "Explore the platform, define the problem, and get your first traction signal.",
+    subtitle: "Decide who to serve first",
+    audience: "Experience both AHA flows, create your first customer decision, and see the connected journey ahead.",
     monthlyPrice: PLAN_PRICING.rookie.monthly,
     yearlyPrice: PLAN_PRICING.rookie.yearly,
     yearlyEquivalent: "Free forever",
@@ -48,8 +48,8 @@ const PLAN_CONFIG: Array<{
     key: "starter",
     title: "Starter",
     outcomeLabel: "Validate",
-    subtitle: "Building momentum",
-    audience: "Bridge the gap between free exploration and full startup-building momentum.",
+    subtitle: "Prove demand before building",
+    audience: "Turn your customer hypothesis into proof, collect evidence, and make your first PMF decision.",
     monthlyPrice: PLAN_PRICING.starter.monthly,
     yearlyPrice: PLAN_PRICING.starter.yearly,
     yearlyEquivalent: "$6.58/mo",
@@ -62,8 +62,8 @@ const PLAN_CONFIG: Array<{
     key: "rising",
     title: "Rising",
     outcomeLabel: "Build & Launch",
-    subtitle: "Actively building",
-    audience: "The default plan for founders shipping, validating, and iterating every week.",
+    subtitle: "Ship what the evidence supports",
+    audience: "Build the evidence backed MVP, prepare the launch, publish assets, and begin measuring traction.",
     monthlyPrice: PLAN_PRICING.rising.monthly,
     yearlyPrice: PLAN_PRICING.rising.yearly,
     yearlyEquivalent: "$19.92/mo",
@@ -74,9 +74,9 @@ const PLAN_CONFIG: Array<{
   {
     key: "pro",
     title: "Pro",
-    outcomeLabel: "Fundraise & Scale",
-    subtitle: "Fundraising and scaling",
-    audience: "For founders running faster, fundraising actively, and needing priority support.",
+    outcomeLabel: "Accelerate & Fundraise",
+    subtitle: "Add expert accountability",
+    audience: "Move faster with deeper research, fundraising workflows, and a substantive expert response within 48 hours.",
     monthlyPrice: PLAN_PRICING.pro.monthly,
     yearlyPrice: PLAN_PRICING.pro.yearly,
     yearlyEquivalent: "$49.08/mo",
@@ -209,7 +209,7 @@ export default function Pricing() {
             Choose Your Plan
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-            Start for free. Upgrade to get the capacity that matches your current entrepreneurial needs.
+            Choose the outcome you need now. Every plan keeps your evidence and decisions connected as you progress.
           </p>
 
           <Tabs value={billingCycle} onValueChange={(value) => setBillingCycle(value as BillingCycle)} className="inline-block">

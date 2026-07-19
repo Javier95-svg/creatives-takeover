@@ -122,6 +122,63 @@ export function normalizeIcpDraftDocument(
       roleLine: draft.gatePreview?.roleLine || roleLine,
       painLine: draft.gatePreview?.painLine || painQuote,
     },
+    decisionBrief: {
+      primarySegment:
+        typeof draft.decisionBrief?.primarySegment === "string" && draft.decisionBrief.primarySegment.trim()
+          ? draft.decisionBrief.primarySegment
+          : roleLine,
+      nonFitSegment:
+        typeof draft.decisionBrief?.nonFitSegment === "string" && draft.decisionBrief.nonFitSegment.trim()
+          ? draft.decisionBrief.nonFitSegment
+          : "Adjacent customers without the same urgent trigger are not the first segment to serve.",
+      rankedPains: Array.from({ length: 3 }, (_, index) => {
+        const item = draft.decisionBrief?.rankedPains?.[index];
+        return {
+          rank: index + 1,
+          pain:
+            typeof item?.pain === "string" && item.pain.trim()
+              ? item.pain
+              : index === 0
+                ? painQuote
+                : `Secondary pain ${index + 1} still needs interview evidence.`,
+          evidence:
+            typeof item?.evidence === "string" && item.evidence.trim()
+              ? item.evidence
+              : "Treat this ranking as an assumption until interviews confirm it.",
+        };
+      }),
+      buyingTrigger:
+        typeof draft.decisionBrief?.buyingTrigger === "string" && draft.decisionBrief.buyingTrigger.trim()
+          ? draft.decisionBrief.buyingTrigger
+          : draft.customer.actionTrigger || draft.pain?.triggerMoment || "The buying trigger still needs validation.",
+      currentAlternative:
+        typeof draft.decisionBrief?.currentAlternative === "string" && draft.decisionBrief.currentAlternative.trim()
+          ? draft.decisionBrief.currentAlternative
+          : draft.build?.replaces?.[0] || "The current alternative still needs to be named in interviews.",
+      reachableChannels:
+        normalizeSectionList(draft.decisionBrief?.reachableChannels).length > 0
+          ? normalizeSectionList(draft.decisionBrief?.reachableChannels).slice(0, 5)
+          : normalizeSectionList(draft.customer.whereToFind).slice(0, 5),
+      interviewValidationPlan: Array.from({ length: 5 }, (_, index) => {
+        const item = draft.decisionBrief?.interviewValidationPlan?.[index];
+        const defaultQuestions = [
+          "Tell me about the last time this problem happened.",
+          "What did you do instead, and what did that cost?",
+          "What made the problem urgent enough to act on?",
+          "Where would you look for a solution like this?",
+          "What proof would make you try or pay for a first version?",
+        ];
+        return {
+          step: index + 1,
+          question:
+            typeof item?.question === "string" && item.question.trim() ? item.question : defaultQuestions[index],
+          successSignal:
+            typeof item?.successSignal === "string" && item.successSignal.trim()
+              ? item.successSignal
+              : "Capture a specific recent behavior, not a hypothetical preference.",
+        };
+      }),
+    },
     customer: {
       personaName,
       roleLine,

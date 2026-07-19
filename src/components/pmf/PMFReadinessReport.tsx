@@ -21,6 +21,7 @@ import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 import { BizMapShareDialog } from '@/components/bizmap/BizMapShareDialog';
 import { useBizMapSharing } from '@/hooks/useBizMapSharing';
 import { createPMFSharedPayload } from '@/lib/bizmapSharing';
+import { formatPmfDecision, getPmfConfidence, getPmfDecision } from '@/lib/pmfConfidence';
 
 interface PMFReadinessReportProps {
   analysis: PMFReadinessAnalysis;
@@ -67,8 +68,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
   customerDiscoverySignalCount = 0,
 }) => {
   const [interviewPreviewOpen, setInterviewPreviewOpen] = useState(false);
-  const isReady = analysis.verdict === 'ready';
-  const meetsThreshold = analysis.overallScore >= 75;
+  const decision = analysis.decision ?? getPmfDecision(analysis.overallScore);
   const decisionTitle = analysis.recommendedActionTitle;
   const scoreMeaning = analysis.scoreMeaning;
   const missingFeatures = analysis.missingFeatures;
@@ -89,6 +89,14 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
       ? Math.round((savedVery / savedSeanTotal) * 100)
       : 0;
   const citationCount = analysis.dataSources?.filter((source) => Boolean(source.url || source.snippet)).length ?? 0;
+  const demoBehaviorSignals = analysis.demoEvidence
+    ? Math.max(analysis.demoEvidence.completions, analysis.demoEvidence.ctaClicks, analysis.demoEvidence.signups)
+    : 0;
+  const observedSignalCount = analysis.evidenceSignalCount
+    ?? loggedInterviews.length + surveyTotal + demoBehaviorSignals;
+  const confidence = getPmfConfidence(observedSignalCount);
+  const isReady = decision === 'build' && confidence.grade === 'decision_grade';
+  const meetsThreshold = confidence.grade === 'decision_grade';
 
   // Primary Finding — lowest-scoring dimension
   const dimensionEntries = Object.entries(analysis.dimensions) as [string, { score: number; explanation: string }][];
@@ -110,7 +118,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
     ? analysis.recommendations.filter((r) => r !== criticalRec)
     : analysis.recommendations;
 
-  const belowSampleThreshold = loggedInterviews.length < PMF_REQUIRED_SIGNALS;
+  const belowSampleThreshold = confidence.grade !== 'decision_grade';
   const interviewSegments = Array.from(new Set(
     loggedInterviews.map((item) => item.segment.trim()).filter(Boolean)
   ));
@@ -121,18 +129,18 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
     (item) => item.landingPageShown && item.solutionPitched
   ).length;
 
-  const thresholdBanner = isReady
+  const thresholdBanner = meetsThreshold
     ? {
         bg: 'bg-success-subtle border-success/30',
         icon: CheckCircle2,
         iconColor: 'text-success',
-        message: "You've crossed the threshold. You have enough evidence to start scoping your MVP.",
+        message: `Decision grade evidence reached. The report recommends ${formatPmfDecision(decision)} based on ${observedSignalCount} weighted signals.`,
       }
     : {
         bg: 'bg-warning-subtle border-warning/30',
         icon: XCircle,
         iconColor: 'text-warning',
-        message: `You need a score of 75 to proceed. You're at ${analysis.overallScore}. Here's what's holding you back:`,
+        message: `${confidence.label}: the current ${formatPmfDecision(decision)} recommendation is provisional. Gather ${confidence.signalsToNext} more weighted signal${confidence.signalsToNext === 1 ? '' : 's'} to reach the next confidence level.`,
       };
 
   const ThresholdIcon = thresholdBanner.icon;
@@ -203,7 +211,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
           />
           {belowSampleThreshold && (
             <Badge variant="secondary" className="bg-warning-subtle text-warning border-warning/30 text-caption">
-              Low sample size — score reliability reduced
+              {confidence.label} — recommendation is provisional
             </Badge>
           )}
         </div>
@@ -223,7 +231,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
                 ? 'border-success/30 bg-success-subtle text-success'
                 : 'border-warning/30 bg-warning-subtle text-warning'
             )}>
-              {meetsThreshold ? 'Recommendation unlocked' : 'Iteration required'}
+              Decision: {formatPmfDecision(decision)}
             </div>
           </div>
 
@@ -248,7 +256,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
               <RefreshCw className="mr-2 h-4 w-4" />
               Re-analyze
             </Button>
-            {meetsThreshold && (
+            {isReady && (
               <Button asChild variant="outline" size="sm">
                 <Link to="/mvp-builder">
                   Continue to Building
@@ -268,9 +276,10 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
         <p className="text-sm leading-relaxed text-muted-foreground">
           This is an AI interpretation of your evidence. Interview records remain the primary signal; survey data and external sources strengthen or challenge the read.
         </p>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
           {[
-            { label: 'Interviews', value: loggedInterviews.length.toString(), note: loggedInterviews.length >= PMF_REQUIRED_SIGNALS ? 'Target reached' : 'Below target' },
+            { label: 'Weighted signals', value: observedSignalCount.toString(), note: confidence.label },
+            { label: 'Interviews', value: loggedInterviews.length.toString(), note: 'Weight 1.0 each' },
             { label: 'Survey responses', value: surveyTotal.toString(), note: liveSurveyTotal > 0 ? 'Hosted responses' : savedSurveyTotal > 0 ? 'Saved tally' : 'None yet' },
             { label: 'Sean Ellis', value: surveyTotal > 0 || savedSeanTotal > 0 ? `${seanEllisPct}%` : 'N/A', note: seanEllisPct >= 40 ? '40% line met' : '40% line not met' },
             { label: 'Citations', value: citationCount.toString(), note: citationCount > 0 ? 'External signal' : 'Interview-only' },
@@ -316,7 +325,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
         <div className="rounded-2xl border border-border/60 bg-muted/20 p-5">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">What this score means</p>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            PMF Lab expects at least {PMF_REQUIRED_SIGNALS} interviews and a score of 75 or higher before you move from Validation to Building.
+            Five weighted signals create directional evidence, ten reveal emerging patterns, and {PMF_REQUIRED_SIGNALS} support a decision grade Build, Narrow, Pivot, or Stop recommendation.
           </p>
           <p className="mt-3 text-sm leading-relaxed text-foreground">
             {analysis.overallScore >= 75

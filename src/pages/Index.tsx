@@ -55,9 +55,9 @@ const Index = () => {
     <div className="min-h-screen relative">
       <HomeWallpaper />
       <SEO
-        title="AI Startup Builder for Founders | Creatives Takeover"
-        description="Build, validate, and launch your startup with AI-powered tools for customer discovery, MVP planning, fundraising prep, and go-to-market execution. Built for first-time founders."
-        keywords="AI startup builder, startup idea validation, MVP planning, customer discovery, fundraising for founders, go-to-market strategy, startup mentor, first-time founders, indie hacker tools, startup tools"
+        title="The Founders Compass | Creatives Takeover"
+        description="Turn your idea into a validated startup through one evidence backed path for customer clarity, proof, PMF decisions, MVP building, GTM execution, and verified traction."
+        keywords="founder operating system, startup idea validation, customer decision brief, interactive product demo, product market fit evidence, MVP builder, go-to-market execution, traction engine, first-time solo founders"
         url="/"
         image="/og-image.png"
         structuredData={structuredData}

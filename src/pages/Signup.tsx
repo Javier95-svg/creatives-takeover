@@ -44,6 +44,7 @@ import {
 import { getSocialAuthSignupMethod, startSocialOAuth, type SocialAuthProviderId } from "@/lib/socialAuth";
 import { applySignupActivationSource } from "@/lib/retentionSystem";
 import { beginAttributedOAuthSignup } from "@/lib/signupAttribution";
+import { trackJourneyEvent } from "@/lib/journeyOutcomes";
 
 const signupHeroSlides = [
   {
@@ -412,6 +413,16 @@ const Signup = () => {
         }).catch((activationError) => {
           console.warn('Signup activation source tracking failed', activationError);
         });
+        if (conversionSource.source === 'demo-try' || conversionSource.source === 'icp-draft-unlock') {
+          const tool = conversionSource.source === 'demo-try' ? 'demo_studio' : 'icp_builder';
+          trackJourneyEvent('journey_account_created_from_output', {
+            tool,
+            artifact_type: tool === 'demo_studio' ? 'interactive_demo_preview' : 'customer_decision_preview',
+            outcome_status: 'draft',
+            source: conversionSource.source,
+            return_path: conversionSource.returnUrl,
+          });
+        }
 
         toast.success("Account created successfully! Redirecting...");
 

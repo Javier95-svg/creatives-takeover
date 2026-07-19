@@ -24,6 +24,7 @@ import {
 import { logInfo, logWarn, logError } from '@/lib/logger';
 import { applySignupActivationSource } from '@/lib/retentionSystem';
 import { completeAttributedOAuthSignup } from '@/lib/signupAttribution';
+import { trackJourneyEvent } from '@/lib/journeyOutcomes';
 
 const NEW_ACCOUNT_MAX_AGE_MS = 10 * 60 * 1000;
 
@@ -201,6 +202,19 @@ const AuthCallback = () => {
           }).catch((activationError) => {
             logWarn('Failed to apply signup activation source', { activationError });
           });
+          if (
+            isNewlyCreatedUser(session.user.created_at) &&
+            (oauthSource === 'demo-try' || oauthSource === 'icp-draft-unlock')
+          ) {
+            const tool = oauthSource === 'demo-try' ? 'demo_studio' : 'icp_builder';
+            trackJourneyEvent('journey_account_created_from_output', {
+              tool,
+              artifact_type: tool === 'demo_studio' ? 'interactive_demo_preview' : 'customer_decision_preview',
+              outcome_status: 'draft',
+              source: oauthSource,
+              return_path: returnUrl,
+            });
+          }
 
           // Track OAuth signup if source exists
           if (

@@ -206,35 +206,36 @@ export const PLAN_MONTHLY_CREDITS: Record<Plan, number> = {
 
 export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
   rookie: [
-    'Stage 1 guided dashboard (Rookie Mode)',
-    'ICP Builder free + Insighta Test & Newspaper',
-    'MVP Builder, billed per action from credits',
-    'Browse VC Search & Accelerator Hunt',
-    'Unlimited Discovery Calls (10 credits per booking)',
-    'Find a Co-Founder posts (5 credits each)',
+    '50 monthly credits',
+    'ICP Builder and both visitor AHA previews',
+    'Guided Stage 1 founder dashboard',
+    'Core build tools with transparent credit costs',
+    'Browse VC Search and Accelerator Hunt',
+    'Expert discovery calls at 10 credits per booking',
   ],
   starter: [
-    'Everything in Rookie, with Stages 1-3 unlocked',
-    'Demo Studio + Product-Market Fit Lab',
+    '100 monthly credits',
+    'Structured execution across Stages 1 to 3',
+    'Demo Studio and Product Market Fit Lab',
     'Full Email Templates library',
     'VC Search & Accelerator Hunt: 2 profile views/month',
-    'Find a Co-Founder posts (5 credits each)',
+    'Core build tools with transparent credit costs',
   ],
   rising: [
-    'Everything in Starter, with all 5 stages active',
-    'GTM Strategist + Tech Stack Builder',
-    'Pitch Deck Analyzer (full access)',
-    'Founders Unleashed podcast + Newspaper exclusives',
+    '250 monthly credits',
+    'Full founder cockpit across all active stages',
+    'MVP, GTM, and traction execution workflows',
+    'Full Prompt Library with export actions',
     'VC Search & Accelerator Hunt: 10 profile views/month',
-    'Find a Co-Founder posts (5 credits each)',
+    'Pitch Deck Analyzer with transparent credit costs',
   ],
   pro: [
-    'Everything in Rising, plus the Pro War Room',
+    '600 monthly credits and the Pro War Room',
+    'Substantive expert response within 48 hours',
     'Find Your Angel investor matching',
-    'Fundraising-aware dashboard & insights',
-    'Priority founder support',
+    'Fundraising aware dashboard and workflows',
+    'Priority founder support and deeper research',
     'Unlimited VC Search & Accelerator profile views',
-    'Find a Co-Founder posts (5 credits each)',
   ],
 };
 
@@ -516,7 +517,7 @@ export const PLAN_SUMMARIES: Record<Plan, PlanSummary> = {
     monthlyCredits: PLAN_MONTHLY_CREDITS.rookie,
     vcViewLimit: MONTHLY_FREE_QUOTAS.vc_profiles.rookie,
     acceleratorViewLimit: MONTHLY_FREE_QUOTAS.accelerator_profiles.rookie,
-    description: 'A guided Stage 1 dashboard with light monthly usage and previews of the later build and launch layers.',
+    description: 'Clarify who to serve first with 50 monthly credits, both visitor AHA previews, and a guided Stage 1 dashboard.',
   },
   starter: {
     name: PLAN_LABELS.starter,
@@ -524,7 +525,7 @@ export const PLAN_SUMMARIES: Record<Plan, PlanSummary> = {
     monthlyCredits: PLAN_MONTHLY_CREDITS.starter,
     vcViewLimit: MONTHLY_FREE_QUOTAS.vc_profiles.starter,
     acceleratorViewLimit: MONTHLY_FREE_QUOTAS.accelerator_profiles.starter,
-    description: 'Structured execution across Stages 1 to 3 with PMF workflows, prompt shortcuts, and light investor research.',
+    description: 'Validate customer demand with 100 monthly credits, proof workflows, PMF evidence, and structured execution across Stages 1 to 3.',
   },
   rising: {
     name: PLAN_LABELS.rising,
@@ -532,7 +533,7 @@ export const PLAN_SUMMARIES: Record<Plan, PlanSummary> = {
     monthlyCredits: PLAN_MONTHLY_CREDITS.rising,
     vcViewLimit: MONTHLY_FREE_QUOTAS.vc_profiles.rising,
     acceleratorViewLimit: MONTHLY_FREE_QUOTAS.accelerator_profiles.rising,
-    description: 'Full operating cockpit across all five stages with credit-metered build tools and 10 VC plus 10 accelerator profile views per billing cycle.',
+    description: 'Build and launch with 250 monthly credits, the full operating cockpit, and 10 VC plus 10 accelerator profile views per billing cycle.',
   },
   pro: {
     name: PLAN_LABELS.pro,
@@ -540,7 +541,7 @@ export const PLAN_SUMMARIES: Record<Plan, PlanSummary> = {
     monthlyCredits: PLAN_MONTHLY_CREDITS.pro,
     vcViewLimit: MONTHLY_FREE_QUOTAS.vc_profiles.pro,
     acceleratorViewLimit: MONTHLY_FREE_QUOTAS.accelerator_profiles.pro,
-    description: 'Premium war room with Angels access, unlimited research views, and added support for fundraising execution.',
+    description: 'Accelerate and fundraise with 600 monthly credits, the Pro War Room, Angels access, unlimited research views, and expert accountability.',
   },
 };
 

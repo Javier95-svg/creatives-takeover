@@ -25,6 +25,12 @@ import {
   type GTMWeeklyReview,
   type GTMWeeklyReviewInput,
 } from '@/lib/gtmV2';
+import { evaluateGTMOutcome } from '@/lib/gtmOutcome';
+import {
+  createJourneyEvidenceManifest,
+  trackJourneyEvent,
+  upsertJourneyOutcome,
+} from '@/lib/journeyOutcomes';
 
 export interface GTMIntakeAnswers {
   businessType: string;
@@ -118,6 +124,49 @@ const createMvpProjectPrefill = (row: Record<string, unknown>): Partial<GTMIntak
     problem: textValue(setupInput.validatedProblemStatement) || textValue(setupInput.keyPainLanguage),
     solution: textValue(setupInput.oneLineDescription),
   };
+};
+
+const syncGTMJourneyOutcome = async (userId: string, artifactId: string, plan: GTMPlanV2) => {
+  try {
+    const outcome = evaluateGTMOutcome(plan);
+    const evidenceManifest = createJourneyEvidenceManifest([
+      ...plan.researchSources.map((source, index) => ({
+        sourceId: source.id || source.url || `gtm-research-${index + 1}`,
+        sourceType: 'market_research',
+        version: '1',
+        capturedAt: source.verifiedAt || source.publishedDate || plan.generatedAt,
+        confidence: plan.researchStatus === 'complete' ? 0.85 : plan.researchStatus === 'limited' ? 0.6 : 0.3,
+        provenance: source.url ? 'external_cited_source' : 'research_summary',
+        label: source.title,
+        url: source.url || null,
+      })),
+      ...(plan.evidenceItems ?? []).map((source) => ({
+        sourceId: source.id,
+        sourceType: source.kind,
+        version: '1',
+        capturedAt: source.createdAt || source.sourceDate || plan.generatedAt,
+        confidence: source.verified ? 0.9 : 0.5,
+        provenance: source.verified ? 'founder_verified_evidence' : 'founder_supplied_evidence',
+        label: source.title,
+        url: source.url || null,
+      })),
+    ], plan.generatedAt);
+
+    await upsertJourneyOutcome({
+      userId,
+      tool: 'gtm_strategist',
+      artifactType: 'gtm_acquisition_play',
+      artifactId,
+      status: outcome.status,
+      qualityChecks: outcome.checks,
+      evidenceManifest,
+      completionScore: outcome.completionScore,
+    });
+    return outcome;
+  } catch (error) {
+    console.warn('Could not synchronize the GTM journey outcome:', error);
+    return null;
+  }
 };
 
 export function useGTMStrategist() {
@@ -348,6 +397,9 @@ export function useGTMStrategist() {
       trackGTMPlanGenerated({ channel_count: data.analysis.channels.length, schema_version: 2, research_status: data.analysis.researchStatus });
       captureEvent('gtm_research_completed', { status: data.analysis.researchStatus, source_count: data.analysis.researchSources.length });
       trackToolOutputCreated('gtm_strategist', 'gtm_plan', { schema_version: 2 });
+      if (data.planId ?? data.analysis.planId) {
+        void syncGTMJourneyOutcome(user.id, data.planId ?? data.analysis.planId, data.analysis);
+      }
       void trackCurrentActivationJourneyEvent(user.id, 'activation_first_output_generated', { intent: 'plan_gtm', tool: 'gtm_strategist' });
       showCreditReceipt('GTM_ANALYSIS', typeof data.creditsUsed === 'number' ? data.creditsUsed : credits, typeof data.newBalance === 'number' ? data.newBalance : undefined, { featureName: 'GTM Strategist' });
     } catch (error) {
@@ -417,10 +469,32 @@ export function useGTMStrategist() {
       }
       sprintId = data.id;
     }
-    await updatePlay({ ...play, tractionSprintId: sprintId });
+    const activatedPlay = { ...play, tractionSprintId: sprintId };
+    await updatePlay(activatedPlay);
     captureEvent('gtm_traction_sprint_started', { plan_id: planId, play_id: play.id, channel_id: play.channelId, sprint_id: sprintId });
+    if (analysis && isGTMPlanV2(analysis)) {
+      const activatedPlan = { ...analysis, plays: analysis.plays.map((item) => item.id === play.id ? activatedPlay : item) };
+      const outcome = await syncGTMJourneyOutcome(user.id, planId, activatedPlan);
+      trackJourneyEvent('journey_next_stage_started', {
+        tool: 'traction_engine',
+        source: 'gtm_strategist',
+        artifact_type: 'traction_sprint',
+        artifact_id: sprintId,
+        gtm_plan_id: planId,
+        gtm_play_id: play.id,
+      });
+      if (outcome?.status === 'verified') {
+        trackJourneyEvent('journey_stage_outcome_completed', {
+          tool: 'gtm_strategist',
+          artifact_type: 'gtm_acquisition_play',
+          artifact_id: planId,
+          outcome_status: 'verified',
+          completion_score: outcome.completionScore,
+        });
+      }
+    }
     toast.success(`${play.channelName} sprint is active.`);
-  }, [planId, updatePlay, user]);
+  }, [analysis, planId, updatePlay, user]);
 
   const updateV2Plan = useCallback(async (nextPlan: GTMPlanV2) => {
     if (!user || !planId || !analysis || !isGTMPlanV2(analysis)) return;
@@ -553,6 +627,10 @@ export function useGTMStrategist() {
       }
 
       trackGTMPlanSaved({ status });
+
+      if (isGTMPlanV2(analysis)) {
+        await syncGTMJourneyOutcome(user.id, (data as { id?: string })?.id ?? planId ?? analysis.planId ?? 'gtm-plan', analysis);
+      }
 
       if (status === 'draft') {
         toast.success('GTM draft saved.');

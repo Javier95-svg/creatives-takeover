@@ -46,7 +46,21 @@ export interface MVPBuilderSetupInput {
   template: MVPBuilderTemplateId;
   palettePreference: MVPBuilderPaletteId;
   customPrompt?: string;
-  prefillSource?: 'pmf' | 'icp' | 'waitlist_launch_kit' | 'dashboard_home' | 'onboarding_quiz' | null;
+  prefillSource?: 'pmf' | 'icp' | 'journey_evidence' | 'waitlist_launch_kit' | 'dashboard_home' | 'onboarding_quiz' | null;
+  evidenceManifest?: {
+    version: 1;
+    generatedAt: string;
+    sources: Array<{
+      sourceId: string;
+      sourceType: string;
+      version: string;
+      capturedAt: string;
+      confidence: number | null;
+      provenance: string;
+      label?: string;
+      url?: string | null;
+    }>;
+  };
 }
 
 export interface MVPBuilderOutputFile {

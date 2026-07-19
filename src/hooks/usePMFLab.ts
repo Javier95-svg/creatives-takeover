@@ -18,6 +18,12 @@ import { ensureMentorDemandNotification } from '@/lib/mentorDemandNotifications'
 import { trackActivity } from '@/lib/activity';
 import { captureEvent } from '@/lib/analytics';
 import { markDiscoveryLeadsInterviewed } from '@/lib/pmfDiscoveryLeads';
+import type { PmfDecision, PmfEvidenceGrade } from '@/lib/pmfConfidence';
+import {
+  createJourneyEvidenceManifest,
+  trackJourneyEvent,
+  upsertJourneyOutcome,
+} from '@/lib/journeyOutcomes';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -96,6 +102,16 @@ export interface PMFReadinessAnalysis {
   diagnosis: string;
   recommendedAction: 'move_to_building' | 'iterate_before_building';
   recommendedActionTitle: string;
+  decision?: PmfDecision;
+  evidenceGrade?: PmfEvidenceGrade;
+  evidenceSignalCount?: number;
+  decisionProvisional?: boolean;
+  evidenceBreakdown?: {
+    interviews: { count: number; weight: number };
+    hostedSurveyResponses: { count: number; weight: number };
+    verifiedDemoBehaviors: { count: number; weight: number };
+    corroboratingResearch: { count: number; weight: number };
+  };
   dimensions: {
     painClarity: PMFDimension;
     urgency: PMFDimension;
@@ -371,6 +387,82 @@ export function usePMFLab() {
         analysis_id_present: Boolean(data.analysisId),
         external_sources: nextAnalysis.dataSources?.length ?? 0,
       });
+      if (data.analysisId) {
+        const signalCount = nextAnalysis.evidenceSignalCount ?? conversationCount;
+        const decisionGrade = nextAnalysis.evidenceGrade === 'decision_grade';
+        const outcomeStatus = decisionGrade ? 'verified' : 'ready';
+        const evidenceSources = [
+          ...(answers.interviews ?? []).map((interview, index) => ({
+            sourceId: interview.sourceLeadId || `pmf:${data.analysisId}:interview:${interview.id || index + 1}`,
+            sourceType: 'customer_interview',
+            version: '1',
+            capturedAt: nextAnalysis.generatedAt,
+            confidence: 0.9,
+            provenance: 'pmf_interview_log',
+            label: `${interview.intervieweeName}: ${interview.segment}`,
+          })),
+          ...(options?.surveyEvidence?.total
+            ? [{
+                sourceId: `pmf:${data.analysisId}:hosted_survey`,
+                sourceType: 'hosted_survey',
+                version: '1',
+                capturedAt: nextAnalysis.generatedAt,
+                confidence: 0.75,
+                provenance: 'pmf_hosted_survey',
+                label: `${options.surveyEvidence.total} hosted survey responses`,
+              }]
+            : []),
+          ...(nextAnalysis.demoEvidence
+            ? [{
+                sourceId: `pmf:${data.analysisId}:demo_behavior`,
+                sourceType: 'verified_demo_behavior',
+                version: '1',
+                capturedAt: nextAnalysis.generatedAt,
+                confidence: 0.8,
+                provenance: 'demo_studio_events',
+                label: `${nextAnalysis.demoEvidence.completions} demo completions and ${nextAnalysis.demoEvidence.signups} leads`,
+              }]
+            : []),
+          ...(nextAnalysis.dataSources ?? []).map((source, index) => ({
+            sourceId: source.url || `pmf:${data.analysisId}:research:${index + 1}`,
+            sourceType: 'corroborating_research',
+            version: source.publishedDate || '1',
+            capturedAt: nextAnalysis.generatedAt,
+            confidence: typeof source.relevance === 'number' ? source.relevance : 0.5,
+            provenance: 'pmf_web_research',
+            label: source.title,
+            url: source.url,
+          })),
+        ];
+        void upsertJourneyOutcome({
+          userId: user.id,
+          tool: 'pmf_lab',
+          artifactType: 'pmf_decision_report',
+          artifactId: data.analysisId,
+          status: outcomeStatus,
+          completionScore: Math.min(100, 55 + Math.round((Math.min(signalCount, PMF_REQUIRED_SIGNALS) / PMF_REQUIRED_SIGNALS) * 45)),
+          qualityChecks: {
+            report_generated: true,
+            decision_present: Boolean(nextAnalysis.decision),
+            weighted_sources_present: evidenceSources.length > 0,
+            directional_signals: signalCount >= 5,
+            emerging_patterns: signalCount >= 10,
+            decision_grade: decisionGrade,
+          },
+          evidenceManifest: createJourneyEvidenceManifest(evidenceSources, nextAnalysis.generatedAt),
+        }).catch((outcomeError) => console.error('Could not update journey outcome', outcomeError));
+        trackJourneyEvent('journey_stage_outcome_completed', {
+          tool: 'pmf_lab',
+          artifact_type: 'pmf_decision_report',
+          artifact_id: data.analysisId,
+          outcome_status: outcomeStatus,
+          source: isReScore ? 'pmf_rescore' : 'pmf_score',
+          signal_count: signalCount,
+          evidence_grade: nextAnalysis.evidenceGrade,
+          decision: nextAnalysis.decision,
+          score: nextAnalysis.overallScore,
+        });
+      }
       if (isReScore) {
         toast.success('Re-scored with your latest evidence — no credits used.');
       } else {

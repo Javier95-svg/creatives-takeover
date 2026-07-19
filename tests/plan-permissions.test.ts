@@ -25,38 +25,39 @@ test('normalizePlan keeps legacy creator users on rising', () => {
 
 test('plan highlights match the authoritative four-plan contract', () => {
   assert.deepEqual(PLAN_HIGHLIGHTS.rookie, [
-    'Stage 1 guided dashboard (Rookie Mode)',
-    'ICP Builder free + Insighta Test & Newspaper',
-    'MVP Builder, billed per action from credits',
-    'Browse VC Search & Accelerator Hunt',
-    'Unlimited Discovery Calls (10 credits per booking)',
-    'Find a Co-Founder posts (5 credits each)',
+    '50 monthly credits',
+    'ICP Builder and both visitor AHA previews',
+    'Guided Stage 1 founder dashboard',
+    'Core build tools with transparent credit costs',
+    'Browse VC Search and Accelerator Hunt',
+    'Expert discovery calls at 10 credits per booking',
   ]);
 
   assert.deepEqual(PLAN_HIGHLIGHTS.starter, [
-    'Everything in Rookie, with Stages 1-3 unlocked',
-    'Demo Studio + Product-Market Fit Lab',
+    '100 monthly credits',
+    'Structured execution across Stages 1 to 3',
+    'Demo Studio and Product Market Fit Lab',
     'Full Email Templates library',
     'VC Search & Accelerator Hunt: 2 profile views/month',
-    'Find a Co-Founder posts (5 credits each)',
+    'Core build tools with transparent credit costs',
   ]);
 
   assert.deepEqual(PLAN_HIGHLIGHTS.rising, [
-    'Everything in Starter, with all 5 stages active',
-    'GTM Strategist + Tech Stack Builder',
-    'Pitch Deck Analyzer (full access)',
-    'Founders Unleashed podcast + Newspaper exclusives',
+    '250 monthly credits',
+    'Full founder cockpit across all active stages',
+    'MVP, GTM, and traction execution workflows',
+    'Full Prompt Library with export actions',
     'VC Search & Accelerator Hunt: 10 profile views/month',
-    'Find a Co-Founder posts (5 credits each)',
+    'Pitch Deck Analyzer with transparent credit costs',
   ]);
 
   assert.deepEqual(PLAN_HIGHLIGHTS.pro, [
-    'Everything in Rising, plus the Pro War Room',
+    '600 monthly credits and the Pro War Room',
+    'Substantive expert response within 48 hours',
     'Find Your Angel investor matching',
-    'Fundraising-aware dashboard & insights',
-    'Priority founder support',
+    'Fundraising aware dashboard and workflows',
+    'Priority founder support and deeper research',
     'Unlimited VC Search & Accelerator profile views',
-    'Find a Co-Founder posts (5 credits each)',
   ]);
 });
 
@@ -115,7 +116,7 @@ test('pricing page presents plan outcome labels', () => {
   assert.match(pricingSource, /outcomeLabel: "Clarify"/);
   assert.match(pricingSource, /outcomeLabel: "Validate"/);
   assert.match(pricingSource, /outcomeLabel: "Build & Launch"/);
-  assert.match(pricingSource, /outcomeLabel: "Fundraise & Scale"/);
+  assert.match(pricingSource, /outcomeLabel: "Accelerate & Fundraise"/);
 });
 
 test('core entitlement rules reflect the pricing contract', () => {

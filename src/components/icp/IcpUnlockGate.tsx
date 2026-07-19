@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Star, X } from "lucide-react";
+import { AlertCircle, ExternalLink, Loader2, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { persistOnboardingReturn } from "@/lib/authRedirect";
@@ -46,6 +47,17 @@ export function IcpUnlockGate({
   const roleLine = gatePreview?.roleLine || artifact.draftDocument.customer.roleLine;
   const painLine = gatePreview?.painLine || artifact.draftDocument.pain.quote;
   const customerSummary = artifact.draftDocument.customer.summary;
+  const buyingTrigger =
+    artifact.draftDocument.customer.actionTrigger ||
+    artifact.draftDocument.pain.triggerMoment ||
+    artifact.draftDocument.customer.triggerContext;
+  const confidence = artifact.draftDocument.confidence;
+  const citedSignal = artifact.draftDocument.sources?.[0];
+  const fallbackSignal =
+    artifact.enrichment?.marketSignals?.[0] ||
+    artifact.draftDocument.customer.evidence.evidence ||
+    artifact.draftDocument.pain.evidence.evidence;
+  const assumptions = confidence.missingSignals.slice(0, 2);
 
   useEffect(() => {
     trackICPUnlockGateShown({
@@ -164,12 +176,54 @@ export function IcpUnlockGate({
           </div>
 
           <div className="mt-4 rounded-3xl border border-border/60 bg-background/70 px-4 py-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-teal">What you already unlocked</p>
-            <p className="mt-2 text-sm leading-6 text-foreground">{customerSummary}</p>
-            {painLine ? (
-              <p className="mt-3 text-sm leading-6 text-foreground/80 italic">
-                "{painLine}"
-              </p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-teal">Your customer decision preview</p>
+            <dl className="mt-3 grid gap-4 text-sm sm:grid-cols-2">
+              <div>
+                <dt className="font-semibold text-foreground">Primary customer</dt>
+                <dd className="mt-1 leading-6 text-muted-foreground">{personaName}. {customerSummary}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-foreground">Core pain</dt>
+                <dd className="mt-1 leading-6 text-muted-foreground">{painLine}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-foreground">Buying trigger</dt>
+                <dd className="mt-1 leading-6 text-muted-foreground">{buyingTrigger}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-foreground">Confidence</dt>
+                <dd className="mt-1 leading-6 text-muted-foreground capitalize">{confidence.level}. {confidence.summary}</dd>
+              </div>
+            </dl>
+
+            {(citedSignal || fallbackSignal) ? (
+              <div className="mt-4 border-t border-border/60 pt-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Cited market signal</p>
+                <p className="mt-1 text-sm leading-6 text-foreground">
+                  {citedSignal?.detail || citedSignal?.title || fallbackSignal}
+                  {citedSignal?.url ? (
+                    <a
+                      href={citedSignal.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="ml-2 inline-flex items-center gap-1 font-medium text-primary hover:underline"
+                    >
+                      View source <ExternalLink className="h-3 w-3" />
+                    </a>
+                  ) : null}
+                </p>
+              </div>
+            ) : null}
+
+            {assumptions.length ? (
+              <div className="mt-4 rounded-2xl border border-warning/30 bg-warning-subtle px-3 py-3">
+                <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-foreground">
+                  <AlertCircle className="h-3.5 w-3.5" /> Assumptions to validate
+                </p>
+                <ul className="mt-2 space-y-1 text-sm leading-6 text-muted-foreground">
+                  {assumptions.map((assumption) => <li key={assumption}>{assumption}</li>)}
+                </ul>
+              </div>
             ) : null}
           </div>
 
@@ -178,10 +232,10 @@ export function IcpUnlockGate({
         <div className="px-6 py-6 sm:px-8">
           <div className="space-y-2 text-center">
             <h2 className="text-xl font-semibold tracking-tight">
-              You know who. Now see exactly what to build for them.
+              Save the full Customer Decision Brief
             </h2>
             <p className="text-sm text-muted-foreground">
-              Sign up free to unlock the build plan and your competitive edge — all tailored to your idea.
+              Create an account to save, share, and unlock the non fit segment, ranked pains, alternatives, channels, cited evidence, and five interview plan.
             </p>
           </div>
 
@@ -226,22 +280,6 @@ export function IcpUnlockGate({
             >
               I already have an account
             </button>
-          </div>
-
-          <div className="mt-5 rounded-3xl border border-border/50 bg-background/60 px-4 py-4">
-            <div className="flex items-start gap-3">
-              <div className="flex shrink-0 text-warning">
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <Star key={i} className="h-3.5 w-3.5 fill-current" />
-                ))}
-              </div>
-              <div>
-                <p className="text-sm leading-6 text-foreground">
-                  "I typed two sentences about my idea and it gave me the exact customer profile I'd been struggling to write for weeks."
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">— James K., B2B SaaS founder</p>
-              </div>
-            </div>
           </div>
         </div>
       </div>

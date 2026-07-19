@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { GTM_STRATEGIST_PRICING } from "@/config/gtmStrategist";
+import { CREDIT_COSTS, getCreditCostForPlan } from "@/config/constants";
 
 type PlanKey = "rookie" | "starter" | "rising" | "pro";
 type FeatureValue = string | boolean;
@@ -43,15 +44,15 @@ const features: FeatureCategory[] = [
     ],
   },
   {
-    category: "BizMap AI: Startup Development Cycle",
+    category: "The Founders Compass: Startup Development Cycle",
     items: [
       { feature: "ICP Builder", rookie: "Free on every plan", starter: "Free on every plan", rising: "Free on every plan", pro: "Free on every plan" },
-      { feature: "Demo Studio", rookie: "Unlocked; 3 credits/use", starter: "Unlocked; 3 credits/use", rising: "Unlocked; 3 credits/use", pro: "Unlocked; 3 credits/use" },
-      { feature: "PMF Lab", rookie: "Preview only", starter: "Unlocked; uses credits", rising: "Unlocked; uses credits", pro: "Unlocked; uses credits" },
+      { feature: "Demo Studio", rookie: `Unlocked; ${getCreditCostForPlan("WAITLIST_GENERATION", "rookie")} credits/use`, starter: `Unlocked; ${CREDIT_COSTS.WAITLIST_GENERATION} credits/use`, rising: `Unlocked; ${CREDIT_COSTS.WAITLIST_GENERATION} credits/use`, pro: `Unlocked; ${CREDIT_COSTS.WAITLIST_GENERATION} credits/use` },
+      { feature: "PMF Lab", rookie: "First score free; then credits", starter: "First score free; then credits", rising: "First score free; then credits", pro: "First score free; then credits" },
       { feature: "MVP Builder", rookie: "Unlocked; uses credits", starter: "Unlocked; uses credits", rising: "Unlocked; uses credits", pro: "Unlocked; uses credits" },
-      { feature: "Tech Stack Builder", rookie: "Preview only", starter: "Preview only", rising: "Unlocked; 3 credits/use", pro: "Unlocked; 3 credits/use" },
+      { feature: "Tech Stack Builder", rookie: "First build free; then credits", starter: "First build free; then credits", rising: "First build free; then credits", pro: "First build free; then credits" },
       { feature: "GTM Strategist", rookie: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation`, starter: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation`, rising: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation`, pro: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation` },
-      { feature: "Directories", rookie: "Preview only", starter: "Preview only", rising: "Included", pro: "Included" },
+      { feature: "Directories", rookie: "3 visits/month", starter: "10 visits/month", rising: "15 visits/month", pro: "Unlimited" },
     ],
   },
   {
@@ -60,7 +61,7 @@ const features: FeatureCategory[] = [
       { feature: "VC Search", rookie: "Browse only", starter: "2 profile views/monthly", rising: "10 profile views/monthly", pro: "Unlimited profile views" },
       { feature: "Accelerator Hunt", rookie: "Browse only", starter: "2 profile views/monthly", rising: "10 profile views/monthly", pro: "Unlimited profile views" },
       { feature: "Email Templates", rookie: "Not included", starter: "Full access", rising: "Full access", pro: "Full access" },
-      { feature: "Pitch Deck Analyzer", rookie: "Not included", starter: "Not included", rising: "Unlocked; 6 credits/use", pro: "Unlocked; 6 credits/use" },
+      { feature: "Pitch Deck Analyzer", rookie: "Quick Score free; then 10 credits", starter: "Quick Score free; then 10 credits", rising: "Quick Score free; then 10 credits", pro: "Quick Score free; then 10 credits" },
       { feature: "Insighta Test", rookie: "Included", starter: "Included", rising: "Included", pro: "Included" },
     ],
   },
@@ -68,7 +69,7 @@ const features: FeatureCategory[] = [
     category: "Community",
     items: [
       { feature: "Discovery Calls (Mentorship)", rookie: "Unlimited; 10 credits/booking", starter: "Unlimited; 10 credits/booking", rising: "Unlimited; 10 credits/booking", pro: "Unlimited; 10 credits/booking" },
-      { feature: "Find a Co-Founder Posting", rookie: "1 post/monthly", starter: "2 posts/monthly", rising: "Unlimited", pro: "Unlimited" },
+      { feature: "Find a Co-Founder Posting", rookie: "5 credits/post", starter: "5 credits/post", rising: "5 credits/post", pro: "5 credits/post" },
       { feature: "Find Your Angel", rookie: false, starter: false, rising: false, pro: "Included" },
     ],
   },

@@ -53,6 +53,15 @@ type DraftDocument = {
     roleLine: string;
     painLine: string;
   };
+  decisionBrief: {
+    primarySegment: string;
+    nonFitSegment: string;
+    rankedPains: Array<{ rank: number; pain: string; evidence: string }>;
+    buyingTrigger: string;
+    currentAlternative: string;
+    reachableChannels: string[];
+    interviewValidationPlan: Array<{ step: number; question: string; successSignal: string }>;
+  };
   customer: {
     personaName: string;
     roleLine: string;
@@ -259,6 +268,15 @@ Return this exact JSON shape:
   "status":"draft_ready",
   "draftDocument":{
     "gatePreview":{"personaName":"string","roleLine":"string","painLine":"string"},
+    "decisionBrief":{
+      "primarySegment":"string",
+      "nonFitSegment":"string",
+      "rankedPains":[{"rank":1,"pain":"string","evidence":"string"}],
+      "buyingTrigger":"string",
+      "currentAlternative":"string",
+      "reachableChannels":["string"],
+      "interviewValidationPlan":[{"step":1,"question":"string","successSignal":"string"}]
+    },
     "customer":{
       "personaName":"string",
       "roleLine":"string",
@@ -313,6 +331,9 @@ Rules for output quality:
 - The moat section must identify the source of the edge and why it is hard to copy.
 - The competition section must be sharp, not encyclopedic.
 - coreFeatures must be exactly 3 items.
+- rankedPains must contain 3 pains in priority order and state the evidence for each rank.
+- nonFitSegment must name the closest adjacent segment the founder should deliberately avoid first.
+- interviewValidationPlan must contain exactly 5 concrete interview steps with a question and an observable success signal.
 - nextActions must be concrete and usable in the next week.
 
 Founder evidence:
@@ -404,6 +425,68 @@ function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEn
       personaName: cleanText(parsed?.gatePreview?.personaName, cleanText(parsed?.customer?.personaName, "Ideal customer")),
       roleLine: cleanText(parsed?.gatePreview?.roleLine, cleanText(parsed?.customer?.roleLine, "Founder-aligned buyer")),
       painLine: cleanText(parsed?.gatePreview?.painLine, cleanText(parsed?.pain?.quote, "The core pain still needs sharper founder evidence.")),
+    },
+    decisionBrief: {
+      primarySegment: cleanText(
+        parsed?.decisionBrief?.primarySegment,
+        cleanText(parsed?.customer?.roleLine, "The best-fit early customer still needs to be narrowed."),
+      ),
+      nonFitSegment: cleanText(
+        parsed?.decisionBrief?.nonFitSegment,
+        "Adjacent customers without the same urgent trigger are not the first segment to serve.",
+      ),
+      rankedPains: Array.from({ length: 3 }, (_, index) => {
+        const candidates = Array.isArray(parsed?.decisionBrief?.rankedPains)
+          ? parsed.decisionBrief.rankedPains.filter((item: any) => item && typeof item === "object")
+          : [];
+        const item = candidates[index];
+        return {
+          rank: index + 1,
+          pain: cleanText(
+            item?.pain,
+            index === 0
+              ? cleanText(parsed?.pain?.quote, "The primary pain still needs direct customer language.")
+              : `Secondary pain ${index + 1} still needs interview evidence.`,
+          ),
+          evidence: cleanText(
+            item?.evidence,
+            index === 0
+              ? cleanText(parsed?.pain?.evidence?.evidence, "Grounded in founder input and pending customer validation.")
+              : "Treat this ranking as an assumption until interviews confirm it.",
+          ),
+        };
+      }),
+      buyingTrigger: cleanText(
+        parsed?.decisionBrief?.buyingTrigger,
+        cleanText(parsed?.customer?.actionTrigger, cleanText(parsed?.pain?.triggerMoment, "The buying trigger still needs validation.")),
+      ),
+      currentAlternative: cleanText(
+        parsed?.decisionBrief?.currentAlternative,
+        Array.isArray(parsed?.build?.replaces) && parsed.build.replaces[0]
+          ? String(parsed.build.replaces[0])
+          : "The current manual or competing alternative still needs to be named in interviews.",
+      ),
+      reachableChannels: normalizeList(
+        parsed?.decisionBrief?.reachableChannels ?? parsed?.customer?.whereToFind,
+        5,
+      ),
+      interviewValidationPlan: Array.from({ length: 5 }, (_, index) => {
+        const item = Array.isArray(parsed?.decisionBrief?.interviewValidationPlan)
+          ? parsed.decisionBrief.interviewValidationPlan[index]
+          : null;
+        const defaultQuestions = [
+          "Tell me about the last time this problem happened.",
+          "What did you do instead, and what did that cost?",
+          "What made the problem urgent enough to act on?",
+          "Where would you look for a solution like this?",
+          "What proof would make you try or pay for a first version?",
+        ];
+        return {
+          step: index + 1,
+          question: cleanText(item?.question, defaultQuestions[index]),
+          successSignal: cleanText(item?.successSignal, "Capture a specific recent behavior, not a hypothetical preference."),
+        };
+      }),
     },
     customer: {
       personaName: cleanText(parsed?.customer?.personaName, "Ideal customer"),

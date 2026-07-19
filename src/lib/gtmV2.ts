@@ -147,6 +147,7 @@ export interface GTMPlay {
   actions: string[];
   metric: string;
   target: number;
+  killRule?: string;
   weeklyTimeHours: number;
   weeklyBudget: number;
   requiredAssets: string[];

@@ -49,6 +49,11 @@ import { captureEvent } from '@/lib/analytics';
 import { markFirstArtifactCreated, trackCurrentActivationJourneyEvent, trackRetentionEvent } from '@/lib/retentionSystem';
 import { trackActivationFunnelEvent } from '@/lib/activationEntry';
 import { useActivationAbandonment } from '@/hooks/useActivationAbandonment';
+import {
+  createJourneyEvidenceManifest,
+  trackJourneyEvent,
+  upsertJourneyOutcome,
+} from '@/lib/journeyOutcomes';
 
 const MAX_SCREENSHOTS = DEMO_STUDIO_TRY_MAX_SCREENSHOTS;
 const MIN_SCREENSHOTS = DEMO_STUDIO_TRY_MIN_SCREENSHOTS;
@@ -122,6 +127,7 @@ export default function TryPage() {
   // Best-effort eager serialization for anonymous visitors so the draft is in
   // sessionStorage by the time any CTA navigates to signup.
   const persistPromiseRef = useRef<Promise<boolean> | null>(null);
+  const generationStartedAtRef = useRef<number | null>(null);
 
   // Anonymous flow: screenshots live only as in-memory object URLs. Removed
   // shots are revoked individually in removeShot; revoke whatever remains on
@@ -231,12 +237,27 @@ export default function TryPage() {
   }) => {
     const { built, runId, fallback, mode } = args;
     const fallbackReason = args.fallbackReason ?? (fallback ? 'client_fallback' : null);
+    const durationMs = generationStartedAtRef.current
+      ? Math.max(0, Date.now() - generationStartedAtRef.current)
+      : undefined;
     setSteps(built);
     setError(null);
     setUsedPlaceholders(mode === 'no_assets');
     trackActivationFunnelEvent('activation_step_completed', {
       entry_id: 'demo_try', tool: 'demo_studio', source: 'demo_try', step: 'preview_generated',
       is_authenticated: Boolean(user), artifact_type: 'demo_studio_draft',
+    });
+    trackJourneyEvent('journey_aha_output_generated', {
+      tool: 'demo_studio',
+      artifact_type: 'interactive_demo_preview',
+      outcome_status: 'draft',
+      source: 'demo_try',
+      duration_ms: durationMs,
+      step_count: built.length,
+      input_mode: mode,
+      fallback,
+      fallback_reason: fallbackReason,
+      success: true,
     });
     const outputProperties = {
       tool: 'demo_studio_try',
@@ -294,6 +315,7 @@ export default function TryPage() {
       return;
     }
     const runId = ++runIdRef.current;
+    generationStartedAtRef.current = Date.now();
     setGenerating(true);
     setError(null);
     captureEvent('activation_first_input_submitted', {
@@ -302,6 +324,14 @@ export default function TryPage() {
       screenshot_count: shots.length,
       input_mode: mode,
       is_authenticated: Boolean(user),
+    });
+    trackJourneyEvent('journey_aha_started', {
+      tool: 'demo_studio',
+      artifact_type: 'interactive_demo_preview',
+      outcome_status: 'draft',
+      source: 'demo_try',
+      input_mode: mode,
+      screenshot_count: shots.length,
     });
     if (user) {
       void trackRetentionEvent('activation_first_input_submitted', {
@@ -414,6 +444,14 @@ export default function TryPage() {
     const built = buildTryPreviewSteps({ shots: restoredShots, storyboard });
     if (built.length === 0) throw new Error('This demo draft could not be restored.');
     setSteps(built);
+    trackJourneyEvent('journey_artifact_restored', {
+      tool: 'demo_studio',
+      artifact_type: 'interactive_demo_preview',
+      outcome_status: 'draft',
+      source: 'demo_try_resume',
+      step_count: built.length,
+      success: true,
+    });
     // The draft is already serialized (sessionStorage), so the signup path is armed.
     persistPromiseRef.current = Promise.resolve(true);
   }, []);
@@ -559,6 +597,45 @@ export default function TryPage() {
             : `/demo-studio/projects/${project.id}/brief`,
           source: 'demo_try',
         });
+        const outcomeStatus = published ? 'ready' : 'draft';
+        void upsertJourneyOutcome({
+          userId: user.id,
+          tool: 'demo_studio',
+          artifactType: 'interactive_proof_page',
+          artifactId: demo.id,
+          status: outcomeStatus,
+          completionScore: published ? 70 : 40,
+          qualityChecks: {
+            interactive_steps: position >= 2,
+            mobile_ready: true,
+            published,
+            narrated_video: false,
+            lead_capture: published,
+            generated_visuals: usedPlaceholders,
+            unresolved_placeholders: false,
+          },
+          evidenceManifest: createJourneyEvidenceManifest([
+            {
+              sourceId: `demo_try:${demo.id}`,
+              sourceType: usedPlaceholders ? 'founder_description' : 'founder_screenshots',
+              version: '1',
+              capturedAt: new Date().toISOString(),
+              confidence: null,
+              provenance: 'demo_studio_try',
+              label: usedPlaceholders ? 'Visitor product description' : `${position} visitor screenshots`,
+            },
+          ]),
+        }).catch((outcomeError) => console.error('Could not update journey outcome', outcomeError));
+        trackJourneyEvent('journey_artifact_restored', {
+          tool: 'demo_studio',
+          artifact_type: 'interactive_proof_page',
+          artifact_id: demo.id,
+          outcome_status: outcomeStatus,
+          source: isReturning ? 'signup_return' : 'authenticated_save',
+          step_count: position,
+          published,
+          success: true,
+        });
         clearTryDraft();
         if (published) {
           toast.success('Your demo is live — grab your share link below.');
@@ -575,7 +652,7 @@ export default function TryPage() {
         hydratingRef.current = false;
       }
     },
-    [navigate, subscriptionData?.subscription_tier, user],
+    [isReturning, navigate, subscriptionData?.subscription_tier, usedPlaceholders, user],
   );
 
   // Primary CTA on the result view.

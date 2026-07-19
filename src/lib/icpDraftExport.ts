@@ -166,6 +166,25 @@ export async function downloadIcpDraftDocx(draft: IcpDraftDocument, fileName: st
     );
   }
 
+  if (draft.decisionBrief) {
+    children.push(heading("Customer Decision Brief"));
+    children.push(labelled("Primary segment", draft.decisionBrief.primarySegment));
+    children.push(labelled("Not the first segment", draft.decisionBrief.nonFitSegment));
+    children.push(labelled("Buying trigger", draft.decisionBrief.buyingTrigger));
+    children.push(labelled("Current alternative", draft.decisionBrief.currentAlternative));
+    if (draft.decisionBrief.reachableChannels.length) {
+      children.push(labelled("Reachable channels", draft.decisionBrief.reachableChannels.join(", ")));
+    }
+    children.push(subheading("Ranked pains"));
+    draft.decisionBrief.rankedPains.forEach((item) =>
+      children.push(bullet(`${item.rank}. ${item.pain} Evidence: ${item.evidence}`)),
+    );
+    children.push(subheading("Five interview validation plan"));
+    draft.decisionBrief.interviewValidationPlan.forEach((item) =>
+      children.push(bullet(`${item.step}. ${item.question} Success signal: ${item.successSignal}`)),
+    );
+  }
+
   // 1. Ideal Customer
   children.push(heading("Ideal Customer"));
   if (draft.customer.summary) children.push(body(draft.customer.summary));

@@ -68,6 +68,11 @@ import {
   captureEvent,
 } from '@/lib/analytics';
 import type { GTMPlay } from '@/lib/gtmV2';
+import {
+  createJourneyEvidenceManifest,
+  trackJourneyEvent,
+  upsertJourneyOutcome,
+} from '@/lib/journeyOutcomes';
 
 const SPRINTS_TABLE = 'traction_engine_sprints' as const;
 const LOGS_TABLE = 'traction_engine_weekly_logs' as const;
@@ -229,6 +234,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
   });
   const [activeSprints, setActiveSprints] = useState<SprintRow[]>([]);
   const [recentLogs, setRecentLogs] = useState<WeeklyLogRow[]>([]);
+  const [decisionCount, setDecisionCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [platformSnapshot, setPlatformSnapshot] = useState<{
@@ -269,7 +275,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
   const loadTractionData = async () => {
     if (!userId) return;
     setLoading(true);
-    const [sprintsRes, logsRes] = await Promise.all([
+    const [sprintsRes, logsRes, decisionsRes] = await Promise.all([
       supabase
         .from(SPRINTS_TABLE)
         .select('id, channel, cycle_start_date, status')
@@ -282,6 +288,10 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         .eq('user_id', userId)
         .order('week_start_date', { ascending: false })
         .limit(8),
+      supabase
+        .from(EXPERIMENTS_TABLE)
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId),
     ]);
 
     if (sprintsRes.error) {
@@ -295,6 +305,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
     } else {
       setRecentLogs((logsRes.data ?? []) as WeeklyLogRow[]);
     }
+    if (!decisionsRes.error) setDecisionCount(decisionsRes.count ?? 0);
     setLoading(false);
   };
 
@@ -638,6 +649,83 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         source: 'traction_engine',
       });
 
+      const { data: ledgerLogs, error: ledgerError } = await supabase
+        .from(LOGS_TABLE)
+        .select('id,week_start_date,combined_score,seven_day_active_users,thirty_day_active_users,revenue,score_breakdown')
+        .eq('user_id', userId)
+        .order('week_start_date', { ascending: false })
+        .limit(6);
+      if (ledgerError) throw ledgerError;
+      const ledgerLogIds = (ledgerLogs ?? []).map((item) => item.id);
+      const { data: ledgerDecisions, error: decisionError } = ledgerLogIds.length
+        ? await supabase
+          .from(EXPERIMENTS_TABLE)
+          .select('id,weekly_log_id,channel,decision,efficiency_score,pass')
+          .eq('user_id', userId)
+          .in('weekly_log_id', ledgerLogIds)
+        : { data: [], error: null };
+      if (decisionError) throw decisionError;
+
+      const sixWeekLedger = (ledgerLogs?.length ?? 0) >= 6;
+      const threeMeasuredDecisions = (ledgerDecisions?.length ?? 0) >= 3;
+      const hasSourceBadges = (ledgerLogs ?? []).every((item) => {
+        const breakdown = item.score_breakdown as { retentionSource?: string } | null;
+        return breakdown?.retentionSource === 'platform' || breakdown?.retentionSource === 'manual';
+      });
+      const qualityChecks = {
+        threeMeasuredWeeklyDecisions: threeMeasuredDecisions,
+        sixWeekLedger,
+        sourceBadges: hasSourceBadges,
+        acquisitionEfficiency: (ledgerDecisions ?? []).every((item) => Number.isFinite(Number(item.efficiency_score))),
+        retention: (ledgerLogs ?? []).every((item) => Number.isFinite(Number(item.seven_day_active_users)) && Number.isFinite(Number(item.thirty_day_active_users))),
+        revenueWhereAvailable: (ledgerLogs ?? []).every((item) => item.revenue === null || Number.isFinite(Number(item.revenue))),
+        exportableVerifiedReport: sixWeekLedger && threeMeasuredDecisions,
+      };
+      const completedChecks = Object.values(qualityChecks).filter(Boolean).length;
+      const outcomeStatus = sixWeekLedger && threeMeasuredDecisions ? 'verified' : 'ready';
+      const outcomeManifest = createJourneyEvidenceManifest([
+        ...(ledgerLogs ?? []).map((item) => {
+          const breakdown = item.score_breakdown as { retentionSource?: string } | null;
+          const platformVerified = breakdown?.retentionSource === 'platform';
+          return {
+            sourceId: item.id,
+            sourceType: 'traction_weekly_log',
+            version: '1',
+            capturedAt: `${item.week_start_date}T00:00:00.000Z`,
+            confidence: platformVerified ? 0.95 : 0.65,
+            provenance: platformVerified ? 'platform_verified' : 'founder_reported',
+            label: `Traction week ${item.week_start_date}`,
+          };
+        }),
+        ...(gtmSource ? [{
+          sourceId: gtmSource.playId,
+          sourceType: 'gtm_acquisition_play',
+          version: '1',
+          capturedAt: new Date().toISOString(),
+          confidence: 0.9,
+          provenance: `gtm_plan:${gtmSource.planId}`,
+          label: `${gtmSource.channel} GTM play`,
+        }] : []),
+      ]);
+      await upsertJourneyOutcome({
+        userId,
+        tool: 'traction_engine',
+        artifactType: 'verified_traction_ledger',
+        artifactId: `traction-ledger-${userId}`,
+        status: outcomeStatus,
+        qualityChecks,
+        evidenceManifest: outcomeManifest,
+        completionScore: Math.round((completedChecks / Object.keys(qualityChecks).length) * 100),
+      });
+      trackJourneyEvent('journey_stage_outcome_completed', {
+        tool: 'traction_engine',
+        artifact_type: 'verified_traction_ledger',
+        artifact_id: `traction-ledger-${userId}`,
+        outcome_status: outcomeStatus,
+        week_count: ledgerLogs?.length ?? 0,
+        decision_count: ledgerDecisions?.length ?? 0,
+      });
+
       localStorage.removeItem('ct_traction_draft');
       showDashboardReturnToast({
         message: score.phaseSevenReady ? 'Saved. Phase 7 readiness unlocked.' : 'Traction week saved.',
@@ -656,6 +744,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
   const isFirstTime = !loading && recentLogs.length === 0 && activeSprints.length === 0;
   const hasInput = experiments.some((e) => e.channel.trim() || e.resultValue > 0) || retention.newUsers > 0;
   const showScore = hasInput || recentLogs.length > 0;
+  const verifiedLedger = recentLogs.length >= 6 && decisionCount >= 3;
 
   return (
     <div className="space-y-8">
@@ -1049,21 +1138,26 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                       size="sm"
                       className="gap-1.5"
                       onClick={() => {
+                        captureEvent('traction_report_exported', { verified: verifiedLedger, week_count: recentLogs.length, decision_count: decisionCount });
                         void exportTractionReportPdf(userId).catch((error) =>
                           toast.error(error instanceof Error ? error.message : 'Export failed.'),
                         );
                       }}
                     >
                       <LineChart className="h-3.5 w-3.5" />
-                      Export investor report
+                      {verifiedLedger ? 'Export verified report' : 'Export progress report'}
                     </Button>
                   )}
                   <Badge variant="outline" className="shrink-0 text-xs text-muted-foreground">Step 3 of 4</Badge>
                 </div>
               </div>
-              <CardDescription>{loading ? 'Loading history...' : 'Your latest saved traction scorecards. The investor report exports your full ledger with platform-verified badges.'}</CardDescription>
+              <CardDescription>{loading ? 'Loading history...' : 'Your latest saved traction scorecards. The report exports the ledger with platform verified and founder reported source badges.'}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
+              <div className={cn('rounded-lg border p-3', verifiedLedger ? 'border-success/30 bg-success/5' : 'border-border/70 bg-muted/20')}>
+                <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-semibold">Verified traction ledger</p><Badge variant="outline">{verifiedLedger ? 'Verified' : 'In progress'}</Badge></div>
+                <p className="mt-2 text-xs text-muted-foreground">{Math.min(recentLogs.length, 6)}/6 measured weeks · {Math.min(decisionCount, 3)}/3 double down, iterate, or kill decisions</p>
+              </div>
               {recentLogs.length === 0 ? (
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">No saved weeks yet.</p>

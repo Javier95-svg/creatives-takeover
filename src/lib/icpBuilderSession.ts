@@ -53,6 +53,15 @@ export interface IcpDraftDocument {
     roleLine: string;
     painLine: string;
   };
+  decisionBrief?: {
+    primarySegment: string;
+    nonFitSegment: string;
+    rankedPains: Array<{ rank: number; pain: string; evidence: string }>;
+    buyingTrigger: string;
+    currentAlternative: string;
+    reachableChannels: string[];
+    interviewValidationPlan: Array<{ step: number; question: string; successSignal: string }>;
+  };
   customer: {
     personaName: string;
     roleLine: string;

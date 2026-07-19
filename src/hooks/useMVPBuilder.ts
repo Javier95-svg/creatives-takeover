@@ -74,6 +74,8 @@ import {
   type MVPIntegrationStatus,
 } from '@/lib/mvp-builder/integrations';
 import { MVP_PUBLISH_BASE_DOMAIN, buildPublicAppUrl } from '@/lib/mvp-builder/publish';
+import { evaluateMvpQuality } from '@/lib/mvp-builder/qualityChecks';
+import { trackJourneyEvent, upsertJourneyOutcome } from '@/lib/journeyOutcomes';
 
 export interface MVPMessage {
   id: string;
@@ -3631,6 +3633,17 @@ export function useMVPBuilder() {
       if (projectFiles.length === 0) toast.error('Generate a project before publishing.');
       return;
     }
+    const quality = evaluateMvpQuality({
+      files: projectFiles,
+      preview: previewState,
+      versionCount: projectVersions.length,
+    });
+    if (!quality.passed) {
+      toast.error('This MVP is not ready to publish yet.', {
+        description: quality.failures.slice(0, 3).join(' '),
+      });
+      return;
+    }
     if (creditsLoading) {
       toast('Loading credit balance...');
       return;
@@ -3664,6 +3677,32 @@ export function useMVPBuilder() {
 
       setDeploymentUrl(data.url);
       trackMVPDeployed({ slug: typeof data.slug === 'string' ? data.slug : undefined });
+      const hasEvidenceManifest = (setupInput.evidenceManifest?.sources.length ?? 0) > 0;
+      void upsertJourneyOutcome({
+        userId: user.id,
+        tool: 'mvp_builder',
+        artifactType: 'evidence_backed_mvp',
+        artifactId: projectId,
+        status: 'ready',
+        completionScore: hasEvidenceManifest ? 95 : 80,
+        qualityChecks: {
+          ...quality.checks,
+          published: true,
+          analytics_injected_on_publish: true,
+          evidence_manifest_approved: hasEvidenceManifest,
+        },
+        evidenceManifest: setupInput.evidenceManifest,
+      }).catch((outcomeError) => console.error('Could not update journey outcome', outcomeError));
+      trackJourneyEvent('journey_stage_outcome_completed', {
+        tool: 'mvp_builder',
+        artifact_type: 'evidence_backed_mvp',
+        artifact_id: projectId,
+        outcome_status: 'ready',
+        source: 'mvp_publish',
+        published_url: data.url,
+        evidence_source_count: setupInput.evidenceManifest?.sources.length ?? 0,
+        primary_flow_smoke_test: true,
+      });
       void refreshCredits();
       showDashboardReturnToast({
         message: `Published to ${data.slug}.${MVP_PUBLISH_BASE_DOMAIN} for ${Number(data.creditsUsed ?? CREDIT_COSTS.APP_BUILDER_DEPLOY)} credits.`,
@@ -3676,7 +3715,7 @@ export function useMVPBuilder() {
     } finally {
       setIsDeploying(false);
     }
-  }, [creditsLoading, handleCreditError, isDeploying, navigate, projectFiles.length, projectId, refreshCredits, saveProject, user]);
+  }, [creditsLoading, handleCreditError, isDeploying, navigate, previewState, projectFiles, projectId, projectVersions.length, refreshCredits, saveProject, setupInput.evidenceManifest, user]);
 
   const closeCreditExhaustedModal = useCallback(() => {
     setIsCreditExhaustedModalOpen(false);

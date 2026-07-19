@@ -14,6 +14,7 @@ import { gtmGenerationLabel } from '@/config/gtmStrategist';
 import { captureEvent } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 import type { GTMPlanV2, GTMPlay, GTMWeeklyReview, GTMWeeklyReviewInput } from '@/lib/gtmV2';
+import { evaluateGTMOutcome } from '@/lib/gtmOutcome';
 import GTMExecutionOS from './GTMExecutionOS';
 import GTMEvidenceManager from './GTMEvidenceManager';
 import GTMPipelineBoard from './GTMPipelineBoard';
@@ -88,6 +89,7 @@ function PlayEditor({ play, planId, onSave, onStartSprint }: { play: GTMPlay; pl
             <div className="space-y-2"><Label>Offer</Label><Textarea rows={3} value={draft.offer} onChange={(event) => setDraft({ ...draft, offer: event.target.value })} /></div>
             <div className="md:col-span-2 space-y-2"><Label>Message</Label><Textarea rows={3} value={draft.message} onChange={(event) => setDraft({ ...draft, message: event.target.value })} /></div>
             <div className="md:col-span-2 space-y-2"><Label>Experiment hypothesis</Label><Textarea rows={3} value={draft.hypothesis} onChange={(event) => setDraft({ ...draft, hypothesis: event.target.value })} /></div>
+            <div className="md:col-span-2 space-y-2"><Label>Kill rule</Label><Textarea rows={3} value={draft.killRule ?? ''} onChange={(event) => setDraft({ ...draft, killRule: event.target.value })} placeholder="Stop or replace this play when the measured threshold is missed for a defined period." /></div>
             <div className="space-y-2"><Label>Metric</Label><Input value={draft.metric} onChange={(event) => setDraft({ ...draft, metric: event.target.value })} /></div>
             <div className="space-y-2"><Label>Weekly target</Label><Input type="number" min="0" value={draft.target} onChange={(event) => setDraft({ ...draft, target: Number(event.target.value) || 0 })} /></div>
             <div className="md:col-span-2 flex justify-end gap-2"><Button variant="outline" onClick={() => { setDraft(play); setEditing(false); }}>Cancel</Button><Button onClick={() => void onSave(draft).then(() => setEditing(false))}><Save className="mr-2 h-4 w-4" />Save free edit</Button></div>
@@ -96,6 +98,7 @@ function PlayEditor({ play, planId, onSave, onStartSprint }: { play: GTMPlay; pl
           <>
             <div className="grid gap-3 md:grid-cols-2"><div className="rounded-xl bg-muted/30 p-3"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Audience + trigger</p><p className="mt-2 text-sm">{play.audience}</p><p className="mt-1 text-xs text-muted-foreground">{play.buyingTrigger}</p></div><div className="rounded-xl bg-muted/30 p-3"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Offer + message</p><p className="mt-2 text-sm">{play.offer}</p><p className="mt-1 text-xs text-muted-foreground">{play.message}</p></div></div>
             <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Experiment</p><p className="mt-2 text-sm">{play.hypothesis}</p></div>
+            <div className="rounded-xl border border-warning/30 bg-warning/5 p-3"><p className="text-xs font-semibold uppercase tracking-wider text-warning">Kill rule</p><p className="mt-2 text-sm">{play.killRule || 'Add a measurable kill rule before activating this play.'}</p></div>
             <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</p><ul className="mt-2 space-y-2">{play.actions.map((action) => <li key={action} className="flex items-start gap-2 text-sm"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{action}</li>)}</ul></div>
           </>
         )}
@@ -119,6 +122,12 @@ export default function GTMWorkspace({ plan, planId, weeklyReview, isSaving, isE
   const [tab, setTab] = useState('overview');
   const [reviewInput, setReviewInput] = useState<GTMWeeklyReviewInput>(weeklyReview?.reviewInput ?? { wins: '', misses: '', objections: '', customerLanguage: '', blockers: '', notes: '' });
   const primaryPlay = plan.plays.find((play) => play.status === 'active') ?? plan.plays[0];
+  const outcome = evaluateGTMOutcome(plan);
+  const outcomeLabels: Record<keyof typeof outcome.checks, string> = {
+    primaryChannel: 'Primary channel', fallbackChannel: 'Fallback channel', evidenceBackedMessaging: 'Evidence backed messaging',
+    usableCampaignAssets: 'Usable assets', sixWeekTargets: 'Six week targets', budgetAndTimeConstraints: 'Budget and time constraints',
+    killRule: 'Kill rule', tractionSprintCreated: 'Attributed Traction sprint',
+  };
   return (
     <div className="space-y-6">
       <div className="rounded-3xl border border-border/60 bg-background/85 p-5 shadow-sm sm:p-7">
@@ -127,6 +136,11 @@ export default function GTMWorkspace({ plan, planId, weeklyReview, isSaving, isE
           <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={isSaving} onClick={onSave}>{isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}Save</Button><Button variant="outline" onClick={onShare}><Share2 className="mr-2 h-4 w-4" />Share</Button><Button variant="outline" disabled={isExporting} onClick={onExport}>{isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}PDF</Button><Button variant="outline" onClick={onRegenerate}><RefreshCw className="mr-2 h-4 w-4" />{gtmGenerationLabel()}</Button></div>
         </div>
       </div>
+
+      <Card className="border-primary/20 bg-primary/5">
+        <CardHeader className="pb-3"><div className="flex flex-wrap items-center justify-between gap-2"><div><CardTitle className="text-base">GTM outcome contract</CardTitle><p className="mt-1 text-sm text-muted-foreground">Begin one measurable acquisition play with every execution constraint attached.</p></div><Badge variant="outline">{outcome.completionScore}% {outcome.status}</Badge></div></CardHeader>
+        <CardContent className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{Object.entries(outcome.checks).map(([key, complete]) => <div key={key} className="flex items-center gap-2 text-xs"><Check className={cn('h-3.5 w-3.5', complete ? 'text-success' : 'text-muted-foreground/40')} /><span className={complete ? 'text-foreground' : 'text-muted-foreground'}>{outcomeLabels[key as keyof typeof outcome.checks]}</span></div>)}</CardContent>
+      </Card>
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-2xl p-1 md:grid-cols-4">

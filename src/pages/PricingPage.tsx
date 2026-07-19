@@ -19,25 +19,25 @@ const PricingPage = () => {
   const structuredData = [
     createProductSchema({
       name: "Creatives Takeover Rookie Plan",
-      description: "Free founder plan with 50 monthly credits, free ICP Builder access, and early-stage startup validation tools.",
+      description: "Clarify who to serve first with both visitor AHA previews, a customer decision workflow, and 50 monthly credits.",
       price: 0,
       currency: "USD"
     }),
     createProductSchema({
       name: "Creatives Takeover Starter Plan",
-      description: "Validation-focused founder plan with 100 monthly credits, Demo Studio, PMF Lab, and light fundraising access.",
+      description: "Validate demand with 100 monthly credits, Demo Studio proof workflows, PMF evidence, and structured execution.",
       price: 9,
       currency: "USD"
     }),
     createProductSchema({
       name: "Creatives Takeover Rising Plan",
-      description: "The default build plan with 250 monthly credits, full startup tool access, and fundraising workflows for active founders.",
+      description: "Build and launch with 250 monthly credits, evidence backed MVP workflows, GTM execution, and traction measurement.",
       price: 29,
       currency: "USD"
     }),
     createProductSchema({
       name: "Creatives Takeover Pro Plan",
-      description: "Scaling and fundraising plan with 600 monthly credits, unlimited investor research views, office hours, and priority support.",
+      description: "Accelerate and fundraise with 600 monthly credits, expert accountability within 48 hours, deeper research, and fundraising workflows.",
       price: 65,
       currency: "USD"
     }),
@@ -50,8 +50,8 @@ const PricingPage = () => {
   return (
     <>
       <SEO
-        title="Pricing For AI Startup Tools | Creatives Takeover"
-        description="Compare pricing for Creatives Takeover's AI startup tools, founder workflows, fundraising resources, and MVP planning features."
+        title="Founder Outcomes and Pricing | Creatives Takeover"
+        description="Compare Rookie, Starter, Rising, and Pro by the founder outcome each plan enables, from customer clarity to expert backed fundraising."
         keywords="ai startup tools pricing, founder software pricing, startup platform pricing, fundraising tools pricing, mvp builder pricing"
         url="/pricing"
         structuredData={structuredData}

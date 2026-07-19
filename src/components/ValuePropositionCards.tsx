@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef, type ChangeEvent } from "react";
-import { Lightbulb, Users, Rocket, LayoutDashboard, Upload, Loader2, GraduationCap, TrendingUp, Handshake, BookOpen } from "lucide-react";
+import { Code2, FlaskConical, Loader2, Megaphone, Presentation, Search, TrendingUp, Upload } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,73 +39,73 @@ const ValuePropositionCards = () => {
   const allCards = [
     {
       position: 1,
-      icon: Lightbulb,
-      title: "Build Your Product & Validate Demand",
-      subtitle: "BizMap AI",
-      buttonLabel: "Validate - Build - Launch",
-      description: "BizMap AI is your personal business planning partner that walks you through every stage of building a product and getting it into the right hands. From defining your ideal customer with ICP Builder to validating demand with PMF Lab, choosing your tech stack, and mapping out your go-to-market strategy, every tool works together to keep you moving forward.\n\nThink of it as having a co-founder who never sleeps. Chat with the Business Planner about any challenge, get tailored recommendations, and export polished plans when you need to share your vision with investors or partners.",
-      cta: "Start Building",
-      link: "/bizmap-ai",
+      icon: Search,
+      title: "Decide exactly whom to serve first",
+      subtitle: "ICP Builder",
+      buttonLabel: "Decide Customer",
+      description: "Finish with a Customer Decision Brief that names one primary segment and one non fit segment, ranks the pains that matter, and identifies the buying trigger, current alternative, and reachable channels.\n\nEvery conclusion carries cited evidence, a confidence level, and a five interview plan for validating the assumptions that still matter.",
+      cta: "Draft your ICP",
+      link: "/icp-builder",
       image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&h=600&fit=crop&q=80&fm=webp",
       imageAlt: "Business development planning with strategy notes"
     },
     {
       position: 2,
-      icon: GraduationCap,
-      title: "A founder-focused social network",
-      subtitle: "Founder Profile",
-      buttonLabel: "Share your Journey",
-      description: "Every account has a founder profile where you can share posts, reels, and updates in a space built for builders. It is your personal home on the platform, a place to show who you are, what you are working on, and the progress you are making so other users can follow your ups and downs.\n\nYour profile also links to your startup, so anyone who finds you can instantly explore what you are building and the key details behind it. Share product demos, behind the scenes moments, milestones, launches, and lessons learned, and turn every update into visibility and new opportunities.",
-      cta: "Find Accelerators",
-      link: "/accelerator-hunt",
+      icon: Presentation,
+      title: "Publish proof people can experience",
+      subtitle: "Demo Studio",
+      buttonLabel: "Publish Proof",
+      description: "Turn screenshots, a product URL, or a one line description into an interactive product story before the full product exists.\n\nThe finished proof page is public and mobile ready, with a narrated demo, one clear call to action, lead capture, analytics, and no unresolved placeholders or broken interactions.",
+      cta: "Launch a live demo",
+      link: "/demo-studio/try",
       image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=600&fit=crop&q=80&fm=webp",
       imageAlt: "Startup accelerator program session"
     },
     {
       position: 3,
-      icon: TrendingUp,
-      title: "Access to VCs and Accelerators",
-      subtitle: "Insighta",
-      buttonLabel: "Fundraising Tools",
-      description: "Raising money starts with knowing who to talk to. VC Search lets you explore a curated database of venture capital firms filtered by industry, stage, and check size so you can build a targeted list instead of pitching blind. Find your Angel connects you directly with angel investors who are actively looking to back early stage founders.\n\nPair your outreach with the Pitch Deck Analyzer to sharpen your presentation, Email Templates to craft messages that actually feel personal, and the Insighta Test to check your fundraising readiness. It's everything you need to walk into investor conversations prepared.",
-      cta: "Explore Investors",
-      link: "/vc-search",
+      icon: FlaskConical,
+      title: "Make a defensible product decision",
+      subtitle: "PMF Lab",
+      buttonLabel: "Choose Direction",
+      description: "Combine interviews, surveys, demo behavior, leads, and corroborating research into one source weighted report.\n\nFive signals create directional evidence, ten reveal emerging patterns, and twenty five support a decision grade recommendation to Build, Narrow, Pivot, or Stop.",
+      cta: "Evaluate evidence",
+      link: "/pmf-lab",
       image: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&h=600&fit=crop&q=80&fm=webp",
       imageAlt: "Fundraising meeting with investors"
     },
     {
       position: 4,
-      icon: Handshake,
-      title: "Mentorship and Angel Investor Network",
-      subtitle: "Community",
-      buttonLabel: "Networking",
-      description: "Building a business on your own doesn't mean you have to figure everything out alone. The Mentor Marketplace connects you with experienced founders and industry experts who offer guidance, honest feedback, and the kind of perspective that only comes from having been through it before.\n\nLooking for someone to build with? The Co-Founder Marketplace helps you find partners who complement your skills and share your ambition. Filter by industry, stage, and expertise to connect with people who get what you're working on and want to be part of the journey.",
-      cta: "Join Community",
-      link: "/mentorship",
+      icon: Code2,
+      title: "Deploy only what evidence justifies",
+      subtitle: "MVP Builder",
+      buttonLabel: "Build MVP",
+      description: "Start from an approved evidence manifest and build the smallest product that completes one core customer job.\n\nA ready MVP has responsive UI, analytics, rollback support, a passing primary flow smoke test, and no unresolved runtime errors.",
+      cta: "Build your MVP",
+      link: "/mvp-builder",
       image: "https://images.unsplash.com/photo-1587614382346-4ec70e388b28?w=800&h=600&fit=crop&q=80&fm=webp",
       imageAlt: "Founders collaborating in a video call"
     },
     {
       position: 5,
-      icon: BookOpen,
-      title: "Success Stories + Prompt Library",
-      subtitle: "Get Inspired",
-      buttonLabel: "Niche Content",
-      description: "Great ideas often start with the right spark. The Prompt Library gives you a rich collection of business cases and startup scenarios across industries like AI, e-commerce, SaaS, and the creator economy, so you always have fresh starting points when you need inspiration or want to explore a new direction.\n\nFounder Stories brings you real experiences from entrepreneurs who've walked the path before you. No recycled advice or theory, just honest lessons, practical wins, and real struggles from people who understand what it takes to get something off the ground.",
-      cta: "Read Stories",
-      link: "/newspaper",
+      icon: Megaphone,
+      title: "Begin a measurable acquisition play",
+      subtitle: "GTM Strategist",
+      buttonLabel: "Launch Play",
+      description: "Choose one primary channel and one fallback with evidence backed messaging, campaign assets, six week targets, and clear budget and time constraints.\n\nEvery primary play includes a kill rule and creates an attributed Traction sprint from the same workspace.",
+      cta: "Start your GTM play",
+      link: "/go-to-market",
       image: "https://images.unsplash.com/photo-1456324504439-367cee3b3c32?w=800&h=600&fit=crop&q=80&fm=webp",
       imageAlt: "Founder reading and learning from content"
     },
     {
       position: 6,
-      icon: LayoutDashboard,
-      title: "Customize your Experience",
-      subtitle: "Dashboard: Prioritize Tasks",
-      buttonLabel: "Execute Smartly",
-      description: "Your dashboard is where everything comes together. Focus Funnel helps you cut through the noise and prioritize what actually moves the needle, while Decision Sprint gives you a structured way to evaluate ideas before committing. Core Metrics keeps your key numbers visible so you always know where you stand.\n\nWeekly Mission and Your Tasks keep you accountable with clear goals and action items, so you spend less time wondering what to do next and more time making real progress. It's your personal command center, designed to keep you focused and moving forward.",
-      cta: "View Dashboard",
-      link: "/dashboard",
+      icon: TrendingUp,
+      title: "Decide what to scale, iterate, or kill",
+      subtitle: "Traction Engine",
+      buttonLabel: "Measure Traction",
+      description: "Record measured weekly decisions in a six week ledger that keeps source badges, acquisition efficiency, retention, and revenue visible.\n\nAfter at least three weekly decisions, export a verified traction report and feed the results back into the next GTM and customer review.",
+      cta: "Measure traction",
+      link: "/traction-engine",
       image: "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&h=600&fit=crop&q=80&fm=webp",
       imageAlt: "Personalized startup dashboard"
     }
@@ -378,13 +378,13 @@ const ValuePropositionCards = () => {
         {/* Section Header */}
         <div className="max-w-3xl mx-auto text-center mb-12 sm:mb-16">
           <Badge variant="outline" className="homepage-section-badge mb-5">
-            The Perfect Ecosystem
+            Six connected outcome contracts
           </Badge>
           <h2 className="homepage-section-title value-prop-section__title text-3xl sm:text-4xl lg:text-[2.9rem] mb-4">
-            Creatives Takeover in a Nutshell
+            Every tool ends in a decision or a finished artifact
           </h2>
           <p className="homepage-section-copy value-prop-section__copy text-base sm:text-lg">
-            Everything you need, all in one place. Built on six core pillars to help startup founders validate, build, and grow a business from scratch.
+            Each stage carries its evidence, assumptions, and measured results forward so the next tool starts with what you have already learned.
           </p>
         </div>
 
