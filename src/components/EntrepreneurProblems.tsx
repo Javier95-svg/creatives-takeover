@@ -196,7 +196,7 @@ const journeyActions: JourneyAction[] = [
   {
     to: "/investors",
     title: "Find Investors",
-    outcome: "Targeted fundraising",
+    outcome: "Angel Investor Network",
     description: "Find relevant investors by stage and sector, then start targeted conversations.",
     icon: Users,
     accentName: "emerald",

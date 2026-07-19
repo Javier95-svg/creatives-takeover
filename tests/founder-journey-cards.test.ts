@@ -16,9 +16,10 @@ test('the task prioritization row promotes Dashboard with a coherent outcome', (
   );
 });
 
-test("ICP and demand cards use the approved outcome labels", () => {
+test("journey cards use the approved outcome labels", () => {
   assert.match(source, /title: "Define Your ICP",[\s\S]*?outcome: "Target Correctly"/);
   assert.match(source, /title: "Validate Demand",[\s\S]*?outcome: "Understand the Market"/);
+  assert.match(source, /title: "Find Investors",[\s\S]*?outcome: "Angel Investor Network"/);
 });
 
 test('all founder journey cards expose complete, concise outcome copy', () => {
