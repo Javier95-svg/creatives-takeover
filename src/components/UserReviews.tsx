@@ -122,16 +122,16 @@ const UserReviews = () => {
   const sectionHeader = (
     <div className="startup-cycle-header text-center mb-16 sm:mb-20 px-6 sm:px-8 lg:px-12">
       <Badge variant="outline" className="homepage-section-badge mb-5 animate-in fade-in slide-in-from-top duration-700">
-        The framework behind The Founders Compass
+        The 7 Stage Journey
       </Badge>
       <h2 className="homepage-section-title startup-cycle-title text-3xl sm:text-4xl lg:text-[2.9rem] mb-5 break-words animate-in fade-in slide-in-from-bottom duration-700 delay-100">
         Startup Development Cycle
       </h2>
       <p className="homepage-section-copy startup-cycle-copy text-base sm:text-lg max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom duration-700 delay-200">
-        The Startup Development Cycle guides first time founders from a raw idea to a startup with verified traction and fundraising readiness.
+        The Startup Development Cycle is a 7-stage roadmap built by Creatives Takeover to guide first-time founders from raw idea to funded startup.
         <br />
         <br />
-        Six connected tools deliver the customer decision, proof, validation, working product, acquisition play, and measured traction. Fundraising begins only after the evidence supports the story.
+        We divide it into two phases: Phase A (BizMap AI) takes founders from ideation to launch, covering validation, MVP, and early distribution. Phase B (Insighta) focuses on traction and fundraising, building the repeatable acquisition systems that attract investors.
       </p>
     </div>
   );
