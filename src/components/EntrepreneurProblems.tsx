@@ -108,7 +108,7 @@ const journeyActions: JourneyAction[] = [
   {
     to: "/icp-builder",
     title: "Define Your ICP",
-    outcome: "Customer clarity",
+    outcome: "Target Correctly",
     description: "Identify who to serve, what they need, and how to position your offer.",
     icon: Target,
     accentName: "cobalt",
@@ -130,7 +130,7 @@ const journeyActions: JourneyAction[] = [
   {
     to: "/pmf-lab",
     title: "Validate Demand",
-    outcome: "Evidence decision",
+    outcome: "Understand the Market",
     description: "Turn customer evidence into a clear Build, Narrow, Pivot, or Stop decision.",
     icon: FlaskConical,
     accentName: "teal",
@@ -173,7 +173,7 @@ const journeyActions: JourneyAction[] = [
   },
   {
     to: "/dashboard",
-    title: "Open Your Dashboard",
+    title: "Dashboard: Your Project Co-Pilot",
     outcome: "Weekly focus",
     description: "Prioritize tasks, track weekly progress, and stay accountable in one workspace.",
     icon: LayoutDashboard,

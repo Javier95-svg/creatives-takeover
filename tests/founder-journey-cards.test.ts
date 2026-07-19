@@ -12,8 +12,13 @@ const actionBlock = source.match(/const journeyActions: JourneyAction\[\] = \[([
 test('the task prioritization row promotes Dashboard with a coherent outcome', () => {
   assert.match(
     actionBlock,
-    /to: "\/dashboard",[\s\S]*?title: "Open Your Dashboard",[\s\S]*?outcome: "Weekly focus",[\s\S]*?Prioritize tasks, track weekly progress, and stay accountable in one workspace\./,
+    /to: "\/dashboard",[\s\S]*?title: "Dashboard: Your Project Co-Pilot",[\s\S]*?outcome: "Weekly focus",[\s\S]*?Prioritize tasks, track weekly progress, and stay accountable in one workspace\./,
   );
+});
+
+test("ICP and demand cards use the approved outcome labels", () => {
+  assert.match(source, /title: "Define Your ICP",[\s\S]*?outcome: "Target Correctly"/);
+  assert.match(source, /title: "Validate Demand",[\s\S]*?outcome: "Understand the Market"/);
 });
 
 test('all founder journey cards expose complete, concise outcome copy', () => {
