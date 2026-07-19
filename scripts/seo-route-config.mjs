@@ -108,7 +108,7 @@ export const INDEXABLE_ROUTES = [
       "Turn your idea into a validated startup through one evidence backed path for customer clarity, proof, PMF decisions, MVP building, GTM, and traction.",
     changefreq: "daily",
     priority: 1.0,
-    heroHeading: "The Founders Compass",
+    heroHeading: "The Founders' Compass",
     heroCopy:
       "Define your ideal customer, prove demand, build your MVP, launch it, and find investment.",
     sections: [
