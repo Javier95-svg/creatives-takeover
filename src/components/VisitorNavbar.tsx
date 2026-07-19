@@ -3,17 +3,17 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   ChevronDown,
+  Compass,
   DollarSign,
   Gift,
-  GraduationCap,
   Info,
   type LucideIcon,
   Menu,
   Mic,
   Newspaper,
   Rocket,
+  Wrench,
   X,
-  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,10 +37,10 @@ type VisitorMenuItem = { label: string; href: string; icon: LucideIcon; descript
 type VisitorMenu = { label: string; icon: LucideIcon; tagline: string; taglineIcon?: LucideIcon; items: VisitorMenuItem[] };
 
 // Simple links, in display order. The Free Tools menu renders first. Final order:
-// Free Tools · Build · Learn · Podcast · Newspaper · About · Pricing. Home is covered by the logo.
+// Free Tools · Build · Guidance · Podcast · Newspaper · About · Pricing. Home is covered by the logo.
 const visitorLinks: VisitorLink[] = [
-  { label: "Build", href: "/build", icon: Zap },
-  { label: "Learn", href: "/mentorship", icon: GraduationCap },
+  { label: "Build", href: "/build", icon: Wrench },
+  { label: "Guidance", href: "/mentorship", icon: Compass },
   { label: "Podcast", href: "/podcast", icon: Mic },
   { label: "Newspaper", href: "/newspaper", icon: Newspaper },
   { label: "About", href: "/about", icon: Info },
