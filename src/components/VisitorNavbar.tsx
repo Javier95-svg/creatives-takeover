@@ -2,17 +2,18 @@ import type { MouseEvent } from "react";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  BadgeCheck,
   ChevronDown,
-  Compass,
   DollarSign,
   Gift,
-  Headphones,
+  GraduationCap,
+  Info,
   type LucideIcon,
   Menu,
+  Mic,
+  Newspaper,
   Rocket,
-  Wrench,
   X,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,13 +36,14 @@ type VisitorLink = { label: string; href: string; icon: LucideIcon; sectionId?: 
 type VisitorMenuItem = { label: string; href: string; icon: LucideIcon; description: string };
 type VisitorMenu = { label: string; icon: LucideIcon; tagline: string; taglineIcon?: LucideIcon; items: VisitorMenuItem[] };
 
-// The visitor navigation follows the founder journey. Secondary products and
-// editorial destinations remain available elsewhere without competing with it.
+// Simple links, in display order. The Free Tools menu renders first. Final order:
+// Free Tools · Build · Learn · Podcast · Newspaper · About · Pricing. Home is covered by the logo.
 const visitorLinks: VisitorLink[] = [
-  { label: "How It Works", href: "/", icon: Compass, sectionId: "startup-development-cycle" },
-  { label: "Tools & Outcomes", href: "/build", icon: Wrench },
-  { label: "Expert Support", href: "/mentorship", icon: Headphones },
-  { label: "Founder Proof", href: "/stories", icon: BadgeCheck },
+  { label: "Build", href: "/build", icon: Zap },
+  { label: "Learn", href: "/mentorship", icon: GraduationCap },
+  { label: "Podcast", href: "/podcast", icon: Mic },
+  { label: "Newspaper", href: "/newspaper", icon: Newspaper },
+  { label: "About", href: "/about", icon: Info },
   { label: "Pricing", href: "/pricing", icon: DollarSign },
 ];
 
@@ -50,9 +52,9 @@ const visitorLinks: VisitorLink[] = [
 const freeToolsItems: VisitorMenuItem[] = FREE_TOOLS_NAV_ITEMS;
 
 const giftsMenu: VisitorMenu = {
-  label: "More",
+  label: "Free Tools",
   icon: Gift,
-  tagline: "Additional founder resources",
+  tagline: "From Creatives Takeover with 💙",
   items: freeToolsItems,
 };
 
@@ -275,6 +277,7 @@ const VisitorNavbar = () => {
             </Link>
 
             <div className="hidden flex-1 items-center justify-center gap-1 lg:flex">
+              {renderDesktopMenu(giftsMenu)}
               {visitorLinks.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -289,7 +292,6 @@ const VisitorNavbar = () => {
                   </Link>
                 );
               })}
-              {renderDesktopMenu(giftsMenu)}
             </div>
 
             <div className="ml-auto hidden items-center gap-2 lg:flex">
@@ -331,6 +333,7 @@ const VisitorNavbar = () => {
           >
             <div className="min-h-0">
               <div className="space-y-2 border-t border-border/70 px-3 py-4 sm:px-4">
+                {renderMobileMenu(giftsMenu)}
                 {visitorLinks.map((item) => {
                   const Icon = item.icon;
                   return (
@@ -350,7 +353,6 @@ const VisitorNavbar = () => {
                     </Link>
                   );
                 })}
-                {renderMobileMenu(giftsMenu)}
 
                 <div className="grid gap-2 border-t border-border/70 pt-3">
                   <Button asChild variant="outline" className="w-full">
