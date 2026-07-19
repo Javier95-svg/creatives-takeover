@@ -358,7 +358,7 @@ const EntrepreneurProblems = () => {
             Every Founder's Journey is Unique
           </h2>
           <p className="homepage-section-copy founder-journey-section__copy mx-auto text-base sm:text-lg">
-            But some challenges are universal. Here, we highlight some of the most common obstacles founders face and how we assist to overcome them.
+            But the challenges are universal. Here's how we clear the path from idea to launch, removing bottlenecks at every stage.
           </p>
         </ScrollReveal>
 
