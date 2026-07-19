@@ -12,7 +12,7 @@ const actionBlock = source.match(/const journeyActions: JourneyAction\[\] = \[([
 test('the task prioritization row promotes Dashboard with a coherent outcome', () => {
   assert.match(
     actionBlock,
-    /to: "\/dashboard",[\s\S]*?title: "Dashboard: Your Project Co-Pilot",[\s\S]*?outcome: "Weekly focus",[\s\S]*?Prioritize tasks, track weekly progress, and stay accountable in one workspace\./,
+    /to: "\/dashboard",[\s\S]*?title: "Dashboard: Your Project Co-Pilot",[\s\S]*?outcome: "Daily Focus",[\s\S]*?Prioritize tasks, track weekly progress, and stay accountable in one workspace\./,
   );
 });
 

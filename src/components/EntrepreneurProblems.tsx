@@ -174,7 +174,7 @@ const journeyActions: JourneyAction[] = [
   {
     to: "/dashboard",
     title: "Dashboard: Your Project Co-Pilot",
-    outcome: "Weekly focus",
+    outcome: "Daily Focus",
     description: "Prioritize tasks, track weekly progress, and stay accountable in one workspace.",
     icon: LayoutDashboard,
     accentName: "amber",
