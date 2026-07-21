@@ -302,6 +302,7 @@ test('weekly review rewrites the next week from exact Traction evidence without 
   assert.doesNotMatch(review, /deductCredits|checkAndDeductCredits/);
   assert.match(workspace, /Week \{weeklyReview\.adaptation\.week\} rewritten/);
   assert.match(workspace, /Start sprint here/);
-  assert.match(hook, /source_gtm_plan_id: planId, source_gtm_play_id: play\.id/);
+  assert.match(hook, /activate_gtm_play_v2/);
+  assert.match(hook, /createJourneyHandoff/);
   assert.match(hook, /gtm_directory_actions/);
 });

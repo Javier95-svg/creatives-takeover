@@ -13,6 +13,12 @@ export interface JourneyEvidenceBrief {
   brief: string;
   sources: { icp: boolean; demo: boolean; pmf: boolean; gtm: boolean };
   manifest: JourneyEvidenceManifest;
+  scope: {
+    coreCustomer: string;
+    coreJob: string;
+    successEvent: string;
+    essentialFeatures: string[];
+  };
 }
 
 type AnyRecord = Record<string, unknown>;
@@ -31,7 +37,7 @@ const asTextList = (value: unknown, max: number): string[] =>
 const bulletList = (items: string[]): string => items.map((item) => `- ${item}`).join('\n');
 
 export async function fetchJourneyEvidenceBrief(userId: string): Promise<JourneyEvidenceBrief | null> {
-  const [icpRes, demoRes, pmfRes, gtmRes] = await Promise.all([
+  const [icpRes, demoRes, pmfRes, gtmRes, outcomesRes] = await Promise.all([
     supabase
       .from('icp_analysis_results' as never)
       .select('id, target_audience, business_description, analysis_data, created_at')
@@ -60,12 +66,20 @@ export async function fetchJourneyEvidenceBrief(userId: string): Promise<Journey
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from('journey_outcomes' as never)
+      .select('tool,status,artifact_id')
+      .eq('user_id', userId)
+      .in('status', ['ready', 'verified', 'reviewed']),
   ]);
 
   const icp = asRecord(icpRes.data);
   const demo = asRecord(demoRes.data);
   const pmf = asRecord(pmfRes.data);
   const gtm = asRecord(gtmRes.data);
+  const readyTools = new Set(
+    ((outcomesRes.data ?? []) as Array<{ tool: string; status: string }>).map((outcome) => outcome.tool),
+  );
 
   const sections: string[] = [];
   const sources = { icp: false, demo: false, pmf: false, gtm: false };
@@ -80,7 +94,7 @@ export async function fetchJourneyEvidenceBrief(userId: string): Promise<Journey
   const roleLine = asText(customer.roleLine) || asText(icp.target_audience);
   const painQuote = asText(pain.quote);
   const businessDescription = asText(icp.business_description);
-  if (roleLine || painQuote || businessDescription) {
+  if (readyTools.has('icp_builder') && (roleLine || painQuote || businessDescription)) {
     sources.icp = true;
     const lines = [
       asText(decisionBrief.primarySegment) ? `- Primary customer: ${asText(decisionBrief.primarySegment)}` : roleLine ? `- Target customer: ${roleLine}` : null,
@@ -105,7 +119,7 @@ export async function fetchJourneyEvidenceBrief(userId: string): Promise<Journey
   // ── Demo: proof already shown to visitors ──────────────────────────────────
   const demoName = asText(demo.name);
   const demoTagline = asText(demo.tagline);
-  if (demoName || demoTagline) {
+  if (readyTools.has('demo_studio') && (demoName || demoTagline)) {
     sources.demo = true;
     sections.push([
       'PROOF ALREADY SHOWN (from Demo Studio):',
@@ -133,7 +147,7 @@ export async function fetchJourneyEvidenceBrief(userId: string): Promise<Journey
   const verdictLabel = asText(pmfData.verdictLabel);
   const decision = asText(pmfData.decision);
   const evidenceGrade = asText(pmfData.evidenceGrade);
-  if (missingFeatures.length || objections.length || buyingSignals.length) {
+  if (readyTools.has('pmf_lab') && (missingFeatures.length || objections.length || buyingSignals.length)) {
     sources.pmf = true;
     const header = pmfScore !== null
       ? `WHAT VALIDATION SAYS (PMF score ${pmfScore}/100${verdictLabel ? ` — ${verdictLabel}` : ''}):`
@@ -164,7 +178,7 @@ export async function fetchJourneyEvidenceBrief(userId: string): Promise<Journey
   const headline = asText(messaging.headline);
   const hookLine = asText(messaging.hookLine);
   const ctaCopy = asText(messaging.ctaCopy);
-  if (positioningStatement || headline) {
+  if (readyTools.has('gtm_strategist') && (positioningStatement || headline)) {
     sources.gtm = true;
     const lines = [
       positioningStatement ? `- Positioning: ${positioningStatement}` : null,
@@ -187,6 +201,10 @@ export async function fetchJourneyEvidenceBrief(userId: string): Promise<Journey
   if (sections.length === 0) return null;
 
   const manifest = createJourneyEvidenceManifest(manifestSources);
+  const coreCustomer = asText(decisionBrief.primarySegment) || roleLine || 'Primary customer from the evidence manifest';
+  const coreJob = painQuote || asText(pmfData.nextExperiment) || 'Complete the workflow that resolves the validated pain';
+  const successEvent = buyingSignals[0] || 'Customer completes the primary workflow';
+  const essentialFeatures = missingFeatures.slice(0, 3);
   const brief = [
     'Build my MVP from my validated evidence below.',
     ...sections,
@@ -194,5 +212,15 @@ export async function fetchJourneyEvidenceBrief(userId: string): Promise<Journey
     'BUILD THIS:\nA focused MVP for the audience above. Treat the must-have features as the core flows, design the UX to answer the top objection directly, and use the approved positioning copy on the landing or home screen. Keep scope tight: only what the evidence justifies. Preserve analytics, rollback support, and one testable primary customer flow.',
   ].join('\n\n');
 
-  return { brief, sources, manifest };
+  return {
+    brief,
+    sources,
+    manifest,
+    scope: {
+      coreCustomer,
+      coreJob,
+      successEvent,
+      essentialFeatures: essentialFeatures.length > 0 ? essentialFeatures : ['Primary customer workflow'],
+    },
+  };
 }

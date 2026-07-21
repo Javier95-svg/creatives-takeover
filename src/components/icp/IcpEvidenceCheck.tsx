@@ -12,6 +12,7 @@ interface EvidenceState {
   pmf: { score: number | null; verdictLabel: string | null; interviews: number; contradictions: string[] } | null;
   demo: { uniqueViewers: number; completions: number; signups: number } | null;
   waitlistSignups: number;
+  traction: { channel: string; signal: string; recommendation: string } | null;
 }
 
 interface IcpEvidenceCheckProps {
@@ -33,7 +34,7 @@ export default function IcpEvidenceCheck({ userId }: IcpEvidenceCheckProps) {
     let active = true;
     const load = async () => {
       try {
-        const [pmfRes, demoRes, waitlistRes] = await Promise.all([
+        const [pmfRes, demoRes, waitlistRes, tractionRes] = await Promise.all([
           supabase
             .from('pmf_analysis_results' as never)
             .select('pmf_score, analysis_data')
@@ -45,6 +46,13 @@ export default function IcpEvidenceCheck({ userId }: IcpEvidenceCheckProps) {
           supabase
             .from('demo_studio_signups' as never)
             .select('id', { count: 'exact', head: true }),
+          supabase
+            .from('traction_engine_weekly_logs' as never)
+            .select('primary_acquisition_channel,channel_quality_signal,prioritized_recommendation')
+            .eq('user_id', userId)
+            .order('week_start_date', { ascending: false })
+            .limit(1)
+            .maybeSingle(),
         ]);
         if (!active) return;
 
@@ -80,6 +88,13 @@ export default function IcpEvidenceCheck({ userId }: IcpEvidenceCheckProps) {
               ? { uniqueViewers: demoRow.total_visitors ?? 0, completions: 0, signups: 0 }
               : null,
           waitlistSignups: waitlistRes.count ?? 0,
+          traction: tractionRes.data
+            ? {
+                channel: String((tractionRes.data as { primary_acquisition_channel?: string }).primary_acquisition_channel ?? ''),
+                signal: String((tractionRes.data as { channel_quality_signal?: string }).channel_quality_signal ?? ''),
+                recommendation: String((tractionRes.data as { prioritized_recommendation?: string }).prioritized_recommendation ?? ''),
+              }
+            : null,
         });
       } catch {
         if (active) setEvidence(null);
@@ -122,6 +137,14 @@ export default function IcpEvidenceCheck({ userId }: IcpEvidenceCheckProps) {
     rows.push({
       tone: 'confirm',
       text: `${evidence.waitlistSignups} waitlist/launch-page signup${evidence.waitlistSignups === 1 ? '' : 's'} collected.`,
+    });
+  }
+
+  if (evidence.traction) {
+    const contradictsAudience = /wrong audience|churn quickly|audience fit/i.test(evidence.traction.signal);
+    rows.push({
+      tone: contradictsAudience ? 'contradict' : 'confirm',
+      text: `Traction feedback from ${evidence.traction.channel || 'the primary channel'}: ${evidence.traction.signal} ${evidence.traction.recommendation}`,
     });
   }
 

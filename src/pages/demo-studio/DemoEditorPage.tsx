@@ -568,7 +568,10 @@ export default function DemoEditorPage() {
       return;
     }
     if (!demoReadiness.ready) {
-      toast.warning(`Demo readiness is ${demoReadiness.score}%. Publishing anyway so you can keep moving.`);
+      toast.error(`This demo is not ready to publish yet (${demoReadiness.score}%).`, {
+        description: demoReadiness.missing.slice(0, 3).join(' '),
+      });
+      return;
     }
     setPublishing(true);
     try {
@@ -1068,7 +1071,6 @@ export default function DemoEditorPage() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="overflow-hidden rounded-lg border border-border bg-black">
-              {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
               <video
                 ref={captureVideoRef}
                 autoPlay

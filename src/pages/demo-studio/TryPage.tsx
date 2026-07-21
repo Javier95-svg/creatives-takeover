@@ -597,22 +597,25 @@ export default function TryPage() {
             : `/demo-studio/projects/${project.id}/brief`,
           source: 'demo_try',
         });
-        const outcomeStatus = published ? 'ready' : 'draft';
         void upsertJourneyOutcome({
           userId: user.id,
           tool: 'demo_studio',
           artifactType: 'interactive_proof_page',
           artifactId: demo.id,
-          status: outcomeStatus,
-          completionScore: published ? 70 : 40,
+          status: 'draft',
+          completionScore: published ? 45 : 30,
           qualityChecks: {
             interactive_steps: position >= 2,
-            mobile_ready: true,
+            working_hotspots: position >= 2,
+            captions_complete: hydrateSteps.slice(0, position).every((step) => Boolean(step.caption.trim())),
+            single_cta: false,
+            lead_capture: false,
+            analytics: published,
+            mobile_ready: false,
             published,
-            narrated_video: false,
-            lead_capture: published,
-            generated_visuals: usedPlaceholders,
-            unresolved_placeholders: false,
+            no_unresolved_placeholders: !usedPlaceholders,
+            no_broken_interactions: position >= 2,
+            external_activity: false,
           },
           evidenceManifest: createJourneyEvidenceManifest([
             {
@@ -630,7 +633,7 @@ export default function TryPage() {
           tool: 'demo_studio',
           artifact_type: 'interactive_proof_page',
           artifact_id: demo.id,
-          outcome_status: outcomeStatus,
+          outcome_status: 'draft',
           source: isReturning ? 'signup_return' : 'authenticated_save',
           step_count: position,
           published,

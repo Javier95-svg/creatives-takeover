@@ -25,6 +25,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
 import { cn } from '@/lib/utils';
 import { shouldShowWatermark } from '@/lib/demoStudio/plan';
+import { evaluateDemoArtifact } from '@/lib/demoStudio/outcome';
+import { createJourneyEvidenceManifest, createJourneyHandoff, trackJourneyEvent, upsertJourneyOutcome } from '@/lib/journeyOutcomes';
 import {
   getOrCreateLaunchPage,
   getBrief,
@@ -179,6 +181,64 @@ export default function LaunchComposerPage() {
       const updated = await publishLaunchPage(project, user.id);
       setProject(updated);
       setReadiness(await getProjectReadiness(project.id));
+      if (selectedDemo && launchPage) {
+        const { qualityChecks, evaluation } = evaluateDemoArtifact({
+          steps: previewSteps,
+          theme: selectedDemo.theme,
+          project: updated,
+          launchPage,
+          published: true,
+          leadCaptureEnabled: true,
+          analyticsEnabled: true,
+          containsGeneratedPlaceholders: previewSteps.some((step) => !step.asset_url || /placeholder/i.test(step.asset_url)),
+          externalActivity: Boolean(metrics && (metrics.demoCompletions > 0 || metrics.ctaClicks > 0 || metrics.signups > 0)),
+        });
+        const outcome = await upsertJourneyOutcome({
+          userId: user.id,
+          tool: 'demo_studio',
+          artifactType: 'interactive_proof_page',
+          artifactId: selectedDemo.id,
+          status: evaluation.status,
+          qualityChecks,
+          completionScore: evaluation.completionScore,
+          verificationMode: evaluation.verificationMode,
+          evidenceManifest: createJourneyEvidenceManifest([{
+            sourceId: selectedDemo.id,
+            sourceType: 'interactive_demo',
+            version: selectedDemo.updated_at,
+            capturedAt: new Date().toISOString(),
+            confidence: evaluation.status === 'verified' ? 0.95 : 0.8,
+            provenance: 'demo_studio',
+            artifactType: 'interactive_proof_page',
+            artifactId: selectedDemo.id,
+            verificationMode: evaluation.verificationMode,
+            label: selectedDemo.title,
+            url: updated.slug ? `${window.location.origin}/p/${updated.slug}` : null,
+          }]),
+        });
+        trackJourneyEvent('journey_stage_outcome_completed', {
+          tool: 'demo_studio',
+          artifact_type: 'interactive_proof_page',
+          artifact_id: selectedDemo.id,
+          outcome_status: outcome.evaluation.status,
+          source: 'demo_launch_publish',
+        });
+        if (['ready', 'verified'].includes(outcome.evaluation.status)) {
+          const outcomeId = (outcome.outcome as { id?: string } | null)?.id;
+          if (outcomeId) {
+            await createJourneyHandoff({
+              sourceOutcomeId: outcomeId,
+              destinationTool: 'pmf_lab',
+              payload: {
+                sourceArtifactId: selectedDemo.id,
+                sourceArtifactVersion: selectedDemo.updated_at,
+                destinationRoute: '/pmf-lab',
+              },
+              idempotencyKey: `demo:${selectedDemo.id}:pmf`,
+            });
+          }
+        }
+      }
       showDashboardReturnToast({
         message: 'Launch page published.',
         description: 'Signups will show on your command center.',

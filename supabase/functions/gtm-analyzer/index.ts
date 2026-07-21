@@ -342,6 +342,13 @@ Return only JSON with this shape:
       message: safeText(narrative.message, safeText(strategic.messaging?.hookLine, intake.problem)),
       hypothesis: safeText(narrative.hypothesis, `If we reach ${intake.targetSegment} through ${item.rule.name}, we will generate ${item.rule.target} ${item.rule.metric.toLowerCase()} per week.`),
       killRule: safeText(narrative.killRule, `Kill or replace this play after three measured weeks below ${item.rule.target} ${item.rule.metric.toLowerCase()} with no improving trend.`),
+      structuredKillRule: {
+        metric: item.rule.metric,
+        operator: 'lt',
+        threshold: item.rule.target,
+        observationWindowWeeks: 3,
+        minSampleSize: Math.max(3, Math.ceil(item.rule.target * 3)),
+      },
       actions: safeStringArray(narrative.actions, [`Launch the first ${item.rule.name} experiment.`, `Log ${item.rule.metric.toLowerCase()} in Traction Engine.`]).slice(0, 6),
       metric: item.rule.metric,
       target: item.rule.target,

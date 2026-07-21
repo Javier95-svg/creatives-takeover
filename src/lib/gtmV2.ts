@@ -148,6 +148,7 @@ export interface GTMPlay {
   metric: string;
   target: number;
   killRule?: string;
+  structuredKillRule?: GTMKillRule;
   weeklyTimeHours: number;
   weeklyBudget: number;
   requiredAssets: string[];
@@ -155,6 +156,34 @@ export interface GTMPlay {
   actual?: number;
   tractionSprintId?: string;
   directoryProgress?: Record<string, 'recommended' | 'visited' | 'submitted' | 'live' | 'skipped'>;
+}
+
+export interface GTMKillRule {
+  metric: string;
+  operator: 'lt' | 'lte' | 'gt' | 'gte';
+  threshold: number;
+  observationWindowWeeks: number;
+  minSampleSize: number;
+}
+
+export type GTMKillRuleStatus = 'collecting' | 'on_track' | 'at_risk' | 'triggered';
+
+export function evaluateGTMKillRule(
+  rule: GTMKillRule | undefined,
+  observations: Array<{ value: number; sampleSize: number }>,
+): GTMKillRuleStatus {
+  if (!rule || observations.length < rule.observationWindowWeeks) return 'collecting';
+  const window = observations.slice(-rule.observationWindowWeeks);
+  if (window.reduce((sum, item) => sum + Math.max(0, item.sampleSize), 0) < rule.minSampleSize) return 'collecting';
+  const misses = window.filter((item) => {
+    if (rule.operator === 'lt') return item.value < rule.threshold;
+    if (rule.operator === 'lte') return item.value <= rule.threshold;
+    if (rule.operator === 'gt') return item.value > rule.threshold;
+    return item.value >= rule.threshold;
+  }).length;
+  if (misses === window.length) return 'triggered';
+  if (misses >= Math.ceil(window.length / 2)) return 'at_risk';
+  return 'on_track';
 }
 
 export interface GTMTask {

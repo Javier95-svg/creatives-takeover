@@ -20,7 +20,9 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['github'], ['list']] : 'list',
   timeout: 45_000,
-  expect: { timeout: 15_000 },
+  // Tool routes compile large authenticated workspaces on first request in CI.
+  // Keep assertions strict while allowing the cold GTM bundle to mount reliably.
+  expect: { timeout: 25_000 },
   use: {
     baseURL,
     trace: 'on-first-retry',

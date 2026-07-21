@@ -84,9 +84,12 @@ import { markFirstArtifactCreated, sendRetentionEmail, trackCurrentActivationJou
 import { useActivationAbandonment } from "@/hooks/useActivationAbandonment";
 import {
   createJourneyEvidenceManifest,
+  createJourneyHandoff,
+  registerJourneyAssumptions,
   trackJourneyEvent,
   upsertJourneyOutcome,
 } from "@/lib/journeyOutcomes";
+import { evaluateIcpArtifact } from "@/lib/icpOutcome";
 
 const ICP_RESULTS_TABLE = "icp_analysis_results";
 const SEED_TIMEOUT_MS = 25000;
@@ -1001,26 +1004,17 @@ const ICPBuilder: React.FC = () => {
       step: 'draft_saved', is_authenticated: true, artifact_type: 'icp_analysis',
     });
     if (user?.id) {
-      const brief = artifact.draftDocument.decisionBrief;
-      const qualityChecks = {
-        primary_segment: Boolean(brief?.primarySegment),
-        non_fit_segment: Boolean(brief?.nonFitSegment),
-        three_ranked_pains: (brief?.rankedPains.length ?? 0) >= 3,
-        buying_trigger: Boolean(brief?.buyingTrigger),
-        current_alternative: Boolean(brief?.currentAlternative),
-        reachable_channels: (brief?.reachableChannels.length ?? 0) > 0,
-        cited_evidence: (artifact.draftDocument.sources?.length ?? 0) > 0,
-        confidence_level: Boolean(artifact.draftDocument.confidence.level),
-        five_interview_plan: (brief?.interviewValidationPlan.length ?? 0) === 5,
-      };
-      const passedChecks = Object.values(qualityChecks).filter(Boolean).length;
-      const completionScore = Math.round((passedChecks / Object.keys(qualityChecks).length) * 100);
-      void upsertJourneyOutcome({
+      const { qualityChecks, evaluation, assumptions } = evaluateIcpArtifact(artifact);
+      const completionScore = evaluation.completionScore;
+      const assumptionRegistration = assumptions.length > 0
+        ? registerJourneyAssumptions(analysisId, assumptions)
+        : Promise.resolve([]);
+      void assumptionRegistration.then(() => upsertJourneyOutcome({
         userId: user.id,
         tool: 'icp_builder',
         artifactType: 'customer_decision_brief',
         artifactId: analysisId,
-        status: 'ready',
+        status: evaluation.status,
         completionScore,
         qualityChecks,
         evidenceManifest: createJourneyEvidenceManifest(
@@ -1040,12 +1034,26 @@ const ICPBuilder: React.FC = () => {
           })),
           artifact.generatedAt,
         ),
+      })).then(async (saved) => {
+        if (!['ready', 'verified'].includes(saved.evaluation.status)) return;
+        const outcomeId = (saved.outcome as { id?: string } | null)?.id;
+        if (!outcomeId) return;
+        await createJourneyHandoff({
+          sourceOutcomeId: outcomeId,
+          destinationTool: 'pmf_lab',
+          payload: {
+            sourceArtifactId: analysisId,
+            sourceArtifactVersion: String(artifact.version),
+            destinationRoute: '/pmf-lab',
+          },
+          idempotencyKey: `icp:${analysisId}:pmf`,
+        });
       }).catch((outcomeError) => console.error('Could not update journey outcome', outcomeError));
       trackJourneyEvent('journey_stage_outcome_completed', {
         tool: 'icp_builder',
         artifact_type: 'customer_decision_brief',
         artifact_id: analysisId,
-        outcome_status: 'ready',
+        outcome_status: evaluation.status,
         source,
         completion_score: completionScore,
         confidence: artifact.draftDocument.confidence.level,

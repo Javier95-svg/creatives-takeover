@@ -28,6 +28,7 @@ import {
 import { evaluateGTMOutcome } from '@/lib/gtmOutcome';
 import {
   createJourneyEvidenceManifest,
+  createJourneyHandoff,
   trackJourneyEvent,
   upsertJourneyOutcome,
 } from '@/lib/journeyOutcomes';
@@ -152,17 +153,27 @@ const syncGTMJourneyOutcome = async (userId: string, artifactId: string, plan: G
       })),
     ], plan.generatedAt);
 
-    await upsertJourneyOutcome({
+    const saved = await upsertJourneyOutcome({
       userId,
       tool: 'gtm_strategist',
       artifactType: 'gtm_acquisition_play',
       artifactId,
       status: outcome.status,
-      qualityChecks: outcome.checks,
+      qualityChecks: {
+        primary_channel: outcome.checks.primaryChannel,
+        fallback_channel: outcome.checks.fallbackChannel,
+        claim_level_evidence: outcome.checks.evidenceBackedMessaging,
+        usable_campaign_assets: outcome.checks.usableCampaignAssets,
+        six_week_targets: outcome.checks.sixWeekTargets,
+        budget_and_time_constraints: outcome.checks.budgetAndTimeConstraints,
+        structured_kill_rule: outcome.checks.structuredKillRule,
+        traction_sprint_created: outcome.checks.tractionSprintCreated,
+      },
       evidenceManifest,
       completionScore: outcome.completionScore,
+      verificationMode: outcome.status === 'verified' ? 'corroborated' : 'unverified',
     });
-    return outcome;
+    return { ...outcome, outcomeId: (saved.outcome as { id?: string } | null)?.id ?? null };
   } catch (error) {
     console.warn('Could not synchronize the GTM journey outcome:', error);
     return null;
@@ -434,47 +445,63 @@ export function useGTMStrategist() {
   }, [analysis, planId, user]);
 
   const startPlaySprint = useCallback(async (play: GTMPlay) => {
-    if (!user || !planId) return;
-    const { data: activeRows, error: activeError } = await supabase
-      .from('traction_engine_sprints')
-      .select('id,channel,status')
-      .eq('user_id', user.id)
-      .eq('status', 'active');
-    if (activeError) {
-      toast.error('Could not check active Traction sprints.');
+    if (!user || !planId || !analysis || !isGTMPlanV2(analysis)) return;
+    const preActivation = await syncGTMJourneyOutcome(user.id, planId, analysis);
+    if (!preActivation || preActivation.status === 'draft') {
+      toast.error('Complete the GTM outcome contract before activating this play.');
       return;
     }
-    const existing = activeRows?.find((row) => row.channel.trim().toLowerCase() === play.channelName.trim().toLowerCase());
-    let sprintId = existing?.id;
-    if (existing) {
-      const { error } = await supabase.from('traction_engine_sprints').update({
-        source_gtm_plan_id: planId, source_gtm_play_id: play.id,
-      }).eq('id', existing.id).eq('user_id', user.id);
-      if (error) {
-        toast.error('Could not link the existing sprint.');
-        return;
+    const fallback = analysis.channels.find((channel) => channel.role === 'secondary');
+    const attributedUrls: Array<{ label: string; url: string }> = [];
+    if (analysis.intake.productUrl) {
+      try {
+        const attributed = new URL(analysis.intake.productUrl);
+        attributed.searchParams.set('utm_source', play.channelName.toLowerCase().replace(/[^a-z0-9]+/g, '_'));
+        attributed.searchParams.set('utm_medium', 'gtm_play');
+        attributed.searchParams.set('utm_campaign', `${planId}_${play.id}`);
+        attributedUrls.push({ label: `${play.channelName} primary play`, url: attributed.toString() });
+      } catch {
+        // The readiness contract will keep an invalid destination visible for correction.
       }
-    } else {
-      if ((activeRows?.length ?? 0) >= 2) {
-        toast.error('Traction Engine supports two active channels. Close one before starting this sprint.');
-        return;
-      }
-      const { data, error } = await supabase.from('traction_engine_sprints').insert({
-        user_id: user.id, channel: play.channelName, cycle_start_date: new Date().toISOString().slice(0, 10),
-        status: 'active', source_gtm_plan_id: planId, source_gtm_play_id: play.id,
-      }).select('id').single();
-      if (error || !data) {
-        toast.error('Could not start this Traction sprint.');
-        return;
-      }
-      sprintId = data.id;
+    }
+    const activationPayload = {
+      metric: play.metric,
+      target: play.target,
+      hypothesis: play.hypothesis,
+      killRule: play.structuredKillRule,
+      fallbackChannel: fallback?.name ?? null,
+      assetIds: (analysis.assets ?? []).filter((asset) => asset.playId === play.id).map((asset) => asset.id),
+      taskIds: (analysis.tasks ?? []).filter((task) => task.playId === play.id).map((task) => task.id),
+      attributedUrls,
+      reviewDueAt: new Date(Date.now() + 7 * 86_400_000).toISOString(),
+    };
+    const activationKey = `gtm:${planId}:${play.id}`;
+    const { data, error } = await (supabase as any).rpc('activate_gtm_play_v2', {
+      p_plan_id: planId,
+      p_play_id: play.id,
+      p_channel: play.channelName,
+      p_activation_payload: activationPayload,
+      p_idempotency_key: activationKey,
+    });
+    const sprintId = Array.isArray(data) ? data[0]?.sprint_id : data?.sprint_id;
+    if (error || !sprintId) {
+      toast.error(error?.message || 'Could not activate this GTM play.');
+      return;
     }
     const activatedPlay = { ...play, tractionSprintId: sprintId };
-    await updatePlay(activatedPlay);
+    const activatedPlan = { ...analysis, plays: analysis.plays.map((item) => item.id === play.id ? activatedPlay : item) };
+    setAnalysis(activatedPlan);
     captureEvent('gtm_traction_sprint_started', { plan_id: planId, play_id: play.id, channel_id: play.channelId, sprint_id: sprintId });
-    if (analysis && isGTMPlanV2(analysis)) {
-      const activatedPlan = { ...analysis, plays: analysis.plays.map((item) => item.id === play.id ? activatedPlay : item) };
+    {
       const outcome = await syncGTMJourneyOutcome(user.id, planId, activatedPlan);
+      if (outcome?.outcomeId) {
+        await createJourneyHandoff({
+          sourceOutcomeId: outcome.outcomeId,
+          destinationTool: 'traction_engine',
+          payload: { planId, playId: play.id, sprintId, ...activationPayload },
+          idempotencyKey: activationKey,
+        });
+      }
       trackJourneyEvent('journey_next_stage_started', {
         tool: 'traction_engine',
         source: 'gtm_strategist',
@@ -494,7 +521,7 @@ export function useGTMStrategist() {
       }
     }
     toast.success(`${play.channelName} sprint is active.`);
-  }, [analysis, planId, updatePlay, user]);
+  }, [analysis, planId, user]);
 
   const updateV2Plan = useCallback(async (nextPlan: GTMPlanV2) => {
     if (!user || !planId || !analysis || !isGTMPlanV2(analysis)) return;

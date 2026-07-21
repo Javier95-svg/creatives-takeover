@@ -49,6 +49,20 @@ export interface TractionExperimentScore {
   pass: boolean;
   efficiencyScore: number;
   qualityScore: number;
+  recommendedDecision?: TractionDecision;
+}
+
+export type TractionScoreDimensionKey =
+  | 'consistency'
+  | 'channel_efficiency'
+  | 'experiment_quality'
+  | 'retention_health';
+
+export interface TractionScoreDimensionInsight {
+  key: TractionScoreDimensionKey;
+  label: string;
+  score: number;
+  detail: string;
 }
 
 export interface TractionScoreResult {
@@ -63,6 +77,12 @@ export interface TractionScoreResult {
   phaseSevenReady: boolean;
   consistencyStreakWeeks: number;
   experimentScores: TractionExperimentScore[];
+  recommendedDecisions: TractionDecision[];
+  scoreDelta: number | null;
+  dimensionInsights: TractionScoreDimensionInsight[];
+  strongestDimension: TractionScoreDimensionInsight;
+  priorityDimension: TractionScoreDimensionInsight;
+  priorityAction: string;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -141,6 +161,29 @@ export const calculateConsistencyStreak = (previousLogDates: string[], currentWe
   }
 
   return streak;
+};
+
+export const calculateConsecutiveLoggedWeeks = (weekStarts: string[]): number => {
+  const unique = Array.from(new Set(weekStarts)).filter((value) => getWeekStartTime(value) > 0).sort((a, b) => b.localeCompare(a));
+  if (unique.length === 0) return 0;
+  let count = 1;
+  for (let index = 1; index < unique.length; index += 1) {
+    if (getWeekStartTime(unique[index - 1]) - getWeekStartTime(unique[index]) !== WEEK_MS) break;
+    count += 1;
+  }
+  return count;
+};
+
+export const recommendTractionDecision = (input: {
+  pass: boolean;
+  efficiencyScore: number;
+  retentionHealthScore: number;
+  sampleSize: number;
+}): TractionDecision => {
+  if (input.sampleSize <= 0) return 'iterate';
+  if (input.pass && input.efficiencyScore >= 55 && input.retentionHealthScore >= 50) return 'double_down';
+  if (!input.pass && input.efficiencyScore < 30 && input.retentionHealthScore < 35 && input.sampleSize >= 5) return 'kill';
+  return 'iterate';
 };
 
 export const scoreExperiment = (
@@ -227,6 +270,21 @@ const buildChannelSignal = (channel: string, diagnosis: RetentionDiagnosis): str
   return `${label}${DIAGNOSIS_SIGNALS[diagnosis]}`;
 };
 
+const formatRate = (value: number): string => `${Math.round(value * 100)}%`;
+
+const buildPriorityAction = (
+  key: TractionScoreDimensionKey,
+  retentionDiagnosis: RetentionDiagnosis,
+): string => {
+  if (key === 'consistency') return 'Save next week on schedule. A continuous weekly rhythm makes the rest of the score trustworthy.';
+  if (key === 'channel_efficiency') return 'Concentrate the next sprint on the channel producing the most results for each hour invested.';
+  if (key === 'experiment_quality') return 'Run one precise hypothesis with one action, one measurable target, and one recorded decision.';
+  if (retentionDiagnosis === 'wrong_audience') return 'Tighten the target audience before investing more time in acquisition.';
+  if (retentionDiagnosis === 'onboarding_gap') return 'Improve the first-use experience so more new users reach the product value.';
+  if (retentionDiagnosis === 'core_loop_gap') return 'Strengthen the reason users return after their first successful session.';
+  return 'Keep measuring 7-day and 30-day activity while repeating the acquisition channel that brought these users.';
+};
+
 type RecommendationSignal = {
   severity: number;
   message: string;
@@ -245,6 +303,13 @@ export const calculateTractionScore = (input: TractionScoreInput): TractionScore
     ? clampScore(experimentScores.reduce((sum, s) => sum + s.qualityScore, 0) / experimentScores.length)
     : 0;
   const retentionHealthScore = scoreRetention(input.retention);
+  const recommendedDecisions = experimentScores.map((experiment, index) => recommendTractionDecision({
+    pass: experiment.pass,
+    efficiencyScore: experiment.efficiencyScore,
+    retentionHealthScore,
+    sampleSize: Math.max(0, input.experiments[index]?.resultValue ?? 0),
+  }));
+  experimentScores.forEach((experiment, index) => { experiment.recommendedDecision = recommendedDecisions[index]; });
   const combinedScore = clampScore(
     (consistencyScore + channelEfficiencyScore + experimentQualityScore + retentionHealthScore) / 4,
   );
@@ -258,6 +323,61 @@ export const calculateTractionScore = (input: TractionScoreInput): TractionScore
     input.retention.primaryAcquisitionChannel,
     retentionDiagnosis,
   );
+  const previousScore = input.previousScores[0];
+  const scoreDelta = Number.isFinite(previousScore) ? combinedScore - previousScore : null;
+  const totalExperiments = input.experiments.length;
+  const experimentsOnTarget = experimentScores.filter((experiment) => experiment.pass).length;
+  const wellDocumentedExperiments = experimentScores.filter((experiment) => experiment.qualityScore >= 75).length;
+  const bestExperimentIndex = experimentScores.reduce(
+    (bestIndex, experiment, index, all) => (
+      experiment.efficiencyScore > (all[bestIndex]?.efficiencyScore ?? -1) ? index : bestIndex
+    ),
+    0,
+  );
+  const bestExperiment = input.experiments[bestExperimentIndex];
+  const bestResultPerHour = bestExperiment
+    ? Math.max(0, bestExperiment.resultValue) / Math.max(0.25, bestExperiment.timeInvestedHours)
+    : 0;
+  const retentionBenchmarks = RETENTION_BENCHMARKS[input.retention.productCategory] ?? RETENTION_BENCHMARKS.other;
+  const newUsers = Math.max(0, input.retention.newUsers);
+  const sevenDayRate = newUsers > 0 ? Math.max(0, input.retention.sevenDayActiveUsers) / newUsers : 0;
+  const thirtyDayRate = newUsers > 0 ? Math.max(0, input.retention.thirtyDayActiveUsers) / newUsers : 0;
+  const dimensions: TractionScoreDimensionInsight[] = [
+    {
+      key: 'consistency',
+      label: 'Consistency',
+      score: consistencyScore,
+      detail: `${consistencyStreakWeeks} consecutive ${consistencyStreakWeeks === 1 ? 'week' : 'weeks'} logged. This factor reaches 100 after eight continuous weeks.`,
+    },
+    {
+      key: 'channel_efficiency',
+      label: 'Channel Efficiency',
+      score: channelEfficiencyScore,
+      detail: bestExperiment
+        ? `${bestExperiment.channel || 'Your best channel'} produced ${bestExperiment.resultValue} ${bestExperiment.targetMetric.toLowerCase()} in ${bestExperiment.timeInvestedHours} hours, or ${bestResultPerHour.toFixed(1)} per hour.`
+        : 'No channel result has been measured yet.',
+    },
+    {
+      key: 'experiment_quality',
+      label: 'Experiment Quality',
+      score: experimentQualityScore,
+      detail: totalExperiments > 0
+        ? `${experimentsOnTarget} of ${totalExperiments} ${totalExperiments === 1 ? 'experiment' : 'experiments'} reached the target, and ${wellDocumentedExperiments} had decision-ready documentation.`
+        : 'No complete experiment has been recorded yet.',
+    },
+    {
+      key: 'retention_health',
+      label: 'Retention Health',
+      score: retentionHealthScore,
+      detail: newUsers > 0
+        ? `7-day retention is ${formatRate(sevenDayRate)} versus a ${formatRate(retentionBenchmarks.sevenDay)} benchmark. 30-day retention is ${formatRate(thirtyDayRate)} versus ${formatRate(retentionBenchmarks.thirtyDay)}.`
+        : 'Add new users and returning users to measure retention health.',
+    },
+  ];
+  const rankedDimensions = [...dimensions].sort((left, right) => right.score - left.score);
+  const strongestDimension = rankedDimensions[0];
+  const priorityDimension = rankedDimensions[rankedDimensions.length - 1];
+  const priorityAction = buildPriorityAction(priorityDimension.key, retentionDiagnosis);
 
   // Priority-ranked recommendation: collect all signals, surface the highest-severity one.
   const signals: RecommendationSignal[] = [];
@@ -333,5 +453,11 @@ export const calculateTractionScore = (input: TractionScoreInput): TractionScore
     phaseSevenReady,
     consistencyStreakWeeks,
     experimentScores,
+    recommendedDecisions,
+    scoreDelta,
+    dimensionInsights: dimensions,
+    strongestDimension,
+    priorityDimension,
+    priorityAction,
   };
 };

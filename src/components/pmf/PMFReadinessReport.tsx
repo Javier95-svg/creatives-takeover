@@ -202,6 +202,17 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
         </div>
       </div>
 
+      {analysis.decisionChange && (
+        <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Why the decision changed</p>
+          <p className="mt-2 text-sm font-semibold text-foreground">
+            {analysis.decisionChange.previousDecision} → {analysis.decisionChange.nextDecision}
+            {' '}({analysis.decisionChange.scoreDelta >= 0 ? '+' : ''}{analysis.decisionChange.scoreDelta} points)
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{analysis.decisionChange.explanation}</p>
+        </div>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-[220px,1fr]">
         <div className="rounded-3xl border border-border/60 bg-background/90 p-6 text-center shadow-sm space-y-3">
           <PMFScoreCircle

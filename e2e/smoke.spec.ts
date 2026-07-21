@@ -20,6 +20,12 @@ const PUBLIC_ROUTES = [
   '/community',
   '/login',
   '/signup',
+  '/icp-builder',
+  '/demo-studio/try',
+  '/pmf-lab',
+  '/mvp-builder',
+  '/go-to-market',
+  '/traction-engine',
 ];
 
 for (const route of PUBLIC_ROUTES) {

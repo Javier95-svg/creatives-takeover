@@ -4,20 +4,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_shared/credit-deduction.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
+import { assessPmfEvidence } from '../_shared/pmf-evidence.ts';
 
 const MIN_INTERVIEWS_FOR_READY = 25;
-const DIRECTIONAL_SIGNAL_THRESHOLD = 5;
-const EMERGING_SIGNAL_THRESHOLD = 10;
 const DECISION_GRADE_SIGNAL_THRESHOLD = 25;
-
-type EvidenceGrade = 'insufficient' | 'directional' | 'emerging' | 'decision_grade';
-
-function resolveEvidenceGrade(signalCount: number): EvidenceGrade {
-  if (signalCount >= DECISION_GRADE_SIGNAL_THRESHOLD) return 'decision_grade';
-  if (signalCount >= EMERGING_SIGNAL_THRESHOLD) return 'emerging';
-  if (signalCount >= DIRECTIONAL_SIGNAL_THRESHOLD) return 'directional';
-  return 'insufficient';
-}
 
 function resolvePmfDecision(score: number): 'build' | 'narrow' | 'pivot' | 'stop' {
   if (score >= 75) return 'build';
@@ -189,7 +179,9 @@ serve(async (req) => {
     const body: PMFEvidenceAnswers = await req.json();
 
     // Basic validation
-    const interviews = Array.isArray(body.interviews) ? body.interviews : [];
+    const rawInterviews = Array.isArray(body.interviews) ? body.interviews : [];
+    const preliminaryEvidence = assessPmfEvidence({ interviews: rawInterviews, surveyResponses: 0, verifiedDemoBehaviors: 0, researchSources: 0 });
+    const interviews = preliminaryEvidence.uniqueInterviews;
     const loggedInterviewCount = interviews.length || body.conversationCount || 0;
 
     if (!body.testTypes?.length || loggedInterviewCount < 1) {
@@ -206,15 +198,19 @@ serve(async (req) => {
     // Free re-score (Section C): if a prior analysis owned by this user is referenced,
     // skip the credit charge. Ownership is verified server-side so the flag can't be spoofed.
     let isFreeReScore = false;
+    let priorAnalysis: Record<string, unknown> | null = null;
     if (body.previousAnalysisId) {
       try {
         const { data: prior } = await supabase
           .from('pmf_analysis_results' as any)
-          .select('id')
+          .select('id,analysis_data')
           .eq('id', body.previousAnalysisId)
           .eq('user_id', user.id)
           .maybeSingle();
         isFreeReScore = Boolean(prior);
+        priorAnalysis = prior?.analysis_data && typeof prior.analysis_data === 'object'
+          ? prior.analysis_data as Record<string, unknown>
+          : null;
       } catch (ownershipErr) {
         console.warn('Re-score ownership check failed, charging as a normal run:', ownershipErr);
         isFreeReScore = false;
@@ -411,13 +407,14 @@ serve(async (req) => {
       ? Math.min(10, Math.max(demoEvidence.completions, demoEvidence.ctaClicks, demoEvidence.signups))
       : 0;
     const researchSignalCount = marketSources.length;
-    const weightedEvidenceSignalCount = Math.floor(
-      loggedInterviewCount
-      + surveySignalCount * 0.75
-      + demoBehaviorSignalCount * 0.75
-      + researchSignalCount * 0.25
-    );
-    const evidenceGrade = resolveEvidenceGrade(weightedEvidenceSignalCount);
+    const evidenceAssessment = assessPmfEvidence({
+      interviews,
+      surveyResponses: surveySignalCount,
+      verifiedDemoBehaviors: demoBehaviorSignalCount,
+      researchSources: researchSignalCount,
+    });
+    const weightedEvidenceSignalCount = evidenceAssessment.weightedSignals;
+    const evidenceGrade = evidenceAssessment.grade;
     const scoreCap = evidenceGrade === 'decision_grade'
       ? 100
       : evidenceGrade === 'emerging'
@@ -646,6 +643,10 @@ Apply the scoring rubric to this evidence and return the PMF readiness JSON. Mak
       analysis.overallScore = Math.min(rawScore, scoreCap);
       analysis.evidenceGrade = evidenceGrade;
       analysis.evidenceSignalCount = weightedEvidenceSignalCount;
+      analysis.directEvidenceSignalCount = evidenceAssessment.directWeightedSignals;
+      analysis.independentInterviewCount = evidenceAssessment.independentInterviewCount;
+      analysis.duplicateEvidenceCount = preliminaryEvidence.duplicateEvidenceCount;
+      analysis.interviewQualityWeights = evidenceAssessment.interviewWeights;
       analysis.decisionProvisional = evidenceGrade !== 'decision_grade';
       analysis.evidenceBreakdown = {
         interviews: { count: loggedInterviewCount, weight: 1 },
@@ -673,6 +674,29 @@ Apply the scoring rubric to this evidence and return the PMF readiness JSON. Mak
         ? decisionTitles[analysis.decision as keyof typeof decisionTitles]
         : `Provisional: ${decisionTitles[analysis.decision as keyof typeof decisionTitles]}`;
       analysis.readyToScope = analysis.recommendedAction === 'move_to_building';
+      if (priorAnalysis) {
+        const previousScore = Number(priorAnalysis.overallScore ?? 0);
+        const previousDecision = String(priorAnalysis.decision ?? 'unknown');
+        const changedDimensions = Object.entries(analysis.dimensions ?? {})
+          .map(([key, value]) => {
+            const nextScore = Number((value as Record<string, unknown>)?.score ?? 0);
+            const previousDimensions = priorAnalysis?.dimensions as Record<string, Record<string, unknown>> | undefined;
+            const priorScore = Number(previousDimensions?.[key]?.score ?? 0);
+            return { dimension: key, previousScore: priorScore, nextScore, delta: nextScore - priorScore };
+          })
+          .filter((item) => item.delta !== 0);
+        analysis.decisionChange = {
+          previousDecision,
+          nextDecision: analysis.decision,
+          previousScore,
+          nextScore: analysis.overallScore,
+          scoreDelta: analysis.overallScore - previousScore,
+          changedDimensions,
+          explanation: previousDecision === analysis.decision
+            ? `The ${analysis.decision} decision stayed stable while the evidence score changed by ${analysis.overallScore - previousScore} points.`
+            : `The recommendation changed from ${previousDecision} to ${analysis.decision} because the newly weighted evidence changed the score and dimension pattern.`,
+        };
+      }
 
       // Attach evidence answers, external citations, and timestamp
       analysis.evidenceAnswers = body;

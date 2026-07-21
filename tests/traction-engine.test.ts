@@ -79,3 +79,23 @@ test('flags phase seven readiness after three consecutive strong scores', () => 
   assert.equal(result.phaseSevenReady, true);
   assert.ok(result.combinedScore >= 75);
 });
+
+test('explains weekly score movement, strongest signal, and first improvement', () => {
+  const result = calculateTractionScore(baseInput({ previousScores: [70] }));
+
+  assert.equal(result.scoreDelta, result.combinedScore - 70);
+  assert.ok(result.strongestDimension.label.length > 0);
+  assert.ok(result.strongestDimension.detail.length > 20);
+  assert.ok(result.priorityDimension.label.length > 0);
+  assert.ok(result.priorityAction.length > 20);
+  assert.equal(result.dimensionInsights.length, 4);
+});
+
+test('shows retention rates against the product-category benchmark', () => {
+  const result = calculateTractionScore(baseInput());
+  const retentionInsight = result.dimensionInsights.find((dimension) => dimension.key === 'retention_health');
+
+  assert.ok(retentionInsight);
+  assert.match(retentionInsight.detail, /7-day retention is 55% versus a 45% benchmark/i);
+  assert.match(retentionInsight.detail, /30-day retention is 35% versus 25%/i);
+});

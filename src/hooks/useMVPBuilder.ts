@@ -74,8 +74,9 @@ import {
   type MVPIntegrationStatus,
 } from '@/lib/mvp-builder/integrations';
 import { MVP_PUBLISH_BASE_DOMAIN, buildPublicAppUrl } from '@/lib/mvp-builder/publish';
-import { evaluateMvpQuality } from '@/lib/mvp-builder/qualityChecks';
-import { trackJourneyEvent, upsertJourneyOutcome } from '@/lib/journeyOutcomes';
+import { evaluateMvpQuality, hasMvpSuccessEventInstrumentation } from '@/lib/mvp-builder/qualityChecks';
+import { runMvpBrowserSmokeTest } from '@/lib/mvp-builder/smokeTest';
+import { createJourneyHandoff, trackJourneyEvent, upsertJourneyOutcome } from '@/lib/journeyOutcomes';
 
 export interface MVPMessage {
   id: string;
@@ -711,6 +712,12 @@ function createDefaultSetupInput(): MVPBuilderSetupInput {
     palettePreference: 'minimal',
     customPrompt: '',
     prefillSource: null,
+    buildEvidenceMode: 'experimental',
+    coreCustomer: '',
+    coreJob: '',
+    successEvent: '',
+    essentialFeatures: [],
+    evidenceApprovedAt: null,
   };
 }
 
@@ -3633,10 +3640,15 @@ export function useMVPBuilder() {
       if (projectFiles.length === 0) toast.error('Generate a project before publishing.');
       return;
     }
+    const smokeTest = await runMvpBrowserSmokeTest({
+      ...previewState,
+      html: previewState.html ?? currentHtml,
+    });
     const quality = evaluateMvpQuality({
       files: projectFiles,
-      preview: previewState,
+      preview: { ...previewState, html: previewState.html ?? currentHtml },
       versionCount: projectVersions.length,
+      smokeTestPassed: smokeTest.passed,
     });
     if (!quality.passed) {
       toast.error('This MVP is not ready to publish yet.', {
@@ -3660,7 +3672,14 @@ export function useMVPBuilder() {
           'Idempotency-Key': idempotencyKey,
           ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         },
-        body: { projectId },
+        body: {
+          projectId,
+          validation: {
+            smokeTest,
+            qualityChecks: quality.checks,
+            validatedAt: new Date().toISOString(),
+          },
+        },
       });
 
       if (error || !data?.ok) {
@@ -3678,26 +3697,50 @@ export function useMVPBuilder() {
       setDeploymentUrl(data.url);
       trackMVPDeployed({ slug: typeof data.slug === 'string' ? data.slug : undefined });
       const hasEvidenceManifest = (setupInput.evidenceManifest?.sources.length ?? 0) > 0;
+      const evidenceApproved = hasEvidenceManifest && Boolean(setupInput.evidenceApprovedAt);
+      const featureCount = setupInput.essentialFeatures?.filter((feature) => feature.trim()).length ?? 0;
+      const analyticsInstrumented = hasMvpSuccessEventInstrumentation(projectFiles, setupInput.successEvent);
+      const qualityChecks = {
+        ...quality.checks,
+        evidence_manifest_approved: evidenceApproved,
+        one_customer: Boolean(setupInput.coreCustomer?.trim()),
+        one_core_job: Boolean(setupInput.coreJob?.trim()),
+        success_event: Boolean(setupInput.successEvent?.trim()),
+        feature_budget: featureCount >= 1 && featureCount <= 3,
+        published: true,
+        analytics_injected_on_publish: analyticsInstrumented,
+        external_success_event: false,
+      };
       void upsertJourneyOutcome({
         userId: user.id,
         tool: 'mvp_builder',
         artifactType: 'evidence_backed_mvp',
         artifactId: projectId,
-        status: 'ready',
-        completionScore: hasEvidenceManifest ? 95 : 80,
-        qualityChecks: {
-          ...quality.checks,
-          published: true,
-          analytics_injected_on_publish: true,
-          evidence_manifest_approved: hasEvidenceManifest,
-        },
+        status: evidenceApproved && analyticsInstrumented ? 'ready' : 'draft',
+        completionScore: evidenceApproved && analyticsInstrumented ? 92 : 65,
+        qualityChecks,
         evidenceManifest: setupInput.evidenceManifest,
+      }).then(async (saved) => {
+        if (!['ready', 'verified'].includes(saved.evaluation.status)) return;
+        const outcomeId = (saved.outcome as { id?: string } | null)?.id;
+        if (!outcomeId) return;
+        await createJourneyHandoff({
+          sourceOutcomeId: outcomeId,
+          destinationTool: 'gtm_strategist',
+          payload: {
+            sourceArtifactId: projectId,
+            sourceArtifactVersion: String(projectVersions.length),
+            deploymentUrl: data.url,
+            destinationRoute: '/gtm-strategist',
+          },
+          idempotencyKey: `mvp:${projectId}:gtm`,
+        });
       }).catch((outcomeError) => console.error('Could not update journey outcome', outcomeError));
       trackJourneyEvent('journey_stage_outcome_completed', {
         tool: 'mvp_builder',
         artifact_type: 'evidence_backed_mvp',
         artifact_id: projectId,
-        outcome_status: 'ready',
+        outcome_status: evidenceApproved && analyticsInstrumented ? 'ready' : 'draft',
         source: 'mvp_publish',
         published_url: data.url,
         evidence_source_count: setupInput.evidenceManifest?.sources.length ?? 0,
@@ -3715,7 +3758,7 @@ export function useMVPBuilder() {
     } finally {
       setIsDeploying(false);
     }
-  }, [creditsLoading, handleCreditError, isDeploying, navigate, previewState, projectFiles, projectId, projectVersions.length, refreshCredits, saveProject, setupInput.evidenceManifest, user]);
+  }, [creditsLoading, currentHtml, handleCreditError, isDeploying, navigate, previewState, projectFiles, projectId, projectVersions.length, refreshCredits, saveProject, setupInput, user]);
 
   const closeCreditExhaustedModal = useCallback(() => {
     setIsCreditExhaustedModalOpen(false);

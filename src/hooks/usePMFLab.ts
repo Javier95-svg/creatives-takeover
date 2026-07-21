@@ -19,8 +19,11 @@ import { trackActivity } from '@/lib/activity';
 import { captureEvent } from '@/lib/analytics';
 import { markDiscoveryLeadsInterviewed } from '@/lib/pmfDiscoveryLeads';
 import type { PmfDecision, PmfEvidenceGrade } from '@/lib/pmfConfidence';
+import { fingerprintPmfInterview } from '@/lib/pmfEvidence';
 import {
   createJourneyEvidenceManifest,
+  createJourneyHandoff,
+  recordJourneyAssumptionSignal,
   trackJourneyEvent,
   upsertJourneyOutcome,
 } from '@/lib/journeyOutcomes';
@@ -58,6 +61,9 @@ export interface PMFInterviewLog {
   missingFeatures: string;
   interestLevel: number;
   buyingIntent: 'low' | 'medium' | 'high' | 'ready_to_pay';
+  assumptionFingerprint?: string;
+  assumptionStatement?: string;
+  assumptionStatus?: 'confirmed' | 'rejected';
   landingPageShown: boolean;
   solutionPitched: boolean;
   askedAboutPricing: boolean;
@@ -105,6 +111,19 @@ export interface PMFReadinessAnalysis {
   decision?: PmfDecision;
   evidenceGrade?: PmfEvidenceGrade;
   evidenceSignalCount?: number;
+  directEvidenceSignalCount?: number;
+  independentInterviewCount?: number;
+  duplicateEvidenceCount?: number;
+  interviewQualityWeights?: number[];
+  decisionChange?: {
+    previousDecision: string;
+    nextDecision: string;
+    previousScore: number;
+    nextScore: number;
+    scoreDelta: number;
+    changedDimensions: Array<{ dimension: string; previousScore: number; nextScore: number; delta: number }>;
+    explanation: string;
+  };
   decisionProvisional?: boolean;
   evidenceBreakdown?: {
     interviews: { count: number; weight: number };
@@ -390,7 +409,8 @@ export function usePMFLab() {
       if (data.analysisId) {
         const signalCount = nextAnalysis.evidenceSignalCount ?? conversationCount;
         const decisionGrade = nextAnalysis.evidenceGrade === 'decision_grade';
-        const outcomeStatus = decisionGrade ? 'verified' : 'ready';
+        const directional = signalCount >= 5 && (nextAnalysis.directEvidenceSignalCount ?? signalCount) >= 5;
+        const outcomeStatus = decisionGrade ? 'verified' : directional ? 'ready' : 'draft';
         const evidenceSources = [
           ...(answers.interviews ?? []).map((interview, index) => ({
             sourceId: interview.sourceLeadId || `pmf:${data.analysisId}:interview:${interview.id || index + 1}`,
@@ -400,6 +420,8 @@ export function usePMFLab() {
             confidence: 0.9,
             provenance: 'pmf_interview_log',
             label: `${interview.intervieweeName}: ${interview.segment}`,
+            independenceFingerprint: fingerprintPmfInterview(interview),
+            verificationMode: 'founder_reported' as const,
           })),
           ...(options?.surveyEvidence?.total
             ? [{
@@ -434,6 +456,20 @@ export function usePMFLab() {
             url: source.url,
           })),
         ];
+        const mappedInterviewSignals = (answers.interviews ?? []).filter((interview) => (
+          Boolean(interview.assumptionFingerprint && interview.assumptionStatus)
+        ));
+        if (mappedInterviewSignals.length > 0) {
+          void Promise.all(mappedInterviewSignals.map((interview) => recordJourneyAssumptionSignal({
+            assumptionFingerprint: interview.assumptionFingerprint!,
+            sourceTool: 'pmf_lab',
+            sourceArtifactId: data.analysisId,
+            participantFingerprint: fingerprintPmfInterview(interview),
+            status: interview.assumptionStatus!,
+            rationale: interview.mainFeedback,
+            verificationMode: 'founder_reported',
+          }))).catch((assumptionError) => console.warn('Could not update ICP assumption evidence:', assumptionError));
+        }
         void upsertJourneyOutcome({
           userId: user.id,
           tool: 'pmf_lab',
@@ -448,8 +484,25 @@ export function usePMFLab() {
             directional_signals: signalCount >= 5,
             emerging_patterns: signalCount >= 10,
             decision_grade: decisionGrade,
+            duplicates_removed: true,
           },
           evidenceManifest: createJourneyEvidenceManifest(evidenceSources, nextAnalysis.generatedAt),
+        }).then(async (saved) => {
+          if (!['ready', 'verified'].includes(saved.evaluation.status)) return;
+          const outcomeId = (saved.outcome as { id?: string } | null)?.id;
+          if (!outcomeId) return;
+          await createJourneyHandoff({
+            sourceOutcomeId: outcomeId,
+            destinationTool: 'mvp_builder',
+            payload: {
+              sourceArtifactId: data.analysisId,
+              sourceArtifactVersion: nextAnalysis.generatedAt,
+              decision: nextAnalysis.decision,
+              evidenceGrade: nextAnalysis.evidenceGrade,
+              destinationRoute: '/mvp-builder',
+            },
+            idempotencyKey: `pmf:${data.analysisId}:mvp`,
+          });
         }).catch((outcomeError) => console.error('Could not update journey outcome', outcomeError));
         trackJourneyEvent('journey_stage_outcome_completed', {
           tool: 'pmf_lab',

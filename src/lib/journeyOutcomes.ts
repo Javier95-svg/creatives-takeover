@@ -1,6 +1,7 @@
 import { captureEvent } from "@/lib/analytics";
 import { getActivationSessionId } from "@/lib/activationEntry";
 import { supabase } from "@/integrations/supabase/client";
+import type { OutcomeEvaluation, VerificationMode } from "@/lib/outcomeContracts";
 
 export type JourneyTool =
   | "icp_builder"
@@ -39,10 +40,14 @@ export interface JourneyEvidenceSource {
   provenance: string;
   label?: string;
   url?: string | null;
+  artifactType?: string;
+  artifactId?: string;
+  independenceFingerprint?: string;
+  verificationMode?: VerificationMode;
 }
 
 export interface JourneyEvidenceManifest {
-  version: 1;
+  version: 1 | 2;
   generatedAt: string;
   sources: JourneyEvidenceSource[];
 }
@@ -57,6 +62,26 @@ export interface JourneyOutcomeInput {
   qualityChecks?: Record<string, boolean | number | string | null>;
   evidenceManifest?: JourneyEvidenceManifest;
   completionScore?: number | null;
+  verificationMode?: VerificationMode;
+}
+
+export interface JourneyHandoff {
+  id: string;
+  source_outcome_id: string;
+  source_version_id: string;
+  destination_tool: JourneyTool;
+  payload: Record<string, unknown>;
+  status: "pending" | "consumed" | "failed";
+  consumed_artifact_id: string | null;
+}
+
+export interface JourneyAssumption {
+  id: string;
+  fingerprint: string;
+  statement: string;
+  status: "untested" | "confirmed" | "rejected";
+  current_version: number;
+  source_artifact_id: string;
 }
 
 export interface JourneyEventProperties {
@@ -117,7 +142,7 @@ export function createJourneyEvidenceManifest(
   );
 
   return {
-    version: 1,
+    version: 2,
     generatedAt,
     sources: uniqueSources,
   };
@@ -132,29 +157,81 @@ export function trackJourneyEvent(event: JourneyEvent, properties: JourneyEventP
 }
 
 export async function upsertJourneyOutcome(input: JourneyOutcomeInput) {
-  const completedAt = input.status === "draft" ? null : new Date().toISOString();
-  const payload = {
-    user_id: input.userId,
-    tool: input.tool,
-    stage: input.stage ?? JOURNEY_TOOL_STAGES[input.tool],
-    artifact_type: input.artifactType,
-    artifact_id: input.artifactId,
-    status: input.status,
-    quality_checks: input.qualityChecks ?? {},
-    evidence_manifest: input.evidenceManifest ?? createJourneyEvidenceManifest([]),
-    completion_score: input.completionScore ?? null,
-    completed_at: completedAt,
-    verified_at: input.status === "verified" || input.status === "reviewed" ? completedAt : null,
-    reviewed_at: input.status === "reviewed" ? completedAt : null,
-    updated_at: new Date().toISOString(),
-  };
-
-  const { data, error } = await supabase
-    .from("journey_outcomes" as never)
-    .upsert(payload as never, { onConflict: "user_id,tool,artifact_type,artifact_id" })
-    .select("*")
-    .single();
-
+  const { data, error } = await supabase.functions.invoke("journey-outcome-service", {
+    body: {
+      action: "evaluate",
+      input: {
+        tool: input.tool,
+        artifactType: input.artifactType,
+        artifactId: input.artifactId,
+        qualityChecks: input.qualityChecks ?? {},
+        evidenceManifest: input.evidenceManifest ?? createJourneyEvidenceManifest([]),
+        verificationMode: input.verificationMode ?? "unverified",
+      },
+    },
+  });
   if (error) throw error;
-  return data as unknown;
+  if (!data?.ok) throw new Error(data?.error || "Could not evaluate journey outcome.");
+  return data as { outcome: unknown; evaluation: OutcomeEvaluation; restoredHandoffs?: JourneyHandoff[] };
+}
+
+export async function createJourneyHandoff(input: {
+  sourceOutcomeId: string;
+  destinationTool: JourneyTool;
+  payload: Record<string, unknown>;
+  idempotencyKey: string;
+}) {
+  const { data, error } = await supabase.functions.invoke("journey-outcome-service", {
+    body: { action: "create_handoff", ...input },
+  });
+  if (error) throw error;
+  if (!data?.ok) throw new Error(data?.error || "Could not create the journey handoff.");
+  return data.handoff as JourneyHandoff;
+}
+
+export async function consumeJourneyHandoff(handoffId: string, artifactId: string) {
+  const { data, error } = await supabase.functions.invoke("journey-outcome-service", {
+    body: { action: "consume_handoff", handoffId, artifactId },
+  });
+  if (error) throw error;
+  if (!data?.ok) throw new Error(data?.error || "Could not complete the journey handoff.");
+  return data.handoff as JourneyHandoff;
+}
+
+export async function registerJourneyAssumptions(sourceArtifactId: string, statements: string[]) {
+  const { data, error } = await supabase.functions.invoke("journey-outcome-service", {
+    body: { action: "register_assumptions", sourceArtifactId, statements },
+  });
+  if (error) throw error;
+  if (!data?.ok) throw new Error(data?.error || "Could not register ICP assumptions.");
+  return data.assumptions as JourneyAssumption[];
+}
+
+export async function listJourneyAssumptions(sourceArtifactId?: string) {
+  const { data, error } = await supabase.functions.invoke("journey-outcome-service", {
+    body: { action: "list_assumptions", sourceArtifactId },
+  });
+  if (error) throw error;
+  if (!data?.ok) throw new Error(data?.error || "Could not load ICP assumptions.");
+  return data.assumptions as JourneyAssumption[];
+}
+
+export async function recordJourneyAssumptionSignal(input: {
+  assumptionFingerprint: string;
+  sourceTool: Exclude<JourneyTool, "icp_builder">;
+  sourceArtifactId: string;
+  participantFingerprint: string;
+  status: "confirmed" | "rejected";
+  rationale?: string;
+  verificationMode?: Exclude<VerificationMode, "unverified">;
+}) {
+  const { data, error } = await supabase.functions.invoke("journey-outcome-service", {
+    body: { action: "record_assumption_signal", ...input },
+  });
+  if (error) throw error;
+  if (!data?.ok) throw new Error(data?.error || "Could not record the assumption signal.");
+  return data as {
+    assumption: JourneyAssumption;
+    signalSummary: { confirmations: number; rejections: number };
+  };
 }

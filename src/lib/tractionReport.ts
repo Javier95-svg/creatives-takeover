@@ -7,6 +7,7 @@
 import { supabase } from '@/integrations/supabase/client';
 
 interface ReportLogRow {
+  id: string;
   week_start_date: string;
   combined_score: number;
   consistency_score: number;
@@ -20,13 +21,24 @@ interface ReportLogRow {
   thirty_day_active_users: number;
   primary_acquisition_channel: string | null;
   score_breakdown: { retentionSource?: string } | null;
+  revenue: number | null;
+}
+
+interface ReportDecisionRow {
+  weekly_log_id: string;
+  channel: string;
+  decision: string;
+  recommended_decision: string | null;
+  override_rationale: string | null;
+  efficiency_score: number;
+  pass: boolean;
 }
 
 export async function exportTractionReportPdf(userId: string): Promise<void> {
   const { data, error } = await supabase
     .from('traction_engine_weekly_logs' as never)
     .select(
-      'week_start_date, combined_score, consistency_score, channel_efficiency_score, experiment_quality_score, retention_health_score, consistency_streak_weeks, phase_seven_ready, new_users, seven_day_active_users, thirty_day_active_users, primary_acquisition_channel, score_breakdown',
+      'id, week_start_date, combined_score, consistency_score, channel_efficiency_score, experiment_quality_score, retention_health_score, consistency_streak_weeks, phase_seven_ready, new_users, seven_day_active_users, thirty_day_active_users, primary_acquisition_channel, score_breakdown, revenue',
     )
     .eq('user_id', userId)
     .order('week_start_date', { ascending: false })
@@ -35,6 +47,14 @@ export async function exportTractionReportPdf(userId: string): Promise<void> {
   const logs = ((data ?? []) as ReportLogRow[]).reverse();
   if (logs.length === 0) throw new Error('No saved weeks yet — save your first weekly scorecard first.');
 
+  const { data: decisionData, error: decisionError } = await supabase
+    .from('traction_engine_experiments' as never)
+    .select('weekly_log_id,channel,decision,recommended_decision,override_rationale,efficiency_score,pass')
+    .eq('user_id', userId)
+    .in('weekly_log_id', logs.map((log) => log.id));
+  if (decisionError) throw new Error('Could not load the measured traction decisions.');
+  const decisions = (decisionData ?? []) as ReportDecisionRow[];
+
   const { jsPDF } = await import('jspdf');
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   const pageW = doc.internal.pageSize.getWidth();
@@ -42,7 +62,7 @@ export async function exportTractionReportPdf(userId: string): Promise<void> {
   let y = margin;
 
   const latest = logs[logs.length - 1];
-  const verifiedWeeks = logs.filter((log) => log.score_breakdown?.retentionSource === 'platform').length;
+  const verifiedWeeks = logs.filter((log) => ['platform', 'corroborated'].includes(log.score_breakdown?.retentionSource ?? '')).length;
   const phaseSevenReady = logs.some((log) => log.phase_seven_ready);
 
   doc.setFont('helvetica', 'bold');
@@ -64,7 +84,7 @@ export async function exportTractionReportPdf(userId: string): Promise<void> {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   const summaryBits = [
-    `${logs.length} consecutive logged week${logs.length === 1 ? '' : 's'}`,
+    `${logs.length} logged week${logs.length === 1 ? '' : 's'}`,
     `Latest score: ${latest.combined_score}/100`,
     `Streak: ${latest.consistency_streak_weeks} week${latest.consistency_streak_weeks === 1 ? '' : 's'}`,
     phaseSevenReady ? 'Phase 7 (fundraise-ready) threshold reached' : 'Phase 7 threshold not yet reached',
@@ -116,7 +136,13 @@ export async function exportTractionReportPdf(userId: string): Promise<void> {
       doc.addPage();
       y = margin;
     }
-    const verified = log.score_breakdown?.retentionSource === 'platform';
+    const sourceMode = log.score_breakdown?.retentionSource;
+    const verified = sourceMode === 'platform' || sourceMode === 'corroborated';
+    const sourceLabel = sourceMode === 'platform'
+      ? 'Platform-verified'
+      : sourceMode === 'corroborated'
+        ? 'Corroborated'
+        : 'Founder-reported';
     const cells = [
       log.week_start_date,
       String(log.combined_score),
@@ -127,7 +153,7 @@ export async function exportTractionReportPdf(userId: string): Promise<void> {
       String(log.new_users),
       String(log.seven_day_active_users),
       String(log.thirty_day_active_users),
-      verified ? 'Platform-verified' : 'Self-reported',
+      sourceLabel,
     ];
     x = startX + 4;
     cells.forEach((cell, i) => {
@@ -144,6 +170,23 @@ export async function exportTractionReportPdf(userId: string): Promise<void> {
       doc.setTextColor(20);
     }
     y += 15;
+    const weekDecisions = decisions.filter((decision) => decision.weekly_log_id === log.id);
+    const detail = [
+      `Revenue: ${log.revenue == null ? 'not reported' : `$${Number(log.revenue).toLocaleString()}`}`,
+      ...weekDecisions.map((decision) => {
+        const override = decision.recommended_decision && decision.decision !== decision.recommended_decision
+          ? `; override of ${decision.recommended_decision}${decision.override_rationale ? `: ${decision.override_rationale}` : ''}`
+          : '';
+        return `${decision.channel}: ${decision.decision} (${decision.pass ? 'target met' : 'target missed'}, efficiency ${decision.efficiency_score})${override}`;
+      }),
+    ].join(' | ');
+    const detailLines = doc.splitTextToSize(detail, pageW - margin * 2 - 8);
+    doc.setFontSize(7.5);
+    doc.setTextColor(100);
+    doc.text(detailLines, startX + 4, y);
+    y += Math.max(12, detailLines.length * 9);
+    doc.setFontSize(8.5);
+    doc.setTextColor(20);
   });
 
   y += 18;
@@ -151,7 +194,7 @@ export async function exportTractionReportPdf(userId: string): Promise<void> {
   doc.setTextColor(120);
   const footer =
     'Scores are computed deterministically (equal-weighted consistency, channel efficiency, experiment quality, retention health) at the time each week was saved. ' +
-    'Platform-verified weeks draw retention from visit tracking on the founder\'s published product; the ledger cannot be edited retroactively.';
+    'Source badges distinguish founder-reported, corroborated, and platform-verified evidence. Platform-verified weeks draw retention from visit tracking on the founder\'s published product.';
   doc.text(doc.splitTextToSize(footer, pageW - margin * 2), margin, y);
 
   doc.save(`traction-ledger-${new Date().toISOString().slice(0, 10)}.pdf`);

@@ -121,7 +121,7 @@ serve(async (req) => {
 
   const { data: project, error: projectError } = await supabase
     .from("mvp_projects")
-    .select("id, title, subdomain_slug")
+    .select("id, title, subdomain_slug, project_files, versions, metadata")
     .eq("id", projectId)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -129,6 +129,44 @@ serve(async (req) => {
   if (projectError || !project) {
     return jsonResponse({ ok: false, error: "Project not found", errorCode: "NOT_FOUND" }, 404);
   }
+
+  const validation = body.validation && typeof body.validation === "object" && !Array.isArray(body.validation)
+    ? body.validation as Record<string, unknown>
+    : {};
+  const smokeTest = validation.smokeTest && typeof validation.smokeTest === "object" && !Array.isArray(validation.smokeTest)
+    ? validation.smokeTest as Record<string, unknown>
+    : {};
+  const projectFiles = Array.isArray(project.project_files) ? project.project_files : [];
+  const source = projectFiles
+    .map((file) => file && typeof file === "object" && "content" in file ? String(file.content ?? "") : "")
+    .join("\n");
+  const hasPrimaryAction = /<(button|form)\b|<a\b[^>]*href=|onClick\s*=|type\s*=\s*["']submit["']/i.test(source);
+  const hasResponsiveLayout = /name\s*=\s*["']viewport["']|@media\b|\b(sm|md|lg|xl):/i.test(source);
+  const hasRollback = Array.isArray(project.versions) && project.versions.length > 0;
+  const smokePassed = smokeTest.passed === true
+    && smokeTest.primaryActionFound === true
+    && smokeTest.primaryActionTriggered === true
+    && Array.isArray(smokeTest.runtimeErrors)
+    && smokeTest.runtimeErrors.length === 0;
+  if (projectFiles.length === 0 || !hasPrimaryAction || !hasResponsiveLayout || !hasRollback || !smokePassed) {
+    return jsonResponse({
+      ok: false,
+      error: "The MVP failed its server publication contract. Fix the primary flow, responsive layout, runtime errors, or rollback version and run the smoke test again.",
+      errorCode: "PUBLICATION_CONTRACT_FAILED",
+      checks: { projectFiles: projectFiles.length > 0, primaryFlow: hasPrimaryAction, responsive: hasResponsiveLayout, rollback: hasRollback, smokeTest: smokePassed },
+    }, 409);
+  }
+  const currentMetadata = project.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+    ? project.metadata as Record<string, unknown>
+    : {};
+  const nextMetadata = {
+    ...currentMetadata,
+    lastPublishValidation: {
+      smokeTest,
+      structuralChecks: { primaryFlow: hasPrimaryAction, responsive: hasResponsiveLayout, rollback: hasRollback },
+      validatedAt: typeof validation.validatedAt === "string" ? validation.validatedAt : new Date().toISOString(),
+    },
+  };
 
   // Charge for the publish before doing any work. Held credits are released if
   // anything below fails. Every publish is a distinct charge (idempotency key per click).
@@ -172,7 +210,7 @@ serve(async (req) => {
       const url = `https://${slug}.${BASE_DOMAIN}`;
       const { error: reuseError } = await supabase
         .from("mvp_projects")
-        .update({ deployment_url: url, deployment_status: "deployed" })
+        .update({ deployment_url: url, deployment_status: "deployed", metadata: nextMetadata })
         .eq("id", projectId)
         .eq("user_id", user.id);
       if (reuseError) throw new Error("Unable to update project");
@@ -211,7 +249,7 @@ serve(async (req) => {
 
         const { error: updateError } = await supabase
           .from("mvp_projects")
-          .update({ subdomain_slug: candidate, deployment_url: url, deployment_status: "deployed" })
+          .update({ subdomain_slug: candidate, deployment_url: url, deployment_status: "deployed", metadata: nextMetadata })
           .eq("id", projectId)
           .eq("user_id", user.id);
 

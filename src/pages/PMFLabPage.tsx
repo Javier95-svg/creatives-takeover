@@ -411,6 +411,7 @@ export default function PMFLabPage() {
                           survey={survey}
                           surveyAggregate={surveyAggregate}
                           customerDiscoverySignals={customerDiscoverySignals}
+                          authoritativeSignalCount={analysis?.evidenceSignalCount}
                           recommended={hubRecommendation}
                           onLogInterviews={() => chooseStep('score')}
                           onCreateOrReviewSurvey={() => { chooseStep('gather'); handleSurveyHubAction(); }}

@@ -20,6 +20,7 @@ test('MVP readiness requires a working primary flow, responsive UI, clean runtim
     files: [{ path: 'index.html', language: 'html', content: '<meta name="viewport" content="width=device-width"><form><button>Start</button></form>' }],
     preview: { html: '<html></html>', entryFile: 'index.html', canPreview: true, warnings: [], errors: [], runtimeMode: 'static', consoleHints: [] },
     versionCount: 1,
+    smokeTestPassed: true,
   });
   assert.equal(result.passed, true);
 
@@ -53,7 +54,7 @@ const gtmPlan = (withSprint: boolean): GTMPlanV2 => ({
     { id: 'community', name: 'Founder communities', role: 'secondary', score: 80, scoreBreakdown: { audienceEvidence: 80, motionEconomicsFit: 80, tractionEvidence: 70, founderConstraints: 80, founderStrengths: 80 }, confidence: 'medium', rationale: 'Fallback', evidence: ['research-1'], prerequisites: [] },
   ],
   excludedChannels: [],
-  plays: [{ id: 'play-1', channelId: 'outreach', channelName: 'Founder outreach', status: 'active', audience: 'Founder', buyingTrigger: 'Stalled validation', offer: 'Evidence path', message: 'Validate first', hypothesis: 'Five replies', actions: ['Send ten messages'], metric: 'Replies', target: 5, killRule: 'Kill after three weeks below two replies.', weeklyTimeHours: 4, weeklyBudget: 0, requiredAssets: ['Sequence'], recommendedDirectoryIds: [], tractionSprintId: withSprint ? 'sprint-1' : undefined }],
+  plays: [{ id: 'play-1', channelId: 'outreach', channelName: 'Founder outreach', status: 'active', audience: 'Founder', buyingTrigger: 'Stalled validation', offer: 'Evidence path', message: 'Validate first', hypothesis: 'Five replies', actions: ['Send ten messages'], metric: 'Replies', target: 5, killRule: 'Kill after three weeks below two replies.', structuredKillRule: { metric: 'Replies', operator: 'lt', threshold: 2, observationWindowWeeks: 3, minSampleSize: 10 }, weeklyTimeHours: 4, weeklyBudget: 0, requiredAssets: ['Sequence'], recommendedDirectoryIds: [], tractionSprintId: withSprint ? 'sprint-1' : undefined }],
   funnel: [],
   growthLoop: { name: 'Evidence loop', input: 'Message', action: 'Outreach', output: 'Reply', reinvestment: 'Improve copy' },
   sixWeekPlan: Array.from({ length: 6 }, (_, index) => ({ week: index + 1, objective: `Week ${index + 1} target`, actions: ['Run the play'] })),

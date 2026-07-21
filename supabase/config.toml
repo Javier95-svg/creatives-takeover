@@ -191,3 +191,7 @@ verify_jwt = false
 # TTS for narrated demo exports; authenticated founders only.
 [functions.demo-voiceover]
 verify_jwt = true
+
+# Authenticated, server-authoritative outcome evaluation and evidence handoffs.
+[functions.journey-outcome-service]
+verify_jwt = true

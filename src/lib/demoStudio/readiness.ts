@@ -35,6 +35,7 @@ export function getDemoReadiness(steps: DemoStepWithHotspots[], theme?: DemoThem
   const missing = new Set<string>();
   if (steps.length < 3) missing.add('Add at least 3 storyboard steps.');
   if (!theme?.endCtaLabel?.trim()) missing.add('Set an end CTA label.');
+  if (!theme?.endCtaHref?.trim()) missing.add('Set a working end CTA destination.');
 
   const stepReadiness = steps.map((step, index) => {
     const stepMissing: string[] = [];
@@ -42,6 +43,21 @@ export function getDemoReadiness(steps: DemoStepWithHotspots[], theme?: DemoThem
     if (!step.caption?.trim()) stepMissing.push('caption');
     if (!step.speaker_notes?.trim()) stepMissing.push('speaker notes');
     if (index < steps.length - 1 && step.hotspots.length === 0) stepMissing.push('hotspot');
+    const hasBrokenHotspot = step.hotspots.some((hotspot) => {
+      if (!hotspot.label?.trim() || hotspot.w <= 0 || hotspot.h <= 0) return true;
+      if (hotspot.action === 'next') return index >= steps.length - 1;
+      if (hotspot.action === 'goto') return !hotspot.action_target || !steps.some((candidate) => candidate.id === hotspot.action_target);
+      if (hotspot.action === 'url') {
+        try {
+          const target = new URL(hotspot.action_target || '');
+          return target.protocol !== 'https:' && target.protocol !== 'http:';
+        } catch {
+          return true;
+        }
+      }
+      return false;
+    });
+    if (hasBrokenHotspot) stepMissing.push('working hotspot action');
     stepMissing.forEach((item) => missing.add(`Step ${index + 1}: add ${item}.`));
     return {
       stepId: step.id,
@@ -51,7 +67,7 @@ export function getDemoReadiness(steps: DemoStepWithHotspots[], theme?: DemoThem
     };
   });
 
-  const totalChecks = 2 + Math.max(1, steps.length) * 4;
+  const totalChecks = 3 + Math.max(1, steps.length) * 5;
   const missingChecks = missing.size + stepReadiness.reduce((sum, step) => sum + step.missing.length, 0);
   const score = Math.max(0, Math.min(100, Math.round(((totalChecks - missingChecks) / totalChecks) * 100)));
 

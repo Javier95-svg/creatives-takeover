@@ -31,6 +31,7 @@ import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 import { CreditCostNotice } from '@/components/CreditCostNotice';
 import { captureEvent, trackPMFEvidenceLogged } from '@/lib/analytics';
 import type { PMFInterviewLeadSeed } from '@/components/pmf/PMFDiscoveryPipeline';
+import { listJourneyAssumptions, type JourneyAssumption } from '@/lib/journeyOutcomes';
 
 const TEST_TYPES = [
   'Landing page',
@@ -161,6 +162,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
   const [importOpen, setImportOpen] = useState(false);
   const [importNotes, setImportNotes] = useState('');
   const [isImporting, setIsImporting] = useState(false);
+  const [journeyAssumptions, setJourneyAssumptions] = useState<JourneyAssumption[]>([]);
 
   const [wtpDetail, setWtpDetail] = useState('');
   const [mostPainfulQuote, setMostPainfulQuote] = useState('');
@@ -175,6 +177,18 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
   const interviewStepRef = useRef<HTMLDivElement | null>(null);
   const seededLeadRef = useRef<string | null>(null);
   const [stepFeedback, setStepFeedback] = useState<{ step: number; message: string } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void listJourneyAssumptions()
+      .then((items) => {
+        if (!cancelled) setJourneyAssumptions(items);
+      })
+      .catch(() => {
+        if (!cancelled) setJourneyAssumptions([]);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     if (!initialInterviewLead || seededLeadRef.current === initialInterviewLead.sourceLeadId) return;
@@ -239,7 +253,8 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
     draftInterview.segment.trim().length > 0 &&
     draftInterview.mainFeedback.trim().length > 0 &&
     draftInterview.objections.trim().length > 0 &&
-    draftInterview.missingFeatures.trim().length > 0;
+    draftInterview.missingFeatures.trim().length > 0 &&
+    (journeyAssumptions.length === 0 || Boolean(draftInterview.assumptionFingerprint && draftInterview.assumptionStatus));
 
   const toggleTestType = (type: string) => {
     setTestTypes((prev) =>
@@ -689,6 +704,53 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
                 />
               </div>
             </div>
+
+            {journeyAssumptions.length > 0 && (
+              <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
+                <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Which ICP assumption did this interview test?</Label>
+                    <select
+                      value={draftInterview.assumptionFingerprint ?? ''}
+                      onChange={(event) => {
+                        const selected = journeyAssumptions.find((item) => item.fingerprint === event.target.value);
+                        updateDraft('assumptionFingerprint', selected?.fingerprint);
+                        updateDraft('assumptionStatement', selected?.statement);
+                        if (!selected) updateDraft('assumptionStatus', undefined);
+                      }}
+                      className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground"
+                    >
+                      <option value="">Select the assumption this interview tested</option>
+                      {journeyAssumptions.map((assumption) => (
+                        <option key={assumption.id} value={assumption.fingerprint}>
+                          {assumption.statement}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Interview result</Label>
+                    <div className="flex gap-2">
+                      {(['confirmed', 'rejected'] as const).map((status) => (
+                        <Button
+                          key={status}
+                          type="button"
+                          size="sm"
+                          variant={draftInterview.assumptionStatus === status ? 'default' : 'outline'}
+                          disabled={!draftInterview.assumptionFingerprint}
+                          onClick={() => updateDraft('assumptionStatus', status)}
+                        >
+                          {status === 'confirmed' ? 'Confirmed' : 'Rejected'}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  This keeps the original ICP decision intact and adds a versioned evidence signal to its confidence history.
+                </p>
+              </div>
+            )}
 
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-1.5 md:col-span-1">

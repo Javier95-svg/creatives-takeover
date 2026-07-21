@@ -21,6 +21,7 @@ interface PMFEvidenceHubProps {
   onCreateOrReviewSurvey: () => void;
   onFindCustomers: () => void;
   onRunScore: () => void;
+  authoritativeSignalCount?: number;
 }
 
 const RECOMMENDATION_COPY: Record<PMFHubRecommendation, string> = {
@@ -47,10 +48,12 @@ const PMFEvidenceHub = ({
   onCreateOrReviewSurvey,
   onFindCustomers,
   onRunScore,
+  authoritativeSignalCount,
 }: PMFEvidenceHubProps) => {
   const savedInterviews = evidence?.interview_notes_count ?? 0;
   const surveyResponses = surveyAggregate.total || evidence?.survey_results_count || 0;
-  const totalSignals = savedInterviews + surveyResponses;
+  const estimatedSignals = Math.floor(savedInterviews + surveyResponses * 0.75);
+  const totalSignals = authoritativeSignalCount ?? estimatedSignals;
   const progress = requiredSignals > 0 ? Math.min(100, Math.round((totalSignals / requiredSignals) * 100)) : 0;
   const checklistCount = evidence?.validation_checklist?.length ?? 0;
   const hasSurvey = Boolean(survey);

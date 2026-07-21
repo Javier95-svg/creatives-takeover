@@ -47,8 +47,14 @@ export interface MVPBuilderSetupInput {
   palettePreference: MVPBuilderPaletteId;
   customPrompt?: string;
   prefillSource?: 'pmf' | 'icp' | 'journey_evidence' | 'waitlist_launch_kit' | 'dashboard_home' | 'onboarding_quiz' | null;
+  buildEvidenceMode?: 'experimental' | 'evidence_backed';
+  coreCustomer?: string;
+  coreJob?: string;
+  successEvent?: string;
+  essentialFeatures?: string[];
+  evidenceApprovedAt?: string | null;
   evidenceManifest?: {
-    version: 1;
+    version: 1 | 2;
     generatedAt: string;
     sources: Array<{
       sourceId: string;
@@ -59,6 +65,10 @@ export interface MVPBuilderSetupInput {
       provenance: string;
       label?: string;
       url?: string | null;
+      artifactType?: string;
+      artifactId?: string;
+      independenceFingerprint?: string;
+      verificationMode?: 'unverified' | 'founder_reported' | 'corroborated' | 'platform_verified';
     }>;
   };
 }

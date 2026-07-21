@@ -8,7 +8,7 @@ export interface GTMOutcomeEvaluation {
     usableCampaignAssets: boolean;
     sixWeekTargets: boolean;
     budgetAndTimeConstraints: boolean;
-    killRule: boolean;
+    structuredKillRule: boolean;
     tractionSprintCreated: boolean;
   };
   completionScore: number;
@@ -21,12 +21,12 @@ export function evaluateGTMOutcome(plan: GTMPlanV2): GTMOutcomeEvaluation {
   const primaryPlay = plan.plays.find((play) => play.channelId === plan.channels.find((channel) => channel.role === "primary")?.id)
     ?? plan.plays.find((play) => play.status === "active")
     ?? plan.plays[0];
+  const nonAssumptionClaims = (plan.claimAttributions ?? []).filter((claim) => !claim.assumption);
   const evidenceBackedMessaging = Boolean(
     plan.messaging.headline.trim()
       && plan.messaging.hookLine.trim()
-      && ((plan.claimAttributions ?? []).some((claim) => !claim.assumption && claim.sourceIds.length > 0)
-        || plan.researchSources.length > 0
-        || (plan.evidenceItems ?? []).some((item) => item.verified)),
+      && nonAssumptionClaims.length > 0
+      && nonAssumptionClaims.every((claim) => claim.sourceIds.length > 0),
   );
   const usableCampaignAssets = Boolean(
     primaryPlay
@@ -42,7 +42,12 @@ export function evaluateGTMOutcome(plan: GTMPlanV2): GTMOutcomeEvaluation {
       && Number.isFinite(primaryPlay.weeklyBudget)
       && primaryPlay.weeklyBudget >= 0,
   );
-  const killRule = Boolean(primaryPlay?.killRule?.trim());
+  const structuredKillRule = Boolean(
+    primaryPlay?.structuredKillRule?.metric.trim()
+      && Number.isFinite(primaryPlay.structuredKillRule.threshold)
+      && primaryPlay.structuredKillRule.observationWindowWeeks > 0
+      && primaryPlay.structuredKillRule.minSampleSize > 0,
+  );
   const tractionSprintCreated = Boolean(primaryPlay?.tractionSprintId);
   const checks = {
     primaryChannel,
@@ -51,7 +56,7 @@ export function evaluateGTMOutcome(plan: GTMPlanV2): GTMOutcomeEvaluation {
     usableCampaignAssets,
     sixWeekTargets,
     budgetAndTimeConstraints,
-    killRule,
+    structuredKillRule,
     tractionSprintCreated,
   };
   const values = Object.values(checks);
