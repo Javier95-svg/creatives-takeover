@@ -874,24 +874,24 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
 
   return (
     <div className="space-y-8">
-      <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-6">
-          <h1 className="text-4xl font-bold leading-tight sm:text-5xl md:text-6xl">
+      <section className="grid gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)] lg:items-start">
+        <div className="space-y-5 py-2 lg:py-4">
+          <h1 className="text-3xl font-bold leading-tight sm:text-4xl md:text-5xl">
             <span className="takeover-gradient creatives-font">Traction Engine</span>
           </h1>
-          <div className="max-w-3xl space-y-2 text-sm leading-relaxed text-muted-foreground">
-            <p>Traction is a pattern, not a spike.</p>
+          <div className="max-w-2xl space-y-3 text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
+            <p className="font-medium text-foreground/85">Traction is a pattern, not a spike.</p>
             <p>Start with the acquisition channels your GTM Strategist surfaced and run one focused experiment each week. Log what you shipped, measure who came back, and repeat.</p>
             <p>Show up consistently and the score takes care of itself. Three consecutive weeks above the threshold means you have a repeatable growth loop and the Fundraise stage is within reach.</p>
           </div>
         </div>
-        <div className="rounded-lg border border-border bg-card p-5">
+        <div className="w-full max-w-md justify-self-end rounded-lg border border-border/70 bg-card/60 p-4">
           {showScore ? (
             <>
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">This week's score</p>
-                  <p className={cn('mt-1 text-5xl font-bold', scoreColor(score.combinedScore))}>{score.combinedScore}</p>
+                  <p className={cn('mt-1 text-4xl font-bold', scoreColor(score.combinedScore))}>{score.combinedScore}</p>
                 </div>
                 <Badge className={cn(score.phaseSevenReady ? 'bg-success' : score.combinedScore >= 75 ? 'bg-success' : score.combinedScore >= 50 ? 'bg-warning' : 'bg-destructive')}>
                   {score.phaseSevenReady ? 'Phase 7 Ready' : `${score.consistencyStreakWeeks} week streak`}

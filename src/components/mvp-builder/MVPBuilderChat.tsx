@@ -25,7 +25,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
@@ -777,63 +776,6 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
       </ScrollArea>
 
       <div className="shrink-0 border-t border-white/6 bg-gradient-to-b from-background/20 to-background/95 px-4 pb-4 pt-3">
-        {(setupInput.evidenceManifest?.sources.length ?? 0) > 0 && (
-          <div className="mb-3 rounded-2xl border border-info/20 bg-info/8 p-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <p className="text-label font-semibold uppercase tracking-[0.18em] text-info">Evidence build contract</p>
-                <p className="mt-1 text-xs text-muted-foreground">Approve one customer, one job, one success event, and no more than three essential features.</p>
-              </div>
-              <Badge variant="outline" className={setupInput.evidenceApprovedAt ? 'border-success/30 text-success' : 'border-warning/30 text-warning'}>
-                {setupInput.evidenceApprovedAt ? 'Approved' : 'Needs approval'}
-              </Badge>
-            </div>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              <Input
-                value={setupInput.coreCustomer ?? ''}
-                aria-label="Core customer"
-                placeholder="One primary customer"
-                onChange={(event) => onSetupInputChange({ coreCustomer: event.target.value, evidenceApprovedAt: null })}
-              />
-              <Input
-                value={setupInput.coreJob ?? ''}
-                aria-label="Core customer job"
-                placeholder="One core customer job"
-                onChange={(event) => onSetupInputChange({ coreJob: event.target.value, evidenceApprovedAt: null })}
-              />
-              <Input
-                value={setupInput.successEvent ?? ''}
-                aria-label="Success event"
-                placeholder="One measurable success event"
-                onChange={(event) => onSetupInputChange({ successEvent: event.target.value, evidenceApprovedAt: null })}
-              />
-              <Input
-                value={(setupInput.essentialFeatures ?? []).join(', ')}
-                aria-label="Essential features"
-                placeholder="Up to three essential features"
-                onChange={(event) => onSetupInputChange({
-                  essentialFeatures: event.target.value.split(',').map((value) => value.trim()).filter(Boolean).slice(0, 3),
-                  evidenceApprovedAt: null,
-                })}
-              />
-            </div>
-            <Button
-              type="button"
-              size="sm"
-              className="mt-3"
-              disabled={
-                !setupInput.coreCustomer?.trim()
-                || !setupInput.coreJob?.trim()
-                || !setupInput.successEvent?.trim()
-                || (setupInput.essentialFeatures?.length ?? 0) < 1
-                || (setupInput.essentialFeatures?.length ?? 0) > 3
-              }
-              onClick={() => onSetupInputChange({ buildEvidenceMode: 'evidence_backed', evidenceApprovedAt: new Date().toISOString() })}
-            >
-              <Check className="mr-2 h-4 w-4" />Approve evidence scope
-            </Button>
-          </div>
-        )}
         <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-3 shadow-2xl backdrop-blur-xl transition-all duration-200 focus-within:border-info/25 focus-within:bg-white/[0.06]">
           {queuedSubmissions.length > 0 && (
             <div className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-warning/20 bg-warning/10 px-3 py-2 text-xs text-warning">
