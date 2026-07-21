@@ -876,10 +876,10 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
     <div className="space-y-8">
       <section className="grid gap-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(380px,0.75fr)] lg:items-start">
         <div className="space-y-5 py-2 lg:py-4">
-          <h1 className="text-3xl font-bold leading-tight sm:text-4xl md:text-5xl">
+          <h1 className="text-4xl font-bold leading-tight sm:text-5xl md:text-6xl">
             <span className="takeover-gradient creatives-font">Traction Engine</span>
           </h1>
-          <div className="max-w-2xl space-y-3 text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
+          <div className="max-w-2xl space-y-3 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
             <p className="font-medium text-foreground/85">Traction is a pattern, not a spike.</p>
             <p>Start with the acquisition channels your GTM Strategist surfaced and run one focused experiment each week. Log what you shipped, measure who came back, and repeat.</p>
             <p>Show up consistently and the score takes care of itself. Three consecutive weeks above the threshold means you have a repeatable growth loop and the Fundraise stage is within reach.</p>
