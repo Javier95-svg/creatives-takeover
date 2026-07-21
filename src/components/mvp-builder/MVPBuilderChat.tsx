@@ -668,14 +668,14 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
       <ScrollArea className="flex-1 min-h-0">
         <div className="p-4">
           {isEmpty ? (
-            <div className="flex flex-col gap-5 py-6">
+            <div className="flex flex-col gap-4 py-6">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-info/20 bg-white/[0.04] shadow-[0_0_24px_rgba(56,189,248,0.18)]">
                 <img src={ctBrandLogo} alt="Creatives Takeover" className="h-8 w-8 object-contain drop-shadow-[0_0_8px_rgba(45,212,191,0.28)]" />
               </div>
               <div className="space-y-2">
                 <h2 className="text-base font-semibold text-white">Ready to build</h2>
                 <p className="text-sm leading-relaxed text-muted-foreground">
-                  Your latest customer decision, proof, PMF evidence, and approved positioning are loaded into an editable evidence manifest before the first build.
+                  Describe your MVP below, or start with your saved evidence.
                 </p>
               </div>
               <Button
@@ -685,19 +685,8 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                 className="w-full justify-center gap-2 rounded-xl border border-info/30 bg-info/15 py-5 text-sm font-semibold text-white shadow-[0_0_24px_rgba(56,189,248,0.12)] hover:bg-info/25"
               >
                 {isLoadingEvidence ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4 text-info" />}
-                {isLoadingEvidence ? 'Compiling your evidence…' : 'Build from my validated evidence'}
+                {isLoadingEvidence ? 'Loading your evidence…' : 'Use my saved evidence'}
               </Button>
-              <p className="-mt-2 text-xs leading-relaxed text-muted-foreground">
-                Drafts your build prompt from your saved ICP, Demo proof, PMF findings, and GTM positioning — the
-                features and copy real prospects asked for, not a blank guess.
-              </p>
-              <div className="rounded-lg border border-info/10 bg-info/5 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
-                Tip: type{' '}
-                <span className="font-medium text-info">@icp-profile</span>,{' '}
-                <span className="font-medium text-info">@pmf-score</span>, or{' '}
-                <span className="font-medium text-info">@brand-kit</span>{' '}
-                in your prompt to anchor the build to specific context.
-              </div>
             </div>
           ) : (
             <div className="space-y-4">

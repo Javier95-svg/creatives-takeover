@@ -874,7 +874,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
 
   return (
     <div className="space-y-8">
-      <section className="grid gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)] lg:items-start">
+      <section className="grid gap-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(380px,0.75fr)] lg:items-start">
         <div className="space-y-5 py-2 lg:py-4">
           <h1 className="text-3xl font-bold leading-tight sm:text-4xl md:text-5xl">
             <span className="takeover-gradient creatives-font">Traction Engine</span>
@@ -885,7 +885,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
             <p>Show up consistently and the score takes care of itself. Three consecutive weeks above the threshold means you have a repeatable growth loop and the Fundraise stage is within reach.</p>
           </div>
         </div>
-        <div className="w-full max-w-md justify-self-end rounded-lg border border-border/70 bg-card/60 p-4">
+        <div className="w-full max-w-lg justify-self-end rounded-lg border border-border/70 bg-card/60 p-4">
           {showScore ? (
             <>
               <div className="flex items-start justify-between gap-4">
@@ -902,19 +902,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                   {score.scoreDelta > 0 ? '+' : ''}{score.scoreDelta} points versus your last saved week
                 </p>
               )}
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-md border border-success/20 bg-success/5 p-3">
-                  <p className="text-label font-semibold uppercase tracking-wide text-success">Strongest signal</p>
-                  <p className="mt-1 text-sm font-medium">{score.strongestDimension.label} · {score.strongestDimension.score}</p>
-                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{score.strongestDimension.detail}</p>
-                </div>
-                <div className="rounded-md border border-warning/20 bg-warning/5 p-3">
-                  <p className="text-label font-semibold uppercase tracking-wide text-warning">Improve first</p>
-                  <p className="mt-1 text-sm font-medium">{score.priorityDimension.label} · {score.priorityDimension.score}</p>
-                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{score.priorityAction}</p>
-                </div>
-              </div>
-              <div className="mt-3 rounded-md border border-border/70 bg-background/60 p-3">
+              <div className="mt-4 rounded-md border border-border/70 bg-background/60 p-3">
                 <p className="text-label font-semibold uppercase tracking-wide text-muted-foreground">Recommended next move</p>
                 <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{score.prioritizedRecommendation}</p>
               </div>
