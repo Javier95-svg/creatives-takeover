@@ -557,7 +557,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
       "Plan your startup MVP by choosing the smallest product scope that proves your core promise, supports learning, and avoids overbuilding.",
     keyword: "MVP builder for startups",
     searchIntent: "A founder is ready to build but needs the smallest useful product scope.",
-    updatedLabel: "May 2026",
+    updatedLabel: "July 2026",
     summary:
       "A good MVP is not a smaller version of the final product. It is the smallest product or workflow that proves the core promise for one ICP.",
     quickAnswerItems: [
@@ -592,6 +592,18 @@ export const founderAnswerPages: FounderAnswerPage[] = [
         title: "Build for learning speed",
         description:
           "The first MVP should create evidence quickly: usage, retention, payment intent, or clearer product direction.",
+      },
+    ],
+    sources: [
+      {
+        title: "Practical Design: MVP Spec",
+        publisher: "Y Combinator",
+        url: "https://www.ycombinator.com/blog/practical-design-mvp/",
+      },
+      {
+        title: "YC's Essential Startup Advice",
+        publisher: "Y Combinator",
+        url: "https://www.ycombinator.com/blog/ycs-essential-startup-advice",
       },
     ],
     checklist: [
@@ -1221,7 +1233,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
       "Use these customer interview questions to uncover real pain, past behavior, and willingness to pay — without leading the witness.",
     keyword: "customer interview questions",
     searchIntent: "A founder wants to run validation interviews but does not know what to ask.",
-    updatedLabel: "June 2026",
+    updatedLabel: "July 2026",
     summary:
       "Great customer interviews dig into the past, not the future. Ask what people already do and have paid for — never whether they 'would' buy your idea.",
     quickAnswerItems: [
@@ -1233,6 +1245,18 @@ export const founderAnswerPages: FounderAnswerPage[] = [
       { title: "Open with the last time it happened", description: "\"Tell me about the last time you dealt with [problem]\" surfaces real workflows and emotion, not hypotheticals." },
       { title: "Dig into the workaround and its cost", description: "Ask what they use today and what it costs them. A painful workaround is your strongest demand signal." },
       { title: "Probe willingness to pay indirectly", description: "Ask what they've already paid to solve this and what would make them switch — never \"would you pay for X?\"" },
+    ],
+    sources: [
+      {
+        title: "Startup School Week 1 Recap: Kevin Hale and Eric Migicovsky",
+        publisher: "Y Combinator",
+        url: "https://www.ycombinator.com/blog/startup-school-week-1-recap-kevin-hale-and-eric-migicovsky/",
+      },
+      {
+        title: "Practical Design: User Observation",
+        publisher: "Y Combinator",
+        url: "https://www.ycombinator.com/blog/practical-design-user-observation",
+      },
     ],
     checklist: [
       "5+ interviews with the same segment",
@@ -1508,7 +1532,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
       "Find the right investors by filtering for stage, sector, and check size, then prioritizing warm paths over cold blasts.",
     keyword: "how to find investors for startup",
     searchIntent: "A founder is ready to raise and needs a targeted investor list.",
-    updatedLabel: "June 2026",
+    updatedLabel: "July 2026",
     summary:
       "Finding investors is a targeting problem, not a volume problem. Build a focused list that matches your stage, sector, and geography, then prioritize warm introductions.",
     quickAnswerItems: [
@@ -1520,6 +1544,18 @@ export const founderAnswerPages: FounderAnswerPage[] = [
       { title: "Define your investor fit", description: "Stage, sector, geography, and check size narrow thousands of firms to a relevant shortlist." },
       { title: "Map warm paths", description: "Find the shortest real connection to each target — founders they back, mutual contacts, communities." },
       { title: "Run a fundraising pipeline", description: "Track every investor's stage and next step so momentum and follow-up don't slip." },
+    ],
+    sources: [
+      {
+        title: "A Guide to Seed Fundraising",
+        publisher: "Y Combinator",
+        url: "https://www.ycombinator.com/blog/how-to-raise-a-seed-round",
+      },
+      {
+        title: "Tips on Formation and Fundraising",
+        publisher: "Y Combinator",
+        url: "https://www.ycombinator.com/blog/startup-formation-and-fundraising/",
+      },
     ],
     checklist: [
       "Stage and sector defined",
