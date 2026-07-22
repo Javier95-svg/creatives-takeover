@@ -64,8 +64,10 @@ export default function FounderAnswerPage() {
       dateModified: updatedIso,
       author: {
         "@type": "Person",
-        name: "Javier Alonso",
-        url: "https://creatives-takeover.com/about",
+        "@id": "https://creatives-takeover.com/about#founder",
+        name: "Javier Peña",
+        jobTitle: "Founder & CEO",
+        url: "https://creatives-takeover.com/about#founder",
       },
       publisher: {
         "@type": "Organization",
@@ -92,7 +94,7 @@ export default function FounderAnswerPage() {
         keywords={`${page.keyword}, ${cluster.label}, startup guide, founder guide, Creatives Takeover`}
         url={`/answers/${page.slug}`}
         type="article"
-        author="Javier Alonso"
+        author="Javier Peña"
         publishedTime={updatedIso}
         modifiedTime={updatedIso}
         structuredData={structuredData}

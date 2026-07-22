@@ -102,13 +102,23 @@ export default SEO;
 export const createOrganizationSchema = () => ({
   "@context": "https://schema.org",
   "@type": "Organization",
+  "@id": "https://creatives-takeover.com/#organization",
   "name": "Creatives Takeover",
   "url": "https://creatives-takeover.com",
   "logo": "https://creatives-takeover.com/favicon-192x192.png",
-  "description": "The creative entrepreneur's AI co-founder. Go from scattered ideas to profitable launch in 30 days.",
+  "description": "Creatives Takeover is a startup development platform for first-time founders, connecting customer clarity, validation, MVP building, go-to-market execution, traction, and fundraising preparation.",
+  "founder": {
+    "@type": "Person",
+    "@id": "https://creatives-takeover.com/about#founder",
+    "name": "Javier Peña",
+    "jobTitle": "Founder & CEO",
+    "url": "https://creatives-takeover.com/about#founder"
+  },
   "sameAs": [
     "https://twitter.com/CreativesTakeover",
-    "https://linkedin.com/company/creatives-takeover"
+    "https://www.linkedin.com/company/creatives-takeover",
+    "https://www.instagram.com/creativestakeover.official/",
+    "https://www.youtube.com/@CreativesTakeover"
   ],
   "contactPoint": {
     "@type": "ContactPoint",
@@ -306,17 +316,24 @@ export const createAboutPageSchema = () => ({
   "@context": "https://schema.org",
   "@type": "AboutPage",
   "name": "About Creatives Takeover",
-  "description": "Learn about Creatives Takeover's mission and vision to empower creators and solopreneurs with AI and no-code solutions.",
+  "description": "Learn about Creatives Takeover, the startup development platform helping first-time founders move from validation to launch and fundraising preparation.",
   "url": "https://creatives-takeover.com/about",
   "mainEntity": {
     "@type": "Organization",
     "name": "Creatives Takeover",
     "url": "https://creatives-takeover.com",
     "logo": "https://creatives-takeover.com/favicon-192x192.png",
-    "description": "The creative entrepreneur's AI co-founder. Go from scattered ideas to profitable launch in 30 days.",
+    "description": "Creatives Takeover is a startup development platform for first-time founders, connecting customer clarity, validation, MVP building, go-to-market execution, traction, and fundraising preparation.",
+    "founder": {
+      "@type": "Person",
+      "@id": "https://creatives-takeover.com/about#founder",
+      "name": "Javier Peña",
+      "jobTitle": "Founder & CEO",
+      "url": "https://creatives-takeover.com/about#founder"
+    },
     "sameAs": [
       "https://twitter.com/CreativesTakeover",
-      "https://linkedin.com/company/creatives-takeover",
+      "https://www.linkedin.com/company/creatives-takeover",
       "https://www.instagram.com/creativestakeover.official/",
       "https://www.youtube.com/@CreativesTakeover"
     ],

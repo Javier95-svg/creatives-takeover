@@ -182,10 +182,18 @@ const ORGANIZATION_SCHEMA = {
   name: SITE_NAME,
   url: BASE_URL,
   logo: { "@type": "ImageObject", url: `${BASE_URL}/favicon-192x192.png`, width: 192, height: 192 },
-  founder: { "@type": "Person", name: "Javier Alonso" },
+  description: "Creatives Takeover is a startup development platform for first-time founders, connecting customer clarity, validation, MVP building, go-to-market execution, traction, and fundraising preparation.",
+  founder: {
+    "@type": "Person",
+    "@id": `${BASE_URL}/about#founder`,
+    name: "Javier Peña",
+    jobTitle: "Founder & CEO",
+    url: `${BASE_URL}/about#founder`,
+  },
   sameAs: [
     "https://twitter.com/CreativesTakeover",
-    "https://linkedin.com/company/creatives-takeover",
+    "https://www.linkedin.com/company/creatives-takeover",
+    "https://www.instagram.com/creativestakeover.official/",
     "https://www.youtube.com/@CreativesTakeover",
   ],
 };
@@ -251,7 +259,13 @@ function buildStructuredData(routeConfig) {
       description: routeConfig.description,
       datePublished: updatedIso,
       dateModified: updatedIso,
-      author: { "@type": "Person", name: "Javier Alonso", url: `${BASE_URL}/about` },
+      author: {
+        "@type": "Person",
+        "@id": `${BASE_URL}/about#founder`,
+        name: "Javier Peña",
+        jobTitle: "Founder & CEO",
+        url: `${BASE_URL}/about#founder`,
+      },
       publisher: {
         "@type": "Organization",
         name: SITE_NAME,
