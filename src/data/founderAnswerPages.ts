@@ -82,7 +82,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
       "Learn how to define your ideal customer profile, narrow your first market, and turn customer clarity into a practical startup validation plan.",
     keyword: "how to define ICP for startup",
     searchIntent: "A founder has an idea but does not know exactly who to target first.",
-    updatedLabel: "May 2026",
+    updatedLabel: "July 2026",
     summary:
       "Your ICP is the customer segment most likely to feel the pain, move quickly, and teach you what the product should become. Define it before you build so every interview, waitlist page, and MVP decision has a clear audience.",
     quickAnswerItems: [
@@ -117,6 +117,18 @@ export const founderAnswerPages: FounderAnswerPage[] = [
         title: "Write the first validation promise",
         description:
           "A good ICP should make your next sentence easier: 'We help [specific customer] achieve [outcome] without [painful tradeoff].'",
+      },
+    ],
+    sources: [
+      {
+        title: "The Value Proposition Canvas",
+        publisher: "Strategyzer",
+        url: "https://www.strategyzer.com/library/the-value-proposition-canvas",
+      },
+      {
+        title: "Market Research and Competitive Analysis",
+        publisher: "U.S. Small Business Administration",
+        url: "https://www.sba.gov/business-guide/plan-your-business/market-research-competitive-analysis",
       },
     ],
     checklist: [
@@ -724,7 +736,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
       "Create an early-stage go-to-market strategy by choosing your ICP, message, first channel, launch motion, and weekly traction experiment.",
     keyword: "go to market strategy for startup",
     searchIntent: "A founder has something to launch but no clear acquisition plan.",
-    updatedLabel: "May 2026",
+    updatedLabel: "July 2026",
     summary:
       "Early GTM is not a giant marketing plan. It is a focused system for reaching one ICP through one or two channels with a message that converts attention into learning.",
     quickAnswerItems: [
@@ -759,6 +771,18 @@ export const founderAnswerPages: FounderAnswerPage[] = [
         title: "Measure weekly traction",
         description:
           "Track replies, clicks, signups, ICP completions, and return visits so you know whether the channel is creating momentum.",
+      },
+    ],
+    sources: [
+      {
+        title: "Make Your Idea a Success With a Solid Go-to-Market Strategy",
+        publisher: "AWS Startups",
+        url: "https://aws.amazon.com/startups/learn/prove-whats-possible-make-your-idea-success-solid-go-to-market-strategy",
+      },
+      {
+        title: "What Is a Go-to-Market Strategy? How to Create a GTM Strategy for Startups",
+        publisher: "Stripe",
+        url: "https://stripe.com/resources/more/what-is-a-go-to-market-strategy-a-quick-gtm-guide-for-startups",
       },
     ],
     checklist: [
@@ -957,7 +981,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
       "Get a practical pitch deck feedback checklist covering narrative, traction, market, business model, competition, and fundraising readiness.",
     keyword: "pitch deck feedback",
     searchIntent: "A founder wants to improve a deck before sending it to investors.",
-    updatedLabel: "May 2026",
+    updatedLabel: "July 2026",
     summary:
       "Strong pitch deck feedback focuses on the story investors need to believe: the problem is real, the market is meaningful, the product has traction, and the team can execute.",
     quickAnswerItems: [
@@ -992,6 +1016,18 @@ export const founderAnswerPages: FounderAnswerPage[] = [
         title: "Tighten the investor ask",
         description:
           "A clear ask explains the amount, use of funds, runway, and milestone the round is meant to unlock.",
+      },
+    ],
+    sources: [
+      {
+        title: "Writing a Business Plan",
+        publisher: "Sequoia Capital",
+        url: "https://sequoiacap.com/article/writing-a-business-plan/",
+      },
+      {
+        title: "Pitching Your Early-Stage Startup",
+        publisher: "Stripe Atlas",
+        url: "https://stripe.com/guides/atlas/pitching",
       },
     ],
     checklist: [

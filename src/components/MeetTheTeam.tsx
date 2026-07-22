@@ -72,6 +72,7 @@ const MeetTheTeam = () => {
           {teamMembers.map((member) => (
             <Card
               key={member.name}
+              id={member.role === "Founder & CEO" ? "founder" : undefined}
               className="glass border-border/60 overflow-hidden flex flex-col"
             >
               <figure className="aspect-square overflow-hidden">

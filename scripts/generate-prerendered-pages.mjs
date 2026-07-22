@@ -29,6 +29,9 @@ function buildFallbackHtml(routeConfig) {
           <p><strong>No application. No cohort. No equity.</strong></p>
           <p><a href="/demo-studio/try">Launch a live demo</a> <a href="/icp-builder">Draft your ICP</a></p>`
     : `<p>${routeConfig.heroCopy || routeConfig.description}</p>`;
+  const authorByline = routeConfig.path.startsWith("/answers/")
+    ? `<p>By <a href="/about#founder">Javier Peña, Founder &amp; CEO</a></p>`
+    : "";
   const quickAnswer = routeConfig.quickAnswer
     ? `        <section>
           <h2>Quick answer: ${routeConfig.quickAnswer.title}</h2>
@@ -117,6 +120,7 @@ ${PRICING_SUMMARY.map((plan) => `          <article>
         <section>
           <h1>${routeConfig.heroHeading || routeConfig.title}</h1>
           ${heroContent}
+          ${authorByline}
           ${routeConfig.updatedLabel ? `<p>Last updated ${routeConfig.updatedLabel}</p>` : ""}
         </section>
 ${quickAnswer}

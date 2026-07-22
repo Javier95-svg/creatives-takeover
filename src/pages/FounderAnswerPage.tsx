@@ -115,6 +115,13 @@ export default function FounderAnswerPage() {
                 {page.summary}
               </p>
               <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground">
+                <span>
+                  By{" "}
+                  <Link className="font-medium text-foreground underline-offset-4 hover:underline" to="/about#founder">
+                    Javier Peña, Founder & CEO
+                  </Link>
+                </span>
+                <span aria-hidden="true">/</span>
                 <span>Search intent: {page.searchIntent}</span>
                 <span aria-hidden="true">/</span>
                 <span>Updated {page.updatedLabel}</span>
