@@ -83,6 +83,7 @@ const FOUNDER_ANSWER_ROUTES = founderAnswerPages.map((page) => ({
     heading: section.title,
     copy: section.description,
   })),
+  sources: page.sources,
   checklist: page.checklist,
   cta: page.cta,
   faqs: page.faqs,

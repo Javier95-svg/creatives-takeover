@@ -58,6 +58,16 @@ ${routeConfig.checklist.map((item) => `            <li>${item}</li>`).join("\n")
           </ul>
         </section>`
     : "";
+  const sources = (routeConfig.sources || []).length
+    ? `        <section>
+          <h2>Primary sources</h2>
+          <ul>
+${routeConfig.sources
+  .map((source) => `            <li><a href="${source.url}">${source.title}</a> — ${source.publisher}</li>`)
+  .join("\n")}
+          </ul>
+        </section>`
+    : "";
   const faqs = (routeConfig.faqs || [])
     .map(
       (faq) => `          <dt>${faq.question}</dt>
@@ -112,6 +122,7 @@ ${PRICING_SUMMARY.map((plan) => `          <article>
 ${quickAnswer}
 ${pricingSummary}
 ${sections}
+${sources}
 ${checklist}
         ${faqs ? `        <section>
           <h2>Common questions</h2>
@@ -272,6 +283,9 @@ function buildStructuredData(routeConfig) {
         logo: { "@type": "ImageObject", url: `${BASE_URL}/favicon-192x192.png` },
       },
       mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
+      ...(routeConfig.sources?.length
+        ? { citation: routeConfig.sources.map((source) => source.url) }
+        : {}),
       ...(routeConfig.keyword ? { keywords: `${routeConfig.keyword}, startup founder guide, ${SITE_NAME}` } : {}),
     });
   }
