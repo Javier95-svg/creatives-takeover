@@ -125,9 +125,9 @@ export const INDEXABLE_ROUTES = [
   },
   {
     path: "/about",
-    title: "About Creatives Takeover",
+    title: "About Creatives Takeover | Startup Development Platform",
     description:
-      "Learn about Creatives Takeover, our mission to help founders go from idea to execution, and the tools we are building for startup operators.",
+      "Learn about Creatives Takeover, the startup development platform helping first-time founders validate ideas, build MVPs, launch, and prepare for fundraising.",
     changefreq: "monthly",
     priority: 0.7,
     heroHeading: "About Creatives Takeover",
