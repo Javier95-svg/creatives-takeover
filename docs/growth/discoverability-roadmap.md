@@ -63,7 +63,7 @@ Intercept early-stage founders while they are actively searching for answers acr
 - Use concise copy and conversational tone. Avoid hashtag stuffing.
 
 ### LinkedIn
-- Position as: "The self-serve accelerator for founders who want structure without applications, cohorts, rejection, or equity."
+- Position as: "Creatives Takeover is an AI-powered startup development platform for first-time founders, connecting customer clarity, validation, MVP building, go-to-market execution, traction, and fundraising preparation in one guided system."
 - Use founder personal profiles for reach and the company page as proof.
 - Weekly: 3 founder posts, 1 company resource post, 10-15 thoughtful comments.
 

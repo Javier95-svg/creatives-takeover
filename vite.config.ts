@@ -117,7 +117,10 @@ function getManualChunk(id: string) {
     return `document-tools-${sanitizeChunkName(packageName)}`;
   }
 
-  return `vendor-${sanitizeChunkName(packageName)}`;
+  // Let Rollup keep the remaining dependencies with the lazy route that uses
+  // them. Creating one chunk per package turned the first page into more than
+  // one hundred script requests and made modulepreload compete with the LCP.
+  return undefined;
 }
 
 // https://vitejs.dev/config/

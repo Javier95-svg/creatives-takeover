@@ -5,16 +5,15 @@ import {
   founderAnswerPages,
   getRelatedFounderAnswerPages,
 } from "../src/data/founderAnswerPages.ts";
+import { getFounderAnswerEvidence } from "../src/data/founderAnswerEvidence.ts";
+import { PRICING_FAQS } from "../src/config/pricingFaq.ts";
+import { PLAN_PRICING } from "../src/config/pricing.ts";
+import { SITE_IDENTITY } from "../src/config/siteIdentity.ts";
+import { PLATFORM_FAQS } from "../src/config/platformFaq.ts";
 
-export const BASE_URL = "https://creatives-takeover.com";
-export const SITE_NAME = "Creatives Takeover";
+export const BASE_URL = SITE_IDENTITY.baseUrl;
+export const SITE_NAME = SITE_IDENTITY.name;
 export const OG_IMAGE = `${BASE_URL}/og-image.png`;
-
-// Mirror the truncation rules in src/components/SEO.tsx so the prerendered
-// <title>/<meta description> match what react-helmet renders after hydration.
-const truncateTitle = (title) => (title.length > 60 ? `${title.substring(0, 57)}...` : title);
-const truncateDescription = (description) =>
-  description.length > 160 ? `${description.substring(0, 157)}...` : description;
 
 // Mirror updatedLabelToIso in src/pages/FounderAnswerPage.tsx ("May 2026" -> "2026-05-01").
 const MONTHS = {
@@ -64,41 +63,65 @@ export const ROBOTS_DISALLOW = [
 
 // Each answer route carries the page's real, hand-written meta and body content
 // so the prerendered HTML is unique per page and matches the hydrated React page.
-const FOUNDER_ANSWER_ROUTES = founderAnswerPages.map((page) => ({
-  path: `/answers/${page.slug}`,
-  title: truncateTitle(page.metaTitle),
-  description: truncateDescription(page.metaDescription),
-  changefreq: "monthly",
-  priority: 0.65,
-  lastmod: updatedLabelToIso(page.updatedLabel),
-  heroHeading: page.title,
-  heroCopy: page.summary,
-  updatedLabel: page.updatedLabel,
-  keyword: page.keyword,
-  quickAnswer: {
-    title: page.keyword,
-    items: page.quickAnswerItems,
-  },
-  sections: page.sections.map((section) => ({
-    heading: section.title,
-    copy: section.description,
-  })),
-  checklist: page.checklist,
-  cta: page.cta,
-  faqs: page.faqs,
-  relatedLinks: [
-    ...getRelatedFounderAnswerPages(page).map((related) => ({
-      href: `/answers/${related.slug}`,
-      label: related.title,
-    })),
-    { href: "/answers", label: "Founder Answer Library" },
-  ],
-  breadcrumb: [
-    { name: "Home", url: "/" },
-    { name: "Founder Answer Library", url: "/answers" },
-    { name: page.title, url: `/answers/${page.slug}` },
-  ],
-}));
+const FOUNDER_ANSWER_ROUTES = founderAnswerPages.map((page) => {
+  const evidence = getFounderAnswerEvidence(page.cluster);
+  return {
+    path: `/answers/${page.slug}`,
+    title: page.metaTitle,
+    description: page.metaDescription.trim(),
+    changefreq: "monthly",
+    priority: 0.65,
+    lastmod: updatedLabelToIso(page.updatedLabel),
+    heroHeading: page.title,
+    heroCopy: page.summary,
+    updatedLabel: page.updatedLabel,
+    keyword: page.keyword,
+    quickAnswer: {
+      title: page.keyword,
+      items: page.quickAnswerItems,
+    },
+    sections: [
+      ...page.sections.map((section) => ({
+        heading: section.title,
+        copy: section.description,
+      })),
+      {
+        heading: evidence.heading,
+        copy: evidence.introduction,
+      },
+      {
+        heading: "Evidence checks and next actions",
+        copy: evidence.checks
+          .map((check) => `${check.signal}: ${check.evidence} Next action: ${check.nextAction}`)
+          .join(" "),
+      },
+      {
+        heading: evidence.exampleTitle,
+        copy: evidence.example,
+      },
+      {
+        heading: "Common false positives to avoid",
+        copy: evidence.failureModes.join(" "),
+      },
+    ],
+    checklist: page.checklist,
+    cta: page.cta,
+    faqs: page.faqs,
+    sources: evidence.sources,
+    relatedLinks: [
+      ...getRelatedFounderAnswerPages(page).map((related) => ({
+        href: `/answers/${related.slug}`,
+        label: related.title,
+      })),
+      { href: "/answers", label: "Founder Answer Library" },
+    ],
+    breadcrumb: [
+      { name: "Home", url: "/" },
+      { name: "Founder Answer Library", url: "/answers" },
+      { name: page.title, url: `/answers/${page.slug}` },
+    ],
+  };
+});
 
 export const INDEXABLE_ROUTES = [
   {
@@ -113,20 +136,40 @@ export const INDEXABLE_ROUTES = [
       "Define your ideal customer, prove demand, build your MVP, launch it, and find investment.",
     sections: [
       {
-        heading: "Reach value before signup",
-        copy: "Launch a personalized live demo or draft an evidence backed customer decision before creating an account.",
+        heading: "Define the first customer before choosing features",
+        copy: "Use ICP Builder to name one reachable customer, the painful situation they face, the workaround they use today, the outcome they want, and the trigger that makes the problem urgent. The output becomes the shared customer decision used by later validation, product, and launch work.",
       },
       {
-        heading: "Complete six connected outcomes",
-        copy: "Move from ICP Builder through Demo Studio, PMF Lab, MVP Builder, GTM Strategist, and Traction Engine without losing the evidence behind each decision.",
+        heading: "Prove demand before committing to a build",
+        copy: "Turn assumptions into interview prompts, a focused demo or waitlist, and measurable evidence. PMF Lab helps separate polite interest from repeated pain, behavioral commitment, willingness to pay, and retention signals so the next decision is based on observed behavior rather than enthusiasm alone.",
+      },
+      {
+        heading: "Scope and build the smallest useful MVP",
+        copy: "Carry validated customer evidence into MVP Scope, Tech Stack Builder, and MVP Builder. Define one primary flow, one measurable outcome, explicit exclusions, and the events needed to observe activation and retained use before adding automation, secondary personas, or hypothetical scale requirements.",
+      },
+      {
+        heading: "Launch through a measurable go-to-market system",
+        copy: "GTM Strategist connects the chosen customer and promise to a first channel, launch assets, outreach, and a 30-day execution plan. Directories and email workflows support distribution, while source and activation tracking show which channel produces qualified behavior instead of temporary traffic.",
+      },
+      {
+        heading: "Track traction with the evidence behind it",
+        copy: "Traction Engine records distribution experiments, activation, retention, and the next weekly decision. The goal is not a decorative score: it is a traceable operating record showing what was tried, which cohort responded, what changed, and whether the result is strong enough to repeat.",
+      },
+      {
+        heading: "Prepare for fundraising only when the company is ready",
+        copy: "Insighta combines readiness assessment, investor and accelerator research, outreach templates, and pitch analysis. Founders can connect the customer, market, product, traction, business model, and use of funds into one evidence-backed narrative before asking relevant investors for a conversation.",
+      },
+      {
+        heading: "Reach a useful result before creating an account",
+        copy: "A visitor can launch a personalized live demo or draft an evidence-backed customer decision before signup. The lowest-friction starting point depends on the current uncertainty: define the customer, demonstrate the promise, or read a direct founder answer and continue into its linked tool.",
       },
     ],
   },
   {
     path: "/about",
-    title: "About Creatives Takeover",
+    title: "About Creatives Takeover | The Founders' Compass",
     description:
-      "Learn about Creatives Takeover, our mission to help founders go from idea to execution, and the tools we are building for startup operators.",
+      "Meet the team building Creatives Takeover, an AI-powered startup development platform that helps first-time founders move from idea to execution.",
     changefreq: "monthly",
     priority: 0.7,
     heroHeading: "About Creatives Takeover",
@@ -149,17 +192,22 @@ export const INDEXABLE_ROUTES = [
         copy: "See the credit cost before every metered action and upgrade only when you need more capacity, expert accountability, or deeper fundraising support.",
       },
     ],
+    faqs: PRICING_FAQS.map(({ question, answer }) => ({ question, answer })),
+    breadcrumb: [
+      { name: "Home", url: "/" },
+      { name: "Pricing", url: "/pricing" },
+    ],
   },
   {
     path: "/resources",
-    title: "Resources | Creatives Takeover",
+    title: "Startup Resources for First-Time Founders | Creatives Takeover",
     description:
-      "Explore founder resources, startup guides, templates, and practical learning materials from Creatives Takeover.",
+      "Use 25 practical startup guides, evidence checklists, and connected tools for customer clarity, validation, MVP building, launch, and fundraising preparation.",
     changefreq: "weekly",
     priority: 0.75,
     heroHeading: "Founder resources and guides",
     heroCopy:
-      "Browse practical tutorials, downloads, and startup learning resources designed to help founders move faster with less guesswork.",
+      "Start with the question blocking progress. Each guide gives a direct answer, evidence standard, worked example, checklist, primary references, and a connected tool.",
   },
   {
     path: "/answers",
@@ -220,28 +268,7 @@ export const INDEXABLE_ROUTES = [
     heroHeading: "Frequently Asked Questions",
     heroCopy:
       "Everything founders ask about Creatives Takeover: what the platform does, how pricing and credits work, and what you get on the free plan.",
-    faqs: [
-      {
-        question: "What is Creatives Takeover?",
-        answer:
-          "Creatives Takeover is a founder support platform built to help people build startups from scratch. BizMap AI guides users through the Startup Development Cycle, while tools like PMF Lab, ICP Builder, Tech Stack Builder, VC Search, and the mentor and co-founder community help turn ideas into real execution.",
-      },
-      {
-        question: "How much does it cost?",
-        answer:
-          "We offer four plans: Rookie is free with 50 credits/month, Starter is $9/month or $79/year with 100 credits, Rising is $29/month or $239/year with 250 credits, and Pro is $65/month or $589/year with 600 credits. Extra credit packs remain available on every plan.",
-      },
-      {
-        question: "Can I try it for free?",
-        answer:
-          "Yes. Rookie is free forever with 50 credits per month and no credit card required. You get free ICP Builder access, Insighta Test, Newspaper, early-stage browsing or preview access, and community browsing features.",
-      },
-      {
-        question: "What makes Creatives Takeover different?",
-        answer:
-          "We help founders, indie hackers, and builders move from scratch to launch through a practical Startup Development Cycle supported by AI, founder tools, mentors, co-founders, and fundraising resources.",
-      },
-    ],
+    faqs: PLATFORM_FAQS,
     breadcrumb: [
       { name: "Home", url: "/" },
       { name: "FAQ", url: "/faq" },
@@ -282,9 +309,9 @@ export const INDEXABLE_ROUTES = [
   },
   {
     path: "/newspaper",
-    title: "Newspaper | Creatives Takeover",
+    title: "Startup Newspaper for Founders | Creatives Takeover",
     description:
-      "Read founder stories, startup lessons, fundraising insights, and practical articles for early-stage entrepreneurs.",
+      "Read evidence-led startup guides on customer discovery, validation, MVP building, go-to-market execution, traction, and fundraising for first-time founders.",
     changefreq: "daily",
     priority: 0.8,
     heroHeading: "Founder stories and startup insights",
@@ -381,6 +408,20 @@ export const INDEXABLE_ROUTES = [
       {
         question: "What happens after idea validation in BizMap AI?",
         answer: "After validation, the workflow moves into customer targeting, product-market fit review, MVP planning, demand testing, and go-to-market execution so you do not restart from scratch at each step.",
+      },
+    ],
+    faqs: [
+      {
+        question: "What is Creatives Takeover?",
+        answer: SITE_IDENTITY.description,
+      },
+      {
+        question: "Who is Creatives Takeover built for?",
+        answer: "Creatives Takeover is built for first-time founders, solo founders, indie hackers, and early-stage teams that need a structured path from customer clarity to launch and traction.",
+      },
+      {
+        question: "Can founders start for free?",
+        answer: `Yes. The Rookie plan costs $${PLAN_PRICING.rookie.monthly} per month, requires no credit card, and includes the free ICP Builder plus monthly credits for selected AI workflows.`,
       },
     ],
   },
@@ -612,7 +653,7 @@ export const INDEXABLE_ROUTES = [
   },
   {
     path: "/traction-engine",
-    title: "Traction Engine | Weekly Distribution & Retention Tracker | Creatives Takeover",
+    title: "Traction Engine | Distribution and Retention Tracker",
     description:
       "Log weekly distribution experiments, score retention by product category, and track Phase 7 fundraising readiness with a deterministic Traction Score.",
     changefreq: "weekly",
@@ -652,7 +693,7 @@ export const INDEXABLE_ROUTES = [
   },
   {
     path: "/insighta",
-    title: "Fundraising Tools For Startups | Insighta | Creatives Takeover",
+    title: "Startup Fundraising Tools | Insighta | Creatives Takeover",
     description:
       "Explore fundraising tools for startups, including investor search, accelerator research, outreach templates, pitch deck analysis, and readiness assessment.",
     changefreq: "weekly",
@@ -814,15 +855,234 @@ export const INDEXABLE_ROUTES = [
     heroCopy:
       "Explore an interactive walkthrough of key founder tools including BizMap AI, Prompt Library, Insighta, and Community.",
   },
-  {
-    path: "/creatives-takeover",
-    title: "Creatives Takeover Studio",
-    description:
-      "Explore Creatives Takeover's creative studio page, services vision, and positioning around modern design and AI workflows.",
-    changefreq: "monthly",
-    priority: 0.45,
-    heroHeading: "Creative strategy meets execution",
-    heroCopy:
-      "Explore the broader Creatives Takeover studio positioning around design systems, AI workflows, and creative execution.",
-  },
 ];
+
+// Public React routes can contain substantial content that a non-JavaScript
+// retriever never sees. These route-specific summaries keep the HTTP response
+// useful on its own and give hubs real contextual links instead of a generic
+// pricing/newspaper/community footer.
+const STATIC_ROUTE_ENHANCEMENTS = {
+  "/about": {
+    sections: [
+      { heading: "What Creatives Takeover does", copy: SITE_IDENTITY.description },
+      { heading: "Who the platform serves", copy: "The platform is designed for first-time and solo founders who need a practical sequence for validating a problem, choosing a customer, building a focused product, launching, and preparing for investment. It also supports indie hackers, consultants, educators, and small founder teams creating a new product or business from scratch." },
+      { heading: "Why it is called The Founders' Compass", copy: "A compass does not build the company for the founder. It helps identify the next direction when several plausible tasks compete for attention. Creatives Takeover organizes the journey around decisions and evidence so the founder can choose a useful next move without pretending uncertainty has disappeared." },
+      { heading: "How the system is different", copy: "Founder decisions remain connected across tools, so customer evidence, product scope, launch assets, and traction signals can carry forward instead of being recreated in separate prompt sessions. The goal is a continuous operating record from first customer hypothesis to a product, distribution system, and credible fundraising narrative." },
+      { heading: "Evidence before automation", copy: "The product emphasizes observed customer language, behavioral commitment, activation, retention, and sourced claims before a founder scales a workflow. AI helps structure research and execution, but each guide and tool is designed to make the assumption, evidence threshold, and next decision visible to the user." },
+      { heading: "Content and product work together", copy: "The Founder Answer Library explains the framework, cites primary references, and shows worked examples. Connected tools turn that answer into an ICP, validation plan, MVP scope, go-to-market workflow, traction record, investor shortlist, or pitch review without asking the founder to rebuild the underlying context." },
+      { heading: "Who is building it", copy: `${SITE_IDENTITY.founder.name}, Founder and CEO, leads a small team spanning product engineering, growth, business development, and founder support. The public About page identifies the team, while the Organization and Person structured data connect the company, founder, canonical website, and external profiles for search and answer engines.` },
+    ],
+    relatedLinks: [
+      { href: "/startup-guide", label: "Read the first-time founder guide" },
+      { href: "/answers", label: "Browse founder answers" },
+      { href: "/pricing", label: "Compare plans and outcomes" },
+    ],
+  },
+  "/resources": {
+    sections: [
+      { heading: "Customer clarity resources", copy: "Start with five guides covering ideal customer definition, target-audience research, positioning, and customer interviews. Each page explains which observed customer behaviors count as evidence and connects the framework to ICP Builder when a founder is ready to draft the decision." },
+      { heading: "Validation resources", copy: "Use five guides to compare waitlists and MVPs, test whether an idea is worth building, prepare PMF questions, and distinguish compliments from commitment. Worked examples show how a smaller set of qualified actions can outweigh a larger vanity audience." },
+      { heading: "MVP building resources", copy: "Build resources connect scope, feature prioritization, no-code versus code, and stack selection to the risky assumption the product must test. The guides emphasize one measurable outcome, a real feedback loop, and a documented operating limit before automation." },
+      { heading: "Launch and go-to-market resources", copy: "Launch guides cover first users, Product Hunt preparation, cold outreach, channel choice, and measurement. They connect audience, promise, source, activation, and retained use so founders can judge distribution by qualified behavior rather than impressions alone." },
+      { heading: "Fundraising preparation resources", copy: "Fundraising guides explain pitch structure, investor fit, seed-stage expectations, accelerator alternatives, and outreach preparation. They show how to source market claims, label projections, separate types of traction, and map the raise to a specific operating milestone." },
+      { heading: "Primary references and visible evidence standards", copy: "Founder answers link to primary materials from Strategyzer, Stripe Atlas, Product Hunt, Google, and Y Combinator. Each answer also exposes the evidence checks, next actions, failure modes, and worked example in both the rendered page and the non-JavaScript response." },
+      { heading: "Move from an answer into a connected action", copy: "The resource library is part of the product journey, not a detached blog. Continue into ICP Builder, Demo Studio, PMF Lab, MVP Builder, GTM Strategist, Traction Engine, or Insighta using the customer and evidence decisions made in the guide." },
+    ],
+    relatedLinks: [
+      ...founderAnswerPages.map((page) => ({ href: `/answers/${page.slug}`, label: page.title })),
+      { href: "/answers", label: "Search the Founder Answer Library" },
+      { href: "/startup-guide", label: "How to Build a Startup" },
+      { href: "/icp-builder", label: "Free ICP Builder" },
+    ],
+  },
+  "/answers": {
+    sections: [
+      { heading: "Customer clarity", copy: "Define an ideal customer, target audience, urgent problem, and positioning before investing in a broad market or an unfocused product." },
+      { heading: "Validation and product decisions", copy: "Use interviews, waitlists, demand evidence, PMF surveys, and prioritization frameworks to decide whether and what to build." },
+      { heading: "Launch, traction, and fundraising", copy: "Plan the first acquisition channel, find early users, prepare launch assets, build an investor shortlist, and improve the pitch narrative." },
+    ],
+    relatedLinks: founderAnswerPages.map((page) => ({
+      href: `/answers/${page.slug}`,
+      label: page.title,
+    })),
+  },
+  "/mentorship": {
+    sections: [
+      { heading: "Find relevant startup experience", copy: "Review mentor expertise across product, fundraising, growth, engineering, operations, and founder leadership before requesting a practical working session." },
+      { heading: "Book around a concrete outcome", copy: "Use mentoring for a defined decision such as narrowing an ICP, reviewing an MVP, improving a pitch, choosing a channel, or removing an execution blocker." },
+      { heading: "Keep advice connected to execution", copy: "Bring current evidence and platform outputs into the conversation, then carry agreed actions back into the founder journey instead of treating mentorship as a disconnected call." },
+    ],
+    relatedLinks: [
+      { href: "/mentorship/progress", label: "Track mentorship progress" },
+      { href: "/co-founder", label: "Find a co-founder" },
+      { href: "/answers", label: "Prepare with founder guides" },
+    ],
+  },
+  "/co-founder": {
+    sections: [
+      { heading: "Search for complementary skills", copy: "Compare founder profiles by product, engineering, growth, sales, design, industry experience, location, and the type of company they want to build." },
+      { heading: "Evaluate working fit before equity", copy: "Discuss time commitment, decision-making, values, risk tolerance, responsibilities, and a short trial project before making a long-term co-founder commitment." },
+      { heading: "Bring a clearer startup brief", copy: "A specific customer, validated problem, evidence, and MVP direction make it easier for the right collaborator to understand the opportunity and decide whether to engage." },
+    ],
+    relatedLinks: [
+      { href: "/answers/customer-interview-questions", label: "Customer interview questions" },
+      { href: "/answers/mvp-feature-prioritization", label: "Prioritize the MVP" },
+      { href: "/mentorship", label: "Find a startup mentor" },
+    ],
+  },
+  "/investors": {
+    sections: [
+      { heading: "Filter for actual investor fit", copy: "Focus the shortlist by startup stage, sector, geography, check size, thesis, portfolio, and recent activity instead of sending the same pitch to a broad list." },
+      { heading: "Prepare evidence before outreach", copy: "A clear customer, credible problem, focused product, traction evidence, and realistic fundraising ask make investor conversations more useful and more likely to continue." },
+      { heading: "Research before requesting an introduction", copy: "Use portfolio and thesis context to explain why the company fits, what has already been proven, and what the requested capital will make possible." },
+    ],
+    relatedLinks: [
+      { href: "/answers/how-to-find-investors-for-startup", label: "How to find startup investors" },
+      { href: "/answers/startup-pitch-deck-outline", label: "Startup pitch deck outline" },
+      { href: "/insighta/vc-search", label: "Search the VC database" },
+    ],
+  },
+  "/newspaper": {
+    sections: [
+      { heading: "Founder decisions explained through cases", copy: "Read practical breakdowns of how companies found demand, changed direction, acquired early customers, built distribution, raised capital, and responded when the original plan failed." },
+      { heading: "Evidence for early-stage operators", copy: "Articles connect company histories and current market changes to decisions a founder can make about validation, positioning, product scope, growth, resilience, and fundraising." },
+      { heading: "From story to action", copy: "Continue from each article into a related founder guide or platform workflow so inspiration becomes a testable customer, product, launch, or traction decision." },
+    ],
+    relatedLinks: [
+      { href: "/newspaper/rss.xml", label: "Subscribe to the Newspaper RSS feed" },
+      { href: "/answers", label: "Browse founder answers" },
+      { href: "/startup-guide", label: "Follow the startup guide" },
+    ],
+  },
+  "/tech-stack": {
+    sections: [
+      { heading: "Choose for the product you are proving", copy: "Start with the user experience, data, integrations, security, and operational requirements the first product genuinely needs rather than copying a stack designed for a later-stage company." },
+      { heading: "Compare speed, cost, and maintainability", copy: "Evaluate frameworks, hosting, authentication, database, payments, analytics, email, AI services, and support tooling against team skills and expected usage." },
+      { heading: "Keep the first architecture reversible", copy: "Prefer managed services and clear interfaces where they shorten the learning cycle, while documenting the scale, compliance, or performance signals that would justify a future change." },
+    ],
+    relatedLinks: [
+      { href: "/answers/tech-stack-for-startup", label: "How to choose a startup tech stack" },
+      { href: "/answers/no-code-vs-code-for-mvp", label: "No-code vs code for an MVP" },
+      { href: "/mvp-builder", label: "Build the MVP" },
+    ],
+  },
+  "/decision-sprint": {
+    sections: [
+      { heading: "Compare ideas against the same evidence", copy: "Score each option using customer urgency, reachability, willingness to act, founder advantage, market timing, and the cost of testing the riskiest assumption." },
+      { heading: "Expose the assumption that can kill the idea", copy: "Turn enthusiasm into a falsifiable question and identify the smallest interview, landing page, outreach, or prototype test that can answer it quickly." },
+      { heading: "Leave with one committed next move", copy: "The output is not a longer idea list. It is one selected direction, a documented reason, the evidence still missing, and the next validation action." },
+    ],
+    relatedLinks: [
+      { href: "/answers/signs-your-startup-idea-is-good", label: "Signs a startup idea is strong" },
+      { href: "/validate", label: "Validate in seven days" },
+      { href: "/icp-builder", label: "Define the first customer" },
+    ],
+  },
+  "/validate": {
+    sections: [
+      { heading: "Turn the idea into testable assumptions", copy: "Name the first customer, the painful situation, the current workaround, the promised outcome, and the behavior that would count as real demand." },
+      { heading: "Collect evidence from real people", copy: "Run focused interviews and outreach, record repeated language and objections, and separate polite interest from actions such as introductions, waitlist signups, deposits, or committed trials." },
+      { heading: "Make a build, iterate, or stop decision", copy: "Summarize what the evidence supports, what remains uncertain, and which result would justify an MVP instead of letting activity substitute for a decision." },
+    ],
+    relatedLinks: [
+      { href: "/answers/how-to-validate-startup-idea", label: "How to validate a startup idea" },
+      { href: "/answers/customer-interview-questions", label: "Customer interview questions" },
+      { href: "/pmf-lab", label: "Review product-market-fit evidence" },
+    ],
+  },
+  "/mvp-builder": {
+    sections: [
+      { heading: "Build around the riskiest assumption", copy: "Translate validated customer evidence into the smallest product experience that can test whether the target user reaches the promised outcome and wants to return." },
+      { heading: "Define scope before implementation", copy: "Document the primary flow, required data, success event, excluded features, acceptance criteria, and the technical choices needed for a reliable first release." },
+      { heading: "Launch a product designed to learn", copy: "Instrument activation and retention, recruit a narrow first cohort, and use observed behavior and customer conversations to decide what earns the next development cycle." },
+    ],
+    relatedLinks: [
+      { href: "/answers/mvp-builder-for-startups", label: "MVP builder guide" },
+      { href: "/answers/mvp-feature-prioritization", label: "Prioritize MVP features" },
+      { href: "/tech-stack", label: "Choose the startup tech stack" },
+    ],
+  },
+  "/mvp-scope": {
+    sections: [
+      { heading: "Name the single product promise", copy: "Choose one target user, one recurring painful situation, and one measurable outcome the first version must deliver before adding supporting workflows." },
+      { heading: "Separate required features from attractive extras", copy: "Keep only the capabilities required to complete the primary flow, capture the success event, and safely operate the product for the first test cohort." },
+      { heading: "Document what is deliberately excluded", copy: "A strong scope records deferred personas, integrations, automation, edge cases, and scale work so the team can ship without reopening every decision." },
+    ],
+    relatedLinks: [
+      { href: "/answers/mvp-feature-prioritization", label: "How to prioritize MVP features" },
+      { href: "/answers/no-code-vs-code-for-mvp", label: "Choose no-code or code" },
+      { href: "/mvp-builder", label: "Build the MVP" },
+    ],
+  },
+  "/directories": {
+    sections: [
+      { heading: "Choose directories by audience fit", copy: "Prioritize communities and launch platforms where the target customer already looks for products like yours rather than submitting to the longest possible list." },
+      { heading: "Prepare consistent launch assets", copy: "Use one clear category, positioning statement, description, logo, screenshots, founder profile, pricing summary, and canonical link across every submission." },
+      { heading: "Measure qualified outcomes", copy: "Track visits, signups, activation, conversations, and backlinks by source so future distribution work favors channels that create evidence rather than vanity traffic." },
+    ],
+    relatedLinks: [
+      { href: "/answers/startup-launch-checklist", label: "Startup launch checklist" },
+      { href: "/answers/product-hunt-launch-guide", label: "Product Hunt launch guide" },
+      { href: "/traction-engine", label: "Track launch traction" },
+    ],
+  },
+  "/insighta": {
+    sections: [
+      { heading: "Assess fundraising readiness", copy: "Review the clarity of the customer, problem, market, product narrative, traction evidence, business model, use of funds, and milestones before starting broad investor outreach." },
+      { heading: "Research the right capital sources", copy: "Build investor and accelerator shortlists around stage, sector, geography, check size, thesis, portfolio fit, and recent activity instead of relying on generic databases." },
+      { heading: "Improve the pitch and outreach system", copy: "Analyze the deck, prepare concise email variants, record responses, and refine the story using investor questions and real operating evidence." },
+    ],
+    relatedLinks: [
+      { href: "/insighta/test", label: "Take the fundraising readiness assessment" },
+      { href: "/insighta/pitch-deck-analyzer", label: "Analyze the pitch deck" },
+      { href: "/insighta/vc-search", label: "Search venture capital investors" },
+    ],
+  },
+  "/insighta/email-templates": {
+    sections: [
+      { heading: "Start with investor relevance", copy: "Reference a specific thesis, portfolio pattern, recent investment, or stated interest that explains why the recipient belongs on the shortlist." },
+      { heading: "Make one concise, credible case", copy: "State the customer problem, what the company does, the strongest evidence, the current round, and one clear request without turning the first email into a full pitch deck." },
+      { heading: "Treat templates as a research framework", copy: "Keep the structure repeatable while changing the opening, fit rationale, evidence, and ask for each recipient; then track replies and objections to improve later outreach." },
+    ],
+    relatedLinks: [
+      { href: "/answers/cold-email-for-startups", label: "Cold email guide for startups" },
+      { href: "/insighta/vc-search", label: "Research investor fit" },
+      { href: "/insighta/pitch-deck-analyzer", label: "Review the pitch deck" },
+    ],
+  },
+  "/insighta/accelerator-hunt": {
+    sections: [
+      { heading: "Filter by stage and program fit", copy: "Compare accelerator focus, geography, sector, cohort format, investment terms, equity, program dates, alumni outcomes, and the support the startup actually needs." },
+      { heading: "Evaluate the cost beyond equity", copy: "Account for application time, relocation, cohort schedule, opportunity cost, mentor relevance, fundraising access, and whether the program changes the company's probability of success." },
+      { heading: "Prepare evidence for the application", copy: "Use a clear customer, validated problem, focused product, traction signal, founder advantage, and specific reason this program can accelerate the next milestone." },
+    ],
+    relatedLinks: [
+      { href: "/answers/accelerator-alternatives", label: "Compare accelerator alternatives" },
+      { href: "/answers/startup-pitch-deck-outline", label: "Prepare the pitch outline" },
+      { href: "/insighta/test", label: "Assess fundraising readiness" },
+    ],
+  },
+  "/demo": {
+    sections: [
+      { heading: "See the connected founder journey", copy: "Walk through how customer clarity, validation evidence, MVP decisions, launch assets, traction, and fundraising preparation remain linked across the platform." },
+      { heading: "Preview practical outputs", copy: "Review the kinds of briefs, scores, plans, checklists, research, and execution artifacts each tool creates before starting a full workspace." },
+      { heading: "Choose the right first workflow", copy: "Begin with the decision that is currently blocking progress, whether that is defining the customer, validating demand, scoping a product, planning launch, or preparing for investors." },
+    ],
+    relatedLinks: [
+      { href: "/icp-builder", label: "Build an ICP for free" },
+      { href: "/startup-guide", label: "Read the startup guide" },
+      { href: "/pricing", label: "Compare plans" },
+    ],
+  },
+};
+
+for (const route of INDEXABLE_ROUTES) {
+  const enhancement = STATIC_ROUTE_ENHANCEMENTS[route.path];
+  if (enhancement) Object.assign(route, enhancement);
+  if (route.path !== "/" && !route.breadcrumb) {
+    route.breadcrumb = [
+      { name: "Home", url: "/" },
+      { name: route.heroHeading || route.title, url: route.path },
+    ];
+  }
+}

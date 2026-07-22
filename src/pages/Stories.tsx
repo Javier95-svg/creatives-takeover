@@ -27,6 +27,8 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
+import { createBreadcrumbSchema } from "@/components/SEO";
+import { SITE_IDENTITY } from "@/config/siteIdentity";
 
 const ARTICLES_PER_PAGE = 15;
 
@@ -257,30 +259,58 @@ const Stories = () => {
   return (
     <>
       <Helmet>
-        <title>Stories | Creatives Takeover</title>
+        <title>Startup Newspaper for Founders | Creatives Takeover</title>
         <meta
           name="description"
-          content="Read expert stories, insights, and articles from Creatives Takeover. Learn about entrepreneurship, startups, marketing, fundraising, business strategy, and creative success stories from industry leaders."
+          content="Read evidence-led startup guides on customer discovery, validation, MVP building, go-to-market execution, traction, and fundraising for first-time founders."
         />
         <meta
           name="keywords"
           content="startups, entrepreneurship, marketing, fundraising, business stories, creative insights, business strategy, startup advice, entrepreneur stories, business growth"
         />
         <meta name="author" content="Creatives Takeover" />
-        <meta property="og:title" content="Stories | Creatives Takeover" />
+        <meta property="og:title" content="Startup Newspaper | Creatives Takeover" />
         <meta
           property="og:description"
-          content="Discover expert stories, insights, and articles about turning ideas into reality. Learn from successful entrepreneurs and creative professionals."
+          content="Evidence-led startup guides for first-time founders moving from customer clarity to validation, launch, traction, and fundraising."
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://creatives-takeover.com/newspaper" />
         <meta property="og:site_name" content="Creatives Takeover" />
         <meta name="twitter:card" content="summary" />
-        <meta name="twitter:title" content="Stories | Creatives Takeover" />
-        <meta name="twitter:description" content="Discover expert stories, insights, and articles about turning ideas into reality." />
+        <meta name="twitter:title" content="Startup Newspaper | Creatives Takeover" />
+        <meta name="twitter:description" content="Evidence-led startup guides for first-time founders moving from customer clarity to traction." />
         <meta name="twitter:site" content="@CreativesTakeover" />
         <link rel="canonical" href="https://creatives-takeover.com/newspaper" />
         <link rel="alternate" type="application/rss+xml" title="Creatives Takeover Stories RSS Feed" href="https://creatives-takeover.com/newspaper/rss.xml" />
+        <script type="application/ld+json">
+          {JSON.stringify([
+            {
+              "@context": "https://schema.org",
+              "@type": "CollectionPage",
+              "@id": `${SITE_IDENTITY.baseUrl}/newspaper#collection`,
+              name: "Creatives Takeover Startup Newspaper",
+              description: "Evidence-led startup guides for first-time founders.",
+              url: `${SITE_IDENTITY.baseUrl}/newspaper`,
+              isPartOf: { "@id": `${SITE_IDENTITY.baseUrl}/#website` },
+              publisher: { "@id": `${SITE_IDENTITY.baseUrl}/#organization` },
+              mainEntity: {
+                "@type": "ItemList",
+                numberOfItems: stories.length,
+                itemListElement: stories.slice(0, ARTICLES_PER_PAGE).map((story, index) => ({
+                  "@type": "ListItem",
+                  position: index + 1,
+                  url: `${SITE_IDENTITY.baseUrl}/newspaper/${story.slug}`,
+                  name: story.title,
+                })),
+              },
+            },
+            createBreadcrumbSchema([
+              { name: "Home", url: "/" },
+              { name: "Startup Newspaper", url: "/newspaper" },
+            ]),
+          ])}
+        </script>
       </Helmet>
 
       <div className="min-h-screen bg-background">

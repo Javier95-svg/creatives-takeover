@@ -16,7 +16,7 @@ const FAQNavigation = () => {
     {
       icon: <DollarSign className="w-8 h-8 text-success" />,
       title: "View Pricing Plans",
-      description: "Explore our affordable pricing options and find the perfect plan for your creative needs",
+      description: "Compare Rookie, Starter, Rising, and Pro by the founder outcome and credit runway each plan enables",
       link: "/pricing",
       cta: "See Pricing",
       highlight: true
@@ -24,7 +24,7 @@ const FAQNavigation = () => {
     {
       icon: <Users className="w-8 h-8 text-purple-500" />,
       title: "Join Our Community",
-      description: "Connect with 50,000+ creatives and get personalized help from our supportive community",
+      description: "Browse mentors, book a working session, and connect with other founders when you need human input",
       link: "/mentorship",
       cta: "Join Community",
       highlight: false
@@ -32,7 +32,7 @@ const FAQNavigation = () => {
     {
       icon: <BookOpen className="w-8 h-8 text-info" />,
       title: "Free Resources",
-      description: "Access tutorials, guides, and downloads to enhance your creative skills and knowledge",
+      description: "Use 25 evidence-led guides for customer clarity, validation, MVP building, launch, and fundraising",
       link: "/resources",
       cta: "Browse Resources",
       highlight: false
@@ -43,17 +43,17 @@ const FAQNavigation = () => {
     {
       icon: <MessageCircle className="w-6 h-6 text-primary" />,
       title: "Community Support",
-      description: "Get help from fellow creatives 24/7"
+      description: "Search direct answers before opening a support request"
     },
     {
       icon: <Heart className="w-6 h-6 text-primary" />,
       title: "Expert Guidance",
-      description: "Access to professional creative mentors"
+      description: "Book a founder or specialist for a focused working session"
     },
     {
       icon: <Clock className="w-6 h-6 text-primary" />,
-      title: "Quick Responses", 
-      description: "Average community response time under 30 minutes"
+      title: "Connected Resources",
+      description: "Move from an answer to the relevant guide or product tool"
     }
   ];
 
@@ -67,7 +67,7 @@ const FAQNavigation = () => {
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
             Whether you need answers about pricing, want to connect with our community, 
-            or access learning resources, we're here to support your creative journey.
+            or need a deeper founder guide, use the route that matches the decision in front of you.
           </p>
 
           {/* Help Highlights */}
@@ -87,8 +87,8 @@ const FAQNavigation = () => {
           <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-2xl p-8 lg:p-12 mb-16">
             <h3 className="text-2xl font-bold mb-4">Need Immediate Help?</h3>
             <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-              Our community is active 24/7 with thousands of helpful creatives ready to assist. 
-              Get personalized answers to your specific questions.
+              Send the support team a specific account or billing question, or browse mentors when
+              the blocker needs a working session rather than a written answer.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -98,13 +98,13 @@ const FAQNavigation = () => {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button variant="outline" size="lg" className="text-lg px-8 py-6">
-                Email Support Team
+              <Button variant="outline" size="lg" className="text-lg px-8 py-6" asChild>
+                <a href="mailto:admin@creatives-takeover.com">Email Support Team</a>
               </Button>
             </div>
             
             <p className="text-sm text-muted-foreground mt-4">
-              ✓ Free community support  ✓ Expert guidance  ✓ Avg. 30min response time
+              Searchable answers · Evidence-led guides · Optional expert sessions
             </p>
           </div>
         </div>
