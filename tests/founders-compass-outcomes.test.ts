@@ -5,7 +5,6 @@ import test from 'node:test';
 import { evaluateGTMOutcome } from '../src/lib/gtmOutcome.ts';
 import { evaluateMvpQuality } from '../src/lib/mvp-builder/qualityChecks.ts';
 import { getPmfConfidence, getPmfDecision } from '../src/lib/pmfConfidence.ts';
-import { PLAN_MONTHLY_CREDITS, PLAN_PRICING } from '../src/config/pricing.ts';
 import type { GTMPlanV2 } from '../src/lib/gtmV2.ts';
 
 test('PMF confidence changes exactly at five, ten, and twenty five weighted signals', () => {
@@ -93,18 +92,10 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
   });
   assert.match(hero, /Launch a live demo/);
   assert.match(hero, /Draft your ICP/);
-  assert.deepEqual(
-    [PLAN_PRICING.rookie.monthly, PLAN_PRICING.starter.monthly, PLAN_PRICING.rising.monthly, PLAN_PRICING.pro.monthly],
-    [0, 9, 29, 65],
-  );
-  assert.deepEqual(
-    [PLAN_MONTHLY_CREDITS.rookie, PLAN_MONTHLY_CREDITS.starter, PLAN_MONTHLY_CREDITS.rising, PLAN_MONTHLY_CREDITS.pro],
-    [50, 100, 250, 600],
-  );
-  assert.match(prerender, /PLAN_PRICING\.rookie\.monthly[\s\S]*Clarify/);
-  assert.match(prerender, /PLAN_PRICING\.starter\.monthly[\s\S]*Validate/);
-  assert.match(prerender, /PLAN_PRICING\.rising\.monthly[\s\S]*Build and Launch/);
-  assert.match(prerender, /PLAN_PRICING\.pro\.monthly[\s\S]*Accelerate and Fundraise/);
+  assert.match(prerender, /Rookie[\s\S]*\$0[\s\S]*Clarify/);
+  assert.match(prerender, /Starter[\s\S]*\$9[\s\S]*Validate/);
+  assert.match(prerender, /Rising[\s\S]*\$29[\s\S]*Build and Launch/);
+  assert.match(prerender, /Pro[\s\S]*\$65[\s\S]*Accelerate and Fundraise/);
 });
 
 test('hero scrolling cards retain the restored market data', () => {

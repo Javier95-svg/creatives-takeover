@@ -1,13 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { BASE_URL, INDEXABLE_ROUTES, ROBOTS_DISALLOW, updatedLabelToIso } from "./seo-route-config.mjs";
-import { SITE_IDENTITY } from "../src/config/siteIdentity.ts";
 
 const PUBLIC_DIR = path.resolve(process.cwd(), "public");
 const SITEMAP_INDEX_PATH = path.join(PUBLIC_DIR, "sitemap.xml");
 const SITEMAP_PAGES_PATH = path.join(PUBLIC_DIR, "sitemap-pages.xml");
 const ROBOTS_PATH = path.join(PUBLIC_DIR, "robots.txt");
-const LLMS_PATH = path.join(PUBLIC_DIR, "llms.txt");
 
 // Static pages + programmatic answer routes are stable per deploy, so they ship
 // as a built sitemap. Newspaper articles change between deploys, so they live in
@@ -57,10 +55,8 @@ function generateRobotsTxt() {
     "OAI-SearchBot",
     "Claude-SearchBot",
     "Claude-User",
-    "ClaudeBot",
     "PerplexityBot",
     "Perplexity-User",
-    "Google-Extended",
   ];
 
   const crawlerBlocks = crawlerAgents
@@ -81,26 +77,12 @@ Sitemap: ${BASE_URL}/sitemap.xml
 `;
 }
 
-function generateLlmsTxt() {
-  const publicPages = INDEXABLE_ROUTES.map(
-    (route) => `- [${route.heroHeading || route.title}](${BASE_URL}${route.path}): ${route.description}`,
-  ).join("\n");
-
-  const privatePages = ROBOTS_DISALLOW
-    .filter((route) => !route.startsWith("/api"))
-    .map((route) => `- ${route}`)
-    .join("\n");
-
-  return `# ${SITE_IDENTITY.name}\n\n> ${SITE_IDENTITY.description}\n\n${SITE_IDENTITY.tagline} helps first-time and solo founders move through customer clarity, validation, MVP building, go-to-market execution, traction, and fundraising preparation without restarting their context at every stage.\n\n## Public pages\n\n${publicPages}\n\n## Private or non-indexable paths\n\n${privatePages}\n\n## Discovery\n\n- Sitemap: ${BASE_URL}/sitemap.xml\n- Robots: ${BASE_URL}/robots.txt\n- RSS: ${BASE_URL}/newspaper/rss.xml\n- Organization: ${BASE_URL}/about\n`;
-}
-
 async function main() {
   await fs.mkdir(PUBLIC_DIR, { recursive: true });
   await fs.writeFile(SITEMAP_PAGES_PATH, generatePagesSitemapXml(), "utf8");
   await fs.writeFile(SITEMAP_INDEX_PATH, generateSitemapIndexXml(), "utf8");
   await fs.writeFile(ROBOTS_PATH, generateRobotsTxt(), "utf8");
-  await fs.writeFile(LLMS_PATH, generateLlmsTxt(), "utf8");
-  console.log(`Generated SEO assets: sitemap index + ${INDEXABLE_ROUTES.length} page routes + robots.txt + llms.txt (articles served live at /sitemap-articles.xml).`);
+  console.log(`Generated SEO assets: sitemap index + ${INDEXABLE_ROUTES.length} page routes (articles served live at /sitemap-articles.xml).`);
 }
 
 main().catch((error) => {

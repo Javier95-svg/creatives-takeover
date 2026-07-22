@@ -1,48 +1,22 @@
 import { StrictMode, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { HelmetProvider } from 'react-helmet-async'
+import { PostHogProvider } from 'posthog-js/react'
+import posthog from 'posthog-js'
 import App from './App.tsx'
 import './index.css'
 import './styles/responsive-overrides.css'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { reportAppError } from './lib/errorReporting'
+import { getPosthogClient, bootstrapPosthog, captureUtmSuperProperties, isLikelyBot } from './lib/analytics'
 
 function AnalyticsBootstrap() {
   useEffect(() => {
-    let cancelled = false;
-    let idleId: number | undefined;
-    let fallbackId: number | undefined;
-
-    const start = async () => {
-      const analytics = await import('./lib/analytics');
-      if (cancelled) return;
-
-      if (analytics.isLikelyBot()) {
-        analytics.getPosthogClient().opt_out_capturing();
-        return;
-      }
-
-      await analytics.initPosthog();
-      if (!cancelled) {
-        analytics.captureUtmSuperProperties();
-      }
-    };
-
-    if ('requestIdleCallback' in window) {
-      idleId = window.requestIdleCallback(() => void start(), { timeout: 4000 });
+    if (isLikelyBot()) {
+      posthog.opt_out_capturing();
     } else {
-      fallbackId = window.setTimeout(() => void start(), 2000);
+      captureUtmSuperProperties();
     }
-
-    return () => {
-      cancelled = true;
-      if (idleId !== undefined && 'cancelIdleCallback' in window) {
-        window.cancelIdleCallback(idleId);
-      }
-      if (fallbackId !== undefined) {
-        window.clearTimeout(fallbackId);
-      }
-    };
   }, []);
   return null;
 }
@@ -97,13 +71,17 @@ window.addEventListener('error', (event) => {
   );
 });
 
+bootstrapPosthog();
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <AnalyticsBootstrap />
-    <ThemeProvider>
-      <HelmetProvider context={helmetContext}>
-        <App />
-      </HelmetProvider>
-    </ThemeProvider>
+    <PostHogProvider client={getPosthogClient()}>
+      <AnalyticsBootstrap />
+      <ThemeProvider>
+        <HelmetProvider context={helmetContext}>
+          <App />
+        </HelmetProvider>
+      </ThemeProvider>
+    </PostHogProvider>
   </StrictMode>
 );

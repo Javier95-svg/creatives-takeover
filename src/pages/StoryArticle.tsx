@@ -5,7 +5,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, Hash, Linkedin, Facebook, Copy, Edit, ExternalLink } from "lucide-react";
+import { ArrowLeft, Calendar, Hash, Share2, Linkedin, Facebook, Copy, Edit } from "lucide-react";
 import { XIcon } from "@/components/icons/XIcon";
 import { useStories, StoryArticle as StoryArticleType } from "@/hooks/useStories";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,8 +17,6 @@ import { slugifyTag } from "@/utils/hashtagUtils";
 import RelatedStories from "@/components/stories/RelatedStories";
 import { LinkedInPostEmbed } from "@/components/stories/LinkedInPostEmbed";
 import { ArticleBody } from "@/components/stories/ArticleBody";
-import { extractArticleCitations } from "@/lib/articleCitations";
-import { SITE_IDENTITY } from "@/config/siteIdentity";
 
 const StoryArticle = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -134,17 +132,33 @@ const StoryArticle = () => {
   };
   const readingTime = calculateReadingTime(article.body_content || article.excerpt);
 
-  // Prefer the editor-authored title. Do not append hashtags or mechanically
-  // truncate: the publishing editor exposes the final length before release.
+  // Optimize meta title - include primary keyword (first hashtag) if available
   const primaryTag = article.hashtags && article.hashtags.length > 0 
     ? article.hashtags[0].replace('#', '') 
     : '';
-  const metaTitle = (article.meta_title || article.title).trim();
-  const optimizedMetaTitle = metaTitle.toLowerCase().includes("creatives takeover")
-    ? metaTitle
-    : `${metaTitle} | Creatives Takeover`;
+  const metaTitle = article.meta_title || article.title;
+  const optimizedMetaTitle = primaryTag && !metaTitle.toLowerCase().includes(primaryTag.toLowerCase())
+    ? `${metaTitle} | ${primaryTag}`
+    : metaTitle;
   
-  const metaDescription = (article.meta_description || article.excerpt || article.title).trim();
+  // Optimize meta description - ensure 150-160 characters, keyword-rich
+  let metaDescription = article.meta_description || article.excerpt || article.title;
+  if (metaDescription.length < 120) {
+    // Enhance short descriptions
+    const tagKeywords = article.hashtags?.slice(0, 2).map(t => t.replace('#', '')).join(', ') || '';
+    metaDescription = tagKeywords 
+      ? `${metaDescription} Learn about ${tagKeywords} and more from Creatives Takeover.`
+      : `${metaDescription} Read insights and stories from Creatives Takeover.`;
+  }
+  // Ensure description is within optimal length (150-160 chars)
+  if (metaDescription.length > 160) {
+    metaDescription = metaDescription.substring(0, 157) + '...';
+  } else if (metaDescription.length < 120) {
+    metaDescription = metaDescription + ' Discover expert insights and actionable advice.';
+    if (metaDescription.length > 160) {
+      metaDescription = metaDescription.substring(0, 157) + '...';
+    }
+  }
   
   // Get primary hashtag for article:section
   const articleSection = primaryTag || 'General';
@@ -153,44 +167,16 @@ const StoryArticle = () => {
   const ogImage = linkedInOgImage || article.banner_image_url || "";
   const ogImageUrl = ogImage ? (ogImage.startsWith('http') ? ogImage : `${window.location.origin}${ogImage}`) : '';
   const articleUrl = `${window.location.origin}/newspaper/${article.slug}`;
-  const citations = extractArticleCitations(article.body_content);
-  const articleSchema = {
-    ...createArticleSchema({
-      title: article.title,
-      description: metaDescription,
-      image: ogImageUrl || undefined,
-      author: SITE_IDENTITY.name,
-      publishedTime: article.published_at ? new Date(article.published_at).toISOString() : new Date(article.created_at).toISOString(),
-      modifiedTime: article.updated_at && article.updated_at !== article.created_at
-        ? new Date(article.updated_at).toISOString()
-        : undefined,
-      url: `/newspaper/${article.slug}`,
-      keywords: article.hashtags || [],
-      articleSection,
-    }),
-    "@id": `${SITE_IDENTITY.baseUrl}/newspaper/${article.slug}`,
-    author: {
-      "@type": "Organization",
-      "@id": `${SITE_IDENTITY.baseUrl}/#organization`,
-      name: `${SITE_IDENTITY.name} Editorial Team`,
-      url: `${SITE_IDENTITY.baseUrl}/about`,
-    },
-    mainEntity: {
-      "@type": "WebPage",
-      "@id": `${SITE_IDENTITY.baseUrl}/newspaper/${article.slug}`,
-    },
-    ...(citations.length ? { citation: citations.map((citation) => citation.url) } : {}),
-  };
 
   return (
     <>
       <Helmet>
-        <title>{optimizedMetaTitle}</title>
+        <title>{optimizedMetaTitle} | Creatives Takeover Stories</title>
         <meta name="description" content={metaDescription} />
         {article.hashtags && article.hashtags.length > 0 && (
           <meta name="keywords" content={article.hashtags.map(t => t.replace('#', '')).join(', ')} />
         )}
-        <meta name="author" content="Creatives Takeover Editorial Team" />
+        <meta name="author" content="Creatives Takeover" />
 
         {/* Open Graph - Optimized for LinkedIn (1200x627 or 1920x1080) */}
         <meta property="og:type" content="article" />
@@ -242,7 +228,24 @@ const StoryArticle = () => {
         {/* Structured Data (JSON-LD) */}
         <script type="application/ld+json">
           {JSON.stringify([
-            articleSchema,
+            {
+              ...createArticleSchema({
+                title: article.title,
+                description: metaDescription,
+                image: ogImageUrl || undefined,
+                author: "Creatives Takeover",
+                publishedTime: article.published_at ? new Date(article.published_at).toISOString() : new Date(article.created_at).toISOString(),
+                modifiedTime: article.updated_at ? new Date(article.updated_at).toISOString() : undefined,
+                url: `/newspaper/${article.slug}`,
+                keywords: article.hashtags || [],
+                articleSection: articleSection,
+              }),
+              "@id": `https://creatives-takeover.com/newspaper/${article.slug}`,
+              "mainEntity": {
+                "@type": "WebPage",
+                "@id": `https://creatives-takeover.com/newspaper/${article.slug}`
+              }
+            },
             createBreadcrumbSchema([
               { name: 'Home', url: '/' },
               { name: 'Stories', url: '/newspaper' },
@@ -346,10 +349,6 @@ const StoryArticle = () => {
 
               {/* Metadata */}
               <div className="flex items-center gap-6 mb-6 text-muted-foreground text-sm">
-                <span>
-                  By <Link to="/about" className="font-medium text-foreground underline-offset-4 hover:underline">Creatives Takeover Editorial Team</Link>
-                </span>
-                <span aria-hidden="true">•</span>
                 <time dateTime={publishedDate.toISOString()} className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   <span>{fullDate}</span>
@@ -423,33 +422,6 @@ const StoryArticle = () => {
               </div>
             )}
 
-            {citations.length > 0 && (
-              <section className="my-10 rounded-2xl border border-border bg-muted/30 p-6" aria-labelledby="article-sources-heading">
-                <h2 id="article-sources-heading" className="text-2xl font-semibold tracking-tight">Sources</h2>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  External references linked in this article, collected here for verification and further reading.
-                </p>
-                <ul className="mt-5 space-y-3">
-                  {citations.map((citation) => (
-                    <li key={citation.url}>
-                      <a
-                        href={citation.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-start justify-between gap-4 rounded-xl border border-border/70 bg-background p-4 text-sm transition-colors hover:border-primary/40"
-                      >
-                        <span>
-                          <span className="block font-semibold text-foreground">{citation.title}</span>
-                          <span className="mt-1 block text-muted-foreground">{citation.publisher}</span>
-                        </span>
-                        <ExternalLink className="mt-0.5 h-4 w-4 flex-none text-primary" aria-hidden="true" />
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-
             {/* Related Stories Section */}
             <RelatedStories currentStory={article} limit={4} />
           </article>
@@ -462,3 +434,4 @@ const StoryArticle = () => {
 };
 
 export default StoryArticle;
+

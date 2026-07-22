@@ -1,5 +1,5 @@
 import { Link, Navigate, useParams } from "react-router-dom";
-import { ArrowRight, CheckCircle2, ExternalLink } from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 
 import SEO, { createBreadcrumbSchema, createFAQSchema, createHowToSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
@@ -16,8 +16,6 @@ import {
   getFounderAnswerPage,
   getRelatedFounderAnswerPages,
 } from "@/data/founderAnswerPages";
-import { getFounderAnswerEvidence } from "@/data/founderAnswerEvidence";
-import { SITE_AUTHOR, SITE_IDENTITY } from "@/config/siteIdentity";
 
 // Convert a human "Month YYYY" label into an ISO date for schema freshness signals.
 const MONTHS: Record<string, string> = {
@@ -42,21 +40,8 @@ export default function FounderAnswerPage() {
   }
 
   const cluster = FOUNDER_ANSWER_CLUSTERS[page.cluster];
-  const evidence = getFounderAnswerEvidence(page.cluster);
   const relatedPages = getRelatedFounderAnswerPages(page);
   const updatedIso = updatedLabelToIso(page.updatedLabel);
-  const schemaSteps = [
-    ...page.sections,
-    { title: evidence.heading, description: evidence.introduction },
-    {
-      title: "Evidence checks and next actions",
-      description: evidence.checks
-        .map((check) => `${check.signal}: ${check.evidence} Next action: ${check.nextAction}`)
-        .join(" "),
-    },
-    { title: evidence.exampleTitle, description: evidence.example },
-    { title: "Common false positives to avoid", description: evidence.failureModes.join(" ") },
-  ];
   const structuredData = [
     createBreadcrumbSchema([
       { name: "Home", url: "/" },
@@ -66,7 +51,7 @@ export default function FounderAnswerPage() {
     createHowToSchema({
       name: page.title,
       description: page.summary,
-      steps: schemaSteps,
+      steps: page.sections,
       url: `/answers/${page.slug}`,
     }),
     createFAQSchema(page.faqs),
@@ -79,17 +64,15 @@ export default function FounderAnswerPage() {
       dateModified: updatedIso,
       author: {
         "@type": "Person",
-        "@id": `${SITE_IDENTITY.baseUrl}/about#founder`,
-        name: SITE_AUTHOR.name,
-        jobTitle: SITE_AUTHOR.jobTitle,
-        url: SITE_AUTHOR.url,
+        name: "Javier Alonso",
+        url: "https://creatives-takeover.com/about",
       },
       publisher: {
         "@type": "Organization",
-        name: SITE_IDENTITY.name,
+        name: "Creatives Takeover",
         logo: {
           "@type": "ImageObject",
-          url: SITE_IDENTITY.logoUrl,
+          url: "https://creatives-takeover.com/favicon-192x192.png",
         },
       },
       mainEntityOfPage: {
@@ -97,7 +80,6 @@ export default function FounderAnswerPage() {
         "@id": `https://creatives-takeover.com/answers/${page.slug}`,
       },
       keywords: [page.keyword, cluster.label, "startup founder guide", "Creatives Takeover"],
-      citation: evidence.sources.map((source) => source.url),
     },
   ];
 
@@ -110,8 +92,9 @@ export default function FounderAnswerPage() {
         keywords={`${page.keyword}, ${cluster.label}, startup guide, founder guide, Creatives Takeover`}
         url={`/answers/${page.slug}`}
         type="article"
-        author={SITE_AUTHOR.name}
+        author="Javier Alonso"
         publishedTime={updatedIso}
+        modifiedTime={updatedIso}
         structuredData={structuredData}
       />
       <div className="relative z-10">
@@ -129,16 +112,9 @@ export default function FounderAnswerPage() {
                 {page.summary}
               </p>
               <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground">
-                <span>
-                  By{" "}
-                  <Link to="/about#founder" className="font-medium text-foreground underline-offset-4 hover:underline">
-                    {SITE_AUTHOR.name}, {SITE_AUTHOR.jobTitle}
-                  </Link>
-                </span>
-                <span aria-hidden="true">/</span>
                 <span>Search intent: {page.searchIntent}</span>
                 <span aria-hidden="true">/</span>
-                <span>Published {page.updatedLabel}</span>
+                <span>Updated {page.updatedLabel}</span>
               </div>
             </header>
 
@@ -153,53 +129,14 @@ export default function FounderAnswerPage() {
             </div>
 
             <section className="mt-10 grid gap-5 md:grid-cols-3">
-              {page.sections.map((section, index) => (
-                <Card id={`step-${index + 1}`} key={section.title} className="scroll-mt-24 border-border/60 bg-card/80 shadow-sm backdrop-blur">
+              {page.sections.map((section) => (
+                <Card key={section.title} className="border-border/60 bg-card/80 shadow-sm backdrop-blur">
                   <CardContent className="p-6">
                     <h2 className="text-xl font-semibold tracking-tight">{section.title}</h2>
                     <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{section.description}</p>
                   </CardContent>
                 </Card>
               ))}
-            </section>
-
-            <section id="step-4" className="mt-10 scroll-mt-24 rounded-5xl border border-border/60 bg-card/80 p-6 shadow-sm backdrop-blur sm:p-8">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Evidence standard</p>
-              <h2 className="mt-3 text-2xl font-semibold tracking-tight">{evidence.heading}</h2>
-              <p className="mt-4 max-w-4xl leading-relaxed text-muted-foreground">{evidence.introduction}</p>
-
-              <div id="step-5" className="mt-7 scroll-mt-24 overflow-hidden rounded-2xl border border-border/60">
-                <div className="hidden grid-cols-[0.7fr_1.2fr_1fr] gap-4 bg-muted/60 px-5 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground md:grid">
-                  <span>Signal</span>
-                  <span>Evidence to record</span>
-                  <span>Next action</span>
-                </div>
-                {evidence.checks.map((check) => (
-                  <div key={check.signal} className="grid gap-2 border-t border-border/60 px-5 py-5 first:border-t-0 md:grid-cols-[0.7fr_1.2fr_1fr] md:gap-4">
-                    <h3 className="font-semibold text-foreground">{check.signal}</h3>
-                    <p className="text-sm leading-relaxed text-muted-foreground">{check.evidence}</p>
-                    <p className="text-sm leading-relaxed text-muted-foreground">{check.nextAction}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-7 grid gap-5 lg:grid-cols-2">
-                <div id="step-6" className="scroll-mt-24 rounded-2xl bg-primary/10 p-6">
-                  <h3 className="text-lg font-semibold tracking-tight">{evidence.exampleTitle}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{evidence.example}</p>
-                </div>
-                <div id="step-7" className="scroll-mt-24 rounded-2xl bg-muted/50 p-6">
-                  <h3 className="text-lg font-semibold tracking-tight">Common false positives to avoid</h3>
-                  <ul className="mt-3 space-y-3 text-sm leading-relaxed text-muted-foreground">
-                    {evidence.failureModes.map((failureMode) => (
-                      <li key={failureMode} className="flex gap-3">
-                        <span aria-hidden="true" className="mt-2 h-1.5 w-1.5 flex-none rounded-full bg-primary" />
-                        <span>{failureMode}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
             </section>
 
             <section className="mt-10 rounded-5xl border border-border/60 bg-card/80 p-6 shadow-sm backdrop-blur sm:p-8">
@@ -239,31 +176,6 @@ export default function FounderAnswerPage() {
                 faqs={page.faqs}
               />
             </div>
-
-            <section className="mt-10 rounded-3xl border border-border/60 bg-card/80 p-6 shadow-sm backdrop-blur sm:p-8" aria-labelledby="answer-sources-heading">
-              <h2 id="answer-sources-heading" className="text-2xl font-semibold tracking-tight">Sources and further reading</h2>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                Primary references used to ground this framework. Creatives Takeover adds the operating examples and founder checklist above.
-              </p>
-              <ul className="mt-5 grid gap-3 sm:grid-cols-2">
-                {evidence.sources.map((source) => (
-                  <li key={source.url}>
-                    <a
-                      href={source.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex h-full items-start justify-between gap-3 rounded-2xl border border-border/60 bg-background/70 p-4 text-sm transition-colors hover:border-primary/40"
-                    >
-                      <span>
-                        <span className="block font-semibold text-foreground">{source.title}</span>
-                        <span className="mt-1 block text-muted-foreground">{source.publisher}</span>
-                      </span>
-                      <ExternalLink className="mt-0.5 h-4 w-4 flex-none text-primary" aria-hidden="true" />
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </section>
 
             <RelatedPageLinks
               title="Keep learning"

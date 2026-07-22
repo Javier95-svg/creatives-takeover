@@ -15,12 +15,11 @@ import { useStories, StoryArticle } from "@/hooks/useStories";
 import { generateSlug } from "@/utils/slugGenerator";
 import { parseHashtags as parseHashtagsUtil } from "@/utils/hashtagUtils";
 import { useAuth } from "@/contexts/AuthContext";
-import { Save, X, Loader2, ArrowLeft, Maximize2, Minimize2, Layout, Linkedin, Image, Upload, Trash2, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Save, X, Loader2, ArrowLeft, Maximize2, Minimize2, Layout, Linkedin, Image, Upload, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { EditorPreviewTabs } from "@/components/stories/EditorPreviewTabs";
 import { ArticleBodyEditor } from "@/components/stories/ArticleBodyEditor";
 import { supabase } from "@/integrations/supabase/client";
-import { getArticleCitationStatus } from "@/lib/articleCitations";
 
 const AdminStoryEditor = () => {
   const { id } = useParams<{ id: string }>();
@@ -189,29 +188,6 @@ const AdminStoryEditor = () => {
       return;
     }
 
-    const citationStatus = getArticleCitationStatus(formData.body_content);
-    const willPublish = publish || formData.status === "published";
-    if (willPublish) {
-      const rawMetaTitle = (formData.meta_title || formData.title).trim();
-      const finalMetaTitle = rawMetaTitle.toLowerCase().includes("creatives takeover")
-        ? rawMetaTitle
-        : `${rawMetaTitle} | Creatives Takeover`;
-      const finalMetaDescription = (formData.meta_description || formData.excerpt || formData.title).trim();
-      const publishWarnings: string[] = [];
-      if (finalMetaTitle.length > 65) {
-        publishWarnings.push(`The final meta title is ${finalMetaTitle.length} characters; write a concise Meta Title that keeps the complete branded title at 65 characters or fewer.`);
-      }
-      if (finalMetaDescription.length < 80 || finalMetaDescription.length > 170) {
-        publishWarnings.push(`The meta description is ${finalMetaDescription.length} characters; write a specific summary between 80 and 170 characters.`);
-      }
-      if (citationStatus.needsSourceWarning) {
-        publishWarnings.push("The article contains quantitative claims but no external source links. Continue only if the figures are original Creatives Takeover data and the methodology is explained in the article.");
-      }
-      if (publishWarnings.length && !confirm(`${publishWarnings.join("\n\n")}\n\nPublish anyway?`)) {
-        return;
-      }
-    }
-
     const hashtags = parseHashtags(formData.hashtags);
     const storyData = {
       slug: formData.slug,
@@ -267,12 +243,6 @@ const AdminStoryEditor = () => {
   }
 
   const hashtagsArray = parseHashtags(formData.hashtags);
-  const citationStatus = getArticleCitationStatus(formData.body_content);
-  const rawMetaTitlePreview = (formData.meta_title || formData.title).trim();
-  const metaTitlePreview = rawMetaTitlePreview.toLowerCase().includes("creatives takeover")
-    ? rawMetaTitlePreview
-    : `${rawMetaTitlePreview} | Creatives Takeover`;
-  const metaDescriptionPreview = (formData.meta_description || formData.excerpt || formData.title).trim();
 
   return (
     <div className="min-h-screen bg-background">
@@ -453,31 +423,6 @@ const AdminStoryEditor = () => {
                           <p className="text-xs text-muted-foreground">
                             This is what readers see on the article page. Paste your text and format it with the toolbar.
                           </p>
-                          <div
-                            className={`rounded-lg border p-3 text-sm ${
-                              citationStatus.needsSourceWarning
-                                ? "border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-100"
-                                : "border-border bg-muted/40 text-muted-foreground"
-                            }`}
-                          >
-                            <div className="flex items-start gap-2">
-                              {citationStatus.needsSourceWarning ? (
-                                <AlertTriangle className="mt-0.5 h-4 w-4 flex-none" aria-hidden="true" />
-                              ) : (
-                                <CheckCircle2 className="mt-0.5 h-4 w-4 flex-none text-primary" aria-hidden="true" />
-                              )}
-                              <div>
-                                <p className="font-medium text-foreground">
-                                  {citationStatus.citations.length} external source{citationStatus.citations.length === 1 ? "" : "s"} detected
-                                </p>
-                                <p className="mt-1 leading-relaxed">
-                                  {citationStatus.needsSourceWarning
-                                    ? "Quantitative claims need a source link, or an explicit note that the figure is original Creatives Takeover data with a described methodology."
-                                    : "Markdown and pasted links are collected into the public Sources section and Article citation schema automatically."}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
                         </div>
                       </AccordionContent>
                     </AccordionItem>
@@ -587,9 +532,6 @@ const AdminStoryEditor = () => {
                             placeholder="Leave empty to use article title"
                             className="mt-1"
                           />
-                          <p className={`mt-1 text-xs ${metaTitlePreview.length > 65 ? "text-amber-600 dark:text-amber-300" : "text-muted-foreground"}`}>
-                            Final title: {metaTitlePreview.length} characters (recommended maximum: 65). The brand suffix is included in this count.
-                          </p>
                         </div>
                         <div>
                           <Label htmlFor="meta_description">Meta Description</Label>
@@ -606,9 +548,6 @@ const AdminStoryEditor = () => {
                             rows={3}
                             className="mt-1"
                           />
-                          <p className={`mt-1 text-xs ${metaDescriptionPreview.length < 80 || metaDescriptionPreview.length > 170 ? "text-amber-600 dark:text-amber-300" : "text-muted-foreground"}`}>
-                            Final description: {metaDescriptionPreview.length} characters (recommended range: 80–170). It is used as written, without automatic padding or truncation.
-                          </p>
                         </div>
                       </AccordionContent>
                     </AccordionItem>

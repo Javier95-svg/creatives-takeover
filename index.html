@@ -40,34 +40,46 @@
           return script;
         };
 
-        var startTelemetry = function () {
-          window.dataLayer = window.dataLayer || [];
-          window.gtag = function () {
-            window.dataLayer.push(arguments);
+        loadScript("https://t.contentsquare.net/uxa/3ef0f84e50f77.js", { defer: true });
+
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () {
+          window.dataLayer.push(arguments);
+        };
+        window.gtag("js", new Date());
+        window.gtag("config", "G-SBVWSWCNX8");
+        loadScript("https://www.googletagmanager.com/gtag/js?id=G-SBVWSWCNX8", { async: true });
+
+        loadScript("https://cloud.umami.is/script.js", {
+          defer: true,
+          attributes: { "data-website-id": "b6a9bcb8-c6ac-41c5-b624-75b3f6957742" },
+        });
+
+        var amplitudeApiKey = "%VITE_AMPLITUDE_API_KEY%";
+        var hasAmplitudeApiKey = amplitudeApiKey && amplitudeApiKey.charAt(0) !== "%";
+
+        if (hasAmplitudeApiKey) {
+          var amplitudeInitialized = false;
+          var initializeAmplitude = function () {
+            if (amplitudeInitialized) {
+              return;
+            }
+
+            if (window.amplitude && window.sessionReplay) {
+              window.amplitude.add(window.sessionReplay.plugin({ sampleRate: 0.1 }));
+              window.amplitude.init(amplitudeApiKey, { autocapture: { elementInteractions: true } });
+              amplitudeInitialized = true;
+            }
           };
-          window.gtag("js", new Date());
-          window.gtag("config", "G-SBVWSWCNX8");
 
-          loadScript("https://www.googletagmanager.com/gtag/js?id=G-SBVWSWCNX8", { async: true });
-          loadScript("https://cloud.umami.is/script.js", {
-            defer: true,
-            attributes: { "data-website-id": "b6a9bcb8-c6ac-41c5-b624-75b3f6957742" },
-          });
-          loadScript("https://t.contentsquare.net/uxa/3ef0f84e50f77.js", { defer: true });
-        };
+          loadScript("https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz", { defer: true, onload: initializeAmplitude, attributes: { integrity: "sha384-XxDPxKDB79eXOLF+koPFe4h9iVF6LgQ1J6Do9sdhcohvTlVMK7EJE74b1b0iK3uK", crossorigin: "anonymous" } });
+          loadScript("https://cdn.amplitude.com/libs/plugin-session-replay-browser-1.25.0-min.js.gz", { defer: true, onload: initializeAmplitude, attributes: { integrity: "sha384-w/8o1T6e81D5lOWP8nN3YXVXE20le69jhB0ZMRw6bRV6HWtnj+wItvrFzecb+b9B", crossorigin: "anonymous" } });
 
-        var scheduleTelemetry = function () {
-          if ("requestIdleCallback" in window) {
-            window.requestIdleCallback(startTelemetry, { timeout: 5000 });
+          if (document.readyState === "complete") {
+            initializeAmplitude();
           } else {
-            window.setTimeout(startTelemetry, 2500);
+            window.addEventListener("load", initializeAmplitude, { once: true });
           }
-        };
-
-        if (document.readyState === "complete") {
-          scheduleTelemetry();
-        } else {
-          window.addEventListener("load", scheduleTelemetry, { once: true });
         }
       })();
     </script>
@@ -75,12 +87,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>The Founders Compass | Creatives Takeover</title>
     <meta name="description" content="Turn your idea into a validated startup through one evidence backed path for customer clarity, proof, PMF decisions, MVP building, GTM execution, and verified traction." />
-    <meta name="author" content="Javier Peña" />
+    <meta name="author" content="Javier Alonso" />
     <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
     <link rel="canonical" href="https://creatives-takeover.com/" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://rcjlaybjnozqbsoxzboa.supabase.co" crossorigin />
+    <link rel="preconnect" href="https://cdn.amplitude.com" />
     <link rel="dns-prefetch" href="https://images.unsplash.com" />
     <link rel="dns-prefetch" href="https://rcjlaybjnozqbsoxzboa.supabase.co" />
     <link rel="dns-prefetch" href="https://t.contentsquare.net" />
@@ -118,7 +131,7 @@
         "@id": "https://creatives-takeover.com/#website",
         "url": "https://creatives-takeover.com/",
         "name": "Creatives Takeover",
-        "description": "An AI-powered startup development platform that helps first-time founders move from customer clarity to validation, launch, traction, and fundraising preparation.",
+        "description": "An evidence backed founder system connecting customer clarity, proof, PMF decisions, MVP building, GTM execution, and verified traction.",
         "potentialAction": {
           "@type": "SearchAction",
           "target": { "@type": "EntryPoint", "urlTemplate": "https://creatives-takeover.com/answers?q={search_term_string}" },
@@ -131,13 +144,11 @@
         "@id": "https://creatives-takeover.com/#organization",
         "name": "Creatives Takeover",
         "url": "https://creatives-takeover.com",
-        "logo": { "@type": "ImageObject", "url": "https://creatives-takeover.com/favicon-192x192.png", "width": 192, "height": 192 },
-        "description": "Creatives Takeover is an AI-powered startup development platform for first-time founders, connecting customer clarity, validation, MVP building, go-to-market execution, traction, and fundraising preparation in one guided system.",
-        "founder": { "@type": "Person", "@id": "https://creatives-takeover.com/about#founder", "name": "Javier Peña", "jobTitle": "Founder & CEO", "url": "https://creatives-takeover.com/about#founder" },
+        "logo": { "@type": "ImageObject", "url": "https://creatives-takeover.com/og-image.png", "width": 1200, "height": 630 },
+        "founder": { "@type": "Person", "name": "Javier Alonso" },
         "sameAs": [
           "https://twitter.com/CreativesTakeover",
-          "https://www.linkedin.com/company/creatives-takeover",
-          "https://www.instagram.com/creativestakeover.official/",
+          "https://linkedin.com/company/creatives-takeover",
           "https://www.youtube.com/@CreativesTakeover"
         ]
       },

@@ -1,12 +1,11 @@
 import { useEffect } from "react";
-import SEO, { createProductSchema, createBreadcrumbSchema, createFAQSchema } from "@/components/SEO";
+import SEO, { createProductSchema, createBreadcrumbSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import Pricing from "@/components/Pricing";
 import SubscriptionFeatures from "@/components/SubscriptionFeatures";
 import PricingComparison from "@/components/PricingComparison";
 import PricingFAQ from "@/components/PricingFAQ";
-import { PRICING_FAQS } from "@/config/pricingFaq";
 import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
 import { trackPricingViewed } from "@/lib/analytics";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
@@ -45,8 +44,7 @@ const PricingPage = () => {
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'Pricing', url: '/pricing' }
-    ]),
-    createFAQSchema(PRICING_FAQS)
+    ])
   ];
 
   return (

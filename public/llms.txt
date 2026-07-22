@@ -1,84 +1,78 @@
-# Creatives Takeover
+site: https://creatives-takeover.com
+name: Creatives Takeover
+description: AI-powered startup builder for first-time founders. Tools for startup idea validation, MVP planning, customer discovery, fundraising preparation, and go-to-market execution.
 
-> Creatives Takeover is an AI-powered startup development platform for first-time founders, connecting customer clarity, validation, MVP building, go-to-market execution, traction, and fundraising preparation in one guided system.
+purpose: Help early-stage founders, indie hackers, and solo builders go from idea to launch with AI-guided workflows, a startup mentor marketplace, and a founder community.
 
-The Founders' Compass helps first-time and solo founders move through customer clarity, validation, MVP building, go-to-market execution, traction, and fundraising preparation without restarting their context at every stage.
+public_pages:
+# Core
+- /
+- /startup-guide
+- /pricing
+- /about
+- /faq
+- /resources
+- /careers
+- /prompt-library
 
-## Public pages
+# AI Startup Tools (BizMap AI suite)
+- /bizmap-ai
+- /validate
+- /icp-builder
+- /mvp-builder
+- /mvp-scope
+- /go-to-market
+- /tech-stack
+- /pmf-lab
+- /decision-sprint
+- /traction-engine
+- /waitlist
+- /directories
 
-- [The Founders' Compass](https://creatives-takeover.com/): Turn your idea into a validated startup through one evidence backed path for customer clarity, proof, PMF decisions, MVP building, GTM, and traction.
-- [About Creatives Takeover](https://creatives-takeover.com/about): Meet the team building Creatives Takeover, an AI-powered startup development platform that helps first-time founders move from idea to execution.
-- [Choose the outcome you need now](https://creatives-takeover.com/pricing): Compare Rookie, Starter, Rising, and Pro by the founder outcome each plan enables, from customer clarity to expert backed fundraising.
-- [Founder resources and guides](https://creatives-takeover.com/resources): Use 25 practical startup guides, evidence checklists, and connected tools for customer clarity, validation, MVP building, launch, and fundraising preparation.
-- [Answers founders search for before they build](https://creatives-takeover.com/answers): Searchable startup guides for founders defining an ICP, validating demand, planning an MVP, launching, and preparing for fundraising.
-- [How to Define an ICP for Your Startup](https://creatives-takeover.com/answers/how-to-define-icp-for-startup): Learn how to define your ideal customer profile, narrow your first market, and turn customer clarity into a practical startup validation plan.
-- [Ideal Customer Profile Template for Early-Stage Founders](https://creatives-takeover.com/answers/ideal-customer-profile-template): Use this ideal customer profile template to clarify your target customer, pain point, urgency, buying trigger, and first validation channel.
-- [Startup Positioning Examples for First-Time Founders](https://creatives-takeover.com/answers/startup-positioning-examples): See practical startup positioning examples and learn how to connect your ICP, pain point, outcome, and differentiation into one clear message.
-- [How to Validate a Startup Idea Before Building](https://creatives-takeover.com/answers/how-to-validate-startup-idea): Validate a startup idea with ICP clarity, customer evidence, waitlist demand, and product-market fit signals before you build an MVP.
-- [Waitlist or MVP: What Should You Build First?](https://creatives-takeover.com/answers/waitlist-before-mvp): Decide whether to launch a startup waitlist before building an MVP, based on customer clarity, risk, validation evidence, and speed.
-- [Product-Market Fit Survey Questions for Early Startups](https://creatives-takeover.com/answers/product-market-fit-survey-questions): Use these product-market fit survey questions to measure pain, urgency, alternatives, willingness to pay, and retention risk before scaling.
-- [MVP Builder for Startups: What to Build First](https://creatives-takeover.com/answers/mvp-builder-for-startups): Plan your startup MVP by choosing the smallest product scope that proves your core promise, supports learning, and avoids overbuilding.
-- [How to Choose a Tech Stack for Your Startup](https://creatives-takeover.com/answers/tech-stack-for-startup): Choose a startup tech stack based on product type, team skill, speed, cost, integrations, and what your MVP actually needs to prove.
-- [Go-to-Market Strategy for an Early-Stage Startup](https://creatives-takeover.com/answers/go-to-market-strategy-for-startup): Create an early-stage go-to-market strategy by choosing your ICP, message, first channel, launch motion, and weekly traction experiment.
-- [How to Find the First Users for a SaaS Startup](https://creatives-takeover.com/answers/first-users-for-saas): Find the first users for your SaaS by joining existing conversations, answering painful questions, and routing demand into a focused activation path.
-- [Startup Launch Checklist for First-Time Founders](https://creatives-takeover.com/answers/startup-launch-checklist): Use this startup launch checklist to align your ICP, waitlist, MVP scope, messaging, first channel, analytics, and follow-up plan.
-- [Pitch Deck Feedback: What Investors Notice First](https://creatives-takeover.com/answers/pitch-deck-feedback-for-startups): Get a practical pitch deck feedback checklist covering narrative, traction, market, business model, competition, and fundraising readiness.
-- [VC Search for Startups: Build a Better Investor List](https://creatives-takeover.com/answers/vc-search-for-startups): Learn how founders should search for VCs by stage, sector, check size, geography, portfolio fit, and outreach relevance.
-- [Accelerator Alternatives for Founders Who Want to Build Now](https://creatives-takeover.com/answers/accelerator-alternatives): Explore accelerator alternatives for founders who want structure, validation, startup tools, and fundraising preparation without applications or cohorts.
-- [How to Find Your Target Audience as a Startup](https://creatives-takeover.com/answers/how-to-find-your-target-audience): Find your startup's target audience by ranking pain, locating where they gather, and testing one segment before you build for everyone.
-- [Customer Interview Questions That Reveal Real Demand](https://creatives-takeover.com/answers/customer-interview-questions): Use these customer interview questions to uncover real pain, past behavior, and willingness to pay — without leading the witness.
-- [Signs Your Startup Idea Is Actually Good](https://creatives-takeover.com/answers/signs-your-startup-idea-is-good): Learn the real signals that a startup idea is worth building — urgency, existing spend, and pull — and the red flags that mean you should stop.
-- [No-Code vs Code for Your MVP](https://creatives-takeover.com/answers/no-code-vs-code-for-mvp): Decide between no-code and custom code for your MVP based on speed, your riskiest assumption, and what you actually need to prove first.
-- [How to Prioritize MVP Features](https://creatives-takeover.com/answers/mvp-feature-prioritization): Prioritize MVP features by mapping each one to your riskiest assumption and the single core job — then cut everything that doesn't earn its place.
-- [How to Get Your First 100 Users](https://creatives-takeover.com/answers/how-to-get-first-100-users): Get your first 100 users with manual, unscalable outreach in the communities your ICP already lives in — before you touch paid ads.
-- [Product Hunt Launch Guide for Founders](https://creatives-takeover.com/answers/product-hunt-launch-guide): Plan a Product Hunt launch that actually converts: build an audience first, prepare assets, and turn launch-day traffic into retained users.
-- [Cold Email for Startups That Gets Replies](https://creatives-takeover.com/answers/cold-email-for-startups): Write cold emails that get replies: research the recipient, lead with their problem, keep it short, and make one specific ask.
-- [How to Find Investors for Your Startup](https://creatives-takeover.com/answers/how-to-find-investors-for-startup): Find the right investors by filtering for stage, sector, and check size, then prioritizing warm paths over cold blasts.
-- [Pre-Seed vs Seed Funding: What's the Difference?](https://creatives-takeover.com/answers/pre-seed-vs-seed-funding): Understand pre-seed vs seed funding: what each stage expects, how much founders raise, and which one fits your traction today.
-- [Startup Pitch Deck Outline (Slide by Slide)](https://creatives-takeover.com/answers/startup-pitch-deck-outline): Use this pitch deck outline to tell a tight investor story: problem, solution, market, traction, business model, team, and the ask.
-- [How to Build a Startup: The Complete First-Time Founder Guide](https://creatives-takeover.com/startup-guide): A step-by-step guide for first-time founders: define your ICP, validate your idea, scope your MVP, plan go-to-market, and prepare for fundraising.
-- [Frequently Asked Questions](https://creatives-takeover.com/faq): Answers to common questions about Creatives Takeover's AI startup tools, pricing, credits, BizMap AI, PMF Lab, Insighta, and community features.
-- [Connect. Learn. Grow.](https://creatives-takeover.com/mentorship): Find startup mentors, book working sessions, and connect with experienced founders who can help you move from idea to execution.
-- [Find the right co-founder](https://creatives-takeover.com/co-founder): Meet potential startup co-founders, browse founder profiles, and discover collaborators across product, growth, design, and engineering.
-- [Build a better investor shortlist](https://creatives-takeover.com/investors): Browse angel investors, review fit signals, and build a tighter investor shortlist for your startup fundraising process.
-- [Founder stories and startup insights](https://creatives-takeover.com/newspaper): Read evidence-led startup guides on customer discovery, validation, MVP building, go-to-market execution, traction, and fundraising for first-time founders.
-- [Work with us](https://creatives-takeover.com/careers): Explore open roles at Creatives Takeover and help build tools for startup founders, fundraising workflows, and execution support.
-- [Prompt libraries for founders](https://creatives-takeover.com/prompt-library): Browse startup prompt libraries, business idea workflows, and structured founder prompts for research, validation, and strategy.
-- [Privacy Policy](https://creatives-takeover.com/privacy-policy): Review how Creatives Takeover collects, uses, stores, and protects personal data across its founder tools and platform features.
-- [Data Privacy Policy](https://creatives-takeover.com/data-privacy): Learn how Creatives Takeover collects, uses, protects, and shares founder data across BizMap AI, Insighta, community features, and startup tools.
-- [Terms of Service](https://creatives-takeover.com/terms): Review the Terms of Service for Creatives Takeover, including subscriptions, credits, founder tools, and community features.
-- [Startup Development Cycle For Founders](https://creatives-takeover.com/bizmap-ai): Use BizMap AI to validate a startup idea, define your ideal customer, plan your MVP, and move into launch with a clearer founder workflow.
-- [Product-Market Fit Score Tool](https://creatives-takeover.com/pmf-lab): Score product-market fit readiness with customer evidence, validation signals, and practical recommendations before building your startup.
-- [Startup Tech Stack Builder](https://creatives-takeover.com/tech-stack): Compare startup frameworks, tools, and platforms to choose a tech stack that fits your product, speed, and budget.
-- [Ideal Customer Profile Builder](https://creatives-takeover.com/icp-builder): Define your ideal customer profile, sharpen positioning, and choose the customer segment your startup should target first.
-- [Demo Studio for Startup Founders](https://creatives-takeover.com/demo-studio): Build an interactive product demo, record a founder VSL, and publish one proof page with signup capture.
-- [Pick the strongest idea](https://creatives-takeover.com/decision-sprint): Score startup ideas side by side, compare opportunity quality, and decide which concept deserves your next sprint.
-- [Validate in 7 days](https://creatives-takeover.com/validate): Follow a structured founder validation journey to test demand, gather evidence, and move from assumptions to learning.
-- [Build your MVP with AI](https://creatives-takeover.com/mvp-builder): Describe your product, generate a working MVP, and iterate with live preview and code updates inside an AI MVP builder.
-- [Scope the right first version](https://creatives-takeover.com/mvp-scope): Define MVP boundaries, cut unnecessary features, and leave with a clearer build scope for your first product version.
-- [Plan how you will get customers](https://creatives-takeover.com/go-to-market): Generate a go-to-market strategy with channel recommendations, positioning, messaging, and a 30-day startup launch plan.
-- [Startup Launch Directories](https://creatives-takeover.com/directories): Browse startup launch directories, communities, and listing platforms to promote your product and reach early users.
-- [Traction Engine](https://creatives-takeover.com/traction-engine): Log weekly distribution experiments, score retention by product category, and track Phase 7 fundraising readiness with a deterministic Traction Score.
-- [Fundraising tools for founders](https://creatives-takeover.com/insighta): Explore fundraising tools for startups, including investor search, accelerator research, outreach templates, pitch deck analysis, and readiness assessment.
-- [Venture Capital Search](https://creatives-takeover.com/insighta/vc-search): Search a venture capital database by stage, geography, sector, and check size to build a tighter startup investor list.
-- [Fundraising Email Templates](https://creatives-takeover.com/insighta/email-templates): Use fundraising email templates for investor outreach, warm intros, follow-ups, and startup updates without starting from scratch.
-- [Startup Accelerator Search](https://creatives-takeover.com/insighta/accelerator-hunt): Search a startup accelerator database by location, focus area, and funding profile to shortlist the right programs faster.
-- [Analyze your pitch deck](https://creatives-takeover.com/insighta/pitch-deck-analyzer): Upload a pitch deck, get a score, and review actionable feedback on narrative, clarity, traction, business model, and fundraising readiness.
-- [Fundraising Readiness Assessment](https://creatives-takeover.com/insighta/test): Assess fundraising readiness, identify gaps, and see what your startup needs to improve before approaching investors.
-- [Try the platform](https://creatives-takeover.com/demo): Try Creatives Takeover features in an interactive demo covering startup planning, prompt workflows, fundraising tools, and community.
+# Fundraising Tools (Insighta suite)
+- /insighta
+- /insighta/vc-search
+- /insighta/pitch-deck-analyzer
+- /insighta/email-templates
+- /insighta/accelerator-hunt
 
-## Private or non-indexable paths
+# Community & Mentorship
+- /mentorship
+- /co-founder
+- /investors
 
-- /admin/
-- /auth/
+# Content & SEO
+- /newspaper
+- /answers
+- /answers/how-to-validate-startup-idea
+- /answers/how-to-define-icp-for-startup
+- /answers/ideal-customer-profile-template
+- /answers/startup-positioning-examples
+- /answers/waitlist-before-mvp
+- /answers/product-market-fit-survey-questions
+- /answers/mvp-builder-for-startups
+- /answers/tech-stack-for-startup
+- /answers/go-to-market-strategy-for-startup
+- /answers/first-users-for-saas
+- /answers/startup-launch-checklist
+- /answers/pitch-deck-feedback-for-startups
+- /answers/vc-search-for-startups
+- /answers/accelerator-alternatives
+
+# Legal
+- /privacy-policy
+- /data-privacy
+- /terms
+
+private_pages:
+- /account
+- /dashboard
+- /messages
+- /admin
+- /auth
 - /login
 - /signup
-- /forgot-password
-- /reset-password
 - /onboarding
-- /dashboard
-- /account
-- /messages
 - /profile
 - /setup-quiz
 - /focus-funnel
@@ -86,21 +80,8 @@ The Founders' Compass helps first-time and solo founders move through customer c
 - /weekly-mission
 - /tasks
 - /subscription-success
-- /mentorship/book/
 - /mentorship/my-bookings
-- /mentorship/admin/
-- /co-founder/create
-- /co-founder/edit/
-- /investors/admin/
-- /newspaper/admin/
-- /stories/admin/
-- /w/
-- /rag-test
-- /test-phase1
+- /mentorship/book/
 
-## Discovery
-
-- Sitemap: https://creatives-takeover.com/sitemap.xml
-- Robots: https://creatives-takeover.com/robots.txt
-- RSS: https://creatives-takeover.com/newspaper/rss.xml
-- Organization: https://creatives-takeover.com/about
+sitemap: https://creatives-takeover.com/sitemap.xml
+robots: https://creatives-takeover.com/robots.txt

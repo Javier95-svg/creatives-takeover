@@ -46,7 +46,7 @@ const FAQHero = () => {
           <div className="flex items-center justify-center mb-8 animate-fade-in">
             <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 px-4 py-2">
               <MessageCircle className="w-4 h-4 mr-2" />
-              Direct answers about tools, plans, and founder workflows
+              24/7 Community Support Available
             </Badge>
           </div>
 
@@ -62,24 +62,24 @@ const FAQHero = () => {
           {/* Value Proposition */}
           <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <p className="text-xl lg:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
-              Search practical answers about the Creatives Takeover startup development platform,
-              including plans, credits, founder tools, community features, and data protection.
+              Get instant answers to common questions about our creative subscription service, 
+              community features, pricing plans, and platform capabilities.
             </p>
           </div>
 
           {/* Quick Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12 animate-fade-in" style={{ animationDelay: '0.3s' }}>
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">24</div>
-              <div className="text-muted-foreground">Searchable Answers</div>
+              <div className="text-3xl font-bold text-primary mb-2">50+</div>
+              <div className="text-muted-foreground">Common Questions</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">6</div>
-              <div className="text-muted-foreground">Topic Groups</div>
+              <div className="text-3xl font-bold text-primary mb-2">&lt; 1min</div>
+              <div className="text-muted-foreground">Average Answer Time</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">25</div>
-              <div className="text-muted-foreground">Founder Guides</div>
+              <div className="text-3xl font-bold text-primary mb-2">24/7</div>
+              <div className="text-muted-foreground">Community Help</div>
             </div>
           </div>
 

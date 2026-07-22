@@ -149,7 +149,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     slug: "ideal-customer-profile-template",
     cluster: "icp",
     title: "Ideal Customer Profile Template for Early-Stage Founders",
-    metaTitle: "ICP Template for Startups | Creatives Takeover",
+    metaTitle: "Ideal Customer Profile Template for Startups | Creatives Takeover",
     metaDescription:
       "Use this ideal customer profile template to clarify your target customer, pain point, urgency, buying trigger, and first validation channel.",
     keyword: "ideal customer profile template",
@@ -304,7 +304,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     slug: "how-to-validate-startup-idea",
     cluster: "validation",
     title: "How to Validate a Startup Idea Before Building",
-    metaTitle: "Validate a Startup Idea Before Building | Creatives Takeover",
+    metaTitle: "How to Validate a Startup Idea Before Building | Creatives Takeover",
     metaDescription:
       "Validate a startup idea with ICP clarity, customer evidence, waitlist demand, and product-market fit signals before you build an MVP.",
     keyword: "how to validate startup idea",
@@ -1158,7 +1158,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     slug: "how-to-find-your-target-audience",
     cluster: "icp",
     title: "How to Find Your Target Audience as a Startup",
-    metaTitle: "Find Your Startup Target Audience | Creatives Takeover",
+    metaTitle: "How to Find Your Target Audience for a Startup | Creatives Takeover",
     metaDescription:
       "Find your startup's target audience by ranking pain, locating where they gather, and testing one segment before you build for everyone.",
     keyword: "how to find your target audience",
@@ -1199,7 +1199,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     slug: "customer-interview-questions",
     cluster: "validation",
     title: "Customer Interview Questions That Reveal Real Demand",
-    metaTitle: "Customer Interview Questions | Creatives Takeover",
+    metaTitle: "Customer Interview Questions for Startups | Creatives Takeover",
     metaDescription:
       "Use these customer interview questions to uncover real pain, past behavior, and willingness to pay — without leading the witness.",
     keyword: "customer interview questions",
@@ -1240,7 +1240,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     slug: "signs-your-startup-idea-is-good",
     cluster: "validation",
     title: "Signs Your Startup Idea Is Actually Good",
-    metaTitle: "7 Signs Your Startup Idea Is Strong | Creatives Takeover",
+    metaTitle: "Signs Your Startup Idea Is Good (and When to Drop It) | Creatives Takeover",
     metaDescription:
       "Learn the real signals that a startup idea is worth building — urgency, existing spend, and pull — and the red flags that mean you should stop.",
     keyword: "signs your startup idea is good",
@@ -1281,7 +1281,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     slug: "no-code-vs-code-for-mvp",
     cluster: "build",
     title: "No-Code vs Code for Your MVP",
-    metaTitle: "No-Code vs Code for an MVP | Creatives Takeover",
+    metaTitle: "No-Code vs Code for an MVP: Which Should You Use? | Creatives Takeover",
     metaDescription:
       "Decide between no-code and custom code for your MVP based on speed, your riskiest assumption, and what you actually need to prove first.",
     keyword: "no-code vs code for mvp",
@@ -1322,7 +1322,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     slug: "mvp-feature-prioritization",
     cluster: "build",
     title: "How to Prioritize MVP Features",
-    metaTitle: "Prioritize MVP Features | Creatives Takeover",
+    metaTitle: "How to Prioritize MVP Features (Cut the Rest) | Creatives Takeover",
     metaDescription:
       "Prioritize MVP features by mapping each one to your riskiest assumption and the single core job — then cut everything that doesn't earn its place.",
     keyword: "mvp feature prioritization",
@@ -1363,7 +1363,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     slug: "how-to-get-first-100-users",
     cluster: "launch",
     title: "How to Get Your First 100 Users",
-    metaTitle: "Get Your First 100 Startup Users | Creatives Takeover",
+    metaTitle: "How to Get Your First 100 Users for a Startup | Creatives Takeover",
     metaDescription:
       "Get your first 100 users with manual, unscalable outreach in the communities your ICP already lives in — before you touch paid ads.",
     keyword: "how to get first 100 users",
@@ -1445,7 +1445,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     slug: "cold-email-for-startups",
     cluster: "launch",
     title: "Cold Email for Startups That Gets Replies",
-    metaTitle: "Cold Email Templates for Startups | Creatives Takeover",
+    metaTitle: "Cold Email for Startups: Templates & Tactics | Creatives Takeover",
     metaDescription:
       "Write cold emails that get replies: research the recipient, lead with their problem, keep it short, and make one specific ask.",
     keyword: "cold email for startups",
@@ -1568,7 +1568,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     slug: "startup-pitch-deck-outline",
     cluster: "fundraising",
     title: "Startup Pitch Deck Outline (Slide by Slide)",
-    metaTitle: "Startup Pitch Deck Outline | Creatives Takeover",
+    metaTitle: "Startup Pitch Deck Outline, Slide by Slide | Creatives Takeover",
     metaDescription:
       "Use this pitch deck outline to tell a tight investor story: problem, solution, market, traction, business model, team, and the ask.",
     keyword: "startup pitch deck outline",

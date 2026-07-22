@@ -23,9 +23,9 @@ const About = () => {
   return (
     <>
       <SEO
-        title="About Creatives Takeover | The Founders' Compass"
-        description="Meet the team building Creatives Takeover, an AI-powered startup development platform that helps first-time founders move from idea to execution."
-        keywords="about Creatives Takeover, founder platform, startup development platform, first-time founders, AI startup tools"
+        title="About Creatives Takeover - Empowering Creators & Solopreneurs"
+        description="Learn about Creatives Takeover's mission and vision to empower creators and solopreneurs with AI and no-code solutions. See how we work and what we do."
+        keywords="about Creatives Takeover, creator platform, no-code community, solopreneur tools, AI co-founder, creative business platform"
         url="/about"
         canonical="https://creatives-takeover.com/about"
         image="/og-image.png"

@@ -1,5 +1,4 @@
 import { Helmet } from 'react-helmet-async';
-import { SITE_AUTHOR, SITE_IDENTITY } from '@/config/siteIdentity';
 
 interface SEOProps {
   title: string;
@@ -36,16 +35,18 @@ const SEO = ({
   structuredData,
   googleSiteVerification,
 }: SEOProps) => {
-  const baseUrl = SITE_IDENTITY.baseUrl;
+  const baseUrl = 'https://creatives-takeover.com';
   const fullUrl = url ? `${baseUrl}${url}` : baseUrl;
   const canonicalUrl = canonical || fullUrl;
   const fullImageUrl = image.startsWith('http') ? image : `${baseUrl}${image}`;
 
-  // Titles and descriptions are deliberately authored at the route level. Do
-  // not cut them mechanically: a literal ellipsis hides the brand/topic and
-  // creates different metadata between the source HTML and hydrated page.
-  const optimizedTitle = title.trim();
-  const optimizedDescription = description.trim();
+  // Ensure title is optimized length (50-60 chars)
+  const optimizedTitle = title.length > 60 ? `${title.substring(0, 57)}...` : title;
+  
+  // Ensure description is optimized length (150-160 chars)
+  const optimizedDescription = description.length > 160 
+    ? `${description.substring(0, 157)}...` 
+    : description;
 
   return (
     <Helmet>
@@ -71,7 +72,7 @@ const SEO = ({
       <meta property="og:image:height" content="630" />
       <meta property="og:image:alt" content={optimizedTitle} />
       <meta property="og:locale" content="en_US" />
-      <meta property="og:site_name" content={SITE_IDENTITY.name} />
+      <meta property="og:site_name" content="Creatives Takeover" />
       {publishedTime && <meta property="article:published_time" content={publishedTime} />}
       {modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
       {author && type === 'article' && <meta property="article:author" content={author} />}
@@ -97,55 +98,34 @@ const SEO = ({
 
 export default SEO;
 
-const createOrganizationEntity = () => ({
-  "@type": "Organization",
-  "@id": `${SITE_IDENTITY.baseUrl}/#organization`,
-  "name": SITE_IDENTITY.name,
-  "url": SITE_IDENTITY.baseUrl,
-  "logo": {
-    "@type": "ImageObject",
-    "url": SITE_IDENTITY.logoUrl,
-    "width": 192,
-    "height": 192,
-  },
-  "description": SITE_IDENTITY.description,
-  "founder": {
-    "@type": "Person",
-    "@id": `${SITE_IDENTITY.baseUrl}/about#founder`,
-    "name": SITE_AUTHOR.name,
-    "jobTitle": SITE_AUTHOR.jobTitle,
-    "url": SITE_AUTHOR.url,
-    "sameAs": [...SITE_AUTHOR.sameAs],
-  },
-  "sameAs": [...SITE_IDENTITY.sameAs],
-  "contactPoint": {
-    "@type": "ContactPoint",
-    "contactType": "Customer Support",
-    "email": SITE_IDENTITY.supportEmail,
-  },
-  "address": {
-    "@type": "PostalAddress",
-    ...SITE_IDENTITY.address,
-  },
-});
-
 // Helper function to create Organization schema
 export const createOrganizationSchema = () => ({
   "@context": "https://schema.org",
-  ...createOrganizationEntity(),
+  "@type": "Organization",
+  "name": "Creatives Takeover",
+  "url": "https://creatives-takeover.com",
+  "logo": "https://creatives-takeover.com/favicon-192x192.png",
+  "description": "The creative entrepreneur's AI co-founder. Go from scattered ideas to profitable launch in 30 days.",
+  "sameAs": [
+    "https://twitter.com/CreativesTakeover",
+    "https://linkedin.com/company/creatives-takeover"
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "contactType": "Customer Support",
+    "email": "support@creatives-takeover.com"
+  }
 });
 
 // Helper function to create WebSite schema with search
 export const createWebSiteSchema = () => ({
   "@context": "https://schema.org",
   "@type": "WebSite",
-  "@id": `${SITE_IDENTITY.baseUrl}/#website`,
-  "name": SITE_IDENTITY.name,
-  "url": SITE_IDENTITY.baseUrl,
-  "description": SITE_IDENTITY.shortDescription,
+  "name": "Creatives Takeover",
+  "url": "https://creatives-takeover.com",
   "potentialAction": {
     "@type": "SearchAction",
-    "target": { "@type": "EntryPoint", "urlTemplate": `${SITE_IDENTITY.baseUrl}/answers?q={search_term_string}` },
+    "target": { "@type": "EntryPoint", "urlTemplate": "https://creatives-takeover.com/answers?q={search_term_string}" },
     "query-input": "required name=search_term_string"
   }
 });
@@ -158,7 +138,7 @@ export const createBreadcrumbSchema = (items: Array<{ name: string; url: string 
     "@type": "ListItem",
     "position": index + 1,
     "name": item.name,
-    "item": `${SITE_IDENTITY.baseUrl}${item.url}`
+    "item": `https://creatives-takeover.com${item.url}`
   }))
 });
 
@@ -182,17 +162,21 @@ export const createArticleSchema = (article: {
     "image": article.image || "https://creatives-takeover.com/og-image.png",
     "author": {
       "@type": "Person",
-      "name": article.author,
-      ...(article.author === SITE_AUTHOR.name
-        ? { "@id": `${SITE_IDENTITY.baseUrl}/about#founder`, "url": SITE_AUTHOR.url }
-        : {})
+      "name": article.author
     },
-    "publisher": createOrganizationEntity(),
+    "publisher": {
+      "@type": "Organization",
+      "name": "Creatives Takeover",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://creatives-takeover.com/favicon-192x192.png"
+      }
+    },
     "datePublished": article.publishedTime,
-    ...(article.modifiedTime ? { "dateModified": article.modifiedTime } : {}),
+    "dateModified": article.modifiedTime || article.publishedTime,
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": `${SITE_IDENTITY.baseUrl}${article.url}`
+      "@id": `https://creatives-takeover.com${article.url}`
     }
   };
 
@@ -220,14 +204,18 @@ export const createHowToSchema = (params: {
   "@type": "HowTo",
   "name": params.name,
   "description": params.description,
-  "url": `${SITE_IDENTITY.baseUrl}${params.url}`,
-  "publisher": createOrganizationEntity(),
+  "url": `https://creatives-takeover.com${params.url}`,
+  "publisher": {
+    "@type": "Organization",
+    "name": "Creatives Takeover",
+    "url": "https://creatives-takeover.com"
+  },
   "step": params.steps.map((step, index) => ({
     "@type": "HowToStep",
     "position": index + 1,
     "name": step.title,
     "text": step.description,
-    "url": `${SITE_IDENTITY.baseUrl}${params.url}#step-${index + 1}`
+    "url": `https://creatives-takeover.com${params.url}#step-${index + 1}`
   }))
 });
 
@@ -257,7 +245,7 @@ export const createProductSchema = (product: {
   "@type": "Product",
   "name": product.name,
   "description": product.description,
-  "image": product.image || SITE_IDENTITY.imageUrl,
+  "image": product.image || "https://creatives-takeover.com/og-image.png",
   "offers": {
     "@type": "Offer",
     "price": product.price,
@@ -270,9 +258,9 @@ export const createProductSchema = (product: {
 export const createSoftwareSchema = () => ({
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": SITE_IDENTITY.name,
+  "name": "Creatives Takeover Dream2Plan",
   "applicationCategory": "BusinessApplication",
-  "description": SITE_IDENTITY.description,
+  "description": "AI-powered business planning tool that helps creative entrepreneurs go from scattered ideas to profitable launch in 30 days.",
   "operatingSystem": "Web",
   "offers": {
     "@type": "Offer",
@@ -301,7 +289,7 @@ export const createSoftwareApplicationSchema = (app: {
   "applicationCategory": app.applicationCategory || "BusinessApplication",
   "description": app.description,
   "operatingSystem": "Web",
-  "url": `${SITE_IDENTITY.baseUrl}${app.url}`,
+  "url": `https://creatives-takeover.com${app.url}`,
   ...(app.featureList && app.featureList.length > 0
     ? { "featureList": app.featureList }
     : {}),
@@ -318,9 +306,34 @@ export const createAboutPageSchema = () => ({
   "@context": "https://schema.org",
   "@type": "AboutPage",
   "name": "About Creatives Takeover",
-  "description": SITE_IDENTITY.description,
-  "url": `${SITE_IDENTITY.baseUrl}/about`,
-  "mainEntity": createOrganizationEntity(),
+  "description": "Learn about Creatives Takeover's mission and vision to empower creators and solopreneurs with AI and no-code solutions.",
+  "url": "https://creatives-takeover.com/about",
+  "mainEntity": {
+    "@type": "Organization",
+    "name": "Creatives Takeover",
+    "url": "https://creatives-takeover.com",
+    "logo": "https://creatives-takeover.com/favicon-192x192.png",
+    "description": "The creative entrepreneur's AI co-founder. Go from scattered ideas to profitable launch in 30 days.",
+    "sameAs": [
+      "https://twitter.com/CreativesTakeover",
+      "https://linkedin.com/company/creatives-takeover",
+      "https://www.instagram.com/creativestakeover.official/",
+      "https://www.youtube.com/@CreativesTakeover"
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "Customer Support",
+      "email": "admin@creatives-takeover.com"
+    },
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "71-75, Shelton Street",
+      "addressLocality": "Covent Garden",
+      "addressRegion": "London",
+      "postalCode": "WC2H 9JQ",
+      "addressCountry": "GB"
+    }
+  }
 });
 
 // Helper function to create Service/ServiceList schema
@@ -329,18 +342,22 @@ export const createServiceSchema = (services?: Array<{ name: string; description
     return {
       "@context": "https://schema.org",
       "@type": "Service",
-      "serviceType": "Startup Development Support",
-      "name": "Creatives Takeover Founder Platform",
-      "description": SITE_IDENTITY.description,
-      "provider": createOrganizationEntity(),
+      "serviceType": "Creative Subscription Service",
+      "name": "Creatives Takeover Services",
+      "description": "Transform your creative workflow with our creative subscription service. Unlimited design access, AI-powered tools, and premium features for modern creatives.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Creatives Takeover",
+        "url": "https://creatives-takeover.com"
+      },
       "areaServed": "Worldwide",
       "availableChannel": {
         "@type": "ServiceChannel",
-        "serviceUrl": `${SITE_IDENTITY.baseUrl}/build`
+        "serviceUrl": "https://creatives-takeover.com/services"
       },
       "hasOfferCatalog": {
         "@type": "OfferCatalog",
-        "name": "Founder Tools and Support",
+        "name": "Creative Services",
         "itemListElement": services.map((service, index) => ({
           "@type": "OfferCatalogItem",
           "position": index + 1,
@@ -357,14 +374,18 @@ export const createServiceSchema = (services?: Array<{ name: string; description
   return {
     "@context": "https://schema.org",
     "@type": "Service",
-    "serviceType": "Startup Development Support",
-    "name": "Creatives Takeover Founder Platform",
-    "description": SITE_IDENTITY.description,
-    "provider": createOrganizationEntity(),
+    "serviceType": "Creative Subscription Service",
+    "name": "Creatives Takeover Services",
+    "description": "Transform your creative workflow with our creative subscription service. Unlimited design access, AI-powered tools, and premium features for modern creatives.",
+    "provider": {
+      "@type": "Organization",
+      "name": "Creatives Takeover",
+      "url": "https://creatives-takeover.com"
+    },
     "areaServed": "Worldwide",
     "availableChannel": {
       "@type": "ServiceChannel",
-      "serviceUrl": `${SITE_IDENTITY.baseUrl}/build`
+      "serviceUrl": "https://creatives-takeover.com/services"
     }
   };
 };
@@ -373,14 +394,18 @@ export const createServiceSchema = (services?: Array<{ name: string; description
 export const createLocalBusinessSchema = () => ({
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
-  "name": SITE_IDENTITY.name,
-  "image": SITE_IDENTITY.imageUrl,
-  "url": SITE_IDENTITY.baseUrl,
+  "name": "Creatives Takeover",
+  "image": "https://creatives-takeover.com/og-image.png",
+  "url": "https://creatives-takeover.com",
   "telephone": "",
-  "email": SITE_IDENTITY.supportEmail,
+  "email": "admin@creatives-takeover.com",
   "address": {
     "@type": "PostalAddress",
-    ...SITE_IDENTITY.address,
+    "streetAddress": "71-75, Shelton Street",
+    "addressLocality": "Covent Garden",
+    "addressRegion": "London",
+    "postalCode": "WC2H 9JQ",
+    "addressCountry": "GB"
   },
   "geo": {
     "@type": "GeoCoordinates",
@@ -399,15 +424,20 @@ export const createLocalBusinessSchema = () => ({
     "opens": "09:00",
     "closes": "17:00"
   },
-  "sameAs": [...SITE_IDENTITY.sameAs]
+  "sameAs": [
+    "https://twitter.com/CreativesTakeover",
+    "https://linkedin.com/company/creatives-takeover",
+    "https://www.instagram.com/creativestakeover.official/",
+    "https://www.youtube.com/@CreativesTakeover"
+  ]
 });
 
 // Helper function to create ContactPage schema
 export const createContactPageSchema = () => ({
   "@context": "https://schema.org",
   "@type": "ContactPage",
-  "name": `Contact ${SITE_IDENTITY.name}`,
+  "name": "Contact Creatives Takeover",
   "description": "Contact Creatives Takeover. We're here to help with product questions, partnerships, and support.",
-  "url": `${SITE_IDENTITY.baseUrl}/contact`,
+  "url": "https://creatives-takeover.com/contact",
   "mainEntity": createLocalBusinessSchema()
 });
