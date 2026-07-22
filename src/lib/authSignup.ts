@@ -1,5 +1,6 @@
 import type { AuthError } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { getSignupMetadata } from "@/lib/attribution";
 
 interface SignUpWithFallbackParams {
   email: string;
@@ -126,12 +127,14 @@ export async function signUpWithFallback({
   }
 
   const normalizedUsername = (username || "").trim().toLowerCase();
+  const attributionMetadata = getSignupMetadata();
 
   const { error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: {
+        ...attributionMetadata,
         full_name: fullName || "",
         date_of_birth: dateOfBirth || null,
         username: normalizedUsername || null,

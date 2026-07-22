@@ -2,6 +2,7 @@ import posthog from 'posthog-js';
 import * as amplitude from '@amplitude/analytics-browser';
 import { getSafeSessionStorage, getSafeLocalStorage } from '@/lib/safeStorage';
 import { logWarn } from '@/lib/logger';
+import { captureFirstTouch } from '@/lib/attribution';
 
 type AnalyticsProperties = Record<string, unknown>;
 type PostHogWithLoaded = typeof posthog & { __loaded?: boolean };
@@ -89,7 +90,6 @@ const INTERNAL_EMAILS = new Set<string>(
 );
 INTERNAL_EMAILS.add('admin@creatives-takeover.com');
 
-const FIRST_TOUCH_UTM_KEY = 'ct_posthog_first_touch_utms';
 const AUTH_METHOD_STORAGE_KEY = 'ct_auth_method';
 const SIGNUP_INTENT_STORAGE_KEY = 'ct_signup_intent';
 // Honor a stored signup intent for this long. Covers the OAuth round-trip and the
@@ -210,40 +210,15 @@ const flushQueue = () => {
 };
 
 const getFirstTouchUtms = (): AnalyticsProperties => {
-  if (typeof window === 'undefined') {
-    return {};
-  }
-
-  try {
-    const stored = window.localStorage.getItem(FIRST_TOUCH_UTM_KEY);
-    if (stored) {
-      return JSON.parse(stored) as AnalyticsProperties;
-    }
-  } catch (error) {
-    logWarn('Failed to read stored PostHog UTMs', error);
-  }
-
-  const params = new URLSearchParams(window.location.search);
-  const firstTouchUtms = {
-    utm_source: params.get('utm_source') || undefined,
-    utm_medium: params.get('utm_medium') || undefined,
-    utm_campaign: params.get('utm_campaign') || undefined,
-    utm_content: params.get('utm_content') || undefined,
-    utm_term: params.get('utm_term') || undefined,
+  const firstTouch = captureFirstTouch();
+  if (!firstTouch) return {};
+  return {
+    utm_source: firstTouch.utm_source,
+    utm_medium: firstTouch.utm_medium,
+    utm_campaign: firstTouch.utm_campaign,
+    utm_content: firstTouch.utm_content,
+    utm_term: firstTouch.utm_term,
   };
-
-  const hasAnyUtm = Object.values(firstTouchUtms).some(Boolean);
-  if (!hasAnyUtm) {
-    return {};
-  }
-
-  try {
-    window.localStorage.setItem(FIRST_TOUCH_UTM_KEY, JSON.stringify(firstTouchUtms));
-  } catch (error) {
-    logWarn('Failed to persist first-touch UTMs', error);
-  }
-
-  return firstTouchUtms;
 };
 
 const registerFirstTouchUtms = () => {

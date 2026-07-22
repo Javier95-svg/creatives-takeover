@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "node --experimental-strip-types --test tests/**/*.test.ts",
-    "test:analytics": "node --experimental-strip-types --test tests/analytics-governance.test.ts tests/dual-analytics-events.test.ts tests/server-analytics-events.test.ts",
+    "test:analytics": "node --experimental-strip-types --test tests/analytics-governance.test.ts tests/attribution.test.ts tests/dual-analytics-events.test.ts tests/server-analytics-events.test.ts",
     "test:mvp-builder": "node --experimental-strip-types --test tests/mvp-builder-project.test.ts",
     "test:waitlist": "node --experimental-strip-types --test tests/waitlist-model.test.ts",
     "typecheck": "tsc --noEmit",

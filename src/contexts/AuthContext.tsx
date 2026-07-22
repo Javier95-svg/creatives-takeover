@@ -28,6 +28,10 @@ import {
 import { isAdminEmail } from '@/lib/admin';
 import { triggerEmailSequenceEvent } from '@/lib/emailSequences';
 import { clearAccountScopedStorage } from '@/lib/accountScopedStorage';
+import {
+  persistAttributionAfterAuth,
+  type AttributionRpcClient,
+} from '@/lib/attribution';
 
 interface AuthContextType {
   user: User | null;
@@ -59,6 +63,13 @@ const getDaysSinceSignup = (createdAt?: string | null): number => {
 // Defined at module scope (not inside handleSignIn) so the method literal stays out of
 // the identify() block that the PII test scans.
 const DEFAULT_SIGNUP_METHOD: SignupMethod = 'email';
+const SIGNUP_ATTRIBUTION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+const isRecentSignup = (createdAt?: string | null): boolean => {
+  if (!createdAt) return false;
+  const createdMs = new Date(createdAt).getTime();
+  return !Number.isNaN(createdMs) && Date.now() - createdMs <= SIGNUP_ATTRIBUTION_MAX_AGE_MS;
+};
 
 const getSignupCompletedMethod = (provider?: string | null, storedMethod?: string | null) => {
   const rawMethod = (storedMethod || provider || '').toLowerCase();
@@ -175,6 +186,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (!profileExists) {
         logError('Profile does not exist after sign in', null, { userId });
         return;
+      }
+
+      // The signup trigger handles email metadata. This best-effort RPC also covers
+      // OAuth and the direct-signup Edge Function, which cannot carry browser state.
+      // Restrict it to newly-created accounts so an older user's latest visit can
+      // never be mislabeled as their original signup source.
+      if (!isInternalEmail(email) && isRecentSignup(signedInUser.created_at)) {
+        void persistAttributionAfterAuth(supabase as unknown as AttributionRpcClient);
       }
 
       const { data: refreshedProfile, error: refreshedProfileError } = await supabase

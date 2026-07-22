@@ -9,12 +9,14 @@ import './styles/responsive-overrides.css'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { reportAppError } from './lib/errorReporting'
 import { getPosthogClient, bootstrapPosthog, captureUtmSuperProperties, isLikelyBot } from './lib/analytics'
+import { captureFirstTouch } from './lib/attribution'
 
 function AnalyticsBootstrap() {
   useEffect(() => {
     if (isLikelyBot()) {
       posthog.opt_out_capturing();
     } else {
+      captureFirstTouch();
       captureUtmSuperProperties();
     }
   }, []);
