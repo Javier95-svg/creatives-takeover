@@ -5,6 +5,7 @@ import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_share
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 import { inferMotion, rankChannels, type GTMIntakeV2 } from '../_shared/gtm-channel-engine.ts';
+import { emitBusinessEvent, resolveAnalyticsErrorCode } from '../_shared/analytics.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -628,9 +629,18 @@ serve(async (req) => {
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch (v2Error) {
         const error = v2Error instanceof Error ? v2Error : new Error(String(v2Error));
-        if (chargedCredits > 0) {
-          await refundCredits(user.id, chargedCredits, 'GTM Analysis', 'Refund: GTM V2 generation failed', { error: error.message });
-        }
+        const refundSucceeded = chargedCredits > 0
+          ? await refundCredits(user.id, chargedCredits, 'GTM Analysis', 'Refund: GTM V2 generation failed', { error: error.message })
+          : true;
+        await emitBusinessEvent({
+          eventName: 'generation_failed',
+          userId: user.id,
+          properties: {
+            tool: 'gtm_strategist',
+            error_code: resolveAnalyticsErrorCode(v2Error),
+            credits_refunded: refundSucceeded ? chargedCredits : 0,
+          },
+        });
         throw error;
       }
     }
@@ -824,9 +834,18 @@ Apply the scoring matrix, enforce all constraint rules, then generate the GTM Br
 
     } catch (aiError) {
       const err = aiError instanceof Error ? aiError : new Error(String(aiError));
-      if (chargedCredits > 0) {
-        await refundCredits(user.id, chargedCredits, 'GTM Analysis', 'Refund: AI processing failed', { error: err.message });
-      }
+      const refundSucceeded = chargedCredits > 0
+        ? await refundCredits(user.id, chargedCredits, 'GTM Analysis', 'Refund: AI processing failed', { error: err.message })
+        : true;
+      await emitBusinessEvent({
+        eventName: 'generation_failed',
+        userId: user.id,
+        properties: {
+          tool: 'gtm_strategist',
+          error_code: resolveAnalyticsErrorCode(aiError),
+          credits_refunded: refundSucceeded ? chargedCredits : 0,
+        },
+      });
       throw aiError;
     }
 

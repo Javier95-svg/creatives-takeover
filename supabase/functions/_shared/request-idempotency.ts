@@ -4,7 +4,11 @@ const MAX_ARRAY_ITEMS = 20;
 const MAX_STRING_LENGTH = 240;
 const MAX_FINGERPRINT_LENGTH = 3_000;
 
-type FingerprintValue = string | number | boolean | null | undefined | FingerprintValue[] | Record<string, FingerprintValue>;
+interface FingerprintObject {
+  [key: string]: FingerprintValue;
+}
+
+type FingerprintValue = string | number | boolean | null | undefined | FingerprintValue[] | FingerprintObject;
 
 function sanitizeFingerprint(value: FingerprintValue, depth = 0): FingerprintValue {
   if (value === null || value === undefined) return value;
@@ -46,7 +50,7 @@ export interface CreditIdempotencyOptions {
   userId: string;
   feature: string;
   sessionId?: string;
-  requestFingerprint?: FingerprintValue;
+  requestFingerprint?: unknown;
   timeBucketMs?: number;
 }
 
@@ -76,7 +80,7 @@ export async function resolveCreditIdempotencyKey(
     }
   })();
 
-  const sanitizedFingerprint = sanitizeFingerprint(options.requestFingerprint);
+  const sanitizedFingerprint = sanitizeFingerprint(options.requestFingerprint as FingerprintValue);
   const serializedFingerprint = stableStringify(sanitizedFingerprint).slice(0, MAX_FINGERPRINT_LENGTH);
   const seed = [
     'credit-deduction',

@@ -111,6 +111,17 @@ const toIsoOrNull = (unixSeconds?: number | null) => (
     : null
 );
 
+const daysBetweenUnixSeconds = (
+  startSeconds?: number | null,
+  endSeconds?: number | null,
+): number | undefined => {
+  if (typeof startSeconds !== "number" || !Number.isFinite(startSeconds)) return undefined;
+  const resolvedEnd = typeof endSeconds === "number" && Number.isFinite(endSeconds)
+    ? endSeconds
+    : Math.floor(Date.now() / 1000);
+  return Math.max(0, Math.floor((resolvedEnd - startSeconds) / 86_400));
+};
+
 const getStripeCustomerContext = async (customerId: string | null | undefined) => {
   if (!customerId) {
     return { email: null as string | null, metadataUserId: null as string | null };
@@ -551,7 +562,7 @@ const syncSubscriptionState = async (
     stripeCurrentPeriodEnd?: string | null;
     proActivationEvent?: ProActivationEventContext | null;
   }
-) => {
+): Promise<{ previousTier: string; wasSubscribed: boolean }> => {
   const normalizedTier = subscribed ? normalizeSubscriptionTier(tier) : "rookie";
   const nextBillingCycle = subscribed ? billingCycle : null;
   const tierCredits = await getTierCredits(supabaseAdmin, normalizedTier);
@@ -694,6 +705,8 @@ const syncSubscriptionState = async (
       billingCycle: nextBillingCycle,
     });
   }
+
+  return { previousTier, wasSubscribed };
 };
 
 async function handleCheckoutCompleted(
@@ -817,6 +830,20 @@ async function handleCheckoutCompleted(
     subscriptionId: session.subscription,
     subscriptionPriceId,
     rpcStatus: subscriptionResult?.status,
+  });
+
+  const amountCents = Number(
+    session.amount_total ?? subscription?.items?.data?.[0]?.price?.unit_amount ?? 0,
+  );
+  await emitBusinessEvent({
+    eventName: "subscription_started",
+    userId: resolvedUserId,
+    properties: {
+      plan: syncedTier,
+      billing_interval: billingCycle,
+      amount_usd: Number((amountCents / 100).toFixed(2)),
+      stripe_customer_id: customerId ?? undefined,
+    },
   });
 }
 
@@ -1061,7 +1088,11 @@ async function handlePaymentIntentSucceeded(paymentIntent: any, supabaseAdmin: a
 async function handleSubscriptionChange(
   subscription: any,
   supabaseAdmin: any,
-  eventContext: { stripeEventId: string; stripeEventType: string }
+  eventContext: {
+    stripeEventId: string;
+    stripeEventType: string;
+    previousAttributes?: Record<string, unknown>;
+  }
 ) {
   console.log("[Subscription] Processing subscription change");
 
@@ -1093,7 +1124,7 @@ async function handleSubscriptionChange(
   const stripeCurrentPeriodStart = toIsoOrNull(subscription.current_period_start ?? null);
   const billingAnchorAt = toIsoOrNull(subscription.billing_cycle_anchor ?? subscription.current_period_start ?? null);
 
-  await syncSubscriptionState(supabaseAdmin, {
+  const previousState = await syncSubscriptionState(supabaseAdmin, {
     userId: resolvedUserId,
     email: customerEmail,
     stripeCustomerId: customerId,
@@ -1112,6 +1143,25 @@ async function handleSubscriptionChange(
       subscriptionId: typeof subscription.id === "string" ? subscription.id : null,
     },
   });
+
+  if (eventContext.stripeEventType === "customer.subscription.updated") {
+    const previousStatus = typeof eventContext.previousAttributes?.status === "string"
+      ? eventContext.previousAttributes.status
+      : null;
+    const planChanged = previousState.previousTier !== normalizeSubscriptionTier(tier);
+    const statusChanged = previousStatus !== null && previousStatus !== status;
+    if (planChanged || statusChanged) {
+      await emitBusinessEvent({
+        eventName: "subscription_plan_changed",
+        userId: resolvedUserId,
+        properties: {
+          previous_plan: previousState.previousTier,
+          new_plan: normalizeSubscriptionTier(tier),
+          status,
+        },
+      });
+    }
+  }
 
   console.log(`[Subscription] Synced ${resolvedUserId}: ${tier} (${status})`);
 }
@@ -1160,6 +1210,18 @@ async function handleSubscriptionDeleted(
     });
     throw error;
   }
+
+  await emitBusinessEvent({
+    eventName: "subscription_cancelled",
+    userId: resolvedUserId,
+    properties: {
+      plan: resolveSubscriptionTier(subscription),
+      days_since_start: daysBetweenUnixSeconds(
+        subscription.start_date ?? subscription.created ?? null,
+        subscription.ended_at ?? subscription.canceled_at ?? null,
+      ),
+    },
+  });
 
   console.log("[Subscription] Downgraded to rookie through RPC", { userId: resolvedUserId, result: data });
 }
@@ -1257,6 +1319,15 @@ async function handleInvoicePaid(
     appliedAt,
     billingAnchorAt,
   });
+
+  await emitBusinessEvent({
+    eventName: "subscription_payment_received",
+    userId: resolvedUserId,
+    properties: {
+      amount_usd: Number((Number(invoice.amount_paid ?? 0) / 100).toFixed(2)),
+      plan: normalizeSubscriptionTier(tier),
+    },
+  });
 }
 
 serve(async (req) => {
@@ -1333,6 +1404,7 @@ serve(async (req) => {
         await handleSubscriptionChange(object, supabaseAdmin, {
           stripeEventId: event.id,
           stripeEventType: event.type,
+          previousAttributes: event.data.previous_attributes as Record<string, unknown> | undefined,
         });
         break;
       case "customer.subscription.deleted":

@@ -342,5 +342,5 @@ test('ICP analyzer skips free saves and preserves ICP entitlement metadata for f
   assert.match(source, /if \(shouldChargeIcpCredits\(icpDraftCost\)\)/);
   assert.match(source, /entitlementFeature: "ICP_ANALYSIS"/);
   assert.match(source, /First ICP draft is free for this account; no credits charged/);
-  assert.match(source, /payload\.mode === "save" && user && creditsCharged/);
+  assert.match(source, /const refundSucceeded = creditsCharged[\s\S]*\? await refundCredits/);
 });

@@ -4,7 +4,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_shared/credit-deduction.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
-import { assessPmfEvidence } from '../_shared/pmf-evidence.ts';
+import { assessPmfEvidence, PMF_SIGNAL_THRESHOLDS } from '../_shared/pmf-evidence.ts';
+import { emitBusinessEvent, resolveAnalyticsErrorCode } from '../_shared/analytics.ts';
 
 const MIN_INTERVIEWS_FOR_READY = 25;
 const DECISION_GRADE_SIGNAL_THRESHOLD = 25;
@@ -556,7 +557,7 @@ Willingness to pay signal: ${wtpDetail}
 Minimum interview threshold to move to Building: ${MIN_INTERVIEWS_FOR_READY}
 Weighted evidence signals: ${weightedEvidenceSignalCount}
 Evidence grade: ${evidenceGrade.replace('_', ' ')}
-Signal ladder: ${DIRECTIONAL_SIGNAL_THRESHOLD} directional, ${EMERGING_SIGNAL_THRESHOLD} emerging patterns, ${DECISION_GRADE_SIGNAL_THRESHOLD} decision grade
+Signal ladder: ${PMF_SIGNAL_THRESHOLDS.directional} directional, ${PMF_SIGNAL_THRESHOLDS.emerging} emerging patterns, ${DECISION_GRADE_SIGNAL_THRESHOLD} decision grade
 Source weights in this run: ${loggedInterviewCount} interviews × 1.0, ${surveySignalCount} hosted survey responses × 0.75, ${demoBehaviorSignalCount} verified demo behaviors × 0.75, ${researchSignalCount} research sources × 0.25
 
 STRUCTURED INTERVIEW LOG:
@@ -787,9 +788,18 @@ Apply the scoring rubric to this evidence and return the PMF readiness JSON. Mak
 
     } catch (aiError) {
       const err = aiError instanceof Error ? aiError : new Error(String(aiError));
-      if (chargedCredits > 0) {
-        await refundCredits(user.id, chargedCredits, 'PMF Evidence Analysis', 'Refund: AI processing failed', { error: err.message });
-      }
+      const refundSucceeded = chargedCredits > 0
+        ? await refundCredits(user.id, chargedCredits, 'PMF Evidence Analysis', 'Refund: AI processing failed', { error: err.message })
+        : true;
+      await emitBusinessEvent({
+        eventName: 'generation_failed',
+        userId: user.id,
+        properties: {
+          tool: 'pmf_lab',
+          error_code: resolveAnalyticsErrorCode(aiError),
+          credits_refunded: refundSucceeded ? chargedCredits : 0,
+        },
+      });
       // A failed run must not consume the free first score.
       if (isFirstScoreGift) {
         await supabase

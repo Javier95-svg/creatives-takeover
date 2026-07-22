@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { emitBusinessEvent } from "../_shared/analytics.ts";
 
 // Public endpoint: a logged-out visitor submits a PMF survey response.
 // verify_jwt stays true — supabase-js attaches the anon JWT for anonymous callers,
@@ -116,6 +117,21 @@ serve(async (req) => {
     // A repeat email for the same survey is a no-op, not an error.
     if (insertError && !/duplicate key|unique/i.test(insertError.message || "")) {
       throw insertError;
+    }
+    const responseInserted = !insertError;
+
+    if (responseInserted) {
+      await emitBusinessEvent({
+        eventName: "pmf_survey_response_received",
+        userId: survey.user_id,
+        properties: {
+          survey_slug: slug,
+          sean_ellis_answer: answer,
+          has_email: Boolean(email),
+          has_main_benefit: Boolean(clean(body.mainBenefit, 2000)),
+          has_feedback: Boolean(clean(body.feedback, 4000)),
+        },
+      });
     }
 
     const { data: responseRows, error: responseCountError } = await admin

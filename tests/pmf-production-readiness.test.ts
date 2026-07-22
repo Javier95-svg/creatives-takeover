@@ -20,7 +20,7 @@ test('pmf funnel analytics events are wired on client actions', () => {
   const page = read('src/pages/PMFLabPage.tsx');
   const labHook = read('src/hooks/usePMFLab.ts');
   const surveyHook = read('src/hooks/usePMFSurvey.ts');
-  const surveyPage = read('src/pages/pmf/PMFSurveyPage.tsx');
+  const surveyResponseEdge = read('supabase/functions/pmf-survey-respond/index.ts');
   const discoveryEdge = read('supabase/functions/pmf-customer-discovery/index.ts');
 
   for (const event of [
@@ -41,7 +41,7 @@ test('pmf funnel analytics events are wired on client actions', () => {
   }
 
   assert.match(surveyHook, /pmf_survey_created/);
-  assert.match(surveyPage, /pmf_survey_response_received/);
+  assert.match(surveyResponseEdge, /pmf_survey_response_received/);
   assert.match(discoveryEdge, /pmf_customer_discovery_started/);
   assert.match(discoveryEdge, /pmf_customer_discovery_completed/);
   assert.match(discoveryEdge, /pmf_customer_discovery_failed/);

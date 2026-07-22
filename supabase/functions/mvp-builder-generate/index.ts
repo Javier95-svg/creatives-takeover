@@ -1182,6 +1182,28 @@ function emitMVPBuilderTelemetry(eventName: string, userId: string, properties: 
   });
 }
 
+function emitMVPGenerationFailed({
+  userId,
+  reservationId,
+  errorCode,
+  released,
+  heldCredits,
+}: {
+  userId: string;
+  reservationId: string;
+  errorCode: string;
+  released: { success?: boolean; wasReleased?: boolean; heldCredits?: number };
+  heldCredits: number;
+}) {
+  if (!released.success || !released.wasReleased) return;
+  emitMVPBuilderTelemetry("generation_failed", userId, {
+    tool: "mvp_builder",
+    error_code: errorCode,
+    credits_refunded: Number(released.heldCredits ?? heldCredits),
+    operation_id: reservationId,
+  });
+}
+
 function formatFounderContext(context: Record<string, unknown> | null): string {
   if (!context) return "";
 
@@ -1696,6 +1718,7 @@ serve(async (req: Request) => {
 
         if (deterministicResult.status === "no_change") {
           const released = await releaseMVPBuilderCredits(reservationId, "MVP Builder deterministic edit produced no material change");
+          emitMVPGenerationFailed({ userId, reservationId, errorCode: "NO_MATERIAL_CHANGE", released, heldCredits });
           await writer.write(enc({ type: "credit-released", ...released, releaseReason: "no_material_change" }));
           await writer.write(enc({
             type: "error",
@@ -1720,6 +1743,7 @@ serve(async (req: Request) => {
 
         if (!hasMaterialProjectChange(currentProject, validated)) {
           const released = await releaseMVPBuilderCredits(reservationId, "MVP Builder deterministic edit produced no material change");
+          emitMVPGenerationFailed({ userId, reservationId, errorCode: "NO_MATERIAL_CHANGE", released, heldCredits });
           await writer.write(enc({ type: "credit-released", ...released, releaseReason: "no_material_change" }));
           await writer.write(enc({
             type: "error",
@@ -1761,6 +1785,7 @@ serve(async (req: Request) => {
         const released = await releaseMVPBuilderCredits(reservationId, "Deterministic edit stream error", {
           error: err instanceof Error ? err.message : String(err),
         }).catch(() => ({ success: false }));
+        emitMVPGenerationFailed({ userId, reservationId, errorCode: "STREAM_ERROR", released, heldCredits });
         await writer.write(enc({ type: "credit-released", ...released, releaseReason: "stream_error" }));
         await writer.write(enc({ type: "error", error: "Stream interrupted. Held credits have been released. Please try again.", errorCode: "STREAM_ERROR" }));
         await writer.write(encDone());
@@ -1811,7 +1836,12 @@ serve(async (req: Request) => {
   }
 
   if (!aiResponse) {
-    await releaseMVPBuilderCredits(reservationId, "AI API error", { lastApiError, providerErrors }).catch(() => {});
+    const released = await releaseMVPBuilderCredits(
+      reservationId,
+      "AI API error",
+      { lastApiError, providerErrors },
+    ).catch(() => ({ success: false }));
+    emitMVPGenerationFailed({ userId, reservationId, errorCode: "AI_ERROR", released, heldCredits });
     console.error("All MVP Builder model attempts failed", {
       actionType: classifiedAction,
       primaryModel,
@@ -1976,6 +2006,7 @@ serve(async (req: Request) => {
       if (classifiedAction === "chat") {
         if (!fullText.trim()) {
           const released = await releaseMVPBuilderCredits(reservationId, "Empty MVP Builder chat response");
+          emitMVPGenerationFailed({ userId, reservationId, errorCode: "EMPTY_OUTPUT", released, heldCredits });
           await writer.write(enc({
             type: "credit-released",
             ...released,
@@ -2075,6 +2106,7 @@ ${fullText}`,
             });
           } else if (retry?.status === "no_change") {
             const released = await releaseMVPBuilderCredits(reservationId, "MVP Builder deterministic retry produced no material change");
+            emitMVPGenerationFailed({ userId, reservationId, errorCode: "NO_MATERIAL_CHANGE", released, heldCredits });
             await writer.write(enc({ type: "credit-released", ...released, releaseReason: "no_material_change" }));
             await writer.write(enc({
               type: "error",
@@ -2084,37 +2116,38 @@ ${fullText}`,
             await writer.write(encDone());
             return;
           } else {
-          const released = await releaseMVPBuilderCredits(
-            reservationId,
-            "Invalid MVP Builder JSON output",
-            {
-              validationError: validationError instanceof Error ? validationError.message : String(validationError),
-              repairError: repairError instanceof Error ? repairError.message : String(repairError),
-            }
-          );
-          logMVPBuilderFailedAttempt({
-            actionType: classifiedAction,
-            selectedModel,
-            repairModel: repairModels.join(","),
-            validationErrorCategory: validationErrorCategory(validationError),
-            deterministicEditAttempted,
-            creditsReleased: true,
-          });
-          emitMVPBuilderTelemetry("mvp_builder_validation_failed_after_all_repair", userId, {
-            action_type: classifiedAction,
-            selected_model: selectedModel,
-            repair_models: repairModels,
-            validation_error_category: validationErrorCategory(validationError),
-            deterministic_edit_attempted: deterministicEditAttempted,
-          });
-          await writer.write(enc({ type: "credit-released", ...released, releaseReason: "validation_failed" }));
-          await writer.write(enc({
-            type: "error",
-            error: "The AI returned an invalid project after repair. Held credits have been released. Please try again.",
-            errorCode: "VALIDATION_FAILED",
-          }));
-          await writer.write(encDone());
-          return;
+            const released = await releaseMVPBuilderCredits(
+              reservationId,
+              "Invalid MVP Builder JSON output",
+              {
+                validationError: validationError instanceof Error ? validationError.message : String(validationError),
+                repairError: repairError instanceof Error ? repairError.message : String(repairError),
+              }
+            );
+            emitMVPGenerationFailed({ userId, reservationId, errorCode: "VALIDATION_FAILED", released, heldCredits });
+            logMVPBuilderFailedAttempt({
+              actionType: classifiedAction,
+              selectedModel,
+              repairModel: repairModels.join(","),
+              validationErrorCategory: validationErrorCategory(validationError),
+              deterministicEditAttempted,
+              creditsReleased: true,
+            });
+            emitMVPBuilderTelemetry("mvp_builder_validation_failed_after_all_repair", userId, {
+              action_type: classifiedAction,
+              selected_model: selectedModel,
+              repair_models: repairModels,
+              validation_error_category: validationErrorCategory(validationError),
+              deterministic_edit_attempted: deterministicEditAttempted,
+            });
+            await writer.write(enc({ type: "credit-released", ...released, releaseReason: "validation_failed" }));
+            await writer.write(enc({
+              type: "error",
+              error: "The AI returned an invalid project after repair. Held credits have been released. Please try again.",
+              errorCode: "VALIDATION_FAILED",
+            }));
+            await writer.write(encDone());
+            return;
           }
         }
       }
@@ -2129,6 +2162,7 @@ ${fullText}`,
 
       if (!hasMaterialProjectChange(currentProject, validated)) {
         const released = await releaseMVPBuilderCredits(reservationId, "MVP Builder produced no material project change");
+        emitMVPGenerationFailed({ userId, reservationId, errorCode: "NO_MATERIAL_CHANGE", released, heldCredits });
         logMVPBuilderFailedAttempt({
           actionType: classifiedAction,
           selectedModel,
@@ -2176,6 +2210,7 @@ ${fullText}`,
       const released = await releaseMVPBuilderCredits(reservationId, "Stream error", {
         error: err instanceof Error ? err.message : String(err),
       }).catch(() => ({ success: false }));
+      emitMVPGenerationFailed({ userId, reservationId, errorCode: "STREAM_ERROR", released, heldCredits });
       await writer.write(enc({ type: "credit-released", ...released, releaseReason: "stream_error" }));
       await writer.write(enc({ type: "error", error: "Stream interrupted. Held credits have been released. Please try again.", errorCode: "STREAM_ERROR" }));
       await writer.write(encDone());

@@ -185,7 +185,7 @@ function buildFounderEvidence(request: DraftRequestShape) {
     const namedAlternatives = inferNamedAlternatives(guided.workaround);
     const missingSignals = [
       namedAlternatives.length === 0 ? "No named alternatives were provided." : null,
-      guided.founderEdge.trim().length < 20 ? "Founder edge may still be too broad." : null,
+      (guided.founderEdge ?? "").trim().length < 20 ? "Founder edge may still be too broad." : null,
     ].filter((value): value is string => Boolean(value));
 
     return {

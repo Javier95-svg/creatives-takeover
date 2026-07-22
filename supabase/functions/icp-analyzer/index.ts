@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { checkAndDeductCredits, getUserFromAuth, refundCredits } from "../_shared/credit-deduction.ts";
 import { CREDIT_COSTS } from "../_shared/credit-constants.ts";
 import { resolveCreditIdempotencyKey } from "../_shared/request-idempotency.ts";
+import { emitBusinessEvent, resolveAnalyticsErrorCode } from "../_shared/analytics.ts";
 import {
   generateIcpDraftArtifact,
   type DraftRequestShape,
@@ -133,7 +134,7 @@ Startup idea:
 ${seed}`;
 }
 
-async function fetchMarketSignals(serviceClient: ReturnType<typeof createClient>, req: Request, request: DraftRequestShape) {
+async function fetchMarketSignals(serviceClient: any, req: Request, request: DraftRequestShape) {
   const authHeader = req.headers.get("Authorization") || "";
   if (!authHeader) {
     return { marketSignals: [] as string[], competitors: [] as Array<{ name: string; url: string | null }>, sources: [] as DraftSource[] };
@@ -254,7 +255,7 @@ async function storeArtifact({
   userId,
   artifact,
 }: {
-  serviceClient: ReturnType<typeof createClient>;
+  serviceClient: any;
   userId: string;
   artifact: Record<string, any>;
 }) {
@@ -293,7 +294,7 @@ function getArtifactNicheFallback(artifact: Record<string, any>) {
 }
 
 async function getIcpSprintProfile(
-  serviceClient: ReturnType<typeof createClient>,
+  serviceClient: any,
   userId: string,
   artifact: Record<string, any>,
 ): Promise<IcpSprintProfile> {
@@ -472,7 +473,7 @@ serve(async (req) => {
     let user = null;
     let creditResult: {
       success: boolean;
-      newBalance: number;
+      newBalance?: number;
       error?: string;
       errorCode?: string;
       usedFromQuota?: number;
@@ -576,9 +577,20 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     } catch (error) {
-      if (payload.mode === "save" && user && creditsCharged) {
-        await refundCredits(user.id, icpDraftCost, "ICP Draft", "Refund: ICP draft generation failed", {
-          error: error instanceof Error ? error.message : String(error),
+      if (payload.mode === "save" && user) {
+        const refundSucceeded = creditsCharged
+          ? await refundCredits(user.id, icpDraftCost, "ICP Draft", "Refund: ICP draft generation failed", {
+              error: error instanceof Error ? error.message : String(error),
+            })
+          : true;
+        await emitBusinessEvent({
+          eventName: "generation_failed",
+          userId: user.id,
+          properties: {
+            tool: "icp_builder",
+            error_code: resolveAnalyticsErrorCode(error),
+            credits_refunded: refundSucceeded && creditsCharged ? icpDraftCost : 0,
+          },
         });
       }
       throw error;
