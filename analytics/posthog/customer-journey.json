@@ -1,0 +1,382 @@
+{
+  "schemaVersion": 1,
+  "name": "Creatives Takeover customer journey",
+  "description": "Canonical product-analytics contract for acquisition, activation, value, monetization, retention, and customer evidence.",
+  "globalFilters": [
+    {
+      "property": "is_internal",
+      "operator": "is_not",
+      "value": true,
+      "description": "Exclude internal and test accounts from every managed insight."
+    }
+  ],
+  "identity": {
+    "authenticatedDistinctId": "Supabase auth user UUID",
+    "anonymousMerge": "posthog.identify(user.id) after authentication",
+    "resetOnSignOut": true,
+    "personProperties": [
+      "subscription_tier",
+      "days_since_signup",
+      "onboarding_completed",
+      "quiz_completed",
+      "is_admin",
+      "is_internal"
+    ],
+    "prohibitedProperties": [
+      "email",
+      "full_name",
+      "fullName",
+      "name",
+      "first_name",
+      "last_name",
+      "username",
+      "avatar_url",
+      "ip",
+      "ip_address"
+    ]
+  },
+  "naming": {
+    "eventPattern": "^[a-z][a-z0-9_]*$",
+    "propertyPattern": "^[a-z_$][a-z0-9_$]*$",
+    "convention": "past-tense business outcomes or explicit viewed/opened/started actions",
+    "breakingChangeRule": "Never rename a live event. Add a new event or schema_version and keep the old contract during migration."
+  },
+  "events": {
+    "landing_viewed": {
+      "stage": "acquisition",
+      "owner": "growth",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["page"]
+    },
+    "signup_started": {
+      "stage": "acquisition",
+      "owner": "growth",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["method"]
+    },
+    "signup_completed": {
+      "stage": "acquisition",
+      "owner": "growth",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["method"]
+    },
+    "onboarding_started": {
+      "stage": "onboarding",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["source"]
+    },
+    "onboarding_step_completed": {
+      "stage": "onboarding",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["step", "step_name", "total_steps"]
+    },
+    "onboarding_completed": {
+      "stage": "onboarding",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["quiz_completed"]
+    },
+    "onboarding_abandoned": {
+      "stage": "onboarding",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["last_step", "total_steps", "elapsed_ms"]
+    },
+    "dashboard_viewed": {
+      "stage": "activation",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/pages/Dashboard.tsx",
+      "requiredProperties": ["user_id", "source", "plan"]
+    },
+    "activation_first_action_opened": {
+      "stage": "activation",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": []
+    },
+    "activation_first_input_submitted": {
+      "stage": "activation",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": []
+    },
+    "activation_first_output_generated": {
+      "stage": "activation",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": []
+    },
+    "activation_first_artifact_saved": {
+      "stage": "activation",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": []
+    },
+    "activation_completed": {
+      "stage": "activation",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": []
+    },
+    "activation_returned_day_2": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/activationState.ts",
+      "requiredProperties": ["user_id", "days_since_signup"]
+    },
+    "activation_returned_day_7": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/activationState.ts",
+      "requiredProperties": ["user_id", "days_since_signup"]
+    },
+    "tool_opened": {
+      "stage": "value",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["tool"]
+    },
+    "tool_output_created": {
+      "stage": "value",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["tool", "artifact_type"]
+    },
+    "first_tool_used": {
+      "stage": "value",
+      "owner": "product",
+      "source": "both",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["tool_name", "credits_cost", "credits_remaining"]
+    },
+    "credit_exhausted": {
+      "stage": "monetization",
+      "owner": "growth",
+      "source": "both",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["plan", "last_feature_used"]
+    },
+    "pricing_viewed": {
+      "stage": "monetization",
+      "owner": "growth",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["source"]
+    },
+    "upgrade_clicked": {
+      "stage": "monetization",
+      "owner": "growth",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["from_plan", "to_plan", "location"]
+    },
+    "subscription_started": {
+      "stage": "monetization",
+      "owner": "revenue",
+      "source": "server",
+      "sourceFile": "supabase/functions/stripe-webhook/index.ts",
+      "requiredProperties": ["plan", "billing_interval", "amount_usd"]
+    },
+    "subscription_plan_changed": {
+      "stage": "monetization",
+      "owner": "revenue",
+      "source": "server",
+      "sourceFile": "supabase/functions/stripe-webhook/index.ts",
+      "requiredProperties": ["previous_plan", "new_plan", "status"]
+    },
+    "subscription_cancelled": {
+      "stage": "retention",
+      "owner": "revenue",
+      "source": "server",
+      "sourceFile": "supabase/functions/stripe-webhook/index.ts",
+      "requiredProperties": ["plan"]
+    },
+    "subscription_payment_received": {
+      "stage": "monetization",
+      "owner": "revenue",
+      "source": "server",
+      "sourceFile": "supabase/functions/stripe-webhook/index.ts",
+      "requiredProperties": ["amount_usd", "plan"]
+    },
+    "pmf_survey_shared": {
+      "stage": "evidence",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["method"]
+    },
+    "pmf_survey_response_received": {
+      "stage": "evidence",
+      "owner": "product",
+      "source": "server",
+      "sourceFile": "supabase/functions/pmf-survey-respond/index.ts",
+      "requiredProperties": ["survey_slug", "sean_ellis_answer", "has_email"]
+    },
+    "pmf_evidence_logged": {
+      "stage": "evidence",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["evidence_type"]
+    },
+    "generation_failed": {
+      "stage": "reliability",
+      "owner": "engineering",
+      "source": "server",
+      "sourceFile": "supabase/functions/icp-analyzer/index.ts",
+      "requiredProperties": ["tool", "credits_refunded"]
+    }
+  },
+  "funnels": [
+    {
+      "key": "acquisition_to_activation",
+      "name": "Acquisition to activation",
+      "windowDays": 14,
+      "steps": [
+        "landing_viewed",
+        "signup_started",
+        "signup_completed",
+        "dashboard_viewed",
+        "activation_first_output_generated",
+        "activation_completed"
+      ]
+    },
+    {
+      "key": "onboarding_completion",
+      "name": "Onboarding completion",
+      "windowDays": 7,
+      "steps": ["signup_completed", "onboarding_started", "onboarding_completed"]
+    },
+    {
+      "key": "core_tool_value",
+      "name": "Core tool time-to-value",
+      "windowDays": 7,
+      "steps": ["tool_opened", "tool_output_created"],
+      "breakdownProperty": "tool"
+    },
+    {
+      "key": "monetization",
+      "name": "Pricing to paid",
+      "windowDays": 30,
+      "steps": [
+        "pricing_viewed",
+        "upgrade_clicked",
+        "subscription_started",
+        "subscription_payment_received"
+      ]
+    },
+    {
+      "key": "pmf_feedback_loop",
+      "name": "PMF evidence loop",
+      "windowDays": 30,
+      "steps": ["pmf_survey_shared", "pmf_survey_response_received", "pmf_evidence_logged"]
+    }
+  ],
+  "cohorts": [
+    {
+      "key": "activated_founders_30d",
+      "name": "Activated founders — last 30 days",
+      "definition": {
+        "event": "activation_completed",
+        "withinDays": 30
+      }
+    },
+    {
+      "key": "stalled_new_founders",
+      "name": "Signed up but not activated — 7 days",
+      "definition": {
+        "includedEvent": "signup_completed",
+        "excludedEvent": "activation_completed",
+        "withinDays": 7
+      }
+    },
+    {
+      "key": "paying_founders",
+      "name": "Paying founders",
+      "definition": {
+        "personProperty": "subscription_tier",
+        "operator": "is_not",
+        "value": "rookie"
+      }
+    },
+    {
+      "key": "at_risk_paid_founders",
+      "name": "Paid but inactive — 14 days",
+      "definition": {
+        "baseCohort": "paying_founders",
+        "excludedEvent": "tool_opened",
+        "withinDays": 14
+      }
+    }
+  ],
+  "dashboards": [
+    {
+      "key": "customer_journey",
+      "name": "Customer Journey — Executive",
+      "insights": [
+        "acquisition_to_activation",
+        "onboarding_completion",
+        "core_tool_value",
+        "monetization",
+        "pmf_feedback_loop",
+        "activation_returned_day_2",
+        "activation_returned_day_7",
+        "subscription_cancelled"
+      ]
+    },
+    {
+      "key": "analytics_quality",
+      "name": "Analytics Quality & Reliability",
+      "insights": [
+        "tool_opened",
+        "generation_failed",
+        "subscription_started",
+        "pmf_survey_response_received"
+      ],
+      "externalMonitor": "public.analytics_delivery_health_24h"
+    }
+  ],
+  "alerts": [
+    {
+      "key": "tool_opened_zero_volume",
+      "system": "posthog",
+      "event": "tool_opened",
+      "windowHours": 168,
+      "condition": "count_equals_zero",
+      "severity": "critical"
+    },
+    {
+      "key": "server_delivery_critical",
+      "system": "supabase",
+      "view": "public.analytics_delivery_health_24h",
+      "condition": "health_status_equals_critical",
+      "severity": "critical"
+    },
+    {
+      "key": "server_destination_disabled",
+      "system": "supabase",
+      "view": "public.analytics_delivery_health_24h",
+      "condition": "health_status_equals_disabled",
+      "severity": "warning"
+    }
+  ]
+}

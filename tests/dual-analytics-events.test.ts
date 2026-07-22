@@ -31,6 +31,20 @@ test('identity uses safe user dimensions and excludes profile PII', () => {
   assert.doesNotMatch(identifyBlock, /username/);
 });
 
+test('sign-out and account switches reset both analytics identities and pending queues', () => {
+  const analytics = read('../src/lib/analytics.ts');
+  const authContext = read('../src/contexts/AuthContext.tsx');
+
+  assert.match(analytics, /export const resetAnalyticsIdentity/);
+  assert.match(analytics, /queuedEvents\.length = 0/);
+  assert.match(analytics, /queuedIdentifies\.length = 0/);
+  assert.match(analytics, /resetAmplitude\(\)/);
+  assert.match(analytics, /posthogClient\.reset\(\)/);
+  assert.match(analytics, /posthogResetPending/);
+  assert.match(authContext, /previousUserIdRef\.current !== nextUserId[\s\S]*resetAnalyticsIdentity\(\)/);
+  assert.match(authContext, /event === 'SIGNED_OUT'[\s\S]*resetAnalyticsIdentity\(\)/);
+});
+
 test('signup completion is centralized after profile confirmation', () => {
   const authContext = read('../src/contexts/AuthContext.tsx');
   const authPage = read('../src/pages/Auth.tsx');

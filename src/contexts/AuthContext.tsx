@@ -20,7 +20,7 @@ import {
   initAmplitudeWithUser,
   isInternalEmail,
   readAuthMethod,
-  resetAmplitude,
+  resetAnalyticsIdentity,
   setInternalUser,
   trackSignupCompleted,
   type SignupMethod,
@@ -345,6 +345,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const nextUserId = currentSession?.user?.id ?? null;
         if (previousUserIdRef.current && previousUserIdRef.current !== nextUserId) {
           clearAccountScopedStorage();
+          resetAnalyticsIdentity();
         }
         previousUserIdRef.current = nextUserId;
 
@@ -359,7 +360,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         // Clear processed ref on sign out so next sign-in gets processed
         if (event === 'SIGNED_OUT') {
-          resetAmplitude();
+          resetAnalyticsIdentity();
           // Re-enable analytics so a different user on this browser is tracked again.
           setInternalUser(false);
           signInProcessedRef.current = null;

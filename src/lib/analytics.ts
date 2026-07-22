@@ -104,6 +104,9 @@ let amplitudeInitialized = false;
 // When true, all capture() calls are dropped so internal/admin activity never
 // enters the event stream. Set from AuthContext once the signed-in email is known.
 let internalUser = false;
+// A sign-out can race the deferred PostHog bootstrap. Remember the reset and
+// apply it from the loaded callback before any queued identity is flushed.
+let posthogResetPending = false;
 const queuedEvents: Array<{ eventName: string; properties?: AnalyticsProperties }> = [];
 const queuedIdentifies: Array<{ id: string; properties?: AnalyticsProperties }> = [];
 
@@ -285,6 +288,10 @@ export const initPosthog = () => {
           persistence: 'localStorage',
           loaded: (client) => {
             posthogClient = client as typeof posthog;
+            if (posthogResetPending) {
+              posthogClient.reset();
+              posthogResetPending = false;
+            }
             registerFirstTouchUtms();
             initialized = true;
             flushQueue();
@@ -337,6 +344,30 @@ export const setInternalUser = (value: boolean) => {
 };
 
 export const isInternalUser = () => internalUser;
+
+/**
+ * Start a fresh analytics identity after sign-out or an in-browser account
+ * switch. Clearing the queues prevents events captured for the old account from
+ * being flushed under the next identity while PostHog is still bootstrapping.
+ */
+export const resetAnalyticsIdentity = () => {
+  queuedEvents.length = 0;
+  queuedIdentifies.length = 0;
+  resetAmplitude();
+
+  if (!isPosthogReady(posthogClient)) {
+    posthogResetPending = true;
+    return;
+  }
+
+  try {
+    posthogClient.reset();
+    posthogResetPending = false;
+  } catch (error) {
+    posthogResetPending = true;
+    logWarn('PostHog identity reset failed', error);
+  }
+};
 
 export const captureEvent = (eventName: string, properties?: AnalyticsProperties) => {
   // Drop all events from internal/admin accounts so they never pollute metrics.
