@@ -26,6 +26,11 @@ export interface FounderAnswerPage {
     description: string;
   }>;
   sections: FounderAnswerStep[];
+  sources?: Array<{
+    title: string;
+    publisher: string;
+    url: string;
+  }>;
   checklist: string[];
   cta: {
     label: string;
@@ -309,7 +314,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
       "Validate a startup idea with ICP clarity, customer evidence, waitlist demand, and product-market fit signals before you build an MVP.",
     keyword: "how to validate startup idea",
     searchIntent: "A founder wants to know if the idea is worth building.",
-    updatedLabel: "May 2026",
+    updatedLabel: "July 2026",
     summary:
       "Startup validation is not asking friends if the idea is good. It is collecting evidence that a specific customer has a painful problem and will take action to solve it.",
     quickAnswerItems: [
@@ -344,6 +349,18 @@ export const founderAnswerPages: FounderAnswerPage[] = [
         title: "Score the evidence",
         description:
           "Validation improves when you compare signals: interview quality, signup intent, urgency, willingness to pay, and retention expectations.",
+      },
+    ],
+    sources: [
+      {
+        title: "How to Test Your Idea: Start With the Most Critical Hypotheses",
+        publisher: "Strategyzer",
+        url: "https://www.strategyzer.com/library/how-to-test-your-idea-start-with-the-most-critical-hypotheses",
+      },
+      {
+        title: "YC's Essential Startup Advice",
+        publisher: "Y Combinator",
+        url: "https://www.ycombinator.com/blog/ycs-essential-startup-advice",
       },
     ],
     checklist: [

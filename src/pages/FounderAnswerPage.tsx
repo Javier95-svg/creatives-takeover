@@ -81,6 +81,7 @@ export default function FounderAnswerPage() {
         "@type": "WebPage",
         "@id": `https://creatives-takeover.com/answers/${page.slug}`,
       },
+      ...(page.sources?.length ? { citation: page.sources.map((source) => source.url) } : {}),
       keywords: [page.keyword, cluster.label, "startup founder guide", "Creatives Takeover"],
     },
   ];
@@ -140,6 +141,35 @@ export default function FounderAnswerPage() {
                 </Card>
               ))}
             </section>
+
+            {page.sources?.length ? (
+              <section
+                aria-labelledby="primary-sources-heading"
+                className="mt-10 rounded-3xl border border-border/60 bg-card/80 p-6 shadow-sm backdrop-blur sm:p-8"
+              >
+                <h2 id="primary-sources-heading" className="text-2xl font-semibold tracking-tight">
+                  Primary sources
+                </h2>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  These references support the validation principles used in this guide.
+                </p>
+                <ul className="mt-5 space-y-3">
+                  {page.sources.map((source) => (
+                    <li key={source.url} className="text-sm leading-relaxed">
+                      <a
+                        className="font-medium text-primary underline-offset-4 hover:underline"
+                        href={source.url}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {source.title}
+                      </a>{" "}
+                      <span className="text-muted-foreground">— {source.publisher}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
 
             <section className="mt-10 rounded-5xl border border-border/60 bg-card/80 p-6 shadow-sm backdrop-blur sm:p-8">
               <div className="grid gap-8 lg:grid-cols-[1fr_0.8fr] lg:items-center">
