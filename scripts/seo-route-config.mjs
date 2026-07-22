@@ -814,15 +814,4 @@ export const INDEXABLE_ROUTES = [
     heroCopy:
       "Explore an interactive walkthrough of key founder tools including BizMap AI, Prompt Library, Insighta, and Community.",
   },
-  {
-    path: "/creatives-takeover",
-    title: "Creatives Takeover Studio",
-    description:
-      "Explore Creatives Takeover's creative studio page, services vision, and positioning around modern design and AI workflows.",
-    changefreq: "monthly",
-    priority: 0.45,
-    heroHeading: "Creative strategy meets execution",
-    heroCopy:
-      "Explore the broader Creatives Takeover studio positioning around design systems, AI workflows, and creative execution.",
-  },
 ];
