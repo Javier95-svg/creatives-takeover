@@ -58,6 +58,17 @@ public_pages:
 - /answers/pitch-deck-feedback-for-startups
 - /answers/vc-search-for-startups
 - /answers/accelerator-alternatives
+- /answers/how-to-find-your-target-audience
+- /answers/customer-interview-questions
+- /answers/signs-your-startup-idea-is-good
+- /answers/no-code-vs-code-for-mvp
+- /answers/mvp-feature-prioritization
+- /answers/how-to-get-first-100-users
+- /answers/product-hunt-launch-guide
+- /answers/cold-email-for-startups
+- /answers/how-to-find-investors-for-startup
+- /answers/pre-seed-vs-seed-funding
+- /answers/startup-pitch-deck-outline
 
 # Legal
 - /privacy-policy
