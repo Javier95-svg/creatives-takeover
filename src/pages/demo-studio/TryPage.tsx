@@ -100,7 +100,11 @@ export default function TryPage() {
 
   const [shots, setShots] = useState<Shot[]>([]);
   const [contextUrl, setContextUrl] = useState('');
-  const [inputMode, setInputMode] = useState<TryInputMode>(() => searchParams.get('mode') === 'no_assets' ? 'no_assets' : 'screenshots');
+  // Defaults to the no-assets path. The screenshots-first default asked for an
+  // asset the target visitor (a pre-product founder, per our own hero copy)
+  // doesn't have open, and the tool recorded 0 completions in its first two
+  // months. ?mode=screenshots still opts into the upload flow directly.
+  const [inputMode, setInputMode] = useState<TryInputMode>(() => searchParams.get('mode') === 'screenshots' ? 'screenshots' : 'no_assets');
   const [description, setDescription] = useState('');
   // True when the current preview was built from generated placeholder frames
   // (zero-asset mode) rather than the visitor's own screenshots.
@@ -811,12 +815,16 @@ export default function TryPage() {
           <p className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-caption font-medium text-white/80">
             <Sparkles className="h-3.5 w-3.5" /> Demo Studio
           </p>
+          {/* Leads with the description path, matching the default input mode.
+              The screenshot-first framing asked for an asset most visitors
+              don't have open, and the page recorded 0 completions in 2 months. */}
           <h1 className="text-3xl font-semibold sm:text-4xl [text-shadow:0_0_18px_rgba(99,102,241,0.55)]">
-            Turn screenshots into a live demo
+            Describe your product, get a live demo
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-sm text-white/70">
-            Upload {MIN_SCREENSHOTS} to {MAX_SCREENSHOTS} screenshots of your product — or just describe
-            it in a line. We'll write the captions and hand you an interactive walkthrough. No signup needed.
+            One line about what you're building is enough — we'll write the captions and hand you an
+            interactive walkthrough. Got {MIN_SCREENSHOTS}–{MAX_SCREENSHOTS} screenshots? Even better.
+            No signup needed.
           </p>
         </div>
 
@@ -912,8 +920,8 @@ export default function TryPage() {
               aria-label="How do you want to start?"
             >
               {([
+                { mode: 'no_assets' as const, label: 'Describe it' },
                 { mode: 'screenshots' as const, label: 'I have screenshots' },
-                { mode: 'no_assets' as const, label: 'No screenshots yet' },
               ]).map(({ mode, label }) => (
                 <button
                   key={mode}

@@ -1,4 +1,5 @@
 import posthog from 'posthog-js';
+import * as amplitude from '@amplitude/analytics-browser';
 import { getSafeSessionStorage, getSafeLocalStorage } from '@/lib/safeStorage';
 import { logWarn } from '@/lib/logger';
 import { captureFirstTouch } from '@/lib/attribution';
@@ -143,48 +144,20 @@ const sanitizeAnalyticsProperties = (properties?: AnalyticsProperties): Analytic
   }, {});
 };
 
-// The Amplitude SDK (~200KB across five chunks) is loaded on demand the first
-// time a signed-in user needs it, keeping it out of the synchronous entry
-// bundle that gates first paint. Before the module resolves, capture/identify
-// calls are dropped exactly as they were before init in the static version.
-type AmplitudeModule = typeof import('@amplitude/analytics-browser');
-let amplitudeModule: AmplitudeModule | null = null;
-let amplitudeLoadPromise: Promise<AmplitudeModule | null> | null = null;
-
-const loadAmplitude = (): Promise<AmplitudeModule | null> => {
-  if (amplitudeModule) return Promise.resolve(amplitudeModule);
-  if (!amplitudeLoadPromise) {
-    amplitudeLoadPromise = import('@amplitude/analytics-browser')
-      .then((module) => {
-        amplitudeModule = module;
-        return module;
-      })
-      .catch((error) => {
-        logWarn('Amplitude SDK load failed', error);
-        amplitudeLoadPromise = null;
-        return null;
-      });
-  }
-  return amplitudeLoadPromise;
-};
-
 export const initAmplitudeWithUser = (userId: string) => {
   if (typeof window === 'undefined' || !AMPLITUDE_API_KEY) return;
-  void loadAmplitude().then((amplitude) => {
-    if (!amplitude) return;
-    try {
-      amplitude.init(AMPLITUDE_API_KEY, userId, { defaultTracking: { pageViews: false, sessions: true } });
-      amplitudeInitialized = true;
-    } catch (error) {
-      logWarn('Amplitude init failed', error);
-    }
-  });
+  try {
+    amplitude.init(AMPLITUDE_API_KEY, userId, { defaultTracking: { pageViews: false, sessions: true } });
+    amplitudeInitialized = true;
+  } catch (error) {
+    logWarn('Amplitude init failed', error);
+  }
 };
 
 export const resetAmplitude = () => {
-  if (!amplitudeInitialized || !amplitudeModule) return;
+  if (!amplitudeInitialized) return;
   try {
-    amplitudeModule.reset();
+    amplitude.reset();
     amplitudeInitialized = false;
   } catch (error) {
     logWarn('Amplitude reset failed', error);
@@ -192,27 +165,27 @@ export const resetAmplitude = () => {
 };
 
 const captureAmplitudeEvent = (eventName: string, properties?: AnalyticsProperties) => {
-  if (!amplitudeInitialized || !amplitudeModule) return;
+  if (!amplitudeInitialized) return;
 
   try {
-    amplitudeModule.track(eventName, sanitizeAnalyticsProperties(properties));
+    amplitude.track(eventName, sanitizeAnalyticsProperties(properties));
   } catch (error) {
     logWarn('Amplitude capture failed', error);
   }
 };
 
 const identifyAmplitudeUser = (id: string, properties?: AnalyticsProperties) => {
-  if (!amplitudeInitialized || !amplitudeModule) return;
+  if (!amplitudeInitialized) return;
 
   try {
-    amplitudeModule.setUserId(id);
+    amplitude.setUserId(id);
     const sanitized = sanitizeAnalyticsProperties(properties);
     if (Object.keys(sanitized).length > 0) {
-      const identifyEvent = new amplitudeModule.Identify();
+      const identifyEvent = new amplitude.Identify();
       Object.entries(sanitized).forEach(([key, value]) => {
         identifyEvent.set(key, value as string | number | boolean | string[] | number[] | boolean[] | null);
       });
-      amplitudeModule.identify(identifyEvent);
+      amplitude.identify(identifyEvent);
     }
   } catch (error) {
     logWarn('Amplitude identify failed', error);
@@ -775,10 +748,44 @@ export type CoreToolName =
   | 'demo_studio'
   | 'mvp_builder'
   | 'gtm_strategist'
-  | 'traction_engine';
+  | 'traction_engine'
+  | 'pitch_deck_analyzer'
+  | 'tech_stack'
+  | 'insighta_test'
+  | 'demo_studio_try';
 
 export const trackToolOpened = (tool: CoreToolName, properties?: AnalyticsProperties) =>
   captureEvent('tool_opened', { tool, ...properties });
+
+/**
+ * One call for the public tool surfaces, so `free_tool_opened` (the existing
+ * taxonomy) and `tool_opened` (the cross-tool funnel) can never disagree on the
+ * tool name or the auth flag.
+ *
+ * `auth_resolved` exists because these fire before AuthContext settles — see
+ * useFreeToolOpened for why we don't wait. Filter the funnel on
+ * `is_authenticated = false`, and use `auth_resolved` to size the error bar.
+ */
+export const trackFreeToolOpened = (
+  tool: CoreToolName,
+  context: { isAuthenticated: boolean; authResolved: boolean },
+) => {
+  const properties = {
+    tool,
+    is_authenticated: context.isAuthenticated,
+    auth_resolved: context.authResolved,
+  };
+  captureEvent('free_tool_opened', properties);
+  captureEvent('tool_opened', properties);
+};
+
+/** First real input on an anonymous tool run — the step 93% never reach. */
+export const trackAnonymousToolInputSubmitted = (tool: CoreToolName, properties?: AnalyticsProperties) =>
+  captureEvent('activation_first_input_submitted', { tool, is_authenticated: false, ...properties });
+
+/** First rendered output on an anonymous tool run. */
+export const trackAnonymousToolOutputGenerated = (tool: CoreToolName, properties?: AnalyticsProperties) =>
+  captureEvent('activation_first_output_generated', { tool, is_authenticated: false, ...properties });
 
 export const trackToolOutputCreated = (tool: CoreToolName, artifactType: string, properties?: AnalyticsProperties) =>
   captureEvent('tool_output_created', { tool, artifact_type: artifactType, ...properties });
@@ -953,17 +960,6 @@ export const trackCreditCostDisclosed = (properties: {
   status: 'free' | 'metered' | 'locked';
   source_tool?: string;
 }) => captureEvent('credit_cost_disclosed', properties);
-
-export const trackCreditActionQuoted = (properties: {
-  feature_key: string;
-  credit_cost: number;
-  current_plan: 'rookie' | 'starter' | 'rising' | 'pro';
-  credits_available: number;
-  resulting_balance: number;
-  deliverable: string;
-  automatic_refund: boolean;
-  source_tool?: string;
-}) => captureEvent('credit_action_quoted', properties);
 
 export const trackCreditActionCompleted = (properties: {
   feature_key: string;

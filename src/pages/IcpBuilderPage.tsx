@@ -63,12 +63,14 @@ export default function ICPBuilderPage() {
     const FALLBACK_MS = 12000;   // backstop for users who linger without engaging
 
     let shown = false;
+    // Progress means the visitor typed something, not merely which screen they
+    // are on: the builder now auto-advances past mode_select on arrival, so
+    // screen position no longer distinguishes a starter from a bouncer.
     const hasProgress = () => {
       const session = readIcpBuilderSession();
       return Boolean(
         session &&
-          (session.currentScreen !== 'mode_select' ||
-            session.fastDescription?.trim() ||
+          (session.fastDescription?.trim() ||
             session.guided?.seed?.trim() ||
             session.draftPreview),
       );
@@ -133,11 +135,12 @@ export default function ICPBuilderPage() {
   }, [isAuthenticated]);
 
   const handleReturnToPlatform = () => {
+    // Same reasoning as the lead banner above: only real content counts as
+    // progress worth warning about, not the auto-advanced screen position.
     const session = readIcpBuilderSession();
     const hasProgress = Boolean(
       session &&
-        (session.currentScreen !== "mode_select" ||
-          session.fastDescription.trim() ||
+        (session.fastDescription.trim() ||
           session.guided.seed?.trim() ||
           session.draftPreview),
     );

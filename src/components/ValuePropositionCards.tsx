@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef, type ChangeEvent } from "react";
-import { Lightbulb, Users, Rocket, LayoutDashboard, Upload, Loader2, GraduationCap, TrendingUp, Handshake, BookOpen } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ArrowRight, Lightbulb, Users, Rocket, LayoutDashboard, Upload, Loader2, GraduationCap, TrendingUp, Handshake, BookOpen } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,8 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { useCTAAttribution } from "@/hooks/useCTAAttribution";
+import { captureEvent } from "@/lib/analytics";
 
 interface ValueCardImage {
   position: number;
@@ -34,6 +37,7 @@ const ValuePropositionCards = () => {
   const { user } = useAuth();
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
   const prefersReducedMotion = usePrefersReducedMotion();
+  const { set: setAttribution } = useCTAAttribution();
 
   // Core value propositions - 6 outcome-driven selling points
   const allCards = [
@@ -537,6 +541,31 @@ const ValuePropositionCards = () => {
               </Button>
             ))}
           </div>
+
+          {/* The section sold six product areas and then dead-ended — every
+              control above is carousel navigation, so a convinced reader had
+              nowhere to go. One destination, deliberately: the homepage's only
+              other signup path is the navbar, which is where 23 of 27 signups
+              came from precisely because nothing else was findable. */}
+          {!user ? (
+            <div className="mt-10 flex flex-col items-center gap-3 text-center">
+              <Link
+                to="/signup?source=home_value_props"
+                onClick={() => {
+                  setAttribution('home_value_props', '/');
+                  captureEvent('cta_clicked', { cta_name: 'home_value_props_signup' });
+                }}
+              >
+                <Button size="lg" className="h-12 px-8 text-base font-semibold">
+                  Create your free account
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+              <p className="text-sm text-muted-foreground">
+                Free forever. No credit card.
+              </p>
+            </div>
+          ) : null}
         </div>
       </div>
     </section>

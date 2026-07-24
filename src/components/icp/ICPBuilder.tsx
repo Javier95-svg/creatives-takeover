@@ -1568,16 +1568,31 @@ const ICPBuilder: React.FC = () => {
     }));
   }, [user]);
 
+  // Fast input is the default entry, not the two-card chooser. The chooser
+  // asked for no input at all and still lost 13 of 15 anonymous visitors — the
+  // cost was the decision itself, so there is now nothing to decide on arrival.
+  // The chooser stays reachable: `?mode=select` opens it, and Back from
+  // fast_input returns to it (see getPreviousScreen).
   useEffect(() => {
     if (autoModeAppliedRef.current) return;
     if (session.currentScreen !== "mode_select") return;
-    if (searchParams.get("mode") !== "fast") return;
+
+    const requestedMode = searchParams.get("mode");
+    if (requestedMode === "select") return;
+
     autoModeAppliedRef.current = true;
-    handleSelectFastMode();
-    const next = new URLSearchParams(searchParams);
-    next.delete("mode");
-    setSearchParams(next, { replace: true });
-  }, [session.currentScreen, searchParams, handleSelectFastMode, setSearchParams]);
+    if (requestedMode === "guided") {
+      handleSelectGuidedMode();
+    } else {
+      handleSelectFastMode();
+    }
+
+    if (requestedMode) {
+      const next = new URLSearchParams(searchParams);
+      next.delete("mode");
+      setSearchParams(next, { replace: true });
+    }
+  }, [session.currentScreen, searchParams, handleSelectFastMode, handleSelectGuidedMode, setSearchParams]);
 
   const handleSkipPersona = useCallback(() => {
     captureEvent("icp_guided_step_skipped", { step: 2 });

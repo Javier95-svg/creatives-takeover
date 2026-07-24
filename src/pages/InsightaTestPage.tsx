@@ -5,17 +5,12 @@ import AnswerSummary from "@/components/seo/AnswerSummary";
 import PageFAQSection from "@/components/seo/PageFAQSection";
 import RelatedPageLinks from "@/components/seo/RelatedPageLinks";
 import FundraisingReadinessToolkitAll from "@/components/blog/FundraisingReadinessToolkitAll";
-import { useAuth } from "@/contexts/AuthContext";
-import { captureEvent } from "@/lib/analytics";
-import { useEffect } from "react";
+import { useFreeToolOpened } from "@/hooks/useFreeToolOpened";
 
 export default function InsightaTestPage() {
-  const { user } = useAuth();
-
-  // Funnel: a logged-out visitor opened a free tool.
-  useEffect(() => {
-    if (!user) captureEvent('free_tool_opened', { tool: 'insighta_test' });
-  }, [user]);
+  // Funnel: someone opened a free tool. Fires for everyone with an auth flag —
+  // see useFreeToolOpened for why we don't gate on it.
+  useFreeToolOpened('insighta_test');
 
   const faqs = [
     {

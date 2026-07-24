@@ -8,17 +8,22 @@ import { PitchDeckUnlockGate } from "@/components/pitch-deck-analyzer/PitchDeckU
 import { PitchDeckBuilder } from "@/components/pitch-deck-builder/PitchDeckBuilder";
 import { usePitchDeckAnalyzer } from "@/hooks/usePitchDeckAnalyzer";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles, BarChart3, TrendingUp, Target } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { captureEvent } from "@/lib/analytics";
+import {
+  captureEvent,
+  trackAnonymousToolInputSubmitted,
+  trackAnonymousToolOutputGenerated,
+} from "@/lib/analytics";
 import { toast } from "sonner";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { clearAnonymousToolState, readAnonymousToolState, saveAnonymousToolState } from "@/lib/anonymousToolState";
 import type { PitchDeckGuestResult } from "@/types/pitchDeckAnalyzer";
 import { trackActivationFunnelEvent } from "@/lib/activationEntry";
 import { useActivationAbandonment } from "@/hooks/useActivationAbandonment";
+import { useFreeToolOpened } from "@/hooks/useFreeToolOpened";
 
 const MAX_FILE_SIZE_MB = 20;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -49,6 +54,7 @@ export default function PitchDeckAnalyzerPage() {
   } = usePitchDeckAnalyzer();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [hydratedPitchDeck, setHydratedPitchDeck] = useState(false);
+  const entryTrackedRef = useRef(false);
   useActivationAbandonment({
     entry_id: 'pitch_deck_analyzer', tool: 'pitch_deck_analyzer', source: 'pitch_deck_analyzer',
     step: 'before_result', is_authenticated: Boolean(user),
@@ -58,9 +64,16 @@ export default function PitchDeckAnalyzerPage() {
     trackPageVisit('Pitch Deck Analyzer');
   }, [trackPageVisit]);
 
-  // Funnel: a logged-out visitor opened a free tool.
+  // Funnel: someone opened a free tool. Fires for everyone with an auth flag —
+  // see useFreeToolOpened for why we don't gate on it.
+  useFreeToolOpened('pitch_deck_analyzer');
+
+  // Ref-guarded: this effect depends on `user`, which flips from null once auth
+  // resolves. Without the guard the entry event fired again on every change —
+  // 17 events from 2 people over 30 days.
   useEffect(() => {
-    if (!user) captureEvent('free_tool_opened', { tool: 'pitch_deck_analyzer' });
+    if (entryTrackedRef.current) return;
+    entryTrackedRef.current = true;
     trackActivationFunnelEvent('activation_entry_opened', {
       entry_id: 'pitch_deck_analyzer', tool: 'pitch_deck_analyzer', source: 'pitch_deck_analyzer',
       step: 'opened', entry_page: '/pitch-deck-analyzer', is_authenticated: Boolean(user),
@@ -115,8 +128,10 @@ export default function PitchDeckAnalyzerPage() {
   const handlePublicAnalyze = async () => {
     if (!selectedFile) return;
     captureEvent('free_tool_input_submitted', { tool: 'pitch_deck_analyzer', file_size: selectedFile.size });
+    trackAnonymousToolInputSubmitted('pitch_deck_analyzer', { file_size: selectedFile.size });
     const result = await analyzePublicDeck(selectedFile);
     if (result) {
+      trackAnonymousToolOutputGenerated('pitch_deck_analyzer', { score: result.overallScore });
       trackActivationFunnelEvent('activation_step_completed', {
         entry_id: 'pitch_deck_analyzer', tool: 'pitch_deck_analyzer', source: 'pitch_deck_analyzer',
         step: 'partial_result_generated', is_authenticated: false, artifact_type: 'pitch_deck_analysis',

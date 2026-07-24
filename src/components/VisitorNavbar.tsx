@@ -33,7 +33,10 @@ import { captureEvent } from "@/lib/analytics";
 import { FREE_TOOLS_NAV_ITEMS } from "@/config/freeTools";
 
 type VisitorLink = { label: string; href: string; icon: LucideIcon; sectionId?: string };
-type VisitorMenuItem = { label: string; href: string; icon: LucideIcon; description: string };
+// `analyticsTool` carries the snake_case key so nav clicks and the tool pages
+// report the same `tool` value and can be joined in one funnel — the nav used to
+// send display labels ("Pitch Deck Analyzer") against the pages' "pitch_deck_analyzer".
+type VisitorMenuItem = { label: string; href: string; icon: LucideIcon; description: string; analyticsTool?: string };
 type VisitorMenu = { label: string; icon: LucideIcon; tagline: string; taglineIcon?: LucideIcon; items: VisitorMenuItem[] };
 
 // Simple links, in display order. The Free Tools menu renders first. Final order:
@@ -159,7 +162,7 @@ const VisitorNavbar = () => {
                   onClick={() => {
                     trackNavClick(`${menu.label} - ${item.label}`);
                     captureEvent("free_tool_nav_click", {
-                      tool: item.label,
+                      tool: item.analyticsTool ?? item.label,
                       source: "visitor_navbar_desktop",
                     });
                   }}
@@ -222,7 +225,7 @@ const VisitorNavbar = () => {
                   onClick={() => {
                     trackNavClick(`Mobile ${menu.label} - ${item.label}`);
                     captureEvent("free_tool_nav_click", {
-                      tool: item.label,
+                      tool: item.analyticsTool ?? item.label,
                       source: "visitor_navbar_mobile",
                     });
                   }}

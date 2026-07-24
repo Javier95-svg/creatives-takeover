@@ -45,6 +45,20 @@ interface SoftGateModalProps {
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/**
+ * This gate deliberately asks for two fields, so it has no name input — but an
+ * empty full_name would leave the profile permanently nameless, because nothing
+ * downstream (onboarding included) ever asks for it. Derive a readable
+ * placeholder from the email local part; the user can change it in their profile.
+ */
+export function deriveDisplayNameFromEmail(email: string): string {
+  const localPart = email.split("@")[0] ?? "";
+  const firstToken = localPart.split(/[._+-]/).filter(Boolean)[0] ?? "";
+  const letters = firstToken.replace(/[^a-zA-Z]/g, "");
+  if (!letters) return "";
+  return letters.charAt(0).toUpperCase() + letters.slice(1).toLowerCase();
+}
+
 const SoftGateModal = ({
   open,
   onOpenChange,
@@ -170,7 +184,14 @@ const SoftGateModal = ({
       persistOnboardingReturn(returnPath);
       const pendingReferralCode = getPendingReferralCode();
 
-      const { error } = await signUp(email.trim(), password, "", undefined, undefined, pendingReferralCode);
+      const { error } = await signUp(
+        email.trim(),
+        password,
+        deriveDisplayNameFromEmail(email.trim()),
+        undefined,
+        undefined,
+        pendingReferralCode,
+      );
       if (error) {
         toast.error(mapSignUpError(error));
         return;

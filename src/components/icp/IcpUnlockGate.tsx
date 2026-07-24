@@ -18,6 +18,7 @@ import {
 import type { StoredIcpArtifact } from "@/lib/icpBuilderSession";
 import { beginAttributedOAuthSignup } from "@/lib/signupAttribution";
 import { trackActivationFunnelEvent } from "@/lib/activationEntry";
+import SoftGateModal from "@/components/auth/SoftGateModal";
 
 interface IcpUnlockGateProps {
   artifact: StoredIcpArtifact;
@@ -41,6 +42,7 @@ export function IcpUnlockGate({
   const navigate = useNavigate();
   const normalizedSeed = useMemo(() => normalizeIcpSeed(seed), [seed]);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [softGateOpen, setSoftGateOpen] = useState(false);
 
   const gatePreview = artifact.draftDocument.gatePreview;
   const personaName = gatePreview?.personaName || artifact.draftDocument.customer.personaName;
@@ -123,6 +125,11 @@ export function IcpUnlockGate({
     }
   };
 
+  // Opens the 2-field modal in place instead of navigating to /signup (4 fields
+  // plus a full page load). This is the highest-intent moment in the funnel —
+  // the visitor is looking at their own half-unlocked draft — so the previous
+  // behaviour of throwing away the page and asking for twice the input was the
+  // worst possible trade. SoftGateModal returns them here via returnPath.
   const handleSignUpRedirect = () => {
     trackICPUnlockClicked({
       page_path: "/icp-builder",
@@ -133,10 +140,7 @@ export function IcpUnlockGate({
       entry_id: "icp_draft_unlock", tool: "icp_builder", source: "icp-draft-unlock",
       step: "signup_email", is_authenticated: false, return_path: returnPath,
     });
-    onBeforeAuthContinue?.();
-    persistIcpSeed(normalizedSeed);
-    persistOnboardingReturn(returnPath);
-    navigate(`/sign-up?source=icp-draft-unlock&return=${encodeURIComponent(returnPath)}`);
+    setSoftGateOpen(true);
   };
 
   const handleLoginRedirect = () => {
@@ -283,6 +287,17 @@ export function IcpUnlockGate({
           </div>
         </div>
       </div>
+
+      <SoftGateModal
+        open={softGateOpen}
+        onOpenChange={setSoftGateOpen}
+        seed={normalizedSeed}
+        trigger="icp_draft_unlock"
+        title="Save the full Customer Decision Brief"
+        description="Two fields and your draft is yours. Free forever. No credit card."
+        returnPathOverride={returnPath}
+        onBeforeAuthContinue={onBeforeAuthContinue}
+      />
     </div>
   );
 }

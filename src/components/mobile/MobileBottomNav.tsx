@@ -221,7 +221,7 @@ export const MobileBottomNav = () => {
                           <Link
                             to={tool.href}
                             onClick={() =>
-                              captureEvent("free_tool_nav_click", { tool: tool.name, source: "mobile_bottom_nav" })
+                              captureEvent("free_tool_nav_click", { tool: tool.analyticsTool, source: "mobile_bottom_nav" })
                             }
                             className="cursor-pointer"
                           >

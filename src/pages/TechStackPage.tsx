@@ -6,14 +6,12 @@ import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useLeanStartupStore } from "@/store/leanStartupStore";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { captureEvent } from "@/lib/analytics";
+import { useFreeToolOpened } from "@/hooks/useFreeToolOpened";
 
 // Lazy load the Tech Stack component
 const TechStack = lazy(() => import("@/components/tech-stack/TechStack"));
 
 export default function TechStackPage() {
-  const { user } = useAuth();
   const { trackPageVisit } = useReadingAnalytics();
   const markToolUsed = useLeanStartupStore(s => s.markToolUsed);
 
@@ -24,10 +22,9 @@ export default function TechStackPage() {
     trackPageVisit('Tech Stack');
   }, [trackPageVisit]);
 
-  // Funnel: a logged-out visitor opened a free tool.
-  useEffect(() => {
-    if (!user) captureEvent('free_tool_opened', { tool: 'tech_stack' });
-  }, [user]);
+  // Funnel: someone opened a free tool. Fires for everyone with an auth flag —
+  // see useFreeToolOpened for why we don't gate on it.
+  useFreeToolOpened('tech_stack');
 
   // Structured data for Tech Stack page
   const structuredData = [

@@ -25,6 +25,32 @@ import { clearAnonymousToolState, readAnonymousToolState, saveAnonymousToolState
 import { markFirstArtifactCreated, trackRetentionEvent } from '@/lib/retentionSystem';
 import { trackActivationFunnelEvent } from '@/lib/activationEntry';
 import { useActivationAbandonment } from '@/hooks/useActivationAbandonment';
+import { trackAnonymousToolInputSubmitted, trackAnonymousToolOutputGenerated } from '@/lib/analytics';
+
+/**
+ * Preferred product per category for the seeded "solo founder MVP" stack.
+ * Ids are matched leniently — any that no longer exist fall back to the first
+ * product in that category, so this can never leave a category unselected.
+ */
+const STARTER_STACK_PREFERENCES: Record<string, string> = {
+  frontend: 'react',
+  backend: 'supabase',
+  hosting: 'vercel',
+  analytics: 'posthog',
+  payments: 'stripe',
+  email: 'resend',
+  'lead-generation': 'apollo',
+  crm: 'hubspot',
+};
+
+function buildStarterStack(): SelectedProducts {
+  return techStackData.reduce<SelectedProducts>((selection, category) => {
+    const preferredId = STARTER_STACK_PREFERENCES[category.id];
+    const product = category.products.find((item) => item.id === preferredId) ?? category.products[0];
+    if (product) selection[category.id] = product.id;
+    return selection;
+  }, {});
+}
 import {
   buildTechStackPublicInsights,
   type TechStackPublicInsights,
@@ -96,7 +122,11 @@ const TechStack: React.FC = () => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const { refreshProgress } = useBizMapProgress();
-  const [selectedProducts, setSelectedProducts] = useState<SelectedProducts>({});
+  // Result-first: arrive on a working stack, not eight empty categories. The
+  // tool required a choice in all 8 before it would show any number at all, and
+  // 15 of 15 anonymous visitors left without submitting. Every product here
+  // stays swappable and deselectable — this is a starting point, not a lock.
+  const [selectedProducts, setSelectedProducts] = useState<SelectedProducts>(buildStarterStack);
   const [showBudget, setShowBudget] = useState(false);
   const [savedReports, setSavedReports] = useState<TechStackReport[]>([]);
   const [reportsLoading, setReportsLoading] = useState(false);
@@ -292,6 +322,8 @@ const TechStack: React.FC = () => {
       }
 
       captureEvent('free_tool_input_submitted', { tool: 'tech_stack', categories: techStackData.length });
+      trackAnonymousToolInputSubmitted('tech_stack', { categories: techStackData.length });
+      trackAnonymousToolOutputGenerated('tech_stack', { monthly_budget: budget.total });
       setShowBudget(true);
       setGeneratedBudgetKey(selectedProductsKey);
       setOutputState('preview');

@@ -9,6 +9,7 @@ import { captureEvent } from '@/lib/analytics';
 import { getPendingReferralCode, persistPendingReferralCode } from '@/lib/referral';
 import { beginAttributedOAuthSignup } from '@/lib/signupAttribution';
 import { trackActivationFunnelEvent } from '@/lib/activationEntry';
+import SoftGateModal from '@/components/auth/SoftGateModal';
 
 interface PitchDeckUnlockGateProps {
   returnPath: string;
@@ -22,6 +23,7 @@ const SOURCE = 'pitch-deck-unlock';
 export function PitchDeckUnlockGate({ returnPath, onBeforeSignup }: PitchDeckUnlockGateProps) {
   const navigate = useNavigate();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [softGateOpen, setSoftGateOpen] = useState(false);
 
   useEffect(() => {
     captureEvent('free_tool_signup_gate_shown', { tool: 'pitch_deck_analyzer' });
@@ -62,11 +64,12 @@ export function PitchDeckUnlockGate({ returnPath, onBeforeSignup }: PitchDeckUnl
     }
   };
 
+  // In-place 2-field modal rather than a navigation to /signup's 4-field form —
+  // same reasoning as the ICP gate: don't discard the page the visitor is
+  // reading at the moment they're most willing to convert.
   const handleSignUpRedirect = () => {
     captureEvent('free_tool_signup_gate_cta_clicked', { tool: 'pitch_deck_analyzer', method: 'email' });
-    onBeforeSignup?.();
-    persistOnboardingReturn(returnPath);
-    navigate(`/signup?source=${SOURCE}&return=${encodeURIComponent(returnPath)}`);
+    setSoftGateOpen(true);
   };
 
   const handleLoginRedirect = () => {
@@ -166,6 +169,16 @@ export function PitchDeckUnlockGate({ returnPath, onBeforeSignup }: PitchDeckUnl
           </div>
         </div>
       </div>
+
+      <SoftGateModal
+        open={softGateOpen}
+        onOpenChange={setSoftGateOpen}
+        trigger="pitch_deck_unlock"
+        title="Unlock your full pitch deck analysis"
+        description="Two fields and the full breakdown is yours. Free forever. No credit card."
+        returnPathOverride={returnPath}
+        onBeforeAuthContinue={onBeforeSignup}
+      />
     </div>
   );
 }
