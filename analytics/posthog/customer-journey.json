@@ -238,6 +238,90 @@
       "sourceFile": "src/lib/analytics.ts",
       "requiredProperties": ["evidence_type"]
     },
+    "validation_sprint_started": {
+      "stage": "activation",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/pages/ValidationSprintPage.tsx",
+      "requiredProperties": ["source", "current_step"]
+    },
+    "validation_sprint_step_completed": {
+      "stage": "activation",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/pages/ValidationSprintPage.tsx",
+      "requiredProperties": ["source", "step", "step_name"]
+    },
+    "evidence_signal_added": {
+      "stage": "evidence",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/pages/ValidationSprintPage.tsx",
+      "requiredProperties": ["tool", "artifact_type", "source", "verification_mode", "credits_used"]
+    },
+    "journey_outcome_evaluated": {
+      "stage": "value",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/pages/ValidationSprintPage.tsx",
+      "requiredProperties": ["tool", "artifact_type", "previous_status", "new_status", "verification_mode", "completion_score", "evidence_grade", "source", "credits_used"]
+    },
+    "journey_outcome_status_changed": {
+      "stage": "value",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/pages/ValidationSprintPage.tsx",
+      "requiredProperties": ["tool", "artifact_type", "previous_status", "new_status", "verification_mode", "completion_score", "evidence_grade", "source", "credits_used"]
+    },
+    "journey_handoff_consumed": {
+      "stage": "value",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/pages/ValidationSprintPage.tsx",
+      "requiredProperties": ["tool", "artifact_type", "previous_status", "new_status", "verification_mode", "completion_score", "evidence_grade", "source", "credits_used"]
+    },
+    "validation_sprint_completed": {
+      "stage": "value",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/pages/ValidationSprintPage.tsx",
+      "requiredProperties": ["source", "evidence_grade", "decision"]
+    },
+    "credit_action_quoted": {
+      "stage": "monetization",
+      "owner": "growth",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["feature_key", "credit_cost", "current_plan", "credits_available", "resulting_balance", "deliverable", "automatic_refund"]
+    },
+    "credit_action_completed": {
+      "stage": "monetization",
+      "owner": "revenue",
+      "source": "server",
+      "sourceFile": "supabase/functions/_shared/credit-deduction.ts",
+      "requiredProperties": ["feature_key", "credit_cost", "current_plan", "balance_after", "operation_id"]
+    },
+    "credit_action_refunded": {
+      "stage": "reliability",
+      "owner": "engineering",
+      "source": "server",
+      "sourceFile": "supabase/functions/_shared/credit-deduction.ts",
+      "requiredProperties": ["feature_key", "credits_refunded", "source", "operation_id"]
+    },
+    "credit_pack_checkout_started": {
+      "stage": "monetization",
+      "owner": "growth",
+      "source": "client",
+      "sourceFile": "src/hooks/useSubscription.ts",
+      "requiredProperties": ["pack_id", "purchase_source"]
+    },
+    "credit_pack_purchased": {
+      "stage": "monetization",
+      "owner": "revenue",
+      "source": "server",
+      "sourceFile": "supabase/functions/stripe-webhook/index.ts",
+      "requiredProperties": ["pack_id", "credits_added", "price_cents", "purchase_source", "operation_id"]
+    },
     "generation_failed": {
       "stage": "reliability",
       "owner": "engineering",
@@ -289,6 +373,30 @@
       "name": "PMF evidence loop",
       "windowDays": 30,
       "steps": ["pmf_survey_shared", "pmf_survey_response_received", "pmf_evidence_logged"]
+    },
+    {
+      "key": "validation_brief_activation",
+      "name": "Landing to Customer Decision Brief",
+      "windowDays": 7,
+      "steps": ["landing_viewed", "validation_sprint_started", "validation_sprint_step_completed"]
+    },
+    {
+      "key": "validation_directional_evidence",
+      "name": "Brief to directional evidence",
+      "windowDays": 30,
+      "steps": ["validation_sprint_step_completed", "evidence_signal_added", "journey_outcome_evaluated"]
+    },
+    {
+      "key": "outcome_handoff",
+      "name": "Outcome to next-stage handoff",
+      "windowDays": 30,
+      "steps": ["journey_outcome_status_changed", "journey_handoff_consumed"]
+    },
+    {
+      "key": "credit_pack_recovery",
+      "name": "Credit quote to recovered action",
+      "windowDays": 7,
+      "steps": ["credit_action_quoted", "credit_exhausted", "credit_pack_checkout_started", "credit_pack_purchased", "credit_action_completed"]
     }
   ],
   "cohorts": [
@@ -338,6 +446,10 @@
         "core_tool_value",
         "monetization",
         "pmf_feedback_loop",
+        "validation_brief_activation",
+        "validation_directional_evidence",
+        "outcome_handoff",
+        "credit_pack_recovery",
         "activation_returned_day_2",
         "activation_returned_day_7",
         "subscription_cancelled"

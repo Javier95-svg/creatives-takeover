@@ -13,6 +13,8 @@ import {
   type BizMapStage,
 } from '@/lib/bizmapStages';
 import { mapFounderStageToBizMapStage, type FounderStageId } from '@/lib/stageDiagnostic';
+import { useFounderOutcomeSnapshot } from '@/hooks/useFounderOutcomeSnapshot';
+import { isOutcomeComplete } from '@/lib/founderOutcomeSnapshot';
 import {
   getPmfResultsTableName,
   handlePmfResultsTableError,
@@ -106,6 +108,7 @@ function getCompletionUnlockedStage(progress: UserProgressRow): BizMapStage {
 
 export const useBizMapProgress = () => {
   const { user } = useAuth();
+  const authoritative = useFounderOutcomeSnapshot();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<UserProgressRow | null>(null);
@@ -381,7 +384,10 @@ export const useBizMapProgress = () => {
         };
       }
 
-      const synced = await syncProgress(row);
+      // Outcome truth is a read model, not a timestamp backfill. While the flag
+      // is enabled we preserve the legacy row for compatibility but never
+      // promote a stage from the mere existence of an artifact.
+      const synced = authoritative.enabled ? row : await syncProgress(row);
       setProgress(synced);
     } catch (err) {
       console.error('Failed to load BizMap progress:', err);
@@ -390,7 +396,7 @@ export const useBizMapProgress = () => {
     } finally {
       setLoading(false);
     }
-  }, [syncProgress, user]);
+  }, [authoritative.enabled, syncProgress, user]);
 
   useEffect(() => {
     void initializeProgress();
@@ -423,6 +429,26 @@ export const useBizMapProgress = () => {
   );
 
   const stageState = useMemo(() => {
+    if (authoritative.enabled && authoritative.snapshot) {
+      const stages = authoritative.snapshot.stages;
+      const stateFor = (key: string) => ({
+        unlocked: true,
+        completed: isOutcomeComplete(stages[key]?.status),
+        completedAt: stages[key]?.completedAt ?? null,
+      });
+      return {
+        IDENTITY: stateFor('identity'),
+        PROTOTYPE: stateFor('prototype'),
+        VALIDATING: stateFor('validation'),
+        BUILDING: stateFor('building'),
+        LAUNCH: stateFor('launch'),
+        TRACTION: stateFor('traction'),
+        // Capital is an optional path and is deliberately excluded from the
+        // six evidence-to-execution completion contracts.
+        FUNDRAISING: { unlocked: true, completed: false, completedAt: null },
+      } as Record<BizMapStage, { unlocked: boolean; completed: boolean; completedAt: string | null }>;
+    }
+
     const row = progress;
     const effectiveHighestUnlocked: BizMapStage = 'FUNDRAISING';
     return {
@@ -462,7 +488,7 @@ export const useBizMapProgress = () => {
         completedAt: row?.fundraising_completed_at ?? null,
       },
     } as Record<BizMapStage, { unlocked: boolean; completed: boolean; completedAt: string | null }>;
-  }, [progress]);
+  }, [authoritative.enabled, authoritative.snapshot, progress]);
 
   const isToolRouteUnlocked = useCallback(
     () => true,
@@ -475,16 +501,19 @@ export const useBizMapProgress = () => {
   );
 
   return {
-    loading,
-    error,
+    loading: loading || authoritative.loading,
+    error: authoritative.error ?? error,
     progress,
     stageState,
-    currentStage: progress?.current_stage ?? DEFAULT_CURRENT_STAGE,
+    currentStage: authoritative.snapshot?.currentStage ?? progress?.current_stage ?? DEFAULT_CURRENT_STAGE,
     highestUnlockedStage: 'FUNDRAISING' as BizMapStage,
     hasFullBizMapAccess: true,
-    refreshProgress,
+    refreshProgress: async () => {
+      await Promise.all([refreshProgress(), authoritative.refetch()]);
+    },
     setCurrentStage,
     isToolRouteUnlocked,
     getLockReasonForRoute,
+    outcomeSnapshot: authoritative.snapshot,
   };
 };

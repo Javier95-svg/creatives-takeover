@@ -11,7 +11,7 @@ import {
 
 export interface JourneyEvidenceBrief {
   brief: string;
-  sources: { icp: boolean; demo: boolean; pmf: boolean; gtm: boolean };
+  sources: { icp: boolean; demo: boolean; pmf: boolean; gtm: boolean; validationSprint: boolean };
   manifest: JourneyEvidenceManifest;
   scope: {
     coreCustomer: string;
@@ -37,7 +37,7 @@ const asTextList = (value: unknown, max: number): string[] =>
 const bulletList = (items: string[]): string => items.map((item) => `- ${item}`).join('\n');
 
 export async function fetchJourneyEvidenceBrief(userId: string): Promise<JourneyEvidenceBrief | null> {
-  const [icpRes, demoRes, pmfRes, gtmRes, outcomesRes] = await Promise.all([
+  const [icpRes, demoRes, pmfRes, gtmRes, outcomesRes, sprintRes, handoffRes] = await Promise.all([
     supabase
       .from('icp_analysis_results' as never)
       .select('id, target_audience, business_description, analysis_data, created_at')
@@ -71,19 +71,103 @@ export async function fetchJourneyEvidenceBrief(userId: string): Promise<Journey
       .select('tool,status,artifact_id')
       .eq('user_id', userId)
       .in('status', ['ready', 'verified', 'reviewed']),
+    supabase
+      .from('validation_sprints' as never)
+      .select('id,hypothesis,primary_segment,customer_brief,decision,evidence_grade,next_experiment,updated_at')
+      .eq('user_id', userId)
+      .eq('status', 'completed')
+      .eq('decision', 'build')
+      .eq('evidence_grade', 'decision_grade')
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('journey_handoffs' as never)
+      .select('id,source_outcome_id,source_version_id,payload,created_at')
+      .eq('user_id', userId)
+      .eq('destination_tool', 'mvp_builder')
+      .in('status', ['pending', 'consumed'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const icp = asRecord(icpRes.data);
   const demo = asRecord(demoRes.data);
   const pmf = asRecord(pmfRes.data);
   const gtm = asRecord(gtmRes.data);
+  const validationSprint = asRecord(sprintRes.data);
+  const sprintHandoff = asRecord(handoffRes.data);
+  const sprintHandoffPayload = asRecord(sprintHandoff.payload);
+  const validationSprintId = asText(validationSprint.id);
+  const hasValidationSprintHandoff = Boolean(
+    validationSprintId &&
+    asText(sprintHandoffPayload.sourceArtifactId) === validationSprintId &&
+    asText(sprintHandoff.source_outcome_id) &&
+    asText(sprintHandoff.source_version_id),
+  );
+  const sprintEvidenceRes = hasValidationSprintHandoff
+    ? await supabase
+      .from('validation_sprint_evidence' as never)
+      .select('source_type,source_label,summary,signal,weight,verification_mode,occurred_at,created_at')
+      .eq('user_id', userId)
+      .eq('sprint_id', validationSprintId as string)
+      .order('created_at', { ascending: true })
+      .limit(100)
+    : { data: [], error: null };
+  const sprintEvidence = ((sprintEvidenceRes.data ?? []) as unknown[]).map(asRecord);
   const readyTools = new Set(
     ((outcomesRes.data ?? []) as Array<{ tool: string; status: string }>).map((outcome) => outcome.tool),
   );
 
   const sections: string[] = [];
-  const sources = { icp: false, demo: false, pmf: false, gtm: false };
+  const sources = { icp: false, demo: false, pmf: false, gtm: false, validationSprint: false };
   const manifestSources: JourneyEvidenceSource[] = [];
+
+  // ── Validation Sprint: exact version-pinned Build handoff ─────────────────
+  const sprintBrief = asRecord(validationSprint.customer_brief);
+  const sprintCustomer = asText(sprintBrief.primarySegment) || asText(validationSprint.primary_segment);
+  const sprintProblem = asText(sprintBrief.idea) || asText(validationSprint.hypothesis);
+  const sprintAlternative = asText(sprintBrief.currentAlternative);
+  const sprintTrigger = asText(sprintBrief.urgencyTrigger);
+  const sprintNextExperiment = asText(validationSprint.next_experiment);
+  if (hasValidationSprintHandoff && sprintEvidence.length >= 25) {
+    sources.validationSprint = true;
+    sources.pmf = true;
+    const evidenceLines = sprintEvidence.slice(0, 25).map((item, index) => {
+      const signal = asText(item.signal) || 'neutral';
+      const summary = asText(item.summary) || asText(item.source_label) || 'Evidence signal';
+      const verification = asText(item.verification_mode) || 'founder_reported';
+      return `${index + 1}. [${signal}; ${verification}] ${summary}`;
+    });
+    sections.push([
+      'DECISION-GRADE VALIDATION SPRINT:',
+      '- Decision: BUILD',
+      '- Evidence grade: decision grade',
+      `- Independent signals: ${sprintEvidence.length}`,
+      sprintCustomer ? `- Primary customer: ${sprintCustomer}` : null,
+      sprintProblem ? `- Problem/job: ${sprintProblem}` : null,
+      sprintTrigger ? `- Urgency trigger: ${sprintTrigger}` : null,
+      sprintAlternative ? `- Current alternative: ${sprintAlternative}` : null,
+      `Evidence ledger:\n${evidenceLines.join('\n')}`,
+      sprintEvidence.length > evidenceLines.length
+        ? `- ${sprintEvidence.length - evidenceLines.length} additional signals remain attached to the version-pinned outcome.`
+        : null,
+      sprintNextExperiment ? `- Next experiment: ${sprintNextExperiment}` : null,
+    ].filter(Boolean).join('\n'));
+    manifestSources.push({
+      sourceId: asText(sprintHandoff.source_outcome_id) as string,
+      sourceType: 'pmf_decision_report',
+      artifactType: 'pmf_decision_report',
+      artifactId: validationSprintId as string,
+      version: asText(sprintHandoff.source_version_id) as string,
+      capturedAt: asText(sprintHandoff.created_at) || asText(validationSprint.updated_at) || new Date().toISOString(),
+      confidence: 1,
+      provenance: 'journey_handoff:validation_sprint',
+      label: 'Decision-grade Validation Sprint Build decision',
+      verificationMode: 'corroborated',
+    });
+  }
 
   // ── ICP: who it's for ──────────────────────────────────────────────────────
   const icpData = asRecord(icp.analysis_data);
@@ -201,8 +285,8 @@ export async function fetchJourneyEvidenceBrief(userId: string): Promise<Journey
   if (sections.length === 0) return null;
 
   const manifest = createJourneyEvidenceManifest(manifestSources);
-  const coreCustomer = asText(decisionBrief.primarySegment) || roleLine || 'Primary customer from the evidence manifest';
-  const coreJob = painQuote || asText(pmfData.nextExperiment) || 'Complete the workflow that resolves the validated pain';
+  const coreCustomer = sprintCustomer || asText(decisionBrief.primarySegment) || roleLine || 'Primary customer from the evidence manifest';
+  const coreJob = sprintProblem || painQuote || asText(pmfData.nextExperiment) || 'Complete the workflow that resolves the validated pain';
   const successEvent = buyingSignals[0] || 'Customer completes the primary workflow';
   const essentialFeatures = missingFeatures.slice(0, 3);
   const brief = [

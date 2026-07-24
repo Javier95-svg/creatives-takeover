@@ -564,6 +564,25 @@ export async function refundCredits(
       return false;
     }
 
+    if (data.alreadyRefunded) {
+      return true;
+    }
+
+    await emitBusinessEvent({
+      eventName: 'credit_action_refunded',
+      userId,
+      properties: {
+        feature_key: feature,
+        credits_refunded: amount,
+        source: 'automatic_failure_refund',
+        operation_id:
+          data.refundTransactionId ||
+          metadata?.operationId ||
+          metadata?.idempotencyKey ||
+          metadata?.deductionTransactionId,
+      },
+    });
+
     console.log(`[refundCredits] Refunded ${amount} credits to user ${userId} for ${feature}`);
     return true;
   } catch (error) {

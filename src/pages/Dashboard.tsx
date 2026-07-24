@@ -32,6 +32,7 @@ import { normalizePlan } from '@/config/planPermissions';
 import type { ActivationIntent } from '@/lib/retentionSystem';
 import { isExecutionDashboardEnabled } from '@/lib/dashboardRollout';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { ValidationSprintResumeCard } from '@/components/validation/ValidationSprintResumeCard';
 
 interface DashboardActivationState {
   loading: boolean;
@@ -150,6 +151,7 @@ const Dashboard = () => {
         <title>Dashboard — Creatives Takeover</title>
       </Helmet>
       <DashboardTour />
+      <ValidationSprintResumeCard />
       {fromIcpBuilder ? (
         <div className="mb-6 flex items-start justify-between gap-4 rounded-2xl border border-success/20 bg-success/10 p-5 shadow-sm">
           <div className="flex items-start gap-3">

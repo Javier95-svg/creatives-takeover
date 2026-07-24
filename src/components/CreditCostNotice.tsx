@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCreditActions } from "@/hooks/useCreditActions";
 import type { CreditFeature } from "@/config/constants";
 import { PLAN_LABELS } from "@/config/planPermissions";
-import { trackCreditCostDisclosed } from "@/lib/analytics";
+import { trackCreditActionQuoted, trackCreditCostDisclosed } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 interface CreditCostNoticeProps {
@@ -26,12 +26,23 @@ export function CreditCostNotice({
   const quote = getCreditActionQuote(feature, { featureName });
 
   useEffect(() => {
-    trackCreditCostDisclosed({
+    const properties = {
       feature_key: quote.feature,
       credit_cost: quote.requiredCredits,
       current_plan: quote.currentTier,
       credits_available: quote.totalAvailable,
       status: quote.status,
+      source_tool: quote.featureName,
+    } as const;
+    trackCreditCostDisclosed(properties);
+    trackCreditActionQuoted({
+      feature_key: quote.feature,
+      credit_cost: quote.requiredCredits,
+      current_plan: quote.currentTier,
+      credits_available: quote.totalAvailable,
+      resulting_balance: Math.max(0, quote.totalAvailable - quote.requiredCredits),
+      deliverable: quote.featureName,
+      automatic_refund: quote.status === "metered",
       source_tool: quote.featureName,
     });
   }, [quote.currentTier, quote.feature, quote.featureName, quote.requiredCredits, quote.status, quote.totalAvailable]);
@@ -50,7 +61,7 @@ export function CreditCostNotice({
     ? `Unlock with ${PLAN_LABELS[quote.requiredTier ?? "pro"]}`
     : quote.status === "free"
     ? "Free on your plan"
-    : `Costs ${quote.requiredCredits} credits - You have ${quote.totalAvailable} remaining`;
+    : `Costs ${quote.requiredCredits} credits · ${quote.totalAvailable} available · ${Math.max(0, quote.totalAvailable - quote.requiredCredits)} after · automatic refund if generation fails`;
 
   if (variant === "inline") {
     return (

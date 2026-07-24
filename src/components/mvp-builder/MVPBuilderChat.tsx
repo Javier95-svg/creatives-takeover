@@ -59,6 +59,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { trackJourneyEvent } from '@/lib/journeyOutcomes';
+import { useSearchParams } from 'react-router-dom';
 
 // ── Quick-start templates ────────────────────────────────────────────────────
 
@@ -341,6 +342,8 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   const [selectedReferences, setSelectedReferences] = useState<BuilderReferenceId[]>([]);
   const [isLoadingEvidence, setIsLoadingEvidence] = useState(false);
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const validationSprintPrefillHandled = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   // Journey-context compiler: draft the build prompt from the founder's saved
   // ICP decision, Demo proof, PMF report, and GTM plan. Editable before sending.
@@ -372,7 +375,13 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
         evidenceApprovedAt: null,
       });
       requestAnimationFrame(() => textareaRef.current?.focus());
-      const used = [result.sources.icp && 'ICP', result.sources.demo && 'Demo', result.sources.pmf && 'PMF Lab', result.sources.gtm && 'GTM plan']
+      const used = [
+        result.sources.validationSprint && 'Validation Sprint',
+        result.sources.icp && 'ICP',
+        result.sources.demo && 'Demo',
+        result.sources.pmf && !result.sources.validationSprint && 'PMF Lab',
+        result.sources.gtm && 'GTM plan',
+      ]
         .filter(Boolean)
         .join(' + ');
       toast.success(`Build brief drafted from your ${used} evidence.`, {
@@ -475,6 +484,16 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
     setInput(prompt);
     requestAnimationFrame(() => textareaRef.current?.focus());
   }, []);
+
+  useEffect(() => {
+    if (
+      validationSprintPrefillHandled.current ||
+      searchParams.get('source') !== 'validation-sprint' ||
+      !user
+    ) return;
+    validationSprintPrefillHandled.current = true;
+    void handleBuildFromEvidence();
+  }, [handleBuildFromEvidence, searchParams, user]);
 
   useEffect(() => {
     if (githubOpen && githubConnection.connected && githubRepositories.length === 0) {

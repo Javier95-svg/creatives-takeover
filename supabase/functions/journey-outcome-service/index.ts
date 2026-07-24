@@ -498,10 +498,22 @@ serve(async (req) => {
         return json({ error: 'Source outcome, destination tool, and idempotency key are required' }, 400);
       }
       const { data: outcome, error: outcomeError } = await supabase.from('journey_outcomes')
-        .select('id,status,tool').eq('id', sourceOutcomeId).eq('user_id', user.id).single();
+        .select('id,status,tool,quality_checks').eq('id', sourceOutcomeId).eq('user_id', user.id).single();
       if (outcomeError || !outcome) return json({ error: 'Source outcome was not found' }, 404);
       if (!['ready', 'verified', 'reviewed'].includes(outcome.status)) {
         return json({ error: 'Complete the source outcome before handing it to the next tool' }, 409);
+      }
+      if (outcome.tool === 'pmf_lab' && destinationTool === 'mvp_builder') {
+        const checks = recordValue(outcome.quality_checks);
+        if (
+          outcome.status !== 'verified' ||
+          checks.decision !== 'build' ||
+          checks.decision_grade !== true
+        ) {
+          return json({
+            error: 'MVP handoff requires a verified Build decision backed by decision-grade evidence',
+          }, 409);
+        }
       }
       if (!HANDOFF_DESTINATIONS[outcome.tool as JourneyTool]?.includes(destinationTool)) {
         return json({ error: 'This destination is not valid for the source tool contract' }, 400);

@@ -7,6 +7,7 @@ import {
   type BuildFounderJourneyInputs,
   type FounderJourneyExtras,
 } from '../src/lib/founderJourney.ts';
+import type { FounderOutcomeItem } from '../src/lib/founderOutcomeSnapshot.ts';
 import { getFoundationalMilestones, type ToolCompletionSignals } from '../src/lib/taskCalendar.ts';
 
 function makeInputs(overrides: {
@@ -14,6 +15,7 @@ function makeInputs(overrides: {
   stageState?: BuildFounderJourneyInputs['stageState'];
   toolSignals?: ToolCompletionSignals;
   extras?: Partial<FounderJourneyExtras>;
+  outcomeByTool?: Partial<Record<string, FounderOutcomeItem>>;
 } = {}): BuildFounderJourneyInputs {
   const toolSignals = overrides.toolSignals ?? {};
   return {
@@ -22,6 +24,28 @@ function makeInputs(overrides: {
     toolSignals,
     extras: { ...EMPTY_FOUNDER_JOURNEY_EXTRAS, ...overrides.extras },
     foundationalMilestones: getFoundationalMilestones(toolSignals),
+    outcomeByTool: overrides.outcomeByTool,
+  };
+}
+
+function makeOutcome(
+  tool: FounderOutcomeItem['tool'],
+  status: FounderOutcomeItem['status'],
+  nextAction: string | null = null,
+): FounderOutcomeItem {
+  return {
+    tool,
+    stage: tool,
+    status,
+    completionScore: status === 'not_started' ? null : status === 'draft' ? 40 : 100,
+    verificationMode: status === 'verified' ? 'corroborated' : 'unverified',
+    warnings: [],
+    nextAction,
+    artifactType: null,
+    artifactId: null,
+    outcomeId: null,
+    updatedAt: null,
+    completedAt: null,
   };
 }
 
@@ -302,4 +326,68 @@ test('lastTouched picks the most recently updated tool', () => {
 
   assert.equal(snapshot.lastTouched?.label, 'Traction Engine');
   assert.equal(snapshot.lastTouched?.route, '/traction-engine');
+});
+
+test('authoritative draft overrides legacy artifact completion and routes to the sprint', () => {
+  const snapshot = buildFounderJourneySnapshot(
+    makeInputs({
+      toolSignals: { icpCompleted: true },
+      outcomeByTool: {
+        icp_builder: makeOutcome('icp_builder', 'draft', 'Add customer evidence'),
+        pmf_lab: makeOutcome('pmf_lab', 'not_started'),
+      },
+    }),
+  );
+
+  assert.equal(snapshot.tools.find((tool) => tool.key === 'icp-builder')?.status, 'started');
+  assert.equal(snapshot.nextAction?.key, 'icp_builder');
+  assert.equal(snapshot.nextAction?.label, 'Add customer evidence');
+  assert.equal(snapshot.nextAction?.route, '/validation-sprint');
+  assert.equal(snapshot.isEmpty, false);
+});
+
+test('Capital is optional when authoritative core outcomes are complete', () => {
+  const completeState = Object.fromEntries(
+    ['IDENTITY', 'PROTOTYPE', 'VALIDATING', 'BUILDING', 'LAUNCH', 'TRACTION'].map((stage) => [
+      stage,
+      { completed: true, completedAt: '2026-07-22T00:00:00.000Z' },
+    ]),
+  ) as BuildFounderJourneyInputs['stageState'];
+  const outcomeByTool = {
+    icp_builder: makeOutcome('icp_builder', 'ready'),
+    demo_studio: makeOutcome('demo_studio', 'ready'),
+    pmf_lab: makeOutcome('pmf_lab', 'verified'),
+    mvp_builder: makeOutcome('mvp_builder', 'ready'),
+    gtm_strategist: makeOutcome('gtm_strategist', 'ready'),
+    traction_engine: makeOutcome('traction_engine', 'verified'),
+  };
+
+  const snapshot = buildFounderJourneySnapshot(
+    makeInputs({ currentStage: 'TRACTION', stageState: completeState, outcomeByTool }),
+  );
+
+  assert.equal(snapshot.stagesCompleted, 6);
+  assert.equal(snapshot.progressPercent, 100);
+  assert.equal(snapshot.nextAction, null);
+  assert.equal(snapshot.stages.find((stage) => stage.stage === 'FUNDRAISING')?.status, 'upcoming');
+});
+
+test('a decision-grade Build routes to MVP before an incomplete standalone ICP outcome', () => {
+  const pmf = {
+    ...makeOutcome('pmf_lab', 'verified'),
+    decision: 'build' as const,
+    evidenceGrade: 'decision_grade' as const,
+  };
+  const snapshot = buildFounderJourneySnapshot(
+    makeInputs({
+      outcomeByTool: {
+        icp_builder: makeOutcome('icp_builder', 'not_started'),
+        pmf_lab: pmf,
+        mvp_builder: makeOutcome('mvp_builder', 'not_started'),
+      },
+    }),
+  );
+
+  assert.equal(snapshot.nextAction?.key, 'mvp_builder');
+  assert.equal(snapshot.nextAction?.route, '/mvp-builder?source=validation-sprint');
 });

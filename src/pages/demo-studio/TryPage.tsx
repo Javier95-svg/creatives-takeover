@@ -78,7 +78,7 @@ interface HydrateStep {
 
 export default function TryPage() {
   const { user, loading: authLoading } = useAuth();
-  const { subscriptionData } = useSubscription();
+  const { subscriptionData } = useSubscription({ fetchTiers: false });
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const entryTrackedRef = useRef(false);

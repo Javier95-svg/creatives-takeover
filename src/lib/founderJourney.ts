@@ -1,5 +1,6 @@
 import { BIZMAP_STAGES, BIZMAP_STAGE_ORDER, type BizMapStage } from './bizmapStages.ts';
 import type { FoundationalMilestone, ToolCompletionSignals } from './taskCalendar.ts';
+import type { FounderOutcomeItem } from './founderOutcomeSnapshot.ts';
 
 export interface TractionJourneySignal {
   latestScore: number | null;
@@ -106,6 +107,7 @@ export interface BuildFounderJourneyInputs {
   toolSignals: ToolCompletionSignals;
   extras: FounderJourneyExtras;
   foundationalMilestones: FoundationalMilestone[];
+  outcomeByTool?: Partial<Record<string, FounderOutcomeItem>>;
 }
 
 function stagePrimaryRoute(stage: BizMapStage): string {
@@ -317,11 +319,85 @@ function buildTools(inputs: BuildFounderJourneyInputs): JourneyToolTile[] {
 
   return drafts.map((draft) => {
     const stage = TILE_STAGES[draft.key] ?? 'IDENTITY';
-    return { ...draft, stage, isCurrentStage: stage === inputs.currentStage };
+    const outcomeKey = draft.key.replaceAll('-', '_');
+    const outcome = inputs.outcomeByTool?.[outcomeKey];
+    const status = outcome
+      ? ['ready', 'verified', 'reviewed'].includes(outcome.status)
+        ? 'done'
+        : outcome.status === 'draft'
+          ? 'started'
+          : 'not_started'
+      : draft.status;
+    const outcomeLine = outcome
+      ? outcome.status === 'verified' || outcome.status === 'reviewed'
+        ? `${draft.label} outcome verified`
+        : outcome.status === 'ready'
+          ? `${draft.label} outcome ready`
+          : outcome.status === 'draft'
+            ? outcome.nextAction || `${draft.label} draft in progress`
+            : draft.outputLine
+      : draft.outputLine;
+    return {
+      ...draft,
+      status,
+      outputLine: outcomeLine,
+      updatedAt: outcome?.updatedAt ?? draft.updatedAt,
+      stage,
+      isCurrentStage: stage === inputs.currentStage,
+    };
   });
 }
 
 function buildNextAction(inputs: BuildFounderJourneyInputs): JourneyNextAction | null {
+  if (inputs.outcomeByTool) {
+    const pmfOutcome = inputs.outcomeByTool.pmf_lab;
+    const mvpOutcome = inputs.outcomeByTool.mvp_builder;
+    if (
+      pmfOutcome &&
+      ['verified', 'reviewed'].includes(pmfOutcome.status) &&
+      pmfOutcome.decision === 'build' &&
+      pmfOutcome.evidenceGrade === 'decision_grade' &&
+      (!mvpOutcome || !['ready', 'verified', 'reviewed'].includes(mvpOutcome.status))
+    ) {
+      return {
+        key: 'mvp_builder',
+        label: mvpOutcome?.nextAction || 'Build the evidence-backed MVP',
+        route: '/mvp-builder?source=validation-sprint',
+      };
+    }
+
+    const outcomeOrder = [
+      'icp_builder',
+      'pmf_lab',
+      'demo_studio',
+      'mvp_builder',
+      'gtm_strategist',
+      'traction_engine',
+    ] as const;
+    const authoritativeNext = outcomeOrder
+      .map((tool) => inputs.outcomeByTool?.[tool])
+      .filter((outcome): outcome is FounderOutcomeItem => Boolean(outcome))
+      .find((outcome) => !['ready', 'verified', 'reviewed'].includes(outcome.status));
+
+    if (authoritativeNext) {
+      return {
+        key: authoritativeNext.tool,
+        label: authoritativeNext.nextAction || 'Continue your evidence-backed outcome',
+        route: authoritativeNext.tool === 'icp_builder' || authoritativeNext.tool === 'pmf_lab'
+          ? '/validation-sprint'
+          : authoritativeNext.tool === 'demo_studio'
+            ? '/demo-studio'
+            : authoritativeNext.tool === 'mvp_builder'
+              ? '/mvp-builder'
+              : authoritativeNext.tool === 'gtm_strategist'
+                ? '/go-to-market'
+                : '/traction-engine',
+      };
+    }
+
+    return null;
+  }
+
   const firstIncompleteFoundation = inputs.foundationalMilestones.find((milestone) => !milestone.completed);
   if (firstIncompleteFoundation) {
     return {
@@ -343,14 +419,21 @@ export function buildFounderJourneySnapshot(inputs: BuildFounderJourneyInputs): 
   const stages = buildStages(inputs);
   const tools = buildTools(inputs);
 
-  const stagesCompleted = stages.filter((node) => node.status === 'complete').length;
+  const requiredStages = inputs.outcomeByTool
+    ? stages.filter((node) => node.stage !== 'FUNDRAISING')
+    : stages;
+  const stagesCompleted = requiredStages.filter((node) => node.status === 'complete').length;
+  const hasOutcomeActivity = Object.values(inputs.outcomeByTool ?? {}).some(
+    (outcome) => outcome?.status !== 'not_started',
+  );
   const isEmpty =
     !Object.values(inputs.toolSignals).some(Boolean) &&
     !inputs.extras.traction &&
     !inputs.extras.demoStudio &&
     !inputs.extras.pmf &&
     !inputs.extras.pitchDeck &&
-    !inputs.extras.mvpPublished;
+    !inputs.extras.mvpPublished &&
+    !hasOutcomeActivity;
 
   const lastTouched = tools
     .filter((tile): tile is JourneyToolTile & { updatedAt: string } => Boolean(tile.updatedAt))
@@ -362,7 +445,9 @@ export function buildFounderJourneySnapshot(inputs: BuildFounderJourneyInputs): 
     tools,
     nextAction: buildNextAction(inputs),
     stagesCompleted,
-    progressPercent: Math.round((stagesCompleted / stages.length) * 100),
+    progressPercent: Math.round(
+      (stagesCompleted / Math.max(requiredStages.length, 1)) * 100,
+    ),
     isEmpty,
     lastTouched,
   };

@@ -74,36 +74,40 @@ test('GTM is ready as a plan and verified only after its attributed Traction spr
   assert.equal(verified.completionScore, 100);
 });
 
-test('fixed hero copy and server rendered pricing remain available without JavaScript', () => {
-  const hero = readFileSync(new URL('../src/components/Hero.tsx', import.meta.url), 'utf8');
+test('outcome-led hero and CTA remain available with and without JavaScript', () => {
+  const homepage = readFileSync(new URL('../src/pages/Index.tsx', import.meta.url), 'utf8');
   const fallback = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   const prerender = readFileSync(new URL('../scripts/generate-prerendered-pages.mjs', import.meta.url), 'utf8');
-  const paragraphs = [
-    'Business Development platform for startup founders & first-time business owners.',
-    'Define your ideal customer, prove demand, build your MVP, launch it, and find investment.',
-    'No application. No cohort. No equity.',
-  ];
-  const renderedSources = [hero, fallback, prerender].map((source) =>
-    source.replaceAll('&apos;', "'").replaceAll('&amp;', '&'),
+  const renderedSources = [homepage, fallback, prerender].map((source) =>
+    source
+      .replaceAll('&apos;', "'")
+      .replaceAll('&amp;', '&')
+      .replaceAll('&mdash;', '—'),
   );
-  paragraphs.forEach((copy) => {
+  const requiredCopy = [
+    'Stop guessing what to build.',
+    'Turn real customer evidence into a clear Build, Narrow, Pivot, Stop, or keep-testing decision',
+    'Start my validation sprint',
+    'I already have a live product',
+  ];
+  requiredCopy.forEach((copy) => {
     const copyPattern = new RegExp(copy.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-    renderedSources.forEach((source) => assert.match(source, copyPattern));
+    [renderedSources[0], renderedSources[1]].forEach((source) => assert.match(source, copyPattern));
   });
-  assert.match(hero, /Launch a live demo/);
-  assert.match(hero, /Draft your ICP/);
-  assert.match(prerender, /Rookie[\s\S]*\$0[\s\S]*Clarify/);
-  assert.match(prerender, /Starter[\s\S]*\$9[\s\S]*Validate/);
-  assert.match(prerender, /Rising[\s\S]*\$29[\s\S]*Build and Launch/);
-  assert.match(prerender, /Pro[\s\S]*\$65[\s\S]*Accelerate and Fundraise/);
+  renderedSources.slice(1).forEach((source) => {
+    assert.match(source, /Start my validation sprint/);
+    assert.match(source, /I already have a live product/);
+  });
+  assert.doesNotMatch(homepage, /5.? faster|prove demand|achieve PMF|get funded/i);
+  assert.doesNotMatch(fallback, /5.? faster|prove demand|achieve PMF|get funded/i);
 });
 
-test('hero scrolling cards retain the restored market data', () => {
-  const hero = readFileSync(new URL('../src/components/Hero.tsx', import.meta.url), 'utf8');
-  assert.match(hero, /value: "5", unit: "×", label: "Faster idea → MVP than pre-AI builders"/);
-  assert.match(hero, /value: "\$680B", unit: "\+", label: "Into AI-native startups since 2024"/);
-  assert.match(hero, /value: "1 in 4", label: "New 2026 launches are solo founders"/);
-  assert.match(hero, /value: "~18", unit: "mo", label: "Before incumbents close the AI-native gap"/);
+test('homepage pricing resolves from canonical plan and top-up sources', () => {
+  const homepage = readFileSync(new URL('../src/pages/Index.tsx', import.meta.url), 'utf8');
+  assert.match(homepage, /PLAN_PRICING/);
+  assert.match(homepage, /PLAN_MONTHLY_CREDITS/);
+  assert.match(homepage, /TOP_UP_PACKS/);
+  assert.match(homepage, /Persistent top-ups/);
 });
 
 test('Pro expert support has a protected queue while the restored mentorship hero remains intact', () => {

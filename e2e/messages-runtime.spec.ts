@@ -56,7 +56,7 @@ test('authenticated messages route survives unavailable V2 RPCs', async ({ page 
   await page.goto('/messages');
   await expect(page.getByText('Something went wrong')).toHaveCount(0);
   await expect(page.getByText('Failed to load conversations. Please refresh the page.')).toHaveCount(0);
-  await expect(page.getByRole('heading', { name: 'Messages', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Chats', exact: true })).toBeVisible();
 });
 
 test('long inbox stays within the messages workspace frame', async ({ page }) => {
