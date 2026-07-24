@@ -39,6 +39,15 @@ function sanitizeChunkName(value: string) {
 }
 
 function getManualChunk(id: string) {
+  // Vite's dynamic-import preload helper (and Rollup's commonjs helpers) are
+  // referenced by every lazy chunk. Left to Rollup's default placement the
+  // preload helper landed inside the jspdf chunk, which made the entry and all
+  // 120+ lazy chunks statically import ~460KB of PDF tooling on first paint.
+  // Pin the helpers to react-core, which every chunk already depends on.
+  if (id.includes("vite/preload-helper") || id.includes("commonjsHelpers")) {
+    return "react-core";
+  }
+
   const packageName = getPackageName(id);
   if (!packageName) {
     return undefined;
@@ -120,9 +129,31 @@ function getManualChunk(id: string) {
   return `vendor-${sanitizeChunkName(packageName)}`;
 }
 
+// The built stylesheet is ~400KB (60KB gz) and render-blocking, which delays
+// the instant HTML shell's first paint. Swap it to a preload that upgrades to
+// a stylesheet on load; main.tsx waits for it before mounting React so the app
+// itself never renders unstyled.
+function asyncAppCss() {
+  return {
+    name: "async-app-css",
+    apply: "build" as const,
+    transformIndexHtml: {
+      order: "post" as const,
+      handler(html: string) {
+        return html.replace(
+          /<link rel="stylesheet"([^>]*?)href="([^"]+\.css)"([^>]*?)>/g,
+          (_match, pre: string, href: string, post: string) =>
+            `<link rel="preload" as="style"${pre}href="${href}"${post} data-app-css onload="this.onload=null;this.rel='stylesheet'">` +
+            `<noscript><link rel="stylesheet"${pre}href="${href}"${post}></noscript>`
+        );
+      },
+    },
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const plugins = [react()];
+  const plugins = [react(), asyncAppCss()];
   
   // Only add componentTagger in development mode
   if (mode === 'development') {

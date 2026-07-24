@@ -75,15 +75,40 @@ window.addEventListener('error', (event) => {
 
 bootstrapPosthog();
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <PostHogProvider client={getPosthogClient()}>
-      <AnalyticsBootstrap />
-      <ThemeProvider>
-        <HelmetProvider context={helmetContext}>
-          <App />
-        </HelmetProvider>
-      </ThemeProvider>
-    </PostHogProvider>
-  </StrictMode>
-);
+// The build turns the main stylesheet into a non-render-blocking preload (see
+// asyncAppCss in vite.config.ts) so the static shell in index.html can paint
+// first. Wait for it before mounting so the app never renders unstyled; the
+// timeout keeps the app usable if the stylesheet stalls. In dev (or if the
+// link is already applied) this resolves immediately.
+const whenAppCssReady = (): Promise<void> => {
+  const link = document.querySelector<HTMLLinkElement>('link[data-app-css]');
+  if (!link || (link.rel === 'stylesheet' && link.sheet)) {
+    return Promise.resolve();
+  }
+  return new Promise((resolve) => {
+    let settled = false;
+    const done = () => {
+      if (settled) return;
+      settled = true;
+      resolve();
+    };
+    link.addEventListener('load', done, { once: true });
+    link.addEventListener('error', done, { once: true });
+    window.setTimeout(done, 4000);
+  });
+};
+
+void whenAppCssReady().then(() => {
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <PostHogProvider client={getPosthogClient()}>
+        <AnalyticsBootstrap />
+        <ThemeProvider>
+          <HelmetProvider context={helmetContext}>
+            <App />
+          </HelmetProvider>
+        </ThemeProvider>
+      </PostHogProvider>
+    </StrictMode>
+  );
+});

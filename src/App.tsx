@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, type ReactNode } from "react";
+import { Suspense, lazy, useEffect, useState, type ReactNode } from "react";
 import { MotionConfig } from "framer-motion";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -22,6 +22,7 @@ import ProUpgradeBanner from "@/components/ProUpgradeBanner";
 import AdminRoute from "@/components/AdminRoute";
 import { useInteractionTelemetry } from "@/hooks/useInteractionTelemetry";
 import { captureReferralFromUrl } from "@/lib/referral";
+import { removeAppShell } from "@/lib/appShell";
 import { ActivationFocusShell } from '@/components/activation/ActivationFocusShell';
 import { ActivationResumeBanner } from '@/components/activation/ActivationResumeBanner';
 
@@ -135,6 +136,7 @@ const DemoCalls = lazy(() => import("./pages/DemoCalls"));
 const MVPBuilderBetaPage = lazy(() => import("./pages/MVPBuilderBetaPage"));
 const BuildPage = lazy(() => import("./pages/BuildPage"));
 const TractionEnginePage = lazy(() => import("./pages/TractionEnginePage"));
+const ValidationSprintPage = lazy(() => import("./pages/ValidationSprintPage"));
 const ProjectsDashboard = lazy(() => import("./components/dashboard/ProjectsDashboard"));
 
 // Demo Studio (interactive demo builder + public demo viewer)
@@ -175,10 +177,40 @@ const LegacyCommunityRedirect = () => {
   return <Navigate to={`${nextPath}${location.search}${location.hash}`} replace />;
 };
 
+// Sits inside the top Suspense boundary, so its effect only runs once the
+// matched lazy route has resolved and committed — the moment real page
+// content is on screen and the static index.html shell can go.
+const AppShellRemover = () => {
+  useEffect(() => {
+    removeAppShell();
+  }, []);
+  return null;
+};
+
 const PulseWidgetWrapper = () => {
   const location = useLocation();
+  // The widget chunk used to download immediately on mount, competing with the
+  // route bundle on slow connections. Wait for first interaction or a few
+  // seconds of idle before fetching it.
+  const [engaged, setEngaged] = useState(false);
 
-  if (!shouldShowPulseForPath(location.pathname)) return null;
+  useEffect(() => {
+    if (engaged) return;
+    const activate = () => setEngaged(true);
+    const idleTimer = window.setTimeout(activate, 6000);
+    const options: AddEventListenerOptions = { once: true, passive: true };
+    window.addEventListener("pointerdown", activate, options);
+    window.addEventListener("keydown", activate, options);
+    window.addEventListener("scroll", activate, options);
+    return () => {
+      window.clearTimeout(idleTimer);
+      window.removeEventListener("pointerdown", activate);
+      window.removeEventListener("keydown", activate);
+      window.removeEventListener("scroll", activate);
+    };
+  }, [engaged]);
+
+  if (!engaged || !shouldShowPulseForPath(location.pathname)) return null;
 
   return <PulseWidget />;
 };
@@ -220,6 +252,7 @@ function App() {
                 <Sonner />
                 <BrowserRouter>
                   <Suspense fallback={<div style={{ minHeight: '100vh', background: '#1a1a2e' }} />}>
+                    <AppShellRemover />
                     <ScrollToTop />
                     <InteractionTelemetryBridge />
                     <ReferralCaptureBridge />
@@ -300,6 +333,7 @@ function App() {
                         <Route path="/icp/:draftId/public" element={<IcpPublicDraftPage />} />
                         <Route path="/bizmap-ai/icp-builder" element={<Navigate to="/icp-builder" replace />} />
                         <Route path="/decision-sprint" element={<ToolRouteWithCreditGate><ValidateJourneyPage /></ToolRouteWithCreditGate>} />
+                        <Route path="/validation-sprint" element={<RouteErrorBoundary routeName="Validation Sprint"><ValidationSprintPage /></RouteErrorBoundary>} />
                         <Route path="/validate" element={<ToolRouteWithCreditGate><ValidateJourney /></ToolRouteWithCreditGate>} />
                         {/* Demo Studio = the new interactive demo builder (front door) */}
                         <Route path="/demo-studio" element={<RouteErrorBoundary routeName="Demo Studio"><DemoStudioProjectsPage /></RouteErrorBoundary>} />

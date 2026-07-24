@@ -9,7 +9,7 @@ test('browser analytics gateway sends typed business events to Amplitude and Pos
 
   assert.match(source, /@amplitude\/analytics-browser/);
   assert.match(source, /posthog-js/);
-  assert.match(source, /amplitude\.track\(eventName/);
+  assert.match(source, /amplitudeModule\.track\(eventName/);
   assert.match(source, /posthogClient\.capture\(eventName/);
   assert.match(source, /export interface SignupCompletedProps/);
   assert.match(source, /export interface OnboardingCompletedProps/);

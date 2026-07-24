@@ -1,5 +1,4 @@
 import posthog from 'posthog-js';
-import * as amplitude from '@amplitude/analytics-browser';
 import { getSafeSessionStorage, getSafeLocalStorage } from '@/lib/safeStorage';
 import { logWarn } from '@/lib/logger';
 import { captureFirstTouch } from '@/lib/attribution';
@@ -144,20 +143,48 @@ const sanitizeAnalyticsProperties = (properties?: AnalyticsProperties): Analytic
   }, {});
 };
 
+// The Amplitude SDK (~200KB across five chunks) is loaded on demand the first
+// time a signed-in user needs it, keeping it out of the synchronous entry
+// bundle that gates first paint. Before the module resolves, capture/identify
+// calls are dropped exactly as they were before init in the static version.
+type AmplitudeModule = typeof import('@amplitude/analytics-browser');
+let amplitudeModule: AmplitudeModule | null = null;
+let amplitudeLoadPromise: Promise<AmplitudeModule | null> | null = null;
+
+const loadAmplitude = (): Promise<AmplitudeModule | null> => {
+  if (amplitudeModule) return Promise.resolve(amplitudeModule);
+  if (!amplitudeLoadPromise) {
+    amplitudeLoadPromise = import('@amplitude/analytics-browser')
+      .then((module) => {
+        amplitudeModule = module;
+        return module;
+      })
+      .catch((error) => {
+        logWarn('Amplitude SDK load failed', error);
+        amplitudeLoadPromise = null;
+        return null;
+      });
+  }
+  return amplitudeLoadPromise;
+};
+
 export const initAmplitudeWithUser = (userId: string) => {
   if (typeof window === 'undefined' || !AMPLITUDE_API_KEY) return;
-  try {
-    amplitude.init(AMPLITUDE_API_KEY, userId, { defaultTracking: { pageViews: false, sessions: true } });
-    amplitudeInitialized = true;
-  } catch (error) {
-    logWarn('Amplitude init failed', error);
-  }
+  void loadAmplitude().then((amplitude) => {
+    if (!amplitude) return;
+    try {
+      amplitude.init(AMPLITUDE_API_KEY, userId, { defaultTracking: { pageViews: false, sessions: true } });
+      amplitudeInitialized = true;
+    } catch (error) {
+      logWarn('Amplitude init failed', error);
+    }
+  });
 };
 
 export const resetAmplitude = () => {
-  if (!amplitudeInitialized) return;
+  if (!amplitudeInitialized || !amplitudeModule) return;
   try {
-    amplitude.reset();
+    amplitudeModule.reset();
     amplitudeInitialized = false;
   } catch (error) {
     logWarn('Amplitude reset failed', error);
@@ -165,27 +192,27 @@ export const resetAmplitude = () => {
 };
 
 const captureAmplitudeEvent = (eventName: string, properties?: AnalyticsProperties) => {
-  if (!amplitudeInitialized) return;
+  if (!amplitudeInitialized || !amplitudeModule) return;
 
   try {
-    amplitude.track(eventName, sanitizeAnalyticsProperties(properties));
+    amplitudeModule.track(eventName, sanitizeAnalyticsProperties(properties));
   } catch (error) {
     logWarn('Amplitude capture failed', error);
   }
 };
 
 const identifyAmplitudeUser = (id: string, properties?: AnalyticsProperties) => {
-  if (!amplitudeInitialized) return;
+  if (!amplitudeInitialized || !amplitudeModule) return;
 
   try {
-    amplitude.setUserId(id);
+    amplitudeModule.setUserId(id);
     const sanitized = sanitizeAnalyticsProperties(properties);
     if (Object.keys(sanitized).length > 0) {
-      const identifyEvent = new amplitude.Identify();
+      const identifyEvent = new amplitudeModule.Identify();
       Object.entries(sanitized).forEach(([key, value]) => {
         identifyEvent.set(key, value as string | number | boolean | string[] | number[] | boolean[] | null);
       });
-      amplitude.identify(identifyEvent);
+      amplitudeModule.identify(identifyEvent);
     }
   } catch (error) {
     logWarn('Amplitude identify failed', error);
@@ -926,6 +953,17 @@ export const trackCreditCostDisclosed = (properties: {
   status: 'free' | 'metered' | 'locked';
   source_tool?: string;
 }) => captureEvent('credit_cost_disclosed', properties);
+
+export const trackCreditActionQuoted = (properties: {
+  feature_key: string;
+  credit_cost: number;
+  current_plan: 'rookie' | 'starter' | 'rising' | 'pro';
+  credits_available: number;
+  resulting_balance: number;
+  deliverable: string;
+  automatic_refund: boolean;
+  source_tool?: string;
+}) => captureEvent('credit_action_quoted', properties);
 
 export const trackCreditActionCompleted = (properties: {
   feature_key: string;

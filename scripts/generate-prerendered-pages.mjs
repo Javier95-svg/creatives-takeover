@@ -24,10 +24,9 @@ const PRICING_SUMMARY = [
 function buildFallbackHtml(routeConfig) {
   const nav = PRIMARY_NAV.map((item) => `<a href="${item.href}">${item.label}</a>`).join(" | ");
   const heroContent = routeConfig.path === "/"
-    ? `<p>Business Development platform for startup founders &amp; first-time business owners.</p>
-          <p>Define your ideal customer, prove demand, build your MVP, launch it, and find investment.</p>
-          <p><strong>No application. No cohort. No equity.</strong></p>
-          <p><a href="/demo-studio/try">Launch a live demo</a> <a href="/icp-builder">Draft your ICP</a></p>`
+    ? `<p>Creatives Takeover &middot; Founders Compass</p>
+          <p>Turn real customer evidence into a clear Build, Narrow, Pivot, Stop, or keep-testing decision&mdash;then carry that evidence into your MVP.</p>
+          <p><a href="/validation-sprint">Start my validation sprint</a> <a href="/traction-engine">I already have a live product</a></p>`
     : `<p>${routeConfig.heroCopy || routeConfig.description}</p>`;
   const authorByline = routeConfig.path.startsWith("/answers/")
     ? `<p>By <a href="/about#founder">Javier Peña, Founder &amp; CEO</a></p>`
@@ -317,6 +316,35 @@ function buildOgImage(routeConfig) {
   return `${BASE_URL}/api/og?${params.toString()}`.replace(/&/g, "&amp;");
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+// The template's static #app-shell (instant pre-JS paint) carries the homepage
+// hero. Prerendered inner routes bake their own path and headline so the first
+// paint always matches the page; the badge and homepage CTA stay home-only.
+function renderShellForRoute(html, routeConfig) {
+  if (routeConfig.path === "/") return html;
+
+  const title = escapeHtml(
+    (routeConfig.heroHeading || routeConfig.title || "")
+      .replace(/\s*\|\s*Creatives Takeover.*$/i, "")
+      .trim()
+  );
+  const subtitle = escapeHtml((routeConfig.heroCopy || routeConfig.description || "").trim());
+
+  return html
+    .replace('data-shell-route="/"', `data-shell-route="${escapeHtml(routeConfig.path)}"`)
+    .replace(/<span class="shell-badge"[^>]*>[\s\S]*?<\/span>/, "")
+    .replace(/(<h1 class="shell-title"[^>]*>)[\s\S]*?(<\/h1>)/, `$1${title}$2`)
+    .replace(/(<p class="shell-subtitle"[^>]*>)[\s\S]*?(<\/p>)/, `$1${subtitle}$2`)
+    .replace(/<a class="shell-cta"[^>]*>[\s\S]*?<\/a>/, "");
+}
+
 function renderRoute(template, routeConfig) {
   const canonical = `${BASE_URL}${routeConfig.path}`;
   const robots = "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1";
@@ -344,6 +372,7 @@ function renderRoute(template, routeConfig) {
     /<main id="seo-fallback">[\s\S]*?<\/main>/i,
     `<main id="seo-fallback">\n${buildFallbackHtml(routeConfig)}\n    </main>`
   );
+  html = renderShellForRoute(html, routeConfig);
   return html;
 }
 

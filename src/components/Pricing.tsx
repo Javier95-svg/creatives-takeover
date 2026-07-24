@@ -129,7 +129,11 @@ const formatPrice = (value: number) => {
 };
 
 export default function Pricing() {
-  const { loading, subscriptionData } = useSubscription();
+  // Plan cards render from the static PLAN_CONFIG below; the subscription_tiers
+  // fetch added nothing here but blocked first render (anonymous visitors saw a
+  // spinner until Supabase answered). Only the signed-in subscription check
+  // (for the current-plan state) can briefly gate the render now.
+  const { loading, subscriptionData } = useSubscription({ fetchTiers: false });
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
