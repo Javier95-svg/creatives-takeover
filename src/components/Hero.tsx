@@ -140,8 +140,15 @@ const Hero = ({
               placement: "hero_secondary",
               is_authenticated: isAuthenticated,
             });
-            void trackTriggerView("hero-primary-cta", {
+            // Trigger ids must match the ones trackEngagement uses on click
+            // (hero-demo-cta / hero-icp-cta) or conversion_cta_viewed and
+            // conversion_cta_clicked can't be paired into a CTR for either CTA.
+            void trackTriggerView("hero-demo-cta", {
               ctaType: "primary",
+              authenticated: isAuthenticated,
+            });
+            void trackTriggerView("hero-icp-cta", {
+              ctaType: "secondary",
               authenticated: isAuthenticated,
             });
           }

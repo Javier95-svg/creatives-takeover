@@ -232,7 +232,9 @@ const invokeIcpAnalyzer = async <T,>(body: unknown, timeoutMs: number, context: 
       captureEvent("icp_analyzer_function_failed", {
         context,
         operation,
-        step: details.step,
+        // See activationEntry.ts — `step` is typed Numeric project-wide, so string
+        // step names must go under funnel_step to stay queryable.
+        funnel_step: details.step,
         error_code: details.errorCode,
         required_credits: details.requiredCredits,
         message: details.message,

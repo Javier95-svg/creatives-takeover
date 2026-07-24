@@ -10,6 +10,7 @@ export type ActivationEntryId =
   | "navbar_join_today"
   | `pricing_${string}`
   | "demo_try"
+  | "icp_builder"
   | "icp_draft_unlock"
   | "icp_draft_share"
   | "pitch_deck_analyzer"
@@ -90,8 +91,15 @@ export function trackActivationFunnelEvent(
   event: ActivationFunnelEvent,
   properties: ActivationFunnelProperties,
 ) {
+  // `step` is a project-global property name in PostHog, and onboarding_step_completed /
+  // icp_builder_step_completed already type it as Numeric by sending step numbers (1..6).
+  // Our string step names therefore resolve to NULL in HogQL and in UI filters. Emit them
+  // under a dedicated string key so the activation funnel stays queryable; retyping the
+  // shared `step` key would just break the onboarding funnels instead.
+  const { step, ...rest } = properties;
   captureEvent(event, {
-    ...properties,
+    ...rest,
+    funnel_step: step,
     anonymous_session_id: properties.anonymous_session_id ?? getActivationSessionId(),
   });
 }

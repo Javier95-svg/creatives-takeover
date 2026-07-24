@@ -16,6 +16,8 @@ import {
   type IcpBuilderOpenedSource,
 } from "@/lib/analytics";
 import { ICP_SEED_STORAGE_KEY } from "@/lib/icpSeed";
+import { trackActivationFunnelEvent } from "@/lib/activationEntry";
+import { useAuth } from "@/contexts/AuthContext";
 
 const ICPBuilder = lazy(() => import("@/components/icp/ICPBuilder"));
 
@@ -50,6 +52,7 @@ function getIcpBuilderOpenedSource(
 
 export default function ICPBuilderPage() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const hasTracked = useRef(false);
   const { showExitIntent, closeExitIntent } = useExitIntent();
   const [showLeadBanner, setShowLeadBanner] = useState(false);
@@ -111,10 +114,23 @@ export default function ICPBuilderPage() {
     });
     trackToolOpened('icp_builder');
 
+    // The ICP route previously emitted only icp_builder_opened, so it was invisible to the
+    // activation funnel and no single funnel could span both hero CTA destinations.
+    // Fired ungated (not waiting on auth) to match trackICPBuilderOpened above — a complete
+    // denominator matters more here than a perfectly resolved is_authenticated flag.
+    trackActivationFunnelEvent('activation_entry_opened', {
+      entry_id: 'icp_builder',
+      tool: 'icp_builder',
+      source: 'icp_builder',
+      step: 'opened',
+      entry_page: '/icp-builder',
+      is_authenticated: isAuthenticated,
+    });
+
     if (seed?.trim()) {
       trackActivationCompleted({ trigger: 'icp_seed_prefilled', artifact: 'icp_seed_prefilled' });
     }
-  }, []);
+  }, [isAuthenticated]);
 
   const handleReturnToPlatform = () => {
     const session = readIcpBuilderSession();

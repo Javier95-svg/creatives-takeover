@@ -78,7 +78,7 @@ interface HydrateStep {
 
 export default function TryPage() {
   const { user, loading: authLoading } = useAuth();
-  const { subscriptionData } = useSubscription({ fetchTiers: false });
+  const { subscriptionData } = useSubscription();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const entryTrackedRef = useRef(false);
@@ -87,13 +87,16 @@ export default function TryPage() {
   const resumeToken = isReturning ? null : searchParams.get('resume');
 
   useEffect(() => {
-    if (entryTrackedRef.current || authLoading) return;
+    if (entryTrackedRef.current) return;
     entryTrackedRef.current = true;
+    // Fired without waiting on authLoading: while it was gated, only 8 of 34 visits ever
+    // reached this event because most visitors leave within ~10s. The fast bounces are
+    // exactly the ones the denominator needs, so completeness wins over the auth flag.
     trackActivationFunnelEvent('activation_entry_opened', {
       entry_id: 'demo_try', tool: 'demo_studio', source: 'demo_try', step: 'opened',
       entry_page: '/demo-studio/try', is_authenticated: Boolean(user),
     });
-  }, [authLoading, user]);
+  }, [user]);
 
   const [shots, setShots] = useState<Shot[]>([]);
   const [contextUrl, setContextUrl] = useState('');

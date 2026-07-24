@@ -4,10 +4,12 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 const frozenFiles = {
-  '../src/components/Hero.tsx': 'cf950e78ebdc308ce6d020223c43f6095b441039d1caf7f25a08e4b979fccfc7',
+  // Rehashed 2026-07-24 for an analytics-only change: trackTriggerView now fires under
+  // hero-demo-cta / hero-icp-cta so it pairs with the click ids. No render change.
+  '../src/components/Hero.tsx': '52778566cdab675eccbdba77822ee61f7803cfc83caeff32ddb85b0c11625444',
   '../src/components/EntrepreneurProblems.tsx': '9cd3383b7b1c06d298aaab7711113454d4e4fa66ac31f5cdc841c30fb31b588f',
   '../src/components/Navigation.tsx': '806bf8264b1b63f70098b590708247739789f16e4607da6ef239a0b7a1882146',
-  '../src/pages/Index.tsx': 'e0da4792ea6fa51c92e2bfde12459f76e613fa37720a8002f47fd7d9e80fa486',
+  '../src/pages/Index.tsx': '52030eec532fd0c986f6e286e9bef2ffdef9aa805cdb1067372ef54956189e68',
 } as const;
 
 test('the approved unauthenticated landing page remains frozen during core-tool work', () => {
