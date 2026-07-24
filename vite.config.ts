@@ -76,9 +76,10 @@ function getManualChunk(id: string) {
     return "data-clients";
   }
 
-  if (packageName.startsWith("@radix-ui/")) {
-    return "radix-ui";
-  }
+  // Radix packages get one chunk each (via the default vendor-* naming below)
+  // instead of a single united chunk: the startup path only uses tooltip,
+  // toast, and slot, and a shared chunk forced it to download every Radix
+  // package used anywhere in the app (~39KB gz) before first render.
 
   if (packageName.startsWith("@dnd-kit/")) {
     return "dnd-kit";

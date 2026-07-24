@@ -6,7 +6,7 @@
   "scripts": {
     "audit:cta": "node scripts/generate-cta-audit-artifacts.mjs",
     "dev": "vite",
-    "build": "node scripts/generate-seo-assets.mjs && vite build && node scripts/generate-prerendered-pages.mjs",
+    "build": "node scripts/generate-seo-assets.mjs && vite build && node scripts/check-entry-budget.mjs && node scripts/generate-prerendered-pages.mjs",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",

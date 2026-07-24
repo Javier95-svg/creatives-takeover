@@ -1,7 +1,5 @@
 import { Suspense, lazy, useEffect, useState, type ReactNode } from "react";
 import { MotionConfig } from "framer-motion";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
@@ -25,6 +23,17 @@ import { captureReferralFromUrl } from "@/lib/referral";
 import { removeAppShell } from "@/lib/appShell";
 import { ActivationFocusShell } from '@/components/activation/ActivationFocusShell';
 import { ActivationResumeBanner } from '@/components/activation/ActivationResumeBanner';
+
+// Both toasters render portals with nothing visible until a toast fires, so
+// loading them lazily keeps their Radix/sonner code out of the startup path.
+// Toast state lives in module stores, so anything queued before the chunk
+// arrives renders as soon as it mounts.
+const Toaster = lazy(() =>
+  import("@/components/ui/toaster").then((module) => ({ default: module.Toaster }))
+);
+const Sonner = lazy(() =>
+  import("@/components/ui/sonner").then((module) => ({ default: module.Toaster }))
+);
 
 const PulseWidget = lazy(() => import("@/components/pulse/PulseWidget"));
 const MobileBottomNav = lazy(() =>
@@ -248,8 +257,10 @@ function App() {
               <TooltipProvider>
                 {hasUpdate && <VersionUpdateBanner onRefresh={refreshApp} />}
                 <MobileOptimization />
-                <Toaster />
-                <Sonner />
+                <Suspense fallback={null}>
+                  <Toaster />
+                  <Sonner />
+                </Suspense>
                 <BrowserRouter>
                   <Suspense fallback={<div style={{ minHeight: '100vh', background: '#1a1a2e' }} />}>
                     <AppShellRemover />
