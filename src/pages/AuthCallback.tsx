@@ -92,11 +92,19 @@ const AuthCallback = () => {
           toast.success('Email confirmed successfully!');
         }
 
-        // Handle PKCE code exchange (for OAuth)
+        // Handle PKCE code exchange (for OAuth).
+        //
+        // The Supabase client runs with `detectSessionInUrl: true`, so it exchanges the
+        // `?code=` itself during initialization, deletes the single-use code verifier, and
+        // strips `code` from window.location via history.replaceState(). React Router never
+        // sees that replaceState, so `searchParams` still carries the (now spent) code here.
+        // Exchanging it a second time always fails — that failure is what showed users
+        // "Authentication failed" and bounced them to /login on an account that was in fact
+        // created and signed in. Only exchange when initialization did not already do it.
         const code = searchParams.get('code');
-        if (code) {
+        if (code && !(await getSessionSafely())) {
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-          if (exchangeError) {
+          if (exchangeError && !(await getSessionSafely())) {
             logError('Code exchange error', exchangeError);
             setStatus('error');
             toast.error('Authentication failed');
@@ -220,7 +228,7 @@ const AuthCallback = () => {
           if (
             oauthSource &&
             oauthSource !== 'direct' &&
-            (oauthSignupMethod === 'google' || oauthSignupMethod === 'linkedin')
+            (oauthSignupMethod === 'google' || oauthSignupMethod === 'linkedin' || oauthSignupMethod === 'x')
           ) {
             try {
               const { trackActivity } = await import('@/lib/activity');

@@ -26,6 +26,7 @@ import {
   type SignupMethod,
 } from '@/lib/analytics';
 import { isAdminEmail } from '@/lib/admin';
+import { resolveIdentityDisplayName } from '@/lib/identityProfile';
 import { triggerEmailSequenceEvent } from '@/lib/emailSequences';
 import { clearAccountScopedStorage } from '@/lib/accountScopedStorage';
 import {
@@ -76,6 +77,7 @@ const getSignupCompletedMethod = (provider?: string | null, storedMethod?: strin
   if (rawMethod === 'google') return 'google' as const;
   if (rawMethod === 'github') return 'github' as const;
   if (rawMethod === 'linkedin' || rawMethod === 'linkedin_oidc') return 'linkedin' as const;
+  if (rawMethod === 'x' || rawMethod === 'twitter') return 'x' as const;
   if (rawMethod === 'email' || rawMethod === 'password') return 'email' as const;
   return null;
 };
@@ -299,21 +301,51 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         );
       }
 
-      // New profile: send notification emails
-      if (isNewProfile) {
+      // New account: send notification emails.
+      //
+      // FIX(signup email): this used to be gated on `isNewProfile`, which is only true when
+      // the client itself had to create the profile. The June 2026 signup trigger provisions
+      // the profile *during* signup, so the flag has been permanently false and the welcome
+      // email, admin notification, and signup_completed sequence silently stopped sending
+      // (last signup-time email in retention_email_log: 2026-05-31). New members' first
+      // contact became whichever retention cron happened to run next, up to an hour later.
+      // Gate on the same signal `signup_completed` uses, bounded to accounts created in the
+      // last 24h and guarded per user so a later sign-in can never resend.
+      const isNewAccount =
+        (signupIntentMethod !== null || isBrandNewProfile) && isRecentSignup(signedInUser.created_at);
+
+      let signupEmailsAlreadySent = false;
+      const signupEmailGuardKey = `signup_emails_sent_${userId}`;
+      try {
+        signupEmailsAlreadySent = localStorage.getItem(signupEmailGuardKey) === 'true';
+      } catch {
+        signupEmailsAlreadySent = false;
+      }
+
+      if (isNewAccount && !signupEmailsAlreadySent) {
+        try {
+          localStorage.setItem(signupEmailGuardKey, 'true');
+        } catch {
+          // Guard is best-effort; a missing guard at worst re-sends once.
+        }
+
+        // Provider metadata keys differ (LinkedIn OIDC has no `full_name`), so resolve the
+        // name the same way everywhere instead of reading one provider's key.
+        const signupDisplayName = resolveIdentityDisplayName(signedInUser.user_metadata);
+
         parallelTasks.push(
           Promise.all([
             supabase.functions.invoke('notify-admin', {
               body: {
                 email,
-                fullName: signedInUser.user_metadata?.full_name || '',
+                fullName: signupDisplayName,
                 timestamp: new Date().toISOString()
               }
             }),
             supabase.functions.invoke('send-welcome-email', {
               body: {
                 email,
-                fullName: signedInUser.user_metadata?.full_name || ''
+                fullName: signupDisplayName
               }
             }),
             triggerEmailSequenceEvent('signup_completed', userId)
