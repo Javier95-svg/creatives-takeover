@@ -17,12 +17,12 @@ export interface FreeToolNavItem {
 // asking.
 export const FREE_TOOLS_NAV_ITEMS: FreeToolNavItem[] = [
   {
-    label: 'Tech Stack Builder',
-    name: 'Tech Stack Builder',
-    href: '/tech-stack',
-    icon: Boxes,
-    description: 'Plan your startup stack and monthly budget.',
-    analyticsTool: 'tech_stack',
+    label: 'Pitch Deck Analyzer',
+    name: 'Pitch Deck Analyzer',
+    href: '/pitch-deck-analyzer',
+    icon: BarChart3,
+    description: 'Score your deck across 6 investor dimensions.',
+    analyticsTool: 'pitch_deck_analyzer',
   },
   {
     label: 'Insighta Test',
@@ -33,11 +33,11 @@ export const FREE_TOOLS_NAV_ITEMS: FreeToolNavItem[] = [
     analyticsTool: 'insighta_test',
   },
   {
-    label: 'Pitch Deck Analyzer',
-    name: 'Pitch Deck Analyzer',
-    href: '/pitch-deck-analyzer',
-    icon: BarChart3,
-    description: 'Score your deck across 6 investor dimensions.',
-    analyticsTool: 'pitch_deck_analyzer',
+    label: 'Tech Stack Builder',
+    name: 'Tech Stack Builder',
+    href: '/tech-stack',
+    icon: Boxes,
+    description: 'Plan your startup stack and monthly budget.',
+    analyticsTool: 'tech_stack',
   },
 ];
