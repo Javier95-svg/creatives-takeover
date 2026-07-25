@@ -110,6 +110,10 @@ type TechStackOutputState = 'preview' | 'unlocking' | 'unlocked' | 'confirmation
 const buildSelectedProductsKey = (selectedProducts: SelectedProducts) =>
   techStackData.map((category) => `${category.id}:${selectedProducts[category.id] || ''}`).join('|');
 
+/** Key of the untouched seed, so the "starting point" notice can retire itself
+ *  the moment the visitor changes anything. */
+const STARTER_STACK_KEY = buildSelectedProductsKey(buildStarterStack());
+
 const TechStack: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -647,6 +651,16 @@ const TechStack: React.FC = () => {
 
   const selectedCount = Object.values(selectedProducts).filter(id => id !== null).length;
   const allCategoriesSelected = selectedCount === techStackData.length;
+  // True only while the selection is still the untouched seed, so the notice
+  // explains the pre-fill on arrival and gets out of the way once they engage.
+  const isStarterStack = buildSelectedProductsKey(selectedProducts) === STARTER_STACK_KEY;
+
+  const handleClearStack = () => {
+    setShowBudget(false);
+    setGeneratedBudgetKey(null);
+    setSelectedProducts({});
+  };
+
   const canGenerateBudget = allCategoriesSelected;
   const canSaveReport = Boolean(user) && showBudget && allCategoriesSelected;
   const previewBreakdown = previewReport?.budget_breakdown || [];
@@ -835,6 +849,24 @@ const TechStack: React.FC = () => {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* The builder opens on a seeded solo-founder stack so there is something
+          to react to instead of eight empty categories. That intent was only ever
+          in a code comment, so visitors — especially logged out ones — read the
+          pre-made choices as saved data or a bug. Name it explicitly, and give a
+          one-click way out. */}
+      {isStarterStack && (
+        <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-border bg-muted/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">Starting point:</span> a common solo-founder
+            stack, pre-filled so you can see a budget straight away. Nothing is saved — swap or clear
+            anything.
+          </p>
+          <Button variant="outline" size="sm" className="shrink-0" onClick={handleClearStack}>
+            Clear all
+          </Button>
+        </div>
       )}
 
       {techStackData.map((category) => (
