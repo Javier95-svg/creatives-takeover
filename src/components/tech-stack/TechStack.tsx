@@ -27,30 +27,6 @@ import { trackActivationFunnelEvent } from '@/lib/activationEntry';
 import { useActivationAbandonment } from '@/hooks/useActivationAbandonment';
 import { trackAnonymousToolInputSubmitted, trackAnonymousToolOutputGenerated } from '@/lib/analytics';
 
-/**
- * Preferred product per category for the seeded "solo founder MVP" stack.
- * Ids are matched leniently — any that no longer exist fall back to the first
- * product in that category, so this can never leave a category unselected.
- */
-const STARTER_STACK_PREFERENCES: Record<string, string> = {
-  frontend: 'react',
-  backend: 'supabase',
-  hosting: 'vercel',
-  analytics: 'posthog',
-  payments: 'stripe',
-  email: 'resend',
-  'lead-generation': 'apollo',
-  crm: 'hubspot',
-};
-
-function buildStarterStack(): SelectedProducts {
-  return techStackData.reduce<SelectedProducts>((selection, category) => {
-    const preferredId = STARTER_STACK_PREFERENCES[category.id];
-    const product = category.products.find((item) => item.id === preferredId) ?? category.products[0];
-    if (product) selection[category.id] = product.id;
-    return selection;
-  }, {});
-}
 import {
   buildTechStackPublicInsights,
   type TechStackPublicInsights,
@@ -110,9 +86,6 @@ type TechStackOutputState = 'preview' | 'unlocking' | 'unlocked' | 'confirmation
 const buildSelectedProductsKey = (selectedProducts: SelectedProducts) =>
   techStackData.map((category) => `${category.id}:${selectedProducts[category.id] || ''}`).join('|');
 
-/** Key of the untouched seed, so the "starting point" notice can retire itself
- *  the moment the visitor changes anything. */
-const STARTER_STACK_KEY = buildSelectedProductsKey(buildStarterStack());
 
 const TechStack: React.FC = () => {
   const { user } = useAuth();
@@ -126,11 +99,12 @@ const TechStack: React.FC = () => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const { refreshProgress } = useBizMapProgress();
-  // Result-first: arrive on a working stack, not eight empty categories. The
-  // tool required a choice in all 8 before it would show any number at all, and
-  // 15 of 15 anonymous visitors left without submitting. Every product here
-  // stays swappable and deselectable — this is a starting point, not a lock.
-  const [selectedProducts, setSelectedProducts] = useState<SelectedProducts>(buildStarterStack);
+  // The builder opens completely clean — nothing pre-selected, for anyone,
+  // signed in or not. 68628263 seeded a "solo founder MVP" stack here (React,
+  // Supabase, Vercel, PostHog, Stripe, Resend, Apollo, HubSpot) as an activation
+  // play; it read as the visitor's own saved data and was removed at the owner's
+  // explicit request. Do not re-introduce a default selection.
+  const [selectedProducts, setSelectedProducts] = useState<SelectedProducts>({});
   const [showBudget, setShowBudget] = useState(false);
   const [savedReports, setSavedReports] = useState<TechStackReport[]>([]);
   const [reportsLoading, setReportsLoading] = useState(false);
@@ -651,15 +625,6 @@ const TechStack: React.FC = () => {
 
   const selectedCount = Object.values(selectedProducts).filter(id => id !== null).length;
   const allCategoriesSelected = selectedCount === techStackData.length;
-  // True only while the selection is still the untouched seed, so the notice
-  // explains the pre-fill on arrival and gets out of the way once they engage.
-  const isStarterStack = buildSelectedProductsKey(selectedProducts) === STARTER_STACK_KEY;
-
-  const handleClearStack = () => {
-    setShowBudget(false);
-    setGeneratedBudgetKey(null);
-    setSelectedProducts({});
-  };
 
   const canGenerateBudget = allCategoriesSelected;
   const canSaveReport = Boolean(user) && showBudget && allCategoriesSelected;
@@ -849,24 +814,6 @@ const TechStack: React.FC = () => {
             )}
           </CardContent>
         </Card>
-      )}
-
-      {/* The builder opens on a seeded solo-founder stack so there is something
-          to react to instead of eight empty categories. That intent was only ever
-          in a code comment, so visitors — especially logged out ones — read the
-          pre-made choices as saved data or a bug. Name it explicitly, and give a
-          one-click way out. */}
-      {isStarterStack && (
-        <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-border bg-muted/40 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">Starting point:</span> a common solo-founder
-            stack, pre-filled so you can see a budget straight away. Nothing is saved — swap or clear
-            anything.
-          </p>
-          <Button variant="outline" size="sm" className="shrink-0" onClick={handleClearStack}>
-            Clear all
-          </Button>
-        </div>
       )}
 
       {techStackData.map((category) => (
