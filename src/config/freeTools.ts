@@ -1,4 +1,4 @@
-import { BarChart3, Boxes, FlaskConical, MonitorPlay, Target, type LucideIcon } from 'lucide-react';
+import { BarChart3, Boxes, FlaskConical, type LucideIcon } from 'lucide-react';
 
 export interface FreeToolNavItem {
   label: string;
@@ -9,28 +9,13 @@ export interface FreeToolNavItem {
   analyticsTool: string;
 }
 
-// ICP Builder and Demo Studio Try were previously excluded on the theory that
-// listing them here would compete with the hero CTAs. The data says otherwise:
-// over 30 days the hero CTAs drew 7 clicks while 31 people opened this menu, so
-// the menu is where intent actually goes. Both hero destinations are listed
-// first — ordered by how little the visitor needs to bring to get an answer.
+// The two hero destinations are intentionally NOT listed here: Demo Studio
+// (/demo-studio, the "Have a product?" CTA) and ICP Builder (/icp-builder, the
+// "Still an idea?" CTA). Duplicating them in this menu competes with the hero
+// paths. 68628263 added both on the argument that the menu out-draws the hero
+// CTAs; that was reverted at the owner's request. Do not re-add them without
+// asking.
 export const FREE_TOOLS_NAV_ITEMS: FreeToolNavItem[] = [
-  {
-    label: 'ICP Builder',
-    name: 'ICP Builder',
-    href: '/icp-builder',
-    icon: Target,
-    description: 'Define your ideal customer — no signup, nothing to upload.',
-    analyticsTool: 'icp_builder',
-  },
-  {
-    label: 'Demo Studio',
-    name: 'Demo Studio',
-    href: '/demo-studio/try',
-    icon: MonitorPlay,
-    description: 'Turn your product idea into a playable demo.',
-    analyticsTool: 'demo_studio_try',
-  },
   {
     label: 'Tech Stack Builder',
     name: 'Tech Stack Builder',
