@@ -92,7 +92,7 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
   });
   // CTA labels are asserted in all three rendered sources, not just the component,
   // so the no-JS shell and the prerendered pages can't drift from the live hero.
-  const ctaLabels = [/Start my validation sprint/, /I already have a live product/];
+  const ctaLabels = [/Launch a live demo/, /Draft your ICP/];
   ctaLabels.forEach((label) => {
     assert.match(hero, label);
     assert.match(fallback, label);

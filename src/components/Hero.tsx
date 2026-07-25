@@ -27,6 +27,7 @@ type HeroProps = {
   titleLine1?: string;
   titleLine2?: string;
   lede?: ReactNode;
+  ctaLabel?: string;
   ctaHref?: string;
   onCtaClick?: () => void;
   dashboardUrl?: string;
@@ -80,6 +81,7 @@ const Hero = ({
   titleLine1 = "The Founders'",
   titleLine2 = "Compass",
   lede = DEFAULT_LEDE,
+  ctaLabel = "Launch a live demo",
   ctaHref = "/demo-studio",
   onCtaClick,
   dashboardUrl = "creatives-takeover.com/dashboard",
@@ -121,8 +123,8 @@ const Hero = ({
           if (entry.isIntersecting && !hasTrackedView.current) {
             hasTrackedView.current = true;
             trackActivationEntry("activation_entry_opened", {
-              entry_id: "hero_icp_builder",
-              tool: "icp_builder",
+              entry_id: "hero_demo_try",
+              tool: "demo_studio",
               source: "homepage_hero",
               step: "impression",
               entry_page: location.pathname,
@@ -130,8 +132,8 @@ const Hero = ({
               is_authenticated: isAuthenticated,
             });
             trackActivationEntry("activation_entry_opened", {
-              entry_id: "hero_demo_try",
-              tool: "demo_studio",
+              entry_id: "hero_icp_builder",
+              tool: "icp_builder",
               source: "homepage_hero",
               step: "impression",
               entry_page: location.pathname,
@@ -175,7 +177,7 @@ const Hero = ({
       source: "homepage_hero",
       step: "entry_click",
       entry_page: location.pathname,
-      placement: "hero_secondary",
+      placement: "hero_primary",
       is_authenticated: isAuthenticated,
     });
     onCtaClick?.();
@@ -191,7 +193,7 @@ const Hero = ({
       source: "homepage_hero",
       step: "entry_click",
       entry_page: location.pathname,
-      placement: "hero_primary",
+      placement: "hero_secondary",
       is_authenticated: isAuthenticated,
     });
   };
@@ -283,18 +285,18 @@ const Hero = ({
           ) : (
             <>
               <div className="ct-hero__cta-path">
-                <span className="ct-hero__cta-kicker">Still an idea?</span>
-                <Link className="ct-hero__cta" to="/icp-builder" onClick={handleIcpCtaClick}>
-                  Start my validation sprint
+                <span className="ct-hero__cta-kicker">Have a product?</span>
+                <Link className="ct-hero__cta" to={resolvedCtaHref} onClick={handleCtaClick}>
+                  {ctaLabel}
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                     <polyline points="9 18 15 12 9 6" />
                   </svg>
                 </Link>
               </div>
               <div className="ct-hero__cta-path">
-                <span className="ct-hero__cta-kicker">Already shipping?</span>
-                <Link className="ct-hero__cta ct-hero__cta--secondary" to={resolvedCtaHref} onClick={handleCtaClick}>
-                  I already have a live product
+                <span className="ct-hero__cta-kicker">Still an idea?</span>
+                <Link className="ct-hero__cta ct-hero__cta--secondary" to="/icp-builder" onClick={handleIcpCtaClick}>
+                  Draft your ICP
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                     <polyline points="9 18 15 12 9 6" />
                   </svg>

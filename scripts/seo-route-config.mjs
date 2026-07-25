@@ -104,22 +104,22 @@ const FOUNDER_ANSWER_ROUTES = founderAnswerPages.map((page) => ({
 export const INDEXABLE_ROUTES = [
   {
     path: "/",
-    title: "Stop guessing what to build | Founders Compass",
+    title: "The Founders Compass | Creatives Takeover",
     description:
-      "Turn real customer evidence into a clear Build, Narrow, Pivot, Stop, or keep-testing decision, then carry that evidence into your MVP.",
+      "Turn your idea into a validated startup through one evidence backed path for customer clarity, proof, PMF decisions, MVP building, GTM, and traction.",
     changefreq: "daily",
     priority: 1.0,
-    heroHeading: "Stop guessing what to build.",
+    heroHeading: "The Founders' Compass",
     heroCopy:
-      "Turn real customer evidence into a clear Build, Narrow, Pivot, Stop, or keep-testing decision, then carry that evidence into your MVP.",
+      "Define your ideal customer, prove demand, build your MVP, launch it, and find investment.",
     sections: [
       {
-        heading: "Start with one decision",
-        copy: "Create a free Customer Decision Brief, then gather independent evidence before committing to a build.",
+        heading: "Reach value before signup",
+        copy: "Launch a personalized live demo or draft an evidence backed customer decision before creating an account.",
       },
       {
-        heading: "Carry evidence into execution",
-        copy: "Move a decision-grade Build result into an evidence-backed MVP brief without turning assumptions into claims.",
+        heading: "Complete six connected outcomes",
+        copy: "Move from ICP Builder through Demo Studio, PMF Lab, MVP Builder, GTM Strategist, and Traction Engine without losing the evidence behind each decision.",
       },
     ],
   },

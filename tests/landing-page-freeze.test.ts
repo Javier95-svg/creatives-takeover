@@ -4,10 +4,12 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 const frozenFiles = {
-  // Rehashed 2026-07-24: hero CTA copy and order changed at the owner's request —
-  // "Start my validation sprint" (→ /icp-builder) is now primary, "I already have
-  // a live product" (→ /demo-studio/try) secondary. Layout and styling untouched.
-  '../src/components/Hero.tsx': 'c7be9482cefa0c8860e21987ae8b52cf6426bd53b7e249696bbe49d7696be23f',
+  // Rehashed 2026-07-24 (later the same day): the owner asked for the original
+  // CTAs back, so b1ce5377's Hero.tsx change was reverted wholesale. Primary is
+  // "Have a product? / Launch a live demo" (→ ctaHref, /demo-studio), secondary
+  // "Still an idea? / Draft your ICP" (→ /icp-builder). Layout and styling
+  // untouched throughout; 133a70f0's activation analytics are retained.
+  '../src/components/Hero.tsx': '52778566cdab675eccbdba77822ee61f7803cfc83caeff32ddb85b0c11625444',
   '../src/components/EntrepreneurProblems.tsx': '9cd3383b7b1c06d298aaab7711113454d4e4fa66ac31f5cdc841c30fb31b588f',
   '../src/components/Navigation.tsx': '806bf8264b1b63f70098b590708247739789f16e4607da6ef239a0b7a1882146',
   // Re-pinned 2026-07-24 (later the same day): the previous hash matched no
