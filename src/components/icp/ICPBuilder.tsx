@@ -379,6 +379,50 @@ function getStepsCompleted(screen: IcpFlowScreen, mode: IcpBuilderMode | null) {
   return currentIndex < 0 ? 0 : currentIndex;
 }
 
+/**
+ * Resolves the entry screen *synchronously*, before the first paint.
+ *
+ * 68628263 made fast input the default entry, but it did so from an effect —
+ * which runs after the first paint, so the two-card chooser was still rendered
+ * for at least one frame (longer on slow devices, since this component is lazy
+ * loaded) before swapping itself out. That flash is the exact screen the change
+ * set out to remove: over 12 weeks it was the last step for 57 of ~96 people who
+ * abandoned the builder, none of whom had picked a mode.
+ *
+ * Returns the auto-applied mode alongside the session so the caller can still
+ * report `icp_builder_mode_selected` from an effect — analytics must not fire
+ * during render.
+ */
+function resolveInitialEntry(requestedMode: string | null): {
+  session: IcpBuilderSession;
+  autoAppliedMode: IcpBuilderMode | null;
+} {
+  const session = readIcpBuilderSession() ?? createEmptyIcpBuilderSession();
+
+  // A session already past the chooser (resumed mid-flow) is left untouched, and
+  // `?mode=select` is the explicit opt-in to the chooser.
+  if (session.currentScreen !== "mode_select" || requestedMode === "select") {
+    return { session, autoAppliedMode: null };
+  }
+
+  if (requestedMode === "guided") {
+    return {
+      session: {
+        ...session,
+        mode: "guided",
+        currentScreen: "guided_seed",
+        guided: session.guided.seed ? session.guided : buildEmptyGuidedAnswers(session.fastDescription),
+      },
+      autoAppliedMode: "guided",
+    };
+  }
+
+  return {
+    session: { ...session, mode: "fast", currentScreen: "fast_input" },
+    autoAppliedMode: "fast",
+  };
+}
+
 const ICPBuilder: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -389,7 +433,15 @@ const ICPBuilder: React.FC = () => {
   const { totalAvailable, subscriptionTier, loading: creditsLoading } = useCredits();
   const { createCheckout } = useSubscription();
 
-  const [session, setSession] = useState<IcpBuilderSession>(() => readIcpBuilderSession() ?? createEmptyIcpBuilderSession());
+  // Computed once, before first paint. Held in a ref so the effect below can
+  // report the auto-applied mode without recomputing (and without re-reading
+  // storage, which the chooser may since have changed).
+  const initialEntryRef = useRef<ReturnType<typeof resolveInitialEntry> | null>(null);
+  if (!initialEntryRef.current) {
+    initialEntryRef.current = resolveInitialEntry(searchParams.get("mode"));
+  }
+
+  const [session, setSession] = useState<IcpBuilderSession>(initialEntryRef.current.session);
   useActivationAbandonment({
     entry_id: 'icp_draft_unlock', tool: 'icp_builder', source: 'icp_builder',
     step: 'before_saved_draft', is_authenticated: Boolean(user),
@@ -1573,26 +1625,24 @@ const ICPBuilder: React.FC = () => {
   // cost was the decision itself, so there is now nothing to decide on arrival.
   // The chooser stays reachable: `?mode=select` opens it, and Back from
   // fast_input returns to it (see getPreviousScreen).
+  // The screen itself is chosen in resolveInitialEntry, before first paint, so
+  // this only reports the mode that was auto-applied (analytics can't fire during
+  // render) and strips the consumed `?mode=` param.
   useEffect(() => {
     if (autoModeAppliedRef.current) return;
-    if (session.currentScreen !== "mode_select") return;
 
-    const requestedMode = searchParams.get("mode");
-    if (requestedMode === "select") return;
+    const autoAppliedMode = initialEntryRef.current?.autoAppliedMode;
+    if (!autoAppliedMode) return;
 
     autoModeAppliedRef.current = true;
-    if (requestedMode === "guided") {
-      handleSelectGuidedMode();
-    } else {
-      handleSelectFastMode();
-    }
+    trackICPBuilderModeSelected({ mode: autoAppliedMode, is_authenticated: Boolean(user) });
 
-    if (requestedMode) {
+    if (searchParams.get("mode")) {
       const next = new URLSearchParams(searchParams);
       next.delete("mode");
       setSearchParams(next, { replace: true });
     }
-  }, [session.currentScreen, searchParams, handleSelectFastMode, handleSelectGuidedMode, setSearchParams]);
+  }, [searchParams, setSearchParams, user]);
 
   const handleSkipPersona = useCallback(() => {
     captureEvent("icp_guided_step_skipped", { step: 2 });
