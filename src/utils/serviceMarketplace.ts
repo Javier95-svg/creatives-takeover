@@ -4,10 +4,13 @@ export const DARYA_GETMARKETING_EMAIL = "darya@getmarketing.team";
 export const DARYA_GETMARKETING_USER_ID = "a4233961-2e68-463a-a6a9-e43d57a836ab";
 export const ADAM_APICEFLOW_EMAIL = "adam@apiceflow.com";
 export const ADAM_APICEFLOW_USER_ID = "b0866625-7934-46cf-a29d-87bb00d83e5b";
+export const HARSH_BOTPRO_EMAIL = "harsh.ladani@botprosolutions.com";
+export const HARSH_BOTPRO_USER_ID = "4ceda6be-fc20-420f-aba1-cee3a1416f59";
 
 const SERVICE_MESSAGE_USER_IDS_BY_EMAIL: Record<string, string> = {
   [DARYA_GETMARKETING_EMAIL]: DARYA_GETMARKETING_USER_ID,
   [ADAM_APICEFLOW_EMAIL]: ADAM_APICEFLOW_USER_ID,
+  [HARSH_BOTPRO_EMAIL]: HARSH_BOTPRO_USER_ID,
 };
 
 export function generateServiceSlug(value: string) {

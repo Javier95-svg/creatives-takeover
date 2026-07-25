@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import {
   ADAM_APICEFLOW_USER_ID,
+  HARSH_BOTPRO_USER_ID,
   generateServiceSlug,
   getDeckTypeFromFile,
   inferServiceBookingProvider,
@@ -16,6 +17,10 @@ const serviceNotificationMigration = readFileSync(
 );
 const apiceflowMessagingMigration = readFileSync(
   new URL('../supabase/migrations/20260716131000_connect_adam_apiceflow_service_messages.sql', import.meta.url),
+  'utf8',
+);
+const botproMessagingMigration = readFileSync(
+  new URL('../supabase/migrations/20260725120000_connect_harsh_botpro_service_messages.sql', import.meta.url),
   'utf8',
 );
 
@@ -36,6 +41,13 @@ test('Apiceflow messaging resolves to Adam Lee account', () => {
   assert.match(apiceflowMessagingMigration, /b0866625-7934-46cf-a29d-87bb00d83e5b/);
   assert.match(apiceflowMessagingMigration, /adam@apiceflow\.com/);
   assert.match(apiceflowMessagingMigration, /LIKE '%apiceflow%'/);
+});
+
+test('Botpro Solutions messaging resolves to Harsh Ladani account', () => {
+  assert.equal(resolveServiceMessageUserIdFromEmail(' Harsh.Ladani@botprosolutions.com '), HARSH_BOTPRO_USER_ID);
+  assert.match(botproMessagingMigration, /4ceda6be-fc20-420f-aba1-cee3a1416f59/);
+  assert.match(botproMessagingMigration, /harsh\.ladani@botprosolutions\.com/);
+  assert.match(botproMessagingMigration, /LIKE '%botpro%'/);
 });
 
 test('service marketplace decks are limited to PDF and PPTX', () => {
