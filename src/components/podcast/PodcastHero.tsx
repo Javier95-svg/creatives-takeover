@@ -4,6 +4,10 @@ import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 const DESCRIPTION =
   "A series of conversations with founders building real products, told as stories, not pitches. Each episode digs into the unusual paths, contrarian bets, and hard moments behind the company, with concrete takeaways for anyone building their own.";
 
+const PARAGRAPH_CLASS =
+  "text-sm sm:text-base md:text-lg text-foreground/70 leading-7 font-normal tracking-wide";
+const PARAGRAPH_STYLE = { fontFamily: "'Space Grotesk', 'Poppins', sans-serif" } as const;
+
 const PodcastHero = () => {
   const { displayedText, isTyping } = useTypingAnimation({
     text: DESCRIPTION,
@@ -32,12 +36,19 @@ const PodcastHero = () => {
             <span className="takeover-gradient">Founders Unleashed</span>
           </h1>
 
-          {/* Description */}
-          <div className="max-w-3xl mx-auto px-4">
+          {/* Description. A hidden copy of the finished text reserves the final
+              height in the same grid cell, so the typing animation fills a box
+              that never resizes — otherwise each newly wrapped line shifts
+              everything below it. Same fix as StoriesHero. */}
+          <div className="max-w-3xl mx-auto px-4 grid">
             <p
-              className="text-sm sm:text-base md:text-lg text-foreground/70 leading-7 font-normal tracking-wide"
-              style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}
+              className={`col-start-1 row-start-1 invisible ${PARAGRAPH_CLASS}`}
+              style={PARAGRAPH_STYLE}
+              aria-hidden="true"
             >
+              {DESCRIPTION}
+            </p>
+            <p className={`col-start-1 row-start-1 ${PARAGRAPH_CLASS}`} style={PARAGRAPH_STYLE}>
               {displayedText}
               {isTyping && (
                 <span className="inline-block w-0.5 h-5 sm:h-6 bg-primary ml-1 animate-pulse" />

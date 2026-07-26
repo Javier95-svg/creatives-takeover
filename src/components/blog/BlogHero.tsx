@@ -1,6 +1,9 @@
 import { Sparkles } from "lucide-react";
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 
+const DESCRIPTION_CLASS =
+  "text-base sm:text-lg md:text-xl text-foreground/90 leading-relaxed text-left";
+
 const BlogHero = () => {
   const fullText = "Insighta blends AI-driven analysis with curated market intelligence to help entrepreneurs uncover funding opportunities, identify market trends, and make informed, data-based decisions. Covering everything from investment contests to accelerator programs, Insighta turns complex market information into practical insights that empower creative businesses to seize the right opportunities at the perfect moment.";
   
@@ -117,9 +120,15 @@ const BlogHero = () => {
             </div>
           </div>
 
-          {/* Description */}
-          <div className="max-w-3xl mx-auto px-4">
-            <p className="text-base sm:text-lg md:text-xl text-foreground/90 leading-relaxed text-left">
+          {/* Description. A hidden copy of the finished text reserves the final
+              height in the same grid cell, so the typing animation fills a box
+              that never resizes — otherwise each newly wrapped line shifts
+              everything below it. Same fix as StoriesHero. */}
+          <div className="max-w-3xl mx-auto px-4 grid">
+            <p className={`col-start-1 row-start-1 invisible ${DESCRIPTION_CLASS}`} aria-hidden="true">
+              {fullText}
+            </p>
+            <p className={`col-start-1 row-start-1 ${DESCRIPTION_CLASS}`}>
               {displayedText}
               {isTyping && <span className="inline-block w-0.5 h-5 sm:h-6 bg-primary ml-1 animate-pulse" />}
             </p>

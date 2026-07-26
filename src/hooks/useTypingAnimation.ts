@@ -8,11 +8,23 @@ interface UseTypingAnimationProps {
   onComplete?: () => void;
 }
 
-export const useTypingAnimation = ({ 
-  text, 
-  speed = 50, 
+// One React state update per character is what this used to do. On the
+// newspaper hero that is a 600-character string at 20ms — 600 renders, layouts
+// and paints across 12 seconds, right when visitors are most likely to click
+// something. Measured on /newspaper at 4x CPU throttling: an interaction during
+// the animation cost 432ms versus 232ms once it had finished.
+//
+// Ticking in small chunks instead keeps the total duration and the perceived
+// speed identical (charactersPerTick * interval == charactersPerTick * speed)
+// while cutting the number of renders by the same factor. 60ms is still ~16
+// updates a second, which reads as typing rather than as stepping.
+const MIN_TICK_MS = 60;
+
+export const useTypingAnimation = ({
+  text,
+  speed = 50,
   startDelay = 0,
-  onComplete 
+  onComplete
 }: UseTypingAnimationProps) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const [displayedText, setDisplayedText] = useState('');
@@ -33,19 +45,25 @@ export const useTypingAnimation = ({
     setIsTyping(true);
     indexRef.current = 0;
 
+    // Advance several characters per tick when the requested speed is faster
+    // than MIN_TICK_MS, so a fast animation costs proportionally fewer renders
+    // instead of one per character.
+    const charactersPerTick = Math.max(1, Math.round(MIN_TICK_MS / Math.max(speed, 1)));
+    const tickInterval = speed * charactersPerTick;
+
     const startTyping = () => {
-      const typeNextCharacter = () => {
+      const typeNextChunk = () => {
         if (indexRef.current < text.length) {
-          setDisplayedText(text.substring(0, indexRef.current + 1));
-          indexRef.current++;
-          timeoutRef.current = setTimeout(typeNextCharacter, speed);
+          indexRef.current = Math.min(text.length, indexRef.current + charactersPerTick);
+          setDisplayedText(text.substring(0, indexRef.current));
+          timeoutRef.current = setTimeout(typeNextChunk, tickInterval);
         } else {
           setIsTyping(false);
           onComplete?.();
         }
       };
 
-      timeoutRef.current = setTimeout(typeNextCharacter, startDelay);
+      timeoutRef.current = setTimeout(typeNextChunk, startDelay);
     };
 
     if (text) {

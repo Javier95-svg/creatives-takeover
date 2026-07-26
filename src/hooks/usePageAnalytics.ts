@@ -42,15 +42,24 @@ export const usePageAnalytics = (pagePath?: string, pageTitle?: string) => {
     }
   }, [trackEvent]);
 
-  // Track scroll depth
+  // Track scroll depth.
+  // This used to read documentElement.scrollHeight on every scroll event, which
+  // forces a synchronous layout — on a long page that is layout thrash on every
+  // scroll frame, and it showed up in a CPU profile of /newspaper as the single
+  // largest application-JS cost during interaction. Now the work is coalesced
+  // to one rAF per frame, and the listener detaches once all four milestones
+  // have fired, so the common case is no handler at all.
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollPercent = Math.round(
-        (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100
-      );
+    const MILESTONES = [25, 50, 75, 100];
+    let queued = false;
 
-      // Track 25%, 50%, 75%, 100% milestones
-      [25, 50, 75, 100].forEach(depth => {
+    const measure = () => {
+      queued = false;
+      const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+      if (scrollable <= 0) return;
+
+      const scrollPercent = Math.round((window.scrollY / scrollable) * 100);
+      for (const depth of MILESTONES) {
         if (scrollPercent >= depth && !scrollDepths.current.has(depth)) {
           scrollDepths.current.add(depth);
           void trackEvent({
@@ -58,11 +67,21 @@ export const usePageAnalytics = (pagePath?: string, pageTitle?: string) => {
             event_data: { scroll_depth: depth }
           });
         }
-      });
+      }
+
+      if (scrollDepths.current.size >= MILESTONES.length) detach();
     };
 
+    const handleScroll = () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(measure);
+    };
+
+    const detach = () => window.removeEventListener('scroll', handleScroll);
+
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    return detach;
   }, [trackEvent]);
 
   // Track exit intent
