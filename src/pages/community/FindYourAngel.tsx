@@ -420,6 +420,22 @@ const FindYourAngel = () => {
                   )}
                 </div>
 
+                {/* While loading, the block below is absent entirely, so #angel-grid
+                    sat at ~132px and then jumped to ~2788px once the query resolved,
+                    taking the footer with it — measured CLS 0.44 desktop / 0.63 mobile,
+                    the worst on the site. These skeletons hold that space at the
+                    measured AngelCard heights (334px mobile, 258px sm, 244px lg). */}
+                {loading && (
+                  <div className="grid grid-cols-1 gap-6" aria-busy="true" aria-label="Loading angel investors">
+                    {Array.from({ length: ANGELS_PER_PAGE }).map((_, index) => (
+                      <div
+                        key={index}
+                        className="min-h-[334px] sm:min-h-[258px] lg:min-h-[244px] rounded-card border border-border/60 bg-card/60 animate-pulse"
+                      />
+                    ))}
+                  </div>
+                )}
+
                 {/* Blurred Preview of First Page of Angels - for non-signed-in visitors */}
                 {!loading && angels.length > 0 && (
                   <div className="relative min-h-[600px]">
