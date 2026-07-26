@@ -309,11 +309,23 @@ const FindCoFounder = () => {
 
       <div className="mb-12 grid gap-5 lg:grid-cols-2">
         {loading ? (
-          <Card>
-            <CardContent className="pt-6 text-center py-12">
-              <p className="text-muted-foreground">Loading posts...</p>
-            </CardContent>
-          </Card>
+          // One short "Loading posts..." card was replaced by a full page of
+          // opportunity cards, pushing the page down ~477px — measured CLS 0.29
+          // desktop / 0.48 mobile, the worst remaining on the site. These
+          // skeletons fill the same grid at the measured card heights (~680px
+          // in one column on mobile, ~490px at sm, ~513px in the two-column lg
+          // layout). Card height varies with post length, so these are close
+          // rather than exact, which still removes almost all of the shift.
+          <>
+            {Array.from({ length: POSTS_PER_PAGE }).map((_, index) => (
+              <div
+                key={index}
+                className="min-h-[680px] sm:min-h-[490px] lg:min-h-[513px] rounded-xl border border-border/70 bg-card/60 animate-pulse"
+                aria-hidden="true"
+              />
+            ))}
+            <span className="sr-only" aria-live="polite">Loading founder opportunities</span>
+          </>
         ) : filteredPosts.length === 0 ? (
           <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-purple/5">
             <CardContent className="pt-6 text-center py-12">

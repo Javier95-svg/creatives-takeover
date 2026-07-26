@@ -39,6 +39,16 @@ function sanitizeChunkName(value: string) {
 }
 
 function getManualChunk(id: string) {
+  // Vite's dynamic-import preload helper (and Rollup's commonjs helpers) are
+  // referenced by every lazy chunk. Left to Rollup's default placement the
+  // preload helper lands inside the jspdf chunk, which makes the entry and all
+  // 120+ lazy chunks statically import ~340KB (107KB gz) of PDF tooling before
+  // first paint — on every page, whether or not it ever exports a PDF.
+  // Pin the helpers to react-core, which every chunk already depends on.
+  if (id.includes("vite/preload-helper") || id.includes("commonjsHelpers")) {
+    return "react-core";
+  }
+
   const packageName = getPackageName(id);
   if (!packageName) {
     return undefined;
