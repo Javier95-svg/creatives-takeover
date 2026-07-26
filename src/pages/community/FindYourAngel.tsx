@@ -420,12 +420,17 @@ const FindYourAngel = () => {
                   )}
                 </div>
 
-                {/* While loading, the block below is absent entirely, so #angel-grid
-                    sat at ~132px and then jumped to ~2788px once the query resolved,
-                    taking the footer with it — measured CLS 0.44 desktop / 0.63 mobile,
-                    the worst on the site. These skeletons hold that space at the
-                    measured AngelCard heights (334px mobile, 258px sm, 244px lg). */}
-                {loading && (
+                {/* Reserve the grid's space from the very first paint. useAngels
+                    starts `loading` as false, so keying off it left this section
+                    empty until the fetch began and the skeleton then pushed the
+                    page down ~530px on mount — measured CLS 0.44 desktop / 0.63
+                    mobile, the worst on the site. `angels.length === 0` is the exact
+                    complement of the render condition below, so the skeleton is up
+                    from first paint until the real cards replace it at the same
+                    height (334px mobile, 258px sm, 244px lg, measured). Client-side
+                    "no results" is filteredAngels, not angels, so this does not
+                    strand an empty search behind skeletons. */}
+                {angels.length === 0 && (
                   <div className="grid grid-cols-1 gap-6" aria-busy="true" aria-label="Loading angel investors">
                     {Array.from({ length: ANGELS_PER_PAGE }).map((_, index) => (
                       <div
