@@ -15,7 +15,7 @@ const REFETCH_THROTTLE_MS = 60_000;
 
 export function useFounderJourneySnapshot() {
   const { user } = useAuth();
-  const { currentStage, stageState, outcomeSnapshot, loading: stageLoading } = useBizMapProgress();
+  const { currentStage, stageState, loading: stageLoading } = useBizMapProgress();
   const [toolSignals, setToolSignals] = useState<ToolCompletionSignals>({});
   const [extras, setExtras] = useState<FounderJourneyExtras>(EMPTY_FOUNDER_JOURNEY_EXTRAS);
   const [isLoading, setIsLoading] = useState(true);
@@ -71,9 +71,8 @@ export function useFounderJourneySnapshot() {
         toolSignals,
         extras,
         foundationalMilestones: getFoundationalMilestones(toolSignals),
-        outcomeByTool: outcomeSnapshot?.outcomes,
       }),
-    [currentStage, extras, outcomeSnapshot?.outcomes, stageState, toolSignals],
+    [currentStage, extras, stageState, toolSignals],
   );
 
   const refetch = useCallback(() => load(true), [load]);

@@ -480,7 +480,6 @@ export function usePMFLab() {
           qualityChecks: {
             report_generated: true,
             decision_present: Boolean(nextAnalysis.decision),
-            decision: nextAnalysis.decision,
             weighted_sources_present: evidenceSources.length > 0,
             directional_signals: signalCount >= 5,
             emerging_patterns: signalCount >= 10,
@@ -489,11 +488,7 @@ export function usePMFLab() {
           },
           evidenceManifest: createJourneyEvidenceManifest(evidenceSources, nextAnalysis.generatedAt),
         }).then(async (saved) => {
-          if (
-            saved.evaluation.status !== 'verified' ||
-            nextAnalysis.decision !== 'build' ||
-            nextAnalysis.evidenceGrade !== 'decision_grade'
-          ) return;
+          if (!['ready', 'verified'].includes(saved.evaluation.status)) return;
           const outcomeId = (saved.outcome as { id?: string } | null)?.id;
           if (!outcomeId) return;
           await createJourneyHandoff({

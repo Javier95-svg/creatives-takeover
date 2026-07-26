@@ -3,7 +3,6 @@ import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { reportAppError, createErrorId } from '@/lib/errorReporting';
-import { removeAppShell } from '@/lib/appShell';
 
 interface Props {
   children: ReactNode;
@@ -52,9 +51,6 @@ export class ErrorBoundary extends Component<Props, State> {
 
     this.attemptChunkRecovery(error);
     this.props.onError?.(error, errorInfo);
-    // The static index.html shell is a fixed overlay; if we crash before the
-    // first route mounts it would cover the error UI rendered below.
-    removeAppShell();
   }
 
   private handleReset = () => {
