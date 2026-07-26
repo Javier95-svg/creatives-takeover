@@ -52,32 +52,32 @@ const CHIPS = [
 const SHOWCASE_SITES = [
   {
     name: 'IronLog',
-    image: '/mvp-builder-showcase/ironlog.png',
+    image: '/mvp-builder-showcase/ironlog.webp',
     url: 'https://ironlog.creatives-takeover.com/',
   },
   {
     name: 'LinguaExpat',
-    image: '/mvp-builder-showcase/linguaexpat.png',
+    image: '/mvp-builder-showcase/linguaexpat.webp',
     url: 'https://linguaexpact.creatives-takeover.com/',
   },
   {
     name: 'SentryNest',
-    image: '/mvp-builder-showcase/sentrynest.png',
+    image: '/mvp-builder-showcase/sentrynest.webp',
     url: 'https://sentrynest.creatives-takeover.com/',
   },
   {
     name: 'ShiftCode',
-    image: '/mvp-builder-showcase/shiftcode.png',
+    image: '/mvp-builder-showcase/shiftcode.webp',
     url: 'https://shiftcode.creatives-takeover.com/',
   },
   {
     name: 'Sora Botanicals',
-    image: '/mvp-builder-showcase/sora-botanicals.png',
+    image: '/mvp-builder-showcase/sora-botanicals.webp',
     url: 'https://sora-botanicals.creatives-takeover.com/',
   },
   {
     name: 'Steeped',
-    image: '/mvp-builder-showcase/steeped.png',
+    image: '/mvp-builder-showcase/steeped.webp',
     url: 'https://steeped.creatives-takeover.com/',
   },
 ];

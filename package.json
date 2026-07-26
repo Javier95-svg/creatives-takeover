@@ -14,6 +14,7 @@
     "test:mvp-builder": "node --experimental-strip-types --test tests/mvp-builder-project.test.ts",
     "test:waitlist": "node --experimental-strip-types --test tests/waitlist-model.test.ts",
     "typecheck": "tsc --noEmit",
+    "images:optimize": "node scripts/optimize-images.mjs",
     "lint:fix": "eslint . --fix",
     "test:smoke": "playwright test",
     "test:messages:performance": "node scripts/check-messages-performance.mjs"

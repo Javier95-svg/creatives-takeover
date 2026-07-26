@@ -773,9 +773,19 @@ const FindYourAngel = () => {
 
             {/* Angel Investor Cards Grid */}
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                <p className="text-muted-foreground">Loading angel investors...</p>
+              // A centred spinner occupied ~200px and was then replaced by a
+              // 10-card grid ~2656px tall, pushing the whole page (and the
+              // footer) down — measured CLS 0.44 desktop / 0.63 mobile, the
+              // worst on the site. This skeleton uses the same grid and the
+              // measured card heights (334px mobile, 258px sm, 244px lg), so
+              // the real cards drop straight into the space already reserved.
+              <div className="grid grid-cols-1 gap-6" aria-busy="true" aria-label="Loading angel investors">
+                {Array.from({ length: ANGELS_PER_PAGE }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="min-h-[334px] sm:min-h-[258px] lg:min-h-[244px] rounded-card border border-border/60 bg-card/60 animate-pulse"
+                  />
+                ))}
               </div>
             ) : filteredAngels.length > 0 ? (
               <>

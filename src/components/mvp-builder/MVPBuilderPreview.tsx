@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import ctBrandLogo from '@/assets/ct-brand-logo.png';
+import ctBrandLogo from '@/assets/ct-brand-logo.webp';
 import { MVPBuilderDomainPanel } from './MVPBuilderDomainPanel';
 import { MVPBuilderPublishPanel } from './MVPBuilderPublishPanel';
 import { MVPBuilderCodePanel } from './MVPBuilderCodePanel';

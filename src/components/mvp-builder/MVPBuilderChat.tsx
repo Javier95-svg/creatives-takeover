@@ -45,7 +45,7 @@ import type { MVPBuilderSetupInput, MVPBuilderVersion } from '@/lib/mvp-builder/
 import {
   MVP_BUILDER_ACTION_LABELS,
 } from '@/lib/mvp-builder/phase1';
-import ctBrandLogo from '@/assets/ct-brand-logo.png';
+import ctBrandLogo from '@/assets/ct-brand-logo.webp';
 import {
   MVP_MODEL_OPTIONS,
   getMVPDefaultModelForPlan,

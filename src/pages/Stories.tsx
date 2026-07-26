@@ -524,11 +524,23 @@ const Stories = () => {
             ) : (
               /* Published Stories View */
               loading ? (
-                <div className="text-center py-16">
-                  <div className="inline-flex items-center gap-3">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    <p className="text-muted-foreground">Loading stories...</p>
-                  </div>
+                // A ~130px centred spinner was replaced by the full article
+                // grid once the query resolved, pushing everything below it
+                // down — measured CLS 0.30 desktop / 0.25 mobile. StoryCard is
+                // a uniform 394px tall at every breakpoint, so a skeleton of
+                // ARTICLES_PER_PAGE cards in the same grid reserves exactly the
+                // right space whether it lays out in 1, 2 or 3 columns.
+                <div
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                  aria-busy="true"
+                  aria-label="Loading articles"
+                >
+                  {Array.from({ length: ARTICLES_PER_PAGE }).map((_, index) => (
+                    <div
+                      key={index}
+                      className="h-[394px] rounded-lg border border-border bg-card animate-pulse"
+                    />
+                  ))}
                 </div>
               ) : stories.length === 0 ? (
                 <div className="text-center py-16">
