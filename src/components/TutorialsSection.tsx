@@ -1,3 +1,4 @@
+import type { IframeHTMLAttributes } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,16 @@ import {
   PenTool,
   ArrowRight
 } from "lucide-react";
+
+// The site is cross-origin isolated (COEP: credentialless, set in vercel.json for
+// the MVP Builder's webcontainers). Under that policy a plain cross-origin iframe
+// is blocked — these six tutorial embeds were failing with ERR_BLOCKED_BY_RESPONSE
+// and rendering as blank frames. credentialless satisfies COEP without YouTube
+// needing to send its own header, and is ignored by browsers that do not enforce
+// the policy. Same treatment as PodcastPlayerModal and SnapshotFrame.
+const credentiallessIframeProp = {
+  credentialless: "",
+} as unknown as IframeHTMLAttributes<HTMLIFrameElement>;
 
 const TutorialsSection = () => {
   const tutorialCategories = [
@@ -190,7 +201,9 @@ const TutorialsSection = () => {
                         frameBorder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
+                        loading="lazy"
                         className="w-full h-full"
+                        {...credentiallessIframeProp}
                       />
                     </div>
                     <div className="absolute top-4 right-4 pointer-events-none">
