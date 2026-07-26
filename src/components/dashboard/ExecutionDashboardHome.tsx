@@ -191,7 +191,7 @@ function WaitingOnPeople() {
                 <CalendarCheck2 className="h-5 w-5 text-primary" />
                 <p className="mt-3 text-sm font-semibold">{booking.title}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{new Date(booking.scheduledAt).toLocaleString()}</p>
-                <Button asChild className="mt-3 min-h-11" size="sm" variant="outline"><Link to="/my-bookings">View booking</Link></Button>
+                <Button asChild className="mt-3 min-h-11" size="sm" variant="outline"><Link to="/mentorship/my-bookings">View booking</Link></Button>
               </div>
             ))}
             {people.activeCofounderPosts > 0 ? (

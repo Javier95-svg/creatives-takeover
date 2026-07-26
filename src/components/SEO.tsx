@@ -115,10 +115,11 @@ export const createOrganizationSchema = () => ({
     "url": "https://creatives-takeover.com/about#founder"
   },
   "sameAs": [
-    "https://twitter.com/CreativesTakeover",
+    "https://x.com/Creatives_Rule",
     "https://www.linkedin.com/company/creatives-takeover",
     "https://www.instagram.com/creativestakeover.official/",
-    "https://www.youtube.com/@CreativesTakeover"
+    "https://www.youtube.com/@CreativesTakeover",
+    "https://www.tiktok.com/@creativestakeover"
   ],
   "contactPoint": {
     "@type": "ContactPoint",
@@ -332,10 +333,11 @@ export const createAboutPageSchema = () => ({
       "url": "https://creatives-takeover.com/about#founder"
     },
     "sameAs": [
-      "https://twitter.com/CreativesTakeover",
+      "https://x.com/Creatives_Rule",
       "https://www.linkedin.com/company/creatives-takeover",
       "https://www.instagram.com/creativestakeover.official/",
-      "https://www.youtube.com/@CreativesTakeover"
+      "https://www.youtube.com/@CreativesTakeover",
+      "https://www.tiktok.com/@creativestakeover"
     ],
     "contactPoint": {
       "@type": "ContactPoint",
@@ -442,10 +444,11 @@ export const createLocalBusinessSchema = () => ({
     "closes": "17:00"
   },
   "sameAs": [
-    "https://twitter.com/CreativesTakeover",
-    "https://linkedin.com/company/creatives-takeover",
+    "https://x.com/Creatives_Rule",
+    "https://www.linkedin.com/company/creatives-takeover",
     "https://www.instagram.com/creativestakeover.official/",
-    "https://www.youtube.com/@CreativesTakeover"
+    "https://www.youtube.com/@CreativesTakeover",
+    "https://www.tiktok.com/@creativestakeover"
   ]
 });
 

@@ -265,7 +265,7 @@ export const chatbotFAQ: FAQItem[] = [
     category: FAQCategory.TECHNICAL,
     priority: 9,
     quickActions: [
-      { text: 'View Privacy Policy', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/privacy', priority: 1 },
+      { text: 'View Privacy Policy', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/privacy-policy', priority: 1 },
       { text: 'Contact Security Team', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/contact', priority: 2 }
     ],
     metadata: {
@@ -286,7 +286,7 @@ export const chatbotFAQ: FAQItem[] = [
     priority: 6,
     quickActions: [
       { text: 'View Integrations', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/services', priority: 1 },
-      { text: 'API Documentation', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/api-docs', priority: 2 }
+      { text: 'Ask Support', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/contact', priority: 2 }
     ],
     metadata: {
       views: 543,

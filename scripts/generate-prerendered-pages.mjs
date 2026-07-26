@@ -207,10 +207,11 @@ const ORGANIZATION_SCHEMA = {
     url: `${BASE_URL}/about#founder`,
   },
   sameAs: [
-    "https://twitter.com/CreativesTakeover",
+    "https://x.com/Creatives_Rule",
     "https://www.linkedin.com/company/creatives-takeover",
     "https://www.instagram.com/creativestakeover.official/",
     "https://www.youtube.com/@CreativesTakeover",
+    "https://www.tiktok.com/@creativestakeover",
   ],
 };
 
