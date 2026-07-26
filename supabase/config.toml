@@ -195,3 +195,58 @@ verify_jwt = true
 # Authenticated, server-authoritative outcome evaluation and evidence handoffs.
 [functions.journey-outcome-service]
 verify_jwt = true
+
+# ─── Recorded 2026-07-25 (delivery audit, Phase 4) ────────────────────────────
+# These were already deployed with verify_jwt = false but were never declared
+# here, so config.toml disagreed with production. That was harmless only while
+# deploys were manual and one-at-a-time; once CI deploys the changed set, an
+# undeclared function would be redeployed JWT-gated and would break silently.
+# Each was confirmed against production: an anonymous POST reaches the function
+# (200/400/422/500) instead of being rejected with 401.
+
+# Public contact form on /contact.
+[functions.contact-form-submission]
+verify_jwt = false
+
+# Public waitlist endpoints used by published waitlist pages on {slug} domains.
+[functions.waitlist-public-api]
+verify_jwt = false
+
+[functions.waitlist-domain-check]
+verify_jwt = false
+
+# Checkout/Connect links opened before an authenticated session is established.
+[functions.create-mentor-booking-checkout]
+verify_jwt = false
+
+[functions.create-stripe-connect-link]
+verify_jwt = false
+
+# Scheduled/cron-invoked services (no end-user JWT available).
+[functions.daily-challenge-generator]
+verify_jwt = false
+
+[functions.daily-reminder-service]
+verify_jwt = false
+
+[functions.stripe-revenue-metrics]
+verify_jwt = false
+
+[functions.model-comparison-audit]
+verify_jwt = false
+
+# Link preview + retrieval helpers called from anonymous surfaces.
+[functions.fetch-linkedin-metadata]
+verify_jwt = false
+
+[functions.rag-chat]
+verify_jwt = false
+
+[functions.rag-ingest]
+verify_jwt = false
+
+[functions.speech-to-text]
+verify_jwt = false
+
+[functions.web-search]
+verify_jwt = false

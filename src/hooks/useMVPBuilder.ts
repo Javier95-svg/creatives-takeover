@@ -3731,7 +3731,7 @@ export function useMVPBuilder() {
             sourceArtifactId: projectId,
             sourceArtifactVersion: String(projectVersions.length),
             deploymentUrl: data.url,
-            destinationRoute: '/gtm-strategist',
+            destinationRoute: '/go-to-market',
           },
           idempotencyKey: `mvp:${projectId}:gtm`,
         });

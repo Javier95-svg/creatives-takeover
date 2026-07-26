@@ -222,7 +222,7 @@ export const STAGE_TASKS: Record<BizMapStage, StageTaskTemplate[]> = {
   ],
   TRACTION: [
     { id: 'traction-channel-test', stage: 'TRACTION', title: 'Choose one acquisition channel to test this week', priority: 'high', route: '/insighta' },
-    { id: 'traction-retention-review', stage: 'TRACTION', title: 'Review first-month retention and activation drop-off', priority: 'high', route: '/dashboard/core-metrics' },
+    { id: 'traction-retention-review', stage: 'TRACTION', title: 'Review first-month retention and activation drop-off', priority: 'high', route: '/core-metrics' },
     { id: 'traction-revenue-funnel', stage: 'TRACTION', title: 'Map the revenue funnel from visitor to paid customer', priority: 'medium', route: '/go-to-market' },
     { id: 'traction-growth-experiment', stage: 'TRACTION', title: 'Launch one measurable growth experiment', priority: 'high', route: '/insighta' },
   ],

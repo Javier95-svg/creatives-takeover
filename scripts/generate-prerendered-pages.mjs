@@ -319,34 +319,15 @@ function buildOgImage(routeConfig) {
   return `${BASE_URL}/api/og?${params.toString()}`.replace(/&/g, "&amp;");
 }
 
-function escapeHtml(value) {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-// The template's static #app-shell (instant pre-JS paint) carries the homepage
-// hero. Prerendered inner routes bake their own path and headline so the first
-// paint always matches the page; the badge and homepage CTA stay home-only.
-function renderShellForRoute(html, routeConfig) {
-  if (routeConfig.path === "/") return html;
-
-  const title = escapeHtml(
-    (routeConfig.heroHeading || routeConfig.title || "")
-      .replace(/\s*\|\s*Creatives Takeover.*$/i, "")
-      .trim()
-  );
-  const subtitle = escapeHtml((routeConfig.heroCopy || routeConfig.description || "").trim());
-
-  return html
-    .replace('data-shell-route="/"', `data-shell-route="${escapeHtml(routeConfig.path)}"`)
-    .replace(/<span class="shell-badge"[^>]*>[\s\S]*?<\/span>/, "")
-    .replace(/(<h1 class="shell-title"[^>]*>)[\s\S]*?(<\/h1>)/, `$1${title}$2`)
-    .replace(/(<p class="shell-subtitle"[^>]*>)[\s\S]*?(<\/p>)/, `$1${subtitle}$2`)
-    .replace(/<a class="shell-cta"[^>]*>[\s\S]*?<\/a>/, "");
-}
+// renderShellForRoute() lived here until 2026-07-25. It rewrote the static
+// #app-shell that commit 4cd383e8 added to index.html for an instant pre-JS
+// paint — but b1ce5377 deleted that shell the same day, so every replacement
+// below had been silently matching nothing on each build for a month.
+//
+// It is removed rather than repaired because the owner chose to keep the
+// homepage frozen without a shell. If a pre-JS paint layer is ever restored,
+// bring this back alongside it: it baked each prerendered route's own headline
+// into the shell so the first paint matched the page it belonged to.
 
 function renderRoute(template, routeConfig) {
   const canonical = `${BASE_URL}${routeConfig.path}`;
@@ -375,7 +356,6 @@ function renderRoute(template, routeConfig) {
     /<main id="seo-fallback">[\s\S]*?<\/main>/i,
     `<main id="seo-fallback">\n${buildFallbackHtml(routeConfig)}\n    </main>`
   );
-  html = renderShellForRoute(html, routeConfig);
   return html;
 }
 
