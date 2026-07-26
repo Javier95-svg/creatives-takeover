@@ -188,19 +188,12 @@ export default function Pricing() {
     setPendingPlan(null);
   };
 
-  if (loading) {
-    return (
-      <section className="relative py-section-mobile lg:py-section-desktop overflow-hidden">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
-            <p className="text-muted-foreground mt-4">Loading pricing plans...</p>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
+  // The plan cards are static marketing content (PLAN_CONFIG), so they render
+  // immediately. Gating the whole section on useSubscription() used to swap a
+  // short spinner for a full-height grid once the auth round-trip resolved,
+  // which pushed everything below it down — measured CLS 0.81 desktop / 0.93
+  // mobile. Only the "Your Plan" badge needs the subscription, and it is
+  // absolutely positioned, so it can appear late without moving anything.
   return (
     <section className="relative overflow-hidden pt-28 pb-section-mobile md:pt-32 lg:pt-36 lg:pb-section-desktop" id="pricing-plans">
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
@@ -229,7 +222,10 @@ export default function Pricing() {
 
         <RevealGroup className="grid grid-cols-1 justify-items-center sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 xl:gap-9 max-w-[124rem] mx-auto items-start" variant="card">
           {PLAN_CONFIG.map((plan, index) => {
-            const isCurrentPlan = currentTier === plan.key;
+            // Until the subscription resolves we do not know the tier, and
+            // normalizeTierName() defaults to "rookie" — so without this guard
+            // a Pro user would briefly see "Your Plan" on the Rookie card.
+            const isCurrentPlan = !loading && currentTier === plan.key;
             const isPopular = plan.key === "starter";
             const isPro = plan.key === "pro";
             const isPlanPending = pendingPlan === plan.key;
