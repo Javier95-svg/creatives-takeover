@@ -12,6 +12,11 @@ import { VCFilters as VCFiltersType } from "@/types/insighta";
 import { PLAN_SUMMARIES } from "@/config/planPermissions";
 import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
 
+// How many cards the grid shows before the query resolves. Anonymous visitors
+// get a six-card preview; signed-in users can page through more, but reserving
+// six removes the bulk of the shift in both cases.
+const VC_PREVIEW_CARDS = 6;
+
 const VCSearchTab = () => {
   const [filters, setFilters] = useState<VCFiltersType>({});
   const [page, setPage] = useState(1);
@@ -94,9 +99,23 @@ const VCSearchTab = () => {
       )}
 
       {loading ? (
-        <div className="text-center py-12">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-          <p className="mt-4 text-muted-foreground">Loading VCs...</p>
+        // A ~130px spinner was replaced by the VC grid once the query resolved,
+        // pushing the footer down — measured CLS 0.177 desktop / 0.109 mobile.
+        // Same shape as the /investors and /newspaper fixes: skeletons in the
+        // grid the real cards use, at the measured card height (511px, 491px at
+        // lg). Anonymous visitors see a six-card preview, which is the case this
+        // reserves for.
+        <div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          aria-busy="true"
+          aria-label="Loading VCs"
+        >
+          {Array.from({ length: VC_PREVIEW_CARDS }).map((_, index) => (
+            <div
+              key={index}
+              className="min-h-[511px] lg:min-h-[491px] rounded-card border border-border/60 bg-card/60 animate-pulse"
+            />
+          ))}
         </div>
       ) : error ? (
         <div className="text-center py-12 text-destructive">
