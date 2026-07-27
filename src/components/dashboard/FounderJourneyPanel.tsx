@@ -47,7 +47,7 @@ function StageNode({ node }: { node: JourneyStageNode }) {
       to={node.route}
       onClick={() => trackDashboardJourneyStageClicked({ stage: node.stage, status: node.status })}
       className="group flex min-w-[64px] snap-start flex-col items-center gap-1.5 sm:min-w-0 sm:flex-1"
-      title={`${node.title} stage`}
+      title={`${node.title} stage${node.optional ? ' (optional)' : ''}`}
     >
       <span
         className={cn(
@@ -81,6 +81,9 @@ function StageNode({ node }: { node: JourneyStageNode }) {
       >
         {node.title}
       </span>
+      {node.optional ? (
+        <span className="text-[9px] uppercase tracking-wide text-muted-foreground">Optional</span>
+      ) : null}
     </Link>
   );
 }

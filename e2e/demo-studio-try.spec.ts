@@ -26,7 +26,7 @@ test('#4 no subscription_tiers request fires on the anonymous try route', async 
   });
 
   await page.goto('/demo-studio/try', { waitUntil: 'commit' });
-  await expect(page.getByText(/Turn screenshots into a live demo/i)).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Describe your product, get a live demo/i })).toBeVisible();
   // Let any deferred boot queries fire before asserting none touched tiers.
   await page.waitForTimeout(2500);
 
@@ -57,7 +57,8 @@ test('#3 generate -> preview -> start over -> regenerate loop is clean (mocked g
   });
 
   await page.goto('/demo-studio/try', { waitUntil: 'commit' });
-  await expect(page.getByText(/Turn screenshots into a live demo/i)).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Describe your product, get a live demo/i })).toBeVisible();
+  await page.getByRole('tab', { name: 'I have screenshots' }).click();
 
   const upload = async () =>
     page.locator('input[type="file"]').setInputFiles([
@@ -182,7 +183,8 @@ test('#2 a mid-save failure rolls back the project (no orphan; retries do not ac
   );
 
   await page.goto('/demo-studio/try', { waitUntil: 'commit' });
-  await expect(page.getByText(/Turn screenshots into a live demo/i)).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Describe your product, get a live demo/i })).toBeVisible();
+  await page.getByRole('tab', { name: 'I have screenshots' }).click();
 
   const upload = () =>
     page.locator('input[type="file"]').setInputFiles([

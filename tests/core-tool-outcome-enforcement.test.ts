@@ -97,6 +97,9 @@ test('the outcome service reloads owned artifacts and versions attributed assump
   assert.match(service, /source_version_id/);
   assert.match(service, /provenance: `journey_handoff:/);
   assert.match(service, /consumed_artifact_id: artifactId/);
+  assert.match(service, /MVP handoff requires a verified Build decision backed by decision-grade evidence/);
+  assert.match(service, /checks\.decision !== 'build'/);
+  assert.match(service, /checks\.decision_grade !== true/);
 });
 
 test('MVP Builder opens with an empty typing bar and never auto-loads evidence into it', () => {

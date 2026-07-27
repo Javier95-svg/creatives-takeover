@@ -77,9 +77,12 @@ export async function fetchJourneyEvidenceBrief(userId: string): Promise<Journey
   const demo = asRecord(demoRes.data);
   const pmf = asRecord(pmfRes.data);
   const gtm = asRecord(gtmRes.data);
-  const readyTools = new Set(
-    ((outcomesRes.data ?? []) as Array<{ tool: string; status: string }>).map((outcome) => outcome.tool),
-  );
+  const readyOutcomes = (outcomesRes.data ?? []) as Array<{
+    tool: string;
+    status: string;
+    artifact_id: string;
+  }>;
+  const readyTools = new Set(readyOutcomes.map((outcome) => outcome.tool));
 
   const sections: string[] = [];
   const sources = { icp: false, demo: false, pmf: false, gtm: false };
@@ -147,7 +150,14 @@ export async function fetchJourneyEvidenceBrief(userId: string): Promise<Journey
   const verdictLabel = asText(pmfData.verdictLabel);
   const decision = asText(pmfData.decision);
   const evidenceGrade = asText(pmfData.evidenceGrade);
-  if (readyTools.has('pmf_lab') && (missingFeatures.length || objections.length || buyingSignals.length)) {
+  const pmfOutcome = readyOutcomes.find((outcome) => outcome.tool === 'pmf_lab');
+  const verifiedBuildEvidence = Boolean(
+    pmfOutcome?.status === 'verified' &&
+    pmfOutcome.artifact_id === asText(pmf.id) &&
+    decision === 'build' &&
+    evidenceGrade === 'decision_grade',
+  );
+  if (verifiedBuildEvidence && (missingFeatures.length || objections.length || buyingSignals.length)) {
     sources.pmf = true;
     const header = pmfScore !== null
       ? `WHAT VALIDATION SAYS (PMF score ${pmfScore}/100${verdictLabel ? ` — ${verdictLabel}` : ''}):`

@@ -22,6 +22,7 @@ import { BizMapShareDialog } from '@/components/bizmap/BizMapShareDialog';
 import { useBizMapSharing } from '@/hooks/useBizMapSharing';
 import { createPMFSharedPayload } from '@/lib/bizmapSharing';
 import { formatPmfDecision, getPmfConfidence, getPmfDecision } from '@/lib/pmfConfidence';
+import { getPmfDecisionAction } from '@/lib/pmfDecisionAction';
 
 interface PMFReadinessReportProps {
   analysis: PMFReadinessAnalysis;
@@ -95,8 +96,13 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
   const observedSignalCount = analysis.evidenceSignalCount
     ?? loggedInterviews.length + surveyTotal + demoBehaviorSignals;
   const confidence = getPmfConfidence(observedSignalCount);
-  const isReady = decision === 'build' && confidence.grade === 'decision_grade';
   const meetsThreshold = confidence.grade === 'decision_grade';
+  const decisionAction = getPmfDecisionAction({
+    analysisId: analysisId ?? 'unsaved',
+    decision,
+    evidenceGrade: analysis.evidenceGrade ?? confidence.grade,
+    nextExperiment: analysis.nextExperiment,
+  });
 
   // Primary Finding — lowest-scoring dimension
   const dimensionEntries = Object.entries(analysis.dimensions) as [string, { score: number; explanation: string }][];
@@ -267,14 +273,6 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
               <RefreshCw className="mr-2 h-4 w-4" />
               Re-analyze
             </Button>
-            {isReady && (
-              <Button asChild variant="outline" size="sm">
-                <Link to="/mvp-builder">
-                  Continue to Building
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            )}
           </div>
         </div>
       </div>
@@ -309,6 +307,44 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
       <div className={cn('flex items-start gap-3 rounded-lg border p-4', thresholdBanner.bg)}>
         <ThresholdIcon className={cn('w-5 h-5 shrink-0 mt-0.5', thresholdBanner.iconColor)} />
         <p className="text-sm leading-relaxed">{thresholdBanner.message}</p>
+      </div>
+
+      <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex min-w-0 flex-1 items-start gap-3">
+            <div className="mt-0.5 rounded-xl bg-primary/15 p-2 text-primary">
+              <Compass className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Your next evidence action</p>
+              <p className="mt-2 text-base font-semibold text-foreground">{decisionAction.title}</p>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{decisionAction.description}</p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Save this report to add the action to Today on your dashboard.
+              </p>
+            </div>
+          </div>
+          {decisionAction.destination === 'mvp_builder' ? (
+            <Button asChild size="sm">
+              <Link to={decisionAction.route}>
+                {decisionAction.ctaLabel}
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          ) : onFindCustomers ? (
+            <Button size="sm" onClick={onFindCustomers}>
+              {decisionAction.ctaLabel}
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          ) : (
+            <Button asChild size="sm">
+              <Link to={decisionAction.route}>
+                {decisionAction.ctaLabel}
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">

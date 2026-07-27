@@ -78,7 +78,10 @@ interface HydrateStep {
 
 export default function TryPage() {
   const { user, loading: authLoading } = useAuth();
-  const { subscriptionData } = useSubscription();
+  // This public route only needs the signed-in founder's subscription status.
+  // Loading the full tier catalog for anonymous visitors adds a needless boot
+  // request and makes the free first result more fragile.
+  const { subscriptionData } = useSubscription({ fetchTiers: false });
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const entryTrackedRef = useRef(false);

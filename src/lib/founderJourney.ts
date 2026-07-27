@@ -63,6 +63,7 @@ export interface JourneyStageNode {
   numeral: string;
   title: string;
   status: JourneyStageStatus;
+  optional: boolean;
   hasActivity: boolean;
   route: string;
 }
@@ -154,6 +155,7 @@ function buildStages(inputs: BuildFounderJourneyInputs): JourneyStageNode[] {
       numeral: definition?.numeral ?? '',
       title: definition?.title ?? stage,
       status: completed ? 'complete' : stage === currentStage ? 'current' : 'upcoming',
+      optional: stage === 'FUNDRAISING',
       hasActivity: stageHasActivity(stage, toolSignals, extras),
       route: stagePrimaryRoute(stage),
     } satisfies JourneyStageNode;
@@ -333,9 +335,6 @@ function buildNextAction(inputs: BuildFounderJourneyInputs): JourneyNextAction |
   if (!inputs.extras.traction?.phaseSevenReady) {
     return { key: 'traction-weekly-log', label: "Log this week's traction", route: '/traction-engine' };
   }
-  if (!inputs.extras.pitchDeck) {
-    return { key: 'pitch-deck-analysis', label: 'Analyze your pitch deck', route: '/pitch-deck-analyzer' };
-  }
   return null;
 }
 
@@ -343,7 +342,8 @@ export function buildFounderJourneySnapshot(inputs: BuildFounderJourneyInputs): 
   const stages = buildStages(inputs);
   const tools = buildTools(inputs);
 
-  const stagesCompleted = stages.filter((node) => node.status === 'complete').length;
+  const requiredStages = stages.filter((node) => !node.optional);
+  const stagesCompleted = requiredStages.filter((node) => node.status === 'complete').length;
   const isEmpty =
     !Object.values(inputs.toolSignals).some(Boolean) &&
     !inputs.extras.traction &&
@@ -362,7 +362,7 @@ export function buildFounderJourneySnapshot(inputs: BuildFounderJourneyInputs): 
     tools,
     nextAction: buildNextAction(inputs),
     stagesCompleted,
-    progressPercent: Math.round((stagesCompleted / stages.length) * 100),
+    progressPercent: Math.round((stagesCompleted / requiredStages.length) * 100),
     isEmpty,
     lastTouched,
   };

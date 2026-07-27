@@ -18,8 +18,15 @@ import { ensureMentorDemandNotification } from '@/lib/mentorDemandNotifications'
 import { trackActivity } from '@/lib/activity';
 import { captureEvent } from '@/lib/analytics';
 import { markDiscoveryLeadsInterviewed } from '@/lib/pmfDiscoveryLeads';
-import type { PmfDecision, PmfEvidenceGrade } from '@/lib/pmfConfidence';
+import {
+  getPmfConfidence,
+  getPmfDecision,
+  type PmfDecision,
+  type PmfEvidenceGrade,
+} from '@/lib/pmfConfidence';
 import { fingerprintPmfInterview } from '@/lib/pmfEvidence';
+import { getPmfDecisionAction } from '@/lib/pmfDecisionAction';
+import { syncPmfDecisionAction } from '@/lib/pmfDecisionActionSync';
 import {
   createJourneyEvidenceManifest,
   createJourneyHandoff,
@@ -480,6 +487,7 @@ export function usePMFLab() {
           qualityChecks: {
             report_generated: true,
             decision_present: Boolean(nextAnalysis.decision),
+            decision: nextAnalysis.decision ?? null,
             weighted_sources_present: evidenceSources.length > 0,
             directional_signals: signalCount >= 5,
             emerging_patterns: signalCount >= 10,
@@ -488,7 +496,11 @@ export function usePMFLab() {
           },
           evidenceManifest: createJourneyEvidenceManifest(evidenceSources, nextAnalysis.generatedAt),
         }).then(async (saved) => {
-          if (!['ready', 'verified'].includes(saved.evaluation.status)) return;
+          if (
+            saved.evaluation.status !== 'verified' ||
+            nextAnalysis.decision !== 'build' ||
+            nextAnalysis.evidenceGrade !== 'decision_grade'
+          ) return;
           const outcomeId = (saved.outcome as { id?: string } | null)?.id;
           if (!outcomeId) return;
           await createJourneyHandoff({
@@ -656,11 +668,40 @@ export function usePMFLab() {
         ?? 0;
       await persistInterviewEvidenceCount(conversationCount);
 
+      if (analysisId) {
+        const decision = analysis.decision ?? getPmfDecision(analysis.overallScore);
+        const evidenceGrade = analysis.evidenceGrade
+          ?? getPmfConfidence(analysis.evidenceSignalCount ?? conversationCount).grade;
+        const decisionAction = getPmfDecisionAction({
+          analysisId,
+          decision,
+          evidenceGrade,
+          nextExperiment: analysis.nextExperiment,
+        });
+
+        try {
+          const taskId = await syncPmfDecisionAction({
+            analysisId,
+            decision,
+            evidenceGrade,
+            nextExperiment: analysis.nextExperiment,
+          });
+          captureEvent('pmf_decision_action_created', {
+            decision,
+            evidence_grade: evidenceGrade,
+            destination: decisionAction.destination,
+            task_created: Boolean(taskId),
+          });
+        } catch (taskError) {
+          console.warn('Could not add the PMF decision action to the dashboard:', taskError);
+        }
+      }
+
       showDashboardReturnToast({
         message:
           conversationCount >= PMF_REQUIRED_SIGNALS
-            ? 'PMF report saved. Stage III marked complete.'
-            : `PMF report saved. Add ${PMF_REQUIRED_SIGNALS - conversationCount} more conversations to complete Stage III.`,
+            ? 'PMF report saved. Your verified next action is on the dashboard.'
+            : `PMF report saved. Your next evidence action is on the dashboard; ${PMF_REQUIRED_SIGNALS - conversationCount} more conversations remain for decision grade.`,
         tool: 'pmf-lab',
         navigate,
       });

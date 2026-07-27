@@ -238,6 +238,13 @@
       "sourceFile": "src/lib/analytics.ts",
       "requiredProperties": ["evidence_type"]
     },
+    "pmf_decision_action_created": {
+      "stage": "value",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/hooks/usePMFLab.ts",
+      "requiredProperties": ["decision", "evidence_grade", "destination", "task_created"]
+    },
     "generation_failed": {
       "stage": "reliability",
       "owner": "engineering",
@@ -289,6 +296,12 @@
       "name": "PMF evidence loop",
       "windowDays": 30,
       "steps": ["pmf_survey_shared", "pmf_survey_response_received", "pmf_evidence_logged"]
+    },
+    {
+      "key": "pmf_evidence_to_action",
+      "name": "PMF evidence to next action",
+      "windowDays": 30,
+      "steps": ["pmf_evidence_logged", "pmf_decision_action_created"]
     }
   ],
   "cohorts": [
@@ -338,6 +351,7 @@
         "core_tool_value",
         "monetization",
         "pmf_feedback_loop",
+        "pmf_evidence_to_action",
         "activation_returned_day_2",
         "activation_returned_day_7",
         "subscription_cancelled"

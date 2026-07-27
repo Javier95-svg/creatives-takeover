@@ -63,7 +63,7 @@ test('stage completion follows stageState and marks the current stage', () => {
   );
 
   assert.equal(snapshot.stagesCompleted, 2);
-  assert.equal(snapshot.progressPercent, 29);
+  assert.equal(snapshot.progressPercent, 33);
   assert.equal(snapshot.stages.find((node) => node.stage === 'IDENTITY')?.status, 'complete');
   assert.equal(snapshot.stages.find((node) => node.stage === 'VALIDATING')?.status, 'current');
   assert.equal(snapshot.stages.find((node) => node.stage === 'LAUNCH')?.status, 'upcoming');
@@ -159,7 +159,7 @@ test('tech stack alone marks the MVP tile as started', () => {
   assert.equal(tile?.outputLine, 'Tech stack saved — scope your MVP');
 });
 
-test('next action falls through foundations → traction → pitch deck → null', () => {
+test('next action ends at traction while Capital remains optional', () => {
   const withFoundationsDone = makeInputs({ toolSignals: ALL_TOOL_SIGNALS });
   assert.equal(buildFounderJourneySnapshot(withFoundationsDone).nextAction?.key, 'traction-weekly-log');
 
@@ -169,7 +169,9 @@ test('next action falls through foundations → traction → pitch deck → null
       traction: { latestScore: 90, weekStartDate: '2026-07-06', phaseSevenReady: true, updatedAt: null },
     },
   });
-  assert.equal(buildFounderJourneySnapshot(withTractionReady).nextAction?.key, 'pitch-deck-analysis');
+  const completedCore = buildFounderJourneySnapshot(withTractionReady);
+  assert.equal(completedCore.nextAction, null);
+  assert.equal(completedCore.stages.find((stage) => stage.stage === 'FUNDRAISING')?.optional, true);
 
   const withEverything = makeInputs({
     toolSignals: ALL_TOOL_SIGNALS,
@@ -179,6 +181,29 @@ test('next action falls through foundations → traction → pitch deck → null
     },
   });
   assert.equal(buildFounderJourneySnapshot(withEverything).nextAction, null);
+});
+
+test('optional Capital does not reduce core journey progress', () => {
+  const snapshot = buildFounderJourneySnapshot(
+    makeInputs({
+      stageState: {
+        IDENTITY: { completed: true, completedAt: null },
+        PROTOTYPE: { completed: true, completedAt: null },
+        VALIDATING: { completed: true, completedAt: null },
+        BUILDING: { completed: true, completedAt: null },
+        LAUNCH: { completed: true, completedAt: null },
+        TRACTION: { completed: true, completedAt: null },
+      },
+      toolSignals: ALL_TOOL_SIGNALS,
+      extras: {
+        traction: { latestScore: 90, weekStartDate: '2026-07-06', phaseSevenReady: true, updatedAt: null },
+      },
+    }),
+  );
+
+  assert.equal(snapshot.stagesCompleted, 6);
+  assert.equal(snapshot.progressPercent, 100);
+  assert.equal(snapshot.stages.find((stage) => stage.stage === 'FUNDRAISING')?.status, 'upcoming');
 });
 
 test('demo tile appends the demand signup count', () => {
