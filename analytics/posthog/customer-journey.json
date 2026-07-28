@@ -245,6 +245,48 @@
       "sourceFile": "src/hooks/usePMFLab.ts",
       "requiredProperties": ["decision", "evidence_grade", "destination", "task_created"]
     },
+    "cycle_loop_assigned": {
+      "stage": "onboarding",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["loop", "assignment_source"]
+    },
+    "cycle_primary_action_started": {
+      "stage": "activation",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["loop", "action_key", "expected_evidence"]
+    },
+    "customer_evidence_recorded": {
+      "stage": "evidence",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["loop", "evidence_type", "contact_source", "verification_mode"]
+    },
+    "costly_commitment_recorded": {
+      "stage": "evidence",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["loop", "commitment_type", "verification_mode"]
+    },
+    "cycle_loop_exited": {
+      "stage": "value",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["from_loop", "to_loop", "exit_evidence"]
+    },
+    "raise_track_activated": {
+      "stage": "value",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["operating_loop", "activation_source"]
+    },
     "generation_failed": {
       "stage": "reliability",
       "owner": "engineering",
@@ -302,6 +344,19 @@
       "name": "PMF evidence to next action",
       "windowDays": 30,
       "steps": ["pmf_evidence_logged", "pmf_decision_action_created"]
+    },
+    {
+      "key": "founder_cycle_external_value",
+      "name": "Founder cycle to external evidence",
+      "windowDays": 30,
+      "steps": [
+        "cycle_loop_assigned",
+        "cycle_primary_action_started",
+        "customer_evidence_recorded",
+        "costly_commitment_recorded",
+        "cycle_loop_exited",
+        "subscription_started"
+      ]
     }
   ],
   "cohorts": [
@@ -352,6 +407,9 @@
         "monetization",
         "pmf_feedback_loop",
         "pmf_evidence_to_action",
+        "founder_cycle_external_value",
+        "customer_evidence_recorded",
+        "costly_commitment_recorded",
         "activation_returned_day_2",
         "activation_returned_day_7",
         "subscription_cancelled"

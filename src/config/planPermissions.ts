@@ -207,24 +207,24 @@ export const PLAN_MONTHLY_CREDITS: Record<Plan, number> = {
 export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
   rookie: [
     '50 monthly credits',
-    'ICP Builder and both visitor AHA previews',
-    'Guided Stage 1 founder dashboard',
+    'PROVE preview, first ICP, and evidence plan',
+    'One recommended market-facing action',
     'Core build tools with transparent credit costs',
     'Browse VC Search and Accelerator Hunt',
     'Expert discovery calls at 10 credits per booking',
   ],
   starter: [
     '100 monthly credits',
-    'Structured execution across Stages 1 to 3',
-    'Demo Studio and Product Market Fit Lab',
+    'Full PROVE workflow and customer evidence ledger',
+    'PMF Discovery and weekly validation guidance',
     'Full Email Templates library',
     'VC Search & Accelerator Hunt: 2 profile views/month',
     'Core build tools with transparent credit costs',
   ],
   rising: [
     '250 monthly credits',
-    'Full founder cockpit across all active stages',
-    'MVP, GTM, and traction execution workflows',
+    'SELL and self-serve GROW workflows',
+    'Prospect pipeline, messaging, experiments, and metrics',
     'Full Prompt Library with export actions',
     'VC Search & Accelerator Hunt: 10 profile views/month',
     'Pitch Deck Analyzer with transparent credit costs',
@@ -233,7 +233,7 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
     '600 monthly credits and the Pro War Room',
     'Substantive expert response within 48 hours',
     'Find Your Angel investor matching',
-    'Fundraising aware dashboard and workflows',
+    'All execution loops plus optional RAISE workflows',
     'Priority founder support and deeper research',
     'Unlimited VC Search & Accelerator profile views',
   ],
@@ -253,9 +253,9 @@ const COMMAND_CENTER_DASHBOARD_NAV_ITEMS: DashboardNavItem[] = SHARED_DASHBOARD_
 
 export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeConfig> = {
   rookie: {
-    label: 'Rookie Mode',
-    badgeDescription: 'Guided and simplified',
-    subtitle: 'A simplified dashboard for getting the first signal right.',
+    label: 'PROVE Preview',
+    badgeDescription: 'First evidence action',
+    subtitle: 'Clarify the customer and take the first market-facing action.',
     sectionIds: ['mode-welcome', 'mode-usage', 'mode-preview'],
     activeStages: [1],
     previewStages: [4, 5],
@@ -264,9 +264,9 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
     visibleTools: ['icp_builder', 'mvp_builder', 'saved_mentors', 'find_mentor', 'find_cofounder'],
   },
   starter: {
-    label: 'Starter Mode',
-    badgeDescription: 'Structured and progressing',
-    subtitle: 'A structured workspace for moving through Stages 1 to 3.',
+    label: 'PROVE Mode',
+    badgeDescription: 'Customer evidence',
+    subtitle: 'Run the full problem, conversation, and commitment loop.',
     sectionIds: ['mode-tasks', 'mode-usage'],
     activeStages: [1, 2, 3],
     previewStages: [4, 5],
@@ -275,9 +275,9 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
     visibleTools: ['icp_builder', 'waitlist_maker', 'pmf_lab', 'mvp_builder', 'saved_mentors', 'find_mentor', 'find_cofounder', 'vc_search', 'accelerator_hunt', 'email_templates', 'prompt_library', 'ai_goals'],
   },
   rising: {
-    label: 'Rising Mode',
-    badgeDescription: 'Operational and productive',
-    subtitle: 'Your full operator cockpit across all five stages.',
+    label: 'SELL + GROW Mode',
+    badgeDescription: 'Customer execution',
+    subtitle: 'Turn evidence into customers, experiments, and repeatable growth.',
     sectionIds: ['mode-usage', 'routine', 'your-tasks'],
     activeStages: [1, 2, 3, 4, 5],
     previewStages: [],
@@ -286,9 +286,9 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
     visibleTools: ['icp_builder', 'waitlist_maker', 'pmf_lab', 'mvp_builder', 'tech_stack', 'gtm_strategist', 'directories', 'saved_mentors', 'decision_sprint', 'core_metrics', 'ai_goals', 'find_mentor', 'find_cofounder', 'vc_search', 'accelerator_hunt', 'email_templates', 'pitch_deck_analyzer', 'insighta_test', 'newspaper', 'prompt_library'],
   },
   pro: {
-    label: 'Pro Mode',
-    badgeDescription: 'Strategic and data-rich',
-    subtitle: 'Your fundraising-aware command layer with premium support.',
+    label: 'Expert Execution Mode',
+    badgeDescription: 'Accountability and RAISE',
+    subtitle: 'All operating loops with expert support and optional fundraising.',
     sectionIds: ['mode-support', 'mode-fundraising', 'mode-usage', 'routine', 'your-tasks'],
     activeStages: [1, 2, 3, 4, 5],
     previewStages: [],
@@ -517,7 +517,7 @@ export const PLAN_SUMMARIES: Record<Plan, PlanSummary> = {
     monthlyCredits: PLAN_MONTHLY_CREDITS.rookie,
     vcViewLimit: MONTHLY_FREE_QUOTAS.vc_profiles.rookie,
     acceleratorViewLimit: MONTHLY_FREE_QUOTAS.accelerator_profiles.rookie,
-    description: 'Clarify who to serve first with 50 monthly credits, both visitor AHA previews, and a guided Stage 1 dashboard.',
+    description: 'Clarify who to serve, create the first evidence plan, and take one market-facing action with 50 monthly credits.',
   },
   starter: {
     name: PLAN_LABELS.starter,
@@ -525,7 +525,7 @@ export const PLAN_SUMMARIES: Record<Plan, PlanSummary> = {
     monthlyCredits: PLAN_MONTHLY_CREDITS.starter,
     vcViewLimit: MONTHLY_FREE_QUOTAS.vc_profiles.starter,
     acceleratorViewLimit: MONTHLY_FREE_QUOTAS.accelerator_profiles.starter,
-    description: 'Validate customer demand with 100 monthly credits, proof workflows, PMF evidence, and structured execution across Stages 1 to 3.',
+    description: 'Run the full PROVE loop with PMF discovery, a customer evidence ledger, and weekly validation guidance.',
   },
   rising: {
     name: PLAN_LABELS.rising,
@@ -533,7 +533,7 @@ export const PLAN_SUMMARIES: Record<Plan, PlanSummary> = {
     monthlyCredits: PLAN_MONTHLY_CREDITS.rising,
     vcViewLimit: MONTHLY_FREE_QUOTAS.vc_profiles.rising,
     acceleratorViewLimit: MONTHLY_FREE_QUOTAS.accelerator_profiles.rising,
-    description: 'Build and launch with 250 monthly credits, the full operating cockpit, and 10 VC plus 10 accelerator profile views per billing cycle.',
+    description: 'Run SELL and self-serve GROW with a prospect pipeline, messaging, experiments, metrics, and 250 monthly credits.',
   },
   pro: {
     name: PLAN_LABELS.pro,
@@ -541,7 +541,7 @@ export const PLAN_SUMMARIES: Record<Plan, PlanSummary> = {
     monthlyCredits: PLAN_MONTHLY_CREDITS.pro,
     vcViewLimit: MONTHLY_FREE_QUOTAS.vc_profiles.pro,
     acceleratorViewLimit: MONTHLY_FREE_QUOTAS.accelerator_profiles.pro,
-    description: 'Accelerate and fundraise with 600 monthly credits, the Pro War Room, Angels access, unlimited research views, and expert accountability.',
+    description: 'Access every operating loop, expert accountability, the Pro War Room, and optional RAISE workflows with 600 monthly credits.',
   },
 };
 

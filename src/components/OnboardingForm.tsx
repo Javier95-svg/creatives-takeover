@@ -32,6 +32,8 @@ import {
   trackOnboardingAbandoned,
   trackOnboardingCompleted,
   trackOnboardingStepCompleted,
+  trackCycleLoopAssigned,
+  trackRaiseTrackActivated,
 } from '@/lib/analytics';
 import { trackActivity } from '@/lib/activity';
 import { cn } from '@/lib/utils';
@@ -49,6 +51,12 @@ import {
   type ActivationJourneyV2,
 } from '@/lib/activationJourneyV2';
 import { isActivationV2Enabled } from '@/lib/activationRollout';
+import { isFounderCycleRolloutEnabled } from '@/lib/founderCycleRollout';
+import {
+  deriveFounderLoop,
+  type FounderBusinessModel,
+  type FounderLoop,
+} from '@/lib/founderCycle';
 import { useFeatureGating } from '@/hooks/useFeatureGating';
 import { normalizePlan } from '@/config/planPermissions';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -68,6 +76,7 @@ import {
 
 interface OnboardingData {
   stageAnswers: Partial<FounderStageQuizAnswersV3>;
+  cycleAnswers: FounderCycleOnboardingAnswers;
   startupSectors: string[];
   country: string;
   cofounderSituation: CofounderSituation | '';
@@ -75,7 +84,7 @@ interface OnboardingData {
 }
 
 type CofounderSituation = 'actively_looking' | 'solo_ok';
-type StepKind = 'stage' | 'fundraising' | 'sector' | 'country' | 'cofounder' | 'activation';
+type StepKind = 'stage' | 'cycle' | 'fundraising' | 'sector' | 'country' | 'cofounder' | 'activation';
 
 interface OnboardingStep {
   id: string;
@@ -96,6 +105,214 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
   { id: 'cofounder_situation', kind: 'cofounder', chapter: 'Team', label: 'Co-founder' },
   { id: 'activation_intent', kind: 'activation', chapter: 'First action', label: 'Launchpad' },
 ];
+
+type CycleEvidenceState = 'none' | 'prospects' | 'replies' | 'conversations' | 'commitment' | 'payment';
+type CycleOfferStatus = 'no_offer' | 'testing_offer' | 'offer_shared' | 'paid_offer';
+type CyclePrimaryGoal = 'validate_problem' | 'win_first_customer' | 'reach_three_customers' | 'repeatable_growth' | 'raise';
+type CycleMainBlocker = 'customer_clarity' | 'prospect_access' | 'messaging' | 'sales_conversion' | 'product_delivery' | 'traction_growth' | 'fundraising' | 'accountability';
+
+interface FounderCycleOnboardingAnswers {
+  businessModel: FounderBusinessModel | '';
+  customerCount: number | null;
+  evidenceState: CycleEvidenceState | '';
+  offerStatus: CycleOfferStatus | '';
+  primaryGoal: CyclePrimaryGoal | '';
+  mainBlocker: CycleMainBlocker | '';
+  weeklyCapacityHours: number | null;
+  fundraisingStatus: FounderStageQuizAnswersV3['fundraisingStatus'] | '';
+}
+
+interface CycleQuestionDef {
+  id: keyof FounderCycleOnboardingAnswers;
+  question: string;
+  description: string;
+  options: Array<{ value: string | number; label: string }>;
+}
+
+const FOUNDER_CYCLE_QUESTIONS: CycleQuestionDef[] = [
+  {
+    id: 'businessModel',
+    question: 'How does this business make money?',
+    description: 'The execution-cycle beta is initially tuned for B2B SaaS and service businesses.',
+    options: [
+      { value: 'b2b_saas', label: 'B2B SaaS or business software' },
+      { value: 'service', label: 'Agency, consultancy, or online service' },
+      { value: 'b2c_product', label: 'Consumer app or digital product' },
+      { value: 'marketplace', label: 'Marketplace' },
+      { value: 'ecommerce', label: 'E-commerce' },
+      { value: 'media', label: 'Creator, media, or audience business' },
+      { value: 'other', label: 'Another model' },
+    ],
+  },
+  {
+    id: 'customerCount',
+    question: 'How many paying customers do you have today?',
+    description: 'Paying customers determine whether the next job is proof, first sales, or repeatable growth.',
+    options: [
+      { value: 0, label: 'None yet' },
+      { value: 1, label: '1 paying customer' },
+      { value: 2, label: '2 paying customers' },
+      { value: 3, label: '3 paying customers' },
+      { value: 4, label: 'More than 3' },
+    ],
+  },
+  {
+    id: 'evidenceState',
+    question: 'What is the strongest customer action you have seen?',
+    description: 'Choose evidence from the market, not an internal document or completed product feature.',
+    options: [
+      { value: 'none', label: 'No external evidence yet' },
+      { value: 'prospects', label: 'I have named prospects to contact' },
+      { value: 'replies', label: 'Target customers have replied' },
+      { value: 'conversations', label: 'I completed qualified customer conversations' },
+      { value: 'commitment', label: 'A customer made a costly commitment or signed a pilot' },
+      { value: 'payment', label: 'A customer paid' },
+    ],
+  },
+  {
+    id: 'offerStatus',
+    question: 'What is the status of your offer?',
+    description: 'An offer is the concrete result, pilot, or service a customer can say yes to.',
+    options: [
+      { value: 'no_offer', label: 'I do not have a concrete offer yet' },
+      { value: 'testing_offer', label: 'I am shaping or testing an offer' },
+      { value: 'offer_shared', label: 'I have shared the offer with target customers' },
+      { value: 'paid_offer', label: 'Someone has accepted or paid for the offer' },
+    ],
+  },
+  {
+    id: 'primaryGoal',
+    question: 'What outcome matters most in the next 30 days?',
+    description: 'Your dashboard will prioritize one external outcome instead of a list of startup tasks.',
+    options: [
+      { value: 'validate_problem', label: 'Validate an urgent customer problem' },
+      { value: 'win_first_customer', label: 'Win the first paying customer' },
+      { value: 'reach_three_customers', label: 'Reach three paying customers' },
+      { value: 'repeatable_growth', label: 'Find a repeatable acquisition or retention signal' },
+      { value: 'raise', label: 'Prepare for or actively raise funding' },
+    ],
+  },
+  {
+    id: 'mainBlocker',
+    question: 'What is most likely to stop that outcome?',
+    description: 'This determines the next action the cycle recommends.',
+    options: [
+      { value: 'customer_clarity', label: 'The customer or problem is still too broad' },
+      { value: 'prospect_access', label: 'I cannot find or reach the right prospects' },
+      { value: 'messaging', label: 'My message is not earning replies' },
+      { value: 'sales_conversion', label: 'Interest is not converting into commitments' },
+      { value: 'product_delivery', label: 'I cannot deliver the promised result yet' },
+      { value: 'traction_growth', label: 'Acquisition or retention is not repeatable' },
+      { value: 'fundraising', label: 'Fundraising preparation or investor access' },
+      { value: 'accountability', label: 'I need accountability and prioritization' },
+    ],
+  },
+  {
+    id: 'weeklyCapacityHours',
+    question: 'How much focused execution time can you protect each week?',
+    description: 'Recommendations will fit the time you can actually commit.',
+    options: [
+      { value: 2, label: 'About 2 hours' },
+      { value: 5, label: 'About 5 hours' },
+      { value: 10, label: 'About 10 hours' },
+      { value: 20, label: '20 or more hours' },
+    ],
+  },
+];
+
+const FOUNDER_CYCLE_STEPS: OnboardingStep[] = FOUNDER_CYCLE_QUESTIONS.map((question) => ({
+  id: question.id,
+  kind: 'cycle',
+  chapter: 'Execution',
+  label: question.id === 'businessModel'
+    ? 'Business model'
+    : question.id === 'customerCount'
+      ? 'Customers'
+      : question.id === 'weeklyCapacityHours'
+        ? 'Capacity'
+        : 'Evidence',
+}));
+
+const emptyCycleAnswers: FounderCycleOnboardingAnswers = {
+  businessModel: '',
+  customerCount: null,
+  evidenceState: '',
+  offerStatus: '',
+  primaryGoal: '',
+  mainBlocker: '',
+  weeklyCapacityHours: null,
+  fundraisingStatus: '',
+};
+
+function deriveLegacyAnswersFromCycle(answers: FounderCycleOnboardingAnswers): FounderStageQuizAnswersV3 {
+  const customerCount = answers.customerCount ?? 0;
+  const hasPayment = answers.evidenceState === 'payment' || answers.offerStatus === 'paid_offer' || customerCount > 0;
+  const hasCommitment = answers.evidenceState === 'commitment';
+  const hasConversation = answers.evidenceState === 'conversations';
+  const productStatus = answers.offerStatus === 'paid_offer'
+    ? 'live_product'
+    : answers.offerStatus === 'offer_shared'
+      ? 'mvp_beta'
+      : answers.offerStatus === 'testing_offer'
+        ? 'prototype_demo'
+        : 'idea_only';
+  const blockerMap: Record<CycleMainBlocker, FounderBlocker> = {
+    customer_clarity: 'customer_clarity',
+    prospect_access: 'demand_validation',
+    messaging: 'go_to_market',
+    sales_conversion: 'go_to_market',
+    product_delivery: 'product_build',
+    traction_growth: 'traction_growth',
+    fundraising: 'fundraising',
+    accountability: 'solo',
+  };
+
+  return {
+    productStatus,
+    tractionSignal: customerCount >= 3 || answers.primaryGoal === 'repeatable_growth'
+      ? 'repeatable_growth'
+      : hasPayment
+        ? 'revenue'
+        : hasCommitment || hasConversation
+          ? 'active_users'
+          : answers.evidenceState === 'replies' || answers.evidenceState === 'prospects'
+            ? 'waitlist_interest'
+            : 'none',
+    blocker: answers.mainBlocker ? blockerMap[answers.mainBlocker] : 'demand_validation',
+    fundraisingStatus: answers.primaryGoal === 'raise'
+      ? (answers.fundraisingStatus || 'preparing')
+      : 'not_now',
+    customerTesting: hasPayment
+      ? 'paying_customers'
+      : hasConversation || hasCommitment
+        ? 'target_customers'
+        : answers.evidenceState === 'replies'
+          ? 'friends_family'
+          : 'no_one',
+    mainFocus: answers.primaryGoal === 'raise'
+      ? 'raise_capital'
+      : answers.primaryGoal === 'repeatable_growth'
+        ? 'grow_channels'
+        : answers.primaryGoal === 'reach_three_customers' || answers.primaryGoal === 'win_first_customer'
+          ? 'launch_market'
+          : 'validate_demand',
+  };
+}
+
+function deriveLoopFromCycleAnswers(answers: FounderCycleOnboardingAnswers): FounderLoop {
+  return deriveFounderLoop({
+    payingCustomers: answers.customerCount ?? 0,
+    costlyCommitments: answers.evidenceState === 'commitment' || answers.evidenceState === 'payment' ? 1 : 0,
+    hasExternalEvidence: true,
+  }).loop;
+}
+
+function hasCompleteCycleAnswers(answers: FounderCycleOnboardingAnswers) {
+  return FOUNDER_CYCLE_QUESTIONS.every((question) => {
+    const value = answers[question.id];
+    return value !== '' && value !== null && value !== undefined;
+  });
+}
 
 interface ActivationCard {
   value: ActivationIntent;
@@ -162,6 +379,7 @@ const V2_ONBOARDING_INTENTS: ActivationIntent[] = ['find_mentor', 'build_demo', 
 
 const emptyOnboardingData: OnboardingData = {
   stageAnswers: {},
+  cycleAnswers: emptyCycleAnswers,
   startupSectors: [],
   country: '',
   cofounderSituation: '',
@@ -169,7 +387,7 @@ const emptyOnboardingData: OnboardingData = {
 };
 
 // Increment this whenever the question set changes so PostHog cohorts stay clean.
-const QUIZ_VERSION = 5;
+const QUIZ_VERSION = 6;
 
 interface OnboardingFormProps {
   onComplete?: (startRoute?: string) => void;
@@ -229,7 +447,9 @@ function appendActivationParams(route: string, intent: ActivationIntent) {
 export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   const { user } = useAuth();
   const activationFlag = useFeatureFlagEnabled('onboarding-activation-v2');
+  const founderCycleFlag = useFeatureFlagEnabled('founder-execution-cycle-v1');
   const activationV2Enabled = isActivationV2Enabled(activationFlag);
+  const founderCycleEnabled = isFounderCycleRolloutEnabled(user?.id, founderCycleFlag);
   const { checkFeatureAccess } = useFeatureGating();
   const { subscriptionData } = useSubscription({ fetchTiers: false });
   const { totalAvailable, loading: creditsLoading } = useCredits();
@@ -259,6 +479,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         return {
           ...emptyOnboardingData,
           stageAnswers: parsed.stageAnswers ?? {},
+          cycleAnswers: { ...emptyCycleAnswers, ...(parsed.cycleAnswers ?? {}) },
           startupSectors: Array.isArray(parsed.startupSectors) ? parsed.startupSectors : [],
           country: parsed.country ?? '',
           cofounderSituation: parsed.cofounderSituation ?? '',
@@ -285,16 +506,20 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   // Steps are dynamic: the fundraising follow-up only appears when the primary
   // blocker is fundraising, so it never taxes the other ~85% of founders.
   const steps = useMemo<OnboardingStep[]>(() => {
-    const list: OnboardingStep[] = ONBOARDING_STEPS.filter((item) => item.kind === 'stage');
+    const list: OnboardingStep[] = founderCycleEnabled
+      ? [...FOUNDER_CYCLE_STEPS]
+      : ONBOARDING_STEPS.filter((item) => item.kind === 'stage');
 
-    if (formData.stageAnswers.blocker === 'fundraising') {
+    if (founderCycleEnabled && formData.cycleAnswers.primaryGoal === 'raise') {
+      list.push({ id: 'fundraisingStatus', kind: 'cycle', chapter: 'Optional track', label: 'Fundraising' });
+    } else if (!founderCycleEnabled && formData.stageAnswers.blocker === 'fundraising') {
       list.push({ id: 'fundraisingStatus', kind: 'fundraising', chapter: 'Stage', label: 'Fundraising' });
     }
 
     list.push(...ONBOARDING_STEPS.filter((item) => item.kind !== 'stage'));
 
     return list;
-  }, [formData.stageAnswers.blocker]);
+  }, [formData.cycleAnswers.primaryGoal, formData.stageAnswers.blocker, founderCycleEnabled]);
 
   const totalSteps = steps.length;
   // Declared here (before the abandonment ref/effect below use it) to avoid a
@@ -336,13 +561,36 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   // Drop a stale fundraising answer if the blocker is no longer fundraising,
   // so it can't inflate the Fundraising stage.
   useEffect(() => {
-    if (formData.stageAnswers.blocker !== 'fundraising' && formData.stageAnswers.fundraisingStatus) {
+    if (
+      founderCycleEnabled
+      && formData.cycleAnswers.primaryGoal !== 'raise'
+      && formData.cycleAnswers.fundraisingStatus
+    ) {
+      setFormData((previous) => {
+        const cycleAnswers = { ...previous.cycleAnswers, fundraisingStatus: '' as const };
+        return {
+          ...previous,
+          cycleAnswers,
+          stageAnswers: deriveLegacyAnswersFromCycle(cycleAnswers),
+        };
+      });
+    } else if (
+      !founderCycleEnabled
+      && formData.stageAnswers.blocker !== 'fundraising'
+      && formData.stageAnswers.fundraisingStatus
+    ) {
       setFormData((prev) => {
-        const { fundraisingStatus, ...restStageAnswers } = prev.stageAnswers;
+        const { fundraisingStatus: _fundraisingStatus, ...restStageAnswers } = prev.stageAnswers;
         return { ...prev, stageAnswers: restStageAnswers };
       });
     }
-  }, [formData.stageAnswers.blocker, formData.stageAnswers.fundraisingStatus]);
+  }, [
+    formData.cycleAnswers.fundraisingStatus,
+    formData.cycleAnswers.primaryGoal,
+    formData.stageAnswers.blocker,
+    formData.stageAnswers.fundraisingStatus,
+    founderCycleEnabled,
+  ]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -350,6 +598,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
       localStorage.setItem(`onboarding_draft_${user.id}`, JSON.stringify({
         currentStep,
         stageAnswers: formData.stageAnswers,
+        cycleAnswers: formData.cycleAnswers,
         startupSectors: formData.startupSectors,
         country: formData.country,
         cofounderSituation: formData.cofounderSituation,
@@ -363,6 +612,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     formData.activationIntent,
     formData.cofounderSituation,
     formData.country,
+    formData.cycleAnswers,
     formData.stageAnswers,
     formData.startupSectors,
     user?.id,
@@ -375,7 +625,20 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   }, [countrySearch]);
 
   const progress = ((currentStep + 1) / totalSteps) * 100;
-  const diagnostic = useMemo(() => getStageDiagnostic(formData.stageAnswers), [formData.stageAnswers]);
+  const effectiveStageAnswers = useMemo(
+    () => founderCycleEnabled
+      ? deriveLegacyAnswersFromCycle(formData.cycleAnswers)
+      : formData.stageAnswers,
+    [formData.cycleAnswers, formData.stageAnswers, founderCycleEnabled],
+  );
+  const diagnostic = useMemo(
+    () => founderCycleEnabled
+      ? (hasCompleteCycleAnswers(formData.cycleAnswers)
+        ? assignFounderStageV3(effectiveStageAnswers as FounderStageQuizAnswersV3)
+        : null)
+      : getStageDiagnostic(effectiveStageAnswers),
+    [effectiveStageAnswers, formData.cycleAnswers, founderCycleEnabled],
+  );
   const assignedStage = diagnostic?.assignedStage ?? null;
   const stageMeta = assignedStage ? STAGES[assignedStage] : null;
   const availableIntents = useMemo(() => {
@@ -397,28 +660,43 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     });
   }, [checkFeatureAccess, creditsLoading, currentPlan, existingPreferences.activationIntent, totalAvailable]);
   const recommendation = useMemo<ActivationRecommendation | null>(() => {
-    if (!diagnostic || !formData.stageAnswers.blocker || !formData.stageAnswers.productStatus) return null;
+    if (!diagnostic || !effectiveStageAnswers.blocker || !effectiveStageAnswers.productStatus) return null;
     return recommendActivation({
       assignedStage: diagnostic.assignedStage,
-      blocker: formData.stageAnswers.blocker,
-      productStatus: formData.stageAnswers.productStatus,
+      blocker: effectiveStageAnswers.blocker,
+      productStatus: effectiveStageAnswers.productStatus,
       userPreferences: existingPreferences,
       availableIntents,
     });
-  }, [availableIntents, diagnostic, existingPreferences, formData.stageAnswers.blocker, formData.stageAnswers.productStatus]);
+  }, [availableIntents, diagnostic, effectiveStageAnswers.blocker, effectiveStageAnswers.productStatus, existingPreferences]);
 
   useEffect(() => {
     if (!activationV2Enabled || explicitIntentChoice || !recommendation) return;
-    setFormData((previous) => previous.activationIntent === recommendation.intent
+    const cycleIntent = founderCycleEnabled && hasCompleteCycleAnswers(formData.cycleAnswers)
+      ? deriveLoopFromCycleAnswers(formData.cycleAnswers) === 'GROW'
+        ? 'log_traction'
+        : deriveLoopFromCycleAnswers(formData.cycleAnswers) === 'SELL'
+          ? 'plan_gtm'
+          : 'start_validation'
+      : recommendation.intent;
+    const nextIntent = availableIntents.includes(cycleIntent) ? cycleIntent : recommendation.intent;
+    setFormData((previous) => previous.activationIntent === nextIntent
       ? previous
-      : { ...previous, activationIntent: recommendation.intent });
-  }, [activationV2Enabled, explicitIntentChoice, recommendation]);
+      : { ...previous, activationIntent: nextIntent });
+  }, [
+    activationV2Enabled,
+    availableIntents,
+    explicitIntentChoice,
+    formData.cycleAnswers,
+    founderCycleEnabled,
+    recommendation,
+  ]);
 
   const selectedActivationCard = ACTIVATION_CARDS.find((card) => card.value === formData.activationIntent) ?? null;
   const selectedRoute = formData.activationIntent ? getActivationRoute(formData.activationIntent) : null;
   const profileTags = [
     ...formData.startupSectors,
-    ...deriveSupportAreas(formData.stageAnswers.blocker),
+    ...deriveSupportAreas(effectiveStageAnswers.blocker),
     formData.country,
   ].filter(Boolean);
 
@@ -433,6 +711,13 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
           newErrors[target.id] = 'Choose the option that best describes you today';
         }
         break;
+      case 'cycle': {
+        const value = formData.cycleAnswers[target.id as keyof FounderCycleOnboardingAnswers];
+        if (value === '' || value === null || value === undefined) {
+          newErrors[target.id] = 'Choose the option that best describes you today';
+        }
+        break;
+      }
       case 'fundraising':
         if (!formData.stageAnswers.fundraisingStatus) {
           newErrors.fundraisingStatus = 'Pick where your raise is today';
@@ -489,8 +774,8 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         elapsed_ms: now - startedAt,
         step_time_ms: now - stepEnteredAt.current,
         quiz_version: QUIZ_VERSION,
-        stage: formData.stageAnswers.productStatus,
-        painPoint: formData.stageAnswers.blocker,
+        stage: effectiveStageAnswers.productStatus,
+        painPoint: effectiveStageAnswers.blocker,
       });
       stepEnteredAt.current = now;
       setCurrentStep((prev) => prev + 1);
@@ -528,7 +813,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     try {
       const selectedIntent = formData.activationIntent as ActivationIntent;
       const startRoute = getActivationRoute(selectedIntent);
-      const stageAnswers = formData.stageAnswers as FounderStageQuizAnswersV3;
+      const stageAnswers = effectiveStageAnswers as FounderStageQuizAnswersV3;
       const finalDiagnostic = assignFounderStageV3(stageAnswers);
       const finalAssignedStage = finalDiagnostic.assignedStage;
       const businessStage = mapFounderStageToBusinessStage(finalAssignedStage);
@@ -547,7 +832,14 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         ? { ...baseJourney, resumeUrl: `${ACTIVATION_CATALOG.build_demo.route}?mode=no_assets` }
         : baseJourney;
 
-      if (activationJourney) setHandoff({ journey: activationJourney, stageName: STAGES[finalAssignedStage].name });
+      if (activationJourney) {
+        setHandoff({
+          journey: activationJourney,
+          stageName: founderCycleEnabled
+            ? `${deriveLoopFromCycleAnswers(formData.cycleAnswers)} operating loop`
+            : STAGES[finalAssignedStage].name,
+        });
+      }
 
       await startActivationJourney({
         userId: user.id,
@@ -566,6 +858,37 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         onboardingLocalDate: new Intl.DateTimeFormat('en-CA').format(new Date()),
         activationJourney: activationJourney ?? undefined,
       });
+
+      if (founderCycleEnabled && formData.cycleAnswers.businessModel) {
+        const selectedLoop = deriveLoopFromCycleAnswers(formData.cycleAnswers);
+        const customerCount = formData.cycleAnswers.customerCount ?? 0;
+        // Generated database types are refreshed after the additive migration is deployed.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: cycleStateError } = await (supabase as any).rpc('upsert_founder_cycle_state_v1', {
+          p_business_model: formData.cycleAnswers.businessModel,
+          p_customer_count: customerCount,
+          p_primary_goal: formData.cycleAnswers.primaryGoal,
+          p_selected_loop: null,
+          p_raise_active: formData.cycleAnswers.primaryGoal === 'raise'
+            && formData.cycleAnswers.fundraisingStatus !== 'not_now',
+          p_weekly_capacity_hours: formData.cycleAnswers.weeklyCapacityHours,
+        });
+        if (cycleStateError) throw cycleStateError;
+        trackCycleLoopAssigned({
+          loop: selectedLoop,
+          assignment_source: 'onboarding',
+          business_model: formData.cycleAnswers.businessModel,
+        });
+        if (
+          formData.cycleAnswers.primaryGoal === 'raise'
+          && formData.cycleAnswers.fundraisingStatus !== 'not_now'
+        ) {
+          trackRaiseTrackActivated({
+            operating_loop: selectedLoop,
+            activation_source: 'onboarding',
+          });
+        }
+      }
 
       await refreshOnboardingMentorRecommendations({
         userId: user.id,
@@ -590,6 +913,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         supportAreasNeeded: supportAreas,
         country: formData.country,
         cofounderSituation: formData.cofounderSituation,
+        founderLoop: founderCycleEnabled ? deriveLoopFromCycleAnswers(formData.cycleAnswers) : null,
         timeMs: Date.now() - startedAt,
         startRoute,
       });
@@ -603,6 +927,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         supportAreasNeeded: supportAreas,
         country: formData.country,
         cofounderSituation: formData.cofounderSituation,
+        founderLoop: founderCycleEnabled ? deriveLoopFromCycleAnswers(formData.cycleAnswers) : null,
         timeMs: Date.now() - startedAt,
         startRoute,
       });
@@ -632,6 +957,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         pain_point: primaryPain,
         activation_intent: selectedIntent,
         cofounder_situation: formData.cofounderSituation,
+        founder_loop: founderCycleEnabled ? deriveLoopFromCycleAnswers(formData.cycleAnswers) : null,
       };
       if (activationJourney) {
         await trackActivationJourneyEvent({
@@ -728,6 +1054,67 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                       : 'border-border text-muted-foreground',
                   )}
                 >
+                  {selected ? <Check className="h-3.5 w-3.5" /> : index + 1}
+                </span>
+                <span className="min-w-0 flex-1 text-sm font-medium leading-6 text-foreground">
+                  {option.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        {errors[question.id] ? <p className="text-sm text-destructive">{errors[question.id]}</p> : null}
+      </div>
+    );
+  };
+
+  const renderCycleQuestion = (question: CycleQuestionDef) => {
+    const selectedValue = formData.cycleAnswers[question.id];
+    return (
+      <div className="space-y-6">
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase text-accent-teal">{step.chapter}</p>
+          <h2 className="font-space-grotesk text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+            {question.question}
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">{question.description}</p>
+        </div>
+        <div className="grid gap-2">
+          {question.options.map((option, index) => {
+            const selected = selectedValue === option.value;
+            return (
+              <button
+                key={String(option.value)}
+                type="button"
+                aria-pressed={selected}
+                className={cn(
+                  'flex min-h-14 items-start gap-3 rounded-lg border p-3 text-left transition-all',
+                  selected
+                    ? 'border-accent-teal bg-accent-teal/10 shadow-sm shadow-accent-teal/10'
+                    : 'border-border/60 bg-background/70 hover:border-accent-teal/50 hover:bg-accent/60',
+                )}
+                onClick={() => {
+                  setFormData((previous) => {
+                    const cycleAnswers = {
+                      ...previous.cycleAnswers,
+                      [question.id]: option.value,
+                    } as FounderCycleOnboardingAnswers;
+                    return {
+                      ...previous,
+                      cycleAnswers,
+                      stageAnswers: deriveLegacyAnswersFromCycle(cycleAnswers),
+                    };
+                  });
+                  setErrors((previous) => ({ ...previous, [question.id]: undefined }));
+                  queueAutoAdvance();
+                }}
+              >
+                <span className={cn(
+                  'mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold',
+                  selected
+                    ? 'border-accent-teal bg-accent-teal text-white'
+                    : 'border-border text-muted-foreground',
+                )}>
                   {selected ? <Check className="h-3.5 w-3.5" /> : index + 1}
                 </span>
                 <span className="min-w-0 flex-1 text-sm font-medium leading-6 text-foreground">
@@ -856,11 +1243,23 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         <div className="rounded-lg border border-accent-teal/30 bg-accent-teal/10 p-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase text-accent-teal">Your founder stage</p>
-              <p className="mt-1 font-space-grotesk text-xl font-semibold">
-                Stage {stageMeta.id}: {stageMeta.name}
+              <p className="text-xs font-semibold uppercase text-accent-teal">
+                {founderCycleEnabled ? 'Your recommended operating loop' : 'Your founder stage'}
               </p>
-              <p className="mt-1 text-sm leading-6 text-muted-foreground">{stageMeta.description}</p>
+              <p className="mt-1 font-space-grotesk text-xl font-semibold">
+                {founderCycleEnabled
+                  ? deriveLoopFromCycleAnswers(formData.cycleAnswers)
+                  : `Stage ${stageMeta.id}: ${stageMeta.name}`}
+              </p>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                {founderCycleEnabled
+                  ? deriveLoopFromCycleAnswers(formData.cycleAnswers) === 'PROVE'
+                    ? 'Collect qualified conversations and a costly customer commitment before more build work.'
+                    : deriveLoopFromCycleAnswers(formData.cycleAnswers) === 'SELL'
+                      ? 'Turn customer evidence into offers and the first three paying customers.'
+                      : 'Find a repeatable acquisition and retention signal.'
+                  : stageMeta.description}
+              </p>
             </div>
             <div className="shrink-0 rounded-full border border-accent-teal/30 bg-background/70 px-3 py-1 text-sm font-semibold">
               {diagnostic.confidence}% match
@@ -1051,6 +1450,20 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
           'Pick the closest match. We will use this to place you on the right founder path.',
         );
       }
+      case 'cycle': {
+        const question = step.id === 'fundraisingStatus'
+          ? {
+              id: 'fundraisingStatus' as const,
+              question: 'Where is fundraising today?',
+              description: 'RAISE will run beside the customer operating loop, never instead of it.',
+              options: FUNDRAISING_STATUS_QUESTION.options.map((option) => ({
+                value: String(option.value),
+                label: option.label,
+              })),
+            }
+          : FOUNDER_CYCLE_QUESTIONS.find((item) => item.id === step.id);
+        return question ? renderCycleQuestion(question) : null;
+      }
       case 'fundraising':
         return renderSingleSelectQuestion(
           FUNDRAISING_STATUS_QUESTION,
@@ -1078,7 +1491,9 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent-teal/15 text-accent-teal">
               <Loader2 className="h-7 w-7 animate-spin motion-reduce:animate-none" />
             </div>
-            <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-accent-teal">Stage assigned</p>
+            <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-accent-teal">
+              {founderCycleEnabled ? 'Operating loop assigned' : 'Stage assigned'}
+            </p>
             <h1 className="mt-2 font-space-grotesk text-3xl font-semibold">{handoff.stageName}</h1>
             <p className="mt-4 text-sm text-muted-foreground">Preparing your focused first win</p>
             <p className="mt-1 text-lg font-semibold">{entry.label}</p>
@@ -1157,8 +1572,16 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                   <div className="flex items-start gap-3">
                     <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-accent-teal" />
                     <div>
-                      <p className="text-sm font-semibold">{stageMeta.label}</p>
-                      <p className="mt-1 text-xs leading-5 text-muted-foreground">{stageMeta.topFocus[0]?.label}</p>
+                      <p className="text-sm font-semibold">
+                        {founderCycleEnabled
+                          ? `${deriveLoopFromCycleAnswers(formData.cycleAnswers)} loop`
+                          : stageMeta.label}
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                        {founderCycleEnabled
+                          ? 'Customer evidence determines what comes next.'
+                          : stageMeta.topFocus[0]?.label}
+                      </p>
                     </div>
                   </div>
                 </div>

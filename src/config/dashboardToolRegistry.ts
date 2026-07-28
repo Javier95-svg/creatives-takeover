@@ -74,6 +74,7 @@ const definitions: DashboardToolDefinition[] = [
   { key: 'newspaper', label: 'Newspaper', route: '/newspaper', stage: 'MORE', icon: FileText, entitlement: 'newspaper', inlineActions: ['toggle_content_bookmark'] },
   { key: 'files', label: 'Files', route: '/dashboard/files', stage: 'MORE', icon: FileText, inlineActions: ['create_task'] },
   { key: 'dashboard', label: 'Dashboard', route: '/dashboard', stage: 'MORE', icon: Sparkles, inlineActions: ['open_tool'] },
+  { key: 'founder_cycle', label: 'Founder Execution Cycle', route: '/bizmap-ai', stage: 'MORE', icon: Target, inlineActions: ['open_tool'] },
 ];
 
 export const DASHBOARD_TOOL_REGISTRY = Object.fromEntries(

@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { dashboardSnapshotQueryKey } from '@/contexts/DashboardDataContext';
+import { founderCycleQueryKey } from '@/hooks/useFounderCycle';
 import { supabase } from '@/integrations/supabase/client';
 import type { DashboardAction, DashboardSnapshotV1 } from '@/types/dashboardSnapshot';
 import { captureEvent } from '@/lib/analytics';
@@ -132,9 +133,17 @@ export function useDashboardAction() {
         }
         case 'snooze_recommendation':
         case 'dismiss_recommendation': {
-          if (!action.entityId) throw new Error('Recommendation id is required');
           const isSnooze = action.actionKind === 'snooze_recommendation';
-          if (action.kind === 'task') {
+          if (action.key.startsWith('cycle:')) {
+            // Generated database types are refreshed after the additive migration is deployed.
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { error } = await (supabase as any).rpc('record_founder_cycle_action_feedback_v1', {
+              p_action_key: action.key.slice('cycle:'.length),
+              p_feedback_status: isSnooze ? 'remind_later' : 'not_relevant',
+            });
+            if (error) throw error;
+          } else if (action.kind === 'task') {
+            if (!action.entityId) throw new Error('Task id is required');
             const cooldown = new Date(Date.now() + (isSnooze ? 24 : 14 * 24) * 60 * 60_000).toISOString();
             const { error } = await supabase.from('daily_tasks').update({
               recommendation_status: 'dismissed',
@@ -144,6 +153,7 @@ export function useDashboardAction() {
             }).eq('id', action.entityId).eq('user_id', userId);
             if (error) throw error;
           } else {
+            if (!action.entityId) throw new Error('Recommendation id is required');
             const { error } = await supabase.from('personalized_recommendations').update({ is_dismissed: true }).eq('id', action.entityId).eq('user_id', userId);
             if (error) throw error;
           }
@@ -288,7 +298,12 @@ export function useDashboardAction() {
       toast.success('Dashboard updated');
     },
     onSettled: async () => {
-      if (userId) await queryClient.invalidateQueries({ queryKey: dashboardSnapshotQueryKey(userId) });
+      if (userId) {
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: dashboardSnapshotQueryKey(userId) }),
+          queryClient.invalidateQueries({ queryKey: founderCycleQueryKey(userId) }),
+        ]);
+      }
     },
   });
 }

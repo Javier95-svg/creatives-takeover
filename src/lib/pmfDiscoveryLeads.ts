@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { captureEvent } from '@/lib/analytics';
+import { captureEvent, trackCustomerEvidenceRecorded } from '@/lib/analytics';
 import type { PMFDiscoveryLeadStatus } from '@/hooks/useCustomerDiscovery';
 
 export type PMFDiscoveryLeadActivityType =
@@ -93,6 +93,25 @@ export async function updateDiscoveryLeadStatus(
   if (status === 'contacted') await logDiscoveryLeadActivity(userId, leadId, 'outreach_sent');
   if (status === 'interview_scheduled') await logDiscoveryLeadActivity(userId, leadId, 'interview_scheduled');
   captureEvent(`pmf_discovery_lead_${status}`, { lead_status: status });
+  const evidenceType = status === 'saved'
+    ? 'prospect_qualified'
+    : status === 'contacted'
+      ? 'outreach_sent'
+      : status === 'interview_scheduled'
+        ? 'interview_scheduled'
+        : status === 'interviewed'
+          ? 'interview_completed'
+          : status === 'dismissed'
+            ? 'customer_lost'
+            : null;
+  if (evidenceType) {
+    trackCustomerEvidenceRecorded({
+      loop: 'PROVE',
+      evidence_type: evidenceType,
+      contact_source: 'pmf_discovery',
+      verification_mode: status.startsWith('interview') ? 'customer_action' : 'imported',
+    });
+  }
 }
 
 export async function saveDiscoveryLeadNotes(userId: string, leadId: string, notes: string) {

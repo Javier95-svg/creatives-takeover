@@ -852,6 +852,44 @@ export const trackPMFSurveyShared = (properties?: AnalyticsProperties) =>
 export const trackPMFEvidenceLogged = (properties: { evidence_type: string } & AnalyticsProperties) =>
   captureEvent('pmf_evidence_logged', properties);
 
+// Evidence-driven founder execution cycle. Contact/customer PII is deliberately
+// excluded: analytics receives only the loop, evidence type, source, and mode.
+export const trackCycleLoopAssigned = (properties: {
+  loop: 'PROVE' | 'SELL' | 'GROW';
+  assignment_source: 'onboarding' | 'evidence' | 'legacy_fallback' | 'override';
+  business_model?: string | null;
+}) => captureEvent('cycle_loop_assigned', properties);
+
+export const trackCyclePrimaryActionStarted = (properties: {
+  loop: 'PROVE' | 'SELL' | 'GROW';
+  action_key: string;
+  expected_evidence: string;
+}) => captureEvent('cycle_primary_action_started', properties);
+
+export const trackCustomerEvidenceRecorded = (properties: {
+  loop: 'PROVE' | 'SELL' | 'GROW';
+  evidence_type: string;
+  contact_source: string;
+  verification_mode: string;
+}) => captureEvent('customer_evidence_recorded', properties);
+
+export const trackCostlyCommitmentRecorded = (properties: {
+  loop: 'PROVE' | 'SELL' | 'GROW';
+  commitment_type: 'commitment' | 'payment';
+  verification_mode: string;
+}) => captureEvent('costly_commitment_recorded', properties);
+
+export const trackCycleLoopExited = (properties: {
+  from_loop: 'PROVE' | 'SELL';
+  to_loop: 'SELL' | 'GROW';
+  exit_evidence: string;
+}) => captureEvent('cycle_loop_exited', properties);
+
+export const trackRaiseTrackActivated = (properties: {
+  operating_loop: 'PROVE' | 'SELL' | 'GROW';
+  activation_source: 'onboarding' | 'settings';
+}) => captureEvent('raise_track_activated', properties);
+
 export const normalizePlanId = (planLike?: string | null): PlanId => {
   const normalized = (planLike || '').trim().toLowerCase();
   if (normalized === 'starter') return 'STARTER';

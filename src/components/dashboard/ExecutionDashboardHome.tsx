@@ -28,11 +28,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardData } from '@/contexts/DashboardDataContext';
 import { getDashboardTool } from '@/config/dashboardToolRegistry';
 import { useDashboardAction } from '@/hooks/useDashboardAction';
+import { useFounderCycle } from '@/hooks/useFounderCycle';
 import type { DashboardAction, DashboardMetric } from '@/types/dashboardSnapshot';
 import { cn } from '@/lib/utils';
-import { captureEvent } from '@/lib/analytics';
+import { captureEvent, trackCyclePrimaryActionStarted } from '@/lib/analytics';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import FounderCycleDashboardPanel from '@/components/founder-cycle/FounderCycleDashboardPanel';
 
 const STAGE_LABELS: Record<string, string> = {
   IDENTITY: 'Identity',
@@ -47,6 +49,7 @@ const STAGE_LABELS: Record<string, string> = {
 function ActionButton({ action, compact = false }: { action: DashboardAction; compact?: boolean }) {
   const navigate = useNavigate();
   const mutation = useDashboardAction();
+  const founderCycle = useFounderCycle();
   const tool = getDashboardTool(action.toolKey);
   const isOpen = action.actionKind === 'open_tool' || action.toolKey === 'find_cofounder';
   const actionLabel = isOpen
@@ -67,6 +70,13 @@ function ActionButton({ action, compact = false }: { action: DashboardAction; co
           action_kind: action.actionKind,
           tool_key: action.toolKey,
         });
+        if (action.key.startsWith('cycle:') && founderCycle.snapshot) {
+          trackCyclePrimaryActionStarted({
+            loop: founderCycle.snapshot.selectedLoop,
+            action_key: founderCycle.snapshot.primaryAction.key,
+            expected_evidence: founderCycle.snapshot.primaryAction.expectedEvidence,
+          });
+        }
         if (isOpen) {
           navigate(tool.route);
           return;
@@ -93,7 +103,9 @@ function FocusNow({ action }: { action: DashboardAction }) {
     return () => observer.disconnect();
   }, []);
 
-  const canFeedback = action.kind === 'task' || action.kind === 'recommendation';
+  const canFeedback = action.kind === 'task'
+    || action.kind === 'recommendation'
+    || action.key.startsWith('cycle:');
   const feedbackAction = (kind: 'snooze_recommendation' | 'dismiss_recommendation'): DashboardAction => ({
     ...action,
     actionKind: kind,
@@ -449,7 +461,7 @@ export default function ExecutionDashboardHome() {
       <WaitingOnPeople />
       <TodayPanel />
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-        <JourneyPanel />
+        <FounderCycleDashboardPanel fallback={<JourneyPanel />} />
         <BusinessPulse />
       </div>
       <RecentWork />

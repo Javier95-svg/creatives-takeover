@@ -26,8 +26,8 @@ test('normalizePlan keeps legacy creator users on rising', () => {
 test('plan highlights match the authoritative four-plan contract', () => {
   assert.deepEqual(PLAN_HIGHLIGHTS.rookie, [
     '50 monthly credits',
-    'ICP Builder and both visitor AHA previews',
-    'Guided Stage 1 founder dashboard',
+    'PROVE preview, first ICP, and evidence plan',
+    'One recommended market-facing action',
     'Core build tools with transparent credit costs',
     'Browse VC Search and Accelerator Hunt',
     'Expert discovery calls at 10 credits per booking',
@@ -35,8 +35,8 @@ test('plan highlights match the authoritative four-plan contract', () => {
 
   assert.deepEqual(PLAN_HIGHLIGHTS.starter, [
     '100 monthly credits',
-    'Structured execution across Stages 1 to 3',
-    'Demo Studio and Product Market Fit Lab',
+    'Full PROVE workflow and customer evidence ledger',
+    'PMF Discovery and weekly validation guidance',
     'Full Email Templates library',
     'VC Search & Accelerator Hunt: 2 profile views/month',
     'Core build tools with transparent credit costs',
@@ -44,8 +44,8 @@ test('plan highlights match the authoritative four-plan contract', () => {
 
   assert.deepEqual(PLAN_HIGHLIGHTS.rising, [
     '250 monthly credits',
-    'Full founder cockpit across all active stages',
-    'MVP, GTM, and traction execution workflows',
+    'SELL and self-serve GROW workflows',
+    'Prospect pipeline, messaging, experiments, and metrics',
     'Full Prompt Library with export actions',
     'VC Search & Accelerator Hunt: 10 profile views/month',
     'Pitch Deck Analyzer with transparent credit costs',
@@ -55,7 +55,7 @@ test('plan highlights match the authoritative four-plan contract', () => {
     '600 monthly credits and the Pro War Room',
     'Substantive expert response within 48 hours',
     'Find Your Angel investor matching',
-    'Fundraising aware dashboard and workflows',
+    'All execution loops plus optional RAISE workflows',
     'Priority founder support and deeper research',
     'Unlimited VC Search & Accelerator profile views',
   ]);
@@ -68,7 +68,7 @@ test('dashboard mode config resolves from the canonical plan contract', () => {
   assert.equal(resolveDashboardMode('pro'), 'pro');
 
   const rookieMode = getDashboardModeConfig('rookie');
-  assert.equal(rookieMode.label, 'Rookie Mode');
+  assert.equal(rookieMode.label, 'PROVE Preview');
   assert.deepEqual(rookieMode.activeStages, [1]);
   assert.deepEqual(rookieMode.previewStages, [4, 5]);
   assert.deepEqual(rookieMode.navItems.map((item) => item.path), [
@@ -81,7 +81,7 @@ test('dashboard mode config resolves from the canonical plan contract', () => {
   assert.deepEqual(rookieMode.visibleTools, ['icp_builder', 'mvp_builder', 'saved_mentors', 'find_mentor', 'find_cofounder']);
 
   const proMode = getDashboardModeConfig('pro');
-  assert.equal(proMode.label, 'Pro Mode');
+  assert.equal(proMode.label, 'Expert Execution Mode');
   assert.deepEqual(proMode.activeStages, [1, 2, 3, 4, 5]);
   assert.deepEqual(proMode.previewStages, []);
   assert.equal(proMode.navItems[0]?.label, 'Command Center');
@@ -113,10 +113,10 @@ test('plan monthly credits stay aligned with pricing', () => {
 test('pricing page presents plan outcome labels', () => {
   const pricingSource = readFileSync(new URL('../src/components/Pricing.tsx', import.meta.url), 'utf8');
 
-  assert.match(pricingSource, /outcomeLabel: "Clarify"/);
-  assert.match(pricingSource, /outcomeLabel: "Validate"/);
-  assert.match(pricingSource, /outcomeLabel: "Build & Launch"/);
-  assert.match(pricingSource, /outcomeLabel: "Accelerate & Fundraise"/);
+  assert.match(pricingSource, /outcomeLabel: "PROVE Preview"/);
+  assert.match(pricingSource, /outcomeLabel: "PROVE"/);
+  assert.match(pricingSource, /outcomeLabel: "SELL \+ GROW"/);
+  assert.match(pricingSource, /outcomeLabel: "Expert \+ RAISE"/);
 });
 
 test('core entitlement rules reflect the pricing contract', () => {

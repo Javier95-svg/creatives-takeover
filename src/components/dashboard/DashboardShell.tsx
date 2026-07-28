@@ -28,6 +28,7 @@ import { DashboardTabsHost } from './DashboardTabsHost';
 import { DashboardMetricsContext, TaskCountContext, type DashboardWeeklyMetrics } from './TaskCountContext';
 import { ModeToggle, type DashboardMode } from './modes/ModeToggle';
 import { isExecutionDashboardEnabled } from '@/lib/dashboardRollout';
+import { isFounderCycleRolloutEnabled } from '@/lib/founderCycleRollout';
 import { BIZMAP_STAGE_ORDER, DEFAULT_CURRENT_STAGE, type BizMapStage } from '@/lib/bizmapStages';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { captureEvent } from '@/lib/analytics';
@@ -191,8 +192,12 @@ function ShadowDashboardFrame() {
 function DashboardFrame() {
   const { user } = useAuth();
   const posthogFlag = useFeatureFlagEnabled('dashboard-command-center-v2');
+  const founderCycleFlag = useFeatureFlagEnabled('founder-execution-cycle-v1');
   const shadowFlag = useFeatureFlagEnabled('dashboard-command-center-shadow');
-  if (isExecutionDashboardEnabled(user?.id, posthogFlag)) {
+  if (
+    isExecutionDashboardEnabled(user?.id, posthogFlag)
+    || isFounderCycleRolloutEnabled(user?.id, founderCycleFlag)
+  ) {
     return (
       <DashboardDataProvider>
         <SnapshotDashboardFrame />

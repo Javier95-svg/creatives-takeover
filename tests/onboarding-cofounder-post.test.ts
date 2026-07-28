@@ -28,7 +28,7 @@ test('onboarding asks and persists the required co-founder situation', async () 
   assert.match(source, /I'm a solo founder and I'm OK with that\./);
   assert.match(source, /case 'cofounder':[\s\S]*cofounderSituation/);
   assert.match(source, /cofounderSituation: formData\.cofounderSituation/);
-  assert.match(source, /QUIZ_VERSION = 5/);
+  assert.match(source, /QUIZ_VERSION = 6/);
 });
 
 test('database seeds and completes the dashboard task from the onboarding answer', async () => {

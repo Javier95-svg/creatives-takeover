@@ -16,6 +16,8 @@ import { getActivationPreferenceState } from '@/lib/activationState';
 import { buildActivationSummary, trackRetentionEvent, type ActivationIntent } from '@/lib/retentionSystem';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 import { BIZMAP_STAGES } from '@/lib/bizmapStages';
+import FounderExecutionCycle from '@/components/founder-cycle/FounderExecutionCycle';
+import { useFounderCycle } from '@/hooks/useFounderCycle';
 
 interface BizMapPrimaryAction {
   title: string;
@@ -27,6 +29,7 @@ interface BizMapPrimaryAction {
 
 export default function BizMapJourneyHubPage() {
   const { user } = useAuth();
+  const founderCycle = useFounderCycle();
   const {
     currentStage,
     stageState,
@@ -173,6 +176,39 @@ export default function BizMapJourneyHubPage() {
       { name: 'BizMap AI', url: '/bizmap-ai' },
     ]),
   ];
+
+  if (founderCycle.rolloutEnabled && founderCycle.isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <main className="px-4 pt-32">
+          <div className="container mx-auto h-64 max-w-6xl animate-pulse rounded-2xl bg-muted/50" />
+        </main>
+      </div>
+    );
+  }
+
+  if (founderCycle.showCycle) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SEO
+          title="Founder Execution Cycle | Prove, Sell, Grow"
+          description="Turn customer conversations, commitments, payments, and retention into the next evidence-backed founder action."
+          keywords="startup validation, first customers, founder execution, customer evidence, go to market"
+          url="/bizmap-ai"
+          structuredData={structuredData}
+        />
+        <Navigation />
+        <main className="px-4 pb-20 pt-28 md:pt-32 lg:pt-36">
+          <FounderExecutionCycle />
+          <div className="container mx-auto mt-10 max-w-6xl">
+            <PageFAQSection title="Frequent Questions" faqs={faqs} />
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

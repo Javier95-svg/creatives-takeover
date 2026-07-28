@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { isDashboardAiRankingEnabled } from '@/lib/dashboardRollout';
 import { captureEvent } from '@/lib/analytics';
 import { isDashboardSnapshotV1, type DashboardAction, type DashboardSnapshotV1 } from '@/types/dashboardSnapshot';
+import { useFounderCycle } from '@/hooks/useFounderCycle';
 
 export const dashboardSnapshotQueryKey = (userId: string | null | undefined) => ['dashboard-snapshot-v1', userId] as const;
 
@@ -71,6 +72,7 @@ function candidateHash(candidates: DashboardAction[], snapshot: DashboardSnapsho
 
 export function DashboardDataProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const founderCycle = useFounderCycle();
   const queryClient = useQueryClient();
   const aiRankingFlag = useFeatureFlagEnabled('dashboard-ai-ranking');
   const userId = user?.id ?? null;
@@ -176,9 +178,49 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
     return explanation ? { ...ranked, description: explanation } : ranked;
   }, [rankableCandidates, rankingQuery.data, snapshotQuery.data]);
 
+  const cyclePrimary = useMemo<DashboardAction | null>(() => {
+    const action = founderCycle.snapshot?.primaryAction;
+    if (!founderCycle.showCycle || !action) return null;
+    const routeTool = action.route.startsWith('/pmf-lab')
+      ? 'pmf_lab'
+      : action.route.startsWith('/go-to-market')
+        ? 'gtm_strategist'
+        : action.route.startsWith('/traction-engine')
+          ? 'traction_engine'
+          : action.route.startsWith('/core-metrics')
+            ? 'core_metrics'
+          : action.route.startsWith('/icp-builder')
+            ? 'icp_builder'
+            : 'founder_cycle';
+    return {
+      key: `cycle:${action.key}`,
+      kind: 'journey',
+      toolKey: routeTool,
+      entityId: null,
+      title: action.title,
+      description: `${action.description} Expected evidence: ${action.expectedEvidence.replaceAll('_', ' ')}.`,
+      urgency: 'high',
+      reasonCodes: ['external_customer_evidence', action.reason],
+      estimatedMinutes: 20,
+      dueAt: null,
+      actionKind: 'open_tool',
+    };
+  }, [founderCycle.showCycle, founderCycle.snapshot?.primaryAction]);
+
+  const rankedReasonText = rankedPrimary?.reasonCodes.join(' ').toLowerCase() ?? '';
+  const rankedIsCustomerUrgent = rankedPrimary?.kind === 'human_reply'
+    || (
+      rankedPrimary?.urgency === 'high'
+      && ['messages', 'pmf_lab', 'gtm_strategist'].includes(rankedPrimary.toolKey)
+      && /(reply|follow.?up|interview|meeting|overdue|customer)/.test(rankedReasonText)
+    );
+  const effectivePrimary = rankedIsCustomerUrgent
+    ? rankedPrimary
+    : cyclePrimary ?? rankedPrimary;
+
   const value = useMemo<DashboardDataContextValue>(() => ({
     snapshot: snapshotQuery.data ?? null,
-    primaryAction: rankedPrimary,
+    primaryAction: effectivePrimary,
     isLoading: snapshotQuery.isLoading,
     isFetching: snapshotQuery.isFetching,
     isStale: snapshotQuery.isStale,
@@ -187,7 +229,7 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
     refresh: async () => {
       await snapshotQuery.refetch();
     },
-  }), [isOffline, rankedPrimary, snapshotQuery]);
+  }), [effectivePrimary, isOffline, snapshotQuery]);
 
   return <DashboardDataContext.Provider value={value}>{children}</DashboardDataContext.Provider>;
 }
