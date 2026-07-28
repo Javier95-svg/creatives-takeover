@@ -7,6 +7,7 @@ import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { supabase } from "@/integrations/supabase/client";
 import heroCompass from "@/assets/hero-compass.svg";
+import WhoIsThisForDialog from "@/components/WhoIsThisForDialog";
 import "./hero-cinematic-spotlight.css";
 import { trackActivationEntry, trackActivationFunnelEvent } from "@/lib/activationEntry";
 
@@ -96,6 +97,7 @@ const Hero = ({
   const heroRef = useRef<HTMLElement>(null);
   const hasTrackedView = useRef(false);
   const [userUsername, setUserUsername] = useState<string | null>(null);
+  const [isAudienceDialogOpen, setIsAudienceDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -151,6 +153,12 @@ const Hero = ({
               ctaType: "secondary",
               authenticated: isAuthenticated,
             });
+            if (!isAuthenticated) {
+              void trackTriggerView("hero-who-is-this-for", {
+                ctaType: "audience_education",
+                authenticated: false,
+              });
+            }
           }
         });
       },
@@ -219,21 +227,9 @@ const Hero = ({
     setAttribution('hero_dashboard_preview', location.pathname);
   };
 
-  // Smooth-scrolls to the "Startup Development Cycle" section on the homepage.
-  // The id appears in both UserReviews variants, so prefer the visible one.
-  const handleStartupCycleClick = () => {
-    void trackEngagement("hero-startup-cycle-link", 60);
-    const id = "startup-development-cycle";
-    const candidates = Array.from(document.querySelectorAll<HTMLElement>(`#${id}`));
-    const target =
-      candidates.find((element) => {
-        const rect = element.getBoundingClientRect();
-        const style = window.getComputedStyle(element);
-        return style.display !== "none" && style.visibility !== "hidden" && rect.height > 0;
-      }) ?? document.getElementById(id);
-    if (!target) return;
-    const y = target.getBoundingClientRect().top + window.pageYOffset - 100;
-    window.scrollTo({ top: Math.max(y, 0), behavior: "smooth" });
+  const handleWhoIsThisForClick = () => {
+    void trackEngagement("hero-who-is-this-for", 60);
+    setIsAudienceDialogOpen(true);
   };
 
   return (
@@ -302,8 +298,8 @@ const Hero = ({
                   </svg>
                 </Link>
               </div>
-              <button type="button" className="ct-hero__cycle-link" onClick={handleStartupCycleClick}>
-                The Startup Development Cycle
+              <button type="button" className="ct-hero__audience-link" onClick={handleWhoIsThisForClick}>
+                Who is this for?
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                   <polyline points="6 9 12 15 18 9" />
                 </svg>
@@ -381,6 +377,9 @@ const Hero = ({
           </div>
         </div>
       </div>
+      {!isAuthenticated ? (
+        <WhoIsThisForDialog open={isAudienceDialogOpen} onOpenChange={setIsAudienceDialogOpen} />
+      ) : null}
     </section>
   );
 };

@@ -385,10 +385,9 @@
   color: var(--ct-muted);
 }
 
-/* Secondary text link under the primary CTA — scrolls to the Startup
-   Development Cycle section. Full-width flex item so it sits on its own line
-   directly beneath the CTA. Smaller and quieter than a CTA, but still clear. */
-.ct-hero__cycle-link {
+/* Audience link under the primary CTAs. It opens the "Who is this for?"
+   profile dialog while keeping the existing hero layout unchanged. */
+.ct-hero__audience-link {
   flex: 0 0 100%;
   display: inline-flex;
   align-items: center;
@@ -409,18 +408,18 @@
   transition: color 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
 }
 
-.ct-hero__cycle-link:hover {
+.ct-hero__audience-link:hover {
   color: var(--ct-fg);
   transform: translateY(1px);
 }
 
-.ct-hero__cycle-link:focus-visible {
+.ct-hero__audience-link:focus-visible {
   outline: 2px solid var(--ct-fg);
   outline-offset: 3px;
   border-radius: 6px;
 }
 
-.ct-hero__cycle-link svg {
+.ct-hero__audience-link svg {
   width: 13px;
   height: 13px;
   flex-shrink: 0;
@@ -428,7 +427,7 @@
   transition: transform 0.22s ease;
 }
 
-.ct-hero__cycle-link:hover svg {
+.ct-hero__audience-link:hover svg {
   transform: translateY(2px);
 }
 

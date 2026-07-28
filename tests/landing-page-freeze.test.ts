@@ -9,7 +9,9 @@ const frozenFiles = {
   // "Have a product? / Launch a live demo" (→ ctaHref, /demo-studio), secondary
   // "Still an idea? / Draft your ICP" (→ /icp-builder). Layout and styling
   // untouched throughout; 133a70f0's activation analytics are retained.
-  '../src/components/Hero.tsx': '52778566cdab675eccbdba77822ee61f7803cfc83caeff32ddb85b0c11625444',
+  // Rehashed 2026-07-27: the primary CTAs and hero copy remain unchanged.
+  // The small cycle link now opens the approved "Who is this for?" ICP dialog.
+  '../src/components/Hero.tsx': '034af1f4f816a6d2b5eb47e5d9fae756b0bfad9574df5bbe43bb62a1d0dd9cf9',
   '../src/components/EntrepreneurProblems.tsx': '9cd3383b7b1c06d298aaab7711113454d4e4fa66ac31f5cdc841c30fb31b588f',
   '../src/components/Navigation.tsx': '806bf8264b1b63f70098b590708247739789f16e4607da6ef239a0b7a1882146',
   // Re-pinned 2026-07-25 (delivery audit, Phase 1): AISpecializationTrends moved
