@@ -3,9 +3,17 @@ import { expect, test } from "@playwright/test";
 test("hero audience dialog rotates, stops, resumes, and navigates manually", async ({ page }) => {
   await page.goto("/", { waitUntil: "commit" });
 
-  await page.getByRole("button", { name: "Who is this for?" }).click();
+  const audienceButton = page.getByRole("button", { name: "Who is this for?" });
+  await expect(audienceButton.locator("svg")).toHaveCount(0);
+  expect(Number(await audienceButton.evaluate((element) => getComputedStyle(element).fontWeight))).toBeGreaterThanOrEqual(
+    700,
+  );
+  await audienceButton.click();
   const dialog = page.getByRole("dialog", { name: "Who is Creatives Takeover for?" });
   await expect(dialog).toBeVisible();
+  expect(await dialog.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(
+    "rgba(0, 0, 0, 0)",
+  );
   await expect(dialog.getByText("You need evidence before you need code.")).toBeVisible();
   await expect(dialog.getByRole("link", { name: /Open ICP Builder:/ })).toHaveAttribute(
     "href",

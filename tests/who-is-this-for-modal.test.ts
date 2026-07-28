@@ -46,14 +46,21 @@ test("the hero opens the audience dialog and the dialog preserves its accessibil
     new URL("../src/components/WhoIsThisForDialog.tsx", import.meta.url),
     "utf8",
   );
+  const heroStyles = readFileSync(
+    new URL("../src/components/hero-cinematic-spotlight.css", import.meta.url),
+    "utf8",
+  );
 
   assert.match(hero, /Who is this for\?/);
+  assert.match(hero, /Who is this for\?[\s\r\n]*<\/button>/);
   assert.match(hero, /hero-who-is-this-for/);
   assert.match(hero, /setIsAudienceDialogOpen\(true\)/);
   assert.match(hero, /<WhoIsThisForDialog/);
   assert.doesNotMatch(hero, /handleStartupCycleClick|hero-startup-cycle-link/);
 
   assert.match(dialog, /Who is Creatives Takeover for\?/);
+  assert.match(dialog, /border-border\/70 bg-background p-0/);
+  assert.doesNotMatch(dialog, /bg-background\/98/);
   assert.match(dialog, /usePrefersReducedMotion/);
   assert.match(dialog, /visibilitychange/);
   assert.match(dialog, /window\.setInterval/);
@@ -63,4 +70,7 @@ test("the hero opens the audience dialog and the dialog preserves its accessibil
   assert.match(dialog, /Show next founder profile/);
   assert.match(dialog, /aria-live=\{isPlaying \? "off" : "polite"\}/);
   assert.match(dialog, /cta_name: "who_is_this_for_tool"/);
+
+  assert.match(heroStyles, /\.ct-hero__audience-link\s*\{[\s\S]*?font-weight:\s*700;/);
+  assert.doesNotMatch(heroStyles, /\.ct-hero__audience-link svg/);
 });

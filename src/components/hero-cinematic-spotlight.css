@@ -399,7 +399,7 @@
   border: 0;
   color: var(--ct-muted);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 700;
   letter-spacing: 0.005em;
   text-decoration: underline;
   text-decoration-thickness: 1px;
@@ -417,18 +417,6 @@
   outline: 2px solid var(--ct-fg);
   outline-offset: 3px;
   border-radius: 6px;
-}
-
-.ct-hero__audience-link svg {
-  width: 13px;
-  height: 13px;
-  flex-shrink: 0;
-  opacity: 0.85;
-  transition: transform 0.22s ease;
-}
-
-.ct-hero__audience-link:hover svg {
-  transform: translateY(2px);
 }
 
 .ct-hero--signed-in .ct-hero__cta-row {
