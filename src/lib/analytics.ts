@@ -1,11 +1,11 @@
-import posthog from 'posthog-js';
-import * as amplitude from '@amplitude/analytics-browser';
+import type * as AmplitudeBrowser from '@amplitude/analytics-browser';
 import { getSafeSessionStorage, getSafeLocalStorage } from '@/lib/safeStorage';
 import { logWarn } from '@/lib/logger';
 import { captureFirstTouch } from '@/lib/attribution';
 
 type AnalyticsProperties = Record<string, unknown>;
-type PostHogWithLoaded = typeof posthog & { __loaded?: boolean };
+type PostHogClient = (typeof import('posthog-js'))['default'];
+type PostHogWithLoaded = PostHogClient & { __loaded?: boolean };
 type StoredAuthMethod = 'google' | 'linkedin' | 'email' | 'github' | 'x';
 export type ActivationCompletedTrigger =
   | 'icp_completed'
@@ -97,10 +97,17 @@ const SIGNUP_INTENT_STORAGE_KEY = 'ct_signup_intent';
 // are ignored so we never mislabel a returning login as a fresh signup.
 const SIGNUP_INTENT_MAX_AGE_MS = 30 * 60 * 1000;
 
-let posthogClient: typeof posthog | null = null;
+let posthogClient: PostHogClient | null = null;
+let posthogLoadPromise: Promise<PostHogClient> | null = null;
 let initPromise: Promise<void> | null = null;
 let initialized = false;
+let amplitude: typeof AmplitudeBrowser | null = null;
+let amplitudeLoadPromise: Promise<typeof AmplitudeBrowser> | null = null;
 let amplitudeInitialized = false;
+let amplitudeGeneration = 0;
+let posthogBootstrapScheduled = false;
+let sessionRecordingScheduled = false;
+let sessionRecordingGeneration = 0;
 // When true, all capture() calls are dropped so internal/admin activity never
 // enters the event stream. Set from AuthContext once the signed-in email is known.
 let internalUser = false;
@@ -109,6 +116,7 @@ let internalUser = false;
 let posthogResetPending = false;
 const queuedEvents: Array<{ eventName: string; properties?: AnalyticsProperties }> = [];
 const queuedIdentifies: Array<{ id: string; properties?: AnalyticsProperties }> = [];
+const posthogReadyListeners = new Set<(client: PostHogClient) => void>();
 
 const PII_PROPERTY_KEYS = new Set([
   'email',
@@ -144,18 +152,45 @@ const sanitizeAnalyticsProperties = (properties?: AnalyticsProperties): Analytic
   }, {});
 };
 
+const loadAmplitude = () => {
+  if (!amplitudeLoadPromise) {
+    amplitudeLoadPromise = import('@amplitude/analytics-browser').then((module) => {
+      amplitude = module;
+      return module;
+    });
+  }
+
+  return amplitudeLoadPromise;
+};
+
+const loadPosthog = () => {
+  if (!posthogLoadPromise) {
+    posthogLoadPromise = import('posthog-js').then((module) => module.default);
+  }
+
+  return posthogLoadPromise;
+};
+
 export const initAmplitudeWithUser = (userId: string) => {
   if (typeof window === 'undefined' || !AMPLITUDE_API_KEY) return;
-  try {
-    amplitude.init(AMPLITUDE_API_KEY, userId, { defaultTracking: { pageViews: false, sessions: true } });
-    amplitudeInitialized = true;
-  } catch (error) {
-    logWarn('Amplitude init failed', error);
-  }
+  const generation = ++amplitudeGeneration;
+
+  void loadAmplitude().then(() => {
+    if (!amplitude || generation !== amplitudeGeneration) return;
+    try {
+      amplitude.init(AMPLITUDE_API_KEY, userId, { defaultTracking: { pageViews: false, sessions: true } });
+      amplitudeInitialized = true;
+    } catch (error) {
+      logWarn('Amplitude init failed', error);
+    }
+  }).catch((error) => {
+    logWarn('Amplitude load failed', error);
+  });
 };
 
 export const resetAmplitude = () => {
-  if (!amplitudeInitialized) return;
+  amplitudeGeneration += 1;
+  if (!amplitudeInitialized || !amplitude) return;
   try {
     amplitude.reset();
     amplitudeInitialized = false;
@@ -165,7 +200,7 @@ export const resetAmplitude = () => {
 };
 
 const captureAmplitudeEvent = (eventName: string, properties?: AnalyticsProperties) => {
-  if (!amplitudeInitialized) return;
+  if (!amplitudeInitialized || !amplitude) return;
 
   try {
     amplitude.track(eventName, sanitizeAnalyticsProperties(properties));
@@ -175,7 +210,7 @@ const captureAmplitudeEvent = (eventName: string, properties?: AnalyticsProperti
 };
 
 const identifyAmplitudeUser = (id: string, properties?: AnalyticsProperties) => {
-  if (!amplitudeInitialized) return;
+  if (!amplitudeInitialized || !amplitude) return;
 
   try {
     amplitude.setUserId(id);
@@ -192,17 +227,50 @@ const identifyAmplitudeUser = (id: string, properties?: AnalyticsProperties) => 
   }
 };
 
-const isPosthogReady = (client: typeof posthog | null): client is typeof posthog =>
+const isPosthogReady = (client: PostHogClient | null): client is PostHogClient =>
   typeof window !== 'undefined' && Boolean((client as PostHogWithLoaded | null)?.__loaded);
+
+const notifyPosthogReady = (client: PostHogClient) => {
+  posthogReadyListeners.forEach((listener) => listener(client));
+};
+
+const scheduleAuthenticatedSessionRecording = (client: PostHogClient) => {
+  if (sessionRecordingScheduled || typeof window === 'undefined') return;
+  sessionRecordingScheduled = true;
+  const generation = sessionRecordingGeneration;
+
+  const start = () => {
+    if (generation !== sessionRecordingGeneration) return;
+    try {
+      client.startSessionRecording();
+    } catch (error) {
+      logWarn('PostHog session recording start failed', error);
+    }
+  };
+
+  // Session replay is useful inside authenticated workspaces, but loading the
+  // recorder on anonymous landing pages blocked the mobile main thread for
+  // several seconds. Start it only after identity exists and the browser is
+  // idle so it cannot compete with the route's first interaction.
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(start, { timeout: 5_000 });
+  } else {
+    setTimeout(start, 2_000);
+  }
+};
 
 const flushQueue = () => {
   if (!isPosthogReady(posthogClient)) {
     return;
   }
 
-  queuedIdentifies.splice(0).forEach(({ id, properties }) => {
+  const identifies = queuedIdentifies.splice(0);
+  identifies.forEach(({ id, properties }) => {
     posthogClient.identify(id, sanitizeAnalyticsProperties(properties));
   });
+  if (identifies.length > 0) {
+    scheduleAuthenticatedSessionRecording(posthogClient);
+  }
 
   queuedEvents.splice(0).forEach(({ eventName, properties }) => {
     posthogClient.capture(eventName, sanitizeAnalyticsProperties(properties));
@@ -253,16 +321,21 @@ export const initPosthog = () => {
 
   initPromise = (async () => {
     try {
+      const posthog = await loadPosthog();
       await new Promise<void>((resolve) => {
         posthog.init(PH_KEY as string, {
           api_host: PH_HOST,
           autocapture: true,
+          disable_session_recording: true,
+          disable_surveys: true,
+          capture_performance: false,
+          capture_dead_clicks: false,
           // SPA route changes must emit $pageview; the legacy default only fires
           // on full page loads, which made every <Link> navigation invisible.
           capture_pageview: 'history_change',
           persistence: 'localStorage',
           loaded: (client) => {
-            posthogClient = client as typeof posthog;
+            posthogClient = client as PostHogClient;
             if (posthogResetPending) {
               posthogClient.reset();
               posthogResetPending = false;
@@ -270,6 +343,7 @@ export const initPosthog = () => {
             registerFirstTouchUtms();
             initialized = true;
             flushQueue();
+            notifyPosthogReady(posthogClient);
             resolve();
           },
         });
@@ -279,6 +353,7 @@ export const initPosthog = () => {
           registerFirstTouchUtms();
           initialized = true;
           flushQueue();
+          notifyPosthogReady(posthogClient);
           resolve();
         }
       });
@@ -290,19 +365,36 @@ export const initPosthog = () => {
   return initPromise;
 };
 
-export const getPosthogClient = () => posthog;
+export const getPosthogClient = () => posthogClient;
+
+export const onPosthogReady = (listener: (client: PostHogClient) => void) => {
+  if (isPosthogReady(posthogClient)) {
+    listener(posthogClient);
+    return () => {};
+  }
+
+  posthogReadyListeners.add(listener);
+  return () => posthogReadyListeners.delete(listener);
+};
 
 export const bootstrapPosthog = () => {
+  if (posthogBootstrapScheduled || initialized || initPromise) return;
+  posthogBootstrapScheduled = true;
+
   const start = () => {
+    posthogBootstrapScheduled = false;
     void initPosthog();
   };
 
-  if ('requestIdleCallback' in window) {
-    window.requestIdleCallback(start);
-    return;
-  }
-
-  setTimeout(start, 1500);
+  // Give the app's first paint and LCP a clean window. Events emitted during
+  // this delay remain in the in-memory queue and flush once PostHog is ready.
+  setTimeout(() => {
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(start, { timeout: 5_000 });
+      return;
+    }
+    start();
+  }, 3_000);
 };
 
 /** True when `email` belongs to an internal/test account excluded from analytics. */
@@ -329,6 +421,8 @@ export const resetAnalyticsIdentity = () => {
   queuedEvents.length = 0;
   queuedIdentifies.length = 0;
   resetAmplitude();
+  sessionRecordingGeneration += 1;
+  sessionRecordingScheduled = false;
 
   if (!isPosthogReady(posthogClient)) {
     posthogResetPending = true;
@@ -338,6 +432,8 @@ export const resetAnalyticsIdentity = () => {
   try {
     posthogClient.reset();
     posthogResetPending = false;
+    sessionRecordingScheduled = false;
+    posthogClient.stopSessionRecording();
   } catch (error) {
     posthogResetPending = true;
     logWarn('PostHog identity reset failed', error);
@@ -364,7 +460,7 @@ export const captureEvent = (eventName: string, properties?: AnalyticsProperties
   }
 
   queuedEvents.push({ eventName, properties: safeProperties });
-  void initPosthog();
+  bootstrapPosthog();
 };
 
 export const identify = (id: string, properties?: AnalyticsProperties) => {
@@ -379,6 +475,7 @@ export const identify = (id: string, properties?: AnalyticsProperties) => {
   if (isPosthogReady(posthogClient)) {
     try {
       posthogClient.identify(id, safeProperties);
+      scheduleAuthenticatedSessionRecording(posthogClient);
       return;
     } catch (error) {
       logWarn('PostHog identify failed', error);
@@ -387,7 +484,7 @@ export const identify = (id: string, properties?: AnalyticsProperties) => {
   }
 
   queuedIdentifies.push({ id, properties: safeProperties });
-  void initPosthog();
+  bootstrapPosthog();
 };
 
 export const captureAuthenticatedEvent = (

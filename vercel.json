@@ -16,7 +16,8 @@
     { "source": "/community", "destination": "/mentorship", "permanent": true },
     { "source": "/waitlist/templates", "destination": "/demo-studio/classic/templates", "permanent": true },
     { "source": "/waitlist", "destination": "/demo-studio/classic", "permanent": true },
-    { "source": "/waitlist-maker", "destination": "/demo-studio/classic", "permanent": true }
+    { "source": "/waitlist-maker", "destination": "/demo-studio/classic", "permanent": true },
+    { "source": "/gtm-strategist", "destination": "/go-to-market", "permanent": true }
   ],
   "rewrites": [
     {
@@ -53,6 +54,12 @@
       ]
     },
     {
+      "source": "/(auth|mvp-builder-showcase|lovable-uploads|resources|templates)/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=2592000" }
+      ]
+    },
+    {
       "source": "/(.*)",
       "headers": [
         { "key": "X-Frame-Options", "value": "DENY" },
@@ -62,8 +69,7 @@
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
         { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
-        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=()" },
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=()" }
       ]
     }
   ]

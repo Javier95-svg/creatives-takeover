@@ -71,7 +71,7 @@ const GuidesSection = () => {
       rating: 4.8,
       featured: false,
       tags: ["Branding", "Logo Design", "Style Guides"],
-      downloadUrl: "https://www.designhill.com/design-blog/wp-content/uploads/2016/03/Brand-Guidelines.pdf"
+      downloadUrl: "https://www.designhill.com/design-blog/key-elements-of-brand-identity-design-services/"
     },
     {
       title: "AI-Powered Creative Workflow Optimization",
@@ -84,7 +84,7 @@ const GuidesSection = () => {
       rating: 4.9,
       featured: true,
       tags: ["AI Tools", "Automation", "Productivity"],
-      downloadUrl: "https://www.mckinsey.com/~/media/mckinsey/business%20functions/mckinsey%20digital/our%20insights/the%20economic%20potential%20of%20generative%20ai%20the%20next%20productivity%20frontier/The-economic-potential-of-generative-AI-The-next-productivity-frontier-vF.pdf"
+      downloadUrl: "https://www.mckinsey.com/~/media/mckinsey/business%20functions/mckinsey%20digital/our%20insights/the%20economic%20potential%20of%20generative%20ai%20the%20next%20productivity%20frontier/the-economic-potential-of-generative-ai-the-next-productivity-frontier.pdf"
     },
     {
       title: "Design Team Management & Collaboration",
@@ -123,7 +123,7 @@ const GuidesSection = () => {
       rating: 4.9,
       featured: false,
       tags: ["Freelancing", "Business", "Client Relations"],
-      downloadUrl: "https://www.shopify.com/blog/how-to-start-a-creative-business"
+      downloadUrl: "https://www.shopify.com/blog/start-freelance-business"
     }
   ];
 

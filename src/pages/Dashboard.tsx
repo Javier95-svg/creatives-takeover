@@ -31,7 +31,7 @@ import {
 import { normalizePlan } from '@/config/planPermissions';
 import type { ActivationIntent } from '@/lib/retentionSystem';
 import { isExecutionDashboardEnabled } from '@/lib/dashboardRollout';
-import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { useFeatureFlagEnabled } from '@/hooks/usePosthogFeatureFlag';
 
 interface DashboardActivationState {
   loading: boolean;

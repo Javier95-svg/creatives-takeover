@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArrowRight, X } from 'lucide-react';
-import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { useFeatureFlagEnabled } from '@/hooks/usePosthogFeatureFlag';
 import { Link, useLocation } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';

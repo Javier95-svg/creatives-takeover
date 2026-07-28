@@ -16,7 +16,9 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
   const [uploading, setUploading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [gifAspectRatio, setGifAspectRatio] = useState<number | null>(null);
+  const [shouldLoadMedia, setShouldLoadMedia] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaHostRef = useRef<HTMLDivElement>(null);
 
   // Check if user is admin
   useEffect(() => {
@@ -61,6 +63,34 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
 
     void loadGif();
   }, [position]);
+
+  // These founder-journey GIFs are large remote assets. Keep their layout
+  // reserved, but do not download them until the corresponding card is close
+  // to the viewport. Previously all seven GIFs (more than 140 MB combined)
+  // downloaded during the homepage's critical loading window.
+  useEffect(() => {
+    if (!gifUrl) return;
+
+    if (isAdmin || typeof IntersectionObserver === 'undefined') {
+      setShouldLoadMedia(true);
+      return;
+    }
+
+    const host = mediaHostRef.current;
+    if (!host) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        setShouldLoadMedia(true);
+        observer.disconnect();
+      },
+      { rootMargin: '150px 0px', threshold: 0.01 },
+    );
+
+    observer.observe(host);
+    return () => observer.disconnect();
+  }, [gifUrl, isAdmin]);
 
   const handleGifUpload = async (file: File) => {
     // Validate file type
@@ -230,15 +260,24 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
   }
 
   return (
-    <div className={`founder-journey-gif relative group ${className}`} style={{ aspectRatio: containerAspectRatio }}>
+    <div
+      ref={mediaHostRef}
+      className={`founder-journey-gif relative group ${className}`}
+      style={{ aspectRatio: containerAspectRatio }}
+    >
       {/* GIF Frame */}
       <div className="founder-journey-gif__frame w-full h-full rounded-lg border-4 border-border bg-muted/30 overflow-hidden relative shadow-xl">
-        {gifUrl ? (
+        {gifUrl && shouldLoadMedia ? (
           <>
             <img
               src={gifUrl}
               alt="Founder journey GIF"
               className="founder-journey-gif__image w-full h-full object-contain"
+              width={1152}
+              height={648}
+              loading="lazy"
+              decoding="async"
+              fetchPriority="low"
               onLoad={handleImageLoad}
             />
             {/* Admin overlay on hover */}
@@ -251,6 +290,8 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
               </div>
             )}
           </>
+        ) : gifUrl ? (
+          <div className="h-full w-full animate-pulse bg-muted/20" aria-hidden="true" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             {/* Only admins reach this empty state (visitors return null above). */}

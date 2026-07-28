@@ -330,6 +330,7 @@ function App() {
                         <Route path="/mvp-builder" element={<ToolRouteWithCreditGate><AppBuilderPage /></ToolRouteWithCreditGate>} />
                         <Route path="/mvp-scope" element={<MVPBuilderBetaPage />} />
                         <Route path="/go-to-market" element={<RouteErrorBoundary routeName="GTM Strategist"><ToolRouteWithCreditGate><GTMStrategistPage /></ToolRouteWithCreditGate></RouteErrorBoundary>} />
+                        <Route path="/gtm-strategist" element={<Navigate to="/go-to-market" replace />} />
                         <Route path="/client-acquisition" element={<Navigate to="/go-to-market" replace />} />
 
                         <Route path="/auth" element={<Auth />} />

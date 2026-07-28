@@ -101,6 +101,28 @@ const STAGES = [
   { num: '07', key: 'fundraising', name: 'Fundraising', tool: 'Insighta + Angels', dot: '#EC4899', youAreHere: false, description: "With a working MVP, proven demand, and early customers, you're ready to raise. Fundraising gives you the resources to scale faster, grow your team, and keep improving the product. It also adds credibility that attracts more investment and keeps the momentum going." },
 ];
 
+const useViewportAnimation = () => {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const [isActive, setIsActive] = useState(false);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host || typeof IntersectionObserver === 'undefined') {
+      setIsActive(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsActive(Boolean(entry?.isIntersecting)),
+      { rootMargin: '200px 0px', threshold: 0.01 },
+    );
+    observer.observe(host);
+    return () => observer.disconnect();
+  }, []);
+
+  return { hostRef, isActive };
+};
+
 const TESTIMONIALS = [
   { quote: "I was quoted £5k for an MVP. I described it here instead and had a working version that night. Three weeks later it had paying users.", em: '£5k for an MVP', name: 'Jordan Rivera', role: 'Solo founder. ops SaaS', initials: 'JR', from: '#3B82F6', to: '#2563EB' },
   { quote: "No application, no cohort, no rejection email. I just started building and the system kept telling me the next move.", em: 'started building', name: 'Maya Karlsson', role: 'Non-technical founder', initials: 'MK', from: '#7C5CFA', to: '#5B3FD6' },
@@ -489,6 +511,7 @@ const BuildHero = ({ onOpen }: HeroProps) => {
 
 const BuildHowItWorks = () => {
   const loopedSites = [...SHOWCASE_SITES, ...SHOWCASE_SITES];
+  const { hostRef, isActive } = useViewportAnimation();
 
   return (
     <section className="pb-20 pt-8 lg:pb-24">
@@ -523,11 +546,14 @@ const BuildHowItWorks = () => {
         </ScrollReveal>
 
         <ScrollReveal>
-          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/35 py-5 shadow-[0_30px_90px_-55px_rgba(59,130,246,0.65)] backdrop-blur-sm">
+          <div ref={hostRef} className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/35 py-5 shadow-[0_30px_90px_-55px_rgba(59,130,246,0.65)] backdrop-blur-sm">
             <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-background via-background/70 to-transparent sm:w-28" />
             <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-background via-background/70 to-transparent sm:w-28" />
 
-            <div className="mvp-showcase-track flex w-max gap-6 px-5 will-change-transform">
+            <div
+              className={cn("mvp-showcase-track flex w-max gap-6 px-5", isActive && "will-change-transform")}
+              style={{ animationPlayState: isActive ? 'running' : 'paused' }}
+            >
               {loopedSites.map((site, index) => {
                 const duplicate = index >= SHOWCASE_SITES.length;
                 return (
@@ -546,7 +572,11 @@ const BuildHowItWorks = () => {
                         src={site.image}
                         alt={`${site.name} landing page screenshot`}
                         className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
-                        loading={duplicate ? 'lazy' : 'eager'}
+                        width={1600}
+                        height={1000}
+                        loading="lazy"
+                        decoding="async"
+                        fetchPriority="low"
                       />
                       <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/80 via-black/45 to-transparent px-4 pb-4 pt-12 text-white opacity-95">
                         <span className="font-space-grotesk text-lg font-bold tracking-[-0.02em]">{site.name}</span>
@@ -697,6 +727,7 @@ const BuildStageSelector = () => {
 
 const BuildTestimonials = () => {
   const doubled = [...TESTIMONIALS, ...TESTIMONIALS];
+  const { hostRef, isActive } = useViewportAnimation();
   return (
     <section className="pb-20 pt-4 lg:pb-24" id="founders">
       {/* keyframes for the marquee */}
@@ -704,6 +735,9 @@ const BuildTestimonials = () => {
         @keyframes ct-marquee { from { transform: translateX(0) } to { transform: translateX(-50%) } }
         .ct-marquee-track { animation: ct-marquee 60s linear infinite; }
         .ct-marquee-wrap:hover .ct-marquee-track { animation-play-state: paused; }
+        @media (prefers-reduced-motion: reduce) {
+          .ct-marquee-track { animation: none; }
+        }
       `}</style>
 
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
@@ -719,10 +753,14 @@ const BuildTestimonials = () => {
 
       {/* full-bleed marquee */}
       <div
+        ref={hostRef}
         className="ct-marquee-wrap relative mb-10 overflow-hidden"
         style={{ maskImage: 'linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)' }}
       >
-        <div className="ct-marquee-track flex gap-5 will-change-transform">
+        <div
+          className={cn("ct-marquee-track flex gap-5", isActive && "will-change-transform")}
+          style={{ animationPlayState: isActive ? 'running' : 'paused' }}
+        >
           {doubled.map((t, i) => (
             <div
               key={i}

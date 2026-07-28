@@ -15,7 +15,7 @@ import {
   useCustomerDiscovery, type PMFDiscovery, type PMFExternalMention, type PMFPerson,
   type PMFThreadCategory, type PMFValidationStage,
 } from '@/hooks/useCustomerDiscovery';
-import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { useFeatureFlagEnabled } from '@/hooks/usePosthogFeatureFlag';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { logDiscoveryLeadActivity, upsertExternalLead } from '@/lib/pmfDiscoveryLeads';

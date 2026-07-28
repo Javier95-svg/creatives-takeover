@@ -454,6 +454,8 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
                   src={mentor.picture || undefined}
                   alt={mentor.name}
                   className="object-cover"
+                  width={96}
+                  height={96}
                   loading={priority ? "eager" : "lazy"}
                   decoding="async"
                   fetchPriority={priority ? "high" : "auto"}
@@ -644,4 +646,3 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
     </Card>
   );
 };
-

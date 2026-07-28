@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useServices } from "@/hooks/useServices";
 import type { MarketplaceService, ServiceCategory } from "@/types/serviceMarketplace";
@@ -36,8 +37,9 @@ function sortServices(services: MarketplaceService[], sortBy: string) {
 const ServiceMarketplaceHub = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { isAdmin } = useAdminRole();
-  const { fetchServices, loading } = useServices();
+  const { fetchServices } = useServices();
   const [services, setServices] = useState<MarketplaceService[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const categoryFromUrl = searchParams.get("category") as CategoryFilter | null;
   const [category, setCategory] = useState<CategoryFilter>(
@@ -51,9 +53,15 @@ const ServiceMarketplaceHub = () => {
     let cancelled = false;
 
     const loadServices = async () => {
-      const nextServices = await fetchServices();
-      if (!cancelled) {
-        setServices(nextServices);
+      try {
+        const nextServices = await fetchServices();
+        if (!cancelled) {
+          setServices(nextServices);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -211,7 +219,7 @@ const ServiceMarketplaceHub = () => {
 
           <section className="container mx-auto max-w-6xl px-4 pb-12 pt-2 sm:px-6">
             <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              {loading ? (
+              {isLoading ? (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Loading services...
@@ -226,10 +234,23 @@ const ServiceMarketplaceHub = () => {
               </p>
             </div>
 
-            {loading ? (
-              <div className="flex flex-col items-center justify-center gap-4 py-20">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-muted-foreground">Loading services...</p>
+            {isLoading ? (
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2" aria-busy="true" aria-label="Loading services">
+                {Array.from({ length: 4 }, (_, index) => (
+                  <div key={index} className="overflow-hidden rounded-lg border-2 border-border/60 bg-background">
+                    <Skeleton className="aspect-[4/1] w-full rounded-none" />
+                    <div className="space-y-4 p-5">
+                      <Skeleton className="h-5 w-24" />
+                      <Skeleton className="h-16 w-full" />
+                      <Skeleton className="h-6 w-2/3" />
+                      <Skeleton className="h-14 w-full" />
+                      <div className="grid grid-cols-2 gap-2">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : filteredServices.length > 0 ? (
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

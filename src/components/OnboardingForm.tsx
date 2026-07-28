@@ -16,7 +16,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { useFeatureFlagEnabled } from '@/hooks/usePosthogFeatureFlag';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

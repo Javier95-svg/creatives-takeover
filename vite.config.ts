@@ -93,7 +93,13 @@ function getManualChunk(id: string) {
     return "charts";
   }
 
-  if (packageName === "posthog-js" || packageName === "@vercel/analytics" || packageName === "@vercel/speed-insights") {
+  if (packageName === "posthog-js") {
+    // Preserve the dynamic import boundary in analytics.ts. Assigning PostHog
+    // to a manual chunk makes Rollup add it back to the entry preload graph.
+    return undefined;
+  }
+
+  if (packageName === "@vercel/analytics" || packageName === "@vercel/speed-insights") {
     return "analytics";
   }
 

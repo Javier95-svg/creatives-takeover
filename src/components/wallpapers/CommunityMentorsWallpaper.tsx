@@ -1,6 +1,6 @@
 const CommunityMentorsWallpaper = () => {
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+    <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_18%,rgba(14,165,233,0.18),transparent_28%),radial-gradient(circle_at_82%_22%,rgba(16,185,129,0.14),transparent_26%),linear-gradient(180deg,rgba(248,250,252,0.98),rgba(241,245,249,0.94))] dark:bg-[radial-gradient(circle_at_16%_18%,rgba(56,189,248,0.2),transparent_28%),radial-gradient(circle_at_82%_22%,rgba(52,211,153,0.14),transparent_26%),linear-gradient(180deg,rgba(2,6,23,0.97),rgba(8,15,32,0.98))]" />
 
       <div className="absolute -left-24 top-24 h-72 w-72 rounded-full bg-sky-400/15 blur-3xl dark:bg-sky-500/20" />

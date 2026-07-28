@@ -11,7 +11,7 @@ import { useMessaging } from "@/hooks/useMessaging";
 import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
 import { logError } from "@/lib/logger";
-import { useFeatureFlagEnabled } from "posthog-js/react";
+import { useFeatureFlagEnabled } from "@/hooks/usePosthogFeatureFlag";
 
 const Messages = () => {
   const { isAuthenticated, user } = useAuth();

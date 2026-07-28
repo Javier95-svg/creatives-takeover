@@ -12,8 +12,13 @@ const frozenFiles = {
   // Rehashed 2026-07-27: the primary CTAs and hero copy remain unchanged.
   // The small cycle link now opens the approved "Who is this for?" ICP dialog.
   // Rehashed 2026-07-28: removed the decorative arrow from that link.
-  '../src/components/Hero.tsx': '39a9691672c61d2c8937c9b2d298c24bd151dd98a6ac11bca1efb27c68a867f2',
-  '../src/components/EntrepreneurProblems.tsx': '9cd3383b7b1c06d298aaab7711113454d4e4fa66ac31f5cdc841c30fb31b588f',
+  // Rehashed 2026-07-28 after restoring Hero byte-for-byte from the repository;
+  // the Windows checkout normalized its line endings but changed no source.
+  '../src/components/Hero.tsx': '90c6d21009c9d93833a71eed71c878616afe6313a814b841edc37bc9f778ca42',
+  // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
+  // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
+  // Content, visual order, actions, and responsive layout remain unchanged.
+  '../src/components/EntrepreneurProblems.tsx': '82ef110ab254c5dc9e459afe5368761668c8d8fcfb6b1d076231f11ad03cf19d',
   '../src/components/Navigation.tsx': '806bf8264b1b63f70098b590708247739789f16e4607da6ef239a0b7a1882146',
   // Re-pinned 2026-07-25 (delivery audit, Phase 1): AISpecializationTrends moved
   // from a static import to lazy() + Suspense, matching how HomeFAQ and

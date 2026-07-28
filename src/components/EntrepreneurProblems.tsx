@@ -18,6 +18,7 @@ import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import FounderJourneyVideo from "./FounderJourneyVideo";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type AccentColor = "blue" | "green" | "red" | "amber";
 
@@ -262,6 +263,8 @@ const journeyActions: JourneyAction[] = [
 ];
 
 const EntrepreneurProblems = () => {
+  const isMobile = useIsMobile();
+
   const getAccentClasses = (color: string) => {
     const classes = {
       blue: {
@@ -378,8 +381,8 @@ const EntrepreneurProblems = () => {
                   className="relative"
                   variant={isEven ? "slide-left" : "slide-right"}
                 >
-                  {/* Mobile Layout */}
-                  <div className="md:hidden space-y-5">
+                  {isMobile ? (
+                  <div className="space-y-5">
                     <div className="text-center">
                       <div className="mb-3 flex justify-center">
                         <span className="inline-flex items-center rounded-full border border-border/72 bg-background/88 px-3 py-1 text-label font-medium uppercase tracking-[0.18em] text-muted-foreground">
@@ -405,9 +408,8 @@ const EntrepreneurProblems = () => {
                       {renderPathwayAction(step, index, "max-w-3xl")}
                     </div>
                   </div>
-
-                  {/* Desktop Layout (Alternating) */}
-                  <div className="hidden md:grid md:grid-cols-2 md:grid-rows-[auto_1fr] md:gap-x-6 md:gap-y-4 lg:gap-x-8">
+                  ) : (
+                  <div className="grid grid-cols-2 grid-rows-[auto_1fr] gap-x-6 gap-y-4 lg:gap-x-8">
                     {isEven ? (
                       <>
                         <div className="md:col-start-2 md:row-start-1 text-center">
@@ -468,6 +470,7 @@ const EntrepreneurProblems = () => {
                       </>
                     )}
                   </div>
+                  )}
                 </ScrollReveal>
               );
             })}

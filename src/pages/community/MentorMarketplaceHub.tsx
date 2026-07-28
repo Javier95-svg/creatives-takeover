@@ -7,6 +7,7 @@ import CommunityMentorsWallpaper from "@/components/wallpapers/CommunityMentorsW
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { MentorCard } from "@/components/mentor-marketplace/MentorCard";
 import { TopFilterBar } from "@/components/mentor-marketplace/TopFilterBar";
 import { MentorFilters } from "@/components/mentor-marketplace/FilterSidebar";
@@ -57,9 +58,10 @@ const MentorMarketplaceHub = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
-  const { fetchMentors, loading } = useMentors();
+  const { fetchMentors } = useMentors();
   const { savedMentors } = useMentorSaves();
   const [mentors, setMentors] = useState<Mentor[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("alphabetical");
   const currentPage = parseInt(searchParams.get("page") || "1", 10);
@@ -143,6 +145,8 @@ const MentorMarketplaceHub = () => {
     } catch (error) {
       console.error('Error loading mentors:', error);
       setMentors([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -545,7 +549,7 @@ const MentorMarketplaceHub = () => {
           <section id="mentor-grid" className="container mx-auto max-w-6xl px-4 pb-12 pt-2 relative z-10 sm:px-6">
             {/* Results Count */}
             <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              {loading ? (
+              {isLoading ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span className="text-sm text-muted-foreground">Loading mentors...</span>
@@ -561,10 +565,26 @@ const MentorMarketplaceHub = () => {
             </div>
 
             {/* Mentor Cards Grid */}
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                <p className="text-muted-foreground">Loading mentors...</p>
+            {isLoading ? (
+              <div className="grid grid-cols-1 gap-6" aria-busy="true" aria-label="Loading mentors">
+                {Array.from({ length: 3 }, (_, index) => (
+                  <div key={index} className="min-h-[30rem] rounded-lg border-2 border-border/60 bg-background/75 p-6 sm:min-h-72">
+                    <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start">
+                      <Skeleton className="h-24 w-24 shrink-0 rounded-full sm:h-20 sm:w-20" />
+                      <div className="flex-1 space-y-3">
+                        <Skeleton className="h-6 w-1/3" />
+                        <Skeleton className="h-4 w-2/3" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-5/6" />
+                      </div>
+                    </div>
+                    <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : filteredMentors.length > 0 ? (
               <>
@@ -573,7 +593,7 @@ const MentorMarketplaceHub = () => {
 	                    <MentorCard
 	                      key={mentor.id}
 	                      mentor={mentor}
-	                      priority={index < 4}
+	                      priority={index === 0}
 	                    />
 	                  ))}
                 </div>

@@ -30,7 +30,7 @@ import { ModeToggle, type DashboardMode } from './modes/ModeToggle';
 import { isExecutionDashboardEnabled } from '@/lib/dashboardRollout';
 import { isFounderCycleRolloutEnabled } from '@/lib/founderCycleRollout';
 import { BIZMAP_STAGE_ORDER, DEFAULT_CURRENT_STAGE, type BizMapStage } from '@/lib/bizmapStages';
-import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { useFeatureFlagEnabled } from '@/hooks/usePosthogFeatureFlag';
 import { captureEvent } from '@/lib/analytics';
 import type { DashboardSnapshotV1 } from '@/types/dashboardSnapshot';
 

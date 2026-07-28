@@ -25,6 +25,7 @@ const PUBLIC_ROUTES = [
   '/pmf-lab',
   '/mvp-builder',
   '/go-to-market',
+  '/gtm-strategist',
   '/traction-engine',
 ];
 
