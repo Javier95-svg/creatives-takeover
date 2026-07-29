@@ -96,7 +96,7 @@ export async function getProject(id: string): Promise<DemoStudioProject | null> 
 
 export async function createProject(
   ownerId: string,
-  fields: { name: string; tagline?: string; category?: string },
+  fields: { name: string; tagline?: string; category?: string; acquisitionSource?: string },
 ): Promise<DemoStudioProject> {
   const result = await supabase
     .from(PROJECTS)
@@ -105,6 +105,7 @@ export async function createProject(
       name: fields.name,
       tagline: fields.tagline ?? null,
       category: fields.category ?? null,
+      acquisition_source: fields.acquisitionSource ?? null,
     } as any)
     .select('*')
     .single();
@@ -337,10 +338,16 @@ export async function createDemo(
   projectId: string,
   ownerId: string,
   title: string,
+  fields?: { assetMode?: 'uploaded_screenshots' | 'generated_placeholders' },
 ): Promise<DemoStudioDemo> {
   const result = await supabase
     .from(DEMOS)
-    .insert({ project_id: projectId, owner_id: ownerId, title } as any)
+    .insert({
+      project_id: projectId,
+      owner_id: ownerId,
+      title,
+      asset_mode: fields?.assetMode ?? null,
+    } as any)
     .select('*')
     .single();
   const demo = unwrap(result) as unknown as DemoStudioDemo;

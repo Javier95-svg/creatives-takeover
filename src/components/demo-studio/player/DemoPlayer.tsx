@@ -17,6 +17,8 @@ interface DemoPlayerProps {
   demoId?: string | null;
   ctaHref?: string | null;
   ctaLabel?: string;
+  productName?: string;
+  onCtaClick?: () => void;
   className?: string;
   /** Show MP4/GIF export controls. Off by default; enabled in the editor/viewer. */
   allowExport?: boolean;
@@ -34,6 +36,8 @@ export default function DemoPlayer({
   demoId = null,
   ctaHref = null,
   ctaLabel,
+  productName,
+  onCtaClick,
   className,
   allowExport = false,
   onComplete,
@@ -191,14 +195,17 @@ export default function DemoPlayer({
       <div className="relative overflow-hidden rounded-xl border border-border bg-black/90 shadow-lg">
         {finished ? (
           <div className="flex aspect-video w-full flex-col items-center justify-center gap-4 bg-gradient-to-br from-slate-900 to-slate-800 p-8 text-center text-white">
-            <h3 className="text-2xl font-semibold">That's the demo 🎬</h3>
-            <p className="max-w-sm text-sm text-white/70">Thanks for watching. Want to see more?</p>
+            <h3 className="text-2xl font-semibold">
+              {productName ? `${productName} is ready to share` : "That's the demo"}
+            </h3>
+            <p className="max-w-sm text-sm text-white/70">You reached the outcome. Publish it to get a live share link.</p>
             <div className="flex flex-wrap items-center justify-center gap-3 touch:[&_button]:min-h-[44px]">
-              {resolvedCtaHref && (
+              {resolvedCtaHref ? (
                 <Button asChild style={{ backgroundColor: primaryColor }}>
                   <a
                     href={resolvedCtaHref}
                     onClick={() => {
+                      onCtaClick?.();
                       if (mode === 'live') {
                         void trackDemoEvent('cta_click', {
                           projectId,
@@ -211,7 +218,11 @@ export default function DemoPlayer({
                     {resolvedCtaLabel}
                   </a>
                 </Button>
-              )}
+              ) : onCtaClick ? (
+                <Button onClick={onCtaClick} style={{ backgroundColor: primaryColor }}>
+                  {resolvedCtaLabel}
+                </Button>
+              ) : null}
               <Button variant="outline" onClick={restart} className="gap-2 bg-white/10 text-white hover:bg-white/20">
                 <RotateCcw className="h-4 w-4" /> Replay
               </Button>

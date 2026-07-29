@@ -34,9 +34,10 @@ interface TryDraftStep {
 }
 
 interface TryDraft {
-  v: 1;
+  v: 1 | 2;
   productName: string;
   contextUrl: string;
+  assetMode?: "uploaded_screenshots" | "generated_placeholders";
   steps: TryDraftStep[];
 }
 
@@ -75,7 +76,14 @@ function validateDraft(draft: TryDraft | undefined): string[] {
     issues.push("draft is required");
     return issues;
   }
-  if (draft.v !== 1) issues.push("draft.v must be 1");
+  if (draft.v !== 1 && draft.v !== 2) issues.push("draft.v must be 1 or 2");
+  if (
+    draft.v === 2 &&
+    draft.assetMode !== "uploaded_screenshots" &&
+    draft.assetMode !== "generated_placeholders"
+  ) {
+    issues.push("draft.assetMode is invalid");
+  }
   if (!Array.isArray(draft.steps) || draft.steps.length === 0 || draft.steps.length > MAX_STEPS) {
     issues.push(`draft.steps must contain 1-${MAX_STEPS} steps`);
     return issues;

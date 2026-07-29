@@ -8,9 +8,7 @@ import { getSessionSafely } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { mapSignUpError } from "@/lib/authErrors";
 import {
-  persistAuthMethod,
   trackLandingViewed,
-  trackSignupStarted,
   trackSoftGateShown,
 } from "@/lib/analytics";
 import { persistOnboardingReturn } from "@/lib/authRedirect";
@@ -20,7 +18,6 @@ import {
   clearPendingReferralCode,
   getPendingReferralCode,
   persistPendingReferralCode,
-  setOAuthAuthIntent,
 } from "@/lib/referral";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +28,19 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+  beginAttributedOAuthSignup,
+  beginAttributedSignup,
+  completeAttributedSignup,
+} from "@/lib/signupAttribution";
+import { applySignupActivationSource } from "@/lib/retentionSystem";
+import { trackJourneyEvent, type JourneyTool } from "@/lib/journeyOutcomes";
+import {
+  trackActivationEntry,
+  trackActivationFunnelEvent,
+  type ActivationEntryId,
+  type ActivationTool,
+} from "@/lib/activationEntry";
 
 interface SoftGateModalProps {
   open: boolean;
@@ -41,6 +51,11 @@ interface SoftGateModalProps {
   description?: string;
   returnPathOverride?: string;
   onBeforeAuthContinue?: () => void;
+  signupSource?: string;
+  entryId?: ActivationEntryId;
+  activationTool?: ActivationTool;
+  journeyTool?: JourneyTool;
+  artifactType?: string;
 }
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -68,6 +83,11 @@ const SoftGateModal = ({
   description = "Create your founder profile in 10 seconds. Free forever. No credit card.",
   returnPathOverride,
   onBeforeAuthContinue,
+  signupSource = "icp-draft-unlock",
+  entryId = "icp_draft_unlock",
+  activationTool = "icp_builder",
+  journeyTool = "icp_builder",
+  artifactType = "customer_decision_preview",
 }: SoftGateModalProps) => {
   const navigate = useNavigate();
   const { signUp } = useAuth();
@@ -96,8 +116,17 @@ const SoftGateModal = ({
     }
 
     trackSoftGateShown({ trigger });
+    trackActivationEntry("activation_gate_shown", {
+      entry_id: entryId,
+      tool: activationTool,
+      source: signupSource,
+      step: "gate_shown",
+      is_authenticated: false,
+      return_path: returnPath,
+      artifact_type: artifactType,
+    });
     hasTrackedOpenRef.current = true;
-  }, [open, trigger]);
+  }, [activationTool, artifactType, entryId, open, returnPath, signupSource, trigger]);
 
   const closeWithoutExitTracking = () => {
     ignoreDismissTrackingRef.current = true;
@@ -117,15 +146,24 @@ const SoftGateModal = ({
 
   const handleGoogleContinue = async () => {
     try {
-      trackSignupStarted({ method: "google" });
-      persistAuthMethod("google");
       onBeforeAuthContinue?.();
-      persistIcpSeed(normalizedSeed);
-      persistOnboardingReturn(returnPath);
-      localStorage.setItem("oauth_return_url", returnPath);
-      localStorage.setItem("oauth_source", trigger);
-      localStorage.setItem("oauth_signup_method", "google");
-      setOAuthAuthIntent("signup");
+      if (normalizedSeed) persistIcpSeed(normalizedSeed);
+      beginAttributedOAuthSignup({
+        method: "google",
+        source: signupSource,
+        returnUrl: returnPath,
+        entryId,
+      });
+      trackActivationEntry("activation_gate_clicked", {
+        entry_id: entryId,
+        tool: activationTool,
+        source: signupSource,
+        step: "signup_started",
+        is_authenticated: false,
+        return_path: returnPath,
+        artifact_type: artifactType,
+        method: "google",
+      });
       const pendingReferralCode = getPendingReferralCode();
       if (pendingReferralCode) {
         persistPendingReferralCode(pendingReferralCode);
@@ -178,10 +216,25 @@ const SoftGateModal = ({
     setIsLoading(true);
 
     try {
-      trackSignupStarted({ method: "email" });
       onBeforeAuthContinue?.();
-      persistIcpSeed(normalizedSeed);
+      if (normalizedSeed) persistIcpSeed(normalizedSeed);
       persistOnboardingReturn(returnPath);
+      beginAttributedSignup({
+        method: "email",
+        source: signupSource,
+        returnUrl: returnPath,
+        entryId,
+      });
+      trackActivationEntry("activation_gate_clicked", {
+        entry_id: entryId,
+        tool: activationTool,
+        source: signupSource,
+        step: "signup_started",
+        is_authenticated: false,
+        return_path: returnPath,
+        artifact_type: artifactType,
+        method: "email",
+      });
       const pendingReferralCode = getPendingReferralCode();
 
       const { error } = await signUp(
@@ -226,6 +279,31 @@ const SoftGateModal = ({
         return;
       }
 
+      completeAttributedSignup();
+      await applySignupActivationSource({
+        userId: session.user.id,
+        source: signupSource,
+        returnUrl: returnPath,
+      }).catch((activationError) => {
+        console.warn("Soft-gate activation source tracking failed", activationError);
+      });
+      trackJourneyEvent("journey_account_created_from_output", {
+        tool: journeyTool,
+        artifact_type: artifactType,
+        outcome_status: "draft",
+        source: signupSource,
+        return_path: returnPath,
+      });
+      trackActivationFunnelEvent("activation_step_completed", {
+        entry_id: entryId,
+        tool: activationTool,
+        source: signupSource,
+        step: "signup_completed",
+        is_authenticated: true,
+        return_path: returnPath,
+        artifact_type: artifactType,
+        method: "email",
+      });
       closeWithoutExitTracking();
       navigate(returnPath, { replace: true });
     } catch (error) {

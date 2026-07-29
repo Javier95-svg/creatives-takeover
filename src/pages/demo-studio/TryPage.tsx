@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import DemoPlayer from '@/components/demo-studio/player/DemoPlayer';
+import SoftGateModal from '@/components/auth/SoftGateModal';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   createDemo,
@@ -30,6 +31,7 @@ import {
   readTryDraft,
   saveTryDraft,
   type TryDraft,
+  type TryDraftAssetMode,
   type TryDraftStep,
 } from '@/lib/demoStudio/tryDraft';
 import {
@@ -46,7 +48,12 @@ import {
 } from '@/lib/demoStudio/tryPreview';
 import type { DemoStepWithHotspots, DemoStudioStoryboardStep } from '@/lib/demoStudio/types';
 import { captureEvent } from '@/lib/analytics';
-import { markFirstArtifactCreated, trackCurrentActivationJourneyEvent, trackRetentionEvent } from '@/lib/retentionSystem';
+import {
+  markFirstArtifactCreated,
+  sendRetentionEmail,
+  trackCurrentActivationJourneyEvent,
+  trackRetentionEvent,
+} from '@/lib/retentionSystem';
 import { trackActivationFunnelEvent } from '@/lib/activationEntry';
 import { useActivationAbandonment } from '@/hooks/useActivationAbandonment';
 import {
@@ -58,7 +65,6 @@ import {
 const MAX_SCREENSHOTS = DEMO_STUDIO_TRY_MAX_SCREENSHOTS;
 const MIN_SCREENSHOTS = DEMO_STUDIO_TRY_MIN_SCREENSHOTS;
 const RETURN_PATH = '/demo-studio/try?hydrate=1';
-const SIGNUP_RETURN_HREF = `/signup?from=demo-try&return=${encodeURIComponent(RETURN_PATH)}`;
 
 interface Shot {
   file: File;
@@ -74,6 +80,33 @@ interface HydrateStep {
   caption: string;
   speaker_notes: string;
   hotspot_label: string;
+}
+
+function inferTryProductName(contextUrl: string, description: string, fallbackTitle?: string) {
+  const urlDerived = deriveTryProductName(contextUrl);
+  if (!/^(your product|key feature)$/i.test(urlDerived)) return urlDerived;
+
+  const namedMatch = description.match(/\b(?:called|named)\s+["']?([a-z0-9][a-z0-9 -]{1,36})/i);
+  if (namedMatch?.[1]) return namedMatch[1].trim();
+
+  const productPhrase = description.match(
+    /^(?:(?:i(?:'m| am)|we(?:'re| are))\s+building\s+)?(?:an?|the)?\s*([a-z0-9][a-z0-9 -]{1,48}?\b(?:app|platform|tool|service|workspace|software|product))\b/i,
+  );
+  if (productPhrase?.[1]) return productPhrase[1].trim();
+
+  const conciseSubject = description
+    .split(/[.!?]/)[0]
+    .replace(/^(?:(?:i(?:'m| am)|we(?:'re| are))\s+building\s+)?(?:an?|the)\s+/i, '')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 5)
+    .join(' ');
+  if (conciseSubject) return conciseSubject;
+
+  const normalizedFallback = fallbackTitle?.replace(/^(?:start with|welcome to|open)\s+/i, '').trim();
+  return normalizedFallback && !/^(your product|key feature)$/i.test(normalizedFallback)
+    ? normalizedFallback
+    : 'Product concept';
 }
 
 export default function TryPage() {
@@ -103,11 +136,6 @@ export default function TryPage() {
 
   const [shots, setShots] = useState<Shot[]>([]);
   const [contextUrl, setContextUrl] = useState('');
-  // Defaults to the no-assets path. The screenshots-first default asked for an
-  // asset the target visitor (a pre-product founder, per our own hero copy)
-  // doesn't have open, and the tool recorded 0 completions in its first two
-  // months. ?mode=screenshots still opts into the upload flow directly.
-  const [inputMode, setInputMode] = useState<TryInputMode>(() => searchParams.get('mode') === 'screenshots' ? 'screenshots' : 'no_assets');
   const [description, setDescription] = useState('');
   // True when the current preview was built from generated placeholder frames
   // (zero-asset mode) rather than the visitor's own screenshots.
@@ -115,6 +143,7 @@ export default function TryPage() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [steps, setSteps] = useState<DemoStepWithHotspots[] | null>(null);
+  const [showSignupGate, setShowSignupGate] = useState(false);
   useActivationAbandonment({
     entry_id: 'demo_try', tool: 'demo_studio', source: 'demo_try', step: 'before_result',
     is_authenticated: Boolean(user),
@@ -138,6 +167,20 @@ export default function TryPage() {
   // sessionStorage by the time any CTA navigates to signup.
   const persistPromiseRef = useRef<Promise<boolean> | null>(null);
   const generationStartedAtRef = useRef<number | null>(null);
+  const assetModeRef = useRef<TryDraftAssetMode>('generated_placeholders');
+  const inputStartedRef = useRef(false);
+
+  const markInputStarted = () => {
+    if (inputStartedRef.current) return;
+    inputStartedRef.current = true;
+    trackActivationFunnelEvent('activation_step_completed', {
+      entry_id: 'demo_try',
+      tool: 'demo_studio',
+      source: 'demo_try',
+      step: 'input_started',
+      is_authenticated: Boolean(user),
+    });
+  };
 
   // Anonymous flow: screenshots live only as in-memory object URLs. Removed
   // shots are revoked individually in removeShot; revoke whatever remains on
@@ -155,6 +198,7 @@ export default function TryPage() {
 
   const handleFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return;
+    markInputStarted();
     const images = Array.from(files).filter((file) => file.type.startsWith('image/'));
     if (images.length === 0) {
       toast.error('Please choose image files (PNG or JPG).');
@@ -207,24 +251,30 @@ export default function TryPage() {
       // When a runId is supplied (background persist), bail if the run was
       // superseded (start-over/unmount) so we don't re-write a cleared draft.
       const isStale = () => runId !== undefined && runId !== runIdRef.current;
-      const productName = deriveTryProductName(contextUrl, built[0]?.title ?? undefined);
+      const productName = inferTryProductName(contextUrl, description, built[0]?.title ?? undefined);
       let draftSteps = await buildDraftSteps(built, 1600, 0.85);
       if (isStale()) return false;
-      const draft: TryDraft = { v: 1, productName, contextUrl, steps: draftSteps };
+      const draft: TryDraft = {
+        v: 2,
+        productName,
+        contextUrl,
+        assetMode: assetModeRef.current,
+        steps: draftSteps,
+      };
       if (saveTryDraft(draft)) return true;
       // Retry once smaller if the first attempt overflowed the quota.
       draftSteps = await buildDraftSteps(built, 1024, 0.7);
       if (isStale()) return false;
       return saveTryDraft({ ...draft, steps: draftSteps });
     },
-    [buildDraftSteps, contextUrl],
+    [buildDraftSteps, contextUrl, description],
   );
 
   // Zero-asset mode: replace the shot list with generated placeholder frames so
   // the save/persist pipeline works exactly as if the visitor had uploaded them.
   const createPlaceholderShots = useCallback(
     async (storyboard: DemoStudioStoryboardStep[]): Promise<Shot[]> => {
-      const productName = deriveTryProductName(contextUrl);
+      const productName = inferTryProductName(contextUrl, description);
       const files = await buildPlaceholderShotFiles({ productName, storyboard });
       const placeholders = files.map((file) => ({ file, url: URL.createObjectURL(file) }));
       shotsRef.current.forEach((shot) => URL.revokeObjectURL(shot.url));
@@ -233,7 +283,7 @@ export default function TryPage() {
       setShots(placeholders);
       return placeholders;
     },
-    [contextUrl],
+    [contextUrl, description],
   );
 
   // Shared tail of a successful generation (AI or client fallback): show the
@@ -253,6 +303,7 @@ export default function TryPage() {
     setSteps(built);
     setError(null);
     setUsedPlaceholders(mode === 'no_assets');
+    assetModeRef.current = mode === 'no_assets' ? 'generated_placeholders' : 'uploaded_screenshots';
     trackActivationFunnelEvent('activation_step_completed', {
       entry_id: 'demo_try', tool: 'demo_studio', source: 'demo_try', step: 'preview_generated',
       is_authenticated: Boolean(user), artifact_type: 'demo_studio_draft',
@@ -304,19 +355,18 @@ export default function TryPage() {
   };
 
   const handleGenerate = async () => {
-    const isNoAssets = inputMode === 'no_assets';
+    const isNoAssets = shots.length === 0;
     const mode: TryInputMode = isNoAssets ? 'no_assets' : 'screenshots';
     const trimmedDescription = description.trim();
-    if (isNoAssets) {
-      if (!trimmedDescription && !contextUrl.trim()) {
-        trackActivationFunnelEvent('activation_validation_failed', {
-          entry_id: 'demo_try', tool: 'demo_studio', source: 'demo_try', step: 'input',
-          is_authenticated: Boolean(user), reason: 'missing_description_or_url',
-        });
-        toast.error('Describe your product or paste its URL first.');
-        return;
-      }
-    } else if (shots.length < MIN_SCREENSHOTS) {
+    if (!trimmedDescription) {
+      trackActivationFunnelEvent('activation_validation_failed', {
+        entry_id: 'demo_try', tool: 'demo_studio', source: 'demo_try', step: 'input',
+        is_authenticated: Boolean(user), reason: 'missing_description',
+      });
+      toast.error('Describe your product first.');
+      return;
+    }
+    if (!isNoAssets && shots.length < MIN_SCREENSHOTS) {
       trackActivationFunnelEvent('activation_validation_failed', {
         entry_id: 'demo_try', tool: 'demo_studio', source: 'demo_try', step: 'input',
         is_authenticated: Boolean(user), reason: 'too_few_screenshots',
@@ -356,12 +406,13 @@ export default function TryPage() {
       const stepCount: DemoStudioTryStepCount = isNoAssets ? 3 : normalizeTryStepCount(shots.length);
       const draftResult = await generateDemoStudioDraftStoryboard({
         contextUrl,
-        description: isNoAssets ? trimmedDescription : undefined,
+        description: trimmedDescription,
         stepCount,
       });
       // Ignore the response if the user started over or left during generation.
       if (runId !== runIdRef.current) return;
-      const usableStoryboard = getUsableTryStoryboard(draftResult.steps, { contextUrl, stepCount });
+      const productName = inferTryProductName(contextUrl, trimmedDescription, draftResult.steps[0]?.title);
+      const usableStoryboard = getUsableTryStoryboard(draftResult.steps, { contextUrl, productName, stepCount });
       const activeShots = isNoAssets ? await createPlaceholderShots(usableStoryboard) : shots;
       if (runId !== runIdRef.current) return;
       const built = buildTryPreviewSteps({ shots: activeShots, storyboard: usableStoryboard });
@@ -394,7 +445,11 @@ export default function TryPage() {
 
       try {
         const stepCount: DemoStudioTryStepCount = isNoAssets ? 3 : normalizeTryStepCount(shots.length);
-        const fallbackStoryboard = buildTryFallbackStoryboard({ contextUrl, stepCount });
+        const fallbackStoryboard = buildTryFallbackStoryboard({
+          contextUrl,
+          productName: inferTryProductName(contextUrl, trimmedDescription),
+          stepCount,
+        });
         const activeShots = isNoAssets ? await createPlaceholderShots(fallbackStoryboard) : shots;
         if (runId !== runIdRef.current) return;
         const built = buildTryPreviewSteps({ shots: activeShots, storyboard: fallbackStoryboard });
@@ -424,13 +479,11 @@ export default function TryPage() {
     setError(null);
     persistPromiseRef.current = null;
     setResumeEmailState('idle');
-    if (usedPlaceholders) {
-      // Placeholder frames aren't user uploads; drop them so the uploader is clean.
-      shotsRef.current.forEach((shot) => URL.revokeObjectURL(shot.url));
-      shotsRef.current = [];
-      setShots([]);
-      setUsedPlaceholders(false);
-    }
+    shotsRef.current.forEach((shot) => URL.revokeObjectURL(shot.url));
+    shotsRef.current = [];
+    setShots([]);
+    setUsedPlaceholders(false);
+    assetModeRef.current = 'generated_placeholders';
     clearTryDraft();
   };
 
@@ -444,6 +497,9 @@ export default function TryPage() {
     shotsRef.current = restoredShots;
     setShots(restoredShots);
     setContextUrl(draft.contextUrl ?? '');
+    const restoredPlaceholders = draft.assetMode === 'generated_placeholders';
+    assetModeRef.current = draft.assetMode;
+    setUsedPlaceholders(restoredPlaceholders);
     const storyboard = draft.steps.map((step) => ({
       title: step.title,
       caption: step.caption,
@@ -482,7 +538,9 @@ export default function TryPage() {
           throw new Error(payload?.error || 'This demo link is no longer valid.');
         }
         saveTryDraft(payload.artifact);
-        await restoreFromDraft(payload.artifact);
+        const normalizedDraft = readTryDraft();
+        if (!normalizedDraft) throw new Error('This demo draft could not be restored.');
+        await restoreFromDraft(normalizedDraft);
         captureEvent('demo_try_resume_opened', {
           tool: 'demo_studio_try',
           source: 'resume_email',
@@ -545,9 +603,10 @@ export default function TryPage() {
       if (hydratingRef.current) return;
       hydratingRef.current = true;
       const name = productName || 'My product';
-      const project = await createProject(user.id, { name });
+      const assetMode = assetModeRef.current;
+      const project = await createProject(user.id, { name, acquisitionSource: 'demo-try' });
       try {
-        const demo = await createDemo(project.id, user.id, `${name} demo`);
+        const demo = await createDemo(project.id, user.id, `${name} demo`, { assetMode });
         let position = 0;
         for (const step of hydrateSteps) {
           const file =
@@ -607,6 +666,20 @@ export default function TryPage() {
             : `/demo-studio/projects/${project.id}/brief`,
           source: 'demo_try',
         });
+        if (user.email) {
+          void sendRetentionEmail({
+            userId: user.id,
+            email: user.email,
+            fullName: user.user_metadata?.full_name ?? null,
+            sequence: 'activation_day0',
+            ctaUrl: `/demo-studio/projects/${project.id}?source=demo-try&assetMode=${assetMode}`,
+            ctaLabel: 'Open my published demo',
+            contextHeadline: `${name} is live.`,
+            contextBody: assetMode === 'generated_placeholders'
+              ? 'Copy the share link for your concept demo, then replace the generated frames with real product screenshots.'
+              : 'Return to the exact published project, copy its share link, and refine the screenshot hotspots.',
+          });
+        }
         void upsertJourneyOutcome({
           userId: user.id,
           tool: 'demo_studio',
@@ -623,19 +696,19 @@ export default function TryPage() {
             analytics: published,
             mobile_ready: false,
             published,
-            no_unresolved_placeholders: !usedPlaceholders,
+            no_unresolved_placeholders: assetMode === 'uploaded_screenshots',
             no_broken_interactions: position >= 2,
             external_activity: false,
           },
           evidenceManifest: createJourneyEvidenceManifest([
             {
               sourceId: `demo_try:${demo.id}`,
-              sourceType: usedPlaceholders ? 'founder_description' : 'founder_screenshots',
+              sourceType: assetMode === 'generated_placeholders' ? 'founder_description' : 'founder_screenshots',
               version: '1',
               capturedAt: new Date().toISOString(),
               confidence: null,
               provenance: 'demo_studio_try',
-              label: usedPlaceholders ? 'Visitor product description' : `${position} visitor screenshots`,
+              label: assetMode === 'generated_placeholders' ? 'Visitor product description' : `${position} visitor screenshots`,
             },
           ]),
         }).catch((outcomeError) => console.error('Could not update journey outcome', outcomeError));
@@ -649,10 +722,21 @@ export default function TryPage() {
           published,
           success: true,
         });
+        trackActivationFunnelEvent('activation_step_completed', {
+          entry_id: 'demo_try',
+          tool: 'demo_studio',
+          source: 'demo_try',
+          step: 'artifact_saved',
+          is_authenticated: true,
+          artifact_type: 'interactive_proof_page',
+          artifact_id: demo.id,
+          published,
+          asset_mode: assetMode,
+        });
         clearTryDraft();
         if (published) {
           toast.success('Your demo is live — grab your share link below.');
-          navigate(`/demo-studio/projects/${project.id}`, { replace: true });
+          navigate(`/demo-studio/projects/${project.id}?source=demo-try&assetMode=${assetMode}`, { replace: true });
         } else {
           navigate(`/demo-studio/projects/${project.id}/brief`, { replace: true });
         }
@@ -665,7 +749,7 @@ export default function TryPage() {
         hydratingRef.current = false;
       }
     },
-    [isReturning, navigate, subscriptionData?.subscription_tier, usedPlaceholders, user],
+    [isReturning, navigate, subscriptionData?.subscription_tier, user],
   );
 
   // Primary CTA on the result view.
@@ -675,7 +759,7 @@ export default function TryPage() {
     if (user) {
       setSaving(true);
       try {
-        const productName = deriveTryProductName(contextUrl, steps[0]?.title ?? undefined);
+        const productName = inferTryProductName(contextUrl, description, steps[0]?.title ?? undefined);
         const hydrateSteps: HydrateStep[] = steps.map((step, i) => ({
           file: shots[i]?.file,
           title: step.title ?? '',
@@ -690,14 +774,16 @@ export default function TryPage() {
       }
       return;
     }
-    // Anonymous: make sure the draft is stored, then send them through signup.
+    // Anonymous: preserve the artifact, then keep signup in context so the
+    // preview remains visible behind the two-field gate.
     setSaving(true);
     void trackDemoEvent('signup_attempt', { meta: { source: 'demo_try' } });
     const stored = await (persistPromiseRef.current ?? persistDraft(steps));
     if (!stored) {
       toast.error('Your screenshots are large. You may need to re-upload after signing up.');
     }
-    navigate(SIGNUP_RETURN_HREF);
+    setSaving(false);
+    setShowSignupGate(true);
   };
 
   const handleLogin = async () => {
@@ -756,6 +842,9 @@ export default function TryPage() {
   }, [isReturning, authLoading, hydrateError, runReturnHydration]);
 
   const showSaving = saving || (isReturning && !hydrateError && !steps);
+  const resultProductName = steps
+    ? inferTryProductName(contextUrl, description, steps[0]?.title ?? undefined)
+    : '';
 
   if (resuming) {
     return (
@@ -818,27 +907,48 @@ export default function TryPage() {
           <p className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-caption font-medium text-white/80">
             <Sparkles className="h-3.5 w-3.5" /> Demo Studio
           </p>
-          {/* Leads with the description path, matching the default input mode.
-              The screenshot-first framing asked for an asset most visitors
-              don't have open, and the page recorded 0 completions in 2 months. */}
           <h1 className="text-3xl font-semibold sm:text-4xl [text-shadow:0_0_18px_rgba(99,102,241,0.55)]">
-            Describe your product, get a live demo
+            Turn your product into an interactive story
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-sm text-white/70">
-            One line about what you're building is enough — we'll write the captions and hand you an
-            interactive walkthrough. Got {MIN_SCREENSHOTS}–{MAX_SCREENSHOTS} screenshots? Even better.
-            No signup needed.
+            Describe it, optionally add screenshots, and preview the customer problem, product journey,
+            and outcome before signup. Uploaded UI becomes a product demo; generated frames stay clearly labeled as a concept.
           </p>
         </div>
 
         {steps ? (
           <div className="space-y-5">
+            <section className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-5" aria-labelledby="demo-ready-heading">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-300">
+                {usedPlaceholders ? 'Concept demo / storyboard' : 'Interactive product demo'}
+              </p>
+              <h2 id="demo-ready-heading" className="mt-2 text-2xl font-semibold">
+                Your {steps.length === 3 ? 'three-step' : `${steps.length}-step`} demo is ready
+              </h2>
+              <p className="mt-1 text-base font-medium text-white/90">{resultProductName}</p>
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                {steps.slice(0, 3).map((step, index) => (
+                  <figure key={step.id} className="overflow-hidden rounded-lg border border-white/10 bg-black/20">
+                    <img src={step.asset_url ?? ''} alt="" className="aspect-video w-full object-cover" />
+                    <figcaption className="line-clamp-2 px-2 py-2 text-xs text-white/70">
+                      {index + 1}. {step.title}
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+              <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+                <div><dt className="font-semibold text-white">Customer problem</dt><dd className="mt-1 text-white/65">{steps[0]?.caption}</dd></div>
+                <div><dt className="font-semibold text-white">Product journey</dt><dd className="mt-1 text-white/65">{steps[Math.min(1, steps.length - 1)]?.caption}</dd></div>
+                <div><dt className="font-semibold text-white">Outcome</dt><dd className="mt-1 text-white/65">{steps[steps.length - 1]?.caption}</dd></div>
+              </dl>
+            </section>
             <DemoPlayer
               steps={steps}
               mode="preview"
               showWatermark
-              ctaHref={user ? null : SIGNUP_RETURN_HREF}
-              ctaLabel="Save and publish this demo"
+              productName={resultProductName}
+              ctaLabel="Publish free and get my share link"
+              onCtaClick={() => void handleSave()}
               onComplete={() =>
                 void trackDemoEvent('demo_complete', {
                   meta: { source: 'demo_try' },
@@ -850,16 +960,16 @@ export default function TryPage() {
               {usedPlaceholders && (
                 <p className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/15 px-3 py-1 text-xs font-medium text-indigo-200">
                   <ImagePlus className="h-3.5 w-3.5" />
-                  Placeholder frames — save the demo and swap in real screenshots any time.
+                  Generated frames are a concept storyboard, not captured product UI. Publish now, then replace them with real screenshots.
                 </p>
               )}
               <p className="text-sm text-white/80">
-                Keep this demo. Save it to your account to add hotspots, record a VSL, and publish a launch page.
+                Publish this demo free to get its share link. No credit card required.
               </p>
               <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">
                 <Button onClick={() => void handleSave()} disabled={saving} className="w-full gap-2 sm:w-auto">
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                  Save and publish this demo
+                  Publish free and get my share link
                 </Button>
                 <Button
                   variant="outline"
@@ -917,88 +1027,27 @@ export default function TryPage() {
           </div>
         ) : (
           <div className="space-y-6 rounded-xl border border-white/10 bg-white/5 p-6">
-            <div
-              className="grid grid-cols-2 gap-1 rounded-lg border border-white/10 bg-white/5 p-1"
-              role="tablist"
-              aria-label="How do you want to start?"
-            >
-              {([
-                { mode: 'no_assets' as const, label: 'Describe it' },
-                { mode: 'screenshots' as const, label: 'I have screenshots' },
-              ]).map(({ mode, label }) => (
-                <button
-                  key={mode}
-                  type="button"
-                  role="tab"
-                  aria-selected={inputMode === mode}
-                  onClick={() => setInputMode(mode)}
-                  className={`rounded-md px-3 py-2 text-sm font-medium transition ${
-                    inputMode === mode ? 'bg-white/15 text-white' : 'text-white/60 hover:text-white'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+            <div>
+              <Label htmlFor="product-description" className="text-sm font-medium text-white">
+                Describe your product <span className="text-red-300">*</span>
+              </Label>
+              <p className="mt-1 text-xs text-white/60">
+                Tell us who it helps, what they do, and the outcome. This drives the story even when you add screenshots.
+              </p>
+              <Textarea
+                id="product-description"
+                rows={3}
+                maxLength={300}
+                required
+                placeholder="e.g. An app that turns founder interviews into shareable customer-insight reports."
+                value={description}
+                onChange={(e) => {
+                  markInputStarted();
+                  setDescription(e.target.value);
+                }}
+                className="mt-2 border-white/15 bg-white/5 text-white placeholder:text-white/40"
+              />
             </div>
-
-            {inputMode === 'screenshots' ? (
-              <div>
-                <Label className="text-sm font-medium text-white">Screenshots</Label>
-                <p className="mt-1 text-xs text-white/60">PNG or JPG, up to {MAX_SCREENSHOTS} images.</p>
-                <div className="mt-3 grid grid-cols-3 gap-3">
-                  {shots.map((shot) => (
-                    <div key={shot.url} className="group relative overflow-hidden rounded-lg border border-white/10">
-                      <img src={shot.url} alt="Screenshot preview" className="aspect-video w-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => removeShot(shot.url)}
-                        className="absolute right-1.5 top-1.5 rounded-full bg-black/70 p-1.5 text-white/80 transition hover:text-white touch:p-2.5"
-                        aria-label="Remove screenshot"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  ))}
-                  {shots.length < MAX_SCREENSHOTS && (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex aspect-video w-full flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-white/25 text-white/60 transition hover:border-white/50 hover:text-white"
-                    >
-                      <ImagePlus className="h-5 w-5" />
-                      <span className="text-xs">Add screenshot</span>
-                    </button>
-                  )}
-                </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => handleFiles(e.target.files)}
-                />
-              </div>
-            ) : (
-              <div>
-                <Label htmlFor="product-description" className="text-sm font-medium text-white">
-                  Describe your product
-                </Label>
-                <p className="mt-1 text-xs text-white/60">
-                  One or two lines is plenty. We'll build a 3-step walkthrough with styled placeholder
-                  frames you can swap for real screenshots later.
-                </p>
-                <Textarea
-                  id="product-description"
-                  rows={3}
-                  maxLength={300}
-                  placeholder="e.g. An app that turns founder interviews into shareable customer-insight reports."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="mt-2 border-white/15 bg-white/5 text-white placeholder:text-white/40"
-                />
-              </div>
-            )}
 
             <div>
               <Label htmlFor="context-url" className="text-sm font-medium text-white">
@@ -1013,9 +1062,57 @@ export default function TryPage() {
                 inputMode="url"
                 placeholder="https://yourproduct.com"
                 value={contextUrl}
-                onChange={(e) => setContextUrl(e.target.value)}
+                onChange={(e) => {
+                  markInputStarted();
+                  setContextUrl(e.target.value);
+                }}
                 className="mt-2 border-white/15 bg-white/5 text-white placeholder:text-white/40"
               />
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium text-white">
+                Product screenshots <span className="font-normal text-white/50">(optional)</span>
+              </Label>
+              <p className="mt-1 text-xs text-white/60">
+                Add {MIN_SCREENSHOTS}–{MAX_SCREENSHOTS} PNG or JPG images for an interactive product demo. With none, you get a clearly labeled concept storyboard.
+              </p>
+              <div className="mt-3 grid grid-cols-3 gap-3">
+                {shots.map((shot) => (
+                  <div key={shot.url} className="group relative overflow-hidden rounded-lg border border-white/10">
+                    <img src={shot.url} alt="Screenshot preview" className="aspect-video w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeShot(shot.url)}
+                      className="absolute right-1.5 top-1.5 rounded-full bg-black/70 p-1.5 text-white/80 transition hover:text-white touch:p-2.5"
+                      aria-label="Remove screenshot"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+                {shots.length < MAX_SCREENSHOTS && (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex aspect-video w-full flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-white/25 text-white/60 transition hover:border-white/50 hover:text-white"
+                  >
+                    <ImagePlus className="h-5 w-5" />
+                    <span className="text-xs">Add screenshot</span>
+                  </button>
+                )}
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                multiple
+                className="hidden"
+                onChange={(e) => handleFiles(e.target.files)}
+              />
+              {shots.length > 0 && shots.length < MIN_SCREENSHOTS ? (
+                <p className="mt-2 text-xs text-amber-300">Add {MIN_SCREENSHOTS - shots.length} more screenshot to use uploaded product UI.</p>
+              ) : null}
             </div>
 
             {error && <p className="text-sm text-red-300">{error}</p>}
@@ -1024,9 +1121,8 @@ export default function TryPage() {
               onClick={handleGenerate}
               disabled={
                 generating ||
-                (inputMode === 'screenshots'
-                  ? shots.length < MIN_SCREENSHOTS
-                  : !description.trim() && !contextUrl.trim())
+                !description.trim() ||
+                (shots.length > 0 && shots.length < MIN_SCREENSHOTS)
               }
               className="w-full gap-2"
             >
@@ -1036,7 +1132,7 @@ export default function TryPage() {
                 </>
               ) : (
                 <>
-                  <Sparkles className="h-4 w-4" /> Generate the demo
+                  <Sparkles className="h-4 w-4" /> Build my interactive preview
                 </>
               )}
             </Button>
@@ -1057,6 +1153,23 @@ export default function TryPage() {
           </p>
         )}
       </div>
+      <SoftGateModal
+        open={showSignupGate}
+        onOpenChange={setShowSignupGate}
+        seed=""
+        trigger="demo-try-publish"
+        title="Publish free and get your share link"
+        description="Create your account with Google or email. We’ll publish this exact demo and return you to its share panel."
+        returnPathOverride={RETURN_PATH}
+        signupSource="demo-try"
+        entryId="demo_try"
+        activationTool="demo_studio"
+        journeyTool="demo_studio"
+        artifactType="interactive_demo_preview"
+        onBeforeAuthContinue={() => {
+          if (steps) void persistDraft(steps);
+        }}
+      />
     </div>
   );
 }

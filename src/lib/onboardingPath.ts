@@ -73,6 +73,7 @@ export function shouldShowOnboardingPathGate(
   profile: OnboardingPathProfile | null | undefined,
 ): boolean {
   if (!FORCED_ONBOARDING_ENABLED || !profile) return false;
+  if (getActivationPreferenceState(profile.user_preferences).firstArtifactType) return false;
   return profile.onboarding_completed !== true;
 }
 

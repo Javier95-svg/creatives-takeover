@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   ArrowLeft,
   ArrowRight,
   BarChart3,
+  CheckCircle2,
+  Copy,
   ExternalLink,
   FileText,
   Globe,
@@ -26,11 +28,14 @@ import { applyStoryboardToDemo, createDemo, deleteDemo, getBrief, getProject, ge
 import type { DemoStudioBrief, DemoStudioDemo, DemoStudioProject, DemoStudioReadiness, DemoStudioVsl } from '@/lib/demoStudio/types';
 import GettingStartedChecklist, { type ChecklistStep } from '@/components/demo-studio/GettingStartedChecklist';
 import WhatIsADemoPopover from '@/components/demo-studio/WhatIsADemoPopover';
+import { trackActivationFunnelEvent } from '@/lib/activationEntry';
+import { trackJourneyEvent } from '@/lib/journeyOutcomes';
 
 export default function ProjectOverviewPage() {
   const { id: projectId } = useParams<{ id: string }>();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [project, setProject] = useState<DemoStudioProject | null>(null);
   const [brief, setBrief] = useState<DemoStudioBrief | null>(null);
   const [demos, setDemos] = useState<DemoStudioDemo[]>([]);
@@ -130,6 +135,39 @@ export default function ProjectOverviewPage() {
     brief?.primary_cta_label?.trim(),
   );
   const firstDemoId = demos[0]?.id;
+  const publishedDemo = demos.find((demo) => demo.status === 'published' && demo.public_id);
+  const arrivedFromTry = searchParams.get('source') === 'demo-try' || project?.acquisition_source === 'demo-try';
+  const tryAssetMode = publishedDemo?.asset_mode ?? (
+    searchParams.get('assetMode') === 'generated_placeholders'
+      ? 'generated_placeholders'
+      : 'uploaded_screenshots'
+  );
+  const shareUrl = publishedDemo?.public_id && typeof window !== 'undefined'
+    ? `${window.location.origin}/demo/${publishedDemo.public_id}`
+    : '';
+
+  const copyShareLink = async () => {
+    if (!shareUrl) return;
+    await navigator.clipboard.writeText(shareUrl);
+    toast.success('Live demo link copied.');
+    trackActivationFunnelEvent('activation_step_completed', {
+      entry_id: 'demo_try',
+      tool: 'demo_studio',
+      source: 'demo_try',
+      step: 'second_meaningful_action',
+      is_authenticated: true,
+      artifact_type: 'interactive_proof_page',
+      artifact_id: publishedDemo?.id,
+      action: 'copy_share_link',
+    });
+    trackJourneyEvent('journey_next_stage_started', {
+      tool: 'demo_studio',
+      artifact_type: 'interactive_proof_page',
+      artifact_id: publishedDemo?.id,
+      source: 'demo_try',
+      action: 'copy_share_link',
+    });
+  };
   const nextProjectAction = !briefComplete
     ? {
         label: 'Complete brief',
@@ -237,6 +275,33 @@ export default function ProjectOverviewPage() {
           <h1 className="creatives-font mt-2 text-3xl font-bold md:text-4xl">{project?.name}</h1>
           {project?.tagline && <p className="mt-1 text-muted-foreground">{project.tagline}</p>}
         </div>
+
+        {arrivedFromTry && publishedDemo ? (
+          <section className="mb-6 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-5" aria-labelledby="demo-live-heading">
+            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                  <CheckCircle2 className="h-5 w-5" /> Published automatically
+                </p>
+                <h2 id="demo-live-heading" className="mt-1 text-2xl font-semibold">Your live demo is ready to share</h2>
+                <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                  This is the exact project you previewed. Copy its public link now; the launch-page and VSL roadmap stays available below.
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+                <Button onClick={() => void copyShareLink()} className="gap-2">
+                  <Copy className="h-4 w-4" /> Copy live link
+                </Button>
+                <Button asChild variant="outline" className="gap-2">
+                  <Link to={`/demo-studio/projects/${projectId}/demos/${publishedDemo.id}/edit`}>
+                    <ImagePlus className="h-4 w-4" />
+                    {tryAssetMode === 'generated_placeholders' ? 'Replace frames with screenshots' : 'Refine screenshots and hotspots'}
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </section>
+        ) : null}
 
         <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

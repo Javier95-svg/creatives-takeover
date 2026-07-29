@@ -26,18 +26,14 @@ test('upgrade prompt gives Starter first-step treatment', () => {
   assert.match(source, /Upgrade to Starter - \$9\/mo/);
 });
 
-test('post-ICP nudge appears only after first Rookie ICP and uses Starter checkout', () => {
+test('post-ICP activation opens interview work without an immediate paid prompt', () => {
   const source = readFileSync(new URL('../src/components/icp/ICPBuilder.tsx', import.meta.url), 'utf8');
 
-  assert.match(source, /shouldShowPostIcpStarterNudge/);
-  assert.match(source, /normalizePlan\(subscriptionTier\) !== "rookie"/);
-  assert.match(source, /\.select\("id", \{ count: "exact", head: true \}\)/);
-  assert.match(source, /\.neq\("id", analysisId\)/);
-  assert.match(source, /Your ICP is live\. Now validate the demand behind it\./);
-  assert.match(source, /Starter gives you 100 credits\/month/);
-  assert.match(source, /trigger: "post_icp_nudge"/);
-  assert.match(source, /createCheckout\("starter", undefined, "monthly"\)/);
-  assert.match(source, /location: "post_icp_nudge"/);
+  assert.doesNotMatch(source, /shouldShowPostIcpStarterNudge/);
+  assert.doesNotMatch(source, /Upgrade to Starter - \$9\/mo/);
+  assert.match(source, /buildIcpUnlockNavigationPath\(analysisId\)/);
+  assert.match(source, /Open my ICP brief/);
+  assert.match(source, /first incomplete customer-interview task/);
 });
 
 test('dashboard nudge targets low-credit onboarded Rookie users', () => {

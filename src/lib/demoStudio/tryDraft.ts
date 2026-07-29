@@ -14,11 +14,21 @@ export interface TryDraftStep {
   hotspot_label: string;
 }
 
-export interface TryDraft {
-  v: 1;
+export type TryDraftAssetMode = 'uploaded_screenshots' | 'generated_placeholders';
+
+interface TryDraftBase {
   productName: string;
   contextUrl: string;
   steps: TryDraftStep[];
+}
+
+export interface TryDraftV1 extends TryDraftBase {
+  v: 1;
+}
+
+export interface TryDraft extends TryDraftBase {
+  v: 2;
+  assetMode: TryDraftAssetMode;
 }
 
 /** Downscale an image File to a JPEG data URL, capping the longest edge. */
@@ -55,7 +65,7 @@ export async function dataUrlToFile(dataUrl: string, name: string): Promise<File
  * Persist the draft. Returns false if it could not be stored (e.g. quota), so
  * the caller can degrade gracefully rather than silently lose the draft.
  */
-export function saveTryDraft(draft: TryDraft): boolean {
+export function saveTryDraft(draft: TryDraft | TryDraftV1): boolean {
   if (typeof window === 'undefined') return false;
   try {
     window.sessionStorage.setItem(TRY_DRAFT_KEY, JSON.stringify(draft));
@@ -70,9 +80,21 @@ export function readTryDraft(): TryDraft | null {
   try {
     const raw = window.sessionStorage.getItem(TRY_DRAFT_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as TryDraft;
-    if (parsed?.v !== 1 || !Array.isArray(parsed.steps) || parsed.steps.length === 0) return null;
-    return parsed;
+    const parsed = JSON.parse(raw) as TryDraft | TryDraftV1;
+    if (![1, 2].includes(parsed?.v) || !Array.isArray(parsed.steps) || parsed.steps.length === 0) return null;
+    if (parsed.v === 1) {
+      return {
+        ...parsed,
+        v: 2,
+        assetMode: 'uploaded_screenshots',
+      };
+    }
+    return {
+      ...parsed,
+      assetMode: parsed.assetMode === 'generated_placeholders'
+        ? 'generated_placeholders'
+        : 'uploaded_screenshots',
+    };
   } catch {
     return null;
   }

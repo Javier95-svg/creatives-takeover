@@ -1,5 +1,5 @@
 import { captureEvent } from "@/lib/analytics";
-import { getActivationSessionId } from "@/lib/activationEntry";
+import { getActivationSessionId, readCTAAttribution } from "@/lib/activationEntry";
 import { supabase } from "@/integrations/supabase/client";
 import type { OutcomeEvaluation, VerificationMode } from "@/lib/outcomeContracts";
 
@@ -149,10 +149,15 @@ export function createJourneyEvidenceManifest(
 }
 
 export function trackJourneyEvent(event: JourneyEvent, properties: JourneyEventProperties) {
+  const activationFlowId = typeof properties.activation_flow_id === "string"
+    ? properties.activation_flow_id
+    : properties.anonymous_session_id ?? getActivationSessionId();
   captureEvent(event, {
     ...properties,
     stage: properties.stage ?? JOURNEY_TOOL_STAGES[properties.tool],
-    anonymous_session_id: properties.anonymous_session_id ?? getActivationSessionId(),
+    anonymous_session_id: properties.anonymous_session_id ?? activationFlowId,
+    origin_entry_id: properties.origin_entry_id ?? readCTAAttribution()?.ctaId ?? properties.source ?? "direct",
+    activation_flow_id: activationFlowId,
   });
 }
 

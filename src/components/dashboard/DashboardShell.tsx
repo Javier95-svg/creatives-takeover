@@ -32,6 +32,7 @@ import { isFounderCycleRolloutEnabled } from '@/lib/founderCycleRollout';
 import { BIZMAP_STAGE_ORDER, DEFAULT_CURRENT_STAGE, type BizMapStage } from '@/lib/bizmapStages';
 import { useFeatureFlagEnabled } from '@/hooks/usePosthogFeatureFlag';
 import { captureEvent } from '@/lib/analytics';
+import { getActivationPreferenceState } from '@/lib/activationState';
 import type { DashboardSnapshotV1 } from '@/types/dashboardSnapshot';
 
 const DASHBOARD_MAX_WIDTH = 'max-w-7xl';
@@ -225,6 +226,9 @@ export function DashboardShell() {
   const [profileLoading, setProfileLoading] = useState(() => Boolean(userId && !cachedProfile));
   const [day1Profile, setDay1Profile] = useState<Day1Profile | null>(cachedProfile);
   const validatedUserIdRef = useRef<string | null>(cachedProfile ? userId : null);
+  const hasCreatedArtifact = Boolean(
+    day1Profile && getActivationPreferenceState(day1Profile.user_preferences).firstArtifactType,
+  );
 
   useEffect(() => {
     let isCancelled = false;
@@ -345,17 +349,17 @@ export function DashboardShell() {
   // matching), and its final step already routes into a first action — so it
   // must run before the path-chooser gate, which marks onboarding complete
   // without capturing any of that.
-  if (day1Profile && shouldRedirectToGuidedOnboarding(day1Profile)) {
+  if (day1Profile && !hasCreatedArtifact && shouldRedirectToGuidedOnboarding(day1Profile)) {
     return <Navigate to="/onboarding?source=dashboard_prompt" replace />;
   }
 
   // Task 4 path chooser remains as a fallback for accounts exempt from the
   // guided quiz (legacy profiles without the flag, icp_unlock bootstraps).
-  if (day1Profile && shouldShowOnboardingPathGate(day1Profile)) {
+  if (day1Profile && !hasCreatedArtifact && shouldShowOnboardingPathGate(day1Profile)) {
     return <OnboardingPathGate profile={day1Profile} onProfilePatch={handleDay1ProfilePatch} />;
   }
 
-  if (day1Profile && day1Profile.onboarding_completed !== true) {
+  if (day1Profile && !hasCreatedArtifact && day1Profile.onboarding_completed !== true) {
     return <Day1Welcome profile={day1Profile} onProfilePatch={handleDay1ProfilePatch} />;
   }
 

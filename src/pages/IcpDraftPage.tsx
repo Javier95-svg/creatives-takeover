@@ -17,6 +17,8 @@ import { normalizeStoredArtifact } from "@/lib/icpDraftArtifacts";
 import { getIcpDraftPublicUrl, upsertIcpDraftShare } from "@/lib/icpDraftSharing";
 import { downloadIcpDraftDocx, downloadIcpDraftPdf } from "@/lib/icpDraftExport";
 import type { StoredIcpArtifact } from "@/lib/icpBuilderSession";
+import { trackActivationFunnelEvent } from "@/lib/activationEntry";
+import { trackJourneyEvent } from "@/lib/journeyOutcomes";
 
 function slugifyFileName(value: string) {
   return value.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase() || "icp-draft";
@@ -89,13 +91,30 @@ export default function IcpDraftPage() {
     });
   }, [artifact, draftId, isUnlockSource]);
 
-  const handleUnlockedDashboardClick = () => {
+  const handleInterviewTasksClick = () => {
     captureEvent("icp_unlocked_draft_dashboard_clicked", {
       draft_id: draftId,
       page_path: draftId ? `/icp/draft/${draftId}` : "/icp/draft",
-      source: "unlock_success_banner",
+      source: "customer_interview_tasks",
     });
-    navigate("/dashboard?from=icp_builder");
+    trackActivationFunnelEvent("activation_step_completed", {
+      entry_id: "icp_draft_unlock",
+      tool: "icp_builder",
+      source: "icp-draft-unlock",
+      step: "second_meaningful_action",
+      is_authenticated: true,
+      artifact_type: "customer_decision_brief",
+      artifact_id: draftId,
+      action: "open_interview_tasks",
+    });
+    trackJourneyEvent("journey_next_stage_started", {
+      tool: "icp_builder",
+      artifact_type: "customer_decision_brief",
+      artifact_id: draftId,
+      source: "icp-draft-unlock",
+      action: "open_interview_tasks",
+    });
+    navigate(`/dashboard/tasks?from=icp_builder&draft=${draftId ?? ""}`);
   };
 
   const dismissUnlockBanner = () => {
@@ -239,7 +258,7 @@ export default function IcpDraftPage() {
                     Your full ICP Draft is unlocked
                   </h2>
                   <p className="max-w-xl text-sm leading-6 text-muted-foreground">
-                    You can read the complete draft now. When you&apos;re ready, open the dashboard to turn it into your next founder tasks.
+                    Your brief is saved. Start with the five customer-interview tasks generated from its evidence gaps.
                   </p>
                 </div>
               </div>
@@ -248,9 +267,9 @@ export default function IcpDraftPage() {
                   type="button"
                   size="lg"
                   className="shrink-0 gap-2 bg-slate-950 text-white hover:bg-slate-800"
-                  onClick={handleUnlockedDashboardClick}
+                  onClick={handleInterviewTasksClick}
                 >
-                  Open dashboard
+                  Open my five customer-interview tasks
                   <ArrowRight className="h-4 w-4" />
                 </Button>
                 <Button
@@ -277,10 +296,10 @@ export default function IcpDraftPage() {
               <div className="space-y-1">
                 <p className="text-label font-semibold uppercase tracking-[0.24em] text-[#7dd3fc]">Next step</p>
                 <h2 className="text-xl font-semibold text-white sm:text-2xl">
-                  You built your ICP. Now let’s get your first users.
+                  Validate this customer before you build more.
                 </h2>
                 <p className="max-w-xl text-sm leading-6 text-muted-foreground">
-                  Turn this ICP into a live, founder-grade waitlist page — pre-filled with your persona, pain points, and value props.
+                  Your primary next move is five focused interviews. Demo Studio can then turn the validated story into interactive proof; PMF Lab can pressure-test the demand evidence.
                 </p>
               </div>
             </div>
@@ -288,11 +307,27 @@ export default function IcpDraftPage() {
               type="button"
               size="lg"
               className="shrink-0 gap-2 bg-white text-foreground hover:bg-white/90"
-              onClick={() => navigate(`/demo-studio/classic?icp=${draftId}`)}
+              onClick={handleInterviewTasksClick}
             >
-              <span>Build your waitlist</span>
+              <span>Open my five customer-interview tasks</span>
               <ArrowRight className="h-4 w-4" />
             </Button>
+          </div>
+          <div className="relative mt-5 grid gap-3 border-t border-white/10 pt-5 sm:grid-cols-2">
+            <Link
+              to={`/demo-studio/try?icp=${draftId ?? ""}`}
+              className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white transition hover:bg-white/10"
+            >
+              <span className="font-semibold">Demo Studio</span>
+              <span className="mt-1 block text-white/60">Turn the validated customer story into a shareable interactive demo.</span>
+            </Link>
+            <Link
+              to={`/pmf-lab?icp=${draftId ?? ""}`}
+              className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white transition hover:bg-white/10"
+            >
+              <span className="font-semibold">PMF Lab</span>
+              <span className="mt-1 block text-white/60">Evaluate whether interview and demand signals support build, narrow, pivot, or stop.</span>
+            </Link>
           </div>
         </div>
       </div>
@@ -334,8 +369,8 @@ export default function IcpDraftPage() {
               isSharing={isSharing}
             />
             <div className="flex justify-center">
-              <Button type="button" className="gap-2" onClick={() => navigate("/dashboard")}>
-                Start Stage 2 →
+              <Button type="button" className="gap-2" onClick={handleInterviewTasksClick}>
+                Open my five customer-interview tasks
               </Button>
             </div>
           </div>

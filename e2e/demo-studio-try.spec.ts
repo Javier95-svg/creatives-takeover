@@ -26,7 +26,7 @@ test('#4 no subscription_tiers request fires on the anonymous try route', async 
   });
 
   await page.goto('/demo-studio/try', { waitUntil: 'commit' });
-  await expect(page.getByRole('heading', { name: /Describe your product, get a live demo/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Turn your product into an interactive story/i })).toBeVisible();
   // Let any deferred boot queries fire before asserting none touched tiers.
   await page.waitForTimeout(2500);
 
@@ -57,8 +57,10 @@ test('#3 generate -> preview -> start over -> regenerate loop is clean (mocked g
   });
 
   await page.goto('/demo-studio/try', { waitUntil: 'commit' });
-  await expect(page.getByRole('heading', { name: /Describe your product, get a live demo/i })).toBeVisible();
-  await page.getByRole('tab', { name: 'I have screenshots' }).click();
+  await expect(page.getByRole('heading', { name: /Turn your product into an interactive story/i })).toBeVisible();
+  await page.getByLabel(/Describe your product/i).fill(
+    'A client feedback app for freelance designers that consolidates revisions and helps them deliver approved work faster.',
+  );
 
   const upload = async () =>
     page.locator('input[type="file"]').setInputFiles([
@@ -68,16 +70,16 @@ test('#3 generate -> preview -> start over -> regenerate loop is clean (mocked g
 
   // First pass: upload -> generate -> preview.
   await upload();
-  await page.getByRole('button', { name: /Generate the demo/i }).click();
+  await page.getByRole('button', { name: /Build my interactive preview/i }).click();
   await expect(page.getByRole('button', { name: /Try different screenshots/i })).toBeVisible();
 
   // Start over returns to a clean uploader (runId bump invalidates in-flight work).
   await page.getByRole('button', { name: /Try different screenshots/i }).click();
-  await expect(page.getByRole('button', { name: /Generate the demo/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Build my interactive preview/i })).toBeVisible();
 
   // Second pass works after reset (no stuck state).
   await upload();
-  await page.getByRole('button', { name: /Generate the demo/i }).click();
+  await page.getByRole('button', { name: /Build my interactive preview/i }).click();
   await expect(page.getByRole('button', { name: /Try different screenshots/i })).toBeVisible();
 
   expect(pageErrors, `try flow threw: ${pageErrors.join(' | ')}`).toHaveLength(0);
@@ -183,8 +185,10 @@ test('#2 a mid-save failure rolls back the project (no orphan; retries do not ac
   );
 
   await page.goto('/demo-studio/try', { waitUntil: 'commit' });
-  await expect(page.getByRole('heading', { name: /Describe your product, get a live demo/i })).toBeVisible();
-  await page.getByRole('tab', { name: 'I have screenshots' }).click();
+  await expect(page.getByRole('heading', { name: /Turn your product into an interactive story/i })).toBeVisible();
+  await page.getByLabel(/Describe your product/i).fill(
+    'A client feedback app for freelance designers that consolidates revisions and helps them deliver approved work faster.',
+  );
 
   const upload = () =>
     page.locator('input[type="file"]').setInputFiles([
@@ -193,8 +197,8 @@ test('#2 a mid-save failure rolls back the project (no orphan; retries do not ac
     ]);
 
   await upload();
-  await page.getByRole('button', { name: /Generate the demo/i }).click();
-  const saveButton = page.getByRole('button', { name: /Save and publish this demo/i });
+  await page.getByRole('button', { name: /Build my interactive preview/i }).click();
+  const saveButton = page.getByRole('button', { name: /Publish free and get my share link/i });
   await expect(saveButton).toBeVisible();
 
   // Attempt 1: save -> create project -> mid-hydrate failure -> rollback.

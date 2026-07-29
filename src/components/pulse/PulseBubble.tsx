@@ -6,14 +6,24 @@ interface PulseBubbleProps {
   hasUnread: boolean;
   onClick: () => void;
   compactMobileHomepage?: boolean;
+  focusedActivationSurface?: boolean;
 }
 
-export const PulseBubble = ({ hasUnread, onClick, compactMobileHomepage = false }: PulseBubbleProps) => {
+export const PulseBubble = ({
+  hasUnread,
+  onClick,
+  compactMobileHomepage = false,
+  focusedActivationSurface = false,
+}: PulseBubbleProps) => {
   return (
     <div
       className={cn(
         "fixed right-4 z-50 sm:right-6",
-        compactMobileHomepage ? "bottom-[calc(8.5rem+env(safe-area-inset-bottom,0px))]" : "bottom-6"
+        compactMobileHomepage
+          ? "bottom-[calc(8.5rem+env(safe-area-inset-bottom,0px))]"
+          : focusedActivationSurface
+            ? "bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))]"
+            : "bottom-6"
       )}
     >
       {/* Pulse ring animation when there's an unread proactive message */}

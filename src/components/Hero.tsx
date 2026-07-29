@@ -82,8 +82,8 @@ const Hero = ({
   titleLine1 = "The Founders'",
   titleLine2 = "Compass",
   lede = DEFAULT_LEDE,
-  ctaLabel = "Launch a live demo",
-  ctaHref = "/demo-studio",
+  ctaLabel = "Turn it into a live demo",
+  ctaHref = "/demo-studio/try",
   onCtaClick,
   dashboardUrl = "creatives-takeover.com/dashboard",
   dashboardBread = "Building · Stage 4 of 7",
@@ -125,8 +125,8 @@ const Hero = ({
           if (entry.isIntersecting && !hasTrackedView.current) {
             hasTrackedView.current = true;
             trackActivationEntry("activation_entry_opened", {
-              entry_id: "hero_demo_try",
-              tool: "demo_studio",
+              entry_id: "hero_icp_builder",
+              tool: "icp_builder",
               source: "homepage_hero",
               step: "impression",
               entry_page: location.pathname,
@@ -134,8 +134,8 @@ const Hero = ({
               is_authenticated: isAuthenticated,
             });
             trackActivationEntry("activation_entry_opened", {
-              entry_id: "hero_icp_builder",
-              tool: "icp_builder",
+              entry_id: "hero_demo_try",
+              tool: "demo_studio",
               source: "homepage_hero",
               step: "impression",
               entry_page: location.pathname,
@@ -146,11 +146,11 @@ const Hero = ({
             // (hero-demo-cta / hero-icp-cta) or conversion_cta_viewed and
             // conversion_cta_clicked can't be paired into a CTR for either CTA.
             void trackTriggerView("hero-demo-cta", {
-              ctaType: "primary",
+              ctaType: "secondary",
               authenticated: isAuthenticated,
             });
             void trackTriggerView("hero-icp-cta", {
-              ctaType: "secondary",
+              ctaType: "primary",
               authenticated: isAuthenticated,
             });
             if (!isAuthenticated) {
@@ -185,13 +185,13 @@ const Hero = ({
       source: "homepage_hero",
       step: "entry_click",
       entry_page: location.pathname,
-      placement: "hero_primary",
+      placement: "hero_secondary",
       is_authenticated: isAuthenticated,
     });
     onCtaClick?.();
   };
 
-  // Path B for visitors who don't have a product to screenshot yet.
+  // Primary path for visitors who are still shaping the customer and problem.
   const handleIcpCtaClick = () => {
     void trackEngagement("hero-icp-cta", 80);
     setAttribution('hero_icp_builder', location.pathname);
@@ -201,14 +201,13 @@ const Hero = ({
       source: "homepage_hero",
       step: "entry_click",
       entry_page: location.pathname,
-      placement: "hero_secondary",
+      placement: "hero_primary",
       is_authenticated: isAuthenticated,
     });
   };
 
-  // Send logged-out visitors into the no-signup Demo Studio "try" flow so they
-  // reach the aha moment before any login wall; signed-in users get the dashboard.
-  const resolvedCtaHref = !isAuthenticated && ctaHref === "/demo-studio" ? "/demo-studio/try" : ctaHref;
+  // Keep legacy callers that still pass /demo-studio on the pre-signup try flow.
+  const resolvedCtaHref = ctaHref === "/demo-studio" ? "/demo-studio/try" : ctaHref;
 
   const handleProfileCtaClick = () => {
     void trackEngagement("hero-profile-cta", 80);
@@ -281,22 +280,24 @@ const Hero = ({
           ) : (
             <>
               <div className="ct-hero__cta-path">
+                <span className="ct-hero__cta-kicker">Still an idea?</span>
+                <Link className="ct-hero__cta" to="/icp-builder" onClick={handleIcpCtaClick}>
+                  Define my first customer
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </Link>
+                <span className="ct-hero__cta-microcopy">Get a customer + pain brief in about 2 minutes. Free before signup.</span>
+              </div>
+              <div className="ct-hero__cta-path">
                 <span className="ct-hero__cta-kicker">Have a product?</span>
-                <Link className="ct-hero__cta" to={resolvedCtaHref} onClick={handleCtaClick}>
+                <Link className="ct-hero__cta ct-hero__cta--secondary" to={resolvedCtaHref} onClick={handleCtaClick}>
                   {ctaLabel}
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                     <polyline points="9 18 15 12 9 6" />
                   </svg>
                 </Link>
-              </div>
-              <div className="ct-hero__cta-path">
-                <span className="ct-hero__cta-kicker">Still an idea?</span>
-                <Link className="ct-hero__cta ct-hero__cta--secondary" to="/icp-builder" onClick={handleIcpCtaClick}>
-                  Draft your ICP
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </Link>
+                <span className="ct-hero__cta-microcopy">Describe it or add screenshots. Preview before signup.</span>
               </div>
               <button type="button" className="ct-hero__audience-link" onClick={handleWhoIsThisForClick}>
                 Who is this for?

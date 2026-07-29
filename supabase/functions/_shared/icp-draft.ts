@@ -27,6 +27,7 @@ export interface DraftRequestShape {
 }
 
 export interface DraftSource {
+  sourceId?: string;
   type: "community" | "competitor" | "market";
   title: string;
   url: string | null;
@@ -45,6 +46,8 @@ type SectionEvidence = {
   confidence: SectionConfidence;
   evidence: string;
   missingSignalPrompt: string | null;
+  provenance: "external_source" | "founder_input" | "model_inference";
+  sourceIds: string[];
 };
 
 type DraftDocument = {
@@ -145,6 +148,8 @@ function buildSectionEvidence(
     confidence?: SectionConfidence;
     evidence: string;
     missingSignalPrompt?: string | null;
+    provenance: SectionEvidence["provenance"];
+    sourceIds?: string[];
   },
 ): SectionEvidence {
   return {
@@ -152,6 +157,8 @@ function buildSectionEvidence(
     evidence: cleanText(value?.evidence, fallback.evidence),
     missingSignalPrompt:
       typeof value?.missingSignalPrompt === "string" ? value.missingSignalPrompt : fallback.missingSignalPrompt ?? null,
+    provenance: fallback.provenance,
+    sourceIds: fallback.sourceIds ?? [],
   };
 }
 
@@ -502,6 +509,7 @@ function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEn
         confidence: overallConfidence,
         evidence: "Customer profile grounded in the founder evidence provided.",
         missingSignalPrompt: "What moment makes this customer actively search for a better solution?",
+        provenance: "founder_input",
       }),
     },
     pain: {
@@ -514,6 +522,7 @@ function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEn
         confidence: overallConfidence,
         evidence: "Pain diagnosis grounded in the founder's pain and workaround inputs.",
         missingSignalPrompt: "Describe one recent moment where this pain caused delay, lost trust, or lost money.",
+        provenance: "founder_input",
       }),
     },
     build: {
@@ -533,6 +542,7 @@ function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEn
         confidence: overallConfidence,
         evidence: "Build recommendation grounded in the founder's stated problem and solution direction.",
         missingSignalPrompt: "What should the customer stop doing manually once this product works?",
+        provenance: "model_inference",
       }),
     },
     moat: {
@@ -554,6 +564,7 @@ function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEn
         confidence: overallConfidence,
         evidence: "Moat statement grounded in the founder's edge and workflow positioning.",
         missingSignalPrompt: "What access, trust, distribution, or lived insight do you have that others do not?",
+        provenance: "model_inference",
       }),
     },
     competition: {
@@ -582,6 +593,8 @@ function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEn
             ? "Competition informed by founder evidence plus targeted market-signal enrichment."
             : "Competition inferred from founder evidence only; treat this section as provisional.",
         missingSignalPrompt: "Name the tools, services, or manual alternatives this customer uses today so the competitive landscape can be sharpened.",
+        provenance: enrichment.sources.some((source) => Boolean(source.url)) ? "external_source" : "model_inference",
+        sourceIds: enrichment.sources.filter((source) => Boolean(source.url)).map((source) => source.sourceId ?? ""),
       }),
     },
     confidence: {
@@ -617,7 +630,10 @@ export async function generateIcpDraftArtifact({
   const resolvedEnrichment: DraftEnrichment = {
     marketSignals: enrichment?.marketSignals ?? [],
     competitorLinks: enrichment?.competitorLinks ?? [],
-    sources: enrichment?.sources ?? [],
+    sources: (enrichment?.sources ?? []).map((source, index) => ({
+      ...source,
+      sourceId: source.sourceId || `source-${index + 1}`,
+    })),
   };
 
   // Hard timeout so a hung OpenAI request fails fast and clean instead of
@@ -677,7 +693,7 @@ export async function generateIcpDraftArtifact({
   return {
     status: "draft_ready",
     artifact: {
-      version: 4,
+      version: 5,
       generatedAt: new Date().toISOString(),
       founderInputs: {
         mode: request.entryMode,

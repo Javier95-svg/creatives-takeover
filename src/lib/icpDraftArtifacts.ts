@@ -49,8 +49,20 @@ function buildSectionEvidence(
     confidence?: IcpConfidenceLevel;
     evidence: string;
     missingSignalPrompt?: string | null;
+    provenance?: IcpDraftSectionEvidence["provenance"];
   },
 ): IcpDraftSectionEvidence {
+  const sourceIds = Array.isArray(value?.sourceIds)
+    ? value.sourceIds.filter((sourceId): sourceId is string => typeof sourceId === "string" && sourceId.trim().length > 0)
+    : [];
+  const provenance =
+    value?.provenance === "external_source" ||
+    value?.provenance === "founder_input" ||
+    value?.provenance === "model_inference"
+      ? value.provenance
+      : sourceIds.length > 0
+        ? "external_source"
+        : fallback.provenance ?? "model_inference";
   return {
     confidence: normalizeConfidence(value?.confidence, fallback.confidence ?? "medium"),
     evidence:
@@ -59,6 +71,8 @@ function buildSectionEvidence(
         : fallback.evidence,
     missingSignalPrompt:
       typeof value?.missingSignalPrompt === "string" ? value.missingSignalPrompt : fallback.missingSignalPrompt ?? null,
+    provenance,
+    sourceIds,
   };
 }
 
@@ -202,6 +216,7 @@ export function normalizeIcpDraftDocument(
         confidence: confidenceLevel,
         evidence: "Customer profile inferred from the founder's niche, pain, workaround, and solution inputs.",
         missingSignalPrompt: "What moment makes this customer actively search for a better solution?",
+        provenance: "founder_input",
       }),
     },
     pain: {
@@ -226,6 +241,7 @@ export function normalizeIcpDraftDocument(
         confidence: confidenceLevel,
         evidence: "Pain diagnosis grounded in the founder's pain statement and current workaround.",
         missingSignalPrompt: "Describe one recent example where this pain caused delay, loss, or frustration.",
+        provenance: "founder_input",
       }),
     },
     build: {
@@ -248,6 +264,7 @@ export function normalizeIcpDraftDocument(
         confidence: confidenceLevel,
         evidence: "Build recommendation grounded in the founder's stated problem and product direction.",
         missingSignalPrompt: "What should the customer stop doing manually if this product works exactly as intended?",
+        provenance: "model_inference",
       }),
     },
     moat: {
@@ -280,6 +297,7 @@ export function normalizeIcpDraftDocument(
         confidence: confidenceLevel,
         evidence: "Moat inferred from the founder's edge statement and the niche-specific workflow gap.",
         missingSignalPrompt: "What access, trust, distribution, or lived insight do you have that a generic competitor does not?",
+        provenance: "model_inference",
       }),
     },
     competition: {
@@ -299,6 +317,7 @@ export function normalizeIcpDraftDocument(
             ? "Competition informed by founder inputs plus targeted market-signal enrichment."
             : "Competition inferred from founder inputs only; treat it as provisional until the current alternatives are more explicit.",
         missingSignalPrompt: "Name the tools, services, or manual alternatives this customer uses today so the competitive landscape can be sharpened.",
+        provenance: "model_inference",
       }),
     },
     confidence: {
@@ -318,7 +337,11 @@ export function normalizeIcpDraftDocument(
     sources: Array.isArray(draft.sources)
       ? draft.sources
           .filter((source): source is NonNullable<typeof source> => Boolean(source?.title))
-          .map((source) => ({
+          .map((source, index) => ({
+            sourceId:
+              typeof source.sourceId === "string" && source.sourceId.trim()
+                ? source.sourceId
+                : `source-${index + 1}`,
             type: source.type === "competitor" || source.type === "market" ? source.type : "community",
             title: String(source.title),
             url: typeof source.url === "string" && source.url.trim() ? source.url : null,
@@ -331,10 +354,38 @@ export function normalizeIcpDraftDocument(
 function normalizeArtifactShape(artifact: StoredIcpArtifact) {
   const draftDocument = normalizeIcpDraftDocument(artifact.draftDocument, artifact);
   if (!draftDocument) return null;
+  const externalSourceIds = (draftDocument.sources ?? [])
+    .filter((source) => Boolean(source.url))
+    .map((source, index) => source.sourceId ?? `source-${index + 1}`);
+  const realSourceIds = new Set(externalSourceIds);
+  const evidenceSections = [
+    ["customer", draftDocument.customer.evidence, "founder_input"],
+    ["pain", draftDocument.pain.evidence, "founder_input"],
+    ["build", draftDocument.build.evidence, "model_inference"],
+    ["moat", draftDocument.moat.evidence, "model_inference"],
+    ["competition", draftDocument.competition.evidence, "model_inference"],
+  ] as const;
+  evidenceSections.forEach(([, evidence, fallbackProvenance]) => {
+    const verifiedSourceIds = (evidence.sourceIds ?? []).filter((sourceId) => realSourceIds.has(sourceId));
+    if (evidence.provenance === "external_source" && verifiedSourceIds.length === 0) {
+      evidence.provenance = fallbackProvenance;
+      evidence.sourceIds = [];
+    } else if (verifiedSourceIds.length > 0) {
+      evidence.provenance = "external_source";
+      evidence.sourceIds = verifiedSourceIds;
+    }
+  });
+  if (externalSourceIds.length > 0 && !draftDocument.competition.evidence.sourceIds?.length) {
+    draftDocument.competition.evidence = {
+      ...draftDocument.competition.evidence,
+      provenance: "external_source",
+      sourceIds: externalSourceIds,
+    };
+  }
 
   return {
     ...artifact,
-    version: artifact.version === 4 ? 4 : 3,
+    version: 5,
     draftDocument,
   } satisfies StoredIcpArtifact;
 }
@@ -350,7 +401,10 @@ export function normalizeStoredArtifact(row: {
     return { artifact: null, legacyAvailable: false, legacyAnalysis: null };
   }
 
-  if ((analysisData.version === 3 || analysisData.version === 4) && analysisData.draftDocument?.customer) {
+  if (
+    (analysisData.version === 3 || analysisData.version === 4 || analysisData.version === 5) &&
+    analysisData.draftDocument?.customer
+  ) {
     const artifact = normalizeArtifactShape(analysisData as StoredIcpArtifact);
     if (!artifact) {
       return { artifact: null, legacyAvailable: false, legacyAnalysis: null };
@@ -419,7 +473,7 @@ export function mapLegacyAnalysisToArtifact(
     "The saved analysis found a wedge that differentiates this offer from current alternatives.";
 
   const artifact: StoredIcpArtifact = {
-    version: 4,
+    version: 5,
     generatedAt: analysisData?.generatedAt ?? new Date().toISOString(),
     founderInputs: {
       mode: "guided",
@@ -671,7 +725,7 @@ export function buildBuilderSessionFromArtifact(artifact: StoredIcpArtifact, sav
   };
 
   return {
-    version: 4,
+    version: 5,
     mode,
     currentScreen: mode === "fast" ? "fast_input" : "guided_seed",
     fastDescription: artifact.founderInputs.fastDescription ?? "",

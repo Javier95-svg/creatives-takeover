@@ -2,6 +2,7 @@ import { getSafeLocalStorage } from '@/lib/safeStorage';
 import { trackActivationFunnelEvent } from '@/lib/analytics';
 import { getUserPreferencesRecord } from '@/lib/guidedOnboarding';
 import { getActivationRoute, type ActivationIntent } from '@/lib/retentionSystem';
+import { getActivationSessionId, readCTAAttribution } from '@/lib/activationEntry';
 
 const ACTIVATION_INTENTS = new Set<ActivationIntent>([
   'build_demo',
@@ -91,6 +92,8 @@ export function trackActivationReturnMilestones(params: {
       source: params.source ?? 'dashboard',
       plan: params.plan ?? null,
       days_since_signup: daysSinceSignup,
+      origin_entry_id: readCTAAttribution()?.ctaId ?? params.source ?? 'direct',
+      activation_flow_id: getActivationSessionId(),
     });
   });
 }

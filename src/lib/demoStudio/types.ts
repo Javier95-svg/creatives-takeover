@@ -51,6 +51,7 @@ export interface DemoStudioProject {
   category: string | null;
   slug: string | null;
   launch_published: boolean;
+  acquisition_source?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -63,6 +64,7 @@ export interface DemoStudioDemo {
   public_id: string | null;
   status: DemoStatus;
   capture_method: CaptureMethod;
+  asset_mode?: 'uploaded_screenshots' | 'generated_placeholders' | null;
   theme: DemoTheme;
   created_at: string;
   updated_at: string;

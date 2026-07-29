@@ -4,17 +4,10 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 const frozenFiles = {
-  // Rehashed 2026-07-24 (later the same day): the owner asked for the original
-  // CTAs back, so b1ce5377's Hero.tsx change was reverted wholesale. Primary is
-  // "Have a product? / Launch a live demo" (→ ctaHref, /demo-studio), secondary
-  // "Still an idea? / Draft your ICP" (→ /icp-builder). Layout and styling
-  // untouched throughout; 133a70f0's activation analytics are retained.
-  // Rehashed 2026-07-27: the primary CTAs and hero copy remain unchanged.
-  // The small cycle link now opens the approved "Who is this for?" ICP dialog.
-  // Rehashed 2026-07-28: removed the decorative arrow from that link.
-  // Rehashed 2026-07-28 after restoring Hero byte-for-byte from the repository;
-  // the Windows checkout normalized its line endings but changed no source.
-  '../src/components/Hero.tsx': '90c6d21009c9d93833a71eed71c878616afe6313a814b841edc37bc9f778ca42',
+  // Rehashed 2026-07-28 for the approved activation redesign: ICP is the
+  // outcome-led primary path and Demo Studio is the product-ready secondary
+  // path, with explicit pre-signup value and correlated funnel placements.
+  '../src/components/Hero.tsx': '1d92ffad76a21ae9ec60c6acd89af5cd87b8ed9abb48677ade9f44b4b5c02932',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.

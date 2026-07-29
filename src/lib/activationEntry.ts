@@ -43,6 +43,8 @@ export interface ActivationFunnelProperties {
   step: string;
   is_authenticated: boolean;
   anonymous_session_id?: string;
+  origin_entry_id?: string;
+  activation_flow_id?: string;
   entry_page?: string;
   placement?: string;
   reason?: string;
@@ -97,10 +99,14 @@ export function trackActivationFunnelEvent(
   // under a dedicated string key so the activation funnel stays queryable; retyping the
   // shared `step` key would just break the onboarding funnels instead.
   const { step, ...rest } = properties;
+  const activationFlowId = properties.activation_flow_id ?? properties.anonymous_session_id ?? getActivationSessionId();
+  const originEntryId = properties.origin_entry_id ?? readCTAAttribution()?.ctaId ?? properties.entry_id;
   captureEvent(event, {
     ...rest,
     funnel_step: step,
-    anonymous_session_id: properties.anonymous_session_id ?? getActivationSessionId(),
+    anonymous_session_id: properties.anonymous_session_id ?? activationFlowId,
+    origin_entry_id: originEntryId,
+    activation_flow_id: activationFlowId,
   });
 }
 

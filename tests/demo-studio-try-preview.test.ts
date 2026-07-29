@@ -42,6 +42,20 @@ test('try preview repairs short or invalid storyboard output before rendering', 
   assert.equal(usable[2].caption.length > 0, true);
 });
 
+test('try preview rejects generic AI frames in favor of product-specific steps', () => {
+  const usable = getUsableTryStoryboard(
+    [
+      { title: 'Welcome', caption: 'See the product.', speaker_notes: '', hotspot_label: 'Start', suggested_action: 'next' },
+      { title: 'Key feature', caption: 'This is the core workflow.', speaker_notes: '', hotspot_label: 'Next', suggested_action: 'next' },
+    ],
+    { productName: 'Signal Desk', stepCount: 2 },
+  );
+
+  assert.equal(usable.some((step) => /^(welcome|your product|key feature)$/i.test(step.title)), false);
+  assert.match(usable[0].title, /Signal Desk/);
+  assert.match(usable[0].caption, /Signal Desk/i);
+});
+
 test('try preview pairs storyboard steps only with uploaded screenshots', () => {
   const storyboard = getUsableTryStoryboard([], { productName: 'Acme', stepCount: 3 });
   const steps = buildTryPreviewSteps({

@@ -13,7 +13,8 @@ export const ICP_BUILDER_SESSION_TTL_MS = 48 * 60 * 60 * 1000;
 
 export type IcpConfidenceLevel = "high" | "medium" | "low";
 export type IcpBuilderMode = "fast" | "guided";
-export type IcpArtifactVersion = 3 | 4;
+export type IcpArtifactVersion = 3 | 4 | 5;
+export type IcpEvidenceProvenance = "external_source" | "founder_input" | "model_inference";
 
 export type IcpFlowScreen =
   | "mode_select"
@@ -38,6 +39,8 @@ export interface IcpDraftSectionEvidence {
   confidence: IcpConfidenceLevel;
   evidence: string;
   missingSignalPrompt: string | null;
+  provenance?: IcpEvidenceProvenance;
+  sourceIds?: string[];
 }
 
 export interface IcpDraftCompetitor {
@@ -118,6 +121,7 @@ export interface IcpDraftDocument {
 }
 
 export interface IcpDraftSource {
+  sourceId?: string;
   type: "community" | "competitor" | "market";
   title: string;
   url: string | null;
@@ -318,7 +322,16 @@ export function authorizeIcpBuilderSession(
 
   const storage = getSafeSessionStorage();
   const raw = storage.getItem(ICP_BUILDER_AUTH_HANDOFF_KEY);
-  if (!raw) return null;
+  if (!raw) {
+    // React StrictMode can replay the hydration effect with the pre-claim
+    // session after the first pass has already consumed the one-time handoff.
+    // Accept only the exact persisted session that the first pass just claimed;
+    // this keeps the handoff one-time without resetting a valid draft.
+    const claimed = readIcpBuilderSession();
+    return claimed?.sessionId === session.sessionId && claimed.ownerUserId === userId
+      ? claimed
+      : null;
+  }
   try {
     const handoff = JSON.parse(raw) as Partial<IcpBuilderAuthHandoff>;
     if (

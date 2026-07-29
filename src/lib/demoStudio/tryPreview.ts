@@ -47,6 +47,13 @@ function normalizeStoryboardStep(step: unknown): DemoStudioStoryboardStep | null
   };
 }
 
+function isGenericStoryboardStep(step: DemoStudioStoryboardStep): boolean {
+  const genericTitle = /^(?:welcome|your product|key feature|main feature|core feature|feature)$/i;
+  const genericCaption =
+    /^(?:see|explore|discover|learn about|this is|this shows)\s+(?:the\s+)?(?:product|key feature|main feature|core workflow)[.!]?$/i;
+  return genericTitle.test(step.title) || genericCaption.test(step.caption);
+}
+
 export function buildTryFallbackStoryboard(args: {
   contextUrl?: string;
   productName?: string;
@@ -97,7 +104,8 @@ export function getUsableTryStoryboard(
   const normalized = (Array.isArray(storyboard) ? storyboard : [])
     .map(normalizeStoryboardStep)
     .filter((step): step is DemoStudioStoryboardStep => Boolean(step))
-    .slice(0, desiredCount);
+    .slice(0, desiredCount)
+    .map((step, index) => (isGenericStoryboardStep(step) ? fallback[index] : step));
 
   while (normalized.length < desiredCount) {
     normalized.push(fallback[normalized.length]);

@@ -10,6 +10,8 @@ const PulseWidget = () => {
   const location = useLocation();
   const isMobile = useIsMobile();
   const compactMobileHomepage = isMobile && location.pathname === '/';
+  const focusedActivationSurface =
+    location.pathname === '/icp-builder' || location.pathname === '/demo-studio/try';
   const {
     isOpen,
     activeTab,
@@ -40,7 +42,7 @@ const PulseWidget = () => {
   return (
     <>
       {/* Proactive message bubble */}
-      {proactiveVisible && proactiveMessage && !isOpen && (
+      {!focusedActivationSurface && proactiveVisible && proactiveMessage && !isOpen && (
         <PulseProactiveMessage
           message={proactiveMessage}
           onDismiss={dismissProactive}
@@ -65,9 +67,10 @@ const PulseWidget = () => {
       {/* Floating bubble (hidden when panel is open) */}
       {!isOpen && (
         <PulseBubble
-          hasUnread={proactiveVisible}
+          hasUnread={!focusedActivationSurface && proactiveVisible}
           onClick={openPanel}
           compactMobileHomepage={compactMobileHomepage}
+          focusedActivationSurface={focusedActivationSurface}
         />
       )}
     </>

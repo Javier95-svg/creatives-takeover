@@ -12,6 +12,7 @@ test('ICP browser drafts are session scoped, expiring, and auth-handoff protecte
   assert.match(source, /ownerUserId/);
   assert.match(source, /handoff\.sessionId !== session\.sessionId/);
   assert.match(source, /ownerUserId && session\.ownerUserId !== userId/);
+  assert.match(source, /claimed\?\.sessionId === session\.sessionId && claimed\.ownerUserId === userId/);
 });
 
 test('signup abandonment uses a stable one-shot page lifecycle handler', () => {

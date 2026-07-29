@@ -367,14 +367,14 @@
   transform: translateX(3px);
 }
 
-/* Dual-path CTAs for logged-out visitors: each path is a small column with a
-   kicker line ("Have a product?" / "Still an idea?") above its button, so every
-   visitor sees a next step that matches where they are. */
+/* Dual-path CTAs for logged-out visitors: each path pairs a founder-state
+   question with an outcome and a concise pre-signup promise. */
 .ct-hero__cta-path {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  width: min(100%, 310px);
 }
 
 .ct-hero__cta-kicker {
@@ -383,6 +383,15 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--ct-muted);
+}
+
+.ct-hero__cta-microcopy {
+  max-width: 290px;
+  color: var(--ct-muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-wrap: balance;
 }
 
 /* Audience link under the primary CTAs. It opens the "Who is this for?"

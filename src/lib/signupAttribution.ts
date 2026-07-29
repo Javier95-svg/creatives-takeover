@@ -36,7 +36,7 @@ function operationId() {
   return `signup_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 }
 
-export function beginAttributedOAuthSignup({ method, source, returnUrl, entryId }: BeginSignupAttributionParams) {
+export function beginAttributedSignup({ method, source, returnUrl, entryId }: BeginSignupAttributionParams) {
   const safeReturn = sanitizeReturnPath(returnUrl, "/dashboard");
   const local = getSafeLocalStorage();
   const session = getSafeSessionStorage();
@@ -66,14 +66,16 @@ export function beginAttributedOAuthSignup({ method, source, returnUrl, entryId 
   };
 
   local.setItem(INTENT_KEY, JSON.stringify(intent));
-  local.setItem("oauth_return_url", safeReturn);
-  local.setItem("oauth_source", source);
-  local.setItem("oauth_signup_method", method);
+  if (method !== "email") {
+    local.setItem("oauth_return_url", safeReturn);
+    local.setItem("oauth_source", source);
+    local.setItem("oauth_signup_method", method);
+    setOAuthAuthIntent("signup");
+  }
   session.setItem(START_GUARD_KEY, intent.operationId);
   persistOnboardingReturn(safeReturn);
   persistAuthMethod(method);
   persistSignupIntent(method);
-  setOAuthAuthIntent("signup");
   captureEvent("signup_started", {
     method,
     source,
@@ -92,7 +94,11 @@ export function beginAttributedOAuthSignup({ method, source, returnUrl, entryId 
   return intent;
 }
 
-export function completeAttributedOAuthSignup(): SignupAttributionIntent | null {
+export function beginAttributedOAuthSignup(params: BeginSignupAttributionParams) {
+  return beginAttributedSignup(params);
+}
+
+export function completeAttributedSignup(): SignupAttributionIntent | null {
   const storage = getSafeLocalStorage();
   const raw = storage.getItem(INTENT_KEY);
   if (!raw) return null;
@@ -114,4 +120,8 @@ export function completeAttributedOAuthSignup(): SignupAttributionIntent | null 
   } finally {
     storage.removeItem(INTENT_KEY);
   }
+}
+
+export function completeAttributedOAuthSignup() {
+  return completeAttributedSignup();
 }

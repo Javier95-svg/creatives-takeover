@@ -1,5 +1,5 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import { Loader2, ShieldCheck, X } from "lucide-react";
+import { lazy, Suspense, useEffect, useRef } from "react";
+import { Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
 import Navigation from "@/components/Navigation";
@@ -55,51 +55,6 @@ export default function ICPBuilderPage() {
   const { isAuthenticated } = useAuth();
   const hasTracked = useRef(false);
   const { showExitIntent, closeExitIntent } = useExitIntent();
-  const [showLeadBanner, setShowLeadBanner] = useState(false);
-
-  useEffect(() => {
-    const mountedAt = Date.now();
-    const MIN_DELAY_MS = 6000;   // don't pop instantly / over a resumed session
-    const FALLBACK_MS = 12000;   // backstop for users who linger without engaging
-
-    let shown = false;
-    // Progress means the visitor typed something, not merely which screen they
-    // are on: the builder now auto-advances past mode_select on arrival, so
-    // screen position no longer distinguishes a starter from a bouncer.
-    const hasProgress = () => {
-      const session = readIcpBuilderSession();
-      return Boolean(
-        session &&
-          (session.fastDescription?.trim() ||
-            session.guided?.seed?.trim() ||
-            session.draftPreview),
-      );
-    };
-
-    const reveal = () => {
-      if (shown) return;
-      shown = true;
-      window.clearInterval(pollId);
-      window.clearTimeout(fallbackId);
-      setShowLeadBanner(true);
-    };
-
-    // Show the banner the moment the user has something worth saving — that is
-    // the high-intent moment, and it happens well before the old 20s timer.
-    const pollId = window.setInterval(() => {
-      if (Date.now() - mountedAt >= MIN_DELAY_MS && hasProgress()) {
-        reveal();
-      }
-    }, 2000);
-
-    // Still catch passive browsers, just earlier than before.
-    const fallbackId = window.setTimeout(reveal, FALLBACK_MS);
-
-    return () => {
-      window.clearInterval(pollId);
-      window.clearTimeout(fallbackId);
-    };
-  }, []);
 
   useEffect(() => {
     if (hasTracked.current) return;
@@ -153,10 +108,6 @@ export default function ICPBuilderPage() {
     }
 
     navigate("/");
-  };
-
-  const handleDismissLeadBanner = () => {
-    setShowLeadBanner(false);
   };
 
   const icpFaqs = [
@@ -269,36 +220,6 @@ export default function ICPBuilderPage() {
           .
         </aside>
       </main>
-
-      {showLeadBanner ? (
-        <div className="fixed inset-x-4 bottom-4 z-50 mx-auto w-auto max-w-[24rem] overflow-hidden rounded-3xl border border-white/70 bg-white/90 text-foreground shadow-[0_28px_80px_-32px_rgba(15,23,42,0.45)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/90 dark:text-white sm:left-auto sm:right-5 sm:mx-0">
-          <div className="pointer-events-none absolute -right-16 -top-20 h-36 w-36 rounded-full bg-accent-teal/25 blur-3xl" />
-
-          <button
-            type="button"
-            aria-label="Dismiss save progress banner"
-            className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-white/80 text-muted-foreground shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-950 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-teal/50 dark:border-white/10 dark:bg-white/10 dark:text-muted-foreground dark:hover:bg-white dark:hover:text-foreground"
-            onClick={handleDismissLeadBanner}
-          >
-            <X className="h-4 w-4" />
-          </button>
-
-          <div className="relative p-5 pr-14">
-            <div className="flex items-start gap-3 pr-1">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent-teal/10 text-[#168996]">
-                <ShieldCheck className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-foreground dark:text-white">Your draft auto-saves in this browser</p>
-                <p className="mt-1 text-sm leading-5 text-muted-foreground dark:text-muted-foreground">
-                  Keep answering — nothing is lost if you step away. When your draft is ready, create a
-                  free account to keep it forever and unlock the full profile.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       <ExitIntentModal isOpen={showExitIntent} onClose={closeExitIntent} />
     </div>

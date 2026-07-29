@@ -44,21 +44,17 @@ export function IcpUnlockGate({
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [softGateOpen, setSoftGateOpen] = useState(false);
 
-  const gatePreview = artifact.draftDocument.gatePreview;
-  const personaName = gatePreview?.personaName || artifact.draftDocument.customer.personaName;
-  const roleLine = gatePreview?.roleLine || artifact.draftDocument.customer.roleLine;
-  const painLine = gatePreview?.painLine || artifact.draftDocument.pain.quote;
-  const customerSummary = artifact.draftDocument.customer.summary;
-  const buyingTrigger =
-    artifact.draftDocument.customer.actionTrigger ||
-    artifact.draftDocument.pain.triggerMoment ||
-    artifact.draftDocument.customer.triggerContext;
   const confidence = artifact.draftDocument.confidence;
-  const citedSignal = artifact.draftDocument.sources?.[0];
+  const citedSignal = artifact.draftDocument.sources?.find((source) => Boolean(source.url));
+  const customerEvidence = artifact.draftDocument.customer.evidence;
+  const painEvidence = artifact.draftDocument.pain.evidence;
   const fallbackSignal =
-    artifact.enrichment?.marketSignals?.[0] ||
     artifact.draftDocument.customer.evidence.evidence ||
     artifact.draftDocument.pain.evidence.evidence;
+  const fallbackProvenance =
+    customerEvidence.provenance === "founder_input" || painEvidence.provenance === "founder_input"
+      ? "Founder hypothesis"
+      : "Model inference — validate this";
   const assumptions = confidence.missingSignals.slice(0, 2);
 
   useEffect(() => {
@@ -161,10 +157,11 @@ export function IcpUnlockGate({
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="mb-3 text-caption font-semibold uppercase tracking-[0.22em] text-accent-teal">
-                Preview ready
+                Evidence check
               </p>
-              <p className="text-base font-semibold text-foreground">{personaName}</p>
-              <p className="mt-0.5 text-sm text-muted-foreground">{roleLine}</p>
+              <p className="text-base font-semibold text-foreground">
+                Know what is sourced, hypothesized, and inferred
+              </p>
             </div>
 
             {onDismiss ? (
@@ -180,29 +177,11 @@ export function IcpUnlockGate({
           </div>
 
           <div className="mt-4 rounded-3xl border border-border/60 bg-background/70 px-4 py-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-teal">Your customer decision preview</p>
-            <dl className="mt-3 grid gap-4 text-sm sm:grid-cols-2">
-              <div>
-                <dt className="font-semibold text-foreground">Primary customer</dt>
-                <dd className="mt-1 leading-6 text-muted-foreground">{personaName}. {customerSummary}</dd>
-              </div>
-              <div>
-                <dt className="font-semibold text-foreground">Core pain</dt>
-                <dd className="mt-1 leading-6 text-muted-foreground">{painLine}</dd>
-              </div>
-              <div>
-                <dt className="font-semibold text-foreground">Buying trigger</dt>
-                <dd className="mt-1 leading-6 text-muted-foreground">{buyingTrigger}</dd>
-              </div>
-              <div>
-                <dt className="font-semibold text-foreground">Confidence</dt>
-                <dd className="mt-1 leading-6 text-muted-foreground capitalize">{confidence.level}. {confidence.summary}</dd>
-              </div>
-            </dl>
-
             {(citedSignal || fallbackSignal) ? (
-              <div className="mt-4 border-t border-border/60 pt-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Cited market signal</p>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  {citedSignal ? "Cited market signal" : fallbackProvenance}
+                </p>
                 <p className="mt-1 text-sm leading-6 text-foreground">
                   {citedSignal?.detail || citedSignal?.title || fallbackSignal}
                   {citedSignal?.url ? (
@@ -229,6 +208,9 @@ export function IcpUnlockGate({
                 </ul>
               </div>
             ) : null}
+            <p className="mt-4 border-t border-border/60 pt-4 text-sm text-muted-foreground">
+              Confidence: <span className="font-semibold capitalize text-foreground">{confidence.level}</span>. {confidence.summary}
+            </p>
           </div>
 
         </div>
@@ -236,10 +218,10 @@ export function IcpUnlockGate({
         <div className="px-6 py-6 sm:px-8">
           <div className="space-y-2 text-center">
             <h2 className="text-xl font-semibold tracking-tight">
-              Save the full Customer Decision Brief
+              Save my brief and reveal the action plan
             </h2>
             <p className="text-sm text-muted-foreground">
-              Create an account to save, share, and unlock the non fit segment, ranked pains, alternatives, channels, cited evidence, and five interview plan.
+              Create an account to keep this exact brief and open five concrete customer-interview tasks.
             </p>
           </div>
 
@@ -293,9 +275,14 @@ export function IcpUnlockGate({
         onOpenChange={setSoftGateOpen}
         seed={normalizedSeed}
         trigger="icp_draft_unlock"
-        title="Save the full Customer Decision Brief"
-        description="Two fields and your draft is yours. Free forever. No credit card."
+        title="Save my brief and reveal the action plan"
+        description="Two fields and this exact brief is yours, including five customer-interview tasks. Free, with no credit card."
         returnPathOverride={returnPath}
+        signupSource="icp-draft-unlock"
+        entryId="icp_draft_unlock"
+        activationTool="icp_builder"
+        journeyTool="icp_builder"
+        artifactType="customer_decision_preview"
         onBeforeAuthContinue={onBeforeAuthContinue}
       />
     </div>
