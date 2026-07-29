@@ -58,7 +58,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen relative">
-      <HomeWallpaper />
+      <HomeWallpaper variant="landing" />
       <SEO
         title="The Founders Compass | Creatives Takeover"
         description="Turn your idea into a validated startup through one evidence backed path for customer clarity, proof, PMF decisions, MVP building, GTM execution, and verified traction."

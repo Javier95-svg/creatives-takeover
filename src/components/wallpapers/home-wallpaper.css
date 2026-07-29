@@ -1,0 +1,55 @@
+.home-wallpaper--landing {
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 92% 72% at 8% 4%, rgba(59, 130, 246, 0.16) 0%, rgba(96, 165, 250, 0.07) 36%, transparent 70%),
+    radial-gradient(ellipse 70% 58% at 92% 8%, rgba(99, 102, 241, 0.11) 0%, rgba(139, 92, 246, 0.045) 40%, transparent 72%),
+    radial-gradient(ellipse 74% 66% at 54% 94%, rgba(20, 184, 166, 0.09) 0%, rgba(45, 212, 191, 0.035) 42%, transparent 74%),
+    linear-gradient(145deg, #fbfcff 0%, #f4f7ff 38%, #f8fafc 67%, #f3f9f7 100%);
+}
+
+.home-wallpaper__mesh {
+  position: absolute;
+  inset: -12%;
+  background:
+    radial-gradient(circle at 27% 32%, rgba(147, 197, 253, 0.13), transparent 26%),
+    radial-gradient(circle at 72% 38%, rgba(196, 181, 253, 0.085), transparent 24%),
+    radial-gradient(circle at 48% 76%, rgba(153, 246, 228, 0.07), transparent 28%);
+  filter: blur(44px);
+  transform: translateZ(0);
+}
+
+.home-wallpaper__texture {
+  position: absolute;
+  inset: 0;
+  opacity: 0.018;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='.7'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  mix-blend-mode: multiply;
+}
+
+.dark .home-wallpaper--landing {
+  background:
+    radial-gradient(ellipse 94% 76% at 7% 3%, rgba(37, 99, 235, 0.2) 0%, rgba(30, 64, 175, 0.075) 38%, transparent 72%),
+    radial-gradient(ellipse 72% 62% at 94% 7%, rgba(99, 102, 241, 0.13) 0%, rgba(76, 29, 149, 0.05) 42%, transparent 74%),
+    radial-gradient(ellipse 78% 68% at 56% 96%, rgba(13, 148, 136, 0.11) 0%, rgba(6, 78, 59, 0.04) 44%, transparent 75%),
+    linear-gradient(145deg, #111827 0%, #0d1420 38%, #0b1018 67%, #0b1517 100%);
+}
+
+.dark .home-wallpaper__mesh {
+  background:
+    radial-gradient(circle at 26% 31%, rgba(59, 130, 246, 0.15), transparent 27%),
+    radial-gradient(circle at 73% 37%, rgba(129, 140, 248, 0.09), transparent 25%),
+    radial-gradient(circle at 49% 77%, rgba(45, 212, 191, 0.065), transparent 29%);
+  filter: blur(52px);
+}
+
+.dark .home-wallpaper__texture {
+  opacity: 0.026;
+  mix-blend-mode: soft-light;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-wallpaper__mesh {
+    transform: none;
+  }
+}
