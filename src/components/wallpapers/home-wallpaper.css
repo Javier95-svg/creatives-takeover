@@ -18,15 +18,6 @@
   transform: translateZ(0);
 }
 
-.home-wallpaper__texture {
-  position: absolute;
-  inset: 0;
-  opacity: 0.018;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='.7'/%3E%3C/svg%3E");
-  background-size: 180px 180px;
-  mix-blend-mode: multiply;
-}
-
 .dark .home-wallpaper--landing {
   background:
     radial-gradient(ellipse 94% 76% at 7% 3%, rgba(37, 99, 235, 0.2) 0%, rgba(30, 64, 175, 0.075) 38%, transparent 72%),
@@ -41,11 +32,6 @@
     radial-gradient(circle at 73% 37%, rgba(129, 140, 248, 0.09), transparent 25%),
     radial-gradient(circle at 49% 77%, rgba(45, 212, 191, 0.065), transparent 29%);
   filter: blur(52px);
-}
-
-.dark .home-wallpaper__texture {
-  opacity: 0.026;
-  mix-blend-mode: soft-light;
 }
 
 @media (prefers-reduced-motion: reduce) {

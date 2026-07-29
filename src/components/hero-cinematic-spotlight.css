@@ -368,7 +368,7 @@
 }
 
 /* Dual-path CTAs for logged-out visitors: each path pairs a founder-state
-   question with an outcome and a concise pre-signup promise. */
+   question with a single, outcome-led action. */
 .ct-hero__cta-path {
   display: flex;
   flex-direction: column;
@@ -383,15 +383,6 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--ct-muted);
-}
-
-.ct-hero__cta-microcopy {
-  max-width: 290px;
-  color: var(--ct-muted);
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.45;
-  text-wrap: balance;
 }
 
 /* Audience link under the primary CTAs. It opens the "Who is this for?"

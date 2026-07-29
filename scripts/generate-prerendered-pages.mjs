@@ -28,8 +28,8 @@ function buildFallbackHtml(routeConfig) {
           <p>Business Development platform for startup founders &amp; first-time business owners.</p>
           <p>Define your ideal customer, prove demand, build your MVP, launch it, and find investment.</p>
           <p><strong>No application. No cohort. No equity.</strong></p>
-          <p><strong>Still an idea?</strong> <a href="/icp-builder">Define my first customer</a> &mdash; get a customer and pain brief in about 2 minutes, free before signup.</p>
-          <p><strong>Have a product?</strong> <a href="/demo-studio/try">Turn it into a live demo</a> &mdash; describe it or add screenshots, then preview before signup.</p>`
+          <p><strong>Still an idea?</strong> <a href="/icp-builder">Define my first customer</a></p>
+          <p><strong>Have a product?</strong> <a href="/demo-studio/try">Turn it into a live demo</a></p>`
     : `<p>${routeConfig.heroCopy || routeConfig.description}</p>`;
   const authorByline = routeConfig.path.startsWith("/answers/")
     ? `<p>By <a href="/about#founder">Javier Peña, Founder &amp; CEO</a></p>`

@@ -287,7 +287,6 @@ const Hero = ({
                     <polyline points="9 18 15 12 9 6" />
                   </svg>
                 </Link>
-                <span className="ct-hero__cta-microcopy">Get a customer + pain brief in about 2 minutes. Free before signup.</span>
               </div>
               <div className="ct-hero__cta-path">
                 <span className="ct-hero__cta-kicker">Have a product?</span>
@@ -297,7 +296,6 @@ const Hero = ({
                     <polyline points="9 18 15 12 9 6" />
                   </svg>
                 </Link>
-                <span className="ct-hero__cta-microcopy">Describe it or add screenshots. Preview before signup.</span>
               </div>
               <button type="button" className="ct-hero__audience-link" onClick={handleWhoIsThisForClick}>
                 Who is this for?

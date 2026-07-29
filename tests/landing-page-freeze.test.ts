@@ -4,10 +4,10 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 const frozenFiles = {
-  // Rehashed 2026-07-28 for the approved activation redesign: ICP is the
-  // outcome-led primary path and Demo Studio is the product-ready secondary
-  // path, with explicit pre-signup value and correlated funnel placements.
-  '../src/components/Hero.tsx': '1d92ffad76a21ae9ec60c6acd89af5cd87b8ed9abb48677ade9f44b4b5c02932',
+  // Rehashed 2026-07-28 for the approved CTA simplification: ICP remains the
+  // outcome-led primary path and Demo Studio the product-ready secondary path,
+  // while the supporting microcopy beneath both actions has been removed.
+  '../src/components/Hero.tsx': 'c21d2adac83ef57d3f5e28aa7a3dc9ba916c4ac179eea5e4df4ba7cf5d56e39b',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.
@@ -22,11 +22,14 @@ const frozenFiles = {
   // Load timing only — no section added, removed, reordered, restyled or
   // re-copied. The Suspense fallback reserves the section's measured rendered
   // height (969px at 390px wide, 753px at lg) so the swap shifts nothing.
-  // Hero/EntrepreneurProblems/Navigation hashes are unchanged.
+  // Hero/EntrepreneurProblems/Navigation hashes were unchanged at that
+  // performance checkpoint.
   //
   // Previous hash (approved homepage restored from 1325b121, the parent of
   // 5dd4dbbb): 20234ac0810e38a9cf7fbc6497bd33ec7d3c1da7fc181d068a00dfe2c8ecb4d0
-  '../src/pages/Index.tsx': 'e142b000976a4a4e80aae383fadd76bef4dd573b28af9414725a0152a449dbcb',
+  // Rehashed 2026-07-28 for the approved homepage wallpaper redesign: Index
+  // opts into the landing-only gradient while section order stays unchanged.
+  '../src/pages/Index.tsx': 'da2cf00c370d9e05954b83dcfc7d6516171a3f8b14a1925a4b3bb9d98a150dad',
 } as const;
 
 test('the approved unauthenticated landing page remains frozen during core-tool work', () => {
