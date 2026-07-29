@@ -25,7 +25,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -169,16 +168,16 @@ const WhoIsThisForDialog = ({ open, onOpenChange }: WhoIsThisForDialogProps) => 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90dvh] w-[calc(100%-1rem)] max-w-5xl gap-0 overflow-y-auto rounded-3xl border-border/70 bg-background p-0 shadow-[0_36px_120px_-48px_rgba(15,23,42,0.8)] [&>button]:z-40 sm:w-[calc(100%-2rem)]">
+      <DialogContent
+        aria-describedby={undefined}
+        className="max-h-[90dvh] w-[calc(100%-1rem)] max-w-5xl gap-0 overflow-y-auto rounded-3xl border-border/70 bg-background p-0 shadow-[0_36px_120px_-48px_rgba(15,23,42,0.8)] [&>button]:z-40 sm:w-[calc(100%-2rem)]"
+      >
         <div className="sticky top-0 z-30 border-b border-border/60 bg-background/95 px-5 py-4 pr-14 backdrop-blur-xl sm:px-7 sm:py-5 sm:pr-16">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <DialogHeader className="space-y-1 text-left">
               <DialogTitle className="font-space-grotesk text-xl sm:text-2xl">
                 Who is Creatives Takeover for?
               </DialogTitle>
-              <DialogDescription className="max-w-2xl text-sm leading-6">
-                Choose the profile that most closely matches what you need to prove next.
-              </DialogDescription>
             </DialogHeader>
             <div className="flex shrink-0 items-center gap-3">
               <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">

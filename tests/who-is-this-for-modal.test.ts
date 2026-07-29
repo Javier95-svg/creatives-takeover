@@ -59,6 +59,7 @@ test("the hero opens the audience dialog and the dialog preserves its accessibil
   assert.doesNotMatch(hero, /handleStartupCycleClick|hero-startup-cycle-link/);
 
   assert.match(dialog, /Who is Creatives Takeover for\?/);
+  assert.doesNotMatch(dialog, /Choose the profile that most closely matches what you need to prove next\./);
   assert.match(dialog, /border-border\/70 bg-background p-0/);
   assert.doesNotMatch(dialog, /bg-background\/98/);
   assert.match(dialog, /usePrefersReducedMotion/);
