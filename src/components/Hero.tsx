@@ -82,7 +82,7 @@ const Hero = ({
   titleLine1 = "The Founders'",
   titleLine2 = "Compass",
   lede = DEFAULT_LEDE,
-  ctaLabel = "Turn it into a live demo",
+  ctaLabel = "Launch a live demo",
   ctaHref = "/demo-studio/try",
   onCtaClick,
   dashboardUrl = "creatives-takeover.com/dashboard",
@@ -282,7 +282,7 @@ const Hero = ({
               <div className="ct-hero__cta-path">
                 <span className="ct-hero__cta-kicker">Still an idea?</span>
                 <Link className="ct-hero__cta" to="/icp-builder" onClick={handleIcpCtaClick}>
-                  Define my first customer
+                  Draft your ICP
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                     <polyline points="9 18 15 12 9 6" />
                   </svg>
