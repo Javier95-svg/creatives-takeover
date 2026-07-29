@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import Navigation from "@/components/Navigation";
 import SEO, { createBreadcrumbSchema, createFAQSchema, createSoftwareApplicationSchema } from "@/components/SEO";
@@ -209,16 +209,6 @@ export default function ICPBuilderPage() {
         >
           <ICPBuilder />
         </Suspense>
-        <aside aria-label="ICP learning resource" className="mx-auto max-w-5xl px-4 pb-12 text-center text-sm text-muted-foreground">
-          Need a clearer starting point?{" "}
-          <Link
-            className="font-medium text-foreground underline underline-offset-4 hover:text-primary"
-            to="/answers/how-to-define-icp-for-startup"
-          >
-            Learn how to define an ICP for your startup
-          </Link>
-          .
-        </aside>
       </main>
 
       <ExitIntentModal isOpen={showExitIntent} onClose={closeExitIntent} />
