@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
-import { toast } from 'sonner';
 
 import DashboardPreview from '@/components/DashboardPreview';
 import { Day1Welcome, type Day1Profile } from '@/components/dashboard/Day1Welcome';
@@ -13,7 +12,6 @@ import { DashboardNavigationProvider } from '@/contexts/DashboardNavigationConte
 import { DashboardDataProvider, useDashboardData } from '@/contexts/DashboardDataContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useActivationGate } from '@/hooks/useActivationGate';
 import { useFeatureGating } from '@/hooks/useFeatureGating';
 import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -22,14 +20,11 @@ import { shouldRedirectToGuidedOnboarding } from '@/lib/guidedOnboarding';
 import { shouldShowOnboardingPathGate } from '@/lib/onboardingPath';
 import { OnboardingPathGate } from '@/components/onboarding/OnboardingPathGate';
 import { cn } from '@/lib/utils';
-import { DashboardSidebar, DashboardSidebarContent } from './DashboardSidebar';
+import { DashboardSidebar } from './DashboardSidebar';
 import { DashboardStreakChip } from './DashboardStreakChip';
 import { DashboardTabsHost } from './DashboardTabsHost';
 import { DashboardMetricsContext, TaskCountContext, type DashboardWeeklyMetrics } from './TaskCountContext';
 import { ModeToggle, type DashboardMode } from './modes/ModeToggle';
-import { isExecutionDashboardEnabled } from '@/lib/dashboardRollout';
-import { isFounderCycleRolloutEnabled } from '@/lib/founderCycleRollout';
-import { BIZMAP_STAGE_ORDER, DEFAULT_CURRENT_STAGE, type BizMapStage } from '@/lib/bizmapStages';
 import { useFeatureFlagEnabled } from '@/hooks/usePosthogFeatureFlag';
 import { captureEvent } from '@/lib/analytics';
 import { getActivationPreferenceState } from '@/lib/activationState';
@@ -41,14 +36,12 @@ const completedDashboardProfileCache = new Map<string, Day1Profile>();
 interface DashboardFrameContentProps {
   incompleteTaskCount: number;
   weeklyMetrics: DashboardWeeklyMetrics;
-  snapshotStage?: BizMapStage;
   useLegacyStreak?: boolean;
 }
 
 function DashboardFrameContent({
   incompleteTaskCount,
   weeklyMetrics,
-  snapshotStage,
   useLegacyStreak = false,
 }: DashboardFrameContentProps) {
   const navigate = useNavigate();
@@ -69,7 +62,7 @@ function DashboardFrameContent({
       <DashboardMetricsContext.Provider value={weeklyMetrics}>
       <SidebarProvider>
         <DashboardNavigationProvider>
-          {snapshotStage ? <DashboardSidebarContent currentStage={snapshotStage} /> : <DashboardSidebar />}
+          <DashboardSidebar />
           <SidebarInset>
             <div className="relative min-h-screen overflow-hidden bg-background">
               <div className="pointer-events-none absolute inset-x-0 top-0 z-50">
@@ -159,52 +152,13 @@ function LegacyDashboardFrame({ shadowSnapshot }: { shadowSnapshot?: DashboardSn
   );
 }
 
-function SnapshotDashboardFrame() {
-  const { snapshot, error } = useDashboardData();
-  const stageValue = snapshot?.journey.currentStage;
-  const snapshotStage = stageValue && BIZMAP_STAGE_ORDER.includes(stageValue as BizMapStage)
-    ? stageValue as BizMapStage
-    : DEFAULT_CURRENT_STAGE;
-  const weeklyMission = snapshot?.focus.weeklyMission;
-  const weeklyMetrics = useMemo<DashboardWeeklyMetrics>(() => ({
-    weeklyMissionGoal: weeklyMission?.title ?? null,
-    weeklyMissionProgress: weeklyMission?.progress ?? null,
-    tasksCompletedThisWeek: 0,
-    totalTasksThisWeek: 0,
-  }), [weeklyMission]);
-  const incompleteTaskCount = (snapshot?.focus.dueToday.length ?? 0) + (snapshot?.focus.overdueCount ?? 0);
-
-  if (error) return <LegacyDashboardFrame />;
-
-  return (
-    <DashboardFrameContent
-      incompleteTaskCount={incompleteTaskCount}
-      weeklyMetrics={weeklyMetrics}
-      snapshotStage={snapshotStage}
-    />
-  );
-}
-
 function ShadowDashboardFrame() {
   const { snapshot } = useDashboardData();
   return <LegacyDashboardFrame shadowSnapshot={snapshot} />;
 }
 
 function DashboardFrame() {
-  const { user } = useAuth();
-  const posthogFlag = useFeatureFlagEnabled('dashboard-command-center-v2');
-  const founderCycleFlag = useFeatureFlagEnabled('founder-execution-cycle-v1');
   const shadowFlag = useFeatureFlagEnabled('dashboard-command-center-shadow');
-  if (
-    isExecutionDashboardEnabled(user?.id, posthogFlag)
-    || isFounderCycleRolloutEnabled(user?.id, founderCycleFlag)
-  ) {
-    return (
-      <DashboardDataProvider>
-        <SnapshotDashboardFrame />
-      </DashboardDataProvider>
-    );
-  }
   if (shadowFlag) {
     return (
       <DashboardDataProvider>
@@ -218,10 +172,7 @@ function DashboardFrame() {
 export function DashboardShell() {
   const { user } = useAuth();
   const { checkFeatureAccess } = useFeatureGating();
-  const activationGate = useActivationGate();
-  const navigate = useNavigate();
   const userId = user?.id ?? null;
-  const userCreatedAt = user?.created_at ?? null;
   const cachedProfile = userId ? completedDashboardProfileCache.get(userId) ?? null : null;
   const [profileLoading, setProfileLoading] = useState(() => Boolean(userId && !cachedProfile));
   const [day1Profile, setDay1Profile] = useState<Day1Profile | null>(cachedProfile);
@@ -294,20 +245,6 @@ export function DashboardShell() {
     });
   };
 
-  useEffect(() => {
-    if (!userId || !userCreatedAt || !activationGate.shouldEnforceGate) return;
-
-    const accountAgeMs = Date.now() - new Date(userCreatedAt).getTime();
-    const isNewUser = accountAgeMs < 24 * 60 * 60 * 1000;
-    if (!isNewUser) return;
-
-    toast.info('Complete your first action to unlock your full dashboard.');
-    const timer = setTimeout(() => {
-      navigate(activationGate.redirectUrl, { replace: true });
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, [activationGate.redirectUrl, activationGate.shouldEnforceGate, navigate, userCreatedAt, userId]);
-
   if (!user) {
     return (
       <>
@@ -320,7 +257,7 @@ export function DashboardShell() {
     );
   }
 
-  if (profileLoading || (activationGate.loading && day1Profile?.onboarding_completed !== true)) {
+  if (profileLoading) {
     return <DashboardSkeleton />;
   }
 

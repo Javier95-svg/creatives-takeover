@@ -30,8 +30,8 @@ const STEPS: TourStep[] = [
   },
   {
     icon: Home,
-    title: "Home, your daily command center",
-    body: "Start here every day. The top of Home shows today's habits, what's due, anything overdue, and your streak. Knock those out first.",
+    title: "Command Center, your daily operating view",
+    body: "Start here every day. The top of your Command Center shows today's habits, what's due, anything overdue, and your streak. Knock those out first.",
   },
   {
     icon: Repeat2,

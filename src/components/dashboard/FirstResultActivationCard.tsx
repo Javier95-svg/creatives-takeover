@@ -1,8 +1,7 @@
-import { ArrowRight, CheckCircle2, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { trackActivationFunnelEvent } from '@/lib/analytics';
 import { buildActivationSummary, trackRetentionEvent, type ActivationIntent } from '@/lib/retentionSystem';
 
@@ -45,35 +44,29 @@ export function FirstResultActivationCard({
   };
 
   return (
-    <Card className="overflow-hidden border-primary/25 bg-card/95 shadow-sm">
-      <CardContent className="grid gap-6 p-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:p-8">
-        <div className="space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
-            <Sparkles className="h-3.5 w-3.5" />
-            First result
+    <div className="mb-6 rounded-2xl border border-primary/25 bg-primary/8 p-5 shadow-sm">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+            <Sparkles className="h-5 w-5" aria-hidden="true" />
           </div>
-          <div className="space-y-2">
-            <h1 className="font-space-grotesk text-2xl font-semibold tracking-tight md:text-3xl">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+              First result
+            </p>
+            <p className="mt-1 text-sm font-semibold text-foreground">
               Finish your first result
-            </h1>
-            <p className="max-w-2xl text-sm leading-6 text-muted-foreground md:text-base">
+            </p>
+            <p className="mt-0.5 max-w-3xl text-sm leading-6 text-muted-foreground">
               {summary.description}
             </p>
           </div>
-          <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-3">
-            {['Open the tool', 'Create one useful artifact', 'Return here with your next step ready'].map((step) => (
-              <div key={step} className="flex items-center gap-2 rounded-xl border border-border/60 bg-background/70 px-3 py-2">
-                <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
-                <span>{step}</span>
-              </div>
-            ))}
-          </div>
         </div>
-        <Button type="button" size="lg" onClick={handleContinue} className="w-full gap-2 md:w-auto">
+        <Button type="button" onClick={handleContinue} className="w-full shrink-0 gap-2 sm:w-auto">
           {summary.title}
           <ArrowRight className="h-4 w-4" />
         </Button>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

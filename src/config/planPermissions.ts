@@ -240,16 +240,12 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
 };
 
 const SHARED_DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
-  { path: '/dashboard', label: 'Home', description: 'Daily overview', iconKey: 'home' },
+  { path: '/dashboard', label: 'Command Center', description: 'Daily operating overview', iconKey: 'home' },
   { path: '/dashboard/files', label: 'Files', description: 'Saved proof and artifacts', iconKey: 'folder_open' },
   { path: '/dashboard/tasks', label: 'Tasks', description: 'Actions and deadlines', iconKey: 'check_square' },
   { path: '/dashboard/routine', label: 'Routine', description: 'Habits and weekly rhythm', iconKey: 'repeat_2' },
   { path: '/dashboard/referral', label: 'Referrals', description: 'Invite and grow', iconKey: 'gift' },
 ];
-
-const COMMAND_CENTER_DASHBOARD_NAV_ITEMS: DashboardNavItem[] = SHARED_DASHBOARD_NAV_ITEMS.map((item) =>
-  item.path === '/dashboard' ? { ...item, label: 'Command Center', description: 'Executive operating overview' } : item,
-);
 
 export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeConfig> = {
   rookie: {
@@ -293,7 +289,7 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
     activeStages: [1, 2, 3, 4, 5],
     previewStages: [],
     showUpgradeBanner: false,
-    navItems: COMMAND_CENTER_DASHBOARD_NAV_ITEMS,
+    navItems: SHARED_DASHBOARD_NAV_ITEMS,
     visibleTools: ['icp_builder', 'waitlist_maker', 'pmf_lab', 'mvp_builder', 'tech_stack', 'gtm_strategist', 'directories', 'saved_mentors', 'decision_sprint', 'core_metrics', 'ai_goals', 'find_mentor', 'find_cofounder', 'find_angel', 'vc_search', 'accelerator_hunt', 'email_templates', 'pitch_deck_analyzer', 'insighta_test', 'newspaper', 'prompt_library'],
   },
 };

@@ -17,7 +17,6 @@ import StarterDashboardNudge from '@/components/dashboard/StarterDashboardNudge'
 import { useExitIntent } from '@/hooks/useExitIntent';
 import { ExitIntentModal } from '@/components/ExitIntentModal';
 import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
-import ExecutionDashboardHome from '@/components/dashboard/ExecutionDashboardHome';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,12 +29,10 @@ import {
 } from '@/lib/activationState';
 import { normalizePlan } from '@/config/planPermissions';
 import type { ActivationIntent } from '@/lib/retentionSystem';
-import { isExecutionDashboardEnabled } from '@/lib/dashboardRollout';
-import { useFeatureFlagEnabled } from '@/hooks/usePosthogFeatureFlag';
 
 interface DashboardActivationState {
   loading: boolean;
-  showFirstResultMode: boolean;
+  showFirstResultBanner: boolean;
   activationIntent: ActivationIntent | null;
   continueUrl: string | null;
   firstArtifactLabel: string | null;
@@ -50,11 +47,9 @@ const Dashboard = () => {
   const fromIcpBuilder = searchParams.get('from') === 'icp_builder';
   const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
   const daysSinceSignup = getDaysSinceSignup(user?.created_at ?? null);
-  const executionDashboardFlag = useFeatureFlagEnabled('dashboard-command-center-v2');
-  const executionDashboardEnabled = isExecutionDashboardEnabled(user?.id, executionDashboardFlag);
   const [activationState, setActivationState] = useState<DashboardActivationState>({
     loading: true,
-    showFirstResultMode: false,
+    showFirstResultBanner: false,
     activationIntent: null,
     continueUrl: null,
     firstArtifactLabel: null,
@@ -68,7 +63,7 @@ const Dashboard = () => {
       if (!user) {
         setActivationState({
           loading: false,
-          showFirstResultMode: false,
+          showFirstResultBanner: false,
           activationIntent: null,
           continueUrl: null,
           firstArtifactLabel: null,
@@ -88,7 +83,7 @@ const Dashboard = () => {
       if (error) {
         setActivationState({
           loading: false,
-          showFirstResultMode: false,
+          showFirstResultBanner: false,
           activationIntent: null,
           continueUrl: null,
           firstArtifactLabel: null,
@@ -98,14 +93,14 @@ const Dashboard = () => {
       }
 
       const preferenceState = getActivationPreferenceState(data?.user_preferences);
-      const showFirstResultMode = shouldShowFirstResultMode({
+      const showFirstResultBanner = shouldShowFirstResultMode({
         onboardingCompleted: data?.onboarding_completed,
         userPreferences: data?.user_preferences,
       });
 
       setActivationState({
         loading: false,
-        showFirstResultMode,
+        showFirstResultBanner,
         activationIntent: preferenceState.activationIntent,
         // Only surface a resume card when a real artifact deep link exists.
         continueUrl: preferenceState.firstArtifactResumeUrl,
@@ -120,7 +115,7 @@ const Dashboard = () => {
         plan: currentPlan,
         days_since_signup: getDaysSinceSignup(user.created_at),
         first_artifact_type: preferenceState.firstArtifactType,
-        first_result_mode: showFirstResultMode,
+        first_result_mode: showFirstResultBanner,
       });
       trackActivationReturnMilestones({
         userId: user.id,
@@ -175,24 +170,14 @@ const Dashboard = () => {
           </button>
         </div>
       ) : null}
-      {!activationState.loading && activationState.showFirstResultMode && activationState.activationIntent ? (
-        <>
-          <FirstResultActivationCard
-            activationIntent={activationState.activationIntent}
-            userId={user?.id}
-            daysSinceSignup={daysSinceSignup}
-            plan={currentPlan}
-          />
-          <ExitIntentModal isOpen={showExitIntent} onClose={closeExitIntent} />
-        </>
-      ) : (
-      <>
-      {executionDashboardEnabled ? (
-        <ExecutionDashboardHome />
-      ) : (
-      <>
-      {/* Returning users land back in their saved work before anything else. */}
-      {activationState.continueUrl ? (
+      {!activationState.loading && activationState.showFirstResultBanner && activationState.activationIntent ? (
+        <FirstResultActivationCard
+          activationIntent={activationState.activationIntent}
+          userId={user?.id}
+          daysSinceSignup={daysSinceSignup}
+          plan={currentPlan}
+        />
+      ) : activationState.continueUrl ? (
         <ContinueArtifactCard
           continueUrl={activationState.continueUrl}
           artifactLabel={activationState.firstArtifactLabel}
@@ -218,11 +203,7 @@ const Dashboard = () => {
           <StarterDashboardNudge />
         </div>
       </DashboardDisclosure>
-      </>
-      )}
       <ExitIntentModal isOpen={showExitIntent} onClose={closeExitIntent} />
-      </>
-      )}
     </>
   );
 };

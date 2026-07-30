@@ -90,32 +90,54 @@ test('client uses one snapshot query and a single activity invalidation stream',
   assert.match(source, /invalidateQueries/);
 });
 
-test('dashboard and AI ranking roll out through separate PostHog flags and kill switches', () => {
+test('canonical command center stays visible while snapshot validation remains shadow-only', () => {
+  const dashboard = read('../src/pages/Dashboard.tsx');
   const shell = read('../src/components/dashboard/DashboardShell.tsx');
   const provider = read('../src/contexts/DashboardDataContext.tsx');
   const rollout = read('../src/lib/dashboardRollout.ts');
+  const envExample = read('../.env.example');
 
-  assert.match(shell, /dashboard-command-center-v2/);
+  assert.doesNotMatch(dashboard, /ExecutionDashboardHome|dashboard-command-center-v2|isExecutionDashboardEnabled/);
+  assert.doesNotMatch(shell, /dashboard-command-center-v2|founder-execution-cycle-v1|SnapshotDashboardFrame/);
   assert.match(shell, /dashboard-command-center-shadow/);
   assert.match(shell, /dashboard_snapshot_shadow_compared/);
   assert.match(provider, /dashboard-ai-ranking/);
-  assert.match(rollout, /VITE_DASHBOARD_V2_ROLLOUT_PERCENT/);
+  assert.doesNotMatch(rollout, /isExecutionDashboardEnabled|VITE_DASHBOARD_V2_ROLLOUT_PERCENT/);
+  assert.doesNotMatch(envExample, /VITE_DASHBOARD_V2_ROLLOUT_PERCENT/);
   assert.match(rollout, /VITE_DASHBOARD_AI_RANKING_ENABLED/);
 });
 
-test('execution-first visual order is focus, people, today, journey and business pulse', () => {
-  const source = read('../src/components/dashboard/ExecutionDashboardHome.tsx');
-  const focus = source.lastIndexOf('<FocusNow');
-  const people = source.lastIndexOf('<WaitingOnPeople');
-  const today = source.lastIndexOf('<TodayPanel');
-  const journey = source.lastIndexOf('<JourneyPanel');
-  const business = source.lastIndexOf('<BusinessPulse');
+test('first-result and resume banners lead into the complete command center', () => {
+  const dashboard = read('../src/pages/Dashboard.tsx');
+  const firstResult = dashboard.lastIndexOf('<FirstResultActivationCard');
+  const resume = dashboard.lastIndexOf('<ContinueArtifactCard');
+  const today = dashboard.lastIndexOf('<DashboardTodayCockpit');
+  const journey = dashboard.lastIndexOf('<FounderJourneyPanel');
+  const disclosure = dashboard.lastIndexOf('<DashboardDisclosure');
+  const exitIntent = dashboard.lastIndexOf('<ExitIntentModal');
 
-  assert.ok(focus > 0);
-  assert.ok(focus < people);
-  assert.ok(people < today);
+  assert.ok(firstResult > 0);
+  assert.ok(firstResult < resume);
+  assert.ok(resume < today);
   assert.ok(today < journey);
-  assert.ok(journey < business);
+  assert.ok(journey < disclosure);
+  assert.ok(disclosure < exitIntent);
+  assert.match(dashboard, /showFirstResultBanner/);
+  assert.match(dashboard, /first_result_mode: showFirstResultBanner/);
+});
+
+test('first-result prompt is compact, responsive, non-dismissible, and keeps activation analytics', () => {
+  const banner = read('../src/components/dashboard/FirstResultActivationCard.tsx');
+  const tour = read('../src/components/dashboard/DashboardTour.tsx');
+
+  assert.match(banner, /mb-6 rounded-2xl/);
+  assert.match(banner, /sm:flex-row/);
+  assert.match(banner, /Finish your first result/);
+  assert.match(banner, /trackActivationFunnelEvent\('first_action_opened'/);
+  assert.match(banner, /trackRetentionEvent\('activation_first_action_opened'/);
+  assert.doesNotMatch(banner, /handleDismiss|aria-label="Dismiss"|CheckCircle2/);
+  assert.match(tour, /Command Center, your daily operating view/);
+  assert.doesNotMatch(tour, /Home, your daily command center/);
 });
 
 test('tool registry covers the seven core journey tools and human layer', () => {
@@ -143,5 +165,8 @@ test('returning to a mounted dashboard tab preserves its home component and comp
   assert.doesNotMatch(dashboard, /isActiveDashboardHome/);
   assert.match(tabs, /mountedTabIds/);
   assert.match(shell, /completedDashboardProfileCache/);
-  assert.match(shell, /activationGate\.loading && day1Profile\?\.onboarding_completed !== true/);
+  assert.match(shell, /if \(profileLoading\)/);
+  assert.match(shell, /shouldRedirectToGuidedOnboarding/);
+  assert.match(shell, /shouldShowOnboardingPathGate/);
+  assert.doesNotMatch(shell, /useActivationGate|shouldEnforceGate|Complete your first action to unlock your full dashboard/);
 });

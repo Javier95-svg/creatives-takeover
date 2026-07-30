@@ -80,6 +80,10 @@ test('dashboard mode config resolves from the canonical plan contract', () => {
   ]);
   assert.deepEqual(rookieMode.visibleTools, ['icp_builder', 'mvp_builder', 'saved_mentors', 'find_mentor', 'find_cofounder']);
 
+  for (const mode of ['rookie', 'starter', 'rising', 'pro'] as const) {
+    assert.equal(getDashboardModeConfig(mode).navItems[0]?.label, 'Command Center');
+  }
+
   const proMode = getDashboardModeConfig('pro');
   assert.equal(proMode.label, 'Expert Execution Mode');
   assert.deepEqual(proMode.activeStages, [1, 2, 3, 4, 5]);
