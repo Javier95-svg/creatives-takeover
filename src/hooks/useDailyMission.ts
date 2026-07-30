@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { getLocalDateString } from '@/lib/dailyGoalPrompt';
 import { BIZMAP_STAGES, type BizMapStage } from '@/lib/bizmapStages';
+import { recordRecommendationOutcome } from '@/lib/recommendationLearning';
 
 type DailyMission = Database['public']['Tables']['daily_missions']['Row'];
 
@@ -99,6 +100,13 @@ export const useDailyMission = (options: UseDailyMissionOptions = {}) => {
       }
 
       setMission(data);
+      void recordRecommendationOutcome({
+        recommendationKey: `daily_mission:${mission.id}`,
+        surface: 'daily_mission',
+        outcomeType: 'completed',
+      }).catch(() => {
+        // Mission completion must not depend on the additive learning pipeline.
+      });
       toast.success('Today\'s mission marked as done');
     } catch (error) {
       console.error('Failed to complete daily mission:', error);

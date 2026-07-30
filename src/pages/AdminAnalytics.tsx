@@ -109,6 +109,39 @@ interface FounderStageAccuracyReport {
   }>;
 }
 
+interface RecommendationLearningReport {
+  summary: {
+    uniqueUsers: number;
+    exposures: number;
+    opened: number;
+    completed: number;
+    artifacts: number;
+    helpful: number;
+    negative: number;
+    maturedD7: number;
+    returnedD7: number;
+  };
+  assignments: Array<{
+    assignment: string;
+    exposures: number;
+    artifacts: number;
+    negative: number;
+  }>;
+  eligibleSegments: number;
+  activeSuppressions: number;
+  config: {
+    status: 'collecting' | 'active' | 'paused';
+    active_policy_version: string;
+    holdout_percent: number;
+    exploration_percent: number;
+  } | null;
+  latestEvaluation: {
+    recommendation: 'collect' | 'activate' | 'continue' | 'pause';
+    relative_artifact_lift: number | null;
+    reason_codes: string[];
+  } | null;
+}
+
 const AdminAnalytics = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -152,6 +185,7 @@ const AdminAnalytics = () => {
   const [messagePerformance, setMessagePerformance] = useState<MessagePerformanceMetric[]>([]);
   const [onboardingOutcomes, setOnboardingOutcomes] = useState<OnboardingOutcomeReport | null>(null);
   const [stageAccuracy, setStageAccuracy] = useState<FounderStageAccuracyReport | null>(null);
+  const [recommendationLearning, setRecommendationLearning] = useState<RecommendationLearningReport | null>(null);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -228,6 +262,7 @@ const AdminAnalytics = () => {
         activationV2Result,
         onboardingOutcomesResult,
         stageAccuracyResult,
+        recommendationLearningResult,
       ] = await Promise.all([
         supabase
           .from('conversion_events')
@@ -286,6 +321,7 @@ const AdminAnalytics = () => {
         supabase.rpc('get_activation_funnel_v2', { p_from: fromIso, p_to: toIso }),
         supabase.rpc('get_onboarding_dashboard_outcomes_v1' as never, { p_from: fromIso, p_to: toIso } as never),
         supabase.rpc('get_founder_stage_accuracy_v1' as never, { p_from: fromIso, p_to: toIso } as never),
+        supabase.rpc('get_recommendation_learning_report_v1' as never, { p_from: fromIso, p_to: toIso } as never),
       ]);
 
       const outcomeReport = onboardingOutcomesResult.data && typeof onboardingOutcomesResult.data === 'object'
@@ -295,6 +331,11 @@ const AdminAnalytics = () => {
       setStageAccuracy(
         stageAccuracyResult.data && typeof stageAccuracyResult.data === 'object'
           ? stageAccuracyResult.data as unknown as FounderStageAccuracyReport
+          : null,
+      );
+      setRecommendationLearning(
+        recommendationLearningResult.data && typeof recommendationLearningResult.data === 'object'
+          ? recommendationLearningResult.data as unknown as RecommendationLearningReport
           : null,
       );
 
@@ -895,6 +936,90 @@ const AdminAnalytics = () => {
                           Calibration will appear after founders confirm or correct their dashboard stage.
                         </p>
                       )}
+                    </CardContent>
+                  </Card>
+                ) : null}
+                {recommendationLearning ? (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Collective recommendation learning</CardTitle>
+                      <CardDescription>
+                        Privacy-safe recommendation outcomes, policy guardrails, and learned segment coverage. Free-form onboarding answers are never included.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        {[
+                          {
+                            label: 'Users exposed',
+                            value: recommendationLearning.summary.uniqueUsers,
+                            detail: `${recommendationLearning.summary.exposures} idempotent decisions`,
+                          },
+                          {
+                            label: 'Artifact outcomes',
+                            value: recommendationLearning.summary.artifacts,
+                            detail: `${recommendationLearning.summary.completed} recommendations completed`,
+                          },
+                          {
+                            label: 'D7 returns',
+                            value: `${recommendationLearning.summary.returnedD7}/${recommendationLearning.summary.maturedD7}`,
+                            detail: 'Only fully matured 144–192h windows',
+                          },
+                          {
+                            label: 'Learning state',
+                            value: recommendationLearning.config?.status ?? 'unavailable',
+                            detail: `${recommendationLearning.eligibleSegments} eligible segments · ${recommendationLearning.activeSuppressions} active suppressions`,
+                          },
+                        ].map((metric) => (
+                          <div key={metric.label} className="rounded-xl border border-border p-4">
+                            <p className="text-xs font-medium text-muted-foreground">{metric.label}</p>
+                            <p className="mt-1 text-2xl font-bold capitalize">{metric.value}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">{metric.detail}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="grid gap-6 lg:grid-cols-2">
+                        <div>
+                          <p className="mb-3 text-sm font-semibold">Policy assignments</p>
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Assignment</TableHead>
+                                <TableHead className="text-right">Exposures</TableHead>
+                                <TableHead className="text-right">Artifacts</TableHead>
+                                <TableHead className="text-right">Negative</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {recommendationLearning.assignments.map((assignment) => (
+                                <TableRow key={assignment.assignment}>
+                                  <TableCell className="capitalize">{assignment.assignment}</TableCell>
+                                  <TableCell className="text-right">{assignment.exposures}</TableCell>
+                                  <TableCell className="text-right">{assignment.artifacts}</TableCell>
+                                  <TableCell className="text-right">{assignment.negative}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                        <div className="rounded-xl border border-border p-4">
+                          <p className="text-sm font-semibold">Latest policy evaluation</p>
+                          <p className="mt-2 text-2xl font-bold capitalize">
+                            {recommendationLearning.latestEvaluation?.recommendation ?? 'Collecting'}
+                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Policy {recommendationLearning.config?.active_policy_version ?? 'collective_v1'} ·{' '}
+                            {recommendationLearning.config?.holdout_percent ?? 10}% permanent control ·{' '}
+                            {recommendationLearning.config?.exploration_percent ?? 5}% capped exploration
+                          </p>
+                          {recommendationLearning.latestEvaluation?.reason_codes?.length ? (
+                            <p className="mt-3 text-xs text-muted-foreground">
+                              {recommendationLearning.latestEvaluation.reason_codes.join(', ').replaceAll('_', ' ')}
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                 ) : null}

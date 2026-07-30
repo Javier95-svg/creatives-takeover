@@ -21,7 +21,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardPanelHeader } from '@/components/dashboard/DashboardPanel';
+import { RecommendationFeedback } from '@/components/dashboard/RecommendationFeedback';
+import { useAuth } from '@/contexts/AuthContext';
+import { useDashboardFocus } from '@/contexts/DashboardDataContext';
 import { useFounderJourneySnapshot } from '@/hooks/useFounderJourneySnapshot';
+import { getDashboardTool } from '@/config/dashboardToolRegistry';
 import {
   trackDashboardJourneyContinueClicked,
   trackDashboardJourneyPanelViewed,
@@ -29,6 +33,8 @@ import {
   trackDashboardJourneyToolOpened,
 } from '@/lib/analytics';
 import type { JourneyStageNode, JourneyToolTile } from '@/lib/founderJourney';
+import { recordRecommendationOutcome } from '@/lib/recommendationLearning';
+import { trackRetentionEvent } from '@/lib/retentionSystem';
 import { cn } from '@/lib/utils';
 
 const TILE_ICONS: Record<string, LucideIcon> = {
@@ -139,8 +145,33 @@ function ToolTile({ tile }: { tile: JourneyToolTile }) {
 }
 
 export default function FounderJourneyPanel() {
+  const { user } = useAuth();
   const { snapshot, isLoading } = useFounderJourneySnapshot();
+  const { primaryAction, recommendationPolicy } = useDashboardFocus();
   const viewedRef = useRef(false);
+  const recommendedRoute = primaryAction ? getDashboardTool(primaryAction.toolKey).route : null;
+
+  const handleRecommendedOpen = () => {
+    if (!primaryAction) return;
+    void recordRecommendationOutcome({
+      recommendationKey: primaryAction.key,
+      surface: 'command_center',
+      outcomeType: 'opened',
+    }).catch(() => {
+      // The journey CTA remains usable while the additive learning pipeline rolls out.
+    });
+    if (user?.id) {
+      void trackRetentionEvent('dashboard_recommendation_opened', {
+        user_id: user.id,
+        recommendation_key: primaryAction.key,
+        recommendation_family: primaryAction.toolKey,
+        policy_version: recommendationPolicy?.policyVersion ?? 'deterministic_v1',
+        assignment: recommendationPolicy?.assignment ?? 'baseline',
+        source: 'founder_journey',
+      });
+    }
+    trackDashboardJourneyContinueClicked({ milestone_key: primaryAction.key });
+  };
 
   useEffect(() => {
     if (isLoading || viewedRef.current) return;
@@ -166,7 +197,14 @@ export default function FounderJourneyPanel() {
             description="Each tool you complete lights up here, so you always know where you stand across the whole journey."
           />
           <div className="mt-4 flex flex-wrap gap-2">
-            {snapshot.nextAction ? (
+            {primaryAction && recommendedRoute ? (
+              <Button asChild size="sm">
+                <Link to={recommendedRoute} onClick={handleRecommendedOpen}>
+                  {primaryAction.title}
+                  <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            ) : snapshot.nextAction ? (
               <Button asChild size="sm">
                 <Link
                   to={snapshot.nextAction.route}
@@ -191,6 +229,18 @@ export default function FounderJourneyPanel() {
               </Link>
             </Button>
           </div>
+          {primaryAction ? (
+            <RecommendationFeedback
+              surface="command_center"
+              recommendationKey={primaryAction.key}
+              metadata={{
+                recommendation_family: primaryAction.toolKey,
+                policy_version: recommendationPolicy?.policyVersion ?? 'deterministic_v1',
+                assignment: recommendationPolicy?.assignment ?? 'baseline',
+              }}
+              recordExposure={false}
+            />
+          ) : null}
         </CardContent>
       </Card>
     );
@@ -203,19 +253,6 @@ export default function FounderJourneyPanel() {
           kicker="Startup journey"
           title="Where you stand"
           badges={<Badge variant="secondary">{snapshot.stagesCompleted}/7 stages</Badge>}
-          action={
-            snapshot.nextAction ? (
-              <Button asChild size="sm" variant="outline" className="shrink-0">
-                <Link
-                  to={snapshot.nextAction.route}
-                  onClick={() => trackDashboardJourneyContinueClicked({ milestone_key: snapshot.nextAction?.key })}
-                >
-                  Continue: {snapshot.nextAction.label}
-                  <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-                </Link>
-              </Button>
-            ) : null
-          }
         />
 
         <Progress value={snapshot.progressPercent} className="mt-4 h-1.5" />
@@ -228,6 +265,50 @@ export default function FounderJourneyPanel() {
             ))}
           </div>
         </div>
+
+        {primaryAction && recommendedRoute ? (
+          <div className="mt-5 rounded-xl border border-primary/25 bg-primary/[0.05] p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+                  Recommended next
+                </p>
+                <p className="mt-1 text-sm font-semibold text-foreground">{primaryAction.title}</p>
+                {primaryAction.description ? (
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">{primaryAction.description}</p>
+                ) : null}
+                <RecommendationFeedback
+                  surface="command_center"
+                  recommendationKey={primaryAction.key}
+                  metadata={{
+                    recommendation_family: primaryAction.toolKey,
+                    policy_version: recommendationPolicy?.policyVersion ?? 'deterministic_v1',
+                    assignment: recommendationPolicy?.assignment ?? 'baseline',
+                  }}
+                  recordExposure={false}
+                />
+              </div>
+              <Button asChild size="sm" variant="outline" className="shrink-0">
+                <Link to={recommendedRoute} onClick={handleRecommendedOpen}>
+                  Continue
+                  <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        ) : snapshot.nextAction ? (
+          <div className="mt-5 flex justify-end">
+            <Button asChild size="sm" variant="outline">
+              <Link
+                to={snapshot.nextAction.route}
+                onClick={() => trackDashboardJourneyContinueClicked({ milestone_key: snapshot.nextAction?.key })}
+              >
+                Continue: {snapshot.nextAction.label}
+                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          </div>
+        ) : null}
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {snapshot.tools.map((tile) => (

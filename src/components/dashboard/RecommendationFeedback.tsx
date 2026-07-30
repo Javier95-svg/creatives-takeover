@@ -1,13 +1,19 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ThumbsDown, ThumbsUp } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  recommendationDecisionKey,
+  recordRecommendationDecision,
+  recordRecommendationFeedback,
+  type RecommendationFeedbackReason,
+  type RecommendationSurface,
+} from '@/lib/recommendationLearning';
 import { trackRetentionEvent } from '@/lib/retentionSystem';
 
-type NegativeReason = 'already_completed' | 'wrong_stage' | 'wrong_goal' | 'too_much_time';
-
-const REASONS: Array<[NegativeReason, string]> = [
+const REASONS: Array<[RecommendationFeedbackReason, string]> = [
   ['already_completed', 'Already completed'],
   ['wrong_stage', 'Wrong stage'],
   ['wrong_goal', 'Wrong goal'],
@@ -18,19 +24,68 @@ export function RecommendationFeedback({
   surface,
   recommendationKey,
   metadata = {},
+  recordExposure = true,
 }: {
-  surface: 'daily_mission' | 'first_action';
+  surface: RecommendationSurface;
   recommendationKey: string;
   metadata?: Record<string, unknown>;
+  recordExposure?: boolean;
 }) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [showReasons, setShowReasons] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const recordedExposureKey = useRef<string | null>(null);
+  const selectedToolKey = useMemo(() => {
+    const activationIntent = metadata.activation_intent;
+    if (typeof activationIntent === 'string' && activationIntent.trim()) return activationIntent;
+    return surface;
+  }, [metadata.activation_intent, surface]);
 
-  const submit = (relevance: 'helpful' | 'not_relevant', reason?: NegativeReason) => {
+  useEffect(() => {
+    setSubmitted(false);
+    setShowReasons(false);
+  }, [recommendationKey]);
+
+  useEffect(() => {
+    if (!user?.id || !recordExposure) return;
+    const decisionKey = recommendationDecisionKey(surface, recommendationKey);
+    if (recordedExposureKey.current === decisionKey) return;
+    recordedExposureKey.current = decisionKey;
+    void recordRecommendationDecision({
+      decisionKey,
+      surface,
+      candidates: [{ key: recommendationKey, toolKey: selectedToolKey }],
+      selectedKey: recommendationKey,
+      selectedToolKey,
+      deterministicKey: recommendationKey,
+      policyVersion: 'surface_baseline_v1',
+      assignment: 'baseline',
+    }).catch(() => {
+      // Feedback remains available while the additive learning migration rolls out.
+      recordedExposureKey.current = null;
+    });
+  }, [recordExposure, recommendationKey, selectedToolKey, surface, user?.id]);
+
+  const submit = (relevance: 'helpful' | 'not_relevant', reason?: RecommendationFeedbackReason) => {
     if (!user?.id || submitted) return;
     setSubmitted(true);
     setShowReasons(false);
+    void recordRecommendationFeedback({
+      recommendationKey,
+      surface,
+      relevance,
+      reason,
+    })
+      .then(() => {
+        if (surface === 'command_center' && relevance === 'not_relevant') {
+          return queryClient.invalidateQueries({ queryKey: ['dashboard-action-ranking'] });
+        }
+        return undefined;
+      })
+      .catch(() => {
+        // Retention analytics below remains the backwards-compatible fallback.
+      });
     void trackRetentionEvent('dashboard_recommendation_feedback', {
       user_id: user.id,
       surface,

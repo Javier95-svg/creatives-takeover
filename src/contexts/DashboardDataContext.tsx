@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components -- provider and selector hooks intentionally share one contract */
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFeatureFlagEnabled } from '@/hooks/usePosthogFeatureFlag';
 
@@ -9,12 +9,24 @@ import { isDashboardAiRankingEnabled } from '@/lib/dashboardRollout';
 import { captureEvent } from '@/lib/analytics';
 import { isDashboardSnapshotV1, type DashboardAction, type DashboardSnapshotV1 } from '@/types/dashboardSnapshot';
 import { useFounderCycle } from '@/hooks/useFounderCycle';
+import {
+  recommendationDecisionKey,
+  recordRecommendationDecision,
+  type RecommendationAssignment,
+} from '@/lib/recommendationLearning';
 
 export const dashboardSnapshotQueryKey = (userId: string | null | undefined) => ['dashboard-snapshot-v1', userId] as const;
 
 interface RankingResult {
   orderedCandidateKeys: string[];
   rationaleByKey: Record<string, string>;
+  model?: string | null;
+  policyVersion?: string;
+  assignment?: RecommendationAssignment;
+  deterministicKey?: string;
+  scoreDiagnostics?: Record<string, unknown>;
+  contextSegments?: Record<string, unknown>;
+  suppressedKeys?: string[];
 }
 
 interface DashboardDataContextValue {
@@ -25,6 +37,11 @@ interface DashboardDataContextValue {
   isStale: boolean;
   isOffline: boolean;
   error: Error | null;
+  recommendationPolicy: {
+    decisionKey: string;
+    policyVersion: string;
+    assignment: RecommendationAssignment;
+  } | null;
   refresh: () => Promise<void>;
 }
 
@@ -41,6 +58,17 @@ function uniqueCandidates(snapshot: DashboardSnapshotV1 | null): DashboardAction
     if (candidate) byKey.set(candidate.key, candidate);
   });
   return [...byKey.values()].slice(0, 10);
+}
+
+function isCustomerUrgent(action: DashboardAction | null | undefined) {
+  if (!action) return false;
+  const reasonText = action.reasonCodes.join(' ').toLowerCase();
+  return action.kind === 'human_reply'
+    || (
+      action.urgency === 'high'
+      && ['messages', 'pmf_lab', 'gtm_strategist'].includes(action.toolKey)
+      && /(reply|follow.?up|interview|meeting|overdue|customer)/.test(reasonText)
+    );
 }
 
 function candidateHash(candidates: DashboardAction[], snapshot: DashboardSnapshotV1 | null) {
@@ -77,6 +105,11 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
   const aiRankingFlag = useFeatureFlagEnabled('dashboard-ai-ranking');
   const userId = user?.id ?? null;
   const [isOffline, setIsOffline] = useState(() => typeof navigator !== 'undefined' && !navigator.onLine);
+  const recordedDecisionKeys = useRef(new Set<string>());
+
+  useEffect(() => {
+    recordedDecisionKeys.current.clear();
+  }, [userId]);
 
   const snapshotQuery = useQuery({
     queryKey: dashboardSnapshotQueryKey(userId),
@@ -107,25 +140,62 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const candidates = useMemo(() => uniqueCandidates(snapshotQuery.data ?? null), [snapshotQuery.data]);
-  const rankableCandidates = useMemo(() => {
-    const deterministicPrimary = snapshotQuery.data?.focus.primaryAction;
-    if (!deterministicPrimary) return [];
-    return candidates.filter((candidate) => candidate.urgency === deterministicPrimary.urgency);
-  }, [candidates, snapshotQuery.data]);
+  const cyclePrimary = useMemo<DashboardAction | null>(() => {
+    const action = founderCycle.snapshot?.primaryAction;
+    if (!founderCycle.showCycle || !action) return null;
+    const routeTool = action.route.startsWith('/pmf-lab')
+      ? 'pmf_lab'
+      : action.route.startsWith('/go-to-market')
+        ? 'gtm_strategist'
+        : action.route.startsWith('/traction-engine')
+          ? 'traction_engine'
+          : action.route.startsWith('/core-metrics')
+            ? 'core_metrics'
+          : action.route.startsWith('/icp-builder')
+            ? 'icp_builder'
+            : 'founder_cycle';
+    return {
+      key: `cycle:${action.key}`,
+      kind: 'journey',
+      toolKey: routeTool,
+      entityId: null,
+      title: action.title,
+      description: `${action.description} Expected evidence: ${action.expectedEvidence.replaceAll('_', ' ')}.`,
+      urgency: 'high',
+      reasonCodes: ['external_customer_evidence', action.reason],
+      estimatedMinutes: 20,
+      dueAt: null,
+      actionKind: 'open_tool',
+    };
+  }, [founderCycle.showCycle, founderCycle.snapshot?.primaryAction]);
+
+  const candidates = useMemo(() => {
+    const snapshotCandidates = uniqueCandidates(snapshotQuery.data ?? null);
+    if (!cyclePrimary || isCustomerUrgent(snapshotQuery.data?.focus.primaryAction)) {
+      return snapshotCandidates;
+    }
+    return [
+      cyclePrimary,
+      ...snapshotCandidates.filter((candidate) => candidate.key !== cyclePrimary.key),
+    ].slice(0, 10);
+  }, [cyclePrimary, snapshotQuery.data]);
+  const rankableCandidates = candidates;
   const snapshotHash = useMemo(
     () => candidateHash(rankableCandidates, snapshotQuery.data ?? null),
     [rankableCandidates, snapshotQuery.data],
   );
+  const aiRankingEnabled = isDashboardAiRankingEnabled(aiRankingFlag);
+  const rankingSnapshotHash = `${snapshotHash}:${aiRankingEnabled ? 'ai' : 'rules'}`;
   const rankingQuery = useQuery({
-    queryKey: ['dashboard-action-ranking', userId, snapshotHash],
-    enabled: Boolean(userId) && isDashboardAiRankingEnabled(aiRankingFlag) && rankableCandidates.length > 1,
+    queryKey: ['dashboard-action-ranking', userId, rankingSnapshotHash],
+    enabled: Boolean(userId) && rankableCandidates.length > 0,
     staleTime: 24 * 60 * 60_000,
     retry: false,
     queryFn: async (): Promise<RankingResult | null> => {
       const { data, error } = await supabase.functions.invoke('rank-dashboard-actions', {
         body: {
-          snapshotHash,
+          snapshotHash: rankingSnapshotHash,
+          allowAi: aiRankingEnabled,
           candidates: rankableCandidates.map(({ key, urgency, reasonCodes, estimatedMinutes, toolKey }) => ({
             key,
             urgency,
@@ -171,52 +241,85 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
 
   const rankedPrimary = useMemo(() => {
     const key = rankingQuery.data?.orderedCandidateKeys?.[0];
-    if (!key) return snapshotQuery.data?.focus.primaryAction ?? null;
+    if (!key) return rankableCandidates[0] ?? snapshotQuery.data?.focus.primaryAction ?? null;
     const ranked = rankableCandidates.find((candidate) => candidate.key === key);
-    if (!ranked) return snapshotQuery.data?.focus.primaryAction ?? null;
+    if (!ranked) return rankableCandidates[0] ?? snapshotQuery.data?.focus.primaryAction ?? null;
     const explanation = rankingQuery.data?.rationaleByKey?.[key];
     return explanation ? { ...ranked, description: explanation } : ranked;
   }, [rankableCandidates, rankingQuery.data, snapshotQuery.data]);
 
-  const cyclePrimary = useMemo<DashboardAction | null>(() => {
-    const action = founderCycle.snapshot?.primaryAction;
-    if (!founderCycle.showCycle || !action) return null;
-    const routeTool = action.route.startsWith('/pmf-lab')
-      ? 'pmf_lab'
-      : action.route.startsWith('/go-to-market')
-        ? 'gtm_strategist'
-        : action.route.startsWith('/traction-engine')
-          ? 'traction_engine'
-          : action.route.startsWith('/core-metrics')
-            ? 'core_metrics'
-          : action.route.startsWith('/icp-builder')
-            ? 'icp_builder'
-            : 'founder_cycle';
-    return {
-      key: `cycle:${action.key}`,
-      kind: 'journey',
-      toolKey: routeTool,
-      entityId: null,
-      title: action.title,
-      description: `${action.description} Expected evidence: ${action.expectedEvidence.replaceAll('_', ' ')}.`,
-      urgency: 'high',
-      reasonCodes: ['external_customer_evidence', action.reason],
-      estimatedMinutes: 20,
-      dueAt: null,
-      actionKind: 'open_tool',
-    };
-  }, [founderCycle.showCycle, founderCycle.snapshot?.primaryAction]);
+  const effectivePrimary = rankedPrimary;
 
-  const rankedReasonText = rankedPrimary?.reasonCodes.join(' ').toLowerCase() ?? '';
-  const rankedIsCustomerUrgent = rankedPrimary?.kind === 'human_reply'
-    || (
-      rankedPrimary?.urgency === 'high'
-      && ['messages', 'pmf_lab', 'gtm_strategist'].includes(rankedPrimary.toolKey)
-      && /(reply|follow.?up|interview|meeting|overdue|customer)/.test(rankedReasonText)
+  const decision = useMemo(() => {
+    if (!effectivePrimary || !snapshotQuery.data) return null;
+    const rankingSelectedKey = rankingQuery.data?.orderedCandidateKeys?.[0];
+    const selectedByRanker = effectivePrimary.key === rankingSelectedKey;
+    const deterministicKey = snapshotQuery.data.focus.primaryAction?.key ?? effectivePrimary.key;
+    const policyVersion = selectedByRanker
+      ? rankingQuery.data?.policyVersion ?? 'collective_v1'
+      : effectivePrimary.key === cyclePrimary?.key
+        ? 'founder_cycle_v1'
+        : 'deterministic_v1';
+    const assignment: RecommendationAssignment = selectedByRanker
+      ? rankingQuery.data?.assignment ?? 'learned'
+      : 'baseline';
+    const exposureCandidates = [...candidates];
+    if (!exposureCandidates.some((candidate) => candidate.key === effectivePrimary.key)) {
+      exposureCandidates.push(effectivePrimary);
+    }
+    const decisionKey = recommendationDecisionKey(
+      'command_center',
+      effectivePrimary.key,
+      rankingSnapshotHash || 'snapshot',
     );
-  const effectivePrimary = rankedIsCustomerUrgent
-    ? rankedPrimary
-    : cyclePrimary ?? rankedPrimary;
+
+    return {
+      decisionKey,
+      policyVersion,
+      assignment,
+      deterministicKey: selectedByRanker
+        ? rankingQuery.data?.deterministicKey ?? deterministicKey
+        : deterministicKey,
+      model: selectedByRanker ? rankingQuery.data?.model ?? null : null,
+      scoreDiagnostics: selectedByRanker ? rankingQuery.data?.scoreDiagnostics ?? {} : {},
+      candidates: exposureCandidates,
+      selected: effectivePrimary,
+    };
+  }, [
+    candidates,
+    cyclePrimary?.key,
+    effectivePrimary,
+    rankingQuery.data,
+    rankingSnapshotHash,
+    snapshotQuery.data,
+  ]);
+
+  useEffect(() => {
+    if (!decision || recordedDecisionKeys.current.has(decision.decisionKey)) return;
+    recordedDecisionKeys.current.add(decision.decisionKey);
+    void recordRecommendationDecision({
+      decisionKey: decision.decisionKey,
+      surface: 'command_center',
+      snapshotHash: rankingSnapshotHash,
+      candidates: decision.candidates.map((candidate) => ({
+        key: candidate.key,
+        toolKey: candidate.toolKey,
+        urgency: candidate.urgency,
+        reasonCodes: candidate.reasonCodes,
+        estimatedMinutes: candidate.estimatedMinutes,
+      })),
+      selectedKey: decision.selected.key,
+      selectedToolKey: decision.selected.toolKey,
+      deterministicKey: decision.deterministicKey,
+      policyVersion: decision.policyVersion,
+      assignment: decision.assignment,
+      model: decision.model,
+      scoreDiagnostics: decision.scoreDiagnostics,
+    }).catch(() => {
+      // The dashboard remains fully usable while the additive learning migration rolls out.
+      recordedDecisionKeys.current.delete(decision.decisionKey);
+    });
+  }, [decision, rankingSnapshotHash]);
 
   const value = useMemo<DashboardDataContextValue>(() => ({
     snapshot: snapshotQuery.data ?? null,
@@ -226,10 +329,15 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
     isStale: snapshotQuery.isStale,
     isOffline,
     error: snapshotQuery.error instanceof Error ? snapshotQuery.error : null,
+    recommendationPolicy: decision ? {
+      decisionKey: decision.decisionKey,
+      policyVersion: decision.policyVersion,
+      assignment: decision.assignment,
+    } : null,
     refresh: async () => {
       await snapshotQuery.refetch();
     },
-  }), [effectivePrimary, isOffline, snapshotQuery]);
+  }), [decision, effectivePrimary, isOffline, snapshotQuery]);
 
   return <DashboardDataContext.Provider value={value}>{children}</DashboardDataContext.Provider>;
 }

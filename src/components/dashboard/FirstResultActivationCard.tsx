@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { buildActivationSummary, trackRetentionEvent, type ActivationIntent } from '@/lib/retentionSystem';
 import { RecommendationFeedback } from '@/components/dashboard/RecommendationFeedback';
+import { recordRecommendationOutcome } from '@/lib/recommendationLearning';
 
 interface FirstResultActivationCardProps {
   activationIntent: ActivationIntent;
@@ -22,6 +23,13 @@ export function FirstResultActivationCard({
   const summary = buildActivationSummary(activationIntent);
 
   const handleContinue = () => {
+    void recordRecommendationOutcome({
+      recommendationKey: `first_action:${activationIntent}`,
+      surface: 'first_action',
+      outcomeType: 'opened',
+    }).catch(() => {
+      // Navigation remains available while collective learning rolls out.
+    });
     if (userId) {
       void trackRetentionEvent('activation_first_action_opened', {
         user_id: userId,

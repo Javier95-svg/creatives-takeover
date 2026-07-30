@@ -156,21 +156,18 @@ function LegacyDashboardFrame({ shadowSnapshot }: { shadowSnapshot?: DashboardSn
   );
 }
 
-function ShadowDashboardFrame() {
+function DashboardFrameWithData({ enableShadowComparison }: { enableShadowComparison: boolean }) {
   const { snapshot } = useDashboardData();
-  return <LegacyDashboardFrame shadowSnapshot={snapshot} />;
+  return <LegacyDashboardFrame shadowSnapshot={enableShadowComparison ? snapshot : null} />;
 }
 
 function DashboardFrame() {
   const shadowFlag = useFeatureFlagEnabled('dashboard-command-center-shadow');
-  if (shadowFlag) {
-    return (
-      <DashboardDataProvider>
-        <ShadowDashboardFrame />
-      </DashboardDataProvider>
-    );
-  }
-  return <LegacyDashboardFrame />;
+  return (
+    <DashboardDataProvider>
+      <DashboardFrameWithData enableShadowComparison={Boolean(shadowFlag)} />
+    </DashboardDataProvider>
+  );
 }
 
 export function DashboardShell() {

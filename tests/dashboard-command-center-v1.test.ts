@@ -77,7 +77,8 @@ test('AI ranker cannot invent candidates and has deterministic timeout fallback'
   assert.match(source, /unique\.length !== candidates\.length/);
   assert.match(source, /setTimeout\(\(\) => controller\.abort\(\), 2_000\)/);
   assert.match(source, /DASHBOARD_RANKING_MODEL/);
-  assert.match(source, /fallback: true/);
+  assert.match(source, /aiRanking\?\.orderedCandidateKeys \?\? candidates\.map/);
+  assert.match(source, /"deterministic-v1"/);
   assert.doesNotMatch(source, /deduct_credits|checkAndDeductCredits/);
 });
 
