@@ -11,6 +11,8 @@ import {
 import { fetchFounderJourneyExtras, fetchToolCompletionSignals } from '@/lib/founderSignals';
 import { getFoundationalMilestones, type ToolCompletionSignals } from '@/lib/taskCalendar';
 import { useOnboardingContext } from '@/hooks/useOnboardingContext';
+import { useStageIntelligence } from '@/hooks/useStageIntelligence';
+import { mapFounderStageToBizMapStage } from '@/lib/stageDiagnostic';
 
 const REFETCH_THROTTLE_MS = 60_000;
 
@@ -18,6 +20,7 @@ export function useFounderJourneySnapshot() {
   const { user } = useAuth();
   const { currentStage, stageState, loading: stageLoading } = useBizMapProgress();
   const { value: onboarding, loading: onboardingLoading } = useOnboardingContext();
+  const { state: stageIntelligence, loading: intelligenceLoading } = useStageIntelligence();
   const [toolSignals, setToolSignals] = useState<ToolCompletionSignals>({});
   const [extras, setExtras] = useState<FounderJourneyExtras>(EMPTY_FOUNDER_JOURNEY_EXTRAS);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,23 +69,46 @@ export function useFounderJourneySnapshot() {
   }, [load]);
 
   const snapshot: FounderJourneySnapshot = useMemo(
-    () =>
+    () => {
+      const evidenceStage = stageIntelligence?.current_stage;
+      const effectiveStage = evidenceStage
+        ? mapFounderStageToBizMapStage(evidenceStage)
+        : currentStage;
+      const effectiveContext = onboarding?.context && stageIntelligence
+        ? {
+            ...onboarding.context,
+            assignedStage: stageIntelligence.current_stage,
+            operatingStage: stageIntelligence.current_stage,
+            runnerUpStage: stageIntelligence.runner_up_stage,
+            stageConfidence: stageIntelligence.confidence_score,
+            stageConfidenceBand: stageIntelligence.confidence_band,
+            stageEvidenceCoverage: stageIntelligence.evidence_coverage,
+            stageScoreMargin: stageIntelligence.score_margin,
+            capitalMotion: stageIntelligence.capital_motion,
+            capitalEvidence: stageIntelligence.capital_evidence,
+            stageRationaleCodes: stageIntelligence.rationale_codes,
+          }
+        : onboarding?.context;
+
+      return (
       buildFounderJourneySnapshot({
-        currentStage,
+        currentStage: effectiveStage,
         stageState,
         toolSignals,
         extras,
         foundationalMilestones: getFoundationalMilestones(toolSignals),
-        onboardingContext: onboarding?.context,
-      }),
-    [currentStage, extras, onboarding?.context, stageState, toolSignals],
+        onboardingContext: effectiveContext,
+      })
+      );
+    },
+    [currentStage, extras, onboarding?.context, stageIntelligence, stageState, toolSignals],
   );
 
   const refetch = useCallback(() => load(true), [load]);
 
   return {
     snapshot,
-    isLoading: isLoading || stageLoading || onboardingLoading,
+    isLoading: isLoading || stageLoading || onboardingLoading || intelligenceLoading,
     refetch,
   };
 }

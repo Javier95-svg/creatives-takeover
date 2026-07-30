@@ -5,6 +5,7 @@ import { requiresGuidedOnboarding } from '@/lib/guidedOnboarding';
 import { triggerEmailSequenceEvent } from '@/lib/emailSequences';
 import { mapFounderStageToBizMapStage, STAGES, type FounderStageId } from '@/lib/stageDiagnostic';
 import { parseActivationJourney, type ActivationJourneyV2 } from '@/lib/activationJourneyV2';
+import { recordArtifactStageEvidence } from '@/lib/stageIntelligence';
 
 export type ActivationIntent =
   | 'build_demo'
@@ -677,7 +678,20 @@ export async function markFirstArtifactCreated(params: MarkArtifactCreatedParams
     lastArtifactLabel: params.label ?? null,
     lastArtifactResumeUrl: params.resumeUrl,
     ...(completedJourney ? { activationJourney: completedJourney } : {}),
-  }, true);
+  });
+
+  try {
+    await recordArtifactStageEvidence({
+      userId: params.userId,
+      artifactType: params.artifactType,
+      artifactId: params.artifactId,
+      observedAt: createdAt,
+    });
+  } catch (error) {
+    // Artifact creation is the source of truth. Stage enrichment is best effort
+    // and will be reconciled on a later dashboard visit.
+    console.warn('Unable to record artifact stage evidence', error);
+  }
 
   // FIX(retention): retention-system — first artifact creation now lands in durable activity logs so the admin experiment dashboard can measure signup-to-artifact conversion by variant.
   await trackRetentionEvent('first_artifact_created', {
@@ -737,7 +751,18 @@ export async function saveValidationDraftArtifact(userId: string, draft: Validat
     lastArtifactLabel: 'Validation sprint draft',
     lastArtifactResumeUrl: '/decision-sprint',
     ...(completedJourney ? { activationJourney: completedJourney } : {}),
-  }, !hasFirstArtifact);
+  });
+
+  try {
+    await recordArtifactStageEvidence({
+      userId,
+      artifactType: 'validation_draft',
+      artifactId: draft.id,
+      observedAt: draft.updatedAt,
+    });
+  } catch (error) {
+    console.warn('Unable to record validation stage evidence', error);
+  }
 
   if (!activationJourney) {
     await trackRetentionEvent('activation_first_artifact_saved', {

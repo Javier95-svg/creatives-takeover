@@ -83,7 +83,7 @@ test('repeatable growth and revenue assigns Traction', () => {
   assert.ok(STAGE_TASKS.TRACTION.some((task) => task.id === 'traction-growth-experiment'));
 });
 
-test('active investor conversations with traction assigns Fundraising', () => {
+test('active investor conversations preserve Traction as the operating stage and add a capital overlay', () => {
   const result = assignFounderStageV3(answers({
     productStatus: 'scaling_product',
     customerTesting: 'paying_customers',
@@ -92,19 +92,44 @@ test('active investor conversations with traction assigns Fundraising', () => {
     blocker: 'fundraising',
     fundraisingStatus: 'talking_investors',
   }));
-  assert.equal(result.assignedStage, 7);
+  assert.equal(result.assignedStage, 6);
+  assert.equal(result.capitalMotion, 'active');
+  assert.equal(result.capitalEvidence, true);
   assert.ok(STAGE_TASKS.FUNDRAISING.some((task) => task.id === 'fundraising-investor-list'));
 });
 
-test('fundraising interest without product or market evidence does not automatically assign Fundraising', () => {
+test('fundraising interest without market evidence remains an overlay and does not distort operating-stage confidence', () => {
   const result = assignFounderStageV3(answers({
     mainFocus: 'raise_capital',
     blocker: 'fundraising',
     fundraisingStatus: 'preparing',
   }));
   assert.notEqual(result.assignedStage, 7);
+  assert.equal(result.assignedStage, 1);
+  assert.equal(result.capitalMotion, 'preparing');
+  assert.equal(result.capitalEvidence, false);
   assert.ok(result.conflictFlags.includes('fundraising_intent_without_market_evidence'));
-  assert.ok(result.confidence < 70);
+});
+
+test('goals and blockers do not promote a founder without maturity evidence', () => {
+  const result = assignFounderStageV3(answers({
+    mainFocus: 'grow_channels',
+    blocker: 'traction_growth',
+  }));
+
+  assert.equal(result.assignedStage, 1);
+  assert.equal(result.capitalMotion, 'inactive');
+});
+
+test('ambiguous ties prefer the earlier operating stage', () => {
+  const result = assignFounderStageV3(answers({
+    productStatus: 'prototype_demo',
+    customerTesting: 'target_customers',
+    tractionSignal: 'none',
+  }));
+
+  assert.ok(result.assignedStage <= 3);
+  assert.notEqual(result.assignedStage, 4);
 });
 
 test('every diagnostic answer contributes to scoring payload shape', () => {

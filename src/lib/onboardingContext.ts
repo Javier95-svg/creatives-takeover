@@ -3,9 +3,12 @@ import {
   mapFounderStageToBizMapStage,
   mapFounderStageToBusinessStage,
   STAGES,
+  type CapitalMotion,
   type FounderBlocker,
+  type FounderOperatingStageId,
   type FounderStageId,
   type FounderStageQuizAnswersV3,
+  type StageConfidenceBand,
 } from './stageDiagnostic.ts';
 import type { FounderLoop } from './founderCycle.ts';
 import type { RoutineGoal } from './routineTemplates.ts';
@@ -85,11 +88,20 @@ export interface OnboardingContextV1 {
   schemaVersion: 1;
   flowVersion: OnboardingFlowVersion;
   assignedStage: FounderStageId;
+  operatingStage: FounderOperatingStageId;
+  runnerUpStage: FounderOperatingStageId | null;
   assignedStageLabel: string;
   businessStage: string;
   bizMapStage: string;
   founderLoop: FounderLoop;
   stageConfidence: number;
+  stageConfidenceBand: StageConfidenceBand;
+  stageScoreMargin: number;
+  stageEvidenceCoverage: number;
+  capitalMotion: CapitalMotion;
+  capitalEvidence: boolean;
+  stageRationaleCodes: string[];
+  stageConflictFlags: string[];
   recommendedIntent: ActivationIntent;
   selectedIntent: ActivationIntent;
   recommendationAccepted: boolean;
@@ -135,7 +147,7 @@ const EVIDENCE_TO_PRODUCT: Record<OnboardingEvidenceState, FounderStageQuizAnswe
   none: 'idea_only',
   prospects: 'prototype_demo',
   replies: 'prototype_demo',
-  conversations: 'mvp_beta',
+  conversations: 'prototype_demo',
   commitment: 'mvp_beta',
   payment: 'live_product',
   repeatable_growth: 'scaling_product',
@@ -145,7 +157,7 @@ const EVIDENCE_TO_TRACTION: Record<OnboardingEvidenceState, FounderStageQuizAnsw
   none: 'none',
   prospects: 'waitlist_interest',
   replies: 'waitlist_interest',
-  conversations: 'active_users',
+  conversations: 'waitlist_interest',
   commitment: 'active_users',
   payment: 'revenue',
   repeatable_growth: 'repeatable_growth',
@@ -308,11 +320,20 @@ export function deriveOnboardingContextV1(
     schemaVersion: 1,
     flowVersion: options.flowVersion ?? ADAPTIVE_ONBOARDING_FLOW_VERSION,
     assignedStage: diagnostic.assignedStage,
+    operatingStage: diagnostic.operatingStage,
+    runnerUpStage: diagnostic.runnerUpStage,
     assignedStageLabel: STAGES[diagnostic.assignedStage].name,
     businessStage: mapFounderStageToBusinessStage(diagnostic.assignedStage),
     bizMapStage: mapFounderStageToBizMapStage(diagnostic.assignedStage),
     founderLoop: deriveFounderLoopFromAnswers(answers),
     stageConfidence: diagnostic.confidence,
+    stageConfidenceBand: diagnostic.confidenceBand,
+    stageScoreMargin: diagnostic.scoreMargin,
+    stageEvidenceCoverage: diagnostic.evidenceCoverage,
+    capitalMotion: diagnostic.capitalMotion,
+    capitalEvidence: diagnostic.capitalEvidence,
+    stageRationaleCodes: diagnostic.primarySignals,
+    stageConflictFlags: diagnostic.conflictFlags,
     recommendedIntent: recommendation.intent,
     selectedIntent,
     recommendationAccepted: selectedIntent === recommendation.intent,

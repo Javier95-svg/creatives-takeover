@@ -106,9 +106,32 @@ export function useOnboardingContext() {
     try {
       const session = await getLatestOnboardingSession();
       if (session?.derived_context) {
+        const answers = { ...EMPTY_ONBOARDING_ANSWERS_V1, ...session.answers } as OnboardingAnswersV1;
+        const refreshedContext = deriveOnboardingContextV1(answers, {
+          flowVersion: session.flow_version,
+          selectedIntent: session.derived_context.selectedIntent,
+          dataCompleteness: session.derived_context.dataCompleteness,
+        });
+        const persisted = session.derived_context;
+        const context: OnboardingContextV1 = {
+          ...persisted,
+          operatingStage: persisted.operatingStage ?? refreshedContext.operatingStage,
+          runnerUpStage: persisted.runnerUpStage ?? refreshedContext.runnerUpStage,
+          stageConfidenceBand: persisted.stageConfidenceBand ?? refreshedContext.stageConfidenceBand,
+          stageScoreMargin: persisted.stageScoreMargin ?? refreshedContext.stageScoreMargin,
+          stageEvidenceCoverage: persisted.stageEvidenceCoverage ?? refreshedContext.stageEvidenceCoverage,
+          capitalMotion: persisted.capitalMotion ?? refreshedContext.capitalMotion,
+          capitalEvidence: persisted.capitalEvidence ?? refreshedContext.capitalEvidence,
+          stageRationaleCodes: Array.isArray(persisted.stageRationaleCodes)
+            ? persisted.stageRationaleCodes
+            : refreshedContext.stageRationaleCodes,
+          stageConflictFlags: Array.isArray(persisted.stageConflictFlags)
+            ? persisted.stageConflictFlags
+            : refreshedContext.stageConflictFlags,
+        };
         setValue({
-          answers: { ...EMPTY_ONBOARDING_ANSWERS_V1, ...session.answers } as OnboardingAnswersV1,
-          context: session.derived_context,
+          answers,
+          context,
           session,
           isLegacy: false,
         });

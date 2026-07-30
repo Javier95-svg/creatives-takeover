@@ -33,6 +33,11 @@ const STAGE_CONTEXT = {
     focus: "activate distribution, publish consistently, and create repeatable traction loops",
     fallbackMission: "Choose one launch channel and publish one concrete offer or update there today.",
   },
+  TRACTION: {
+    label: "Stage VI - Traction",
+    focus: "verify retention, improve the strongest distribution loop, and make growth repeatable",
+    fallbackMission: "Compare your last two growth periods and choose one retention or acquisition variable to improve today.",
+  },
 } as const;
 
 type BizMapStage = keyof typeof STAGE_CONTEXT;
@@ -58,7 +63,20 @@ function normalizeStage(value: unknown): BizMapStage {
   if (typeof value === "string" && value in STAGE_CONTEXT) {
     return value as BizMapStage;
   }
+  // Fundraising is a parallel capital motion, not an operating maturity stage.
+  if (value === "FUNDRAISING") return "TRACTION";
   return "IDENTITY";
+}
+
+function stageFromIntelligence(value: unknown): BizMapStage | null {
+  const stage = Number(value);
+  if (stage === 1) return "IDENTITY";
+  if (stage === 2) return "PROTOTYPE";
+  if (stage === 3) return "VALIDATING";
+  if (stage === 4) return "BUILDING";
+  if (stage === 5) return "LAUNCH";
+  if (stage === 6) return "TRACTION";
+  return null;
 }
 
 function sanitizeMissionText(value: unknown, stage: BizMapStage): string {
@@ -94,12 +112,35 @@ function buildLastActivitySummary(activity: any, profile: any): string {
   return "No recent activity logged yet.";
 }
 
-function buildPersonalizedFallback(stage: BizMapStage, onboarding: any): string {
+function buildPersonalizedFallback(stage: BizMapStage, onboarding: any, stageIntelligence: any): string {
   const answers = onboarding?.answers ?? {};
   const goal = answers.primaryGoal;
   const blocker = answers.blocker;
   const capacity = Number(answers.weeklyCapacityHours ?? 5);
   const actionCount = capacity <= 2 ? 2 : capacity <= 5 ? 3 : 5;
+
+  if (
+    stageIntelligence?.confidence_band === "low"
+    && !stageIntelligence?.boundary_answered_at
+  ) {
+    const candidateStage = Number(stageIntelligence?.candidate_stage ?? stageIntelligence?.current_stage ?? 1);
+    if (candidateStage <= 1) {
+      return "Show one target customer a concrete sketch of the idea and record what they expected to be able to do with it.";
+    }
+    if (candidateStage === 2) {
+      return `Put your prototype in front of ${actionCount} target customers and record whether they attempt the core action without prompting.`;
+    }
+    if (candidateStage === 3) {
+      return "Ask one target customer for a concrete commitment—time, data, a pilot, or payment—and record the response.";
+    }
+    if (candidateStage === 4) {
+      return "Complete and test the smallest end-to-end product flow that delivers the promised customer outcome.";
+    }
+    if (candidateStage === 5) {
+      return "Compare customer activity across two recent periods and record whether acquisition, usage, or revenue repeated.";
+    }
+    return "Verify your strongest growth claim against two recent periods and record the channel, conversion, and retention evidence.";
+  }
 
   if (goal === "raise" || blocker === "fundraising") {
     return "Write the three strongest traction claims in your investor story and attach one verifiable proof point to each.";
@@ -131,14 +172,16 @@ async function generateMissionText({
   profile,
   activity,
   onboarding,
+  stageIntelligence,
 }: {
   openaiApiKey: string | null;
   stage: BizMapStage;
   profile: any;
   activity: any;
   onboarding: any;
+  stageIntelligence: any;
 }): Promise<string> {
-  const fallbackMission = buildPersonalizedFallback(stage, onboarding);
+  const fallbackMission = buildPersonalizedFallback(stage, onboarding, stageIntelligence);
   if (!openaiApiKey) {
     return fallbackMission;
   }
@@ -156,6 +199,14 @@ async function generateMissionText({
     answers.weeklyCapacityHours ? `Weekly capacity: ${answers.weeklyCapacityHours} hours` : null,
     context.founderLoop ? `Operating loop: ${context.founderLoop}` : null,
     context.selectedIntent ? `Selected first action: ${context.selectedIntent}` : null,
+    stageIntelligence?.current_stage ? `Evidence-backed operating stage: ${stageIntelligence.current_stage}` : null,
+    stageIntelligence?.confidence_band ? `Stage evidence confidence: ${stageIntelligence.confidence_band}` : null,
+    stageIntelligence?.capital_motion && stageIntelligence.capital_motion !== "inactive"
+      ? `Parallel capital motion: ${stageIntelligence.capital_motion}`
+      : null,
+    Array.isArray(stageIntelligence?.rationale_codes) && stageIntelligence.rationale_codes.length > 0
+      ? `Stage reason codes: ${stageIntelligence.rationale_codes.join(", ")}`
+      : null,
     Array.isArray(answers.sectors) && answers.sectors.length > 0 ? `Sectors: ${answers.sectors.join(", ")}` : null,
     profile?.startup_name ? `Startup: ${profile.startup_name}` : null,
     profile?.current_focus ? `Current focus: ${profile.current_focus}` : null,
@@ -263,7 +314,13 @@ serve(async (req) => {
       return jsonResponse({ mission: existingMission, cached: true });
     }
 
-    const [{ data: progress }, { data: activity }, { data: profile }, onboardingResult] = await Promise.all([
+    const [
+      { data: progress },
+      { data: activity },
+      { data: profile },
+      onboardingResult,
+      stageIntelligenceResult,
+    ] = await Promise.all([
       supabase
         .from("user_progress")
         .select("current_stage")
@@ -289,15 +346,23 @@ serve(async (req) => {
         .order("completed_at", { ascending: false })
         .limit(1)
         .maybeSingle(),
+      supabase
+        .from("founder_stage_state")
+        .select("current_stage, candidate_stage, runner_up_stage, confidence_band, evidence_coverage, capital_motion, rationale_codes, boundary_answered_at")
+        .eq("user_id", userId)
+        .maybeSingle(),
     ]);
 
-    const stage = normalizeStage(progress?.current_stage);
+    const stageIntelligence = stageIntelligenceResult.data;
+    const stage = stageFromIntelligence(stageIntelligence?.current_stage)
+      ?? normalizeStage(progress?.current_stage);
     const missionText = await generateMissionText({
       openaiApiKey: Deno.env.get("OPENAI_API_KEY"),
       stage,
       profile,
       activity,
       onboarding: onboardingResult.data,
+      stageIntelligence,
     });
 
     const { data: insertedMissionRaw, error: insertError } = await supabase

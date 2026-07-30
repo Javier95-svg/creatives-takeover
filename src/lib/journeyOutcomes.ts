@@ -2,6 +2,7 @@ import { captureEvent } from "@/lib/analytics";
 import { getActivationSessionId, readCTAAttribution } from "@/lib/activationEntry";
 import { supabase } from "@/integrations/supabase/client";
 import type { OutcomeEvaluation, VerificationMode } from "@/lib/outcomeContracts";
+import { recordArtifactStageEvidence } from "@/lib/stageIntelligence";
 
 export type JourneyTool =
   | "icp_builder"
@@ -177,6 +178,18 @@ export async function upsertJourneyOutcome(input: JourneyOutcomeInput) {
   });
   if (error) throw error;
   if (!data?.ok) throw new Error(data?.error || "Could not evaluate journey outcome.");
+  if (data.evaluation?.status === "ready" || data.evaluation?.status === "verified") {
+    try {
+      await recordArtifactStageEvidence({
+        userId: input.userId,
+        artifactType: input.artifactType,
+        artifactId: input.artifactId,
+      });
+    } catch (stageError) {
+      // Outcome persistence stays authoritative if enrichment is unavailable.
+      console.warn("Could not refresh founder stage evidence:", stageError);
+    }
+  }
   return data as { outcome: unknown; evaluation: OutcomeEvaluation; restoredHandoffs?: JourneyHandoff[] };
 }
 

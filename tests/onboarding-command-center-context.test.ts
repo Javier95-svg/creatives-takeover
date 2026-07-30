@@ -51,6 +51,29 @@ test('context derives SELL loop, stage, recommendation decision, and sales routi
   assert.equal(stageAnswers.mainFocus, 'launch_market');
 });
 
+test('adaptive evidence maps conservatively to operating maturity boundaries', () => {
+  const stageFor = (
+    evidenceState: OnboardingAnswersV1['evidenceState'],
+    customerCountBand: OnboardingAnswersV1['customerCountBand'] = '',
+  ) => deriveOnboardingContextV1({
+    ...completeAnswers,
+    evidenceState,
+    customerCountBand,
+    primaryGoal: 'raise',
+    blocker: 'fundraising',
+    fundraisingStatus: 'preparing',
+    selectedIntent: 'analyze_pitch_deck',
+  });
+
+  assert.equal(stageFor('none').operatingStage, 1);
+  assert.equal(stageFor('replies').operatingStage, 2);
+  assert.equal(stageFor('conversations').operatingStage, 3);
+  assert.equal(stageFor('commitment', '1').operatingStage, 4);
+  assert.equal(stageFor('payment', '1').operatingStage, 5);
+  assert.equal(stageFor('repeatable_growth', '4_plus').operatingStage, 6);
+  assert.equal(stageFor('none').capitalMotion, 'preparing');
+});
+
 test('fundraising and team answers map to truthful specialized context', () => {
   const raise = deriveOnboardingContextV1({
     ...completeAnswers,

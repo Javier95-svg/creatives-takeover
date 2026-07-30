@@ -1,5 +1,8 @@
 export type FounderStageId = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 export type StageId = FounderStageId;
+export type FounderOperatingStageId = 1 | 2 | 3 | 4 | 5 | 6;
+export type CapitalMotion = "inactive" | "preparing" | "active";
+export type StageConfidenceBand = "low" | "medium" | "high";
 
 export type ProductStatus =
   | "idea_only"
@@ -59,8 +62,15 @@ export type FounderStageQuizAnswersV3 = {
 };
 
 export type FounderStageDiagnosticResult = {
-  assignedStage: FounderStageId;
+  assignedStage: FounderOperatingStageId;
+  operatingStage: FounderOperatingStageId;
+  runnerUpStage: FounderOperatingStageId | null;
   confidence: number;
+  confidenceBand: StageConfidenceBand;
+  scoreMargin: number;
+  evidenceCoverage: number;
+  capitalMotion: CapitalMotion;
+  capitalEvidence: boolean;
   stageScores: Record<FounderStageId, number>;
   primarySignals: string[];
   conflictFlags: string[];
@@ -237,7 +247,7 @@ export const STAGES: Record<FounderStageId, StageMeta> = {
   },
 };
 
-const STAGE_IDS: FounderStageId[] = [1, 2, 3, 4, 5, 6, 7];
+const OPERATING_STAGE_IDS: FounderOperatingStageId[] = [1, 2, 3, 4, 5, 6];
 
 function emptyScores(): Record<FounderStageId, number> {
   return { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 };
@@ -247,39 +257,20 @@ function add(scores: Record<FounderStageId, number>, stage: FounderStageId, valu
   scores[stage] += value;
 }
 
-function maxStageFromScores(scores: Record<FounderStageId, number>): FounderStageId {
-  return STAGE_IDS.reduce((best, stage) => {
-    if (scores[stage] > scores[best]) return stage;
-    if (scores[stage] === scores[best] && stage > best) return stage;
-    return best;
-  }, 1 as FounderStageId);
+function rankedOperatingStages(scores: Record<FounderStageId, number>): FounderOperatingStageId[] {
+  return [...OPERATING_STAGE_IDS].sort((left, right) => {
+    if (scores[right] !== scores[left]) return scores[right] - scores[left];
+    // Ambiguous evidence should not silently over-stage a founder.
+    return left - right;
+  });
 }
 
-function getMaturityLevel(a: FounderStageQuizAnswersV3) {
-  const productLevel: Record<ProductStatus, number> = {
-    idea_only: 1,
-    prototype_demo: 2,
-    mvp_beta: 4,
-    live_product: 5,
-    scaling_product: 6,
-  };
-  const customerLevel: Record<CustomerTesting, number> = {
-    no_one: 1,
-    friends_family: 2,
-    target_customers: 3,
-    paying_customers: 5,
-    repeat_customers: 6,
-  };
-  const tractionLevel: Record<TractionSignal, number> = {
-    none: 1,
-    waitlist_interest: 3,
-    active_users: 4,
-    revenue: 5,
-    repeatable_growth: 6,
-  };
-  const levels = [productLevel[a.productStatus], tractionLevel[a.tractionSignal]];
-  if (a.customerTesting) levels.push(customerLevel[a.customerTesting]);
-  return Math.max(...levels);
+function maxStageFromScores(scores: Record<FounderStageId, number>): FounderOperatingStageId {
+  return OPERATING_STAGE_IDS.reduce((best, stage) => {
+    if (scores[stage] > scores[best]) return stage;
+    if (scores[stage] === scores[best] && stage < best) return stage;
+    return best;
+  }, 1 as FounderOperatingStageId);
 }
 
 function hasFundraisingEvidence(a: FounderStageQuizAnswersV3) {
@@ -291,6 +282,20 @@ function hasFundraisingEvidence(a: FounderStageQuizAnswersV3) {
     a.customerTesting === "paying_customers" ||
     a.customerTesting === "repeat_customers"
   );
+}
+
+export function deriveCapitalMotion(a: FounderStageQuizAnswersV3): CapitalMotion {
+  if (a.fundraisingStatus === "talking_investors" || a.fundraisingStatus === "raising_now") {
+    return "active";
+  }
+  if (
+    a.fundraisingStatus === "preparing"
+    || a.mainFocus === "raise_capital"
+    || a.blocker === "fundraising"
+  ) {
+    return "preparing";
+  }
+  return "inactive";
 }
 
 export function assignFounderStageV3(a: FounderStageQuizAnswersV3): FounderStageDiagnosticResult {
@@ -305,25 +310,24 @@ export function assignFounderStageV3(a: FounderStageQuizAnswersV3): FounderStage
       primarySignals.push("idea_only");
       break;
     case "prototype_demo":
-      add(scores, 2, 34);
-      add(scores, 3, 10);
+      add(scores, 2, 40);
+      add(scores, 3, 8);
       primarySignals.push("prototype_or_demo");
       break;
     case "mvp_beta":
-      add(scores, 4, 28);
-      add(scores, 3, 16);
+      add(scores, 4, 42);
+      add(scores, 3, 10);
       add(scores, 5, 6);
       primarySignals.push("mvp_or_beta");
       break;
     case "live_product":
-      add(scores, 5, 28);
-      add(scores, 6, 12);
+      add(scores, 5, 40);
+      add(scores, 6, 10);
       add(scores, 4, 8);
       primarySignals.push("live_product");
       break;
     case "scaling_product":
-      add(scores, 6, 34);
-      add(scores, 7, 12);
+      add(scores, 6, 44);
       primarySignals.push("scaling_product");
       break;
   }
@@ -341,51 +345,17 @@ export function assignFounderStageV3(a: FounderStageQuizAnswersV3): FounderStage
       break;
     case "target_customers":
       add(scores, 3, 24);
-      add(scores, 4, 6);
+      add(scores, 4, 4);
       primarySignals.push("target_customer_testing");
       break;
     case "paying_customers":
-      add(scores, 5, 18);
-      add(scores, 6, 18);
-      add(scores, 7, 8);
+      add(scores, 5, 20);
+      add(scores, 6, 12);
       primarySignals.push("paying_customers");
       break;
     case "repeat_customers":
-      add(scores, 6, 28);
-      add(scores, 7, 12);
-      primarySignals.push("repeat_or_retained_usage");
-      break;
-  }
-
-  switch (a.mainFocus) {
-    case "shape_idea":
-      add(scores, 1, 28);
-      primarySignals.push("clarifying_customer_and_idea");
-      break;
-    case "prototype":
-      add(scores, 2, 28);
-      primarySignals.push("prototype_focus");
-      break;
-    case "validate_demand":
-      add(scores, 3, 30);
-      primarySignals.push("demand_validation_focus");
-      break;
-    case "build_product":
-      add(scores, 4, 30);
-      primarySignals.push("product_build_focus");
-      break;
-    case "launch_market":
-      add(scores, 5, 30);
-      primarySignals.push("launch_focus");
-      break;
-    case "grow_channels":
       add(scores, 6, 32);
-      primarySignals.push("growth_channel_focus");
-      break;
-    case "raise_capital":
-      add(scores, 7, 22);
-      add(scores, hasFundraisingEvidence(a) ? 7 : 5, hasFundraisingEvidence(a) ? 14 : 6);
-      primarySignals.push("capital_focus");
+      primarySignals.push("repeat_or_retained_usage");
       break;
   }
 
@@ -395,69 +365,23 @@ export function assignFounderStageV3(a: FounderStageQuizAnswersV3): FounderStage
       add(scores, 2, 10);
       break;
     case "waitlist_interest":
-      add(scores, 3, 22);
-      add(scores, 5, 8);
+      add(scores, 3, 24);
+      add(scores, 5, 4);
       primarySignals.push("waitlist_or_interest");
       break;
     case "active_users":
       add(scores, 5, 20);
-      add(scores, 6, 12);
+      add(scores, 4, 8);
       primarySignals.push("active_users");
       break;
     case "revenue":
-      add(scores, 6, 24);
-      add(scores, 7, 10);
+      add(scores, 5, 20);
+      add(scores, 6, 14);
       primarySignals.push("revenue_signal");
       break;
     case "repeatable_growth":
-      add(scores, 6, 32);
-      add(scores, 7, 12);
+      add(scores, 6, 40);
       primarySignals.push("repeatable_growth");
-      break;
-  }
-
-  switch (a.blocker) {
-    case "customer_clarity":
-      add(scores, 1, 20);
-      break;
-    case "demand_validation":
-      add(scores, 3, 20);
-      break;
-    case "product_build":
-      add(scores, 4, 20);
-      break;
-    case "go_to_market":
-      add(scores, 5, 20);
-      break;
-    case "traction_growth":
-      add(scores, 6, 20);
-      break;
-    case "fundraising":
-      add(scores, 7, hasFundraisingEvidence(a) ? 18 : 6);
-      add(scores, hasFundraisingEvidence(a) ? 6 : 3, 6);
-      break;
-    case "solo":
-      add(scores, Math.max(1, Math.min(getMaturityLevel(a), 6)) as FounderStageId, 8);
-      break;
-  }
-
-  switch (a.fundraisingStatus) {
-    case "not_now":
-      add(scores, 7, -8);
-      break;
-    case "preparing":
-      add(scores, 7, hasFundraisingEvidence(a) ? 16 : 4);
-      add(scores, hasFundraisingEvidence(a) ? 6 : 3, 6);
-      primarySignals.push("preparing_to_raise");
-      break;
-    case "talking_investors":
-      add(scores, 7, hasFundraisingEvidence(a) ? 30 : 12);
-      add(scores, hasFundraisingEvidence(a) ? 6 : 3, 8);
-      primarySignals.push("investor_conversations");
-      break;
-    case "raising_now":
-      add(scores, 7, 42);
-      primarySignals.push("actively_raising");
       break;
   }
 
@@ -467,20 +391,7 @@ export function assignFounderStageV3(a: FounderStageQuizAnswersV3): FounderStage
     Boolean(a.fundraisingStatus && a.fundraisingStatus !== "not_now");
 
   if (hasFundraisingIntent && !hasFundraisingEvidence(a) && a.fundraisingStatus !== "raising_now") {
-    scores[7] = Math.min(scores[7], scores[3] + 4, scores[5] + 4);
     conflictFlags.push("fundraising_intent_without_market_evidence");
-  }
-
-  // Decisive Traction -> Fundraising promotion. A founder who explicitly names
-  // fundraising as their top need, is actively in a raise, and has real market
-  // evidence is in the Fundraising phase even if traction signals are strong.
-  if (
-    a.blocker === "fundraising" &&
-    a.fundraisingStatus &&
-    a.fundraisingStatus !== "not_now" &&
-    hasFundraisingEvidence(a)
-  ) {
-    add(scores, 7, 60);
   }
 
   if (
@@ -491,16 +402,34 @@ export function assignFounderStageV3(a: FounderStageQuizAnswersV3): FounderStage
   }
 
   const assignedStage = maxStageFromScores(scores);
-  const sorted = STAGE_IDS.map((stage) => scores[stage]).sort((left, right) => right - left);
-  const topScore = sorted[0] ?? 0;
-  const runnerUp = sorted[1] ?? 0;
+  const ranked = rankedOperatingStages(scores);
+  const runnerUpStage = ranked.find((stage) => stage !== assignedStage) ?? null;
+  const topScore = scores[assignedStage] ?? 0;
+  const runnerUp = runnerUpStage ? scores[runnerUpStage] : 0;
   const spread = Math.max(0, topScore - runnerUp);
-  const baseConfidence = Math.min(96, Math.max(55, 58 + spread * 2));
-  const confidence = Math.max(45, baseConfidence - conflictFlags.length * 28);
+  const answeredEvidenceDimensions = 2 + (a.customerTesting ? 1 : 0);
+  const evidenceCoverage = answeredEvidenceDimensions / 3;
+  const baseConfidence = Math.min(94, Math.max(48, 48 + spread * 1.5 + evidenceCoverage * 12));
+  const confidence = Math.round(Math.max(35, baseConfidence - conflictFlags.length * 24));
+  const confidenceBand: StageConfidenceBand = confidence >= 80
+    ? "high"
+    : confidence >= 60
+      ? "medium"
+      : "low";
+  const capitalMotion = deriveCapitalMotion(a);
+  if (capitalMotion === "preparing") primarySignals.push("capital_motion_preparing");
+  if (capitalMotion === "active") primarySignals.push("capital_motion_active");
 
   return {
     assignedStage,
+    operatingStage: assignedStage,
+    runnerUpStage,
     confidence,
+    confidenceBand,
+    scoreMargin: spread,
+    evidenceCoverage,
+    capitalMotion,
+    capitalEvidence: hasFundraisingEvidence(a),
     stageScores: scores,
     primarySignals: Array.from(new Set(primarySignals)).slice(0, 6),
     conflictFlags,
@@ -516,6 +445,13 @@ export function createQuizAnswersV3Payload(
     answers,
     assignedStage: result.assignedStage,
     confidence: result.confidence,
+    confidenceBand: result.confidenceBand,
+    scoreMargin: result.scoreMargin,
+    evidenceCoverage: result.evidenceCoverage,
+    operatingStage: result.operatingStage,
+    runnerUpStage: result.runnerUpStage,
+    capitalMotion: result.capitalMotion,
+    capitalEvidence: result.capitalEvidence,
     stageScores: result.stageScores,
     primarySignals: result.primarySignals,
     conflictFlags: result.conflictFlags,

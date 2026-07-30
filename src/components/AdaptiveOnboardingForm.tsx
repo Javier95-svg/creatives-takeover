@@ -694,6 +694,16 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
           <div className="flex flex-wrap items-center gap-2">
             <Badge>{draftContext.founderLoop} loop</Badge>
             <Badge variant="outline">Stage {draftContext.assignedStage}: {draftContext.assignedStageLabel}</Badge>
+            <Badge variant="outline">
+              {draftContext.stageConfidenceBand === 'high'
+                ? 'Strong stage evidence'
+                : draftContext.stageConfidenceBand === 'medium'
+                  ? 'Moderate stage evidence'
+                  : 'Stage will refine with evidence'}
+            </Badge>
+            {draftContext.capitalMotion !== 'inactive' ? (
+              <Badge variant="outline">Fundraising {draftContext.capitalMotion}</Badge>
+            ) : null}
             <Badge variant="outline">{answers.weeklyCapacityHours} hours/week</Badge>
           </div>
           <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">

@@ -7,6 +7,7 @@ import StartupHomeCommandCenter from '@/components/dashboard/StartupHomeCommandC
 import DashboardTodayCockpit from '@/components/dashboard/DashboardTodayCockpit';
 import FounderJourneyPanel from '@/components/dashboard/FounderJourneyPanel';
 import DashboardFocusEditor from '@/components/dashboard/DashboardFocusEditor';
+import FounderStageIntelligenceCard from '@/components/dashboard/FounderStageIntelligenceCard';
 import EnablePushCard from '@/components/dashboard/EnablePushCard';
 import DashboardTour from '@/components/dashboard/DashboardTour';
 import FirstRunCard from '@/components/dashboard/FirstRunCard';
@@ -211,6 +212,7 @@ const Dashboard = () => {
       ) : null}
       <DashboardTodayCockpit />
       <DashboardFocusEditor />
+      <FounderStageIntelligenceCard />
       <FounderJourneyPanel />
       <DashboardDisclosure
         title="More founder signals"

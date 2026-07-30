@@ -84,6 +84,31 @@ interface OnboardingOutcomeReport {
   breakdowns: Record<string, Array<{ key: string; users: number }>>;
 }
 
+interface FounderStageAccuracyReport {
+  from: string;
+  to: string;
+  summary: {
+    labeledUsers: number;
+    exactMatches: number;
+    adjacentMatches: number;
+    overstaged: number;
+    understaged: number;
+    exactRate: number;
+    adjacentRate: number;
+  };
+  confidenceBands: Array<{
+    confidenceBand: 'low' | 'medium' | 'high';
+    labeled: number;
+    exact: number;
+    exactRate: number;
+  }>;
+  confusionMatrix: Array<{
+    assignedStage: number;
+    confirmedStage: number;
+    users: number;
+  }>;
+}
+
 const AdminAnalytics = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -126,6 +151,7 @@ const AdminAnalytics = () => {
   });
   const [messagePerformance, setMessagePerformance] = useState<MessagePerformanceMetric[]>([]);
   const [onboardingOutcomes, setOnboardingOutcomes] = useState<OnboardingOutcomeReport | null>(null);
+  const [stageAccuracy, setStageAccuracy] = useState<FounderStageAccuracyReport | null>(null);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -201,6 +227,7 @@ const AdminAnalytics = () => {
         activationCompletedResult,
         activationV2Result,
         onboardingOutcomesResult,
+        stageAccuracyResult,
       ] = await Promise.all([
         supabase
           .from('conversion_events')
@@ -257,13 +284,19 @@ const AdminAnalytics = () => {
           .gte('created_at', fromIso)
           .lte('created_at', toIso),
         supabase.rpc('get_activation_funnel_v2', { p_from: fromIso, p_to: toIso }),
-        (supabase as any).rpc('get_onboarding_dashboard_outcomes_v1', { p_from: fromIso, p_to: toIso }),
+        supabase.rpc('get_onboarding_dashboard_outcomes_v1' as never, { p_from: fromIso, p_to: toIso } as never),
+        supabase.rpc('get_founder_stage_accuracy_v1' as never, { p_from: fromIso, p_to: toIso } as never),
       ]);
 
       const outcomeReport = onboardingOutcomesResult.data && typeof onboardingOutcomesResult.data === 'object'
         ? onboardingOutcomesResult.data as OnboardingOutcomeReport
         : null;
       setOnboardingOutcomes(outcomeReport);
+      setStageAccuracy(
+        stageAccuracyResult.data && typeof stageAccuracyResult.data === 'object'
+          ? stageAccuracyResult.data as unknown as FounderStageAccuracyReport
+          : null,
+      );
 
       const activationV2 = activationV2Result.data && typeof activationV2Result.data === 'object'
         ? activationV2Result.data as Record<string, unknown>
@@ -769,6 +802,101 @@ const AdminAnalytics = () => {
                       </CardContent>
                     </Card>
                   </>
+                ) : null}
+                {stageAccuracy ? (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Founder stage calibration</CardTitle>
+                      <CardDescription>
+                        Compares the evidence model&apos;s assignment with structured founder confirmations and corrections. Fundraising is excluded from operating-stage accuracy.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        {[
+                          {
+                            label: 'Labeled founders',
+                            value: stageAccuracy.summary.labeledUsers,
+                            detail: 'Confirmed, corrected, or boundary-resolved',
+                          },
+                          {
+                            label: 'Exact accuracy',
+                            value: `${stageAccuracy.summary.exactRate}%`,
+                            detail: `${stageAccuracy.summary.exactMatches}/${stageAccuracy.summary.labeledUsers} labeled founders`,
+                          },
+                          {
+                            label: 'Within one stage',
+                            value: `${stageAccuracy.summary.adjacentRate}%`,
+                            detail: `${stageAccuracy.summary.adjacentMatches}/${stageAccuracy.summary.labeledUsers} labeled founders`,
+                          },
+                          {
+                            label: 'Direction of error',
+                            value: `${stageAccuracy.summary.overstaged} / ${stageAccuracy.summary.understaged}`,
+                            detail: 'Overstaged / understaged',
+                          },
+                        ].map((metric) => (
+                          <div key={metric.label} className="rounded-xl border border-border p-4">
+                            <p className="text-xs font-medium text-muted-foreground">{metric.label}</p>
+                            <p className="mt-1 text-2xl font-bold">{metric.value}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">{metric.detail}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      {stageAccuracy.summary.labeledUsers > 0 ? (
+                        <div className="grid gap-6 lg:grid-cols-2">
+                          <div>
+                            <p className="mb-3 text-sm font-semibold">Accuracy by confidence band</p>
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Band</TableHead>
+                                  <TableHead className="text-right">Labeled</TableHead>
+                                  <TableHead className="text-right">Exact</TableHead>
+                                  <TableHead className="text-right">Rate</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {stageAccuracy.confidenceBands.map((band) => (
+                                  <TableRow key={band.confidenceBand}>
+                                    <TableCell className="capitalize">{band.confidenceBand}</TableCell>
+                                    <TableCell className="text-right">{band.labeled}</TableCell>
+                                    <TableCell className="text-right">{band.exact}</TableCell>
+                                    <TableCell className="text-right">{band.exactRate}%</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                          <div>
+                            <p className="mb-3 text-sm font-semibold">Observed assignment corrections</p>
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Assigned</TableHead>
+                                  <TableHead>Confirmed</TableHead>
+                                  <TableHead className="text-right">Founders</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {stageAccuracy.confusionMatrix.map((cell) => (
+                                  <TableRow key={`${cell.assignedStage}-${cell.confirmedStage}`}>
+                                    <TableCell>Stage {cell.assignedStage}</TableCell>
+                                    <TableCell>Stage {cell.confirmedStage}</TableCell>
+                                    <TableCell className="text-right">{cell.users}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          Calibration will appear after founders confirm or correct their dashboard stage.
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
                 ) : null}
 	              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 	                <Card>
