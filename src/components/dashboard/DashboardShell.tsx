@@ -17,7 +17,11 @@ import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { useSubscription } from '@/hooks/useSubscription';
 import { normalizePlan, resolveDashboardMode } from '@/config/planPermissions';
 import { shouldRedirectToGuidedOnboarding } from '@/lib/guidedOnboarding';
-import { shouldShowOnboardingPathGate } from '@/lib/onboardingPath';
+import {
+  getOnboardingPathState,
+  isDay1WelcomeComplete,
+  shouldShowOnboardingPathGate,
+} from '@/lib/onboardingPath';
 import { OnboardingPathGate } from '@/components/onboarding/OnboardingPathGate';
 import { cn } from '@/lib/utils';
 import { DashboardSidebar } from './DashboardSidebar';
@@ -296,7 +300,13 @@ export function DashboardShell() {
     return <OnboardingPathGate profile={day1Profile} onProfilePatch={handleDay1ProfilePatch} />;
   }
 
-  if (day1Profile && !hasCreatedArtifact && day1Profile.onboarding_completed !== true) {
+  if (
+    day1Profile
+    && !hasCreatedArtifact
+    && day1Profile.onboarding_completed !== true
+    && !getOnboardingPathState(day1Profile.user_preferences).completed
+    && !isDay1WelcomeComplete(day1Profile.onboarding_steps_completed)
+  ) {
     return <Day1Welcome profile={day1Profile} onProfilePatch={handleDay1ProfilePatch} />;
   }
 

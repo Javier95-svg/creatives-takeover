@@ -1,5 +1,6 @@
 import { BIZMAP_STAGES, BIZMAP_STAGE_ORDER, type BizMapStage } from './bizmapStages.ts';
 import type { FoundationalMilestone, ToolCompletionSignals } from './taskCalendar.ts';
+import type { OnboardingContextV1 } from './onboardingContext.ts';
 
 export interface TractionJourneySignal {
   latestScore: number | null;
@@ -107,6 +108,7 @@ export interface BuildFounderJourneyInputs {
   toolSignals: ToolCompletionSignals;
   extras: FounderJourneyExtras;
   foundationalMilestones: FoundationalMilestone[];
+  onboardingContext?: OnboardingContextV1 | null;
 }
 
 function stagePrimaryRoute(stage: BizMapStage): string {
@@ -324,7 +326,34 @@ function buildTools(inputs: BuildFounderJourneyInputs): JourneyToolTile[] {
 }
 
 function buildNextAction(inputs: BuildFounderJourneyInputs): JourneyNextAction | null {
-  const firstIncompleteFoundation = inputs.foundationalMilestones.find((milestone) => !milestone.completed);
+  if (
+    inputs.onboardingContext
+    && !Object.values(inputs.toolSignals).some(Boolean)
+  ) {
+    const firstActionByIntent: Record<OnboardingContextV1['selectedIntent'], JourneyNextAction> = {
+      find_mentor: { key: 'intent:find-mentor', label: 'Find one mentor', route: '/mentorship?mentorSource=onboarding' },
+      build_demo: { key: 'intent:build-demo', label: 'Build your first demo', route: '/demo-studio/try' },
+      run_icp: { key: 'intent:run-icp', label: 'Define your first ICP', route: '/icp-builder?mode=fast' },
+      start_validation: { key: 'intent:start-validation', label: 'Validate one idea', route: '/decision-sprint' },
+      build_mvp: { key: 'intent:build-mvp', label: 'Scope your MVP', route: '/mvp-scope' },
+      plan_gtm: { key: 'intent:plan-gtm', label: 'Create your GTM plan', route: '/go-to-market' },
+      log_traction: { key: 'intent:log-traction', label: "Log this week's traction", route: '/traction-engine' },
+      analyze_pitch_deck: { key: 'intent:analyze-deck', label: 'Analyze your pitch deck', route: '/pitch-deck-analyzer' },
+      unlock_pitch_deck: { key: 'intent:unlock-deck', label: 'Resume your pitch analysis', route: '/pitch-deck-analyzer?hydrate=1' },
+      unlock_tech_stack: { key: 'intent:unlock-stack', label: 'Resume your tech stack', route: '/tech-stack?hydrate=1' },
+      unlock_insighta: { key: 'intent:unlock-insighta', label: 'Finish your diagnostic', route: '/insighta-test?hydrate=1' },
+      save_mentor: { key: 'intent:save-mentor', label: 'Save one mentor', route: '/mentorship?mentorSource=onboarding' },
+      send_message: { key: 'intent:send-message', label: 'Start one conversation', route: '/mentorship?mentorSource=onboarding' },
+      book_call: { key: 'intent:book-call', label: 'Book one discovery call', route: '/mentorship?mentorSource=onboarding' },
+    };
+    return firstActionByIntent[inputs.onboardingContext.selectedIntent];
+  }
+
+  const currentStageIndex = BIZMAP_STAGE_ORDER.indexOf(inputs.currentStage);
+  const firstIncompleteFoundation = inputs.foundationalMilestones.find((milestone) => (
+    !milestone.completed
+    && BIZMAP_STAGE_ORDER.indexOf(milestone.stage) >= currentStageIndex
+  )) ?? inputs.foundationalMilestones.find((milestone) => !milestone.completed);
   if (firstIncompleteFoundation) {
     return {
       key: firstIncompleteFoundation.key,

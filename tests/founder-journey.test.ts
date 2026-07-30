@@ -8,12 +8,14 @@ import {
   type FounderJourneyExtras,
 } from '../src/lib/founderJourney.ts';
 import { getFoundationalMilestones, type ToolCompletionSignals } from '../src/lib/taskCalendar.ts';
+import type { OnboardingContextV1 } from '../src/lib/onboardingContext.ts';
 
 function makeInputs(overrides: {
   currentStage?: BuildFounderJourneyInputs['currentStage'];
   stageState?: BuildFounderJourneyInputs['stageState'];
   toolSignals?: ToolCompletionSignals;
   extras?: Partial<FounderJourneyExtras>;
+  onboardingContext?: OnboardingContextV1 | null;
 } = {}): BuildFounderJourneyInputs {
   const toolSignals = overrides.toolSignals ?? {};
   return {
@@ -22,6 +24,7 @@ function makeInputs(overrides: {
     toolSignals,
     extras: { ...EMPTY_FOUNDER_JOURNEY_EXTRAS, ...overrides.extras },
     foundationalMilestones: getFoundationalMilestones(toolSignals),
+    onboardingContext: overrides.onboardingContext,
   };
 }
 
@@ -181,6 +184,37 @@ test('next action ends at traction while Capital remains optional', () => {
     },
   });
   assert.equal(buildFounderJourneySnapshot(withEverything).nextAction, null);
+});
+
+test('fresh personalized journey starts from the selected first win instead of ICP', () => {
+  const snapshot = buildFounderJourneySnapshot(makeInputs({
+    currentStage: 'LAUNCH',
+    onboardingContext: {
+      schemaVersion: 1,
+      flowVersion: 'adaptive_v1',
+      assignedStage: 5,
+      assignedStageLabel: 'Launch',
+      businessStage: 'launch',
+      bizMapStage: 'LAUNCH',
+      founderLoop: 'SELL',
+      stageConfidence: 0.9,
+      recommendedIntent: 'plan_gtm',
+      selectedIntent: 'plan_gtm',
+      recommendationAccepted: true,
+      recommendationReasonCodes: ['sales_or_launch_goal'],
+      routineGoal: 'launch_product',
+      dataCompleteness: 'complete',
+    },
+  }));
+
+  assert.equal(snapshot.nextAction?.key, 'intent:plan-gtm');
+  assert.equal(snapshot.nextAction?.route, '/go-to-market');
+});
+
+test('legacy journey chooses the first unfinished milestone at the assigned stage', () => {
+  const snapshot = buildFounderJourneySnapshot(makeInputs({ currentStage: 'BUILDING' }));
+  assert.equal(snapshot.nextAction?.key, 'tool:tech-stack');
+  assert.equal(snapshot.nextAction?.route, '/tech-stack');
 });
 
 test('optional Capital does not reduce core journey progress', () => {

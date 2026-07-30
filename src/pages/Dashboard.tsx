@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import StartupHomeCommandCenter from '@/components/dashboard/StartupHomeCommandCenter';
 import DashboardTodayCockpit from '@/components/dashboard/DashboardTodayCockpit';
 import FounderJourneyPanel from '@/components/dashboard/FounderJourneyPanel';
+import DashboardFocusEditor from '@/components/dashboard/DashboardFocusEditor';
 import EnablePushCard from '@/components/dashboard/EnablePushCard';
 import DashboardTour from '@/components/dashboard/DashboardTour';
 import FirstRunCard from '@/components/dashboard/FirstRunCard';
@@ -20,7 +21,7 @@ import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure'
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
-import { trackActivationFunnelEvent, trackDashboardFounderSignalsExpanded } from '@/lib/analytics';
+import { trackDashboardFounderSignalsExpanded } from '@/lib/analytics';
 import {
   getActivationPreferenceState,
   getDaysSinceSignup,
@@ -28,7 +29,7 @@ import {
   trackActivationReturnMilestones,
 } from '@/lib/activationState';
 import { normalizePlan } from '@/config/planPermissions';
-import type { ActivationIntent } from '@/lib/retentionSystem';
+import { trackRetentionEvent, type ActivationIntent } from '@/lib/retentionSystem';
 
 interface DashboardActivationState {
   loading: boolean;
@@ -37,6 +38,9 @@ interface DashboardActivationState {
   continueUrl: string | null;
   firstArtifactLabel: string | null;
   firstArtifactType: string | null;
+  onboardingSessionId: string | null;
+  flowVersion: string | null;
+  rolloutVariant: string | null;
 }
 
 const Dashboard = () => {
@@ -54,6 +58,9 @@ const Dashboard = () => {
     continueUrl: null,
     firstArtifactLabel: null,
     firstArtifactType: null,
+    onboardingSessionId: null,
+    flowVersion: null,
+    rolloutVariant: null,
   });
 
   useEffect(() => {
@@ -68,6 +75,9 @@ const Dashboard = () => {
           continueUrl: null,
           firstArtifactLabel: null,
           firstArtifactType: null,
+          onboardingSessionId: null,
+          flowVersion: null,
+          rolloutVariant: null,
         });
         return;
       }
@@ -88,11 +98,17 @@ const Dashboard = () => {
           continueUrl: null,
           firstArtifactLabel: null,
           firstArtifactType: null,
+          onboardingSessionId: null,
+          flowVersion: null,
+          rolloutVariant: null,
         });
         return;
       }
 
       const preferenceState = getActivationPreferenceState(data?.user_preferences);
+      const preferences = data?.user_preferences && typeof data.user_preferences === 'object' && !Array.isArray(data.user_preferences)
+        ? data.user_preferences as Record<string, unknown>
+        : {};
       const showFirstResultBanner = shouldShowFirstResultMode({
         onboardingCompleted: data?.onboarding_completed,
         userPreferences: data?.user_preferences,
@@ -106,9 +122,12 @@ const Dashboard = () => {
         continueUrl: preferenceState.firstArtifactResumeUrl,
         firstArtifactLabel: preferenceState.firstArtifactLabel,
         firstArtifactType: preferenceState.firstArtifactType,
+        onboardingSessionId: typeof preferences.onboardingSessionId === 'string' ? preferences.onboardingSessionId : null,
+        flowVersion: typeof preferences.onboardingFlowVersion === 'string' ? preferences.onboardingFlowVersion : null,
+        rolloutVariant: typeof preferences.onboardingRolloutVariant === 'string' ? preferences.onboardingRolloutVariant : null,
       });
 
-      trackActivationFunnelEvent('dashboard_viewed', {
+      void trackRetentionEvent('dashboard_viewed', {
         user_id: user.id,
         activation_intent: preferenceState.activationIntent,
         source: 'dashboard',
@@ -116,6 +135,9 @@ const Dashboard = () => {
         days_since_signup: getDaysSinceSignup(user.created_at),
         first_artifact_type: preferenceState.firstArtifactType,
         first_result_mode: showFirstResultBanner,
+        onboarding_session_id: preferences.onboardingSessionId ?? null,
+        flow_version: preferences.onboardingFlowVersion ?? null,
+        rollout_variant: preferences.onboardingRolloutVariant ?? null,
       });
       trackActivationReturnMilestones({
         userId: user.id,
@@ -182,9 +204,13 @@ const Dashboard = () => {
           continueUrl={activationState.continueUrl}
           artifactLabel={activationState.firstArtifactLabel}
           artifactType={activationState.firstArtifactType}
+          onboardingSessionId={activationState.onboardingSessionId}
+          flowVersion={activationState.flowVersion}
+          rolloutVariant={activationState.rolloutVariant}
         />
       ) : null}
       <DashboardTodayCockpit />
+      <DashboardFocusEditor />
       <FounderJourneyPanel />
       <DashboardDisclosure
         title="More founder signals"

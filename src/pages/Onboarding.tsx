@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { OnboardingForm } from '@/components/OnboardingForm';
+import { AdaptiveOnboardingForm } from '@/components/AdaptiveOnboardingForm';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Helmet } from 'react-helmet-async';
@@ -10,11 +11,12 @@ import {
   trackOnboardingStarted,
   type OnboardingStartedSource,
 } from '@/lib/analytics';
-import { trackActivity } from '@/lib/activity';
 import { getOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
 import {
   isLegacyOnboardingExempt,
 } from '@/lib/guidedOnboarding';
+import { beginOnboardingSession } from '@/lib/onboardingSession';
+import type { OnboardingSessionV1 } from '@/lib/onboardingContext';
 
 const ONBOARDING_STARTED_SOURCES: OnboardingStartedSource[] = [
   'signup_redirect',
@@ -58,6 +60,7 @@ const Onboarding = () => {
   const hasTrackedStart = useRef(false);
   const [isChecking, setIsChecking] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [onboardingSession, setOnboardingSession] = useState<OnboardingSessionV1 | null>(null);
 
   useEffect(() => {
     const checkOnboardingStatus = async () => {
@@ -72,11 +75,12 @@ const Onboarding = () => {
 
       try {
         // Check if user has already completed onboarding
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('created_at, onboarding_completed, quiz_completed, user_preferences')
+          .select('created_at, onboarding_completed, quiz_completed, user_preferences, subscription_tier')
           .eq('id', user.id)
           .single();
+        if (profileError) throw profileError;
 
         const requestedReturn = searchParams.get('return') ?? getOnboardingReturn('/dashboard');
         const returnTarget = sanitizeReturnPath(requestedReturn, '/dashboard');
@@ -97,20 +101,27 @@ const Onboarding = () => {
           return;
         }
 
+        const source = getOnboardingStartedSource(searchParams, user.id, safeExitTarget, profile?.created_at);
+        const session = await beginOnboardingSession({
+          source,
+          plan: profile?.subscription_tier,
+          device: window.innerWidth < 768 ? 'mobile' : 'desktop',
+        });
+        setOnboardingSession(session);
+
         if (!hasTrackedStart.current) {
           hasTrackedStart.current = true;
-          // FIX(retention): onboarding — emit a canonical onboarding_started event once the route is actually reached by an authenticated user.
-          const source = getOnboardingStartedSource(searchParams, user.id, safeExitTarget, profile?.created_at);
           trackOnboardingStarted({
             source,
             userId: user.id,
             page_path: '/onboarding',
-            quiz_version: 4,
+            quiz_version: session.flow_version === 'adaptive_v1' ? 1 : 6,
+            onboarding_session_id: session.id,
+            flow_version: session.flow_version,
+            rollout_variant: session.rollout_variant,
+            plan: session.plan_snapshot,
+            device: session.device_snapshot,
           });
-          void trackActivity('onboarding_started', {
-            page_path: '/onboarding',
-            source,
-          }, user.id);
         }
 
         setIsChecking(false);
@@ -157,11 +168,12 @@ const Onboarding = () => {
       ) : (
         <div className="relative min-h-screen flex items-center justify-center py-8 px-4 sm:py-12">
           <div className="w-full max-w-4xl mx-auto">
-            <p className="text-center text-sm text-muted-foreground mb-4">
-              Welcome to Creatives Takeover: complete this quiz to personalize your experience
-            </p>
             <div className="animate-fade-in-up">
-              <OnboardingForm onComplete={handleComplete} />
+              {onboardingSession?.flow_version === 'adaptive_v1' ? (
+                <AdaptiveOnboardingForm session={onboardingSession} onComplete={handleComplete} />
+              ) : onboardingSession ? (
+                <OnboardingForm session={onboardingSession} onComplete={handleComplete} />
+              ) : null}
             </div>
           </div>
         </div>

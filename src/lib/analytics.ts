@@ -64,6 +64,12 @@ export interface OnboardingCompletedProps {
   stage_confidence?: number;
   pain_point?: string;
   activation_intent?: string;
+  onboarding_session_id?: string;
+  flow_version?: string;
+  rollout_variant?: string;
+  plan?: string;
+  device?: string;
+  recommendation_overridden?: boolean;
 }
 export interface FirstToolUsedProps { tool_name: string; credits_cost: number; credits_remaining: number; days_since_signup: number; }
 export interface ICPBuilderCompletedProps { mode: 'fast' | 'guided'; time_to_complete_seconds: number; credits_used: number; }
@@ -128,6 +134,11 @@ const PII_PROPERTY_KEYS = new Set([
   'username',
   'avatar_url',
   'avatarUrl',
+  'startupBrief',
+  'startup_brief',
+  'country',
+  'free_form_answer',
+  'freeFormAnswer',
   'ip',
   'ip_address',
   'linkedin_url',
@@ -139,7 +150,7 @@ const PII_PROPERTY_KEYS = new Set([
   'website_url',
 ]);
 
-const sanitizeAnalyticsProperties = (properties?: AnalyticsProperties): AnalyticsProperties => {
+export const sanitizeAnalyticsProperties = (properties?: AnalyticsProperties): AnalyticsProperties => {
   if (!properties) return {};
 
   return Object.entries(properties).reduce<AnalyticsProperties>((safe, [key, value]) => {
@@ -632,6 +643,11 @@ export const trackOnboardingStarted = (properties: {
   userId?: string;
   page_path?: string;
   quiz_version?: number;
+  onboarding_session_id?: string;
+  flow_version?: string;
+  rollout_variant?: string;
+  plan?: string | null;
+  device?: string | null;
 }) => captureAuthenticatedEvent('onboarding_started', properties.userId, properties);
 
 export const trackOnboardingCompleted = (properties: OnboardingCompletedProps) =>

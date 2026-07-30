@@ -18,6 +18,9 @@ export interface ActivationJourneyV2 {
   firstArtifactAt: string | null;
   completedAt: string | null;
   status: ActivationJourneyStatus;
+  onboardingSessionId?: string;
+  flowVersion?: string;
+  rolloutVariant?: string;
 }
 
 export interface ActivationCatalogEntry {
@@ -123,7 +126,24 @@ export function parseActivationJourney(value: unknown): ActivationJourneyV2 | nu
   const selectedIntent = normalizeActivationIntent(row.selectedIntent);
   const recommendedIntent = normalizeActivationIntent(row.recommendedIntent);
   if (row.version !== 2 || typeof row.journeyId !== 'string' || !selectedIntent || !recommendedIntent || typeof row.resumeUrl !== 'string' || typeof row.startedAt !== 'string') return null;
-  return { journeyId: row.journeyId, version: 2, selectedIntent, recommendedIntent, source: row.source === 'resume' || row.source === 'signup' ? row.source : 'quiz', resumeUrl: row.resumeUrl, startedAt: row.startedAt, destinationViewedAt: typeof row.destinationViewedAt === 'string' ? row.destinationViewedAt : null, firstInputAt: typeof row.firstInputAt === 'string' ? row.firstInputAt : null, firstOutputAt: typeof row.firstOutputAt === 'string' ? row.firstOutputAt : null, firstArtifactAt: typeof row.firstArtifactAt === 'string' ? row.firstArtifactAt : null, completedAt: typeof row.completedAt === 'string' ? row.completedAt : null, status: row.status === 'completed' || row.status === 'exited' ? row.status : 'active' };
+  return {
+    journeyId: row.journeyId,
+    version: 2,
+    selectedIntent,
+    recommendedIntent,
+    source: row.source === 'resume' || row.source === 'signup' ? row.source : 'quiz',
+    resumeUrl: row.resumeUrl,
+    startedAt: row.startedAt,
+    destinationViewedAt: typeof row.destinationViewedAt === 'string' ? row.destinationViewedAt : null,
+    firstInputAt: typeof row.firstInputAt === 'string' ? row.firstInputAt : null,
+    firstOutputAt: typeof row.firstOutputAt === 'string' ? row.firstOutputAt : null,
+    firstArtifactAt: typeof row.firstArtifactAt === 'string' ? row.firstArtifactAt : null,
+    completedAt: typeof row.completedAt === 'string' ? row.completedAt : null,
+    status: row.status === 'completed' || row.status === 'exited' ? row.status : 'active',
+    onboardingSessionId: typeof row.onboardingSessionId === 'string' ? row.onboardingSessionId : undefined,
+    flowVersion: typeof row.flowVersion === 'string' ? row.flowVersion : undefined,
+    rolloutVariant: typeof row.rolloutVariant === 'string' ? row.rolloutVariant : undefined,
+  };
 }
 
 export function buildActivationJourneyUrl(intent: ActivationIntent, journeyId: string, resumeUrl?: string) {

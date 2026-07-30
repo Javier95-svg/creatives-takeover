@@ -94,24 +94,69 @@ function buildLastActivitySummary(activity: any, profile: any): string {
   return "No recent activity logged yet.";
 }
 
+function buildPersonalizedFallback(stage: BizMapStage, onboarding: any): string {
+  const answers = onboarding?.answers ?? {};
+  const goal = answers.primaryGoal;
+  const blocker = answers.blocker;
+  const capacity = Number(answers.weeklyCapacityHours ?? 5);
+  const actionCount = capacity <= 2 ? 2 : capacity <= 5 ? 3 : 5;
+
+  if (goal === "raise" || blocker === "fundraising") {
+    return "Write the three strongest traction claims in your investor story and attach one verifiable proof point to each.";
+  }
+  if (goal === "build_product" || blocker === "product_delivery") {
+    return "Define the single user outcome your smallest product must deliver and remove every feature that does not support it.";
+  }
+  if (goal === "repeatable_growth" || blocker === "traction_growth") {
+    return "Review your latest acquisition experiment, name the strongest retention signal, and choose one variable to test next.";
+  }
+  if (goal === "launch" || blocker === "messaging") {
+    return `Draft one launch message and send it to ${actionCount} target customers to test whether the promise earns a reply.`;
+  }
+  if (goal === "win_first_customer" || goal === "reach_three_customers" || blocker === "sales_conversion") {
+    return `Contact ${actionCount} qualified prospects with one specific offer and record the objection or commitment you receive.`;
+  }
+  if (blocker === "prospect_access") {
+    return `Add ${actionCount} named prospects who experience the problem and write the first outreach message for each.`;
+  }
+  if (blocker === "accountability" || blocker === "team") {
+    return "Choose the one external founder outcome you will finish today and share that commitment with an accountability partner.";
+  }
+  return STAGE_CONTEXT[stage].fallbackMission;
+}
+
 async function generateMissionText({
   openaiApiKey,
   stage,
   profile,
   activity,
+  onboarding,
 }: {
   openaiApiKey: string | null;
   stage: BizMapStage;
   profile: any;
   activity: any;
+  onboarding: any;
 }): Promise<string> {
-  const fallbackMission = STAGE_CONTEXT[stage].fallbackMission;
+  const fallbackMission = buildPersonalizedFallback(stage, onboarding);
   if (!openaiApiKey) {
     return fallbackMission;
   }
 
   const stageConfig = STAGE_CONTEXT[stage];
+  const answers = onboarding?.answers ?? {};
+  const context = onboarding?.derived_context ?? {};
   const startupContext = [
+    answers.startupBrief ? `Startup brief: ${answers.startupBrief}` : null,
+    answers.businessModel ? `Business model: ${answers.businessModel}` : null,
+    answers.evidenceState ? `Strongest evidence: ${answers.evidenceState}` : null,
+    answers.customerCountBand ? `Customer-count band: ${answers.customerCountBand}` : null,
+    answers.primaryGoal ? `30-day goal: ${answers.primaryGoal}` : null,
+    answers.blocker ? `Primary blocker: ${answers.blocker}` : null,
+    answers.weeklyCapacityHours ? `Weekly capacity: ${answers.weeklyCapacityHours} hours` : null,
+    context.founderLoop ? `Operating loop: ${context.founderLoop}` : null,
+    context.selectedIntent ? `Selected first action: ${context.selectedIntent}` : null,
+    Array.isArray(answers.sectors) && answers.sectors.length > 0 ? `Sectors: ${answers.sectors.join(", ")}` : null,
     profile?.startup_name ? `Startup: ${profile.startup_name}` : null,
     profile?.current_focus ? `Current focus: ${profile.current_focus}` : null,
     profile?.quiz_biggest_challenge ? `Biggest challenge: ${profile.quiz_biggest_challenge}` : null,
@@ -218,7 +263,7 @@ serve(async (req) => {
       return jsonResponse({ mission: existingMission, cached: true });
     }
 
-    const [{ data: progress }, { data: activity }, { data: profile }] = await Promise.all([
+    const [{ data: progress }, { data: activity }, { data: profile }, onboardingResult] = await Promise.all([
       supabase
         .from("user_progress")
         .select("current_stage")
@@ -236,6 +281,14 @@ serve(async (req) => {
         .select("business_stage, current_focus, last_activity_at, quiz_biggest_challenge, startup_name")
         .eq("id", userId)
         .maybeSingle(),
+      supabase
+        .from("onboarding_sessions")
+        .select("answers, derived_context")
+        .eq("user_id", userId)
+        .eq("status", "completed")
+        .order("completed_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
 
     const stage = normalizeStage(progress?.current_stage);
@@ -244,6 +297,7 @@ serve(async (req) => {
       stage,
       profile,
       activity,
+      onboarding: onboardingResult.data,
     });
 
     const { data: insertedMissionRaw, error: insertError } = await supabase

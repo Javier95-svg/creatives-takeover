@@ -23,6 +23,7 @@ import { useRoutine } from '@/hooks/useRoutine';
 import { useTaskCalendarEngine } from '@/hooks/useTaskCalendarEngine';
 import { getCompletionKey, getLocalDateKey, type RoutineTask } from '@/lib/routineTemplates';
 import { getTaskRuntimeStatus, shouldShowAsDailyCommand, toDateKey, type CalendarTaskRow } from '@/lib/taskCalendar';
+import { RecommendationFeedback } from '@/components/dashboard/RecommendationFeedback';
 
 function getFirstName(value: string | null | undefined): string {
   const trimmed = (value ?? '').trim();
@@ -136,6 +137,14 @@ export default function DashboardTodayCockpit() {
                 <p className="mt-1.5 text-sm leading-6 text-foreground">
                   {dailyMission.mission.mission_text}
                 </p>
+                <RecommendationFeedback
+                  surface="daily_mission"
+                  recommendationKey={`daily_mission:${dailyMission.mission.id}`}
+                  metadata={{
+                    mission_date: dailyMission.mission.mission_date,
+                    stage: dailyMission.mission.stage,
+                  }}
+                />
               </div>
               {dailyMission.mission.completed ? (
                 <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-success/25 bg-success/10 px-3 py-1.5 text-xs font-semibold text-success dark:text-success">

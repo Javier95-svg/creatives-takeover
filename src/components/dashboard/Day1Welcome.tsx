@@ -14,8 +14,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 import { getLocalDateString } from '@/lib/dailyGoalPrompt';
-import { trackOnboardingCompleted } from '@/lib/analytics';
-import { triggerEmailSequenceEvent } from '@/lib/emailSequences';
 import { cn } from '@/lib/utils';
 
 type StepKey = 'icp_builder' | 'founder_stage' | 'daily_mission';
@@ -210,13 +208,7 @@ export function Day1Welcome({ profile, onProfilePatch }: Day1WelcomeProps) {
         }
       }
 
-      await updateStep('daily_mission', { onboarding_completed: true });
-      trackOnboardingCompleted({
-        quiz_completed: profile.quiz_completed === true,
-        creative_niche: null,
-        business_stage: profile.quiz_current_stage || stage || null,
-      });
-      await triggerEmailSequenceEvent('onboarding_complete', user.id);
+      await updateStep('daily_mission');
       setCelebrating(true);
       window.setTimeout(() => {
         navigate('/dashboard/tasks', { replace: true });
@@ -234,22 +226,20 @@ export function Day1Welcome({ profile, onProfilePatch }: Day1WelcomeProps) {
 
     setSavingStep('skip');
     try {
+      const nextSteps = {
+        ...getCompletedSteps(profile.onboarding_steps_completed),
+        daily_mission: true,
+      };
       const { error } = await supabase
         .from('profiles')
-        .update({ onboarding_completed: true })
+        .update({ onboarding_steps_completed: nextSteps })
         .eq('id', user.id);
 
       if (error) {
         throw error;
       }
 
-      trackOnboardingCompleted({
-        quiz_completed: profile.quiz_completed === true,
-        creative_niche: null,
-        business_stage: profile.quiz_current_stage || stage || null,
-      });
-      await triggerEmailSequenceEvent('onboarding_complete', user.id);
-      onProfilePatch({ onboarding_completed: true });
+      onProfilePatch({ onboarding_steps_completed: nextSteps });
       navigate('/dashboard', { replace: true });
     } catch (error) {
       console.error('Failed to skip Day 1 Welcome:', error);

@@ -38,7 +38,7 @@ export const CofounderOnboarding = ({ open, onComplete }: CofounderOnboardingPro
         .update({
           ai_personality: selectedPersonality,
           memory_preference: memoryPreference,
-          onboarding_completed: true
+          cofounder_onboarding_completed: true
         })
         .eq('id', user.id);
 

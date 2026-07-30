@@ -15,7 +15,6 @@ import {
   trackOnboardingPathSelected,
   trackOnboardingPathSkipped,
 } from '@/lib/analytics';
-import { triggerEmailSequenceEvent } from '@/lib/emailSequences';
 import {
   seedDefaultRoutineForOnboarding,
   withOnboardingPath,
@@ -93,16 +92,16 @@ export function OnboardingPathGate({ profile, onProfilePatch }: OnboardingPathGa
     if (!user) return;
     setBusy('icp');
     try {
-      const nextPrefs = withOnboardingPath(profile.user_preferences, 'icp');
+      const nextPrefs = withOnboardingPathCompleted(profile.user_preferences, 'icp');
       const { error } = await supabase
         .from('profiles')
-        .update({ user_preferences: nextPrefs as Json, onboarding_completed: true })
+        .update({ user_preferences: nextPrefs as Json })
         .eq('id', user.id);
       if (error) throw error;
 
       trackOnboardingPathSelected({ path: 'icp' });
       void seedDefaultRoutineForOnboarding(user.id);
-      onProfilePatch({ user_preferences: nextPrefs as Json, onboarding_completed: true });
+      onProfilePatch({ user_preferences: nextPrefs as Json });
       navigate('/icp-builder?source=onboarding');
     } catch (error) {
       console.error('Failed to start ICP onboarding path:', error);
@@ -157,13 +156,12 @@ export function OnboardingPathGate({ profile, onProfilePatch }: OnboardingPathGa
       const nextPrefs = withOnboardingPathCompleted(profile.user_preferences, 'mentor');
       const { error } = await supabase
         .from('profiles')
-        .update({ user_preferences: nextPrefs as Json, onboarding_completed: true })
+        .update({ user_preferences: nextPrefs as Json })
         .eq('id', user.id);
       if (error) throw error;
 
       trackActivationCompleted({ trigger: 'mentor_intro_sent', mentor_id: mentor.id });
-      await triggerEmailSequenceEvent('onboarding_complete', user.id);
-      onProfilePatch({ user_preferences: nextPrefs as Json, onboarding_completed: true });
+      onProfilePatch({ user_preferences: nextPrefs as Json });
 
       toast.success(`Intro sent to ${mentor.name}!`);
       navigate(`/messages?conversationId=${conversationId}`);
@@ -179,15 +177,16 @@ export function OnboardingPathGate({ profile, onProfilePatch }: OnboardingPathGa
     if (!user) return;
     setBusy('skip');
     try {
+      const nextPrefs = withOnboardingPathCompleted(profile.user_preferences);
       const { error } = await supabase
         .from('profiles')
-        .update({ onboarding_completed: true })
+        .update({ user_preferences: nextPrefs as Json })
         .eq('id', user.id);
       if (error) throw error;
 
       trackOnboardingPathSkipped({ view });
       void seedDefaultRoutineForOnboarding(user.id);
-      onProfilePatch({ onboarding_completed: true });
+      onProfilePatch({ user_preferences: nextPrefs as Json });
       navigate('/dashboard', { replace: true });
     } catch (error) {
       console.error('Failed to skip onboarding path:', error);

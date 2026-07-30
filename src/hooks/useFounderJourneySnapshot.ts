@@ -10,12 +10,14 @@ import {
 } from '@/lib/founderJourney';
 import { fetchFounderJourneyExtras, fetchToolCompletionSignals } from '@/lib/founderSignals';
 import { getFoundationalMilestones, type ToolCompletionSignals } from '@/lib/taskCalendar';
+import { useOnboardingContext } from '@/hooks/useOnboardingContext';
 
 const REFETCH_THROTTLE_MS = 60_000;
 
 export function useFounderJourneySnapshot() {
   const { user } = useAuth();
   const { currentStage, stageState, loading: stageLoading } = useBizMapProgress();
+  const { value: onboarding, loading: onboardingLoading } = useOnboardingContext();
   const [toolSignals, setToolSignals] = useState<ToolCompletionSignals>({});
   const [extras, setExtras] = useState<FounderJourneyExtras>(EMPTY_FOUNDER_JOURNEY_EXTRAS);
   const [isLoading, setIsLoading] = useState(true);
@@ -71,15 +73,16 @@ export function useFounderJourneySnapshot() {
         toolSignals,
         extras,
         foundationalMilestones: getFoundationalMilestones(toolSignals),
+        onboardingContext: onboarding?.context,
       }),
-    [currentStage, extras, stageState, toolSignals],
+    [currentStage, extras, onboarding?.context, stageState, toolSignals],
   );
 
   const refetch = useCallback(() => load(true), [load]);
 
   return {
     snapshot,
-    isLoading: isLoading || stageLoading,
+    isLoading: isLoading || stageLoading || onboardingLoading,
     refetch,
   };
 }

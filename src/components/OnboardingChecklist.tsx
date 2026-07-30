@@ -6,9 +6,7 @@ import { CheckCircle2, Circle, Sparkles, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
-import { trackOnboardingCompleted } from '@/lib/analytics';
-import { trackOnboardingComplete, trackOnboardingDismissed } from '@/lib/onboardingAnalytics';
-import { triggerEmailSequenceEvent } from '@/lib/emailSequences';
+import { captureEvent } from '@/lib/analytics';
 
 interface OnboardingChecklistProps {
   userId: string;
@@ -90,23 +88,18 @@ export const OnboardingChecklist = ({
 
   // Auto-complete onboarding when all items are done
   useEffect(() => {
-    const completeOnboarding = async () => {
+    const completeProfileChecklist = async () => {
       if (allCompleted) {
         try {
-          // Mark onboarding as completed in database
           await supabase
             .from('profiles')
-            .update({ onboarding_completed: true })
+            .update({ profile_checklist_completed_at: new Date().toISOString() } as never)
             .eq('id', userId);
 
-          // Track completion analytics
-          trackOnboardingCompleted({
-            quiz_completed: true,
-            creative_niche: null,
-            business_stage: null,
+          captureEvent('profile_checklist_completed', {
+            completed_count: completedCount,
+            total_count: totalCount,
           });
-          await trackOnboardingComplete(userId);
-          await triggerEmailSequenceEvent('onboarding_complete', userId);
 
           // Show celebration
           void confetti({
@@ -115,42 +108,36 @@ export const OnboardingChecklist = ({
             origin: { y: 0.6 },
           });
 
-          toast.success('🎉 Onboarding Complete! Welcome to Creatives Takeover!');
+          toast.success('Profile checklist complete.');
 
           // Hide checklist after a short delay
           setTimeout(() => {
             setIsVisible(false);
           }, 3000);
         } catch (error) {
-          console.error('Error completing onboarding:', error);
+          console.error('Error completing profile checklist:', error);
         }
       }
     };
 
-    void completeOnboarding();
-  }, [allCompleted, userId]);
+    void completeProfileChecklist();
+  }, [allCompleted, completedCount, totalCount, userId]);
 
   const handleDismiss = async () => {
     try {
-      // Track dismissal analytics
-      await trackOnboardingDismissed(userId, completedCount, totalCount);
-
-      // Mark onboarding as completed even if not all items are done
       await supabase
         .from('profiles')
-        .update({ onboarding_completed: true })
+        .update({ profile_checklist_dismissed_at: new Date().toISOString() } as never)
         .eq('id', userId);
 
-      trackOnboardingCompleted({
-        quiz_completed: false,
-        creative_niche: null,
-        business_stage: null,
+      captureEvent('profile_checklist_dismissed', {
+        completed_count: completedCount,
+        total_count: totalCount,
       });
-      await triggerEmailSequenceEvent('onboarding_complete', userId);
       setIsVisible(false);
       toast.info('You can always complete your profile later from Account settings');
     } catch (error) {
-      console.error('Error dismissing onboarding:', error);
+      console.error('Error dismissing profile checklist:', error);
     }
   };
 

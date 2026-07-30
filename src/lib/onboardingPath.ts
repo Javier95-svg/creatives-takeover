@@ -39,6 +39,11 @@ export interface OnboardingPathState {
   completed: boolean;
 }
 
+export function isDay1WelcomeComplete(value: Json | null): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  return (value as Record<string, unknown>).daily_mission === true;
+}
+
 export function getOnboardingPathState(userPreferences: unknown): OnboardingPathState {
   const prefs = getUserPreferencesRecord(userPreferences);
   const rawPath = prefs[ONBOARDING_PATH_KEY];
@@ -74,7 +79,8 @@ export function shouldShowOnboardingPathGate(
 ): boolean {
   if (!FORCED_ONBOARDING_ENABLED || !profile) return false;
   if (getActivationPreferenceState(profile.user_preferences).firstArtifactType) return false;
-  return profile.onboarding_completed !== true;
+  if (profile.onboarding_completed === true) return false;
+  return getOnboardingPathState(profile.user_preferences).completed !== true;
 }
 
 function accountAgeMs(userCreatedAt: string | null | undefined): number | null {

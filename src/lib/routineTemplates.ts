@@ -139,11 +139,24 @@ export const DEFAULT_REMINDER_PREFERENCES: RoutineReminderPreferences = {
   time: '09:00',
 };
 
-export function createRoutineConfig(goal: RoutineGoal, now = new Date()): RoutineConfig {
+export function createRoutineConfig(
+  goal: RoutineGoal,
+  now = new Date(),
+  weeklyCapacityHours?: number | null,
+): RoutineConfig {
+  const capacitySizedTasks = ROUTINE_TEMPLATES[goal]
+    .filter((task, index) => weeklyCapacityHours === 2 ? index === 0 || task.cadence === 'weekly' : true)
+    .map((task, index) => ({
+      ...task,
+      days:
+        weeklyCapacityHours === 5 && task.cadence === 'daily' && index > 0
+          ? [1, 3, 5]
+          : task.days,
+    }));
   return {
     version: 1,
     primaryGoal: goal,
-    tasks: ROUTINE_TEMPLATES[goal].map((task, index) => ({
+    tasks: capacitySizedTasks.map((task, index) => ({
       ...task,
       order: index,
       active: true,

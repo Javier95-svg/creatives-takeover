@@ -50,6 +50,40 @@ interface MessagePerformanceMetric {
   p99_ms: number;
 }
 
+interface OnboardingOutcomeSummary {
+  eligibleSignups: number;
+  startedUsers: number;
+  completedUsers: number;
+  completionRate: number | null;
+  medianCompletionSeconds: number | null;
+  p75CompletionSeconds: number | null;
+  destinationWithin2Minutes: number;
+  inputWithin10Minutes: number;
+  artifactWithin30Minutes: number;
+  artifactWithin24Hours: number;
+  maturedD1Users: number;
+  returnedD1: number;
+  maturedD7Users: number;
+  returnedD7: number;
+  helpfulFeedbackUsers: number;
+  missionCompletedUsers: number;
+  taskCompletedUsers: number;
+  completeContextUsers: number;
+}
+
+interface OnboardingOutcomeReport {
+  summary: OnboardingOutcomeSummary;
+  byVariant: Array<{
+    variant: string;
+    users: number;
+    completed: number;
+    artifact24h: number;
+    maturedD7: number;
+    returnedD7: number;
+  }>;
+  breakdowns: Record<string, Array<{ key: string; users: number }>>;
+}
+
 const AdminAnalytics = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -91,6 +125,7 @@ const AdminAnalytics = () => {
     artifactTypes: [],
   });
   const [messagePerformance, setMessagePerformance] = useState<MessagePerformanceMetric[]>([]);
+  const [onboardingOutcomes, setOnboardingOutcomes] = useState<OnboardingOutcomeReport | null>(null);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -165,6 +200,7 @@ const AdminAnalytics = () => {
         firstArtifactSavedResult,
         activationCompletedResult,
         activationV2Result,
+        onboardingOutcomesResult,
       ] = await Promise.all([
         supabase
           .from('conversion_events')
@@ -221,7 +257,13 @@ const AdminAnalytics = () => {
           .gte('created_at', fromIso)
           .lte('created_at', toIso),
         supabase.rpc('get_activation_funnel_v2', { p_from: fromIso, p_to: toIso }),
+        (supabase as any).rpc('get_onboarding_dashboard_outcomes_v1', { p_from: fromIso, p_to: toIso }),
       ]);
+
+      const outcomeReport = onboardingOutcomesResult.data && typeof onboardingOutcomesResult.data === 'object'
+        ? onboardingOutcomesResult.data as OnboardingOutcomeReport
+        : null;
+      setOnboardingOutcomes(outcomeReport);
 
       const activationV2 = activationV2Result.data && typeof activationV2Result.data === 'object'
         ? activationV2Result.data as Record<string, unknown>
@@ -231,13 +273,13 @@ const AdminAnalytics = () => {
       setOnboardingFunnel({
         signupStarted: signupStartedResult.count ?? 0,
         signupCompleted: signupCompletedResult.count ?? 0,
-        onboardingStarted: onboardingStartedResult.count ?? 0,
-        onboardingCompleted: count('cohortJourneys', onboardingCompletedResult.count ?? 0),
-        firstActionOpened: count('destinationViewed', firstActionOpenedResult.count ?? 0),
-        firstInputSubmitted: count('firstInputWithin10Minutes', firstInputSubmittedResult.count ?? 0),
+        onboardingStarted: outcomeReport?.summary.startedUsers ?? onboardingStartedResult.count ?? 0,
+        onboardingCompleted: outcomeReport?.summary.completedUsers ?? count('cohortJourneys', onboardingCompletedResult.count ?? 0),
+        firstActionOpened: outcomeReport?.summary.destinationWithin2Minutes ?? count('destinationViewed', firstActionOpenedResult.count ?? 0),
+        firstInputSubmitted: outcomeReport?.summary.inputWithin10Minutes ?? count('firstInputWithin10Minutes', firstInputSubmittedResult.count ?? 0),
         firstOutputGenerated: count('firstOutputGenerated', firstOutputGeneratedResult.count ?? 0),
-        firstArtifactSaved: count('artifactWithin30Minutes', firstArtifactSavedResult.count ?? 0),
-        activationCompleted: count('artifactWithin24Hours', activationCompletedResult.count ?? 0),
+        firstArtifactSaved: outcomeReport?.summary.artifactWithin30Minutes ?? count('artifactWithin30Minutes', firstArtifactSavedResult.count ?? 0),
+        activationCompleted: outcomeReport?.summary.artifactWithin24Hours ?? count('artifactWithin24Hours', activationCompletedResult.count ?? 0),
       });
     })();
   }, [endDate, startDate]);
@@ -590,6 +632,144 @@ const AdminAnalytics = () => {
 	            </TabsContent>
 
 	            <TabsContent value="onboarding" className="space-y-6">
+                {onboardingOutcomes ? (
+                  <>
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                      {[
+                        {
+                          label: 'Eligible signup cohort',
+                          value: onboardingOutcomes.summary.eligibleSignups,
+                          detail: 'Unique users eligible in this date window',
+                        },
+                        {
+                          label: 'Onboarding completion',
+                          value: `${onboardingOutcomes.summary.completionRate ?? 0}%`,
+                          detail: `${onboardingOutcomes.summary.completedUsers}/${onboardingOutcomes.summary.startedUsers} unique starters`,
+                        },
+                        {
+                          label: 'First artifact in 24h',
+                          value: `${safePercent(onboardingOutcomes.summary.artifactWithin24Hours, onboardingOutcomes.summary.completedUsers)}%`,
+                          detail: `${onboardingOutcomes.summary.artifactWithin24Hours}/${onboardingOutcomes.summary.completedUsers} completed users`,
+                        },
+                        {
+                          label: 'D7 Command Center return',
+                          value: `${safePercent(onboardingOutcomes.summary.returnedD7, onboardingOutcomes.summary.maturedD7Users)}%`,
+                          detail: `${onboardingOutcomes.summary.returnedD7}/${onboardingOutcomes.summary.maturedD7Users} matured users`,
+                        },
+                        {
+                          label: 'Completion duration',
+                          value: `${Math.round(onboardingOutcomes.summary.medianCompletionSeconds ?? 0)}s`,
+                          detail: `Median · p75 ${Math.round(onboardingOutcomes.summary.p75CompletionSeconds ?? 0)}s`,
+                        },
+                        {
+                          label: 'D1 Command Center return',
+                          value: `${safePercent(onboardingOutcomes.summary.returnedD1, onboardingOutcomes.summary.maturedD1Users)}%`,
+                          detail: `${onboardingOutcomes.summary.returnedD1}/${onboardingOutcomes.summary.maturedD1Users} matured users`,
+                        },
+                        {
+                          label: 'Context completeness',
+                          value: `${safePercent(onboardingOutcomes.summary.completeContextUsers, onboardingOutcomes.summary.completedUsers)}%`,
+                          detail: `${onboardingOutcomes.summary.completeContextUsers}/${onboardingOutcomes.summary.completedUsers} completed users`,
+                        },
+                        {
+                          label: 'Helpful recommendations',
+                          value: `${safePercent(onboardingOutcomes.summary.helpfulFeedbackUsers, onboardingOutcomes.summary.completedUsers)}%`,
+                          detail: `${onboardingOutcomes.summary.helpfulFeedbackUsers}/${onboardingOutcomes.summary.completedUsers} completed users`,
+                        },
+                        {
+                          label: 'Mission completion ≤7d',
+                          value: `${safePercent(onboardingOutcomes.summary.missionCompletedUsers, onboardingOutcomes.summary.completedUsers)}%`,
+                          detail: `${onboardingOutcomes.summary.missionCompletedUsers}/${onboardingOutcomes.summary.completedUsers} completed users`,
+                        },
+                        {
+                          label: 'Task completion ≤7d',
+                          value: `${safePercent(onboardingOutcomes.summary.taskCompletedUsers, onboardingOutcomes.summary.completedUsers)}%`,
+                          detail: `${onboardingOutcomes.summary.taskCompletedUsers}/${onboardingOutcomes.summary.completedUsers} completed users`,
+                        },
+                      ].map((metric) => (
+                        <Card key={metric.label}>
+                          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">{metric.label}</CardTitle></CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold">{metric.value}</div>
+                            <p className="text-xs text-muted-foreground">{metric.detail}</p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+
+                    <div className="grid gap-6 lg:grid-cols-2">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Activation timing</CardTitle>
+                          <CardDescription>Unique completed users; the denominator is {onboardingOutcomes.summary.completedUsers}.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <Table>
+                            <TableHeader><TableRow><TableHead>Milestone</TableHead><TableHead className="text-right">Users</TableHead><TableHead className="text-right">Rate</TableHead></TableRow></TableHeader>
+                            <TableBody>
+                              {[
+                                ['Destination viewed ≤2m', onboardingOutcomes.summary.destinationWithin2Minutes],
+                                ['First input ≤10m', onboardingOutcomes.summary.inputWithin10Minutes],
+                                ['First artifact ≤30m', onboardingOutcomes.summary.artifactWithin30Minutes],
+                                ['First artifact ≤24h', onboardingOutcomes.summary.artifactWithin24Hours],
+                              ].map(([label, users]) => (
+                                <TableRow key={String(label)}>
+                                  <TableCell>{label}</TableCell>
+                                  <TableCell className="text-right">{users}</TableCell>
+                                  <TableCell className="text-right">{safePercent(Number(users), onboardingOutcomes.summary.completedUsers)}%</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Server-persisted rollout</CardTitle>
+                          <CardDescription>Unique users by immutable onboarding variant.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <Table>
+                            <TableHeader><TableRow><TableHead>Variant</TableHead><TableHead className="text-right">Started</TableHead><TableHead className="text-right">Completed</TableHead><TableHead className="text-right">Artifact 24h</TableHead><TableHead className="text-right">D7</TableHead></TableRow></TableHeader>
+                            <TableBody>
+                              {onboardingOutcomes.byVariant.map((variant) => (
+                                <TableRow key={variant.variant}>
+                                  <TableCell className="font-medium">{variant.variant}</TableCell>
+                                  <TableCell className="text-right">{variant.users}</TableCell>
+                                  <TableCell className="text-right">{variant.completed}</TableCell>
+                                  <TableCell className="text-right">{variant.artifact24h}</TableCell>
+                                  <TableCell className="text-right">{variant.returnedD7}/{variant.maturedD7}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Cohort composition</CardTitle>
+                        <CardDescription>Unique completed users broken down by the structured fields used for personalization. No briefs, country, names, or free text are included.</CardDescription>
+                      </CardHeader>
+                      <CardContent className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        {Object.entries(onboardingOutcomes.breakdowns).map(([dimension, rows]) => (
+                          <div key={dimension}>
+                            <p className="mb-2 text-sm font-semibold capitalize">{dimension.replaceAll('_', ' ')}</p>
+                            <div className="space-y-1.5">
+                              {rows.map((row) => (
+                                <div key={row.key} className="flex justify-between gap-3 text-xs">
+                                  <span className="truncate text-muted-foreground">{row.key}</span>
+                                  <span className="font-medium">{row.users}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </>
+                ) : null}
 	              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 	                <Card>
 	                  <CardHeader>
@@ -666,15 +846,14 @@ const AdminAnalytics = () => {
 	              </div>
 	              <Card>
 	                <CardHeader>
-	                  <CardTitle>Onboarding Funnel Debug</CardTitle>
+	                  <CardTitle>Compatibility milestones</CardTitle>
 	                  <CardDescription>
-	                    Temporary admin view for validating that signup reaches onboarding and that onboarding leads to a real first-value action.
+	                    Legacy event counters retained while the session-based cohorts mature.
 	                  </CardDescription>
 	                </CardHeader>
 	                <CardContent className="space-y-2 text-sm text-muted-foreground">
-	                  <p>Use this to confirm whether `onboarding_started` is live again after the retention funnel repair.</p>
-	                  <p>If signup completion is healthy but onboarding start stays low, the auth callback or redirect chain is still broken.</p>
-	                  <p>If onboarding completion is healthy but first-value actions stay low, the activation flow is still leaking after onboarding.</p>
+	                  <p>Use the cohort cards above for rollout decisions; they use unique users, explicit denominators, and matured D1/D7 windows.</p>
+	                  <p>These counters remain available only to validate historical event continuity.</p>
 	                </CardContent>
 	              </Card>
 	            </TabsContent>

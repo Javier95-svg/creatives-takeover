@@ -43,13 +43,12 @@ test('credit deduction triggers email events for rookie low-credit and exhausted
 test('frontend onboarding and signup trigger lifecycle events', () => {
   const authContext = read('../src/contexts/AuthContext.tsx');
   const retentionSystem = read('../src/lib/retentionSystem.ts');
-  const day1Welcome = read('../src/components/dashboard/Day1Welcome.tsx');
   const checklist = read('../src/components/OnboardingChecklist.tsx');
 
   assert.match(authContext, /triggerEmailSequenceEvent\('signup_completed'/);
   assert.match(retentionSystem, /triggerEmailSequenceEvent\('onboarding_complete'/);
-  assert.match(day1Welcome, /triggerEmailSequenceEvent\('onboarding_complete'/);
-  assert.match(checklist, /triggerEmailSequenceEvent\('onboarding_complete'/);
+  assert.doesNotMatch(checklist, /triggerEmailSequenceEvent\('onboarding_complete'/);
+  assert.match(checklist, /profile_checklist_completed/);
 });
 
 test('resend webhooks update retention email tracking columns by resend id', () => {

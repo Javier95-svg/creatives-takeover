@@ -31,6 +31,10 @@
       "last_name",
       "username",
       "avatar_url",
+      "startup_brief",
+      "startupBrief",
+      "country",
+      "free_form_answer",
       "ip",
       "ip_address"
     ]
@@ -68,28 +72,49 @@
       "owner": "product",
       "source": "client",
       "sourceFile": "src/lib/analytics.ts",
-      "requiredProperties": ["source"]
+      "requiredProperties": ["source", "onboarding_session_id", "flow_version", "rollout_variant"]
     },
     "onboarding_step_completed": {
       "stage": "onboarding",
       "owner": "product",
       "source": "client",
       "sourceFile": "src/lib/analytics.ts",
-      "requiredProperties": ["step", "step_name", "total_steps"]
+      "requiredProperties": ["step", "step_name", "total_steps", "onboarding_session_id", "flow_version", "rollout_variant"]
     },
     "onboarding_completed": {
       "stage": "onboarding",
       "owner": "product",
       "source": "client",
       "sourceFile": "src/lib/analytics.ts",
-      "requiredProperties": ["quiz_completed"]
+      "requiredProperties": ["quiz_completed", "onboarding_session_id", "flow_version", "rollout_variant"]
     },
     "onboarding_abandoned": {
       "stage": "onboarding",
       "owner": "product",
       "source": "client",
       "sourceFile": "src/lib/analytics.ts",
-      "requiredProperties": ["last_step", "total_steps", "elapsed_ms"]
+      "requiredProperties": ["last_step", "total_steps", "elapsed_ms", "onboarding_session_id", "flow_version", "rollout_variant"]
+    },
+    "activation_recommendation_shown": {
+      "stage": "onboarding",
+      "owner": "product",
+      "source": "both",
+      "sourceFile": "src/components/AdaptiveOnboardingForm.tsx",
+      "requiredProperties": ["onboarding_session_id", "flow_version", "rollout_variant", "recommendation_intent"]
+    },
+    "activation_recommendation_accepted": {
+      "stage": "onboarding",
+      "owner": "product",
+      "source": "both",
+      "sourceFile": "src/components/AdaptiveOnboardingForm.tsx",
+      "requiredProperties": ["onboarding_session_id", "flow_version", "rollout_variant", "recommendation_intent", "selected_intent"]
+    },
+    "activation_recommendation_overridden": {
+      "stage": "onboarding",
+      "owner": "product",
+      "source": "both",
+      "sourceFile": "src/components/AdaptiveOnboardingForm.tsx",
+      "requiredProperties": ["onboarding_session_id", "flow_version", "rollout_variant", "recommendation_intent", "selected_intent"]
     },
     "dashboard_viewed": {
       "stage": "activation",
@@ -97,6 +122,13 @@
       "source": "client",
       "sourceFile": "src/pages/Dashboard.tsx",
       "requiredProperties": ["user_id", "source", "plan"]
+    },
+    "dashboard_recommendation_feedback": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "both",
+      "sourceFile": "src/components/dashboard/RecommendationFeedback.tsx",
+      "requiredProperties": ["user_id", "surface", "recommendation_key", "relevance", "reason", "context_version"]
     },
     "activation_first_action_opened": {
       "stage": "activation",

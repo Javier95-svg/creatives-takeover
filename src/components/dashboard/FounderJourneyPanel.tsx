@@ -166,17 +166,29 @@ export default function FounderJourneyPanel() {
             description="Each tool you complete lights up here, so you always know where you stand across the whole journey."
           />
           <div className="mt-4 flex flex-wrap gap-2">
-            <Button asChild size="sm">
-              <Link to="/icp-builder">
-                1. Define your ICP
+            {snapshot.nextAction ? (
+              <Button asChild size="sm">
+                <Link
+                  to={snapshot.nextAction.route}
+                  onClick={() => trackDashboardJourneyContinueClicked({ milestone_key: snapshot.nextAction?.key })}
+                >
+                  {snapshot.nextAction.label}
+                  <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            ) : (
+              <Button asChild size="sm">
+                <Link to="/bizmap-ai">
+                  Open your startup journey
+                  <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            )}
+            <Button asChild size="sm" variant="outline">
+              <Link to="/bizmap-ai">
+                Review assigned stage
                 <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
               </Link>
-            </Button>
-            <Button asChild size="sm" variant="outline">
-              <Link to="/demo-studio">2. Publish a demo</Link>
-            </Button>
-            <Button asChild size="sm" variant="outline">
-              <Link to="/pmf-lab">3. Validate demand</Link>
             </Button>
           </div>
         </CardContent>

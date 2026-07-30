@@ -1,6 +1,6 @@
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { captureEvent } from '@/lib/analytics';
+import { captureEvent, sanitizeAnalyticsProperties } from '@/lib/analytics';
 import { requiresGuidedOnboarding } from '@/lib/guidedOnboarding';
 import { triggerEmailSequenceEvent } from '@/lib/emailSequences';
 import { mapFounderStageToBizMapStage, STAGES, type FounderStageId } from '@/lib/stageDiagnostic';
@@ -75,6 +75,14 @@ interface StartActivationParams {
   cofounderSituation?: 'actively_looking' | 'solo_ok';
   onboardingLocalDate?: string;
   activationJourney?: ActivationJourneyV2;
+  onboardingSessionId?: string;
+  flowVersion?: string;
+  rolloutVariant?: string;
+  /**
+   * Canonical onboarding completion persists the profile and preference patch
+   * atomically. Keep this true when that RPC already committed the same state.
+   */
+  skipPersistence?: boolean;
 }
 
 interface CompleteActivationParams {
@@ -233,9 +241,10 @@ async function updateUserPreferences(userId: string, patch: Record<string, unkno
 }
 
 export async function trackRetentionEvent(eventName: string, properties: RetentionEventProperties = {}) {
-  captureEvent(eventName, properties);
+  const safeProperties = sanitizeAnalyticsProperties(properties);
+  captureEvent(eventName, safeProperties);
 
-  const userId = typeof properties.user_id === 'string' ? properties.user_id : undefined;
+  const userId = typeof safeProperties.user_id === 'string' ? safeProperties.user_id : undefined;
   if (!userId) {
     return;
   }
@@ -245,7 +254,7 @@ export async function trackRetentionEvent(eventName: string, properties: Retenti
       body: {
         user_id: userId,
         activity_type: eventName,
-        activity_data: properties,
+        activity_data: safeProperties,
         page_path: typeof window !== 'undefined' ? window.location.pathname : null,
       },
     });
@@ -323,7 +332,6 @@ export async function startActivationJourney(params: StartActivationParams) {
     business_stage: params.businessStage,
     quiz_current_stage: params.businessStage,
     quiz_biggest_challenge: params.primaryPain,
-    onboarding_completed: true,
     startup_industry: params.startupSectors ?? undefined,
     country: params.country?.trim() || undefined,
   };
@@ -362,19 +370,21 @@ export async function startActivationJourney(params: StartActivationParams) {
     ...(params.activationJourney ? { activationJourney: params.activationJourney } : {}),
   };
 
-  if (params.activationJourney) {
-    const { error } = await supabase.rpc('start_activation_journey_v2', {
-      p_profile_updates: profileUpdates,
-      p_preference_patch: preferencePatch,
-    });
-    if (error) throw error;
-  } else {
-    const { error } = await supabase
-      .from('profiles')
-      .update(profileUpdates)
-      .eq('id', params.userId);
-    if (error) throw error;
-    await updateUserPreferences(params.userId, preferencePatch, true);
+  if (!params.skipPersistence) {
+    if (params.activationJourney) {
+      const { error } = await supabase.rpc('start_activation_journey_v2', {
+        p_profile_updates: profileUpdates,
+        p_preference_patch: preferencePatch,
+      });
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from('profiles')
+        .update(profileUpdates)
+        .eq('id', params.userId);
+      if (error) throw error;
+      await updateUserPreferences(params.userId, preferencePatch);
+    }
   }
 
   if (!params.activationJourney) await trackRetentionEvent('activation_started', {
@@ -383,9 +393,14 @@ export async function startActivationJourney(params: StartActivationParams) {
     primary_pain: params.primaryPain,
     activation_intent: params.activationIntent,
     source: 'onboarding',
+    onboarding_session_id: params.onboardingSessionId ?? null,
+    flow_version: params.flowVersion ?? null,
+    rollout_variant: params.rolloutVariant ?? null,
   });
 
-  await triggerEmailSequenceEvent('onboarding_complete', params.userId);
+  void triggerEmailSequenceEvent('onboarding_complete', params.userId).catch((error) => {
+    console.warn('Onboarding email enrichment did not complete.', error);
+  });
 }
 
 export type ActivationJourneyEvent =
@@ -428,6 +443,9 @@ export async function trackActivationJourneyEvent(params: {
       journey_id: params.journey.journeyId,
       activation_intent: params.journey.selectedIntent,
       journey_source: params.journey.source,
+      onboarding_session_id: params.journey.onboardingSessionId ?? null,
+      flow_version: params.journey.flowVersion ?? null,
+      rollout_variant: params.journey.rolloutVariant ?? null,
       ...params.properties,
     });
   }
@@ -441,6 +459,9 @@ export async function trackActivationJourneyEvent(params: {
           journey_id: params.journey.journeyId,
           activation_intent: params.journey.selectedIntent,
           journey_source: params.journey.source,
+          onboarding_session_id: params.journey.onboardingSessionId ?? null,
+          flow_version: params.journey.flowVersion ?? null,
+          rollout_variant: params.journey.rolloutVariant ?? null,
           ...params.properties,
         },
         source_tool: 'onboarding',

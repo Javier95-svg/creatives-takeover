@@ -2,8 +2,8 @@ import { ArrowRight, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
-import { trackActivationFunnelEvent } from '@/lib/analytics';
 import { buildActivationSummary, trackRetentionEvent, type ActivationIntent } from '@/lib/retentionSystem';
+import { RecommendationFeedback } from '@/components/dashboard/RecommendationFeedback';
 
 interface FirstResultActivationCardProps {
   activationIntent: ActivationIntent;
@@ -22,14 +22,6 @@ export function FirstResultActivationCard({
   const summary = buildActivationSummary(activationIntent);
 
   const handleContinue = () => {
-    trackActivationFunnelEvent('first_action_opened', {
-      user_id: userId ?? null,
-      activation_intent: activationIntent,
-      selected_path: summary.actionUrl,
-      source: 'first_run_dashboard',
-      plan: plan ?? null,
-      days_since_signup: daysSinceSignup ?? null,
-    });
     if (userId) {
       void trackRetentionEvent('activation_first_action_opened', {
         user_id: userId,
@@ -60,6 +52,11 @@ export function FirstResultActivationCard({
             <p className="mt-0.5 max-w-3xl text-sm leading-6 text-muted-foreground">
               {summary.description}
             </p>
+            <RecommendationFeedback
+              surface="first_action"
+              recommendationKey={`first_action:${activationIntent}`}
+              metadata={{ activation_intent: activationIntent, plan: plan ?? null }}
+            />
           </div>
         </div>
         <Button type="button" onClick={handleContinue} className="w-full shrink-0 gap-2 sm:w-auto">

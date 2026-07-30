@@ -28,18 +28,22 @@ import { ANGEL_SECTOR_OPTIONS } from '@/data/angelSectors';
 import { COUNTRY_OPTIONS } from '@/data/countries';
 import {
   captureEvent,
-  trackActivationFunnelEvent,
   trackOnboardingAbandoned,
   trackOnboardingCompleted,
   trackOnboardingStepCompleted,
   trackCycleLoopAssigned,
   trackRaiseTrackActivated,
 } from '@/lib/analytics';
-import { trackActivity } from '@/lib/activity';
 import { cn } from '@/lib/utils';
 import { refreshOnboardingMentorRecommendations } from '@/lib/onboardingMentorRecommendations';
-import { seedDefaultRoutineForOnboarding } from '@/lib/onboardingPath';
-import { getActivationRoute, startActivationJourney, trackActivationJourneyEvent, trackRetentionEvent, type ActivationIntent } from '@/lib/retentionSystem';
+import {
+  ensureActivationGateVariant,
+  getActivationRoute,
+  startActivationJourney,
+  trackActivationJourneyEvent,
+  trackRetentionEvent,
+  type ActivationIntent,
+} from '@/lib/retentionSystem';
 import {
   ACTIVATION_CATALOG,
   buildActivationJourneyUrl,
@@ -51,7 +55,6 @@ import {
   type ActivationJourneyV2,
 } from '@/lib/activationJourneyV2';
 import { isActivationV2Enabled } from '@/lib/activationRollout';
-import { isFounderCycleRolloutEnabled } from '@/lib/founderCycleRollout';
 import {
   deriveFounderLoop,
   type FounderBusinessModel,
@@ -66,6 +69,7 @@ import {
   createQuizAnswersV3Payload,
   FOUNDER_STAGE_QUESTIONS,
   FUNDRAISING_STATUS_QUESTION,
+  mapFounderStageToBizMapStage,
   mapFounderStageToBusinessStage,
   STAGES,
   type FounderBlocker,
@@ -73,6 +77,13 @@ import {
   type FounderStageQuestionDef,
   type FounderStageQuizAnswersV3,
 } from '@/lib/stageDiagnostic';
+import {
+  deriveOnboardingContextV1,
+  EMPTY_ONBOARDING_ANSWERS_V1,
+  type OnboardingAnswersV1,
+  type OnboardingSessionV1,
+} from '@/lib/onboardingContext';
+import { completeOnboardingSession, saveOnboardingProgress } from '@/lib/onboardingSession';
 
 interface OnboardingData {
   stageAnswers: Partial<FounderStageQuizAnswersV3>;
@@ -307,6 +318,74 @@ function deriveLoopFromCycleAnswers(answers: FounderCycleOnboardingAnswers): Fou
   }).loop;
 }
 
+function toCanonicalAnswers(
+  formData: OnboardingData,
+  stageAnswers: Partial<FounderStageQuizAnswersV3>,
+  founderCycleEnabled: boolean,
+): OnboardingAnswersV1 {
+  const cycle = formData.cycleAnswers;
+  const customerCount = cycle.customerCount ?? 0;
+  const goalFromLegacy: OnboardingAnswersV1['primaryGoal'] =
+    stageAnswers.mainFocus === 'raise_capital'
+      ? 'raise'
+      : stageAnswers.mainFocus === 'grow_channels'
+        ? 'repeatable_growth'
+        : stageAnswers.mainFocus === 'build_product' || stageAnswers.mainFocus === 'prototype'
+          ? 'build_product'
+          : stageAnswers.mainFocus === 'launch_market'
+            ? 'win_first_customer'
+            : 'validate_problem';
+  const blockerFromLegacy: OnboardingAnswersV1['blocker'] =
+    stageAnswers.blocker === 'customer_clarity'
+      ? 'customer_clarity'
+      : stageAnswers.blocker === 'demand_validation'
+        ? 'prospect_access'
+        : stageAnswers.blocker === 'product_build'
+          ? 'product_delivery'
+          : stageAnswers.blocker === 'go_to_market'
+            ? 'messaging'
+            : stageAnswers.blocker === 'traction_growth'
+              ? 'traction_growth'
+              : stageAnswers.blocker === 'fundraising'
+                ? 'fundraising'
+                : 'accountability';
+  const evidenceFromLegacy: OnboardingAnswersV1['evidenceState'] =
+    stageAnswers.tractionSignal === 'repeatable_growth'
+      ? 'repeatable_growth'
+      : stageAnswers.tractionSignal === 'revenue'
+        ? 'payment'
+        : stageAnswers.tractionSignal === 'active_users'
+          ? 'conversations'
+          : stageAnswers.tractionSignal === 'waitlist_interest'
+            ? 'replies'
+            : 'none';
+  const capacity = cycle.weeklyCapacityHours === 2
+    || cycle.weeklyCapacityHours === 5
+    || cycle.weeklyCapacityHours === 10
+    || cycle.weeklyCapacityHours === 20
+    ? cycle.weeklyCapacityHours
+    : 5;
+
+  return {
+    ...EMPTY_ONBOARDING_ANSWERS_V1,
+    businessModel: founderCycleEnabled && cycle.businessModel ? cycle.businessModel : 'other',
+    evidenceState: founderCycleEnabled && cycle.evidenceState ? cycle.evidenceState : evidenceFromLegacy,
+    customerCountBand: customerCount >= 4
+      ? '4_plus'
+      : customerCount >= 1
+        ? String(customerCount) as OnboardingAnswersV1['customerCountBand']
+        : '',
+    primaryGoal: founderCycleEnabled && cycle.primaryGoal ? cycle.primaryGoal : goalFromLegacy,
+    blocker: founderCycleEnabled && cycle.mainBlocker ? cycle.mainBlocker : blockerFromLegacy,
+    weeklyCapacityHours: capacity,
+    fundraisingStatus: (founderCycleEnabled ? cycle.fundraisingStatus : stageAnswers.fundraisingStatus) || '',
+    cofounderSituation: formData.cofounderSituation,
+    sectors: formData.startupSectors,
+    country: formData.country,
+    selectedIntent: formData.activationIntent,
+  };
+}
+
 function hasCompleteCycleAnswers(answers: FounderCycleOnboardingAnswers) {
   return FOUNDER_CYCLE_QUESTIONS.every((question) => {
     const value = answers[question.id];
@@ -390,6 +469,7 @@ const emptyOnboardingData: OnboardingData = {
 const QUIZ_VERSION = 6;
 
 interface OnboardingFormProps {
+  session: OnboardingSessionV1;
   onComplete?: (startRoute?: string) => void;
 }
 
@@ -444,12 +524,13 @@ function appendActivationParams(route: string, intent: ActivationIntent) {
   return `${route}${separator}activation=1&intent=${intent}`;
 }
 
-export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
+export const OnboardingForm = ({ session, onComplete }: OnboardingFormProps) => {
   const { user } = useAuth();
   const activationFlag = useFeatureFlagEnabled('onboarding-activation-v2');
-  const founderCycleFlag = useFeatureFlagEnabled('founder-execution-cycle-v1');
   const activationV2Enabled = isActivationV2Enabled(activationFlag);
-  const founderCycleEnabled = isFounderCycleRolloutEnabled(user?.id, founderCycleFlag);
+  // Rollout assignment is server-owned. The founder-cycle flag may still power
+  // other surfaces, but it can no longer swap the control questionnaire.
+  const founderCycleEnabled = false;
   const { checkFeatureAccess } = useFeatureGating();
   const { subscriptionData } = useSubscription({ fetchTiers: false });
   const { totalAvailable, loading: creditsLoading } = useCredits();
@@ -552,11 +633,13 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
           total_steps: t,
           elapsed_ms: Date.now() - sa,
           quiz_version: QUIZ_VERSION,
+          onboarding_session_id: session.id,
+          flow_version: session.flow_version,
+          rollout_variant: session.rollout_variant,
         });
       }
     };
-     
-  }, []);
+  }, [session.flow_version, session.id, session.rollout_variant]);
 
   // Drop a stale fundraising answer if the blocker is no longer fundraising,
   // so it can't inflate the Fundraising stage.
@@ -776,6 +859,16 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         quiz_version: QUIZ_VERSION,
         stage: effectiveStageAnswers.productStatus,
         painPoint: effectiveStageAnswers.blocker,
+        onboarding_session_id: session.id,
+        flow_version: session.flow_version,
+        rollout_variant: session.rollout_variant,
+      });
+      void saveOnboardingProgress({
+        sessionId: session.id,
+        currentStep: currentStep + 1,
+        answers: toCanonicalAnswers(formData, effectiveStageAnswers, founderCycleEnabled),
+      }).catch((error) => {
+        console.warn('Server onboarding progress save failed; local draft remains available.', error);
       });
       stepEnteredAt.current = now;
       setCurrentStep((prev) => prev + 1);
@@ -828,9 +921,17 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
       const baseJourney = activationV2Enabled
         ? createActivationJourney(activeRecommendation, selectedIntent)
         : null;
-      const activationJourney = baseJourney && selectedIntent === 'build_demo' && stageAnswers.productStatus === 'idea_only'
+      const routedJourney = baseJourney && selectedIntent === 'build_demo' && stageAnswers.productStatus === 'idea_only'
         ? { ...baseJourney, resumeUrl: `${ACTIVATION_CATALOG.build_demo.route}?mode=no_assets` }
         : baseJourney;
+      const activationJourney = routedJourney
+        ? {
+            ...routedJourney,
+            onboardingSessionId: session.id,
+            flowVersion: session.flow_version,
+            rolloutVariant: session.rollout_variant,
+          }
+        : null;
 
       if (activationJourney) {
         setHandoff({
@@ -841,6 +942,80 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         });
       }
 
+      const canonicalAnswers = toCanonicalAnswers(formData, stageAnswers, founderCycleEnabled);
+      canonicalAnswers.selectedIntent = selectedIntent;
+      const derivedContext = deriveOnboardingContextV1(canonicalAnswers, {
+        flowVersion: session.flow_version,
+        selectedIntent,
+        dataCompleteness: 'legacy_partial',
+      });
+      const selectedLoop = founderCycleEnabled
+        ? deriveLoopFromCycleAnswers(formData.cycleAnswers)
+        : derivedContext.founderLoop;
+      const onboardingContext = {
+        ...derivedContext,
+        assignedStage: finalAssignedStage,
+        assignedStageLabel: STAGES[finalAssignedStage].name,
+        businessStage,
+        bizMapStage: mapFounderStageToBizMapStage(finalAssignedStage),
+        founderLoop: selectedLoop,
+        stageConfidence: finalDiagnostic.confidence,
+        recommendedIntent: activeRecommendation.intent,
+        recommendationAccepted: selectedIntent === activeRecommendation.intent,
+        recommendationReasonCodes: activeRecommendation.intent === derivedContext.recommendedIntent
+          ? derivedContext.recommendationReasonCodes
+          : [...derivedContext.recommendationReasonCodes, 'entitlement_fallback'],
+      };
+      const startedAtIso = new Date().toISOString();
+      const activationGateVariant = await ensureActivationGateVariant(user.id);
+      const quizAnswersV3 = {
+        ...createQuizAnswersV3Payload(stageAnswers, finalDiagnostic),
+        cofounderSituation: formData.cofounderSituation,
+      };
+
+      await completeOnboardingSession({
+        sessionId: session.id,
+        answers: canonicalAnswers,
+        context: onboardingContext,
+        profileUpdates: {
+          business_stage: businessStage,
+          quiz_current_stage: businessStage,
+          quiz_biggest_challenge: primaryPain,
+          startup_industry: formData.startupSectors,
+          country: formData.country.trim() || null,
+          assigned_stage: finalAssignedStage,
+          quiz_completed: true,
+          quiz_completed_at: startedAtIso,
+          quiz_answers_v2: quizAnswersV3,
+        },
+        preferencePatch: {
+          activationIntent: selectedIntent,
+          activationGateVariant,
+          activationStartedAt: startedAtIso,
+          activationCompletedAt: null,
+          activationSource: 'onboarding',
+          firstValueAction: null,
+          firstArtifactType: null,
+          firstArtifactCreatedAt: null,
+          firstArtifactId: null,
+          firstArtifactLabel: null,
+          firstArtifactResumeUrl: null,
+          founderStage: finalAssignedStage,
+          founderStageLabel: STAGES[finalAssignedStage].name,
+          bizMapStage: onboardingContext.bizMapStage,
+          primaryPain,
+          startupSectors: formData.startupSectors,
+          supportAreasNeeded: supportAreas,
+          country: formData.country.trim() || null,
+          cofounderSituation: formData.cofounderSituation || null,
+          onboardingLocalDate: new Intl.DateTimeFormat('en-CA').format(new Date()),
+          onboardingSessionId: session.id,
+          onboardingFlowVersion: session.flow_version,
+          onboardingRolloutVariant: session.rollout_variant,
+          ...(activationJourney ? { activationJourney } : {}),
+        },
+      });
+
       await startActivationJourney({
         userId: user.id,
         businessStage,
@@ -850,30 +1025,17 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         supportAreasNeeded: supportAreas,
         country: formData.country,
         assignedStage: finalAssignedStage,
-        quizAnswersV3: {
-          ...createQuizAnswersV3Payload(stageAnswers, finalDiagnostic),
-          cofounderSituation: formData.cofounderSituation,
-        },
+        quizAnswersV3,
         cofounderSituation: formData.cofounderSituation as CofounderSituation,
         onboardingLocalDate: new Intl.DateTimeFormat('en-CA').format(new Date()),
         activationJourney: activationJourney ?? undefined,
+        skipPersistence: true,
+        onboardingSessionId: session.id,
+        flowVersion: session.flow_version,
+        rolloutVariant: session.rollout_variant,
       });
 
       if (founderCycleEnabled && formData.cycleAnswers.businessModel) {
-        const selectedLoop = deriveLoopFromCycleAnswers(formData.cycleAnswers);
-        const customerCount = formData.cycleAnswers.customerCount ?? 0;
-        // Generated database types are refreshed after the additive migration is deployed.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error: cycleStateError } = await (supabase as any).rpc('upsert_founder_cycle_state_v1', {
-          p_business_model: formData.cycleAnswers.businessModel,
-          p_customer_count: customerCount,
-          p_primary_goal: formData.cycleAnswers.primaryGoal,
-          p_selected_loop: null,
-          p_raise_active: formData.cycleAnswers.primaryGoal === 'raise'
-            && formData.cycleAnswers.fundraisingStatus !== 'not_now',
-          p_weekly_capacity_hours: formData.cycleAnswers.weeklyCapacityHours,
-        });
-        if (cycleStateError) throw cycleStateError;
         trackCycleLoopAssigned({
           loop: selectedLoop,
           assignment_source: 'onboarding',
@@ -890,17 +1052,15 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         }
       }
 
-      await refreshOnboardingMentorRecommendations({
+      void refreshOnboardingMentorRecommendations({
         userId: user.id,
         sectors: formData.startupSectors,
         supportAreas,
         assignedStage: finalAssignedStage,
         stageAnswers,
+      }).catch((error) => {
+        console.warn('Mentor recommendation refresh did not complete after onboarding.', error);
       });
-
-      // RET-003: seed the starter routine here too — previously only the
-      // dashboard path gate did this, and the quiz is now the primary path.
-      void seedDefaultRoutineForOnboarding(user.id);
 
       captureEvent('activation_intent_selected', {
         stage: businessStage,
@@ -911,11 +1071,13 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         activationIntent: selectedIntent,
         startupSectors: formData.startupSectors,
         supportAreasNeeded: supportAreas,
-        country: formData.country,
         cofounderSituation: formData.cofounderSituation,
         founderLoop: founderCycleEnabled ? deriveLoopFromCycleAnswers(formData.cycleAnswers) : null,
         timeMs: Date.now() - startedAt,
         startRoute,
+        onboarding_session_id: session.id,
+        flow_version: session.flow_version,
+        rollout_variant: session.rollout_variant,
       });
       captureEvent('activation_path_selected', {
         stage: businessStage,
@@ -925,26 +1087,23 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         activationIntent: selectedIntent,
         startupSectors: formData.startupSectors,
         supportAreasNeeded: supportAreas,
-        country: formData.country,
         cofounderSituation: formData.cofounderSituation,
         founderLoop: founderCycleEnabled ? deriveLoopFromCycleAnswers(formData.cycleAnswers) : null,
         timeMs: Date.now() - startedAt,
         startRoute,
+        onboarding_session_id: session.id,
+        flow_version: session.flow_version,
+        rollout_variant: session.rollout_variant,
       });
-      if (!activationJourney) {
-        trackActivationFunnelEvent('first_action_opened', {
-          user_id: user.id,
-          activation_intent: selectedIntent,
-          selected_path: startRoute,
-          source: 'onboarding',
-        });
-        void trackRetentionEvent('activation_first_action_opened', {
-          user_id: user.id,
-          activation_intent: selectedIntent,
-          selected_path: startRoute,
-          source: 'onboarding',
-        });
-      }
+      void trackRetentionEvent('activation_first_action_opened', {
+        user_id: user.id,
+        activation_intent: selectedIntent,
+        selected_path: startRoute,
+        source: 'onboarding',
+        onboarding_session_id: session.id,
+        flow_version: session.flow_version,
+        rollout_variant: session.rollout_variant,
+      });
       const onboardingProperties = {
         quiz_completed: true,
         creative_niche: null,
@@ -958,6 +1117,12 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         activation_intent: selectedIntent,
         cofounder_situation: formData.cofounderSituation,
         founder_loop: founderCycleEnabled ? deriveLoopFromCycleAnswers(formData.cycleAnswers) : null,
+        onboarding_session_id: session.id,
+        flow_version: session.flow_version,
+        rollout_variant: session.rollout_variant,
+        plan: currentPlan,
+        device: window.innerWidth < 768 ? 'mobile' : 'desktop',
+        recommendation_overridden: !onboardingContext.recommendationAccepted,
       };
       if (activationJourney) {
         await trackActivationJourneyEvent({
@@ -968,19 +1133,6 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         });
       } else {
         trackOnboardingCompleted(onboardingProperties);
-        void trackActivity('onboarding_completed', {
-        stage: businessStage,
-        assignedStage: finalAssignedStage,
-        stageLabel: STAGES[finalAssignedStage].name,
-        stageConfidence: finalDiagnostic.confidence,
-        painPoint: primaryPain,
-        activationIntent: selectedIntent,
-        startupSectors: formData.startupSectors,
-        supportAreasNeeded: supportAreas,
-        country: formData.country,
-        cofounderSituation: formData.cofounderSituation,
-        startRoute,
-        }, user.id);
       }
 
       toast.success('Your launchpad is ready. Opening your first action now.');
