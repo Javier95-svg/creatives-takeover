@@ -140,6 +140,30 @@ interface RecommendationLearningReport {
     relative_artifact_lift: number | null;
     reason_codes: string[];
   } | null;
+  familyHealth: Array<{
+    recommendation_family: string;
+    current_exposures: number;
+    current_unique_users: number;
+    current_average_reward: number;
+    current_negative_rate: number;
+    reward_drift: number | null;
+    status: 'healthy' | 'watch' | 'critical' | 'insufficient';
+  }>;
+  openAlerts: Array<{
+    id: string;
+    recommendation_family: string | null;
+    alert_type: string;
+    severity: 'warning' | 'critical';
+    reason_codes: string[];
+  }>;
+  latestReplay: {
+    decisions: number;
+    replay_coverage: number;
+    policy_agreement: number;
+    inverse_propensity_reward: number;
+    guardrail_passed: boolean;
+  } | null;
+  maturationBacklog: number;
 }
 
 const AdminAnalytics = () => {
@@ -321,7 +345,7 @@ const AdminAnalytics = () => {
         supabase.rpc('get_activation_funnel_v2', { p_from: fromIso, p_to: toIso }),
         supabase.rpc('get_onboarding_dashboard_outcomes_v1' as never, { p_from: fromIso, p_to: toIso } as never),
         supabase.rpc('get_founder_stage_accuracy_v1' as never, { p_from: fromIso, p_to: toIso } as never),
-        supabase.rpc('get_recommendation_learning_report_v1' as never, { p_from: fromIso, p_to: toIso } as never),
+        supabase.rpc('get_recommendation_learning_report_v2' as never, { p_from: fromIso, p_to: toIso } as never),
       ]);
 
       const outcomeReport = onboardingOutcomesResult.data && typeof onboardingOutcomesResult.data === 'object'
@@ -1009,7 +1033,7 @@ const AdminAnalytics = () => {
                             {recommendationLearning.latestEvaluation?.recommendation ?? 'Collecting'}
                           </p>
                           <p className="mt-1 text-xs text-muted-foreground">
-                            Policy {recommendationLearning.config?.active_policy_version ?? 'collective_v1'} ·{' '}
+                            Policy {recommendationLearning.config?.active_policy_version ?? 'collective_bayesian_v2'} ·{' '}
                             {recommendationLearning.config?.holdout_percent ?? 10}% permanent control ·{' '}
                             {recommendationLearning.config?.exploration_percent ?? 5}% capped exploration
                           </p>
@@ -1017,6 +1041,49 @@ const AdminAnalytics = () => {
                             <p className="mt-3 text-xs text-muted-foreground">
                               {recommendationLearning.latestEvaluation.reason_codes.join(', ').replaceAll('_', ' ')}
                             </p>
+                          ) : null}
+                        </div>
+                      </div>
+
+                      <div className="grid gap-6 lg:grid-cols-2">
+                        <div className="rounded-xl border border-border p-4">
+                          <p className="text-sm font-semibold">Offline replay and delayed outcomes</p>
+                          <p className="mt-2 text-2xl font-bold">
+                            {recommendationLearning.latestReplay
+                              ? `${Math.round(recommendationLearning.latestReplay.replay_coverage * 100)}% coverage`
+                              : 'Collecting'}
+                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {recommendationLearning.latestReplay
+                              ? `${recommendationLearning.latestReplay.decisions} matured decisions · ${Math.round(recommendationLearning.latestReplay.policy_agreement * 100)}% policy agreement · guardrail ${recommendationLearning.latestReplay.guardrail_passed ? 'passed' : 'held'}`
+                              : 'Replay begins after the first matured recommendation cohort.'}
+                          </p>
+                          <p className="mt-3 text-xs text-muted-foreground">
+                            {recommendationLearning.maturationBacklog ?? 0} delayed outcome windows awaiting processing
+                          </p>
+                        </div>
+                        <div className="rounded-xl border border-border p-4">
+                          <p className="text-sm font-semibold">Quality and drift</p>
+                          <p className="mt-2 text-2xl font-bold">
+                            {recommendationLearning.openAlerts?.length ?? 0} open alerts
+                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {(recommendationLearning.familyHealth ?? []).filter((family) => family.status === 'healthy').length} healthy families ·{' '}
+                            {(recommendationLearning.familyHealth ?? []).filter((family) => family.status === 'watch').length} watched ·{' '}
+                            {(recommendationLearning.familyHealth ?? []).filter((family) => family.status === 'critical').length} critical
+                          </p>
+                          {recommendationLearning.openAlerts?.length ? (
+                            <div className="mt-3 space-y-1">
+                              {recommendationLearning.openAlerts.slice(0, 3).map((alert) => (
+                                <p key={alert.id} className="text-xs text-muted-foreground">
+                                  <span className="font-medium capitalize text-foreground">{alert.severity}</span>
+                                  {' · '}
+                                  {(alert.recommendation_family ?? 'learning pipeline').replaceAll('_', ' ')}
+                                  {' · '}
+                                  {alert.reason_codes.join(', ').replaceAll('_', ' ')}
+                                </p>
+                              ))}
+                            </div>
                           ) : null}
                         </div>
                       </div>

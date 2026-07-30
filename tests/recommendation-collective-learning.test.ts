@@ -49,14 +49,19 @@ test('3. privacy-safe hierarchical segment priors use minimum samples and Bayesi
 });
 
 test('4. the ranker combines eligible collective priors with a bounded base score', async () => {
-  const ranker = await read('../supabase/functions/rank-dashboard-actions/index.ts');
+  const [ranker, policy] = await Promise.all([
+    read('../supabase/functions/rank-dashboard-actions/index.ts'),
+    read('../supabase/functions/_shared/recommendation-policy-v2.ts'),
+  ]);
 
   assert.match(ranker, /recommendation_segment_priors/);
-  assert.match(ranker, /\.eq\("eligible", true\)/);
   assert.match(ranker, /assignment === "control" \|\| !allowAi/);
-  assert.match(ranker, /baseScore \* 0\.35 \+ \(prior\?\.score \?\? 0\) \* 0\.65/);
+  assert.match(ranker, /bayesian_lower_bound/);
+  assert.match(ranker, /rankWithCollectiveEvidence/);
+  assert.match(policy, /collectiveScore \* evidenceWeight/);
+  assert.match(policy, /evidence\.uniqueUsers \/ \(evidence\.uniqueUsers \+ 12\)/);
   assert.match(ranker, /bestPriorByFamily/);
-  assert.match(ranker, /rowSpecificity > currentSpecificity/);
+  assert.match(policy, /rowSpecificity > currentSpecificity/);
 });
 
 test('5. structured negative feedback suppresses bad repeats without storing free text', async () => {
@@ -76,11 +81,16 @@ test('5. structured negative feedback suppresses bad repeats without storing fre
 });
 
 test('6. exploration and control are deterministic, capped, and never invent actions', async () => {
-  const ranker = await read('../supabase/functions/rank-dashboard-actions/index.ts');
+  const [ranker, policy] = await Promise.all([
+    read('../supabase/functions/rank-dashboard-actions/index.ts'),
+    read('../supabase/functions/_shared/recommendation-policy-v2.ts'),
+  ]);
 
   assert.match(ranker, /stableHash\(`\$\{userId\}:\$\{config\.active_policy_version\}:holdout`\)/);
   assert.match(ranker, /config\.exploration_percent/);
-  assert.match(ranker, /Math\.min\(2, orderedCandidateKeys\.length - 1\)/);
+  assert.match(ranker, /selectSafeExploration/);
+  assert.match(policy, /\.slice\(1, 4\)/);
+  assert.match(policy, /familyHealth\?\.status === "critical"/);
   assert.match(ranker, /urgencyWeight/);
   assert.match(ranker, /urgencyWeight\[candidate\.urgency\] === highestUrgency/);
   assert.match(ranker, /const allowed = new Set\(candidates\.map/);
@@ -107,7 +117,7 @@ test('8. attribution and policy recalibration run automatically and remain obser
   assert.match(migration, /recommendation-policy-recalibration-weekly/);
   assert.match(migration, /get_recommendation_learning_report_v1/);
   assert.match(admin, /Collective recommendation learning/);
-  assert.match(admin, /get_recommendation_learning_report_v1/);
+  assert.match(admin, /get_recommendation_learning_report_v2/);
 });
 
 test('visible command center uses learned actions while preserving safe fallbacks', async () => {

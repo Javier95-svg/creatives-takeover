@@ -1,5 +1,17 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import {
+  bestPriorByFamily,
+  contextSegmentKeys,
+  rankWithCollectiveEvidence,
+  selectSafeExploration,
+  stableHash,
+  type FamilyHealth,
+  type LearningCandidate,
+  type LearningPrior,
+  type LearningTuning,
+  type RecentExposure,
+} from "../_shared/recommendation-policy-v2.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,17 +21,11 @@ const corsHeaders = {
 };
 
 const DEFAULT_MODEL = "gemini-3.1-flash-lite";
-const DEFAULT_POLICY = "collective_v1";
+const DEFAULT_POLICY = "collective_bayesian_v2";
 const MAX_CANDIDATES = 10;
 const MAX_RATIONALE_LENGTH = 180;
 
-interface Candidate {
-  key: string;
-  urgency: "high" | "medium" | "low";
-  reasonCodes: string[];
-  estimatedMinutes: number;
-  toolKey: string;
-}
+type Candidate = LearningCandidate;
 
 interface PolicyConfig {
   active_policy_version: string;
@@ -27,26 +33,16 @@ interface PolicyConfig {
   holdout_percent: number;
   exploration_percent: number;
   min_segment_samples: number;
-}
-
-interface PriorRow {
-  segment_key: string;
-  recommendation_family: string;
-  matured_exposures: number;
-  smoothed_score: number;
+  exploration_min_samples: number;
+  max_exploration_negative_rate: number;
+  family_frequency_window_days: number;
+  family_frequency_cap: number;
+  diversity_window_days: number;
+  repeat_penalty: number;
 }
 
 function jsonResponse(payload: unknown, status = 200) {
   return new Response(JSON.stringify(payload), { status, headers: corsHeaders });
-}
-
-function stableHash(value: string) {
-  let hash = 2166136261;
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
 }
 
 function parseCandidates(value: unknown): Candidate[] {
@@ -98,21 +94,6 @@ function validateRanking(
   return { orderedCandidateKeys: unique, rationaleByKey };
 }
 
-function contextSegmentKeys(context: Record<string, unknown>): string[] {
-  const stage = String(context.stage ?? "unknown");
-  const goal = String(context.goal ?? "unknown");
-  const blocker = String(context.blocker ?? "unknown");
-  const capacity = String(context.capacityBand ?? "unknown");
-  const plan = String(context.plan ?? "rookie");
-  return [
-    "global",
-    `stage:${stage}`,
-    `stage:${stage}|goal:${goal}`,
-    `stage:${stage}|goal:${goal}|blocker:${blocker}`,
-    `stage:${stage}|goal:${goal}|blocker:${blocker}|capacity:${capacity}|plan:${plan}`,
-  ];
-}
-
 function resolveAssignment(
   userId: string,
   snapshotHash: string,
@@ -129,27 +110,6 @@ function resolveAssignment(
     return "explore";
   }
   return "learned";
-}
-
-function bestPriorByFamily(
-  rows: PriorRow[],
-  segmentKeys: string[],
-): Map<string, { score: number; samples: number; segment: string }> {
-  const specificity = new Map(segmentKeys.map((key, index) => [key, index]));
-  const best = new Map<string, { score: number; samples: number; segment: string }>();
-  for (const row of rows) {
-    const current = best.get(row.recommendation_family);
-    const rowSpecificity = specificity.get(row.segment_key) ?? -1;
-    const currentSpecificity = current ? specificity.get(current.segment) ?? -1 : -1;
-    if (!current || rowSpecificity > currentSpecificity) {
-      best.set(row.recommendation_family, {
-        score: Number(row.smoothed_score) || 0,
-        samples: Number(row.matured_exposures) || 0,
-        segment: row.segment_key,
-      });
-    }
-  }
-  return best;
 }
 
 async function aiBaseRanking(
@@ -230,6 +190,21 @@ serve(async (req) => {
     holdout_percent: Number(configRow?.holdout_percent) || 10,
     exploration_percent: Number(configRow?.exploration_percent) || 5,
     min_segment_samples: Number(configRow?.min_segment_samples) || 20,
+    exploration_min_samples: Number(configRow?.exploration_min_samples) || 3,
+    max_exploration_negative_rate: Number(configRow?.max_exploration_negative_rate) || 0.20,
+    family_frequency_window_days: Number(configRow?.family_frequency_window_days) || 7,
+    family_frequency_cap: Number(configRow?.family_frequency_cap) || 3,
+    diversity_window_days: Number(configRow?.diversity_window_days) || 3,
+    repeat_penalty: Number(configRow?.repeat_penalty) || 0.08,
+  };
+  const tuning: LearningTuning = {
+    explorationPercent: config.exploration_percent,
+    explorationMinSamples: config.exploration_min_samples,
+    maxExplorationNegativeRate: config.max_exploration_negative_rate,
+    frequencyWindowDays: config.family_frequency_window_days,
+    frequencyCap: config.family_frequency_cap,
+    diversityWindowDays: config.diversity_window_days,
+    repeatPenalty: config.repeat_penalty,
   };
   const context = contextRow && typeof contextRow === "object" && !Array.isArray(contextRow)
     ? contextRow as Record<string, unknown>
@@ -249,10 +224,35 @@ serve(async (req) => {
   const deterministicKey = candidates[0].key;
   const assignment = resolveAssignment(authData.user.id, snapshotHash, config);
   const segmentKeys = contextSegmentKeys(context);
+  const families = [...new Set(candidates.map((candidate) => candidate.toolKey))];
+  const recentSince = new Date(
+    Date.now() - Math.max(config.family_frequency_window_days, config.diversity_window_days) * 86_400_000,
+  ).toISOString();
+  const [{ data: recentRows }, { data: healthRows }] = await Promise.all([
+    supabase
+      .from("recommendation_decisions")
+      .select("selected_tool_key,shown_at")
+      .eq("user_id", authData.user.id)
+      .gte("shown_at", recentSince)
+      .order("shown_at", { ascending: false })
+      .limit(50),
+    supabase
+      .from("recommendation_family_health")
+      .select("recommendation_family,status,current_negative_rate,reward_drift")
+      .eq("policy_version", config.active_policy_version)
+      .in("recommendation_family", families),
+  ]);
+  const recentExposures = (recentRows ?? []) as RecentExposure[];
+  const familyHealth = new Map(
+    ((healthRows ?? []) as FamilyHealth[]).map((row) => [row.recommendation_family, row]),
+  );
+  const fatigueFingerprint = stableHash(JSON.stringify(
+    recentExposures.map((row) => [row.selected_tool_key, row.shown_at.slice(0, 10)]),
+  )).toString(16);
 
   const { data: cached } = await supabase
     .from("dashboard_ranking_cache")
-    .select("snapshot_hash,ordered_candidate_keys,rationale_by_key,model,generated_at,expires_at,policy_version,assignment,deterministic_key,score_diagnostics,context_segments,suppressed_keys")
+    .select("snapshot_hash,ordered_candidate_keys,rationale_by_key,model,generated_at,expires_at,policy_version,assignment,deterministic_key,score_diagnostics,context_segments,suppressed_keys,fatigue_fingerprint")
     .eq("user_id", authData.user.id)
     .eq("snapshot_hash", snapshotHash)
     .eq("policy_version", config.active_policy_version)
@@ -265,8 +265,9 @@ serve(async (req) => {
     : [];
   const suppressionStateMatches = cachedSuppressedKeys.length === suppressedKeys.length
     && cachedSuppressedKeys.every((key, index) => key === suppressedKeys[index]);
+  const fatigueStateMatches = cached?.fatigue_fingerprint === fatigueFingerprint;
 
-  if (cached && suppressionStateMatches) {
+  if (cached && suppressionStateMatches && fatigueStateMatches) {
     return jsonResponse({
       orderedCandidateKeys: cached.ordered_candidate_keys,
       rationaleByKey: cached.rationale_by_key,
@@ -285,54 +286,78 @@ serve(async (req) => {
   const aiRanking = assignment === "control" || !allowAi ? null : await aiBaseRanking(candidates);
   const baseOrder = aiRanking?.orderedCandidateKeys ?? candidates.map((candidate) => candidate.key);
   const rationaleByKey = aiRanking?.rationaleByKey ?? {};
-  const families = [...new Set(candidates.map((candidate) => candidate.toolKey))];
   const { data: priorRows } = config.status === "active" && assignment !== "control"
     ? await supabase
       .from("recommendation_segment_priors")
-      .select("segment_key,recommendation_family,matured_exposures,smoothed_score")
+      .select("segment_key,recommendation_family,matured_exposures,unique_users,bayesian_mean,bayesian_lower_bound,posterior_variance,negative_rate")
       .eq("policy_version", config.active_policy_version)
-      .eq("eligible", true)
       .in("segment_key", segmentKeys)
       .in("recommendation_family", families)
-    : { data: [] as PriorRow[] };
-  const priorByFamily = bestPriorByFamily((priorRows ?? []) as PriorRow[], segmentKeys);
+    : { data: [] as LearningPrior[] };
+  const priorByFamily = bestPriorByFamily((priorRows ?? []) as LearningPrior[], segmentKeys);
   const diagnostics: Record<string, unknown> = {};
 
   let orderedCandidateKeys = [...baseOrder];
-  if (config.status === "active" && assignment === "learned" && priorByFamily.size > 0) {
-    orderedCandidateKeys = [...candidates]
-      .map((candidate) => {
-        const baseIndex = baseOrder.indexOf(candidate.key);
-        const baseScore = 1 - Math.max(0, baseIndex) / Math.max(1, candidates.length);
-        const prior = priorByFamily.get(candidate.toolKey);
-        const score = baseScore * 0.35 + (prior?.score ?? 0) * 0.65;
-        diagnostics[candidate.key] = {
-          score: Number(score.toFixed(6)),
-          baseScore: Number(baseScore.toFixed(6)),
-          learnedScore: prior?.score ?? null,
-          samples: prior?.samples ?? 0,
-          segment: prior?.segment ?? null,
-        };
-        return { key: candidate.key, score };
-      })
-      .sort((left, right) => right.score - left.score)
-      .map((entry) => entry.key);
+  if (config.status === "active" && assignment !== "control") {
+    const ranked = rankWithCollectiveEvidence({
+      candidates,
+      baseOrder,
+      priors: priorByFamily,
+      recentExposures,
+      tuning,
+    });
+    orderedCandidateKeys = ranked.orderedCandidateKeys;
+    Object.assign(diagnostics, ranked.diagnostics);
   } else {
     for (const [index, key] of baseOrder.entries()) {
-      diagnostics[key] = { baseRank: index + 1, learnedScore: null, samples: 0 };
+      diagnostics[key] = { baseRank: index + 1, conservativeScore: null, samples: 0 };
     }
   }
 
   if (assignment === "explore" && orderedCandidateKeys.length > 1) {
-    const alternateIndex = 1 + stableHash(`${authData.user.id}:${snapshotHash}:alternate`) % Math.min(2, orderedCandidateKeys.length - 1);
-    const [alternate] = orderedCandidateKeys.splice(alternateIndex, 1);
-    orderedCandidateKeys.unshift(alternate);
-    diagnostics.exploration = { selectedAlternateRank: alternateIndex + 1, cappedPercent: config.exploration_percent };
+    const exploredKey = selectSafeExploration({
+      orderedCandidateKeys,
+      candidates,
+      priors: priorByFamily,
+      health: familyHealth,
+      recentExposures,
+      tuning,
+      seed: `${authData.user.id}:${snapshotHash}:${new Date().toISOString().slice(0, 10)}`,
+    });
+    if (exploredKey) {
+      const alternateIndex = orderedCandidateKeys.indexOf(exploredKey);
+      orderedCandidateKeys.splice(alternateIndex, 1);
+      orderedCandidateKeys.unshift(exploredKey);
+      diagnostics.exploration = {
+        selectedAlternateRank: alternateIndex + 1,
+        strategy: "uncertainty_safe_v2",
+        cappedPercent: config.exploration_percent,
+      };
+    } else {
+      diagnostics.exploration = {
+        skipped: true,
+        reason: "no_safe_alternative",
+        cappedPercent: config.exploration_percent,
+      };
+    }
   }
+
+  const alternateCount = Math.max(1, Math.min(3, orderedCandidateKeys.length - 1));
+  const selectionProbability = assignment === "control"
+    ? config.holdout_percent / 100
+    : assignment === "explore"
+      ? config.exploration_percent / 100 / alternateCount
+      : Math.max(0.01, 1 - (config.holdout_percent + config.exploration_percent) / 100);
+  diagnostics.policy = {
+    rankingVersion: "collective_bayesian_v2",
+    selectionProbability: Number(selectionProbability.toFixed(6)),
+    explorationEligible: assignment === "explore" && !(diagnostics.exploration as { skipped?: boolean })?.skipped,
+    fatigueFingerprint,
+  };
 
   const generatedAt = new Date();
   const expiresAt = new Date(generatedAt.getTime() + 24 * 60 * 60 * 1000);
-  const model = aiRanking?.model ?? (config.status === "active" ? "collective-priors-v1" : "deterministic-v1");
+  const model = aiRanking?.model ?? (config.status === "active" ? "collective-bayesian-v2" : "deterministic-v1");
   await supabase.from("dashboard_ranking_cache").upsert({
     user_id: authData.user.id,
     snapshot_hash: snapshotHash,
@@ -347,6 +372,7 @@ serve(async (req) => {
     score_diagnostics: diagnostics,
     context_segments: context,
     suppressed_keys: suppressedKeys,
+    fatigue_fingerprint: fatigueFingerprint,
   });
 
   return jsonResponse({
