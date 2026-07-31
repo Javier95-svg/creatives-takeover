@@ -67,6 +67,7 @@ function cooldownUntil(days: number): string {
 
 export function useTaskCalendarEngine() {
   const { user } = useAuth();
+  const userId = user?.id ?? null;
   const { currentStage } = useBizMapProgress();
   const [view, setView] = useState<TaskCalendarView>('month');
   const [anchorDate, setAnchorDate] = useState(new Date());
@@ -78,6 +79,7 @@ export function useTaskCalendarEngine() {
   const [isLoading, setIsLoading] = useState(true);
   const [isMutating, setIsMutating] = useState(false);
   const ensuredTodayRef = useRef<string | null>(null);
+  const loadedUserIdRef = useRef<string | null>(null);
 
   const calendarDays = useMemo(() => buildCalendarDays(anchorDate, view), [anchorDate, view]);
   const groupedTasks = useMemo(() => groupTasksByDate(tasks), [tasks]);
@@ -117,7 +119,8 @@ export function useTaskCalendarEngine() {
   }, []);
 
   const fetchTasks = useCallback(async () => {
-    if (!user) {
+    if (!userId) {
+      loadedUserIdRef.current = null;
       setTasks([]);
       setEvents([]);
       setWeeklyMission(null);
@@ -126,23 +129,25 @@ export function useTaskCalendarEngine() {
       return;
     }
 
-    setIsLoading(true);
+    if (loadedUserIdRef.current !== userId) {
+      setIsLoading(true);
+    }
     const [tasksResult, eventsResult, nextSignals, nextWeeklyMission] = await Promise.all([
       supabase
         .from(TASK_TABLE)
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .order('task_date', { ascending: true })
         .order('created_at', { ascending: true })
         .limit(500),
       supabase
         .from(RECOMMENDATION_EVENTS_TABLE)
         .select('recommendation_key, event_type, created_at')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(100),
-      fetchToolCompletionSignals(user.id),
-      fetchWeeklyMission(user.id),
+      fetchToolCompletionSignals(userId),
+      fetchWeeklyMission(userId),
     ]);
 
     if (tasksResult.error) {
@@ -161,27 +166,28 @@ export function useTaskCalendarEngine() {
 
     setToolSignals(nextSignals);
     setWeeklyMission(nextWeeklyMission);
+    loadedUserIdRef.current = userId;
     setIsLoading(false);
-  }, [fetchWeeklyMission, user]);
+  }, [fetchWeeklyMission, userId]);
 
   const logRecommendationEvent = useCallback(async (
     task: CalendarTaskRow,
     eventType: RecommendationEventType,
     metadata: Record<string, unknown> = {},
   ) => {
-    if (!user || !task.recommendation_key) return;
+    if (!userId || !task.recommendation_key) return;
     const { error } = await supabase.from(RECOMMENDATION_EVENTS_TABLE).insert({
-      user_id: user.id,
+      user_id: userId,
       task_id: task.id,
       recommendation_key: task.recommendation_key,
       event_type: eventType,
       metadata,
     });
     if (error) console.warn('Unable to log recommendation event', error);
-  }, [user]);
+  }, [userId]);
 
   const syncStageTaskProgress = useCallback(async (task: CalendarTaskRow, completed: boolean) => {
-    if (!user || !task.recommendation_key?.startsWith('stage:')) return;
+    if (!userId || !task.recommendation_key?.startsWith('stage:')) return;
     const [, stage, taskId] = task.recommendation_key.split(':');
     if (!stage || !taskId) return;
 
@@ -189,7 +195,7 @@ export function useTaskCalendarEngine() {
       .from('bizmap_task_progress' as any)
       .upsert(
         {
-          user_id: user.id,
+          user_id: userId,
           stage,
           task_id: taskId,
           is_completed: completed,
@@ -199,13 +205,13 @@ export function useTaskCalendarEngine() {
       );
 
     if (error) console.warn('Unable to sync Startup Development Cycle task progress', error);
-  }, [user]);
+  }, [userId]);
 
   const ensureTodayRecommendation = useCallback(async () => {
-    if (!user) return;
+    if (!userId) return;
     const today = toDateKey(new Date());
-    if (ensuredTodayRef.current === `${user.id}:${today}:${tasks.length}:${events.length}:${currentStage}`) return;
-    ensuredTodayRef.current = `${user.id}:${today}:${tasks.length}:${events.length}:${currentStage}`;
+    if (ensuredTodayRef.current === `${userId}:${today}:${tasks.length}:${events.length}:${currentStage}`) return;
+    ensuredTodayRef.current = `${userId}:${today}:${tasks.length}:${events.length}:${currentStage}`;
 
     const hasAnyPlatformTaskToday = tasks.some((task) => isPlatformTaskForDate(task, today));
     if (hasAnyPlatformTaskToday) return;
@@ -281,7 +287,7 @@ export function useTaskCalendarEngine() {
     const { data: inserted, error } = await supabase
       .from(TASK_TABLE)
       .insert({
-        user_id: user.id,
+        user_id: userId,
         task_text: recommendation.title,
         task_description: recommendation.description,
         task_date: today,
@@ -323,7 +329,7 @@ export function useTaskCalendarEngine() {
     );
 
     await fetchTasks();
-  }, [currentStage, events, fetchTasks, tasks, toolSignals, user, weeklyMission]);
+  }, [currentStage, events, fetchTasks, logRecommendationEvent, tasks, toolSignals, userId, weeklyMission]);
 
   useEffect(() => {
     void fetchTasks();
@@ -334,38 +340,38 @@ export function useTaskCalendarEngine() {
   }, [ensureTodayRecommendation]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
 
     const refresh = () => {
       void fetchTasks();
     };
 
     const channel = supabase
-      .channel(`task-calendar:${user.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_tasks', filter: `user_id=eq.${user.id}` }, refresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'task_recommendation_events', filter: `user_id=eq.${user.id}` }, refresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'weekly_missions', filter: `user_id=eq.${user.id}` }, refresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'icp_analysis_results', filter: `user_id=eq.${user.id}` }, refresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'pmf_analysis_results', filter: `user_id=eq.${user.id}` }, refresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'pmf_validation_evidence', filter: `user_id=eq.${user.id}` }, refresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tech_stack_reports', filter: `user_id=eq.${user.id}` }, refresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'waitlist_pages', filter: `user_id=eq.${user.id}` }, refresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'mvp_builder_artifacts', filter: `user_id=eq.${user.id}` }, refresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'gtm_plans', filter: `user_id=eq.${user.id}` }, refresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bizmap_task_progress', filter: `user_id=eq.${user.id}` }, refresh)
+      .channel(`task-calendar:${userId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_tasks', filter: `user_id=eq.${userId}` }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'task_recommendation_events', filter: `user_id=eq.${userId}` }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'weekly_missions', filter: `user_id=eq.${userId}` }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'icp_analysis_results', filter: `user_id=eq.${userId}` }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pmf_analysis_results', filter: `user_id=eq.${userId}` }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pmf_validation_evidence', filter: `user_id=eq.${userId}` }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tech_stack_reports', filter: `user_id=eq.${userId}` }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'waitlist_pages', filter: `user_id=eq.${userId}` }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'mvp_builder_artifacts', filter: `user_id=eq.${userId}` }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gtm_plans', filter: `user_id=eq.${userId}` }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bizmap_task_progress', filter: `user_id=eq.${userId}` }, refresh)
       .subscribe();
 
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [fetchTasks, user]);
+  }, [fetchTasks, userId]);
 
   const createManualTask = useCallback(async (input: CreateManualTaskInput) => {
-    if (!user || !input.title.trim()) return false;
+    if (!userId || !input.title.trim()) return false;
     setIsMutating(true);
 
     const { error } = await supabase.from(TASK_TABLE).insert({
-      user_id: user.id,
+      user_id: userId,
       task_text: input.title.trim(),
       task_description: input.description?.trim() || null,
       task_date: input.deadlineDate,
@@ -388,7 +394,7 @@ export function useTaskCalendarEngine() {
     await fetchTasks();
     toast.success('Task added.');
     return true;
-  }, [fetchTasks, user]);
+  }, [fetchTasks, userId]);
 
   const completeTask = useCallback(async (task: CalendarTaskRow, completed: boolean) => {
     setIsMutating(true);
@@ -414,7 +420,7 @@ export function useTaskCalendarEngine() {
   }, [fetchTasks, logRecommendationEvent, syncStageTaskProgress]);
 
   const markTaskSeen = useCallback(async (task: CalendarTaskRow) => {
-    if (!user || (task.task_source !== 'platform' && task.ai_generated !== true) || task.is_completed || task.recommendation_status === 'dismissed') return;
+    if (!userId || (task.task_source !== 'platform' && task.ai_generated !== true) || task.is_completed || task.recommendation_status === 'dismissed') return;
     const now = new Date().toISOString();
     const { error } = await supabase
       .from(TASK_TABLE)
@@ -435,7 +441,7 @@ export function useTaskCalendarEngine() {
         : item
     )));
     await logRecommendationEvent(task, 'seen');
-  }, [logRecommendationEvent, user]);
+  }, [logRecommendationEvent, userId]);
 
   const acceptRecommendation = useCallback(async (task: CalendarTaskRow) => {
     setIsMutating(true);

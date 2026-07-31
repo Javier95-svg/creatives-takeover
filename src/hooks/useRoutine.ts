@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { subDays } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -81,6 +81,7 @@ function calculateConsistency(completions: RoutineCompletion[]) {
 
 export function useRoutine() {
   const { user } = useAuth();
+  const userId = user?.id ?? null;
   const [profile, setProfile] = useState<RoutineProfileSnapshot | null>(null);
   const [config, setConfig] = useState<RoutineConfig | null>(null);
   const [reminderPreferences, setReminderPreferences] = useState<RoutineReminderPreferences>(() => parseReminderPreferences(null));
@@ -90,12 +91,14 @@ export function useRoutine() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const loadedUserIdRef = useRef<string | null>(null);
 
   const todayKey = getLocalDateKey();
   const weekKey = getWeekStartKey();
 
   const refresh = useCallback(async () => {
-    if (!user) {
+    if (!userId) {
+      loadedUserIdRef.current = null;
       setProfile(null);
       setConfig(null);
       setCurrentCompletions([]);
@@ -104,7 +107,9 @@ export function useRoutine() {
       return;
     }
 
-    setIsLoading(true);
+    if (loadedUserIdRef.current !== userId) {
+      setIsLoading(true);
+    }
     setError(null);
 
     try {
@@ -113,23 +118,23 @@ export function useRoutine() {
         supabase
           .from('profiles')
           .select('routine_primary_goal, routine_config, routine_reminder_preferences, quiz_current_stage, quiz_biggest_challenge, creative_niche, startup_stage, startup_name, startup_industry')
-          .eq('id', user.id)
+          .eq('id', userId)
           .maybeSingle(),
         supabase
           .from('routine_task_completions')
           .select('id, routine_task_id, task_title, period_type, period_date, status, completed_at, created_at')
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .in('period_date', [todayKey, weekKey]),
         supabase
           .from('routine_task_completions')
           .select('id, routine_task_id, task_title, period_type, period_date, status, completed_at, created_at')
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .gte('period_date', historyStart)
           .order('period_date', { ascending: false }),
         supabase
           .from('weekly_missions')
           .select('id, mission_goal, week_start_date, week_end_date, status, commitment_outcome, reflection_text')
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .order('week_start_date', { ascending: false })
           .limit(6),
       ]);
@@ -150,16 +155,17 @@ export function useRoutine() {
       console.error('Failed to load routine:', err);
       setError(err instanceof Error ? err.message : 'Failed to load routine');
     } finally {
+      loadedUserIdRef.current = userId;
       setIsLoading(false);
     }
-  }, [todayKey, user, weekKey]);
+  }, [todayKey, userId, weekKey]);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
 
   const saveConfig = useCallback(async (nextConfig: RoutineConfig, options?: { quiet?: boolean }) => {
-    if (!user) return;
+    if (!userId) return;
 
     const normalizedConfig: RoutineConfig = {
       ...nextConfig,
@@ -177,7 +183,7 @@ export function useRoutine() {
           routine_primary_goal: normalizedConfig.primaryGoal,
           routine_config: serializeRoutineConfig(normalizedConfig),
         })
-        .eq('id', user.id);
+        .eq('id', userId);
 
       if (updateError) throw updateError;
       if (!options?.quiet) toast.success('Routine saved');
@@ -188,7 +194,7 @@ export function useRoutine() {
     } finally {
       setIsSaving(false);
     }
-  }, [refresh, user]);
+  }, [refresh, userId]);
 
   const initializeRoutine = useCallback(async (goal: RoutineGoal) => {
     await saveConfig(createRoutineConfig(goal), { quiet: true });
@@ -196,7 +202,7 @@ export function useRoutine() {
   }, [saveConfig]);
 
   const updateReminderPreferences = useCallback(async (preferences: RoutineReminderPreferences) => {
-    if (!user) return;
+    if (!userId) return;
 
     setIsSaving(true);
     setReminderPreferences(preferences);
@@ -205,7 +211,7 @@ export function useRoutine() {
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ routine_reminder_preferences: serializeReminderPreferences(preferences) })
-        .eq('id', user.id);
+        .eq('id', userId);
 
       if (updateError) throw updateError;
       toast.success(preferences.enabled ? 'Routine reminder preference saved' : 'Routine reminders turned off');
@@ -215,14 +221,14 @@ export function useRoutine() {
     } finally {
       setIsSaving(false);
     }
-  }, [user]);
+  }, [userId]);
 
   const setTaskStatus = useCallback(async (
     task: RoutineTask,
     periodType: RoutinePeriodType,
     status: RoutineCompletionStatus,
   ) => {
-    if (!user) return;
+    if (!userId) return;
 
     const periodDate = periodType === 'daily' ? todayKey : weekKey;
     setIsSaving(true);
@@ -231,7 +237,7 @@ export function useRoutine() {
       const { error: upsertError } = await supabase
         .from('routine_task_completions')
         .upsert({
-          user_id: user.id,
+          user_id: userId,
           routine_task_id: task.id,
           task_title: task.title,
           period_type: periodType,
@@ -250,10 +256,10 @@ export function useRoutine() {
     } finally {
       setIsSaving(false);
     }
-  }, [refresh, todayKey, user, weekKey]);
+  }, [refresh, todayKey, userId, weekKey]);
 
   const clearTaskStatus = useCallback(async (task: RoutineTask, periodType: RoutinePeriodType) => {
-    if (!user) return;
+    if (!userId) return;
 
     const periodDate = periodType === 'daily' ? todayKey : weekKey;
     setIsSaving(true);
@@ -262,7 +268,7 @@ export function useRoutine() {
       const { error: deleteError } = await supabase
         .from('routine_task_completions')
         .delete()
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .eq('routine_task_id', task.id)
         .eq('period_type', periodType)
         .eq('period_date', periodDate);
@@ -275,7 +281,7 @@ export function useRoutine() {
     } finally {
       setIsSaving(false);
     }
-  }, [refresh, todayKey, user, weekKey]);
+  }, [refresh, todayKey, userId, weekKey]);
 
   const completionByKey = useMemo(() => {
     return new Map(

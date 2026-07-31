@@ -24,27 +24,32 @@ interface UseDailyMissionOptions {
 
 export const useDailyMission = (options: UseDailyMissionOptions = {}) => {
   const { user } = useAuth();
+  const userId = user?.id ?? null;
   const [mission, setMission] = useState<DailyMission | null>(null);
   const [loading, setLoading] = useState(true);
   const [completing, setCompleting] = useState(false);
   const errorToastShownRef = useRef(false);
+  const loadedUserIdRef = useRef<string | null>(null);
   const showErrorToast = options.showErrorToast ?? false;
 
   const loadMission = useCallback(async () => {
-    if (!user) {
+    if (!userId) {
+      loadedUserIdRef.current = null;
       setMission(null);
       setLoading(false);
       return;
     }
 
-    setLoading(true);
+    if (loadedUserIdRef.current !== userId) {
+      setLoading(true);
+    }
     const missionDate = getLocalDateString();
 
     try {
       const { data: existingMission, error: fetchError } = await supabase
         .from('daily_missions')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .eq('mission_date', missionDate)
         .maybeSingle();
 
@@ -73,16 +78,17 @@ export const useDailyMission = (options: UseDailyMissionOptions = {}) => {
         toast.error('Failed to load today\'s mission');
       }
     } finally {
+      loadedUserIdRef.current = userId;
       setLoading(false);
     }
-  }, [showErrorToast, user]);
+  }, [showErrorToast, userId]);
 
   useEffect(() => {
     void loadMission();
   }, [loadMission]);
 
   const markAsDone = useCallback(async () => {
-    if (!user || !mission || mission.completed) return;
+    if (!userId || !mission || mission.completed) return;
 
     setCompleting(true);
 
@@ -91,7 +97,7 @@ export const useDailyMission = (options: UseDailyMissionOptions = {}) => {
         .from('daily_missions')
         .update({ completed: true })
         .eq('id', mission.id)
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .select('*')
         .single();
 
@@ -114,7 +120,7 @@ export const useDailyMission = (options: UseDailyMissionOptions = {}) => {
     } finally {
       setCompleting(false);
     }
-  }, [mission, user]);
+  }, [mission, userId]);
 
   return {
     mission,

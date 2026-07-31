@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -106,9 +106,11 @@ function getCompletionUnlockedStage(progress: UserProgressRow): BizMapStage {
 
 export const useBizMapProgress = () => {
   const { user } = useAuth();
+  const userId = user?.id ?? null;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<UserProgressRow | null>(null);
+  const loadedUserIdRef = useRef<string | null>(null);
 
   const fetchCompletionSignals = useCallback(async (userId: string): Promise<CompletionSignals> => {
     const [
@@ -316,25 +318,28 @@ export const useBizMapProgress = () => {
   }, [fetchCompletionSignals]);
 
   const initializeProgress = useCallback(async () => {
-    if (!user) {
+    if (!userId) {
+      loadedUserIdRef.current = null;
       setProgress(null);
       setLoading(false);
       return;
     }
 
-    setLoading(true);
+    if (loadedUserIdRef.current !== userId) {
+      setLoading(true);
+    }
     setError(null);
 
     try {
       const progressRes = await supabase
         .from(USER_PROGRESS_TABLE)
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .maybeSingle();
       const profileRes = await supabase
         .from('profiles')
         .select('assigned_stage')
-        .eq('id', user.id)
+        .eq('id', userId)
         .maybeSingle();
 
       const { data: existingData, error: selectError } = progressRes;
@@ -353,7 +358,7 @@ export const useBizMapProgress = () => {
         const { data: insertedData, error: insertError } = await supabase
           .from(USER_PROGRESS_TABLE)
           .insert({
-            user_id: user.id,
+            user_id: userId,
             current_stage: assignedBizMapStage ?? DEFAULT_CURRENT_STAGE,
             highest_unlocked_stage: 'FUNDRAISING' as BizMapStage,
           })
@@ -388,9 +393,10 @@ export const useBizMapProgress = () => {
       setError('Unable to load BizMap progress right now.');
       setProgress(null);
     } finally {
+      loadedUserIdRef.current = userId;
       setLoading(false);
     }
-  }, [syncProgress, user]);
+  }, [syncProgress, userId]);
 
   useEffect(() => {
     void initializeProgress();
@@ -402,12 +408,12 @@ export const useBizMapProgress = () => {
 
   const setCurrentStage = useCallback(
     async (stage: BizMapStage): Promise<boolean> => {
-      if (!progress || !user) return false;
+      if (!progress || !userId) return false;
 
       const { data, error: updateError } = await supabase
         .from(USER_PROGRESS_TABLE)
         .update({ current_stage: stage })
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .select('*')
         .single();
 
@@ -419,7 +425,7 @@ export const useBizMapProgress = () => {
       setProgress(data as UserProgressRow);
       return true;
     },
-    [progress, user],
+    [progress, userId],
   );
 
   const stageState = useMemo(() => {

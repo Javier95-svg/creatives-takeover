@@ -18,6 +18,16 @@ import type { LucideIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardPanelHeader } from '@/components/dashboard/DashboardPanel';
@@ -35,6 +45,15 @@ import {
 import type { JourneyStageNode, JourneyToolTile } from '@/lib/founderJourney';
 import { recordRecommendationOutcome } from '@/lib/recommendationLearning';
 import { trackRetentionEvent } from '@/lib/retentionSystem';
+import { getStageExplanation } from '@/lib/stageIntelligence';
+import {
+  STAGES,
+  type FounderOperatingStageId,
+} from '@/lib/stageDiagnostic';
+import type {
+  OnboardingCustomerCountBand,
+  OnboardingEvidenceState,
+} from '@/lib/onboardingContext';
 import { cn } from '@/lib/utils';
 
 const TILE_ICONS: Record<string, LucideIcon> = {
@@ -45,6 +64,24 @@ const TILE_ICONS: Record<string, LucideIcon> = {
   'gtm-strategist': Globe,
   'traction-engine': TrendingUp,
   'pitch-deck-analyzer': Presentation,
+};
+
+const EVIDENCE_ANSWER_LABELS: Record<OnboardingEvidenceState, string> = {
+  none: 'No external evidence yet',
+  prospects: 'I have named prospects to contact',
+  replies: 'Target customers have replied',
+  conversations: 'I completed qualified customer conversations',
+  commitment: 'A customer made a costly commitment or signed a pilot',
+  payment: 'A customer paid',
+  repeatable_growth: 'I have repeatable acquisition or retention',
+};
+
+const CUSTOMER_COUNT_LABELS: Record<OnboardingCustomerCountBand, string> = {
+  '0': 'No paying customers yet',
+  '1': '1 paying customer',
+  '2': '2 paying customers',
+  '3': '3 paying customers',
+  '4_plus': 'More than 3 paying customers',
 };
 
 function StageNode({ node }: { node: JourneyStageNode }) {
@@ -146,10 +183,39 @@ function ToolTile({ tile }: { tile: JourneyToolTile }) {
 
 export default function FounderJourneyPanel() {
   const { user } = useAuth();
-  const { snapshot, isLoading } = useFounderJourneySnapshot();
+  const {
+    snapshot,
+    isLoading,
+    onboarding,
+    stageIntelligence,
+  } = useFounderJourneySnapshot();
   const { primaryAction, recommendationPolicy } = useDashboardFocus();
   const viewedRef = useRef(false);
   const recommendedRoute = primaryAction ? getDashboardTool(primaryAction.toolKey).route : null;
+  const assignedStage = Math.min(
+    6,
+    Math.max(
+      1,
+      Number(
+        stageIntelligence?.current_stage
+        ?? onboarding?.context.operatingStage
+        ?? onboarding?.context.assignedStage
+        ?? 1,
+      ),
+    ),
+  ) as FounderOperatingStageId;
+  const onboardingEvidence = onboarding?.answers.evidenceState || 'none';
+  const evidenceAnswer = EVIDENCE_ANSWER_LABELS[onboardingEvidence];
+  const customerCount = onboarding?.answers.customerCountBand
+    ? CUSTOMER_COUNT_LABELS[onboarding.answers.customerCountBand]
+    : null;
+  const stageExplanations = getStageExplanation(
+    stageIntelligence ?? {
+      current_stage: assignedStage,
+      rationale_codes: onboarding?.context.stageRationaleCodes ?? [],
+      stage_stale: false,
+    },
+  ).slice(0, 2);
 
   const handleRecommendedOpen = () => {
     if (!primaryAction) return;
@@ -222,12 +288,58 @@ export default function FounderJourneyPanel() {
                 </Link>
               </Button>
             )}
-            <Button asChild size="sm" variant="outline">
-              <Link to="/bizmap-ai">
-                Review assigned stage
-                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-              </Link>
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button type="button" size="sm" variant="outline">
+                  Review assigned stage
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-lg">
+                <DialogHeader>
+                  <div className="mb-1 flex flex-wrap items-center gap-2">
+                    <Badge variant="outline">Operating stage {assignedStage}</Badge>
+                  </div>
+                  <DialogTitle>{STAGES[assignedStage].name}</DialogTitle>
+                  <DialogDescription>
+                    This is your current operating maturity. Your goal and fundraising intent are evaluated separately.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="grid gap-4 py-2">
+                  <div className="rounded-xl border border-border/70 bg-muted/25 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {onboarding?.isLegacy ? 'Evidence currently on file' : 'Your onboarding answer'}
+                    </p>
+                    <p className="mt-2 text-sm font-medium text-foreground">
+                      “{evidenceAnswer}”
+                    </p>
+                    {customerCount ? (
+                      <p className="mt-1 text-xs text-muted-foreground">{customerCount}</p>
+                    ) : null}
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Why we assigned this stage
+                    </p>
+                    <div className="mt-2 grid gap-2">
+                      {stageExplanations.map((explanation) => (
+                        <p key={explanation} className="flex items-start gap-2 text-sm leading-5 text-foreground/90">
+                          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                          {explanation}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button type="button">Got it</Button>
+                  </DialogClose>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
           {primaryAction ? (
             <RecommendationFeedback

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useOnboardingContext } from '@/hooks/useOnboardingContext';
@@ -76,15 +76,19 @@ export function useStageIntelligence() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [available, setAvailable] = useState(true);
+  const loadedUserIdRef = useRef<string | null>(null);
 
   const load = useCallback(async () => {
     if (!user?.id || !onboarding?.context) {
+      if (!user?.id) loadedUserIdRef.current = null;
       setState(null);
       setLoading(onboardingLoading);
       return;
     }
 
-    setLoading(true);
+    if (loadedUserIdRef.current !== user.id) {
+      setLoading(true);
+    }
     const context = onboarding.context;
     const baseStage = clampOperatingStage(context.operatingStage ?? context.assignedStage);
     const runnerUpStage = context.runnerUpStage == null
@@ -145,6 +149,7 @@ export function useStageIntelligence() {
       }));
       setAvailable(false);
     } finally {
+      loadedUserIdRef.current = user.id;
       setLoading(false);
     }
   }, [onboarding, onboardingLoading, user?.id]);

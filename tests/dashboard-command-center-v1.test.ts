@@ -192,3 +192,40 @@ test('returning to a mounted dashboard tab preserves its home component and comp
   assert.match(shell, /shouldShowOnboardingPathGate/);
   assert.doesNotMatch(shell, /useActivationGate|shouldEnforceGate|Complete your first action to unlock your full dashboard/);
 });
+
+test('dashboard data stays visible across tab and auth-session refreshes', () => {
+  const dashboard = read('../src/pages/Dashboard.tsx');
+  const retainedHooks = [
+    read('../src/hooks/useRoutine.ts'),
+    read('../src/hooks/useTaskCalendarEngine.ts'),
+    read('../src/hooks/useBizMapProgress.ts'),
+    read('../src/hooks/useDailyMission.ts'),
+    read('../src/hooks/useOnboardingContext.ts'),
+    read('../src/hooks/useStageIntelligence.ts'),
+  ];
+
+  assert.match(dashboard, /const userId = user\?\.id \?\? null/);
+  assert.match(dashboard, /\[currentPlan, userCreatedAt, userId\]/);
+  assert.doesNotMatch(dashboard, /\[currentPlan, user\]/);
+  retainedHooks.forEach((hook) => {
+    assert.match(hook, /loadedUserIdRef/);
+  });
+});
+
+test('assigned-stage review opens a practical onboarding answer dialog instead of navigating away', () => {
+  const journey = read('../src/components/dashboard/FounderJourneyPanel.tsx');
+  const journeyHook = read('../src/hooks/useFounderJourneySnapshot.ts');
+  const reviewStart = journey.indexOf('<Dialog>');
+  const reviewEnd = journey.indexOf('</Dialog>', reviewStart);
+  const reviewDialog = journey.slice(reviewStart, reviewEnd);
+
+  assert.ok(reviewStart > 0);
+  assert.ok(reviewEnd > reviewStart);
+  assert.match(reviewDialog, /<DialogTrigger asChild>/);
+  assert.match(reviewDialog, /Review assigned stage/);
+  assert.match(reviewDialog, /Your onboarding answer/);
+  assert.match(reviewDialog, /Why we assigned this stage/);
+  assert.match(journey, /getStageExplanation/);
+  assert.doesNotMatch(reviewDialog, /to="\/bizmap-ai"/);
+  assert.match(journeyHook, /onboarding,[\s\S]*stageIntelligence/);
+});

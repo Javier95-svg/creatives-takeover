@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -95,14 +95,18 @@ export function useOnboardingContext() {
   const { user } = useAuth();
   const [value, setValue] = useState<DashboardOnboardingContext | null>(null);
   const [loading, setLoading] = useState(true);
+  const loadedUserIdRef = useRef<string | null>(null);
 
   const load = useCallback(async () => {
     if (!user?.id) {
+      loadedUserIdRef.current = null;
       setValue(null);
       setLoading(false);
       return;
     }
-    setLoading(true);
+    if (loadedUserIdRef.current !== user.id) {
+      setLoading(true);
+    }
     try {
       const session = await getLatestOnboardingSession();
       if (session?.derived_context) {
@@ -149,6 +153,7 @@ export function useOnboardingContext() {
       console.warn('Unable to load onboarding context; dashboard defaults remain available.', error);
       setValue(null);
     } finally {
+      loadedUserIdRef.current = user.id;
       setLoading(false);
     }
   }, [user?.id]);

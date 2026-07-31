@@ -44,9 +44,11 @@ const Dashboard = () => {
   const { showExitIntent, closeExitIntent } = useExitIntent();
   const { user } = useAuth();
   const { subscriptionData } = useSubscription();
+  const userId = user?.id ?? null;
+  const userCreatedAt = user?.created_at ?? null;
   const fromIcpBuilder = searchParams.get('from') === 'icp_builder';
   const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
-  const daysSinceSignup = getDaysSinceSignup(user?.created_at ?? null);
+  const daysSinceSignup = getDaysSinceSignup(userCreatedAt);
   const [activationState, setActivationState] = useState<DashboardActivationState>({
     loading: true,
     showFirstResultBanner: false,
@@ -63,7 +65,7 @@ const Dashboard = () => {
     let cancelled = false;
 
     const loadActivationState = async () => {
-      if (!user) {
+      if (!userId) {
         setActivationState({
           loading: false,
           showFirstResultBanner: false,
@@ -81,7 +83,7 @@ const Dashboard = () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('onboarding_completed, user_preferences')
-        .eq('id', user.id)
+        .eq('id', userId)
         .maybeSingle();
 
       if (cancelled) return;
@@ -124,11 +126,11 @@ const Dashboard = () => {
       });
 
       void trackRetentionEvent('dashboard_viewed', {
-        user_id: user.id,
+        user_id: userId,
         activation_intent: preferenceState.activationIntent,
         source: 'dashboard',
         plan: currentPlan,
-        days_since_signup: getDaysSinceSignup(user.created_at),
+        days_since_signup: getDaysSinceSignup(userCreatedAt),
         first_artifact_type: preferenceState.firstArtifactType,
         first_result_mode: showFirstResultBanner,
         onboarding_session_id: preferences.onboardingSessionId ?? null,
@@ -136,8 +138,8 @@ const Dashboard = () => {
         rollout_variant: preferences.onboardingRolloutVariant ?? null,
       });
       trackActivationReturnMilestones({
-        userId: user.id,
-        userCreatedAt: user.created_at,
+        userId,
+        userCreatedAt,
         activationIntent: preferenceState.activationIntent,
         source: 'dashboard',
         plan: currentPlan,
@@ -149,7 +151,7 @@ const Dashboard = () => {
     return () => {
       cancelled = true;
     };
-  }, [currentPlan, user]);
+  }, [currentPlan, userCreatedAt, userId]);
 
   const dismissIcpBanner = () => {
     const next = new URLSearchParams(searchParams);

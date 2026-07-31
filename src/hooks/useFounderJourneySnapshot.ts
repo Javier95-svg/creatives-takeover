@@ -109,6 +109,8 @@ export function useFounderJourneySnapshot() {
   return {
     snapshot,
     isLoading: isLoading || stageLoading || onboardingLoading || intelligenceLoading,
+    onboarding,
+    stageIntelligence,
     refetch,
   };
 }
