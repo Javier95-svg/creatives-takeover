@@ -8,14 +8,9 @@ import DashboardTodayCockpit from '@/components/dashboard/DashboardTodayCockpit'
 import FounderJourneyPanel from '@/components/dashboard/FounderJourneyPanel';
 import DashboardFocusEditor from '@/components/dashboard/DashboardFocusEditor';
 import FounderStageIntelligenceCard from '@/components/dashboard/FounderStageIntelligenceCard';
-import EnablePushCard from '@/components/dashboard/EnablePushCard';
 import DashboardTour from '@/components/dashboard/DashboardTour';
-import FirstRunCard from '@/components/dashboard/FirstRunCard';
 import ContinueArtifactCard from '@/components/dashboard/ContinueArtifactCard';
-import LiveWaitlistCard from '@/components/dashboard/LiveWaitlistCard';
 import { FirstResultActivationCard } from '@/components/dashboard/FirstResultActivationCard';
-import JourneyNextStepCard from '@/components/dashboard/JourneyNextStepCard';
-import StarterDashboardNudge from '@/components/dashboard/StarterDashboardNudge';
 import { useExitIntent } from '@/hooks/useExitIntent';
 import { ExitIntentModal } from '@/components/ExitIntentModal';
 import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
@@ -211,25 +206,18 @@ const Dashboard = () => {
         />
       ) : null}
       <DashboardTodayCockpit />
+      <FounderJourneyPanel />
       <DashboardFocusEditor />
       <FounderStageIntelligenceCard />
-      <FounderJourneyPanel />
       <DashboardDisclosure
         title="More founder signals"
-        summary="Startup profile editor, growth, and setup prompts are here when you want extra context."
+        summary="Review your startup information and connect with relevant founders."
         className="mb-6"
         onOpenChange={(open) => {
           if (open) trackDashboardFounderSignalsExpanded();
         }}
       >
-        <div className="space-y-5">
-          <LiveWaitlistCard />
-          <EnablePushCard />
-          <FirstRunCard />
-          <JourneyNextStepCard />
-          <StartupHomeCommandCenter />
-          <StarterDashboardNudge />
-        </div>
+        <StartupHomeCommandCenter />
       </DashboardDisclosure>
       <ExitIntentModal isOpen={showExitIntent} onClose={closeExitIntent} />
     </>

@@ -36,12 +36,12 @@ test('post-ICP activation opens interview work without an immediate paid prompt'
   assert.match(source, /first incomplete customer-interview task/);
 });
 
-test('dashboard nudge targets low-credit onboarded Rookie users', () => {
+test('legacy dashboard nudge logic remains available without cluttering the canonical command center', () => {
   const dashboardSource = readFileSync(new URL('../src/pages/Dashboard.tsx', import.meta.url), 'utf8');
   const nudgeSource = readFileSync(new URL('../src/components/dashboard/StarterDashboardNudge.tsx', import.meta.url), 'utf8');
   const analyticsSource = readFileSync(new URL('../src/lib/analytics.ts', import.meta.url), 'utf8');
 
-  assert.match(dashboardSource, /<StarterDashboardNudge \/>/);
+  assert.doesNotMatch(dashboardSource, /<StarterDashboardNudge \/>/);
   assert.match(nudgeSource, /show_starter_nudge_dismissed/);
   assert.match(nudgeSource, /onboardingCompleted/);
   assert.match(nudgeSource, /totalAvailable < 20/);

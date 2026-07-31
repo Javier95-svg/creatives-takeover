@@ -170,7 +170,7 @@ test('dashboard personalization and feedback preserve the standardized shell', a
     readFile(new URL('../src/lib/analytics.ts', import.meta.url), 'utf8'),
   ]);
 
-  assert.match(dashboard, /<DashboardTodayCockpit \/>[\s\S]*<DashboardFocusEditor \/>[\s\S]*<FounderJourneyPanel \/>/);
+  assert.match(dashboard, /<DashboardTodayCockpit \/>[\s\S]*<FounderJourneyPanel \/>[\s\S]*<DashboardFocusEditor \/>/);
   assert.match(mission, /startupBrief/);
   assert.match(mission, /weeklyCapacityHours/);
   assert.match(mission, /founderLoop/);

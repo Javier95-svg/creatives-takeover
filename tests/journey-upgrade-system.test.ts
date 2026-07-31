@@ -16,15 +16,19 @@ test('journey upgrade catalog maps tools to plan outcomes without fabricated met
   assert.doesNotMatch(source, /2x faster/);
 });
 
-test('dashboard shows journey recommendation before low-credit nudge', () => {
+test('dashboard keeps the journey prominent and founder signals focused', () => {
   const source = readFileSync(new URL('../src/pages/Dashboard.tsx', import.meta.url), 'utf8');
-  const recommendationSource = readFileSync(new URL('../src/components/dashboard/JourneyNextStepCard.tsx', import.meta.url), 'utf8');
-  const nudgeSource = readFileSync(new URL('../src/components/dashboard/StarterDashboardNudge.tsx', import.meta.url), 'utf8');
+  const founderSignals = readFileSync(new URL('../src/components/dashboard/StartupHomeCommandCenter.tsx', import.meta.url), 'utf8');
 
-  assert.match(source, /<JourneyNextStepCard \/>[\s\S]*<StartupHomeCommandCenter \/>[\s\S]*<StarterDashboardNudge \/>/);
-  assert.match(recommendationSource, /data-journey-next-step-card="true"/);
-  assert.match(nudgeSource, /primaryJourneyCardVisible/);
-  assert.match(nudgeSource, /ct:journey-next-step-visibility/);
+  assert.match(source, /<DashboardTodayCockpit \/>[\s\S]*<FounderJourneyPanel \/>/);
+  assert.match(source, /<DashboardDisclosure[\s\S]*<StartupHomeCommandCenter \/>[\s\S]*<\/DashboardDisclosure>/);
+  assert.doesNotMatch(source, /<JourneyNextStepCard \/>|<StarterDashboardNudge \/>/);
+  assert.match(founderSignals, /title="Your startup info"/);
+  assert.match(founderSignals, /Connect, Share & Grow/);
+  assert.doesNotMatch(
+    founderSignals,
+    /Ideal Customer|Positioning And Competition|Validation And PMF|Tech Stack And Budget|Startup Development Cycle Outputs/,
+  );
 });
 
 test('journey recommendation card uses saved outputs, dismissal, and checkout flow', () => {

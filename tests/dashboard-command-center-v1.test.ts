@@ -140,6 +140,28 @@ test('first-result prompt is compact, responsive, non-dismissible, and keeps act
   assert.doesNotMatch(tour, /Home, your daily command center/);
 });
 
+test('every completed account receives the canonical utility routes and dashboard sections', () => {
+  const dashboard = read('../src/pages/Dashboard.tsx');
+  const sidebar = read('../src/components/dashboard/DashboardSidebar.tsx');
+  const founderSignals = read('../src/components/dashboard/StartupHomeCommandCenter.tsx');
+
+  assert.match(
+    sidebar,
+    /UNIVERSAL_MORE_TOOL_KEYS[\s\S]*'saved_mentors'[\s\S]*'decision_sprint'[\s\S]*'core_metrics'[\s\S]*'ai_goals'/,
+  );
+  assert.match(sidebar, /!isUniversalMoreTool && !modeConfig\.visibleTools\.includes/);
+  assert.match(sidebar, /!isUniversalMoreTool && !sidebarPreferences\[item\.prefKey\]/);
+  assert.match(dashboard, /<DashboardTodayCockpit \/>[\s\S]*<FounderJourneyPanel \/>/);
+  assert.match(dashboard, /title="More founder signals"[\s\S]*<StartupHomeCommandCenter \/>/);
+  assert.match(founderSignals, /lg:grid-cols-2/);
+  assert.match(founderSignals, /title="Your startup info"/);
+  assert.match(founderSignals, /Connect, Share & Grow/);
+  assert.doesNotMatch(
+    founderSignals,
+    /Ideal Customer|Positioning And Competition|Validation And PMF|Tech Stack And Budget|Startup Development Cycle Outputs/,
+  );
+});
+
 test('tool registry covers the seven core journey tools and human layer', () => {
   const source = read('../src/config/dashboardToolRegistry.ts');
   for (const key of ['icp_builder', 'demo_studio', 'pmf_lab', 'mvp_builder', 'gtm_strategist', 'traction_engine', 'pitch_deck_analyzer', 'messages', 'saved_mentors']) {

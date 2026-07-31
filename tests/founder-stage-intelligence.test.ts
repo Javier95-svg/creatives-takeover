@@ -44,7 +44,7 @@ test('founders receive explanations, corrections, and one adjacent boundary ques
   assert.match(card, /Looks right/);
   assert.match(card, /Not quite/);
   assert.match(card, /Fundraising \{state\.capital_motion\}/);
-  assert.match(dashboard, /<DashboardFocusEditor \/>[\s\S]*<FounderStageIntelligenceCard \/>[\s\S]*<FounderJourneyPanel \/>/);
+  assert.match(dashboard, /<FounderJourneyPanel \/>[\s\S]*<DashboardFocusEditor \/>[\s\S]*<FounderStageIntelligenceCard \/>/);
 });
 
 test('meaningful artifacts trigger evidence recording and immediate recalculation', async () => {

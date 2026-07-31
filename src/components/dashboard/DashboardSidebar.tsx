@@ -56,6 +56,12 @@ import type { BizMapStage } from '@/lib/bizmapStages';
 // essentials — dashboard home, the daily loop, and the two onboarding paths.
 const ONBOARDING_NAV_PATHS = new Set(['/dashboard', '/dashboard/tasks', '/dashboard/routine']);
 const DEFAULT_ONBOARDING_TOOL_KEYS = new Set<DashboardSidebarToolKey>(['waitlist_maker']);
+const UNIVERSAL_MORE_TOOL_KEYS = new Set<DashboardSidebarToolKey>([
+  'saved_mentors',
+  'decision_sprint',
+  'core_metrics',
+  'ai_goals',
+]);
 
 const TOOL_KEY_BY_ACTIVATION_INTENT: Partial<Record<ActivationIntent, DashboardSidebarToolKey>> = {
   build_demo: 'waitlist_maker',
@@ -300,15 +306,17 @@ export const DashboardSidebarContent = ({ currentStage }: { currentStage: BizMap
     registryToolItem('newspaper', 'showNewspaper', 'newspaper'),
     registryToolItem('prompt_library', 'showPromptLibrary', 'prompt_library'),
   ].filter((item) => {
+    const isUniversalMoreTool = UNIVERSAL_MORE_TOOL_KEYS.has(item.toolKey);
+
     if (reduceOnboardingNav && !onboardingToolKeys.has(item.toolKey)) {
       return false;
     }
 
-    if (!modeConfig.visibleTools.includes(item.toolKey)) {
+    if (!isUniversalMoreTool && !modeConfig.visibleTools.includes(item.toolKey)) {
       return false;
     }
 
-    if (!sidebarPreferences[item.prefKey]) {
+    if (!isUniversalMoreTool && !sidebarPreferences[item.prefKey]) {
       return false;
     }
 
@@ -402,17 +410,19 @@ export const DashboardSidebarContent = ({ currentStage }: { currentStage: BizMap
                           <span>{item.label}</span>
                         </Link>
                       </SidebarMenuButton>
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          void removeTool(item.prefKey);
-                        }}
-                        className="opacity-0 group-hover/tool:opacity-100 p-1 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all mr-1 group-data-[collapsible=icon]:hidden"
-                        title={`Remove ${item.label}`}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
+                      {!UNIVERSAL_MORE_TOOL_KEYS.has(item.toolKey) ? (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            void removeTool(item.prefKey);
+                          }}
+                          className="opacity-0 group-hover/tool:opacity-100 p-1 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all mr-1 group-data-[collapsible=icon]:hidden"
+                          title={`Remove ${item.label}`}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      ) : null}
                     </div>
                   </SidebarMenuItem>
                 ))}

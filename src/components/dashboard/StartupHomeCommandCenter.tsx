@@ -1,19 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { formatDistanceToNow } from "date-fns";
-import { Link } from "react-router-dom";
 import {
   Building2,
-  CheckCircle2,
-  FileText,
-  FlaskConical,
-  Globe2,
-  Layers3,
   RefreshCw,
   Save,
   Target,
-  TrendingUp,
   Users,
-  Zap,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -87,13 +78,6 @@ function getOverlap(left: string[], right: string[] | null | undefined) {
   return left.filter((item) => rightSet.has(normalizeText(item)));
 }
 
-function formatFreshness(value?: string | null) {
-  if (!value) return "Not saved yet";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Recently updated";
-  return formatDistanceToNow(date, { addSuffix: true });
-}
-
 function joinList(values: string[] | null | undefined, fallback = "Not captured yet") {
   if (!values?.length) return fallback;
   return values.join(", ");
@@ -107,24 +91,14 @@ function splitIndustryInput(value: string) {
     .slice(0, 5);
 }
 
-function SourceBadge({ children }: { children: string }) {
-  return (
-    <Badge variant="outline" className="rounded-full border-primary/20 bg-primary/5 text-label text-primary">
-      {children}
-    </Badge>
-  );
-}
-
 function SectionPanel({
   title,
   icon: Icon,
-  source,
   children,
   className,
 }: {
   title: string;
   icon: typeof Target;
-  source?: string;
   children: React.ReactNode;
   className?: string;
 }) {
@@ -137,7 +111,6 @@ function SectionPanel({
           </div>
           <h2 className="font-space-grotesk text-lg font-semibold text-foreground">{title}</h2>
         </div>
-        {source ? <SourceBadge>{source}</SourceBadge> : null}
       </div>
       {children}
     </section>
@@ -153,43 +126,11 @@ function FieldValue({ label, value }: { label: string; value: string | number | 
   );
 }
 
-function EmptyAction({ text, href, cta }: { text: string; href: string; cta: string }) {
-  return (
-    <div className="space-y-3">
-      <p className="text-sm leading-6 text-muted-foreground">{text}</p>
-      <Button asChild size="sm" variant="outline">
-        <Link to={href}>{cta}</Link>
-      </Button>
-    </div>
-  );
-}
-
-function BulletList({ values, empty }: { values: string[] | null | undefined; empty: string }) {
-  if (!values?.length) {
-    return <p className="text-sm text-muted-foreground">{empty}</p>;
-  }
-
-  return (
-    <ul className="space-y-2">
-      {values.map((value) => (
-        <li key={value} className="flex gap-2 text-sm leading-6 text-muted-foreground">
-          <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
-          <span>{value}</span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 function HomeSkeleton() {
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.9fr)]">
-      <div className="space-y-4">
-        <Skeleton className="h-44 rounded-lg" />
-        <Skeleton className="h-60 rounded-lg" />
-        <Skeleton className="h-52 rounded-lg" />
-      </div>
-      <Skeleton className="h-[620px] rounded-lg" />
+    <div className="grid gap-5 lg:grid-cols-2">
+      <Skeleton className="h-72 rounded-lg" />
+      <Skeleton className="h-72 rounded-lg" />
     </div>
   );
 }
@@ -335,33 +276,17 @@ function StartupProfileSection() {
   if (loading) return <HomeSkeleton />;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3 border-t border-border/60 pt-6 lg:flex-row lg:items-center lg:justify-between">
-        <div className="space-y-1">
-          <h2 className="font-space-grotesk text-xl font-semibold tracking-tight text-foreground">
-            {model.manual.startupName || "Your startup"}
-          </h2>
-          <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-            What the platform knows about your startup and who you should meet next.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 rounded-full border border-border/70 bg-background/80 px-3 py-2 text-xs text-muted-foreground">
-          <span>{completionCount}/9 profile signals captured</span>
-          <span className="h-1 w-1 rounded-full bg-muted-foreground/50" />
-          <span>Updated {formatFreshness(model.lastUpdatedAt)}</span>
-        </div>
-      </div>
-
+    <div className="space-y-5">
       {error ? (
         <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">
           {error}
         </div>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.9fr)] lg:items-start">
-        <div className="space-y-5">
+      <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
+        <div className="min-w-0">
           {!isEditing ? (
-            <SectionPanel title="Startup Profile" icon={Building2}>
+            <SectionPanel title="Your startup info" icon={Building2}>
               <div className="grid gap-3 sm:grid-cols-2">
                 <FieldValue label="Startup" value={model.manual.startupName} />
                 <FieldValue label="Stage" value={STAGE_OPTIONS.find((s) => s.value === model.manual.stage)?.label || model.manual.stage} />
@@ -383,7 +308,7 @@ function StartupProfileSection() {
             </SectionPanel>
           ) : (
           <MobileFormOptimizer>
-          <SectionPanel title="Startup Profile" icon={Building2}>
+          <SectionPanel title="Your startup info" icon={Building2}>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="startup-name">Startup name</Label>
@@ -547,135 +472,9 @@ function StartupProfileSection() {
           </SectionPanel>
           </MobileFormOptimizer>
           )}
-
-          <div className="grid gap-5 xl:grid-cols-2">
-            <SectionPanel title="Ideal Customer" icon={Target} source="From ICP Builder">
-              {model.generated.icp ? (
-                <div className="space-y-4">
-                  <FieldValue label="Industry" value={model.generated.icp.snapshot.industry} />
-                  <FieldValue label="Customer" value={model.generated.icp.snapshot.roleLine} />
-                  <FieldValue label="Persona" value={model.generated.icp.snapshot.personaName} />
-                  <div>
-                    <p className="mb-2 text-xs font-medium uppercase tracking-normal text-muted-foreground">Core pain points</p>
-                    <BulletList values={model.generated.icp.painPoints} empty="Complete ICP Builder to capture pain points." />
-                  </div>
-                </div>
-              ) : (
-                <EmptyAction
-                  text="Build your ICP to populate customer, pain, positioning, and competition fields."
-                  href="/icp-builder"
-                  cta="Build your ICP"
-                />
-              )}
-            </SectionPanel>
-
-            <SectionPanel title="Positioning And Competition" icon={Layers3} source="From ICP Builder">
-              {model.generated.icp ? (
-                <div className="space-y-4">
-                  <FieldValue label="Product positioning" value={model.generated.icp.productPositioning} />
-                  <FieldValue label="Competitive landscape" value={model.generated.icp.competitiveLandscape} />
-                  <div>
-                    <p className="mb-2 text-xs font-medium uppercase tracking-normal text-muted-foreground">Competitors</p>
-                    <p className="text-sm text-muted-foreground">
-                      {joinList(model.generated.icp.competitors, "Named competitors have not been captured yet.")}
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-sm leading-6 text-muted-foreground">
-                  Competitive landscape will appear here once the ICP draft includes named alternatives or market context.
-                </p>
-              )}
-            </SectionPanel>
-
-            <SectionPanel title="Validation And PMF" icon={FlaskConical} source="From PMF Lab">
-              {model.generated.pmf ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <FieldValue label="PMF score" value={model.generated.pmf.score !== null ? `${model.generated.pmf.score}/100` : null} />
-                    <FieldValue label="Verdict" value={model.generated.pmf.verdict} />
-                  </div>
-                  <p className="text-sm leading-6 text-muted-foreground">
-                    {model.generated.pmf.summaryInsight || "PMF insight saved without a summary."}
-                  </p>
-                  <div>
-                    <p className="mb-2 text-xs font-medium uppercase tracking-normal text-muted-foreground">Gaps to address</p>
-                    <BulletList values={model.generated.pmf.gaps} empty="No PMF gaps captured yet." />
-                  </div>
-                </div>
-              ) : (
-                <EmptyAction
-                  text="Run PMF Lab to show validation score, buying signals, gaps, and next experiments here."
-                  href="/pmf-lab"
-                  cta="Run PMF score"
-                />
-              )}
-            </SectionPanel>
-
-            <SectionPanel title="Tech Stack And Budget" icon={Zap} source="From Tech Stack Builder">
-              {model.generated.techStack ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <FieldValue label="Monthly fixed budget" value={`$${model.generated.techStack.budgetTotal.toFixed(2)}`} />
-                    <FieldValue label="Variable costs" value={model.generated.techStack.hasVariableCosts ? "Included" : "None flagged"} />
-                  </div>
-                  <div>
-                    <p className="mb-2 text-xs font-medium uppercase tracking-normal text-muted-foreground">Selected stack</p>
-                    <div className="flex flex-wrap gap-2">
-                      {model.generated.techStack.selectedTools.length ? (
-                        model.generated.techStack.selectedTools.map((tool) => (
-                          <Badge key={tool} variant="secondary" className="rounded-full">
-                            {tool}
-                          </Badge>
-                        ))
-                      ) : (
-                        <p className="text-sm text-muted-foreground">No selected tools captured.</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <EmptyAction
-                  text="Build a stack report to make selected tools and budget visible here."
-                  href="/tech-stack"
-                  cta="Build tech stack"
-                />
-              )}
-            </SectionPanel>
-          </div>
-
-          <SectionPanel title="Startup Development Cycle Outputs" icon={FileText}>
-            <div className="grid gap-3 md:grid-cols-3">
-              {[
-                { label: "Waitlist", item: model.generated.cycle.waitlist, icon: Globe2, href: "/demo-studio", cta: "Create demo" },
-                { label: "MVP Scope", item: model.generated.cycle.mvp, icon: Layers3, href: "/mvp-builder", cta: "Scope MVP" },
-                { label: "GTM Plan", item: model.generated.cycle.gtm, icon: TrendingUp, href: "/go-to-market", cta: "Build GTM plan" },
-              ].map(({ label, item, icon: Icon, href, cta }) => (
-                <div key={label} className="rounded-md border border-border/70 bg-background/70 p-4">
-                  <div className="mb-3 flex items-center gap-2">
-                    <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
-                    <p className="text-sm font-semibold">{label}</p>
-                  </div>
-                  {item ? (
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium text-foreground">{item.title}</p>
-                      <p className="line-clamp-3 text-xs leading-5 text-muted-foreground">
-                        {item.summary || "Saved output is available."}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{formatFreshness(item.updatedAt)}</p>
-                    </div>
-                  ) : (
-                    <Button asChild size="sm" variant="outline" className="mt-1 w-full">
-                      <Link to={href}>{cta}</Link>
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </SectionPanel>
         </div>
 
-        <aside className="space-y-4 lg:sticky lg:top-24">
+        <aside className="min-w-0">
           <section className="rounded-lg border border-border/70 bg-card/95 shadow-sm">
             <div className="border-b border-border/70 p-5">
               <div className="flex items-start justify-between gap-3">
@@ -700,7 +499,7 @@ function StartupProfileSection() {
                   <Users className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden="true" />
                   <h3 className="mt-3 text-sm font-semibold">Complete your founder context</h3>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    Add a startup sector and country in Startup Profile to discover founders with relevant overlap.
+                    Add a startup sector and country in Your startup info to discover founders with relevant overlap.
                   </p>
                 </div>
               ) : peerLoading ? (
