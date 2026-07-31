@@ -187,7 +187,7 @@ function buildMeta(article: StoryRecord) {
     : '';
   const ogImageUrl = absoluteBanner
     ? toSocialCardImage(absoluteBanner)
-    : `${SITE_ORIGIN}/og-image.png`;
+    : `${SITE_ORIGIN}/og-founders-compass-2026-07.png`;
 
   return { optimizedMetaTitle, metaDescription, ogImageUrl };
 }

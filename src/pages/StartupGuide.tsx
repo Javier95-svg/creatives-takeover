@@ -203,7 +203,7 @@ export default function StartupGuide() {
         keywords="how to build a startup, startup guide for beginners, first-time founder guide, startup idea validation, MVP planning, go-to-market strategy startup, startup fundraising guide, how to start a tech company"
         url="/startup-guide"
         canonical="https://creatives-takeover.com/startup-guide"
-        image="/og-image.png"
+        image="/og-founders-compass-2026-07.png"
         type="article"
         structuredData={structuredData}
       />

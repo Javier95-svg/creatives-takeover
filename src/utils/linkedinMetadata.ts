@@ -80,6 +80,6 @@ export function generateDefaultOgImage(title: string, excerpt?: string): string 
   });
   
   // Return a default OG image or use a service
-  return `${baseUrl}/og-image.png`; // Fallback to default image
+  return `${baseUrl}/og-founders-compass-2026-07.png`; // Fallback to default image
 }
 

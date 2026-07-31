@@ -64,7 +64,7 @@ const Index = () => {
         description="Turn your idea into a validated startup through one evidence backed path for customer clarity, proof, PMF decisions, MVP building, GTM execution, and verified traction."
         keywords="founder operating system, startup idea validation, customer decision brief, interactive product demo, product market fit evidence, MVP builder, go-to-market execution, traction engine, first-time solo founders"
         url="/"
-        image="/og-image.png"
+        image="/og-founders-compass-2026-07.png"
         structuredData={structuredData}
       />
       <Navigation />

@@ -28,7 +28,7 @@ const About = () => {
         keywords="about Creatives Takeover, startup development platform, first-time founders, startup validation tools, MVP builder, fundraising tools"
         url="/about"
         canonical="https://creatives-takeover.com/about"
-        image="/og-image.png"
+        image="/og-founders-compass-2026-07.png"
         structuredData={structuredData}
       />
       <div className="relative min-h-screen overflow-hidden">

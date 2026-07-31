@@ -48,7 +48,7 @@
       ]
     },
     {
-      "source": "/(favicon.*|apple-touch-icon.*|site.webmanifest|robots.txt|sitemap.xml|llms.txt|og-image.png)",
+      "source": "/(favicon.*|apple-touch-icon.*|site.webmanifest|robots.txt|sitemap.xml|llms.txt|og-image.png|og-founders-compass-2026-07.png)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }
       ]

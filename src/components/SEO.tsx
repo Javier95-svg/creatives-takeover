@@ -24,7 +24,7 @@ const SEO = ({
   title,
   description,
   keywords,
-  image = 'https://creatives-takeover.com/og-image.png',
+  image = 'https://creatives-takeover.com/og-founders-compass-2026-07.png',
   url,
   type = 'website',
   author,
@@ -170,7 +170,7 @@ export const createArticleSchema = (article: {
     "@type": "Article",
     "headline": article.title,
     "description": article.description,
-    "image": article.image || "https://creatives-takeover.com/og-image.png",
+    "image": article.image || "https://creatives-takeover.com/og-founders-compass-2026-07.png",
     "author": {
       "@type": "Person",
       "name": article.author
@@ -256,7 +256,7 @@ export const createProductSchema = (product: {
   "@type": "Product",
   "name": product.name,
   "description": product.description,
-  "image": product.image || "https://creatives-takeover.com/og-image.png",
+  "image": product.image || "https://creatives-takeover.com/og-founders-compass-2026-07.png",
   "offers": {
     "@type": "Offer",
     "price": product.price,
@@ -414,7 +414,7 @@ export const createLocalBusinessSchema = () => ({
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
   "name": "Creatives Takeover",
-  "image": "https://creatives-takeover.com/og-image.png",
+  "image": "https://creatives-takeover.com/og-founders-compass-2026-07.png",
   "url": "https://creatives-takeover.com",
   "telephone": "",
   "email": "admin@creatives-takeover.com",
