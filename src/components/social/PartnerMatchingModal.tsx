@@ -76,15 +76,36 @@ export const PartnerMatchingModal = ({ open, onOpenChange }: PartnerMatchingModa
       const nextViewerStage = viewerProfile?.business_stage ?? null;
       setViewerStage(nextViewerStage);
       
-      // Get profiles excluding current user and existing partners
-      const { data, error } = await supabase
+      const { data: existingPartnerships, error: partnershipsError } = await supabase
+        .from('accountability_partnerships')
+        .select('requester_id, partner_id')
+        .or(`requester_id.eq.${user.id},partner_id.eq.${user.id}`)
+        .in('status', ['pending', 'active']);
+
+      if (partnershipsError) throw partnershipsError;
+
+      const existingPartnerIds = [...new Set(
+        (existingPartnerships ?? []).map((partnership) => (
+          partnership.requester_id === user.id
+            ? partnership.partner_id
+            : partnership.requester_id
+        )),
+      )];
+
+      // PostgREST filter values cannot contain SQL subqueries. Load the small
+      // owner-scoped partnership set first, then exclude those UUIDs explicitly.
+      let potentialPartnersQuery = supabase
         .from('public_profiles')
         .select('id, full_name, avatar_url, bio, followers_count, following_count')
         .neq('id', user.id)
-        .not('id', 'in', `(SELECT partner_id FROM accountability_partnerships WHERE requester_id = '${user.id}' AND status IN ('pending', 'active'))`)
-        .not('id', 'in', `(SELECT requester_id FROM accountability_partnerships WHERE partner_id = '${user.id}' AND status IN ('pending', 'active'))`)
         .ilike('full_name', `%${searchQuery}%`)
         .limit(40);
+
+      if (existingPartnerIds.length) {
+        potentialPartnersQuery = potentialPartnersQuery.not('id', 'in', `(${existingPartnerIds.join(',')})`);
+      }
+
+      const { data, error } = await potentialPartnersQuery;
 
       if (error) throw error;
       const rankedPartners = ((data || []) as Array<{

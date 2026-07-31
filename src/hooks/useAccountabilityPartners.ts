@@ -3,6 +3,21 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
+interface AccountabilityProfile {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  bio?: string | null;
+}
+
+interface AccountabilitySprint {
+  id: string;
+  title: string;
+  description: string | null;
+  start_date: string;
+  end_date: string;
+}
+
 export interface AccountabilityPartnership {
   id: string;
   requester_id: string;
@@ -16,25 +31,9 @@ export interface AccountabilityPartnership {
   ended_at?: string;
   partnership_settings: Record<string, any>;
   // Joined data
-  partner_profile?: {
-    id: string;
-    full_name: string;
-    avatar_url?: string;
-    bio?: string;
-  };
-  requester_profile?: {
-    id: string;
-    full_name: string;
-    avatar_url?: string;
-    bio?: string;
-  };
-  sprint?: {
-    id: string;
-    title: string;
-    description?: string;
-    start_date: string;
-    end_date: string;
-  };
+  partner_profile?: AccountabilityProfile;
+  requester_profile?: AccountabilityProfile;
+  sprint?: AccountabilitySprint;
 }
 
 export interface AccountabilityNudge {
@@ -48,11 +47,7 @@ export interface AccountabilityNudge {
   created_at: string;
   acknowledged_at?: string;
   // Joined data
-  nudger_profile?: {
-    id: string;
-    full_name: string;
-    avatar_url?: string;
-  };
+  nudger_profile?: AccountabilityProfile;
 }
 
 export const useAccountabilityPartners = () => {
@@ -67,30 +62,78 @@ export const useAccountabilityPartners = () => {
 
     try {
       setLoading(true);
-      
-      // Fetch partnerships with profile and sprint data
-      // Using simpler syntax that works with or without explicit foreign key constraint names
+
+      // Do not rely on PostgREST embedded relationships here. Older production
+      // schemas can have the tables and RLS policies without the foreign keys in
+      // PostgREST's schema cache, which makes an embedded select fail completely.
       const { data, error } = await supabase
         .from('accountability_partnerships')
-        .select(`
-          *,
-          partner_profile:profiles!partner_id(
-            id, full_name, avatar_url, bio
-          ),
-          requester_profile:profiles!requester_id(
-            id, full_name, avatar_url, bio
-          ),
-          sprint:sprints(
-            id, title, description, start_date, end_date
-          )
-        `)
+        .select('*')
         .or(`requester_id.eq.${user.id},partner_id.eq.${user.id}`)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      const activePartnerships = (data?.filter(p => p.status === 'active') || []) as unknown as AccountabilityPartnership[];
-      const pendingPartnerships = (data?.filter(p => p.status === 'pending') || []) as unknown as AccountabilityPartnership[];
+      const partnershipRows = data ?? [];
+      const profileIds = [...new Set(
+        partnershipRows.flatMap((partnership) => [partnership.requester_id, partnership.partner_id]),
+      )];
+      const sprintIds = [...new Set(
+        partnershipRows
+          .map((partnership) => partnership.sprint_id)
+          .filter((sprintId): sprintId is string => Boolean(sprintId)),
+      )];
+
+      const [profileResult, sprintResult] = await Promise.all([
+        profileIds.length
+          ? supabase
+              .from('public_profiles')
+              .select('id, full_name, avatar_url, bio')
+              .in('id', profileIds)
+          : Promise.resolve({ data: [], error: null }),
+        sprintIds.length
+          ? supabase
+              .from('sprints')
+              .select('id, title, description, start_date, end_date')
+              .in('id', sprintIds)
+          : Promise.resolve({ data: [], error: null }),
+      ]);
+
+      if (profileResult.error) {
+        console.warn('Could not enrich accountability partner profiles:', profileResult.error);
+      }
+      if (sprintResult.error) {
+        console.warn('Could not enrich accountability partnership sprints:', sprintResult.error);
+      }
+
+      const profilesById = new Map(
+        (profileResult.data ?? [])
+          .filter((profile): profile is AccountabilityProfile => Boolean(profile.id))
+          .map((profile) => [profile.id, profile]),
+      );
+      const sprintsById = new Map(
+        (sprintResult.data ?? []).map((sprint) => [sprint.id, sprint]),
+      );
+
+      const hydratedPartnerships = partnershipRows.map((partnership) => ({
+        ...partnership,
+        partner_profile: profilesById.get(partnership.partner_id) ?? {
+          id: partnership.partner_id,
+          full_name: null,
+          avatar_url: null,
+          bio: null,
+        },
+        requester_profile: profilesById.get(partnership.requester_id) ?? {
+          id: partnership.requester_id,
+          full_name: null,
+          avatar_url: null,
+          bio: null,
+        },
+        sprint: partnership.sprint_id ? sprintsById.get(partnership.sprint_id) : undefined,
+      })) as AccountabilityPartnership[];
+
+      const activePartnerships = hydratedPartnerships.filter((partnership) => partnership.status === 'active');
+      const pendingPartnerships = hydratedPartnerships.filter((partnership) => partnership.status === 'pending');
 
       setPartnerships(activePartnerships);
       setPendingRequests(pendingPartnerships);
@@ -108,19 +151,40 @@ export const useAccountabilityPartners = () => {
     try {
       const { data, error } = await supabase
         .from('accountability_nudges')
-        .select(`
-          *,
-          nudger_profile:profiles!nudger_id(
-            id, full_name, avatar_url
-          )
-        `)
+        .select('*')
         .eq('nudged_id', user.id)
         .is('acknowledged_at', null)
         .order('created_at', { ascending: false })
         .limit(10);
 
       if (error) throw error;
-      setRecentNudges((data || []) as unknown as AccountabilityNudge[]);
+
+      const nudgeRows = data ?? [];
+      const nudgerIds = [...new Set(nudgeRows.map((nudge) => nudge.nudger_id))];
+      const { data: profiles, error: profileError } = nudgerIds.length
+        ? await supabase
+            .from('public_profiles')
+            .select('id, full_name, avatar_url, bio')
+            .in('id', nudgerIds)
+        : { data: [], error: null };
+
+      if (profileError) {
+        console.warn('Could not enrich accountability nudge profiles:', profileError);
+      }
+
+      const profilesById = new Map(
+        (profiles ?? [])
+          .filter((profile): profile is AccountabilityProfile => Boolean(profile.id))
+          .map((profile) => [profile.id, profile]),
+      );
+      setRecentNudges(nudgeRows.map((nudge) => ({
+        ...nudge,
+        nudger_profile: profilesById.get(nudge.nudger_id) ?? {
+          id: nudge.nudger_id,
+          full_name: null,
+          avatar_url: null,
+        },
+      })) as AccountabilityNudge[]);
     } catch (error) {
       console.error('Error fetching nudges:', error);
     }
