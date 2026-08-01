@@ -114,7 +114,11 @@ export default function IcpDraftPage() {
       source: "icp-draft-unlock",
       action: "open_interview_tasks",
     });
-    navigate(`/dashboard/tasks?from=icp_builder&draft=${draftId ?? ""}`);
+    // Send founders to the surface that actually records conversations. The dashboard
+    // task list never read `from=icp_builder`, so the interview plan died there; the
+    // PMF Lab interview logger opens seeded with these same five questions and every
+    // logged interview counts toward the evidence grade.
+    navigate(`/pmf-lab?step=interviews&icp=${draftId ?? ""}`);
   };
 
   const dismissUnlockBanner = () => {
@@ -258,7 +262,7 @@ export default function IcpDraftPage() {
                     Your full ICP Draft is unlocked
                   </h2>
                   <p className="max-w-xl text-sm leading-6 text-muted-foreground">
-                    Your brief is saved. Start with the five customer-interview tasks generated from its evidence gaps.
+                    Your brief is saved. Start with the five interview questions generated from its evidence gaps — every answer you log counts toward your build decision.
                   </p>
                 </div>
               </div>
@@ -269,7 +273,7 @@ export default function IcpDraftPage() {
                   className="shrink-0 gap-2 bg-slate-950 text-white hover:bg-slate-800"
                   onClick={handleInterviewTasksClick}
                 >
-                  Open my five customer-interview tasks
+                  Start my five customer interviews
                   <ArrowRight className="h-4 w-4" />
                 </Button>
                 <Button
@@ -299,7 +303,7 @@ export default function IcpDraftPage() {
                   Validate this customer before you build more.
                 </h2>
                 <p className="max-w-xl text-sm leading-6 text-muted-foreground">
-                  Your primary next move is five focused interviews. Demo Studio can then turn the validated story into interactive proof; PMF Lab can pressure-test the demand evidence.
+                  Your primary next move is five focused interviews, logged in PMF Lab so they count as evidence. Demo Studio can then turn the validated story into interactive proof that adds demand signals to the same score.
                 </p>
               </div>
             </div>
@@ -309,13 +313,13 @@ export default function IcpDraftPage() {
               className="shrink-0 gap-2 bg-white text-foreground hover:bg-white/90"
               onClick={handleInterviewTasksClick}
             >
-              <span>Open my five customer-interview tasks</span>
+              <span>Start my five customer interviews</span>
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
           <div className="relative mt-5 grid gap-3 border-t border-white/10 pt-5 sm:grid-cols-2">
             <Link
-              to={`/demo-studio/try?icp=${draftId ?? ""}`}
+              to={`/demo-studio?icp=${draftId ?? ""}`}
               className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white transition hover:bg-white/10"
             >
               <span className="font-semibold">Demo Studio</span>
@@ -326,7 +330,7 @@ export default function IcpDraftPage() {
               className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white transition hover:bg-white/10"
             >
               <span className="font-semibold">PMF Lab</span>
-              <span className="mt-1 block text-white/60">Evaluate whether interview and demand signals support build, narrow, pivot, or stop.</span>
+              <span className="mt-1 block text-white/60">Log what you heard, then see whether interview and demand signals support build, narrow, pivot, or stop.</span>
             </Link>
           </div>
         </div>
@@ -370,7 +374,7 @@ export default function IcpDraftPage() {
             />
             <div className="flex justify-center">
               <Button type="button" className="gap-2" onClick={handleInterviewTasksClick}>
-                Open my five customer-interview tasks
+                Start my five customer interviews
               </Button>
             </div>
           </div>

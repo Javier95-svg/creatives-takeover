@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { ArrowRight, ClipboardCheck, Gauge, MessageSquareText, Search, Sparkles, Target, UsersRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,7 +23,20 @@ interface PMFEvidenceHubProps {
   onFindCustomers: () => void;
   onRunScore: () => void;
   authoritativeSignalCount?: number;
+  /** Verified Demo Studio behaviors counted by the scorer (server-side, capped at 10). */
+  demoBehaviorSignals?: number;
 }
+
+// Mirrors the server weights in supabase/functions/_shared/pmf-evidence.ts. Founders
+// could see a signal total but had no way to learn why 25 was out of reach or which
+// action would move it, which is the single biggest reason scores never complete.
+const SIGNAL_WEIGHTS = {
+  interview: 1,
+  survey: 0.75,
+  demo: 0.75,
+  research: 0.25,
+} as const;
+const DEMO_SIGNAL_CAP = 10;
 
 const RECOMMENDATION_COPY: Record<PMFHubRecommendation, string> = {
   interviews: 'Start by logging the customer interviews behind your score.',
@@ -49,6 +63,7 @@ const PMFEvidenceHub = ({
   onFindCustomers,
   onRunScore,
   authoritativeSignalCount,
+  demoBehaviorSignals = 0,
 }: PMFEvidenceHubProps) => {
   const savedInterviews = evidence?.interview_notes_count ?? 0;
   const surveyResponses = surveyAggregate.total || evidence?.survey_results_count || 0;
@@ -59,6 +74,39 @@ const PMFEvidenceHub = ({
   const hasSurvey = Boolean(survey);
   const hasDiscovery = customerDiscoverySignals > 0;
   const confidence = getPmfConfidence(totalSignals);
+
+  const cappedDemoBehaviors = Math.min(DEMO_SIGNAL_CAP, Math.max(0, demoBehaviorSignals));
+  const ledger: Array<{
+    key: string;
+    source: string;
+    detail: string;
+    contribution: number;
+    action: { label: string; onClick: () => void } | { label: string; to: string };
+  }> = [
+    {
+      key: 'interviews',
+      source: 'Customer interviews',
+      detail: `${savedInterviews} logged · full weight (×${SIGNAL_WEIGHTS.interview})`,
+      contribution: savedInterviews * SIGNAL_WEIGHTS.interview,
+      action: { label: savedInterviews > 0 ? 'Log another' : 'Log the first', onClick: onLogInterviews },
+    },
+    {
+      key: 'survey',
+      source: 'Hosted survey responses',
+      detail: `${surveyResponses} response${surveyResponses === 1 ? '' : 's'} · ×${SIGNAL_WEIGHTS.survey}`,
+      contribution: surveyResponses * SIGNAL_WEIGHTS.survey,
+      action: { label: hasSurvey ? 'Share survey' : 'Create survey', onClick: onCreateOrReviewSurvey },
+    },
+    {
+      key: 'demo',
+      source: 'Verified demo behavior',
+      detail: `${cappedDemoBehaviors} behavior${cappedDemoBehaviors === 1 ? '' : 's'} · ×${SIGNAL_WEIGHTS.demo}, capped at ${DEMO_SIGNAL_CAP}`,
+      contribution: cappedDemoBehaviors * SIGNAL_WEIGHTS.demo,
+      action: { label: 'Open Demo Studio', to: '/demo-studio' },
+    },
+  ];
+
+  const nextSignalsNeeded = confidence.signalsToNext;
 
   const cards: Array<{ key: PMFHubRecommendation; label: string; value: string; description: string; icon: typeof UsersRound; ready: boolean }> = [
     {
@@ -139,6 +187,47 @@ const PMFEvidenceHub = ({
             </div>
           );
         })}
+      </div>
+
+      {/* Signal ledger — where the count comes from and what moves it next. */}
+      <div className="mt-5 rounded-2xl border border-border/60 bg-background/70 p-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            How your {totalSignals} signal{totalSignals === 1 ? '' : 's'} adds up
+          </p>
+          {nextSignalsNeeded > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {nextSignalsNeeded} more to reach {confidence.nextThreshold}
+            </p>
+          )}
+        </div>
+        <ul className="mt-3 divide-y divide-border/60">
+          {ledger.map((row) => (
+            <li key={row.key} className="flex flex-wrap items-center justify-between gap-3 py-2.5">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-foreground">{row.source}</p>
+                <p className="text-xs text-muted-foreground">{row.detail}</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-3">
+                <span className="text-sm font-semibold tabular-nums text-foreground">
+                  +{Number.isInteger(row.contribution) ? row.contribution : row.contribution.toFixed(2)}
+                </span>
+                {'to' in row.action ? (
+                  <Button asChild size="sm" variant="ghost">
+                    <Link to={row.action.to}>{row.action.label}</Link>
+                  </Button>
+                ) : (
+                  <Button size="sm" variant="ghost" onClick={row.action.onClick}>
+                    {row.action.label}
+                  </Button>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 text-xs leading-5 text-muted-foreground">
+          Cited market research adds up to {PMF_SIGNAL_THRESHOLDS.directional} weighted signals at ×{SIGNAL_WEIGHTS.research}, but it does not count toward the {PMF_SIGNAL_THRESHOLDS.decisionGrade} direct signals a decision-grade call requires — only people acting or describing a recent behavior do.
+        </p>
       </div>
 
       {/* Single, unmistakable "do this first" banner so the page has one clear entry point. */}

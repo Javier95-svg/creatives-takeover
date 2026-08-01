@@ -47,6 +47,8 @@ import {
   type DemoStudioTryStepCount,
 } from '@/lib/demoStudio/tryPreview';
 import type { DemoStepWithHotspots, DemoStudioStoryboardStep } from '@/lib/demoStudio/types';
+import { resolveIcpSource } from '@/lib/icpHandoffSource';
+import { icpArtifactToDemoBrief } from '@/lib/icpToDemoBrief';
 import { captureEvent } from '@/lib/analytics';
 import {
   markFirstArtifactCreated,
@@ -121,6 +123,10 @@ export default function TryPage() {
   const isReturning = searchParams.get('hydrate') === '1';
   // Resume-email link (?resume=<token>) — hydrate takes precedence if both appear.
   const resumeToken = isReturning ? null : searchParams.get('resume');
+  // ICP handoff (?icp=<draftId>). Signed-in founders resolve the draft from the DB;
+  // guests who generated a draft but have not signed up yet still have it in
+  // sessionStorage, so the free path prefills too.
+  const icpParam = searchParams.get('icp');
 
   useEffect(() => {
     if (entryTrackedRef.current) return;
@@ -181,6 +187,29 @@ export default function TryPage() {
       is_authenticated: Boolean(user),
     });
   };
+
+  // Seed the description from the founder's ICP Draft so the handoff from ICP Builder
+  // does not restart from a blank textarea. Never overwrites typed input, and stays out
+  // of the way of the hydrate/resume paths, which restore their own state.
+  const [icpSeeded, setIcpSeeded] = useState(false);
+  useEffect(() => {
+    if (icpSeeded || isReturning || resumeToken || authLoading) return;
+    if (description.trim() || steps) return;
+    let active = true;
+    void (async () => {
+      const icp = await resolveIcpSource({ userId: user?.id ?? null, draftId: icpParam });
+      if (!active || !icp) return;
+      const seed = icpArtifactToDemoBrief(icp.artifact).tryDescription;
+      if (!seed) return;
+      setIcpSeeded(true);
+      setDescription((prev) => (prev.trim() ? prev : seed));
+    })();
+    return () => {
+      active = false;
+    };
+    // Runs once per entry; description/steps are read as guards, not triggers.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [icpSeeded, isReturning, resumeToken, authLoading, user?.id, icpParam]);
 
   // Anonymous flow: screenshots live only as in-memory object URLs. Removed
   // shots are revoked individually in removeShot; revoke whatever remains on

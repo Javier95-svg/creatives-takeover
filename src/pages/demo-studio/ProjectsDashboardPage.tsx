@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   ArrowRight,
@@ -36,6 +36,8 @@ import GettingStartedChecklist, { type ChecklistStep } from '@/components/demo-s
 import WhatIsADemoPopover from '@/components/demo-studio/WhatIsADemoPopover';
 import DemoStudioWallpaper from '@/components/wallpapers/DemoStudioWallpaper';
 import { trackToolOpened } from '@/lib/analytics';
+import { resolveIcpSource } from '@/lib/icpHandoffSource';
+import { icpArtifactToDemoBrief } from '@/lib/icpToDemoBrief';
 
 const HOW_IT_WORKS = [
   { icon: Sparkles, step: '1', title: 'Define the story', desc: 'Audience, promise, aha moment, and CTA.' },
@@ -55,6 +57,9 @@ export default function ProjectsDashboardPage() {
   const [tagline, setTagline] = useState('');
   const [creating, setCreating] = useState(false);
   const [counts, setCounts] = useState({ total: 0, published: 0 });
+  const [searchParams] = useSearchParams();
+  const icpParam = searchParams.get('icp');
+  const [icpPrefilled, setIcpPrefilled] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -87,13 +92,35 @@ export default function ProjectsDashboardPage() {
     };
   }, [authLoading, user, navigate]);
 
+  // Arriving from an ICP Draft: open the New Project dialog already filled in, so the
+  // handoff lands the founder one click from a brief built on the customer they chose
+  // rather than on an empty form.
+  useEffect(() => {
+    if (!user || !icpParam || icpPrefilled) return;
+    let active = true;
+    void (async () => {
+      const icp = await resolveIcpSource({ userId: user.id, draftId: icpParam, allowLatestFallback: false });
+      if (!active || !icp) return;
+      const { project } = icpArtifactToDemoBrief(icp.artifact);
+      setName((prev) => prev || project.name);
+      setTagline((prev) => prev || project.tagline);
+      setIcpPrefilled(true);
+      setDialogOpen(true);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [user, icpParam, icpPrefilled]);
+
   const handleCreate = async () => {
     if (!user || !name.trim()) return;
     setCreating(true);
     try {
       const project = await createProject(user.id, { name: name.trim(), tagline: tagline.trim() || undefined });
       toast.success('Project created.');
-      navigate(`/demo-studio/projects/${project.id}/brief`);
+      // Carry the ICP through so the brief prefills from the same draft.
+      const briefPath = `/demo-studio/projects/${project.id}/brief`;
+      navigate(icpParam ? `${briefPath}?icp=${encodeURIComponent(icpParam)}` : briefPath);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Could not create project.');
     } finally {

@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { showDashboardReturnToast } from '@/components/dashboard/dashboardReturnToast';
 import {
   ArrowLeft,
+  ArrowRight,
   BarChart3,
   Camera,
   Check,
@@ -903,6 +904,20 @@ export default function DemoEditorPage() {
                     <Copy className="h-4 w-4" />
                   </Button>
                 </div>
+              </div>
+              {/* The PMF scorer already reads published-demo behavior as verified evidence,
+                  but nothing in Demo Studio ever said so — founders had no reason to think
+                  sharing this link fed their build decision. */}
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
+                <p className="text-xs leading-5 text-muted-foreground">
+                  Views, CTA clicks, and signups on this demo count as verified demand evidence in your PMF score.
+                </p>
+                <Button asChild size="sm" variant="outline" className="shrink-0 gap-1.5">
+                  <Link to="/pmf-lab">
+                    Score this evidence
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </Button>
               </div>
             </div>
           )}

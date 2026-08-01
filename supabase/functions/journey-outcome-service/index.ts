@@ -381,6 +381,32 @@ serve(async (req) => {
             last_evaluated_at: new Date().toISOString(),
             verified_at: evaluation.status === 'verified' ? new Date().toISOString() : null,
           }).eq('id', currentIcp.id).eq('user_id', user.id);
+
+          // The ICP outcome can only reach ready/verified here: its contract requires five
+          // independent assumption signals, which arrive from PMF Lab interviews, never at
+          // draft-save time. The client tried to create this handoff when saving the draft,
+          // where the status is always 'draft' — which is why no ICP handoff has ever been
+          // created. Create it at the one moment the outcome actually qualifies.
+          if (['ready', 'verified'].includes(evaluation.status)) {
+            const { data: icpVersion } = await supabase.from('journey_outcome_versions')
+              .select('id').eq('journey_outcome_id', currentIcp.id)
+              .order('version_number', { ascending: false }).limit(1).maybeSingle();
+            if (icpVersion) {
+              const { error: handoffError } = await supabase.from('journey_handoffs').upsert({
+                user_id: user.id,
+                source_outcome_id: currentIcp.id,
+                source_version_id: icpVersion.id,
+                destination_tool: 'pmf_lab',
+                payload: {
+                  sourceArtifactId: assumption.source_artifact_id,
+                  destinationRoute: `/pmf-lab?icp=${assumption.source_artifact_id}`,
+                },
+                idempotency_key: `icp:${assumption.source_artifact_id}:pmf`,
+              }, { onConflict: 'user_id,idempotency_key', ignoreDuplicates: true });
+              // Never fail the signal write because the handoff bookkeeping did.
+              if (handoffError) console.error('Could not create ICP handoff', handoffError);
+            }
+          }
         }
       }
       return json({ ok: true, assumption: data, signalSummary: { confirmations, rejections } });

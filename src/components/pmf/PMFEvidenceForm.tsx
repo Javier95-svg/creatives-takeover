@@ -145,14 +145,30 @@ const StepView: React.FC<{ children: React.ReactNode; stepKey: number }> = ({ ch
   </div>
 );
 
+export interface PMFIcpInterviewPlanItem {
+  step: number;
+  question: string;
+  successSignal: string;
+}
+
 interface PMFEvidenceFormProps {
   onSubmit: (answers: PMFEvidenceAnswers) => void;
   isSubmitting?: boolean;
   belowThresholdOverride?: boolean;
   initialInterviewLead?: PMFInterviewLeadSeed | null;
+  /** Opens the wizard directly on a step — used by the ?step=interviews deep link. */
+  initialStep?: number;
+  /** The five questions ICP Builder generated, shown alongside the interview log. */
+  icpInterviewPlan?: PMFIcpInterviewPlanItem[] | null;
 }
 
-const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmitting = false, initialInterviewLead }) => {
+const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({
+  onSubmit,
+  isSubmitting = false,
+  initialInterviewLead,
+  initialStep,
+  icpInterviewPlan,
+}) => {
   const [testTypes, setTestTypes] = useState<string[]>([]);
   const [peopleReached, setPeopleReached] = useState(0);
   const [belowThresholdAcknowledged, setBelowThresholdAcknowledged] = useState(false);
@@ -172,11 +188,16 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
   const [founderUncertainties, setFounderUncertainties] = useState('');
   const [whatWouldChangeMind, setWhatWouldChangeMind] = useState('');
   const [confidenceLevel, setConfidenceLevel] = useState(5);
-  const [currentStep, setCurrentStep] = useState(0);
+  // Deep links (?step=interviews) land straight on the interview tracker, so the
+  // conversation stage has an entry point that is not "restart the whole wizard".
+  const [currentStep, setCurrentStep] = useState(() =>
+    typeof initialStep === 'number' ? Math.min(Math.max(initialStep, 0), STEPS.length - 1) : 0,
+  );
   const validationSetupRef = useRef<HTMLDivElement | null>(null);
   const interviewStepRef = useRef<HTMLDivElement | null>(null);
   const seededLeadRef = useRef<string | null>(null);
   const [stepFeedback, setStepFeedback] = useState<{ step: number; message: string } | null>(null);
+  const [planOpen, setPlanOpen] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -582,6 +603,55 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
     if (currentStep === 1) {
       return (
         <div ref={interviewStepRef} className="space-y-5">
+          {/* The five questions ICP Builder already generated from this founder's own
+              evidence gaps. Without them the conversation stage starts from a blank form
+              and the ICP's interview plan is never actually used. */}
+          {icpInterviewPlan && icpInterviewPlan.length > 0 && (
+            <div className="rounded-2xl border border-accent-teal/25 bg-accent-teal/5 p-4">
+              <button
+                type="button"
+                onClick={() => setPlanOpen((prev) => !prev)}
+                className="flex w-full items-center justify-between gap-3 text-left"
+                aria-expanded={planOpen}
+              >
+                <div className="flex items-start gap-2.5">
+                  <FlaskConical className="mt-0.5 h-4 w-4 shrink-0 text-accent-teal" />
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      Your interview plan from ICP Builder
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {icpInterviewPlan.length} questions generated from your draft's evidence gaps. Ask these, then log what you heard below.
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight
+                  className={cn('h-4 w-4 shrink-0 text-muted-foreground transition-transform', planOpen && 'rotate-90')}
+                  aria-hidden
+                />
+              </button>
+              {planOpen && (
+                <ol className="mt-3 space-y-2">
+                  {icpInterviewPlan.map((item) => (
+                    <li
+                      key={item.step}
+                      className="rounded-xl border border-border/60 bg-background/80 px-3 py-2 text-sm"
+                    >
+                      <p className="font-medium text-foreground">
+                        {item.step}. {item.question}
+                      </p>
+                      {item.successSignal && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Listen for: {item.successSignal}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
+          )}
+
           <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4">
             <div className="flex items-center justify-between gap-3 text-sm">
               <div>

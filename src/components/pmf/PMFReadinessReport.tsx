@@ -21,7 +21,7 @@ import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 import { BizMapShareDialog } from '@/components/bizmap/BizMapShareDialog';
 import { useBizMapSharing } from '@/hooks/useBizMapSharing';
 import { createPMFSharedPayload } from '@/lib/bizmapSharing';
-import { formatPmfDecision, getPmfConfidence, getPmfDecision } from '@/lib/pmfConfidence';
+import { PMF_SIGNAL_THRESHOLDS, formatPmfDecision, getPmfConfidence, getPmfDecision } from '@/lib/pmfConfidence';
 import { getPmfDecisionAction } from '@/lib/pmfDecisionAction';
 
 interface PMFReadinessReportProps {
@@ -146,7 +146,9 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
         bg: 'bg-warning-subtle border-warning/30',
         icon: XCircle,
         iconColor: 'text-warning',
-        message: `${confidence.label}: the current ${formatPmfDecision(decision)} recommendation is provisional. Gather ${confidence.signalsToNext} more weighted signal${confidence.signalsToNext === 1 ? '' : 's'} to reach the next confidence level.`,
+        // Leads with the evidence gap rather than a capped verdict, so a thin sample
+        // never reads as a judgment on the idea.
+        message: `${confidence.label}: ${observedSignalCount} of ${PMF_SIGNAL_THRESHOLDS.decisionGrade} weighted signals. Gather ${confidence.signalsToNext} more to reach the next confidence level — PMF Lab withholds a Build, Narrow, Pivot, or Stop call until the evidence supports one.`,
       };
 
   const ThresholdIcon = thresholdBanner.icon;
@@ -228,27 +230,49 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
           />
           {belowSampleThreshold && (
             <Badge variant="secondary" className="bg-warning-subtle text-warning border-warning/30 text-caption">
-              {confidence.label} — recommendation is provisional
+              {confidence.label} — score capped until {PMF_SIGNAL_THRESHOLDS.decisionGrade} signals
             </Badge>
           )}
         </div>
 
         <div className="rounded-3xl border border-border/60 bg-background/90 p-6 shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-4">
+            {/* Below decision grade the score is capped by the evidence ladder, which
+                mechanically maps thin evidence onto Pivot/Stop. Showing that verdict would
+                tell a founder with three honest interviews that their idea failed, when the
+                only thing that failed is the sample size. Report the evidence gap instead;
+                the diagnostic dimensions below still do the teaching. */}
             <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">PMF Lab Decision</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">
+                {meetsThreshold ? 'PMF Lab Decision' : 'Evidence progress'}
+              </p>
               <div>
-                <h2 className="text-2xl font-semibold">{decisionTitle}</h2>
-                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">{scoreMeaning}</p>
+                <h2 className="text-2xl font-semibold">
+                  {meetsThreshold ? decisionTitle : 'Not enough evidence yet'}
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                  {meetsThreshold
+                    ? scoreMeaning
+                    : `${confidence.description} Your dimension scores below are still a reliable diagnostic — use them to decide what to ask next.`}
+                </p>
               </div>
             </div>
             <div className={cn(
-              'rounded-2xl border px-4 py-3 text-sm font-medium',
+              'rounded-2xl border px-4 py-3 text-center text-sm font-medium',
               meetsThreshold
                 ? 'border-success/30 bg-success-subtle text-success'
                 : 'border-warning/30 bg-warning-subtle text-warning'
             )}>
-              Decision: {formatPmfDecision(decision)}
+              {meetsThreshold ? (
+                <>Decision: {formatPmfDecision(decision)}</>
+              ) : (
+                <>
+                  <span className="block text-lg font-semibold tabular-nums">
+                    {observedSignalCount}/{PMF_SIGNAL_THRESHOLDS.decisionGrade}
+                  </span>
+                  <span className="block text-xs font-normal">weighted signals</span>
+                </>
+              )}
             </div>
           </div>
 
