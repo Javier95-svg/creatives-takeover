@@ -256,6 +256,51 @@ test('the focus editor can reach every field the routine and ranking depend on',
   assert.match(source, /runwayMonths: draft\.runwayMonths/);
 });
 
+test('the daily mission knows how much runway the founder has left', async () => {
+  const source = await read('../supabase/functions/generate-daily-mission/index.ts');
+
+  // Runway must reach both paths: the model prompt and the deterministic
+  // fallback used whenever the model is unavailable.
+  assert.match(source, /Runway remaining: /);
+  assert.match(source, /Financial pressure: /);
+  assert.match(source, /readUrgencyBand/);
+  // Sessions completed before urgencyBand existed still segment correctly.
+  assert.match(source, /case "under_3":\s*\n\s*return "critical"/);
+  // A short-runway founder is steered off building and toward revenue.
+  assert.match(source, /Runway is short/);
+  // Fundraising goals are checked first and deliberately not overridden.
+  const raiseIndex = source.indexOf('goal === "raise" || blocker === "fundraising"');
+  const urgencyIndex = source.indexOf('urgency === "critical" || urgency === "high"');
+  assert.ok(raiseIndex > 0 && urgencyIndex > raiseIndex, 'urgency must not pre-empt the fundraising branch');
+});
+
+test('the ICP builder starts from the brief the founder already wrote', async () => {
+  const source = await read('../src/components/icp/ICPBuilder.tsx');
+  assert.match(source, /useOnboardingContext/);
+  assert.match(source, /fastDescription: brief/);
+  // Seeding must never clobber typed input or a session past the seed screens.
+  assert.match(source, /if \(previous\.fastDescription\.trim\(\)\) return previous/);
+  assert.match(source, /atSeedScreen/);
+  assert.match(source, /seededFromOnboardingRef/);
+});
+
+test('an actively-looking founder is told why Recommended is empty', async () => {
+  const source = await read('../src/pages/community/CofounderMarketplacePage.tsx');
+  assert.match(source, /cofounderSituation === 'actively_looking'/);
+  // Only when they have no listing of their own -- that is what matching seeds from.
+  assert.match(source, /!mineQuery\.data/);
+  assert.match(source, /activelyLookingWithoutListing/);
+});
+
+test('control_v6 founders can supply every field the adaptive flow asks for', async () => {
+  const editor = await read('../src/components/dashboard/DashboardFocusEditor.tsx');
+  // control_v6 never asks these, so the editor is the only route for half of
+  // every cohort until the rollout reaches 100%.
+  for (const field of ['runwayMonths', 'revenueBand', 'workingDays']) {
+    assert.match(editor, new RegExp(`${field}: `), `focus editor cannot set ${field}`);
+  }
+});
+
 test('the adaptive rollout is ramped and stays server-owned', async () => {
   const migration = await read(
     '../supabase/migrations/20260801120000_onboarding_data_quality_v1.sql',

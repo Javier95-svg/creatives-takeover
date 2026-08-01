@@ -117,7 +117,7 @@ export async function updateOnboardingFocus(params: {
   answers: Pick<
     OnboardingAnswersV1,
     'startupBrief' | 'primaryGoal' | 'blocker' | 'weeklyCapacityHours' | 'country'
-  > & Partial<Pick<OnboardingAnswersV1, 'workingDays' | 'runwayMonths'>>;
+  > & Partial<Pick<OnboardingAnswersV1, 'workingDays' | 'runwayMonths' | 'revenueBand'>>;
   context: OnboardingContextV1;
 }) {
   const routineConfig = createRoutineConfig(

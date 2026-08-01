@@ -62,6 +62,14 @@ const RUNWAY: Array<[Exclude<OnboardingAnswersV1['runwayMonths'], ''>, string]> 
   ['not_applicable', 'Not burning money yet'],
 ];
 
+const REVENUE: Array<[Exclude<OnboardingAnswersV1['revenueBand'], ''>, string]> = [
+  ['none', 'No revenue yet'],
+  ['under_1k', 'Under $1k / month'],
+  ['1k_10k', '$1k to $10k / month'],
+  ['10k_50k', '$10k to $50k / month'],
+  ['over_50k', 'Over $50k / month'],
+];
+
 export default function DashboardFocusEditor() {
   const { value, loading, refetch } = useOnboardingContext();
   const [open, setOpen] = useState(false);
@@ -95,6 +103,7 @@ export default function DashboardFocusEditor() {
           weeklyCapacityHours: draft.weeklyCapacityHours,
           country: draft.country.trim(),
           runwayMonths: draft.runwayMonths,
+          revenueBand: draft.revenueBand,
           workingDays: normalizeWorkingDays(draft.workingDays),
         },
         context,
@@ -269,6 +278,25 @@ export default function DashboardFocusEditor() {
               </Select>
               <p className="text-xs text-muted-foreground">
                 Sets how hard your recommendations push. A short runway prioritizes revenue over polish.
+              </p>
+            </div>
+            <div className="grid gap-2">
+              <Label>Monthly revenue</Label>
+              <Select
+                value={draft.revenueBand || 'unset'}
+                onValueChange={(band) => setDraft({
+                  ...draft,
+                  revenueBand: band === 'unset' ? '' : band as OnboardingAnswersV1['revenueBand'],
+                })}
+              >
+                <SelectTrigger><SelectValue placeholder="Prefer not to say" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unset">Prefer not to say</SelectItem>
+                  {REVENUE.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Sets the starting point for your revenue metric instead of assuming zero.
               </p>
             </div>
             <div className="grid gap-2">

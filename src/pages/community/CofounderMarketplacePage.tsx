@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOnboardingContext } from '@/hooks/useOnboardingContext';
 import {
   blockCofounderInterest, browseCofounderListings, cofounderKeys, getCofounderInterests, getCofounderMatches,
   getMyCofounderListing, renewCofounderListing, respondCofounderInterest,
@@ -103,6 +104,15 @@ export default function CofounderMarketplacePage() {
   const openInterest = (listing: CofounderListing) => { if (!user) { trackCofounderMarketplaceEvent('cofounder_public_signup_started', { listing_id: listing.id }); navigate(`/signup?source=cofounder-interest&return=${encodeURIComponent(`/co-founder/listing/${listing.id}`)}`); return; } setInterestListing(listing); };
   const changeTab = (value: string) => { const next = new URLSearchParams(params); next.set('tab', value); setParams(next); };
   const items = shownData ?? [];
+  // Matching seeds from the founder's own listing, so someone who told us at
+  // onboarding they are actively looking gets an empty Recommended tab and no
+  // explanation why. Say it plainly instead of letting them assume the
+  // marketplace is empty.
+  const { value: onboardingContext } = useOnboardingContext();
+  const activelyLookingWithoutListing = Boolean(user)
+    && onboardingContext?.answers.cofounderSituation === 'actively_looking'
+    && !mineQuery.isLoading
+    && !mineQuery.data;
   useEffect(() => {
     if (tab !== 'recommended' || !user) return;
     items.slice(0, 10).forEach((listing) => trackCofounderMarketplaceEventOnce(user.id, 'cofounder_match_viewed', 'cofounder_listing', listing.id, { listing_id: listing.id, score: listing.score }));
@@ -111,6 +121,7 @@ export default function CofounderMarketplacePage() {
   return <div className="relative min-h-screen overflow-hidden bg-background"><SEO title="Find a Co-Founder Marketplace" description="Discover compatible startup co-founders through transparent matching and qualified introductions." url="/co-founder" structuredData={[createBreadcrumbSchema([{ name: 'Home', url: '/' }, { name: 'Find a Co-Founder', url: '/co-founder' }])]} /><CommunityCofoundersWallpaper /><div className="relative z-10"><Navigation /><main className="container mx-auto px-4 pb-16 pt-header-offset sm:px-6">
     <section className="flex flex-col gap-5 py-8 lg:flex-row lg:items-end lg:justify-between"><div className="max-w-3xl"><Badge className="mb-3" variant="secondary"><Handshake className="mr-1.5 h-4 w-4" />Founder marketplace</Badge><h1 className="text-3xl font-bold tracking-tight sm:text-5xl">Find the person who makes the company stronger.</h1><p className="mt-3 max-w-2xl text-muted-foreground">Browse real founder opportunities, see transparent compatibility signals, and send qualified interest without cold-message noise.</p></div><Button asChild size="lg" className="h-12 shrink-0"><Link to="/co-founder/create"><Plus className="mr-2 h-5 w-5" />Create listing · 5 credits</Link></Button></section>
     {!user && <Alert className="mb-6 border-primary/30 bg-primary/5"><Users className="h-4 w-4" /><AlertTitle>Real opportunities, identities protected</AlertTitle><AlertDescription>Browse active listing summaries now. Sign up to see founder profiles, compatibility, and express interest.</AlertDescription></Alert>}
+    {activelyLookingWithoutListing && <Alert className="mb-6 border-accent-teal/30 bg-accent-teal/5"><Handshake className="h-4 w-4" /><AlertTitle>You said you are looking for a co-founder</AlertTitle><AlertDescription>Compatibility is matched against your own listing, so Recommended stays empty until you have one. Browsing works either way.<div className="mt-3"><Button asChild size="sm"><Link to="/co-founder/create">Create listing · 5 credits</Link></Button></div></AlertDescription></Alert>}
     <Tabs value={tab} onValueChange={changeTab}>
       <TabsList className="mb-5 grid h-auto w-full grid-cols-2 gap-1 p-1 sm:grid-cols-4 lg:w-auto"><TabsTrigger value="recommended" disabled={!user} className="h-11">Recommended</TabsTrigger><TabsTrigger value="browse" className="h-11">Browse</TabsTrigger><TabsTrigger value="requests" disabled={!user} className="h-11">Requests</TabsTrigger><TabsTrigger value="mine" disabled={!user} className="h-11">My listing</TabsTrigger></TabsList>
       <TabsContent value="recommended"><p className="mb-4 text-sm text-muted-foreground">Ranked with transparent compatibility rules. No AI and no credits used.</p></TabsContent>

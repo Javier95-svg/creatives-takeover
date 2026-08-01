@@ -112,6 +112,31 @@ function buildLastActivitySummary(activity: any, profile: any): string {
   return "No recent activity logged yet.";
 }
 
+/**
+ * Read the founder's runway pressure.
+ *
+ * Mirrors the fallback in get_recommendation_context_v1: prefer the derived
+ * band, but sessions completed before urgencyBand existed still carry the raw
+ * runway answer, and those founders are exactly the ones we should not ignore.
+ */
+function readUrgencyBand(onboarding: any): string | null {
+  const derived = onboarding?.derived_context?.urgencyBand;
+  if (typeof derived === "string" && derived) return derived;
+  switch (onboarding?.answers?.runwayMonths) {
+    case "under_3":
+      return "critical";
+    case "3_6":
+      return "high";
+    case "6_12":
+      return "moderate";
+    case "over_12":
+    case "not_applicable":
+      return "stable";
+    default:
+      return null;
+  }
+}
+
 function buildPersonalizedFallback(stage: BizMapStage, onboarding: any, stageIntelligence: any): string {
   const answers = onboarding?.answers ?? {};
   const goal = answers.primaryGoal;
@@ -145,6 +170,18 @@ function buildPersonalizedFallback(stage: BizMapStage, onboarding: any, stageInt
   if (goal === "raise" || blocker === "fundraising") {
     return "Write the three strongest traction claims in your investor story and attach one verifiable proof point to each.";
   }
+
+  // A founder weeks from running out of money should not spend today building.
+  // Fundraising goals are handled above and deliberately left alone: for them
+  // the raise is the revenue path, not a detour from it.
+  const urgency = readUrgencyBand(onboarding);
+  if (
+    (urgency === "critical" || urgency === "high")
+    && (goal === "build_product" || blocker === "product_delivery")
+  ) {
+    return `Runway is short, so leave the product where it is today: take the offer you can already deliver to ${actionCount} qualified prospects and record every objection or commitment you get back.`;
+  }
+
   if (goal === "build_product" || blocker === "product_delivery") {
     return "Define the single user outcome your smallest product must deliver and remove every feature that does not support it.";
   }
@@ -197,6 +234,9 @@ async function generateMissionText({
     answers.primaryGoal ? `30-day goal: ${answers.primaryGoal}` : null,
     answers.blocker ? `Primary blocker: ${answers.blocker}` : null,
     answers.weeklyCapacityHours ? `Weekly capacity: ${answers.weeklyCapacityHours} hours` : null,
+    answers.runwayMonths ? `Runway remaining: ${answers.runwayMonths.replaceAll("_", " ")}` : null,
+    answers.revenueBand ? `Monthly revenue band: ${answers.revenueBand.replaceAll("_", " ")}` : null,
+    readUrgencyBand(onboarding) ? `Financial pressure: ${readUrgencyBand(onboarding)}` : null,
     context.founderLoop ? `Operating loop: ${context.founderLoop}` : null,
     context.selectedIntent ? `Selected first action: ${context.selectedIntent}` : null,
     stageIntelligence?.current_stage ? `Evidence-backed operating stage: ${stageIntelligence.current_stage}` : null,
@@ -231,7 +271,7 @@ async function generateMissionText({
         {
           role: "system",
           content:
-            "You are a startup execution coach. Return only valid JSON with one key: mission_text. The mission must be exactly one concrete task for today, specific, finishable in under 90 minutes, and aligned to the founder's stage and last activity. Start with a strong verb. Avoid lists, fluff, or multiple steps.",
+            "You are a startup execution coach. Return only valid JSON with one key: mission_text. The mission must be exactly one concrete task for today, specific, finishable in under 90 minutes, and aligned to the founder's stage and last activity. Start with a strong verb. Avoid lists, fluff, or multiple steps. If financial pressure is critical or high, choose a task that moves money or a customer commitment closer today, and never one that spends the remaining runway on building or polish. Do not mention their runway back to them; just let it decide the task.",
         },
         {
           role: "user",

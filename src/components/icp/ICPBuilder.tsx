@@ -33,6 +33,7 @@ import {
   trackToolMilestoneDashboardReturnClicked,
 } from "@/lib/analytics";
 import { markOnboardingPathCompleted } from "@/lib/onboardingPath";
+import { useOnboardingContext } from "@/hooks/useOnboardingContext";
 import {
   fastIcpInputSchema,
   guidedIcpInputSchema,
@@ -433,6 +434,28 @@ const ICPBuilder: React.FC = () => {
     entry_id: 'icp_draft_unlock', tool: 'icp_builder', source: 'icp_builder',
     step: 'before_saved_draft', is_authenticated: Boolean(user),
   }, Boolean(session.savedAnalysisId));
+
+  // Onboarding already asked what they are building and who it is for. Making
+  // them type it again is pure friction, and this is the most recommended first
+  // action for a customer-clarity blocker. Seeded once, never overwriting
+  // anything they have typed or moved past -- it is a starting point, not an
+  // answer, and every seed screen leaves it fully editable.
+  const { value: onboardingContext } = useOnboardingContext();
+  const seededFromOnboardingRef = useRef(false);
+  useEffect(() => {
+    if (seededFromOnboardingRef.current) return;
+    const brief = onboardingContext?.answers.startupBrief?.trim();
+    if (!brief) return;
+    seededFromOnboardingRef.current = true;
+    setSession((previous) => {
+      if (previous.fastDescription.trim()) return previous;
+      const atSeedScreen = previous.currentScreen === 'mode_select'
+        || previous.currentScreen === 'fast_input'
+        || previous.currentScreen === 'guided_seed';
+      if (!atSeedScreen) return previous;
+      return { ...previous, fastDescription: brief };
+    });
+  }, [onboardingContext]);
   const [loadingPhase, setLoadingPhase] = useState<LoadingPhase>(null);
   const [loadingStartedAt, setLoadingStartedAt] = useState<number | null>(null);
   const [isPersisting, setIsPersisting] = useState(false);
