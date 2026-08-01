@@ -62,6 +62,25 @@ export type OnboardingBlocker =
   | 'accountability'
   | 'team';
 export type OnboardingWeeklyCapacityHours = 2 | 5 | 10 | 20;
+/**
+ * How long the founder can keep going at their current burn. This is the
+ * strongest prioritization signal a founder carries: the same stage and the
+ * same blocker demand very different advice at 2 months of runway versus 2
+ * years. 'not_applicable' covers bootstrappers with no burn to speak of.
+ */
+export type OnboardingRunwayBand =
+  | 'under_3'
+  | '3_6'
+  | '6_12'
+  | 'over_12'
+  | 'not_applicable';
+export type OnboardingRevenueBand =
+  | 'none'
+  | 'under_1k'
+  | '1k_10k'
+  | '10k_50k'
+  | 'over_50k';
+export type OnboardingUrgencyBand = 'critical' | 'high' | 'moderate' | 'stable';
 export type OnboardingCofounderSituation = 'actively_looking' | 'solo_ok';
 export type OnboardingFundraisingStatus =
   | 'not_now'
@@ -77,6 +96,14 @@ export interface OnboardingAnswersV1 {
   primaryGoal: OnboardingPrimaryGoal | '';
   blocker: OnboardingBlocker | '';
   weeklyCapacityHours: OnboardingWeeklyCapacityHours | null;
+  /**
+   * Days the founder actually works, as JS day indexes (0 = Sunday).
+   * Empty means "not stated" -- routine scheduling then keeps its template
+   * defaults rather than inventing a week for them.
+   */
+  workingDays: number[];
+  runwayMonths: OnboardingRunwayBand | '';
+  revenueBand: OnboardingRevenueBand | '';
   fundraisingStatus: OnboardingFundraisingStatus | '';
   cofounderSituation: OnboardingCofounderSituation | '';
   sectors: string[];
@@ -107,6 +134,7 @@ export interface OnboardingContextV1 {
   recommendationAccepted: boolean;
   recommendationReasonCodes: string[];
   routineGoal: RoutineGoal;
+  urgencyBand: OnboardingUrgencyBand;
   dataCompleteness: 'complete' | 'legacy_partial';
 }
 
@@ -136,12 +164,36 @@ export const EMPTY_ONBOARDING_ANSWERS_V1: OnboardingAnswersV1 = {
   primaryGoal: '',
   blocker: '',
   weeklyCapacityHours: null,
+  workingDays: [],
+  runwayMonths: '',
+  revenueBand: '',
   fundraisingStatus: '',
   cofounderSituation: '',
   sectors: [],
   country: '',
   selectedIntent: '',
 };
+
+export const WORKING_DAY_OPTIONS: Array<{ value: number; label: string; short: string }> = [
+  { value: 1, label: 'Monday', short: 'Mon' },
+  { value: 2, label: 'Tuesday', short: 'Tue' },
+  { value: 3, label: 'Wednesday', short: 'Wed' },
+  { value: 4, label: 'Thursday', short: 'Thu' },
+  { value: 5, label: 'Friday', short: 'Fri' },
+  { value: 6, label: 'Saturday', short: 'Sat' },
+  { value: 0, label: 'Sunday', short: 'Sun' },
+];
+
+export function normalizeWorkingDays(value: unknown): number[] {
+  if (!Array.isArray(value)) return [];
+  // Deliberately typeof-checked rather than coerced: Number(null) and Number('')
+  // are both 0, which would silently add Sunday to the founder's week.
+  const days = value.filter(
+    (entry): entry is number =>
+      typeof entry === 'number' && Number.isInteger(entry) && entry >= 0 && entry <= 6,
+  );
+  return Array.from(new Set(days)).sort((a, b) => a - b);
+}
 
 const EVIDENCE_TO_PRODUCT: Record<OnboardingEvidenceState, FounderStageQuizAnswersV3['productStatus']> = {
   none: 'idea_only',
@@ -216,6 +268,32 @@ export function requiresFundraisingStatus(
 
 export function requiresCofounderSituation(blocker: OnboardingBlocker | '') {
   return blocker === 'accountability' || blocker === 'team';
+}
+
+/**
+ * Collapse runway into the urgency band the recommendation policy segments on.
+ *
+ * A founder who is actively raising is treated as at least 'high' even on a
+ * comfortable runway: the raise itself imposes the deadline. Unstated runway
+ * stays 'stable' so a missing answer never fabricates false pressure.
+ */
+export function deriveUrgencyBand(answers: OnboardingAnswersV1): OnboardingUrgencyBand {
+  const raising = answers.fundraisingStatus === 'raising_now'
+    || answers.fundraisingStatus === 'talking_investors';
+
+  switch (answers.runwayMonths) {
+    case 'under_3':
+      return 'critical';
+    case '3_6':
+      return 'high';
+    case '6_12':
+      return raising ? 'high' : 'moderate';
+    case 'over_12':
+    case 'not_applicable':
+      return raising ? 'moderate' : 'stable';
+    default:
+      return raising ? 'high' : 'stable';
+  }
 }
 
 export function deriveFounderLoopFromAnswers(answers: OnboardingAnswersV1): FounderLoop {
@@ -339,6 +417,7 @@ export function deriveOnboardingContextV1(
     recommendationAccepted: selectedIntent === recommendation.intent,
     recommendationReasonCodes: recommendation.reasonCodes,
     routineGoal,
+    urgencyBand: deriveUrgencyBand(answers),
     dataCompleteness: options.dataCompleteness ?? 'complete',
   };
 }

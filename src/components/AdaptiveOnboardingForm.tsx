@@ -25,13 +25,20 @@ import {
   deriveStageAnswersFromOnboarding,
   EMPTY_ONBOARDING_ANSWERS_V1,
   isAdaptiveOnboardingComplete,
+  normalizeWorkingDays,
   requiresCofounderSituation,
   requiresCustomerCount,
   requiresFundraisingStatus,
+  WORKING_DAY_OPTIONS,
   type OnboardingAnswersV1,
   type OnboardingSessionV1,
 } from '@/lib/onboardingContext';
-import { completeOnboardingSession, saveOnboardingProgress } from '@/lib/onboardingSession';
+import { getBrowserTimezone } from '@/lib/accountabilityPreferences';
+import {
+  abandonOnboardingSession,
+  completeOnboardingSession,
+  saveOnboardingProgress,
+} from '@/lib/onboardingSession';
 import { mapFounderStageToBusinessStage } from '@/lib/stageDiagnostic';
 import {
   ensureActivationGateVariant,
@@ -111,6 +118,22 @@ const CAPACITY_OPTIONS = [
   [5, 'About 5 hours'],
   [10, 'About 10 hours'],
   [20, '20 or more hours'],
+] as const;
+
+const RUNWAY_OPTIONS = [
+  ['under_3', 'Less than 3 months'],
+  ['3_6', '3 to 6 months'],
+  ['6_12', '6 to 12 months'],
+  ['over_12', 'More than 12 months'],
+  ['not_applicable', 'Not burning money yet'],
+] as const;
+
+const REVENUE_OPTIONS = [
+  ['none', 'No revenue yet'],
+  ['under_1k', 'Under $1k / month'],
+  ['1k_10k', '$1k to $10k / month'],
+  ['10k_50k', '$10k to $50k / month'],
+  ['over_50k', 'Over $50k / month'],
 ] as const;
 
 const FUNDRAISING_OPTIONS = [
@@ -253,21 +276,38 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
     }
   }, [answers, currentStep, session.id]);
 
+  // Snapshot the live step in a ref so the teardown below can read the latest
+  // value without listing it as a dependency. Depending on currentStep here
+  // would re-register the effect on every step, and its cleanup would fire an
+  // abandonment on each forward transition rather than only on a real exit.
+  const abandonRef = useRef({ currentStep, userId: user?.id });
+  useEffect(() => {
+    abandonRef.current = { currentStep, userId: user?.id };
+  }, [currentStep, user?.id]);
+
   useEffect(() => {
     const startedAt = startedAtRef.current;
     return () => {
-      if (completedRef.current || !user?.id) return;
+      const { currentStep: lastStep, userId } = abandonRef.current;
+      if (completedRef.current || !userId) return;
       void trackRetentionEvent('onboarding_abandoned', {
-        user_id: user.id,
+        user_id: userId,
         onboarding_session_id: session.id,
         flow_version: session.flow_version,
         rollout_variant: session.rollout_variant,
-        last_step: currentStep + 1,
+        last_step: lastStep + 1,
         total_steps: CORE_STEPS,
         elapsed_ms: Date.now() - startedAt,
       });
+      // Durable counterpart, mirroring the control flow. Keeps the session
+      // resumable while marking where the founder stalled.
+      void abandonOnboardingSession({
+        sessionId: session.id,
+        currentStep: lastStep,
+        reason: 'page_exit',
+      });
     };
-  }, [currentStep, session, user?.id]);
+  }, [session.flow_version, session.id, session.rollout_variant]);
 
   const availableIntents = useMemo(() => {
     const planIntents = new Set(getStageAvailableIntents(currentPlan));
@@ -451,6 +491,9 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
         firstArtifactResumeUrl: null,
         activationJourney: journey,
         supportAreasNeeded: [],
+        // Captured once here so cron-driven senders can resolve the founder's
+        // local day without a browser. Without it they default to UTC.
+        timezone: getBrowserTimezone(),
         onboardingLocalDate: new Intl.DateTimeFormat('en-CA').format(new Date()),
         onboardingSessionId: session.id,
         onboardingFlowVersion: session.flow_version,
@@ -627,10 +670,17 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
           <StepHeading title="What is the strongest customer evidence you have?" description="Choose an external signal, not a completed internal task." ref={headingRef} />
           <div className="mt-5"><ChoiceGrid options={EVIDENCE_OPTIONS} value={answers.evidenceState} onSelect={(evidenceState) => patchAnswers({ evidenceState, customerCountBand: requiresCustomerCount(evidenceState) ? answers.customerCountBand : '' })} /></div>
           {requiresCustomerCount(answers.evidenceState) ? (
-            <div className="mt-6">
-              <p className="mb-3 text-sm font-semibold">How many paying customers do you have?</p>
-              <ChoiceGrid options={CUSTOMER_BANDS} value={answers.customerCountBand} onSelect={(customerCountBand) => patchAnswers({ customerCountBand })} columns={2} />
-            </div>
+            <>
+              <div className="mt-6">
+                <p className="mb-3 text-sm font-semibold">How many paying customers do you have?</p>
+                <ChoiceGrid options={CUSTOMER_BANDS} value={answers.customerCountBand} onSelect={(customerCountBand) => patchAnswers({ customerCountBand })} columns={2} />
+              </div>
+              <div className="mt-6">
+                <p className="mb-1 text-sm font-semibold">Roughly what is your monthly revenue?</p>
+                <p className="mb-3 text-xs text-muted-foreground">Optional. Used to size traction targets against founders at your level.</p>
+                <ChoiceGrid options={REVENUE_OPTIONS} value={answers.revenueBand} onSelect={(revenueBand) => patchAnswers({ revenueBand })} columns={2} />
+              </div>
+            </>
           ) : null}
         </>
       );
@@ -679,8 +729,49 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
     if (currentStep === 5) {
       return (
         <>
-          <StepHeading title="How much focused execution time can you protect each week?" description="Your routine and missions will fit the time you can actually commit." ref={headingRef} />
-          <div className="mt-5"><ChoiceGrid options={CAPACITY_OPTIONS} value={answers.weeklyCapacityHours} onSelect={(weeklyCapacityHours) => patchAnswers({ weeklyCapacityHours })} /></div>
+          <StepHeading title="What are you working with?" description="Your routine, missions, and how urgently they push you are all sized from these constraints." ref={headingRef} />
+          <p className="mt-5 text-sm font-semibold">How much focused execution time can you protect each week?</p>
+          <div className="mt-3"><ChoiceGrid options={CAPACITY_OPTIONS} value={answers.weeklyCapacityHours} onSelect={(weeklyCapacityHours) => patchAnswers({ weeklyCapacityHours })} /></div>
+          <div className="mt-6">
+            <p className="mb-1 text-sm font-semibold">How long can you keep going at your current burn?</p>
+            <p className="mb-3 text-xs text-muted-foreground">Optional. A short runway changes which action is worth doing first.</p>
+            <ChoiceGrid options={RUNWAY_OPTIONS} value={answers.runwayMonths} onSelect={(runwayMonths) => patchAnswers({ runwayMonths })} columns={2} />
+          </div>
+          <fieldset className="mt-6">
+            <legend className="text-sm font-medium">Which days do you actually work on this?</legend>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Optional. Your routine is scheduled on these days instead of assuming Monday to Friday.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {WORKING_DAY_OPTIONS.map((option) => {
+                const selected = answers.workingDays.includes(option.value);
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="checkbox"
+                    aria-checked={selected}
+                    aria-label={option.label}
+                    onClick={() => patchAnswers({
+                      workingDays: normalizeWorkingDays(
+                        selected
+                          ? answers.workingDays.filter((day) => day !== option.value)
+                          : [...answers.workingDays, option.value],
+                      ),
+                    })}
+                    className={cn(
+                      'rounded-full border px-3 py-1.5 text-sm transition-colors',
+                      selected
+                        ? 'border-accent-teal bg-accent-teal/15 font-medium text-foreground'
+                        : 'border-border text-muted-foreground hover:border-accent-teal/50',
+                    )}
+                  >
+                    {option.short}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
         </>
       );
     }

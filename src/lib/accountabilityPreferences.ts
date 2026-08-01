@@ -51,9 +51,21 @@ export const DEFAULT_ACCOUNTABILITY_PREFERENCES: AccountabilityPreferences = {
   last_weekly_scorecard_week_start: null,
 };
 
-function getBrowserTimezone() {
+/**
+ * Resolve the viewer's IANA timezone, falling back to UTC.
+ *
+ * Exported because onboarding persists this into user_preferences.timezone:
+ * server-side senders (send-weekly-scorecards, generate-daily-mission) have no
+ * browser to ask, so anything never written here silently reads as UTC and
+ * schedules against the wrong local day.
+ */
+export function getBrowserTimezone() {
   try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    const resolved = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (!resolved) return 'UTC';
+    // Guard against exotic values before they reach a server-side formatter.
+    new Intl.DateTimeFormat('en-US', { timeZone: resolved });
+    return resolved;
   } catch {
     return 'UTC';
   }

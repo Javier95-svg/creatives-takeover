@@ -51,6 +51,14 @@ const BLOCKERS: Array<[OnboardingAnswersV1['blocker'], string]> = [
   ['team', 'Team or co-founder'],
 ];
 
+const RUNWAY: Array<[Exclude<OnboardingAnswersV1['runwayMonths'], ''>, string]> = [
+  ['under_3', 'Less than 3 months'],
+  ['3_6', '3 to 6 months'],
+  ['6_12', '6 to 12 months'],
+  ['over_12', 'More than 12 months'],
+  ['not_applicable', 'Not burning money yet'],
+];
+
 export default function DashboardFocusEditor() {
   const { value, loading, refetch } = useOnboardingContext();
   const [open, setOpen] = useState(false);
@@ -83,6 +91,7 @@ export default function DashboardFocusEditor() {
           blocker: draft.blocker,
           weeklyCapacityHours: draft.weeklyCapacityHours,
           country: draft.country.trim(),
+          runwayMonths: draft.runwayMonths,
         },
         context,
       });
@@ -97,15 +106,41 @@ export default function DashboardFocusEditor() {
     }
   };
 
+  // Founders whose context was back-derived rather than answered directly get a
+  // visible invitation instead of a quiet ghost button: their recommendations
+  // are ranked from a lossy approximation until they fill these in.
+  const needsTopUp = value.context.dataCompleteness === 'legacy_partial';
+  const missing = [
+    draft.startupBrief.trim().length < 20 ? 'what you are building' : null,
+    draft.runwayMonths ? null : 'your runway',
+  ].filter(Boolean) as string[];
+
   return (
-    <div className="-mt-3 mb-6 flex justify-end">
+    <div className={needsTopUp && missing.length ? 'mb-6' : '-mt-3 mb-6 flex justify-end'}>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <Button type="button" variant="ghost" size="sm" className="gap-2 text-muted-foreground">
-            <Pencil className="h-3.5 w-3.5" />
-            Edit focus
-          </Button>
-        </DialogTrigger>
+        {needsTopUp && missing.length ? (
+          <div className="rounded-card border border-accent-teal/30 bg-accent-teal/5 p-4 sm:flex sm:items-center sm:justify-between sm:gap-4">
+            <div>
+              <p className="text-sm font-semibold">Sharpen your recommendations</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Your Command Center is ranking from an estimate. Tell us {missing.join(' and ')} to
+                make it specific to you.
+              </p>
+            </div>
+            <DialogTrigger asChild>
+              <Button type="button" size="sm" className="mt-3 shrink-0 sm:mt-0">
+                Add {missing.length === 1 ? 'it' : 'them'}
+              </Button>
+            </DialogTrigger>
+          </div>
+        ) : (
+          <DialogTrigger asChild>
+            <Button type="button" variant="ghost" size="sm" className="gap-2 text-muted-foreground">
+              <Pencil className="h-3.5 w-3.5" />
+              Edit focus
+            </Button>
+          </DialogTrigger>
+        )}
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Edit your Command Center focus</DialogTitle>
@@ -174,6 +209,27 @@ export default function DashboardFocusEditor() {
                   <SelectItem value="20">20 or more hours</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label>Runway</Label>
+              <Select
+                value={draft.runwayMonths || 'unset'}
+                onValueChange={(runway) => setDraft({
+                  ...draft,
+                  runwayMonths: runway === 'unset'
+                    ? ''
+                    : runway as OnboardingAnswersV1['runwayMonths'],
+                })}
+              >
+                <SelectTrigger><SelectValue placeholder="Prefer not to say" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unset">Prefer not to say</SelectItem>
+                  {RUNWAY.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Sets how hard your recommendations push. A short runway prioritizes revenue over polish.
+              </p>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="dashboard-country">Country (optional)</Label>

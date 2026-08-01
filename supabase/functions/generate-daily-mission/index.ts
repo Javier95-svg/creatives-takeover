@@ -266,6 +266,45 @@ Return JSON like {"mission_text":"..."} and make the task feel like the most use
   }
 }
 
+/**
+ * Resolve today's date in the founder's own timezone.
+ *
+ * The dashboard passes mission_date explicitly, so this only runs for callers
+ * that cannot know the local day (a cron sweep, a retry, a manual invoke).
+ * Those would otherwise land on the UTC day, which is the wrong date for most
+ * of the world for part of every day. Onboarding records the timezone into
+ * user_preferences.timezone; anything written before that reads as UTC.
+ */
+async function resolveLocalMissionDate(
+  client: ReturnType<typeof createClient>,
+  userId: string,
+): Promise<string> {
+  let timezone = "UTC";
+  try {
+    const { data } = await client
+      .from("profiles")
+      .select("user_preferences")
+      .eq("id", userId)
+      .maybeSingle();
+    const preferences = data?.user_preferences;
+    const candidate = preferences && typeof preferences === "object" && !Array.isArray(preferences)
+      ? (preferences as Record<string, unknown>).timezone
+      : null;
+    if (typeof candidate === "string" && candidate.trim()) {
+      timezone = candidate.trim();
+    }
+  } catch {
+    // Preferences are advisory here; UTC remains a safe default.
+  }
+
+  try {
+    // en-CA renders as YYYY-MM-DD, matching the mission_date column format.
+    return new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(new Date());
+  } catch {
+    return new Date().toISOString().slice(0, 10);
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -291,11 +330,12 @@ serve(async (req) => {
 
     const userId = userData.user.id;
     const { mission_date: missionDateInput } = await req.json().catch(() => ({ mission_date: null }));
-    const missionDate = typeof missionDateInput === "string" && /^\d{4}-\d{2}-\d{2}$/.test(missionDateInput)
-      ? missionDateInput
-      : new Date().toISOString().slice(0, 10);
 
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+
+    const missionDate = typeof missionDateInput === "string" && /^\d{4}-\d{2}-\d{2}$/.test(missionDateInput)
+      ? missionDateInput
+      : await resolveLocalMissionDate(supabase, userId);
 
     const { data: existingMissionRaw, error: existingError } = await supabase
       .from("daily_missions")

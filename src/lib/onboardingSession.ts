@@ -2,6 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 import {
   EMPTY_ONBOARDING_ANSWERS_V1,
+  normalizeWorkingDays,
   type OnboardingAnswersV1,
   type OnboardingContextV1,
   type OnboardingSessionV1,
@@ -64,6 +65,28 @@ export async function saveOnboardingProgress(params: {
   return normalizeSession(data);
 }
 
+/**
+ * Best-effort drop-off marker. Fired from a page-exit handler, so it must never
+ * throw into the caller and must not block teardown: the founder is already
+ * leaving. The session stays resumable -- see abandon_onboarding_v1.
+ */
+export async function abandonOnboardingSession(params: {
+  sessionId: string;
+  currentStep: number;
+  reason?: string;
+}) {
+  try {
+    await supabase.rpc('abandon_onboarding_v1' as never, {
+      p_session_id: params.sessionId,
+      p_current_step: params.currentStep,
+      p_reason: params.reason ?? 'page_exit',
+    } as never);
+  } catch {
+    // Drop-off is an analytics signal, never a blocker on leaving the page.
+    // PostHog carries the same event over a beacon, so the funnel stays intact.
+  }
+}
+
 export async function completeOnboardingSession(params: {
   sessionId: string;
   answers: OnboardingAnswersV1;
@@ -75,6 +98,7 @@ export async function completeOnboardingSession(params: {
     params.context.routineGoal,
     new Date(),
     params.answers.weeklyCapacityHours,
+    normalizeWorkingDays(params.answers.workingDays),
   );
   const { data, error } = await supabase.rpc('complete_onboarding_v1' as never, {
     p_session_id: params.sessionId,
@@ -90,13 +114,17 @@ export async function completeOnboardingSession(params: {
 }
 
 export async function updateOnboardingFocus(params: {
-  answers: Pick<OnboardingAnswersV1, 'startupBrief' | 'primaryGoal' | 'blocker' | 'weeklyCapacityHours' | 'country'>;
+  answers: Pick<
+    OnboardingAnswersV1,
+    'startupBrief' | 'primaryGoal' | 'blocker' | 'weeklyCapacityHours' | 'country'
+  > & Partial<Pick<OnboardingAnswersV1, 'workingDays' | 'runwayMonths'>>;
   context: OnboardingContextV1;
 }) {
   const routineConfig = createRoutineConfig(
     params.context.routineGoal,
     new Date(),
     params.answers.weeklyCapacityHours,
+    normalizeWorkingDays(params.answers.workingDays),
   );
   const { data, error } = await supabase.rpc('update_onboarding_focus_v1' as never, {
     p_answer_patch: params.answers as Json,

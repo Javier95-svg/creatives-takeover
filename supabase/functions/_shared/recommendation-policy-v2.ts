@@ -72,18 +72,30 @@ export function stableHash(value: string) {
   return hash >>> 0;
 }
 
+/**
+ * Ordered least- to most-specific. bestPriorByFamily and the SQL reader both
+ * treat later entries as more specific, so new tiers may only be appended --
+ * inserting or rewording an existing entry orphans every prior already
+ * aggregated under the old key.
+ *
+ * Kept byte-compatible with public.recommendation_segment_keys_v1; the SQL
+ * function writes the priors this function reads back.
+ */
 export function contextSegmentKeys(context: Record<string, unknown>): string[] {
   const stage = String(context.stage ?? "unknown");
   const goal = String(context.goal ?? "unknown");
   const blocker = String(context.blocker ?? "unknown");
   const capacity = String(context.capacityBand ?? "unknown");
   const plan = String(context.plan ?? "rookie");
+  const urgency = String(context.urgencyBand ?? "unknown");
+  const full = `stage:${stage}|goal:${goal}|blocker:${blocker}|capacity:${capacity}|plan:${plan}`;
   return [
     "global",
     `stage:${stage}`,
     `stage:${stage}|goal:${goal}`,
     `stage:${stage}|goal:${goal}|blocker:${blocker}`,
-    `stage:${stage}|goal:${goal}|blocker:${blocker}|capacity:${capacity}|plan:${plan}`,
+    full,
+    `${full}|urgency:${urgency}`,
   ];
 }
 

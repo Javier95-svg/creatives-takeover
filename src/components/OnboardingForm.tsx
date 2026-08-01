@@ -83,7 +83,12 @@ import {
   type OnboardingAnswersV1,
   type OnboardingSessionV1,
 } from '@/lib/onboardingContext';
-import { completeOnboardingSession, saveOnboardingProgress } from '@/lib/onboardingSession';
+import { getBrowserTimezone } from '@/lib/accountabilityPreferences';
+import {
+  abandonOnboardingSession,
+  completeOnboardingSession,
+  saveOnboardingProgress,
+} from '@/lib/onboardingSession';
 
 interface OnboardingData {
   stageAnswers: Partial<FounderStageQuizAnswersV3>;
@@ -637,6 +642,14 @@ export const OnboardingForm = ({ session, onComplete }: OnboardingFormProps) => 
           flow_version: session.flow_version,
           rollout_variant: session.rollout_variant,
         });
+        // Durable counterpart to the analytics event: marks the session so the
+        // cohort indexes can separate "stalled" from "still deciding" without
+        // depending on an analytics vendor. The session stays resumable.
+        void abandonOnboardingSession({
+          sessionId: session.id,
+          currentStep: s,
+          reason: 'page_exit',
+        });
       }
     };
   }, [session.flow_version, session.id, session.rollout_variant]);
@@ -989,6 +1002,9 @@ export const OnboardingForm = ({ session, onComplete }: OnboardingFormProps) => 
           quiz_answers_v2: quizAnswersV3,
         },
         preferencePatch: {
+          // Captured once here so cron-driven senders can resolve the founder's
+          // local day without a browser. Without it they default to UTC.
+          timezone: getBrowserTimezone(),
           activationIntent: selectedIntent,
           activationGateVariant,
           activationStartedAt: startedAtIso,

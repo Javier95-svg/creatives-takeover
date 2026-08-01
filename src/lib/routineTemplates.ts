@@ -139,20 +139,60 @@ export const DEFAULT_REMINDER_PREFERENCES: RoutineReminderPreferences = {
   time: '09:00',
 };
 
+/**
+ * Spread `count` picks as evenly as possible across the days the founder works,
+ * so a reduced-capacity routine lands on distinct days instead of clustering.
+ */
+function spreadAcross(days: number[], count: number): number[] {
+  if (count <= 0) return [];
+  if (days.length <= count) return days;
+  if (count === 1) return [days[0]];
+  const step = (days.length - 1) / (count - 1);
+  const picked = new Set<number>();
+  for (let index = 0; index < count; index += 1) {
+    picked.add(days[Math.round(index * step)]);
+  }
+  return Array.from(picked).sort((a, b) => a - b);
+}
+
+/**
+ * Constrain a template's days to the founder's actual week.
+ *
+ * Templates assume a Mon-Fri founder. Someone who only works weekends would
+ * otherwise get a routine scheduled entirely on days they never show up, and
+ * every task would read as missed.
+ */
+function fitDaysToWorkingWeek(templateDays: number[], workingDays: number[]): number[] {
+  if (!workingDays.length) return templateDays;
+  const overlap = templateDays.filter((day) => workingDays.includes(day));
+  if (overlap.length) return overlap;
+  // No overlap at all: fall back to the same number of working days, keeping
+  // the template's relative position in the week (a Friday review stays late).
+  return spreadAcross(workingDays, Math.min(templateDays.length, workingDays.length));
+}
+
 export function createRoutineConfig(
   goal: RoutineGoal,
   now = new Date(),
   weeklyCapacityHours?: number | null,
+  workingDays: number[] = [],
 ): RoutineConfig {
+  const week = Array.from(new Set(workingDays))
+    .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6)
+    .sort((a, b) => a - b);
+
   const capacitySizedTasks = ROUTINE_TEMPLATES[goal]
     .filter((task, index) => weeklyCapacityHours === 2 ? index === 0 || task.cadence === 'weekly' : true)
-    .map((task, index) => ({
-      ...task,
-      days:
+    .map((task, index) => {
+      const fitted = fitDaysToWorkingWeek(task.days, week);
+      // At ~5h/week a daily cadence on every working day is not realistic for
+      // anything past the primary task, so thin the secondary ones out.
+      const thinned =
         weeklyCapacityHours === 5 && task.cadence === 'daily' && index > 0
-          ? [1, 3, 5]
-          : task.days,
-    }));
+          ? (week.length ? spreadAcross(fitted, Math.min(3, fitted.length)) : [1, 3, 5])
+          : fitted;
+      return { ...task, days: thinned };
+    });
   return {
     version: 1,
     primaryGoal: goal,
