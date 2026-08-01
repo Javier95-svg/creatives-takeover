@@ -8,7 +8,7 @@ import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
 import { usePMFLab } from '@/hooks/usePMFLab';
 import { usePMFSurvey } from '@/hooks/usePMFSurvey';
-import PMFEvidenceForm from '@/components/pmf/PMFEvidenceForm';
+import PMFEvidenceForm, { type PMFIcpInterviewPlanItem } from '@/components/pmf/PMFEvidenceForm';
 import PMFEvidenceHub, { type PMFHubRecommendation } from '@/components/pmf/PMFEvidenceHub';
 import PMFEvidenceChecklist from '@/components/pmf/PMFEvidenceChecklist';
 import PMFSeanEllisTest from '@/components/pmf/PMFSeanEllisTest';
@@ -16,11 +16,14 @@ import PMFScoringLoader from '@/components/pmf/PMFScoringLoader';
 import PMFReadinessReport from '@/components/pmf/PMFReadinessReport';
 import PMFCustomerDiscovery from '@/components/pmf/PMFCustomerDiscovery';
 import PMFOutcomeCapture from '@/components/pmf/PMFOutcomeCapture';
+import { PMFContextBanner } from '@/components/pmf/PMFContextBanner';
+import { normalizeStoredArtifact } from '@/lib/icpDraftArtifacts';
 import { cn } from '@/lib/utils';
 import { useSearchParams } from 'react-router-dom';
 import { ArrowRight, ChevronDown, Rocket } from 'lucide-react';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 import { getPublicTabConfig } from '@/config/publicTabVisibility';
+import { PLAN_LABELS } from '@/config/planPermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
 import { useCustomerDiscovery } from '@/hooks/useCustomerDiscovery';
@@ -47,8 +50,12 @@ export default function PMFLabPage() {
   const [icpPersonaName, setIcpPersonaName] = useState<string | null>(null);
   const [icpIndustry, setIcpIndustry] = useState<string | null>(null);
   const [icpProblem, setIcpProblem] = useState<string | null>(null);
+  const [icpDraftId, setIcpDraftId] = useState<string | null>(null);
+  const [icpInterviewPlan, setIcpInterviewPlan] = useState<PMFIcpInterviewPlanItem[] | null>(null);
   const [waitlistProductName, setWaitlistProductName] = useState<string | null>(null);
-  const [mode, setMode] = useState<'score' | 'discover'>('score');
+  const [mode, setMode] = useState<'score' | 'discover'>(
+    () => (new URLSearchParams(window.location.search).get('mode') === 'discover' ? 'discover' : 'score'),
+  );
   const [interviewLeadSeed, setInterviewLeadSeed] = useState<PMFInterviewLeadSeed | null>(null);
   // Progressive disclosure: only one detail step is expanded at a time so the
   // page opens with a single clear focus instead of a wall of stacked sections.
@@ -56,6 +63,11 @@ export default function PMFLabPage() {
   const stepChosenRef = useRef(false);
   const [searchParams] = useSearchParams();
   const outcomeAnalysisId = searchParams.get('outcome');
+  const icpParam = searchParams.get('icp');
+  // ?step=interviews is the conversation-stage entry point ICP Builder links to.
+  // (?mode=discover, the distribution entry point Demo Studio links to after publish,
+  // is applied in the `mode` initializer above so the first paint is already correct.)
+  const wantsInterviewStep = searchParams.get('step') === 'interviews';
   const hubViewedRef = useRef(false);
   const surveyRef = useRef<HTMLDivElement | null>(null);
   const scoreFormRef = useRef<HTMLDivElement | null>(null);
@@ -75,33 +87,70 @@ export default function PMFLabPage() {
 
     let active = true;
     const loadContext = async () => {
-      const [icpRes, waitlistRes] = await Promise.all([
-        supabase
-          .from('icp_analysis_results')
-          .select('target_audience, industry, business_description')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle(),
+      // Honor the ?icp=<draftId> handoff from the ICP Draft page. Without it we fall back
+      // to the most recent draft, which is the wrong one for founders with several.
+      const icpBase = supabase
+        .from('icp_analysis_results')
+        .select('id, target_audience, industry, business_description, analysis_data')
+        .eq('user_id', user.id);
+      const icpQuery = icpParam
+        ? icpBase.eq('id', icpParam).maybeSingle()
+        : icpBase.order('created_at', { ascending: false }).limit(1).maybeSingle();
+
+      const [icpRes, waitlistRes, demoRes] = await Promise.all([
+        icpQuery,
         supabase
           .from('waitlist_pages')
-          .select('product_name')
+          .select('product_name, updated_at')
           .eq('user_id', user.id)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        // Demo Studio superseded the waitlist builder, so the product context has to
+        // read both or every Demo Studio founder shows up here with no product.
+        (supabase as any)
+          .from('demo_studio_projects')
+          .select('name, updated_at')
+          .eq('owner_id', user.id)
           .order('updated_at', { ascending: false })
           .limit(1)
           .maybeSingle(),
       ]);
       if (!active) return;
-      const icpRow = icpRes.data as { target_audience: string | null; industry: string | null; business_description: string | null } | null;
-      setIcpPersonaName(icpRow?.target_audience ?? null);
+
+      const icpRow = icpRes.data as {
+        id: string;
+        target_audience: string | null;
+        industry: string | null;
+        business_description: string | null;
+        analysis_data: unknown;
+      } | null;
+
+      setIcpDraftId(icpRow?.id ?? null);
       setIcpIndustry(icpRow?.industry ?? null);
       setIcpProblem(icpRow?.business_description ?? null);
-      setWaitlistProductName((waitlistRes.data as { product_name: string | null } | null)?.product_name ?? null);
+      // The stored artifact names the persona properly; target_audience is the fallback.
+      const artifact = icpRow ? normalizeStoredArtifact(icpRow as never).artifact : null;
+      setIcpPersonaName(
+        artifact?.draftDocument.customer.personaName?.trim() || icpRow?.target_audience || null,
+      );
+      const plan = artifact?.draftDocument.decisionBrief?.interviewValidationPlan ?? null;
+      setIcpInterviewPlan(plan && plan.length > 0 ? plan : null);
+
+      const waitlistRow = waitlistRes.data as { product_name: string | null; updated_at: string | null } | null;
+      const demoRow = demoRes.data as { name: string | null; updated_at: string | null } | null;
+      const newest = [
+        { name: demoRow?.name ?? null, at: demoRow?.updated_at ?? null },
+        { name: waitlistRow?.product_name ?? null, at: waitlistRow?.updated_at ?? null },
+      ]
+        .filter((row) => Boolean(row.name))
+        .sort((a, b) => (b.at ?? '').localeCompare(a.at ?? ''))[0];
+      setWaitlistProductName(newest?.name ?? null);
     };
 
     void loadContext();
     return () => { active = false; };
-  }, [user]);
+  }, [user, icpParam]);
   const faqs = [
     {
       question: 'What does a PMF Readiness Score of 75 or higher actually mean?',
@@ -187,6 +236,16 @@ export default function PMFLabPage() {
   })();
   const recommendedStep: 'gather' | 'score' =
     hubRecommendation === 'survey' || hubRecommendation === 'checklist' ? 'gather' : 'score';
+
+  // An explicit ?step=interviews link beats the recommendation: the founder was sent
+  // here to log a conversation, not to be re-triaged into the survey step.
+  useEffect(() => {
+    if (!wantsInterviewStep || stepChosenRef.current) return;
+    stepChosenRef.current = true;
+    setMode('score');
+    setActiveStep('score');
+    requestAnimationFrame(() => scrollTo(scoreFormRef));
+  }, [wantsInterviewStep]);
 
   // Default the open step to the recommendation until the user picks one themselves.
   useEffect(() => {
@@ -354,6 +413,16 @@ export default function PMFLabPage() {
               )
             ) : hasAccess ? (
               <>
+                {/* PMF Lab silently inherits the ICP persona and the product from Demo
+                    Studio and uses them to prefill. Showing that provenance is what makes
+                    the three tools read as one chain instead of three separate forms. */}
+                <PMFContextBanner
+                  className="mb-6"
+                  icpPersonaName={icpPersonaName}
+                  waitlistProductName={waitlistProductName}
+                  icpDraftId={icpDraftId}
+                />
+
                 {/* Outcome follow-up deep-link (from the "what happened?" email) */}
                 {outcomeAnalysisId && (
                   <div className="mb-8">
@@ -412,6 +481,15 @@ export default function PMFLabPage() {
                           surveyAggregate={surveyAggregate}
                           customerDiscoverySignals={customerDiscoverySignals}
                           authoritativeSignalCount={analysis?.evidenceSignalCount}
+                          demoBehaviorSignals={
+                            analysis?.demoEvidence
+                              ? Math.max(
+                                  analysis.demoEvidence.completions,
+                                  analysis.demoEvidence.ctaClicks,
+                                  analysis.demoEvidence.signups,
+                                )
+                              : 0
+                          }
                           recommended={hubRecommendation}
                           onLogInterviews={() => chooseStep('score')}
                           onCreateOrReviewSurvey={() => { chooseStep('gather'); handleSurveyHubAction(); }}
@@ -479,6 +557,8 @@ export default function PMFLabPage() {
                           <div className={cn('border-t border-border/60 p-5', activeStep !== 'score' && 'hidden')}>
                             <PMFEvidenceForm
                               initialInterviewLead={interviewLeadSeed}
+                              initialStep={wantsInterviewStep ? 1 : undefined}
+                              icpInterviewPlan={icpInterviewPlan}
                               onSubmit={(answers) => runAnalysis(answers, {
                                 businessContext: {
                                   productName: waitlistProductName ?? undefined,
@@ -526,9 +606,13 @@ export default function PMFLabPage() {
                 )}
               </>
             ) : (
+              // Defensive only: pmf_lab is `state: 'full'` on every plan, so this branch is
+              // currently unreachable. The unlock copy is derived from the plan config rather
+              // than hardcoded, which previously claimed "Starter and above" and contradicted
+              // the matrix that gives rookie full access.
               <BlurredToolPreview
                 featureName="PMF Lab"
-                unlockCondition="PMF Lab is available on the Starter plan and above."
+                unlockCondition={`PMF Lab is available on the ${PLAN_LABELS[upgradeTarget] ?? 'Starter'} plan and above.`}
                 requiredPlan={upgradeTarget}
                 locked
               >

@@ -10,6 +10,7 @@ import { normalizePlan, PLAN_LABELS } from "@/config/planPermissions";
 import { useMonthlyQuotas } from "@/hooks/useMonthlyQuotas";
 import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
+import { loadPrototypeStageArtifact } from "@/lib/prototypeStageSource";
 import {
   buildJourneyRecommendation,
   PLAN_JOURNEY_PROMISES,
@@ -132,7 +133,8 @@ export function JourneyNextStepCard() {
         hasMentor,
       ] = await Promise.all([
         hasAnyRecord("icp_analysis_results", user.id, "updated_at"),
-        hasAnyRecord("waitlist_pages", user.id, "updated_at"),
+        // Prototype stage lives in Demo Studio now; the legacy waitlist still counts.
+        loadPrototypeStageArtifact(user.id).then((prototype) => Boolean(prototype.completedAt)),
         hasAnyRecord("pmf_analysis_results", user.id, "created_at"),
         hasAnyRecord("pmf_validation_evidence", user.id, "updated_at"),
         hasAnyRecord("mvp_builder_artifacts", user.id, "updated_at"),

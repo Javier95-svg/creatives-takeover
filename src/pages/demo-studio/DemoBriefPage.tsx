@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ArrowLeft, ArrowRight, FileText, Loader2, MonitorPlay, Rocket, Sparkles, Wand2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, FileText, Loader2, MonitorPlay, Rocket, Sparkles, Target, Wand2 } from 'lucide-react';
 import SEO from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import { Badge } from '@/components/ui/badge';
@@ -40,6 +40,9 @@ import {
   getDefaultBrief,
 } from '@/lib/demoStudio/brief';
 import { getDemoReadiness } from '@/lib/demoStudio/readiness';
+import { icpArtifactToDemoBrief } from '@/lib/icpToDemoBrief';
+import { resolveIcpSource } from '@/lib/icpHandoffSource';
+import type { ResolvedIcpSource } from '@/lib/icpHandoffSource';
 import type {
   DemoStepWithHotspots,
   DemoStudioAiKit,
@@ -48,19 +51,29 @@ import type {
   DemoStudioProject,
 } from '@/lib/demoStudio/types';
 
-// Prefill the four story fields from the project name + tagline (via
-// getDefaultBrief) so a freshly created brief is complete enough to generate in
-// one click. Only fills fields the founder hasn't already written.
+// Prefill the four story fields so a freshly created brief is complete enough to
+// generate in one click. The founder's ICP Draft is the better source when one exists —
+// it already names the segment, ranked pain, and promise — so it wins over the generic
+// name/tagline defaults. Only fills fields the founder hasn't already written.
 function buildBriefPrefillPatch(
   project: Pick<DemoStudioProject, 'name' | 'tagline'>,
   brief: DemoStudioBrief,
+  icp: ResolvedIcpSource | null,
 ): Partial<DemoStudioBrief> {
   const defaults = getDefaultBrief({ name: project.name, tagline: project.tagline });
+  const fromIcp = icp ? icpArtifactToDemoBrief(icp.artifact).patch : null;
   const patch: Partial<DemoStudioBrief> = {};
-  if (!brief.audience?.trim() && defaults.audience) patch.audience = defaults.audience;
-  if (!brief.problem?.trim() && defaults.problem) patch.problem = defaults.problem;
-  if (!brief.product_promise?.trim() && defaults.product_promise) patch.product_promise = defaults.product_promise;
-  if (!brief.aha_moment?.trim() && defaults.aha_moment) patch.aha_moment = defaults.aha_moment;
+
+  const pick = (field: 'audience' | 'problem' | 'product_promise' | 'aha_moment') => {
+    if (brief[field]?.trim()) return;
+    const value = fromIcp?.[field]?.trim() || defaults[field];
+    if (value) patch[field] = value;
+  };
+
+  pick('audience');
+  pick('problem');
+  pick('product_promise');
+  pick('aha_moment');
   return patch;
 }
 
@@ -124,6 +137,12 @@ export default function DemoBriefPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [searchParams] = useSearchParams();
+  const icpParam = searchParams.get('icp');
+  // Set only when the ICP actually seeded fields on this load, so the provenance
+  // banner never claims a prefill that did not happen.
+  const [icpProvenance, setIcpProvenance] = useState<{ draftId: string | null; personaName: string } | null>(null);
+  const [provenanceDismissed, setProvenanceDismissed] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -142,15 +161,24 @@ export default function DemoBriefPage() {
           return;
         }
         let briefRow = await getOrCreateBrief(projectRow, user.id);
-        // One-click path: seed empty story fields from the project so the founder
-        // can generate immediately instead of filling a form first.
-        const prefill = buildBriefPrefillPatch(projectRow, briefRow);
+        // One-click path: seed empty story fields so the founder can generate
+        // immediately instead of filling a form first. Prefer their ICP Draft — arriving
+        // via ?icp= from the draft page, otherwise their most recent one — so the demo
+        // is built for the customer they already decided on.
+        const icp = await resolveIcpSource({ userId: user.id, draftId: icpParam });
+        const prefill = buildBriefPrefillPatch(projectRow, briefRow, icp);
         if (Object.keys(prefill).length > 0) {
           briefRow = await updateBrief(projectRow.id, user.id, prefill);
         }
         if (!active) return;
         setProject(projectRow);
         setBrief(briefRow);
+        if (icp && Object.keys(prefill).length > 0) {
+          setIcpProvenance({
+            draftId: icp.draftId,
+            personaName: icpArtifactToDemoBrief(icp.artifact).personaName,
+          });
+        }
       } catch (e) {
         toast.error(e instanceof Error ? e.message : 'Could not load the demo brief.');
       } finally {
@@ -160,7 +188,7 @@ export default function DemoBriefPage() {
     return () => {
       active = false;
     };
-  }, [authLoading, user, projectId, navigate]);
+  }, [authLoading, user, projectId, navigate, icpParam]);
 
   const completeness = useMemo(() => getBriefCompleteness(brief), [brief]);
   const aiKit: DemoStudioAiKit = useMemo(
@@ -378,6 +406,28 @@ export default function DemoBriefPage() {
           </div>
           <p className="mt-3 text-xs text-muted-foreground">{nextBriefAction.description}</p>
         </div>
+
+        {icpProvenance && !provenanceDismissed && (
+          <div className="mb-6 flex flex-col gap-3 rounded-xl border border-accent-teal/30 bg-accent-teal/10 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <Target className="mt-0.5 h-4 w-4 shrink-0 text-accent-teal" aria-hidden />
+              <p className="text-foreground">
+                Prefilled from your ICP Draft
+                {icpProvenance.personaName ? <> for <span className="font-semibold">{icpProvenance.personaName}</span></> : null}. Edit anything below.
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              {icpProvenance.draftId && (
+                <Button asChild variant="outline" size="sm">
+                  <Link to={`/icp/draft/${icpProvenance.draftId}`}>View draft</Link>
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" onClick={() => setProvenanceDismissed(true)}>
+                Dismiss
+              </Button>
+            </div>
+          </div>
+        )}
 
         {!completeness.complete && (
           <div className="mb-6 rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm text-warning">

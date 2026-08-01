@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils';
 interface PMFContextBannerProps {
   icpPersonaName: string | null;
   waitlistProductName: string | null;
+  /** Links the provenance chip back to the exact draft this context came from. */
+  icpDraftId?: string | null;
   loading?: boolean;
   className?: string;
 }
@@ -12,12 +14,14 @@ interface PMFContextBannerProps {
 export function PMFContextBanner({
   icpPersonaName,
   waitlistProductName,
+  icpDraftId = null,
   loading = false,
   className,
 }: PMFContextBannerProps) {
   const hasIcp = Boolean(icpPersonaName);
   const hasWaitlist = Boolean(waitlistProductName);
   const hasBoth = hasIcp && hasWaitlist;
+  const icpRoute = icpDraftId ? `/icp/draft/${icpDraftId}` : '/icp-builder';
 
   const steps = [
     {
@@ -25,7 +29,7 @@ export function PMFContextBanner({
       name: 'ICP Builder',
       detail: icpPersonaName ?? null,
       done: hasIcp,
-      route: '/icp-builder',
+      route: icpRoute,
       icon: Target,
     },
     {
@@ -62,25 +66,39 @@ export function PMFContextBanner({
       <div className="flex flex-wrap items-center gap-2">
         {steps.map((step, index) => {
           const Icon = step.icon;
+          const chipClass = cn(
+            'flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+            step.current
+              ? 'border-primary bg-primary text-primary-foreground'
+              : step.done
+              ? 'border-success/30 bg-success-subtle text-success hover:bg-success-subtle/80'
+              : 'border-border bg-background/70 text-muted-foreground hover:bg-background'
+          );
+          const chipBody = (
+            <>
+              {step.done && !step.current ? (
+                <CheckCircle2 className="h-3 w-3" />
+              ) : (
+                <Icon className="h-3 w-3" />
+              )}
+              <span>{step.label}: {step.name}</span>
+            </>
+          );
           return (
             <div key={step.name} className="flex items-center gap-2">
-              <div
-                className={cn(
-                  'flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors',
-                  step.current
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : step.done
-                    ? 'border-success/30 bg-success-subtle text-success'
-                    : 'border-border bg-background/70 text-muted-foreground'
-                )}
-              >
-                {step.done && !step.current ? (
-                  <CheckCircle2 className="h-3 w-3" />
-                ) : (
-                  <Icon className="h-3 w-3" />
-                )}
-                <span>{step.label}: {step.name}</span>
-              </div>
+              {/* The completed stages link back to the artifact they came from, so the
+                  inherited context is verifiable rather than an unexplained assertion. */}
+              {step.current ? (
+                <div className={chipClass}>{chipBody}</div>
+              ) : (
+                <Link
+                  to={step.route}
+                  className={chipClass}
+                  title={step.detail ? `${step.name}: ${step.detail}` : `Open ${step.name}`}
+                >
+                  {chipBody}
+                </Link>
+              )}
               {index < steps.length - 1 && (
                 <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0" />
               )}
@@ -93,36 +111,43 @@ export function PMFContextBanner({
       <div className="space-y-1">
         {hasBoth ? (
           <p className="text-sm leading-relaxed text-foreground">
-            You defined{' '}
-            <span className="font-semibold">{icpPersonaName}</span> in Stage I and built the{' '}
-            <span className="font-semibold">{waitlistProductName}</span> waitlist in Stage II.{' '}
-            PMF Lab will now tell you if the demand evidence from your customer interviews is strong enough to start building.
+            Carried over from your earlier stages: you defined{' '}
+            <Link to={icpRoute} className="font-semibold underline underline-offset-2 hover:no-underline">
+              {icpPersonaName}
+            </Link>{' '}
+            in Stage I and built{' '}
+            <span className="font-semibold">{waitlistProductName}</span> in Stage II.{' '}
+            PMF Lab scores whether the evidence from those conversations and demand signals is strong enough to start building.
           </p>
         ) : hasIcp ? (
           <p className="text-sm leading-relaxed text-muted-foreground">
-            You defined <span className="font-semibold text-foreground">{icpPersonaName}</span> in Stage I.{' '}
+            Carried over from Stage I: you defined{' '}
+            <Link to={icpRoute} className="font-semibold text-foreground underline underline-offset-2 hover:no-underline">
+              {icpPersonaName}
+            </Link>
+            .{' '}
             <Link to="/demo-studio" className="text-primary underline underline-offset-2 hover:no-underline">
-              Build your waitlist page in Stage II
+              Publish a demo in Stage II
             </Link>{' '}
-            before running PMF Lab for a more accurate score.
+            to add verified demand signals to this score.
           </p>
         ) : hasWaitlist ? (
           <p className="text-sm leading-relaxed text-muted-foreground">
-            You have a waitlist for <span className="font-semibold text-foreground">{waitlistProductName}</span>.{' '}
+            Carried over from Stage II: <span className="font-semibold text-foreground">{waitlistProductName}</span>.{' '}
             <Link to="/icp-builder" className="text-primary underline underline-offset-2 hover:no-underline">
               Complete the ICP Builder in Stage I
             </Link>{' '}
-            before running PMF Lab for a more accurate score.
+            so this score knows which customer you are testing.
           </p>
         ) : (
           <p className="text-sm leading-relaxed text-muted-foreground">
-            PMF Lab works best after completing Stages I and II.{' '}
+            PMF Lab works best after Stages I and II.{' '}
             <Link to="/icp-builder" className="text-primary underline underline-offset-2 hover:no-underline">
               Start with the ICP Builder
             </Link>{' '}
             to define your customer, then{' '}
             <Link to="/demo-studio" className="text-primary underline underline-offset-2 hover:no-underline">
-              build a waitlist page
+              publish a demo
             </Link>{' '}
             before validating here.
           </p>

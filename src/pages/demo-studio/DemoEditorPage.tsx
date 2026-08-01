@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { showDashboardReturnToast } from '@/components/dashboard/dashboardReturnToast';
 import {
   ArrowLeft,
+  ArrowRight,
   BarChart3,
   Camera,
   Check,
@@ -45,6 +46,9 @@ import HotspotInspector from '@/components/demo-studio/editor/HotspotInspector';
 import LiveCaptureDialog from '@/components/demo-studio/editor/LiveCaptureDialog';
 import DemoPlayer from '@/components/demo-studio/player/DemoPlayer';
 import WhatIsADemoPopover from '@/components/demo-studio/WhatIsADemoPopover';
+import DemoDistributionPanel from '@/components/demo-studio/DemoDistributionPanel';
+import { evaluateDemoArtifact } from '@/lib/demoStudio/outcome';
+import { createJourneyEvidenceManifest, createJourneyHandoff, upsertJourneyOutcome } from '@/lib/journeyOutcomes';
 import { canRemoveWatermark, shouldShowWatermark } from '@/lib/demoStudio/plan';
 import { trackDemoStudioFunnel } from '@/lib/analytics';
 import {
@@ -577,6 +581,60 @@ export default function DemoEditorPage() {
     try {
       const updated = await publishDemo(demo.id, { ownerId: demo.owner_id, ownerPlan: planTier });
       setDemo(updated);
+      // Publishing a demo is the common path, but only the Launch Composer ever recorded
+      // a journey outcome — so the ordinary founder produced no outcome and no PMF
+      // handoff. Recorded as a side effect: a journey-service outage must never turn a
+      // successful publish into a failure. Mirrors LaunchComposerPage.
+      try {
+        const { qualityChecks, evaluation } = evaluateDemoArtifact({
+          steps,
+          theme: updated.theme,
+          published: true,
+          leadCaptureEnabled: Boolean(updated.theme?.endCtaHref?.trim()),
+          analyticsEnabled: true,
+          containsGeneratedPlaceholders: steps.some((step) => !step.asset_url || /placeholder/i.test(step.asset_url)),
+        });
+        const outcome = await upsertJourneyOutcome({
+          userId: updated.owner_id,
+          tool: 'demo_studio',
+          artifactType: 'interactive_proof_page',
+          artifactId: updated.id,
+          status: evaluation.status,
+          qualityChecks,
+          completionScore: evaluation.completionScore,
+          verificationMode: evaluation.verificationMode,
+          evidenceManifest: createJourneyEvidenceManifest([{
+            sourceId: updated.id,
+            sourceType: 'interactive_demo',
+            version: updated.updated_at,
+            capturedAt: new Date().toISOString(),
+            confidence: evaluation.status === 'verified' ? 0.95 : 0.8,
+            provenance: 'demo_studio',
+            artifactType: 'interactive_proof_page',
+            artifactId: updated.id,
+            verificationMode: evaluation.verificationMode,
+            label: updated.title,
+            url: updated.public_id ? `${window.location.origin}/demo/${updated.public_id}` : null,
+          }]),
+        });
+        if (['ready', 'verified'].includes(outcome.evaluation.status)) {
+          const outcomeId = (outcome.outcome as { id?: string } | null)?.id;
+          if (outcomeId) {
+            await createJourneyHandoff({
+              sourceOutcomeId: outcomeId,
+              destinationTool: 'pmf_lab',
+              payload: {
+                sourceArtifactId: updated.id,
+                sourceArtifactVersion: updated.updated_at,
+                destinationRoute: '/pmf-lab',
+              },
+              idempotencyKey: `demo:${updated.id}:pmf`,
+            });
+          }
+        }
+      } catch (outcomeError) {
+        console.error('Could not update journey outcome', outcomeError);
+      }
       showDashboardReturnToast({
         message: 'Demo published!',
         description: 'It now counts toward your startup journey.',
@@ -904,8 +962,25 @@ export default function DemoEditorPage() {
                   </Button>
                 </div>
               </div>
+              {/* The PMF scorer already reads published-demo behavior as verified evidence,
+                  but nothing in Demo Studio ever said so — founders had no reason to think
+                  sharing this link fed their build decision. */}
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
+                <p className="text-xs leading-5 text-muted-foreground">
+                  Views, CTA clicks, and signups on this demo count as verified demand evidence in your PMF score.
+                </p>
+                <Button asChild size="sm" variant="outline" className="shrink-0 gap-1.5">
+                  <Link to="/pmf-lab">
+                    Score this evidence
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </Button>
+              </div>
             </div>
           )}
+          {/* A published demo with no audience produces no evidence, so the share panel
+              is followed immediately by where to send it. */}
+          {demo?.public_id && <DemoDistributionPanel shareUrl={shareUrl} demoTitle={demo.title} />}
         </main>
 
         {/* Right: inspector + theme */}

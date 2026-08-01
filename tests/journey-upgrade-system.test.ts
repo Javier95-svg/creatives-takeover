@@ -36,7 +36,6 @@ test('journey recommendation card uses saved outputs, dismissal, and checkout fl
 
   for (const table of [
     'icp_analysis_results',
-    'waitlist_pages',
     'pmf_analysis_results',
     'pmf_validation_evidence',
     'mvp_builder_artifacts',
@@ -46,6 +45,11 @@ test('journey recommendation card uses saved outputs, dismissal, and checkout fl
   ]) {
     assert.match(source, new RegExp(table));
   }
+
+  // The prototype stage is no longer a direct waitlist_pages read: Demo Studio replaced
+  // the waitlist builder, so the signal comes from loadPrototypeStageArtifact, which
+  // checks demo_studio_demos and waitlist_pages together.
+  assert.match(source, /loadPrototypeStageArtifact/);
 
   assert.match(source, /ct_journey_next_step/);
   assert.match(source, /buildJourneyRecommendation/);

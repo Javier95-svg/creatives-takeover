@@ -107,7 +107,7 @@ async function loadAuthoritativeChecks(
 
   if (tool === 'demo_studio') {
     const { data: demo, error } = await supabase.from('demo_studio_demos')
-      .select('id,project_id,status,public_id').eq('id', artifactId).eq('owner_id', userId).maybeSingle();
+      .select('id,project_id,status,public_id,theme').eq('id', artifactId).eq('owner_id', userId).maybeSingle();
     if (error || !demo) throw new Error('The Demo Studio artifact was not found for this account');
     const [{ data: steps }, { data: launch }, { data: events }, { data: signups }] = await Promise.all([
       supabase.from('demo_studio_demo_steps').select('id,asset_url,caption').eq('demo_id', artifactId).order('position'),
@@ -129,12 +129,19 @@ async function loadAuthoritativeChecks(
     });
     const noPlaceholders = stepRows.every((step) => hasText(step.asset_url) && !/placeholder/i.test(String(step.asset_url)));
     const published = demo.status === 'published' && hasText(demo.public_id);
+    // A published demo carries its own end CTA and its clicks are tracked as
+    // demo_studio_events, so it satisfies "one working call to action a viewer can act
+    // on" without the Launch Composer. Requiring a launch page here meant the common
+    // path — publish a demo — produced no outcome and therefore no handoff at all.
+    const theme = recordValue(demo.theme);
+    const demoEndCta = hasText(theme.endCtaLabel) && authenticUrl(theme.endCtaHref);
+    const launchWired = Boolean(launch && launch.primary_demo_id === artifactId);
     return {
       interactive_steps: stepRows.length >= 2,
       working_hotspots: (hotspots?.length ?? 0) > 0 && !brokenHotspot,
       captions_complete: stepRows.length >= 2 && stepRows.every((step) => hasText(step.caption)),
-      single_cta: Boolean(launch && launch.primary_demo_id === artifactId && hasText(launch.cta_label)),
-      lead_capture: Boolean(launch && launch.primary_demo_id === artifactId),
+      single_cta: (launchWired && hasText(launch?.cta_label)) || demoEndCta,
+      lead_capture: launchWired || (published && demoEndCta),
       analytics: published,
       published,
       no_unresolved_placeholders: noPlaceholders,
@@ -381,6 +388,32 @@ serve(async (req) => {
             last_evaluated_at: new Date().toISOString(),
             verified_at: evaluation.status === 'verified' ? new Date().toISOString() : null,
           }).eq('id', currentIcp.id).eq('user_id', user.id);
+
+          // The ICP outcome can only reach ready/verified here: its contract requires five
+          // independent assumption signals, which arrive from PMF Lab interviews, never at
+          // draft-save time. The client tried to create this handoff when saving the draft,
+          // where the status is always 'draft' — which is why no ICP handoff has ever been
+          // created. Create it at the one moment the outcome actually qualifies.
+          if (['ready', 'verified'].includes(evaluation.status)) {
+            const { data: icpVersion } = await supabase.from('journey_outcome_versions')
+              .select('id').eq('journey_outcome_id', currentIcp.id)
+              .order('version_number', { ascending: false }).limit(1).maybeSingle();
+            if (icpVersion) {
+              const { error: handoffError } = await supabase.from('journey_handoffs').upsert({
+                user_id: user.id,
+                source_outcome_id: currentIcp.id,
+                source_version_id: icpVersion.id,
+                destination_tool: 'pmf_lab',
+                payload: {
+                  sourceArtifactId: assumption.source_artifact_id,
+                  destinationRoute: `/pmf-lab?icp=${assumption.source_artifact_id}`,
+                },
+                idempotency_key: `icp:${assumption.source_artifact_id}:pmf`,
+              }, { onConflict: 'user_id,idempotency_key', ignoreDuplicates: true });
+              // Never fail the signal write because the handoff bookkeeping did.
+              if (handoffError) console.error('Could not create ICP handoff', handoffError);
+            }
+          }
         }
       }
       return json({ ok: true, assumption: data, signalSummary: { confirmations, rejections } });

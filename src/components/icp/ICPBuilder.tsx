@@ -1051,6 +1051,12 @@ const ICPBuilder: React.FC = () => {
           artifact.generatedAt,
         ),
       })).then(async (saved) => {
+        // The ICP outcome contract requires five independent assumption signals, which can
+        // only come from interviews logged in PMF Lab. At save time the status is always
+        // 'draft', so this branch never ran — that is why no ICP handoff existed despite
+        // 31 saved drafts. The handoff is now created server-side in journey-outcome-service
+        // when a fifth assumption signal flips the outcome to ready/verified. Kept here only
+        // for the case where an already-qualified draft is re-saved.
         if (!['ready', 'verified'].includes(saved.evaluation.status)) return;
         const outcomeId = (saved.outcome as { id?: string } | null)?.id;
         if (!outcomeId) return;
@@ -1060,7 +1066,7 @@ const ICPBuilder: React.FC = () => {
           payload: {
             sourceArtifactId: analysisId,
             sourceArtifactVersion: String(artifact.version),
-            destinationRoute: '/pmf-lab',
+            destinationRoute: `/pmf-lab?icp=${analysisId}`,
           },
           idempotencyKey: `icp:${analysisId}:pmf`,
         });

@@ -23,7 +23,8 @@ import {
   type ActivationNotificationState,
 } from '@/lib/activationNotifications';
 
-const WAITLIST_TABLE = 'waitlist_pages' as any;
+import { loadPrototypeStageArtifact } from '@/lib/prototypeStageSource';
+
 const ICP_RESULTS_TABLE = 'icp_analysis_results' as any;
 const PMF_EVIDENCE_TABLE = 'pmf_validation_evidence' as any;
 
@@ -59,20 +60,10 @@ export function useActivationJourney(entryStageOverride?: ActivationEntryStage) 
       }
 
       if (entryStage === 'stage_ii') {
-        const { data } = await supabase
-          .from(WAITLIST_TABLE)
-          .select('created_at, updated_at')
-          .eq('user_id', user.id)
-          .order('updated_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        return {
-          completedAt:
-            (data as { updated_at?: string; created_at?: string } | null)?.updated_at ??
-            (data as { updated_at?: string; created_at?: string } | null)?.created_at ??
-            null,
-        };
+        // Reads Demo Studio and the legacy waitlist builder, so founders on the current
+        // tool are not reported as having skipped the prototype stage.
+        const prototype = await loadPrototypeStageArtifact(user.id);
+        return { completedAt: prototype.completedAt };
       }
 
       const { data } = await supabase

@@ -44,6 +44,8 @@ interface CompletionSignals {
   fundraisingCompletedAt: string | null;
 }
 
+import { loadPrototypeStageArtifact } from '@/lib/prototypeStageSource';
+
 const USER_PROGRESS_TABLE = 'user_progress' as any;
 const WAITLIST_TABLE = 'waitlist_pages' as any;
 const WAITLIST_SIGNUPS_TABLE = 'waitlist_signups' as any;
@@ -226,6 +228,13 @@ export const useBizMapProgress = () => {
           }
         }
       }
+    }
+
+    // A published Demo Studio demo completes the prototype stage just as a published
+    // waitlist page does. Without this, founders on the current tool stall at Identity.
+    const demoPrototype = await loadPrototypeStageArtifact(userId, { publishedOnly: true });
+    if (demoPrototype.published) {
+      prototypeCompletedAt = maxDate(prototypeCompletedAt, demoPrototype.completedAt);
     }
 
     return {
