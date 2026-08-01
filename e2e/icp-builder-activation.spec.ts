@@ -274,11 +274,9 @@ test("fast ICP preview preserves provenance through auth return and opens interv
   await page.getByRole("button", { name: /Continue with email/i }).click();
 
   await expect(page).toHaveURL(/\/icp\/draft\/icp-e2e-activation\?source=icp-unlock/, { timeout: 25_000 });
-  const interviewTasks = page.getByRole("button", { name: /Open my five customer-interview tasks/i }).first();
-  await expect(interviewTasks).toBeVisible();
-  await interviewTasks.click();
+  const demoHandoff = page.getByRole("button", { name: /Create my prospect demo/i }).first();
+  await expect(demoHandoff).toBeVisible();
+  await demoHandoff.click();
 
-  await expect(page).toHaveURL(/\/dashboard\/tasks\?from=icp_builder&draft=icp-e2e-activation/);
-  await expect(page.getByRole("heading", { name: "Tasks", exact: true })).toBeVisible();
-  await expect(page.getByText("Tailor your next tasks")).toBeVisible();
+  await expect(page).toHaveURL(/\/demo-studio\?icp=icp-e2e-activation/);
 });

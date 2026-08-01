@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
@@ -38,6 +38,8 @@ import DemoStudioWallpaper from '@/components/wallpapers/DemoStudioWallpaper';
 import { trackToolOpened } from '@/lib/analytics';
 import { resolveIcpSource } from '@/lib/icpHandoffSource';
 import { icpArtifactToDemoBrief } from '@/lib/icpToDemoBrief';
+import { ensurePrebuildContext } from '@/lib/prebuildContext';
+import { consumeJourneyHandoff, findJourneyHandoff, trackJourneyEvent, trackPrebuildLineageEvent } from '@/lib/journeyOutcomes';
 
 const HOW_IT_WORKS = [
   { icon: Sparkles, step: '1', title: 'Define the story', desc: 'Audience, promise, aha moment, and CTA.' },
@@ -60,6 +62,21 @@ export default function ProjectsDashboardPage() {
   const [searchParams] = useSearchParams();
   const icpParam = searchParams.get('icp');
   const [icpPrefilled, setIcpPrefilled] = useState(false);
+  const [validationContextId, setValidationContextId] = useState<string | null>(null);
+  const [originatingHandoffId, setOriginatingHandoffId] = useState<string | null>(null);
+  const handoffConsumedRef = useRef(false);
+
+  useEffect(() => {
+    const abandon = () => {
+      if (validationContextId && originatingHandoffId && !handoffConsumedRef.current) {
+        trackPrebuildLineageEvent('prebuild_handoff_abandoned', {
+          validationContextId, handoffId: originatingHandoffId, sourceTool: 'icp_builder', destinationTool: 'demo_studio',
+        });
+      }
+    };
+    window.addEventListener('beforeunload', abandon);
+    return () => window.removeEventListener('beforeunload', abandon);
+  }, [originatingHandoffId, validationContextId]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -102,8 +119,22 @@ export default function ProjectsDashboardPage() {
       const icp = await resolveIcpSource({ userId: user.id, draftId: icpParam, allowLatestFallback: false });
       if (!active || !icp) return;
       const { project } = icpArtifactToDemoBrief(icp.artifact);
+      const [context, handoff] = await Promise.all([
+        ensurePrebuildContext({ userId: user.id, icpAnalysisId: icpParam, label: project.name }),
+        findJourneyHandoff('demo_studio', icpParam).catch(() => null),
+      ]);
       setName((prev) => prev || project.name);
       setTagline((prev) => prev || project.tagline);
+      setValidationContextId(context.id);
+      setOriginatingHandoffId(handoff?.id ?? null);
+      trackJourneyEvent('journey_next_stage_started', {
+        tool: 'demo_studio', source: 'icp_handoff', artifact_type: 'customer_decision_brief',
+        artifact_id: icpParam, validation_context_id: context.id, handoff_id: handoff?.id ?? null,
+      });
+      trackPrebuildLineageEvent('prebuild_handoff_opened', {
+        validationContextId: context.id, handoffId: handoff?.id, sourceTool: 'icp_builder',
+        destinationTool: 'demo_studio', artifactId: icpParam,
+      });
       setIcpPrefilled(true);
       setDialogOpen(true);
     })();
@@ -116,7 +147,21 @@ export default function ProjectsDashboardPage() {
     if (!user || !name.trim()) return;
     setCreating(true);
     try {
-      const project = await createProject(user.id, { name: name.trim(), tagline: tagline.trim() || undefined });
+      const project = await createProject(user.id, {
+        name: name.trim(),
+        tagline: tagline.trim() || undefined,
+        validationContextId,
+        originatingHandoffId,
+        sourceIcpAnalysisId: icpParam,
+      });
+      if (originatingHandoffId) {
+        await consumeJourneyHandoff(originatingHandoffId, project.id);
+        handoffConsumedRef.current = true;
+        if (validationContextId) trackPrebuildLineageEvent('prebuild_handoff_consumed', {
+          validationContextId, handoffId: originatingHandoffId, sourceTool: 'icp_builder',
+          destinationTool: 'demo_studio', artifactId: project.id,
+        });
+      }
       toast.success('Project created.');
       // Carry the ICP through so the brief prefills from the same draft.
       const briefPath = `/demo-studio/projects/${project.id}/brief`;

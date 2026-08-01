@@ -49,17 +49,21 @@ test('pmf funnel analytics events are wired on client actions', () => {
   assert.match(discoveryEdge, /pmf_customer_discovery_health_checked/);
 });
 
-test('pmf evidence persistence is updated by scoring and survey responses', () => {
+test('pmf evidence persistence is context-scoped and server authoritative', () => {
   const scorer = read('supabase/functions/pmf-evidence-scorer/index.ts');
   const surveyRespond = read('supabase/functions/pmf-survey-respond/index.ts');
   const surveyHook = read('src/hooks/usePMFSurvey.ts');
 
-  assert.match(scorer, /from\('pmf_validation_evidence' as any\)/);
-  assert.match(scorer, /interview_notes_count:\s*loggedInterviewCount/);
+  assert.match(scorer, /from\('pmf_context_evidence' as any\)/);
+  assert.match(scorer, /fetchStoredInterviews/);
+  assert.match(scorer, /fetchSurveyEvidence/);
+  assert.match(scorer, /validation_context_id:\s*validationContext\.id/);
+  assert.doesNotMatch(scorer, /body\.surveyEvidence/);
   assert.match(surveyRespond, /PMF_REQUIRED_SIGNALS\s*=\s*25/);
-  assert.match(surveyRespond, /from\("pmf_validation_evidence"\)/);
+  assert.match(surveyRespond, /from\("pmf_context_evidence"\)/);
+  assert.match(surveyRespond, /verified:\s*true/);
   assert.match(surveyRespond, /survey_results_count:\s*total/);
-  assert.match(surveyHook, /from\(EVIDENCE\)/);
+  assert.match(surveyHook, /from\('pmf_context_evidence' as never\)/);
 });
 
 test('pmf required signal migration normalizes old rows to 25', () => {

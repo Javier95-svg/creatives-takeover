@@ -15,6 +15,10 @@ verify_jwt = true
 [functions.demo-studio-lead]
 verify_jwt = true
 
+# Public demo behavior is validated, rate-limited, and deduplicated in the function.
+[functions.demo-studio-event]
+verify_jwt = false
+
 # Invoked by pg_cron via pg_net (no JWT); guarded by a CRON_SECRET header instead.
 [functions.demo-studio-webhook-retry]
 verify_jwt = false

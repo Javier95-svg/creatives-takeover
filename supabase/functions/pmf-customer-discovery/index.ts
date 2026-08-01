@@ -192,6 +192,14 @@ serve(async (req) => {
     const searchVersion: 1 | 2 = body.searchVersion === 2 ? 2 : 1;
     const validationStage: ValidationStage = normalizeValidationStage(body.validationStage);
     const filters = normalizeDiscoveryFilters(body.filters);
+    const validationContextId = typeof body.validationContextId === 'string' ? body.validationContextId : '';
+    const originatingHandoffId = typeof body.originatingHandoffId === 'string' ? body.originatingHandoffId : null;
+    if (!validationContextId) {
+      return jsonResponse({ success: false, error: 'Choose an evidence case first.', errorCode: 'MISSING_CONTEXT' }, 400);
+    }
+    const { data: ownedContext } = await serviceClient.from('prebuild_validation_contexts')
+      .select('id').eq('id', validationContextId).eq('user_id', user.id).maybeSingle();
+    if (!ownedContext) return jsonResponse({ success: false, error: 'Evidence case not found.', errorCode: 'INVALID_CONTEXT' }, 404);
     if (!problem && !productName && !targetAudience) {
       return jsonResponse({ success: false, error: 'Describe your product, audience, or the problem you solve.', errorCode: 'INVALID_INPUT' }, 400);
     }
@@ -514,6 +522,8 @@ serve(async (req) => {
       .from('pmf_customer_discovery' as any)
       .insert({
         user_id: user.id,
+        validation_context_id: validationContextId,
+        originating_handoff_id: originatingHandoffId,
         product_name: productName || null,
         target_audience: targetAudience || null,
         problem: problem || null,

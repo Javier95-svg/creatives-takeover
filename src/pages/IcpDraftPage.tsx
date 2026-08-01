@@ -91,11 +91,11 @@ export default function IcpDraftPage() {
     });
   }, [artifact, draftId, isUnlockSource]);
 
-  const handleInterviewTasksClick = () => {
+  const handleDemoStudioClick = () => {
     captureEvent("icp_unlocked_draft_dashboard_clicked", {
       draft_id: draftId,
       page_path: draftId ? `/icp/draft/${draftId}` : "/icp/draft",
-      source: "customer_interview_tasks",
+      source: "demo_studio_handoff",
     });
     trackActivationFunnelEvent("activation_step_completed", {
       entry_id: "icp_draft_unlock",
@@ -105,20 +105,20 @@ export default function IcpDraftPage() {
       is_authenticated: true,
       artifact_type: "customer_decision_brief",
       artifact_id: draftId,
-      action: "open_interview_tasks",
+      action: "open_demo_studio",
     });
     trackJourneyEvent("journey_next_stage_started", {
       tool: "icp_builder",
       artifact_type: "customer_decision_brief",
       artifact_id: draftId,
       source: "icp-draft-unlock",
-      action: "open_interview_tasks",
+      action: "open_demo_studio",
     });
     // Send founders to the surface that actually records conversations. The dashboard
     // task list never read `from=icp_builder`, so the interview plan died there; the
     // PMF Lab interview logger opens seeded with these same five questions and every
     // logged interview counts toward the evidence grade.
-    navigate(`/pmf-lab?step=interviews&icp=${draftId ?? ""}`);
+    navigate(`/demo-studio?icp=${draftId ?? ""}`);
   };
 
   const dismissUnlockBanner = () => {
@@ -262,7 +262,7 @@ export default function IcpDraftPage() {
                     Your full ICP Draft is unlocked
                   </h2>
                   <p className="max-w-xl text-sm leading-6 text-muted-foreground">
-                    Your brief is saved. Start with the five interview questions generated from its evidence gaps — every answer you log counts toward your build decision.
+                    Your brief is saved. Demo Studio will carry this exact draft forward so prospects can react before you make a build decision.
                   </p>
                 </div>
               </div>
@@ -271,9 +271,9 @@ export default function IcpDraftPage() {
                   type="button"
                   size="lg"
                   className="shrink-0 gap-2 bg-slate-950 text-white hover:bg-slate-800"
-                  onClick={handleInterviewTasksClick}
+                  onClick={handleDemoStudioClick}
                 >
-                  Start my five customer interviews
+                  Create my prospect demo
                   <ArrowRight className="h-4 w-4" />
                 </Button>
                 <Button
@@ -300,10 +300,10 @@ export default function IcpDraftPage() {
               <div className="space-y-1">
                 <p className="text-label font-semibold uppercase tracking-[0.24em] text-[#7dd3fc]">Next step</p>
                 <h2 className="text-xl font-semibold text-white sm:text-2xl">
-                  Validate this customer before you build more.
+                  Give this customer something concrete to react to.
                 </h2>
                 <p className="max-w-xl text-sm leading-6 text-muted-foreground">
-                  Your primary next move is five focused interviews, logged in PMF Lab so they count as evidence. Demo Studio can then turn the validated story into interactive proof that adds demand signals to the same score.
+                  Demo Studio carries this exact ICP draft forward as an explicitly untested story. Publish it, collect reactions, then bring the scoped evidence into PMF Lab.
                 </p>
               </div>
             </div>
@@ -311,9 +311,9 @@ export default function IcpDraftPage() {
               type="button"
               size="lg"
               className="shrink-0 gap-2 bg-white text-foreground hover:bg-white/90"
-              onClick={handleInterviewTasksClick}
+              onClick={handleDemoStudioClick}
             >
-              <span>Start my five customer interviews</span>
+              <span>Create my prospect demo</span>
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
@@ -322,14 +322,14 @@ export default function IcpDraftPage() {
               to={`/demo-studio?icp=${draftId ?? ""}`}
               className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white transition hover:bg-white/10"
             >
-              <span className="font-semibold">Demo Studio</span>
-              <span className="mt-1 block text-white/60">Turn the validated customer story into a shareable interactive demo.</span>
+              <span className="font-semibold">Demo Studio â€” recommended next</span>
+              <span className="mt-1 block text-white/60">Turn this exact draft into a shareable interactive demo.</span>
             </Link>
             <Link
               to={`/pmf-lab?icp=${draftId ?? ""}`}
               className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white transition hover:bg-white/10"
             >
-              <span className="font-semibold">PMF Lab</span>
+              <span className="font-semibold">I already have conversations</span>
               <span className="mt-1 block text-white/60">Log what you heard, then see whether interview and demand signals support build, narrow, pivot, or stop.</span>
             </Link>
           </div>
@@ -373,8 +373,8 @@ export default function IcpDraftPage() {
               isSharing={isSharing}
             />
             <div className="flex justify-center">
-              <Button type="button" className="gap-2" onClick={handleInterviewTasksClick}>
-                Start my five customer interviews
+              <Button type="button" className="gap-2" onClick={handleDemoStudioClick}>
+                Create my prospect demo
               </Button>
             </div>
           </div>

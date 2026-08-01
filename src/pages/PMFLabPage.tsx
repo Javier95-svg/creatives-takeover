@@ -30,6 +30,10 @@ import { useCustomerDiscovery } from '@/hooks/useCustomerDiscovery';
 import { captureEvent, trackToolOpened } from '@/lib/analytics';
 import { supabase } from '@/integrations/supabase/client';
 import type { PMFInterviewLeadSeed } from '@/components/pmf/PMFDiscoveryPipeline';
+import { ensurePrebuildContext, getPrebuildContext, listPrebuildContexts, type PrebuildValidationContext } from '@/lib/prebuildContext';
+import { usePMFInterviews } from '@/hooks/usePMFInterviews';
+import { Button } from '@/components/ui/button';
+import { findJourneyHandoff, trackPrebuildLineageEvent } from '@/lib/journeyOutcomes';
 
 const structuredData = [
   {
@@ -61,9 +65,15 @@ export default function PMFLabPage() {
   // page opens with a single clear focus instead of a wall of stacked sections.
   const [activeStep, setActiveStep] = useState<'gather' | 'score'>('gather');
   const stepChosenRef = useRef(false);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const outcomeAnalysisId = searchParams.get('outcome');
   const icpParam = searchParams.get('icp');
+  const contextParam = searchParams.get('context');
+  const [validationContextId, setValidationContextId] = useState<string | null>(contextParam);
+  const [originatingHandoffId, setOriginatingHandoffId] = useState<string | null>(searchParams.get('handoff'));
+  const [demoProjectId, setDemoProjectId] = useState<string | null>(searchParams.get('project'));
+  const [demoId, setDemoId] = useState<string | null>(searchParams.get('demo'));
+  const [contexts, setContexts] = useState<PrebuildValidationContext[]>([]);
   // ?step=interviews is the conversation-stage entry point ICP Builder links to.
   // (?mode=discover, the distribution entry point Demo Studio links to after publish,
   // is applied in the `mode` initializer above so the first paint is already correct.)
@@ -76,6 +86,41 @@ export default function PMFLabPage() {
     ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  useEffect(() => {
+    if (!user) return;
+    void listPrebuildContexts(user.id).then(setContexts).catch(() => setContexts([]));
+  }, [user]);
+
+  useEffect(() => {
+    if (!user || validationContextId || !icpParam) return;
+    void ensurePrebuildContext({ userId: user.id, icpAnalysisId: icpParam })
+      .then((context) => {
+        setValidationContextId(context.id);
+        const next = new URLSearchParams(searchParams);
+        next.set('context', context.id);
+        setSearchParams(next, { replace: true });
+      });
+  }, [icpParam, searchParams, setSearchParams, user, validationContextId]);
+
+  useEffect(() => {
+    if (!user || !demoProjectId || demoId) return;
+    void (supabase as any).from('demo_studio_demos').select('id')
+      .eq('owner_id', user.id).eq('project_id', demoProjectId).eq('status', 'published')
+      .order('updated_at', { ascending: false }).limit(1).maybeSingle()
+      .then(({ data }: { data: { id: string } | null }) => setDemoId(data?.id ?? null));
+  }, [demoId, demoProjectId, user]);
+
+  useEffect(() => {
+    if (!validationContextId || !demoId || originatingHandoffId) return;
+    void findJourneyHandoff('pmf_lab', demoId).then((handoff) => {
+      if (!handoff) return;
+      setOriginatingHandoffId(handoff.id);
+      trackPrebuildLineageEvent('prebuild_handoff_opened', {
+        validationContextId, handoffId: handoff.id, sourceTool: 'demo_studio', destinationTool: 'pmf_lab', artifactId: demoId,
+      });
+    }).catch(() => undefined);
+  }, [demoId, originatingHandoffId, validationContextId]);
+
   const chooseStep = (step: 'gather' | 'score') => {
     stepChosenRef.current = true;
     setActiveStep(step);
@@ -87,34 +132,30 @@ export default function PMFLabPage() {
 
     let active = true;
     const loadContext = async () => {
-      // Honor the ?icp=<draftId> handoff from the ICP Draft page. Without it we fall back
-      // to the most recent draft, which is the wrong one for founders with several.
+      if (!validationContextId) return;
+      const context = await getPrebuildContext(user.id, validationContextId);
+      if (!context) {
+        setValidationContextId(null);
+        return;
+      }
+      const scopedIcpId = icpParam ?? context.icp_analysis_id;
       const icpBase = supabase
         .from('icp_analysis_results')
         .select('id, target_audience, industry, business_description, analysis_data')
         .eq('user_id', user.id);
-      const icpQuery = icpParam
-        ? icpBase.eq('id', icpParam).maybeSingle()
-        : icpBase.order('created_at', { ascending: false }).limit(1).maybeSingle();
+      const icpQuery = scopedIcpId
+        ? icpBase.eq('id', scopedIcpId).maybeSingle()
+        : Promise.resolve({ data: null, error: null });
 
-      const [icpRes, waitlistRes, demoRes] = await Promise.all([
+      let demoQuery = (supabase as any)
+        .from('demo_studio_projects')
+        .select('id, name, updated_at')
+        .eq('owner_id', user.id)
+        .eq('validation_context_id', validationContextId);
+      if (demoProjectId) demoQuery = demoQuery.eq('id', demoProjectId);
+      const [icpRes, demoRes] = await Promise.all([
         icpQuery,
-        supabase
-          .from('waitlist_pages')
-          .select('product_name, updated_at')
-          .eq('user_id', user.id)
-          .order('updated_at', { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-        // Demo Studio superseded the waitlist builder, so the product context has to
-        // read both or every Demo Studio founder shows up here with no product.
-        (supabase as any)
-          .from('demo_studio_projects')
-          .select('name, updated_at')
-          .eq('owner_id', user.id)
-          .order('updated_at', { ascending: false })
-          .limit(1)
-          .maybeSingle(),
+        demoQuery.order('updated_at', { ascending: false }).limit(1).maybeSingle(),
       ]);
       if (!active) return;
 
@@ -137,20 +178,14 @@ export default function PMFLabPage() {
       const plan = artifact?.draftDocument.decisionBrief?.interviewValidationPlan ?? null;
       setIcpInterviewPlan(plan && plan.length > 0 ? plan : null);
 
-      const waitlistRow = waitlistRes.data as { product_name: string | null; updated_at: string | null } | null;
-      const demoRow = demoRes.data as { name: string | null; updated_at: string | null } | null;
-      const newest = [
-        { name: demoRow?.name ?? null, at: demoRow?.updated_at ?? null },
-        { name: waitlistRow?.product_name ?? null, at: waitlistRow?.updated_at ?? null },
-      ]
-        .filter((row) => Boolean(row.name))
-        .sort((a, b) => (b.at ?? '').localeCompare(a.at ?? ''))[0];
-      setWaitlistProductName(newest?.name ?? null);
+      const demoRow = demoRes.data as { id: string; name: string | null; updated_at: string | null } | null;
+      setDemoProjectId(demoRow?.id ?? demoProjectId);
+      setWaitlistProductName(demoRow?.name ?? context.label ?? null);
     };
 
     void loadContext();
     return () => { active = false; };
-  }, [user, icpParam]);
+  }, [user, icpParam, validationContextId, demoProjectId]);
   const faqs = [
     {
       question: 'What does a PMF Readiness Score of 75 or higher actually mean?',
@@ -185,6 +220,25 @@ export default function PMFLabPage() {
   }, [markToolUsed, user]);
 
   const {
+    survey,
+    aggregate: surveyAggregate,
+    shareUrl: surveyShareUrl,
+    isCreating: isCreatingSurvey,
+    createAndPublishSurvey,
+  } = usePMFSurvey(validationContextId, originatingHandoffId);
+
+  const scope = validationContextId ? {
+    validationContextId,
+    originatingHandoffId,
+    icpAnalysisId: icpDraftId,
+    demoProjectId,
+    demoId,
+    surveyId: survey?.id ?? null,
+  } : null;
+
+  const interviewStore = usePMFInterviews(user?.id, validationContextId, originatingHandoffId);
+
+  const {
     phase,
     analysis,
     analysisId,
@@ -200,22 +254,14 @@ export default function PMFLabPage() {
     saveChecklist,
     exportReport,
     resetToIntake,
-  } = usePMFLab();
+  } = usePMFLab(scope);
 
   // Production PMF Lab path: score evidence via pmf-evidence-scorer.
   // market-validation-engine is broader market validation, and pmf-analyzer is legacy.
   const {
-    survey,
-    aggregate: surveyAggregate,
-    shareUrl: surveyShareUrl,
-    isCreating: isCreatingSurvey,
-    createAndPublishSurvey,
-  } = usePMFSurvey();
-
-  const {
     discovery,
     loadDiscovery,
-  } = useCustomerDiscovery();
+  } = useCustomerDiscovery(validationContextId, originatingHandoffId);
 
   const customerDiscoverySignals =
     (discovery?.painPoints.length ?? 0) +
@@ -225,7 +271,7 @@ export default function PMFLabPage() {
 
   // The single next action to spotlight, in the canonical evidence order:
   // get the 40% survey signal → log interviews → save the checklist → score.
-  const savedInterviews = evidence?.interview_notes_count ?? 0;
+  const savedInterviews = interviewStore.interviews.length;
   const surveyResponsesCount = surveyAggregate.total || evidence?.survey_results_count || 0;
   const checklistCount = evidence?.validation_checklist?.length ?? 0;
   const hubRecommendation: PMFHubRecommendation = (() => {
@@ -276,17 +322,6 @@ export default function PMFLabPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [surveyAggregate.total, surveyAggregate.very, surveyAggregate.somewhat, surveyAggregate.not]);
 
-  const surveyEvidence = surveyAggregate.total > 0
-    ? {
-        total: surveyAggregate.total,
-        veryDisappointedPct: surveyAggregate.veryPct,
-        sampleVerbatims: surveyAggregate.verbatims
-          .map((v) => v.feedback || v.mainBenefit || '')
-          .filter(Boolean)
-          .slice(0, 5),
-      }
-    : undefined;
-
   const handleCreateSurvey = () => {
     void createAndPublishSurvey({
       productName: waitlistProductName ?? undefined,
@@ -322,6 +357,44 @@ export default function PMFLabPage() {
       tone: 'border-warning/25 bg-warning/10 text-warning dark:text-warning',
     },
   ];
+
+  const chooseContext = (context: PrebuildValidationContext) => {
+    setValidationContextId(context.id);
+    const next = new URLSearchParams(searchParams);
+    next.set('context', context.id);
+    if (context.icp_analysis_id) next.set('icp', context.icp_analysis_id);
+    setSearchParams(next);
+  };
+
+  if (user && hasAccess && !validationContextId) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SEO title="Choose an evidence case â€” PMF Lab" description="Choose which idea PMF Lab should evaluate." noindex />
+        <Navigation />
+        <main className="container mx-auto max-w-3xl px-4 pb-20 pt-32">
+          <div className="rounded-3xl border border-border/60 bg-card p-7 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">PMF evidence scope</p>
+            <h1 className="mt-2 text-3xl font-bold">Which idea are you evaluating?</h1>
+            <p className="mt-3 text-muted-foreground">PMF Lab never mixes your latest artifacts. Choose an existing ICP/Demo journey, or deliberately start an unscoped evidence case.</p>
+            <div className="mt-6 space-y-3">
+              {contexts.map((context) => (
+                <button key={context.id} type="button" onClick={() => chooseContext(context)} className="flex w-full items-center justify-between rounded-2xl border border-border p-4 text-left hover:border-primary/50">
+                  <span><span className="block font-semibold">{context.label || 'Untitled idea'}</span><span className="text-xs text-muted-foreground">{context.icp_analysis_id ? 'ICP-linked journey' : 'Explicitly unscoped evidence'}</span></span>
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              ))}
+            </div>
+            <Button className="mt-5" variant="outline" onClick={() => {
+              void ensurePrebuildContext({ userId: user.id, explicitlyUnscoped: true })
+                .then((context) => { setContexts((items) => [context, ...items]); chooseContext(context); });
+            }}>Create an unscoped evidence case</Button>
+            <p className="mt-3 text-xs text-muted-foreground">Legacy surveys, reports, and Demo activity remain readable in their original views, but are not attached automatically.</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -559,12 +632,16 @@ export default function PMFLabPage() {
                               initialInterviewLead={interviewLeadSeed}
                               initialStep={wantsInterviewStep ? 1 : undefined}
                               icpInterviewPlan={icpInterviewPlan}
+                              icpDraftId={icpDraftId}
+                              initialInterviews={interviewStore.interviews}
+                              onSaveInterview={interviewStore.saveInterview}
+                              onDeleteInterview={interviewStore.deleteInterview}
+                              onImportInterviews={interviewStore.saveMany}
                               onSubmit={(answers) => runAnalysis(answers, {
                                 businessContext: {
                                   productName: waitlistProductName ?? undefined,
                                   targetAudience: icpPersonaName ?? undefined,
                                 },
-                                surveyEvidence,
                               })}
                               isSubmitting={false}
                             />

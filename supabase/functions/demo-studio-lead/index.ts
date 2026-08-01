@@ -17,6 +17,7 @@ const WEBHOOK_TIMEOUT_MS = 5000;
 
 interface LeadRequest {
   projectId?: string;
+  demoId?: string | null;
   email?: string;
   referrer?: string | null;
   vslVariationSeen?: string | null;
@@ -218,12 +219,20 @@ serve(async (req) => {
     if (!project || project.launch_published !== true) {
       return json({ success: false, error: "This launch page is not accepting signups." }, 404);
     }
+    const demoId = (body.demoId || '').trim() || null;
+    if (demoId) {
+      const { data: demo } = await admin.from('demo_studio_demos').select('id')
+        .eq('id', demoId).eq('project_id', projectId).eq('status', 'published').maybeSingle();
+      if (!demo) return json({ success: false, error: 'Published demo not found.' }, 404);
+    }
 
     const { data: signup, error: signupError } = await admin
       .from("demo_studio_signups")
       .insert({
         project_id: projectId,
+        demo_id: demoId,
         email,
+        verified: true,
         referrer: body.referrer ?? null,
         vsl_variation_seen: body.vslVariationSeen ?? null,
       })
@@ -237,6 +246,7 @@ serve(async (req) => {
     await admin.from("demo_studio_events").insert({
       project_id: projectId,
       type: "signup",
+      verified: true,
       meta: { vsl_variation_seen: body.vslVariationSeen ?? null, referrer: body.referrer ?? null, source: "edge" },
     });
 

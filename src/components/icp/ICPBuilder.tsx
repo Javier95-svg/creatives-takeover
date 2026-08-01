@@ -77,9 +77,11 @@ import {
   createJourneyHandoff,
   registerJourneyAssumptions,
   trackJourneyEvent,
+  trackPrebuildLineageEvent,
   upsertJourneyOutcome,
 } from "@/lib/journeyOutcomes";
 import { evaluateIcpArtifact } from "@/lib/icpOutcome";
+import { ensurePrebuildContext } from "@/lib/prebuildContext";
 
 const ICP_RESULTS_TABLE = "icp_analysis_results";
 const SEED_TIMEOUT_MS = 25000;
@@ -1060,15 +1062,30 @@ const ICPBuilder: React.FC = () => {
         if (!['ready', 'verified'].includes(saved.evaluation.status)) return;
         const outcomeId = (saved.outcome as { id?: string } | null)?.id;
         if (!outcomeId) return;
-        await createJourneyHandoff({
+        const context = await ensurePrebuildContext({
+          userId: user.id,
+          icpAnalysisId: analysisId,
+          label: artifact.draftDocument.customer.personaName,
+        });
+        const handoff = await createJourneyHandoff({
           sourceOutcomeId: outcomeId,
-          destinationTool: 'pmf_lab',
+          destinationTool: 'demo_studio',
           payload: {
+            icpAnalysisId: analysisId,
+            validationContextId: context.id,
+            demoProjectId: null,
+            demoId: null,
+            surveyId: null,
             sourceArtifactId: analysisId,
             sourceArtifactVersion: String(artifact.version),
-            destinationRoute: `/pmf-lab?icp=${analysisId}`,
+            assumptionsTested: false,
+            destinationRoute: `/demo-studio?icp=${analysisId}`,
           },
-          idempotencyKey: `icp:${analysisId}:pmf`,
+          idempotencyKey: `icp:${analysisId}:demo`,
+        });
+        trackPrebuildLineageEvent('prebuild_handoff_offered', {
+          validationContextId: context.id, handoffId: handoff.id, sourceTool: 'icp_builder',
+          destinationTool: 'demo_studio', artifactId: analysisId,
         });
       }).catch((outcomeError) => console.error('Could not update journey outcome', outcomeError));
       trackJourneyEvent('journey_stage_outcome_completed', {

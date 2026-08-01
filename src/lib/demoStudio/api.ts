@@ -96,7 +96,15 @@ export async function getProject(id: string): Promise<DemoStudioProject | null> 
 
 export async function createProject(
   ownerId: string,
-  fields: { name: string; tagline?: string; category?: string; acquisitionSource?: string },
+  fields: {
+    name: string;
+    tagline?: string;
+    category?: string;
+    acquisitionSource?: string;
+    validationContextId?: string | null;
+    originatingHandoffId?: string | null;
+    sourceIcpAnalysisId?: string | null;
+  },
 ): Promise<DemoStudioProject> {
   const result = await supabase
     .from(PROJECTS)
@@ -106,6 +114,9 @@ export async function createProject(
       tagline: fields.tagline ?? null,
       category: fields.category ?? null,
       acquisition_source: fields.acquisitionSource ?? null,
+      validation_context_id: fields.validationContextId ?? null,
+      originating_handoff_id: fields.originatingHandoffId ?? null,
+      source_icp_analysis_id: fields.sourceIcpAnalysisId ?? null,
     } as any)
     .select('*')
     .single();
@@ -918,11 +929,12 @@ export async function getPublicLaunchPage(slug: string): Promise<PublicLaunchPag
 export async function createLaunchSignup(
   projectId: string,
   email: string,
-  fields: { referrer?: string | null; vslVariationSeen?: string | null } = {},
+  fields: { referrer?: string | null; vslVariationSeen?: string | null; demoId?: string | null } = {},
 ): Promise<void> {
   const { data, error } = await supabase.functions.invoke('demo-studio-lead', {
     body: {
       projectId,
+      demoId: fields.demoId ?? null,
       email: email.trim().toLowerCase(),
       referrer: fields.referrer ?? null,
       vslVariationSeen: fields.vslVariationSeen ?? null,

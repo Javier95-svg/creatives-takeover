@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -33,7 +33,6 @@ export interface PMFSurveyAggregate {
 
 const SURVEYS = 'pmf_surveys' as never;
 const RESPONSES = 'pmf_survey_responses' as never;
-const EVIDENCE = 'pmf_validation_evidence' as never;
 
 const EMPTY_AGGREGATE: PMFSurveyAggregate = { total: 0, very: 0, somewhat: 0, not: 0, veryPct: 0, verbatims: [] };
 
@@ -46,11 +45,13 @@ function publicOrigin(): string {
   return 'https://creatives-takeover.com';
 }
 
-export function usePMFSurvey() {
+export function usePMFSurvey(validationContextId?: string | null, originatingHandoffId?: string | null) {
   const { user } = useAuth();
   const [survey, setSurvey] = useState<PMFSurvey | null>(null);
   const [aggregate, setAggregate] = useState<PMFSurveyAggregate>(EMPTY_AGGREGATE);
   const [isCreating, setIsCreating] = useState(false);
+  const activeContextRef = useRef(validationContextId);
+  activeContextRef.current = validationContextId;
 
   const loadResponses = useCallback(async (surveyId: string) => {
     const { data, error } = await supabase
@@ -81,22 +82,26 @@ export function usePMFSurvey() {
       }
     }
     const total = very + somewhat + not;
-    setAggregate({ total, very, somewhat, not, veryPct: total > 0 ? Math.round((very / total) * 100) : 0, verbatims });
-  }, []);
+    if (activeContextRef.current === validationContextId) {
+      setAggregate({ total, very, somewhat, not, veryPct: total > 0 ? Math.round((very / total) * 100) : 0, verbatims });
+    }
+  }, [validationContextId]);
 
   const loadSurvey = useCallback(async () => {
-    if (!user) return;
+    if (!user || !validationContextId) return;
     const { data, error } = await supabase
       .from(SURVEYS)
       .select('id, slug, product_name, audience, status')
       .eq('user_id', user.id)
+      .eq('validation_context_id', validationContextId)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
     if (error || !data) return;
+    if (activeContextRef.current !== validationContextId) return;
     setSurvey(data as unknown as PMFSurvey);
     await loadResponses((data as unknown as PMFSurvey).id);
-  }, [user, loadResponses]);
+  }, [user, validationContextId, loadResponses]);
 
   useEffect(() => {
     if (!user) return;
@@ -104,7 +109,7 @@ export function usePMFSurvey() {
   }, [user, loadSurvey]);
 
   const createAndPublishSurvey = useCallback(async (opts: { productName?: string; audience?: string }) => {
-    if (!user) {
+    if (!user || !validationContextId) {
       toast.error('Sign in to create a survey.');
       return null;
     }
@@ -118,6 +123,8 @@ export function usePMFSurvey() {
           .from(SURVEYS)
           .insert({
             user_id: user.id,
+            validation_context_id: validationContextId,
+            originating_handoff_id: originatingHandoffId ?? null,
             slug,
             product_name: opts.productName || null,
             audience: opts.audience || null,
@@ -129,11 +136,13 @@ export function usePMFSurvey() {
           setSurvey(data as unknown as PMFSurvey);
           setAggregate(EMPTY_AGGREGATE);
           await supabase
-            .from(EVIDENCE)
+            .from('pmf_context_evidence' as never)
             .upsert({
               user_id: user.id,
+              validation_context_id: validationContextId,
+              originating_handoff_id: originatingHandoffId ?? null,
               required_signals: PMF_REQUIRED_SIGNALS,
-            } as never, { onConflict: 'user_id' });
+            } as never, { onConflict: 'user_id,validation_context_id' });
           captureEvent('pmf_survey_created', {
             has_product_name: Boolean(opts.productName?.trim()),
             has_audience: Boolean(opts.audience?.trim()),
@@ -150,7 +159,7 @@ export function usePMFSurvey() {
     } finally {
       setIsCreating(false);
     }
-  }, [user]);
+  }, [originatingHandoffId, user, validationContextId]);
 
   const refreshResponses = useCallback(async () => {
     if (survey) await loadResponses(survey.id);

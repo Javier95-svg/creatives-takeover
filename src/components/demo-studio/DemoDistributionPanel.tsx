@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ArrowRight, Check, Copy, ExternalLink, Radar, Users } from 'lucide-react';
@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useCustomerDiscovery } from '@/hooks/useCustomerDiscovery';
 import { captureEvent } from '@/lib/analytics';
+import { supabase } from '@/integrations/supabase/client';
+import { normalizeStoredArtifact } from '@/lib/icpDraftArtifacts';
 
 /**
  * Publishing a demo used to be the end of the road: the founder got a URL and no
@@ -21,16 +23,39 @@ const MAX_PEOPLE = 5;
 interface DemoDistributionPanelProps {
   shareUrl: string;
   demoTitle: string | null;
+  validationContextId?: string | null;
+  originatingHandoffId?: string | null;
+  sourceIcpAnalysisId?: string | null;
+  projectId?: string | null;
+  demoId?: string | null;
 }
 
-export default function DemoDistributionPanel({ shareUrl, demoTitle }: DemoDistributionPanelProps) {
-  const { discovery } = useCustomerDiscovery();
+export default function DemoDistributionPanel({ shareUrl, demoTitle, validationContextId, originatingHandoffId, sourceIcpAnalysisId, projectId, demoId }: DemoDistributionPanelProps) {
+  const { discovery } = useCustomerDiscovery(validationContextId, originatingHandoffId);
+  const [interviewQuestions, setInterviewQuestions] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   const communities = (discovery?.communities ?? []).slice(0, MAX_COMMUNITIES);
   const people = (discovery?.people ?? []).slice(0, MAX_PEOPLE);
   const hasTargets = communities.length > 0 || people.length > 0;
+  const pmfParams = new URLSearchParams({
+    ...(validationContextId ? { context: validationContextId } : {}),
+    ...(originatingHandoffId ? { handoff: originatingHandoffId } : {}),
+    ...(sourceIcpAnalysisId ? { icp: sourceIcpAnalysisId } : {}),
+    ...(projectId ? { project: projectId } : {}),
+    ...(demoId ? { demo: demoId } : {}),
+  });
+
+  useEffect(() => {
+    if (!sourceIcpAnalysisId) return;
+    void supabase.from('icp_analysis_results').select('analysis_data').eq('id', sourceIcpAnalysisId).maybeSingle()
+      .then(({ data }) => {
+        if (!data) return;
+        const artifact = normalizeStoredArtifact(data as never).artifact;
+        setInterviewQuestions((artifact?.draftDocument.decisionBrief?.interviewValidationPlan ?? []).map((item) => item.question));
+      });
+  }, [sourceIcpAnalysisId]);
 
   // Seeded from Discovery's own DM template so the outreach language matches the
   // pain it actually found, with the live demo link appended.
@@ -77,7 +102,7 @@ export default function DemoDistributionPanel({ shareUrl, demoTitle }: DemoDistr
           counts toward your PMF decision.
         </p>
         <Button asChild size="sm" className="gap-1.5">
-          <Link to="/pmf-lab?mode=discover">
+          <Link to={`/pmf-lab?${pmfParams.toString()}&mode=discover`}>
             Find customers to talk to
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
@@ -151,6 +176,14 @@ export default function DemoDistributionPanel({ shareUrl, demoTitle }: DemoDistr
       )}
 
       <div className="space-y-1.5">
+        {interviewQuestions.length > 0 && (
+          <div className="mb-4 rounded-lg border border-primary/20 bg-primary/5 p-3">
+            <p className="text-label font-semibold uppercase tracking-wide text-primary">Questions from this ICP</p>
+            <ol className="mt-2 list-decimal space-y-1 pl-4 text-xs text-muted-foreground">
+              {interviewQuestions.map((question) => <li key={question}>{question}</li>)}
+            </ol>
+          </div>
+        )}
         <p className="text-label font-semibold uppercase tracking-wide text-muted-foreground">Outreach message</p>
         <Textarea
           rows={6}
@@ -164,7 +197,7 @@ export default function DemoDistributionPanel({ shareUrl, demoTitle }: DemoDistr
             {copied ? 'Copied' : 'Copy message'}
           </Button>
           <Button asChild size="sm" variant="ghost" className="gap-1.5">
-            <Link to="/pmf-lab?step=interviews">
+            <Link to={`/pmf-lab?${pmfParams.toString()}&step=interviews`}>
               Log what they said
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>

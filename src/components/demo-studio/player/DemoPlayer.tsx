@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight, Download, Loader2, Mic, RotateCcw } from 'lucide
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { trackDemoEvent } from '@/lib/demoStudio/events';
+import { submitDemoResponse, trackDemoEvent } from '@/lib/demoStudio/events';
 import SnapshotFrame from '@/components/demo-studio/SnapshotFrame';
 import type { DemoStepWithHotspots, DemoStudioHotspot, DemoTheme } from '@/lib/demoStudio/types';
 
@@ -45,6 +45,8 @@ export default function DemoPlayer({
   const [index, setIndex] = useState(0);
   const [finished, setFinished] = useState(false);
   const [exporting, setExporting] = useState<null | 'mp4' | 'gif' | 'narrated'>(null);
+  const [objection, setObjection] = useState('');
+  const [responseSent, setResponseSent] = useState(false);
   const onCompleteRef = useRef(onComplete);
   useEffect(() => {
     onCompleteRef.current = onComplete;
@@ -58,6 +60,18 @@ export default function DemoPlayer({
   const current = steps[index];
   const resolvedCtaLabel = ctaLabel || theme?.endCtaLabel || 'Get started';
   const resolvedCtaHref = ctaHref || theme?.endCtaHref || null;
+  const demoGoal = theme?.demoGoal ?? 'collect_signups';
+
+  const sendResponse = async (response: 'interested' | 'not_for_me' | 'book_call' | 'commitment') => {
+    if (mode !== 'live' || !demoId) return;
+    try {
+      await submitDemoResponse({ demoId, response, objection: objection.trim() || undefined });
+      setResponseSent(true);
+      toast.success('Response saved. Thank you.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not save your response.');
+    }
+  };
 
   // Emit a single demo_view per session when the player goes live.
   useEffect(() => {
@@ -198,13 +212,29 @@ export default function DemoPlayer({
             <h3 className="text-2xl font-semibold">
               {productName ? `${productName} is ready to share` : "That's the demo"}
             </h3>
-            <p className="max-w-sm text-sm text-white/70">You reached the outcome. Publish it to get a live share link.</p>
+            <p className="max-w-sm text-sm text-white/70">
+              {mode === 'live' ? 'Your reaction helps the founder decide what to build.' : 'You reached the outcome. Publish it to get a live share link.'}
+            </p>
+            {mode === 'live' && demoId && demoGoal === 'validate_interest' && !responseSent ? (
+              <div className="w-full max-w-sm space-y-2">
+                <textarea
+                  value={objection}
+                  onChange={(event) => setObjection(event.target.value)}
+                  placeholder="What would stop you from using this? (optional)"
+                  className="min-h-20 w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/45"
+                />
+                <div className="flex justify-center gap-2">
+                  <Button onClick={() => void sendResponse('interested')} style={{ backgroundColor: primaryColor }}>I'm interested</Button>
+                  <Button variant="outline" onClick={() => void sendResponse('not_for_me')} className="bg-white/10 text-white">Not for me</Button>
+                </div>
+              </div>
+            ) : null}
             <div className="flex flex-wrap items-center justify-center gap-3 touch:[&_button]:min-h-[44px]">
-              {resolvedCtaHref ? (
+              {resolvedCtaHref && demoGoal !== 'validate_interest' ? (
                 <Button asChild style={{ backgroundColor: primaryColor }}>
                   <a
                     href={resolvedCtaHref}
-                    onClick={() => {
+                    onClick={(event) => {
                       onCtaClick?.();
                       if (mode === 'live') {
                         void trackDemoEvent('cta_click', {
@@ -212,6 +242,11 @@ export default function DemoPlayer({
                           demoId,
                           meta: { placement: 'demo_complete' },
                         });
+                        if (demoGoal === 'book_calls' || demoGoal === 'sell_product') {
+                          event.preventDefault();
+                          const response = demoGoal === 'book_calls' ? 'book_call' : 'commitment';
+                          void sendResponse(response).finally(() => window.location.assign(resolvedCtaHref));
+                        }
                       }
                     }}
                   >

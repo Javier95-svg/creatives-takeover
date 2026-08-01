@@ -50,12 +50,12 @@ interface PMFEvidenceAnswers {
   };
   // When present and owned by the caller, this run is a free re-score (no credit charge)
   previousAnalysisId?: string;
-  // Verified responses from the founder's hosted Sean Ellis survey (real users)
-  surveyEvidence?: {
-    total: number;
-    veryDisappointedPct: number;
-    sampleVerbatims: string[];
-  };
+  validationContextId?: string;
+  originatingHandoffId?: string;
+  icpAnalysisId?: string;
+  demoProjectId?: string;
+  demoId?: string;
+  surveyId?: string;
 }
 
 interface MarketEvidenceSource {
@@ -76,17 +76,30 @@ interface DemoEvidence {
   completionRate: number;
   ctaClicks: number;
   signups: number;
+  interested: number;
+  rejected: number;
+  bookings: number;
+  commitments: number;
+  objections: string[];
   windowDays: number;
 }
 
 // deno-lint-ignore no-explicit-any
-async function fetchDemoEvidence(supabase: any, userId: string): Promise<DemoEvidence | null> {
+async function fetchDemoEvidence(
+  supabase: any,
+  userId: string,
+  validationContextId: string,
+  demoProjectId?: string,
+  demoId?: string,
+): Promise<DemoEvidence | null> {
   try {
-    const { data: projects } = await supabase
+    let projectQuery = supabase
       .from('demo_studio_projects')
       .select('id')
       .eq('owner_id', userId)
-      .limit(20);
+      .eq('validation_context_id', validationContextId);
+    if (demoProjectId) projectQuery = projectQuery.eq('id', demoProjectId);
+    const { data: projects } = await projectQuery.limit(1);
     const projectIds = ((projects ?? []) as Array<{ id: string }>).map((p) => p.id);
     if (projectIds.length === 0) return null;
 
@@ -94,28 +107,40 @@ async function fetchDemoEvidence(supabase: any, userId: string): Promise<DemoEvi
     since.setDate(since.getDate() - 90);
     const sinceIso = since.toISOString();
 
-    const [eventsRes, signupsRes] = await Promise.all([
+    const [eventsRes, signupsRes, responsesRes] = await Promise.all([
       supabase
         .from('demo_studio_events')
-        .select('type, meta')
+        .select('type, viewer_hash')
         .in('project_id', projectIds)
+        .eq('verified', true)
+        .not('viewer_hash', 'is', null)
+        .match(demoId ? { demo_id: demoId } : {})
         .gte('created_at', sinceIso)
         .limit(5000),
       supabase
         .from('demo_studio_signups')
-        .select('id', { count: 'exact', head: true })
+        .select('email')
         .in('project_id', projectIds)
+        .eq('verified', true)
+        .match(demoId ? { demo_id: demoId } : {})
+        .gte('created_at', sinceIso),
+      supabase
+        .from('demo_studio_responses')
+        .select('response,objection,viewer_hash')
+        .in('project_id', projectIds)
+        .eq('verified', true)
+        .match(demoId ? { demo_id: demoId } : {})
         .gte('created_at', sinceIso),
     ]);
 
-    const events = (eventsRes.data ?? []) as Array<{ type: string; meta: Record<string, unknown> | null }>;
+    const events = (eventsRes.data ?? []) as Array<{ type: string; viewer_hash: string | null }>;
     const uniqueSessions = (type: string) => {
       const sessions = new Set<string>();
       let count = 0;
       for (const event of events) {
         if (event.type !== type) continue;
         count += 1;
-        const sid = event.meta && typeof event.meta['session_id'] === 'string' ? (event.meta['session_id'] as string) : null;
+        const sid = event.viewer_hash;
         if (sid) sessions.add(sid);
       }
       return { count, unique: sessions.size || count };
@@ -123,8 +148,9 @@ async function fetchDemoEvidence(supabase: any, userId: string): Promise<DemoEvi
 
     const views = uniqueSessions('demo_view');
     const completions = uniqueSessions('demo_complete');
-    const ctaClicks = events.filter((event) => event.type === 'cta_click').length;
-    const signups = (signupsRes.count as number | null) ?? 0;
+    const ctaClicks = uniqueSessions('cta_click').unique;
+    const signups = new Set(((signupsRes.data ?? []) as Array<{ email: string }>).map((row) => row.email.toLowerCase())).size;
+    const responses = (responsesRes.data ?? []) as Array<{ response: string; objection: string | null; viewer_hash: string }>;
 
     if (views.count === 0 && signups === 0) return null;
 
@@ -136,12 +162,58 @@ async function fetchDemoEvidence(supabase: any, userId: string): Promise<DemoEvi
       completionRate: views.unique > 0 ? Math.round((completions.unique / views.unique) * 100) : 0,
       ctaClicks,
       signups,
+      interested: responses.filter((row) => row.response === 'interested').length,
+      rejected: responses.filter((row) => row.response === 'not_for_me').length,
+      bookings: responses.filter((row) => row.response === 'book_call').length,
+      commitments: responses.filter((row) => row.response === 'commitment').length,
+      objections: responses.map((row) => row.objection || '').filter(Boolean).slice(0, 10),
       windowDays: 90,
     };
   } catch (err) {
     console.warn('Demo evidence fetch failed, continuing without it:', err);
     return null;
   }
+}
+
+// deno-lint-ignore no-explicit-any
+async function fetchSurveyEvidence(supabase: any, userId: string, validationContextId: string, surveyId?: string) {
+  if (!surveyId) return null;
+  const { data: survey } = await supabase.from('pmf_surveys').select('id')
+    .eq('id', surveyId).eq('user_id', userId).eq('validation_context_id', validationContextId).maybeSingle();
+  if (!survey) return null;
+  const { data } = await supabase.from('pmf_survey_responses')
+    .select('sean_ellis_answer,main_benefit,feedback,participant_hash').eq('survey_id', survey.id)
+    .eq('verified', true).not('participant_hash', 'is', null).limit(500);
+  const seen = new Set<string>();
+  const rows = (data ?? []).filter((row: any) => {
+    const participant = String(row.participant_hash || '').trim();
+    if (!participant || seen.has(participant)) return false;
+    seen.add(participant);
+    return true;
+  });
+  const very = rows.filter((row: any) => row.sean_ellis_answer === 'very').length;
+  return {
+    total: rows.length,
+    veryDisappointedPct: rows.length ? Math.round((very / rows.length) * 100) : 0,
+    sampleVerbatims: rows.map((row: any) => row.feedback || row.main_benefit || '').filter(Boolean).slice(0, 5),
+  };
+}
+
+// deno-lint-ignore no-explicit-any
+async function fetchStoredInterviews(supabase: any, userId: string, validationContextId: string): Promise<PMFInterviewLog[]> {
+  const { data, error } = await supabase.from('pmf_interviews').select('*')
+    .eq('user_id', userId).eq('validation_context_id', validationContextId).order('created_at');
+  if (error) throw error;
+  return (data ?? []).map((row: any) => ({
+    id: row.id, sourceLeadId: row.source_lead_id, intervieweeName: row.interviewee_name,
+    basicProfile: row.basic_profile, segment: row.segment, mainFeedback: row.main_feedback,
+    objections: row.objections, missingFeatures: row.missing_features, interestLevel: row.interest_level,
+    buyingIntent: row.buying_intent, assumptionFingerprint: row.assumption_fingerprint,
+    assumptionStatement: row.assumption_statement, assumptionStatus: row.assumption_status,
+    landingPageShown: row.landing_page_shown, solutionPitched: row.solution_pitched,
+    askedAboutPricing: row.asked_about_pricing, joinedWaitlist: row.joined_waitlist,
+    referredSomeone: row.referred_someone, offeredToPay: row.offered_to_pay,
+  }));
 }
 
 interface PMFInterviewLog {
@@ -179,11 +251,28 @@ serve(async (req) => {
 
     const body: PMFEvidenceAnswers = await req.json();
 
-    // Basic validation
-    const rawInterviews = Array.isArray(body.interviews) ? body.interviews : [];
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    if (!body.validationContextId) {
+      return new Response(JSON.stringify({ error: 'Choose an evidence case before scoring' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const { data: validationContext } = await supabase.from('prebuild_validation_contexts')
+      .select('id,icp_analysis_id').eq('id', body.validationContextId).eq('user_id', user.id).maybeSingle();
+    if (!validationContext) {
+      return new Response(JSON.stringify({ error: 'Evidence case not found' }), {
+        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Interviews are hydrated from the owner-scoped store. Client totals and
+    // client-supplied "verified" rows are never accepted as decision evidence.
+    const rawInterviews = await fetchStoredInterviews(supabase, user.id, validationContext.id);
     const preliminaryEvidence = assessPmfEvidence({ interviews: rawInterviews, surveyResponses: 0, verifiedDemoBehaviors: 0, researchSources: 0 });
     const interviews = preliminaryEvidence.uniqueInterviews;
-    const loggedInterviewCount = interviews.length || body.conversationCount || 0;
+    const loggedInterviewCount = interviews.length;
 
     if (!body.testTypes?.length || loggedInterviewCount < 1) {
       return new Response(JSON.stringify({ error: 'Missing required evidence fields' }), {
@@ -191,10 +280,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Free re-score (Section C): if a prior analysis owned by this user is referenced,
     // skip the credit charge. Ownership is verified server-side so the flag can't be spoofed.
@@ -207,6 +292,7 @@ serve(async (req) => {
           .select('id,analysis_data')
           .eq('id', body.previousAnalysisId)
           .eq('user_id', user.id)
+          .eq('validation_context_id', validationContext.id)
           .maybeSingle();
         isFreeReScore = Boolean(prior);
         priorAnalysis = prior?.analysis_data && typeof prior.analysis_data === 'object'
@@ -381,7 +467,7 @@ serve(async (req) => {
       : 'No external web evidence was retrieved for this run.';
 
     // Verified responses from the founder's hosted Sean Ellis survey (real users).
-    const survey = body.surveyEvidence;
+    const survey = await fetchSurveyEvidence(supabase, user.id, validationContext.id, body.surveyId);
     const surveyBlock = survey && survey.total > 0
       ? `${survey.total} real users completed the founder's product survey. ${survey.veryDisappointedPct}% said they would be VERY disappointed without the product (Sean Ellis PMF benchmark is 40%).` +
         (survey.sampleVerbatims?.length
@@ -391,7 +477,9 @@ serve(async (req) => {
 
     // Behavioral demand evidence from the founder's live Demo Studio demos,
     // fetched server-side so it is verified by the platform rather than typed in.
-    const demoEvidence = await fetchDemoEvidence(supabase, user.id);
+    const demoEvidence = await fetchDemoEvidence(
+      supabase, user.id, validationContext.id, body.demoProjectId, body.demoId,
+    );
     const demoBlock = demoEvidence
       ? `Auto-collected from the founder's live Demo Studio demos over the last ${demoEvidence.windowDays} days (${demoEvidence.projectCount} project${demoEvidence.projectCount === 1 ? '' : 's'}):
 • Demo views: ${demoEvidence.views} (${demoEvidence.uniqueViewers} unique viewers)
@@ -399,13 +487,22 @@ serve(async (req) => {
 • CTA clicks after watching: ${demoEvidence.ctaClicks}
 • Leads/signups captured: ${demoEvidence.signups}`
       : 'No live demo behavioral data was available for this run.';
+    const demoReactionBlock = demoEvidence
+      ? `Explicit responses: ${demoEvidence.interested} interested, ${demoEvidence.rejected} rejected, ${demoEvidence.bookings} call bookings, ${demoEvidence.commitments} commitment actions.` +
+        (demoEvidence.objections.length ? ` Optional objections: ${demoEvidence.objections.join(' | ')}` : '')
+      : '';
 
     // Evidence sources have different strength. Interviews are the unit weight;
     // hosted survey responses and verified product behavior carry 0.75 each;
     // corroborating research carries 0.25 and can never substitute for direct proof.
     const surveySignalCount = survey?.total ?? 0;
     const demoBehaviorSignalCount = demoEvidence
-      ? Math.min(10, Math.max(demoEvidence.completions, demoEvidence.ctaClicks, demoEvidence.signups))
+      ? Math.min(10, Math.max(
+          demoEvidence.completions,
+          demoEvidence.ctaClicks,
+          demoEvidence.signups,
+          demoEvidence.interested + demoEvidence.rejected + demoEvidence.bookings + demoEvidence.commitments,
+        ))
       : 0;
     const researchSignalCount = marketSources.length;
     const evidenceAssessment = assessPmfEvidence({
@@ -588,6 +685,7 @@ ${surveyBlock}
 
 LIVE DEMO BEHAVIOR (verified by the platform, not self-reported):
 ${demoBlock}
+${demoReactionBlock}
 
 When scoring DEMAND PROOF and CONSISTENCY, and when writing the diagnosis, explicitly note whether this external signal corroborates or contradicts the founder's reported evidence, and reference source numbers like [1], [2] where relevant. Populate marketEvidenceSummary accordingly (empty string if no external evidence was retrieved). Do NOT inflate scores solely because external interest exists — the founder's own structured interviews remain the primary source of truth. The REAL USER SURVEY, however, IS first-class direct demand evidence: when present, weight it heavily in Demand Proof and Consistency (a survey ≥40% "very disappointed" is a strong positive signal; well below 40% is a strong negative one) and reference the % and verbatims explicitly.
 
@@ -700,7 +798,7 @@ Apply the scoring rubric to this evidence and return the PMF readiness JSON. Mak
       }
 
       // Attach evidence answers, external citations, and timestamp
-      analysis.evidenceAnswers = body;
+      analysis.evidenceAnswers = { ...body, interviews, conversationCount: interviews.length };
       analysis.generatedAt = new Date().toISOString();
       if (demoEvidence) analysis.demoEvidence = demoEvidence;
       analysis.dataSources = marketSources.map((s) => ({
@@ -747,6 +845,12 @@ Apply the scoring rubric to this evidence and return the PMF readiness JSON. Mak
             demand_score: demandScore,
             data_sources: dataSourcesPayload,
             target_market: ctx.targetAudience || body.testTypes.join(', '),
+            validation_context_id: validationContext.id,
+            originating_handoff_id: body.originatingHandoffId || null,
+            icp_analysis_id: body.icpAnalysisId || validationContext.icp_analysis_id || null,
+            demo_project_id: body.demoProjectId || null,
+            demo_id: body.demoId || null,
+            survey_id: body.surveyId || null,
           })
           .select('id')
           .single();
@@ -762,12 +866,13 @@ Apply the scoring rubric to this evidence and return the PMF readiness JSON. Mak
 
       try {
         const { error: evidenceError } = await supabase
-          .from('pmf_validation_evidence' as any)
+          .from('pmf_context_evidence' as any)
           .upsert({
             user_id: user.id,
-            interview_notes_count: loggedInterviewCount,
+            validation_context_id: validationContext.id,
+            originating_handoff_id: body.originatingHandoffId || null,
             required_signals: MIN_INTERVIEWS_FOR_READY,
-          }, { onConflict: 'user_id' });
+          }, { onConflict: 'user_id,validation_context_id' });
         if (evidenceError) {
           console.warn('Failed to update PMF validation evidence:', evidenceError);
         }

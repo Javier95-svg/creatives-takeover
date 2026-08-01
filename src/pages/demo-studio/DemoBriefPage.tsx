@@ -260,6 +260,7 @@ export default function DemoBriefPage() {
       await updateDemo(demo.id, {
         theme: {
           ...demo.theme,
+          demoGoal: brief.demo_goal,
           endCtaLabel: brief.primary_cta_label || DEFAULT_DEMO_STUDIO_CTA,
           endCtaHref: brief.primary_cta_url || `/demo-studio/projects/${projectId}/launch`,
           brief: {

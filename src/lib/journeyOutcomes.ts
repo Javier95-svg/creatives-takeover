@@ -76,6 +76,17 @@ export interface JourneyHandoff {
   consumed_artifact_id: string | null;
 }
 
+export interface PrebuildJourneyHandoffPayload extends Record<string, unknown> {
+  validationContextId: string;
+  icpAnalysisId: string | null;
+  demoProjectId: string | null;
+  demoId: string | null;
+  surveyId: string | null;
+  sourceArtifactId: string;
+  sourceArtifactVersion?: string;
+  destinationRoute: string;
+}
+
 export interface JourneyAssumption {
   id: string;
   fingerprint: string;
@@ -162,6 +173,21 @@ export function trackJourneyEvent(event: JourneyEvent, properties: JourneyEventP
   });
 }
 
+export function trackPrebuildLineageEvent(
+  event: 'prebuild_handoff_offered' | 'prebuild_handoff_opened' | 'prebuild_handoff_consumed' | 'prebuild_handoff_abandoned' | 'prebuild_evidence_collected' | 'prebuild_decision_reached',
+  properties: { validationContextId: string; handoffId?: string | null; sourceTool?: JourneyTool; destinationTool?: JourneyTool; artifactId?: string | null; evidenceType?: string; decision?: string },
+) {
+  captureEvent(event, {
+    validation_context_id: properties.validationContextId,
+    handoff_id: properties.handoffId ?? undefined,
+    source_tool: properties.sourceTool,
+    destination_tool: properties.destinationTool,
+    artifact_id: properties.artifactId ?? undefined,
+    evidence_type: properties.evidenceType,
+    decision: properties.decision,
+  });
+}
+
 export async function upsertJourneyOutcome(input: JourneyOutcomeInput) {
   const { data, error } = await supabase.functions.invoke("journey-outcome-service", {
     body: {
@@ -214,6 +240,15 @@ export async function consumeJourneyHandoff(handoffId: string, artifactId: strin
   if (error) throw error;
   if (!data?.ok) throw new Error(data?.error || "Could not complete the journey handoff.");
   return data.handoff as JourneyHandoff;
+}
+
+export async function findJourneyHandoff(destinationTool: JourneyTool, sourceArtifactId: string) {
+  const { data, error } = await supabase.functions.invoke("journey-outcome-service", {
+    body: { action: "find_handoff", destinationTool, sourceArtifactId },
+  });
+  if (error) throw error;
+  if (!data?.ok) throw new Error(data?.error || "Could not load the journey handoff.");
+  return (data.handoff ?? null) as JourneyHandoff | null;
 }
 
 export async function registerJourneyAssumptions(sourceArtifactId: string, statements: string[]) {

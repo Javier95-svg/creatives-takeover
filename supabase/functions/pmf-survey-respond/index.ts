@@ -43,6 +43,13 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+async function participantHash(req: Request, surveyId: string, email: string) {
+  const ip = (req.headers.get("x-forwarded-for") || "unknown").split(",")[0].trim();
+  const identity = email || `${ip}:${req.headers.get("user-agent") || "unknown"}`;
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${surveyId}:${identity}`));
+  return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
 const clean = (value: string | undefined, max: number): string | null => {
   const v = (value || "").trim();
   return v ? v.slice(0, max) : null;
@@ -94,7 +101,7 @@ serve(async (req) => {
 
     const { data: survey, error: surveyError } = await admin
       .from("pmf_surveys")
-      .select("id, user_id, status")
+      .select("id, user_id, status, validation_context_id, originating_handoff_id")
       .eq("slug", slug)
       .maybeSingle();
     if (surveyError) throw surveyError;
@@ -102,6 +109,7 @@ serve(async (req) => {
       return json({ success: false, error: "This survey is not accepting responses." }, 404);
     }
 
+    const verifiedParticipantHash = await participantHash(req, survey.id, email);
     const { error: insertError } = await admin
       .from("pmf_survey_responses")
       .insert({
@@ -113,6 +121,8 @@ serve(async (req) => {
         feedback: clean(body.feedback, 4000),
         email: email || null,
         session_id: clean(body.sessionId, 100),
+        participant_hash: verifiedParticipantHash,
+        verified: true,
       });
     // A repeat email for the same survey is a no-op, not an error.
     if (insertError && !/duplicate key|unique/i.test(insertError.message || "")) {
@@ -137,7 +147,8 @@ serve(async (req) => {
     const { data: responseRows, error: responseCountError } = await admin
       .from("pmf_survey_responses")
       .select("sean_ellis_answer")
-      .eq("survey_id", survey.id);
+      .eq("survey_id", survey.id)
+      .eq("verified", true);
 
     if (responseCountError) {
       console.error("pmf-survey-respond: response count sync failed:", responseCountError.message);
@@ -152,16 +163,18 @@ serve(async (req) => {
       }
       const total = very + somewhat + notDisappointed;
       const { error: evidenceError } = await admin
-        .from("pmf_validation_evidence")
+        .from("pmf_context_evidence")
         .upsert({
           user_id: survey.user_id,
+          validation_context_id: survey.validation_context_id,
+          originating_handoff_id: survey.originating_handoff_id,
           survey_results_count: total,
           required_signals: PMF_REQUIRED_SIGNALS,
           sean_ellis_very_disappointed: very,
           sean_ellis_somewhat_disappointed: somewhat,
           sean_ellis_not_disappointed: notDisappointed,
           sean_ellis_updated_at: new Date().toISOString(),
-        }, { onConflict: "user_id" });
+        }, { onConflict: "user_id,validation_context_id" });
       if (evidenceError) {
         console.error("pmf-survey-respond: evidence sync failed:", evidenceError.message);
       }

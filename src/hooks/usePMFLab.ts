@@ -33,6 +33,8 @@ import {
   recordJourneyAssumptionSignal,
   trackJourneyEvent,
   upsertJourneyOutcome,
+  trackPrebuildLineageEvent,
+  consumeJourneyHandoff,
 } from '@/lib/journeyOutcomes';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -192,11 +194,20 @@ export interface PMFScoreTrendPoint {
 type Phase = 'intake' | 'analyzing' | 'results';
 
 const PMF_RESULTS_TABLE = getPmfResultsTableName();
-const PMF_EVIDENCE_TABLE = 'pmf_validation_evidence' as any;
+const PMF_EVIDENCE_TABLE = 'pmf_context_evidence' as any;
+
+export interface PMFArtifactScope {
+  validationContextId: string;
+  originatingHandoffId?: string | null;
+  icpAnalysisId?: string | null;
+  demoProjectId?: string | null;
+  demoId?: string | null;
+  surveyId?: string | null;
+}
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-export function usePMFLab() {
+export function usePMFLab(scope?: PMFArtifactScope | null) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { refreshProgress } = useBizMapProgress();
@@ -214,15 +225,18 @@ export function usePMFLab() {
   const [trend, setTrend] = useState<PMFScoreTrendPoint[]>([]);
   // Remember the business context of the latest run so re-scores can reuse it
   const lastContextRef = useRef<{ productName?: string; targetAudience?: string; industry?: string } | undefined>(undefined);
+  const activeScopeRef = useRef(scope?.validationContextId);
+  activeScopeRef.current = scope?.validationContextId;
 
   const loadExistingAnalysis = useCallback(async () => {
-    if (!user) return;
+    if (!user || !scope?.validationContextId) return;
     if (!isPmfResultsTableAvailable()) return;
     try {
       const { data, error } = await supabase
         .from(PMF_RESULTS_TABLE)
         .select('id, analysis_data, saved_at')
         .eq('user_id', user.id)
+        .eq('validation_context_id', scope.validationContextId)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -232,7 +246,7 @@ export function usePMFLab() {
         throw error;
       }
 
-      if (!data) return;
+      if (!data || activeScopeRef.current !== scope.validationContextId) return;
 
       const content = (data as any).analysis_data;
       // Only restore if it's the new evidence-based format
@@ -246,34 +260,38 @@ export function usePMFLab() {
       if (handlePmfResultsTableError(err)) return;
       console.warn('Failed to load existing PMF analysis:', err);
     }
-  }, [user]);
+  }, [scope?.validationContextId, user]);
 
   const loadEvidence = useCallback(async () => {
-    if (!user) return;
+    if (!user || !scope?.validationContextId) return;
     try {
       const { data, error } = await supabase
         .from(PMF_EVIDENCE_TABLE)
-        .select('validation_checklist, interview_notes_count, survey_results_count, required_signals, sean_ellis_very_disappointed, sean_ellis_somewhat_disappointed, sean_ellis_not_disappointed')
+        .select('validation_checklist, survey_results_count, required_signals, sean_ellis_very_disappointed, sean_ellis_somewhat_disappointed, sean_ellis_not_disappointed')
         .eq('user_id', user.id)
+        .eq('validation_context_id', scope.validationContextId)
         .maybeSingle();
       if (error) {
         console.warn('Failed to load PMF validation evidence:', error);
         return;
       }
-      if (data) setEvidence(data as unknown as PMFValidationEvidence);
+      const { count } = await supabase.from('pmf_interviews' as any).select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id).eq('validation_context_id', scope.validationContextId);
+      if (data && activeScopeRef.current === scope.validationContextId) setEvidence({ ...(data as any), interview_notes_count: count ?? 0 } as PMFValidationEvidence);
     } catch (err) {
       console.warn('Failed to load PMF validation evidence:', err);
     }
-  }, [user]);
+  }, [scope?.validationContextId, user]);
 
   const loadTrend = useCallback(async () => {
-    if (!user) return;
+    if (!user || !scope?.validationContextId) return;
     if (!isPmfResultsTableAvailable()) return;
     try {
       const { data, error } = await supabase
         .from(PMF_RESULTS_TABLE)
         .select('id, pmf_score, created_at')
         .eq('user_id', user.id)
+        .eq('validation_context_id', scope.validationContextId)
         .not('pmf_score', 'is', null)
         .order('created_at', { ascending: true })
         .limit(50);
@@ -281,6 +299,7 @@ export function usePMFLab() {
         if (handlePmfResultsTableError(error)) return;
         throw error;
       }
+      if (activeScopeRef.current !== scope.validationContextId) return;
       setTrend(
         (data ?? []).map((row: any) => ({
           id: row.id,
@@ -292,19 +311,11 @@ export function usePMFLab() {
       if (handlePmfResultsTableError(err)) return;
       console.warn('Failed to load PMF score trend:', err);
     }
-  }, [user]);
+  }, [scope?.validationContextId, user]);
 
   const persistInterviewEvidenceCount = useCallback(async (conversationCount: number) => {
-    if (!user) return;
+    if (!user || !scope?.validationContextId) return;
     try {
-      const { error } = await supabase
-        .from(PMF_EVIDENCE_TABLE)
-        .upsert({
-          user_id: user.id,
-          interview_notes_count: conversationCount,
-          required_signals: PMF_REQUIRED_SIGNALS,
-        }, { onConflict: 'user_id' });
-      if (error) throw error;
       setEvidence((prev) => prev
         ? { ...prev, interview_notes_count: conversationCount, required_signals: PMF_REQUIRED_SIGNALS }
         : {
@@ -319,7 +330,7 @@ export function usePMFLab() {
     } catch (err) {
       console.warn('Failed to persist PMF interview evidence count:', err);
     }
-  }, [user]);
+  }, [scope?.validationContextId, user]);
 
   // On mount: restore existing analysis, validation evidence, and score trend
   useEffect(() => {
@@ -334,7 +345,6 @@ export function usePMFLab() {
     options?: {
       businessContext?: PMFBusinessContext;
       previousAnalysisId?: string;
-      surveyEvidence?: { total: number; veryDisappointedPct: number; sampleVerbatims: string[] };
     },
   ) => {
     if (!user) {
@@ -366,7 +376,7 @@ export function usePMFLab() {
     captureEvent('pmf_analysis_started', {
       is_rescore: isReScore,
       interview_count: answers.interviews?.length ?? answers.conversationCount ?? 0,
-      survey_responses: options?.surveyEvidence?.total ?? 0,
+      survey_id_present: Boolean(scope?.surveyId),
     });
     setPhase('analyzing');
 
@@ -376,7 +386,12 @@ export function usePMFLab() {
           ...answers,
           businessContext: options?.businessContext,
           previousAnalysisId: options?.previousAnalysisId,
-          surveyEvidence: options?.surveyEvidence,
+          validationContextId: scope?.validationContextId,
+          originatingHandoffId: scope?.originatingHandoffId,
+          icpAnalysisId: scope?.icpAnalysisId,
+          demoProjectId: scope?.demoProjectId,
+          demoId: scope?.demoId,
+          surveyId: scope?.surveyId,
         },
       });
 
@@ -413,13 +428,29 @@ export function usePMFLab() {
         analysis_id_present: Boolean(data.analysisId),
         external_sources: nextAnalysis.dataSources?.length ?? 0,
       });
+      if (scope?.validationContextId) trackPrebuildLineageEvent('prebuild_decision_reached', {
+        validationContextId: scope.validationContextId,
+        handoffId: scope.originatingHandoffId,
+        destinationTool: 'pmf_lab',
+        artifactId: data.analysisId ?? null,
+        decision: nextAnalysis.decision ?? getPmfDecision(nextAnalysis.overallScore),
+      });
+      if (scope?.originatingHandoffId && data.analysisId) {
+        void consumeJourneyHandoff(scope.originatingHandoffId, data.analysisId).then(() => {
+          trackPrebuildLineageEvent('prebuild_handoff_consumed', {
+            validationContextId: scope.validationContextId,
+            handoffId: scope.originatingHandoffId,
+            sourceTool: 'demo_studio', destinationTool: 'pmf_lab', artifactId: data.analysisId,
+          });
+        }).catch(() => undefined);
+      }
       if (data.analysisId) {
         const signalCount = nextAnalysis.evidenceSignalCount ?? conversationCount;
         const decisionGrade = nextAnalysis.evidenceGrade === 'decision_grade';
         const directional = signalCount >= 5 && (nextAnalysis.directEvidenceSignalCount ?? signalCount) >= 5;
         const outcomeStatus = decisionGrade ? 'verified' : directional ? 'ready' : 'draft';
         const evidenceSources = [
-          ...(answers.interviews ?? []).map((interview, index) => ({
+          ...(nextAnalysis.evidenceAnswers?.interviews ?? []).map((interview, index) => ({
             sourceId: interview.sourceLeadId || `pmf:${data.analysisId}:interview:${interview.id || index + 1}`,
             sourceType: 'customer_interview',
             version: '1',
@@ -430,15 +461,15 @@ export function usePMFLab() {
             independenceFingerprint: fingerprintPmfInterview(interview),
             verificationMode: 'founder_reported' as const,
           })),
-          ...(options?.surveyEvidence?.total
+          ...(scope?.surveyId
             ? [{
-                sourceId: `pmf:${data.analysisId}:hosted_survey`,
+                sourceId: scope.surveyId,
                 sourceType: 'hosted_survey',
                 version: '1',
                 capturedAt: nextAnalysis.generatedAt,
                 confidence: 0.75,
                 provenance: 'pmf_hosted_survey',
-                label: `${options.surveyEvidence.total} hosted survey responses`,
+                label: 'Server-verified hosted survey responses',
               }]
             : []),
           ...(nextAnalysis.demoEvidence
@@ -544,7 +575,11 @@ export function usePMFLab() {
       toast.error('Something went wrong. Please try again.');
       setPhase(analysis ? 'results' : 'intake');
     }
-  }, [user, analysis, ensureCredits, handleCreditError, showCreditReceipt, fireJourneyUpgradePrompt, loadTrend, persistInterviewEvidenceCount]);
+  }, [
+    user, analysis, ensureCredits, handleCreditError, showCreditReceipt, fireJourneyUpgradePrompt,
+    loadTrend, persistInterviewEvidenceCount, scope?.validationContextId, scope?.originatingHandoffId,
+    scope?.icpAnalysisId, scope?.demoProjectId, scope?.demoId, scope?.surveyId,
+  ]);
 
   const reScore = useCallback(async () => {
     if (!analysis || !analysisId) return;
@@ -563,7 +598,7 @@ export function usePMFLab() {
     tally: { very: number; somewhat: number; not: number },
     options?: { silent?: boolean },
   ) => {
-    if (!user) {
+    if (!user || !scope?.validationContextId) {
       if (!options?.silent) toast.error('Sign in to save survey results.');
       return false;
     }
@@ -576,13 +611,15 @@ export function usePMFLab() {
         .from(PMF_EVIDENCE_TABLE)
         .upsert({
           user_id: user.id,
+          validation_context_id: scope.validationContextId,
+          originating_handoff_id: scope.originatingHandoffId ?? null,
           sean_ellis_very_disappointed: very,
           sean_ellis_somewhat_disappointed: somewhat,
           sean_ellis_not_disappointed: notDisappointed,
           sean_ellis_updated_at: new Date().toISOString(),
           survey_results_count: total,
           required_signals: PMF_REQUIRED_SIGNALS,
-        }, { onConflict: 'user_id' });
+        }, { onConflict: 'user_id,validation_context_id' });
       if (error) throw error;
       setEvidence((prev) => ({
         validation_checklist: prev?.validation_checklist ?? [],
@@ -601,10 +638,10 @@ export function usePMFLab() {
       if (!options?.silent) toast.error('Unable to save survey results.');
       return false;
     }
-  }, [user, refreshProgress]);
+  }, [scope?.originatingHandoffId, scope?.validationContextId, user, refreshProgress]);
 
   const saveChecklist = useCallback(async (items: string[]) => {
-    if (!user) {
+    if (!user || !scope?.validationContextId) {
       toast.error('Sign in to save your checklist.');
       return false;
     }
@@ -613,10 +650,12 @@ export function usePMFLab() {
         .from(PMF_EVIDENCE_TABLE)
         .upsert({
           user_id: user.id,
+          validation_context_id: scope.validationContextId,
+          originating_handoff_id: scope.originatingHandoffId ?? null,
           validation_checklist: items,
           checklist_saved_at: new Date().toISOString(),
           required_signals: PMF_REQUIRED_SIGNALS,
-        }, { onConflict: 'user_id' });
+        }, { onConflict: 'user_id,validation_context_id' });
       if (error) throw error;
       setEvidence((prev) => ({
         interview_notes_count: prev?.interview_notes_count ?? 0,
@@ -636,7 +675,7 @@ export function usePMFLab() {
       toast.error('Unable to save your checklist.');
       return false;
     }
-  }, [user]);
+  }, [scope?.originatingHandoffId, scope?.validationContextId, user]);
 
   const saveReport = useCallback(async () => {
     if (!user) {
@@ -659,7 +698,7 @@ export function usePMFLab() {
         }
       }
 
-      // Write to pmf_validation_evidence to trigger Stage III completion.
+      // The interview total is derived from durable rows returned by the scoped scorer.
       // Only touch interview_notes_count here — the interactive checklist and the
       // Sean Ellis survey tally are owned by saveChecklist / saveSeanEllis and must
       // not be clobbered on save.

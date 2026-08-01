@@ -236,9 +236,14 @@ export default function LaunchComposerPage() {
                 sourceOutcomeId: outcomeId,
                 destinationTool: 'pmf_lab',
                 payload: {
+                  validationContextId: updated.validation_context_id ?? null,
+                  icpAnalysisId: updated.source_icp_analysis_id ?? null,
+                  demoProjectId: updated.id,
+                  demoId: selectedDemo.id,
+                  surveyId: null,
                   sourceArtifactId: selectedDemo.id,
                   sourceArtifactVersion: selectedDemo.updated_at,
-                  destinationRoute: '/pmf-lab',
+                  destinationRoute: `/pmf-lab?context=${updated.validation_context_id ?? ''}&project=${updated.id}&demo=${selectedDemo.id}`,
                 },
                 idempotencyKey: `demo:${selectedDemo.id}:pmf`,
               });

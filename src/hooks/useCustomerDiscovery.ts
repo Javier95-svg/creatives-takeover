@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreditActions } from '@/hooks/useCreditActions';
@@ -204,24 +204,28 @@ const mapDiscoveryRow = (row: Record<string, unknown>): PMFDiscovery => {
 };
 
 // ─── Hook ───────────────────────────────────────────────────────────────────
-export function useCustomerDiscovery() {
+export function useCustomerDiscovery(validationContextId?: string | null, originatingHandoffId?: string | null) {
   const { user } = useAuth();
   const { ensureCredits, handleCreditError, showCreditReceipt } = useCreditActions();
   const [discovery, setDiscovery] = useState<PMFDiscovery | null>(null);
   const [discoveryError, setDiscoveryError] = useState<PMFDiscoveryError | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [runs, setRuns] = useState<PMFDiscoveryRunSummary[]>([]);
+  const activeContextRef = useRef(validationContextId);
+  activeContextRef.current = validationContextId;
 
   const listRuns = useCallback(async () => {
-    if (!user) return;
+    if (!user || !validationContextId) return;
     try {
       const { data, error } = await supabase
         .from(PMF_DISCOVERY_TABLE)
         .select('id, created_at, product_name, target_audience')
         .eq('user_id', user.id)
+        .eq('validation_context_id', validationContextId)
         .order('created_at', { ascending: false })
         .limit(10);
       if (error || !data) return;
+      if (activeContextRef.current !== validationContextId) return;
       setRuns((data as Array<Record<string, unknown>>).map((row) => ({
         id: String(row.id),
         createdAt: String(row.created_at ?? ''),
@@ -231,15 +235,16 @@ export function useCustomerDiscovery() {
     } catch (err) {
       console.warn('Failed to list discovery runs:', err);
     }
-  }, [user]);
+  }, [user, validationContextId]);
 
   const loadDiscovery = useCallback(async (runId?: string) => {
-    if (!user) return;
+    if (!user || !validationContextId) return;
     try {
       let query = supabase
         .from(PMF_DISCOVERY_TABLE)
         .select(DISCOVERY_ROW_COLUMNS)
         .eq('user_id', user.id);
+      query = query.eq('validation_context_id', validationContextId);
       if (runId) query = query.eq('id', runId);
       const { data, error } = await query
         .order('created_at', { ascending: false })
@@ -249,11 +254,11 @@ export function useCustomerDiscovery() {
         console.warn('Failed to load customer discovery:', error);
         return;
       }
-      if (data) setDiscovery(mapDiscoveryRow(data as Record<string, unknown>));
+      if (data && activeContextRef.current === validationContextId) setDiscovery(mapDiscoveryRow(data as Record<string, unknown>));
     } catch (err) {
       console.warn('Failed to load customer discovery:', err);
     }
-  }, [user]);
+  }, [user, validationContextId]);
 
   useEffect(() => {
     if (!user) return;
@@ -262,7 +267,7 @@ export function useCustomerDiscovery() {
   }, [user, loadDiscovery, listRuns]);
 
   const generateDiscovery = useCallback(async (input: DiscoveryInput) => {
-    if (!user) {
+    if (!user || !validationContextId) {
       toast.error('Sign in to find customers to talk to.');
       return false;
     }
@@ -286,6 +291,8 @@ export function useCustomerDiscovery() {
           searchVersion: input.searchVersion,
           validationStage: input.validationStage,
           filters: input.filters,
+          validationContextId,
+          originatingHandoffId: originatingHandoffId ?? null,
         },
       });
 
@@ -360,7 +367,7 @@ export function useCustomerDiscovery() {
     } finally {
       setIsGenerating(false);
     }
-  }, [user, ensureCredits, handleCreditError, showCreditReceipt, listRuns]);
+  }, [user, validationContextId, originatingHandoffId, ensureCredits, handleCreditError, showCreditReceipt, listRuns]);
 
   return { discovery, discoveryError, isGenerating, generateDiscovery, loadDiscovery, runs, listRuns };
 }

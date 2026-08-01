@@ -160,6 +160,11 @@ interface PMFEvidenceFormProps {
   initialStep?: number;
   /** The five questions ICP Builder generated, shown alongside the interview log. */
   icpInterviewPlan?: PMFIcpInterviewPlanItem[] | null;
+  icpDraftId?: string | null;
+  initialInterviews?: PMFInterviewLog[];
+  onSaveInterview?: (interview: PMFInterviewLog) => Promise<PMFInterviewLog | void>;
+  onDeleteInterview?: (interviewId: string) => Promise<void>;
+  onImportInterviews?: (interviews: PMFInterviewLog[]) => Promise<void>;
 }
 
 const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({
@@ -168,6 +173,11 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({
   initialInterviewLead,
   initialStep,
   icpInterviewPlan,
+  icpDraftId,
+  initialInterviews = [],
+  onSaveInterview,
+  onDeleteInterview,
+  onImportInterviews,
 }) => {
   const [testTypes, setTestTypes] = useState<string[]>([]);
   const [peopleReached, setPeopleReached] = useState(0);
@@ -201,7 +211,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({
 
   useEffect(() => {
     let cancelled = false;
-    void listJourneyAssumptions()
+    void listJourneyAssumptions(icpDraftId ?? undefined)
       .then((items) => {
         if (!cancelled) setJourneyAssumptions(items);
       })
@@ -209,7 +219,11 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({
         if (!cancelled) setJourneyAssumptions([]);
       });
     return () => { cancelled = true; };
-  }, []);
+  }, [icpDraftId]);
+
+  useEffect(() => {
+    setInterviews(initialInterviews);
+  }, [initialInterviews]);
 
   useEffect(() => {
     if (!initialInterviewLead || seededLeadRef.current === initialInterviewLead.sourceLeadId) return;
@@ -292,16 +306,18 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({
     setEditingInterviewId(null);
   };
 
-  const saveInterview = () => {
+  const saveInterview = async () => {
     trackPMFEvidenceLogged({ evidence_type: 'interview' });
     if (!validInterviewDraft) return;
 
-    if (editingInterviewId) {
-      setInterviews((prev) => prev.map((item) => (
-        item.id === editingInterviewId ? draftInterview : item
-      )));
-    } else {
-      setInterviews((prev) => [...prev, draftInterview]);
+    try {
+      const saved = await onSaveInterview?.(draftInterview) ?? draftInterview;
+      setInterviews((prev) => prev.some((item) => item.id === saved.id)
+        ? prev.map((item) => item.id === saved.id ? saved : item)
+        : [...prev, saved]);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not save this interview.');
+      return;
     }
 
     resetDraft();
@@ -315,7 +331,13 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({
     }
   };
 
-  const removeInterview = (id: string) => {
+  const removeInterview = async (id: string) => {
+    try {
+      await onDeleteInterview?.(id);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not delete this interview.');
+      return;
+    }
     setInterviews((prev) => prev.filter((item) => item.id !== id));
     if (editingInterviewId === id) {
       resetDraft();
@@ -344,7 +366,11 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({
         ...item,
         id: newInterviewId(),
       }));
-      setInterviews((prev) => [...prev, ...extracted]);
+      await onImportInterviews?.(extracted);
+      setInterviews((prev) => {
+        const ids = new Set(prev.map((item) => item.id));
+        return [...prev, ...extracted.filter((item) => !ids.has(item.id))];
+      });
       extracted.forEach(() => trackPMFEvidenceLogged({ evidence_type: 'interview' }));
       captureEvent('pmf_interviews_imported', { count: extracted.length, notes_chars: notes.length });
       toast.success(

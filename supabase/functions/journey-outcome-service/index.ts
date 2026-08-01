@@ -29,7 +29,7 @@ const ARTIFACT_TYPES: Record<JourneyTool, string> = {
   traction_engine: 'verified_traction_ledger',
 };
 const HANDOFF_DESTINATIONS: Record<JourneyTool, JourneyTool[]> = {
-  icp_builder: ['pmf_lab'],
+  icp_builder: ['demo_studio'],
   demo_studio: ['pmf_lab'],
   pmf_lab: ['mvp_builder'],
   mvp_builder: ['gtm_strategist'],
@@ -112,8 +112,8 @@ async function loadAuthoritativeChecks(
     const [{ data: steps }, { data: launch }, { data: events }, { data: signups }] = await Promise.all([
       supabase.from('demo_studio_demo_steps').select('id,asset_url,caption').eq('demo_id', artifactId).order('position'),
       supabase.from('demo_studio_launch_pages').select('cta_label,primary_demo_id').eq('project_id', demo.project_id).maybeSingle(),
-      supabase.from('demo_studio_events').select('id,type').eq('demo_id', artifactId).limit(1),
-      supabase.from('demo_studio_signups').select('id').eq('project_id', demo.project_id).limit(1),
+      supabase.from('demo_studio_events').select('id,type').eq('demo_id', artifactId).eq('verified', true).limit(1),
+      supabase.from('demo_studio_signups').select('id').eq('demo_id', artifactId).eq('verified', true).limit(1),
     ]);
     const stepRows = steps ?? [];
     const stepIds = stepRows.map((step) => step.id);
@@ -399,16 +399,31 @@ serve(async (req) => {
               .select('id').eq('journey_outcome_id', currentIcp.id)
               .order('version_number', { ascending: false }).limit(1).maybeSingle();
             if (icpVersion) {
+              const { data: existingContext } = await supabase.from('prebuild_validation_contexts')
+                .select('id').eq('user_id', user.id).eq('icp_analysis_id', assumption.source_artifact_id).maybeSingle();
+              let validationContextId = existingContext?.id ?? null;
+              if (!validationContextId) {
+                const { data: createdContext } = await supabase.from('prebuild_validation_contexts').insert({
+                  user_id: user.id, icp_analysis_id: assumption.source_artifact_id,
+                }).select('id').single();
+                validationContextId = createdContext?.id ?? null;
+              }
               const { error: handoffError } = await supabase.from('journey_handoffs').upsert({
                 user_id: user.id,
                 source_outcome_id: currentIcp.id,
                 source_version_id: icpVersion.id,
-                destination_tool: 'pmf_lab',
+                destination_tool: 'demo_studio',
                 payload: {
+                  icpAnalysisId: assumption.source_artifact_id,
+                  validationContextId,
+                  demoProjectId: null,
+                  demoId: null,
+                  surveyId: null,
                   sourceArtifactId: assumption.source_artifact_id,
-                  destinationRoute: `/pmf-lab?icp=${assumption.source_artifact_id}`,
+                  assumptionsTested: true,
+                  destinationRoute: `/demo-studio?icp=${assumption.source_artifact_id}`,
                 },
-                idempotency_key: `icp:${assumption.source_artifact_id}:pmf`,
+                idempotency_key: `icp:${assumption.source_artifact_id}:demo`,
               }, { onConflict: 'user_id,idempotency_key', ignoreDuplicates: true });
               // Never fail the signal write because the handoff bookkeeping did.
               if (handoffError) console.error('Could not create ICP handoff', handoffError);
@@ -562,6 +577,24 @@ serve(async (req) => {
         payload: recordValue(body.payload),
         idempotency_key: idempotencyKey,
       }, { onConflict: 'user_id,idempotency_key', ignoreDuplicates: false }).select('*').single();
+      if (error) throw error;
+      return json({ ok: true, handoff: data });
+    }
+
+    if (action === 'find_handoff') {
+      const destinationTool = textValue(body.destinationTool, 40) as JourneyTool;
+      const sourceArtifactId = textValue(body.sourceArtifactId, 200);
+      if (!TOOLS.has(destinationTool) || !sourceArtifactId) {
+        return json({ error: 'Destination tool and source artifact id are required' }, 400);
+      }
+      const { data: outcomes, error: outcomesError } = await supabase.from('journey_outcomes')
+        .select('id').eq('user_id', user.id).eq('artifact_id', sourceArtifactId);
+      if (outcomesError) throw outcomesError;
+      const sourceIds = (outcomes ?? []).map((outcome) => outcome.id);
+      if (sourceIds.length === 0) return json({ ok: true, handoff: null });
+      const { data, error } = await supabase.from('journey_handoffs').select('*')
+        .eq('user_id', user.id).eq('destination_tool', destinationTool)
+        .in('source_outcome_id', sourceIds).order('created_at', { ascending: false }).limit(1).maybeSingle();
       if (error) throw error;
       return json({ ok: true, handoff: data });
     }

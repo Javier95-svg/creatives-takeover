@@ -1,11 +1,9 @@
-// Lightweight, fire-and-forget analytics for Demo Studio. Inserts into
-// demo_studio_events (public insert per RLS). Failures are swallowed so tracking
-// never breaks the viewing experience. Events are de-duped per browser session.
+// Public behavior is accepted only by the validating, rate-limited edge endpoint.
+// Browser de-dupe improves UX; database de-dupe remains authoritative.
 import { supabase } from '@/integrations/supabase/client';
 import { captureEvent } from '@/lib/analytics';
 import type { DemoEventType } from './types';
 
-const EVENTS = 'demo_studio_events' as any;
 const SESSION_KEY = 'demo_studio_session_id';
 
 export function getSessionId(): string {
@@ -42,14 +40,24 @@ export async function trackDemoEvent(type: DemoEventType, args: TrackArgs = {}):
       vsl_id: args.vslId ?? undefined,
       ...(args.meta ?? {}),
     });
-    await supabase.from(EVENTS).insert({
+    await supabase.functions.invoke('demo-studio-event', { body: {
       type,
-      project_id: args.projectId ?? null,
-      demo_id: args.demoId ?? null,
-      vsl_id: args.vslId ?? null,
-      meta: { ...(args.meta ?? {}), session_id: getSessionId() },
-    } as any);
+      projectId: args.projectId ?? null,
+      demoId: args.demoId ?? null,
+      vslId: args.vslId ?? null,
+      meta: { ...(args.meta ?? {}), sessionId: getSessionId() },
+    }});
   } catch {
     /* analytics must never throw */
   }
+}
+
+export async function submitDemoResponse(input: {
+  demoId: string;
+  response: 'interested' | 'not_for_me' | 'book_call' | 'commitment';
+  objection?: string;
+}) {
+  const { data, error } = await supabase.functions.invoke('demo-studio-event', { body: input });
+  if (error) throw error;
+  if (!data?.ok) throw new Error(data?.error || 'Could not save your response.');
 }

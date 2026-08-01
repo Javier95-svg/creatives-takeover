@@ -27,6 +27,7 @@ export type DemoStudioEventType =
   | 'waitlist_signup';
 
 export interface DemoTheme {
+  demoGoal?: DemoStudioGoal;
   primaryColor?: string;
   buttonStyle?: 'solid' | 'outline';
   watermark?: boolean;
@@ -52,6 +53,9 @@ export interface DemoStudioProject {
   slug: string | null;
   launch_published: boolean;
   acquisition_source?: string | null;
+  validation_context_id?: string | null;
+  originating_handoff_id?: string | null;
+  source_icp_analysis_id?: string | null;
   created_at: string;
   updated_at: string;
 }

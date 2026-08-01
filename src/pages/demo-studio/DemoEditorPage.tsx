@@ -48,7 +48,7 @@ import DemoPlayer from '@/components/demo-studio/player/DemoPlayer';
 import WhatIsADemoPopover from '@/components/demo-studio/WhatIsADemoPopover';
 import DemoDistributionPanel from '@/components/demo-studio/DemoDistributionPanel';
 import { evaluateDemoArtifact } from '@/lib/demoStudio/outcome';
-import { createJourneyEvidenceManifest, createJourneyHandoff, upsertJourneyOutcome } from '@/lib/journeyOutcomes';
+import { createJourneyEvidenceManifest, createJourneyHandoff, findJourneyHandoff, trackPrebuildLineageEvent, upsertJourneyOutcome } from '@/lib/journeyOutcomes';
 import { canRemoveWatermark, shouldShowWatermark } from '@/lib/demoStudio/plan';
 import { trackDemoStudioFunnel } from '@/lib/analytics';
 import {
@@ -60,6 +60,7 @@ import {
   duplicateStep,
   getDemo,
   getBrief,
+  getProject,
   listHotspotsForDemo,
   listSteps,
   persistStepOrder,
@@ -83,6 +84,7 @@ import type {
   DemoStepWithHotspots,
   DemoStudioDemo,
   DemoStudioHotspot,
+  DemoStudioProject,
   DemoTheme,
 } from '@/lib/demoStudio/types';
 
@@ -122,6 +124,8 @@ export default function DemoEditorPage() {
 
   const [demo, setDemo] = useState<DemoStudioDemo | null>(null);
   const [brief, setBrief] = useState<DemoStudioBrief | null>(null);
+  const [project, setProject] = useState<DemoStudioProject | null>(null);
+  const [pmfHandoffId, setPmfHandoffId] = useState<string | null>(null);
   const [steps, setSteps] = useState<DemoStepWithHotspots[]>([]);
   const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
   const [selectedHotspotId, setSelectedHotspotId] = useState<string | null>(null);
@@ -170,9 +174,13 @@ export default function DemoEditorPage() {
           byStep.set(h.step_id, arr);
         });
         const merged = stepRows.map((s) => ({ ...s, hotspots: byStep.get(s.id) ?? [] }));
-        const briefRow = projectId ? await getBrief(projectId) : null;
+        const [briefRow, projectRow] = projectId ? await Promise.all([getBrief(projectId), getProject(projectId)]) : [null, null];
         setDemo(demoRow);
         setBrief(briefRow);
+        setProject(projectRow);
+        if (projectRow?.validation_context_id) {
+          void findJourneyHandoff('pmf_lab', demoRow.id).then((handoff) => setPmfHandoffId(handoff?.id ?? null)).catch(() => undefined);
+        }
         setSteps(merged);
         setSelectedStepId((prev) => prev ?? merged[0]?.id ?? null);
       } catch (e) {
@@ -620,15 +628,25 @@ export default function DemoEditorPage() {
         if (['ready', 'verified'].includes(outcome.evaluation.status)) {
           const outcomeId = (outcome.outcome as { id?: string } | null)?.id;
           if (outcomeId) {
-            await createJourneyHandoff({
+            const handoff = await createJourneyHandoff({
               sourceOutcomeId: outcomeId,
               destinationTool: 'pmf_lab',
               payload: {
+                validationContextId: project?.validation_context_id ?? null,
+                icpAnalysisId: project?.source_icp_analysis_id ?? null,
+                demoProjectId: project?.id ?? updated.project_id,
+                demoId: updated.id,
+                surveyId: null,
                 sourceArtifactId: updated.id,
                 sourceArtifactVersion: updated.updated_at,
-                destinationRoute: '/pmf-lab',
+                destinationRoute: `/pmf-lab?context=${project?.validation_context_id ?? ''}&project=${project?.id ?? updated.project_id}&demo=${updated.id}`,
               },
               idempotencyKey: `demo:${updated.id}:pmf`,
+            });
+            setPmfHandoffId(handoff.id);
+            if (project?.validation_context_id) trackPrebuildLineageEvent('prebuild_handoff_offered', {
+              validationContextId: project.validation_context_id, handoffId: handoff.id,
+              sourceTool: 'demo_studio', destinationTool: 'pmf_lab', artifactId: updated.id,
             });
           }
         }
@@ -980,7 +998,17 @@ export default function DemoEditorPage() {
           )}
           {/* A published demo with no audience produces no evidence, so the share panel
               is followed immediately by where to send it. */}
-          {demo?.public_id && <DemoDistributionPanel shareUrl={shareUrl} demoTitle={demo.title} />}
+          {demo?.public_id && (
+            <DemoDistributionPanel
+              shareUrl={shareUrl}
+              demoTitle={demo.title}
+              validationContextId={project?.validation_context_id}
+              originatingHandoffId={pmfHandoffId}
+              sourceIcpAnalysisId={project?.source_icp_analysis_id}
+              projectId={project?.id}
+              demoId={demo.id}
+            />
+          )}
         </main>
 
         {/* Right: inspector + theme */}

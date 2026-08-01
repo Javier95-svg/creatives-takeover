@@ -64,15 +64,18 @@ export default function PublicLaunchPage() {
     try {
       void trackDemoEvent('signup_attempt', {
         projectId: data.project.id,
+        demoId: data.demo?.demo.id,
         vslId: data.vsl?.id,
         meta: { variation_label: data.vsl?.variation_label ?? null },
       });
       await createLaunchSignup(data.project.id, email, {
+        demoId: data.demo?.id ?? null,
         referrer: document.referrer || null,
         vslVariationSeen: data.vsl?.variation_label ?? null,
       });
       void trackDemoEvent('signup', {
         projectId: data.project.id,
+        demoId: data.demo?.demo.id,
         vslId: data.vsl?.id,
         meta: { variation_label: data.vsl?.variation_label ?? null },
       });
@@ -111,6 +114,12 @@ export default function PublicLaunchPage() {
   const layout = data.launchPage.theme?.layoutStyle ?? 'split';
   const successMessage = data.launchPage.theme?.successMessage || 'You are on the early access list.';
   const ctaLabel = data.launchPage.cta_label || DEFAULT_DEMO_STUDIO_CTA;
+  const demoGoal = data.demo?.demo.theme?.demoGoal ?? 'collect_signups';
+  const headerHref = demoGoal === 'collect_signups'
+    ? '#signup'
+    : demoGoal === 'validate_interest'
+      ? '#demo'
+      : data.demo?.demo.theme?.endCtaHref || '#demo';
   const pageClass = background === 'light'
     ? 'min-h-screen bg-white text-foreground'
     : background === 'gradient'
@@ -132,11 +141,12 @@ export default function PublicLaunchPage() {
             Creatives Takeover Demo Studio
           </Link>
           <a
-            href="#signup"
+            href={headerHref}
             className="rounded-full bg-white px-4 py-2 text-sm font-medium text-foreground"
             onClick={() => {
               void trackDemoEvent('cta_click', {
                 projectId: data.project.id,
+                demoId: data.demo?.demo.id,
                 vslId: data.vsl?.id,
                 meta: { placement: 'header', variation_label: data.vsl?.variation_label ?? null },
               });
@@ -155,7 +165,7 @@ export default function PublicLaunchPage() {
             <p className={`mt-5 max-w-2xl text-lg ${mutedText}`}>
               {data.launchPage.subheadline || data.project.tagline || 'Watch the pitch, click through the demo, and get early access.'}
             </p>
-            <form id="signup" onSubmit={handleSubmit} className="mt-8 flex max-w-lg flex-col gap-3 sm:flex-row">
+            {demoGoal === 'collect_signups' && <form id="signup" onSubmit={handleSubmit} className="mt-8 flex max-w-lg flex-col gap-3 sm:flex-row">
               <Input
                 type="email"
                 required
@@ -172,6 +182,7 @@ export default function PublicLaunchPage() {
                 onClick={() => {
                   void trackDemoEvent('cta_click', {
                     projectId: data.project.id,
+                    demoId: data.demo?.demo.id,
                     vslId: data.vsl?.id,
                     meta: { placement: 'signup_form', variation_label: data.vsl?.variation_label ?? null },
                   });
@@ -179,7 +190,7 @@ export default function PublicLaunchPage() {
               >
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : submitted ? 'Joined' : ctaLabel}
               </Button>
-            </form>
+            </form>}
             {submitted && (
               <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-success">
                 <CheckCircle2 className="h-4 w-4" /> {successMessage}
@@ -194,14 +205,14 @@ export default function PublicLaunchPage() {
         </section>
 
         {data.demo && (
-          <section className="mt-10 rounded-2xl bg-white p-3 text-foreground md:p-4">
+          <section id="demo" className="mt-10 rounded-2xl bg-white p-3 text-foreground md:p-4">
             <DemoPlayer
               steps={data.demo.steps}
               theme={data.demo.demo.theme}
               mode="live"
               projectId={data.project.id}
               demoId={data.demo.demo.id}
-              ctaHref="#signup"
+              ctaHref={demoGoal === 'collect_signups' ? '#signup' : undefined}
               ctaLabel={data.launchPage.cta_label}
               showWatermark={shouldShowWatermark(data.demo.demo.theme?.watermark, data.demo.demo.theme?.ownerPlan)}
             />
