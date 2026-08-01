@@ -9,7 +9,13 @@ import {
   type OnboardingAnswersV1,
 } from '../src/lib/onboardingContext.ts';
 import { createRoutineConfig } from '../src/lib/routineTemplates.ts';
-import { contextSegmentKeys } from '../supabase/functions/_shared/recommendation-policy-v2.ts';
+import {
+  allowsExploration,
+  contextSegmentKeys,
+  rankWithCollectiveEvidence,
+  urgencyAdjustment,
+  type LearningCandidate,
+} from '../supabase/functions/_shared/recommendation-policy-v2.ts';
 
 const read = (path: string) => readFile(new URL(path, import.meta.url), 'utf8');
 
@@ -161,6 +167,93 @@ test('both onboarding flows record a resumable drop marker and a timezone', asyn
   );
   const deps = teardown.slice(teardown.indexOf('};'), teardown.indexOf('};') + 200);
   assert.doesNotMatch(deps, /\[currentStep/);
+});
+
+test('runway tilts ranking toward revenue work without overriding evidence', () => {
+  // A short runway favours getting paid over building.
+  assert.ok(urgencyAdjustment('gtm_strategist', 'critical') > 0);
+  assert.ok(urgencyAdjustment('traction_engine', 'critical') > 0);
+  assert.ok(urgencyAdjustment('mvp_builder', 'critical') < 0);
+  assert.ok(urgencyAdjustment('tech_stack', 'critical') < 0);
+
+  // Pressure scales down as runway lengthens, and vanishes when stable.
+  assert.ok(
+    urgencyAdjustment('gtm_strategist', 'critical') > urgencyAdjustment('gtm_strategist', 'high'),
+  );
+  assert.equal(urgencyAdjustment('gtm_strategist', 'stable'), 0);
+  assert.equal(urgencyAdjustment('gtm_strategist', null), 0);
+
+  // Unclassified families are left alone rather than guessed at.
+  assert.equal(urgencyAdjustment('find_mentor', 'critical'), 0);
+
+  // Denominated in base-rank steps, and capped at one step so a family can move
+  // past its neighbour without leaping the whole list.
+  assert.ok(Math.abs(urgencyAdjustment('mvp_builder', 'critical')) <= 1);
+});
+
+test('exploration is suppressed only for founders who cannot afford it', () => {
+  assert.equal(allowsExploration('critical'), false);
+  assert.equal(allowsExploration('high'), true);
+  assert.equal(allowsExploration('moderate'), true);
+  assert.equal(allowsExploration('stable'), true);
+  assert.equal(allowsExploration(null), true);
+});
+
+test('a critical runway reorders the ranking on day one, with no priors at all', () => {
+  const candidates: LearningCandidate[] = [
+    { key: 'build', urgency: 'high', reasonCodes: [], estimatedMinutes: 30, toolKey: 'mvp_builder' },
+    { key: 'sell', urgency: 'high', reasonCodes: [], estimatedMinutes: 30, toolKey: 'gtm_strategist' },
+  ];
+  const shared = {
+    candidates,
+    baseOrder: ['build', 'sell'],
+    priors: new Map(),
+    recentExposures: [],
+    tuning: {
+      explorationPercent: 5,
+      explorationMinSamples: 3,
+      maxExplorationNegativeRate: 0.2,
+      frequencyWindowDays: 7,
+      frequencyCap: 3,
+      diversityWindowDays: 3,
+      repeatPenalty: 0.1,
+    },
+  };
+
+  // With no pressure the deterministic base order stands.
+  assert.deepEqual(
+    rankWithCollectiveEvidence({ ...shared, urgencyBand: 'stable' }).orderedCandidateKeys,
+    ['build', 'sell'],
+  );
+  // With two months of runway, selling outranks building.
+  assert.deepEqual(
+    rankWithCollectiveEvidence({ ...shared, urgencyBand: 'critical' }).orderedCandidateKeys,
+    ['sell', 'build'],
+  );
+});
+
+test('Core Metrics never invents runway or revenue', async () => {
+  const source = await read('../src/components/dashboard/CoreMetrics.tsx');
+  // The original bug: a hardcoded 12-month runway shown to every founder next
+  // to advice about raising before hitting 6 months.
+  assert.doesNotMatch(source, /const runwayMonths = \d+;/);
+  assert.doesNotMatch(source, /Placeholder/);
+  // Runway is only rendered when it came from the founder.
+  assert.match(source, /typeof reportedRunway === 'number'/);
+  assert.match(source, /RUNWAY_BAND_FLOOR/);
+  // Revenue seeds from the reported band instead of defaulting everyone to 0.
+  assert.match(source, /REVENUE_BAND_SEED/);
+  // An explicit goal the founder set here always wins over the seed.
+  assert.match(source, /goals\?\.find\(g => g\.goal_type === 'revenue'\) \|\|/);
+});
+
+test('the focus editor can reach every field the routine and ranking depend on', async () => {
+  const source = await read('../src/components/dashboard/DashboardFocusEditor.tsx');
+  // Existing founders complete onboarding before these questions existed, so
+  // the editor is their only route to them.
+  assert.match(source, /WORKING_DAY_OPTIONS/);
+  assert.match(source, /workingDays: normalizeWorkingDays\(draft\.workingDays\)/);
+  assert.match(source, /runwayMonths: draft\.runwayMonths/);
 });
 
 test('the adaptive rollout is ramped and stays server-owned', async () => {

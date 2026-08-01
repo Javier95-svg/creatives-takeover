@@ -8,6 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useOnboardingContext } from '@/hooks/useOnboardingContext';
+import type { OnboardingAnswersV1 } from '@/lib/onboardingContext';
 
 interface Metric {
   id: string;
@@ -20,21 +22,60 @@ interface Metric {
   color: string;
 }
 
+/**
+ * Conservative floor of each onboarding runway band.
+ *
+ * Runway is the one metric where rounding up flatters the founder into a worse
+ * decision, so a founder reporting "6 to 12 months" is shown 6, not 9.
+ * 'not_applicable' is absent on purpose: a founder with no burn has no runway
+ * to track, and inventing one is exactly the bug this replaced.
+ */
+const RUNWAY_BAND_FLOOR: Partial<Record<NonNullable<OnboardingAnswersV1['runwayMonths']>, number>> = {
+  under_3: 2,
+  '3_6': 3,
+  '6_12': 6,
+  over_12: 12,
+};
+
+/**
+ * Monthly revenue floor per onboarding band, with the next band as the target.
+ *
+ * Same reasoning as runway: a founder who told us they are at $10k-50k should
+ * not open this card and be shown $0 against a $100 goal. Only used to seed the
+ * metric -- an explicit kpi_goals row always wins.
+ */
+const REVENUE_BAND_SEED: Partial<
+  Record<NonNullable<OnboardingAnswersV1['revenueBand']>, { current: number; goal: number }>
+> = {
+  none: { current: 0, goal: 1000 },
+  under_1k: { current: 0, goal: 1000 },
+  '1k_10k': { current: 1000, goal: 10000 },
+  '10k_50k': { current: 10000, goal: 50000 },
+  over_50k: { current: 50000, goal: 100000 },
+};
+
 export const CoreMetrics = () => {
   const { user } = useAuth();
+  const { value: onboarding, loading: onboardingLoading } = useOnboardingContext();
   const [metrics, setMetrics] = useState<Metric[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingMetric, setEditingMetric] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) {
-      void loadMetrics();
+    if (user && !onboardingLoading) {
+      void loadMetrics(
+        onboarding?.answers.runwayMonths ?? '',
+        onboarding?.answers.revenueBand ?? '',
+      );
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
-  }, [user]);
+  }, [user, onboarding, onboardingLoading]);
 
-  const loadMetrics = async () => {
+  const loadMetrics = async (
+    runwayBand: OnboardingAnswersV1['runwayMonths'],
+    revenueBand: OnboardingAnswersV1['revenueBand'],
+  ) => {
     if (!user) return;
 
     try {
@@ -53,17 +94,24 @@ export const CoreMetrics = () => {
         period: 'monthly'
       };
 
-      // Get revenue goal
+      // Get revenue goal, seeded from what the founder reported at onboarding
+      // when they have not set one here yet.
+      const revenueSeed = REVENUE_BAND_SEED[revenueBand as keyof typeof REVENUE_BAND_SEED];
       const revenueGoal = goals?.find(g => g.goal_type === 'revenue') || {
-        current_value: 0,
-        target_value: 100,
+        current_value: revenueSeed?.current ?? 0,
+        target_value: revenueSeed?.goal ?? 100,
         unit: '$',
         period: 'quarterly'
       };
 
-      // Calculate runway (simplified - in real app, would calculate from financial data)
-      const runwayMonths = 12; // Placeholder
-      const runwayGoal = 6; // Raise before hitting 6 months
+      // Runway comes from what the founder actually told us at onboarding, or
+      // from a value they set here themselves. It is never invented: if we know
+      // neither, the card is omitted rather than shown with a placeholder.
+      const runwayOverride = goals?.find(g => g.goal_type === 'custom');
+      const reportedRunway = runwayOverride
+        ? runwayOverride.current_value
+        : RUNWAY_BAND_FLOOR[runwayBand as keyof typeof RUNWAY_BAND_FLOOR];
+      const runwayGoal = runwayOverride?.target_value ?? 6; // Raise before hitting 6 months
 
       const loadedMetrics: Metric[] = [
         {
@@ -86,17 +134,22 @@ export const CoreMetrics = () => {
           icon: DollarSign,
           color: 'text-success'
         },
-        {
+      ];
+
+      if (typeof reportedRunway === 'number') {
+        loadedMetrics.push({
           id: 'runway',
           name: 'Runway',
-          current: runwayMonths,
+          current: reportedRunway,
           goal: runwayGoal,
           deadline: 'Before hitting 6 months',
-          whyItMatters: 'Runway is how long you can operate. You need at least 6 months to raise without desperation.',
+          whyItMatters: runwayOverride
+            ? 'Runway is how long you can operate. You need at least 6 months to raise without desperation.'
+            : 'Based on the runway you reported at onboarding. Edit it here if that has changed.',
           icon: Calendar,
           color: 'text-warning'
-        }
-      ];
+        });
+      }
 
       setMetrics(loadedMetrics);
     } catch (error) {
@@ -148,7 +201,10 @@ export const CoreMetrics = () => {
           });
       }
 
-      void loadMetrics();
+      void loadMetrics(
+        onboarding?.answers.runwayMonths ?? '',
+        onboarding?.answers.revenueBand ?? '',
+      );
       setIsEditOpen(false);
       setEditingMetric(null);
     } catch (error) {
@@ -177,7 +233,9 @@ export const CoreMetrics = () => {
     <Card className="backdrop-blur-sm bg-card/95">
       <CardHeader>
         <CardTitle className="text-base">Core Metrics</CardTitle>
-        <p className="text-sm text-muted-foreground mt-1">Track these 3 things:</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Track these {metrics.length} things:
+        </p>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

@@ -25,9 +25,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { useOnboardingContext } from '@/hooks/useOnboardingContext';
 import {
   deriveOnboardingContextV1,
+  normalizeWorkingDays,
+  WORKING_DAY_OPTIONS,
   type OnboardingAnswersV1,
 } from '@/lib/onboardingContext';
 import { updateOnboardingFocus } from '@/lib/onboardingSession';
+import { cn } from '@/lib/utils';
 
 const GOALS: Array<[OnboardingAnswersV1['primaryGoal'], string]> = [
   ['validate_problem', 'Validate the customer problem'],
@@ -92,6 +95,7 @@ export default function DashboardFocusEditor() {
           weeklyCapacityHours: draft.weeklyCapacityHours,
           country: draft.country.trim(),
           runwayMonths: draft.runwayMonths,
+          workingDays: normalizeWorkingDays(draft.workingDays),
         },
         context,
       });
@@ -210,6 +214,42 @@ export default function DashboardFocusEditor() {
                 </SelectContent>
               </Select>
             </div>
+            <fieldset className="grid gap-2">
+              <legend className="text-sm font-medium leading-none">Days you work on this</legend>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {WORKING_DAY_OPTIONS.map((option) => {
+                  const selected = draft.workingDays.includes(option.value);
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      role="checkbox"
+                      aria-checked={selected}
+                      aria-label={option.label}
+                      onClick={() => setDraft({
+                        ...draft,
+                        workingDays: normalizeWorkingDays(
+                          selected
+                            ? draft.workingDays.filter((day) => day !== option.value)
+                            : [...draft.workingDays, option.value],
+                        ),
+                      })}
+                      className={cn(
+                        'rounded-full border px-3 py-1.5 text-sm transition-colors',
+                        selected
+                          ? 'border-accent-teal bg-accent-teal/15 font-medium text-foreground'
+                          : 'border-border text-muted-foreground hover:border-accent-teal/50',
+                      )}
+                    >
+                      {option.short}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Your routine is rebuilt on these days. Leave empty to keep the Monday-to-Friday default.
+              </p>
+            </fieldset>
             <div className="grid gap-2">
               <Label>Runway</Label>
               <Select

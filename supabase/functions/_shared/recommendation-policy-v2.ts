@@ -1,5 +1,71 @@
 export type RecommendationUrgency = "high" | "medium" | "low";
 
+/** Founder-level pressure, derived from runway at onboarding. */
+export type FounderUrgencyBand = "critical" | "high" | "moderate" | "stable";
+
+/**
+ * Families that move a founder closer to revenue, a customer, or a decision.
+ * Under a short runway these outrank building and polish work.
+ */
+const REVENUE_PROXIMATE_FAMILIES = new Set([
+  "gtm_strategist",
+  "traction_engine",
+  "icp_builder",
+  "decision_sprint",
+  "messages",
+]);
+
+/**
+ * Valuable work that nonetheless spends runway before it returns any. Delayed,
+ * not suppressed -- the tilt is bounded and never removes a candidate.
+ */
+const DEFERRABLE_UNDER_PRESSURE = new Set([
+  "mvp_builder",
+  "tech_stack",
+  "demo_studio",
+  "insighta_test",
+]);
+
+/**
+ * Measured in base-rank steps, not raw score.
+ *
+ * Adjacent base ranks are 1/candidateCount apart, so a fixed score delta would
+ * reorder a long candidate list and do nothing at all to a short one. Expressing
+ * the tilt in rank steps makes it behave consistently for any list length.
+ */
+const URGENCY_TILT_RANK_STEPS: Record<FounderUrgencyBand, number> = {
+  critical: 1,
+  high: 0.5,
+  moderate: 0.2,
+  stable: 0,
+};
+
+/**
+ * Immediate, prior-independent ranking bias from the founder's runway, in
+ * base-rank steps. Multiply by the base step before adding it to a score.
+ *
+ * The collective priors only tell an urgent founder apart from a relaxed one
+ * once a segment accumulates matured exposures, which takes weeks. This closes
+ * that gap on day one. At 'critical' a revenue-proximate family gains one rank
+ * and a deferrable one loses one, so the two can swap past each other, while
+ * unclassified families stay exactly where the evidence put them.
+ */
+export function urgencyAdjustment(family: string, band: FounderUrgencyBand | null | undefined) {
+  const tilt = band ? URGENCY_TILT_RANK_STEPS[band] ?? 0 : 0;
+  if (!tilt) return 0;
+  if (REVENUE_PROXIMATE_FAMILIES.has(family)) return tilt;
+  if (DEFERRABLE_UNDER_PRESSURE.has(family)) return -tilt;
+  return 0;
+}
+
+/**
+ * Exploration trades a founder's next action for information. That trade is
+ * not acceptable for someone weeks from running out of money.
+ */
+export function allowsExploration(band: FounderUrgencyBand | null | undefined) {
+  return band !== "critical";
+}
+
 export interface LearningCandidate {
   key: string;
   urgency: RecommendationUrgency;
@@ -164,9 +230,10 @@ export function rankWithCollectiveEvidence(input: {
   priors: Map<string, FamilyEvidence>;
   recentExposures: RecentExposure[];
   tuning: LearningTuning;
+  urgencyBand?: FounderUrgencyBand | null;
   now?: Date;
 }): RankedLearningResult {
-  const { candidates, baseOrder, priors, recentExposures, tuning } = input;
+  const { candidates, baseOrder, priors, recentExposures, tuning, urgencyBand } = input;
   const now = input.now ?? new Date();
   const diagnostics: Record<string, unknown> = {};
   const fatigue = new Map(
@@ -194,14 +261,21 @@ export function rankWithCollectiveEvidence(input: {
     const evidenceWeight = evidence
       ? Math.min(0.65, 0.65 * evidence.uniqueUsers / (evidence.uniqueUsers + 12))
       : 0;
+    // urgencyAdjustment is denominated in base-rank steps, so scale it by the
+    // distance between adjacent ranks in this particular candidate list.
+    const baseStep = 1 / Math.max(1, candidates.length);
+    const urgencyBias = urgencyAdjustment(candidate.toolKey, urgencyBand) * baseStep;
     const score = baseScore * (1 - evidenceWeight)
       + collectiveScore * evidenceWeight
       - fatigueState.penalty
-      - capPenalty;
+      - capPenalty
+      + urgencyBias;
 
     diagnostics[candidate.key] = {
       score: Number(score.toFixed(6)),
       baseScore: Number(baseScore.toFixed(6)),
+      urgencyBand: urgencyBand ?? null,
+      urgencyBias: Number(urgencyBias.toFixed(6)),
       bayesianMean: evidence?.mean ?? null,
       conservativeScore: evidence?.score ?? null,
       uncertainty: evidence?.uncertainty ?? null,

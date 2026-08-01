@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import {
+  allowsExploration,
   bestPriorByFamily,
   contextSegmentKeys,
   rankWithCollectiveEvidence,
@@ -224,6 +225,8 @@ serve(async (req) => {
   const deterministicKey = candidates[0].key;
   const assignment = resolveAssignment(authData.user.id, snapshotHash, config);
   const segmentKeys = contextSegmentKeys(context);
+  const urgencyBand = (["critical", "high", "moderate", "stable"] as const)
+    .find((band) => band === context.urgencyBand) ?? null;
   const families = [...new Set(candidates.map((candidate) => candidate.toolKey))];
   const recentSince = new Date(
     Date.now() - Math.max(config.family_frequency_window_days, config.diversity_window_days) * 86_400_000,
@@ -305,6 +308,7 @@ serve(async (req) => {
       priors: priorByFamily,
       recentExposures,
       tuning,
+      urgencyBand,
     });
     orderedCandidateKeys = ranked.orderedCandidateKeys;
     Object.assign(diagnostics, ranked.diagnostics);
@@ -314,7 +318,7 @@ serve(async (req) => {
     }
   }
 
-  if (assignment === "explore" && orderedCandidateKeys.length > 1) {
+  if (assignment === "explore" && orderedCandidateKeys.length > 1 && allowsExploration(urgencyBand)) {
     const exploredKey = selectSafeExploration({
       orderedCandidateKeys,
       candidates,
@@ -351,7 +355,11 @@ serve(async (req) => {
   diagnostics.policy = {
     rankingVersion: "collective_bayesian_v2",
     selectionProbability: Number(selectionProbability.toFixed(6)),
-    explorationEligible: assignment === "explore" && !(diagnostics.exploration as { skipped?: boolean })?.skipped,
+    explorationEligible: assignment === "explore"
+      && allowsExploration(urgencyBand)
+      && !(diagnostics.exploration as { skipped?: boolean })?.skipped,
+    explorationSuppressedByUrgency: assignment === "explore" && !allowsExploration(urgencyBand),
+    urgencyBand,
     fatigueFingerprint,
   };
 
