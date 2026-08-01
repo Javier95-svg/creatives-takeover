@@ -5,7 +5,8 @@ export function CreditPriceList() {
     const prices = [
         { name: "ICP Builder", value: "Free on every plan" },
         { name: "Demo Studio", value: `${getCreditCostForPlan('WAITLIST_GENERATION', 'rookie')} credits/use on Rookie; ${CREDIT_COSTS.WAITLIST_GENERATION} on paid plans` },
-        { name: "PMF Lab", value: `${CREDIT_COSTS.PMF_ANALYSIS} credits/full analysis; ${CREDIT_COSTS.PMF_SCORING} credits/evidence score on Starter+` },
+        { name: "PMF Lab", value: `1st evidence score free, then ${CREDIT_COSTS.PMF_SCORING} credits/score on every plan; re-scores free` },
+        { name: "PMF Customer Discovery", value: `${CREDIT_COSTS.PMF_DISCOVERY} credits/run on every plan` },
         { name: "MVP Builder", value: `Uses account credits: ${CREDIT_COSTS.APP_BUILDER_GENERATE} new React app, ${CREDIT_COSTS.APP_BUILDER_REFINE} edit, ${CREDIT_COSTS.APP_BUILDER_ADD_FEATURE} add feature, ${CREDIT_COSTS.APP_BUILDER_DEPLOY} publish` },
         { name: "Tech Stack Builder", value: `${CREDIT_COSTS.TECH_STACK_GENERATION} credits/use on Rising+` },
         { name: "GTM Strategist", value: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/researched generation on every plan; edits and reviews included` },

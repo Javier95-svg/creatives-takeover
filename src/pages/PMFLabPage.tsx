@@ -23,6 +23,7 @@ import { useSearchParams } from 'react-router-dom';
 import { ArrowRight, ChevronDown, Rocket } from 'lucide-react';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 import { getPublicTabConfig } from '@/config/publicTabVisibility';
+import { PLAN_LABELS } from '@/config/planPermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
 import { useCustomerDiscovery } from '@/hooks/useCustomerDiscovery';
@@ -52,7 +53,9 @@ export default function PMFLabPage() {
   const [icpDraftId, setIcpDraftId] = useState<string | null>(null);
   const [icpInterviewPlan, setIcpInterviewPlan] = useState<PMFIcpInterviewPlanItem[] | null>(null);
   const [waitlistProductName, setWaitlistProductName] = useState<string | null>(null);
-  const [mode, setMode] = useState<'score' | 'discover'>('score');
+  const [mode, setMode] = useState<'score' | 'discover'>(
+    () => (new URLSearchParams(window.location.search).get('mode') === 'discover' ? 'discover' : 'score'),
+  );
   const [interviewLeadSeed, setInterviewLeadSeed] = useState<PMFInterviewLeadSeed | null>(null);
   // Progressive disclosure: only one detail step is expanded at a time so the
   // page opens with a single clear focus instead of a wall of stacked sections.
@@ -62,6 +65,8 @@ export default function PMFLabPage() {
   const outcomeAnalysisId = searchParams.get('outcome');
   const icpParam = searchParams.get('icp');
   // ?step=interviews is the conversation-stage entry point ICP Builder links to.
+  // (?mode=discover, the distribution entry point Demo Studio links to after publish,
+  // is applied in the `mode` initializer above so the first paint is already correct.)
   const wantsInterviewStep = searchParams.get('step') === 'interviews';
   const hubViewedRef = useRef(false);
   const surveyRef = useRef<HTMLDivElement | null>(null);
@@ -601,9 +606,13 @@ export default function PMFLabPage() {
                 )}
               </>
             ) : (
+              // Defensive only: pmf_lab is `state: 'full'` on every plan, so this branch is
+              // currently unreachable. The unlock copy is derived from the plan config rather
+              // than hardcoded, which previously claimed "Starter and above" and contradicted
+              // the matrix that gives rookie full access.
               <BlurredToolPreview
                 featureName="PMF Lab"
-                unlockCondition="PMF Lab is available on the Starter plan and above."
+                unlockCondition={`PMF Lab is available on the ${PLAN_LABELS[upgradeTarget] ?? 'Starter'} plan and above.`}
                 requiredPlan={upgradeTarget}
                 locked
               >

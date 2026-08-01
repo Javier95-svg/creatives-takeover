@@ -53,14 +53,10 @@ test('metered tools disclose credit costs before action', () => {
   assert.match(promptSource, /feature="PROMPT_GENERATION"/);
 });
 
-test('rookie pmf preview is no-charge and distinct from full analysis', () => {
-  const source = readFileSync(new URL('../src/components/pmf/ProductMarketFitLab.tsx', import.meta.url), 'utf8');
-
-  assert.match(source, /interface RookiePMFPreview/);
-  assert.match(source, /This Rookie preview does not run the full AI analysis or spend credits/);
-  assert.match(source, /Unlock full PMF Lab with Starter/);
-  assert.match(source, /const requiredCredits = ensureCredits\('PMF_ANALYSIS'/);
-});
+// The rookie-preview assertions lived on ProductMarketFitLab.tsx, the unmounted 4-factor
+// PMF tree that /pmf-lab never rendered. It was deleted along with its ~3,200-line
+// subtree; the live rookie path is covered by the PMF_SCORING first-score gift in
+// pmf-evidence-scorer, asserted in tests/pmf-production-readiness.test.ts.
 
 test('account exposes credit activity from the existing credit history path', () => {
   const accountSource = readFileSync(new URL('../src/pages/Account.tsx', import.meta.url), 'utf8');

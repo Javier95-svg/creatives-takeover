@@ -107,10 +107,10 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
         : ' Tech Stack Builder unlocks on Rising and Pro.';
     }
     if (featureLower.includes('pmf') || featureLower.includes('product-market fit')) {
-      if (normalizedTier === 'rookie') {
-        return ' Product-Market Fit Lab unlocks on Starter and above.';
-      }
-      return ` Product-Market Fit Lab is unlocked on your plan and costs ${CREDIT_COSTS.PMF_ANALYSIS} credits per full analysis.`;
+      // PMF Lab is `state: 'full'` on every plan including rookie, and the first evidence
+      // score is gifted. The old copy quoted PMF_ANALYSIS, the legacy analyzer's price,
+      // for a path that no longer exists.
+      return ` PMF Lab is unlocked on your plan. Your first evidence score is free, then it costs ${CREDIT_COSTS.PMF_SCORING} credits per score.`;
     }
     if (featureLower.includes('insighta') || featureLower.includes('test')) {
       return ' Insighta Test is included on every plan.';
