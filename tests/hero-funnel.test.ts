@@ -65,6 +65,25 @@ test('each mode pairs its question, CTA and destination coherently', () => {
   assert.equal(HERO_MODES.product.route, 'demo');
 });
 
+// The typing animation cycles these. Fewer than three and the field visibly
+// repeats itself while someone is still deciding what to write.
+test('each mode offers three distinct placeholder examples', () => {
+  for (const [name, config] of Object.entries(HERO_MODES)) {
+    assert.equal(config.placeholders.length, 3, `${name} should have 3 placeholders`);
+    assert.equal(
+      new Set(config.placeholders).size,
+      3,
+      `${name} placeholders should all be distinct`,
+    );
+    config.placeholders.forEach((placeholder) => {
+      assert.ok(placeholder.trim().length > 0, `${name} placeholder must not be blank`);
+      // They are typed into a field the visitor then edits, so they must read
+      // as something a founder would actually write - not "e.g. ..." prefixed.
+      assert.doesNotMatch(placeholder, /^e\.g\./i, `${name} placeholder should not be prefixed`);
+    });
+  }
+});
+
 test('generation errors collapse into a small queryable set', () => {
   assert.equal(resolveOutputErrorType({ errorCode: 'RATE_LIMITED' }), 'RATE_LIMITED');
   assert.equal(resolveOutputErrorType(new Error('The operation was aborted')), 'TIMEOUT');

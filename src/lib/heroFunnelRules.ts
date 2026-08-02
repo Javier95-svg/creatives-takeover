@@ -28,7 +28,12 @@ export interface HeroModeConfig {
   question: string;
   /** Submit button label. */
   cta: string;
-  placeholder: string;
+  /**
+   * Cycled by the typing animation. Three each, so the field does not loop back
+   * to the same example while someone is still deciding what to write, and so
+   * the examples themselves teach how specific an answer is worth giving.
+   */
+  placeholders: readonly string[];
 }
 
 export const HERO_MODES = {
@@ -38,14 +43,22 @@ export const HERO_MODES = {
     // Curly apostrophe, matching "The Founders' Compass" directly above it.
     question: "Who’s your ideal customer?",
     cta: "Define ICP",
-    placeholder: "e.g. freelance designers who lose track of client revisions",
+    placeholders: [
+      "freelance designers who lose track of client revisions",
+      "small law firms still booking consultations by phone",
+      "indie game studios with no publisher and no marketing budget",
+    ],
   },
   product: {
     route: "demo",
     label: "Product",
     question: "What are you building?",
     cta: "Launch a live demo",
-    placeholder: "e.g. a scheduling tool for independent hairdressers",
+    placeholders: [
+      "a scheduling tool for independent hairdressers",
+      "an invoicing app for freelance photographers",
+      "a CRM for mobile car detailers",
+    ],
   },
 } as const satisfies Record<string, HeroModeConfig>;
 

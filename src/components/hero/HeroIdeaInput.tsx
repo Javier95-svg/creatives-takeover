@@ -1,5 +1,6 @@
 import { forwardRef, useCallback, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
 import { HERO_MODES, type HeroMode } from "@/lib/heroFunnelRules";
+import { useTypingCarousel } from "@/hooks/useTypingCarousel";
 
 const MIN_CHARS = 3;
 const MAX_ROWS = 3;
@@ -45,7 +46,14 @@ export const HeroIdeaInput = forwardRef<HeroIdeaInputHandle, HeroIdeaInputProps>
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const hasFocusedRef = useRef(false);
   const [nudge, setNudge] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const config = HERO_MODES[mode];
+
+  // Paused once the field is focused or has content, so the animation never
+  // competes with what someone is actually typing.
+  const hasValue = value.length > 0;
+  const typedPlaceholder = useTypingCarousel(config.placeholders, isFocused || hasValue);
+  const showPlaceholder = !hasValue;
 
   useImperativeHandle(ref, () => ({
     focus: () => textareaRef.current?.focus(),
@@ -84,6 +92,7 @@ export const HeroIdeaInput = forwardRef<HeroIdeaInputHandle, HeroIdeaInputProps>
   };
 
   const handleFocus = () => {
+    setIsFocused(true);
     if (hasFocusedRef.current) return;
     hasFocusedRef.current = true;
     onFirstFocus?.();
@@ -112,18 +121,33 @@ export const HeroIdeaInput = forwardRef<HeroIdeaInputHandle, HeroIdeaInputProps>
           {config.question}
         </label>
 
-        <textarea
-          id="hero-idea-input"
-          ref={textareaRef}
-          className="ct-hero__idea-textarea"
-          rows={1}
-          value={value}
-          disabled={disabled}
-          placeholder={config.placeholder}
-          onChange={(event) => onChange(event.target.value)}
-          onKeyDown={handleKeyDown}
-          onFocus={handleFocus}
-        />
+        {/*
+          The animated placeholder is an overlay rather than the native
+          `placeholder` attribute: a real placeholder cannot render the blinking
+          caret that makes the effect read as typing. It is aria-hidden and
+          pointer-events:none, so the textarea keeps its own accessible name
+          from the label and stays the only thing you can click or focus.
+        */}
+        <div className="ct-hero__idea-fieldwrap">
+          <textarea
+            id="hero-idea-input"
+            ref={textareaRef}
+            className="ct-hero__idea-textarea"
+            rows={1}
+            value={value}
+            disabled={disabled}
+            onChange={(event) => onChange(event.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={handleFocus}
+            onBlur={() => setIsFocused(false)}
+          />
+          {showPlaceholder ? (
+            <div className="ct-hero__idea-ghost" aria-hidden="true">
+              {typedPlaceholder}
+              {!isFocused ? <span className="ct-hero__idea-caret" /> : null}
+            </div>
+          ) : null}
+        </div>
 
         <div className="ct-hero__idea-bar">
           <div className="ct-hero__idea-modes" role="tablist" aria-label="What stage are you at?">
