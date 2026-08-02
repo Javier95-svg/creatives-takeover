@@ -65,14 +65,15 @@ test('each mode pairs its question, CTA and destination coherently', () => {
   assert.equal(HERO_MODES.product.route, 'demo');
 });
 
-// The typing animation cycles these. Fewer than three and the field visibly
-// repeats itself while someone is still deciding what to write.
-test('each mode offers three distinct placeholder examples', () => {
+// The typing animation cycles these. A full loop is roughly 15s per prompt, so
+// five carries a visitor well past the point where they have decided what to
+// write without ever repeating.
+test('each mode offers five distinct placeholder examples', () => {
   for (const [name, config] of Object.entries(HERO_MODES)) {
-    assert.equal(config.placeholders.length, 3, `${name} should have 3 placeholders`);
+    assert.equal(config.placeholders.length, 5, `${name} should have 5 placeholders`);
     assert.equal(
       new Set(config.placeholders).size,
-      3,
+      5,
       `${name} placeholders should all be distinct`,
     );
     config.placeholders.forEach((placeholder) => {

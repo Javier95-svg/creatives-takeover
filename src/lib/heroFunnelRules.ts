@@ -29,7 +29,7 @@ export interface HeroModeConfig {
   /** Submit button label. */
   cta: string;
   /**
-   * Cycled by the typing animation. Three each, so the field does not loop back
+   * Cycled by the typing animation. Five each, so the field does not loop back
    * to the same example while someone is still deciding what to write, and so
    * the examples themselves teach how specific an answer is worth giving.
    */
@@ -47,6 +47,8 @@ export const HERO_MODES = {
       "freelance designers who lose track of client revisions",
       "small law firms still booking consultations by phone",
       "indie game studios with no publisher and no marketing budget",
+      "boutique fitness studios whose members quietly stop showing up",
+      "small importers buried in customs paperwork",
     ],
   },
   product: {
@@ -58,6 +60,8 @@ export const HERO_MODES = {
       "a scheduling tool for independent hairdressers",
       "an invoicing app for freelance photographers",
       "a CRM for mobile car detailers",
+      "a booking app for mobile dog groomers",
+      "an expense tracker for small construction crews",
     ],
   },
 } as const satisfies Record<string, HeroModeConfig>;
