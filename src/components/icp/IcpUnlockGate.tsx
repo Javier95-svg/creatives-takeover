@@ -223,7 +223,7 @@ export function IcpUnlockGate({
               Save this and keep going
             </h2>
             <p className="text-sm text-muted-foreground">
-              Your profile is saved for 7 days. Create a free account to keep it and move to the next step.
+              Your draft is saved in this browser. Create a free account to keep it and move to the next step.
             </p>
           </div>
 

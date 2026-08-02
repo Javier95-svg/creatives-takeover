@@ -1,5 +1,5 @@
 import { ReactNode, Suspense, lazy, useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, LayoutDashboard, User } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,6 +12,8 @@ import HeroIdeaInput from "@/components/hero/HeroIdeaInput";
 import "./hero-cinematic-spotlight.css";
 import { trackActivationEntry, trackActivationFunnelEvent } from "@/lib/activationEntry";
 import { classifyHeroInput, trackHeroInputFocused, trackHeroInputSubmitted } from "@/lib/heroFunnel";
+import { buildIcpSeedReturnPath, persistIcpSeed } from "@/lib/icpSeed";
+import { useFeatureFlagEnabled } from "@/hooks/usePosthogFeatureFlag";
 
 // Everything that generates lives behind this boundary so no part of it is in
 // the fold-blocking bundle. The input above is plain markup and stays typable
@@ -94,6 +96,18 @@ const Hero = ({
   const { isAuthenticated, user } = useAuth();
   const { trackTriggerView, trackEngagement } = useConversionTracking();
   const location = useLocation();
+  const navigate = useNavigate();
+  // Kill switch, not an experiment. `!== false` matters: PostHog init is
+  // deferred ~3s, so this hook returns undefined well past first paint. Reading
+  // it as "on unless explicitly turned off" keeps the hero rendering
+  // immediately; gating render on a resolved flag would blank the fold for 3s.
+  //
+  // What it disables is the in-place generation - the new, risky machinery. It
+  // does not restore the two old CTA buttons; that is an approved product
+  // decision and rolling it back is a revert plus a Vercel redeploy. With the
+  // flag off, submitting seeds /icp-builder and navigates there, which is the
+  // pre-existing path and still works.
+  const inPlaceGenerationEnabled = useFeatureFlagEnabled("hero-single-input") !== false;
   const { set: setAttribution } = useCTAAttribution();
   const heroRef = useRef<HTMLElement>(null);
   const hasTrackedView = useRef(false);
@@ -206,6 +220,12 @@ const Hero = ({
       placement: "hero_input",
       is_authenticated: isAuthenticated,
     });
+
+    if (!inPlaceGenerationEnabled) {
+      persistIcpSeed(trimmed);
+      navigate(buildIcpSeedReturnPath(trimmed));
+      return;
+    }
 
     setSubmittedIdea(trimmed);
     setGenerationRunId((current) => current + 1);

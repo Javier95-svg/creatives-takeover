@@ -14,8 +14,11 @@ import {
   wasSignupPromptDismissed,
 } from "@/lib/heroFunnel";
 import {
+  buildIcpUnlockReturnPath,
   createEmptyIcpBuilderSession,
+  persistIcpBuilderAuthHandoff,
   persistIcpBuilderSession,
+  type IcpBuilderSession,
   type StoredIcpArtifact,
 } from "@/lib/icpBuilderSession";
 
@@ -47,6 +50,8 @@ export function HeroResultIsland({ description, runId, isAuthenticated, onRetry 
   const [artifact, setArtifact] = useState<StoredIcpArtifact | null>(null);
   const [promptDismissed, setPromptDismissed] = useState(() => wasSignupPromptDismissed());
   const resultRef = useRef<HTMLDivElement>(null);
+  // Kept so the signup handler can hand the exact session to the claim token.
+  const sessionRef = useRef<IcpBuilderSession | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -92,15 +97,16 @@ export function HeroResultIsland({ description, runId, isAuthenticated, onRetry 
 
         // Hand the draft to the builder session so /icp-builder can continue it
         // and the existing auth handoff can claim it on signup.
-        const session = createEmptyIcpBuilderSession();
-        persistIcpBuilderSession({
-          ...session,
+        const session: IcpBuilderSession = {
+          ...createEmptyIcpBuilderSession(),
           mode: "fast",
           currentScreen: "gate",
           fastDescription: description,
           draftPreview: fullArtifact,
           unlockRequired: !isAuthenticated,
-        });
+        };
+        sessionRef.current = session;
+        persistIcpBuilderSession(session);
 
         // Covers the case where the fast slice failed but the draft succeeded:
         // this is still the visitor's first rendered output. The helper is
@@ -192,7 +198,7 @@ export function HeroResultIsland({ description, runId, isAuthenticated, onRetry 
 
       {phase === "complete" ? (
         <div className="ct-hero__result-actions">
-          <Link className="ct-hero__cta" to="/icp-builder?continue=1">
+          <Link className="ct-hero__cta" to="/icp-builder">
             See the full brief
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
               <polyline points="9 18 15 12 9 6" />
@@ -210,9 +216,28 @@ export function HeroResultIsland({ description, runId, isAuthenticated, onRetry 
       {showSignupCard ? (
         <div className="ct-hero__save-card">
           <h3>Save this and keep going</h3>
-          <p>Your profile is saved for 7 days. Create a free account to keep it and move to the next step.</p>
+          {/*
+            The copy deck said "saved for 7 days", but the draft currently lives
+            in sessionStorage - it dies when the tab closes. Promising 7 days
+            would be false. Restore that wording once the draft is persisted
+            server-side against an anonymous token.
+          */}
+          <p>Your draft is saved in this browser. Create a free account to keep it and move to the next step.</p>
           <div className="ct-hero__save-card-actions">
-            <Link className="ct-hero__cta" to="/signup?return=%2Ficp-builder%3Fcontinue%3D1">
+            <Link
+              className="ct-hero__cta"
+              to={`/signup?return=${encodeURIComponent(buildIcpUnlockReturnPath())}`}
+              onClick={() => {
+                // Writes the one-time claim token the new account uses to adopt
+                // this draft, so signup lands on the saved result rather than a
+                // generic /onboarding. Same mechanism the builder's own gate
+                // uses (ICPBuilder.tsx onBeforeAuthContinue).
+                const session = sessionRef.current;
+                if (!session) return;
+                persistIcpBuilderSession(session);
+                persistIcpBuilderAuthHandoff(session, buildIcpUnlockReturnPath());
+              }}
+            >
               Create free account
             </Link>
             <button
