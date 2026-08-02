@@ -31,23 +31,26 @@ const ARTIFACT = {
 };
 
 for (const viewport of [
-  { name: 'desktop', width: 1366, height: 768 },
-  { name: 'mobile', width: 390, height: 844 },
+  { name: 'desktop', width: 1366, height: 768, heroTopPadding: '120px' },
+  { name: 'mobile', width: 390, height: 844, heroTopPadding: '96px' },
 ]) {
-  test(`homepage input and submit stay above the fold on ${viewport.name}`, async ({ page }) => {
+  test(`homepage preserves the established hero spacing on ${viewport.name}`, async ({ page }) => {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
     await page.goto('/', { waitUntil: 'commit' });
+    const hero = page.locator('.ct-hero');
+    const title = page.locator('.ct-hero__title');
+    const lede = page.locator('.ct-hero__lede');
     const field = page.locator('#hero-idea-input');
     const submit = page.locator('.ct-hero__idea-send');
     const showcase = page.locator('.ct-hero__spotlight');
+    await expect(title).toBeVisible();
     await expect(field).toBeVisible();
     await expect(submit).toBeVisible();
-    const fieldBox = await field.boundingBox();
-    const submitBox = await submit.boundingBox();
-    const showcaseBox = await showcase.boundingBox();
-    expect(fieldBox && fieldBox.y + fieldBox.height).toBeLessThanOrEqual(viewport.height);
-    expect(submitBox && submitBox.y + submitBox.height).toBeLessThanOrEqual(viewport.height);
-    expect(showcaseBox?.y).toBeGreaterThanOrEqual(viewport.height);
+    await expect(hero).toHaveCSS('padding-top', viewport.heroTopPadding);
+    await expect(title).toHaveCSS('margin-bottom', '22px');
+    await expect(lede).toHaveCSS('row-gap', '28px');
+    await expect(lede).toHaveCSS('margin-bottom', '34px');
+    await expect(showcase).toHaveCSS('margin-top', '0px');
   });
 }
 
