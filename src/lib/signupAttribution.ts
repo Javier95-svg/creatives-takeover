@@ -9,6 +9,7 @@ import { persistOnboardingReturn, sanitizeReturnPath } from "@/lib/authRedirect"
 import { readCTAAttribution, type ActivationEntryId } from "@/lib/activationEntry";
 import { getSafeLocalStorage, getSafeSessionStorage } from "@/lib/safeStorage";
 import { setOAuthAuthIntent } from "@/lib/referral";
+import { readOutputSignupContext } from "@/lib/outputSignupContext";
 
 const INTENT_KEY = "ct_signup_attribution_intent_v1";
 const START_GUARD_KEY = "ct_signup_attribution_started_v1";
@@ -54,6 +55,7 @@ export function beginAttributedSignup({ method, source, returnUrl, entryId }: Be
     // A malformed marker is replaced below.
   }
   const cta = readCTAAttribution();
+  const outputContext = readOutputSignupContext();
   const intent: SignupAttributionIntent = {
     version: 1,
     method,
@@ -83,6 +85,12 @@ export function beginAttributedSignup({ method, source, returnUrl, entryId }: Be
     entry_id: intent.entryId,
     entry_page: intent.entryPage,
     operation_id: intent.operationId,
+    had_output_before_signup: Boolean(outputContext),
+    ...(outputContext ? {
+      output_route: outputContext.outputRoute,
+      anonymous_artifact_id: outputContext.anonymousArtifactId,
+      time_to_signup_s: Math.max(0, Math.round((Date.now() - outputContext.outputGeneratedAt) / 1000)),
+    } : {}),
   });
   captureEvent("conversion_cta_signup_started", {
     method,

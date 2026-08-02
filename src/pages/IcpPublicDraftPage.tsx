@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getIcpDraftShareBySlug, isIcpDraftSharedSnapshot } from "@/lib/icpDraftSharing";
 import { normalizeIcpDraftDocument } from "@/lib/icpDraftArtifacts";
 import { downloadIcpDraftDocx, downloadIcpDraftPdf } from "@/lib/icpDraftExport";
+import { buildArtifactReferralPath, trackArtifactReferralClicked } from "@/lib/artifactReferral";
 import type { IcpDraftDocument } from "@/lib/icpBuilderSession";
 
 function slugifyFileName(value: string) {
@@ -76,7 +77,12 @@ export default function IcpPublicDraftPage() {
                 The founder may have disabled the share link or replaced it with a newer one.
               </p>
               <Button asChild>
-                <Link to="/icp-builder">Build your own</Link>
+                <Link
+                  to={buildArtifactReferralPath("icp")}
+                  onClick={() => trackArtifactReferralClicked("icp", "missing_state")}
+                >
+                  Build yours free
+                </Link>
               </Button>
             </CardContent>
           </Card>
@@ -135,7 +141,7 @@ export default function IcpPublicDraftPage() {
               <p className="mb-4 text-sm text-muted-foreground">
                 Built with{" "}
                 <a
-                  href="https://creatives-takeover.com"
+                  href={buildArtifactReferralPath("icp")}
                   className="font-medium text-[#0f5b64] hover:underline"
                   target="_blank"
                   rel="noreferrer"
@@ -145,10 +151,11 @@ export default function IcpPublicDraftPage() {
                 {" "}— the platform for first-time founders.
               </p>
               <Link
-                to="/icp-builder?mode=fast"
+                to={buildArtifactReferralPath("icp")}
+                onClick={() => trackArtifactReferralClicked("icp", "footer")}
                 className="inline-flex items-center gap-2 rounded-full bg-[#0f5b64] px-6 py-3 text-sm font-semibold text-white shadow-[0_8px_24px_-12px_rgba(15,91,100,0.55)] transition-opacity hover:opacity-90"
               >
-                Build your ICP free — 60 seconds
+                Build yours free
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>

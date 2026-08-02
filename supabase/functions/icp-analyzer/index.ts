@@ -21,7 +21,15 @@ const corsHeaders = {
 const ICP_RESULTS_TABLE = "icp_analysis_results";
 
 type SaveMode = "preview" | "save";
-type Operation = "seed_prefill" | "first_slice" | "build_draft" | "save_existing_artifact";
+type Operation =
+  | "seed_prefill"
+  | "first_slice"
+  | "start_hero_generation"
+  | "load_guest_artifact"
+  | "retry_guest_deep"
+  | "claim_guest_artifact"
+  | "build_draft"
+  | "save_existing_artifact";
 
 // The fast half of two-stage generation. build_draft is a single gpt-4o call
 // with max_tokens 6000 and a 38s abort - it cannot put anything on screen
@@ -31,6 +39,17 @@ type Operation = "seed_prefill" | "first_slice" | "build_draft" | "save_existing
 interface FirstSliceRequest {
   operation: "first_slice";
   description: string;
+}
+
+interface StartHeroGenerationRequest {
+  operation: "start_hero_generation";
+  description: string;
+  source?: string;
+}
+
+interface GuestArtifactRequest {
+  operation: "load_guest_artifact" | "retry_guest_deep" | "claim_guest_artifact";
+  resumeToken: string;
 }
 
 interface SeedPrefillRequest {
@@ -48,7 +67,13 @@ interface SaveExistingArtifactRequest {
   artifact: Record<string, any>;
 }
 
-type RequestPayload = SeedPrefillRequest | FirstSliceRequest | BuildDraftRequest | SaveExistingArtifactRequest;
+type RequestPayload =
+  | SeedPrefillRequest
+  | FirstSliceRequest
+  | StartHeroGenerationRequest
+  | GuestArtifactRequest
+  | BuildDraftRequest
+  | SaveExistingArtifactRequest;
 
 type AuthenticatedUser = {
   id: string;
@@ -99,8 +124,17 @@ function validatePayload(payload: Partial<RequestPayload>) {
     return issues;
   }
 
-  if (payload.operation === "first_slice") {
+  if (payload.operation === "first_slice" || payload.operation === "start_hero_generation") {
     if (!isNonEmpty(payload.description, 3)) issues.push("description must be at least 3 characters");
+    return issues;
+  }
+
+  if (
+    payload.operation === "load_guest_artifact" ||
+    payload.operation === "retry_guest_deep" ||
+    payload.operation === "claim_guest_artifact"
+  ) {
+    if (!isNonEmpty(payload.resumeToken, 32)) issues.push("resumeToken is invalid");
     return issues;
   }
 
@@ -117,7 +151,7 @@ function validatePayload(payload: Partial<RequestPayload>) {
   }
 
   if (payload.operation !== "build_draft") {
-    issues.push("operation must be seed_prefill, first_slice, build_draft, or save_existing_artifact");
+    issues.push("operation is not supported");
     return issues;
   }
 
@@ -149,23 +183,114 @@ Return valid JSON only in this shape:
 {
   "personaName": "string",
   "roleLine": "string",
-  "segment": "string",
-  "corePain": "string",
-  "buyingTrigger": "string"
+  "primarySegment": "string",
+  "urgentProblem": "string",
+  "buyingTrigger": "string",
+  "nonFitSegment": "string",
+  "messagingHook": "string",
+  "validationStep": "string"
 }
 
 Rules:
 - Be specific and concrete. Never say "small businesses" or "creators".
 - personaName is a short human label, e.g. "Solo bookkeeper at a 3-person firm".
 - roleLine is one sentence describing who they are and what they do.
-- segment names the narrow market you would sell to first.
-- corePain is one frustration they feel now, in their words, not market-speak.
+- primarySegment names the narrow market you would sell to first.
+- urgentProblem is one frustration they feel now, in their words, not market-speak.
 - buyingTrigger is the specific moment that makes them look for a solution.
+- nonFitSegment names one adjacent customer the founder should deliberately avoid first.
+- messagingHook is a concise outcome-led promise written to the customer.
+- validationStep is one concrete interview or outreach action the founder can do this week.
 - The founder may have written only a few words. Infer the most plausible
   reading and commit to it rather than hedging or asking for more detail.
 
 What they are building:
 ${description}`;
+}
+
+type HeroDecisionBrief = {
+  personaName: string;
+  roleLine: string;
+  primarySegment: string;
+  urgentProblem: string;
+  buyingTrigger: string;
+  nonFitSegment: string;
+  messagingHook: string;
+  validationStep: string;
+};
+
+const cleanHeroField = (value: unknown) => typeof value === "string" ? value.trim() : "";
+
+function normalizeHeroDecisionBrief(value: Record<string, unknown>): HeroDecisionBrief {
+  return {
+    personaName: cleanHeroField(value.personaName),
+    roleLine: cleanHeroField(value.roleLine),
+    primarySegment: cleanHeroField(value.primarySegment ?? value.segment),
+    urgentProblem: cleanHeroField(value.urgentProblem ?? value.corePain),
+    buyingTrigger: cleanHeroField(value.buyingTrigger),
+    nonFitSegment: cleanHeroField(value.nonFitSegment),
+    messagingHook: cleanHeroField(value.messagingHook),
+    validationStep: cleanHeroField(value.validationStep),
+  };
+}
+
+async function generateHeroDecisionBrief(openaiApiKey: string, description: string): Promise<HeroDecisionBrief> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FIRST_SLICE_TIMEOUT_MS);
+  let completion: Response;
+  try {
+    completion = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${openaiApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        response_format: { type: "json_object" },
+        temperature: 0.35,
+        max_tokens: 850,
+        messages: [
+          { role: "system", content: "Return valid JSON only." },
+          { role: "user", content: buildFirstSlicePrompt(description) },
+        ],
+      }),
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+
+  if (!completion.ok) {
+    const body = await completion.text().catch(() => "");
+    throw new Error(`OpenAI API Error: ${completion.status} ${body.slice(0, 200)}`.trim());
+  }
+
+  const data = await completion.json();
+  const content = data?.choices?.[0]?.message?.content;
+  if (typeof content !== "string" || !content.trim()) {
+    throw new Error("OpenAI returned an empty hero decision brief");
+  }
+
+  const brief = normalizeHeroDecisionBrief(JSON.parse(content));
+  if (!brief.personaName || !brief.primarySegment || !brief.urgentProblem || !brief.validationStep) {
+    throw new Error("OpenAI returned an incomplete hero decision brief");
+  }
+  return brief;
+}
+
+function createResumeToken() {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+}
+
+async function hashResumeToken(token: string) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
+  return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 function buildSeedPrompt(seed: string) {
@@ -279,6 +404,74 @@ async function fetchMarketSignals(serviceClient: any, req: Request, request: Dra
     console.warn("ICP analyzer enrichment failed, continuing without market signals", error);
     return { marketSignals: [] as string[], competitors: [] as Array<{ name: string; url: string | null }>, sources: [] as DraftSource[] };
   }
+}
+
+async function generateAndPersistHeroDeep({
+  serviceClient,
+  openaiApiKey,
+  req,
+  artifactId,
+  description,
+}: {
+  serviceClient: any;
+  openaiApiKey: string;
+  req: Request;
+  artifactId: string;
+  description: string;
+}) {
+  const request: DraftRequestShape = {
+    entryMode: "fast",
+    fastInput: { description },
+  };
+
+  try {
+    const enrichment = await fetchMarketSignals(serviceClient, req, request);
+    const generated = await generateIcpDraftArtifact({
+      openaiApiKey,
+      request,
+      enrichment: {
+        marketSignals: enrichment.marketSignals,
+        competitorLinks: enrichment.competitors,
+        sources: enrichment.sources,
+      },
+    });
+    const { error } = await serviceClient
+      .from("guest_activation_artifacts")
+      .update({
+        deep_payload: generated.artifact,
+        generation_status: "deep_ready",
+        generation_error_code: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", artifactId);
+    if (error) throw error;
+    return generated.artifact;
+  } catch (error) {
+    await serviceClient
+      .from("guest_activation_artifacts")
+      .update({
+        generation_status: "deep_failed",
+        generation_error_code: resolveAnalyticsErrorCode(error),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", artifactId);
+    throw error;
+  }
+}
+
+function guestArtifactResponse(row: Record<string, any>) {
+  return {
+    success: true,
+    artifactId: row.id,
+    artifactType: row.artifact_type,
+    source: row.source,
+    compact: row.compact_payload,
+    artifact: row.deep_payload,
+    generationStatus: row.generation_status,
+    claimState: row.claim_state,
+    nativeArtifactId: row.native_artifact_id,
+    expiresAt: row.expires_at,
+  };
 }
 
 function buildStoredArtifactPayload(artifact: Record<string, any>) {
@@ -439,6 +632,261 @@ serve(async (req) => {
 
     const serviceClient = createClient(supabaseUrl, supabaseKey);
 
+    if (payload.operation === "start_hero_generation") {
+      const { error: rateError } = await serviceClient.rpc("assert_rate_limit", {
+        p_key: "icp_hero_generation:" + getClientIp(req),
+        p_user_id: null,
+        p_max_per_minute: PREVIEW_RATE_LIMIT_PER_MIN,
+      });
+      if (rateError) {
+        const limited = /rate_limit_exceeded/i.test(rateError.message || "");
+        return new Response(JSON.stringify({
+          success: false,
+          error: limited
+            ? "You have hit the free draft limit. Wait a minute, or create a free account to keep going."
+            : "ICP drafts are temporarily unavailable. Please try again shortly.",
+          errorCode: limited ? "RATE_LIMITED" : "SERVICE_UNAVAILABLE",
+        }), {
+          status: limited ? 429 : 503,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const resumeToken = createResumeToken();
+      const resumeTokenHash = await hashResumeToken(resumeToken);
+      const source = cleanOptionalText(payload.source) || "homepage_hero";
+      const { data: guestRow, error: guestInsertError } = await serviceClient
+        .from("guest_activation_artifacts")
+        .insert({
+          artifact_type: "icp",
+          source,
+          input_payload: { description: payload.description },
+          resume_token_hash: resumeTokenHash,
+          generation_status: "compact_generating",
+        })
+        .select("id, expires_at")
+        .single();
+      if (guestInsertError || !guestRow) {
+        throw new Error(`Could not preserve the guest artifact: ${guestInsertError?.message || "unknown error"}`);
+      }
+
+      const artifactId = String(guestRow.id);
+      const deepPromise = generateAndPersistHeroDeep({
+        serviceClient,
+        openaiApiKey,
+        req,
+        artifactId,
+        description: payload.description,
+      }).catch((error) => {
+        console.error("Hero deep generation failed", { artifactId, error });
+      });
+      EdgeRuntime.waitUntil(deepPromise);
+
+      try {
+        const compact = await generateHeroDecisionBrief(openaiApiKey, payload.description);
+        await serviceClient
+          .from("guest_activation_artifacts")
+          .update({
+            compact_payload: compact,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", artifactId);
+        await serviceClient
+          .from("guest_activation_artifacts")
+          .update({ generation_status: "deep_running", updated_at: new Date().toISOString() })
+          .eq("id", artifactId)
+          .eq("generation_status", "compact_generating");
+        return new Response(JSON.stringify({
+          success: true,
+          artifactId,
+          resumeToken,
+          expiresAt: guestRow.expires_at,
+          compact,
+          generationStatus: "deep_running",
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (error) {
+        await serviceClient
+          .from("guest_activation_artifacts")
+          .update({
+            generation_error_code: resolveAnalyticsErrorCode(error),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", artifactId);
+        return new Response(JSON.stringify({
+          success: false,
+          artifactId,
+          resumeToken,
+          expiresAt: guestRow.expires_at,
+          generationStatus: "deep_running",
+          error: "The compact brief did not finish. We are still building the full result.",
+          errorCode: resolveAnalyticsErrorCode(error),
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    if (
+      payload.operation === "load_guest_artifact" ||
+      payload.operation === "retry_guest_deep" ||
+      payload.operation === "claim_guest_artifact"
+    ) {
+      const isDeepRetry = payload.operation === "retry_guest_deep";
+      const guestAction = isDeepRetry
+        ? "retry"
+        : payload.operation === "claim_guest_artifact"
+          ? "claim"
+          : "resume";
+      const { error: guestActionRateError } = await serviceClient.rpc("assert_rate_limit", {
+        p_key: `guest_icp_${guestAction}:` + getClientIp(req),
+        p_user_id: null,
+        p_max_per_minute: isDeepRetry ? PREVIEW_RATE_LIMIT_PER_MIN : 30,
+      });
+      if (guestActionRateError) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: "Too many result requests. Wait a minute and try again.",
+          errorCode: "RATE_LIMITED",
+        }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const tokenHash = await hashResumeToken(payload.resumeToken);
+      const { data: guest, error: guestError } = await serviceClient
+        .from("guest_activation_artifacts")
+        .select("*")
+        .eq("resume_token_hash", tokenHash)
+        .gt("expires_at", new Date().toISOString())
+        .maybeSingle();
+      if (guestError || !guest) {
+        return new Response(JSON.stringify({ success: false, error: "This result link is no longer valid.", errorCode: "NOT_FOUND" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (payload.operation === "load_guest_artifact") {
+        return new Response(JSON.stringify(guestArtifactResponse(guest)), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const inputDescription = cleanOptionalText(guest.input_payload?.description);
+      if (payload.operation === "retry_guest_deep") {
+        if (!inputDescription) {
+          return new Response(JSON.stringify({ success: false, error: "This result cannot be regenerated." }), {
+            status: 422,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        if (guest.generation_status !== "deep_ready") {
+          await serviceClient
+            .from("guest_activation_artifacts")
+            .update({ generation_status: "deep_running", generation_error_code: null, updated_at: new Date().toISOString() })
+            .eq("id", guest.id);
+          EdgeRuntime.waitUntil(generateAndPersistHeroDeep({
+            serviceClient,
+            openaiApiKey,
+            req,
+            artifactId: guest.id,
+            description: inputDescription,
+          }).catch((error) => console.error("Hero deep retry failed", { artifactId: guest.id, error })));
+        }
+        return new Response(JSON.stringify({ success: true, artifactId: guest.id, generationStatus: "deep_running" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const user = await getUserFromAuth(req);
+      if (!user) {
+        return new Response(JSON.stringify({ success: false, error: "Authentication required" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (guest.claimed_by && guest.claimed_by !== user.id) {
+        return new Response(JSON.stringify({ success: false, error: "This result has already been claimed.", errorCode: "ALREADY_CLAIMED" }), {
+          status: 409,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (guest.native_artifact_id && guest.claimed_by === user.id) {
+        return new Response(JSON.stringify({
+          ...guestArtifactResponse(guest),
+          success: true,
+          status: "claimed",
+          analysisId: guest.native_artifact_id,
+        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (!guest.deep_payload) {
+        if (guest.generation_status === "deep_failed" && inputDescription) {
+          try {
+            guest.deep_payload = await generateAndPersistHeroDeep({
+              serviceClient,
+              openaiApiKey,
+              req,
+              artifactId: guest.id,
+              description: inputDescription,
+            });
+          } catch (error) {
+            await emitBusinessEvent({
+              eventName: "artifact_claim_failed",
+              userId: user.id,
+              properties: { tool: "icp_builder", source: guest.source, error_code: resolveAnalyticsErrorCode(error) },
+            });
+            return new Response(JSON.stringify({ success: false, pending: false, error: "The full brief is not ready yet.", errorCode: "DEEP_FAILED" }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+        } else {
+          return new Response(JSON.stringify({ success: false, pending: true, generationStatus: guest.generation_status }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+
+      try {
+        const { data: analysisId, error: claimError } = await serviceClient.rpc("claim_guest_icp_artifact", {
+          p_guest_id: guest.id,
+          p_user_id: user.id,
+        });
+        if (claimError || !analysisId) {
+          if (/ALREADY_CLAIMED/i.test(claimError?.message || "")) {
+            return new Response(JSON.stringify({ success: false, error: "This result has already been claimed.", errorCode: "ALREADY_CLAIMED" }), {
+              status: 409,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+          throw new Error(claimError?.message || "The saved brief could not be created");
+        }
+        const profile = await getIcpSprintProfile(serviceClient, user.id, guest.deep_payload);
+        triggerIcpSprint({ supabaseUrl, supabaseKey, user, analysisId, artifact: guest.deep_payload, profile });
+        await emitBusinessEvent({
+          eventName: "artifact_claim_succeeded",
+          userId: user.id,
+          properties: { tool: "icp_builder", source: guest.source, artifact_type: "icp_analysis", artifact_id: analysisId },
+        });
+        return new Response(JSON.stringify({
+          success: true,
+          status: "claimed",
+          artifact: guest.deep_payload,
+          compact: guest.compact_payload,
+          artifactId: guest.id,
+          analysisId,
+        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      } catch (error) {
+        await emitBusinessEvent({
+          eventName: "artifact_claim_failed",
+          userId: user.id,
+          properties: { tool: "icp_builder", source: guest.source, error_code: resolveAnalyticsErrorCode(error) },
+        });
+        throw error;
+      }
+    }
+
     if (payload.operation === "first_slice") {
       // Same per-IP cap as the preview path; this runs unauthenticated too.
       const { error: sliceRateError } = await serviceClient.rpc("assert_rate_limit", {
@@ -460,63 +908,17 @@ serve(async (req) => {
         });
       }
 
-      // Hard ceiling well under the full draft's 38s: if the fast path is not
-      // fast it has no reason to exist, and the full draft is already running
-      // in parallel to cover it.
-      const sliceAbort = new AbortController();
-      const sliceTimeout = setTimeout(() => sliceAbort.abort(), FIRST_SLICE_TIMEOUT_MS);
-      let sliceCompletion: Response;
-      try {
-        sliceCompletion = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          signal: sliceAbort.signal,
-          headers: {
-            Authorization: `Bearer ${openaiApiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "gpt-4o-mini",
-            response_format: { type: "json_object" },
-            temperature: 0.4,
-            max_tokens: 500,
-            messages: [
-              { role: "system", content: "Return valid JSON only." },
-              { role: "user", content: buildFirstSlicePrompt(payload.description) },
-            ],
-          }),
-        });
-      } finally {
-        clearTimeout(sliceTimeout);
-      }
-
-      if (!sliceCompletion.ok) {
-        const errBody = await sliceCompletion.text().catch(() => "");
-        throw new Error(`OpenAI API Error: ${sliceCompletion.status} ${errBody.slice(0, 200)}`.trim());
-      }
-
-      const sliceData = await sliceCompletion.json();
-      const sliceContent = sliceData?.choices?.[0]?.message?.content;
-      if (typeof sliceContent !== "string" || !sliceContent.trim()) {
-        throw new Error("OpenAI returned an empty first slice");
-      }
-
-      let slice: ReturnType<typeof JSON.parse>;
-      try {
-        slice = JSON.parse(sliceContent);
-      } catch (parseError) {
-        throw new Error(
-          `Failed to parse first slice JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`,
-        );
-      }
+      const slice = await generateHeroDecisionBrief(openaiApiKey, payload.description);
 
       return new Response(JSON.stringify({
         success: true,
         slice: {
           personaName: typeof slice.personaName === "string" ? slice.personaName : "",
           roleLine: typeof slice.roleLine === "string" ? slice.roleLine : "",
-          segment: typeof slice.segment === "string" ? slice.segment : "",
-          corePain: typeof slice.corePain === "string" ? slice.corePain : "",
-          buyingTrigger: typeof slice.buyingTrigger === "string" ? slice.buyingTrigger : "",
+          ...slice,
+          // Legacy aliases stay for one release while older clients drain.
+          segment: slice.primarySegment,
+          corePain: slice.urgentProblem,
         },
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

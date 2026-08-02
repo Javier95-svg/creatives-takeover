@@ -13,6 +13,7 @@ import { DEFAULT_DEMO_STUDIO_CTA } from '@/lib/demoStudio/brief';
 import { shouldShowWatermark } from '@/lib/demoStudio/plan';
 import { trackDemoEvent } from '@/lib/demoStudio/events';
 import type { PublicLaunchPage as PublicLaunchPageData } from '@/lib/demoStudio/types';
+import { buildArtifactReferralPath, trackArtifactReferralClicked } from '@/lib/artifactReferral';
 
 export default function PublicLaunchPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -102,8 +103,12 @@ export default function PublicLaunchPage() {
         <SEO title="Launch page not found" description="This Demo Studio launch page is unavailable." noindex />
         <h1 className="text-2xl font-semibold">Launch page not found</h1>
         <p className="text-white/60">This page may be unpublished or the link is incorrect.</p>
-        <Link to="/demo-studio" className="mt-2 text-sm text-primary underline-offset-4 hover:underline">
-          Build your own Demo Studio page
+        <Link
+          to={buildArtifactReferralPath('demo_launch')}
+          className="mt-2 text-sm text-primary underline-offset-4 hover:underline"
+          onClick={() => trackArtifactReferralClicked('demo_launch', 'missing_state')}
+        >
+          Build yours free
         </Link>
       </div>
     );
@@ -218,6 +223,19 @@ export default function PublicLaunchPage() {
             />
           </section>
         )}
+
+        <footer className={`mt-10 flex flex-col items-center justify-between gap-4 border-t pt-6 text-sm sm:flex-row ${
+          background === 'light' ? 'border-slate-200' : 'border-white/10'
+        }`}>
+          <span className={mutedText}>Built with Creatives Takeover</span>
+          <Link
+            to={buildArtifactReferralPath('demo_launch')}
+            className="rounded-full bg-white px-5 py-2.5 font-semibold text-slate-950 transition-opacity hover:opacity-90"
+            onClick={() => trackArtifactReferralClicked('demo_launch', 'footer')}
+          >
+            Build yours free
+          </Link>
+        </footer>
       </main>
     </div>
   );

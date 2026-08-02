@@ -1,245 +1,401 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import SoftGateModal from "@/components/auth/SoftGateModal";
 import {
-  generateFirstSlice,
-  generateFullDraft,
-  type HeroFirstSlice,
+  buildHeroClaimReturnPath,
+  buildHeroResumePath,
+  loadHeroGuestArtifact,
+  persistHeroGuestArtifact,
+  retryHeroDeepGeneration,
+  startHeroIcpGeneration,
+  type HeroDecisionBrief,
+  type HeroGuestArtifactRef,
 } from "@/lib/heroIcpGeneration";
 import {
   markSignupPromptDismissed,
-  resolveOutputErrorType,
+  trackDeepOutputGenerated,
   trackFirstOutputGenerated,
   trackOutputGenerationFailed,
   trackSignupPromptShown,
   wasSignupPromptDismissed,
 } from "@/lib/heroFunnel";
 import {
-  buildIcpUnlockReturnPath,
   createEmptyIcpBuilderSession,
-  persistIcpBuilderAuthHandoff,
   persistIcpBuilderSession,
   type IcpBuilderSession,
   type StoredIcpArtifact,
 } from "@/lib/icpBuilderSession";
+import { persistOutputSignupContext } from "@/lib/outputSignupContext";
+import {
+  resolveHeroArtifactState,
+  type HeroRunState,
+} from "@/lib/heroFunnelRules";
 
 interface HeroResultIslandProps {
   description: string;
-  /** Bumped by the parent to force a fresh generation (submit / retry). */
   runId: number;
+  resumeToken?: string | null;
   isAuthenticated: boolean;
   onRetry: () => void;
+  onBusyChange?: (busy: boolean) => void;
+  onArtifactReady?: (artifact: HeroGuestArtifactRef) => void;
 }
 
-type Phase = "reading" | "drafting" | "slice" | "complete" | "failed";
+const POLL_INTERVAL_MS = 2_500;
+const POLL_TIMEOUT_MS = 75_000;
 
-const LOADING_COPY: Record<string, string> = {
-  reading: "Reading your idea…",
-  drafting: "Drafting your segment…",
-};
+function buildSession(description: string, artifact: StoredIcpArtifact): IcpBuilderSession {
+  return {
+    ...createEmptyIcpBuilderSession(),
+    mode: "fast",
+    currentScreen: "gate",
+    fastDescription: description || artifact.founderInputs.fastDescription || "",
+    draftPreview: artifact,
+    unlockRequired: true,
+  };
+}
 
-/**
- * Runs two-stage generation and renders the result directly under the hero
- * input - no navigation, no account, nothing blurred or truncated.
- *
- * Lazy-loaded on first submit so none of this ships in the fold-blocking
- * bundle.
- */
-export function HeroResultIsland({ description, runId, isAuthenticated, onRetry }: HeroResultIslandProps) {
-  const [phase, setPhase] = useState<Phase>("reading");
-  const [slice, setSlice] = useState<HeroFirstSlice | null>(null);
+export function HeroResultIsland({
+  description,
+  runId,
+  resumeToken: initialResumeToken,
+  isAuthenticated,
+  onRetry,
+  onBusyChange,
+  onArtifactReady,
+}: HeroResultIslandProps) {
+  const [runState, setRunState] = useState<HeroRunState>("compact_generating");
+  const [compact, setCompact] = useState<HeroDecisionBrief | null>(null);
   const [artifact, setArtifact] = useState<StoredIcpArtifact | null>(null);
+  const [guestRef, setGuestRef] = useState<HeroGuestArtifactRef | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [promptDismissed, setPromptDismissed] = useState(() => wasSignupPromptDismissed());
-  const resultRef = useRef<HTMLDivElement>(null);
-  // Kept so the signup handler can hand the exact session to the claim token.
-  const sessionRef = useRef<IcpBuilderSession | null>(null);
+  const [signupOpen, setSignupOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [activeResumeToken, setActiveResumeToken] = useState(initialResumeToken ?? null);
+  const [resumeReloadKey, setResumeReloadKey] = useState(0);
+  const outputGeneratedAtRef = useRef<number | null>(null);
+  const generationStartedAtRef = useRef<number>(Date.now());
+  const outputSourceRef = useRef<"homepage_hero" | "homepage_resume">(
+    initialResumeToken ? "homepage_resume" : "homepage_hero",
+  );
+  const promptTrackedRef = useRef<string | null>(null);
+
+  const applyDeepArtifact = useCallback((nextArtifact: StoredIcpArtifact, artifactId: string, startedAt: number) => {
+    setArtifact(nextArtifact);
+    setRunState("deep_ready");
+    setErrorMessage(null);
+    const session = buildSession(description, nextArtifact);
+    persistIcpBuilderSession(session);
+    trackDeepOutputGenerated({
+      route: "icp",
+      tool: "icp_builder",
+      source: "homepage_hero",
+      generation_run_id: String(runId),
+      anonymous_artifact_id: artifactId,
+      latency_ms: Math.max(0, Date.now() - startedAt),
+      is_anonymous: !isAuthenticated,
+    });
+  }, [description, isAuthenticated, runId]);
 
   useEffect(() => {
     let cancelled = false;
+    let pollTimer: ReturnType<typeof setTimeout> | null = null;
     const startedAt = Date.now();
+    const pollStartedAt = Date.now();
+    generationStartedAtRef.current = startedAt;
+    outputSourceRef.current = activeResumeToken ? "homepage_resume" : "homepage_hero";
 
-    setPhase("reading");
-    setSlice(null);
+    setRunState("compact_generating");
+    setCompact(null);
     setArtifact(null);
+    setGuestRef(null);
+    setErrorMessage(null);
+    onBusyChange?.(true);
 
-    // Both stages start together. The slice is only there to put real content
-    // on screen while the full draft - which is the actual deliverable - runs.
-    const slicePromise = generateFirstSlice(description);
-    const draftPromise = generateFullDraft(description);
-
-    // A rejected promise with no attached handler is an unhandled rejection if
-    // the other stage settles first, so both get a no-op catch here.
-    slicePromise.catch(() => undefined);
-    draftPromise.catch(() => undefined);
-
-    void (async () => {
+    const poll = async (token: string, artifactId: string) => {
+      if (cancelled) return;
       try {
-        const firstSlice = await slicePromise;
+        const snapshot = await loadHeroGuestArtifact(token);
         if (cancelled) return;
-        setSlice(firstSlice);
-        setPhase((current) => (current === "complete" ? current : "slice"));
-        trackFirstOutputGenerated({
-          route: "icp",
-          latency_ms: Date.now() - startedAt,
-          is_anonymous: !isAuthenticated,
-        });
-      } catch {
-        // Non-fatal: the full draft is still running and is the real output.
-        if (!cancelled) setPhase((current) => (current === "reading" ? "drafting" : current));
-      }
-    })();
-
-    void (async () => {
-      try {
-        const fullArtifact = await draftPromise;
-        if (cancelled) return;
-        setArtifact(fullArtifact);
-        setPhase("complete");
-
-        // Hand the draft to the builder session so /icp-builder can continue it
-        // and the existing auth handoff can claim it on signup.
-        const session: IcpBuilderSession = {
-          ...createEmptyIcpBuilderSession(),
-          mode: "fast",
-          currentScreen: "gate",
-          fastDescription: description,
-          draftPreview: fullArtifact,
-          unlockRequired: !isAuthenticated,
-        };
-        sessionRef.current = session;
-        persistIcpBuilderSession(session);
-
-        // Covers the case where the fast slice failed but the draft succeeded:
-        // this is still the visitor's first rendered output. The helper is
-        // once-per-session, so a successful slice already claimed it.
-        trackFirstOutputGenerated({
-          route: "icp",
-          latency_ms: Date.now() - startedAt,
-          is_anonymous: !isAuthenticated,
-        });
+        if (snapshot.compact && !compact) setCompact(snapshot.compact);
+        if (snapshot.artifact) {
+          applyDeepArtifact(snapshot.artifact, artifactId, startedAt);
+          onBusyChange?.(false);
+          return;
+        }
+        if (snapshot.generationStatus === "deep_failed" || snapshot.generationStatus === "failed") {
+          setRunState(resolveHeroArtifactState({
+            hasCompact: Boolean(snapshot.compact || compact),
+            hasDeep: false,
+            generationStatus: snapshot.generationStatus,
+          }));
+          setErrorMessage("The deeper report did not finish. Your decision brief is safe and you can retry.");
+          trackOutputGenerationFailed({
+            route: "icp",
+            source: "homepage_hero",
+            generation_run_id: String(runId),
+            anonymous_artifact_id: artifactId,
+            failure_stage: "deep",
+            error_type: snapshot.generationStatus,
+          });
+          onBusyChange?.(false);
+          return;
+        }
+        if (Date.now() - pollStartedAt >= POLL_TIMEOUT_MS) {
+          setRunState(resolveHeroArtifactState({
+            hasCompact: Boolean(snapshot.compact || compact),
+            hasDeep: false,
+            generationStatus: snapshot.generationStatus,
+            timedOut: true,
+          }));
+          setErrorMessage("The deeper report is taking longer than expected. Retry it without losing this brief.");
+          onBusyChange?.(false);
+          return;
+        }
+        setRunState(snapshot.compact || compact ? "deep_generating" : "compact_generating");
+        pollTimer = setTimeout(() => void poll(token, artifactId), POLL_INTERVAL_MS);
       } catch (error) {
         if (cancelled) return;
-        setPhase("failed");
-        trackOutputGenerationFailed({ route: "icp", error_type: resolveOutputErrorType(error) });
+        if (Date.now() - pollStartedAt < POLL_TIMEOUT_MS) {
+          pollTimer = setTimeout(() => void poll(token, artifactId), POLL_INTERVAL_MS);
+          return;
+        }
+        setRunState(resolveHeroArtifactState({
+          hasCompact: Boolean(compact),
+          hasDeep: false,
+          timedOut: true,
+        }));
+        setErrorMessage(error instanceof Error ? error.message : "Could not restore the full result.");
+        onBusyChange?.(false);
       }
-    })();
+    };
 
+    const run = async () => {
+      try {
+        if (activeResumeToken) {
+          const snapshot = await loadHeroGuestArtifact(activeResumeToken);
+          if (cancelled) return;
+          const ref: HeroGuestArtifactRef = {
+            artifactId: snapshot.artifactId,
+            resumeToken: activeResumeToken,
+            expiresAt: snapshot.expiresAt || new Date(Date.now() + 7 * 86_400_000).toISOString(),
+          };
+          setGuestRef(ref);
+          persistHeroGuestArtifact(ref);
+          onArtifactReady?.(ref);
+          if (snapshot.compact) {
+            setCompact(snapshot.compact);
+            outputGeneratedAtRef.current = Date.now();
+          }
+          if (snapshot.artifact) {
+            applyDeepArtifact(snapshot.artifact, snapshot.artifactId, startedAt);
+            onBusyChange?.(false);
+            return;
+          }
+          setRunState(resolveHeroArtifactState({
+            hasCompact: Boolean(snapshot.compact),
+            hasDeep: false,
+            generationStatus: snapshot.generationStatus,
+          }));
+          onBusyChange?.(!snapshot.compact);
+          void poll(activeResumeToken, snapshot.artifactId);
+          return;
+        }
+
+        const result = await startHeroIcpGeneration(description);
+        if (cancelled) return;
+        const ref: HeroGuestArtifactRef = {
+          artifactId: result.artifactId,
+          resumeToken: result.resumeToken,
+          expiresAt: result.expiresAt,
+        };
+        setGuestRef(ref);
+        onArtifactReady?.(ref);
+        if (result.compact) {
+          setCompact(result.compact);
+          setRunState("compact_ready");
+          outputGeneratedAtRef.current = Date.now();
+          onBusyChange?.(false);
+        } else {
+          setRunState("compact_generating");
+          setErrorMessage(result.error || null);
+        }
+        if (result.artifact) {
+          applyDeepArtifact(result.artifact, result.artifactId, startedAt);
+          onBusyChange?.(false);
+          return;
+        }
+        void poll(result.resumeToken, result.artifactId);
+      } catch (error) {
+        if (cancelled) return;
+        setRunState("failed");
+        setErrorMessage(error instanceof Error ? error.message : "That did not generate. Try again.");
+        trackOutputGenerationFailed({
+          route: "icp",
+          source: "homepage_hero",
+          generation_run_id: String(runId),
+          failure_stage: "compact",
+          error_type: "api_error",
+        });
+        onBusyChange?.(false);
+      }
+    };
+
+    void run();
     return () => {
       cancelled = true;
+      if (pollTimer) clearTimeout(pollTimer);
+      onBusyChange?.(false);
     };
-  }, [description, runId, isAuthenticated]);
+  // A new runId is the cancellation boundary. Callback props are intentionally
+  // refs-by-contract from the parent and must not restart a live generation.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeResumeToken, description, resumeReloadKey, runId]);
 
-  // Progress copy advances on a timer so the visitor sees movement rather than
-  // a bare spinner during the slow gpt-4o call.
+  const hasUsefulOutput = Boolean(compact || artifact);
+  const showSignupCard = hasUsefulOutput && !isAuthenticated && !promptDismissed && Boolean(guestRef);
+
+  // Effects run after React commits the result. This is the canonical
+  // visibility boundary: request completion by itself is not an output view.
   useEffect(() => {
-    if (phase !== "reading") return;
-    const timer = setTimeout(() => setPhase((current) => (current === "reading" ? "drafting" : current)), 1600);
-    return () => clearTimeout(timer);
-  }, [phase]);
-
-  const hasOutput = Boolean(slice || artifact);
-  const showSignupCard = phase === "complete" && !isAuthenticated && !promptDismissed;
+    if (!hasUsefulOutput || !guestRef) return;
+    if (!outputGeneratedAtRef.current) outputGeneratedAtRef.current = Date.now();
+    trackFirstOutputGenerated({
+      route: "icp",
+      tool: "icp_builder",
+      source: outputSourceRef.current,
+      generation_run_id: String(runId),
+      anonymous_artifact_id: guestRef.artifactId,
+      latency_ms: Math.max(0, outputGeneratedAtRef.current - generationStartedAtRef.current),
+      is_anonymous: !isAuthenticated,
+    });
+  }, [guestRef, hasUsefulOutput, isAuthenticated, runId]);
 
   useEffect(() => {
-    if (!showSignupCard) return;
-    trackSignupPromptShown({ trigger: "post_output", has_output: true });
-  }, [showSignupCard]);
+    if (!showSignupCard || !guestRef || promptTrackedRef.current === guestRef.artifactId) return;
+    promptTrackedRef.current = guestRef.artifactId;
+    trackSignupPromptShown({
+      trigger: "post_output",
+      has_output: true,
+      route: "icp",
+      source: "homepage_hero",
+      anonymous_artifact_id: guestRef.artifactId,
+    });
+  }, [guestRef, showSignupCard]);
 
-  if (phase === "failed" && !hasOutput) {
+  const retryDeep = async () => {
+    if (!guestRef) {
+      onRetry();
+      return;
+    }
+    setRunState("deep_generating");
+    setErrorMessage(null);
+    try {
+      await retryHeroDeepGeneration(guestRef.resumeToken);
+      setActiveResumeToken(guestRef.resumeToken);
+      setResumeReloadKey((current) => current + 1);
+    } catch (error) {
+      setRunState(hasUsefulOutput ? "partial_failure" : "failed");
+      setErrorMessage(error instanceof Error ? error.message : "Could not retry the deeper report.");
+    }
+  };
+
+  const prepareSignup = () => {
+    if (!guestRef) return;
+    persistOutputSignupContext({
+      source: "hero-icp-output",
+      outputRoute: "icp",
+      anonymousArtifactId: guestRef.artifactId,
+      outputGeneratedAt: outputGeneratedAtRef.current ?? Date.now(),
+    });
+  };
+
+  const copyResumeLink = async () => {
+    if (!guestRef || typeof navigator === "undefined" || !navigator.clipboard) return;
+    await navigator.clipboard.writeText(`${window.location.origin}${buildHeroResumePath(guestRef.resumeToken)}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2_000);
+  };
+
+  if (runState === "failed" && !hasUsefulOutput) {
     return (
       <div className="ct-hero__result" role="status">
-        <p className="ct-hero__result-error">That didn&apos;t generate — try again</p>
-        <button type="button" className="ct-hero__cta ct-hero__result-retry" onClick={onRetry}>
-          Try again
-        </button>
+        <p className="ct-hero__result-error">{errorMessage || "That did not generate. Try again."}</p>
+        <button type="button" className="ct-hero__cta ct-hero__result-retry" onClick={onRetry}>Try again</button>
       </div>
     );
   }
 
   return (
-    <div className="ct-hero__result" ref={resultRef}>
-      {!hasOutput ? (
+    <div className="ct-hero__result">
+      {!hasUsefulOutput ? (
         <p className="ct-hero__result-loading" role="status" aria-live="polite">
-          {LOADING_COPY[phase] ?? LOADING_COPY.drafting}
+          {errorMessage || "Building your customer decision brief…"}
         </p>
       ) : null}
 
-      {slice ? (
-        <div className="ct-hero__result-card">
-          <p className="ct-hero__result-kicker">Your best-fit customer</p>
-          <h3 className="ct-hero__result-persona">{slice.personaName}</h3>
-          {slice.roleLine ? <p className="ct-hero__result-line">{slice.roleLine}</p> : null}
-
-          {slice.segment ? (
-            <div className="ct-hero__result-block">
-              <span className="ct-hero__result-label">Segment</span>
-              <p>{slice.segment}</p>
-            </div>
-          ) : null}
-          {slice.corePain ? (
-            <div className="ct-hero__result-block">
-              <span className="ct-hero__result-label">Core pain</span>
-              <p>{slice.corePain}</p>
-            </div>
-          ) : null}
-          {slice.buyingTrigger ? (
-            <div className="ct-hero__result-block">
-              <span className="ct-hero__result-label">Buying trigger</span>
-              <p>{slice.buyingTrigger}</p>
-            </div>
-          ) : null}
-
-          {phase !== "complete" ? (
+      {compact ? (
+        <article className="ct-hero__result-card">
+          <p className="ct-hero__result-kicker">Your customer decision brief</p>
+          <h3 className="ct-hero__result-persona">{compact.personaName}</h3>
+          {compact.roleLine ? <p className="ct-hero__result-line">{compact.roleLine}</p> : null}
+          <div className="ct-hero__result-grid">
+            <ResultBlock label="Primary segment" value={compact.primarySegment} />
+            <ResultBlock label="Urgent problem" value={compact.urgentProblem} />
+            <ResultBlock label="Buying trigger" value={compact.buyingTrigger} />
+            <ResultBlock label="Do not target first" value={compact.nonFitSegment} />
+            <ResultBlock label="Messaging hook" value={compact.messagingHook} />
+            <ResultBlock label="Validate this week" value={compact.validationStep} />
+          </div>
+          {runState === "deep_generating" || runState === "compact_ready" ? (
             <p className="ct-hero__result-pending" aria-live="polite">
-              Building the full brief — evidence gaps, competition and your interview plan…
+              Building the deeper report in the background—your seven-day result is already safe.
             </p>
           ) : null}
-        </div>
+          {runState === "partial_failure" ? (
+            <div className="ct-hero__result-inline-error">
+              <p>{errorMessage}</p>
+              <button type="button" onClick={() => void retryDeep()}>Retry deeper report</button>
+            </div>
+          ) : null}
+        </article>
       ) : null}
 
-      {phase === "complete" ? (
+      {artifact ? (
+        <details className="ct-hero__deep-report">
+          <summary>Deep customer report ready</summary>
+          <ResultBlock label="Customer" value={artifact.draftDocument.customer.summary} />
+          <ResultBlock label="Pain in their words" value={artifact.draftDocument.pain.quote} />
+          <ResultBlock label="Value proposition" value={artifact.draftDocument.build.valueProposition} />
+          <ResultBlock label="Current alternative" value={artifact.draftDocument.decisionBrief?.currentAlternative || artifact.draftDocument.build.replaces.join(", ")} />
+        </details>
+      ) : null}
+
+      {artifact ? (
         <div className="ct-hero__result-actions">
-          <Link className="ct-hero__cta" to="/icp-builder">
-            See the full brief
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </Link>
-          <Link className="ct-hero__result-crosslink" to="/demo-studio/try">
-            Already have something live? Build a demo instead →
-          </Link>
-          <Link className="ct-hero__result-crosslink" to="/icp-builder?mode=guided">
-            Go deeper — 4-step guided version →
-          </Link>
+          <Link className="ct-hero__result-crosslink" to="/icp-builder">Open the full report in ICP Builder →</Link>
         </div>
       ) : null}
 
-      {showSignupCard ? (
+      {showSignupCard && guestRef ? (
         <div className="ct-hero__save-card">
-          <h3>Save this and keep going</h3>
-          {/*
-            The copy deck said "saved for 7 days", but the draft currently lives
-            in sessionStorage - it dies when the tab closes. Promising 7 days
-            would be false. Restore that wording once the draft is persisted
-            server-side against an anonymous token.
-          */}
-          <p>Your draft is saved in this browser. Create a free account to keep it and move to the next step.</p>
+          <h3>Save this brief and keep building</h3>
+          <p>This result is preserved for seven days. Create a free account to keep it permanently and unlock its shareable version.</p>
           <div className="ct-hero__save-card-actions">
-            <Link
+            <button
               className="ct-hero__cta"
-              to={`/signup?return=${encodeURIComponent(buildIcpUnlockReturnPath())}`}
+              type="button"
               onClick={() => {
-                // Writes the one-time claim token the new account uses to adopt
-                // this draft, so signup lands on the saved result rather than a
-                // generic /onboarding. Same mechanism the builder's own gate
-                // uses (ICPBuilder.tsx onBeforeAuthContinue).
-                const session = sessionRef.current;
-                if (!session) return;
-                persistIcpBuilderSession(session);
-                persistIcpBuilderAuthHandoff(session, buildIcpUnlockReturnPath());
+                prepareSignup();
+                setSignupOpen(true);
               }}
             >
-              Create free account
-            </Link>
+              Save and continue free
+            </button>
+            <button type="button" className="ct-hero__save-card-dismiss" onClick={() => void copyResumeLink()}>
+              {copied ? "Link copied" : "Copy 7-day link"}
+            </button>
             <button
               type="button"
               className="ct-hero__save-card-dismiss"
@@ -253,6 +409,34 @@ export function HeroResultIsland({ description, runId, isAuthenticated, onRetry 
           </div>
         </div>
       ) : null}
+
+      {guestRef ? (
+        <SoftGateModal
+          open={signupOpen}
+          onOpenChange={setSignupOpen}
+          seed={description}
+          trigger="hero-icp-output"
+          title="Save your customer decision brief"
+          description="Create your founder profile in seconds. Your result will be claimed automatically."
+          returnPathOverride={buildHeroClaimReturnPath(guestRef.resumeToken)}
+          onBeforeAuthContinue={prepareSignup}
+          signupSource="hero-icp-output"
+          entryId="icp_draft_unlock"
+          activationTool="icp_builder"
+          journeyTool="icp_builder"
+          artifactType="customer_decision_brief"
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function ResultBlock({ label, value }: { label: string; value: string }) {
+  if (!value?.trim()) return null;
+  return (
+    <div className="ct-hero__result-block">
+      <span className="ct-hero__result-label">{label}</span>
+      <p>{value}</p>
     </div>
   );
 }

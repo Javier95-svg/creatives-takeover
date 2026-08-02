@@ -68,6 +68,57 @@ export const HERO_MODES = {
 
 export type HeroMode = keyof typeof HERO_MODES;
 
+export type HeroRunState =
+  | "idle"
+  | "compact_generating"
+  | "compact_ready"
+  | "deep_generating"
+  | "deep_ready"
+  | "partial_failure"
+  | "failed";
+
+export interface HeroArtifactStateInput {
+  hasCompact: boolean;
+  hasDeep: boolean;
+  generationStatus?: string | null;
+  timedOut?: boolean;
+}
+
+/**
+ * One terminal-state resolver shared by initial generation, polling, resume,
+ * and retry. Keeping this pure makes the two independent generation branches
+ * impossible to accidentally collapse back into one boolean loading flag.
+ */
+export function resolveHeroArtifactState({
+  hasCompact,
+  hasDeep,
+  generationStatus,
+  timedOut = false,
+}: HeroArtifactStateInput): HeroRunState {
+  if (hasDeep) return "deep_ready";
+  if (timedOut || generationStatus === "deep_failed" || generationStatus === "failed") {
+    return hasCompact ? "partial_failure" : "failed";
+  }
+  if (hasCompact) {
+    return generationStatus === "compact_ready" ? "compact_ready" : "deep_generating";
+  }
+  return "compact_generating";
+}
+
+export function buildHeroProductPath(seed: string): string {
+  return `/demo-studio/try?seed=${encodeURIComponent(seed.trim())}&autostart=1&source=hero-product`;
+}
+
+export function buildDemoAutoStartGuardKey(seed: string): string {
+  let hash = 2166136261;
+  const normalized = seed.trim();
+  for (let index = 0; index < normalized.length; index += 1) {
+    hash ^= normalized.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `ct_demo_try_autostart_${(hash >>> 0).toString(36)}`;
+}
+
 /** Idea is the default: it is the only path that delivers an output in the hero. */
 export const DEFAULT_HERO_MODE: HeroMode = "idea";
 

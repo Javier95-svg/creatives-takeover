@@ -2,6 +2,7 @@ import type * as AmplitudeBrowser from '@amplitude/analytics-browser';
 import { getSafeSessionStorage, getSafeLocalStorage } from '@/lib/safeStorage';
 import { logWarn } from '@/lib/logger';
 import { captureFirstTouch } from '@/lib/attribution';
+import { sanitizeAnalyticsValue } from '@/lib/analyticsSanitization';
 
 type AnalyticsProperties = Record<string, unknown>;
 type PostHogClient = (typeof import('posthog-js'))['default'];
@@ -51,7 +52,15 @@ export interface ActivationFunnelProps extends AnalyticsProperties {
 }
 
 export type SignupMethod = 'email' | 'google' | 'github' | 'linkedin' | 'x';
-export interface SignupCompletedProps { method: SignupMethod; referrer: string | null; }
+export interface SignupCompletedProps {
+  method: SignupMethod;
+  referrer: string | null;
+  had_output_before_signup?: boolean;
+  output_route?: 'icp' | 'demo';
+  source?: string;
+  time_to_signup_s?: number;
+  anonymous_artifact_id?: string;
+}
 export interface OnboardingCompletedProps {
   quiz_completed: boolean;
   creative_niche: string | null;
@@ -123,6 +132,21 @@ let posthogResetPending = false;
 const queuedEvents: Array<{ eventName: string; properties?: AnalyticsProperties }> = [];
 const queuedIdentifies: Array<{ id: string; properties?: AnalyticsProperties }> = [];
 const posthogReadyListeners = new Set<(client: PostHogClient) => void>();
+const DURABLE_EVENT_OUTBOX_KEY = 'ct_analytics_event_outbox_v1';
+const DURABLE_EVENT_NAMES = new Set([
+  'landing_viewed',
+  'hero_input_focused',
+  'hero_input_submitted',
+  'first_output_generated',
+  'deep_output_generated',
+  'output_generation_failed',
+  'signup_prompt_shown',
+  'signup_started',
+  'signup_completed',
+  'artifact_claim_succeeded',
+  'artifact_claim_failed',
+]);
+let durableOutboxRestored = false;
 
 const PII_PROPERTY_KEYS = new Set([
   'email',
@@ -158,7 +182,7 @@ export const sanitizeAnalyticsProperties = (properties?: AnalyticsProperties): A
       return safe;
     }
 
-    safe[key === 'userId' ? 'user_id' : key] = value;
+    safe[key === 'userId' ? 'user_id' : key] = sanitizeAnalyticsValue(value);
     return safe;
   }, {});
 };
@@ -172,6 +196,43 @@ const loadAmplitude = () => {
   }
 
   return amplitudeLoadPromise;
+};
+
+const createAnalyticsEventId = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  return `event_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+};
+
+const readDurableEventOutbox = (): Array<{ eventName: string; properties?: AnalyticsProperties }> => {
+  try {
+    const raw = getSafeSessionStorage().getItem(DURABLE_EVENT_OUTBOX_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((item) => item && typeof item.eventName === 'string' && DURABLE_EVENT_NAMES.has(item.eventName))
+      .slice(-50);
+  } catch {
+    return [];
+  }
+};
+
+const restoreDurableEventOutbox = () => {
+  if (durableOutboxRestored) return;
+  durableOutboxRestored = true;
+  queuedEvents.push(...readDurableEventOutbox());
+};
+
+const persistDurableEvent = (eventName: string, properties: AnalyticsProperties) => {
+  if (!DURABLE_EVENT_NAMES.has(eventName)) return properties;
+  const durableProperties = {
+    ...properties,
+    $insert_id: typeof properties.$insert_id === 'string' ? properties.$insert_id : createAnalyticsEventId(),
+  };
+  const outbox = readDurableEventOutbox();
+  outbox.push({ eventName, properties: durableProperties });
+  getSafeSessionStorage().setItem(DURABLE_EVENT_OUTBOX_KEY, JSON.stringify(outbox.slice(-50)));
+  return durableProperties;
 };
 
 const loadPosthog = () => {
@@ -283,9 +344,17 @@ const flushQueue = () => {
     scheduleAuthenticatedSessionRecording(posthogClient);
   }
 
+  let allDelivered = true;
   queuedEvents.splice(0).forEach(({ eventName, properties }) => {
-    posthogClient.capture(eventName, sanitizeAnalyticsProperties(properties));
+    try {
+      posthogClient.capture(eventName, sanitizeAnalyticsProperties(properties));
+    } catch (error) {
+      allDelivered = false;
+      queuedEvents.push({ eventName, properties });
+      logWarn('PostHog queued capture failed', error);
+    }
   });
+  if (allDelivered) getSafeSessionStorage().removeItem(DURABLE_EVENT_OUTBOX_KEY);
 };
 
 const getFirstTouchUtms = (): AnalyticsProperties => {
@@ -344,6 +413,13 @@ export const initPosthog = () => {
           // SPA route changes must emit $pageview; the legacy default only fires
           // on full page loads, which made every <Link> navigation invisible.
           capture_pageview: 'history_change',
+          before_send: (captureResult) => {
+            if (!captureResult) return null;
+            return {
+              ...captureResult,
+              properties: sanitizeAnalyticsValue(captureResult.properties) as Record<string, unknown>,
+            };
+          },
           persistence: 'localStorage',
           loaded: (client) => {
             posthogClient = client as PostHogClient;
@@ -389,6 +465,7 @@ export const onPosthogReady = (listener: (client: PostHogClient) => void) => {
 };
 
 export const bootstrapPosthog = () => {
+  restoreDurableEventOutbox();
   if (posthogBootstrapScheduled || initialized || initPromise) return;
   posthogBootstrapScheduled = true;
 
@@ -431,6 +508,7 @@ export const isInternalUser = () => internalUser;
 export const resetAnalyticsIdentity = () => {
   queuedEvents.length = 0;
   queuedIdentifies.length = 0;
+  getSafeSessionStorage().removeItem(DURABLE_EVENT_OUTBOX_KEY);
   resetAmplitude();
   sessionRecordingGeneration += 1;
   sessionRecordingScheduled = false;
@@ -457,7 +535,11 @@ export const captureEvent = (eventName: string, properties?: AnalyticsProperties
     return;
   }
 
-  const safeProperties = sanitizeAnalyticsProperties(properties);
+  restoreDurableEventOutbox();
+  const baseProperties = sanitizeAnalyticsProperties(properties);
+  const safeProperties = isPosthogReady(posthogClient)
+    ? baseProperties
+    : persistDurableEvent(eventName, baseProperties);
   captureAmplitudeEvent(eventName, safeProperties);
 
   if (isPosthogReady(posthogClient)) {

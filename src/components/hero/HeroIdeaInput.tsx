@@ -122,6 +122,7 @@ export const HeroIdeaInput = forwardRef<HeroIdeaInputHandle, HeroIdeaInputProps>
       {/* Clicking anywhere on the card focuses the field, as on /build. */}
       <div
         className={`ct-hero__idea-card${nudge ? " is-nudged" : ""}`}
+        data-ph-no-capture
         onClick={() => textareaRef.current?.focus()}
         onAnimationEnd={() => setNudge(false)}
       >
@@ -141,6 +142,7 @@ export const HeroIdeaInput = forwardRef<HeroIdeaInputHandle, HeroIdeaInputProps>
             id="hero-idea-input"
             ref={textareaRef}
             className="ct-hero__idea-textarea"
+            data-ph-no-capture
             rows={1}
             value={value}
             disabled={disabled}

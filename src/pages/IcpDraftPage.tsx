@@ -16,6 +16,8 @@ import { captureEvent, trackICPUnlockedDraftOpened } from "@/lib/analytics";
 import { normalizeStoredArtifact } from "@/lib/icpDraftArtifacts";
 import { getIcpDraftPublicUrl, upsertIcpDraftShare } from "@/lib/icpDraftSharing";
 import { downloadIcpDraftDocx, downloadIcpDraftPdf } from "@/lib/icpDraftExport";
+import { publishGuestActivationArtifact } from "@/lib/guestActivationArtifacts";
+import { readHeroGuestArtifact } from "@/lib/heroIcpGeneration";
 import type { StoredIcpArtifact } from "@/lib/icpBuilderSession";
 import { trackActivationFunnelEvent } from "@/lib/activationEntry";
 import { trackJourneyEvent } from "@/lib/journeyOutcomes";
@@ -150,6 +152,10 @@ export default function IcpDraftPage() {
         sourceId: draftId,
         artifact,
       });
+      const guestArtifact = readHeroGuestArtifact();
+      if (guestArtifact) {
+        void publishGuestActivationArtifact(guestArtifact.resumeToken, draftId, record.slug).catch(() => {});
+      }
       const shareUrl = getIcpDraftPublicUrl(record.slug);
       setShareModalData({
         url: shareUrl,
@@ -174,6 +180,10 @@ export default function IcpDraftPage() {
         sourceId: draftId,
         artifact,
       });
+      const guestArtifact = readHeroGuestArtifact();
+      if (guestArtifact) {
+        void publishGuestActivationArtifact(guestArtifact.resumeToken, draftId, record.slug).catch(() => {});
+      }
       return getIcpDraftPublicUrl(record.slug);
     } catch {
       toast.error("Could not create a share link right now.");

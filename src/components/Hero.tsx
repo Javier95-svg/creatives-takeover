@@ -11,9 +11,10 @@ import HeroIdeaInput from "@/components/hero/HeroIdeaInput";
 import "./hero-cinematic-spotlight.css";
 import { trackActivationEntry, trackActivationFunnelEvent } from "@/lib/activationEntry";
 import { classifyHeroInput, trackHeroInputFocused, trackHeroInputSubmitted } from "@/lib/heroFunnel";
-import { DEFAULT_HERO_MODE, type HeroMode } from "@/lib/heroFunnelRules";
+import { buildHeroProductPath, DEFAULT_HERO_MODE, type HeroMode } from "@/lib/heroFunnelRules";
 import { buildIcpSeedReturnPath, persistIcpSeed } from "@/lib/icpSeed";
 import { useFeatureFlagEnabled } from "@/hooks/usePosthogFeatureFlag";
+import { buildHeroResumePath, type HeroGuestArtifactRef } from "@/lib/heroIcpGeneration";
 
 // Everything that generates lives behind this boundary so no part of it is in
 // the fold-blocking bundle. The input above is plain markup and stays typable
@@ -103,29 +104,38 @@ const Hero = ({
   const { trackTriggerView, trackEngagement } = useConversionTracking();
   const location = useLocation();
   const navigate = useNavigate();
-  // Kill switch, not an experiment. `!== false` matters: PostHog init is
-  // deferred ~3s, so this hook returns undefined well past first paint. Reading
-  // it as "on unless explicitly turned off" keeps the hero rendering
-  // immediately; gating render on a resolved flag would blank the fold for 3s.
-  //
-  // What it disables is the in-place generation - the new, risky machinery. It
-  // does not restore the two old CTA buttons; that is an approved product
-  // decision and rolling it back is a revert plus a Vercel redeploy. With the
-  // flag off, submitting seeds /icp-builder and navigates there, which is the
-  // pre-existing path and still works.
-  const inPlaceGenerationEnabled = useFeatureFlagEnabled("hero-single-input") !== false;
+  // Unknown is deliberately the safe route-based fallback. The underscore
+  // alias drains the pre-launch flag spelling for one release.
+  const inPlaceGenerationEnabled = useFeatureFlagEnabled("hero-single-input", ["hero_single_input"]) === true;
   const { set: setAttribution } = useCTAAttribution();
   const heroRef = useRef<HTMLElement>(null);
   const hasTrackedView = useRef(false);
   const [userUsername, setUserUsername] = useState<string | null>(null);
   const [isAudienceDialogOpen, setIsAudienceDialogOpen] = useState(false);
   const [hasOpenedAudienceDialog, setHasOpenedAudienceDialog] = useState(false);
-  const [ideaText, setIdeaText] = useState("");
+  const resumeTokenFromUrl = new URLSearchParams(location.search).get("resume");
+  const [ideaText, setIdeaText] = useState(() => {
+    try {
+      const transferred = window.sessionStorage.getItem("ct_prejs_hero_seed") || "";
+      window.sessionStorage.removeItem("ct_prejs_hero_seed");
+      return transferred;
+    } catch {
+      return "";
+    }
+  });
   const [heroMode, setHeroMode] = useState<HeroMode>(DEFAULT_HERO_MODE);
   // The description generation is actually running against - held separately
   // from ideaText so editing the field mid-generation doesn't restart it.
   const [submittedIdea, setSubmittedIdea] = useState("");
-  const [generationRunId, setGenerationRunId] = useState(0);
+  const [generationRunId, setGenerationRunId] = useState(() => (resumeTokenFromUrl ? 1 : 0));
+  const [initialResumeToken, setInitialResumeToken] = useState<string | null>(resumeTokenFromUrl);
+  const [generationBusy, setGenerationBusy] = useState(false);
+
+  useEffect(() => {
+    if (!resumeTokenFromUrl || resumeTokenFromUrl === initialResumeToken) return;
+    setInitialResumeToken(resumeTokenFromUrl);
+    setGenerationRunId((current) => current + 1);
+  }, [initialResumeToken, resumeTokenFromUrl]);
 
   useEffect(() => {
     if (!user) {
@@ -202,11 +212,6 @@ const Hero = ({
     void trackEngagement("hero-referral-banner", 55);
   };
 
-  const handlePreviewClick = () => {
-    void trackEngagement("hero-dashboard-preview", 65);
-    setAttribution('hero_dashboard_preview', location.pathname);
-  };
-
   const handleWhoIsThisForClick = () => {
     void trackEngagement("hero-who-is-this-for", 60);
     setHasOpenedAudienceDialog(true);
@@ -219,7 +224,13 @@ const Hero = ({
 
     const { route, hasUrl } = classifyHeroInput(trimmed, heroMode);
     const isDemo = route === "demo";
-    trackHeroInputSubmitted({ char_count: trimmed.length, has_url: hasUrl, routed_to: route });
+    trackHeroInputSubmitted({
+      char_count: trimmed.length,
+      has_url: hasUrl,
+      routed_to: route,
+      source: "homepage_hero",
+      mode: heroMode,
+    });
     setAttribution(isDemo ? "hero_demo_try" : "hero_icp_builder", location.pathname);
     trackActivationFunnelEvent("activation_step_completed", {
       entry_id: isDemo ? "hero_demo_try" : "hero_icp_builder",
@@ -237,7 +248,7 @@ const Hero = ({
     // first output than the page it comes from. The description is carried over
     // so /demo-studio/try does not restart from an empty field.
     if (isDemo) {
-      navigate(`/demo-studio/try?seed=${encodeURIComponent(trimmed)}`);
+      navigate(buildHeroProductPath(trimmed));
       return;
     }
 
@@ -247,8 +258,16 @@ const Hero = ({
       return;
     }
 
+    setInitialResumeToken(null);
+    if (resumeTokenFromUrl) window.history.replaceState(window.history.state, "", location.pathname);
     setSubmittedIdea(trimmed);
+    setGenerationBusy(true);
     setGenerationRunId((current) => current + 1);
+  };
+
+  const handleArtifactReady = (artifactRef: HeroGuestArtifactRef) => {
+    const nextPath = buildHeroResumePath(artifactRef.resumeToken);
+    window.history.replaceState(window.history.state, "", nextPath);
   };
 
   return (
@@ -306,7 +325,7 @@ const Hero = ({
                 onFirstFocus={trackHeroInputFocused}
                 mode={heroMode}
                 onModeChange={setHeroMode}
-                busy={generationRunId > 0 && ideaText.trim() === submittedIdea}
+                busy={generationBusy}
               />
               <div className="ct-hero__secondary-row">
                 <button type="button" className="ct-hero__audience-link" onClick={handleWhoIsThisForClick}>
@@ -326,19 +345,24 @@ const Hero = ({
             }
           >
             <HeroResultIsland
+              key={`${generationRunId}:${initialResumeToken ?? submittedIdea}`}
               description={submittedIdea}
               runId={generationRunId}
+              resumeToken={initialResumeToken}
               isAuthenticated={isAuthenticated}
-              onRetry={() => setGenerationRunId((current) => current + 1)}
+              onBusyChange={setGenerationBusy}
+              onArtifactReady={handleArtifactReady}
+              onRetry={() => {
+                setGenerationBusy(true);
+                setGenerationRunId((current) => current + 1);
+              }}
             />
           </Suspense>
         ) : null}
 
-        {!isAuthenticated ? <Link
+        {!isAuthenticated ? <div
           className="ct-hero__spotlight"
-          to="/signup"
-          onClick={handlePreviewClick}
-          aria-label="Preview of the Creatives Takeover dashboard. Sign up for Creatives Takeover."
+          aria-label="Preview of the Creatives Takeover dashboard"
         >
           <div className="ct-hero__st-chrome">
             <div className="ct-hero__st-dots">
@@ -383,7 +407,7 @@ const Hero = ({
               </div>
             </div>
           </div>
-        </Link> : null}
+        </div> : null}
 
         <div className="ct-hero__stats" aria-label="Founder stats for 2026">
           <div className="ct-hero__stats-track">

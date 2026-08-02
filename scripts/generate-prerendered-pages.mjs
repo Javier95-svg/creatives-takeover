@@ -28,8 +28,12 @@ function buildFallbackHtml(routeConfig) {
           <p>Business Development platform for startup founders &amp; first-time business owners.</p>
           <p>Define your ideal customer, prove demand, build your MVP, launch it, and find investment.</p>
           <p><strong>No application. No cohort. No equity.</strong></p>
-          <p><strong>Still an idea?</strong> Say who you think your customer is and <a href="/icp-builder">Define ICP</a> &mdash; free, no account needed.</p>
-          <p><strong>Already have a product?</strong> Describe what you built and <a href="/demo-studio/try">Launch a live demo</a>.</p>`
+          <form action="/icp-builder" method="get">
+            <label for="seo-hero-seed">Who is your ideal customer?</label>
+            <textarea id="seo-hero-seed" name="seed" minlength="3" required></textarea>
+            <button type="submit">Define ICP</button>
+          </form>
+          <p>Already have a product? <a href="/demo-studio/try">Launch a live demo</a>.</p>`
     : `<p>${routeConfig.heroCopy || routeConfig.description}</p>`;
   const authorByline = routeConfig.path.startsWith("/answers/")
     ? `<p>By <a href="/about#founder">Javier Peña, Founder &amp; CEO</a></p>`
@@ -320,15 +324,9 @@ function buildOgImage(routeConfig) {
   return `${BASE_URL}/api/og?${params.toString()}`.replace(/&/g, "&amp;");
 }
 
-// renderShellForRoute() lived here until 2026-07-25. It rewrote the static
-// #app-shell that commit 4cd383e8 added to index.html for an instant pre-JS
-// paint — but b1ce5377 deleted that shell the same day, so every replacement
-// below had been silently matching nothing on each build for a month.
-//
-// It is removed rather than repaired because the owner chose to keep the
-// homepage frozen without a shell. If a pre-JS paint layer is ever restored,
-// bring this back alongside it: it baked each prerendered route's own headline
-// into the shell so the first paint matched the page it belonged to.
+// The template owns a small route-gated homepage shell for first paint.
+// Inner prerendered routes keep it hidden because only `/` receives the
+// home-route class; route-specific crawler content remains in #seo-fallback.
 
 function renderRoute(template, routeConfig) {
   const canonical = `${BASE_URL}${routeConfig.path}`;

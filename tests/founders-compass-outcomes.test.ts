@@ -109,7 +109,7 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
   });
   // Both aha routes must stay linked and crawlable - they have organic entries.
   [fallback, prerender].forEach((source) => {
-    assert.match(source, /href="\/icp-builder"/);
+    assert.match(source, /(?:href|action)="\/icp-builder"/);
     assert.match(source, /href="\/demo-studio\/try"/);
   });
   assert.match(prerender, /Rookie[\s\S]*\$0[\s\S]*Clarify/);

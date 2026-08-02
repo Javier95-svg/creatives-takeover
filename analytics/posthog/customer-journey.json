@@ -36,7 +36,13 @@
       "country",
       "free_form_answer",
       "ip",
-      "ip_address"
+      "ip_address",
+      "prompt",
+      "raw_prompt",
+      "resumeToken",
+      "resume_token",
+      "guestToken",
+      "guest_token"
     ]
   },
   "naming": {
@@ -66,6 +72,69 @@
       "source": "client",
       "sourceFile": "src/lib/analytics.ts",
       "requiredProperties": ["method"]
+    },
+    "hero_input_focused": {
+      "stage": "acquisition",
+      "owner": "growth",
+      "source": "client",
+      "sourceFile": "src/lib/heroFunnel.ts",
+      "requiredProperties": ["source"]
+    },
+    "hero_input_submitted": {
+      "stage": "activation",
+      "owner": "growth",
+      "source": "client",
+      "sourceFile": "src/lib/heroFunnel.ts",
+      "requiredProperties": ["source", "mode", "routed_to"]
+    },
+    "first_output_generated": {
+      "stage": "value",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/heroFunnel.ts",
+      "requiredProperties": ["tool", "route", "source", "generation_run_id", "anonymous_artifact_id", "latency_ms", "is_anonymous"]
+    },
+    "deep_output_generated": {
+      "stage": "value",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/heroFunnel.ts",
+      "requiredProperties": ["tool", "route", "source", "generation_run_id", "anonymous_artifact_id", "latency_ms", "is_anonymous"]
+    },
+    "output_generation_failed": {
+      "stage": "reliability",
+      "owner": "engineering",
+      "source": "client",
+      "sourceFile": "src/lib/heroFunnel.ts",
+      "requiredProperties": ["route", "source", "generation_run_id", "failure_stage", "error_type"]
+    },
+    "signup_prompt_shown": {
+      "stage": "acquisition",
+      "owner": "growth",
+      "source": "client",
+      "sourceFile": "src/lib/heroFunnel.ts",
+      "requiredProperties": ["route", "source", "anonymous_artifact_id", "has_output"]
+    },
+    "artifact_claim_succeeded": {
+      "stage": "activation",
+      "owner": "product",
+      "source": "server",
+      "sourceFile": "supabase/functions/icp-analyzer/index.ts",
+      "requiredProperties": ["tool", "source", "artifact_type", "artifact_id"]
+    },
+    "artifact_claim_failed": {
+      "stage": "reliability",
+      "owner": "engineering",
+      "source": "both",
+      "sourceFile": "supabase/functions/icp-analyzer/index.ts",
+      "requiredProperties": ["tool", "source", "error_code"]
+    },
+    "artifact_referral_clicked": {
+      "stage": "referral",
+      "owner": "growth",
+      "source": "client",
+      "sourceFile": "src/lib/artifactReferral.ts",
+      "requiredProperties": ["artifact_type", "placement", "source"]
     },
     "onboarding_started": {
       "stage": "onboarding",
@@ -329,6 +398,20 @@
   },
   "funnels": [
     {
+      "key": "output_led_activation",
+      "name": "Output-led visitor to active user",
+      "windowDays": 14,
+      "steps": [
+        "landing_viewed",
+        "hero_input_submitted",
+        "first_output_generated",
+        "signup_prompt_shown",
+        "signup_completed",
+        "artifact_claim_succeeded"
+      ],
+      "breakdownProperty": "route"
+    },
+    {
       "key": "acquisition_to_activation",
       "name": "Acquisition to activation",
       "windowDays": 14,
@@ -430,9 +513,35 @@
   ],
   "dashboards": [
     {
+      "key": "output_led_funnel",
+      "name": "Output-led acquisition and activation",
+      "insights": [
+        "output_led_activation",
+        "first_output_generated",
+        "deep_output_generated",
+        "output_generation_failed",
+        "artifact_claim_succeeded",
+        "artifact_claim_failed",
+        "artifact_referral_clicked"
+      ]
+    },
+    {
+      "key": "direct_signup_funnel",
+      "name": "Direct signup and onboarding",
+      "insights": [
+        "acquisition_to_activation",
+        "onboarding_completion",
+        "signup_started",
+        "signup_completed",
+        "onboarding_started",
+        "onboarding_completed"
+      ]
+    },
+    {
       "key": "customer_journey",
       "name": "Customer Journey — Executive",
       "insights": [
+        "output_led_activation",
         "acquisition_to_activation",
         "onboarding_completion",
         "core_tool_value",

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import SEO from '@/components/SEO';
 import DemoPlayer from '@/components/demo-studio/player/DemoPlayer';
 import { getPublicDemo } from '@/lib/demoStudio/api';
 import { shouldShowWatermark } from '@/lib/demoStudio/plan';
 import type { PublicDemo } from '@/lib/demoStudio/types';
+import { buildArtifactReferralPath, trackArtifactReferralClicked } from '@/lib/artifactReferral';
 
 export default function PublicDemoPage() {
   const { publicId } = useParams<{ publicId: string }>();
@@ -48,9 +49,13 @@ export default function PublicDemoPage() {
         <SEO title="Demo not found — Demo Studio" description="This demo is unavailable." noindex />
         <h1 className="text-2xl font-semibold">Demo not found</h1>
         <p className="text-white/60">This demo may have been unpublished or the link is incorrect.</p>
-        <a href="/demo-studio" className="mt-2 text-sm text-primary underline-offset-4 hover:underline">
-          Build your own with Demo Studio
-        </a>
+        <Link
+          to={buildArtifactReferralPath('demo')}
+          className="mt-2 text-sm text-primary underline-offset-4 hover:underline"
+          onClick={() => trackArtifactReferralClicked('demo', 'missing_state')}
+        >
+          Build yours free
+        </Link>
       </div>
     );
   }
@@ -72,6 +77,16 @@ export default function PublicDemoPage() {
           showWatermark={shouldShowWatermark(data.demo.theme?.watermark, data.demo.theme?.ownerPlan)}
           allowExport
         />
+        <footer className="mt-6 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-sm sm:flex-row">
+          <span className="text-white/60">Built with Creatives Takeover</span>
+          <Link
+            to={buildArtifactReferralPath('demo')}
+            className="rounded-full bg-white px-5 py-2.5 font-semibold text-slate-950 transition-opacity hover:opacity-90"
+            onClick={() => trackArtifactReferralClicked('demo', 'footer')}
+          >
+            Build yours free
+          </Link>
+        </footer>
       </div>
     </div>
   );

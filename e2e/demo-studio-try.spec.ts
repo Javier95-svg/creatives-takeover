@@ -85,6 +85,60 @@ test('#3 generate -> preview -> start over -> regenerate loop is clean (mocked g
   expect(pageErrors, `try flow threw: ${pageErrors.join(' | ')}`).toHaveLength(0);
 });
 
+test('hero Product mode auto-builds once and restores the result on refresh', async ({ page }) => {
+  let generatorCalls = 0;
+  let guestDraft: unknown = null;
+  await page.route('**/functions/v1/demo-studio-generator', (route) => {
+    generatorCalls += 1;
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        success: true,
+        mode: 'storyboard',
+        draft: true,
+        kit: {
+          storyboard: [
+            { title: 'Customer problem', caption: 'Bookings are scattered.', speaker_notes: '', hotspot_label: 'See it' },
+            { title: 'Core workflow', caption: 'Manage every booking in one place.', speaker_notes: '', hotspot_label: 'Next' },
+            { title: 'Outcome', caption: 'The schedule stays full.', speaker_notes: '', hotspot_label: 'Finish' },
+          ],
+        },
+      }),
+    });
+  });
+  await page.route('**/functions/v1/guest-activation-artifacts', (route) => {
+    const request = route.request().postDataJSON() as { operation?: string; draft?: unknown };
+    if (request.operation === 'create_demo') guestDraft = request.draft;
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        success: true,
+        artifactId: 'demo-guest-e2e',
+        resumeToken: 'e2e-resume-token-that-is-long-enough-1234567890',
+        expiresAt: '2026-08-09T12:00:00.000Z',
+        ...(request.operation === 'load_demo' ? { draft: guestDraft } : {}),
+      }),
+    });
+  });
+
+  const seed = 'A booking app for independent hairdressers';
+  await page.goto('/', { waitUntil: 'commit' });
+  await page.getByRole('tab', { name: 'Product' }).click();
+  await page.locator('#hero-idea-input').fill(seed);
+  await page.locator('#hero-idea-input').press('Enter');
+  await expect(page).toHaveURL(/\/demo-studio\/try\?.*autostart=1.*source=hero-product/);
+  await expect(page.getByRole('heading', { name: /Your three-step demo is ready/i })).toBeVisible();
+  expect(generatorCalls).toBe(1);
+  await expect.poll(() => page.evaluate(() => Boolean(sessionStorage.getItem('demo_studio_try_draft')))).toBe(true);
+  await expect(page).toHaveURL(/guest=e2e-resume-token/);
+
+  await page.reload({ waitUntil: 'commit' });
+  await expect(page.getByRole('heading', { name: /Your three-step demo is ready/i })).toBeVisible();
+  expect(generatorCalls).toBe(1);
+});
+
 test('#2 a mid-save failure rolls back the project (no orphan; retries do not accumulate)', async ({ page }) => {
   // Seed an authenticated session in localStorage so AuthProvider (storage-based
   // getSession, key sb-<ref>-auth-token; ref = "dummy" from the test Supabase URL)

@@ -107,6 +107,11 @@ verify_jwt = false
 [functions.load-demo-try-draft]
 verify_jwt = false
 
+[functions.guest-activation-artifacts]
+# Public create/resume operations are IP-rate-limited. Claiming still requires
+# and re-validates a real user token inside the function.
+verify_jwt = false
+
 [functions.trigger-icp-sprint]
 verify_jwt = false
 

@@ -33,6 +33,7 @@ import {
   persistAttributionAfterAuth,
   type AttributionRpcClient,
 } from '@/lib/attribution';
+import { consumeOutputSignupContext } from '@/lib/outputSignupContext';
 
 interface AuthContextType {
   user: User | null;
@@ -282,9 +283,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             // Guard is best-effort; a missing guard at worst re-fires once.
           }
 
+          const outputSignupContext = consumeOutputSignupContext();
           trackSignupCompleted({
             method,
             referrer: getSignupReferrer(),
+            had_output_before_signup: Boolean(outputSignupContext),
+            ...(outputSignupContext ? {
+              output_route: outputSignupContext.outputRoute,
+              source: outputSignupContext.source,
+              time_to_signup_s: Math.max(0, Math.round((Date.now() - outputSignupContext.outputGeneratedAt) / 1000)),
+              anonymous_artifact_id: outputSignupContext.anonymousArtifactId,
+            } : {}),
           });
         }
       }

@@ -1,6 +1,6 @@
 import { captureEvent } from "@/lib/analytics";
 import { getSafeSessionStorage } from "@/lib/safeStorage";
-import type { HeroRoute, SignupPromptTrigger } from "@/lib/heroFunnelRules";
+import type { HeroMode, HeroRoute, SignupPromptTrigger } from "@/lib/heroFunnelRules";
 
 /**
  * The canonical homepage activation funnel.
@@ -13,11 +13,8 @@ import type { HeroRoute, SignupPromptTrigger } from "@/lib/heroFunnelRules";
  * `icp_builder_*` events are deliberately left untouched so before/after stays
  * comparable.
  *
- * Note on measurement: PostHog init is deferred ~3s and queues events in memory
- * until it loads, so a visitor who bounces before the flush loses their events
- * entirely. `hero_input_focused` in particular will under-count. That is a known
- * floor on these numbers, and is preferable to un-deferring init and paying for
- * it in LCP.
+ * Canonical events are also kept in a small session outbox by analytics.ts, so
+ * the deferred SDK does not lose a fast bounce.
  */
 
 export {
@@ -29,6 +26,7 @@ export {
 } from "@/lib/heroFunnelRules";
 
 const OUTPUT_MARKER_KEY = "ct_hero_first_output_v1";
+const DEEP_OUTPUT_MARKER_KEY = "ct_hero_deep_output_v1";
 const FOCUS_MARKER_KEY = "ct_hero_input_focused_v1";
 const PROMPT_DISMISSED_KEY = "ct_hero_signup_prompt_dismissed_v1";
 
@@ -44,13 +42,15 @@ function writeMarker(key: string) {
 export function trackHeroInputFocused() {
   if (readMarker(FOCUS_MARKER_KEY)) return;
   writeMarker(FOCUS_MARKER_KEY);
-  captureEvent("hero_input_focused");
+  captureEvent("hero_input_focused", { source: "homepage_hero" });
 }
 
 export function trackHeroInputSubmitted(properties: {
   char_count: number;
   has_url: boolean;
   routed_to: HeroRoute;
+  source: string;
+  mode: HeroMode;
 }) {
   captureEvent("hero_input_submitted", properties);
 }
@@ -62,26 +62,51 @@ export function hasGeneratedOutputThisSession(): boolean {
 
 /**
  * The north star. Fires on completion of a *rendered* output, never on request
- * start, and at most once per person per session - a visitor who regenerates
- * three times is still one activation.
+ * start, and once per artifact/run. The separate session marker still answers
+ * the coarser question of whether this visitor has seen any output.
  */
-export function trackFirstOutputGenerated(properties: {
+type OutputEventProperties = {
   route: HeroRoute;
+  tool: "icp_builder" | "demo_studio";
+  source: string;
+  generation_run_id: string;
+  anonymous_artifact_id: string;
   latency_ms: number;
   is_anonymous: boolean;
-}) {
-  if (hasGeneratedOutputThisSession()) return;
+};
+
+export function trackFirstOutputGenerated(properties: OutputEventProperties) {
+  const artifactMarker = `${OUTPUT_MARKER_KEY}:${properties.anonymous_artifact_id}`;
+  if (readMarker(artifactMarker)) return;
+  writeMarker(artifactMarker);
   writeMarker(OUTPUT_MARKER_KEY);
   captureEvent("first_output_generated", properties);
 }
 
-export function trackOutputGenerationFailed(properties: { route: HeroRoute; error_type: string }) {
+export function trackDeepOutputGenerated(properties: OutputEventProperties) {
+  const artifactMarker = `${DEEP_OUTPUT_MARKER_KEY}:${properties.anonymous_artifact_id}`;
+  if (readMarker(artifactMarker)) return;
+  writeMarker(artifactMarker);
+  captureEvent("deep_output_generated", properties);
+}
+
+export function trackOutputGenerationFailed(properties: {
+  route: HeroRoute;
+  source: string;
+  generation_run_id: string;
+  anonymous_artifact_id?: string;
+  failure_stage: "compact" | "deep" | "demo";
+  error_type: string;
+}) {
   captureEvent("output_generation_failed", properties);
 }
 
 export function trackSignupPromptShown(properties: {
   trigger: SignupPromptTrigger;
   has_output: boolean;
+  route: HeroRoute;
+  source: string;
+  anonymous_artifact_id: string;
 }) {
   captureEvent("signup_prompt_shown", properties);
 }

@@ -10,12 +10,11 @@ import test from 'node:test';
 // pin silently drifts from the committed content. Normalising first makes the
 // hash equal to the git blob hash in every environment.
 const frozenFiles = {
-  // Rehashed 2026-08-01 for the approved hero single-input rebuild. The two CTA
-  // buttons ("Define ideal customer" / "Launch a live demo") are replaced by one
-  // textarea plus one submit, which generates an ICP draft in place - no
-  // navigation, no account. Headline, lede, proof line, the dashboard spotlight
-  // and the stats strip are unchanged.
-  '../src/components/Hero.tsx': '563fb2423eb183b41fe5a11ed7d7402eeaedafb40443159c48c833a21d49dac6',
+  // Rehashed 2026-08-02 for the approved output-led funnel upgrade. The single
+  // input now creates a durable, claimable ICP result in place; Product mode
+  // auto-starts Demo Studio; and unresolved/off rollout state safely uses the
+  // established route handoff. Headline, lede, proof line, and stats are intact.
+  '../src/components/Hero.tsx': '72d57cef3a244a06ef9064463591e91063ebf62a7523034dfc54745c4eb948a6',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.

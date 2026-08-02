@@ -63,6 +63,17 @@ import {
   trackJourneyEvent,
   upsertJourneyOutcome,
 } from '@/lib/journeyOutcomes';
+import { trackFirstOutputGenerated, trackSignupPromptShown } from '@/lib/heroFunnel';
+import { persistOutputSignupContext } from '@/lib/outputSignupContext';
+import { getSafeSessionStorage } from '@/lib/safeStorage';
+import { buildDemoAutoStartGuardKey } from '@/lib/heroFunnelRules';
+import {
+  claimDemoGuestArtifact,
+  createDemoGuestArtifact,
+  loadDemoGuestArtifact,
+  publishGuestActivationArtifact,
+  type DemoGuestArtifactRef,
+} from '@/lib/guestActivationArtifacts';
 
 const MAX_SCREENSHOTS = DEMO_STUDIO_TRY_MAX_SCREENSHOTS;
 const MIN_SCREENSHOTS = DEMO_STUDIO_TRY_MIN_SCREENSHOTS;
@@ -119,10 +130,14 @@ export default function TryPage() {
   const { subscriptionData } = useSubscription({ fetchTiers: false });
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const entrySource = searchParams.get('source') === 'hero-product' ? 'hero-product' : 'demo_try';
+  const heroSeed = (searchParams.get('seed') || '').trim().slice(0, 5000);
+  const shouldAutoStart = searchParams.get('autostart') === '1' && entrySource === 'hero-product';
   const entryTrackedRef = useRef(false);
   const isReturning = searchParams.get('hydrate') === '1';
   // Resume-email link (?resume=<token>) — hydrate takes precedence if both appear.
   const resumeToken = isReturning ? null : searchParams.get('resume');
+  const guestArtifactToken = searchParams.get('guest');
   // ICP handoff (?icp=<draftId>). Signed-in founders resolve the draft from the DB;
   // guests who generated a draft but have not signed up yet still have it in
   // sessionStorage, so the free path prefills too.
@@ -160,6 +175,7 @@ export default function TryPage() {
   // Recovery-loop email capture on the anonymous result view.
   const [resumeEmail, setResumeEmail] = useState('');
   const [resumeEmailState, setResumeEmailState] = useState<'idle' | 'sending' | 'sent'>('idle');
+  const [guestArtifactRef, setGuestArtifactRef] = useState<DemoGuestArtifactRef | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const shotsRef = useRef<Shot[]>([]);
   const hydratedRef = useRef(false);
@@ -172,9 +188,15 @@ export default function TryPage() {
   // Best-effort eager serialization for anonymous visitors so the draft is in
   // sessionStorage by the time any CTA navigates to signup.
   const persistPromiseRef = useRef<Promise<boolean> | null>(null);
+  const serverPersistPromiseRef = useRef<Promise<DemoGuestArtifactRef | null> | null>(null);
   const generationStartedAtRef = useRef<number | null>(null);
   const assetModeRef = useRef<TryDraftAssetMode>('generated_placeholders');
   const inputStartedRef = useRef(false);
+  const autoStartAttemptedRef = useRef(false);
+  const outputArtifactIdRef = useRef<string | null>(null);
+  const outputGeneratedAtRef = useRef<number | null>(null);
+  const outputLatencyMsRef = useRef<number>(0);
+  const signupPromptTrackedRef = useRef<string | null>(null);
 
   const markInputStarted = () => {
     if (inputStartedRef.current) return;
@@ -193,11 +215,11 @@ export default function TryPage() {
   // would land on an empty textarea and have to type it a second time, which is
   // the restart-from-scratch pattern this whole change exists to remove.
   useEffect(() => {
-    const seed = (searchParams.get('seed') || '').trim();
+    const seed = heroSeed;
     if (!seed || isReturning || resumeToken) return;
     // Functional update, so `description` is a guard rather than a dependency.
     setDescription((prev) => (prev.trim() ? prev : seed.slice(0, 5000)));
-  }, [searchParams, isReturning, resumeToken]);
+  }, [heroSeed, isReturning, resumeToken]);
 
   // Seed the description from the founder's ICP Draft so the handoff from ICP Builder
   // does not restart from a blank textarea. Never overwrites typed input, and stays out
@@ -310,6 +332,29 @@ export default function TryPage() {
     [buildDraftSteps, contextUrl, description],
   );
 
+  const ensureServerGuestArtifact = useCallback(async (built: DemoStepWithHotspots[]) => {
+    if (guestArtifactRef) return guestArtifactRef;
+    if (serverPersistPromiseRef.current) return serverPersistPromiseRef.current;
+    const promise = (async () => {
+      const stored = await (persistPromiseRef.current ?? persistDraft(built));
+      if (!stored) return null;
+      const draft = readTryDraft();
+      if (!draft) return null;
+      const ref = await createDemoGuestArtifact(draft, entrySource);
+      setGuestArtifactRef(ref);
+      const resumeUrl = new URL(window.location.href);
+      resumeUrl.searchParams.set('guest', ref.resumeToken);
+      window.history.replaceState(window.history.state, '', `${resumeUrl.pathname}${resumeUrl.search}${resumeUrl.hash}`);
+      return ref;
+    })().catch((error) => {
+      console.warn('Could not preserve demo draft server-side', error);
+      serverPersistPromiseRef.current = null;
+      return null;
+    });
+    serverPersistPromiseRef.current = promise;
+    return promise;
+  }, [entrySource, guestArtifactRef, persistDraft]);
+
   // Zero-asset mode: replace the shot list with generated placeholder frames so
   // the save/persist pipeline works exactly as if the visitor had uploaded them.
   const createPlaceholderShots = useCallback(
@@ -343,6 +388,10 @@ export default function TryPage() {
     setSteps(built);
     setError(null);
     setUsedPlaceholders(mode === 'no_assets');
+    const outputArtifactId = outputArtifactIdRef.current || `demo_try_${runId}`;
+    outputArtifactIdRef.current = outputArtifactId;
+    outputGeneratedAtRef.current = Date.now();
+    outputLatencyMsRef.current = durationMs ?? 0;
     assetModeRef.current = mode === 'no_assets' ? 'generated_placeholders' : 'uploaded_screenshots';
     trackActivationFunnelEvent('activation_step_completed', {
       entry_id: 'demo_try', tool: 'demo_studio', source: 'demo_try', step: 'preview_generated',
@@ -391,6 +440,9 @@ export default function TryPage() {
     // Anonymous visitors: stash the draft now so it survives the auth redirect.
     if (!user) {
       persistPromiseRef.current = persistDraft(built, runId).catch(() => false);
+      void persistPromiseRef.current
+        .then((stored) => stored ? ensureServerGuestArtifact(built) : null)
+        .catch(() => null);
     }
   };
 
@@ -415,6 +467,9 @@ export default function TryPage() {
       return;
     }
     const runId = ++runIdRef.current;
+    outputArtifactIdRef.current = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `demo_try_${Date.now()}_${runId}`;
     generationStartedAtRef.current = Date.now();
     setGenerating(true);
     setError(null);
@@ -512,12 +567,43 @@ export default function TryPage() {
     }
   };
 
+  // The canonical output event belongs to the committed result view, not the
+  // fulfilled generation promise. Hydration skips this because it has no run id.
+  useEffect(() => {
+    const artifactId = outputArtifactIdRef.current;
+    if (!steps || !artifactId) return;
+    trackFirstOutputGenerated({
+      route: 'demo',
+      tool: 'demo_studio',
+      source: entrySource,
+      generation_run_id: String(runIdRef.current),
+      anonymous_artifact_id: artifactId,
+      latency_ms: outputLatencyMsRef.current,
+      is_anonymous: !user,
+    });
+  }, [entrySource, steps, user]);
+
+  useEffect(() => {
+    const artifactId = outputArtifactIdRef.current;
+    if (!showSignupGate || !steps || !artifactId || signupPromptTrackedRef.current === artifactId) return;
+    signupPromptTrackedRef.current = artifactId;
+    trackSignupPromptShown({
+      trigger: 'post_output',
+      has_output: true,
+      route: 'demo',
+      source: entrySource,
+      anonymous_artifact_id: artifactId,
+    });
+  }, [entrySource, showSignupGate, steps]);
+
   const startOver = () => {
     // Supersede any in-flight generation/persistence before clearing the draft.
     runIdRef.current += 1;
     setSteps(null);
     setError(null);
     persistPromiseRef.current = null;
+    serverPersistPromiseRef.current = null;
+    setGuestArtifactRef(null);
     setResumeEmailState('idle');
     shotsRef.current.forEach((shot) => URL.revokeObjectURL(shot.url));
     shotsRef.current = [];
@@ -561,6 +647,51 @@ export default function TryPage() {
     // The draft is already serialized (sessionStorage), so the signup path is armed.
     persistPromiseRef.current = Promise.resolve(true);
   }, []);
+
+  // Hero Product mode has already collected and validated the founder's input.
+  // Auto-build once per seed. On refresh, restore the serialized or server-side
+  // result instead of replaying generation; StrictMode sees the same guard.
+  useEffect(() => {
+    if (!shouldAutoStart || isReturning || resumeToken || steps || generating || autoStartAttemptedRef.current) return;
+    if (!heroSeed || description.trim() !== heroSeed) return;
+    const guardKey = buildDemoAutoStartGuardKey(heroSeed);
+    const storage = getSafeSessionStorage();
+    autoStartAttemptedRef.current = true;
+
+    const restoreOrGenerate = async () => {
+      if (guestArtifactToken) {
+        try {
+          const restored = await loadDemoGuestArtifact(guestArtifactToken);
+          saveTryDraft(restored.draft);
+          setGuestArtifactRef({
+            artifactId: restored.artifactId || 'restored-demo',
+            resumeToken: guestArtifactToken,
+            expiresAt: restored.expiresAt || new Date(Date.now() + 7 * 86_400_000).toISOString(),
+          });
+          await restoreFromDraft(restored.draft);
+          return;
+        } catch (restoreError) {
+          setError(restoreError instanceof Error ? restoreError.message : 'This demo result could not be restored.');
+          return;
+        }
+      }
+
+      if (storage.getItem(guardKey) === '1') {
+        const draft = readTryDraft();
+        if (draft) await restoreFromDraft(draft);
+        return;
+      }
+
+      storage.setItem(guardKey, '1');
+      markInputStarted();
+      void handleGenerate();
+    };
+
+    void restoreOrGenerate();
+  // handleGenerate intentionally reads the current page state after the seed
+  // effect has populated it; adding the function as a dependency would replay.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [description, generating, guestArtifactToken, heroSeed, isReturning, resumeToken, restoreFromDraft, shouldAutoStart, steps]);
 
   // Resume-email link: fetch the server-stored draft, re-arm sessionStorage, and
   // show the result view so the visitor lands exactly where they left off.
@@ -685,6 +816,7 @@ export default function TryPage() {
         // not another form. Best-effort: the free-tier publish cap or any error
         // falls back to the original brief-page handoff.
         let published = false;
+        let publishedSlug: string | null = null;
         if (position > 0) {
           try {
             const publishedDemo = await publishDemo(demo.id, {
@@ -692,6 +824,7 @@ export default function TryPage() {
               ownerPlan: normalizePlan(subscriptionData?.subscription_tier),
             });
             published = Boolean(publishedDemo.public_id);
+            publishedSlug = publishedDemo.public_id || null;
           } catch {
             published = false;
           }
@@ -706,6 +839,24 @@ export default function TryPage() {
             : `/demo-studio/projects/${project.id}/brief`,
           source: 'demo_try',
         });
+        const claimToken = guestArtifactRef?.resumeToken || guestArtifactToken;
+        if (claimToken) {
+          let claimed = false;
+          await claimDemoGuestArtifact(claimToken, demo.id).then(() => {
+            claimed = true;
+          }).catch((claimError) => {
+            captureEvent('artifact_claim_failed', {
+              tool: 'demo_studio',
+              source: entrySource,
+              failure_stage: 'claim',
+              error_code: 'API_ERROR',
+            });
+            console.warn('Demo guest artifact claim failed', claimError);
+          });
+          if (claimed && publishedSlug) {
+            void publishGuestActivationArtifact(claimToken, demo.id, publishedSlug).catch(() => {});
+          }
+        }
         if (user.email) {
           void sendRetentionEmail({
             userId: user.id,
@@ -789,7 +940,7 @@ export default function TryPage() {
         hydratingRef.current = false;
       }
     },
-    [isReturning, navigate, subscriptionData?.subscription_tier, user],
+    [entrySource, guestArtifactRef?.resumeToken, guestArtifactToken, isReturning, navigate, subscriptionData?.subscription_tier, user],
   );
 
   // Primary CTA on the result view.
@@ -817,10 +968,21 @@ export default function TryPage() {
     // Anonymous: preserve the artifact, then keep signup in context so the
     // preview remains visible behind the two-field gate.
     setSaving(true);
+    const anonymousArtifactId = outputArtifactIdRef.current || `demo_try_${runIdRef.current}`;
+    persistOutputSignupContext({
+      source: entrySource,
+      outputRoute: 'demo',
+      anonymousArtifactId,
+      outputGeneratedAt: outputGeneratedAtRef.current ?? Date.now(),
+    });
     void trackDemoEvent('signup_attempt', { meta: { source: 'demo_try' } });
     const stored = await (persistPromiseRef.current ?? persistDraft(steps));
     if (!stored) {
       toast.error('Your screenshots are large. You may need to re-upload after signing up.');
+    }
+    const serverRef = stored ? await ensureServerGuestArtifact(steps) : null;
+    if (!serverRef) {
+      toast.warning('This preview is safe for this signup, but the seven-day cross-device link could not be created.');
     }
     setSaving(false);
     setShowSignupGate(true);
@@ -848,7 +1010,12 @@ export default function TryPage() {
 
   // Hydrate-on-return: the user came back from signup with ?hydrate=1.
   const runReturnHydration = useCallback(async () => {
-    const draft = readTryDraft();
+    let draft = readTryDraft();
+    if (!draft && guestArtifactToken) {
+      const restored = await loadDemoGuestArtifact(guestArtifactToken);
+      saveTryDraft(restored.draft);
+      draft = readTryDraft();
+    }
     if (!user || !draft) {
       navigate('/demo-studio/try', { replace: true });
       return;
@@ -874,7 +1041,7 @@ export default function TryPage() {
       setHydrateError(message);
       toast.error(message);
     }
-  }, [hydrate, navigate, user]);
+  }, [guestArtifactToken, hydrate, navigate, user]);
 
   useEffect(() => {
     if (!isReturning || authLoading || hydratedRef.current || hydrateError) return;
@@ -1076,6 +1243,7 @@ export default function TryPage() {
               </p>
               <Textarea
                 id="product-description"
+                data-ph-no-capture
                 rows={3}
                 maxLength={300}
                 required
@@ -1200,8 +1368,10 @@ export default function TryPage() {
         trigger="demo-try-publish"
         title="Publish free and get your share link"
         description="Create your account with Google or email. We’ll publish this exact demo and return you to its share panel."
-        returnPathOverride={RETURN_PATH}
-        signupSource="demo-try"
+        returnPathOverride={guestArtifactRef
+          ? `${RETURN_PATH}&guest=${encodeURIComponent(guestArtifactRef.resumeToken)}`
+          : RETURN_PATH}
+        signupSource={entrySource}
         entryId="demo_try"
         activationTool="demo_studio"
         journeyTool="demo_studio"

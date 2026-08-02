@@ -20,7 +20,25 @@ function AnalyticsBootstrap() {
   return null;
 }
 
+function AppMountedMarker() {
+  useEffect(() => {
+    document.documentElement.classList.add('app-mounted');
+  }, []);
+  return null;
+}
+
 const helmetContext = {};
+
+// If someone typed while the application bundle was downloading, transfer the
+// native shell value into the React hero instead of erasing their work.
+const preJsHeroInput = document.getElementById('prejs-hero-input') as HTMLTextAreaElement | null;
+if (preJsHeroInput?.value.trim()) {
+  try {
+    window.sessionStorage.setItem('ct_prejs_hero_seed', preJsHeroInput.value);
+  } catch {
+    // The native form remains functional when storage is unavailable.
+  }
+}
 
 // Prevent FOUC by setting theme before render
 const getInitialTheme = (): 'light' | 'dark' => {
@@ -72,6 +90,7 @@ window.addEventListener('error', (event) => {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
+    <AppMountedMarker />
     <AnalyticsBootstrap />
     <ThemeProvider>
       <HelmetProvider context={helmetContext}>

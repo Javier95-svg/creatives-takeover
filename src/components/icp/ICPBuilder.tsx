@@ -82,6 +82,7 @@ import {
 } from "@/lib/journeyOutcomes";
 import { evaluateIcpArtifact } from "@/lib/icpOutcome";
 import { ensurePrebuildContext } from "@/lib/prebuildContext";
+import { claimHeroGuestArtifact } from "@/lib/heroIcpGeneration";
 
 const ICP_RESULTS_TABLE = "icp_analysis_results";
 const SEED_TIMEOUT_MS = 25000;
@@ -463,6 +464,8 @@ const ICPBuilder: React.FC = () => {
   const [isPersisting, setIsPersisting] = useState(false);
   const [isHydratingEdit, setIsHydratingEdit] = useState(false);
   const [isHydratingResume, setIsHydratingResume] = useState(false);
+  const [guestClaimError, setGuestClaimError] = useState<string | null>(null);
+  const [guestClaimAttempt, setGuestClaimAttempt] = useState(0);
   const [showLegacy, setShowLegacy] = useState(false);
   const [legacyAnalysis, setLegacyAnalysis] = useState<LegacyAnalysis | null>(null);
   const [_legacyAvailable, setLegacyAvailable] = useState(false);
@@ -489,6 +492,7 @@ const ICPBuilder: React.FC = () => {
   const unlockPath = buildIcpUnlockReturnPath();
   const editDraftId = searchParams.get("edit");
   const resumeToken = searchParams.get("resume");
+  const guestArtifactToken = searchParams.get("guest");
   const progress = getDisplayProgress(session.currentScreen, loadingPhase);
   const synthesisElapsedMs = loadingPhase === "synthesis" && loadingStartedAt ? Date.now() - loadingStartedAt : 0;
   const validatedGuided = useMemo(() => guidedIcpInputSchema.safeParse(session.guided), [session.guided]);
@@ -993,7 +997,7 @@ const ICPBuilder: React.FC = () => {
     analysisId: string;
     artifact: StoredIcpArtifact;
     mode: IcpBuilderMode | null;
-    source: "draft_saved" | "unlock_gate";
+    source: "draft_saved" | "unlock_gate" | "guest_claim";
   }) => {
     setSession((previous) => ({
       ...previous,
@@ -1093,7 +1097,7 @@ const ICPBuilder: React.FC = () => {
         completion_score: completionScore,
         confidence: artifact.draftDocument.confidence.level,
       });
-      if (source === 'unlock_gate') {
+      if (source === 'unlock_gate' || source === 'guest_claim') {
         trackJourneyEvent('journey_artifact_restored', {
           tool: 'icp_builder',
           artifact_type: 'customer_decision_brief',
@@ -1378,7 +1382,7 @@ const ICPBuilder: React.FC = () => {
   }, [completeDraftGeneration, isPersisting, session.draftPreview, session.mode, session.unlockRequired, unlockSavedDraft, user]);
 
   useEffect(() => {
-    if (!user || !session.draftPreview || !session.unlockRequired || session.savedAnalysisId || isPersisting || persistError) {
+    if (guestArtifactToken || !user || !session.draftPreview || !session.unlockRequired || session.savedAnalysisId || isPersisting || persistError) {
       return;
     }
 
@@ -1401,7 +1405,58 @@ const ICPBuilder: React.FC = () => {
     }
 
     void persistDraftAndContinue();
-  }, [isPersisting, persistDraftAndContinue, persistError, session, user]);
+  }, [guestArtifactToken, isPersisting, persistDraftAndContinue, persistError, session, user]);
+
+  useEffect(() => {
+    if (!guestArtifactToken || !user || isHydratingResume || showCelebration) return;
+    let cancelled = false;
+
+    const claim = async () => {
+      setIsHydratingResume(true);
+      setGuestClaimError(null);
+      try {
+        const deadline = Date.now() + 90_000;
+        while (!cancelled && Date.now() < deadline) {
+          const result = await claimHeroGuestArtifact(guestArtifactToken);
+          if (cancelled) return;
+          if (result.success && result.analysisId && result.artifact) {
+            await unlockSavedDraft({
+              analysisId: result.analysisId,
+              artifact: result.artifact,
+              mode: "fast",
+              source: "guest_claim",
+            });
+            return;
+          }
+          if (!result.pending) {
+            throw new Error(result.error || "We could not save this customer brief.");
+          }
+          await new Promise<void>((resolve) => window.setTimeout(resolve, 2_000));
+        }
+        if (!cancelled) throw new Error("The deeper report is still finishing. Try the claim again in a moment.");
+      } catch (error) {
+        if (cancelled) return;
+        const message = error instanceof Error ? error.message : "We could not save this customer brief.";
+        setGuestClaimError(message);
+        captureEvent("artifact_claim_failed", {
+          tool: "icp_builder",
+          source: "hero-icp-output",
+          failure_stage: "claim",
+          error_code: /timed out|still finishing/i.test(message) ? "TIMEOUT" : "API_ERROR",
+        });
+      } finally {
+        if (!cancelled) setIsHydratingResume(false);
+      }
+    };
+
+    void claim();
+    return () => {
+      cancelled = true;
+    };
+  // isHydratingResume is an output of this effect; depending on it would cancel
+  // the claim immediately after setting the loading state.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [guestArtifactToken, guestClaimAttempt, showCelebration, unlockSavedDraft, user]);
 
   const requestResumeLink = useCallback(async ({
     email,
@@ -2107,6 +2162,23 @@ const ICPBuilder: React.FC = () => {
           )}
         </div>
         <style>{`@keyframes fadeInScale { from { opacity: 0; transform: scale(0.88); } to { opacity: 1; transform: scale(1); } }`}</style>
+      </div>
+    );
+  }
+
+  if (guestArtifactToken && user && guestClaimError && !isHydratingResume) {
+    return (
+      <div className="min-h-screen bg-transparent">
+        <IcpProgressBar progress={0} shellOffset />
+        <div className="flex min-h-screen items-center justify-center px-6">
+          <Card className="max-w-md rounded-5xl border-border/60 bg-white/80 shadow-sm backdrop-blur dark:bg-slate-950/75">
+            <CardContent className="space-y-4 px-6 py-8 text-center">
+              <h1 className="text-xl font-semibold">Your brief is safe</h1>
+              <p className="text-sm text-muted-foreground">{guestClaimError}</p>
+              <Button onClick={() => setGuestClaimAttempt((current) => current + 1)}>Try saving again</Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
