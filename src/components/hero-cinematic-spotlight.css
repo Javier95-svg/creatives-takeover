@@ -22,6 +22,18 @@
   --ct-green: #25cb7a;
   --ct-grad-trinity: linear-gradient(135deg, #5aa2fb, #f37575, #25cb7a);
 
+  /* Hero idea card - light */
+  --ct-idea-surface: rgba(255, 255, 255, 0.72);
+  --ct-idea-tag-bg: rgba(15, 23, 42, 0.04);
+  --ct-idea-placeholder: rgba(71, 85, 105, 0.6);
+  --ct-idea-glow-border: rgba(37, 99, 235, 0.38);
+  --ct-idea-send-off: rgba(15, 23, 42, 0.07);
+  --ct-idea-mode-on-bg: #ffffff;
+  --ct-idea-shadow: 0 30px 80px -40px rgba(15, 23, 42, 0.45);
+  --ct-idea-shadow-hover:
+    0 36px 90px -40px rgba(15, 23, 42, 0.5),
+    0 0 60px -20px rgba(37, 99, 235, 0.22);
+
   /* Dashboard preview panel — light defaults; overridden for dark mode below.
      The panel surface flips with the theme so its (dark) text stays readable. */
   --ct-panel-bg: linear-gradient(180deg, #ffffff, #eef3fb);
@@ -71,6 +83,18 @@
   --ct-eyebrow-hover-bg: rgba(255, 255, 255, 0.055);
   --ct-secondary-cta-border: rgba(255, 255, 255, 0.14);
   --ct-secondary-cta-bg: rgba(255, 255, 255, 0.04);
+
+  /* Hero idea card - dark */
+  --ct-idea-surface: rgba(255, 255, 255, 0.035);
+  --ct-idea-tag-bg: rgba(255, 255, 255, 0.05);
+  --ct-idea-placeholder: rgba(139, 155, 180, 0.62);
+  --ct-idea-glow-border: rgba(90, 162, 251, 0.42);
+  --ct-idea-send-off: rgba(255, 255, 255, 0.08);
+  --ct-idea-mode-on-bg: rgba(255, 255, 255, 0.13);
+  --ct-idea-shadow: 0 30px 80px -40px rgba(0, 0, 0, 0.85);
+  --ct-idea-shadow-hover:
+    0 36px 90px -40px rgba(0, 0, 0, 0.9),
+    0 0 60px -20px rgba(90, 162, 251, 0.28);
 
   --ct-panel-bg: linear-gradient(180deg, #131820, #0e1219);
   --ct-panel-border: rgba(255, 255, 255, 0.08);
@@ -744,111 +768,195 @@
 }
 
 /* -- Single hero input ------------------------------------------------------
-   Replaces the two CTA buttons. The field is the primary element above the
-   fold, but must not autofocus: that scroll-jumps on mobile and would move
-   the LCP element. Heights are fixed at rest so the lazily-loaded result
-   island cannot shift the fold when it mounts. */
+   Composed like the /build chat card: one surface holding the field, a
+   hairline divider, and a footer bar with the output label on the left and
+   the submit pill on the right. Submit lives inside the card so the
+   standalone button below the field could be removed without making Enter
+   the only way to submit. The field must not autofocus - that scroll-jumps
+   on mobile and would move the LCP element. */
 
 .ct-hero__idea {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 14px;
-  width: min(680px, 100%);
+  width: min(720px, 100%);
   margin: 0 auto;
 }
 
-.ct-hero__idea-field {
+.ct-hero__idea-card {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 16px 20px 14px;
+  padding: 20px 22px 14px;
   border: 1px solid var(--ct-line);
-  border-radius: 18px;
-  background: var(--ct-eyebrow-bg);
-  backdrop-filter: blur(8px);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 22px;
+  background: var(--ct-idea-surface);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--ct-idea-shadow);
+  cursor: text;
+  text-align: left;
+  transition: border-color 0.28s ease, box-shadow 0.28s ease;
 }
 
-.ct-hero__idea-field:focus-within {
-  border-color: var(--ct-blue);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
+.ct-hero__idea-card:hover,
+.ct-hero__idea-card:focus-within {
+  border-color: var(--ct-idea-glow-border);
+  box-shadow: var(--ct-idea-shadow-hover);
+}
+
+/* Empty submit pulses the card instead of raising a red error state. */
+.ct-hero__idea-card.is-nudged {
+  animation: ct-idea-nudge 0.42s ease;
+}
+
+@keyframes ct-idea-nudge {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
 }
 
 .ct-hero__idea-label {
   font-family: var(--ct-sans);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.01em;
-  color: var(--ct-muted);
-  text-align: left;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--ct-muted-2);
+  cursor: text;
 }
 
 .ct-hero__idea-textarea {
   width: 100%;
+  min-height: 30px;
   border: 0;
   padding: 0;
   background: transparent;
   color: var(--ct-fg);
   font-family: var(--ct-sans);
-  font-size: 17px;
-  line-height: 26px;
+  font-size: 18px;
+  line-height: 30px;
   resize: none;
   overflow-y: hidden;
-  text-align: left;
+  caret-color: var(--ct-blue);
 }
 
-.ct-hero__idea-textarea:focus {
+.ct-hero__idea-textarea:focus,
+.ct-hero__idea-textarea:focus-visible {
   outline: none;
+  /* index.css applies a global focus ring to inputs, which drew a second
+     rounded box inside the card. The card itself already shows focus. */
+  box-shadow: none;
 }
 
 .ct-hero__idea-textarea::placeholder {
-  color: var(--ct-muted-2);
+  color: var(--ct-idea-placeholder);
 }
 
-.ct-hero__idea-submit {
-  align-self: center;
-  justify-content: center;
+.ct-hero__idea-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ct-line);
 }
 
-/* Disabled below the 3-character minimum. Dimmed, never a red error state -
-   the visitor has not done anything wrong yet. */
-.ct-hero__idea-submit:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-  transform: none;
+/* Idea | Product. Which tool the submission goes to - Idea generates an ICP
+   draft in place, Product hands off to Demo Studio. Idea is preselected, so
+   unlike the old two-CTA hero nobody has to choose before they can type. */
+.ct-hero__idea-modes {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--ct-line);
+  border-radius: 11px;
+  background: var(--ct-idea-tag-bg);
 }
 
-.ct-hero__idea-submit:disabled::after {
-  animation: none;
-}
-
-.ct-hero__idea-helper {
-  margin: 0;
-  font-family: var(--ct-sans);
-  font-size: 13.5px;
+.ct-hero__idea-mode {
+  padding: 6px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
   color: var(--ct-muted);
-  transition: color 0.2s ease, transform 0.2s ease;
+  font-family: var(--ct-sans);
+  font-size: 12.5px;
+  font-weight: 650;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Empty submit nudges the helper rather than raising an error. */
-.ct-hero__idea-helper.is-active {
-  color: var(--ct-blue);
+.ct-hero__idea-mode:hover:not(.is-on) {
+  color: var(--ct-fg);
+}
+
+.ct-hero__idea-mode.is-on {
+  background: var(--ct-idea-mode-on-bg);
+  color: var(--ct-fg);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.14);
+}
+
+.ct-hero__idea-mode:focus-visible {
+  outline: 2px solid var(--ct-blue);
+  outline-offset: 1px;
+}
+
+.ct-hero__idea-send {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding: 11px 18px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--ct-grad-trinity);
+  color: #fff;
+  font-family: var(--ct-sans);
+  font-size: 14.5px;
   font-weight: 700;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 10px 26px -10px rgba(90, 162, 251, 0.65);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.ct-hero__idea-send svg {
+  width: 16px;
+  height: 16px;
+}
+
+.ct-hero__idea-send:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 14px 32px -10px rgba(90, 162, 251, 0.8);
+}
+
+.ct-hero__idea-send:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Disabled below the 3-character minimum. Muted, never a red error state -
+   the visitor has not done anything wrong yet. */
+.ct-hero__idea-send:disabled {
+  cursor: default;
+  background: var(--ct-idea-send-off);
+  color: var(--ct-muted);
+  box-shadow: none;
 }
 
 .ct-hero__secondary-row {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 8px 24px;
   width: 100%;
+  margin-top: 18px;
 }
 
 .ct-hero__secondary-row .ct-hero__audience-link {
+  /* Not `margin-top` alone: the base rule sets `margin: 16px auto 0`, and
+     inside a flex row those auto side margins expand to fill the track. */
   flex: 0 0 auto;
-  margin-top: 8px;
+  margin: 0;
 }
 
 /* -- In-place result -------------------------------------------------------
@@ -1024,8 +1132,31 @@
 }
 
 @media (max-width: 720px) {
-  .ct-hero__idea-submit {
-    width: 100%;
+
+  .ct-hero__idea-card {
+    padding: 16px 16px 12px;
+  }
+
+  /* The tag and the pill do not fit on one 390px line. */
+  .ct-hero__idea-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .ct-hero__idea-modes {
+    align-self: stretch;
+  }
+
+  /* Split the width evenly so both targets clear 44px. */
+  .ct-hero__idea-mode {
+    flex: 1 1 0;
+    padding: 9px 10px;
+  }
+
+  .ct-hero__idea-send {
+    margin-left: 0;
+    justify-content: center;
   }
 
   .ct-hero__result-card {

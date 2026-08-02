@@ -11,6 +11,7 @@ import HeroIdeaInput from "@/components/hero/HeroIdeaInput";
 import "./hero-cinematic-spotlight.css";
 import { trackActivationEntry, trackActivationFunnelEvent } from "@/lib/activationEntry";
 import { classifyHeroInput, trackHeroInputFocused, trackHeroInputSubmitted } from "@/lib/heroFunnel";
+import { DEFAULT_HERO_MODE, type HeroMode } from "@/lib/heroFunnelRules";
 import { buildIcpSeedReturnPath, persistIcpSeed } from "@/lib/icpSeed";
 import { useFeatureFlagEnabled } from "@/hooks/usePosthogFeatureFlag";
 
@@ -120,6 +121,7 @@ const Hero = ({
   const [isAudienceDialogOpen, setIsAudienceDialogOpen] = useState(false);
   const [hasOpenedAudienceDialog, setHasOpenedAudienceDialog] = useState(false);
   const [ideaText, setIdeaText] = useState("");
+  const [heroMode, setHeroMode] = useState<HeroMode>(DEFAULT_HERO_MODE);
   // The description generation is actually running against - held separately
   // from ideaText so editing the field mid-generation doesn't restart it.
   const [submittedIdea, setSubmittedIdea] = useState("");
@@ -215,18 +217,29 @@ const Hero = ({
     const trimmed = ideaText.trim();
     if (trimmed.length < 3) return;
 
-    const { route, hasUrl } = classifyHeroInput(trimmed);
+    const { route, hasUrl } = classifyHeroInput(trimmed, heroMode);
+    const isDemo = route === "demo";
     trackHeroInputSubmitted({ char_count: trimmed.length, has_url: hasUrl, routed_to: route });
-    setAttribution("hero_idea_input", location.pathname);
+    setAttribution(isDemo ? "hero_demo_try" : "hero_icp_builder", location.pathname);
     trackActivationFunnelEvent("activation_step_completed", {
-      entry_id: "hero_icp_builder",
-      tool: "icp_builder",
+      entry_id: isDemo ? "hero_demo_try" : "hero_icp_builder",
+      tool: isDemo ? "demo_studio" : "icp_builder",
       source: "homepage_hero",
       step: "entry_click",
       entry_page: location.pathname,
       placement: "hero_input",
       is_authenticated: isAuthenticated,
     });
+
+    // Product mode hands off to Demo Studio rather than generating here. The
+    // demo generator needs screenshots - from text alone it returns a generic
+    // placeholder storyboard - so rendering that in the hero would be a worse
+    // first output than the page it comes from. The description is carried over
+    // so /demo-studio/try does not restart from an empty field.
+    if (isDemo) {
+      navigate(`/demo-studio/try?seed=${encodeURIComponent(trimmed)}`);
+      return;
+    }
 
     if (!inPlaceGenerationEnabled) {
       persistIcpSeed(trimmed);
@@ -237,8 +250,6 @@ const Hero = ({
     setSubmittedIdea(trimmed);
     setGenerationRunId((current) => current + 1);
   };
-
-  const heroClassification = classifyHeroInput(ideaText);
 
   return (
     <section
@@ -293,13 +304,11 @@ const Hero = ({
                 onChange={setIdeaText}
                 onSubmit={handleIdeaSubmit}
                 onFirstFocus={trackHeroInputFocused}
-                hasUrl={heroClassification.hasUrl}
+                mode={heroMode}
+                onModeChange={setHeroMode}
                 busy={generationRunId > 0 && ideaText.trim() === submittedIdea}
               />
               <div className="ct-hero__secondary-row">
-                <a className="ct-hero__audience-link" href="#what-you-get">
-                  See the six outcomes →
-                </a>
                 <button type="button" className="ct-hero__audience-link" onClick={handleWhoIsThisForClick}>
                   Who is this for?
                 </button>

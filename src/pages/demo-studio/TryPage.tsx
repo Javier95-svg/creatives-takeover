@@ -188,6 +188,17 @@ export default function TryPage() {
     });
   };
 
+  // Carry `?seed=` straight into the description. The homepage hero's Product
+  // mode sends the founder here with what they already typed; without this they
+  // would land on an empty textarea and have to type it a second time, which is
+  // the restart-from-scratch pattern this whole change exists to remove.
+  useEffect(() => {
+    const seed = (searchParams.get('seed') || '').trim();
+    if (!seed || isReturning || resumeToken) return;
+    // Functional update, so `description` is a guard rather than a dependency.
+    setDescription((prev) => (prev.trim() ? prev : seed.slice(0, 5000)));
+  }, [searchParams, isReturning, resumeToken]);
+
   // Seed the description from the founder's ICP Draft so the handoff from ICP Builder
   // does not restart from a blank textarea. Never overwrites typed input, and stays out
   // of the way of the hydrate/resume paths, which restore their own state.

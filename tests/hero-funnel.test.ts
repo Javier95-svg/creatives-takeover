@@ -1,7 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { containsUrl, classifyHeroInput, resolveOutputErrorType } from '../src/lib/heroFunnelRules.ts';
+import {
+  containsUrl,
+  classifyHeroInput,
+  resolveOutputErrorType,
+  HERO_MODES,
+  DEFAULT_HERO_MODE,
+} from '../src/lib/heroFunnelRules.ts';
 
 test('a pasted link or bare domain is detected', () => {
   assert.equal(containsUrl('https://acme.io'), true);
@@ -31,9 +37,32 @@ test('technology names are not mistaken for domains', () => {
   assert.equal(containsUrl('https://next.js'), true);
 });
 
-test('every submission routes to ICP regardless of a URL', () => {
-  assert.deepEqual(classifyHeroInput('a CRM for plumbers'), { route: 'icp', hasUrl: false });
-  assert.deepEqual(classifyHeroInput('https://acme.io'), { route: 'icp', hasUrl: true });
+// The visitor's chosen mode decides the route. A URL in the text is recorded as
+// demand signal for Demo Studio but never overrides the choice - guessing on
+// their behalf is what the two-CTA hero did wrong.
+test('the selected mode decides the route, not the text', () => {
+  assert.deepEqual(classifyHeroInput('a CRM for plumbers', 'idea'), { route: 'icp', hasUrl: false });
+  assert.deepEqual(classifyHeroInput('https://acme.io', 'idea'), { route: 'icp', hasUrl: true });
+  assert.deepEqual(classifyHeroInput('a CRM for plumbers', 'product'), { route: 'demo', hasUrl: false });
+  assert.deepEqual(classifyHeroInput('https://acme.io', 'product'), { route: 'demo', hasUrl: true });
+});
+
+test('Idea is preselected so nobody has to choose before typing', () => {
+  assert.equal(DEFAULT_HERO_MODE, 'idea');
+  assert.equal(HERO_MODES[DEFAULT_HERO_MODE].route, 'icp');
+});
+
+// The question, the button and the destination have to agree. A button reading
+// "Launch a live demo" that produced a customer profile is the broken promise
+// this rebuild exists to remove.
+test('each mode pairs its question, CTA and destination coherently', () => {
+  assert.equal(HERO_MODES.idea.question, 'Who’s your ideal customer?');
+  assert.equal(HERO_MODES.idea.cta, 'Define ICP');
+  assert.equal(HERO_MODES.idea.route, 'icp');
+
+  assert.equal(HERO_MODES.product.question, 'What are you building?');
+  assert.equal(HERO_MODES.product.cta, 'Launch a live demo');
+  assert.equal(HERO_MODES.product.route, 'demo');
 });
 
 test('generation errors collapse into a small queryable set', () => {

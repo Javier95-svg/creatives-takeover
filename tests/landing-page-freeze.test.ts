@@ -15,7 +15,7 @@ const frozenFiles = {
   // textarea plus one submit, which generates an ICP draft in place - no
   // navigation, no account. Headline, lede, proof line, the dashboard spotlight
   // and the stats strip are unchanged.
-  '../src/components/Hero.tsx': 'fdbe1c6bcc4aeba51473d50cea56174c51f9715bd918540b2063385065c4f1e8',
+  '../src/components/Hero.tsx': '563fb2423eb183b41fe5a11ed7d7402eeaedafb40443159c48c833a21d49dac6',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.

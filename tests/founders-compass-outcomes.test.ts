@@ -97,11 +97,13 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
   // prerendered pages cannot render a working textarea, so they carry the same
   // question and label pointing at /icp-builder, which still resolves and still
   // renders an ungated first output.
-  // The field and its button live in HeroIdeaInput, which Hero renders.
-  const heroInput = readFileSync(new URL('../src/components/hero/HeroIdeaInput.tsx', import.meta.url), 'utf8');
-  const ctaLabels = [/What are you building\?/, /Get my customer profile/];
+  // The hero field has two modes, and the question + CTA for each live in
+  // HERO_MODES rather than in the component, so the toggle, the no-JS shell and
+  // the prerendered pages cannot drift apart.
+  const heroModes = readFileSync(new URL('../src/lib/heroFunnelRules.ts', import.meta.url), 'utf8');
+  const ctaLabels = [/Define ICP/, /Launch a live demo/];
   ctaLabels.forEach((label) => {
-    assert.match(heroInput, label);
+    assert.match(heroModes, label);
     assert.match(fallback, label);
     assert.match(prerender, label);
   });

@@ -10,6 +10,50 @@
 export type HeroRoute = "icp" | "demo";
 export type SignupPromptTrigger = "post_output" | "second_action" | "rate_limit";
 
+/**
+ * The two things a visitor can arrive wanting, and the tool that serves each.
+ *
+ * This replaces guessing from the text. The earlier build inferred the route by
+ * looking for a URL, which meant the product silently decided for the visitor
+ * and could be wrong. An explicit toggle costs one glance and is never wrong -
+ * and unlike the old "Still an idea? / Have a product?" CTA pair it does not
+ * make them choose before they can see the field.
+ */
+export interface HeroModeConfig {
+  /** Which tool the submission is routed to. */
+  route: HeroRoute;
+  /** Toggle label. */
+  label: string;
+  /** The question above the field. */
+  question: string;
+  /** Submit button label. */
+  cta: string;
+  placeholder: string;
+}
+
+export const HERO_MODES = {
+  idea: {
+    route: "icp",
+    label: "Idea",
+    // Curly apostrophe, matching "The Founders' Compass" directly above it.
+    question: "Who’s your ideal customer?",
+    cta: "Define ICP",
+    placeholder: "e.g. freelance designers who lose track of client revisions",
+  },
+  product: {
+    route: "demo",
+    label: "Product",
+    question: "What are you building?",
+    cta: "Launch a live demo",
+    placeholder: "e.g. a scheduling tool for independent hairdressers",
+  },
+} as const satisfies Record<string, HeroModeConfig>;
+
+export type HeroMode = keyof typeof HERO_MODES;
+
+/** Idea is the default: it is the only path that delivers an output in the hero. */
+export const DEFAULT_HERO_MODE: HeroMode = "idea";
+
 // Matches a full URL or a bare domain like acme.io, but not a sentence that
 // merely contains a dot. Requires a TLD of 2+ letters and a label immediately
 // before it, so "It solves scheduling. Then invoicing." is not read as a domain.
@@ -32,17 +76,14 @@ export function containsUrl(text: string): boolean {
 }
 
 /**
- * Everyone routes to ICP.
+ * Resolves what a submission does, from the mode the visitor picked.
  *
- * The original spec sent URL-havers to Demo Studio, but that generator needs
- * screenshots - given text or a URL alone it returns a generic 3-step
- * placeholder storyboard, a markedly weaker first output than the ICP draft.
- * Routing our highest-intent visitors into filler would waste them. The URL is
- * still recorded on the event so we can size the demo opportunity later, and
- * the demo path is offered as a cross-link once the output has landed.
+ * `hasUrl` is still recorded on the event - it tells us how many people arrive
+ * with something already live, which is the demand signal for Demo Studio - but
+ * it no longer decides the route. The visitor does.
  */
-export function classifyHeroInput(text: string): { route: HeroRoute; hasUrl: boolean } {
-  return { route: "icp", hasUrl: containsUrl(text) };
+export function classifyHeroInput(text: string, mode: HeroMode): { route: HeroRoute; hasUrl: boolean } {
+  return { route: HERO_MODES[mode].route, hasUrl: containsUrl(text) };
 }
 
 /**
