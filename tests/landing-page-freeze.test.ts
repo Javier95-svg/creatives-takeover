@@ -3,11 +3,18 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
+// Hashes are taken over LF-normalised bytes, not raw bytes. This repo runs with
+// core.autocrlf=true and no .gitattributes, so a Windows checkout can hold CRLF
+// (Hero.tsx and Index.tsx currently hold a mix of both) while Linux CI holds
+// pure LF. A raw-byte pin therefore cannot match in both places at once, and the
+// pin silently drifts from the committed content. Normalising first makes the
+// hash equal to the git blob hash in every environment.
 const frozenFiles = {
-  // Rehashed 2026-07-28 for the approved CTA simplification: ICP remains the
-  // outcome-led primary path and Demo Studio the product-ready secondary path,
-  // while the supporting microcopy beneath both actions has been removed.
-  '../src/components/Hero.tsx': 'c21d2adac83ef57d3f5e28aa7a3dc9ba916c4ac179eea5e4df4ba7cf5d56e39b',
+  // Rehashed 2026-08-01 (hero single-input rebuild, Workstream 0). The pins had
+  // gone stale: fd902f6f, e31580df and 6adeab90 all edited Hero.tsx on
+  // 2026-07-29 without rehashing, so this test was already failing before any
+  // of the current work started. These hashes pin the approved 09846988 state.
+  '../src/components/Hero.tsx': 'f84d1870e7e4162eb35ae787f38a507abb0e3a4db04272dde414fdc1ce9c92df',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.
@@ -29,12 +36,12 @@ const frozenFiles = {
   // 5dd4dbbb): 20234ac0810e38a9cf7fbc6497bd33ec7d3c1da7fc181d068a00dfe2c8ecb4d0
   // Rehashed 2026-07-28 for the approved homepage wallpaper redesign: Index
   // opts into the landing-only gradient while section order stays unchanged.
-  '../src/pages/Index.tsx': 'da2cf00c370d9e05954b83dcfc7d6516171a3f8b14a1925a4b3bb9d98a150dad',
+  '../src/pages/Index.tsx': '7b73054f0d6d5dcc8e6e45ac075035a527ae1007d86b6330123c9805fd942a01',
 } as const;
 
 test('the approved unauthenticated landing page remains frozen during core-tool work', () => {
   Object.entries(frozenFiles).forEach(([path, expected]) => {
-    const source = readFileSync(new URL(path, import.meta.url));
-    assert.equal(createHash('sha256').update(source).digest('hex'), expected, `${path} changed`);
+    const source = readFileSync(new URL(path, import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+    assert.equal(createHash('sha256').update(source, 'utf8').digest('hex'), expected, `${path} changed`);
   });
 });
