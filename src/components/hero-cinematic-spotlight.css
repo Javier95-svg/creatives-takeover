@@ -932,15 +932,23 @@
   outline-offset: 1px;
 }
 
+/* The submit pill is never disabled below the character minimum: a greyed
+   button under an empty field reads as broken and wastes the click of
+   someone who arrived ready to act. Clicking with nothing typed focuses the
+   field, which is what opens the activation funnel. */
 .ct-hero__idea-send {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   margin-left: auto;
-  padding: 11px 18px;
+  padding: 12px 20px;
   border: 0;
   border-radius: 12px;
+  /* 220% so the gradient has somewhere to travel on hover. */
   background: var(--ct-grad-trinity);
+  background-size: 220% 100%;
+  background-position: 0% 50%;
   color: #fff;
   font-family: var(--ct-sans);
   font-size: 14.5px;
@@ -948,32 +956,85 @@
   letter-spacing: -0.005em;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: 0 10px 26px -10px rgba(90, 162, 251, 0.65);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  overflow: hidden;
+  box-shadow:
+    0 8px 22px -10px rgba(90, 162, 251, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  transition:
+    transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.24s ease,
+    background-position 0.55s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.ct-hero__idea-send svg {
+.ct-hero__idea-send-label {
+  position: relative;
+  z-index: 1;
+}
+
+.ct-hero__idea-send-arrow {
+  position: relative;
+  z-index: 1;
   width: 16px;
   height: 16px;
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.ct-hero__idea-send:hover:not(:disabled) {
-  transform: translateY(-1px);
-  filter: brightness(1.06);
-  box-shadow: 0 14px 32px -10px rgba(90, 162, 251, 0.8);
+/* Light sweep, fired on hover rather than looping - a permanent shimmer on a
+   persistent control is noise; a reactive one reads as responsiveness. */
+.ct-hero__idea-send::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.42) 50%,
+    transparent 70%
+  );
+  transform: translateX(-130%);
+  pointer-events: none;
 }
 
-.ct-hero__idea-send:active:not(:disabled) {
+
+.ct-hero__idea-send:hover {
+  transform: translateY(-2px);
+  background-position: 100% 50%;
+  box-shadow:
+    0 16px 34px -12px rgba(90, 162, 251, 0.85),
+    0 0 0 1px rgba(255, 255, 255, 0.16) inset;
+}
+
+.ct-hero__idea-send:hover::before {
+  animation: ct-idea-send-sweep 0.72s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+
+.ct-hero__idea-send:hover .ct-hero__idea-send-arrow {
+  transform: translateX(3px);
+}
+
+.ct-hero__idea-send:active {
   transform: translateY(0);
+  box-shadow: 0 6px 16px -10px rgba(90, 162, 251, 0.7);
 }
 
-/* Disabled below the 3-character minimum. Muted, never a red error state -
-   the visitor has not done anything wrong yet. */
+.ct-hero__idea-send:focus-visible {
+  outline: 2px solid var(--ct-blue);
+  outline-offset: 3px;
+}
+
+/* Only while a request is in flight. */
 .ct-hero__idea-send:disabled {
-  cursor: default;
-  background: var(--ct-idea-send-off);
-  color: var(--ct-muted);
-  box-shadow: none;
+  cursor: progress;
+  opacity: 0.75;
+  transform: none;
+}
+
+
+@keyframes ct-idea-send-sweep {
+  from { transform: translateX(-130%); }
+  to { transform: translateX(130%); }
 }
 
 .ct-hero__secondary-row {
@@ -1209,5 +1270,23 @@
 
   .ct-hero__idea-card.is-nudged {
     animation: none;
+  }
+
+  /* Keep the colour and glow response, drop the travel. */
+  .ct-hero__idea-send,
+  .ct-hero__idea-send-arrow {
+    transition: box-shadow 0.24s ease, opacity 0.24s ease;
+  }
+
+  .ct-hero__idea-send:hover {
+    transform: none;
+  }
+
+  .ct-hero__idea-send:hover::before {
+    animation: none;
+  }
+
+  .ct-hero__idea-send:hover .ct-hero__idea-send-arrow {
+    transform: none;
   }
 }

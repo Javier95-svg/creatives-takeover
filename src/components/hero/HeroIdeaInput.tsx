@@ -73,13 +73,21 @@ export const HeroIdeaInput = forwardRef<HeroIdeaInputHandle, HeroIdeaInputProps>
 
   const canSubmit = value.trim().length >= MIN_CHARS && !busy && !disabled;
 
+  /**
+   * The CTA is never disabled. A greyed-out button below an empty field reads
+   * as broken, and it wastes the click of someone who arrived ready to act -
+   * which is the first real intent signal in the funnel.
+   *
+   * With nothing typed, clicking focuses the field and pulses the card. That
+   * focus fires the textarea's onFocus, so `hero_input_focused` - the top of
+   * the activation funnel - is recorded from the click itself. No request is
+   * sent until there is something to send.
+   */
   const handleSubmit = useCallback(() => {
     if (canSubmit) {
       onSubmit();
       return;
     }
-    // Empty submit must not error. Pulse the card and keep focus rather than
-    // showing a red validation state - nothing has gone wrong yet.
     setNudge(true);
     textareaRef.current?.focus();
   }, [canSubmit, onSubmit]);
@@ -177,11 +185,17 @@ export const HeroIdeaInput = forwardRef<HeroIdeaInputHandle, HeroIdeaInputProps>
               event.stopPropagation();
               handleSubmit();
             }}
-            disabled={!canSubmit}
-            aria-disabled={!canSubmit}
+            disabled={busy || disabled}
           >
-            {busy ? "Working…" : config.cta}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+            <span className="ct-hero__idea-send-label">{busy ? "Working…" : config.cta}</span>
+            <svg
+              className="ct-hero__idea-send-arrow"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              aria-hidden="true"
+            >
               <line x1="5" y1="12" x2="18" y2="12" />
               <polyline points="12 6 18 12 12 18" />
             </svg>
