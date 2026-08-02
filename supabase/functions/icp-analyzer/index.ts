@@ -21,7 +21,17 @@ const corsHeaders = {
 const ICP_RESULTS_TABLE = "icp_analysis_results";
 
 type SaveMode = "preview" | "save";
-type Operation = "seed_prefill" | "build_draft" | "save_existing_artifact";
+type Operation = "seed_prefill" | "first_slice" | "build_draft" | "save_existing_artifact";
+
+// The fast half of two-stage generation. build_draft is a single gpt-4o call
+// with max_tokens 6000 and a 38s abort - it cannot put anything on screen
+// quickly enough for a visitor who just typed one sentence into the homepage.
+// first_slice answers the same question with gpt-4o-mini in a couple of
+// seconds so there is real content to read while the full draft finishes.
+interface FirstSliceRequest {
+  operation: "first_slice";
+  description: string;
+}
 
 interface SeedPrefillRequest {
   operation: "seed_prefill";
@@ -38,7 +48,7 @@ interface SaveExistingArtifactRequest {
   artifact: Record<string, any>;
 }
 
-type RequestPayload = SeedPrefillRequest | BuildDraftRequest | SaveExistingArtifactRequest;
+type RequestPayload = SeedPrefillRequest | FirstSliceRequest | BuildDraftRequest | SaveExistingArtifactRequest;
 
 type AuthenticatedUser = {
   id: string;
@@ -74,6 +84,7 @@ function validateGuidedInput(input: GuidedInput | null | undefined) {
 // never the cost control it appeared to be - removing it costs us nothing, but
 // the path still has to be bounded. Mirrors demo-studio-generator.
 const PREVIEW_RATE_LIMIT_PER_MIN = 5;
+const FIRST_SLICE_TIMEOUT_MS = 10_000;
 
 function getClientIp(req: Request): string {
   const forwarded = req.headers.get("x-forwarded-for") || "";
@@ -85,6 +96,11 @@ function validatePayload(payload: Partial<RequestPayload>) {
 
   if (payload.operation === "seed_prefill") {
     if (!isNonEmpty(payload.seed, 8)) issues.push("seed must be at least 8 characters");
+    return issues;
+  }
+
+  if (payload.operation === "first_slice") {
+    if (!isNonEmpty(payload.description, 3)) issues.push("description must be at least 3 characters");
     return issues;
   }
 
@@ -101,7 +117,7 @@ function validatePayload(payload: Partial<RequestPayload>) {
   }
 
   if (payload.operation !== "build_draft") {
-    issues.push("operation must be seed_prefill, build_draft, or save_existing_artifact");
+    issues.push("operation must be seed_prefill, first_slice, build_draft, or save_existing_artifact");
     return issues;
   }
 
@@ -125,6 +141,31 @@ function validatePayload(payload: Partial<RequestPayload>) {
 
   issues.push("entryMode must be fast or guided");
   return issues;
+}
+
+function buildFirstSlicePrompt(description: string) {
+  return `You are helping a founder see who they are building for.
+Return valid JSON only in this shape:
+{
+  "personaName": "string",
+  "roleLine": "string",
+  "segment": "string",
+  "corePain": "string",
+  "buyingTrigger": "string"
+}
+
+Rules:
+- Be specific and concrete. Never say "small businesses" or "creators".
+- personaName is a short human label, e.g. "Solo bookkeeper at a 3-person firm".
+- roleLine is one sentence describing who they are and what they do.
+- segment names the narrow market you would sell to first.
+- corePain is one frustration they feel now, in their words, not market-speak.
+- buyingTrigger is the specific moment that makes them look for a solution.
+- The founder may have written only a few words. Infer the most plausible
+  reading and commit to it rather than hedging or asking for more detail.
+
+What they are building:
+${description}`;
 }
 
 function buildSeedPrompt(seed: string) {
@@ -397,6 +438,90 @@ serve(async (req) => {
     }
 
     const serviceClient = createClient(supabaseUrl, supabaseKey);
+
+    if (payload.operation === "first_slice") {
+      // Same per-IP cap as the preview path; this runs unauthenticated too.
+      const { error: sliceRateError } = await serviceClient.rpc("assert_rate_limit", {
+        p_key: "icp_first_slice:" + getClientIp(req),
+        p_user_id: null,
+        p_max_per_minute: PREVIEW_RATE_LIMIT_PER_MIN,
+      });
+      if (sliceRateError) {
+        const rateLimited = /rate_limit_exceeded/i.test(sliceRateError.message || "");
+        return new Response(JSON.stringify({
+          success: false,
+          error: rateLimited
+            ? "You have hit the free draft limit. Wait a minute, or create a free account to keep going."
+            : "ICP drafts are temporarily unavailable. Please try again shortly.",
+          errorCode: rateLimited ? "RATE_LIMITED" : "SERVICE_UNAVAILABLE",
+        }), {
+          status: rateLimited ? 429 : 503,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Hard ceiling well under the full draft's 38s: if the fast path is not
+      // fast it has no reason to exist, and the full draft is already running
+      // in parallel to cover it.
+      const sliceAbort = new AbortController();
+      const sliceTimeout = setTimeout(() => sliceAbort.abort(), FIRST_SLICE_TIMEOUT_MS);
+      let sliceCompletion: Response;
+      try {
+        sliceCompletion = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          signal: sliceAbort.signal,
+          headers: {
+            Authorization: `Bearer ${openaiApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            response_format: { type: "json_object" },
+            temperature: 0.4,
+            max_tokens: 500,
+            messages: [
+              { role: "system", content: "Return valid JSON only." },
+              { role: "user", content: buildFirstSlicePrompt(payload.description) },
+            ],
+          }),
+        });
+      } finally {
+        clearTimeout(sliceTimeout);
+      }
+
+      if (!sliceCompletion.ok) {
+        const errBody = await sliceCompletion.text().catch(() => "");
+        throw new Error(`OpenAI API Error: ${sliceCompletion.status} ${errBody.slice(0, 200)}`.trim());
+      }
+
+      const sliceData = await sliceCompletion.json();
+      const sliceContent = sliceData?.choices?.[0]?.message?.content;
+      if (typeof sliceContent !== "string" || !sliceContent.trim()) {
+        throw new Error("OpenAI returned an empty first slice");
+      }
+
+      let slice: ReturnType<typeof JSON.parse>;
+      try {
+        slice = JSON.parse(sliceContent);
+      } catch (parseError) {
+        throw new Error(
+          `Failed to parse first slice JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`,
+        );
+      }
+
+      return new Response(JSON.stringify({
+        success: true,
+        slice: {
+          personaName: typeof slice.personaName === "string" ? slice.personaName : "",
+          roleLine: typeof slice.roleLine === "string" ? slice.roleLine : "",
+          segment: typeof slice.segment === "string" ? slice.segment : "",
+          corePain: typeof slice.corePain === "string" ? slice.corePain : "",
+          buyingTrigger: typeof slice.buyingTrigger === "string" ? slice.buyingTrigger : "",
+        },
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (payload.operation === "seed_prefill") {
       const completion = await fetch("https://api.openai.com/v1/chat/completions", {
