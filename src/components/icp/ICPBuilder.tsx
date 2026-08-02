@@ -336,7 +336,7 @@ function getScreenTitle(screen: IcpFlowScreen, session: IcpBuilderSession) {
 
   switch (screen) {
     case "fast_input":
-      return "Describe your startup idea, who it's for, and what problem it solves.";
+      return "What are you building?";
     case "guided_seed":
       return "What's your startup idea?";
     case "guided_persona":
@@ -493,10 +493,6 @@ const ICPBuilder: React.FC = () => {
   const synthesisElapsedMs = loadingPhase === "synthesis" && loadingStartedAt ? Date.now() - loadingStartedAt : 0;
   const validatedGuided = useMemo(() => guidedIcpInputSchema.safeParse(session.guided), [session.guided]);
   const validatedFast = useMemo(() => fastIcpInputSchema.safeParse({ description: session.fastDescription }), [session.fastDescription]);
-  const fastWordCount = useMemo(
-    () => (session.fastDescription.trim() ? session.fastDescription.trim().split(/\s+/).length : 0),
-    [session.fastDescription],
-  );
   const unlockEmailPayload = useMemo<IcpUnlockEmailPayload | null>(() => {
     if (!session.draftPreview) return null;
 
@@ -783,7 +779,7 @@ const ICPBuilder: React.FC = () => {
   const canContinue = useMemo(() => {
     switch (session.currentScreen) {
       case "fast_input":
-        return fastWordCount >= 30;
+        return session.fastDescription.trim().length >= 3;
       case "guided_seed":
         return (session.guided.seed || "").trim().length >= 8;
       case "guided_persona":
@@ -799,7 +795,7 @@ const ICPBuilder: React.FC = () => {
       default:
         return false;
     }
-  }, [session, fastWordCount]);
+  }, [session]);
 
   const updateGuided = <K extends keyof IcpBuilderSession["guided"]>(field: K, value: IcpBuilderSession["guided"][K]) => {
     if (!hasStartedTypingRef.current) {
@@ -1858,15 +1854,12 @@ const ICPBuilder: React.FC = () => {
           <p className="rounded-2xl border border-accent-teal/20 bg-accent-teal/5 px-4 py-3 text-sm font-medium leading-6 text-foreground">
             Best-fit customer, core pain, buying trigger, evidence gaps, and interview direction.
           </p>
-          <p className="text-base leading-7 text-muted-foreground">
-            The more detail you give, the better your ICP Draft will be. 3–5 sentences is ideal.
-          </p>
         </div>
 
         <div className="space-y-2">
           <Textarea
             ref={fastInputRef}
-            rows={8}
+            rows={3}
             value={session.fastDescription}
             onChange={(event) => {
               if (!hasStartedTypingRef.current) {
@@ -1880,14 +1873,12 @@ const ICPBuilder: React.FC = () => {
               }));
             }}
             onKeyDown={handleFieldSubmit}
-            placeholder="e.g. I'm building a client feedback tool for freelance designers. Right now they manage revisions through email and WhatsApp, which causes things to get lost and makes them look unprofessional. My tool puts all revision feedback in one place with version tracking. I'm a freelance designer myself so I know this market well."
-            className="min-h-[280px] rounded-5xl border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
+            placeholder="e.g. a client feedback tool for freelance designers"
+            className="min-h-[96px] rounded-5xl border-border/60 bg-white/85 px-5 py-4 text-base leading-7 shadow-sm dark:bg-slate-950/70"
           />
-          {session.fastDescription.length > 0 ? (
-            <p className={`px-1 text-xs transition-colors ${fastWordCount >= 30 ? "text-success dark:text-success" : "text-muted-foreground"}`}>
-              {fastWordCount >= 30 ? "✓ Ready to generate" : `${fastWordCount} / 30 words minimum`}
-            </p>
-          ) : null}
+          <p className="px-1 text-xs text-muted-foreground">
+            One sentence is enough. The more you add, the sharper the draft.
+          </p>
         </div>
       </div>,
     );

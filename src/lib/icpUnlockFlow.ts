@@ -1,6 +1,13 @@
-// Half-gated lead magnet: guests see Customer + Pain (who their customer is and
-// the core pain) before signing up; Build + Moat are unlocked by the signup CTA.
-export const ICP_GUEST_VISIBLE_SECTIONS = ["customer", "pain"] as const;
+// Ungated first output. Guests see the whole brief - customer, pain, build and
+// moat - plus the decision brief, with no blur, truncation or lock.
+//
+// This replaces a half-gate that showed only customer + pain. In the 60 days to
+// 2026-08-01 every single person who reached that wall left: 6 people, 61
+// `icp_builder_abandoned` events between them, roughly ten hits each. They had
+// already done the work; walling them at the moment value arrived cost us the
+// highest-intent visitors of the month. The account ask now comes after the
+// output, and abuse is bounded by a per-token rate limit rather than a wall.
+export const ICP_GUEST_VISIBLE_SECTIONS = ["customer", "pain", "build", "moat"] as const;
 
 export type IcpDraftSaveResult = {
   success?: boolean;

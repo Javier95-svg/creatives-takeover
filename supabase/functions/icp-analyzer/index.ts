@@ -99,8 +99,10 @@ function validatePayload(payload: Partial<RequestPayload>) {
   }
 
   if (payload.entryMode === "fast") {
-    if (!isNonEmpty(payload.fastInput?.description, 40)) {
-      issues.push("fastInput.description must be at least 40 characters");
+    // Mirrors fastIcpInputSchema on the client: 3 characters, not 40. The old
+    // floor rejected exactly the short first sentences we now invite.
+    if (!isNonEmpty(payload.fastInput?.description, 3)) {
+      issues.push("fastInput.description must be at least 3 characters");
     }
     return issues;
   }

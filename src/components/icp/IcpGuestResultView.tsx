@@ -11,9 +11,8 @@ interface IcpGuestResultViewProps {
   onEmailLinkRequest?: (email: string) => Promise<void>;
 }
 
-// Half-gate is driven by ICP_GUEST_VISIBLE_SECTIONS (Customer + Pain only); the
-// Build + Moat sections aren't rendered for guests, and the signup gate (footer)
-// drives account creation to reveal them.
+// Nothing is locked for guests. The footer gate is a save prompt, not a wall -
+// every section above it is fully rendered before any account exists.
 const GUEST_LOCKED_SECTIONS: readonly never[] = [];
 
 export function IcpGuestResultView({
@@ -32,7 +31,7 @@ export function IcpGuestResultView({
         lockedSections={GUEST_LOCKED_SECTIONS}
         topBar={
           <div className="rounded-2xl border border-accent-teal/20 bg-accent-teal/5 px-4 py-3 text-sm text-foreground">
-            <span className="font-semibold">Your free brief:</span>{" "}
+            <span className="font-semibold">Your brief, in full:</span>{" "}
             best-fit customer, core pain, buying trigger, evidence gaps, and interview direction.
           </div>
         }
@@ -52,7 +51,7 @@ export function IcpGuestResultView({
         href="#icp-unlock"
         className="fixed inset-x-4 bottom-4 z-40 flex min-h-12 items-center justify-center rounded-xl bg-primary px-4 text-center text-sm font-semibold text-primary-foreground shadow-xl md:hidden"
       >
-        Save my brief and reveal the action plan
+        Save this and keep going
       </a>
     </div>
   );

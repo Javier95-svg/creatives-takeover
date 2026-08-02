@@ -10,9 +10,24 @@ import {
   isZeroCreditDeductionFailureDetails,
   runIcpPostSaveSteps,
 } from '../src/lib/icpUnlockFlow.ts';
+import { fastIcpInputSchema } from '../src/lib/icpBuilderSchema.ts';
 
-test('guest ICP preview reveals customer and pain before account creation', () => {
-  assert.deepEqual([...ICP_GUEST_VISIBLE_SECTIONS], ['customer', 'pain']);
+test('guest ICP preview is ungated - every section renders before account creation', () => {
+  assert.deepEqual([...ICP_GUEST_VISIBLE_SECTIONS], ['customer', 'pain', 'build', 'moat']);
+});
+
+// The 40-character floor here was the largest single drop-off in the funnel: of
+// 25 people who opened the builder in the two weeks to 2026-08-01, one typed
+// anything at all. One short sentence must be enough to generate.
+test('one short sentence is enough to generate an ICP draft', () => {
+  assert.equal(fastIcpInputSchema.safeParse({ description: 'a CRM for plumbers' }).success, true);
+  assert.equal(fastIcpInputSchema.safeParse({ description: 'app' }).success, true);
+});
+
+test('the ICP fast input still rejects empty and near-empty submissions', () => {
+  assert.equal(fastIcpInputSchema.safeParse({ description: '' }).success, false);
+  assert.equal(fastIcpInputSchema.safeParse({ description: '  ' }).success, false);
+  assert.equal(fastIcpInputSchema.safeParse({ description: 'ab' }).success, false);
 });
 
 test('saved ICP draft unlock is gated only by draft_ready and analysis id', () => {

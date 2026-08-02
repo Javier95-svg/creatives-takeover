@@ -44,7 +44,11 @@ export const guidedIcpInputSchema = z.object({
 });
 
 export const fastIcpInputSchema = z.object({
-  description: z.string().trim().min(40, "Add 3-5 sentences so the draft has enough signal.").max(5000),
+  // 3 characters, not 40. The 40-char floor was the single biggest drop-off in
+  // the funnel: of 25 people who opened the builder in the two weeks to
+  // 2026-08-01, one typed anything at all. A thin sentence produces a thinner
+  // draft, which we say after the output rather than gating on before it.
+  description: z.string().trim().min(3, "Tell us what you're building.").max(5000),
 });
 
 export type GuidedIcpInputSchema = z.infer<typeof guidedIcpInputSchema>;

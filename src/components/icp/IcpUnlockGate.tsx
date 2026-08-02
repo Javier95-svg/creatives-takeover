@@ -63,7 +63,9 @@ export function IcpUnlockGate({
       has_seed: Boolean(normalizedSeed),
       confidence: artifact.draftDocument.confidence.level,
       layout: "inline",
-      locked_after: "pain",
+      // Nothing is locked any more. Kept (rather than dropped) so the event
+      // shape stays stable and before/after is comparable in PostHog.
+      locked_after: "none",
     });
     trackActivationFunnelEvent("activation_gate_shown", {
       entry_id: "icp_draft_unlock",
@@ -218,10 +220,10 @@ export function IcpUnlockGate({
         <div className="px-6 py-6 sm:px-8">
           <div className="space-y-2 text-center">
             <h2 className="text-xl font-semibold tracking-tight">
-              Save my brief and reveal the action plan
+              Save this and keep going
             </h2>
             <p className="text-sm text-muted-foreground">
-              Create an account to keep this exact brief and open five concrete customer-interview tasks.
+              Your profile is saved for 7 days. Create a free account to keep it and move to the next step.
             </p>
           </div>
 
@@ -275,7 +277,7 @@ export function IcpUnlockGate({
         onOpenChange={setSoftGateOpen}
         seed={normalizedSeed}
         trigger="icp_draft_unlock"
-        title="Save my brief and reveal the action plan"
+        title="Save this and keep going"
         description="Two fields and this exact brief is yours, including five customer-interview tasks. Free, with no credit card."
         returnPathOverride={returnPath}
         signupSource="icp-draft-unlock"
