@@ -30,26 +30,27 @@
   --ct-idea-send-off: rgba(15, 23, 42, 0.07);
   --ct-idea-mode-on-bg: #ffffff;
 
-  /* Hero CTA - graphite/silver, light theme */
+  /* Hero CTA - white with a blue sheen, light theme */
   --ct-cta-grad: linear-gradient(
     115deg,
-    #1a1d22 0%,
-    #2f353d 20%,
-    #626b77 38%,
-    #2f353d 56%,
-    #14171c 80%,
-    #262b31 100%
+    #ffffff 0%,
+    #f4f8ff 18%,
+    #d8e6fb 38%,
+    #f4f8ff 58%,
+    #ffffff 80%,
+    #eaf2fd 100%
   );
-  --ct-cta-fg: #ffffff;
-  --ct-cta-rim: rgba(255, 255, 255, 0.22);
-  --ct-cta-rim-hover: rgba(255, 255, 255, 0.38);
-  --ct-cta-shadow: 0 8px 22px -10px rgba(15, 23, 42, 0.75);
-  --ct-cta-shadow-hover: 0 16px 34px -12px rgba(15, 23, 42, 0.9);
-  --ct-cta-sheen: rgba(255, 255, 255, 0.4);
-  --ct-idea-shadow: 0 30px 80px -40px rgba(15, 23, 42, 0.45);
-  --ct-idea-shadow-hover:
-    0 36px 90px -40px rgba(15, 23, 42, 0.5),
-    0 0 60px -20px rgba(37, 99, 235, 0.22);
+  --ct-cta-fg: #0b1220;
+  --ct-cta-rim: rgba(37, 99, 235, 0.24);
+  --ct-cta-rim-hover: rgba(37, 99, 235, 0.46);
+  /* Top-edge catch light does nothing on a white pill; the rim carries it. */
+  --ct-cta-edge: rgba(255, 255, 255, 0);
+  --ct-cta-shadow: 0 8px 22px -10px rgba(37, 99, 235, 0.45);
+  --ct-cta-shadow-hover:
+    0 16px 34px -12px rgba(37, 99, 235, 0.58),
+    0 0 26px -12px rgba(91, 162, 251, 0.5);
+  /* A white sweep is invisible on white - tint it instead. */
+  --ct-cta-sheen: rgba(37, 99, 235, 0.16);
 
   /* Dashboard preview panel — light defaults; overridden for dark mode below.
      The panel surface flips with the theme so its (dark) text stays readable. */
@@ -109,28 +110,25 @@
   --ct-idea-send-off: rgba(255, 255, 255, 0.08);
   --ct-idea-mode-on-bg: rgba(255, 255, 255, 0.13);
 
-  /* Hero CTA - graphite/silver, dark theme */
+  /* Hero CTA - steel blue, dark theme */
   --ct-cta-grad: linear-gradient(
     115deg,
-    #2b3037 0%,
-    #434a54 20%,
-    #6b7480 38%,
-    #434a54 56%,
-    #23272d 80%,
-    #363c44 100%
+    #1c2740 0%,
+    #2a3b5a 18%,
+    #4a6488 38%,
+    #2a3b5a 58%,
+    #17203a 80%,
+    #223150 100%
   );
   --ct-cta-fg: #ffffff;
-  --ct-cta-rim: rgba(255, 255, 255, 0.26);
-  --ct-cta-rim-hover: rgba(255, 255, 255, 0.46);
-  --ct-cta-shadow: 0 8px 22px -10px rgba(0, 0, 0, 0.9);
+  --ct-cta-rim: rgba(140, 178, 240, 0.34);
+  --ct-cta-rim-hover: rgba(165, 200, 255, 0.58);
+  --ct-cta-edge: rgba(255, 255, 255, 0.2);
+  --ct-cta-shadow: 0 8px 22px -10px rgba(0, 0, 0, 0.85);
   --ct-cta-shadow-hover:
-    0 16px 34px -12px rgba(0, 0, 0, 0.95),
-    0 0 26px -12px rgba(190, 202, 218, 0.55);
-  --ct-cta-sheen: rgba(255, 255, 255, 0.5);
-  --ct-idea-shadow: 0 30px 80px -40px rgba(0, 0, 0, 0.85);
-  --ct-idea-shadow-hover:
-    0 36px 90px -40px rgba(0, 0, 0, 0.9),
-    0 0 60px -20px rgba(90, 162, 251, 0.28);
+    0 16px 34px -12px rgba(0, 0, 0, 0.92),
+    0 0 28px -12px rgba(91, 162, 251, 0.6);
+  --ct-cta-sheen: rgba(196, 220, 255, 0.45);
 
   --ct-panel-bg: linear-gradient(180deg, #131820, #0e1219);
   --ct-panel-border: rgba(255, 255, 255, 0.08);
@@ -996,8 +994,8 @@
   box-shadow:
     var(--ct-cta-shadow),
     0 0 0 1px var(--ct-cta-rim) inset,
-    /* Top-edge catch light - what actually sells it as metal. */
-    0 1px 0 rgba(255, 255, 255, 0.16) inset;
+    /* Top-edge catch light - reads as depth in dark, nulled in light. */
+    0 1px 0 var(--ct-cta-edge) inset;
   transition:
     transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 0.24s ease,
@@ -1041,7 +1039,7 @@
   box-shadow:
     var(--ct-cta-shadow-hover),
     0 0 0 1px var(--ct-cta-rim-hover) inset,
-    0 1px 0 rgba(255, 255, 255, 0.24) inset;
+    0 1px 0 var(--ct-cta-edge) inset;
 }
 
 .ct-hero__idea-send:hover::before {
