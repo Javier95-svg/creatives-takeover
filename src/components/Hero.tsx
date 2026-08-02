@@ -7,7 +7,6 @@ import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { supabase } from "@/integrations/supabase/client";
 import heroCompass from "@/assets/hero-compass.svg";
-import WhoIsThisForDialog from "@/components/WhoIsThisForDialog";
 import HeroIdeaInput from "@/components/hero/HeroIdeaInput";
 import "./hero-cinematic-spotlight.css";
 import { trackActivationEntry, trackActivationFunnelEvent } from "@/lib/activationEntry";
@@ -19,6 +18,12 @@ import { useFeatureFlagEnabled } from "@/hooks/usePosthogFeatureFlag";
 // the fold-blocking bundle. The input above is plain markup and stays typable
 // while this loads.
 const HeroResultIsland = lazy(() => import("@/components/hero/HeroResultIsland"));
+
+// Also lazy: it renders nothing until opened, but statically it dragged the
+// Radix dialog and ~20 lucide icons into the homepage's critical path. Homepage
+// FCP p75 is 4.05s against an LCP p75 of 4.72s, so almost all of the delay is
+// before the hero paints at all - it is a bundle problem, not an image problem.
+const WhoIsThisForDialog = lazy(() => import("@/components/WhoIsThisForDialog"));
 
 type HeroNavItem = {
   label: string;
@@ -113,6 +118,7 @@ const Hero = ({
   const hasTrackedView = useRef(false);
   const [userUsername, setUserUsername] = useState<string | null>(null);
   const [isAudienceDialogOpen, setIsAudienceDialogOpen] = useState(false);
+  const [hasOpenedAudienceDialog, setHasOpenedAudienceDialog] = useState(false);
   const [ideaText, setIdeaText] = useState("");
   // The description generation is actually running against - held separately
   // from ideaText so editing the field mid-generation doesn't restart it.
@@ -201,6 +207,7 @@ const Hero = ({
 
   const handleWhoIsThisForClick = () => {
     void trackEngagement("hero-who-is-this-for", 60);
+    setHasOpenedAudienceDialog(true);
     setIsAudienceDialogOpen(true);
   };
 
@@ -387,8 +394,12 @@ const Hero = ({
           </div>
         </div>
       </div>
-      {!isAuthenticated ? (
-        <WhoIsThisForDialog open={isAudienceDialogOpen} onOpenChange={setIsAudienceDialogOpen} />
+      {/* Mounted only once the visitor has actually asked for it, so the chunk
+          is never fetched on a page view that ignores the link. */}
+      {!isAuthenticated && hasOpenedAudienceDialog ? (
+        <Suspense fallback={null}>
+          <WhoIsThisForDialog open={isAudienceDialogOpen} onOpenChange={setIsAudienceDialogOpen} />
+        </Suspense>
       ) : null}
     </section>
   );
