@@ -92,11 +92,23 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
   });
   // CTA labels are asserted in all three rendered sources, not just the component,
   // so the no-JS shell and the prerendered pages can't drift from the live hero.
-  const ctaLabels = [/Define ideal customer/, /Launch a live demo/];
+  //
+  // The hero is now one input rather than two buttons. The no-JS shell and the
+  // prerendered pages cannot render a working textarea, so they carry the same
+  // question and label pointing at /icp-builder, which still resolves and still
+  // renders an ungated first output.
+  // The field and its button live in HeroIdeaInput, which Hero renders.
+  const heroInput = readFileSync(new URL('../src/components/hero/HeroIdeaInput.tsx', import.meta.url), 'utf8');
+  const ctaLabels = [/What are you building\?/, /Get my customer profile/];
   ctaLabels.forEach((label) => {
-    assert.match(hero, label);
+    assert.match(heroInput, label);
     assert.match(fallback, label);
     assert.match(prerender, label);
+  });
+  // Both aha routes must stay linked and crawlable - they have organic entries.
+  [fallback, prerender].forEach((source) => {
+    assert.match(source, /href="\/icp-builder"/);
+    assert.match(source, /href="\/demo-studio\/try"/);
   });
   assert.match(prerender, /Rookie[\s\S]*\$0[\s\S]*Clarify/);
   assert.match(prerender, /Starter[\s\S]*\$9[\s\S]*Validate/);

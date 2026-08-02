@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, Suspense, lazy, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ArrowRight, LayoutDashboard, User } from "lucide-react";
 
@@ -8,8 +8,15 @@ import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { supabase } from "@/integrations/supabase/client";
 import heroCompass from "@/assets/hero-compass.svg";
 import WhoIsThisForDialog from "@/components/WhoIsThisForDialog";
+import HeroIdeaInput from "@/components/hero/HeroIdeaInput";
 import "./hero-cinematic-spotlight.css";
 import { trackActivationEntry, trackActivationFunnelEvent } from "@/lib/activationEntry";
+import { classifyHeroInput, trackHeroInputFocused, trackHeroInputSubmitted } from "@/lib/heroFunnel";
+
+// Everything that generates lives behind this boundary so no part of it is in
+// the fold-blocking bundle. The input above is plain markup and stays typable
+// while this loads.
+const HeroResultIsland = lazy(() => import("@/components/hero/HeroResultIsland"));
 
 type HeroNavItem = {
   label: string;
@@ -28,9 +35,6 @@ type HeroProps = {
   titleLine1?: string;
   titleLine2?: string;
   lede?: ReactNode;
-  ctaLabel?: string;
-  ctaHref?: string;
-  onCtaClick?: () => void;
   dashboardUrl?: string;
   dashboardBread?: string;
   navItems?: HeroNavItem[];
@@ -82,9 +86,6 @@ const Hero = ({
   titleLine1 = "The Founders'",
   titleLine2 = "Compass",
   lede = DEFAULT_LEDE,
-  ctaLabel = "Launch a live demo",
-  ctaHref = "/demo-studio/try",
-  onCtaClick,
   dashboardUrl = "creatives-takeover.com/dashboard",
   dashboardBread = "Building · Stage 4 of 7",
   navItems = DEFAULT_NAV,
@@ -98,6 +99,11 @@ const Hero = ({
   const hasTrackedView = useRef(false);
   const [userUsername, setUserUsername] = useState<string | null>(null);
   const [isAudienceDialogOpen, setIsAudienceDialogOpen] = useState(false);
+  const [ideaText, setIdeaText] = useState("");
+  // The description generation is actually running against - held separately
+  // from ideaText so editing the field mid-generation doesn't restart it.
+  const [submittedIdea, setSubmittedIdea] = useState("");
+  const [generationRunId, setGenerationRunId] = useState(0);
 
   useEffect(() => {
     if (!user) {
@@ -133,26 +139,6 @@ const Hero = ({
               placement: "hero_primary",
               is_authenticated: isAuthenticated,
             });
-            trackActivationEntry("activation_entry_opened", {
-              entry_id: "hero_demo_try",
-              tool: "demo_studio",
-              source: "homepage_hero",
-              step: "impression",
-              entry_page: location.pathname,
-              placement: "hero_secondary",
-              is_authenticated: isAuthenticated,
-            });
-            // Trigger ids must match the ones trackEngagement uses on click
-            // (hero-demo-cta / hero-icp-cta) or conversion_cta_viewed and
-            // conversion_cta_clicked can't be paired into a CTR for either CTA.
-            void trackTriggerView("hero-demo-cta", {
-              ctaType: "secondary",
-              authenticated: isAuthenticated,
-            });
-            void trackTriggerView("hero-icp-cta", {
-              ctaType: "primary",
-              authenticated: isAuthenticated,
-            });
             if (!isAuthenticated) {
               void trackTriggerView("hero-who-is-this-for", {
                 ctaType: "audience_education",
@@ -162,7 +148,13 @@ const Hero = ({
           }
         });
       },
-      { threshold: 0.5 },
+      // 0.15, not 0.5. This observes the whole hero section, which contains the
+      // ~920px dashboard mock and the stats strip - on a phone the section is
+      // far taller than the viewport, so a 0.5 threshold was effectively
+      // unreachable and impressions barely fired. That is why
+      // hero-who-is-this-for looked like 14 clicks per user: the denominator
+      // was missing, not the button broken.
+      { threshold: 0.15 },
     );
 
     if (heroElement) {
@@ -175,39 +167,6 @@ const Hero = ({
       }
     };
   }, [trackTriggerView, isAuthenticated, location.pathname]);
-
-  const handleCtaClick = () => {
-    void trackEngagement("hero-demo-cta", 85);
-    setAttribution('hero_demo_try', location.pathname);
-    trackActivationFunnelEvent("activation_step_completed", {
-      entry_id: "hero_demo_try",
-      tool: "demo_studio",
-      source: "homepage_hero",
-      step: "entry_click",
-      entry_page: location.pathname,
-      placement: "hero_secondary",
-      is_authenticated: isAuthenticated,
-    });
-    onCtaClick?.();
-  };
-
-  // Primary path for visitors who are still shaping the customer and problem.
-  const handleIcpCtaClick = () => {
-    void trackEngagement("hero-icp-cta", 80);
-    setAttribution('hero_icp_builder', location.pathname);
-    trackActivationFunnelEvent("activation_step_completed", {
-      entry_id: "hero_icp_builder",
-      tool: "icp_builder",
-      source: "homepage_hero",
-      step: "entry_click",
-      entry_page: location.pathname,
-      placement: "hero_primary",
-      is_authenticated: isAuthenticated,
-    });
-  };
-
-  // Keep legacy callers that still pass /demo-studio on the pre-signup try flow.
-  const resolvedCtaHref = ctaHref === "/demo-studio" ? "/demo-studio/try" : ctaHref;
 
   const handleProfileCtaClick = () => {
     void trackEngagement("hero-profile-cta", 80);
@@ -230,6 +189,29 @@ const Hero = ({
     void trackEngagement("hero-who-is-this-for", 60);
     setIsAudienceDialogOpen(true);
   };
+
+  const handleIdeaSubmit = () => {
+    const trimmed = ideaText.trim();
+    if (trimmed.length < 3) return;
+
+    const { route, hasUrl } = classifyHeroInput(trimmed);
+    trackHeroInputSubmitted({ char_count: trimmed.length, has_url: hasUrl, routed_to: route });
+    setAttribution("hero_idea_input", location.pathname);
+    trackActivationFunnelEvent("activation_step_completed", {
+      entry_id: "hero_icp_builder",
+      tool: "icp_builder",
+      source: "homepage_hero",
+      step: "entry_click",
+      entry_page: location.pathname,
+      placement: "hero_input",
+      is_authenticated: isAuthenticated,
+    });
+
+    setSubmittedIdea(trimmed);
+    setGenerationRunId((current) => current + 1);
+  };
+
+  const heroClassification = classifyHeroInput(ideaText);
 
   return (
     <section
@@ -279,30 +261,42 @@ const Hero = ({
             </>
           ) : (
             <>
-              <div className="ct-hero__cta-path">
-                <span className="ct-hero__cta-kicker">Still an idea?</span>
-                <Link className="ct-hero__cta" to="/icp-builder" onClick={handleIcpCtaClick}>
-                  Define ideal customer
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </Link>
+              <HeroIdeaInput
+                value={ideaText}
+                onChange={setIdeaText}
+                onSubmit={handleIdeaSubmit}
+                onFirstFocus={trackHeroInputFocused}
+                hasUrl={heroClassification.hasUrl}
+                busy={generationRunId > 0 && ideaText.trim() === submittedIdea}
+              />
+              <div className="ct-hero__secondary-row">
+                <a className="ct-hero__audience-link" href="#what-you-get">
+                  See the six outcomes →
+                </a>
+                <button type="button" className="ct-hero__audience-link" onClick={handleWhoIsThisForClick}>
+                  Who is this for?
+                </button>
               </div>
-              <div className="ct-hero__cta-path">
-                <span className="ct-hero__cta-kicker">Have a product?</span>
-                <Link className="ct-hero__cta ct-hero__cta--secondary" to={resolvedCtaHref} onClick={handleCtaClick}>
-                  {ctaLabel}
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </Link>
-              </div>
-              <button type="button" className="ct-hero__audience-link" onClick={handleWhoIsThisForClick}>
-                Who is this for?
-              </button>
             </>
           )}
         </div>
+
+        {!isAuthenticated && generationRunId > 0 ? (
+          <Suspense
+            fallback={
+              <p className="ct-hero__result-loading" role="status" aria-live="polite">
+                Reading your idea…
+              </p>
+            }
+          >
+            <HeroResultIsland
+              description={submittedIdea}
+              runId={generationRunId}
+              isAuthenticated={isAuthenticated}
+              onRetry={() => setGenerationRunId((current) => current + 1)}
+            />
+          </Suspense>
+        ) : null}
 
         {!isAuthenticated ? <Link
           className="ct-hero__spotlight"

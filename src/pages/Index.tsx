@@ -71,7 +71,7 @@ const Index = () => {
       <main>
         {isMobile ? (
           <PullToRefresh onRefresh={handleRefresh}>
-            <Hero ctaHref="/demo-studio" />
+            <Hero />
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
                 <EntrepreneurProblems />
@@ -105,7 +105,7 @@ const Index = () => {
           </PullToRefresh>
         ) : (
           <>
-            <Hero ctaHref="/demo-studio" />
+            <Hero />
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
                 <EntrepreneurProblems />

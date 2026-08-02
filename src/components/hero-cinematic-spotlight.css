@@ -742,3 +742,300 @@
     font-size: 24px;
   }
 }
+
+/* -- Single hero input ------------------------------------------------------
+   Replaces the two CTA buttons. The field is the primary element above the
+   fold, but must not autofocus: that scroll-jumps on mobile and would move
+   the LCP element. Heights are fixed at rest so the lazily-loaded result
+   island cannot shift the fold when it mounts. */
+
+.ct-hero__idea {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  width: min(680px, 100%);
+  margin: 0 auto;
+}
+
+.ct-hero__idea-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 20px 14px;
+  border: 1px solid var(--ct-line);
+  border-radius: 18px;
+  background: var(--ct-eyebrow-bg);
+  backdrop-filter: blur(8px);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ct-hero__idea-field:focus-within {
+  border-color: var(--ct-blue);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
+}
+
+.ct-hero__idea-label {
+  font-family: var(--ct-sans);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--ct-muted);
+  text-align: left;
+}
+
+.ct-hero__idea-textarea {
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--ct-fg);
+  font-family: var(--ct-sans);
+  font-size: 17px;
+  line-height: 26px;
+  resize: none;
+  overflow-y: hidden;
+  text-align: left;
+}
+
+.ct-hero__idea-textarea:focus {
+  outline: none;
+}
+
+.ct-hero__idea-textarea::placeholder {
+  color: var(--ct-muted-2);
+}
+
+.ct-hero__idea-submit {
+  align-self: center;
+  justify-content: center;
+}
+
+/* Disabled below the 3-character minimum. Dimmed, never a red error state -
+   the visitor has not done anything wrong yet. */
+.ct-hero__idea-submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.ct-hero__idea-submit:disabled::after {
+  animation: none;
+}
+
+.ct-hero__idea-helper {
+  margin: 0;
+  font-family: var(--ct-sans);
+  font-size: 13.5px;
+  color: var(--ct-muted);
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+/* Empty submit nudges the helper rather than raising an error. */
+.ct-hero__idea-helper.is-active {
+  color: var(--ct-blue);
+  font-weight: 700;
+}
+
+.ct-hero__secondary-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 24px;
+  width: 100%;
+}
+
+.ct-hero__secondary-row .ct-hero__audience-link {
+  flex: 0 0 auto;
+  margin-top: 8px;
+}
+
+/* -- In-place result -------------------------------------------------------
+   Renders directly beneath the input. No navigation, no account, and nothing
+   blurred, truncated or locked. */
+
+.ct-hero__result {
+  width: min(680px, 100%);
+  margin: 24px auto 48px;
+  text-align: left;
+}
+
+.ct-hero__result-loading,
+.ct-hero__result-pending {
+  margin: 0;
+  font-family: var(--ct-sans);
+  font-size: 14.5px;
+  color: var(--ct-muted);
+  text-align: center;
+}
+
+.ct-hero__result-pending {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--ct-line);
+  text-align: left;
+}
+
+.ct-hero__result-error {
+  margin: 0 0 14px;
+  font-family: var(--ct-sans);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ct-fg);
+  text-align: center;
+}
+
+.ct-hero__result-retry {
+  display: flex;
+  margin: 0 auto;
+}
+
+.ct-hero__result-card {
+  padding: 24px 26px;
+  border: 1px solid var(--ct-panel-border);
+  border-radius: 20px;
+  background: var(--ct-panel-bg);
+  box-shadow: var(--ct-panel-shadow);
+}
+
+.ct-hero__result-kicker {
+  margin: 0 0 6px;
+  font-family: var(--ct-sans);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ct-blue);
+}
+
+.ct-hero__result-persona {
+  margin: 0 0 6px;
+  font-family: var(--ct-sans);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ct-fg);
+}
+
+.ct-hero__result-line {
+  margin: 0;
+  font-family: var(--ct-sans);
+  font-size: 15px;
+  line-height: 24px;
+  color: var(--ct-muted);
+}
+
+.ct-hero__result-block {
+  margin-top: 16px;
+}
+
+.ct-hero__result-block p {
+  margin: 2px 0 0;
+  font-family: var(--ct-sans);
+  font-size: 15px;
+  line-height: 24px;
+  color: var(--ct-fg);
+}
+
+.ct-hero__result-label {
+  font-family: var(--ct-sans);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ct-muted-2);
+}
+
+.ct-hero__result-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.ct-hero__result-crosslink {
+  font-family: var(--ct-sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ct-muted);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.ct-hero__result-crosslink:hover {
+  color: var(--ct-fg);
+}
+
+/* -- Post-output signup card -----------------------------------------------
+   Inline and beneath the output, never an overlay on first output. The six
+   people who reached the old wall generated 61 abandonment events between
+   them and none of them signed up. */
+
+.ct-hero__save-card {
+  margin-top: 20px;
+  padding: 22px 24px;
+  border: 1px solid var(--ct-line);
+  border-radius: 18px;
+  background: var(--ct-eyebrow-bg);
+  text-align: center;
+}
+
+.ct-hero__save-card h3 {
+  margin: 0 0 6px;
+  font-family: var(--ct-sans);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ct-fg);
+}
+
+.ct-hero__save-card p {
+  margin: 0 0 16px;
+  font-family: var(--ct-sans);
+  font-size: 14.5px;
+  line-height: 22px;
+  color: var(--ct-muted);
+}
+
+.ct-hero__save-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px 20px;
+}
+
+.ct-hero__save-card-dismiss {
+  background: none;
+  border: 0;
+  padding: 4px 8px;
+  font-family: var(--ct-sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ct-muted);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+.ct-hero__save-card-dismiss:hover {
+  color: var(--ct-fg);
+}
+
+@media (max-width: 720px) {
+  .ct-hero__idea-submit {
+    width: 100%;
+  }
+
+  .ct-hero__result-card {
+    padding: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ct-hero__idea-field,
+  .ct-hero__idea-helper {
+    transition: none;
+  }
+}
