@@ -29,6 +29,23 @@
   --ct-idea-glow-border: rgba(37, 99, 235, 0.38);
   --ct-idea-send-off: rgba(15, 23, 42, 0.07);
   --ct-idea-mode-on-bg: #ffffff;
+
+  /* Hero CTA - graphite/silver, light theme */
+  --ct-cta-grad: linear-gradient(
+    115deg,
+    #1a1d22 0%,
+    #2f353d 20%,
+    #626b77 38%,
+    #2f353d 56%,
+    #14171c 80%,
+    #262b31 100%
+  );
+  --ct-cta-fg: #ffffff;
+  --ct-cta-rim: rgba(255, 255, 255, 0.22);
+  --ct-cta-rim-hover: rgba(255, 255, 255, 0.38);
+  --ct-cta-shadow: 0 8px 22px -10px rgba(15, 23, 42, 0.75);
+  --ct-cta-shadow-hover: 0 16px 34px -12px rgba(15, 23, 42, 0.9);
+  --ct-cta-sheen: rgba(255, 255, 255, 0.4);
   --ct-idea-shadow: 0 30px 80px -40px rgba(15, 23, 42, 0.45);
   --ct-idea-shadow-hover:
     0 36px 90px -40px rgba(15, 23, 42, 0.5),
@@ -91,6 +108,25 @@
   --ct-idea-glow-border: rgba(90, 162, 251, 0.42);
   --ct-idea-send-off: rgba(255, 255, 255, 0.08);
   --ct-idea-mode-on-bg: rgba(255, 255, 255, 0.13);
+
+  /* Hero CTA - graphite/silver, dark theme */
+  --ct-cta-grad: linear-gradient(
+    115deg,
+    #2b3037 0%,
+    #434a54 20%,
+    #6b7480 38%,
+    #434a54 56%,
+    #23272d 80%,
+    #363c44 100%
+  );
+  --ct-cta-fg: #ffffff;
+  --ct-cta-rim: rgba(255, 255, 255, 0.26);
+  --ct-cta-rim-hover: rgba(255, 255, 255, 0.46);
+  --ct-cta-shadow: 0 8px 22px -10px rgba(0, 0, 0, 0.9);
+  --ct-cta-shadow-hover:
+    0 16px 34px -12px rgba(0, 0, 0, 0.95),
+    0 0 26px -12px rgba(190, 202, 218, 0.55);
+  --ct-cta-sheen: rgba(255, 255, 255, 0.5);
   --ct-idea-shadow: 0 30px 80px -40px rgba(0, 0, 0, 0.85);
   --ct-idea-shadow-hover:
     0 36px 90px -40px rgba(0, 0, 0, 0.9),
@@ -945,11 +981,11 @@
   padding: 12px 20px;
   border: 0;
   border-radius: 12px;
-  /* 220% so the gradient has somewhere to travel on hover. */
-  background: var(--ct-grad-trinity);
+  /* 220% so the sheen has somewhere to travel on hover. */
+  background: var(--ct-cta-grad);
   background-size: 220% 100%;
   background-position: 0% 50%;
-  color: #fff;
+  color: var(--ct-cta-fg);
   font-family: var(--ct-sans);
   font-size: 14.5px;
   font-weight: 700;
@@ -958,8 +994,10 @@
   white-space: nowrap;
   overflow: hidden;
   box-shadow:
-    0 8px 22px -10px rgba(90, 162, 251, 0.7),
-    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+    var(--ct-cta-shadow),
+    0 0 0 1px var(--ct-cta-rim) inset,
+    /* Top-edge catch light - what actually sells it as metal. */
+    0 1px 0 rgba(255, 255, 255, 0.16) inset;
   transition:
     transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 0.24s ease,
@@ -989,7 +1027,7 @@
   background: linear-gradient(
     105deg,
     transparent 30%,
-    rgba(255, 255, 255, 0.42) 50%,
+    var(--ct-cta-sheen) 50%,
     transparent 70%
   );
   transform: translateX(-130%);
@@ -1001,8 +1039,9 @@
   transform: translateY(-2px);
   background-position: 100% 50%;
   box-shadow:
-    0 16px 34px -12px rgba(90, 162, 251, 0.85),
-    0 0 0 1px rgba(255, 255, 255, 0.16) inset;
+    var(--ct-cta-shadow-hover),
+    0 0 0 1px var(--ct-cta-rim-hover) inset,
+    0 1px 0 rgba(255, 255, 255, 0.24) inset;
 }
 
 .ct-hero__idea-send:hover::before {
@@ -1016,7 +1055,7 @@
 
 .ct-hero__idea-send:active {
   transform: translateY(0);
-  box-shadow: 0 6px 16px -10px rgba(90, 162, 251, 0.7);
+  box-shadow: var(--ct-cta-shadow);
 }
 
 .ct-hero__idea-send:focus-visible {
