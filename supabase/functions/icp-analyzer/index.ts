@@ -69,6 +69,17 @@ function validateGuidedInput(input: GuidedInput | null | undefined) {
   return issues;
 }
 
+// Anonymous preview generation is otherwise uncapped: it needs no auth and
+// charges no credits. The signup wall used to sit AFTER generation, so it was
+// never the cost control it appeared to be - removing it costs us nothing, but
+// the path still has to be bounded. Mirrors demo-studio-generator.
+const PREVIEW_RATE_LIMIT_PER_MIN = 5;
+
+function getClientIp(req: Request): string {
+  const forwarded = req.headers.get("x-forwarded-for") || "";
+  return forwarded.split(",")[0].trim() || "unknown";
+}
+
 function validatePayload(payload: Partial<RequestPayload>) {
   const issues: string[] = [];
 
@@ -483,6 +494,28 @@ serve(async (req) => {
     } = { success: true, newBalance: 0 };
     let creditsCharged = false;
     let icpDraftCost = 0;
+
+    if (payload.mode === "preview") {
+      // Fail closed: never generate uncapped if the limiter itself errors.
+      const { error: rateLimitError } = await serviceClient.rpc("assert_rate_limit", {
+        p_key: "icp_preview:" + getClientIp(req),
+        p_user_id: null,
+        p_max_per_minute: PREVIEW_RATE_LIMIT_PER_MIN,
+      });
+      if (rateLimitError) {
+        const rateLimited = /rate_limit_exceeded/i.test(rateLimitError.message || "");
+        return new Response(JSON.stringify({
+          success: false,
+          error: rateLimited
+            ? "You have hit the free draft limit. Wait a minute, or create a free account to keep going."
+            : "ICP drafts are temporarily unavailable. Please try again shortly.",
+          errorCode: rateLimited ? "RATE_LIMITED" : "SERVICE_UNAVAILABLE",
+        }), {
+          status: rateLimited ? 429 : 503,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     if (payload.mode === "save") {
       user = await getUserFromAuth(req);
