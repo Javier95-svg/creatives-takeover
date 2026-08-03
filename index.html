@@ -3,9 +3,6 @@
   <head>
     <script>
       document.documentElement.classList.add("js");
-      if (window.location.pathname === "/" || window.location.pathname === "/index.html") {
-        document.documentElement.classList.add("home-route");
-      }
     </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -144,58 +141,14 @@
     ]
     </script>
     <style>
+      html, body {
+        min-height: 100%;
+        margin: 0;
+        background: #080d18;
+      }
+      #root { min-height: 100vh; }
       .js #seo-fallback {
         display: none;
-      }
-      #homepage-shell { display: none; }
-      .js.home-route:not(.app-mounted) #homepage-shell {
-        position: absolute;
-        inset: 0;
-        z-index: 999;
-        display: block;
-        min-height: 100vh;
-        padding: 24px 28px 64px;
-        overflow: hidden;
-        background:
-          radial-gradient(circle at 20% 15%, rgba(37, 99, 235, .24), transparent 34%),
-          radial-gradient(circle at 78% 78%, rgba(37, 203, 122, .12), transparent 30%),
-          #080d18;
-        color: #f8fafc;
-        font-family: Inter, system-ui, sans-serif;
-      }
-      .prejs-nav {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        max-width: 1220px;
-        margin: 0 auto;
-        padding: 12px 18px;
-        border: 1px solid rgba(255,255,255,.12);
-        border-radius: 24px;
-        background: rgba(15,23,42,.72);
-      }
-      .prejs-brand { color: #fff; font-size: 16px; font-weight: 750; text-decoration: none; }
-      .prejs-signin { color: #dbeafe; font-size: 14px; font-weight: 650; text-decoration: none; }
-      .prejs-hero { max-width: 760px; margin: 48px auto 0; text-align: center; }
-      .prejs-hero h1 { margin: 0; color: #60a5fa; font-size: clamp(48px, 7vw, 82px); line-height: .96; letter-spacing: -.055em; }
-      .prejs-hero h1 span { display: block; margin-top: 4px; color: #fff; }
-      .prejs-hero-copy { max-width: 570px; margin: 24px auto 20px; color: #9fb1cc; font-size: 16px; line-height: 1.55; }
-      .prejs-hero-copy strong { display: block; margin-top: 10px; color: #f8fafc; }
-      .prejs-form { padding: 20px; border: 1px solid rgba(255,255,255,.13); border-radius: 22px; background: rgba(255,255,255,.045); text-align: left; }
-      .prejs-form label { display: block; margin-bottom: 8px; color: #71829d; font-size: 12px; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
-      .prejs-form textarea { box-sizing: border-box; width: 100%; min-height: 54px; border: 0; outline: 0; resize: none; background: transparent; color: #f8fafc; font: 18px/1.5 Inter, system-ui, sans-serif; }
-      .prejs-form textarea::placeholder { color: #71829d; }
-      .prejs-form-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.1); }
-      .prejs-product { color: #9fb1cc; font-size: 13px; font-weight: 650; text-decoration: none; }
-      .prejs-submit { border: 1px solid rgba(165,200,255,.5); border-radius: 12px; padding: 12px 20px; background: #30476d; color: #fff; font: 700 14px Inter, system-ui, sans-serif; cursor: pointer; }
-      @media (max-width: 600px) {
-        .js.home-route:not(.app-mounted) #homepage-shell { padding: 16px 14px 40px; }
-        .prejs-hero { margin-top: 34px; }
-        .prejs-hero h1 { font-size: clamp(42px, 13vw, 56px); }
-        .prejs-hero-copy { margin: 18px auto 16px; font-size: 14px; }
-        .prejs-form-actions { align-items: stretch; flex-direction: column-reverse; }
-        .prejs-submit { width: 100%; }
-        .prejs-product { text-align: center; }
       }
     </style>
   </head>
@@ -275,28 +228,6 @@
         </section>
       </article>
     </main>
-
-    <div id="homepage-shell">
-      <nav class="prejs-nav" aria-label="Primary navigation">
-        <a class="prejs-brand" href="/">Creatives Takeover</a>
-        <a class="prejs-signin" href="/login">Sign in</a>
-      </nav>
-      <main class="prejs-hero">
-        <h1>The Founders' <span>Compass</span></h1>
-        <p class="prejs-hero-copy">
-          Define your ideal customer, prove demand, build your MVP, launch it, and find investment.
-          <strong>No application. No cohort. No equity.</strong>
-        </p>
-        <form class="prejs-form" action="/icp-builder" method="get">
-          <label for="prejs-hero-input">Who is your ideal customer?</label>
-          <textarea id="prejs-hero-input" name="seed" minlength="3" required placeholder="freelance designers who lose track of client revisions"></textarea>
-          <div class="prejs-form-actions">
-            <a class="prejs-product" href="/demo-studio/try">Have a product? Launch a live demo</a>
-            <button class="prejs-submit" type="submit">Define ICP →</button>
-          </div>
-        </form>
-      </main>
-    </div>
 
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

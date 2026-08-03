@@ -30,6 +30,21 @@ const ARTIFACT = {
   },
 };
 
+test('reload keeps a clean background until the real React hero mounts', async ({ page }) => {
+  await page.route('**/src/main.tsx', async (route) => {
+    await new Promise<void>((resolve) => setTimeout(resolve, 1_200));
+    await route.continue();
+  });
+
+  await page.goto('/', { waitUntil: 'commit' });
+  await page.waitForTimeout(250);
+
+  await expect(page.locator('#homepage-shell')).toHaveCount(0);
+  await expect(page.locator('#seo-fallback')).toBeHidden();
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(8, 13, 24)');
+  await expect(page.locator('#hero-idea-input')).toBeVisible();
+});
+
 for (const viewport of [
   { name: 'desktop', width: 1366, height: 768, heroTopPadding: '120px' },
   { name: 'mobile', width: 390, height: 844, heroTopPadding: '96px' },

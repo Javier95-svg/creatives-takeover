@@ -91,14 +91,13 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
     renderedSources.forEach((source) => assert.match(source, copyPattern));
   });
   // CTA labels are asserted in all three rendered sources, not just the component,
-  // so the no-JS shell and the prerendered pages can't drift from the live hero.
+  // so the crawler fallback and prerendered pages can't drift from the live hero.
   //
-  // The hero is now one input rather than two buttons. The no-JS shell and the
-  // prerendered pages cannot render a working textarea, so they carry the same
-  // question and label pointing at /icp-builder, which still resolves and still
-  // renders an ungated first output.
+  // The hero is now one input rather than two buttons. The crawler fallback
+  // carries equivalent links to both output routes without rendering a second
+  // visual homepage that could flash before React mounts.
   // The hero field has two modes, and the question + CTA for each live in
-  // HERO_MODES rather than in the component, so the toggle, the no-JS shell and
+  // HERO_MODES rather than in the component, so the toggle, crawler fallback and
   // the prerendered pages cannot drift apart.
   const heroModes = readFileSync(new URL('../src/lib/heroFunnelRules.ts', import.meta.url), 'utf8');
   const ctaLabels = [/Define ICP/, /Launch a live demo/];
@@ -112,6 +111,8 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
     assert.match(source, /(?:href|action)="\/icp-builder"/);
     assert.match(source, /href="\/demo-studio\/try"/);
   });
+  assert.doesNotMatch(fallback, /id="homepage-shell"/);
+  assert.match(fallback, /html, body \{[\s\S]*background: #080d18/);
   assert.match(prerender, /Rookie[\s\S]*\$0[\s\S]*Clarify/);
   assert.match(prerender, /Starter[\s\S]*\$9[\s\S]*Validate/);
   assert.match(prerender, /Rising[\s\S]*\$29[\s\S]*Build and Launch/);

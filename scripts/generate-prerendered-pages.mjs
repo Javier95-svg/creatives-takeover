@@ -324,9 +324,9 @@ function buildOgImage(routeConfig) {
   return `${BASE_URL}/api/og?${params.toString()}`.replace(/&/g, "&amp;");
 }
 
-// The template owns a small route-gated homepage shell for first paint.
-// Inner prerendered routes keep it hidden because only `/` receives the
-// home-route class; route-specific crawler content remains in #seo-fallback.
+// Route-specific crawler content remains in #seo-fallback. The browser does
+// not render a second visual shell before React because that causes a visible
+// hydration flash when its simplified markup is replaced by the real app.
 
 function renderRoute(template, routeConfig) {
   const canonical = `${BASE_URL}${routeConfig.path}`;

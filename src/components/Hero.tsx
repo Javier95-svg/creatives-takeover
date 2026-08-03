@@ -114,15 +114,7 @@ const Hero = ({
   const [isAudienceDialogOpen, setIsAudienceDialogOpen] = useState(false);
   const [hasOpenedAudienceDialog, setHasOpenedAudienceDialog] = useState(false);
   const resumeTokenFromUrl = new URLSearchParams(location.search).get("resume");
-  const [ideaText, setIdeaText] = useState(() => {
-    try {
-      const transferred = window.sessionStorage.getItem("ct_prejs_hero_seed") || "";
-      window.sessionStorage.removeItem("ct_prejs_hero_seed");
-      return transferred;
-    } catch {
-      return "";
-    }
-  });
+  const [ideaText, setIdeaText] = useState("");
   const [heroMode, setHeroMode] = useState<HeroMode>(DEFAULT_HERO_MODE);
   // The description generation is actually running against - held separately
   // from ideaText so editing the field mid-generation doesn't restart it.
