@@ -112,7 +112,8 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
     assert.match(source, /href="\/demo-studio\/try"/);
   });
   assert.doesNotMatch(fallback, /id="homepage-shell"/);
-  assert.match(fallback, /html, body \{[\s\S]*background: #080d18/);
+  assert.doesNotMatch(fallback, /background: #080d18/);
+  assert.match(fallback, /\.dark\.home-route body \{[\s\S]*linear-gradient\(145deg, #111827/);
   assert.match(prerender, /Rookie[\s\S]*\$0[\s\S]*Clarify/);
   assert.match(prerender, /Starter[\s\S]*\$9[\s\S]*Validate/);
   assert.match(prerender, /Rising[\s\S]*\$29[\s\S]*Build and Launch/);

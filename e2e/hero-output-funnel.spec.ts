@@ -41,7 +41,9 @@ test('reload keeps a clean background until the real React hero mounts', async (
 
   await expect(page.locator('#homepage-shell')).toHaveCount(0);
   await expect(page.locator('#seo-fallback')).toBeHidden();
-  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(8, 13, 24)');
+  const preloadBackground = await page.locator('body').evaluate((element) => getComputedStyle(element).backgroundImage);
+  expect(preloadBackground).toContain('radial-gradient');
+  expect(preloadBackground).toContain('rgb(17, 24, 39)');
   await expect(page.locator('#hero-idea-input')).toBeVisible();
 });
 
