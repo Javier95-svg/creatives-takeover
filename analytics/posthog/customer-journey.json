@@ -388,6 +388,42 @@
       "sourceFile": "src/lib/analytics.ts",
       "requiredProperties": ["operating_loop", "activation_source"]
     },
+    "first_customer_sprint_viewed": {
+      "stage": "activation", "owner": "product", "source": "client",
+      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "status"]
+    },
+    "first_customer_sprint_started": {
+      "stage": "activation", "owner": "product", "source": "client",
+      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "status", "business_model"]
+    },
+    "first_customer_sprint_message_selected": {
+      "stage": "value", "owner": "product", "source": "client",
+      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "message_variant_key"]
+    },
+    "first_customer_sprint_mentor_brief_created": {
+      "stage": "value", "owner": "product", "source": "client",
+      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "attached_count"]
+    },
+    "first_customer_sprint_mentor_call_booked": {
+      "stage": "value", "owner": "product", "source": "client",
+      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "mentor_id", "discovery_call_id"]
+    },
+    "first_customer_sprint_outreach_target_reached": {
+      "stage": "evidence", "owner": "product", "source": "client",
+      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "outreach_count"]
+    },
+    "first_customer_sprint_first_conversation": {
+      "stage": "evidence", "owner": "product", "source": "client",
+      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "conversation_count"]
+    },
+    "first_customer_sprint_completed": {
+      "stage": "value", "owner": "product", "source": "client",
+      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "decision_category", "outreach_count", "conversation_count"]
+    },
+    "first_customer_sprint_abandoned": {
+      "stage": "retention", "owner": "product", "source": "client",
+      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "status", "decision_category"]
+    },
     "generation_failed": {
       "stage": "reliability",
       "owner": "engineering",
@@ -472,6 +508,18 @@
         "cycle_loop_exited",
         "subscription_started"
       ]
+    },
+    {
+      "key": "first_customer_sprint_completion",
+      "name": "First Customer Sprint completion",
+      "windowDays": 45,
+      "steps": [
+        "first_customer_sprint_viewed",
+        "first_customer_sprint_started",
+        "first_customer_sprint_message_selected",
+        "first_customer_sprint_first_conversation",
+        "first_customer_sprint_completed"
+      ]
     }
   ],
   "cohorts": [
@@ -549,6 +597,9 @@
         "pmf_feedback_loop",
         "pmf_evidence_to_action",
         "founder_cycle_external_value",
+        "first_customer_sprint_completion",
+        "first_customer_sprint_mentor_call_booked",
+        "first_customer_sprint_outreach_target_reached",
         "customer_evidence_recorded",
         "costly_commitment_recorded",
         "activation_returned_day_2",

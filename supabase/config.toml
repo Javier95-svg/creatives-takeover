@@ -259,3 +259,7 @@ verify_jwt = false
 
 [functions.web-search]
 verify_jwt = false
+
+# Invite-only founder sprint message generation; ownership is re-checked by RLS.
+[functions.first-customer-sprint-assistant]
+verify_jwt = true

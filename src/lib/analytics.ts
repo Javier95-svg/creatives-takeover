@@ -1085,6 +1085,32 @@ export const trackRaiseTrackActivated = (properties: {
   activation_source: 'onboarding' | 'settings';
 }) => captureEvent('raise_track_activated', properties);
 
+export type FirstCustomerSprintEvent =
+  | 'first_customer_sprint_viewed'
+  | 'first_customer_sprint_started'
+  | 'first_customer_sprint_message_selected'
+  | 'first_customer_sprint_mentor_brief_created'
+  | 'first_customer_sprint_mentor_call_booked'
+  | 'first_customer_sprint_outreach_target_reached'
+  | 'first_customer_sprint_first_conversation'
+  | 'first_customer_sprint_completed'
+  | 'first_customer_sprint_abandoned';
+
+// Only operational dimensions are accepted here. Do not add message bodies,
+// contact names, URLs, mentor brief text, or founder notes.
+export const trackFirstCustomerSprint = (event: FirstCustomerSprintEvent, properties: {
+  sprint_id: string;
+  status?: string;
+  business_model?: string | null;
+  attached_count?: number;
+  outreach_count?: number;
+  conversation_count?: number;
+  message_variant_key?: string;
+  decision_category?: string;
+  mentor_id?: string;
+  discovery_call_id?: string;
+}) => captureEvent(event, properties);
+
 export const normalizePlanId = (planLike?: string | null): PlanId => {
   const normalized = (planLike || '').trim().toLowerCase();
   if (normalized === 'starter') return 'STARTER';

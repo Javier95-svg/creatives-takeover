@@ -76,7 +76,21 @@ export function useFounderCycle() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const posthogFlag = useFeatureFlagEnabled('founder-execution-cycle-v1');
-  const rolloutEnabled = isFounderCycleRolloutEnabled(user?.id, posthogFlag);
+  const betaQuery = useQuery({
+    queryKey: ['founder-cycle-beta-access', user?.id],
+    enabled: Boolean(user?.id),
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data } = await client
+        .from('founder_cycle_state')
+        .select('beta_cohort')
+        .eq('user_id', user!.id)
+        .maybeSingle();
+      return data?.beta_cohort === true;
+    },
+  });
+  const betaOverride = import.meta.env.VITE_FOUNDER_CYCLE_V1 !== 'false' && betaQuery.data === true;
+  const rolloutEnabled = betaOverride || isFounderCycleRolloutEnabled(user?.id, posthogFlag);
 
   const query = useQuery({
     queryKey: founderCycleQueryKey(user?.id),

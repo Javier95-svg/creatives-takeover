@@ -8,12 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useFounderCycle } from '@/hooks/useFounderCycle';
+import { useFirstCustomerSprint } from '@/hooks/useFirstCustomerSprint';
 import { loopProgress } from '@/lib/founderCycle';
 import { trackCyclePrimaryActionStarted } from '@/lib/analytics';
 import FounderCycleActionFeedback from '@/components/founder-cycle/FounderCycleActionFeedback';
 
 export default function FounderCycleDashboardPanel({ fallback }: { fallback: ReactNode }) {
   const cycle = useFounderCycle();
+  const firstCustomerSprint = useFirstCustomerSprint();
   const snapshot = cycle.snapshot;
   if (!cycle.showCycle || !snapshot) return <>{fallback}</>;
   const progress = loopProgress(snapshot.selectedLoop, snapshot.evidence);
@@ -72,6 +74,15 @@ export default function FounderCycleDashboardPanel({ fallback }: { fallback: Rea
         <Button asChild variant="outline" size="sm" className="mt-4">
           <Link to="/bizmap-ai">Open the full execution cycle</Link>
         </Button>
+        {firstCustomerSprint.enabled && firstCustomerSprint.enrolled ? (
+          <div className="mt-4 flex flex-col gap-3 rounded-xl border border-primary/25 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold">30-day First Customer Sprint</p>
+              <p className="text-xs text-muted-foreground">20 prospects, 10 manual messages, one mentor checkpoint, and customer evidence.</p>
+            </div>
+            <Button asChild size="sm"><Link to="/first-customer-sprint">{firstCustomerSprint.snapshot?.sprint ? 'Continue sprint' : 'Start sprint'}<ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
+          </div>
+        ) : null}
         <FounderCycleActionFeedback
           actionKey={snapshot.primaryAction.key}
           className="mt-2 justify-end"

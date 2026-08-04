@@ -33,6 +33,8 @@ import {
   trackCycleLoopExited,
   trackCustomerEvidenceRecorded,
 } from '@/lib/analytics';
+import { personalizeSprintMessage } from '@/lib/firstCustomerSprint';
+import type { FirstCustomerMessageVariant, FirstCustomerMessageVariantKey } from '@/types/firstCustomerSprint';
 
 interface FounderCustomerContact {
   id: string;
@@ -82,7 +84,16 @@ function outreachDraft(contact: FounderCustomerContact) {
   return `Hi ${contact.display_name}, I noticed your work${context}. I am speaking with a small number of people dealing with this problem and I am not trying to sell you anything on the first call. Would you be open to a 20-minute conversation about how you handle it today?`;
 }
 
-export default function CustomerEvidenceWorkspace() {
+export interface CustomerEvidenceSprintContext {
+  sprintId: string;
+  contactIds: string[];
+  messageVariants: FirstCustomerMessageVariant[];
+  selectedMessageKey: FirstCustomerMessageVariantKey | null;
+  onContactAttached: (contactId: string) => Promise<unknown>;
+  onEvidenceRecorded?: () => void | Promise<void>;
+}
+
+export default function CustomerEvidenceWorkspace({ sprintContext }: { sprintContext?: CustomerEvidenceSprintContext }) {
   const { user } = useAuth();
   const cycle = useFounderCycle();
   const queryClient = useQueryClient();
@@ -107,7 +118,12 @@ export default function CustomerEvidenceWorkspace() {
     },
   });
 
-  const contacts = useMemo(() => contactsQuery.data ?? [], [contactsQuery.data]);
+  const contacts = useMemo(() => {
+    const all = contactsQuery.data ?? [];
+    if (!sprintContext) return all;
+    const attached = new Set(sprintContext.contactIds);
+    return all.filter((contact) => attached.has(contact.id));
+  }, [contactsQuery.data, sprintContext]);
   const activeContacts = useMemo(
     () => contacts.filter((contact) => contact.stage !== 'lost'),
     [contacts],
@@ -118,6 +134,18 @@ export default function CustomerEvidenceWorkspace() {
       queryClient.invalidateQueries({ queryKey: ['founder-customer-contacts', user?.id] }),
       cycle.refresh(),
     ]);
+    await sprintContext?.onEvidenceRecorded?.();
+  };
+
+  const sprintMetadata = (messageVariantKey?: string | null) => sprintContext ? {
+    sprintId: sprintContext.sprintId,
+    messageVariantKey: messageVariantKey ?? sprintContext.selectedMessageKey,
+  } : {};
+
+  const messageFor = (contact: FounderCustomerContact) => {
+    if (!sprintContext?.selectedMessageKey) return outreachDraft(contact);
+    const variant = sprintContext.messageVariants.find((item) => item.key === sprintContext.selectedMessageKey);
+    return variant ? personalizeSprintMessage(variant.body, contact) : outreachDraft(contact);
   };
 
   const run = async (key: string, action: () => Promise<void>) => {
@@ -137,7 +165,7 @@ export default function CustomerEvidenceWorkspace() {
       toast.error('Add a prospect name first.');
       return;
     }
-    const { error } = await client.rpc('upsert_founder_customer_contact_v1', {
+    const { data, error } = await client.rpc('upsert_founder_customer_contact_v1', {
       p_display_name: input.displayName,
       p_company: input.company || null,
       p_role: input.role || null,
@@ -150,6 +178,8 @@ export default function CustomerEvidenceWorkspace() {
         : operationKey('manual-contact'),
     });
     if (error) throw error;
+    const created = Array.isArray(data) ? data[0] : data;
+    if (sprintContext && created?.id) await sprintContext.onContactAttached(created.id);
     trackCustomerEvidenceRecorded({
       loop: cycle.snapshot?.selectedLoop ?? 'PROVE',
       evidence_type: 'prospect_added',
@@ -248,7 +278,7 @@ export default function CustomerEvidenceWorkspace() {
       p_verification_mode: mode,
       p_amount: null,
       p_currency: null,
-      p_metadata: {},
+      p_metadata: sprintMetadata(),
       p_idempotency_key: operationKey(`contact-${contact.id}-${eventType}`),
     });
     if (error) throw error;
@@ -285,6 +315,7 @@ export default function CustomerEvidenceWorkspace() {
         sourceEntityType: 'founder_customer_contact',
         sourceEntityId: contact.id,
         verificationMode: 'customer_action',
+        metadata: sprintMetadata(),
         idempotencyKey: operationKey(`contact-${contact.id}-interview-completed`),
       });
       logAnalytics('interview_completed', contact.source, 'customer_action');
@@ -299,13 +330,14 @@ export default function CustomerEvidenceWorkspace() {
       return;
     }
     void run(`${contact.id}:copy`, async () => {
-      await navigator.clipboard.writeText(outreachDraft(contact));
+      await navigator.clipboard.writeText(messageFor(contact));
       await cycle.recordEvidence({
         eventType: 'outreach_prepared',
         contactId: contact.id,
         sourceEntityType: 'founder_customer_contact',
         sourceEntityId: contact.id,
         verificationMode: 'founder_reported',
+        metadata: sprintMetadata(sprintContext?.selectedMessageKey),
         idempotencyKey: operationKey(`contact-${contact.id}-outreach-prepared`),
       });
       logAnalytics('outreach_prepared', contact.source, 'founder_reported');
@@ -319,8 +351,8 @@ export default function CustomerEvidenceWorkspace() {
     <section id="customer-evidence" className="scroll-mt-28 space-y-5 rounded-2xl border border-primary/20 bg-card/80 p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Badge className="mb-2 bg-primary/10 text-primary">Assisted first-customer loop</Badge>
-          <h2 className="text-2xl font-semibold">Customer evidence pipeline</h2>
+          <Badge className="mb-2 bg-primary/10 text-primary">{sprintContext ? 'Sprint execution' : 'Assisted first-customer loop'}</Badge>
+          <h2 className="text-2xl font-semibold">{sprintContext ? 'Sprint outreach and evidence' : 'Customer evidence pipeline'}</h2>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
             Keep named prospects, approved outreach, replies, conversations, commitments, and customers in one place. Sending remains manual.
           </p>
@@ -443,7 +475,7 @@ export default function CustomerEvidenceWorkspace() {
 
               {draftOpen ? (
                 <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
-                  <Textarea readOnly value={outreachDraft(contact)} aria-label={`Outreach message for ${contact.display_name}`} />
+                  <Textarea readOnly value={messageFor(contact)} aria-label={`Outreach message for ${contact.display_name}`} />
                   <label className="mt-3 flex items-start gap-2 text-sm">
                     <input
                       className="mt-1"

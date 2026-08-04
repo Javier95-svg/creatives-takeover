@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -18,9 +18,19 @@ import {
   openDeferredExternalTab,
 } from "@/services/discoveryCallService";
 import { createIdempotencyKey } from "@/lib/idempotency";
+import { supabase } from '@/integrations/supabase/client';
+import { isFirstCustomerSprintSnapshot } from '@/lib/firstCustomerSprint';
+import { trackFirstCustomerSprint } from '@/lib/analytics';
+import type { FirstCustomerSprint } from '@/types/firstCustomerSprint';
+
+// Additive sprint RPCs are intentionally isolated from generated types until deployment.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const client = supabase as any;
 
 const MentorBookingPage = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const requestedSprintId = searchParams.get('sprint');
   const navigate = useNavigate();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { openUpgradePrompt } = useUpgradePrompt();
@@ -32,12 +42,40 @@ const MentorBookingPage = () => {
   const [pendingCallId, setPendingCallId] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  const [linkedSprint, setLinkedSprint] = useState<FirstCustomerSprint | null>(null);
+  const [sprintValidationLoading, setSprintValidationLoading] = useState(Boolean(requestedSprintId));
+
+  const bookingReturnPath = id
+    ? `/mentorship/book/${id}${requestedSprintId ? `?sprint=${encodeURIComponent(requestedSprintId)}` : ''}`
+    : '/mentorship';
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      navigate(`/signup?source=book-discovery-call&return=${encodeURIComponent(id ? `/mentorship/book/${id}` : "/mentorship")}`);
+      navigate(`/signup?source=book-discovery-call&return=${encodeURIComponent(bookingReturnPath)}`);
     }
-  }, [isAuthenticated, authLoading, navigate, id]);
+  }, [isAuthenticated, authLoading, navigate, bookingReturnPath]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !requestedSprintId) {
+      setLinkedSprint(null);
+      setSprintValidationLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setSprintValidationLoading(true);
+    void client.rpc('get_first_customer_sprint_snapshot_v1', { p_sprint_id: requestedSprintId })
+      .then(({ data, error }: { data: unknown; error: { message?: string } | null }) => {
+        if (cancelled) return;
+        if (!error && isFirstCustomerSprintSnapshot(data) && data.sprint?.id === requestedSprintId && data.sprint.status !== 'completed') {
+          setLinkedSprint(data.sprint);
+        } else {
+          // Invalid, foreign, or completed sprint IDs deliberately degrade to ordinary booking.
+          setLinkedSprint(null);
+        }
+      })
+      .finally(() => { if (!cancelled) setSprintValidationLoading(false); });
+    return () => { cancelled = true; };
+  }, [isAuthenticated, requestedSprintId]);
 
   useEffect(() => {
     if (id && isAuthenticated) {
@@ -56,7 +94,7 @@ const MentorBookingPage = () => {
 
   const handleProceedToPayment = async () => {
     if (!mentor || !user) {
-      navigate(`/signup?source=book-discovery-call&return=${encodeURIComponent(id ? `/mentorship/book/${id}` : "/mentorship")}`);
+      navigate(`/signup?source=book-discovery-call&return=${encodeURIComponent(bookingReturnPath)}`);
       return;
     }
 
@@ -78,9 +116,13 @@ const MentorBookingPage = () => {
       const bookingIntent = await createDiscoveryCallIntent({
         mentorId: mentor.id,
         mentorName: mentor.name,
-        source: "mentor_booking_page",
+        source: linkedSprint ? "first_customer_sprint" : "mentor_booking_page",
         idempotencyKey: createIdempotencyKey(`mentor-booking-page-${mentor.id}`),
-        metadata: { mentor_id: mentor.id, mentor_name: mentor.name },
+        metadata: {
+          mentor_id: mentor.id,
+          mentor_name: mentor.name,
+          ...(linkedSprint ? { sprintId: linkedSprint.id, reviewType: 'first_customer' } : {}),
+        },
       });
 
       if (!bookingIntent.success || !bookingIntent.callId) {
@@ -118,6 +160,23 @@ const MentorBookingPage = () => {
       }
 
       bookingTab.location.href = buildDiscoveryCallRedirectUrl(bookingUrl, bookingIntent.callId);
+
+      if (linkedSprint) {
+        const { error: sprintLinkError } = await client.rpc('link_first_customer_sprint_call_v1', {
+          p_sprint_id: linkedSprint.id,
+          p_discovery_call_id: bookingIntent.callId,
+          p_mentor_id: mentor.id,
+          p_mentor_brief_snapshot: linkedSprint.mentor_brief_snapshot,
+        });
+        if (!sprintLinkError) {
+          trackFirstCustomerSprint('first_customer_sprint_mentor_call_booked', {
+            sprint_id: linkedSprint.id, status: linkedSprint.status, mentor_id: mentor.id,
+            discovery_call_id: bookingIntent.callId,
+          });
+        } else {
+          console.warn('Booked call could not be linked to the sprint; ordinary booking continues', sprintLinkError);
+        }
+      }
 
       // Charge the call now — the moment the founder commits to booking — instead
       // of relying on them returning to click "I've completed my booking" (which
@@ -190,7 +249,7 @@ const MentorBookingPage = () => {
     }
   };
 
-  if (authLoading || mentorLoading) {
+  if (authLoading || mentorLoading || sprintValidationLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -245,7 +304,7 @@ const MentorBookingPage = () => {
                   {/* Mentor Info */}
                   <div className="border rounded-lg p-4">
                     <h3 className="font-semibold mb-2">Mentor: {mentor.name}</h3>
-                    <p className="text-sm text-muted-foreground">Discovery Call</p>
+                      <p className="text-sm text-muted-foreground">{linkedSprint ? 'First Customer Sprint checkpoint' : 'Discovery Call'}</p>
                   </div>
 
                   {confirmed ? (
@@ -255,7 +314,7 @@ const MentorBookingPage = () => {
                         Your discovery call with {mentor.name} is confirmed. You can manage it from your dashboard.
                       </p>
                       <Button asChild variant="outline" className="mt-4">
-                        <Link to="/dashboard">Go to Dashboard</Link>
+                        <Link to={linkedSprint ? '/first-customer-sprint#mentor-checkpoint' : '/dashboard'}>{linkedSprint ? 'Return to sprint' : 'Go to Dashboard'}</Link>
                       </Button>
                     </div>
                   ) : !pendingCallId ? (
@@ -327,4 +386,3 @@ const MentorBookingPage = () => {
 };
 
 export default MentorBookingPage;
-

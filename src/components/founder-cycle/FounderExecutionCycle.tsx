@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useFounderCycle } from '@/hooks/useFounderCycle';
+import { useFirstCustomerSprint } from '@/hooks/useFirstCustomerSprint';
 import {
   FOUNDER_LOOPS,
   FOUNDER_LOOP_DEFINITIONS,
@@ -38,6 +39,7 @@ const LOOP_ICON = {
 
 export default function FounderExecutionCycle({ embedded = false }: { embedded?: boolean }) {
   const cycle = useFounderCycle();
+  const firstCustomerSprint = useFirstCustomerSprint();
   const snapshot = cycle.snapshot;
 
   if (!cycle.showCycle || !snapshot) return null;
@@ -135,6 +137,19 @@ export default function FounderExecutionCycle({ embedded = false }: { embedded?:
           </div>
         </CardContent>
       </Card>
+
+      {firstCustomerSprint.enabled && firstCustomerSprint.enrolled ? (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <Badge variant="outline">Invite-only increment</Badge>
+              <h2 className="mt-2 text-xl font-semibold">First Customer Sprint</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Turn the SELL loop into a focused 30-day target, messaging, mentor, and evidence cycle.</p>
+            </div>
+            <Button asChild><Link to="/first-customer-sprint">{firstCustomerSprint.snapshot?.sprint ? 'Continue sprint' : 'Start sprint'}<ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <section className="grid gap-4 lg:grid-cols-3">
         {FOUNDER_LOOPS.map((loop) => {

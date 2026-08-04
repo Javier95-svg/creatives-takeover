@@ -39,6 +39,7 @@ export default defineConfig({
       VITE_SUPABASE_KEY: 'dummy-anon-key-for-smoke',
       VITE_SUPABASE_PUBLISHABLE_KEY: 'dummy-anon-key-for-smoke',
       VITE_AMPLITUDE_API_KEY: 'dummy-amplitude-key-for-smoke',
+      VITE_FIRST_CUSTOMER_SPRINT_V1: 'true',
     },
   },
 });

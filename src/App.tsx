@@ -61,6 +61,7 @@ const IPPolicy = lazy(() => import("./pages/IPPolicy"));
 const Signup = lazy(() => import("./pages/Signup"));
 const BizMapJourneyHubPage = lazy(() => import("./pages/BizMapJourneyHubPage"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
+const FirstCustomerSprintPage = lazy(() => import("./pages/FirstCustomerSprintPage"));
 
 const Login = lazy(() => import("./pages/Login"));
 const Auth = lazy(() => import("./pages/Auth"));
@@ -249,6 +250,7 @@ function App() {
                         <Route path="/mentorship/progress" element={<ProgressCommunityPage />} />
                         <Route path="/mentorship/mentors/:id" element={<MentorProfilePage />} />
                         <Route path="/mentorship/book/:id" element={<MentorBookingPage />} />
+                        <Route path="/first-customer-sprint" element={<FirstCustomerSprintPage />} />
                         <Route path="/marketplace" element={<ServiceMarketplaceHub />} />
                         <Route path="/marketplace/admin/new" element={<AdminRoute><AdminServiceEditor /></AdminRoute>} />
                         <Route path="/marketplace/admin/edit/:id" element={<AdminRoute><AdminServiceEditor /></AdminRoute>} />
