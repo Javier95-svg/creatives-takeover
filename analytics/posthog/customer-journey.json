@@ -290,6 +290,34 @@
       "sourceFile": "src/lib/analytics.ts",
       "requiredProperties": ["from_plan", "to_plan", "location"]
     },
+    "checkout_start_failed": {
+      "stage": "monetization",
+      "owner": "revenue",
+      "source": "client",
+      "sourceFile": "src/services/checkoutService.ts",
+      "requiredProperties": ["purchase_type", "purchase_source", "error_code"]
+    },
+    "checkout_session_created": {
+      "stage": "monetization",
+      "owner": "revenue",
+      "source": "server",
+      "sourceFile": "supabase/functions/create-checkout/index.ts",
+      "requiredProperties": ["purchase_type", "purchase_source", "amount_usd", "stripe_session_id"]
+    },
+    "checkout_session_expired": {
+      "stage": "monetization",
+      "owner": "revenue",
+      "source": "server",
+      "sourceFile": "supabase/functions/stripe-webhook/index.ts",
+      "requiredProperties": ["purchase_type", "purchase_source", "stripe_session_id"]
+    },
+    "payment_failed": {
+      "stage": "monetization",
+      "owner": "revenue",
+      "source": "server",
+      "sourceFile": "supabase/functions/stripe-webhook/index.ts",
+      "requiredProperties": ["source_event_type", "failure_code", "amount_usd"]
+    },
     "subscription_started": {
       "stage": "monetization",
       "owner": "revenue",
@@ -388,6 +416,14 @@
       "sourceFile": "src/lib/analytics.ts",
       "requiredProperties": ["operating_loop", "activation_source"]
     },
+    "first_customer_sprint_application_viewed": {
+      "stage": "acquisition", "owner": "product", "source": "client",
+      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["acquisition_source"]
+    },
+    "first_customer_sprint_application_submitted": {
+      "stage": "acquisition", "owner": "product", "source": "client",
+      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["application_id", "acquisition_source", "qualified"]
+    },
     "first_customer_sprint_viewed": {
       "stage": "activation", "owner": "product", "source": "client",
       "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "status"]
@@ -395,6 +431,10 @@
     "first_customer_sprint_started": {
       "stage": "activation", "owner": "product", "source": "client",
       "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "status", "business_model"]
+    },
+    "first_customer_sprint_prospect_target_reached": {
+      "stage": "evidence", "owner": "product", "source": "client",
+      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "attached_count"]
     },
     "first_customer_sprint_message_selected": {
       "stage": "value", "owner": "product", "source": "client",
@@ -404,9 +444,25 @@
       "stage": "value", "owner": "product", "source": "client",
       "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "attached_count"]
     },
-    "first_customer_sprint_mentor_call_booked": {
+    "first_customer_sprint_checkpoint_requested": {
       "stage": "value", "owner": "product", "source": "client",
-      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "mentor_id", "discovery_call_id"]
+      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "mentor_id", "credits_deducted"]
+    },
+    "first_customer_sprint_checkpoint_scheduled": {
+      "stage": "value", "owner": "product", "source": "client",
+      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "status", "credits_deducted"]
+    },
+    "first_customer_sprint_checkpoint_verified": {
+      "stage": "value", "owner": "product", "source": "client",
+      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "status", "credits_deducted"]
+    },
+    "first_customer_sprint_checkpoint_cancelled": {
+      "stage": "retention", "owner": "product", "source": "client",
+      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "status", "credits_deducted"]
+    },
+    "first_customer_sprint_checkpoint_recommendation_recorded": {
+      "stage": "value", "owner": "product", "source": "client",
+      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "decision_category"]
     },
     "first_customer_sprint_outreach_target_reached": {
       "stage": "evidence", "owner": "product", "source": "client",
@@ -419,6 +475,18 @@
     "first_customer_sprint_completed": {
       "stage": "value", "owner": "product", "source": "client",
       "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "decision_category", "outreach_count", "conversation_count"]
+    },
+    "first_customer_sprint_review_submitted": {
+      "stage": "retention", "owner": "product", "source": "client",
+      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "value_score", "primary_value", "primary_friction", "would_recommend"]
+    },
+    "first_customer_sprint_continuation_checkout_started": {
+      "stage": "revenue", "owner": "product", "source": "client",
+      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "pack_id", "price_cents"]
+    },
+    "first_customer_sprint_continuation_purchased": {
+      "stage": "revenue", "owner": "product", "source": "server",
+      "sourceFile": "supabase/functions/stripe-webhook/index.ts", "requiredProperties": ["sprint_id", "pack_id", "price_cents"]
     },
     "first_customer_sprint_abandoned": {
       "stage": "retention", "owner": "product", "source": "client",
@@ -480,9 +548,10 @@
       "steps": [
         "pricing_viewed",
         "upgrade_clicked",
-        "subscription_started",
-        "subscription_payment_received"
-      ]
+        "checkout_session_created",
+        "subscription_started"
+      ],
+      "breakdowns": ["checkout_session_expired", "payment_failed"]
     },
     {
       "key": "pmf_feedback_loop",
@@ -510,15 +579,18 @@
       ]
     },
     {
-      "key": "first_customer_sprint_completion",
-      "name": "First Customer Sprint completion",
+      "key": "first_customer_sprint_demand",
+      "name": "First Customer Sprint demand validation",
       "windowDays": 45,
       "steps": [
-        "first_customer_sprint_viewed",
+        "first_customer_sprint_application_viewed",
+        "first_customer_sprint_application_submitted",
         "first_customer_sprint_started",
-        "first_customer_sprint_message_selected",
+        "first_customer_sprint_prospect_target_reached",
+        "first_customer_sprint_outreach_target_reached",
         "first_customer_sprint_first_conversation",
-        "first_customer_sprint_completed"
+        "first_customer_sprint_completed",
+        "first_customer_sprint_continuation_purchased"
       ]
     }
   ],
@@ -597,8 +669,9 @@
         "pmf_feedback_loop",
         "pmf_evidence_to_action",
         "founder_cycle_external_value",
-        "first_customer_sprint_completion",
-        "first_customer_sprint_mentor_call_booked",
+        "first_customer_sprint_demand",
+        "first_customer_sprint_application_submitted",
+        "first_customer_sprint_checkpoint_requested",
         "first_customer_sprint_outreach_target_reached",
         "customer_evidence_recorded",
         "costly_commitment_recorded",
@@ -617,6 +690,18 @@
         "pmf_survey_response_received"
       ],
       "externalMonitor": "public.analytics_delivery_health_24h"
+    },
+    {
+      "key": "revenue_operations",
+      "name": "Revenue Checkout Operations",
+      "insights": [
+        "monetization",
+        "checkout_session_created",
+        "checkout_session_expired",
+        "payment_failed",
+        "subscription_started"
+      ],
+      "externalMonitor": "public.revenue_checkout_alerts_v1"
     }
   ],
   "alerts": [
@@ -641,6 +726,13 @@
       "view": "public.analytics_delivery_health_24h",
       "condition": "health_status_equals_disabled",
       "severity": "warning"
+    },
+    {
+      "key": "revenue_checkout_health",
+      "system": "supabase",
+      "view": "public.revenue_checkout_alerts_v1",
+      "condition": "row_exists",
+      "severity": "critical"
     }
   ]
 }

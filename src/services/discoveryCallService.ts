@@ -52,7 +52,8 @@ export interface DiscoveryCallBookingItem {
     | 'cancelled_early'
     | 'cancelled_late'
     | 'founder_no_show'
-    | 'mentor_no_show';
+    | 'mentor_no_show'
+    | 'expired';
   scheduledFor: string | null;
   durationMinutes: number;
   meetingUrl: string | null;
@@ -222,44 +223,9 @@ export async function resumePendingDiscoveryCallRedirect() {
     return false;
   }
 
+  // Revenue P0 quarantine: stale pre-auth state must never reopen an external
+  // calendar or manufacture another intent. Clearing it lets auth continue to
+  // the safe mentor marketplace fallback selected by the calling page.
   clearPendingDiscoveryCallRedirect();
-
-  if (!pendingRedirect.mentorId && !pendingRedirect.serviceId) {
-    window.open(pendingRedirect.url, '_blank', 'noopener,noreferrer');
-    return true;
-  }
-
-  if (pendingRedirect.serviceId) {
-    const intent = await createServiceDiscoveryCallIntent({
-      serviceId: pendingRedirect.serviceId,
-      serviceName: pendingRedirect.serviceName,
-      source: pendingRedirect.source || 'post_auth_redirect',
-      metadata: { resumedAfterAuth: true },
-    });
-
-    if (!intent.success || !intent.callId) {
-      return false;
-    }
-
-    window.open(
-      buildDiscoveryCallProviderRedirectUrl(pendingRedirect.url, intent.callId, { medium: 'service_marketplace' }),
-      '_blank',
-      'noopener,noreferrer',
-    );
-    return true;
-  }
-
-  const intent = await createDiscoveryCallIntent({
-    mentorId: pendingRedirect.mentorId!,
-    mentorName: pendingRedirect.mentorName,
-    source: pendingRedirect.source || 'post_auth_redirect',
-    metadata: { resumedAfterAuth: true },
-  });
-
-  if (!intent.success || !intent.callId) {
-    return false;
-  }
-
-  window.open(buildDiscoveryCallProviderRedirectUrl(pendingRedirect.url, intent.callId), '_blank', 'noopener,noreferrer');
-  return true;
+  return false;
 }

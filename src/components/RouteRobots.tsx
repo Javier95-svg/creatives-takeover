@@ -21,6 +21,7 @@ const EXACT_NOINDEX_ROUTES = new Set([
 
 const NOINDEX_PREFIXES = [
   "/admin",
+  "/first-customer-sprint",
   "/auth",
   "/messages",
   "/profile",

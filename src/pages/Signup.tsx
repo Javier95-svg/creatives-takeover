@@ -164,7 +164,7 @@ const Signup = () => {
       try {
         const pendingCheckoutIntent = consumeCheckoutIntent();
         if (pendingCheckoutIntent) {
-          redirectToCheckoutIntent(pendingCheckoutIntent, user);
+          await redirectToCheckoutIntent(pendingCheckoutIntent);
           return;
         }
 
@@ -428,10 +428,16 @@ const Signup = () => {
 
         setIsRedirecting(true);
 
-        setTimeout(() => {
+        setTimeout(async () => {
           const pendingCheckoutIntent = consumeCheckoutIntent();
           if (pendingCheckoutIntent) {
-            redirectToCheckoutIntent(pendingCheckoutIntent, session.user);
+            try {
+              await redirectToCheckoutIntent(pendingCheckoutIntent);
+            } catch (checkoutError) {
+              console.error('Unable to resume checkout after signup:', checkoutError);
+              toast.error('Your account is ready, but checkout could not start. Please retry from Pricing.');
+              navigate('/pricing', { replace: true });
+            }
             return;
           }
 

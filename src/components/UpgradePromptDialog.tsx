@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useCredits } from "@/hooks/useCredits";
-import { useAuth } from "@/contexts/AuthContext";
 import { getNextPlan, normalizePlan, PLAN_SUMMARIES, type Plan } from "@/config/planPermissions";
 import {
   normalizePlanId,
@@ -29,33 +28,22 @@ const TOP_UP_PACKAGES = [
   {
     label: "Starter Pack",
     credits: 20,
-    url: "https://buy.stripe.com/dRm5kE4Gl9Kv8746zF0VO0h",
+    id: "pack_20",
     icon: Zap,
   },
   {
     label: "Boost Pack",
     credits: 40,
-    url: "https://buy.stripe.com/aFa4gAegV8Grafc3nt0VO0i",
+    id: "pack_40",
     icon: Rocket,
   },
   {
     label: "Power Pack",
     credits: 60,
-    url: "https://buy.stripe.com/8x29AUc8N1dZevsgaf0VO0j",
+    id: "pack_60",
     icon: Flame,
   },
 ] as const;
-
-function openTopUp(url: string, email?: string | null, userId?: string) {
-  try {
-    const checkoutUrl = new URL(url);
-    if (email) checkoutUrl.searchParams.set("prefilled_email", email);
-    if (userId) checkoutUrl.searchParams.set("client_reference_id", userId);
-    window.location.assign(checkoutUrl.toString());
-  } catch {
-    window.location.assign(url);
-  }
-}
 
 type UpgradeReason = "credits" | "limit" | "feature";
 
@@ -100,11 +88,10 @@ const UpgradePromptDialog = ({
   onUpgrade,
 }: UpgradePromptDialogProps) => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   // Mounted globally (via UpgradePromptProvider) but only needs the checkout
   // action + the user's plan, never the tiers list — skip the tiers fetch so it
   // doesn't fire subscription_tiers on every route (incl. anonymous ones).
-  const { createCheckout, subscriptionData } = useSubscription({ fetchTiers: false });
+  const { createCheckout, createCreditPackCheckout, subscriptionData } = useSubscription({ fetchTiers: false });
   const { currentTier } = useFeatureGating();
   const { balance } = useCredits();
   const normalizedCurrentTier = normalizePlan(currentTier);
@@ -191,7 +178,7 @@ const UpgradePromptDialog = ({
 
     setIsCheckingOut(true);
     try {
-      await createCheckout(recommendedTier, undefined, "monthly");
+      await createCheckout(recommendedTier, undefined, "monthly", sourceTool ?? 'upgrade_prompt');
       onUpgrade?.();
       onOpenChange(false);
     } catch (err) {
@@ -270,15 +257,16 @@ const UpgradePromptDialog = ({
                   Top Up Credits
                 </p>
                 <div className="grid grid-cols-1 gap-2">
-                  {TOP_UP_PACKAGES.map(({ label, credits, url, icon: Icon }) => (
+                  {TOP_UP_PACKAGES.map(({ label, credits, id, icon: Icon }) => (
                     <button
                       key={label}
                       onClick={() => {
                         if (contextualTrigger) {
                           trackContextualUpgradeCtaClicked({ ...contextualBase, outcome: "credits", context: label });
                         }
-                        handleOpenChange(false);
-                        openTopUp(url, user?.email, user?.id);
+                        void createCreditPackCheckout(id, sourceTool ?? 'upgrade_prompt').then((url) => {
+                          if (url) handleOpenChange(false);
+                        });
                       }}
                       className="flex items-center justify-between rounded-lg border bg-card px-4 py-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors text-left"
                     >

@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MentorCard } from "@/components/mentor-marketplace/MentorCard";
 import { TopFilterBar } from "@/components/mentor-marketplace/TopFilterBar";
 import { MentorFilters } from "@/components/mentor-marketplace/FilterSidebar";
-import { Users, Loader2, Search, GraduationCap, ArrowRight, BookmarkCheck, MessageCircle, Calendar } from "lucide-react";
+import { Users, Loader2, Search, GraduationCap, ArrowRight, BookmarkCheck, MessageCircle } from "lucide-react";
 import { Mentor } from "@/types/mentor";
 import { useMentors } from "@/hooks/useMentors";
 import { useAuth } from "@/contexts/AuthContext";
@@ -242,10 +242,10 @@ const MentorMarketplaceHub = () => {
 
     if (mentorSource === "booked-call") {
       return {
-        icon: Calendar,
-        eyebrow: "Discovery calls",
-        title: "Use this session to book or follow up on one call",
-        description: "Discovery calls are the highest-intent action in the current funnel. Focus on one conversation, not more browsing.",
+        icon: MessageCircle,
+        eyebrow: "Mentor follow-up",
+        title: "Use this session to start or continue one conversation",
+        description: "Focus on a useful mentor exchange instead of more passive browsing.",
       };
     }
 
@@ -263,7 +263,7 @@ const MentorMarketplaceHub = () => {
         icon: BookmarkCheck,
         eyebrow: "First value action",
         title: "Create one mentor relationship before passive browsing",
-        description: "Save one mentor, send one message, or book one call so this session ends with a real return trigger.",
+        description: "Save one mentor or send one message so this session ends with a real return trigger.",
       };
     }
 
@@ -278,10 +278,10 @@ const MentorMarketplaceHub = () => {
 
     if (mentorSource === "onboarding" && activationIntent === "book_call") {
       return {
-        icon: Calendar,
+        icon: MessageCircle,
         eyebrow: "First value action",
-        title: "Book one discovery call before passive browsing",
-        description: "This is the highest-intent action in the current funnel. We are prioritizing call-ready mentors in the list below.",
+        title: "Start one mentor conversation before passive browsing",
+        description: "Your saved onboarding choice now resumes at the measurable Message action.",
       };
     }
 
@@ -374,15 +374,6 @@ const MentorMarketplaceHub = () => {
         const aSaved = savedMentorIds.has(a.id) ? 1 : 0;
         const bSaved = savedMentorIds.has(b.id) ? 1 : 0;
         if (aSaved !== bSaved) return bSaved - aSaved;
-        return 0;
-      });
-    }
-
-    if (mentorSource === "onboarding" && activationIntent === "book_call") {
-      result = result.sort((a, b) => {
-        const aBookable = a.calendly_url ? 1 : 0;
-        const bBookable = b.calendly_url ? 1 : 0;
-        if (aBookable !== bBookable) return bBookable - aBookable;
         return 0;
       });
     }

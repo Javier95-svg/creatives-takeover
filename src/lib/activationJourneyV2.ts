@@ -50,13 +50,14 @@ export const ACTIVATION_CATALOG: Record<ActivationIntent, ActivationCatalogEntry
   unlock_insighta: { intent: 'unlock_insighta', toolKey: 'insighta_test', label: 'Finish your readiness diagnostic', description: 'Restore your answers and generate the complete diagnostic.', output: 'A saved readiness result', route: '/insighta-test?hydrate=1', estimatedMinutes: 5, artifactType: 'insighta_readiness', featureKey: 'insighta_test', steps: ['Restore answers', 'Generate the result', 'Save the result'] },
   save_mentor: { intent: 'save_mentor', toolKey: 'find_mentor', label: 'Save one mentor', description: 'Create a mentor shortlist you can return to.', output: 'A saved mentor', route: '/mentorship?mentorSource=onboarding&activationIntent=save_mentor', estimatedMinutes: 4, artifactType: 'mentor_saved', steps: ['Review matches', 'Choose one mentor', 'Save the mentor'] },
   send_message: { intent: 'send_message', toolKey: 'messages', label: 'Start one conversation', description: 'Send one useful message that can generate a reply.', output: 'An active mentor conversation', route: '/mentorship?mentorSource=onboarding&activationIntent=send_message', estimatedMinutes: 6, artifactType: 'mentor_message', steps: ['Choose a mentor', 'Write an intro', 'Send the message'] },
-  book_call: { intent: 'book_call', toolKey: 'find_mentor', label: 'Book one discovery call', description: 'Schedule focused time with a relevant mentor.', output: 'A booked discovery call', route: '/mentorship?mentorSource=onboarding&activationIntent=book_call', estimatedMinutes: 8, artifactType: 'discovery_call', steps: ['Choose a mentor', 'Pick a time', 'Confirm the call'] },
+  book_call: { intent: 'book_call', toolKey: 'find_mentor', label: 'Message one mentor', description: 'Start a focused conversation with a relevant mentor.', output: 'An active mentor conversation', route: '/mentorship?mentorSource=onboarding&activationIntent=send_message', estimatedMinutes: 6, artifactType: 'mentor_message', steps: ['Choose a mentor', 'Write an intro', 'Send the message'] },
 };
 
 const STAGE_FALLBACK: Record<FounderStageId, ActivationIntent> = { 1: 'run_icp', 2: 'build_demo', 3: 'start_validation', 4: 'build_mvp', 5: 'plan_gtm', 6: 'log_traction', 7: 'analyze_pitch_deck' };
 
 export function normalizeActivationIntent(intent: unknown): ActivationIntent | null {
   if (intent === 'unlock_pitch_deck') return 'analyze_pitch_deck';
+  if (intent === 'book_call') return 'send_message';
   return typeof intent === 'string' && intent in ACTIVATION_CATALOG ? intent as ActivationIntent : null;
 }
 

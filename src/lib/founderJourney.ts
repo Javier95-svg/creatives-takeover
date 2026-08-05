@@ -344,7 +344,7 @@ function buildNextAction(inputs: BuildFounderJourneyInputs): JourneyNextAction |
       unlock_insighta: { key: 'intent:unlock-insighta', label: 'Finish your diagnostic', route: '/insighta-test?hydrate=1' },
       save_mentor: { key: 'intent:save-mentor', label: 'Save one mentor', route: '/mentorship?mentorSource=onboarding' },
       send_message: { key: 'intent:send-message', label: 'Start one conversation', route: '/mentorship?mentorSource=onboarding' },
-      book_call: { key: 'intent:book-call', label: 'Book one discovery call', route: '/mentorship?mentorSource=onboarding' },
+      book_call: { key: 'intent:book-call', label: 'Message one mentor', route: '/mentorship?mentorSource=onboarding&activationIntent=send_message' },
     };
     return firstActionByIntent[inputs.onboardingContext.selectedIntent];
   }

@@ -68,7 +68,6 @@ const features: FeatureCategory[] = [
   {
     category: "Community",
     items: [
-      { feature: "Discovery Calls (Mentorship)", rookie: "Unlimited; 10 credits/booking", starter: "Unlimited; 10 credits/booking", rising: "Unlimited; 10 credits/booking", pro: "Unlimited; 10 credits/booking" },
       { feature: "Find a Co-Founder Posting", rookie: "5 credits/post", starter: "5 credits/post", rising: "5 credits/post", pro: "5 credits/post" },
       { feature: "Find Your Angel", rookie: false, starter: false, rising: false, pro: "Included" },
     ],

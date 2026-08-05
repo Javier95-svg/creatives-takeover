@@ -9,22 +9,16 @@ import { Button } from "@/components/ui/button";
 import { MentorProfile as MentorProfileType } from "@/types/mentor";
 import { useMentors } from "@/hooks/useMentors";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { ArrowLeft, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { completeActivationJourney, trackRetentionEvent } from "@/lib/retentionSystem";
-import { buildDiscoveryCallRedirectUrl, createDiscoveryCallIntent, openDeferredExternalTab } from "@/services/discoveryCallService";
-import { createIdempotencyKey } from "@/lib/idempotency";
 
 const MentorProfilePage = () => {
   const { id, slug: paramSlug } = useParams<{ id?: string; slug?: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
   const { fetchMentorById, fetchMentorBySlug } = useMentors();
-  const { openUpgradePrompt } = useUpgradePrompt();
   const [mentor, setMentor] = useState<MentorProfileType | null>(null);
   const [loadingMentor, setLoadingMentor] = useState(true);
 
@@ -73,89 +67,6 @@ const MentorProfilePage = () => {
       cancelled = true;
     };
   }, [id, slug, location.pathname, fetchMentorById, fetchMentorBySlug]);
-
-  const handleBookClick = async () => {
-    if (!mentor) return;
-
-    const bookingUrl = mentor.calendly_url?.trim();
-
-    if (!bookingUrl) {
-      toast.error("This mentor does not have a booking link configured yet.");
-      return;
-    }
-    const normalizedBookingUrl = /^https?:\/\//i.test(bookingUrl) ? bookingUrl : `https://${bookingUrl}`;
-
-    // Check if user is authenticated
-    if (!isAuthenticated || !user) {
-      navigate(`/signup?source=book-discovery-call&return=${encodeURIComponent(location.pathname)}`);
-      return;
-    }
-
-    const bookingTab = openDeferredExternalTab();
-    if (!bookingTab) {
-      toast.error('Popup blocked. Please allow popups and try again.');
-      return;
-    }
-
-    try {
-      const bookingIntent = await createDiscoveryCallIntent({
-        mentorId: mentor.id,
-        mentorName: mentor.name,
-        source: 'mentor_profile_page',
-        idempotencyKey: createIdempotencyKey(`mentor-profile-discovery-call-${mentor.id}`),
-        metadata: { mentor_id: mentor.id, mentor_name: mentor.name },
-      });
-
-      if (!bookingIntent.success || !bookingIntent.callId) {
-        bookingTab.close();
-
-        if (bookingIntent.errorCode === 'PLAN_UPGRADE_REQUIRED' && bookingIntent.requiredTier) {
-          openUpgradePrompt({
-            reason: 'feature',
-            featureName: 'Discovery Calls',
-            requiredTier: bookingIntent.requiredTier,
-            description: bookingIntent.error,
-          });
-          return;
-        }
-
-        if (bookingIntent.errorCode === 'INSUFFICIENT_CREDITS') {
-          openUpgradePrompt({
-            reason: 'credits',
-            featureName: 'Discovery Calls',
-            requiredCredits: bookingIntent.requiredCredits ?? 10,
-            description: bookingIntent.error,
-          });
-          return;
-        }
-
-        toast.error(bookingIntent.error || 'Unable to process booking. Please try again.');
-        return;
-      }
-
-      bookingTab.location.href = buildDiscoveryCallRedirectUrl(normalizedBookingUrl, bookingIntent.callId);
-
-      await trackRetentionEvent('discovery_call_booked', {
-        user_id: user.id,
-        mentor_id: mentor.id,
-        mentor_name: mentor.name,
-        source: 'mentor_profile_page',
-      });
-      await completeActivationJourney({
-        user,
-        action: 'book_call',
-        mentorId: mentor.id,
-        mentorName: mentor.name,
-        source: 'mentor_profile_page',
-        actionUrl: location.pathname,
-      });
-    } catch (error) {
-      bookingTab.close();
-      console.error('Error creating discovery call intent:', error);
-      toast.error('Unable to process booking. Please try again.');
-    }
-  };
-
 
   if (loadingMentor) {
     return (
@@ -224,7 +135,7 @@ const MentorProfilePage = () => {
                 )}
               </div>
 
-              <MentorProfile mentor={mentor} onBookClick={handleBookClick} />
+              <MentorProfile mentor={mentor} />
             </div>
           </div>
           <Footer />

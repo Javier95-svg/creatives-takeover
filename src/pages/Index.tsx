@@ -14,6 +14,7 @@ import Footer from "@/components/Footer";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
 import { trackLandingViewed } from "@/lib/analytics";
+import FirstCustomerSprintPilotCallout from "@/components/FirstCustomerSprintPilotCallout";
 
 // Lazy load below-the-fold components for better performance.
 // AISpecializationTrends is the only homepage section that uses Recharts; as a
@@ -72,6 +73,7 @@ const Index = () => {
         {isMobile ? (
           <PullToRefresh onRefresh={handleRefresh}>
             <Hero />
+            <FirstCustomerSprintPilotCallout />
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
                 <EntrepreneurProblems />
@@ -106,6 +108,7 @@ const Index = () => {
         ) : (
           <>
             <Hero />
+            <FirstCustomerSprintPilotCallout />
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
                 <EntrepreneurProblems />

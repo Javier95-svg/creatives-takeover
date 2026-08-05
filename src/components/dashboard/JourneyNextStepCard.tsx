@@ -227,7 +227,7 @@ export function JourneyNextStepCard() {
     trackClick("plan");
     setCheckingOut(true);
     try {
-      await createCheckout(recommendation.targetPlan, undefined, "monthly");
+      await createCheckout(recommendation.targetPlan, undefined, "monthly", 'journey_next_step');
     } finally {
       setCheckingOut(false);
     }

@@ -251,7 +251,13 @@ const AuthCallback = () => {
           const destination = returnUrl;
           const pendingCheckoutIntent = consumeCheckoutIntent();
           if (pendingCheckoutIntent) {
-            redirectToCheckoutIntent(pendingCheckoutIntent, session.user);
+            try {
+              await redirectToCheckoutIntent(pendingCheckoutIntent);
+            } catch (checkoutError) {
+              logError('Unable to resume checkout after OAuth callback', checkoutError);
+              toast.error('Checkout could not start. Please retry from Pricing.');
+              navigate('/pricing', { replace: true });
+            }
             return;
           }
 

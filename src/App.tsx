@@ -62,6 +62,8 @@ const Signup = lazy(() => import("./pages/Signup"));
 const BizMapJourneyHubPage = lazy(() => import("./pages/BizMapJourneyHubPage"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const FirstCustomerSprintPage = lazy(() => import("./pages/FirstCustomerSprintPage"));
+const FirstCustomerSprintApplicationPage = lazy(() => import("./pages/FirstCustomerSprintApplicationPage"));
+const AdminFirstCustomerSprintPage = lazy(() => import("./pages/AdminFirstCustomerSprintPage"));
 
 const Login = lazy(() => import("./pages/Login"));
 const Auth = lazy(() => import("./pages/Auth"));
@@ -106,7 +108,6 @@ const AdminCofounderMarketplacePage = lazy(() => import("./pages/community/Admin
 const VCProfilePage = lazy(() => import("./components/vc/VCProfilePage"));
 const AcceleratorProfilePage = lazy(() => import("./components/accelerator/AcceleratorProfilePage"));
 const PitchDeckAnalyzerPage = lazy(() => import("./pages/PitchDeckAnalyzerPage"));
-const MentorBookingPage = lazy(() => import("./pages/community/MentorBookingPage"));
 const MyBookings = lazy(() => import("./pages/community/MyBookings"));
 const AdminMentorEditor = lazy(() => import("./pages/community/AdminMentorEditor"));
 const AdminServiceEditor = lazy(() => import("./pages/community/AdminServiceEditor"));
@@ -249,8 +250,10 @@ function App() {
                         <Route path="/mentorship" element={<CommunityPage />} />
                         <Route path="/mentorship/progress" element={<ProgressCommunityPage />} />
                         <Route path="/mentorship/mentors/:id" element={<MentorProfilePage />} />
-                        <Route path="/mentorship/book/:id" element={<MentorBookingPage />} />
+                        <Route path="/mentorship/book/:id" element={<Navigate to="/mentorship" replace />} />
                         <Route path="/first-customer-sprint" element={<FirstCustomerSprintPage />} />
+                        <Route path="/first-customer-sprint/apply" element={<FirstCustomerSprintApplicationPage />} />
+                        <Route path="/admin/first-customer-sprint" element={<AdminRoute><AdminFirstCustomerSprintPage /></AdminRoute>} />
                         <Route path="/marketplace" element={<ServiceMarketplaceHub />} />
                         <Route path="/marketplace/admin/new" element={<AdminRoute><AdminServiceEditor /></AdminRoute>} />
                         <Route path="/marketplace/admin/edit/:id" element={<AdminRoute><AdminServiceEditor /></AdminRoute>} />

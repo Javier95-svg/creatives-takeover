@@ -1,4 +1,5 @@
 import type {
+  FirstCustomerSprintApplicationInput,
   FirstCustomerDecision,
   FirstCustomerEvidenceCounts,
   FirstCustomerMentorBrief,
@@ -10,6 +11,24 @@ import type {
 } from '@/types/firstCustomerSprint';
 
 export const FIRST_CUSTOMER_TARGETS = { prospects: 20, outreach: 10, conversations: 3, mentorCheckpoints: 1 } as const;
+
+export function qualifyFirstCustomerSprintApplication(
+  input: Pick<FirstCustomerSprintApplicationInput,
+    'businessModel' | 'founderOwnsSales' | 'hasSellableProduct' | 'customerCount'
+    | 'estimatedAnnualCustomerValueUsd' | 'weeklyCapacityHours' | 'canNameTenProspects'
+    | 'recentOutreach'>,
+): { qualified: boolean; reasons: string[] } {
+  const reasons: string[] = [];
+  if (input.businessModel !== 'b2b_saas') reasons.push('The pilot is currently for B2B SaaS companies.');
+  if (!input.founderOwnsSales) reasons.push('The participating founder must personally own sales.');
+  if (!input.hasSellableProduct) reasons.push('A working, sellable product is required.');
+  if (input.customerCount < 0 || input.customerCount > 3) reasons.push('The pilot is for founders with 0–3 customers.');
+  if (input.estimatedAnnualCustomerValueUsd < 1000) reasons.push('Expected annual customer value must be at least $1,000.');
+  if (input.weeklyCapacityHours < 2) reasons.push('At least two weekly hours are required.');
+  if (!input.canNameTenProspects) reasons.push('The founder must be able to name ten plausible prospects.');
+  if (input.recentOutreach !== 'last_30_days') reasons.push('The founder must have attempted outreach within 30 days.');
+  return { qualified: reasons.length === 0, reasons };
+}
 
 export function sprintEndDate(start: Date): Date {
   const end = new Date(start);
@@ -51,13 +70,13 @@ export function personalizeSprintMessage(body: string, contact: Pick<FirstCustom
 
 export function deriveFirstCustomerStep(input: {
   status: FirstCustomerSprint['status']; endsAt: string; selectedMessage: FirstCustomerMessageVariantKey | null;
-  linkedCall: boolean; evidence: FirstCustomerEvidenceCounts; finalDecision?: FirstCustomerDecision | null; finalNotes?: string | null;
+  checkpointComplete: boolean; evidence: FirstCustomerEvidenceCounts; finalDecision?: FirstCustomerDecision | null; finalNotes?: string | null;
 }, now = new Date()): NonNullable<FirstCustomerSprintSnapshot['derivedStep']> {
   if (input.status === 'completed') return 'completed';
   if (now.getTime() > new Date(input.endsAt).getTime()) return 'awaiting_final_review';
   if (input.evidence.attachedProspects < 10) return 'target_list';
   if (!input.selectedMessage) return 'message_preparation';
-  if (!input.linkedCall) return 'mentor_checkpoint';
+  if (!input.checkpointComplete) return 'mentor_checkpoint';
   if (input.evidence.contactedProspects < 10) return 'execution';
   return canCompleteFirstCustomerSprint(input.evidence, input.finalDecision, input.finalNotes) ? 'complete' : 'review';
 }
@@ -93,7 +112,12 @@ export function buildFirstCustomerMentorBrief(
       weeklyCapacityHours: Number(sprint.weekly_capacity_hours ?? 0),
     },
     evidence,
-    contacts: contacts.map(({ display_name, company, role, stage }) => ({ displayName: display_name, company, role, stage })),
+    contacts: contacts.map(({ role, stage }, index) => ({
+      displayName: `Prospect ${index + 1}`,
+      company: null,
+      role,
+      stage,
+    })),
     messageVariants: sprint.message_variants,
     decisionQuestion: sprint.mentor_decision_question ?? 'What should I change before the next ten messages?',
   };

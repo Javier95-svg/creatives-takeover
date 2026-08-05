@@ -14,10 +14,8 @@ import type { Plan } from '@/config/planPermissions';
 export type UpgradeTriggerKey =
   | 'rookie_icp_complete'
   | 'rookie_waitlist_published'
-  | 'rookie_quota_discovery'
   | 'rookie_quota_cofounder'
   | 'starter_stage3_complete'
-  | 'starter_quota_discovery'
   | 'starter_quota_cofounder'
   | 'starter_tool_mvp'
   | 'starter_tool_tech'
@@ -51,13 +49,6 @@ export const UPGRADE_TRIGGER_CONFIGS: Record<UpgradeTriggerKey, UpgradeTriggerCo
     body: 'Starter unlocks PMF Lab so you can score your early traction and decide what to validate next.',
     ctaLabel: 'Validate with Starter',
   },
-  rookie_quota_discovery: {
-    key: 'rookie_quota_discovery',
-    targetPlan: 'starter',
-    headline: 'You need credits for Discovery Calls.',
-    body: 'Discovery Calls are unlimited on every plan and cost 10 credits once the booking is confirmed.',
-    ctaLabel: 'Get more credits',
-  },
   rookie_quota_cofounder: {
     key: 'rookie_quota_cofounder',
     targetPlan: 'starter',
@@ -71,13 +62,6 @@ export const UPGRADE_TRIGGER_CONFIGS: Record<UpgradeTriggerKey, UpgradeTriggerCo
     headline: 'Validation shipped. Time to build.',
     body: 'Rising adds more monthly credits and broader launch access so you can run the full build-and-launch cycle faster.',
     ctaLabel: 'Unlock Rising',
-  },
-  starter_quota_discovery: {
-    key: 'starter_quota_discovery',
-    targetPlan: 'rising',
-    headline: 'You need credits for Discovery Calls.',
-    body: 'Discovery Calls are unlimited on every plan and cost 10 credits once the booking is confirmed.',
-    ctaLabel: 'Get more credits',
   },
   starter_quota_cofounder: {
     key: 'starter_quota_cofounder',
@@ -185,7 +169,7 @@ export interface UseUpgradeTriggerReturn {
  * Example:
  *   const upgradeTrigger = useUpgradeTrigger();
  *   // in a child when the user hits their quota:
- *   upgradeTrigger.fire('rookie_quota_discovery');
+ *   upgradeTrigger.fire('rookie_quota_cofounder');
  */
 export function useUpgradeTrigger(): UseUpgradeTriggerReturn {
   const [activeTrigger, setActiveTrigger] = useState<UpgradeTriggerConfig | null>(null);

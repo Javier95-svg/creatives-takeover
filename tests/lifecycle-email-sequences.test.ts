@@ -25,7 +25,8 @@ test('email-sequences handles cron, events, dedupe, unsubscribe, and dynamic pla
   assert.match(source, /credit_exhausted/);
   assert.match(source, /alreadySent/);
   assert.match(source, /isUnsubscribed/);
-  assert.match(source, /stripe_payment_link_monthly/);
+  assert.match(source, /starterLink: `\$\{appUrl\}\/pricing`/);
+  assert.doesNotMatch(source, /stripe_payment_link|buy\.stripe\.com/i);
   assert.match(source, /Build My ICP Free/);
   assert.match(source, /Starter/);
   assert.match(source, /Unsubscribe/);

@@ -3,7 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MentorProfile as MentorProfileType, getCurrencySymbol } from "@/types/mentor";
-import { Star, Calendar, MessageCircle, CheckCircle2, Users, Linkedin } from "lucide-react";
+import { Star, MessageCircle, CheckCircle2, Users, Linkedin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getCountryFlag } from "@/utils/countryFlags";
@@ -16,10 +16,9 @@ import { clearPendingValueCapture, persistPendingValueCapture, readPendingValueC
 
 interface MentorProfileProps {
   mentor: MentorProfileType;
-  onBookClick?: () => void;
 }
 
-export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
+export const MentorProfile = ({ mentor }: MentorProfileProps) => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
   const { startConversation, resolveMentorUserId } = useMessaging({ autoLoad: false });
@@ -31,7 +30,6 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
   const sessionsCompleted = mentor.total_sessions_completed || 0;
   const saveButton = buildSaveButtonState(mentor.id);
   const SaveButtonIcon = saveButton.icon;
-  const hasBookableCall = Boolean(mentor.calendly_url?.trim()) && mentor.is_active !== false;
   const hasMessagingAccount = Boolean(mentor.user_id?.trim());
   const hasConsumedPendingAction = useRef(false);
   
@@ -332,9 +330,13 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
 
     if (pendingCapture.action === 'book_mentor') {
       clearPendingValueCapture();
-      toast.message(`Continue booking with ${mentor.name}`, {
-        description: 'Your account is ready. Use the discovery call button below to finish the booking flow.',
-      });
+      if (hasMessagingAccount) {
+        void handleSendMessage();
+      } else {
+        toast.message(`Save ${mentor.name} to follow up`, {
+          description: 'Direct messaging is not enabled. You can use the external profile links instead.',
+        });
+      }
     }
   }, [handleSendMessage, hasMessagingAccount, mentor.id, mentor.name, saveButton.saved, saveMentor, user]);
 
@@ -514,26 +516,16 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
 
 	                {/* Action Buttons */}
 	                <div className="flex flex-col items-stretch gap-3 pt-2 sm:flex-row">
-	                  <Button
-	                    onClick={hasBookableCall ? onBookClick : undefined}
-	                    size="default"
-	                    variant={hasBookableCall ? "default" : "outline"}
-	                    className="w-full flex-1 text-sm sm:text-base hover:shadow-md transition-all duration-200"
-	                    disabled={!hasBookableCall}
-                  >
-                    <Calendar className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    {hasBookableCall ? 'Book Discovery Call' : 'Discovery Call Unavailable'}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="default"
-                    onClick={hasMessagingAccount ? handleSendMessage : undefined}
-                    className="w-full flex-1 text-sm sm:text-base hover:shadow-md transition-all duration-200"
-                    disabled={!hasMessagingAccount}
-                  >
-	                    <MessageCircle className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-	                    {hasMessagingAccount ? 'Send Message' : 'Messaging Unavailable'}
-	                  </Button>
+                  {hasMessagingAccount && (
+                    <Button
+                      size="default"
+                      onClick={handleSendMessage}
+                      className="w-full flex-1 text-sm sm:text-base hover:shadow-md transition-all duration-200"
+                    >
+                      <MessageCircle className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      Message
+                    </Button>
+                  )}
 	                  <Button
 	                    variant={saveButton.saved ? "secondary" : "outline"}
 	                    size="default"
@@ -545,15 +537,11 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
 	                    {saveButton.saving ? 'Saving...' : saveButton.label}
 	                  </Button>
 	                </div>
-            {(!hasBookableCall || !hasMessagingAccount) && (
+            {!hasMessagingAccount && (
               <>
-                {/* FIX(dead-click): /mentorship/[user-profile] — unavailable mentor actions now render as explicit secondary states instead of primary-looking buttons that silently fail. */}
+                {/* Keep Save and external profile links available when direct messaging is not enabled. */}
                 <p className="text-xs text-muted-foreground">
-                  {!hasBookableCall && !hasMessagingAccount
-                    ? 'This mentor currently supports profile browsing only. Use the external links above to reach out.'
-                    : !hasBookableCall
-                      ? 'Discovery calls are not enabled for this mentor yet.'
-                      : 'Direct messaging is not enabled for this mentor yet.'}
+                  Direct messaging is not enabled for this mentor. Use the external links above to reach out.
                 </p>
               </>
             )}

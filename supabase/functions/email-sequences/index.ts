@@ -175,7 +175,7 @@ async function alreadySent(userId: string, sequence: SequenceSlug, since?: strin
 }
 
 async function getUserContext(userId: string): Promise<UserContext | null> {
-  const [{ data: profile }, { data: credits }, { data: starterTier }, authResult, { data: mentorRow }] =
+  const [{ data: profile }, { data: credits }, authResult, { data: mentorRow }] =
     await Promise.all([
       supabase
         .from("profiles")
@@ -186,11 +186,6 @@ async function getUserContext(userId: string): Promise<UserContext | null> {
         .from("user_credits")
         .select("balance, monthly_quota, subscription_tier, current_period_start, current_period_end")
         .eq("user_id", userId)
-        .maybeSingle(),
-      supabase
-        .from("subscription_tiers")
-        .select("stripe_payment_link, stripe_payment_link_monthly")
-        .eq("tier_name", "starter")
         .maybeSingle(),
       supabase.auth.admin.getUserById(userId),
       supabase
@@ -222,7 +217,7 @@ async function getUserContext(userId: string): Promise<UserContext | null> {
       current_period_end: null,
     }) as CreditRow,
     appUrl,
-    starterLink: starterTier?.stripe_payment_link_monthly || starterTier?.stripe_payment_link || `${appUrl}/pricing`,
+    starterLink: `${appUrl}/pricing`,
   };
 }
 

@@ -110,7 +110,7 @@ export const StarterDashboardNudge = () => {
 
     setIsCheckingOut(true);
     try {
-      await createCheckout("starter", undefined, "monthly");
+      await createCheckout("starter", undefined, "monthly", 'starter_dashboard_nudge');
     } finally {
       setIsCheckingOut(false);
     }

@@ -16,20 +16,9 @@ import { SocialButtons } from "@/components/social/SocialButtons";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
 import { PinnedPosts } from "@/components/profile/PinnedPosts";
 import { PicturesGallery } from "@/components/profile/PicturesGallery";
-import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { toast } from "sonner";
 import { logError } from "@/lib/logger";
-import { createIdempotencyKey } from "@/lib/idempotency";
 import { getPublicStageLabel, shouldShowPublicStage } from "@/lib/accountabilityPreferences";
-import {
-  buildDiscoveryCallRedirectUrl,
-  createDiscoveryCallIntent,
-  openDeferredExternalTab,
-  storePendingDiscoveryCallRedirect,
-} from "@/services/discoveryCallService";
-
-// Fallback booking link for Samuel Starkman
-const SAMUEL_STARKMAN_BOOKING_URL = 'https://calendly.com/samstarkman/1-on-1-with-sam?month=2025-12';
 
 const PUBLIC_PROFILE_SELECT = [
   'id',
@@ -194,24 +183,6 @@ interface Post {
   comment_count: number;
 }
 
-interface DiscoveryCallMentorConfig {
-  id: string;
-  name: string;
-  calendly_url: string | null;
-  is_active: boolean | null;
-}
-
-// Helper function to check if profile belongs to Samuel Starkman
-const isSamuelStarkmanProfile = (profile: Profile | null): boolean => {
-  if (!profile) return false;
-  const fullName = profile.full_name?.toLowerCase() || '';
-  const username = profile.username?.toLowerCase() || '';
-  // Check if full name contains both "samuel" and "starkman"
-  // Or if username contains either "samuel" or "starkman"
-  return (fullName.includes('samuel') && fullName.includes('starkman')) || 
-         username.includes('samuel') || username.includes('starkman');
-};
-
 const Profile = () => {
   const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
@@ -225,128 +196,8 @@ const Profile = () => {
   const isOwnProfile = currentUser?.id === profile?.id;
   const profileId = profile?.id;
 
-  const { openUpgradePrompt } = useUpgradePrompt();
-
   const showPublicStage = profile ? shouldShowPublicStage(profile.user_preferences, isOwnProfile) : false;
   const publicStageLabel = profile ? getPublicStageLabel(profile.business_stage, profile.startup_stage) : null;
-
-  const resolveDiscoveryCallMentor = async (): Promise<DiscoveryCallMentorConfig | null> => {
-    if (!profile) {
-      return null;
-    }
-
-    const mentorQuery = supabase
-      .from('mentors')
-      .select('id, name, calendly_url, is_active')
-      .eq('user_id', profile.id)
-      .eq('is_active', true)
-      .limit(1)
-      .maybeSingle();
-
-    const { data: directMentor, error } = await mentorQuery;
-    let data = directMentor;
-
-    if (error) {
-      throw error;
-    }
-
-    if (!data && isSamuelStarkmanProfile(profile)) {
-      const fallback = await supabase
-        .from('mentors')
-        .select('id, name, calendly_url, is_active')
-        .ilike('name', '%samuel%starkman%')
-        .eq('is_active', true)
-        .limit(1)
-        .maybeSingle();
-
-      if (fallback.error) {
-        throw fallback.error;
-      }
-
-      data = fallback.data;
-    }
-
-    return (data as DiscoveryCallMentorConfig | null) ?? null;
-  };
-
-  const handleBookDiscoveryCall = async () => {
-    try {
-      const mentor = await resolveDiscoveryCallMentor();
-      const bookingUrl = mentor?.calendly_url?.trim() || SAMUEL_STARKMAN_BOOKING_URL;
-
-      if (!mentor?.id || !mentor.is_active || !bookingUrl) {
-        toast.error('This mentor does not have a discovery call booking link configured yet.');
-        return;
-      }
-
-      const normalizedBookingUrl = /^https?:\/\//i.test(bookingUrl) ? bookingUrl : `https://${bookingUrl}`;
-
-      if (!currentUser) {
-        storePendingDiscoveryCallRedirect({
-          url: bookingUrl,
-          mentorId: mentor.id,
-          mentorName: mentor.name,
-          source: 'profile_page',
-        });
-        navigate(`/login?return=${encodeURIComponent(window.location.pathname)}`);
-        return;
-      }
-
-      const bookingTab = openDeferredExternalTab();
-      if (!bookingTab) {
-        toast.error('Popup blocked. Please allow popups and try again.');
-        return;
-      }
-
-      const bookingIntent = await createDiscoveryCallIntent({
-        mentorId: mentor.id,
-        mentorName: mentor.name,
-        source: 'profile_page',
-        idempotencyKey: createIdempotencyKey(`profile-discovery-call-${mentor.id}`),
-        metadata: {
-          mentor_id: mentor.id,
-          mentor_name: mentor.name,
-          profile_id: profile.id,
-          profile_username: profile.username,
-        },
-      });
-
-      if (!bookingIntent.success || !bookingIntent.callId) {
-        bookingTab.close();
-
-        if (bookingIntent.errorCode === 'PLAN_UPGRADE_REQUIRED' && bookingIntent.requiredTier) {
-          openUpgradePrompt({
-            reason: 'feature',
-            featureName: 'Discovery Calls',
-            requiredTier: bookingIntent.requiredTier,
-            description: bookingIntent.error,
-          });
-          return;
-        }
-
-        if (bookingIntent.errorCode === 'INSUFFICIENT_CREDITS') {
-          openUpgradePrompt({
-            reason: 'credits',
-            featureName: 'Discovery Calls',
-            requiredCredits: bookingIntent.requiredCredits ?? 10,
-            description: bookingIntent.error,
-          });
-          return;
-        }
-
-        toast.error(bookingIntent.error || 'Unable to process booking. Please try again.');
-        return;
-      }
-
-      bookingTab.location.href = buildDiscoveryCallRedirectUrl(normalizedBookingUrl, bookingIntent.callId);
-    } catch (error) {
-      logError('profile_discovery_call_booking_failed', {
-        username,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      toast.error('Unable to process booking. Please try again.');
-    }
-  };
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -746,21 +597,6 @@ const Profile = () => {
                   </Button>
                   {!isOwnProfile && profile.id && (
                     <>
-                      {isSamuelStarkmanProfile(profile) && (
-                        <Button
-                          size="sm"
-                          onClick={handleBookDiscoveryCall}
-                          className="hover:shadow-md transition-all"
-                        >
-                          <Calendar className="h-4 w-4 mr-2" />
-                          Book Discovery Call
-                        </Button>
-                      )}
-                      {isSamuelStarkmanProfile(profile) && (
-                        <p className="basis-full text-xs text-muted-foreground">
-                          Discovery Calls cost 10 credits only after the booking is confirmed.
-                        </p>
-                      )}
                       <SocialButtons
                         userId={profile.id}
                         userName={profile.full_name || undefined}

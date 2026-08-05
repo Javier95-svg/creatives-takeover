@@ -144,7 +144,7 @@ const ACTIVATION_ROUTE_BY_INTENT: Record<ActivationIntent, string> = {
   unlock_insighta: '/insighta-test?hydrate=1',
   save_mentor: '/mentorship?mentorSource=onboarding&activationIntent=save_mentor',
   send_message: '/mentorship?mentorSource=onboarding&activationIntent=send_message',
-  book_call: '/mentorship?mentorSource=onboarding&activationIntent=book_call',
+  book_call: '/mentorship?mentorSource=onboarding&activationIntent=send_message',
 };
 
 const SIGNUP_SOURCE_ACTIVATION_INTENT: Record<string, ActivationIntent> = {
@@ -548,7 +548,7 @@ export async function completeActivationJourney(params: CompleteActivationParams
           ? 'mentor_saved'
           : params.action === 'send_message'
             ? 'mentor_message'
-            : 'discovery_call',
+            : 'mentor_message',
       firstArtifactCreatedAt: completedAt,
       firstArtifactId: params.mentorId ?? params.conversationId ?? null,
       firstArtifactLabel:
@@ -556,14 +556,14 @@ export async function completeActivationJourney(params: CompleteActivationParams
           ? (params.mentorName ? `Saved mentor: ${params.mentorName}` : 'Saved mentor')
           : params.action === 'send_message'
             ? 'Founder conversation'
-            : 'Booked discovery call',
+            : 'Founder conversation',
       firstArtifactResumeUrl: params.actionUrl,
       lastArtifactType:
         params.action === 'save_mentor'
           ? 'mentor_saved'
           : params.action === 'send_message'
             ? 'mentor_message'
-            : 'discovery_call',
+            : 'mentor_message',
       lastArtifactCreatedAt: completedAt,
       lastArtifactId: params.mentorId ?? params.conversationId ?? null,
       lastArtifactLabel:
@@ -571,7 +571,7 @@ export async function completeActivationJourney(params: CompleteActivationParams
           ? (params.mentorName ? `Saved mentor: ${params.mentorName}` : 'Saved mentor')
           : params.action === 'send_message'
             ? 'Founder conversation'
-            : 'Booked discovery call',
+            : 'Founder conversation',
       lastArtifactResumeUrl: params.actionUrl,
       firstValueMentorId: params.mentorId ?? null,
       firstValueMentorName: params.mentorName ?? null,
@@ -598,7 +598,7 @@ export async function completeActivationJourney(params: CompleteActivationParams
         ? 'mentor_saved'
         : params.action === 'send_message'
           ? 'mentor_message'
-          : 'discovery_call',
+          : 'mentor_message',
     artifact_id: params.mentorId ?? params.conversationId ?? null,
     resume_url: params.actionUrl,
     source: params.source,
@@ -616,13 +616,13 @@ export async function completeActivationJourney(params: CompleteActivationParams
     const headlineByAction: Record<ActivationArtifactIntent, string> = {
       save_mentor: `You saved ${params.mentorName ?? 'a mentor'} - we will keep this path warm for you`,
       send_message: `Your conversation is open - come back for the reply`,
-      book_call: `Your discovery call path is active - use it to unlock your next move`,
+      book_call: `Your mentor-message path is active - use it to unlock your next move`,
     };
 
     const bodyByAction: Record<ActivationArtifactIntent, string> = {
       save_mentor: 'We will bring you back when your saved mentors are the fastest way to make progress.',
       send_message: 'Messages are the stickiest part of the platform. Keep the thread moving and you will always have a reason to return.',
-      book_call: 'Use your next call to pressure-test one decision, not ten. The strongest follow-up usually happens right after the booking.',
+      book_call: 'Send one focused question to a relevant mentor and use the reply to pressure-test your next decision.',
     };
 
     await sendRetentionEmail({
@@ -639,7 +639,7 @@ export async function completeActivationJourney(params: CompleteActivationParams
         params.action === 'send_message'
           ? 'Open Messages'
           : params.action === 'book_call'
-            ? 'Review Mentor Options'
+            ? 'Open Messages'
             : 'Open Saved Mentors',
       contextHeadline: headlineByAction[params.action],
       contextBody: bodyByAction[params.action],
@@ -883,15 +883,15 @@ export function buildActivationSummary(intent: ActivationIntent) {
       };
     case 'book_call':
       return {
-        title: 'Book one discovery call',
-        description: 'Discovery calls are the strongest commercial-intent action in the current data.',
+        title: 'Start one mentor conversation',
+        description: 'Your legacy call intent now continues through a measurable mentor message.',
         actionUrl: getActivationRoute(intent),
         priorityLabel: 'First win',
       };
     default:
       return {
         title: 'Take one value action',
-        description: 'Save a mentor, send a message, or book a discovery call before you explore the rest of the platform.',
+        description: 'Save a mentor or send a message before you explore the rest of the platform.',
         actionUrl: '/mentorship',
         priorityLabel: 'First win',
       };

@@ -84,14 +84,24 @@ const Login = () => {
   // Handle redirect after successful login - wait for auth state to update
   useEffect(() => {
     if (user && window.location.pathname === '/login') {
-      const pendingCheckoutIntent = consumeCheckoutIntent();
-      if (pendingCheckoutIntent) {
-        redirectToCheckoutIntent(pendingCheckoutIntent, user);
-        return;
-      }
+      const finishLogin = async () => {
+        const pendingCheckoutIntent = consumeCheckoutIntent();
+        if (pendingCheckoutIntent) {
+          try {
+            await redirectToCheckoutIntent(pendingCheckoutIntent);
+            return;
+          } catch (checkoutError) {
+            console.error('Unable to resume checkout after login:', checkoutError);
+            toast.error('Checkout could not start. Please retry from Pricing.');
+            navigate('/pricing', { replace: true });
+            return;
+          }
+        }
 
-      const postLoginTarget = returnUrl.startsWith('/mentorship/book/') ? '/mentorship' : returnUrl;
-      navigate(postLoginTarget);
+        const postLoginTarget = returnUrl.startsWith('/mentorship/book/') ? '/mentorship' : returnUrl;
+        navigate(postLoginTarget);
+      };
+      void finishLogin();
     }
   }, [user, navigate, returnUrl]);
 

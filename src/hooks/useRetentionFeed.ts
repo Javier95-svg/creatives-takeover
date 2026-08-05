@@ -132,15 +132,6 @@ export const useRetentionFeed = (): RetentionFeedState => {
         unreadMessageCount = count ?? 0;
       }
 
-      const { data: recentBooking } = await supabase
-        .from('user_activity_log')
-        .select('activity_data, created_at')
-        .eq('user_id', user.id)
-        .eq('activity_type', 'discovery_call_booked')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
       const nudges: RetentionNudge[] = [];
       let primaryNudge: RetentionNudge | null = null;
 
@@ -190,17 +181,6 @@ export const useRetentionFeed = (): RetentionFeedState => {
             : 'Saved mentors are your best bridge from browsing to real follow-up.',
           actionLabel: 'View saved mentors',
           actionUrl: '/saved-mentors',
-        });
-      }
-
-      if (recentBooking) {
-        nudges.push({
-          id: 'bookings',
-          eyebrow: 'Discovery calls',
-          title: 'Follow up on your booked discovery call',
-          description: 'The best time to clarify your next decision is right after you book the conversation.',
-          actionLabel: 'Open mentors',
-          actionUrl: '/mentorship?mentorSource=booked-call',
         });
       }
 

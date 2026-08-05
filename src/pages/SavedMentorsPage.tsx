@@ -170,7 +170,7 @@ const SavedMentorsPage = () => {
                               <Badge variant="outline">{getSavedMentorLabel(item)}</Badge>
                             </div>
                             <p className="mt-2 text-sm text-muted-foreground">
-                              Keep this mentor in your side lane until you are ready to message, book, or revisit them inside Community.
+                              Keep this mentor in your side lane until you are ready to message or revisit them inside Community.
                             </p>
                             <div className="mt-3 flex flex-wrap gap-2">
                               {expertise.slice(0, 3).map((tag) => (
@@ -242,7 +242,7 @@ const SavedMentorsPage = () => {
             <Card className="border-border/70 bg-card/80 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="text-lg">Quick routes</CardTitle>
-                <CardDescription>Keep follow-up, messages, and bookings in separate spaces instead of stacking them into the dashboard home.</CardDescription>
+                <CardDescription>Keep follow-up, messages, and historical session records in separate spaces instead of stacking them into the dashboard home.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button asChild className="w-full justify-between">
@@ -258,8 +258,8 @@ const SavedMentorsPage = () => {
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="w-full justify-between">
-                  <Link to="/mentorship/my-bookings" onClick={() => trackPageAction('open_bookings')}>
-                    View bookings
+                  <Link to="/mentorship/my-bookings" onClick={() => trackPageAction('open_session_history')}>
+                    View session history
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>

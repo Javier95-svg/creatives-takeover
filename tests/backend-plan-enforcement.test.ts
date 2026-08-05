@@ -127,7 +127,7 @@ test('discovery call notifications fan out beyond admin-only Calendly emails', (
   assert.match(source, /community_notifications/);
 });
 
-test('subscription checkout copy uses the paid plan credit ladder', () => {
+test('subscription checkout uses the paid plan credit ladder and canonical Stripe prices', () => {
   const source = readFileSync(new URL('../supabase/functions/create-checkout/index.ts', import.meta.url), 'utf8');
 
   // Credit ladder is the single source of truth (PLAN_MONTHLY_CREDITS); prices live
@@ -142,7 +142,11 @@ test('subscription checkout copy uses the paid plan credit ladder', () => {
   assert.match(source, /per-action MVP Builder/);
   assert.match(source, /Find Your Angel[\s\S]*unlimited research views/);
   assert.match(source, /\$\{credits\} \$\{connector\} \$\{PLAN_VALUE_PROPS\[tier\]\}/);
-  assert.match(source, /description: `\$\{pricing\.description\} with \$\{billingCycle\} billing`/);
+  assert.match(source, /stripe_price_id_monthly/);
+  assert.match(source, /stripe_price_id_yearly/);
+  assert.match(source, /price: canonicalPrice\.priceId/);
+  assert.match(source, /CHECKOUT_PRICE_NOT_CONFIGURED/);
+  assert.doesNotMatch(source, /payment_link|buy\.stripe\.com/i);
 });
 
 test('platform top-up packs are available through checkout', () => {

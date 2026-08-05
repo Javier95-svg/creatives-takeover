@@ -32,7 +32,18 @@ export function withErrorBoundary<TArgs extends unknown[], TResult>(
       return new Response(JSON.stringify({ ok: true, result }), { status: 200, headers: { 'content-type': 'application/json' } });
     } catch (err: any) {
       logError('edge_function_error', { ...meta, error: err?.message, stack: err?.stack });
-      return new Response(JSON.stringify({ ok: false, error: 'Internal error' }), { status: 500, headers: { 'content-type': 'application/json' } });
+      const errorCode = typeof err?.code === 'string' ? err.code : 'INTERNAL_ERROR';
+      const exposedMessage = err?.expose === true && typeof err?.message === 'string'
+        ? err.message
+        : 'Internal error';
+      return new Response(JSON.stringify({ ok: false, error: exposedMessage, errorCode }), {
+        status: typeof err?.status === 'number' ? err.status : 500,
+        headers: {
+          'content-type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, idempotency-key',
+        },
+      });
     }
   };
 }

@@ -15,13 +15,16 @@ import { attributeContextualConversion } from "@/lib/contextualUpgrade";
 export default function SubscriptionSuccess() {
   const [searchParams] = useSearchParams();
   const tier = searchParams.get("tier") || "starter";
+  const isCreditPack = searchParams.get("purchase_type") === "credit_pack";
+  const billingCycle = searchParams.get("billing_cycle") === "yearly" ? "yearly" : "monthly";
+  const returnTo = searchParams.get("return_to") === "/first-customer-sprint" ? "/first-customer-sprint" : "/dashboard";
   const [verifying, setVerifying] = useState(true);
   const [verified, setVerified] = useState(false);
   const [verifyError, setVerifyError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const MAX_RETRIES = 3;
 
-  const { refreshSubscription, subscriptionData } = useSubscription();
+  const { refreshSubscription } = useSubscription();
   const { refreshBalance, balance } = useCredits();
 
   // Credit-pack purchases complete at Stripe (no subscription state to verify),
@@ -39,12 +42,19 @@ export default function SubscriptionSuccess() {
       setVerifying(true);
       setVerifyError(false);
 
+      if (isCreditPack) {
+        await refreshBalance();
+        setVerified(true);
+        setVerifying(false);
+        return;
+      }
+
       for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         try {
-          await refreshSubscription();
+          const refreshedSubscription = await refreshSubscription();
           await refreshBalance();
 
-          if (subscriptionData?.subscribed) {
+          if (refreshedSubscription?.subscribed) {
             setVerified(true);
             toast.success("Subscription activated successfully!");
             try {
@@ -78,16 +88,16 @@ export default function SubscriptionSuccess() {
     const timer = setTimeout(verifySubscription, 2000);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [retryCount]);
+  }, [isCreditPack, retryCount]);
 
   const getTierInfo = (tierName: string) => {
     const tiers = {
-      starter: { name: "Starter", credits: 30, price: 9 },
-      rising: { name: "Rising", credits: 75, price: 29 },
-      pro: { name: "Pro", credits: 150, price: 65 },
-      basic: { name: "Starter", credits: 30, price: 9 },
-      premium: { name: "Rising", credits: 75, price: 29 },
-      enterprise: { name: "Pro", credits: 150, price: 65 },
+      starter: { name: "Starter", credits: 100, monthly: 9, yearly: 79 },
+      rising: { name: "Rising", credits: 250, monthly: 29, yearly: 239 },
+      pro: { name: "Pro", credits: 600, monthly: 65, yearly: 589 },
+      basic: { name: "Starter", credits: 100, monthly: 9, yearly: 79 },
+      premium: { name: "Rising", credits: 250, monthly: 29, yearly: 239 },
+      enterprise: { name: "Pro", credits: 600, monthly: 65, yearly: 589 },
     };
     return tiers[tierName as keyof typeof tiers] || tiers.starter;
   };
@@ -149,7 +159,20 @@ export default function SubscriptionSuccess() {
               </div>
             )}
 
-            {!verifying && verified && (
+            {!verifying && verified && isCreditPack && (
+              <>
+                <div className="space-y-4">
+                  <div className="w-16 h-16 bg-success-subtle rounded-full flex items-center justify-center mx-auto">
+                    <CheckCircle className="w-8 h-8 text-success" />
+                  </div>
+                  <h1 className="text-3xl font-bold">Credits added successfully</h1>
+                  <p className="text-muted-foreground text-lg">Your purchase is complete. Stripe confirmation may take a moment to appear in the sprint.</p>
+                </div>
+                <Card><CardContent className="space-y-4 pt-6"><p className="text-3xl font-bold text-primary">{balance}</p><p className="text-sm text-muted-foreground">Current available credits</p><Button asChild><Link to={returnTo}>{returnTo === '/first-customer-sprint' ? 'Return to the sprint' : 'Return to dashboard'}<ArrowRight className="ml-2 h-4 w-4" /></Link></Button></CardContent></Card>
+              </>
+            )}
+
+            {!verifying && verified && !isCreditPack && (
               <>
                 <div className="space-y-4">
                   <div className="w-16 h-16 bg-success-subtle rounded-full flex items-center justify-center mx-auto">
@@ -177,8 +200,8 @@ export default function SubscriptionSuccess() {
                         <div className="text-sm text-muted-foreground">Credits per month</div>
                       </div>
                       <div className="space-y-2">
-                        <div className="text-2xl font-bold">${tierInfo.price}</div>
-                        <div className="text-sm text-muted-foreground">Monthly billing</div>
+                        <div className="text-2xl font-bold">${tierInfo[billingCycle]}</div>
+                        <div className="text-sm text-muted-foreground">{billingCycle === 'yearly' ? 'Annual billing' : 'Monthly billing'}</div>
                       </div>
                       <div className="space-y-2">
                         <div className="text-2xl font-bold text-success">{balance}</div>

@@ -211,7 +211,7 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
     'One recommended market-facing action',
     'Core build tools with transparent credit costs',
     'Browse VC Search and Accelerator Hunt',
-    'Expert discovery calls at 10 credits per booking',
+    'Browse, message, and save mentors',
   ],
   starter: [
     '100 monthly credits',

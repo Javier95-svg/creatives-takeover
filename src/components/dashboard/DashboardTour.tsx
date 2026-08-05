@@ -56,7 +56,7 @@ const STEPS: TourStep[] = [
   {
     icon: Users,
     title: "Community & mentors",
-    body: "Find a mentor and book a discovery call, meet a cofounder, or connect with angels. Mentor calls are the fastest way to unblock yourself.",
+    body: "Find and message a mentor, meet a cofounder, or connect with angels. A focused mentor conversation can unblock your next decision.",
   },
   {
     icon: Bell,

@@ -2,12 +2,20 @@
 import { useQuery } from '@tanstack/react-query';
 import { getAccessTokenSafely } from '@/integrations/supabase/auth';
 import { supabase } from '@/integrations/supabase/client';
-import type { Database, Json } from '@/integrations/supabase/types';
+import type { Json } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { ADMIN_SUBSCRIPTION, isAdminEmail } from '@/lib/admin';
 import { normalizePlan } from '@/config/planPermissions';
 import { captureEvent } from '@/lib/analytics';
+import {
+  redirectToHostedCheckout,
+  startCheckout,
+  type CheckoutBillingCycle,
+  type CheckoutPlan,
+} from '@/services/checkoutService';
+
+export type { CheckoutBillingCycle } from '@/services/checkoutService';
 
 const BILLING_STORAGE_KEY = 'ct_billing_details';
 
@@ -22,11 +30,8 @@ export interface SubscriptionTier {
   monthly_credits: number;
   price_cents: number;
   stripe_price_id?: string | null;
-  stripe_payment_link?: string | null;
-  stripe_payment_link_monthly?: string | null;
-  stripe_payment_link_yearly?: string | null;
-  monthly_payment_link?: string | null;
-  yearly_payment_link?: string | null;
+  stripe_price_id_monthly?: string | null;
+  stripe_price_id_yearly?: string | null;
   [key: string]: unknown;
   features: Json | null;
 }
@@ -44,8 +49,6 @@ export interface CheckoutPrefill {
   };
 }
 
-export type CheckoutBillingCycle = 'monthly' | 'yearly';
-
 type StoredBillingDetails = Partial<{
   fullName: string;
   email: string;
@@ -56,8 +59,6 @@ type StoredBillingDetails = Partial<{
   postalCode: string;
   country: string;
 }>;
-
-type CreditPackRow = Database['public']['Tables']['credit_packs']['Row'];
 
 const DEFAULT_SUBSCRIPTION: SubscriptionData = {
   subscribed: false,
@@ -78,12 +79,6 @@ const normalizeSubscriptionData = (
     subscription_tier: normalizePlan(data?.subscription_tier),
     subscription_end: data?.subscription_end ?? null,
   };
-};
-
-const normalizePaymentLink = (value: unknown): string | null => {
-  if (typeof value !== 'string') return null;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
 };
 
 const normalizeTierRow = (row: Record<string, unknown>): SubscriptionTier => {
@@ -107,47 +102,10 @@ const normalizeTierRow = (row: Record<string, unknown>): SubscriptionTier => {
     monthly_credits,
     price_cents,
     stripe_price_id: typeof row.stripe_price_id === 'string' ? row.stripe_price_id : null,
-    stripe_payment_link: normalizePaymentLink(row.stripe_payment_link),
-    stripe_payment_link_monthly: normalizePaymentLink(
-      row.stripe_payment_link_monthly ?? row.monthly_stripe_payment_link ?? row.monthly_payment_link
-    ),
-    stripe_payment_link_yearly: normalizePaymentLink(
-      row.stripe_payment_link_yearly ?? row.yearly_stripe_payment_link ?? row.yearly_payment_link ?? row.annual_payment_link
-    ),
-    monthly_payment_link: normalizePaymentLink(row.monthly_payment_link),
-    yearly_payment_link: normalizePaymentLink(row.yearly_payment_link ?? row.annual_payment_link),
+    stripe_price_id_monthly: typeof row.stripe_price_id_monthly === 'string' ? row.stripe_price_id_monthly : null,
+    stripe_price_id_yearly: typeof row.stripe_price_id_yearly === 'string' ? row.stripe_price_id_yearly : null,
     features
   } as SubscriptionTier;
-};
-
-const resolveTierPaymentLink = (
-  tier: SubscriptionTier | null | undefined,
-  billingCycle: CheckoutBillingCycle
-) => {
-  if (!tier) return null;
-
-  const candidates = billingCycle === 'yearly'
-    ? [
-      tier.stripe_payment_link_yearly,
-      tier.yearly_payment_link,
-      tier.stripe_payment_link,
-    ]
-    : [
-      tier.stripe_payment_link_monthly,
-      tier.monthly_payment_link,
-      tier.stripe_payment_link,
-    ];
-
-  for (const candidate of candidates) {
-    const link = normalizePaymentLink(candidate);
-    if (link) return link;
-  }
-
-  return null;
-};
-
-const resolveCreditPackPaymentLink = (pack: CreditPackRow | null | undefined) => {
-  return normalizePaymentLink(pack?.stripe_payment_link);
 };
 
 export function useSubscription(options?: { fetchTiers?: boolean }) {
@@ -237,74 +195,16 @@ export function useSubscription(options?: { fetchTiers?: boolean }) {
   const loading = tiersQuery.isLoading || subscriptionQuery.isLoading;
 
   const checkSubscription = async () => {
-    if (!user) return;
-    await subscriptionQuery.refetch();
-  };
-
-  const openCheckout = (url: string) => {
-    if (typeof window === 'undefined') return;
-    try {
-      const checkoutUrl = new URL(url);
-      const isStripePaymentLink = checkoutUrl.hostname.toLowerCase() === 'buy.stripe.com';
-
-      if (isStripePaymentLink) {
-        if (user?.email && !checkoutUrl.searchParams.has('prefilled_email')) {
-          checkoutUrl.searchParams.set('prefilled_email', user.email);
-        }
-
-        if (user?.id && !checkoutUrl.searchParams.has('client_reference_id')) {
-          checkoutUrl.searchParams.set('client_reference_id', user.id);
-        }
-      }
-
-      window.location.assign(checkoutUrl.toString());
-    } catch (error) {
-      console.warn('Unable to enrich checkout URL, redirecting as-is', error);
-      window.location.assign(url);
-    }
-  };
-
-  const fetchTierByName = async (tierName: string) => {
-    const normalizedTierName = normalizePlan(tierName);
-    const cachedTier = tiersQuery.data?.find(
-      (tier) => String(tier.tier_name).trim().toLowerCase() === normalizedTierName
-    );
-    if (cachedTier) return cachedTier;
-
-    const { data, error } = await supabase
-      .from('subscription_tiers')
-      .select('*')
-      .eq('tier_name', normalizedTierName)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error fetching subscription tier payment link:', error);
-      return null;
-    }
-
-    return data ? normalizeTierRow(data) : null;
-  };
-
-  const fetchCreditPackById = async (packId: string) => {
-    const { data, error } = await supabase
-      .from('credit_packs')
-      .select('*')
-      .eq('id', packId)
-      .eq('active', true)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error fetching credit pack payment link:', error);
-      return null;
-    }
-
-    return data;
+    if (!user) return null;
+    const refreshed = await subscriptionQuery.refetch();
+    return refreshed.data ?? null;
   };
 
   const createCheckout = async (
     tier: string,
     prefill?: CheckoutPrefill,
-    billingCycle: CheckoutBillingCycle = 'monthly'
+    billingCycle: CheckoutBillingCycle = 'monthly',
+    purchaseSource = 'subscription_action',
   ) => {
     if (!user) {
       toast.error('Please sign in to subscribe');
@@ -419,64 +319,34 @@ export function useSubscription(options?: { fetchTiers?: boolean }) {
 
     try {
       setActionLoading(true);
-      const tierRecord = await fetchTierByName(tier);
-      const paymentLink = resolveTierPaymentLink(tierRecord, billingCycle);
-      if (paymentLink) {
-        openCheckout(paymentLink);
-        return paymentLink;
+      const normalizedTier = normalizePlan(tier);
+      if (!['starter', 'rising', 'pro'].includes(normalizedTier)) {
+        throw new Error('Select a valid paid plan.');
       }
 
-      const accessToken = await getAccessTokenSafely();
-      if (!accessToken) {
-        toast.error('Unable to create checkout: no auth session');
-        return null;
-      }
-
-      const payload: {
-        purchaseType: 'subscription';
-        tier: string;
-        billingCycle: CheckoutBillingCycle;
-        prefill?: CheckoutPrefill;
-      } = {
+      const checkout = await startCheckout({
         purchaseType: 'subscription',
-        tier,
+        plan: normalizedTier as CheckoutPlan,
         billingCycle,
-      };
-      if (resolvedPrefill) {
-        payload.prefill = resolvedPrefill;
-      }
-
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: payload,
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
+        purchaseSource,
+        prefill: resolvedPrefill,
       });
-
-      if (error) {
-        console.error('create-checkout function error:', error);
-        toast.error('Failed to create checkout session');
-        return null;
-      }
-
-      if (data && data.url) {
-        openCheckout(data.url);
-        return data.url;
-      }
-
-      console.error('create-checkout: no URL returned', data);
-      toast.error('Failed to create checkout session');
-      return null;
+      redirectToHostedCheckout(checkout.url);
+      return checkout.url;
     } catch (error) {
       console.error('Error creating checkout:', error);
-      toast.error('Failed to create checkout session');
+      toast.error(error instanceof Error ? error.message : 'Checkout is temporarily unavailable. Please retry.');
       return null;
     } finally {
       setActionLoading(false);
     }
   };
 
-  const createCreditPackCheckout = async (packId: string, purchaseSource?: string) => {
+  const createCreditPackCheckout = async (
+    packId: string,
+    purchaseSource?: string,
+    purchaseContext?: { id: string; returnPath?: string },
+  ) => {
     if (!user) {
       toast.error('Please sign in to purchase credits');
       return null;
@@ -490,46 +360,18 @@ export function useSubscription(options?: { fetchTiers?: boolean }) {
         pack_id: packId,
         purchase_source: purchaseSource ?? 'unknown',
       });
-      const creditPack = await fetchCreditPackById(packId);
-      const paymentLink = resolveCreditPackPaymentLink(creditPack);
-      if (paymentLink) {
-        openCheckout(paymentLink);
-        return paymentLink;
-      }
-      const accessToken = await getAccessTokenSafely();
-      if (!accessToken) {
-        toast.error('Unable to create checkout: no auth session');
-        return null;
-      }
-
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: {
-          purchaseType: 'credit_pack',
-          packId,
-          purchaseSource,
-        },
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
+      const checkout = await startCheckout({
+        purchaseType: 'credit_pack',
+        packId,
+        purchaseSource,
+        purchaseContextId: purchaseContext?.id,
+        returnPath: purchaseContext?.returnPath,
       });
-
-      if (error) {
-        console.error('create-checkout credit pack function error:', error);
-        toast.error('Failed to create credit pack checkout session');
-        return null;
-      }
-
-      if (data?.url) {
-        openCheckout(data.url);
-        return data.url;
-      }
-
-      console.error('create-checkout credit pack: no URL returned', data);
-      toast.error('Failed to create credit pack checkout session');
-      return null;
+      redirectToHostedCheckout(checkout.url);
+      return checkout.url;
     } catch (error) {
       console.error('Error creating credit pack checkout:', error);
-      toast.error('Failed to create credit pack checkout session');
+      toast.error(error instanceof Error ? error.message : 'Checkout is temporarily unavailable. Please retry.');
       return null;
     } finally {
       setActionLoading(false);

@@ -41,12 +41,12 @@ const MyBookings = () => {
   }, []);
 
   const upcomingBookings = useMemo(
-    () => bookings.filter((booking) => booking.status === "intent_created" || booking.status === "scheduled"),
+    () => bookings.filter((booking) => booking.status === "scheduled"),
     [bookings],
   );
 
   const pastBookings = useMemo(
-    () => bookings.filter((booking) => booking.status !== "intent_created" && booking.status !== "scheduled"),
+    () => bookings.filter((booking) => booking.status !== "scheduled"),
     [bookings],
   );
 
@@ -59,6 +59,7 @@ const MyBookings = () => {
       cancelled_late: "destructive",
       founder_no_show: "destructive",
       mentor_no_show: "outline",
+      expired: "outline",
     };
     return variants[status] || "outline";
   };
@@ -66,7 +67,7 @@ const MyBookings = () => {
   const formatStatusLabel = (status: DiscoveryCallBookingItem['status']) => {
     switch (status) {
       case 'intent_created':
-        return 'Scheduling in progress';
+        return 'Not confirmed';
       case 'scheduled':
         return 'Scheduled';
       case 'completed':
@@ -79,6 +80,8 @@ const MyBookings = () => {
         return 'Founder no-show';
       case 'mentor_no_show':
         return 'Mentor no-show';
+      case 'expired':
+        return 'Expired — not booked';
       default:
         return status;
     }
@@ -86,7 +89,7 @@ const MyBookings = () => {
 
   const renderTiming = (booking: DiscoveryCallBookingItem) => {
     if (!booking.scheduledFor) {
-      return <span>Awaiting final scheduling confirmation</span>;
+      return <span>No verified booking</span>;
     }
 
     return (
@@ -107,7 +110,7 @@ const MyBookings = () => {
     <>
       <Helmet>
         <title>My Bookings | Mentor Marketplace</title>
-        <meta name="description" content="Manage your discovery call bookings" />
+        <meta name="description" content="Review historical mentor-session attempts and verified sessions" />
       </Helmet>
       <div className="relative min-h-screen overflow-hidden">
         <div className="relative z-10">
@@ -123,19 +126,19 @@ const MyBookings = () => {
                 </Button>
                 <h1 className="text-3xl font-bold mb-2">My Bookings</h1>
                 <p className="text-muted-foreground">
-                  Manage your upcoming and past discovery calls
+                  Review verified sessions and historical scheduling attempts
                 </p>
               </div>
 
               {loading && (
                 <Card className="mb-8">
                   <CardContent className="p-8 text-center text-muted-foreground">
-                    Loading your discovery calls...
+                    Loading your session history...
                   </CardContent>
                 </Card>
               )}
 
-              {/* Upcoming Bookings */}
+              {/* Only provider-verified scheduled records count as upcoming. */}
               <div className="mb-12">
                 <h2 className="text-2xl font-semibold mb-6">Upcoming Sessions</h2>
                 {!loading && upcomingBookings.length > 0 ? (
@@ -166,13 +169,6 @@ const MyBookings = () => {
                                   </a>
                                 </Button>
                               )}
-                              {!booking.scheduledFor && booking.providerBookingUrl && (
-                                <Button asChild variant="outline" size="sm">
-                                  <a href={booking.providerBookingUrl} target="_blank" rel="noopener noreferrer">
-                                    Continue Scheduling
-                                  </a>
-                                </Button>
-                              )}
                             </div>
                             <div className="flex gap-2" />
                           </div>
@@ -199,9 +195,9 @@ const MyBookings = () => {
                 )}
               </div>
 
-              {/* Past Bookings */}
+              {/* Unconfirmed and expired intents remain unsuccessful history. */}
               <div>
-                <h2 className="text-2xl font-semibold mb-6">Past Sessions</h2>
+                <h2 className="text-2xl font-semibold mb-6">Historical Attempts and Sessions</h2>
                 {!loading && pastBookings.length > 0 ? (
                   <div className="grid gap-4">
                     {pastBookings.map((booking) => (

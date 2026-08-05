@@ -3,7 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Mentor } from "@/types/mentor";
 import { Link, useNavigate } from "react-router-dom";
-import { Star, CheckCircle2, MessageCircle, Calendar, Linkedin } from "lucide-react";
+import { Star, CheckCircle2, MessageCircle, Linkedin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { getCountryFlag } from "@/utils/countryFlags";
@@ -11,13 +11,9 @@ import { useMessaging } from "@/hooks/useMessaging";
 import { toast } from "sonner";
 import { generateMentorSlug } from "@/utils/mentorSlug";
 import { useMentorSaves } from "@/hooks/useMentorSaves";
-import { completeActivationJourney, trackRetentionEvent } from "@/lib/retentionSystem";
 import { clearPendingValueCapture, persistPendingValueCapture, readPendingValueCapture } from "@/lib/valueCapture";
 import { useMemo } from "react";
 import { useEffect, useRef } from "react";
-import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
-import { buildDiscoveryCallRedirectUrl, createDiscoveryCallIntent, openDeferredExternalTab } from "@/services/discoveryCallService";
-import { createIdempotencyKey } from "@/lib/idempotency";
 
 interface MentorCardProps {
   mentor: Mentor;
@@ -30,13 +26,11 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
   const { startConversation, resolveMentorUserId } = useMessaging({ autoLoad: false });
-  const { openUpgradePrompt } = useUpgradePrompt();
   const { saveMentor, buildSaveButtonState } = useMentorSaves();
   const mentorSlug = generateMentorSlug(mentor.name);
   const profileUrl = `/mentorship/${mentorSlug}`;
   const saveButton = buildSaveButtonState(mentor.id);
   const SaveButtonIcon = saveButton.icon;
-  const hasBookableCall = Boolean(mentor.calendly_url?.trim());
   const hasMessagingAccount = Boolean(mentor.user_id?.trim());
   const hasConsumedPendingAction = useRef(false);
 
@@ -242,89 +236,6 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
         ))}
       </div>
     );
-  };
-
-  const handleBookDiscoveryCall = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const bookingUrl = mentor.calendly_url?.trim();
-
-    if (!hasBookableCall || !bookingUrl) {
-      toast.error("This mentor does not have a booking link configured yet.");
-      return;
-    }
-    const normalizedBookingUrl = /^https?:\/\//i.test(bookingUrl) ? bookingUrl : `https://${bookingUrl}`;
-
-    // Check if user is authenticated
-    if (!isAuthenticated || !user) {
-      navigate(`/signup?source=book-discovery-call&return=${encodeURIComponent(profileUrl)}`);
-      return;
-    }
-
-    const bookingTab = openDeferredExternalTab();
-    if (!bookingTab) {
-      toast.error('Popup blocked. Please allow popups and try again.');
-      return;
-    }
-
-    try {
-      const bookingIntent = await createDiscoveryCallIntent({
-        mentorId: mentor.id,
-        mentorName: mentor.name,
-        source: 'mentor_card',
-        idempotencyKey: createIdempotencyKey(`mentor-card-discovery-call-${mentor.id}`),
-        metadata: { mentor_id: mentor.id, mentor_name: mentor.name },
-      });
-
-      if (!bookingIntent.success || !bookingIntent.callId) {
-        bookingTab.close();
-
-        if (bookingIntent.errorCode === 'PLAN_UPGRADE_REQUIRED' && bookingIntent.requiredTier) {
-          openUpgradePrompt({
-            reason: 'feature',
-            featureName: 'Discovery Calls',
-            requiredTier: bookingIntent.requiredTier,
-            description: bookingIntent.error,
-          });
-          return;
-        }
-
-        if (bookingIntent.errorCode === 'INSUFFICIENT_CREDITS') {
-          openUpgradePrompt({
-            reason: 'credits',
-            featureName: 'Discovery Calls',
-            requiredCredits: bookingIntent.requiredCredits ?? 10,
-            description: bookingIntent.error,
-          });
-          return;
-        }
-
-        toast.error(bookingIntent.error || 'Unable to process booking. Please try again.');
-        return;
-      }
-
-      bookingTab.location.href = buildDiscoveryCallRedirectUrl(normalizedBookingUrl, bookingIntent.callId);
-
-      await trackRetentionEvent('discovery_call_booked', {
-        user_id: user.id,
-        mentor_id: mentor.id,
-        mentor_name: mentor.name,
-        source: 'mentor_card',
-      });
-      await completeActivationJourney({
-        user,
-        action: 'book_call',
-        mentorId: mentor.id,
-        mentorName: mentor.name,
-        source: 'mentor_card',
-        actionUrl: profileUrl,
-      });
-    } catch (error) {
-      bookingTab.close();
-      console.error('Error creating discovery call intent:', error);
-      toast.error('Unable to process booking. Please try again.');
-    }
   };
 
   const handleSaveMentor = async (e: React.MouseEvent) => {
@@ -597,28 +508,18 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
-              {/* FIX(dead-click): /mentorship — mentor cards now only show primary call/message actions when the mentor actually supports them, and otherwise render explicit unavailable states. */}
-              <Button
-                size="default"
-                variant={hasBookableCall ? "default" : "outline"}
-                onClick={hasBookableCall ? handleBookDiscoveryCall : undefined}
-                disabled={!hasBookableCall}
-                className="w-full sm:w-auto h-10 flex-1 hover:shadow-md transition-all duration-200"
-              >
-                <Calendar className="h-4 w-4 mr-1.5" />
-                {hasBookableCall ? 'Book Discovery Call' : 'Discovery Call Unavailable'}
-              </Button>
-              <Button
-                size="default"
-                variant="outline"
-                onClick={hasMessagingAccount ? handleSendMessage : undefined}
-                disabled={!hasMessagingAccount}
-                title={hasMessagingAccount ? 'Your first message to this mentor is free; follow-ups cost 3 credits each.' : undefined}
-                className="w-full sm:w-auto h-10 flex-1 hover:shadow-md transition-all duration-200"
-              >
-                <MessageCircle className="h-4 w-4 mr-1.5" />
-                {hasMessagingAccount ? 'Message' : 'Messaging Unavailable'}
-              </Button>
+              {/* Only show Message when the mentor has a messaging account; Save remains available to everyone. */}
+              {hasMessagingAccount && (
+                <Button
+                  size="default"
+                  onClick={handleSendMessage}
+                  title="Your first message to this mentor is free; follow-ups cost 3 credits each."
+                  className="w-full sm:w-auto h-10 flex-1 hover:shadow-md transition-all duration-200"
+                >
+                  <MessageCircle className="h-4 w-4 mr-1.5" />
+                  Message
+                </Button>
+              )}
               <Button
                 size="default"
                 variant={saveButton.saved ? "secondary" : "outline"}
@@ -630,13 +531,9 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
                 {saveButton.saving ? 'Saving...' : saveButton.label}
               </Button>
             </div>
-            {(!hasBookableCall || !hasMessagingAccount) && (
+            {!hasMessagingAccount && (
               <p className="text-xs text-muted-foreground">
-                {!hasBookableCall && !hasMessagingAccount
-                  ? 'This mentor currently supports profile browsing only. Use the external links above to reach out.'
-                  : !hasBookableCall
-                    ? 'Discovery calls are not enabled for this mentor yet.'
-                    : 'Direct messaging is not enabled for this mentor yet.'}
+                Direct messaging is not enabled for this mentor. Use the profile links above to reach out.
               </p>
             )}
           </div>

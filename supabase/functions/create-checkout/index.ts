@@ -3,6 +3,7 @@ import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { withErrorBoundary, logInfo, logError } from "../_shared/logger.ts";
 import { withIdempotency } from "../_shared/idempotency.ts";
+import { emitBusinessEvent } from "../_shared/analytics.ts";
 import {
   PLAN_PRICING_CENTS,
   PLAN_MONTHLY_CREDITS,
@@ -31,6 +32,19 @@ type PrefillInput = {
 
 type BillingCycle = PricingBillingCycle;
 type PurchaseType = "subscription" | "credit_pack";
+
+class CheckoutConfigurationError extends Error {
+  readonly code: string;
+  readonly status: number;
+  readonly expose = true;
+
+  constructor(code: string, message: string, status = 503) {
+    super(message);
+    this.name = "CheckoutConfigurationError";
+    this.code = code;
+    this.status = status;
+  }
+}
 
 // Plan display name + value-prop copy. Prices and credit counts come from the
 // shared pricing module (../_shared/pricing.ts) + PLAN_MONTHLY_CREDITS so a
@@ -138,6 +152,28 @@ const normalizePurchaseSource = (value: unknown): string | undefined => {
   return slug.length > 0 ? slug : undefined;
 };
 
+const normalizePurchaseContextId = (value: unknown): string | undefined => {
+  const normalized = sanitizeString(value);
+  if (!normalized) return undefined;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)
+    ? normalized
+    : undefined;
+};
+
+const normalizeReturnPath = (value: unknown): string | undefined => {
+  const normalized = sanitizeString(value);
+  if (!normalized || !normalized.startsWith("/") || normalized.startsWith("//") || normalized.includes("\\")) {
+    return undefined;
+  }
+  try {
+    const parsed = new URL(normalized, "https://creatives-takeover.local");
+    if (parsed.origin !== "https://creatives-takeover.local") return undefined;
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`.slice(0, 500);
+  } catch {
+    return undefined;
+  }
+};
+
 const buildMetadata = (base: Record<string, string | undefined>): Record<string, string> =>
   Object.fromEntries(
     Object.entries(base).filter((entry): entry is [string, string] => typeof entry[1] === "string" && entry[1].length > 0)
@@ -184,6 +220,74 @@ const findOrCreateCustomer = async (
   return newCustomer.id;
 };
 
+const getCanonicalSubscriptionPrice = async (
+  supabaseAdmin: ReturnType<typeof createClient>,
+  stripe: Stripe,
+  tier: PaidPlan,
+  billingCycle: BillingCycle,
+) => {
+  const { data, error } = await supabaseAdmin
+    .from("subscription_tiers")
+    .select("tier_name, price_cents, stripe_price_id_monthly, stripe_price_id_yearly")
+    .eq("tier_name", tier)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  const priceId = billingCycle === "yearly"
+    ? sanitizeString(data?.stripe_price_id_yearly)
+    : sanitizeString(data?.stripe_price_id_monthly);
+  if (!data || !priceId) {
+    throw new CheckoutConfigurationError(
+      "CHECKOUT_PRICE_NOT_CONFIGURED",
+      `Checkout is not configured for ${tier} ${billingCycle}. Please try again later.`,
+    );
+  }
+
+  const expected = getSubscriptionPricing(tier, billingCycle);
+  const price = await stripe.prices.retrieve(priceId, { expand: ["product"] });
+  const expectedInterval = billingCycle === "yearly" ? "year" : "month";
+  if (
+    !price.active
+    || price.currency.toLowerCase() !== "usd"
+    || price.unit_amount !== expected.amount
+    || price.type !== "recurring"
+    || price.recurring?.interval !== expectedInterval
+  ) {
+    throw new CheckoutConfigurationError(
+      "CHECKOUT_PRICE_MISMATCH",
+      `Checkout configuration does not match ${tier} ${billingCycle}. Please try again later.`,
+    );
+  }
+
+  return { priceId, amountCents: expected.amount };
+};
+
+const recordCheckoutSession = async (
+  supabaseAdmin: ReturnType<typeof createClient>,
+  stripe: Stripe,
+  session: Stripe.Checkout.Session,
+  row: Record<string, unknown>,
+) => {
+  const { error } = await supabaseAdmin.from("stripe_checkout_sessions").insert({
+    stripe_session_id: session.id,
+    ...row,
+  });
+
+  if (!error) return;
+
+  logError("checkout:session_record_failed", { sessionId: session.id, error: error.message });
+  try {
+    if (session.status === "open") await stripe.checkout.sessions.expire(session.id);
+  } catch (expireError) {
+    logError("checkout:orphan_expire_failed", { sessionId: session.id, expireError });
+  }
+  throw new CheckoutConfigurationError(
+    "CHECKOUT_SESSION_RECORD_FAILED",
+    "Checkout could not be started safely. Please retry.",
+  );
+};
+
 serve(withErrorBoundary(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -198,6 +302,12 @@ serve(withErrorBoundary(async (req: Request) => {
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    );
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!serviceRoleKey) throw new Error("SUPABASE_SERVICE_ROLE_KEY is not set");
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      serviceRoleKey,
     );
 
     const authHeader = req.headers.get("Authorization");
@@ -219,9 +329,11 @@ serve(withErrorBoundary(async (req: Request) => {
 
     const purchaseType = normalizePurchaseType(body.purchaseType);
     const billingCycle = normalizeBillingCycle(body.billingCycle);
-    const requestedTier = sanitizeString(body.tier)?.toLowerCase();
+    const requestedTier = sanitizeString(body.plan ?? body.tier)?.toLowerCase();
     const requestedPackId = sanitizeString(body.packId)?.toLowerCase();
     const purchaseSource = normalizePurchaseSource(body.purchaseSource);
+    const purchaseContextId = normalizePurchaseContextId(body.purchaseContextId);
+    const returnPath = normalizeReturnPath(body.returnPath);
 
     let prefillData: PrefillInput = sanitizePrefillInput(body.prefill) ?? {};
     const metadataName = sanitizeString(
@@ -252,6 +364,26 @@ serve(withErrorBoundary(async (req: Request) => {
       }
 
       const pack = CREDIT_PACKS[requestedPackId];
+      if (purchaseSource === "first_customer_sprint") {
+        if (!purchaseContextId) throw new Error("Valid sprint context is required");
+        const authenticatedClient = createClient(
+          Deno.env.get("SUPABASE_URL") ?? "",
+          Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+          { global: { headers: { Authorization: authHeader } } },
+        );
+        const { data: sprint, error: sprintError } = await authenticatedClient
+          .from("first_customer_sprints")
+          .select("id,status,review_submitted_at,continuation_from_sprint_id")
+          .eq("id", purchaseContextId)
+          .eq("founder_id", user.id)
+          .maybeSingle();
+        if (sprintError || !sprint || sprint.status !== "completed" || !sprint.review_submitted_at) {
+          throw new Error("Complete and review the sprint before purchasing the continuation");
+        }
+        if (sprint.continuation_from_sprint_id) {
+          throw new Error("The demand-validation pilot includes one paid continuation only");
+        }
+      }
       const metadata = buildMetadata({
         purchase_type: "credit_pack",
         wallet: "platform",
@@ -259,6 +391,7 @@ serve(withErrorBoundary(async (req: Request) => {
         user_id: user.id,
         user_email: user.email,
         purchase_source: purchaseSource,
+        purchase_context_id: purchaseContextId,
       });
 
       const session = await stripe.checkout.sessions.create({
@@ -287,8 +420,28 @@ serve(withErrorBoundary(async (req: Request) => {
           metadata,
         },
         metadata,
-        success_url: `${origin}/subscription-success?purchase_type=credit_pack&wallet=platform&pack_id=${requestedPackId}&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/pricing#credit-packs`,
+        success_url: `${origin}/subscription-success?purchase_type=credit_pack&wallet=platform&pack_id=${requestedPackId}&session_id={CHECKOUT_SESSION_ID}${returnPath ? `&return_to=${encodeURIComponent(returnPath)}` : ""}`,
+        cancel_url: returnPath ? `${origin}${returnPath}` : `${origin}/pricing#credit-packs`,
+      });
+
+      await recordCheckoutSession(supabaseAdmin, stripe, session, {
+        user_id: user.id,
+        purchase_type: "credit_pack",
+        pack_id: requestedPackId,
+        purchase_source: purchaseSource ?? "unknown",
+        amount_cents: pack.amount,
+      });
+
+      await emitBusinessEvent({
+        eventName: "checkout_session_created",
+        userId: user.id,
+        properties: {
+          purchase_type: "credit_pack",
+          pack_id: requestedPackId,
+          purchase_source: purchaseSource ?? "unknown",
+          amount_usd: Number((pack.amount / 100).toFixed(2)),
+          stripe_session_id: session.id,
+        },
       });
 
       logInfo("checkout:credit_pack_created", {
@@ -308,7 +461,12 @@ serve(withErrorBoundary(async (req: Request) => {
       throw new Error("Valid subscription tier is required");
     }
 
-    const pricing = getSubscriptionPricing(requestedTier, billingCycle);
+    const canonicalPrice = await getCanonicalSubscriptionPrice(
+      supabaseAdmin,
+      stripe,
+      requestedTier,
+      billingCycle,
+    );
     const metadata = buildMetadata({
       purchase_type: "subscription",
       tier: requestedTier,
@@ -331,15 +489,7 @@ serve(withErrorBoundary(async (req: Request) => {
       },
       line_items: [
         {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: pricing.name,
-              description: `${pricing.description} with ${billingCycle} billing`,
-            },
-            unit_amount: pricing.amount,
-            recurring: { interval: billingCycle === "yearly" ? "year" : "month" },
-          },
+          price: canonicalPrice.priceId,
           quantity: 1,
         },
       ],
@@ -348,8 +498,30 @@ serve(withErrorBoundary(async (req: Request) => {
       subscription_data: {
         metadata,
       },
-      success_url: `${origin}/subscription-success?purchase_type=subscription&tier=${requestedTier}&billing_cycle=${billingCycle}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/pricing`,
+      success_url: `${origin}/subscription-success?purchase_type=subscription&tier=${requestedTier}&billing_cycle=${billingCycle}&session_id={CHECKOUT_SESSION_ID}${returnPath ? `&return_to=${encodeURIComponent(returnPath)}` : ""}`,
+      cancel_url: returnPath ? `${origin}${returnPath}` : `${origin}/pricing`,
+    });
+
+    await recordCheckoutSession(supabaseAdmin, stripe, session, {
+      user_id: user.id,
+      purchase_type: "subscription",
+      plan: requestedTier,
+      billing_cycle: billingCycle,
+      purchase_source: purchaseSource ?? "unknown",
+      amount_cents: canonicalPrice.amountCents,
+    });
+
+    await emitBusinessEvent({
+      eventName: "checkout_session_created",
+      userId: user.id,
+      properties: {
+        purchase_type: "subscription",
+        plan: requestedTier,
+        billing_interval: billingCycle,
+        purchase_source: purchaseSource ?? "unknown",
+        amount_usd: Number((canonicalPrice.amountCents / 100).toFixed(2)),
+        stripe_session_id: session.id,
+      },
     });
 
     logInfo("checkout:subscription_created", {

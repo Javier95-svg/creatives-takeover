@@ -22,7 +22,7 @@ test('upgrade prompt gives Starter first-step treatment', () => {
   assert.match(source, /isStarterRecommendation = recommendedTier === "starter"/);
   assert.match(source, /Starter is your validation step/);
   assert.match(source, /Most popular/);
-  assert.match(source, /createCheckout\(recommendedTier, undefined, "monthly"\)/);
+  assert.match(source, /createCheckout\(recommendedTier, undefined, "monthly", sourceTool \?\? 'upgrade_prompt'\)/);
   assert.match(source, /Upgrade to Starter - \$9\/mo/);
 });
 
@@ -46,7 +46,7 @@ test('legacy dashboard nudge logic remains available without cluttering the cano
   assert.match(nudgeSource, /onboardingCompleted/);
   assert.match(nudgeSource, /totalAvailable < 20/);
   assert.match(nudgeSource, /trigger: "dashboard_nudge"/);
-  assert.match(nudgeSource, /createCheckout\("starter", undefined, "monthly"\)/);
+  assert.match(nudgeSource, /createCheckout\("starter", undefined, "monthly", 'starter_dashboard_nudge'\)/);
   assert.match(nudgeSource, /You have \{totalAvailable\} credits left/);
   assert.match(analyticsSource, /'post_icp_nudge'/);
   assert.match(analyticsSource, /'dashboard_nudge'/);

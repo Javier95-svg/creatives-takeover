@@ -1086,22 +1086,35 @@ export const trackRaiseTrackActivated = (properties: {
 }) => captureEvent('raise_track_activated', properties);
 
 export type FirstCustomerSprintEvent =
+  | 'first_customer_sprint_application_viewed'
+  | 'first_customer_sprint_application_submitted'
   | 'first_customer_sprint_viewed'
   | 'first_customer_sprint_started'
+  | 'first_customer_sprint_prospect_target_reached'
   | 'first_customer_sprint_message_selected'
   | 'first_customer_sprint_mentor_brief_created'
-  | 'first_customer_sprint_mentor_call_booked'
+  | 'first_customer_sprint_checkpoint_requested'
+  | 'first_customer_sprint_checkpoint_scheduled'
+  | 'first_customer_sprint_checkpoint_verified'
+  | 'first_customer_sprint_checkpoint_cancelled'
+  | 'first_customer_sprint_checkpoint_recommendation_recorded'
   | 'first_customer_sprint_outreach_target_reached'
   | 'first_customer_sprint_first_conversation'
   | 'first_customer_sprint_completed'
+  | 'first_customer_sprint_review_submitted'
+  | 'first_customer_sprint_continuation_checkout_started'
   | 'first_customer_sprint_abandoned';
 
 // Only operational dimensions are accepted here. Do not add message bodies,
 // contact names, URLs, mentor brief text, or founder notes.
 export const trackFirstCustomerSprint = (event: FirstCustomerSprintEvent, properties: {
-  sprint_id: string;
+  sprint_id?: string;
+  application_id?: string;
   status?: string;
   business_model?: string | null;
+  acquisition_source?: string;
+  qualified?: boolean;
+  customer_count?: number;
   attached_count?: number;
   outreach_count?: number;
   conversation_count?: number;
@@ -1109,6 +1122,13 @@ export const trackFirstCustomerSprint = (event: FirstCustomerSprintEvent, proper
   decision_category?: string;
   mentor_id?: string;
   discovery_call_id?: string;
+  value_score?: number;
+  primary_value?: string;
+  primary_friction?: string;
+  would_recommend?: boolean;
+  pack_id?: string;
+  price_cents?: number;
+  credits_deducted?: number;
 }) => captureEvent(event, properties);
 
 export const normalizePlanId = (planLike?: string | null): PlanId => {

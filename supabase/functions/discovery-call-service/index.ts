@@ -2,7 +2,6 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { logError, logInfo } from "../_shared/logger.ts";
 import { processDiscoveryCallProviderEvent } from "../_shared/discovery-call-provider-events.ts";
-import { emitBusinessEvent } from "../_shared/analytics.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -62,101 +61,21 @@ serve(async (req: Request) => {
     }
 
     if (action === "createIntent") {
-      const mentorId = typeof body.mentorId === "string" ? body.mentorId : "";
-      const serviceId = typeof body.serviceId === "string" ? body.serviceId : "";
-      const source = typeof body.source === "string" ? body.source : null;
-      const idempotencyKey = typeof body.idempotencyKey === "string" ? body.idempotencyKey : null;
-      const metadata = typeof body.metadata === "object" && body.metadata !== null ? body.metadata : {};
-
-      const rpcName = serviceId ? "create_service_discovery_call_intent" : "create_discovery_call_intent";
-      const rpcPayload = serviceId
-        ? {
-          p_founder_id: user.id,
-          p_service_id: serviceId,
-          p_source: source,
-          p_idempotency_key: idempotencyKey,
-          p_metadata: metadata,
-        }
-        : {
-          p_founder_id: user.id,
-          p_mentor_id: mentorId,
-          p_source: source,
-          p_idempotency_key: idempotencyKey,
-          p_metadata: metadata,
-        };
-
-      const { data, error } = await supabaseAdmin.rpc(rpcName, rpcPayload);
-
-      if (error) {
-        throw error;
-      }
-
-      // Notify admin + mentor the moment a booking is made. This is the reliable
-      // signal we control (mentors book on their own external calendars, so
-      // provider confirmation webhooks never arrive). Deduped per call by the
-      // notifier, so repeat invocations for the same call won't double-send.
-      if (data?.success && data?.callId) {
-        await supabaseAdmin.functions.invoke("notify-discovery-call-event", {
-          body: { discoveryCallId: data.callId, eventType: "booked" },
-        }).catch((notificationError) => {
-          logInfo("discovery-call-service:notification-after-intent-failed", {
-            callId: data.callId,
-            error: notificationError instanceof Error ? notificationError.message : String(notificationError),
-          });
-        });
-      }
-
-      const status = data?.success
-        ? 200
-        : data?.errorCode === "MENTOR_UNAVAILABLE" || data?.errorCode === "SERVICE_UNAVAILABLE"
-          ? 404
-          : 409;
-      return jsonResponse(data, status);
+      logInfo("discovery-call-service:feature_paused", { userId: user.id });
+      return jsonResponse({
+        success: false,
+        errorCode: "FEATURE_PAUSED",
+        error: "Discovery calls are temporarily paused. Message or save the mentor instead.",
+      }, 409);
     }
 
     if (action === "confirmBooking") {
-      const callId = typeof body.callId === "string" ? body.callId : "";
-      if (!callId) {
-        return jsonResponse({ success: false, error: "callId is required" }, 400);
-      }
-
-      const { data, error } = await supabaseAdmin.rpc("confirm_discovery_call_by_founder", {
-        p_call_id: callId,
-        p_founder_id: user.id,
-        p_metadata: typeof body.metadata === "object" && body.metadata !== null ? body.metadata : {},
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      // Surface discovery-call credit spend in the same taxonomy as every other
-      // metered action (credit_action_completed) so it shows up in credit/margin
-      // analytics. The charge happens inside the SQL RPC, which otherwise bypasses
-      // the event entirely. Keyed by callId so it stays idempotent per booking.
-      if (data?.success && Number(data?.chargedCredits) > 0) {
-        await emitBusinessEvent({
-          eventName: "credit_action_completed",
-          userId: user.id,
-          properties: {
-            feature_key: "DISCOVERY_CALL",
-            credit_cost: Number(data.chargedCredits),
-            source_tool: "discovery_call",
-            operation_id: callId,
-          },
-        });
-      }
-
-      const status = data?.success
-        ? 200
-        : data?.errorCode === "INSUFFICIENT_CREDITS"
-          ? 402
-          : data?.errorCode === "FORBIDDEN"
-            ? 403
-            : data?.errorCode === "NOT_FOUND"
-              ? 404
-              : 409;
-      return jsonResponse(data, status);
+      logInfo("discovery-call-service:self-confirmation-paused", { userId: user.id });
+      return jsonResponse({
+        success: false,
+        errorCode: "FEATURE_PAUSED",
+        error: "Founder-confirmed discovery calls are paused until provider verification is available.",
+      }, 409);
     }
 
     if (action === "listMine") {

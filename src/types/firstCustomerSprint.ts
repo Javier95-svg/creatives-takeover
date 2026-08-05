@@ -4,6 +4,13 @@ export const FIRST_CUSTOMER_MESSAGE_KEYS = ['discovery', 'problem', 'offer'] as 
 export type FirstCustomerMessageVariantKey = (typeof FIRST_CUSTOMER_MESSAGE_KEYS)[number];
 
 export type FirstCustomerSprintStatus = 'draft' | 'active' | 'paused' | 'completed';
+export type FirstCustomerCheckpointStatus = 'not_requested' | 'requested' | 'scheduled' | 'completed' | 'cancelled';
+export type FirstCustomerSprintApplicationStatus = 'submitted' | 'invited' | 'declined';
+export type FirstCustomerAcquisitionSource = 'mentor_referral' | 'homepage' | 'current_user' | 'direct' | 'other';
+export type FirstCustomerRecentOutreach = 'last_30_days' | 'older' | 'never';
+export type FirstCustomerApplicationBlocker = 'prospect_list' | 'messaging' | 'confidence' | 'accountability' | 'replies' | 'conversion' | 'time';
+export type FirstCustomerPrimaryValue = 'structure' | 'messaging' | 'evidence' | 'mentor' | 'accountability';
+export type FirstCustomerPrimaryFriction = 'prospect_list' | 'messaging' | 'sending' | 'replies' | 'conversion' | 'time' | 'not_urgent' | 'none';
 export type FirstCustomerDecision =
   | 'continue'
   | 'narrow_segment'
@@ -41,15 +48,84 @@ export interface FirstCustomerSprint {
   message_generation_count: number;
   mentor_id: string | null;
   discovery_call_id: string | null;
+  checkpoint_status: FirstCustomerCheckpointStatus;
+  checkpoint_requested_at: string | null;
+  checkpoint_scheduled_for: string | null;
+  checkpoint_verified_by: string | null;
+  checkpoint_verified_at: string | null;
+  checkpoint_redacted_brief: FirstCustomerMentorBrief | null;
   mentor_brief_version: number;
   mentor_brief_snapshot: FirstCustomerMentorBrief | null;
   mentor_checkpoint_completed_at: string | null;
   mentor_recommendation_summary: string | null;
   final_decision: FirstCustomerDecision | null;
   final_notes: string | null;
+  founder_value_score: number | null;
+  primary_value: FirstCustomerPrimaryValue | null;
+  primary_friction: FirstCustomerPrimaryFriction | null;
+  would_recommend: boolean | null;
+  review_note: string | null;
+  review_submitted_at: string | null;
+  continuation_from_sprint_id: string | null;
   completed_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface FirstCustomerSprintApplication {
+  id: string;
+  founder_id: string;
+  status: FirstCustomerSprintApplicationStatus;
+  business_model: 'b2b_saas' | 'service' | 'other';
+  founder_owns_sales: boolean;
+  has_sellable_product: boolean;
+  customer_count: number;
+  estimated_annual_customer_value_usd: number;
+  weekly_capacity_hours: number;
+  can_name_ten_prospects: boolean;
+  recent_outreach: FirstCustomerRecentOutreach;
+  primary_blocker: FirstCustomerApplicationBlocker;
+  product_url: string | null;
+  product_summary: string;
+  acquisition_source: FirstCustomerAcquisitionSource;
+  referring_mentor_id: string | null;
+  qualified: boolean;
+  qualification_reasons: string[];
+  admin_override_reason: string | null;
+  submitted_at: string;
+  reviewed_at: string | null;
+  invited_at: string | null;
+}
+
+export interface FirstCustomerSprintApplicationInput {
+  businessModel: FirstCustomerSprintApplication['business_model'];
+  founderOwnsSales: boolean;
+  hasSellableProduct: boolean;
+  customerCount: number;
+  estimatedAnnualCustomerValueUsd: number;
+  weeklyCapacityHours: number;
+  canNameTenProspects: boolean;
+  recentOutreach: FirstCustomerRecentOutreach;
+  primaryBlocker: FirstCustomerApplicationBlocker;
+  productUrl?: string;
+  productSummary: string;
+  acquisitionSource: FirstCustomerAcquisitionSource;
+  referringMentorId?: string | null;
+  referralCode?: string | null;
+}
+
+export interface FirstCustomerSprintReviewInput {
+  valueScore: number;
+  primaryValue: FirstCustomerPrimaryValue;
+  primaryFriction: FirstCustomerPrimaryFriction;
+  wouldRecommend: boolean;
+  reviewNote?: string;
+}
+
+export interface FirstCustomerContinuation {
+  paid: boolean;
+  purchasedAt?: string;
+  packId?: string;
 }
 
 export interface FirstCustomerSprintContact {
@@ -111,4 +187,47 @@ export interface FirstCustomerSprintSnapshot {
   derivedStep?: 'intake' | 'target_list' | 'message_preparation' | 'mentor_checkpoint' | 'execution' | 'review' | 'complete' | 'completed' | 'awaiting_final_review';
   awaitingFinalReview?: boolean;
   canComplete?: boolean;
+  continuation?: FirstCustomerContinuation;
+}
+
+export interface FirstCustomerSprintAdminApplication {
+  id: string;
+  founderId: string;
+  email: string;
+  status: FirstCustomerSprintApplicationStatus;
+  qualified: boolean;
+  qualificationReasons: string[];
+  source: FirstCustomerAcquisitionSource;
+  referringMentorId: string | null;
+  productSummary: string;
+  productUrl: string | null;
+  customerCount: number;
+  annualCustomerValueUsd: number;
+  weeklyCapacityHours: number;
+  recentOutreach: FirstCustomerRecentOutreach;
+  primaryBlocker: FirstCustomerApplicationBlocker;
+  submittedAt: string;
+  sprintId: string | null;
+  sprintStatus: FirstCustomerSprintStatus | null;
+  attached: number;
+  sent: number;
+  conversations: number;
+  mentorCheckpointCompleted: boolean;
+  checkpointStatus?: FirstCustomerCheckpointStatus;
+  checkpointScheduledFor?: string | null;
+  completedAt: string | null;
+  finalDecision: FirstCustomerDecision | null;
+  valueScore: number | null;
+  primaryValue: FirstCustomerPrimaryValue | null;
+  primaryFriction: FirstCustomerPrimaryFriction | null;
+  wouldRecommend: boolean | null;
+  paidContinuation: boolean;
+  verifiedReferrals: number;
+}
+
+export interface FirstCustomerSprintAdminSnapshot {
+  version: 1;
+  generatedAt: string;
+  summary: Record<string, number>;
+  applications: FirstCustomerSprintAdminApplication[];
 }

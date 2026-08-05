@@ -8,6 +8,7 @@ import {
   deriveFirstCustomerStep,
   deterministicMessageVariants,
   personalizeSprintMessage,
+  qualifyFirstCustomerSprintApplication,
   sprintEndDate,
   validateFirstCustomerIntake,
 } from '../src/lib/firstCustomerSprint.ts';
@@ -21,6 +22,23 @@ const evidence = (patch: Partial<FirstCustomerEvidenceCounts> = {}): FirstCustom
 test('a sprint lasts exactly 30 UTC days', () => {
   const start = new Date('2026-08-03T12:00:00.000Z');
   assert.equal(sprintEndDate(start).toISOString(), '2026-09-02T12:00:00.000Z');
+});
+
+test('pilot qualification applies the same demand filters to both acquisition sources', () => {
+  const qualified = qualifyFirstCustomerSprintApplication({
+    businessModel: 'b2b_saas', founderOwnsSales: true, hasSellableProduct: true,
+    customerCount: 1, estimatedAnnualCustomerValueUsd: 1200, weeklyCapacityHours: 3,
+    canNameTenProspects: true, recentOutreach: 'last_30_days',
+  });
+  assert.deepEqual(qualified, { qualified: true, reasons: [] });
+
+  const unqualified = qualifyFirstCustomerSprintApplication({
+    businessModel: 'service', founderOwnsSales: false, hasSellableProduct: false,
+    customerCount: 4, estimatedAnnualCustomerValueUsd: 500, weeklyCapacityHours: 1,
+    canNameTenProspects: false, recentOutreach: 'never',
+  });
+  assert.equal(unqualified.qualified, false);
+  assert.equal(unqualified.reasons.length, 8);
 });
 
 test('intake requires an offer, buyer, problem, proof, customer value, and two weekly hours', () => {
@@ -40,7 +58,7 @@ test('fallback generation creates three distinct, founder-grounded variants', ()
 });
 
 test('next action follows the weakest target and overdue work is preserved for final review', () => {
-  const base = { status: 'active' as const, endsAt: '2026-09-02T00:00:00.000Z', selectedMessage: null, linkedCall: false, evidence: evidence() };
+  const base = { status: 'active' as const, endsAt: '2026-09-02T00:00:00.000Z', selectedMessage: null, checkpointComplete: false, evidence: evidence() };
   assert.equal(deriveFirstCustomerStep(base, new Date('2026-08-10')), 'target_list');
   assert.equal(deriveFirstCustomerStep({ ...base, evidence: evidence({ attachedProspects: 10 }) }, new Date('2026-08-10')), 'message_preparation');
   assert.equal(deriveFirstCustomerStep({ ...base, selectedMessage: 'problem', evidence: evidence({ attachedProspects: 10 }) }, new Date('2026-08-10')), 'mentor_checkpoint');
@@ -67,8 +85,8 @@ test('mentor brief redacts contact notes, profile URLs, and other private fields
     stage: 'qualified', last_activity_at: '', notes: 'PRIVATE NOTE', profile_url: 'https://private.example',
   }], evidence({ attachedProspects: 1 }), '2026-08-03T00:00:00Z');
   const serialized = JSON.stringify(brief);
-  assert.doesNotMatch(serialized, /PRIVATE NOTE|private\.example|secret\.example/);
-  assert.match(serialized, /Ada|Analytical|qualified/);
+  assert.doesNotMatch(serialized, /PRIVATE NOTE|private\.example|secret\.example|Ada|Analytical/);
+  assert.match(serialized, /Prospect 1|qualified/);
 });
 
 test('database contract enforces invitation, ownership, idempotency, call/contact validation, and completion', () => {
@@ -88,16 +106,57 @@ test('database contract enforces invitation, ownership, idempotency, call/contac
   assert.match(migration, /GRANT EXECUTE[\s\S]*TO authenticated/);
 });
 
-test('UI contract keeps sending manual, uses existing booking route, and handles provider fallback', () => {
+test('checkpoint contract is admin-coordinated, redacted, and never deducts credits', () => {
   const page = readFileSync(new URL('../src/pages/FirstCustomerSprintPage.tsx', import.meta.url), 'utf8');
+  const admin = readFileSync(new URL('../src/pages/AdminFirstCustomerSprintPage.tsx', import.meta.url), 'utf8');
   const evidenceWorkspace = readFileSync(new URL('../src/components/founder-cycle/CustomerEvidenceWorkspace.tsx', import.meta.url), 'utf8');
   const booking = readFileSync(new URL('../src/pages/community/MentorBookingPage.tsx', import.meta.url), 'utf8');
+  const migration = readFileSync(new URL('../supabase/migrations/20260805120000_first_customer_sprint_admin_checkpoint.sql', import.meta.url), 'utf8');
   const assistant = readFileSync(new URL('../supabase/functions/first-customer-sprint-assistant/index.ts', import.meta.url), 'utf8');
-  assert.match(page, /\/mentorship\/book\/\$\{mentor\.id\}\?sprint=\$\{sprint\.id\}/);
-  assert.match(page, /The existing 10-credit call policy applies/);
+  assert.match(page, /Request mentor checkpoint/);
+  assert.match(page, /requestCheckpoint/);
+  assert.doesNotMatch(page, /\/mentorship\/book|10-credit/i);
+  assert.match(admin, /admin_update_first_customer_sprint_checkpoint_v1/);
+  assert.match(admin, /Schedule checkpoint/);
+  assert.match(admin, /Verify complete/);
   assert.match(evidenceWorkspace, /Mark sent/);
   assert.match(evidenceWorkspace, /sprintId[\s\S]*messageVariantKey/);
-  assert.match(booking, /Invalid, foreign, or completed sprint IDs deliberately degrade to ordinary booking/);
+  assert.match(booking, /Navigate/);
+  assert.doesNotMatch(booking, /confirmBooking|createIntent|discovery-call-service/);
+  assert.match(migration, /request_first_customer_sprint_checkpoint_v1/);
+  assert.match(migration, /admin_update_first_customer_sprint_checkpoint_v1/);
+  assert.match(migration, /checkpoint_status IN \('not_requested', 'requested', 'scheduled', 'completed', 'cancelled'\)/);
+  assert.match(migration, /'creditsDeducted', 0/);
+  assert.match(migration, /NEW\.checkpoint_status = 'completed'[\s\S]*NEW\.mentor_recommendation_summary[\s\S]*NEW\.checkpoint_verified_at IS NOT NULL/);
+  assert.doesNotMatch(migration, /deduct_credits_atomic/);
   assert.match(assistant, /fallback/);
   assert.match(assistant, /message_generation_count >= 2/);
+});
+
+test('demand-validation contract supports a balanced cohort, structured review, and paid continuation', () => {
+  const migration = readFileSync(new URL('../supabase/migrations/20260804120000_first_customer_sprint_demand_validation.sql', import.meta.url), 'utf8');
+  const application = readFileSync(new URL('../src/pages/FirstCustomerSprintApplicationPage.tsx', import.meta.url), 'utf8');
+  const admin = readFileSync(new URL('../src/pages/AdminFirstCustomerSprintPage.tsx', import.meta.url), 'utf8');
+  const sprint = readFileSync(new URL('../src/pages/FirstCustomerSprintPage.tsx', import.meta.url), 'utf8');
+  const checkout = readFileSync(new URL('../supabase/functions/create-checkout/index.ts', import.meta.url), 'utf8');
+  const webhook = readFileSync(new URL('../supabase/functions/stripe-webhook/index.ts', import.meta.url), 'utf8');
+
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS public\.first_customer_sprint_applications/);
+  assert.match(migration, /p_business_model <> 'b2b_saas'/);
+  assert.match(migration, /p_estimated_annual_customer_value_usd < 1000/);
+  assert.match(migration, /p_recent_outreach <> 'last_30_days'/);
+  assert.match(migration, /A reason is required to override qualification/);
+  assert.match(migration, /JOIN public\.referral_codes code ON code\.user_id=mentor\.user_id/);
+  assert.match(migration, /review_submitted_at IS NULL/);
+  assert.match(migration, /purchaseContextId/);
+  assert.match(migration, /continuation_from_sprint_id/);
+  assert.match(migration, /one paid continuation only/);
+  assert.match(migration, /'mentorInvited'/);
+  assert.match(application, /mentor referrals and public applicants/);
+  assert.match(admin, /Mentor referrals/);
+  assert.match(admin, /Public\/current audience/);
+  assert.match(sprint, /Unlock sprint two for \$8/);
+  assert.match(checkout, /Complete and review the sprint before purchasing the continuation/);
+  assert.match(checkout, /continuation_from_sprint_id/);
+  assert.match(webhook, /first_customer_sprint_continuation_purchased/);
 });

@@ -71,7 +71,7 @@ export const CreditGateProvider = ({ children }: { children: ReactNode }) => {
   const openStarterCheckout = useCallback(async () => {
     setIsStarterCheckoutLoading(true);
     try {
-      await createCheckout("starter", undefined, "monthly");
+      await createCheckout("starter", undefined, "monthly", 'credit_gate');
     } finally {
       setIsStarterCheckoutLoading(false);
     }

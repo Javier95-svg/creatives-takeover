@@ -53,7 +53,7 @@ test('journey recommendation card uses saved outputs, dismissal, and checkout fl
 
   assert.match(source, /ct_journey_next_step/);
   assert.match(source, /buildJourneyRecommendation/);
-  assert.match(source, /createCheckout\(recommendation\.targetPlan, undefined, "monthly"\)/);
+  assert.match(source, /createCheckout\(recommendation\.targetPlan, undefined, "monthly", 'journey_next_step'\)/);
   assert.match(source, /trackJourneyRecommendationShown/);
   assert.match(source, /trackJourneyRecommendationClicked/);
 });

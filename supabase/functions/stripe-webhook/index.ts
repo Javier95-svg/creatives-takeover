@@ -207,6 +207,95 @@ const resolveSubscriptionBillingCycle = (subscription: any): BillingCycle => {
     : "monthly";
 };
 
+const resolveCanonicalSubscriptionConfig = async (supabaseAdmin: any, subscription: any) => {
+  const billingCycle = resolveSubscriptionBillingCycle(subscription);
+  const priceId = getStripeSubscriptionPriceId(subscription);
+  if (!priceId) throw new Error("UNKNOWN_STRIPE_PRICE: subscription has no price ID");
+
+  const priceColumn = billingCycle === "yearly"
+    ? "stripe_price_id_yearly"
+    : "stripe_price_id_monthly";
+  const { data, error } = await supabaseAdmin
+    .from("subscription_tiers")
+    .select("tier_name, monthly_credits")
+    .eq(priceColumn, priceId)
+    .in("tier_name", ["starter", "rising", "pro"])
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data?.tier_name) {
+    throw new Error(`UNKNOWN_STRIPE_PRICE: ${priceId} (${billingCycle})`);
+  }
+
+  const metadataTier = subscription?.metadata?.tier ?? subscription?.metadata?.subscription_tier;
+  if (
+    typeof metadataTier === "string"
+    && normalizeSubscriptionTier(metadataTier) !== data.tier_name
+  ) {
+    throw new Error(
+      `STRIPE_PRICE_TIER_MISMATCH: ${priceId} maps to ${data.tier_name}, metadata says ${metadataTier}`,
+    );
+  }
+
+  return {
+    tier: data.tier_name as string,
+    billingCycle,
+    priceId,
+  };
+};
+
+const updateCheckoutSessionTerminalState = async (
+  supabaseAdmin: any,
+  {
+    stripeSessionId,
+    status,
+    eventId,
+    eventType,
+    failureCode,
+  }: {
+    stripeSessionId: string | null;
+    status: "completed" | "expired" | "payment_failed";
+    eventId: string;
+    eventType: string;
+    failureCode?: string | null;
+  },
+) => {
+  if (!stripeSessionId) return null;
+  const now = new Date().toISOString();
+  let query = supabaseAdmin
+    .from("stripe_checkout_sessions")
+    .update({
+      status,
+      terminal_event_id: eventId,
+      terminal_event_type: eventType,
+      failure_code: failureCode ?? null,
+      terminal_at: now,
+      updated_at: now,
+    })
+    .eq("stripe_session_id", stripeSessionId);
+
+  if (status === "payment_failed") query = query.eq("status", "created");
+  const { data, error } = await query.select("*").maybeSingle();
+  if (error) throw error;
+  return data;
+};
+
+const findCheckoutSessionId = async ({
+  paymentIntentId,
+  subscriptionId,
+}: {
+  paymentIntentId?: string | null;
+  subscriptionId?: string | null;
+}) => {
+  if (!paymentIntentId && !subscriptionId) return null;
+  const sessions = await stripe.checkout.sessions.list({
+    ...(paymentIntentId ? { payment_intent: paymentIntentId } : {}),
+    ...(subscriptionId ? { subscription: subscriptionId } : {}),
+    limit: 1,
+  });
+  return sessions.data[0]?.id ?? null;
+};
+
 const mergeMetadata = (...sources: Array<Record<string, unknown> | null | undefined>) => {
   return sources.reduce<Record<string, unknown>>((acc, source) => {
     if (!source) return acc;
@@ -757,8 +846,7 @@ async function handleCheckoutCompleted(
   }
 
   if (session.mode !== "subscription") {
-    console.log("[Checkout] Skipping unsupported checkout mode", { mode: session.mode });
-    return;
+    throw new Error(`UNSUPPORTED_CHECKOUT_MODE: ${String(session.mode)}`);
   }
 
   if (!resolvedUserId || !customerEmail || typeof session.subscription !== "string") {
@@ -769,11 +857,12 @@ async function handleCheckoutCompleted(
       metadata: combinedMetadata,
       paymentLinkId,
     });
-    return;
+    throw new Error("UNRESOLVED_CHECKOUT_USER: missing subscription context");
   }
 
   const subscription = await stripe.subscriptions.retrieve(session.subscription);
-  const subscriptionPriceId = getStripeSubscriptionPriceId(subscription);
+  const canonicalConfig = await resolveCanonicalSubscriptionConfig(supabaseAdmin, subscription);
+  const subscriptionPriceId = canonicalConfig.priceId;
   const { data: subscriptionResult, error: subscriptionError } = await supabaseAdmin.rpc(
     "apply_stripe_subscription_checkout",
     buildApplyStripeSubscriptionCheckoutRpcPayload({
@@ -892,7 +981,7 @@ async function handleCreditPackPurchase({
       checkoutSessionId,
       paymentIntentId,
     });
-    return;
+    throw new Error("UNKNOWN_CREDIT_PACK: payment could not be mapped to a configured pack");
   }
 
   if (!resolvedUserId) {
@@ -903,7 +992,7 @@ async function handleCreditPackPurchase({
       amountCents,
       paymentLinkId,
     });
-    return;
+    throw new Error("UNRESOLVED_CHECKOUT_USER: credit-pack buyer could not be resolved");
   }
 
   const purchaseReference = paymentIntentId ?? checkoutSessionId ?? `${purchase.id}:${resolvedUserId}`;
@@ -968,6 +1057,7 @@ async function handleCreditPackPurchase({
     const purchaseSource =
       getMetadataString(metadata, ["purchase_source", "purchaseSource"]) ??
       (paymentLinkId ? "payment_link" : "unknown");
+    const purchaseContextId = getMetadataString(metadata, ["purchase_context_id", "purchaseContextId"]);
 
     await supabaseAdmin.from("credit_transactions").insert({
       user_id: resolvedUserId,
@@ -982,6 +1072,7 @@ async function handleCreditPackPurchase({
         creditsAdded: purchase.credits,
         priceCents: purchase.price_cents,
         purchaseSource,
+        purchaseContextId,
         stripeSessionId: checkoutSessionId,
         stripePaymentIntentId: paymentIntentId,
         stripePaymentLinkId: paymentLinkId,
@@ -1004,10 +1095,23 @@ async function handleCreditPackPurchase({
         credits_added: purchase.credits,
         price_cents: purchase.price_cents,
         purchase_source: purchaseSource,
+        purchase_context_id: purchaseContextId,
         source_event_type: sourceEventType,
         operation_id: idempotencyKey,
       },
     });
+
+    if (purchaseSource === "first_customer_sprint" && purchaseContextId) {
+      await emitBusinessEvent({
+        eventName: "first_customer_sprint_continuation_purchased",
+        userId: resolvedUserId,
+        properties: {
+          sprint_id: purchaseContextId,
+          pack_id: purchase.id,
+          price_cents: purchase.price_cents,
+        },
+      });
+    }
 
     await createCreditPurchaseNotification(supabaseAdmin, {
       userId: resolvedUserId,
@@ -1111,13 +1215,16 @@ async function handleSubscriptionChange(
 
   if (!resolvedUserId || !customerEmail) {
     console.error("[Subscription] Missing user context", { customerId, customerEmail });
-    return;
+    throw new Error("UNRESOLVED_SUBSCRIPTION_USER: subscription change could not be attached");
   }
 
   const status = typeof subscription.status === "string" ? subscription.status : "";
   const isSubscribed = ["active", "trialing", "past_due"].includes(status);
-  const tier = isSubscribed ? resolveSubscriptionTier(subscription) : "rookie";
-  const billingCycle = isSubscribed ? resolveSubscriptionBillingCycle(subscription) : null;
+  // Validate the Price even when Stripe is transitioning the subscription out
+  // of an active state. An unknown Price must never silently downgrade a user.
+  const canonicalConfig = await resolveCanonicalSubscriptionConfig(supabaseAdmin, subscription);
+  const tier = isSubscribed ? canonicalConfig.tier : "rookie";
+  const billingCycle = canonicalConfig.billingCycle;
   const subscriptionEnd = subscription.current_period_end
     ? new Date(subscription.current_period_end * 1000).toISOString()
     : null;
@@ -1188,8 +1295,10 @@ async function handleSubscriptionDeleted(
 
   if (!resolvedUserId) {
     console.error("[Subscription] Missing user context for deletion", { customerId, customerEmail });
-    return;
+    throw new Error("UNRESOLVED_SUBSCRIPTION_USER: deletion could not be attached");
   }
+
+  const canonicalConfig = await resolveCanonicalSubscriptionConfig(supabaseAdmin, subscription);
 
   const { data, error } = await supabaseAdmin.rpc(
     "downgrade_stripe_subscription_to_rookie",
@@ -1215,7 +1324,7 @@ async function handleSubscriptionDeleted(
     eventName: "subscription_cancelled",
     userId: resolvedUserId,
     properties: {
-      plan: resolveSubscriptionTier(subscription),
+      plan: canonicalConfig.tier,
       days_since_start: daysBetweenUnixSeconds(
         subscription.start_date ?? subscription.created ?? null,
         subscription.ended_at ?? subscription.canceled_at ?? null,
@@ -1275,11 +1384,12 @@ async function handleInvoicePaid(
       customerEmail,
       explicitUserId,
     });
-    return;
+    throw new Error("UNRESOLVED_INVOICE_USER: paid invoice could not be attached");
   }
 
-  const tier = resolveSubscriptionTier(subscription);
-  const billingCycle = resolveSubscriptionBillingCycle(subscription);
+  const canonicalConfig = await resolveCanonicalSubscriptionConfig(supabaseAdmin, subscription);
+  const tier = canonicalConfig.tier;
+  const billingCycle = canonicalConfig.billingCycle;
   const subscriptionEnd = subscription.current_period_end
     ? new Date(subscription.current_period_end * 1000).toISOString()
     : null;
@@ -1330,6 +1440,100 @@ async function handleInvoicePaid(
   });
 }
 
+async function handleCheckoutExpired(
+  session: any,
+  supabaseAdmin: any,
+  eventContext: { stripeEventId: string; stripeEventType: string },
+) {
+  const row = await updateCheckoutSessionTerminalState(supabaseAdmin, {
+    stripeSessionId: typeof session.id === "string" ? session.id : null,
+    status: "expired",
+    eventId: eventContext.stripeEventId,
+    eventType: eventContext.stripeEventType,
+  });
+
+  const userId = row?.user_id
+    ?? getMetadataString(session.metadata as Record<string, unknown> | null | undefined, ["user_id"])
+    ?? (typeof session.client_reference_id === "string" ? session.client_reference_id : null);
+  if (!userId) throw new Error("UNRESOLVED_CHECKOUT_USER: expired session has no user");
+
+  await emitBusinessEvent({
+    eventName: "checkout_session_expired",
+    userId,
+    properties: {
+      purchase_type: row?.purchase_type ?? session.mode ?? "unknown",
+      plan: row?.plan ?? session.metadata?.tier ?? undefined,
+      billing_interval: row?.billing_cycle ?? session.metadata?.billing_cycle ?? undefined,
+      pack_id: row?.pack_id ?? session.metadata?.pack_id ?? undefined,
+      purchase_source: row?.purchase_source ?? session.metadata?.purchase_source ?? "unknown",
+      stripe_session_id: session.id,
+    },
+  });
+}
+
+async function handlePaymentFailure(
+  object: any,
+  supabaseAdmin: any,
+  eventContext: { stripeEventId: string; stripeEventType: string },
+) {
+  const isInvoice = eventContext.stripeEventType === "invoice.payment_failed";
+  const subscriptionId = isInvoice && typeof object.subscription === "string"
+    ? object.subscription
+    : null;
+  const paymentIntentId = isInvoice
+    ? (typeof object.payment_intent === "string" ? object.payment_intent : null)
+    : (typeof object.id === "string" ? object.id : null);
+  const customerId = typeof object.customer === "string" ? object.customer : null;
+  const customerContext = await getStripeCustomerContext(customerId);
+  const metadata = (object.metadata ?? {}) as Record<string, unknown>;
+  const explicitUserId = getMetadataString(metadata, ["user_id"]);
+  const customerEmail = typeof object.customer_email === "string"
+    ? object.customer_email
+    : (typeof object.receipt_email === "string" ? object.receipt_email : customerContext.email);
+  const userId = await resolveUserId(supabaseAdmin, {
+    explicitUserId,
+    customerId,
+    customerEmail,
+    customerMetadataUserId: customerContext.metadataUserId,
+  });
+  if (!userId) throw new Error("UNRESOLVED_PAYMENT_USER: failed payment could not be attached");
+
+  let tier: string | undefined;
+  let billingCycle: BillingCycle | undefined;
+  if (subscriptionId) {
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const canonicalConfig = await resolveCanonicalSubscriptionConfig(supabaseAdmin, subscription);
+    tier = canonicalConfig.tier;
+    billingCycle = canonicalConfig.billingCycle;
+  }
+
+  const stripeSessionId = await findCheckoutSessionId({ paymentIntentId, subscriptionId });
+  const failureCode = getMetadataString(
+    object.last_payment_error as Record<string, unknown> | null | undefined,
+    ["code", "decline_code"],
+  ) ?? (typeof object.status === "string" ? object.status : "payment_failed");
+  await updateCheckoutSessionTerminalState(supabaseAdmin, {
+    stripeSessionId,
+    status: "payment_failed",
+    eventId: eventContext.stripeEventId,
+    eventType: eventContext.stripeEventType,
+    failureCode,
+  });
+
+  await emitBusinessEvent({
+    eventName: "payment_failed",
+    userId,
+    properties: {
+      source_event_type: eventContext.stripeEventType,
+      plan: tier,
+      billing_interval: billingCycle,
+      amount_usd: Number((Number(object.amount_due ?? object.amount ?? 0) / 100).toFixed(2)),
+      failure_code: failureCode,
+      stripe_session_id: stripeSessionId ?? undefined,
+    },
+  });
+}
+
 serve(async (req) => {
   const signature = req.headers.get("stripe-signature");
 
@@ -1364,11 +1568,12 @@ serve(async (req) => {
           ? object.customer_email
           : (typeof object.receipt_email === "string" ? object.receipt_email : null));
 
-    const { data: existingEvent } = await supabaseAdmin
+    const { data: existingEvent, error: existingEventError } = await supabaseAdmin
       .from("stripe_webhook_events")
       .select("processed")
       .eq("event_id", event.id)
       .maybeSingle();
+    if (existingEventError) throw existingEventError;
 
     if (existingEvent?.processed) {
       return new Response(JSON.stringify({ received: true, duplicate: true }), {
@@ -1378,7 +1583,7 @@ serve(async (req) => {
     }
 
     if (!existingEvent) {
-      await supabaseAdmin.from("stripe_webhook_events").insert({
+      const { error: insertEventError } = await supabaseAdmin.from("stripe_webhook_events").insert({
         event_id: event.id,
         event_type: event.type,
         customer_id: customerId,
@@ -1387,11 +1592,31 @@ serve(async (req) => {
         payload: event,
         processed: false,
       });
+      if (insertEventError) throw insertEventError;
     }
 
     switch (event.type) {
       case "checkout.session.completed":
         await handleCheckoutCompleted(object, supabaseAdmin, {
+          stripeEventId: event.id,
+          stripeEventType: event.type,
+        });
+        await updateCheckoutSessionTerminalState(supabaseAdmin, {
+          stripeSessionId: typeof object.id === "string" ? object.id : null,
+          status: "completed",
+          eventId: event.id,
+          eventType: event.type,
+        });
+        break;
+      case "checkout.session.expired":
+        await handleCheckoutExpired(object, supabaseAdmin, {
+          stripeEventId: event.id,
+          stripeEventType: event.type,
+        });
+        break;
+      case "invoice.payment_failed":
+      case "payment_intent.payment_failed":
+        await handlePaymentFailure(object, supabaseAdmin, {
           stripeEventId: event.id,
           stripeEventType: event.type,
         });
@@ -1423,7 +1648,7 @@ serve(async (req) => {
         console.log(`[Webhook] Unhandled event type: ${event.type}`);
     }
 
-    await supabaseAdmin
+    const { error: markProcessedError } = await supabaseAdmin
       .from("stripe_webhook_events")
       .update({
         processed: true,
@@ -1431,6 +1656,7 @@ serve(async (req) => {
         error_message: null,
       })
       .eq("event_id", event.id);
+    if (markProcessedError) throw markProcessedError;
 
     return new Response(JSON.stringify({ received: true }), {
       headers: { "Content-Type": "application/json" },

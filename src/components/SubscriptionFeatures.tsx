@@ -112,13 +112,6 @@ const creditBreakdown: {
   ],
   community: [
     {
-      name: "Discovery Calls (Mentorship)",
-      description: "Available on every plan with no monthly cap. Each confirmed booking costs 10 credits.",
-      badge: "10 credits",
-      badgeVariant: "outline",
-      badgeClassName: "bg-info-subtle dark:bg-info/30",
-    },
-    {
       name: "Find a Co-Founder Posting",
       description: `Available on every plan. Each successfully published cofounder post costs ${CREDIT_COSTS.COFOUNDER_POST} credits.`,
       badge: `${CREDIT_COSTS.COFOUNDER_POST} credits`,

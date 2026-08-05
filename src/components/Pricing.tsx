@@ -11,7 +11,7 @@ import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { useLocation } from "react-router-dom";
 import { PLAN_HIGHLIGHTS, PLAN_MONTHLY_CREDITS } from "@/config/planPermissions";
 import { PLAN_PRICING } from "@/config/pricing";
-import { appendCheckoutIntentParam, redirectToCheckoutUrl, resolveCheckoutIntentUrl } from "@/lib/checkoutRedirect";
+import { appendCheckoutIntentParam } from "@/lib/checkoutRedirect";
 import { RevealGroup } from "@/components/animations/ScrollReveal";
 
 type BillingCycle = "monthly" | "yearly";
@@ -129,7 +129,7 @@ const formatPrice = (value: number) => {
 };
 
 export default function Pricing() {
-  const { loading, subscriptionData } = useSubscription();
+  const { loading, subscriptionData, createCheckout } = useSubscription();
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -178,14 +178,8 @@ export default function Pricing() {
       return;
     }
 
-    const checkoutUrl = resolveCheckoutIntentUrl(checkoutIntent);
-
-    if (checkoutUrl) {
-      redirectToCheckoutUrl(checkoutUrl, user);
-      return;
-    }
-
-    setPendingPlan(null);
+    const checkoutUrl = await createCheckout(plan, undefined, billingCycle, 'pricing_page');
+    if (!checkoutUrl) setPendingPlan(null);
   };
 
   // The plan cards are static marketing content (PLAN_CONFIG), so they render

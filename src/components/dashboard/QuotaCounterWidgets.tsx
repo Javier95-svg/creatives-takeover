@@ -1,4 +1,4 @@
-import { Phone, Eye, Building2, Infinity as InfinityIcon } from 'lucide-react';
+import { Eye, Building2, Infinity as InfinityIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
 import { useMonthlyQuotas } from '@/hooks/useMonthlyQuotas';
@@ -20,13 +20,12 @@ const QuotaBar = ({ used, max }: { used: number; max: number }) => {
 };
 
 export const QuotaCounterWidgets = () => {
-  const { plan } = usePlanAccess('discovery_calls');
+  const { plan } = usePlanAccess('vc_search_profile');
   const { quotas, loading, cycleStart } = useMonthlyQuotas();
   const { subscriptionData } = useSubscription();
 
   const currentPlan = normalizePlan(subscriptionData.subscription_tier || plan);
 
-  const dcLimit = getMonthlyQuotaLimit('discovery_calls', currentPlan);
   const vcLimit = getMonthlyQuotaLimit('vc_search_profile', currentPlan);
   const accLimit = getMonthlyQuotaLimit('accelerator_profile', currentPlan);
 
@@ -46,13 +45,6 @@ export const QuotaCounterWidgets = () => {
 
   const counters = [
     {
-      icon: Phone,
-      label: 'Discovery Calls',
-      used: quotas.discovery_calls_used,
-      max: dcLimit,
-      suffix: '10 credits each',
-    },
-    {
       icon: Eye,
       label: 'VC Profiles',
       used: quotas.vc_profiles_viewed,
@@ -66,18 +58,12 @@ export const QuotaCounterWidgets = () => {
       max: accLimit,
       suffix: isUnlimitedQuotaLimit(accLimit) ? 'unlimited' : 'views',
     },
-  ].filter((counter) => {
-    if (currentPlan === 'rookie') {
-      return counter.label === 'Discovery Calls';
-    }
+  ];
 
-    return true;
-  });
-
-  if (loading) return null;
+  if (loading || currentPlan === 'rookie') return null;
 
   return (
-    <div className={`grid grid-cols-1 gap-3 ${currentPlan === 'rookie' ? '' : 'sm:grid-cols-2 xl:grid-cols-3'}`}>
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       {counters.map(({ icon: Icon, label, used, max, suffix }) => (
         <Card key={label} className="bg-card/60 border-border/50 backdrop-blur-sm">
           <CardContent className="p-4">
@@ -101,9 +87,7 @@ export const QuotaCounterWidgets = () => {
               )}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              {label === 'Discovery Calls'
-                ? 'No monthly cap. Credits are charged when a booking is confirmed.'
-                : isUnlimitedQuotaLimit(max)
+              {isUnlimitedQuotaLimit(max)
                 ? 'No monthly cap on this workflow for your plan.'
                 : `${Math.max(max - used, 0)} remaining this billing cycle.`}
             </p>

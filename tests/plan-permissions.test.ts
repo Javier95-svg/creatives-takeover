@@ -30,7 +30,7 @@ test('plan highlights match the authoritative four-plan contract', () => {
     'One recommended market-facing action',
     'Core build tools with transparent credit costs',
     'Browse VC Search and Accelerator Hunt',
-    'Expert discovery calls at 10 credits per booking',
+    'Browse, message, and save mentors',
   ]);
 
   assert.deepEqual(PLAN_HIGHLIGHTS.starter, [

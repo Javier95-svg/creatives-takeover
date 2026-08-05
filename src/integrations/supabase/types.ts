@@ -7069,6 +7069,60 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_checkout_sessions: {
+        Row: {
+          amount_cents: number
+          billing_cycle: string | null
+          created_at: string
+          failure_code: string | null
+          pack_id: string | null
+          plan: string | null
+          purchase_source: string
+          purchase_type: string
+          status: string
+          stripe_session_id: string
+          terminal_at: string | null
+          terminal_event_id: string | null
+          terminal_event_type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          billing_cycle?: string | null
+          created_at?: string
+          failure_code?: string | null
+          pack_id?: string | null
+          plan?: string | null
+          purchase_source?: string
+          purchase_type: string
+          status?: string
+          stripe_session_id: string
+          terminal_at?: string | null
+          terminal_event_id?: string | null
+          terminal_event_type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          billing_cycle?: string | null
+          created_at?: string
+          failure_code?: string | null
+          pack_id?: string | null
+          plan?: string | null
+          purchase_source?: string
+          purchase_type?: string
+          status?: string
+          stripe_session_id?: string
+          terminal_at?: string | null
+          terminal_event_id?: string | null
+          terminal_event_type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscribers: {
         Row: {
           billing_anchor_at: string | null
@@ -7139,6 +7193,8 @@ export type Database = {
           stripe_payment_link_monthly: string | null
           stripe_payment_link_yearly: string | null
           stripe_price_id: string | null
+          stripe_price_id_monthly: string | null
+          stripe_price_id_yearly: string | null
           tier_name: string
         }
         Insert: {
@@ -7150,6 +7206,8 @@ export type Database = {
           stripe_payment_link_monthly?: string | null
           stripe_payment_link_yearly?: string | null
           stripe_price_id?: string | null
+          stripe_price_id_monthly?: string | null
+          stripe_price_id_yearly?: string | null
           tier_name: string
         }
         Update: {
@@ -7161,6 +7219,8 @@ export type Database = {
           stripe_payment_link_monthly?: string | null
           stripe_payment_link_yearly?: string | null
           stripe_price_id?: string | null
+          stripe_price_id_monthly?: string | null
+          stripe_price_id_yearly?: string | null
           tier_name?: string
         }
         Relationships: []
