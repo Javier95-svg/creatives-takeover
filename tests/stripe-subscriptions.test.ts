@@ -5,7 +5,10 @@ import { readFileSync } from 'node:fs';
 import {
   buildApplyStripeSubscriptionCheckoutRpcPayload,
   buildDowngradeStripeSubscriptionToRookieRpcPayload,
+  getStripeInvoiceSubscriptionId,
   getStripeSubscriptionBillingCycle,
+  getStripeSubscriptionPeriodEnd,
+  getStripeSubscriptionPeriodStart,
   getStripeSubscriptionPriceId,
 } from '../supabase/functions/_shared/stripe-subscriptions.ts';
 
@@ -29,6 +32,48 @@ const subscription = {
 test('subscription helper extracts Stripe price id for tier lookup', () => {
   assert.equal(getStripeSubscriptionPriceId(subscription), 'price_starter_monthly');
   assert.equal(getStripeSubscriptionBillingCycle(subscription), 'monthly');
+});
+
+// The webhook endpoint delivers event.data.object in ITS OWN API version
+// (2026-01-28.clover), while the SDK is pinned to 2023-10-16. Stripe's 2025
+// "Basil" releases moved the billing period onto subscription items and the
+// invoice's subscription pointer under `parent`. Reading only the legacy path
+// fails silently — undefined, not an error — so renewals get skipped and
+// monthly credits are never refreshed. Both shapes must keep working.
+test('subscription period reads legacy and Basil-era field locations', () => {
+  assert.equal(getStripeSubscriptionPeriodStart(subscription), 1_771_000_000);
+  assert.equal(getStripeSubscriptionPeriodEnd(subscription), 1_773_592_000);
+
+  const basilSubscription = {
+    id: 'sub_123',
+    items: {
+      data: [{
+        price: { id: 'price_starter_monthly', recurring: { interval: 'month' } },
+        current_period_start: 1_771_000_000,
+        current_period_end: 1_773_592_000,
+      }],
+    },
+  };
+  assert.equal(getStripeSubscriptionPeriodStart(basilSubscription), 1_771_000_000);
+  assert.equal(getStripeSubscriptionPeriodEnd(basilSubscription), 1_773_592_000);
+  assert.equal(getStripeSubscriptionPeriodEnd({}), null);
+});
+
+test('invoice subscription id reads legacy and Basil-era field locations', () => {
+  assert.equal(getStripeInvoiceSubscriptionId({ subscription: 'sub_legacy' }), 'sub_legacy');
+  assert.equal(getStripeInvoiceSubscriptionId({ subscription: { id: 'sub_expanded' } }), 'sub_expanded');
+  assert.equal(
+    getStripeInvoiceSubscriptionId({ parent: { subscription_details: { subscription: 'sub_basil' } } }),
+    'sub_basil',
+  );
+  assert.equal(
+    getStripeInvoiceSubscriptionId({
+      lines: { data: [{ parent: { subscription_item_details: { subscription: 'sub_line' } } }] },
+    }),
+    'sub_line',
+  );
+  // A genuine one-off invoice must still be skipped rather than misread.
+  assert.equal(getStripeInvoiceSubscriptionId({ id: 'in_oneoff' }), null);
 });
 
 test('checkout subscription helper builds apply RPC payload', () => {

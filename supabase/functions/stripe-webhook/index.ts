@@ -12,7 +12,10 @@ import {
 import {
   buildApplyStripeSubscriptionCheckoutRpcPayload,
   buildDowngradeStripeSubscriptionToRookieRpcPayload,
+  getStripeInvoiceSubscriptionId,
   getStripeSubscriptionBillingCycle,
+  getStripeSubscriptionPeriodEnd,
+  getStripeSubscriptionPeriodStart,
   getStripeSubscriptionPriceId,
 } from "../_shared/stripe-subscriptions.ts";
 import { TOP_UP_PACKS_CENTS, inferTierFromAmountCents } from "../_shared/pricing.ts";
@@ -1225,11 +1228,12 @@ async function handleSubscriptionChange(
   const canonicalConfig = await resolveCanonicalSubscriptionConfig(supabaseAdmin, subscription);
   const tier = isSubscribed ? canonicalConfig.tier : "rookie";
   const billingCycle = canonicalConfig.billingCycle;
-  const subscriptionEnd = subscription.current_period_end
-    ? new Date(subscription.current_period_end * 1000).toISOString()
-    : null;
-  const stripeCurrentPeriodStart = toIsoOrNull(subscription.current_period_start ?? null);
-  const billingAnchorAt = toIsoOrNull(subscription.billing_cycle_anchor ?? subscription.current_period_start ?? null);
+  // `subscription` here is event.data.object, delivered in the endpoint's API
+  // version — read the period through the version-tolerant helpers.
+  const periodStart = getStripeSubscriptionPeriodStart(subscription);
+  const subscriptionEnd = toIsoOrNull(getStripeSubscriptionPeriodEnd(subscription));
+  const stripeCurrentPeriodStart = toIsoOrNull(periodStart);
+  const billingAnchorAt = toIsoOrNull(subscription.billing_cycle_anchor ?? periodStart);
 
   const previousState = await syncSubscriptionState(supabaseAdmin, {
     userId: resolvedUserId,
@@ -1345,7 +1349,7 @@ async function handleInvoicePaid(
     billingReason: invoice.billing_reason,
   });
 
-  const subscriptionId = typeof invoice.subscription === "string" ? invoice.subscription : null;
+  const subscriptionId = getStripeInvoiceSubscriptionId(invoice);
   if (!subscriptionId) {
     console.log("[Invoice] Skipping non-subscription invoice");
     return;
@@ -1477,9 +1481,7 @@ async function handlePaymentFailure(
   eventContext: { stripeEventId: string; stripeEventType: string },
 ) {
   const isInvoice = eventContext.stripeEventType === "invoice.payment_failed";
-  const subscriptionId = isInvoice && typeof object.subscription === "string"
-    ? object.subscription
-    : null;
+  const subscriptionId = isInvoice ? getStripeInvoiceSubscriptionId(object) : null;
   const paymentIntentId = isInvoice
     ? (typeof object.payment_intent === "string" ? object.payment_intent : null)
     : (typeof object.id === "string" ? object.id : null);
