@@ -44,6 +44,8 @@ import { useFounderOSIntegration } from "@/hooks/useFounderOSIntegration";
 import { BizMapTour } from "@/components/onboarding/BizMapTour";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import BizmapWallpaper from "@/components/wallpapers/BizmapWallpaper";
+import { SmartRecommendations } from "@/components/smart/SmartRecommendations";
+import PDFGenerator from "@/components/PDFGenerator";
 import { Link, useSearchParams } from "react-router-dom";
 
 const BizMapAI = () => {

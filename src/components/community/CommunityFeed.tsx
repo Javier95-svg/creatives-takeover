@@ -248,6 +248,7 @@ const CommunityFeed: React.FC = () => {
   }, [posts]);
 
   const filtered = useMemo(() => {
+    const searchLower = search.trim().toLowerCase();
     let list = posts.filter((p) =>
       (p.title + " " + p.content).toLowerCase().includes(searchLower)
     );

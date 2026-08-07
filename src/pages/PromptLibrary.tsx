@@ -136,7 +136,7 @@ const PromptLibrary = () => {
   };
 
   const _getDifficultyColor = (_difficulty: string) => {
-    switch (difficulty) {
+    switch (_difficulty) {
       case "Easy": return "bg-success-subtle text-success border-success";
       case "Medium": return "bg-warning-subtle text-warning border-warning";
       case "Hard": return "bg-destructive-subtle text-destructive border-destructive";

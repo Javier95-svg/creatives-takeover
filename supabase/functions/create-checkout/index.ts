@@ -244,6 +244,19 @@ const getCanonicalSubscriptionPrice = async (
     );
   }
 
+  // subscription_tiers has held literal placeholders ("[STARTER_PRICE_ID]") from
+  // the commented template in 20260514090000_add_stripe_price_ids.sql being run
+  // verbatim. Those pass the null check above and then fail deep inside
+  // stripe.prices.retrieve() as an opaque 500, which reads like an outage rather
+  // than the configuration gap it is. Fail closed here with the real reason.
+  if (!priceId.startsWith("price_")) {
+    logError("checkout:price_id_not_configured", { tier, billingCycle, priceId });
+    throw new CheckoutConfigurationError(
+      "CHECKOUT_PRICE_NOT_CONFIGURED",
+      `Checkout is not configured for ${tier} ${billingCycle}. Please try again later.`,
+    );
+  }
+
   const expected = getSubscriptionPricing(tier, billingCycle);
   const price = await stripe.prices.retrieve(priceId, { expand: ["product"] });
   const expectedInterval = billingCycle === "yearly" ? "year" : "month";

@@ -93,7 +93,16 @@ export default tseslint.config(
     files: ["src/**/*.{ts,tsx}"],
     languageOptions: {
       ecmaVersion: 2020,
-      globals: globals.browser,
+      // `React`/`JSX` come from the automatic JSX runtime + global types, and
+      // NodeJS/process appear in shared timer + env typings. They are resolved by
+      // TypeScript, not by a runtime import, so no-undef needs them declared here.
+      globals: {
+        ...globals.browser,
+        React: "readonly",
+        JSX: "readonly",
+        NodeJS: "readonly",
+        process: "readonly",
+      },
       parserOptions: {
         project: ["./tsconfig.app.json"],
         tsconfigRootDir: import.meta.dirname,
@@ -106,6 +115,13 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      // `npm run typecheck` runs tsc against tsconfig.json, which sets
+      // "files": [] and only lists project references — so it checks nothing,
+      // and Vite/esbuild strips types without checking. That let a reference to
+      // an undefined `normalizeSubscriptionTier` ship in useSubscription.ts,
+      // crashing every caller of getTierInfo()/hasFeatureAccess(). This rule is
+      // the guardrail that actually runs in CI.
+      "no-undef": "error",
       "react-refresh/only-export-components": [
         "warn",
         { allowConstantExport: true },

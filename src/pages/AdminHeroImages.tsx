@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Shield, AlertTriangle, Image as ImageIcon, Trash2 } from "lucide-react";
+import { Loader2, Shield, AlertTriangle, Image as ImageIcon, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { HERO_IMAGE_ALLOWED_TYPES, HERO_IMAGE_MAX_SIZE_BYTES } from "@/lib/heroImages";
 

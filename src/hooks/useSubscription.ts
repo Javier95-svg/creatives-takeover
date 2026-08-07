@@ -420,7 +420,7 @@ export function useSubscription(options?: { fetchTiers?: boolean }) {
 
   const getTierInfo = (tierName: string) => {
     if (!tierName) return undefined;
-    const normalized = normalizeSubscriptionTier(tierName);
+    const normalized = normalizePlan(tierName);
     return tiers.find(t => String(t.tier_name).trim().toLowerCase() === normalized);
   };
 

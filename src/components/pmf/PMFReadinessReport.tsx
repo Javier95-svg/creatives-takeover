@@ -783,7 +783,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
       {/* Bottom CTA */}
       <div className="flex flex-wrap gap-3 pt-4 pb-8">
         <Button onClick={onSave} disabled={isSaving} className="flex-1 sm:flex-none px-6">
-          {isSaving ? 'Saving…' : isReady ? 'Save Report & Lock Validation' : 'Save Report'}
+          {isSaving ? 'Saving…' : meetsThreshold ? 'Save Report & Lock Validation' : 'Save Report'}
         </Button>
         <Button variant="outline" onClick={onExport} disabled={isExporting} className="flex-1 sm:flex-none px-6">
           {isExporting ? 'Exporting…' : 'Export PDF'}
