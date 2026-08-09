@@ -19,7 +19,6 @@ export interface SavedMentor {
     name: string;
     picture: string | null;
     expertise: string[] | null;
-    calendly_url: string | null;
   } | null;
 }
 
@@ -52,8 +51,7 @@ export const useMentorSaves = () => {
             id,
             name,
             picture,
-            expertise,
-            calendly_url
+            expertise
           )
         `)
         .eq('user_id', user.id)
