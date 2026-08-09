@@ -5,6 +5,16 @@
 
 CREATE EXTENSION IF NOT EXISTS btree_gist WITH SCHEMA extensions;
 
+-- Some production mentor schemas predate the optional timezone field even
+-- though the V2 request RPC already reads it. Keep this compatibility field
+-- private; mentor_discovery_call_settings.scheduling_timezone is the V4
+-- scheduling source of truth.
+ALTER TABLE public.mentors
+  ADD COLUMN IF NOT EXISTS timezone TEXT;
+
+COMMENT ON COLUMN public.mentors.timezone IS
+  'Legacy compatibility timezone. V4 scheduling uses mentor_discovery_call_settings.scheduling_timezone.';
+
 ALTER TABLE public.mentor_discovery_call_settings
   ADD COLUMN IF NOT EXISTS booking_mode TEXT NOT NULL DEFAULT 'request',
   ADD COLUMN IF NOT EXISTS scheduling_timezone TEXT NOT NULL DEFAULT 'UTC',

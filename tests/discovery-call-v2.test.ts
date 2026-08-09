@@ -157,6 +157,8 @@ test('V4 availability is platform-owned and collision safe', () => {
   const schema = read('../supabase/migrations/20260809131000_discovery_call_calendar_booking_schema_v4.sql');
   assert.match(schema, /mentor_discovery_availability_rules/);
   assert.match(schema, /mentor_discovery_availability_exceptions/);
+  assert.match(schema, /ADD COLUMN IF NOT EXISTS timezone TEXT/);
+  assert.match(schema, /scheduling source of truth/);
   assert.match(schema, /EXCLUDE USING gist/);
   assert.match(schema, /starts_at - make_interval\(mins => buffer_minutes\)/);
   assert.match(schema, /ends_at \+ make_interval\(mins => buffer_minutes\)/);
