@@ -507,40 +507,50 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
             )}
 
             {/* Action Buttons */}
-            {mentor.discovery_call_available ? (
-              <Button asChild className="w-full">
-                <Link to={`/mentorship/book/${mentor.id}`}>
-                  <CalendarClock className="mr-2 h-4 w-4" />
-                  Request Discovery Call · 10 credits
-                </Link>
-              </Button>
-            ) : (
-              <Button className="w-full" variant="outline" disabled title="Send this mentor a message instead">
-                <CalendarClock className="mr-2 h-4 w-4" />
-                Discovery Calls unavailable
-              </Button>
-            )}
-            <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
-              {/* Only show Message when the mentor has a messaging account; Save remains available to everyone. */}
-              {hasMessagingAccount && (
+            <div className="grid grid-cols-3 gap-2 pt-2">
+              {mentor.discovery_call_available ? (
+                <Button
+                  asChild
+                  size="default"
+                  className="h-10 min-w-0 px-1 text-xs transition-all duration-200 hover:shadow-md sm:px-3 sm:text-sm"
+                >
+                  <Link to={`/mentorship/book/${mentor.id}`} title="Request a 30-minute Discovery Call for 10 credits">
+                    <CalendarClock className="hidden h-4 w-4 shrink-0 sm:block" />
+                    Discovery Call
+                  </Link>
+                </Button>
+              ) : (
                 <Button
                   size="default"
-                  onClick={handleSendMessage}
-                  title="Your first message to this mentor is free; follow-ups cost 3 credits each."
-                  className="w-full sm:w-auto h-10 flex-1 hover:shadow-md transition-all duration-200"
+                  variant="outline"
+                  disabled
+                  title="Discovery Calls are unavailable for this mentor"
+                  className="h-10 min-w-0 px-1 text-xs sm:px-3 sm:text-sm"
                 >
-                  <MessageCircle className="h-4 w-4 mr-1.5" />
-                  Message
+                  <CalendarClock className="hidden h-4 w-4 shrink-0 sm:block" />
+                  Discovery Call
                 </Button>
               )}
+              <Button
+                size="default"
+                onClick={handleSendMessage}
+                disabled={!hasMessagingAccount}
+                title={hasMessagingAccount
+                  ? "Your first message to this mentor is free; follow-ups cost 3 credits each."
+                  : "Direct messaging is not enabled for this mentor."}
+                className="h-10 min-w-0 px-1 text-xs transition-all duration-200 hover:shadow-md sm:px-3 sm:text-sm"
+              >
+                <MessageCircle className="hidden h-4 w-4 shrink-0 sm:block" />
+                Message
+              </Button>
               <Button
                 size="default"
                 variant={saveButton.saved ? "secondary" : "outline"}
                 onClick={handleSaveMentor}
                 disabled={saveButton.saving || saveButton.saved}
-                className="w-full sm:w-auto h-10 flex-1 hover:shadow-md transition-all duration-200"
+                className="h-10 min-w-0 px-1 text-xs transition-all duration-200 hover:shadow-md sm:px-3 sm:text-sm"
               >
-                <SaveButtonIcon className="h-4 w-4 mr-1.5" />
+                <SaveButtonIcon className="hidden h-4 w-4 shrink-0 sm:block" />
                 {saveButton.saving ? 'Saving...' : saveButton.label}
               </Button>
             </div>
