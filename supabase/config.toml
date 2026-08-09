@@ -184,6 +184,11 @@ verify_jwt = false
 [functions.process-discovery-call-deadlines]
 verify_jwt = false
 
+# Resend signs the raw request body with Svix headers; the function verifies the
+# signature using DISCOVERY_CALL_RESEND_WEBHOOK_SECRET before recording outcomes.
+[functions.discovery-call-resend-webhook]
+verify_jwt = false
+
 [functions.notify-discovery-call-booked]
 verify_jwt = true
 

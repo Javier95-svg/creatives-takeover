@@ -57,6 +57,56 @@ test('durable notifications retry and recover stale claims', () => {
   assert.match(cron, /'x-cron-secret'/);
 });
 
+test('request creation durably queues a founder receipt as well as mentor and admin notices', () => {
+  const reliability = read('../supabase/migrations/20260809120000_discovery_call_notification_reliability_v3.sql');
+  assert.match(reliability, /ensure_founder_discovery_request_receipt_v3/);
+  assert.match(reliability, /'request_created', 'founder'/);
+  assert.match(reliability, /AFTER INSERT ON public\.discovery_call_notification_outbox/);
+  assert.match(reliability, /dc\.status = 'pending_mentor_response'/);
+});
+
+test('Resend delivery outcomes are signed, replay-safe, and stored separately from queue acceptance', () => {
+  const reliability = read('../supabase/migrations/20260809120000_discovery_call_notification_reliability_v3.sql');
+  const webhook = read('../supabase/functions/discovery-call-resend-webhook/index.ts');
+  const config = read('../supabase/config.toml');
+  assert.match(reliability, /provider_delivery_status/);
+  assert.match(reliability, /provider_event_id TEXT NOT NULL UNIQUE/);
+  assert.match(reliability, /email\.delivered/);
+  assert.match(reliability, /email\.bounced/);
+  assert.match(reliability, /email\.complained/);
+  assert.match(reliability, /email\.suppressed/);
+  assert.match(webhook, /svix-id/);
+  assert.match(webhook, /svix-timestamp/);
+  assert.match(webhook, /svix-signature/);
+  assert.match(webhook, /DISCOVERY_CALL_RESEND_WEBHOOK_SECRET/);
+  assert.match(webhook, /await req\.text\(\)/);
+  assert.doesNotMatch(webhook, /req\.json\(\)/);
+  assert.match(config, /\[functions\.discovery-call-resend-webhook\][\s\S]*verify_jwt = false/);
+});
+
+test('notification worker uses stable provider idempotency and admin receives independent failure alerts', () => {
+  const reliability = read('../supabase/migrations/20260809120000_discovery_call_notification_reliability_v3.sql');
+  const worker = read('../supabase/functions/process-discovery-call-notifications/index.ts');
+  assert.match(worker, /"Idempotency-Key": input\.idempotencyKey/);
+  assert.match(worker, /discovery-call\/\$\{row\.id\}\/\$\{row\.send_generation\}/);
+  assert.match(worker, /\{ name: "category", value: "discovery_call" \}/);
+  assert.match(worker, /\{ name: "outbox_id", value: input\.outboxId \}/);
+  assert.match(reliability, /discovery_call_notification_alerts/);
+  assert.match(reliability, /community_notifications/);
+  assert.match(reliability, /delivery_attempts_exhausted/);
+  assert.match(reliability, /delivery_not_confirmed/);
+});
+
+test('ended calls notify admin for outcome review and health requires confirmed delivery', () => {
+  const reliability = read('../supabase/migrations/20260809120000_discovery_call_notification_reliability_v3.sql');
+  const emails = read('../supabase/functions/_shared/discovery-call-emails.ts');
+  assert.match(reliability, /'awaiting_outcome'/);
+  assert.match(reliability, /'outcome_required', 'admin'/);
+  assert.match(reliability, /confirmation_not_delivered/);
+  assert.match(reliability, /provider_delivery_status[\s\S]*<> 'delivered'/);
+  assert.match(emails, /outcome_required: "Discovery Call outcome requires review"/);
+});
+
 test('founder and public mentor routes use V2 service actions', () => {
   const booking = read('../src/pages/community/MentorBookingPage.tsx');
   const mentor = read('../src/pages/community/MentorDiscoveryResponsePage.tsx');

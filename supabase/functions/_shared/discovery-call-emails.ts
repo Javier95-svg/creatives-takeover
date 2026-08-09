@@ -35,6 +35,7 @@ function titleFor(template: string) {
     reschedule_expired: "Reschedule closed; original booking remains",
     booking_cancelled: "Discovery Call cancelled",
     outcome_recorded: "Discovery Call status updated",
+    outcome_required: "Discovery Call outcome requires review",
   };
   return titles[template] ?? "Discovery Call update";
 }
@@ -87,6 +88,10 @@ export function buildDiscoveryCallEmail(input: {
     .join("");
   const message = input.template === "request_created" && input.recipientRole === "mentor"
     ? "A founder has requested a 30-minute Discovery Call. Choose one of their times, propose another, or decline securely."
+    : input.template === "request_created" && input.recipientRole === "founder"
+      ? "Your Discovery Call request was received. Ten credits are held and will only be finalized if the call is confirmed."
+      : input.template === "outcome_required"
+        ? "The scheduled call has ended. Record its outcome in the admin dashboard."
     : input.template === "booking_confirmed"
       ? "The time and meeting details are confirmed."
       : input.template === "request_expired"
@@ -117,7 +122,8 @@ export function buildDiscoveryCallIcs(payload: EmailPayload, cancelled = false) 
     "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Creatives Takeover//Discovery Call//EN",
     `METHOD:${cancelled ? "CANCEL" : "REQUEST"}`, "BEGIN:VEVENT",
     `UID:discovery-call-${icsEscape(callId)}@creatives-takeover.com`,
-    `SEQUENCE:${Number(payload.calendarSequence ?? 0)}`, `DTSTAMP:${icsDate(new Date().toISOString())}`,
+    `SEQUENCE:${Number(payload.calendarSequence ?? 0)}`,
+    `DTSTAMP:${icsDate(text(payload.notificationCreatedAt) || startsAt)}`,
     `DTSTART:${icsDate(start.toISOString())}`, `DTEND:${icsDate(end.toISOString())}`,
     `STATUS:${cancelled ? "CANCELLED" : "CONFIRMED"}`,
     `SUMMARY:${icsEscape(`Discovery Call with ${text(payload.mentorName) || "mentor"}`)}`,

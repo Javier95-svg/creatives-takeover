@@ -232,16 +232,18 @@ serve(async (req) => {
   }
 
   if (action === "listAdminCalls") {
-    const [{ data: calls, error }, { data: health }, { data: outbox }, { data: events }, { data: rounds }, { data: reservations }] = await Promise.all([
+    const [{ data: calls, error }, { data: health, error: healthError }, { data: outbox, error: outboxError }, { data: alerts, error: alertsError }, { data: events, error: eventsError }, { data: rounds, error: roundsError }, { data: reservations, error: reservationsError }] = await Promise.all([
       admin.from("discovery_calls").select("*").eq("workflow_version", 2).order("created_at", { ascending: false }).limit(250),
       admin.from("admin_discovery_call_workflow_health").select("*"),
-      admin.from("discovery_call_notification_outbox").select("id, discovery_call_id, template_key, recipient_role, recipient_email, status, attempt_count, max_attempts, last_error, next_attempt_at, sent_at, created_at").order("created_at", { ascending: false }).limit(500),
+      admin.from("discovery_call_notification_outbox").select("id, discovery_call_id, template_key, recipient_role, recipient_email, status, send_generation, attempt_count, max_attempts, last_error, next_attempt_at, sent_at, provider_message_id, provider_delivery_status, provider_event_at, delivered_at, delivery_delayed_at, bounced_at, complained_at, suppressed_at, provider_last_error, created_at").order("created_at", { ascending: false }).limit(500),
+      admin.from("discovery_call_notification_alerts").select("id, discovery_call_id, outbox_id, severity, alert_type, message, status, metadata, created_at, resolved_at").order("created_at", { ascending: false }).limit(500),
       admin.from("discovery_call_events").select("id, discovery_call_id, event_type, actor_user_id, payload, created_at").order("created_at", { ascending: false }).limit(1000),
       admin.from("discovery_call_scheduling_rounds").select("*, discovery_call_scheduling_slots(*)").order("created_at", { ascending: false }).limit(500),
       admin.from("discovery_call_credit_reservations").select("*").order("created_at", { ascending: false }).limit(500),
     ]);
-    if (error) return json({ success: false, error: error.message }, 500);
-    return json({ success: true, calls: calls ?? [], health: health ?? [], notifications: outbox ?? [], events: events ?? [], rounds: rounds ?? [], reservations: reservations ?? [] });
+    const adminReadError = error ?? healthError ?? outboxError ?? alertsError ?? eventsError ?? roundsError ?? reservationsError;
+    if (adminReadError) return json({ success: false, error: adminReadError.message }, 500);
+    return json({ success: true, calls: calls ?? [], health: health ?? [], notifications: outbox ?? [], notificationAlerts: alerts ?? [], events: events ?? [], rounds: rounds ?? [], reservations: reservations ?? [] });
   }
 
   if (action === "adminOverride") {
@@ -256,8 +258,12 @@ serve(async (req) => {
   }
 
   if (action === "resendNotification") {
-    const { error } = await admin.from("discovery_call_notification_outbox").update({ status: "pending", attempt_count: 0, next_attempt_at: new Date().toISOString(), last_error: null }).eq("id", String(body.notificationId ?? ""));
+    const { data, error } = await admin.rpc("retry_discovery_call_notification_v3", {
+      p_outbox_id: String(body.notificationId ?? ""),
+      p_admin_user_id: user.id,
+    });
     if (error) return json({ success: false, error: error.message }, 500);
+    if (!data?.success) return rpcResponse(data, null);
     void invokeNotificationWorker();
     return json({ success: true });
   }

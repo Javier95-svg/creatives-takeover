@@ -214,7 +214,7 @@ export const updateAdminMentorDiscoverySettings = (input: {
 }) => invoke<{ success: boolean; settings?: AdminMentorDiscoverySettings; error?: string }>('discovery-call-service', { action: 'updateAdminSettings', ...input });
 
 export const listAdminDiscoveryCalls = () =>
-  invoke<{ success: boolean; calls: Array<Record<string, unknown>>; health: Array<Record<string, unknown>>; notifications: Array<Record<string, unknown>>; events: Array<Record<string, unknown>>; rounds: Array<Record<string, unknown>>; reservations: Array<Record<string, unknown>> }>('discovery-call-service', { action: 'listAdminCalls' });
+  invoke<{ success: boolean; calls: Array<Record<string, unknown>>; health: Array<Record<string, unknown>>; notifications: Array<Record<string, unknown>>; notificationAlerts: Array<Record<string, unknown>>; events: Array<Record<string, unknown>>; rounds: Array<Record<string, unknown>>; reservations: Array<Record<string, unknown>> }>('discovery-call-service', { action: 'listAdminCalls' });
 
 export const adminOverrideDiscoveryCall = (input: Record<string, unknown>) =>
   invoke<ServiceResult>('discovery-call-service', { action: 'adminOverride', ...input });

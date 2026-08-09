@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import {
   decryptDiscoveryCallToken,
@@ -12,6 +11,8 @@ import { buildDiscoveryCallEmail, buildDiscoveryCallIcs } from "../_shared/disco
 
 interface OutboxRow {
   id: string;
+  created_at: string;
+  send_generation: number;
   template_key: string;
   recipient_role: string;
   recipient_email: string;
@@ -34,6 +35,52 @@ function base64Content(value: string) {
   return btoa(String.fromCharCode(...new TextEncoder().encode(value)));
 }
 
+async function sendWithResend(input: {
+  apiKey: string;
+  idempotencyKey: string;
+  outboxId: string;
+  sendGeneration: number;
+  fromEmail: string;
+  to: string;
+  subject: string;
+  html: string;
+  attachment: string | null;
+}) {
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${input.apiKey}`,
+      "Content-Type": "application/json",
+      "Idempotency-Key": input.idempotencyKey,
+    },
+    body: JSON.stringify({
+      from: `Creatives Takeover <${input.fromEmail}>`,
+      to: [input.to],
+      subject: input.subject,
+      html: input.html,
+      tags: [
+        { name: "category", value: "discovery_call" },
+        { name: "outbox_id", value: input.outboxId },
+        { name: "send_generation", value: String(input.sendGeneration) },
+      ],
+      ...(input.attachment
+        ? { attachments: [{ filename: "discovery-call.ics", content: input.attachment }] }
+        : {}),
+    }),
+  });
+  const responseBody = await response.json().catch(() => ({})) as Record<string, unknown>;
+  if (!response.ok) {
+    const message = typeof responseBody.message === "string"
+      ? responseBody.message
+      : `Resend returned HTTP ${response.status}`;
+    throw new Error(message);
+  }
+  if (typeof responseBody.id !== "string" || !responseBody.id) {
+    throw new Error("Resend accepted the request without returning an email ID");
+  }
+  return responseBody.id;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: discoveryCallCorsHeaders });
   if (req.method !== "POST") return json({ success: false, error: "Method not allowed" }, 405);
@@ -53,7 +100,6 @@ serve(async (req) => {
   const { data, error } = await admin.rpc("claim_discovery_call_notifications", { p_limit: limit });
   if (error) return json({ success: false, error: error.message }, 500);
 
-  const resend = new Resend(apiKey);
   let sent = 0;
   let failed = 0;
   for (const row of (data ?? []) as OutboxRow[]) {
@@ -68,23 +114,28 @@ serve(async (req) => {
         actionUrl: actionUrl(row.template_key, row.recipient_role, token, row.payload ?? {}),
       });
       const includeCalendar = ["booking_confirmed", "reschedule_confirmed", "booking_cancelled"].includes(row.template_key);
+      const stablePayload = { ...(row.payload ?? {}), notificationCreatedAt: row.created_at };
       const ics = includeCalendar
-        ? buildDiscoveryCallIcs(row.payload ?? {}, row.template_key === "booking_cancelled")
+        ? buildDiscoveryCallIcs(stablePayload, row.template_key === "booking_cancelled")
         : null;
-      const result = await resend.emails.send({
-        from: `Creatives Takeover <${fromEmail}>`,
-        to: [row.recipient_email],
+      const providerMessageId = await sendWithResend({
+        apiKey,
+        idempotencyKey: `discovery-call/${row.id}/${row.send_generation}`,
+        outboxId: row.id,
+        sendGeneration: row.send_generation,
+        fromEmail,
+        to: row.recipient_email,
         subject: email.subject,
         html: email.html,
-        ...(ics ? { attachments: [{ filename: "discovery-call.ics", content: base64Content(ics) }] } : {}),
+        attachment: ics ? base64Content(ics) : null,
       });
-      if (result.error) throw new Error(result.error.message);
-      await admin.rpc("complete_discovery_call_notification", {
+      const { error: completionError } = await admin.rpc("complete_discovery_call_notification", {
         p_outbox_id: row.id,
         p_success: true,
-        p_provider_message_id: result.data?.id ?? null,
+        p_provider_message_id: providerMessageId,
         p_error: null,
       });
+      if (completionError) throw new Error(`Unable to record Resend acceptance: ${completionError.message}`);
       sent += 1;
     } catch (deliveryError) {
       await admin.rpc("complete_discovery_call_notification", {
