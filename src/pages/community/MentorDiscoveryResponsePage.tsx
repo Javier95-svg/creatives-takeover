@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { CalendarClock, CheckCircle2, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -31,8 +31,6 @@ export default function MentorDiscoveryResponsePage() {
   const [done, setDone] = useState('');
   const [selectedSlot, setSelectedSlot] = useState('');
   const [counterTime, setCounterTime] = useState('');
-  const [meetingUrl, setMeetingUrl] = useState('');
-  const [meetingInstructions, setMeetingInstructions] = useState('');
   const [reason, setReason] = useState('');
   const [rescheduleSlots, setRescheduleSlots] = useState(['', '', '']);
 
@@ -42,15 +40,12 @@ export default function MentorDiscoveryResponsePage() {
       .then((response) => {
         if (!response.success || !response.portal) throw new Error(response.message || 'This link has expired or was already used.');
         setPortal(response.portal);
-        setMeetingUrl(response.portal.meetingUrl ?? '');
-        setMeetingInstructions(response.portal.meetingInstructions ?? '');
       })
       .catch((loadError) => setError(loadError instanceof Error ? loadError.message : 'Unable to load this Discovery Call.'))
       .finally(() => setLoading(false));
   }, [token]);
 
   const slots = portal?.activeRound?.discovery_call_scheduling_slots ?? [];
-  const meetingValid = useMemo(() => /^https:\/\//i.test(meetingUrl.trim()) || meetingInstructions.trim().length >= 10, [meetingInstructions, meetingUrl]);
   const formatTime = (value: string, timeZone?: string) => new Intl.DateTimeFormat(undefined, { dateStyle: 'full', timeStyle: 'short', ...(timeZone ? { timeZone } : {}) }).format(new Date(value));
   const slotTime = (value: string) => <><span>{formatTime(value, portal?.mentorTimezone)} ({portal?.mentorTimezone})</span><span className="block text-xs text-muted-foreground">Founder: {formatTime(value, portal?.founderTimezone)} ({portal?.founderTimezone})</span></>;
 
@@ -82,9 +77,9 @@ export default function MentorDiscoveryResponsePage() {
 
             {portal.purpose === 'mentor_request_response' && <>
               <div className="space-y-2"><Label>Choose a founder-proposed time</Label>{slots.map((slot) => { const unavailable = Date.parse(slot.starts_at) < Date.now() + 24 * 60 * 60 * 1000; return <label key={slot.id} className={`flex items-center gap-3 rounded-lg border p-3 ${unavailable ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}><input type="radio" name="slot" disabled={unavailable} checked={selectedSlot === slot.id} onChange={() => setSelectedSlot(slot.id)} /><span>{slotTime(slot.starts_at)}{unavailable && <span className="block text-xs font-semibold text-destructive">Unavailable — counter-propose a new time.</span>}</span></label>; })}</div>
-              <div className="grid gap-4 sm:grid-cols-2"><div><Label htmlFor="meeting-url">HTTPS meeting link</Label><Input id="meeting-url" type="url" value={meetingUrl} onChange={(e) => setMeetingUrl(e.target.value)} placeholder="https://meet.google.com/…" /></div><div><Label htmlFor="meeting-instructions">Or meeting instructions</Label><Textarea id="meeting-instructions" value={meetingInstructions} onChange={(e) => setMeetingInstructions(e.target.value)} maxLength={1000} placeholder="Phone or in-person instructions" /></div></div>
-              <Button className="w-full" disabled={submitting || !selectedSlot || !meetingValid} onClick={() => void act({ action: 'acceptSlot', slotId: selectedSlot, meetingUrl, meetingInstructions }, 'The call is confirmed. Everyone has been notified.')}>Accept selected time</Button>
-              <div className="rounded-lg border p-4"><Label htmlFor="counter">Or propose one different time</Label><Input id="counter" type="datetime-local" value={counterTime} onChange={(e) => setCounterTime(e.target.value)} /><Button variant="outline" className="mt-3" disabled={submitting || !counterTime || !meetingValid} onClick={() => void act({ action: 'counter', counterStartsAt: localValueToIso(counterTime), meetingUrl, meetingInstructions }, 'Your proposed time was sent to the founder. Their 48-hour response window has started.')}>Send counter-proposal</Button></div>
+              <Alert><AlertDescription>Creatives Takeover automatically creates the private Google Meet room after you accept. You do not need to create or paste a meeting link.</AlertDescription></Alert>
+              <Button className="w-full" disabled={submitting || !selectedSlot} onClick={() => void act({ action: 'acceptSlot', slotId: selectedSlot }, 'The time is reserved. Everyone will be notified as soon as the secure Google Meet link is ready.')}>Accept selected time</Button>
+              <div className="rounded-lg border p-4"><Label htmlFor="counter">Or propose one different time</Label><Input id="counter" type="datetime-local" value={counterTime} onChange={(e) => setCounterTime(e.target.value)} /><Button variant="outline" className="mt-3" disabled={submitting || !counterTime} onClick={() => void act({ action: 'counter', counterStartsAt: localValueToIso(counterTime) }, 'Your proposed time was sent to the founder. Their 48-hour response window has started.')}>Send counter-proposal</Button></div>
               <div className="border-t pt-5"><Label htmlFor="reason">Decline reason (optional)</Label><Textarea id="reason" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={500} /><Button variant="destructive" className="mt-3" disabled={submitting} onClick={() => window.confirm('Decline this request and release the founder’s held credits?') && void act({ action: 'decline', reason }, 'The request was declined and the founder’s held credits were released.')}>Decline request</Button></div>
             </>}
 
@@ -95,11 +90,11 @@ export default function MentorDiscoveryResponsePage() {
                   <h2 className="font-semibold">Founder reschedule request</h2>
                   <p className="mb-3 text-sm text-muted-foreground">The original booking remains active unless you accept a replacement.</p>
                   <div className="space-y-2">{slots.map((slot) => <label key={slot.id} className="flex cursor-pointer items-center gap-3 rounded-lg border p-3"><input type="radio" name="reschedule-slot" checked={selectedSlot === slot.id} onChange={() => setSelectedSlot(slot.id)} /><span>{slotTime(slot.starts_at)}</span></label>)}</div>
-                  <Button className="mt-3" disabled={submitting || !selectedSlot || !meetingValid} onClick={() => void act({ action: 'acceptReschedule', slotId: selectedSlot, meetingUrl, meetingInstructions }, 'The replacement time is confirmed. Everyone has been notified.')}>Accept replacement</Button>
+                  <Button className="mt-3" disabled={submitting || !selectedSlot} onClick={() => void act({ action: 'acceptReschedule', slotId: selectedSlot }, 'The replacement time is confirmed. The existing Google Calendar invitation will update automatically.')}>Accept replacement</Button>
                   <div className="mt-4 border-t pt-4">
                     <Label htmlFor="reschedule-counter">Counter with one time</Label>
                     <Input id="reschedule-counter" type="datetime-local" value={counterTime} onChange={(e) => setCounterTime(e.target.value)} />
-                    <Button className="mt-2" variant="outline" disabled={submitting || !counterTime || portal.activeRound.counter_depth >= 1} onClick={() => void act({ action: 'counterReschedule', counterStartsAt: localValueToIso(counterTime), meetingUrl, meetingInstructions }, 'Your counter-proposal was sent. The original booking remains active.')}>Send counter</Button>
+                    <Button className="mt-2" variant="outline" disabled={submitting || !counterTime || portal.activeRound.counter_depth >= 1} onClick={() => void act({ action: 'counterReschedule', counterStartsAt: localValueToIso(counterTime) }, 'Your counter-proposal was sent. The original booking remains active.')}>Send counter</Button>
                     <Button className="ml-2 mt-2" variant="ghost" disabled={submitting} onClick={() => window.confirm('Decline this reschedule and keep the original booking?') && void act({ action: 'declineReschedule' }, 'The reschedule was declined. The original booking remains active.')}>Decline reschedule</Button>
                   </div>
                 </div>

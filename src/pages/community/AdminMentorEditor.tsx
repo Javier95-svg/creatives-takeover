@@ -22,6 +22,7 @@ import { logInfo, logError, logWarn } from "@/lib/logger";
 import { handleError } from "@/lib/errors";
 import {
   getAdminMentorDiscoverySettings,
+  createMentorAvailabilityAccess,
   updateAdminMentorDiscoverySettings,
 } from "@/services/discoveryCallService";
 
@@ -63,6 +64,13 @@ const AdminMentorEditor = () => {
     enabled: false,
     legacyProvider: "other",
     legacyBookingUrl: "",
+    bookingMode: "request" as 'request' | 'instant' | 'hybrid',
+    schedulingTimezone: "UTC",
+    minimumNoticeHours: 72,
+    bookingWindowDays: 60,
+    bufferMinutes: 0,
+    allowRequestFallback: true,
+    availabilityRules: [] as Array<{ weekday: number; startLocalTime: string; endLocalTime: string; enabled: boolean }>,
   });
   const [formData, setFormData] = useState<CreateMentorInput>({
     name: "",
@@ -131,6 +139,18 @@ const AdminMentorEditor = () => {
           enabled: settingsResponse.settings.discovery_calls_enabled,
           legacyProvider: settingsResponse.settings.legacy_provider || 'other',
           legacyBookingUrl: settingsResponse.settings.legacy_booking_url || '',
+          bookingMode: settingsResponse.settings.booking_mode || 'request',
+          schedulingTimezone: settingsResponse.settings.scheduling_timezone || 'UTC',
+          minimumNoticeHours: settingsResponse.settings.minimum_notice_hours ?? 72,
+          bookingWindowDays: settingsResponse.settings.booking_window_days ?? 60,
+          bufferMinutes: settingsResponse.settings.buffer_minutes ?? 0,
+          allowRequestFallback: settingsResponse.settings.allow_request_fallback !== false,
+          availabilityRules: (settingsResponse.settings.availability_rules ?? []).map((rule) => ({
+            weekday: rule.weekday,
+            startLocalTime: rule.start_local_time?.slice(0, 5) ?? '09:00',
+            endLocalTime: rule.end_local_time?.slice(0, 5) ?? '17:00',
+            enabled: rule.enabled,
+          })),
         });
       }
     }
@@ -379,6 +399,13 @@ const AdminMentorEditor = () => {
           mentorId: result.id,
           notificationEmail: discoverySettings.notificationEmail.trim(),
           discoveryCallsEnabled: discoverySettings.enabled,
+          bookingMode: discoverySettings.bookingMode,
+          schedulingTimezone: discoverySettings.schedulingTimezone,
+          minimumNoticeHours: discoverySettings.minimumNoticeHours,
+          bookingWindowDays: discoverySettings.bookingWindowDays,
+          bufferMinutes: discoverySettings.bufferMinutes,
+          allowRequestFallback: discoverySettings.allowRequestFallback,
+          availabilityRules: discoverySettings.availabilityRules,
           legacyProvider: discoverySettings.legacyProvider === 'manual' ? 'other' : discoverySettings.legacyProvider,
           legacyBookingUrl: discoverySettings.legacyBookingUrl.trim() || null,
         });
@@ -604,6 +631,15 @@ const AdminMentorEditor = () => {
                 <div className="flex items-center justify-between rounded-lg border p-4">
                   <div><Label htmlFor="discovery_enabled">Discovery Calls enabled</Label><p className="text-xs text-muted-foreground">Allows founders to request a tracked 30-minute call for 10 credits.</p></div>
                   <Switch id="discovery_enabled" checked={discoverySettings.enabled} disabled={!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(discoverySettings.notificationEmail.trim())} onCheckedChange={(enabled) => setDiscoverySettings((current) => ({ ...current, enabled }))} />
+                </div>
+                <div className="grid gap-4 rounded-lg border p-4 sm:grid-cols-2">
+                  <div><Label htmlFor="discovery_booking_mode">Booking mode</Label><Select value={discoverySettings.bookingMode} onValueChange={(bookingMode) => setDiscoverySettings((current) => ({ ...current, bookingMode: bookingMode as 'request' | 'instant' | 'hybrid' }))}><SelectTrigger id="discovery_booking_mode" className="mt-1"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="request">Three-time request</SelectItem><SelectItem value="instant">Instant availability</SelectItem><SelectItem value="hybrid">Instant + request fallback</SelectItem></SelectContent></Select></div>
+                  <div><Label htmlFor="discovery_timezone">Scheduling timezone</Label><Input id="discovery_timezone" value={discoverySettings.schedulingTimezone} onChange={(e) => setDiscoverySettings((current) => ({ ...current, schedulingTimezone: e.target.value }))} placeholder="America/Bogota" className="mt-1" /></div>
+                  <div><Label htmlFor="discovery_notice">Minimum notice (hours)</Label><Input id="discovery_notice" type="number" min={1} max={720} value={discoverySettings.minimumNoticeHours} onChange={(e) => setDiscoverySettings((current) => ({ ...current, minimumNoticeHours: Number(e.target.value) }))} className="mt-1" /></div>
+                  <div><Label htmlFor="discovery_window">Booking window (days)</Label><Input id="discovery_window" type="number" min={1} max={60} value={discoverySettings.bookingWindowDays} onChange={(e) => setDiscoverySettings((current) => ({ ...current, bookingWindowDays: Number(e.target.value) }))} className="mt-1" /></div>
+                  <div><Label htmlFor="discovery_buffer">Calendar buffer (minutes)</Label><Input id="discovery_buffer" type="number" min={0} max={120} value={discoverySettings.bufferMinutes} onChange={(e) => setDiscoverySettings((current) => ({ ...current, bufferMinutes: Number(e.target.value) }))} className="mt-1" /></div>
+                  <div className="flex items-center justify-between rounded-lg border p-3"><div><Label htmlFor="discovery_fallback">Request fallback</Label><p className="text-xs text-muted-foreground">Allow three-time requests when no slot works.</p></div><Switch id="discovery_fallback" checked={discoverySettings.allowRequestFallback} onCheckedChange={(allowRequestFallback) => setDiscoverySettings((current) => ({ ...current, allowRequestFallback }))} /></div>
+                  {mentor?.id && <div className="sm:col-span-2"><Button type="button" variant="outline" onClick={async () => { const response = await createMentorAvailabilityAccess(mentor.id); if (!response.success || !response.url) { toast.error(response.error || 'Unable to create secure availability link'); return; } await navigator.clipboard.writeText(response.url); toast.success('Secure 30-day mentor availability link copied'); }}>Copy secure mentor availability link</Button><p className="mt-1 text-xs text-muted-foreground">Send this private no-login link to the mentor so they can publish weekly hours, time off, and optionally connect Google Calendar.</p></div>}
                 </div>
                 <details className="rounded-lg border p-4">
                   <summary className="cursor-pointer font-medium">Legacy booking reference</summary>

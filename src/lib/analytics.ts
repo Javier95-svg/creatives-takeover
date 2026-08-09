@@ -1145,7 +1145,7 @@ export type DiscoveryCallWorkflowEvent =
 // meeting links/instructions, or secure portal tokens.
 export const trackDiscoveryCallWorkflow = (
   event: DiscoveryCallWorkflowEvent,
-  properties: { discovery_call_id?: string; mentor_id?: string; status?: string; source?: string },
+  properties: { discovery_call_id?: string; mentor_id?: string; status?: string; source?: string; booking_mode?: 'instant' | 'request' },
 ) => captureEvent(event, properties);
 
 export const normalizePlanId = (planLike?: string | null): PlanId => {

@@ -27,7 +27,7 @@ import {
 const terminalStatuses = new Set(['completed', 'declined', 'withdrawn', 'expired', 'cancelled_early', 'cancelled_late', 'founder_no_show', 'mentor_no_show']);
 const statusLabels: Record<string, string> = {
   intent_created: 'Legacy attempt', pending_mentor_response: 'Awaiting mentor',
-  pending_founder_response: 'Needs your response', scheduled: 'Scheduled', awaiting_outcome: 'Awaiting outcome',
+  pending_founder_response: 'Needs your response', pending_meeting_creation: 'Creating secure meeting', scheduled: 'Scheduled', awaiting_outcome: 'Awaiting outcome',
   completed: 'Completed', declined: 'Declined', withdrawn: 'Withdrawn', expired: 'Expired',
   cancelled_early: 'Cancelled — refunded', cancelled_late: 'Cancelled late', founder_no_show: 'Founder no-show', mentor_no_show: 'Mentor no-show — refunded',
 };
@@ -96,7 +96,7 @@ export default function MyBookings() {
   const groups = useMemo(() => ({
     needsResponse: bookings.filter((booking) => booking.status === 'pending_founder_response' || (activeRound(booking)?.round_type === 'reschedule' && activeRound(booking)?.responder_role === 'founder')),
     awaitingMentor: bookings.filter((booking) => booking.status === 'pending_mentor_response' || (activeRound(booking)?.round_type === 'reschedule' && activeRound(booking)?.responder_role === 'mentor')),
-    upcoming: bookings.filter((booking) => booking.status === 'scheduled' && !activeRound(booking)),
+    upcoming: bookings.filter((booking) => booking.status === 'pending_meeting_creation' || (booking.status === 'scheduled' && !activeRound(booking))),
     past: bookings.filter((booking) => terminalStatuses.has(booking.status) || booking.status === 'awaiting_outcome' || booking.status === 'intent_created'),
   }), [bookings]);
 
@@ -134,6 +134,7 @@ export default function MyBookings() {
   const renderCard = (booking: DiscoveryCallBookingItem) => {
     const round = activeRound(booking);
     const pending = booking.status === 'pending_mentor_response' || booking.status === 'pending_founder_response';
+    const creatingMeeting = booking.status === 'pending_meeting_creation';
     const earlyRefund = booking.scheduledFor && Date.now() <= Date.parse(booking.scheduledFor) - 24 * 60 * 60 * 1000;
     const refundResult = booking.reservation?.metadata?.refundResult as Record<string, unknown> | undefined;
     return <Card key={booking.id} id={`call-${booking.id}`}><CardContent className="p-6">
@@ -147,12 +148,14 @@ export default function MyBookings() {
       </div>
       {booking.desiredOutcome && <p className="mt-3 text-sm text-muted-foreground">Goal: {booking.desiredOutcome}</p>}
       {booking.responseDueAt && pending && <p className="mt-2 text-xs text-muted-foreground">Response deadline: {new Date(booking.responseDueAt).toLocaleString()}</p>}
+      {creatingMeeting && <Alert className="mt-4"><Loader2 className="h-4 w-4 animate-spin" /><AlertDescription>Your time is reserved and 10 credits remain held while the private Google Meet room is created. Refresh shortly; credits are not charged until the link exists.</AlertDescription></Alert>}
       {round && renderRound(booking, round)}
       {booking.meetingUrl && <Button asChild size="sm" variant="outline" className="mt-4"><a href={booking.meetingUrl} target="_blank" rel="noreferrer"><Video className="mr-2 h-4 w-4" />Join meeting</a></Button>}
       {booking.meetingInstructions && <p className="mt-3 whitespace-pre-line rounded-lg bg-muted p-3 text-sm">{booking.meetingInstructions}</p>}
       <div className="mt-4 flex flex-wrap gap-2">
-        {booking.scheduledFor && <Button size="sm" variant="outline" onClick={() => downloadCalendar(booking)}><Download className="mr-2 h-4 w-4" />Add to calendar</Button>}
+        {booking.externalCalendarHtmlUrl ? <Button size="sm" variant="outline" asChild><a href={booking.externalCalendarHtmlUrl} target="_blank" rel="noreferrer"><Calendar className="mr-2 h-4 w-4" />Open calendar event</a></Button> : booking.scheduledFor && booking.status === 'scheduled' ? <Button size="sm" variant="outline" onClick={() => downloadCalendar(booking)}><Download className="mr-2 h-4 w-4" />Add to calendar</Button> : null}
         {pending && <Button size="sm" variant="destructive" disabled={busyId === booking.id} onClick={() => window.confirm('Withdraw this request and release the 10-credit hold?') && void run(booking.id, () => withdrawDiscoveryCallRequest(booking.id))}>Withdraw request</Button>}
+        {creatingMeeting && <Button size="sm" variant="destructive" disabled={busyId === booking.id} onClick={() => window.confirm('Cancel this reservation and release the 10-credit hold?') && void run(booking.id, () => cancelDiscoveryCall(booking.id, 'Founder cancelled while meeting link was being created'))}>Cancel reservation</Button>}
         {booking.status === 'scheduled' && !round && <><Button size="sm" variant="outline" onClick={() => setRescheduleFor(rescheduleFor === booking.id ? '' : booking.id)}><RotateCcw className="mr-2 h-4 w-4" />Reschedule</Button><Button size="sm" variant="destructive" disabled={busyId === booking.id} onClick={() => { const reason = window.prompt(`Why are you cancelling? ${earlyRefund ? 'This cancellation qualifies for a refund.' : 'This is inside 24 hours and will not be refunded.'}`); if (reason) void run(booking.id, () => cancelDiscoveryCall(booking.id, reason)); }}>Cancel</Button></>}
       </div>
       {rescheduleFor === booking.id && <div className="mt-4 rounded-lg border p-4"><p className="mb-3 text-sm font-semibold">Propose three replacement times</p>{rescheduleSlots.map((value, index) => <Input key={index} type="datetime-local" className="mb-2" value={value} onChange={(e) => setRescheduleSlots((current) => current.map((item, itemIndex) => itemIndex === index ? e.target.value : item))} />)}<Button size="sm" disabled={rescheduleSlots.some((value) => !value) || busyId === booking.id} onClick={() => void run(booking.id, () => createDiscoveryCallReschedule({ callId: booking.id, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, slots: rescheduleSlots.map((value) => new Date(value).toISOString()) }))}>Send reschedule request</Button></div>}

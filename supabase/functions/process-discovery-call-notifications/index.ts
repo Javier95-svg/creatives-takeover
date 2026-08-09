@@ -113,7 +113,12 @@ serve(async (req) => {
         payload: row.payload ?? {},
         actionUrl: actionUrl(row.template_key, row.recipient_role, token, row.payload ?? {}),
       });
-      const includeCalendar = ["booking_confirmed", "reschedule_confirmed", "booking_cancelled"].includes(row.template_key);
+      // Google Calendar already sends the canonical REQUEST/UPDATE/CANCEL to
+      // every attendee. Attaching a second ICS would create duplicate events.
+      const calendarManagedExternally = row.payload?.calendarManagedExternally === true
+        || (typeof row.payload?.meetingUrl === "string" && row.payload.meetingUrl.startsWith("https://meet.google.com/"));
+      const includeCalendar = !calendarManagedExternally
+        && ["booking_confirmed", "reschedule_confirmed", "booking_cancelled"].includes(row.template_key);
       const stablePayload = { ...(row.payload ?? {}), notificationCreatedAt: row.created_at };
       const ics = includeCalendar
         ? buildDiscoveryCallIcs(stablePayload, row.template_key === "booking_cancelled")

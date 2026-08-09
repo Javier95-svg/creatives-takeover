@@ -5,6 +5,7 @@ export type DiscoveryCallWorkflowStatus =
   | 'intent_created'
   | 'pending_mentor_response'
   | 'pending_founder_response'
+  | 'pending_meeting_creation'
   | 'scheduled'
   | 'awaiting_outcome'
   | 'completed'
@@ -75,6 +76,11 @@ export interface DiscoveryCallBookingItem {
   cancelledAt: string | null;
   cancelledReason: string | null;
   calendarSequence: number;
+  meetingProvider: 'google_meet' | 'manual' | 'external' | null;
+  calendarProvider: 'google_calendar' | null;
+  meetingCreationStatus: 'not_required' | 'pending' | 'created' | 'failed' | 'cancelled';
+  externalCalendarHtmlUrl: string | null;
+  calendarError: string | null;
   rounds: SchedulingRound[];
   reservation: {
     status: DiscoveryCallCreditState;
@@ -105,6 +111,10 @@ export interface DiscoveryCallAvailability {
   creditCost: number;
   durationMinutes: number;
   quotaStatus: DiscoveryCallQuotaStatus;
+  bookingMode: 'request' | 'instant' | 'hybrid';
+  allowRequestFallback: boolean;
+  mentorTimezone: string;
+  slots: Array<{ startsAt: string; durationMinutes: number }>;
 }
 
 export interface MentorDiscoveryPortal {
@@ -142,8 +152,16 @@ async function invoke<T>(functionName: string, body: Record<string, unknown>): P
 export const getDiscoveryCallQuotaStatus = () =>
   invoke<DiscoveryCallQuotaStatus>('discovery-call-service', { action: 'getQuotaStatus' });
 
-export const getDiscoveryCallAvailability = (mentorId: string) =>
-  invoke<DiscoveryCallAvailability>('discovery-call-service', { action: 'getAvailability', mentorId });
+export const getDiscoveryCallAvailability = (mentorId: string, range?: { from: string; to: string }) =>
+  invoke<DiscoveryCallAvailability>('discovery-call-service', { action: 'getAvailability', mentorId, ...range });
+
+export function createInstantDiscoveryCallBooking(input: Omit<CreateDiscoveryCallRequestInput, 'slots'> & { startsAt: string }) {
+  return invoke<ServiceResult & { callId?: string; scheduledFor?: string; heldCredits?: number }>('discovery-call-service', {
+    action: 'createInstantBooking',
+    ...input,
+    idempotencyKey: input.idempotencyKey || createIdempotencyKey('discovery-call-instant-v4'),
+  });
+}
 
 export function createDiscoveryCallRequest(input: CreateDiscoveryCallRequestInput) {
   return invoke<ServiceResult & { callId?: string; responseDueAt?: string; heldCredits?: number }>('discovery-call-service', {
@@ -200,6 +218,40 @@ export interface AdminMentorDiscoverySettings {
   discovery_calls_enabled: boolean;
   legacy_provider: 'calendly' | 'koalendar' | 'google_calendar' | 'cal_com' | 'other' | null;
   legacy_booking_url: string | null;
+  booking_mode: 'request' | 'instant' | 'hybrid';
+  scheduling_timezone: string;
+  minimum_notice_hours: number;
+  booking_window_days: number;
+  buffer_minutes: number;
+  allow_request_fallback: boolean;
+  availability_rules?: MentorAvailabilityRule[];
+  availability_exceptions?: MentorAvailabilityException[];
+  calendar_connection?: MentorCalendarConnection | null;
+}
+
+export interface MentorAvailabilityRule {
+  id?: string;
+  weekday: number;
+  start_local_time?: string;
+  end_local_time?: string;
+  startLocalTime?: string;
+  endLocalTime?: string;
+  enabled: boolean;
+}
+
+export interface MentorAvailabilityException {
+  id: string;
+  exception_type: 'unavailable' | 'additional';
+  starts_at: string;
+  ends_at: string;
+  reason: string | null;
+}
+
+export interface MentorCalendarConnection {
+  status: 'active' | 'reauthorization_required' | 'revoked' | 'error';
+  google_account_email: string | null;
+  last_synced_at: string | null;
+  last_error: string | null;
 }
 
 export const getAdminMentorDiscoverySettings = (mentorId: string) =>
@@ -209,18 +261,70 @@ export const updateAdminMentorDiscoverySettings = (input: {
   mentorId: string;
   notificationEmail: string;
   discoveryCallsEnabled: boolean;
+  bookingMode?: 'request' | 'instant' | 'hybrid';
+  schedulingTimezone?: string;
+  minimumNoticeHours?: number;
+  bookingWindowDays?: number;
+  bufferMinutes?: number;
+  allowRequestFallback?: boolean;
+  availabilityRules?: Array<{ weekday: number; startLocalTime: string; endLocalTime: string; enabled?: boolean }>;
   legacyProvider?: string | null;
   legacyBookingUrl?: string | null;
 }) => invoke<{ success: boolean; settings?: AdminMentorDiscoverySettings; error?: string }>('discovery-call-service', { action: 'updateAdminSettings', ...input });
 
 export const listAdminDiscoveryCalls = () =>
-  invoke<{ success: boolean; calls: Array<Record<string, unknown>>; health: Array<Record<string, unknown>>; notifications: Array<Record<string, unknown>>; notificationAlerts: Array<Record<string, unknown>>; events: Array<Record<string, unknown>>; rounds: Array<Record<string, unknown>>; reservations: Array<Record<string, unknown>> }>('discovery-call-service', { action: 'listAdminCalls' });
+  invoke<{ success: boolean; calls: Array<Record<string, unknown>>; health: Array<Record<string, unknown>>; notifications: Array<Record<string, unknown>>; notificationAlerts: Array<Record<string, unknown>>; events: Array<Record<string, unknown>>; rounds: Array<Record<string, unknown>>; reservations: Array<Record<string, unknown>>; calendarJobs: Array<Record<string, unknown>> }>('discovery-call-service', { action: 'listAdminCalls' });
 
 export const adminOverrideDiscoveryCall = (input: Record<string, unknown>) =>
   invoke<ServiceResult>('discovery-call-service', { action: 'adminOverride', ...input });
 
 export const resendDiscoveryCallNotification = (notificationId: string) =>
   invoke<ServiceResult>('discovery-call-service', { action: 'resendNotification', notificationId });
+
+export const retryDiscoveryCallCalendarOperation = (calendarJobId: string) =>
+  invoke<ServiceResult>('discovery-call-service', { action: 'retryCalendarOperation', calendarJobId });
+
+export const createMentorAvailabilityAccess = (mentorId: string) =>
+  invoke<ServiceResult & { url?: string }>('discovery-call-service', { action: 'createMentorAvailabilityAccess', mentorId });
+
+export interface MentorAvailabilityPortalData {
+  mentor: { id: string; name: string; picture: string | null };
+  settings: {
+    discovery_calls_enabled: boolean;
+    booking_mode: 'request' | 'instant' | 'hybrid';
+    scheduling_timezone: string;
+    minimum_notice_hours: number;
+    booking_window_days: number;
+    buffer_minutes: number;
+    allow_request_fallback: boolean;
+  };
+  rules: MentorAvailabilityRule[];
+  exceptions: MentorAvailabilityException[];
+  calendarConnection: MentorCalendarConnection | null;
+}
+
+export const loadMentorAvailabilityPortal = (token: string) =>
+  invoke<{ success: boolean } & Partial<MentorAvailabilityPortalData>>('discovery-call-mentor-availability', { action: 'load', token });
+
+export const saveMentorAvailability = (token: string, input: {
+  bookingMode: 'request' | 'instant' | 'hybrid'; timezone: string;
+  minimumNoticeHours: number; bookingWindowDays: number; bufferMinutes: number;
+  allowRequestFallback: boolean;
+  rules: Array<{ weekday: number; startLocalTime: string; endLocalTime: string; enabled: boolean }>;
+}) => invoke<ServiceResult>('discovery-call-mentor-availability', { action: 'save', token, ...input });
+
+export const addMentorAvailabilityException = (token: string, input: {
+  exceptionType: 'unavailable' | 'additional'; startsAt: string; endsAt: string; reason?: string;
+}) => invoke<ServiceResult & { exception?: MentorAvailabilityException }>('discovery-call-mentor-availability', { action: 'addException', token, ...input });
+
+export const deleteMentorAvailabilityException = (token: string, exceptionId: string) =>
+  invoke<ServiceResult>('discovery-call-mentor-availability', { action: 'deleteException', token, exceptionId });
+
+export const beginMentorGoogleCalendarConnect = (token: string) =>
+  invoke<ServiceResult & { authorizationUrl?: string }>('discovery-call-mentor-availability', { action: 'beginGoogleConnect', token });
+
+export const disconnectMentorGoogleCalendar = (token: string) =>
+  invoke<ServiceResult>('discovery-call-mentor-availability', { action: 'disconnectGoogle', token });
 
 export function clearLegacyDiscoveryCallRedirects() {
   ['pending_calendly_redirect', 'pending_discovery_call_booking_redirect', 'oauth_discovery_call_booking_redirect', 'oauth_calendly_redirect']

@@ -28,6 +28,7 @@ const NOINDEX_PREFIXES = [
   "/mentorship/book/",
   "/mentorship/my-bookings",
   "/mentorship/calls/respond",
+  "/mentorship/calls/availability",
   "/mentorship/admin",
   "/co-founder/create",
   "/co-founder/edit/",

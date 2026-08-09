@@ -42,6 +42,12 @@ async function wakeWorker() {
   }).catch(() => undefined);
 }
 
+async function wakeCalendarWorker() {
+  await admin.functions.invoke("process-discovery-call-calendar-events", {
+    body: { limit: 25 }, headers: { Authorization: `Bearer ${env("SUPABASE_SERVICE_ROLE_KEY")}` },
+  }).catch(() => undefined);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: discoveryCallCorsHeaders });
   if (req.method !== "POST") return json({ success: false, error: "Method not allowed" }, 405, { "Cache-Control": "no-store" });
@@ -92,17 +98,16 @@ serve(async (req) => {
   let error: { message: string } | null = null;
   if (["acceptSlot", "counter", "decline"].includes(action) && tokenRow.purpose === "mentor_request_response") {
     const nextToken = action === "acceptSlot" ? await managementToken() : null;
-    const result = await admin.rpc("respond_to_discovery_call_request_v2", {
+    const result = await admin.rpc("respond_to_discovery_call_request_v4", {
       p_call_id: call.id, p_token_hash: tokenHash,
       p_action: action === "acceptSlot" ? "accept" : action,
       p_slot_id: body.slotId ?? null, p_counter_starts_at: body.counterStartsAt ?? null,
-      p_meeting_url: body.meetingUrl ?? null, p_meeting_instructions: body.meetingInstructions ?? null,
       p_reason: body.reason ?? null, p_management_token_hash: nextToken?.hash ?? null,
       p_management_token_ciphertext: nextToken?.ciphertext ?? null,
     });
     data = result.data; error = result.error;
   } else if (action === "cancelBooking" && tokenRow.purpose === "mentor_booking_manage") {
-    const result = await admin.rpc("cancel_discovery_call_v2", {
+    const result = await admin.rpc("cancel_discovery_call_v4", {
       p_call_id: call.id, p_actor_user_id: null, p_actor_role: "mentor",
       p_reason: String(body.reason ?? "Mentor cancellation"), p_force_refund: true,
     });
@@ -118,11 +123,10 @@ serve(async (req) => {
     data = result.data; error = result.error;
   } else if (["acceptReschedule", "counterReschedule", "declineReschedule"].includes(action) && tokenRow.purpose === "mentor_booking_manage") {
     const nextToken = action === "acceptReschedule" ? await managementToken() : null;
-    const result = await admin.rpc("respond_to_discovery_call_reschedule_v2", {
+    const result = await admin.rpc("respond_to_discovery_call_reschedule_v4", {
       p_call_id: call.id, p_actor_user_id: null, p_actor_role: "mentor",
       p_action: action === "acceptReschedule" ? "accept" : action === "counterReschedule" ? "counter" : "decline",
       p_slot_id: body.slotId ?? null, p_counter_starts_at: body.counterStartsAt ?? null,
-      p_meeting_url: body.meetingUrl ?? null, p_meeting_instructions: body.meetingInstructions ?? null,
       p_management_token_hash: nextToken?.hash ?? null,
       p_management_token_ciphertext: nextToken?.ciphertext ?? null,
     });
@@ -132,6 +136,9 @@ serve(async (req) => {
   }
 
   if (error) return json({ success: false, error: error.message }, 500, { "Cache-Control": "no-store" });
-  if (data?.success) void wakeWorker();
+  if (data?.success) {
+    void wakeWorker();
+    if (["acceptSlot", "acceptReschedule", "cancelBooking"].includes(action)) void wakeCalendarWorker();
+  }
   return json(data ?? { success: false }, data?.success === false ? errorStatus(String(data.errorCode ?? "")) : 200, { "Cache-Control": "no-store" });
 });

@@ -9,11 +9,14 @@ serve(async (req) => {
   const admin = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"), {
     auth: { persistSession: false },
   });
-  const { data, error } = await admin.rpc("process_discovery_call_deadlines_v2");
-  if (error) return json({ success: false, error: error.message }, 500);
+  const [{ data, error }, { data: calendarData, error: calendarError }] = await Promise.all([
+    admin.rpc("process_discovery_call_deadlines_v2"),
+    admin.rpc("process_discovery_call_calendar_deadlines_v4"),
+  ]);
+  if (error || calendarError) return json({ success: false, error: error?.message ?? calendarError?.message }, 500);
   void admin.functions.invoke("process-discovery-call-notifications", {
     body: { limit: 50 },
     headers: { Authorization: `Bearer ${env("SUPABASE_SERVICE_ROLE_KEY")}` },
   });
-  return json(data ?? { success: true });
+  return json({ ...(data ?? { success: true }), calendar: calendarData ?? { expiredMeetingCreations: 0 } });
 });

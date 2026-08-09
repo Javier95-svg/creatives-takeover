@@ -138,3 +138,101 @@ test('workflow health flags every mandatory confirmation recipient', () => {
   assert.match(lifecycle, /reservationBillingPeriodStart/);
   assert.match(lifecycle, /expiredMonthlyCreditsNotRestored/);
 });
+
+test('V4 holds credits until Google Meet creation succeeds', () => {
+  const transitions = read('../supabase/migrations/20260809132000_discovery_call_calendar_booking_transitions_v4.sql');
+  const acceptBlock = transitions.slice(transitions.indexOf('respond_to_discovery_call_request_v4'), transitions.indexOf('respond_to_discovery_call_counter_v4'));
+  const completionBlock = transitions.slice(transitions.indexOf('complete_discovery_call_calendar_job_v4'), transitions.indexOf('process_discovery_call_calendar_deadlines_v4'));
+  assert.match(acceptBlock, /'pending_meeting_creation'/);
+  assert.match(acceptBlock, /enqueue_discovery_call_calendar_operation_v4/);
+  assert.doesNotMatch(acceptBlock, /finalize_discovery_call_reservation_v2/);
+  assert.match(completionBlock, /p_meeting_url !~\* '\^https:\/\/meet\\\.google\\\.com\/'/);
+  assert.match(completionBlock, /finalize_discovery_call_reservation_v2/);
+  assert.match(completionBlock, /'booking_confirmed', 'founder'/);
+  assert.match(completionBlock, /'booking_confirmed', 'mentor'/);
+  assert.match(completionBlock, /'booking_confirmed', 'admin'/);
+});
+
+test('V4 availability is platform-owned and collision safe', () => {
+  const schema = read('../supabase/migrations/20260809131000_discovery_call_calendar_booking_schema_v4.sql');
+  assert.match(schema, /mentor_discovery_availability_rules/);
+  assert.match(schema, /mentor_discovery_availability_exceptions/);
+  assert.match(schema, /EXCLUDE USING gist/);
+  assert.match(schema, /starts_at - make_interval\(mins => buffer_minutes\)/);
+  assert.match(schema, /ends_at \+ make_interval\(mins => buffer_minutes\)/);
+  assert.match(schema, /mentor_calendar_busy_periods/);
+  assert.match(schema, /get_mentor_discovery_slots_v4/);
+  assert.match(schema, /save_mentor_discovery_settings_v4/);
+  assert.match(schema, /minimum_notice_hours/);
+  assert.match(schema, /booking_window_days/);
+});
+
+test('mentor availability saves are atomic across settings and weekly rules', () => {
+  const schema = read('../supabase/migrations/20260809131000_discovery_call_calendar_booking_schema_v4.sql');
+  const service = read('../supabase/functions/discovery-call-service/index.ts');
+  const portal = read('../supabase/functions/discovery-call-mentor-availability/index.ts');
+  assert.match(schema, /CREATE OR REPLACE FUNCTION public\.save_mentor_discovery_settings_v4/);
+  assert.match(schema, /DELETE FROM public\.mentor_discovery_availability_rules/);
+  assert.match(service, /admin\.rpc\("save_mentor_discovery_settings_v4"/);
+  assert.match(portal, /admin\.rpc\("save_mentor_discovery_settings_v4"/);
+});
+
+test('calendar worker creates one deterministic Google event and requests Meet', () => {
+  const worker = read('../supabase/functions/process-discovery-call-calendar-events/index.ts');
+  const cron = read('../supabase/migrations/20260809133000_schedule_discovery_call_calendar_worker_v4.sql');
+  assert.match(worker, /stableGoogleEventId/);
+  assert.match(worker, /conferenceDataVersion=1&sendUpdates=all/);
+  assert.match(worker, /conferenceSolutionKey: \{ type: "hangoutsMeet" \}/);
+  assert.match(worker, /complete_discovery_call_calendar_job_v4/);
+  assert.match(worker, /fail_discovery_call_calendar_job_v4/);
+  assert.match(cron, /discovery-call-v4-calendar/);
+  assert.match(cron, /process-discovery-call-calendar-events/);
+});
+
+test('Google event updates and cancellations reuse the existing booking', () => {
+  const schema = read('../supabase/migrations/20260809131000_discovery_call_calendar_booking_schema_v4.sql');
+  const transitions = read('../supabase/migrations/20260809132000_discovery_call_calendar_booking_transitions_v4.sql');
+  const worker = read('../supabase/functions/process-discovery-call-calendar-events/index.ts');
+  assert.match(transitions, /respond_to_discovery_call_reschedule_v4/);
+  assert.match(transitions, /enqueue_discovery_call_calendar_operation_v4\(p_call_id, 'update'/);
+  assert.match(transitions, /enqueue_discovery_call_calendar_operation_v4\(p_call_id, 'cancel'/);
+  assert.match(worker, /method: "PATCH"/);
+  assert.match(worker, /method: "DELETE"/);
+  assert.match(worker, /sendUpdates=all/);
+  assert.match(worker, /visibility: "private"/);
+  assert.match(schema, /Never resurrect that job/);
+  assert.match(schema, /enqueue_discovery_call_calendar_operation_v4\(v_job\.discovery_call_id, 'cancel'/);
+  assert.match(transitions, /enqueue_discovery_call_calendar_operation_v4\(v_call\.id, 'cancel'/);
+});
+
+test('mentor availability portal is token protected and Google OAuth credentials are encrypted', () => {
+  const availability = read('../supabase/functions/discovery-call-mentor-availability/index.ts');
+  const callback = read('../supabase/functions/discovery-call-google-oauth/index.ts');
+  const config = read('../supabase/config.toml');
+  assert.match(availability, /mentor_availability_access_tokens/);
+  assert.match(availability, /hashDiscoveryCallToken\(rawToken\)/);
+  assert.match(availability, /calendar\.readonly/);
+  assert.match(callback, /encryptDiscoveryCallToken\(tokenBody\.refresh_token\)/);
+  assert.match(callback, /state_hash/);
+  assert.match(config, /\[functions\.discovery-call-mentor-availability\][\s\S]*verify_jwt = false/);
+  assert.match(config, /\[functions\.discovery-call-google-oauth\][\s\S]*verify_jwt = false/);
+  assert.doesNotMatch(availability, /console\.(?:log|error|warn)\([^)]*token/i);
+});
+
+test('founders get Preply-style instant slots with the request fallback', () => {
+  const booking = read('../src/pages/community/MentorBookingPage.tsx');
+  const availabilityPage = read('../src/pages/community/MentorDiscoveryAvailabilityPage.tsx');
+  assert.match(booking, /createInstantDiscoveryCallBooking/);
+  assert.match(booking, /Choose an available time/);
+  assert.match(booking, /Propose three times/);
+  assert.match(booking, /private Google Meet link/);
+  assert.match(availabilityPage, /Weekly availability/);
+  assert.match(availabilityPage, /Connect Google Calendar/);
+});
+
+test('platform Google invitations do not receive a duplicate ICS attachment', () => {
+  const notificationWorker = read('../supabase/functions/process-discovery-call-notifications/index.ts');
+  assert.match(notificationWorker, /calendarManagedExternally/);
+  assert.match(notificationWorker, /meet\.google\.com/);
+  assert.match(notificationWorker, /!calendarManagedExternally/);
+});

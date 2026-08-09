@@ -85,7 +85,7 @@ export function isAuthorizedWorker(req: Request): boolean {
 
 export function errorStatus(errorCode?: string): number {
   if (errorCode === "TOKEN_EXPIRED" || errorCode === "RESPONSE_EXPIRED") return 410;
-  if (["STALE_STATE", "ACTIVE_CALL_EXISTS", "ACTIVE_RESCHEDULE_EXISTS"].includes(errorCode ?? "")) return 409;
+  if (["STALE_STATE", "ACTIVE_CALL_EXISTS", "ACTIVE_RESCHEDULE_EXISTS", "SLOT_UNAVAILABLE"].includes(errorCode ?? "")) return 409;
   if (errorCode === "FORBIDDEN") return 403;
   if (errorCode === "NOT_FOUND") return 404;
   if (errorCode === "INSUFFICIENT_CREDITS" || errorCode?.startsWith("INVALID_") || errorCode === "MEETING_DETAILS_REQUIRED") return 422;
