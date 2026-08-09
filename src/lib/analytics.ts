@@ -1131,6 +1131,23 @@ export const trackFirstCustomerSprint = (event: FirstCustomerSprintEvent, proper
   credits_deducted?: number;
 }) => captureEvent(event, properties);
 
+export type DiscoveryCallWorkflowEvent =
+  | 'discovery_call_request_started'
+  | 'discovery_call_request_submitted'
+  | 'discovery_call_request_expired'
+  | 'discovery_call_counter_received'
+  | 'discovery_call_confirmed'
+  | 'discovery_call_cancelled'
+  | 'discovery_call_reschedule_requested'
+  | 'discovery_call_rescheduled';
+
+// Operational identifiers only: never include request text, email addresses,
+// meeting links/instructions, or secure portal tokens.
+export const trackDiscoveryCallWorkflow = (
+  event: DiscoveryCallWorkflowEvent,
+  properties: { discovery_call_id?: string; mentor_id?: string; status?: string; source?: string },
+) => captureEvent(event, properties);
+
 export const normalizePlanId = (planLike?: string | null): PlanId => {
   const normalized = (planLike || '').trim().toLowerCase();
   if (normalized === 'starter') return 'STARTER';

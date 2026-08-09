@@ -33,11 +33,6 @@ import {
   type SocialAuthIntent,
   type SocialAuthProviderId,
 } from '@/lib/socialAuth';
-import {
-  PENDING_DISCOVERY_CALL_BOOKING_KEY,
-  PENDING_DISCOVERY_CALL_KEY,
-  resumePendingDiscoveryCallRedirect,
-} from '@/services/discoveryCallService';
 
 const Auth: React.FC = () => {
   const navigate = useNavigate();
@@ -67,16 +62,9 @@ const Auth: React.FC = () => {
     if (!user) return;
 
     void (async () => {
-      const resumedDiscoveryCall = await resumePendingDiscoveryCallRedirect();
-      if (resumedDiscoveryCall) {
-        navigate('/mentorship');
-        return;
-      }
-
       // Only redirect if we're still on the auth page
       if (window.location.pathname === '/auth') {
-        // If redirect is a booking flow, go to /mentorship instead
-        const finalRedirect = redirectUrl.startsWith('/mentorship/book/') ? '/mentorship' : redirectUrl;
+        const finalRedirect = redirectUrl;
         
         // If redirect is just '/', check onboarding status to avoid double redirect
         if (finalRedirect === '/') {
@@ -205,7 +193,7 @@ const Auth: React.FC = () => {
     intent: SocialAuthIntent,
     provider: SocialAuthProviderId,
   ) => {
-    const finalRedirect = redirectUrl.startsWith('/mentorship/book/') ? '/mentorship' : redirectUrl;
+    const finalRedirect = redirectUrl;
     const signupMethod = getSocialAuthSignupMethod(provider);
 
     await startSocialOAuth({
@@ -213,18 +201,10 @@ const Auth: React.FC = () => {
       intent,
       beforeRedirect: () => {
         if (intent === 'login') {
-          const pendingBookingUrl = localStorage.getItem(PENDING_DISCOVERY_CALL_BOOKING_KEY)
-            || localStorage.getItem(PENDING_DISCOVERY_CALL_KEY);
-
           localStorage.setItem('oauth_return_url', finalRedirect);
           localStorage.removeItem('oauth_signup_method');
           setOAuthAuthIntent('login');
           persistOnboardingReturn(finalRedirect);
-
-          if (pendingBookingUrl) {
-            localStorage.setItem('oauth_discovery_call_booking_redirect', pendingBookingUrl);
-            localStorage.setItem('oauth_calendly_redirect', pendingBookingUrl);
-          }
 
           return;
         }

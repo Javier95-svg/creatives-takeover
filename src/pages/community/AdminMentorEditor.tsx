@@ -20,6 +20,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Mentor, CURRENCY_OPTIONS, MentorCurrency, getCurrencySymbol } from "@/types/mentor";
 import { logInfo, logError, logWarn } from "@/lib/logger";
 import { handleError } from "@/lib/errors";
+import {
+  getAdminMentorDiscoverySettings,
+  updateAdminMentorDiscoverySettings,
+} from "@/services/discoveryCallService";
 
 const EXPERTISE_OPTIONS = [
   "Product Development",
@@ -54,6 +58,12 @@ const AdminMentorEditor = () => {
   const [uploadingPicture, setUploadingPicture] = useState(false);
   const [picturePreview, setPicturePreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [discoverySettings, setDiscoverySettings] = useState({
+    notificationEmail: "",
+    enabled: false,
+    legacyProvider: "other",
+    legacyBookingUrl: "",
+  });
   const [formData, setFormData] = useState<CreateMentorInput>({
     name: "",
     picture: null,
@@ -68,8 +78,6 @@ const AdminMentorEditor = () => {
     linkedin_url: null,
     twitter_x_url: null,
     website_url: null,
-    calendly_url: null,
-    booking_provider: 'calendly',
     nationality: null,
   });
 
@@ -91,7 +99,10 @@ const AdminMentorEditor = () => {
   }, [adminLoading, authLoading, id, isAdmin, navigate]);
 
   const loadMentor = async (mentorId: string) => {
-    const found = await fetchMentorById(mentorId);
+    const [found, settingsResponse] = await Promise.all([
+      fetchMentorById(mentorId),
+      getAdminMentorDiscoverySettings(mentorId).catch(() => ({ success: false, settings: null })),
+    ]);
 
     if (found) {
       setMentor(found);
@@ -109,12 +120,18 @@ const AdminMentorEditor = () => {
         linkedin_url: found.linkedin_url || null,
         twitter_x_url: found.twitter_x_url || null,
         website_url: found.website_url || null,
-        calendly_url: found.calendly_url || null,
-        booking_provider: found.booking_provider || 'calendly',
         nationality: found.nationality || null,
       });
       if (found.picture) {
         setPicturePreview(found.picture);
+      }
+      if (settingsResponse.settings) {
+        setDiscoverySettings({
+          notificationEmail: settingsResponse.settings.notification_email,
+          enabled: settingsResponse.settings.discovery_calls_enabled,
+          legacyProvider: settingsResponse.settings.legacy_provider || 'other',
+          legacyBookingUrl: settingsResponse.settings.legacy_booking_url || '',
+        });
       }
     }
   };
@@ -220,7 +237,7 @@ const AdminMentorEditor = () => {
           .from('mentors')
           .update({ picture: publicUrl })
           .eq('id', mentor.id)
-          .select();
+          .select('id, picture');
 
         if (dbError) {
           logError('Database update error', dbError);
@@ -311,6 +328,11 @@ const AdminMentorEditor = () => {
       return;
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(discoverySettings.notificationEmail.trim())) {
+      toast.error("A valid Discovery Call notification email is required");
+      return;
+    }
+
     try {
       setSaving(true);
       logInfo('Starting save operation');
@@ -330,8 +352,6 @@ const AdminMentorEditor = () => {
         linkedin_url: formData.linkedin_url || null,
         twitter_x_url: formData.twitter_x_url || null,
         website_url: formData.website_url || null,
-        calendly_url: formData.calendly_url || null,
-        booking_provider: formData.booking_provider || 'calendly',
         nationality: formData.nationality || null,
       };
 
@@ -355,6 +375,14 @@ const AdminMentorEditor = () => {
       }
 
       if (result) {
+        const settingsResult = await updateAdminMentorDiscoverySettings({
+          mentorId: result.id,
+          notificationEmail: discoverySettings.notificationEmail.trim(),
+          discoveryCallsEnabled: discoverySettings.enabled,
+          legacyProvider: discoverySettings.legacyProvider === 'manual' ? 'other' : discoverySettings.legacyProvider,
+          legacyBookingUrl: discoverySettings.legacyBookingUrl.trim() || null,
+        });
+        if (!settingsResult.success) throw new Error(settingsResult.error || 'Mentor saved, but Discovery Call settings failed to save.');
         toast.success(mentor ? "Mentor updated!" : "Mentor created!");
         navigate(`/mentorship/mentors/${result.id}`);
       } else {
@@ -569,46 +597,22 @@ const AdminMentorEditor = () => {
                   </p>
                 </div>
                 <div>
-                  <Label htmlFor="booking_provider">Booking Provider *</Label>
-                  <Select
-                    value={formData.booking_provider || 'calendly'}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        booking_provider: value as CreateMentorInput['booking_provider'],
-                      }))
-                    }
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select booking provider" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="calendly">Calendly</SelectItem>
-                      <SelectItem value="koalendar">Koalendar</SelectItem>
-                      <SelectItem value="other">Other booking tool</SelectItem>
-                      <SelectItem value="manual">Manual confirmation only</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Used by discovery call confirmation webhooks and admin review.
-                  </p>
+                  <Label htmlFor="discovery_notification_email">Discovery Call notification email *</Label>
+                  <Input id="discovery_notification_email" type="email" required value={discoverySettings.notificationEmail} onChange={(e) => setDiscoverySettings((current) => ({ ...current, notificationEmail: e.target.value }))} placeholder="mentor@example.com" className="mt-1" />
+                  <p className="mt-1 text-xs text-muted-foreground">Private. Request and booking emails are delivered here.</p>
                 </div>
-                <div>
-                  <Label htmlFor="calendly_url">Booking URL *</Label>
-                  <Input
-                    id="calendly_url"
-                    type="url"
-                    value={formData.calendly_url || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, calendly_url: e.target.value || null }))
-                    }
-                    placeholder="https://calendly.com/username or https://koalendar.com/e/..."
-                    className="mt-1"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Required: external calendar link for discovery call bookings
-                  </p>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div><Label htmlFor="discovery_enabled">Discovery Calls enabled</Label><p className="text-xs text-muted-foreground">Allows founders to request a tracked 30-minute call for 10 credits.</p></div>
+                  <Switch id="discovery_enabled" checked={discoverySettings.enabled} disabled={!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(discoverySettings.notificationEmail.trim())} onCheckedChange={(enabled) => setDiscoverySettings((current) => ({ ...current, enabled }))} />
                 </div>
+                <details className="rounded-lg border p-4">
+                  <summary className="cursor-pointer font-medium">Legacy booking reference</summary>
+                  <p className="my-3 text-xs text-muted-foreground">Retained for admin reference only. These values are never shown as founder booking actions.</p>
+                  <Label htmlFor="legacy_provider">Provider</Label>
+                  <Select value={discoverySettings.legacyProvider} onValueChange={(legacyProvider) => setDiscoverySettings((current) => ({ ...current, legacyProvider }))}><SelectTrigger id="legacy_provider" className="mt-1"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="calendly">Calendly</SelectItem><SelectItem value="koalendar">Koalendar</SelectItem><SelectItem value="google_calendar">Google Calendar</SelectItem><SelectItem value="cal_com">Cal.com</SelectItem><SelectItem value="other">Other</SelectItem></SelectContent></Select>
+                  <Label htmlFor="legacy_booking_url" className="mt-3 block">Booking URL</Label>
+                  <Input id="legacy_booking_url" type="url" value={discoverySettings.legacyBookingUrl} onChange={(e) => setDiscoverySettings((current) => ({ ...current, legacyBookingUrl: e.target.value }))} placeholder="https://…" className="mt-1" />
+                </details>
                 <div>
                   <Label htmlFor="nationality">Nationality</Label>
                   <Input
@@ -856,4 +860,3 @@ const AdminMentorEditor = () => {
 };
 
 export default AdminMentorEditor;
-

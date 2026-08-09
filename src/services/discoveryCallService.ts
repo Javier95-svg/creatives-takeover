@@ -1,231 +1,228 @@
 import { supabase } from '@/integrations/supabase/client';
 import { createIdempotencyKey } from '@/lib/idempotency';
 
-export const PENDING_DISCOVERY_CALL_KEY = 'pending_calendly_redirect';
-export const PENDING_DISCOVERY_CALL_BOOKING_KEY = 'pending_discovery_call_booking_redirect';
+export type DiscoveryCallWorkflowStatus =
+  | 'intent_created'
+  | 'pending_mentor_response'
+  | 'pending_founder_response'
+  | 'scheduled'
+  | 'awaiting_outcome'
+  | 'completed'
+  | 'declined'
+  | 'withdrawn'
+  | 'expired'
+  | 'cancelled_early'
+  | 'cancelled_late'
+  | 'founder_no_show'
+  | 'mentor_no_show';
+
+export type DiscoveryCallCreditState = 'pending' | 'finalized' | 'released' | 'expired' | 'refunded';
 
 export interface DiscoveryCallQuotaStatus {
   success: boolean;
-  plan: 'rookie' | 'starter' | 'rising' | 'pro';
-  billingPeriodStart: string | null;
-  billingPeriodEnd: string | null;
-  includedLimit: number | null;
-  upgradeTarget: 'starter' | 'rising' | 'pro' | null;
-  overageCreditCost: number;
-  hasUnlimited: boolean;
-  includedCallsBooked: number;
-  overageCallsBooked: number;
-  usedCalls: number;
-  remainingIncluded: number | null;
-  requiresCredits: boolean;
   canBookNow: boolean;
   totalCreditsAvailable: number;
+  overageCreditCost: number;
+  [key: string]: unknown;
 }
 
-export interface DiscoveryCallIntentResponse {
-  success: boolean;
-  callId?: string;
-  status?: string;
-  providerBookingUrl?: string;
-  bookingProvider?: 'calendly' | 'koalendar' | 'other' | 'manual';
-  serviceId?: string;
-  quotaStatus?: DiscoveryCallQuotaStatus;
-  error?: string;
-  errorCode?: string;
-  requiredTier?: 'starter' | 'rising' | 'pro';
-  requiredCredits?: number;
+export interface SchedulingSlot {
+  id: string;
+  ordinal: number;
+  starts_at: string;
+  duration_minutes: number;
+  proposed_timezone: string;
+}
+
+export interface SchedulingRound {
+  id: string;
+  round_type: 'initial' | 'reschedule';
+  proposer_role: 'founder' | 'mentor' | 'admin';
+  responder_role: 'founder' | 'mentor';
+  status: 'pending' | 'accepted' | 'declined' | 'superseded' | 'expired';
+  counter_depth: number;
+  response_due_at: string;
+  meeting_url: string | null;
+  meeting_instructions: string | null;
+  discovery_call_scheduling_slots: SchedulingSlot[];
+}
+
+export interface MeetingDetails {
+  meetingUrl?: string;
+  meetingInstructions?: string;
 }
 
 export interface DiscoveryCallBookingItem {
   id: string;
-  bookingContext?: 'mentor' | 'service';
+  bookingContext: 'mentor' | 'service';
   mentorId: string | null;
   mentorName: string;
   mentorPicture: string | null;
-  serviceId?: string | null;
-  serviceName?: string | null;
-  serviceBannerUrl?: string | null;
-  status:
-    | 'intent_created'
-    | 'scheduled'
-    | 'completed'
-    | 'cancelled_early'
-    | 'cancelled_late'
-    | 'founder_no_show'
-    | 'mentor_no_show'
-    | 'expired';
+  status: DiscoveryCallWorkflowStatus;
+  workflowVersion: number;
+  topic: string | null;
+  desiredOutcome: string | null;
+  notes: string | null;
+  founderTimezone: string | null;
+  responseDueAt: string | null;
   scheduledFor: string | null;
   durationMinutes: number;
   meetingUrl: string | null;
-  providerBookingUrl: string | null;
+  meetingInstructions: string | null;
   creditChargeAmount: number;
-  consumptionMode: 'none' | 'included' | 'overage' | 'unlimited';
+  creditsCharged: boolean;
+  creditsRefunded: boolean;
   cancelledAt: string | null;
   cancelledReason: string | null;
+  calendarSequence: number;
+  rounds: SchedulingRound[];
+  reservation: {
+    status: DiscoveryCallCreditState;
+    held_amount: number;
+    expires_at: string;
+    credit_transaction_id: string | null;
+    refund_transaction_id: string | null;
+    metadata: Record<string, unknown>;
+  } | null;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface PendingDiscoveryCallRedirect {
-  url: string;
-  mentorId?: string;
-  mentorName?: string;
-  serviceId?: string;
-  serviceName?: string;
-  bookingProvider?: 'calendly' | 'koalendar' | 'other' | 'manual';
-  source?: string;
+export interface CreateDiscoveryCallRequestInput {
+  mentorId: string;
+  topic: string;
+  desiredOutcome: string;
+  notes?: string;
+  timezone: string;
+  slots: Array<{ startsAt: string }>;
+  idempotencyKey?: string;
 }
 
-async function invokeDiscoveryCallService<T>(body: Record<string, unknown>): Promise<T> {
-  const { data, error } = await supabase.functions.invoke('discovery-call-service', { body });
+export interface DiscoveryCallAvailability {
+  success: boolean;
+  featureEnabled: boolean;
+  available: boolean;
+  creditCost: number;
+  durationMinutes: number;
+  quotaStatus: DiscoveryCallQuotaStatus;
+}
 
-  if (error) {
-    throw new Error(error.message || 'Discovery call request failed');
-  }
+export interface MentorDiscoveryPortal {
+  callId: string;
+  purpose: 'mentor_request_response' | 'mentor_booking_manage';
+  founderName: string;
+  mentorName: string;
+  status: DiscoveryCallWorkflowStatus;
+  topic: string | null;
+  desiredOutcome: string | null;
+  notes: string | null;
+  founderTimezone: string;
+  mentorTimezone: string;
+  responseDueAt: string | null;
+  scheduledFor: string | null;
+  durationMinutes: number;
+  meetingUrl: string | null;
+  meetingInstructions: string | null;
+  activeRound: SchedulingRound | null;
+}
 
+interface ServiceResult {
+  success: boolean;
+  error?: string;
+  errorCode?: string;
+  [key: string]: unknown;
+}
+
+async function invoke<T>(functionName: string, body: Record<string, unknown>): Promise<T> {
+  const { data, error } = await supabase.functions.invoke(functionName, { body });
+  if (error) throw new Error(error.message || 'Discovery Call request failed');
   return data as T;
 }
 
-export function storePendingDiscoveryCallRedirect(payload: PendingDiscoveryCallRedirect) {
-  localStorage.setItem(PENDING_DISCOVERY_CALL_BOOKING_KEY, JSON.stringify(payload));
-  localStorage.setItem(PENDING_DISCOVERY_CALL_KEY, JSON.stringify(payload));
+export const getDiscoveryCallQuotaStatus = () =>
+  invoke<DiscoveryCallQuotaStatus>('discovery-call-service', { action: 'getQuotaStatus' });
+
+export const getDiscoveryCallAvailability = (mentorId: string) =>
+  invoke<DiscoveryCallAvailability>('discovery-call-service', { action: 'getAvailability', mentorId });
+
+export function createDiscoveryCallRequest(input: CreateDiscoveryCallRequestInput) {
+  return invoke<ServiceResult & { callId?: string; responseDueAt?: string; heldCredits?: number }>('discovery-call-service', {
+    action: 'createRequest',
+    ...input,
+    idempotencyKey: input.idempotencyKey || createIdempotencyKey('discovery-call-request-v2'),
+  });
 }
 
-export function readPendingDiscoveryCallRedirect(): PendingDiscoveryCallRedirect | null {
-  const rawValue = localStorage.getItem(PENDING_DISCOVERY_CALL_BOOKING_KEY)
-    || localStorage.getItem(PENDING_DISCOVERY_CALL_KEY);
-  if (!rawValue) {
-    return null;
-  }
+export const listMyDiscoveryCalls = () =>
+  invoke<{ success: boolean; bookings: DiscoveryCallBookingItem[] }>('discovery-call-service', { action: 'listMine' });
 
-  try {
-    const parsed = JSON.parse(rawValue) as PendingDiscoveryCallRedirect;
-    if (parsed && typeof parsed.url === 'string') {
-      return parsed;
-    }
-  } catch {
-    return { url: rawValue };
-  }
+export const acceptMentorCounter = (callId: string) =>
+  invoke<ServiceResult>('discovery-call-service', { action: 'acceptMentorCounter', callId });
 
-  return { url: rawValue };
+export const declineMentorCounter = (callId: string) =>
+  invoke<ServiceResult>('discovery-call-service', { action: 'declineMentorCounter', callId });
+
+export const withdrawDiscoveryCallRequest = (callId: string) =>
+  invoke<ServiceResult>('discovery-call-service', { action: 'withdrawRequest', callId });
+
+export const cancelDiscoveryCall = (callId: string, reason: string) =>
+  invoke<ServiceResult>('discovery-call-service', { action: 'cancel', callId, reason });
+
+export const createDiscoveryCallReschedule = (input: { callId: string; timezone: string; slots: string[] }) =>
+  invoke<ServiceResult>('discovery-call-service', { action: 'createReschedule', ...input });
+
+export const respondToDiscoveryCallReschedule = (input: {
+  callId: string;
+  response: 'accept' | 'counter' | 'decline';
+  slotId?: string;
+  counterStartsAt?: string;
+  meetingUrl?: string;
+  meetingInstructions?: string;
+}) => invoke<ServiceResult>('discovery-call-service', { action: 'respondToReschedule', ...input });
+
+export const loadMentorDiscoveryPortal = (token: string) =>
+  invoke<{ success: boolean; portal?: MentorDiscoveryPortal; errorCode?: string; message?: string }>('discovery-call-mentor-response', { action: 'load', token });
+
+export const respondAsMentor = (token: string, input: {
+  action: 'acceptSlot' | 'counter' | 'decline' | 'cancelBooking' | 'createReschedule' | 'acceptReschedule' | 'counterReschedule' | 'declineReschedule';
+  slotId?: string;
+  counterStartsAt?: string;
+  meetingUrl?: string;
+  meetingInstructions?: string;
+  reason?: string;
+  timezone?: string;
+  slots?: string[];
+}) => invoke<ServiceResult>('discovery-call-mentor-response', { token, ...input });
+
+export interface AdminMentorDiscoverySettings {
+  mentor_id: string;
+  notification_email: string;
+  discovery_calls_enabled: boolean;
+  legacy_provider: 'calendly' | 'koalendar' | 'google_calendar' | 'cal_com' | 'other' | null;
+  legacy_booking_url: string | null;
 }
 
-export function clearPendingDiscoveryCallRedirect() {
-  localStorage.removeItem(PENDING_DISCOVERY_CALL_BOOKING_KEY);
-  localStorage.removeItem(PENDING_DISCOVERY_CALL_KEY);
-}
+export const getAdminMentorDiscoverySettings = (mentorId: string) =>
+  invoke<{ success: boolean; settings: AdminMentorDiscoverySettings | null }>('discovery-call-service', { action: 'getAdminSettings', mentorId });
 
-export async function getDiscoveryCallQuotaStatus() {
-  return invokeDiscoveryCallService<DiscoveryCallQuotaStatus>({ action: 'getQuotaStatus' });
-}
-
-export async function createDiscoveryCallIntent(input: {
+export const updateAdminMentorDiscoverySettings = (input: {
   mentorId: string;
-  source: string;
-  mentorName?: string;
-  metadata?: Record<string, unknown>;
-  idempotencyKey?: string;
-}) {
-  const idempotencyKey = input.idempotencyKey || createIdempotencyKey('discovery-call-intent');
-  return invokeDiscoveryCallService<DiscoveryCallIntentResponse>({
-    action: 'createIntent',
-    mentorId: input.mentorId,
-    source: input.source,
-    idempotencyKey,
-    metadata: {
-      ...(input.metadata || {}),
-      mentorName: input.mentorName,
-    },
-  });
-}
+  notificationEmail: string;
+  discoveryCallsEnabled: boolean;
+  legacyProvider?: string | null;
+  legacyBookingUrl?: string | null;
+}) => invoke<{ success: boolean; settings?: AdminMentorDiscoverySettings; error?: string }>('discovery-call-service', { action: 'updateAdminSettings', ...input });
 
-export async function createServiceDiscoveryCallIntent(input: {
-  serviceId: string;
-  source: string;
-  serviceName?: string;
-  metadata?: Record<string, unknown>;
-  idempotencyKey?: string;
-}) {
-  const idempotencyKey = input.idempotencyKey || createIdempotencyKey('service-discovery-call-intent');
-  return invokeDiscoveryCallService<DiscoveryCallIntentResponse>({
-    action: 'createIntent',
-    serviceId: input.serviceId,
-    source: input.source,
-    idempotencyKey,
-    metadata: {
-      ...(input.metadata || {}),
-      serviceName: input.serviceName,
-    },
-  });
-}
+export const listAdminDiscoveryCalls = () =>
+  invoke<{ success: boolean; calls: Array<Record<string, unknown>>; health: Array<Record<string, unknown>>; notifications: Array<Record<string, unknown>>; events: Array<Record<string, unknown>>; rounds: Array<Record<string, unknown>>; reservations: Array<Record<string, unknown>> }>('discovery-call-service', { action: 'listAdminCalls' });
 
-export interface DiscoveryCallConfirmResponse {
-  success: boolean;
-  callId?: string;
-  status?: string;
-  alreadyConfirmed?: boolean;
-  chargedCredits?: number;
-  error?: string;
-  errorCode?: string;
-  requiredCredits?: number;
-}
+export const adminOverrideDiscoveryCall = (input: Record<string, unknown>) =>
+  invoke<ServiceResult>('discovery-call-service', { action: 'adminOverride', ...input });
 
-export async function confirmDiscoveryCallBooking(callId: string, metadata?: Record<string, unknown>) {
-  return invokeDiscoveryCallService<DiscoveryCallConfirmResponse>({
-    action: 'confirmBooking',
-    callId,
-    metadata: metadata ?? {},
-  });
-}
+export const resendDiscoveryCallNotification = (notificationId: string) =>
+  invoke<ServiceResult>('discovery-call-service', { action: 'resendNotification', notificationId });
 
-export async function listMyDiscoveryCalls() {
-  return invokeDiscoveryCallService<{ success: boolean; bookings: DiscoveryCallBookingItem[] }>({
-    action: 'listMine',
-  });
-}
-
-export function buildDiscoveryCallProviderRedirectUrl(
-  baseUrl: string,
-  callId: string,
-  options?: { medium?: string },
-) {
-  const normalizedUrl = /^https?:\/\//i.test(baseUrl) ? baseUrl : `https://${baseUrl}`;
-  const url = new URL(normalizedUrl);
-  url.searchParams.set('ct_discovery_call_id', callId);
-  url.searchParams.set('utm_source', 'creatives_takeover');
-  url.searchParams.set('utm_medium', options?.medium || 'mentor_marketplace');
-  url.searchParams.set('utm_campaign', 'discovery_call');
-  url.searchParams.set('utm_content', callId);
-  return url.toString();
-}
-
-export const buildDiscoveryCallRedirectUrl = buildDiscoveryCallProviderRedirectUrl;
-
-export function openDeferredExternalTab() {
-  const tab = window.open('', '_blank');
-
-  if (!tab) {
-    return null;
-  }
-
-  try {
-    tab.opener = null;
-  } catch {
-    // Ignore browser restrictions on mutating opener.
-  }
-
-  return tab;
-}
-
-export async function resumePendingDiscoveryCallRedirect() {
-  const pendingRedirect = readPendingDiscoveryCallRedirect();
-  if (!pendingRedirect) {
-    return false;
-  }
-
-  // Revenue P0 quarantine: stale pre-auth state must never reopen an external
-  // calendar or manufacture another intent. Clearing it lets auth continue to
-  // the safe mentor marketplace fallback selected by the calling page.
-  clearPendingDiscoveryCallRedirect();
-  return false;
+export function clearLegacyDiscoveryCallRedirects() {
+  ['pending_calendly_redirect', 'pending_discovery_call_booking_redirect', 'oauth_discovery_call_booking_redirect', 'oauth_calendly_redirect']
+    .forEach((key) => localStorage.removeItem(key));
 }

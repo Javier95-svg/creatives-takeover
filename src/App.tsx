@@ -109,7 +109,10 @@ const VCProfilePage = lazy(() => import("./components/vc/VCProfilePage"));
 const AcceleratorProfilePage = lazy(() => import("./components/accelerator/AcceleratorProfilePage"));
 const PitchDeckAnalyzerPage = lazy(() => import("./pages/PitchDeckAnalyzerPage"));
 const MyBookings = lazy(() => import("./pages/community/MyBookings"));
+const MentorBookingPage = lazy(() => import("./pages/community/MentorBookingPage"));
+const MentorDiscoveryResponsePage = lazy(() => import("./pages/community/MentorDiscoveryResponsePage"));
 const AdminMentorEditor = lazy(() => import("./pages/community/AdminMentorEditor"));
+const AdminDiscoveryCallsPage = lazy(() => import("./pages/community/AdminDiscoveryCallsPage"));
 const AdminServiceEditor = lazy(() => import("./pages/community/AdminServiceEditor"));
 const PMFLabPage = lazy(() => import("./pages/PMFLabPage"));
 const ICPBuilderPage = lazy(() => import("./pages/IcpBuilderPage"));
@@ -250,7 +253,8 @@ function App() {
                         <Route path="/mentorship" element={<CommunityPage />} />
                         <Route path="/mentorship/progress" element={<ProgressCommunityPage />} />
                         <Route path="/mentorship/mentors/:id" element={<MentorProfilePage />} />
-                        <Route path="/mentorship/book/:id" element={<Navigate to="/mentorship" replace />} />
+                        <Route path="/mentorship/book/:id" element={<MentorBookingPage />} />
+                        <Route path="/mentorship/calls/respond" element={<MentorDiscoveryResponsePage />} />
                         <Route path="/first-customer-sprint" element={<FirstCustomerSprintPage />} />
                         <Route path="/first-customer-sprint/apply" element={<FirstCustomerSprintApplicationPage />} />
                         <Route path="/admin/first-customer-sprint" element={<AdminRoute><AdminFirstCustomerSprintPage /></AdminRoute>} />
@@ -269,6 +273,7 @@ function App() {
                         <Route path="/mentorship/my-bookings" element={<MyBookings />} />
                         <Route path="/mentorship/admin/new" element={<AdminRoute><AdminMentorEditor /></AdminRoute>} />
                         <Route path="/mentorship/admin/edit/:id" element={<AdminRoute><AdminMentorEditor /></AdminRoute>} />
+                        <Route path="/mentorship/admin/discovery-calls" element={<AdminRoute><AdminDiscoveryCallsPage /></AdminRoute>} />
                         <Route path="/mentorship/:slug" element={<MentorProfilePage />} />
                         <Route path="/community" element={<LegacyCommunityRedirect />} />
                         <Route path="/community/*" element={<LegacyCommunityRedirect />} />

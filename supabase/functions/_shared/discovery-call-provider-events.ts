@@ -35,6 +35,8 @@ type DiscoveryCallRow = {
   provider_event_id: string | null;
   provider_invitee_id: string | null;
   created_at: string;
+  workflow_version: number;
+  booking_source: string | null;
 };
 
 type MatchResult =
@@ -139,7 +141,7 @@ async function resolveFounderId(supabaseAdmin: SupabaseAdmin, email: string | nu
 async function findCallById(supabaseAdmin: SupabaseAdmin, id: string) {
   const { data, error } = await supabaseAdmin
     .from("discovery_calls")
-    .select("id, founder_id, mentor_id, status, scheduled_for, provider_name, provider_event_id, provider_invitee_id, created_at")
+    .select("id, founder_id, mentor_id, status, scheduled_for, provider_name, provider_event_id, provider_invitee_id, created_at, workflow_version, booking_source")
     .eq("id", id)
     .maybeSingle();
 
@@ -164,7 +166,7 @@ async function resolveDiscoveryCall(supabaseAdmin: SupabaseAdmin, event: Discove
   if (event.providerInviteeId) {
     const { data, error } = await supabaseAdmin
       .from("discovery_calls")
-      .select("id, founder_id, mentor_id, status, scheduled_for, provider_name, provider_event_id, provider_invitee_id, created_at")
+      .select("id, founder_id, mentor_id, status, scheduled_for, provider_name, provider_event_id, provider_invitee_id, created_at, workflow_version, booking_source")
       .eq("provider_invitee_id", event.providerInviteeId)
       .maybeSingle();
 
@@ -177,7 +179,7 @@ async function resolveDiscoveryCall(supabaseAdmin: SupabaseAdmin, event: Discove
   if (event.providerEventId) {
     const { data, error } = await supabaseAdmin
       .from("discovery_calls")
-      .select("id, founder_id, mentor_id, status, scheduled_for, provider_name, provider_event_id, provider_invitee_id, created_at")
+      .select("id, founder_id, mentor_id, status, scheduled_for, provider_name, provider_event_id, provider_invitee_id, created_at, workflow_version, booking_source")
       .eq("provider_event_id", event.providerEventId)
       .maybeSingle();
 
@@ -200,8 +202,9 @@ async function resolveDiscoveryCall(supabaseAdmin: SupabaseAdmin, event: Discove
 
   let query = supabaseAdmin
     .from("discovery_calls")
-    .select("id, founder_id, mentor_id, status, scheduled_for, provider_name, provider_event_id, provider_invitee_id, created_at")
+    .select("id, founder_id, mentor_id, status, scheduled_for, provider_name, provider_event_id, provider_invitee_id, created_at, workflow_version, booking_source")
     .eq("founder_id", founderId)
+    .eq("workflow_version", 1)
     .in("status", ["intent_created", "scheduled"])
     .gte("created_at", lookbackIso)
     .order("created_at", { ascending: false })
@@ -557,6 +560,23 @@ export async function processDiscoveryCallProviderEvent(
       action: "pending_review",
       reason: match.reason,
       providerEventRecordId: providerEventRecord.eventId,
+    };
+  }
+
+  // Platform-owned V2 calls are never mutated by provider/email events, even
+  // when a stale external event contains an explicit tracked call ID.
+  if (match.call.workflow_version === 2 || match.call.booking_source === "platform_request") {
+    await finishProviderEventRecord(supabaseAdmin, providerEventRecord.eventId, {
+      matchStatus: "ignored",
+      discoveryCallId: match.call.id,
+      processingError: "platform_request_is_provider_independent",
+    });
+    return {
+      ok: true,
+      action: "ignored",
+      reason: "platform_request_is_provider_independent",
+      providerEventRecordId: providerEventRecord.eventId,
+      callId: match.call.id,
     };
   }
 

@@ -3,7 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Mentor } from "@/types/mentor";
 import { Link, useNavigate } from "react-router-dom";
-import { Star, CheckCircle2, MessageCircle, Linkedin } from "lucide-react";
+import { Star, CheckCircle2, MessageCircle, Linkedin, CalendarClock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { getCountryFlag } from "@/utils/countryFlags";
@@ -507,6 +507,19 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
             )}
 
             {/* Action Buttons */}
+            {mentor.discovery_call_available ? (
+              <Button asChild className="w-full">
+                <Link to={`/mentorship/book/${mentor.id}`}>
+                  <CalendarClock className="mr-2 h-4 w-4" />
+                  Request Discovery Call · 10 credits
+                </Link>
+              </Button>
+            ) : (
+              <Button className="w-full" variant="outline" disabled title="Send this mentor a message instead">
+                <CalendarClock className="mr-2 h-4 w-4" />
+                Discovery Calls unavailable
+              </Button>
+            )}
             <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
               {/* Only show Message when the mentor has a messaging account; Save remains available to everyone. */}
               {hasMessagingAccount && (

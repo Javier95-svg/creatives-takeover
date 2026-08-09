@@ -10,11 +10,7 @@ import { appendReturnParam, persistOnboardingReturn, sanitizeReturnPath } from '
 import { consumeCheckoutIntent, redirectToCheckoutIntent } from '@/lib/checkoutRedirect';
 import { ICP_SEED_STORAGE_KEY } from '@/lib/icpSeed';
 import { getSafeSessionStorage } from '@/lib/safeStorage';
-import {
-  PENDING_DISCOVERY_CALL_BOOKING_KEY,
-  PENDING_DISCOVERY_CALL_KEY,
-  resumePendingDiscoveryCallRedirect,
-} from '@/services/discoveryCallService';
+import { clearLegacyDiscoveryCallRedirects } from '@/services/discoveryCallService';
 import {
   clearOAuthAuthIntent,
   clearPendingReferralCode,
@@ -152,41 +148,16 @@ const AuthCallback = () => {
             toast.success('Successfully signed in!');
           }
           
-          // Check for pending discovery-call redirect (from OAuth or regular auth)
-          const oauthBookingUrl = localStorage.getItem('oauth_discovery_call_booking_redirect')
-            || localStorage.getItem('oauth_calendly_redirect');
-          const pendingBookingUrl = localStorage.getItem(PENDING_DISCOVERY_CALL_BOOKING_KEY)
-            || localStorage.getItem(PENDING_DISCOVERY_CALL_KEY)
-            || oauthBookingUrl;
-          
-          if (pendingBookingUrl) {
-            localStorage.removeItem(PENDING_DISCOVERY_CALL_BOOKING_KEY);
-            localStorage.removeItem(PENDING_DISCOVERY_CALL_KEY);
-            localStorage.removeItem('oauth_discovery_call_booking_redirect');
-            localStorage.removeItem('oauth_calendly_redirect');
-
-            localStorage.setItem(PENDING_DISCOVERY_CALL_BOOKING_KEY, pendingBookingUrl);
-            await resumePendingDiscoveryCallRedirect();
-            // Also navigate to community page
-            setTimeout(() => {
-              navigate('/mentorship');
-            }, 500);
-            return;
-          }
+          clearLegacyDiscoveryCallRedirects();
           
           // Get return URL from localStorage (saved before OAuth redirect)
           const fallbackReturnUrl = getSafeSessionStorage().getItem(ICP_SEED_STORAGE_KEY)
             ? '/icp-builder'
             : '/dashboard';
-          let returnUrl = sanitizeReturnPath(localStorage.getItem('oauth_return_url') || fallbackReturnUrl, '/dashboard');
+          const returnUrl = sanitizeReturnPath(localStorage.getItem('oauth_return_url') || fallbackReturnUrl, '/dashboard');
           const oauthSource = localStorage.getItem('oauth_source');
           const oauthSignupMethod = localStorage.getItem('oauth_signup_method');
           completeAttributedOAuthSignup();
-          
-          // If return URL is a booking flow, redirect to /mentorship instead
-          if (returnUrl.startsWith('/mentorship/book/')) {
-            returnUrl = '/mentorship';
-          }
           
           // Restore BizMap progress if it exists
           const savedBizMapProgress = localStorage.getItem('oauth_bizmap_progress');

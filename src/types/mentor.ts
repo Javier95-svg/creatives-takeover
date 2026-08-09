@@ -44,8 +44,7 @@ export interface Mentor {
   linkedin_url?: string; // LinkedIn profile URL
   twitter_x_url?: string; // X (Twitter) profile URL
   website_url?: string; // Personal or company website URL
-  calendly_url?: string; // External scheduling link for discovery calls
-  booking_provider?: 'calendly' | 'koalendar' | 'other' | 'manual'; // Scheduling provider for discovery calls
+  discovery_call_available?: boolean;
   nationality?: string; // Country name or code (e.g., "USA", "US", "United States")
   universities?: string[]; // Array of universities/educational institutions
   created_at: string;

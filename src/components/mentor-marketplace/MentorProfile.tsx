@@ -3,7 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MentorProfile as MentorProfileType, getCurrencySymbol } from "@/types/mentor";
-import { Star, MessageCircle, CheckCircle2, Users, Linkedin } from "lucide-react";
+import { Star, MessageCircle, CheckCircle2, Users, Linkedin, CalendarClock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getCountryFlag } from "@/utils/countryFlags";
@@ -515,6 +515,16 @@ export const MentorProfile = ({ mentor }: MentorProfileProps) => {
             )}
 
 	                {/* Action Buttons */}
+	                <Button
+	                  size="default"
+	                  className="w-full"
+	                  variant={mentor.discovery_call_available ? "default" : "outline"}
+	                  disabled={!mentor.discovery_call_available}
+	                  onClick={() => navigate(`/mentorship/book/${mentor.id}`)}
+	                >
+	                  <CalendarClock className="mr-2 h-4 w-4" />
+	                  {mentor.discovery_call_available ? 'Request Discovery Call · 10 credits' : 'Discovery Calls unavailable — send a message instead'}
+	                </Button>
 	                <div className="flex flex-col items-stretch gap-3 pt-2 sm:flex-row">
                   {hasMessagingAccount && (
                     <Button

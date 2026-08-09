@@ -267,6 +267,23 @@ serve(async (req: Request) => {
       return jsonResponse({ success: false, error: "discoveryCallId or providerEventRecordId is required" }, 400);
     }
 
+    if (body.discoveryCallId) {
+      const { data: callVersion } = await supabaseAdmin
+        .from("discovery_calls")
+        .select("workflow_version, booking_source")
+        .eq("id", body.discoveryCallId)
+        .maybeSingle();
+      if (callVersion?.workflow_version === 2 || callVersion?.booking_source === "platform_request") {
+        // V2 transitions create durable outbox rows in the same transaction.
+        // This compatibility endpoint must never send an untracked duplicate.
+        void supabaseAdmin.functions.invoke("process-discovery-call-notifications", {
+          body: { limit: 50 },
+          headers: { Authorization: `Bearer ${serviceRoleKey}` },
+        });
+        return jsonResponse({ success: true, queued: true, delivery: "v2_outbox" }, 202);
+      }
+    }
+
     const idempotencyKey = `notify:discovery-call-event:${eventType}:${idempotencySubject}`;
     const { data: beginStatus, error: beginError } = await supabaseAdmin.rpc("idempotency_try_begin", {
       p_id: idempotencyKey,

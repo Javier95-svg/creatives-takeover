@@ -61,7 +61,7 @@ test('webhook delivery is durable and unresolved revenue events stay unprocessed
   assert.match(source, /payment_failed/);
 });
 
-test('public mentor surfaces expose Message and Save without booking actions', () => {
+test('public mentor surfaces expose tracked Discovery Call requests without provider links', () => {
   const card = read('../src/components/mentor-marketplace/MentorCard.tsx');
   const profile = read('../src/components/mentor-marketplace/MentorProfile.tsx');
   const legacyProfile = read('../src/pages/Profile.tsx');
@@ -70,20 +70,29 @@ test('public mentor surfaces expose Message and Save without booking actions', (
   for (const surface of [card, profile]) {
     assert.match(surface, /\bMessage\b/);
     assert.match(surface, /saveButton\.label/);
-    assert.doesNotMatch(surface, /Book Discovery Call|Unavailable for Calls|createIntent|confirmBooking/i);
+    assert.match(surface, /Request Discovery Call/);
+    assert.doesNotMatch(surface, /calendly_url|providerBookingUrl|createIntent|confirmBooking/i);
   }
   assert.match(saves, /'Save Mentor'/);
   assert.doesNotMatch(legacyProfile, /Book Discovery Call|createIntent|confirmBooking/i);
-  assert.match(app, /path="\/mentorship\/book\/:id"[\s\S]*Navigate to="\/mentorship"/);
+  assert.match(app, /path="\/mentorship\/book\/:id" element={<MentorBookingPage/);
+  assert.match(app, /path="\/mentorship\/calls\/respond" element={<MentorDiscoveryResponsePage/);
 });
 
-test('discovery-call creation is paused while historical attempts expire with audit history', () => {
+test('discovery-call V2 retires provider creation and uses atomic request tracking', () => {
   const service = read('../supabase/functions/discovery-call-service/index.ts');
+  const workflow = read('../supabase/migrations/20260808122100_discovery_call_v2_transitions.sql');
+  const outbox = read('../supabase/migrations/20260808122000_discovery_call_notification_outbox.sql');
   const enumMigration = read('../supabase/migrations/20260805110000_add_discovery_call_expired_status.sql');
   const expiryMigration = read('../supabase/migrations/20260805111000_expire_stale_discovery_call_intents.sql');
   const refundMigration = read('../supabase/migrations/20260805112000_refund_unverified_self_confirmed_calls.sql');
-  assert.match(service, /action === "createIntent"[\s\S]*FEATURE_PAUSED/);
-  assert.match(service, /action === "confirmBooking"[\s\S]*FEATURE_PAUSED/);
+  assert.match(service, /"createIntent", "confirmBooking", "finalizeBooking", "manualConfirmBooking"/);
+  assert.match(service, /FEATURE_RETIRED/);
+  assert.match(service, /action === "createRequest"[\s\S]*create_discovery_call_request_v2/);
+  assert.match(workflow, /pending_mentor_response/);
+  assert.match(workflow, /finalize_discovery_call_reservation_v2/);
+  assert.match(workflow, /admin@creatives-takeover\.com/);
+  assert.match(outbox, /claim_discovery_call_notifications/);
   assert.match(enumMigration, /ADD VALUE IF NOT EXISTS 'expired'/);
   assert.match(expiryMigration, /status = 'intent_created'[\s\S]*interval '24 hours'/);
   assert.match(expiryMigration, /INSERT INTO public\.discovery_call_events/);

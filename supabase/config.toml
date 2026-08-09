@@ -172,6 +172,18 @@ verify_jwt = false
 [functions.discovery-call-email-ingest]
 verify_jwt = false
 
+[functions.discovery-call-service]
+verify_jwt = true
+
+[functions.discovery-call-mentor-response]
+verify_jwt = false
+
+[functions.process-discovery-call-notifications]
+verify_jwt = false
+
+[functions.process-discovery-call-deadlines]
+verify_jwt = false
+
 [functions.notify-discovery-call-booked]
 verify_jwt = true
 

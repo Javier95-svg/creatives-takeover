@@ -146,8 +146,6 @@ export interface CreateMentorInput {
   linkedin_url?: string | null;
   twitter_x_url?: string | null;
   website_url?: string | null;
-  calendly_url?: string | null;
-  booking_provider?: 'calendly' | 'koalendar' | 'other' | 'manual';
   nationality?: string | null;
 }
 
@@ -199,7 +197,7 @@ const formatErrorMessage = (error: any, defaultMessage: string): string => {
 const convertToMentor = (data: any): Mentor => {
   return {
     ...data,
-    booking_provider: data.booking_provider || inferBookingProvider(data.calendly_url),
+    discovery_call_available: false,
     user_id:
       data.user_id ||
       (isMarcBrightMentor(data.name)
@@ -248,12 +246,23 @@ const convertToMentor = (data: any): Mentor => {
   };
 };
 
-const inferBookingProvider = (bookingUrl?: string | null): 'calendly' | 'koalendar' | 'other' | 'manual' => {
-  const normalizedUrl = (bookingUrl || '').toLowerCase().trim();
-  if (!normalizedUrl) return 'manual';
-  if (normalizedUrl.includes('calendly.com')) return 'calendly';
-  if (normalizedUrl.includes('koalendar.com')) return 'koalendar';
-  return 'other';
+const PUBLIC_MENTOR_COLUMNS = 'id, user_id, name, picture, bio, hourly_rate, hourly_rate_per_hour, currency, stripe_connected_account_id, expertise, rating, review_count, availability, is_active, is_featured, linkedin_url, twitter_x_url, website_url, nationality, universities, created_at, updated_at';
+
+const attachDiscoveryCallAvailability = async (mentor: Mentor): Promise<Mentor> => {
+  const { data, error } = await (supabase as any).rpc('get_mentor_discovery_call_availability', {
+    p_mentor_id: mentor.id,
+  });
+  return { ...mentor, discovery_call_available: error ? false : Boolean(data) };
+};
+
+const attachDiscoveryCallAvailabilityBulk = async (mentors: Mentor[]): Promise<Mentor[]> => {
+  if (mentors.length === 0) return mentors;
+  const { data, error } = await (supabase as any).rpc('get_mentor_discovery_call_availability_bulk', {
+    p_mentor_ids: mentors.map((mentor) => mentor.id),
+  });
+  if (error) return mentors.map((mentor) => ({ ...mentor, discovery_call_available: false }));
+  const availability = new Map((data ?? []).map((row: { mentor_id: string; discovery_call_available: boolean }) => [row.mentor_id, row.discovery_call_available]));
+  return mentors.map((mentor) => ({ ...mentor, discovery_call_available: Boolean(availability.get(mentor.id)) }));
 };
 
 /**
@@ -300,13 +309,13 @@ export const useMentors = () => {
 
       const { data, error } = await supabase
         .from('mentors')
-        .select('*')
+        .select(PUBLIC_MENTOR_COLUMNS)
         .eq('is_active', true)
         .order('name', { ascending: true });
 
       if (error) throw error;
 
-      const result = sortMentorsAlphabetically((data || []).map(convertToMentor));
+      const result = sortMentorsAlphabetically(await attachDiscoveryCallAvailabilityBulk((data || []).map(convertToMentor)));
       return result;
     } catch (error: any) {
       console.error('Error fetching mentors:', {
@@ -331,13 +340,13 @@ export const useMentors = () => {
 
       const { data, error } = await supabase
         .from('mentors')
-        .select('*')
+        .select(PUBLIC_MENTOR_COLUMNS)
         .eq('id', id)
         .maybeSingle();
 
       if (error) throw error;
 
-      return data ? convertToMentor(data) : null;
+      return data ? attachDiscoveryCallAvailability(convertToMentor(data)) : null;
     } catch (error: any) {
       console.error('Error fetching mentor:', {
         id,
@@ -363,7 +372,7 @@ export const useMentors = () => {
       // Fetch all active mentors
       const { data, error } = await supabase
         .from('mentors')
-        .select('*')
+        .select(PUBLIC_MENTOR_COLUMNS)
         .eq('is_active', true);
 
       if (error) throw error;
@@ -379,7 +388,7 @@ export const useMentors = () => {
       });
 
       if (mentor) {
-        return convertToMentor(mentor);
+        return attachDiscoveryCallAvailability(convertToMentor(mentor));
       }
 
       // Fallback: try partial name match for robustness
@@ -390,7 +399,7 @@ export const useMentors = () => {
       });
 
       if (partialMatch) {
-        return convertToMentor(partialMatch);
+        return attachDiscoveryCallAvailability(convertToMentor(partialMatch));
       }
 
       return null;
@@ -439,8 +448,6 @@ export const useMentors = () => {
         linkedin_url: input.linkedin_url || null,
         twitter_x_url: input.twitter_x_url || null,
         website_url: input.website_url || null,
-        calendly_url: input.calendly_url || null,
-        booking_provider: input.booking_provider || inferBookingProvider(input.calendly_url),
         nationality: input.nationality || null,
       };
       
@@ -456,7 +463,7 @@ export const useMentors = () => {
       const { data, error } = await supabase
         .from('mentors')
         .insert([insertData])
-        .select()
+        .select(PUBLIC_MENTOR_COLUMNS)
         .single();
 
       if (error) {
@@ -535,10 +542,6 @@ export const useMentors = () => {
       if (input.linkedin_url !== undefined) cleanInput.linkedin_url = input.linkedin_url;
       if (input.twitter_x_url !== undefined) cleanInput.twitter_x_url = input.twitter_x_url;
       if (input.website_url !== undefined) cleanInput.website_url = input.website_url;
-      if (input.calendly_url !== undefined) cleanInput.calendly_url = input.calendly_url;
-      if (input.booking_provider !== undefined || input.calendly_url !== undefined) {
-        cleanInput.booking_provider = input.booking_provider || inferBookingProvider(input.calendly_url);
-      }
       if (input.nationality !== undefined) cleanInput.nationality = input.nationality;
       
       // Debug: Log the clean input
@@ -556,7 +559,7 @@ export const useMentors = () => {
         .from('mentors')
         .update(cleanInput)
         .eq('id', id)
-        .select()
+        .select(PUBLIC_MENTOR_COLUMNS)
         .single();
 
       if (error) {

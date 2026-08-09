@@ -98,8 +98,7 @@ const Login = () => {
           }
         }
 
-        const postLoginTarget = returnUrl.startsWith('/mentorship/book/') ? '/mentorship' : returnUrl;
-        navigate(postLoginTarget);
+        navigate(returnUrl);
       };
       void finishLogin();
     }

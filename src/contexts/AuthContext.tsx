@@ -9,11 +9,7 @@ import {
   requiresGuidedOnboarding,
   withGuidedOnboardingPreference,
 } from '@/lib/guidedOnboarding';
-import {
-  PENDING_DISCOVERY_CALL_BOOKING_KEY,
-  PENDING_DISCOVERY_CALL_KEY,
-  resumePendingDiscoveryCallRedirect,
-} from '@/services/discoveryCallService';
+import { clearLegacyDiscoveryCallRedirects } from '@/services/discoveryCallService';
 import {
   consumeSignupIntent,
   identify,
@@ -373,13 +369,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         sessionStorage.removeItem(`onboarding_redirect_${userId}`);
       }
 
-      const hasPendingDiscoveryCall = localStorage.getItem(PENDING_DISCOVERY_CALL_BOOKING_KEY)
-        || localStorage.getItem(PENDING_DISCOVERY_CALL_KEY);
-      if (hasPendingDiscoveryCall) {
-        setTimeout(() => {
-          void resumePendingDiscoveryCallRedirect();
-        }, 800);
-      }
+      clearLegacyDiscoveryCallRedirects();
 
     } catch (error) {
       logError('Error in handleSignIn', error, { userId: signedInUser.id });
