@@ -73,7 +73,7 @@ Use a dedicated Workspace organizer such as `discovery-calls@creatives-takeover.
    - `https://rcjlaybjnozqbsoxzboa.supabase.co/functions/v1/discovery-call-google-oauth` for optional mentor busy-calendar connections.
 6. Sign in to the local authorization flow as the account that owns or can write to the platform calendar.
 
-Before production, publish the OAuth consent screen as **Production**. Google documents that an External app left in **Testing** can issue refresh tokens that expire after seven days. Because optional mentor busy-calendar sync requests `calendar.readonly`, complete Google's consent-screen verification before offering that connection to mentors outside your Workspace. The core platform booking flow can launch first with only the dedicated organizer authorized; the mentor connection remains optional.
+Before production, publish the OAuth consent screen as **Production**. Google documents that an External app left in **Testing** can issue refresh tokens that expire after seven days. The platform organizer requests only `calendar.events.owned`; optional mentor conflict sync requests only `calendar.freebusy`. Complete Google's consent-screen verification before offering the mentor connection outside your Workspace. The core platform booking flow can launch first with only the dedicated organizer authorized; the mentor connection remains optional.
 
 Generate the platform refresh token without persisting it to disk:
 

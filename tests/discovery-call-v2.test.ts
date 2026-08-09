@@ -214,7 +214,10 @@ test('mentor availability portal is token protected and Google OAuth credentials
   const config = read('../supabase/config.toml');
   assert.match(availability, /mentor_availability_access_tokens/);
   assert.match(availability, /hashDiscoveryCallToken\(rawToken\)/);
-  assert.match(availability, /calendar\.readonly/);
+  assert.match(availability, /calendar\.freebusy/);
+  const organizerOAuth = read('../scripts/google-calendar-oauth.mjs');
+  assert.match(organizerOAuth, /calendar\.events\.owned/);
+  assert.doesNotMatch(organizerOAuth, /auth\/calendar['"]/);
   assert.match(callback, /encryptDiscoveryCallToken\(tokenBody\.refresh_token\)/);
   assert.match(callback, /state_hash/);
   assert.match(config, /\[functions\.discovery-call-mentor-availability\][\s\S]*verify_jwt = false/);

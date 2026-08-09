@@ -129,7 +129,7 @@ serve(async (req) => {
     const params = new URLSearchParams({
       client_id: clientId, redirect_uri: redirectUri, response_type: "code",
       access_type: "offline", prompt: "consent", include_granted_scopes: "true",
-      scope: "openid email https://www.googleapis.com/auth/calendar.readonly",
+      scope: "openid email https://www.googleapis.com/auth/calendar.freebusy",
       state,
     });
     return json({ success: true, authorizationUrl: `https://accounts.google.com/o/oauth2/v2/auth?${params}` }, 200, { "Cache-Control": "no-store" });
