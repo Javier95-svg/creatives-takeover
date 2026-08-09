@@ -160,8 +160,9 @@ test('V4 availability is platform-owned and collision safe', () => {
   assert.match(schema, /ADD COLUMN IF NOT EXISTS timezone TEXT/);
   assert.match(schema, /scheduling source of truth/);
   assert.match(schema, /EXCLUDE USING gist/);
-  assert.match(schema, /starts_at - make_interval\(mins => buffer_minutes\)/);
-  assert.match(schema, /ends_at \+ make_interval\(mins => buffer_minutes\)/);
+  assert.match(schema, /blocked_range WITH &&/);
+  assert.match(schema, /set_discovery_call_slot_blocked_range_v4/);
+  assert.match(schema, /NEW\.starts_at - make_interval\(mins => NEW\.buffer_minutes\)/);
   assert.match(schema, /mentor_calendar_busy_periods/);
   assert.match(schema, /get_mentor_discovery_slots_v4/);
   assert.match(schema, /save_mentor_discovery_settings_v4/);

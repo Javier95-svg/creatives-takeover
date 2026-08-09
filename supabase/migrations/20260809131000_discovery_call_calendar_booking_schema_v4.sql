@@ -117,6 +117,7 @@ CREATE TABLE public.discovery_call_slot_reservations (
   starts_at TIMESTAMPTZ NOT NULL,
   ends_at TIMESTAMPTZ NOT NULL,
   buffer_minutes INTEGER NOT NULL DEFAULT 0 CHECK (buffer_minutes BETWEEN 0 AND 120),
+  blocked_range TSTZRANGE NOT NULL,
   status TEXT NOT NULL DEFAULT 'held' CHECK (status IN ('held', 'confirmed', 'released', 'cancelled')),
   expires_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -124,13 +125,29 @@ CREATE TABLE public.discovery_call_slot_reservations (
   CHECK (ends_at > starts_at),
   EXCLUDE USING gist (
     mentor_id WITH =,
-    tstzrange(
-      starts_at - make_interval(mins => buffer_minutes),
-      ends_at + make_interval(mins => buffer_minutes),
-      '[)'
-    ) WITH &&
+    blocked_range WITH &&
   ) WHERE (status IN ('held', 'confirmed'))
 );
+
+CREATE OR REPLACE FUNCTION public.set_discovery_call_slot_blocked_range_v4()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+BEGIN
+  NEW.blocked_range := tstzrange(
+    NEW.starts_at - make_interval(mins => NEW.buffer_minutes),
+    NEW.ends_at + make_interval(mins => NEW.buffer_minutes),
+    '[)'
+  );
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER discovery_call_slot_reservations_blocked_range
+  BEFORE INSERT OR UPDATE OF starts_at, ends_at, buffer_minutes
+  ON public.discovery_call_slot_reservations
+  FOR EACH ROW EXECUTE FUNCTION public.set_discovery_call_slot_blocked_range_v4();
 
 CREATE TABLE public.discovery_call_calendar_outbox (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -335,10 +352,7 @@ WITH settings AS (
   AND NOT EXISTS (
     SELECT 1 FROM public.discovery_call_slot_reservations sr
     WHERE sr.mentor_id = c.mentor_id AND sr.status IN ('held', 'confirmed')
-      AND tstzrange(
-            sr.starts_at - make_interval(mins => sr.buffer_minutes),
-            sr.ends_at + make_interval(mins => sr.buffer_minutes), '[)'
-          ) &&
+      AND sr.blocked_range &&
           tstzrange(c.starts_at - make_interval(mins => c.buffer_minutes), c.ends_at + make_interval(mins => c.buffer_minutes), '[)')
   )
 ), additional AS (
@@ -352,10 +366,7 @@ WITH settings AS (
     AND NOT EXISTS (
       SELECT 1 FROM public.discovery_call_slot_reservations sr
       WHERE sr.mentor_id = e.mentor_id AND sr.status IN ('held', 'confirmed')
-        AND tstzrange(
-              sr.starts_at - make_interval(mins => sr.buffer_minutes),
-              sr.ends_at + make_interval(mins => sr.buffer_minutes), '[)'
-            ) &&
+        AND sr.blocked_range &&
             tstzrange(
               slot_start - make_interval(mins => s.buffer_minutes),
               slot_start + interval '30 minutes' + make_interval(mins => s.buffer_minutes), '[)'
@@ -614,11 +625,13 @@ END;
 $$;
 
 REVOKE ALL ON FUNCTION public.get_mentor_discovery_slots_v4(UUID, TIMESTAMPTZ, TIMESTAMPTZ) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.set_discovery_call_slot_blocked_range_v4() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.save_mentor_discovery_settings_v4(UUID, TEXT, BOOLEAN, TEXT, TEXT, INTEGER, INTEGER, INTEGER, BOOLEAN, TEXT, TEXT, JSONB) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.claim_discovery_call_calendar_jobs_v4(INTEGER) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.enqueue_discovery_call_calendar_operation_v4(UUID, TEXT, TEXT) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.fail_discovery_call_calendar_job_v4(UUID, TEXT, TEXT) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.get_mentor_discovery_slots_v4(UUID, TIMESTAMPTZ, TIMESTAMPTZ) TO service_role;
+GRANT EXECUTE ON FUNCTION public.set_discovery_call_slot_blocked_range_v4() TO service_role;
 GRANT EXECUTE ON FUNCTION public.save_mentor_discovery_settings_v4(UUID, TEXT, BOOLEAN, TEXT, TEXT, INTEGER, INTEGER, INTEGER, BOOLEAN, TEXT, TEXT, JSONB) TO service_role;
 GRANT EXECUTE ON FUNCTION public.claim_discovery_call_calendar_jobs_v4(INTEGER) TO service_role;
 GRANT EXECUTE ON FUNCTION public.enqueue_discovery_call_calendar_operation_v4(UUID, TEXT, TEXT) TO service_role;
