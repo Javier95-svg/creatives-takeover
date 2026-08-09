@@ -514,39 +514,44 @@ export const MentorProfile = ({ mentor }: MentorProfileProps) => {
               </div>
             )}
 
-	                {/* Action Buttons */}
-	                <Button
-	                  size="default"
-	                  className="w-full"
-	                  variant={mentor.discovery_call_available ? "default" : "outline"}
-	                  disabled={!mentor.discovery_call_available}
-	                  onClick={() => navigate(`/mentorship/book/${mentor.id}`)}
-	                >
-	                  <CalendarClock className="mr-2 h-4 w-4" />
-	                  {mentor.discovery_call_available ? 'Request Discovery Call · 10 credits' : 'Discovery Calls unavailable — send a message instead'}
-	                </Button>
-	                <div className="flex flex-col items-stretch gap-3 pt-2 sm:flex-row">
-                  {hasMessagingAccount && (
-                    <Button
-                      size="default"
-                      onClick={handleSendMessage}
-                      className="w-full flex-1 text-sm sm:text-base hover:shadow-md transition-all duration-200"
-                    >
-                      <MessageCircle className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                      Message
-                    </Button>
-                  )}
-	                  <Button
-	                    variant={saveButton.saved ? "secondary" : "outline"}
-	                    size="default"
-	                    onClick={handleSaveMentor}
-	                    className="w-full flex-1 text-sm sm:text-base hover:shadow-md transition-all duration-200"
-	                    disabled={saveButton.saving || saveButton.saved}
-	                  >
-	                    <SaveButtonIcon className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-	                    {saveButton.saving ? 'Saving...' : saveButton.label}
-	                  </Button>
-	                </div>
+                {/* Action Buttons */}
+                <div className="grid grid-cols-3 gap-2 pt-2">
+                  <Button
+                    size="default"
+                    variant={mentor.discovery_call_available ? "default" : "outline"}
+                    disabled={!mentor.discovery_call_available}
+                    title={mentor.discovery_call_available
+                      ? "Request a 30-minute Discovery Call for 10 credits"
+                      : "Discovery Calls are unavailable for this mentor"}
+                    onClick={() => navigate(`/mentorship/book/${mentor.id}`)}
+                    className="h-10 min-w-0 px-1 text-xs transition-all duration-200 hover:shadow-md sm:px-3 sm:text-sm"
+                  >
+                    <CalendarClock className="hidden h-4 w-4 shrink-0 sm:block" />
+                    Discovery Call
+                  </Button>
+                  <Button
+                    size="default"
+                    onClick={handleSendMessage}
+                    disabled={!hasMessagingAccount}
+                    title={hasMessagingAccount
+                      ? "Your first message to this mentor is free; follow-ups cost 3 credits each."
+                      : "Direct messaging is not enabled for this mentor."}
+                    className="h-10 min-w-0 px-1 text-xs transition-all duration-200 hover:shadow-md sm:px-3 sm:text-sm"
+                  >
+                    <MessageCircle className="hidden h-4 w-4 shrink-0 sm:block" />
+                    Message
+                  </Button>
+                  <Button
+                    variant={saveButton.saved ? "secondary" : "outline"}
+                    size="default"
+                    onClick={handleSaveMentor}
+                    disabled={saveButton.saving || saveButton.saved}
+                    className="h-10 min-w-0 px-1 text-xs transition-all duration-200 hover:shadow-md sm:px-3 sm:text-sm"
+                  >
+                    <SaveButtonIcon className="hidden h-4 w-4 shrink-0 sm:block" />
+                    {saveButton.saving ? 'Saving...' : saveButton.label}
+                  </Button>
+                </div>
             {!hasMessagingAccount && (
               <>
                 {/* Keep Save and external profile links available when direct messaging is not enabled. */}
