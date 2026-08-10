@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, Save, User, Mail, Calendar, Upload, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Globe, Camera, Users, UserCheck, MessageSquare, ArrowRight, ClipboardList, CheckCircle2, Edit2, X, Lock, Eye, EyeOff } from "lucide-react";
+import { Loader2, Save, User, Mail, Calendar, Upload, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Globe, Camera, Users, UserCheck, MessageSquare, ArrowRight, ClipboardList, CheckCircle2, Edit2, X, Lock } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import AnimatedBackground from "@/components/AnimatedBackground";
@@ -51,16 +52,6 @@ const Account = () => {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid">("idle");
 
-  // Password update state
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordVerificationCode, setPasswordVerificationCode] = useState("");
-  const [passwordStep, setPasswordStep] = useState<"input" | "verify">("input");
-  const [passwordLoading, setPasswordLoading] = useState(false);
-  const [passwordResendCooldown, setPasswordResendCooldown] = useState(0);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
   // Social counts state
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
@@ -286,16 +277,6 @@ const Account = () => {
 
   // Warn user before leaving with unsaved changes
   useEffect(() => {
-    if (passwordResendCooldown <= 0) return;
-
-    const timerId = window.setInterval(() => {
-      setPasswordResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-
-    return () => window.clearInterval(timerId);
-  }, [passwordResendCooldown]);
-
-  useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (hasUnsavedChanges()) {
         e.preventDefault();
@@ -310,18 +291,6 @@ const Account = () => {
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
   }, [fullName, username, bio, avatarUrl, twitterUrl, linkedinUrl, instagramUrl, facebookUrl, youtubeUrl, githubUrl, websiteUrl, initialValues]);
-
-  const resetPasswordVerificationFlow = () => {
-    setPasswordStep("input");
-    setPasswordVerificationCode("");
-    setPasswordResendCooldown(0);
-  };
-
-  const handleRestartPasswordVerification = () => {
-    resetPasswordVerificationFlow();
-    void trackActivity("security:password_change_verification_reset", {}, user?.id);
-    toast.info("Verification reset. Request a new code to continue.");
-  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -501,119 +470,6 @@ const Account = () => {
       }
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handlePasswordUpdate = async (event: React.FormEvent) => {
-    event.preventDefault();
-
-    if (!user) {
-      toast.error("Please sign in to update your password.");
-      return;
-    }
-
-    if (!newPassword.trim()) {
-      toast.error("Please enter a new password.");
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters.");
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match.");
-      return;
-    }
-
-    if (passwordStep === "input") {
-      setPasswordLoading(true);
-      try {
-        const { error } = await supabase.auth.reauthenticate();
-
-        if (error) {
-          throw error;
-        }
-
-        setPasswordStep("verify");
-        setPasswordResendCooldown(45);
-        void trackActivity("security:password_change_verification_sent", { source: "account_page_initial" }, user.id);
-        toast.success("Verification code sent to your email. Enter it to confirm password change.");
-      } catch (error: any) {
-        void trackActivity("security:password_change_verification_send_failed", {
-          source: "account_page_initial",
-          message: error?.message || "unknown_error",
-        }, user.id);
-        toast.error("Failed to send verification code: " + error.message);
-      } finally {
-        setPasswordLoading(false);
-      }
-      return;
-    }
-
-    if (!passwordVerificationCode.trim()) {
-      toast.error("Please enter the verification code from your email.");
-      return;
-    }
-
-    setPasswordLoading(true);
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-        nonce: passwordVerificationCode.trim(),
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      setNewPassword("");
-      setConfirmPassword("");
-      resetPasswordVerificationFlow();
-      void trackActivity("security:password_change_completed", { source: "account_page" }, user.id);
-      toast.success("Password updated successfully.");
-    } catch (error: any) {
-      void trackActivity("security:password_change_verification_failed", {
-        source: "account_page",
-        message: error?.message || "unknown_error",
-      }, user.id);
-      toast.error("Failed to update password: " + error.message);
-    } finally {
-      setPasswordLoading(false);
-    }
-  };
-
-  const handleResendPasswordVerificationCode = async () => {
-    if (!user) {
-      toast.error("Please sign in to continue.");
-      return;
-    }
-
-    if (passwordResendCooldown > 0) {
-      toast.info(`Please wait ${passwordResendCooldown}s before requesting another code.`);
-      return;
-    }
-
-    setPasswordLoading(true);
-    try {
-      const { error } = await supabase.auth.reauthenticate();
-
-      if (error) {
-        throw error;
-      }
-
-      setPasswordResendCooldown(45);
-      void trackActivity("security:password_change_verification_resent", { source: "account_page" }, user.id);
-      toast.success("New verification code sent.");
-    } catch (error: any) {
-      void trackActivity("security:password_change_verification_resend_failed", {
-        source: "account_page",
-        message: error?.message || "unknown_error",
-      }, user.id);
-      toast.error("Failed to resend verification code: " + error.message);
-    } finally {
-      setPasswordLoading(false);
     }
   };
 
@@ -1059,113 +915,20 @@ const Account = () => {
                 Security
               </CardTitle>
               <CardDescription>
-                Update your password with email verification.
+                Manage your sign-in credentials and keep your account secure.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <form onSubmit={handlePasswordUpdate} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="new-password">New Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="new-password"
-                      type={showNewPassword ? "text" : "password"}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Enter a new password"
-                      autoComplete="new-password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewPassword((prev) => !prev)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      aria-label={showNewPassword ? "Hide new password" : "Show new password"}
-                    >
-                      {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-new-password">Confirm New Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="confirm-new-password"
-                      type={showConfirmPassword ? "text" : "password"}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Confirm your new password"
-                      autoComplete="new-password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword((prev) => !prev)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
-                    >
-                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                {passwordStep === "verify" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="password-verification-code">Verification Code</Label>
-                    <Input
-                      id="password-verification-code"
-                      type="text"
-                      value={passwordVerificationCode}
-                      onChange={(e) => setPasswordVerificationCode(e.target.value)}
-                      placeholder="Enter the code sent to your email"
-                      autoComplete="one-time-code"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Check your inbox for the verification code to confirm this password change.
-                    </p>
-                    {passwordResendCooldown > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        You can request a new code in {passwordResendCooldown}s.
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <p className="text-xs text-muted-foreground">Minimum 6 characters.</p>
-                  <div className="flex w-full sm:w-auto gap-2">
-                    {passwordStep === "verify" && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        disabled={passwordLoading}
-                        onClick={handleRestartPasswordVerification}
-                      >
-                        Start Over
-                      </Button>
-                    )}
-                    {passwordStep === "verify" && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        disabled={passwordLoading || passwordResendCooldown > 0}
-                        onClick={handleResendPasswordVerificationCode}
-                      >
-                        {passwordResendCooldown > 0 ? `Resend in ${passwordResendCooldown}s` : "Resend Code"}
-                      </Button>
-                    )}
-                    <Button type="submit" disabled={passwordLoading} className="w-full sm:w-auto">
-                      {passwordLoading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          {passwordStep === "input" ? "Sending Code..." : "Updating..."}
-                        </>
-                      ) : (
-                        passwordStep === "input" ? "Send Verification Code" : "Verify & Update Password"
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </form>
+            <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-medium">Password</p>
+                <p className="text-sm text-muted-foreground">Verify your current password before setting a new one.</p>
+              </div>
+              <Button asChild variant="outline">
+                <Link to="/settings/security">
+                  Change Password
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
             </CardContent>
           </Card>
 

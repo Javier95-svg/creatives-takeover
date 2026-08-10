@@ -11,7 +11,7 @@ import AuthWallpaper from "@/components/wallpapers/AuthWallpaper";
 import MobileFormOptimizer from "@/components/MobileFormOptimizer";
 import { supabase } from "@/integrations/supabase/client";
 import { getSessionSafely } from "@/integrations/supabase/auth";
-import { MIN_PASSWORD_LENGTH, PASSWORD_LENGTH_ERROR } from "@/lib/passwordPolicy";
+import { getPasswordValidationError, PASSWORD_REQUIREMENTS } from "@/lib/passwordPolicy";
 
 const ResetPassword = () => {
   const [formData, setFormData] = useState({
@@ -120,8 +120,8 @@ const ResetPassword = () => {
     // Password validation
     if (!formData.password.trim()) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < MIN_PASSWORD_LENGTH) {
-      newErrors.password = PASSWORD_LENGTH_ERROR;
+    } else {
+      newErrors.password = getPasswordValidationError(formData.password) || "";
     }
 
     // Confirm password validation
@@ -383,7 +383,7 @@ const ResetPassword = () => {
                       <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center">
                         💡
                       </div>
-                      <span>Password must be at least 6 characters long</span>
+                      <span>{PASSWORD_REQUIREMENTS}</span>
                     </div>
                   </div>
 

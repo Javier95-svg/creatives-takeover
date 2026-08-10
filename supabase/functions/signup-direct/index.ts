@@ -239,6 +239,14 @@ serve(async (req: Request): Promise<Response> => {
     });
   }
 
+  if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) {
+    return jsonResponse({
+      ok: false,
+      code: "WEAK_PASSWORD",
+      error: "Password must include at least one letter and one number.",
+    });
+  }
+
   if (username) {
     const { data: existingUsername, error: usernameError } = await supabaseAdmin
       .from("profiles")

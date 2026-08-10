@@ -18,7 +18,7 @@ import { useFeedbackCredits } from '@/hooks/useFeedbackCredits';
 import { useAuth } from '@/contexts/AuthContext';
 import { signUpWithFallback } from '@/lib/authSignup';
 import { mapSignInError, mapSignUpError } from '@/lib/authErrors';
-import { MIN_PASSWORD_LENGTH, PASSWORD_LENGTH_ERROR } from '@/lib/passwordPolicy';
+import { getPasswordValidationError, MIN_PASSWORD_LENGTH } from '@/lib/passwordPolicy';
 import { persistOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
 import { persistAuthMethod } from '@/lib/analytics';
 import {
@@ -137,8 +137,9 @@ const Auth: React.FC = () => {
       return;
     }
 
-    if (password.length < MIN_PASSWORD_LENGTH) {
-      setError(PASSWORD_LENGTH_ERROR);
+    const passwordError = getPasswordValidationError(password);
+    if (passwordError) {
+      setError(passwordError);
       setLoading(false);
       return;
     }

@@ -1,5 +1,5 @@
 import type { AuthError } from "@supabase/supabase-js";
-import { PASSWORD_LENGTH_ERROR } from "@/lib/passwordPolicy";
+import { PASSWORD_REQUIREMENTS } from "@/lib/passwordPolicy";
 
 function normalizeMessage(message?: string): string {
   return (message || "").toLowerCase();
@@ -27,7 +27,7 @@ export function mapSignUpError(error: AuthError | null): string {
   }
 
   if (message.includes("password")) {
-    return PASSWORD_LENGTH_ERROR;
+    return PASSWORD_REQUIREMENTS;
   }
 
   if (message.includes("database error") || message.includes("saving new user") || message.includes("profile")) {

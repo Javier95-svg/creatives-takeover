@@ -16,7 +16,7 @@ import { useConversionTracking } from "@/hooks/useConversionTracking";
 import MobileFormOptimizer from "@/components/MobileFormOptimizer";
 import { AuthSocialButtons } from "@/components/auth/AuthSocialButtons";
 import { mapSignUpError } from "@/lib/authErrors";
-import { MIN_PASSWORD_LENGTH, PASSWORD_LENGTH_ERROR } from "@/lib/passwordPolicy";
+import { getPasswordValidationError, MIN_PASSWORD_LENGTH, PASSWORD_REQUIREMENTS } from "@/lib/passwordPolicy";
 import { captureEvent, persistSignupIntent, trackSignupCompletedAttributed } from "@/lib/analytics";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import {
@@ -308,8 +308,8 @@ const Signup = () => {
     // Password validation
     if (!formData.password.trim()) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < MIN_PASSWORD_LENGTH) {
-      newErrors.password = PASSWORD_LENGTH_ERROR;
+    } else {
+      newErrors.password = getPasswordValidationError(formData.password) || "";
     }
 
     setErrors(newErrors);
@@ -808,7 +808,7 @@ const Signup = () => {
                     </button>
                   </div>
                   {!errors.password && formData.password.length > 0 && (
-                    <p className="text-xs text-muted-foreground">Use at least {MIN_PASSWORD_LENGTH} characters</p>
+                    <p className="text-xs text-muted-foreground">{PASSWORD_REQUIREMENTS}</p>
                   )}
                   {errors.password && (
                     <p className="text-sm text-destructive animate-fade-in">{errors.password}</p>

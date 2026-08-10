@@ -2,12 +2,13 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentTy
 import { useLocation } from 'react-router-dom';
 
 import Dashboard from '@/pages/Dashboard';
+import DashboardSettingsPage from '@/pages/DashboardSettingsPage';
 import FilesPage from '@/pages/FilesPage';
 import ReferralDashboardPage from '@/pages/ReferralDashboardPage';
 import TasksPage from '@/pages/TasksPage';
 import YourRoutinePage from '@/pages/YourRoutinePage';
 
-type DashboardTabId = 'home' | 'files' | 'tasks' | 'routine' | 'referral';
+type DashboardTabId = 'home' | 'files' | 'tasks' | 'routine' | 'referral' | 'settings';
 
 interface DashboardTabDefinition {
   id: DashboardTabId;
@@ -21,6 +22,7 @@ const DASHBOARD_TABS: DashboardTabDefinition[] = [
   { id: 'tasks', path: '/dashboard/tasks', Component: TasksPage },
   { id: 'routine', path: '/dashboard/routine', Component: YourRoutinePage },
   { id: 'referral', path: '/dashboard/referral', Component: ReferralDashboardPage },
+  { id: 'settings', path: '/dashboard/settings', Component: DashboardSettingsPage },
 ];
 
 function resolveDashboardTab(pathname: string) {

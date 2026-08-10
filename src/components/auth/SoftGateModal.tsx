@@ -13,7 +13,7 @@ import {
 } from "@/lib/analytics";
 import { persistOnboardingReturn } from "@/lib/authRedirect";
 import { buildIcpSeedReturnPath, normalizeIcpSeed, persistIcpSeed } from "@/lib/icpSeed";
-import { MIN_PASSWORD_LENGTH, PASSWORD_LENGTH_ERROR } from "@/lib/passwordPolicy";
+import { getPasswordValidationError } from "@/lib/passwordPolicy";
 import {
   clearPendingReferralCode,
   getPendingReferralCode,
@@ -204,8 +204,8 @@ const SoftGateModal = ({
 
     if (!password.trim()) {
       nextErrors.password = "Password is required";
-    } else if (password.length < MIN_PASSWORD_LENGTH) {
-      nextErrors.password = PASSWORD_LENGTH_ERROR;
+    } else {
+      nextErrors.password = getPasswordValidationError(password) || undefined;
     }
 
     setErrors(nextErrors);

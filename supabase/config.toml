@@ -210,6 +210,11 @@ verify_jwt = false
 [functions.send-password-reset]
 verify_jwt = false
 
+# Authenticated account holders only; the function also validates the JWT and
+# verifies the submitted current password against Supabase Auth before updating.
+[functions.change-password]
+verify_jwt = true
+
 # Authenticated founders only; the function re-checks the user via getUserFromAuth.
 [functions.pmf-interview-extract]
 verify_jwt = true
