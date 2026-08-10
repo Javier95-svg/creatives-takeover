@@ -91,13 +91,6 @@ function getFirstName(email: string, metadataName?: string | null, profileName?:
   return email.split("@")[0] || "there";
 }
 
-function getDaysSince(value?: string | null) {
-  if (!value) return 0;
-  const time = new Date(value).getTime();
-  if (Number.isNaN(time)) return 0;
-  return Math.max(0, Math.floor((Date.now() - time) / 86_400_000));
-}
-
 function formatResetDate(value?: string | null) {
   if (!value) return "your next reset";
   const date = new Date(value);
@@ -558,24 +551,21 @@ async function fetchProfilesSignedUpAround(day: number) {
   return (data || []) as ProfileRow[];
 }
 
-function isInactiveSinceSignup(profile: ProfileRow) {
-  const created = profile.created_at ? new Date(profile.created_at).getTime() : 0;
-  const last = profile.last_activity_at ? new Date(profile.last_activity_at).getTime() : created;
-  if (!created || Number.isNaN(created) || Number.isNaN(last)) return true;
-  return last <= created + 24 * 60 * 60 * 1000;
-}
-
-function inactiveForAtLeast(profile: ProfileRow, days: number) {
-  const last = profile.last_activity_at || profile.created_at;
-  return getDaysSince(last) >= days;
+function wasActiveAfterSignup(profile: ProfileRow) {
+  const createdAt = profile.created_at ? Date.parse(profile.created_at) : Number.NaN;
+  const lastActivityAt = profile.last_activity_at ? Date.parse(profile.last_activity_at) : Number.NaN;
+  return Number.isFinite(createdAt)
+    && Number.isFinite(lastActivityAt)
+    && lastActivityAt > createdAt + 24 * 60 * 60 * 1000;
 }
 
 async function runCron() {
   const jobs: Array<{ day: number; sequence: SequenceSlug; filter: (profile: ProfileRow, ctx: UserContext) => boolean }> = [
     { day: 1, sequence: "activation_day1", filter: () => true },
     { day: 3, sequence: "value_day3", filter: (profile) => profile.onboarding_completed !== true },
-    { day: 7, sequence: "checkin_day7", filter: () => true },
-    { day: 14, sequence: "reengagement_day14", filter: (profile) => isInactiveSinceSignup(profile) },
+    // Inactive day-7 founders are owned by check-inactive-users. Keep this
+    // existing lifecycle check-in only for people who actually returned.
+    { day: 7, sequence: "checkin_day7", filter: (profile) => wasActiveAfterSignup(profile) },
     {
       day: 21,
       sequence: "upgrade_day21",
@@ -585,7 +575,6 @@ async function runCron() {
         return tier === "rookie" && total < (ctx.credits.monthly_quota || 0);
       },
     },
-    { day: 30, sequence: "winback_day30", filter: (profile) => inactiveForAtLeast(profile, 20) },
   ];
 
   const summary = {

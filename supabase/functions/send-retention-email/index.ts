@@ -1,6 +1,15 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
+import {
+  buildAuthenticatedReturnUrl,
+  buildInactiveEmail,
+  INACTIVE_CAMPAIGN_KEY,
+  isInactiveSequence,
+  selectReturnAnchor,
+  type InactiveTouchIndex,
+  type InactiveUserContext,
+} from "../_shared/inactive-retention-email.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -46,6 +55,139 @@ interface RetentionEmailRequest {
   weeklyOutcomeState?: "completed" | "missed" | "open";
   activeDaysLast14?: number;
   suggestedFocus?: string;
+}
+
+type ServiceClient = ReturnType<typeof createClient>;
+
+interface InactiveClaimRow {
+  claim_status: string;
+  claimed_log_id: string | null;
+  claimed_touch_index: number | null;
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+}
+
+function stringValue(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function firstName(value: string | null | undefined, email: string) {
+  const raw = value?.trim() || email.split("@")[0] || "there";
+  return raw.split(/\s+/)[0] || "there";
+}
+
+async function signUnsubscribeToken(userId: string, serviceRoleKey: string) {
+  const secret = Deno.env.get("EMAIL_SEQUENCE_UNSUBSCRIBE_SECRET")?.trim() || serviceRoleKey;
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(userId));
+  return Array.from(new Uint8Array(signature))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function buildPreferencesUrl(appUrl: string) {
+  const login = new URL("/login", appUrl);
+  login.searchParams.set("return", "/account#notification-preferences");
+  return login.toString();
+}
+
+function daysSince(value: string | null | undefined) {
+  if (!value) return null;
+  const timestamp = Date.parse(value);
+  if (Number.isNaN(timestamp)) return null;
+  return Math.max(0, Math.floor((Date.now() - timestamp) / 86_400_000));
+}
+
+async function loadInactiveUserContext(
+  supabase: ServiceClient,
+  userId: string,
+  sequence: string,
+  request: RetentionEmailRequest,
+): Promise<{ context: InactiveUserContext; profileName: string | null }> {
+  const [profileResult, routineResult, mentorSaveResult, discoveryResult] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("full_name, user_preferences, routine_primary_goal")
+      .eq("id", userId)
+      .maybeSingle(),
+    supabase
+      .from("routine_task_completions")
+      .select("completed_at, created_at")
+      .eq("user_id", userId)
+      .eq("period_type", "daily")
+      .eq("status", "completed")
+      .order("period_date", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("mentor_saves")
+      .select("mentor:mentors(name)")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("user_activity_log")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("activity_type", "discovery_call_booked")
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  const profile = asRecord(profileResult.data);
+  const preferences = asRecord(profile.user_preferences);
+  const mentorRow = asRecord(mentorSaveResult.data);
+  const mentorRelation = Array.isArray(mentorRow.mentor)
+    ? asRecord(mentorRow.mentor[0])
+    : asRecord(mentorRow.mentor);
+
+  const conversationsResult = await supabase
+    .from("conversations")
+    .select("id")
+    .contains("participants", [userId]);
+  const conversationIds = (conversationsResult.data ?? [])
+    .map((row: { id?: string }) => row.id)
+    .filter((id: string | undefined): id is string => Boolean(id));
+
+  let unreadMessageCount = Math.max(0, request.unreadMessageCount ?? 0);
+  if (conversationIds.length > 0) {
+    const unreadResult = await supabase
+      .from("messages")
+      .select("id", { count: "exact", head: true })
+      .in("conversation_id", conversationIds)
+      .neq("sender_id", userId)
+      .eq("is_read", false);
+    if (!unreadResult.error) unreadMessageCount = unreadResult.count ?? unreadMessageCount;
+  }
+
+  const routineRow = asRecord(routineResult.data);
+  const lastRoutineCheckin = stringValue(routineRow.completed_at) || stringValue(routineRow.created_at);
+
+  return {
+    context: {
+      sequence,
+      routineGoal: stringValue(profile.routine_primary_goal),
+      routineDaysSinceCheckin: daysSince(lastRoutineCheckin),
+      unreadMessageCount,
+      artifactLabel: stringValue(preferences.firstArtifactLabel),
+      artifactPath: stringValue(preferences.firstArtifactResumeUrl),
+      savedMentorName: request.mentorName || stringValue(mentorRelation.name),
+      hasDiscoveryCall: Boolean(discoveryResult.data),
+      activationIntent: request.activationIntent || stringValue(preferences.activationIntent),
+    },
+    profileName: stringValue(profile.full_name),
+  };
 }
 
 function truncateText(value: string, maxLength: number) {
@@ -163,8 +305,8 @@ function buildSequenceEmail(args: {
   niche?: string | null;
   weeklyCommitment?: string;
   weeklyOutcome?: string;
-  weeklyReflection?: string | null;
-  activeDaysLast7?: number;
+  weeklyOutcomeState?: "completed" | "missed" | "open";
+  activeDaysLast14?: number;
   suggestedFocus?: string;
 }) {
   const nicheText = args.niche ? ` in ${args.niche}` : "";
@@ -491,8 +633,8 @@ serve(async (req: Request): Promise<Response> => {
       unreadMessageCount,
       weeklyCommitment,
       weeklyOutcome,
-      weeklyReflection,
-      activeDaysLast7,
+      weeklyOutcomeState,
+      activeDaysLast14,
       suggestedFocus,
     } = body;
 
@@ -504,31 +646,8 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     const appUrl = normalizeAppUrl(Deno.env.get("APP_URL") || "https://creatives-takeover.com");
-    const name = fullName?.trim() || "Founder";
-    const finalCtaUrl = ctaUrl || getDefaultCta(activationIntent, appUrl);
-    const finalCtaLabel = ctaLabel || getDefaultCtaLabel(activationIntent);
-    const emailContent = buildSequenceEmail({
-      name,
-      sequence,
-      intent: activationIntent,
-      mentorName,
-      headline: contextHeadline,
-      body: contextBody,
-      ctaUrl: finalCtaUrl,
-      ctaLabel: finalCtaLabel,
-      unreadMessageCount,
-      savedMentorCount,
-      niche,
-      weeklyCommitment,
-      weeklyOutcome,
-      weeklyReflection,
-      activeDaysLast7,
-      suggestedFocus,
-    });
-
     const fromEmail = Deno.env.get("FROM_EMAIL") || "onboarding@resend.dev";
     const fromName = Deno.env.get("FROM_NAME") || "Creatives Takeover";
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -549,6 +668,159 @@ serve(async (req: Request): Promise<Response> => {
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
+
+    if (isInactiveSequence(sequence)) {
+      const authorization = req.headers.get("Authorization") || "";
+      const callerToken = authorization.replace(/^Bearer\s+/i, "").trim();
+      if (callerToken !== supabaseServiceKey) {
+        const caller = callerToken ? await supabase.auth.getUser(callerToken) : null;
+        if (!caller?.data.user || caller.data.user.id !== userId) {
+          return new Response(JSON.stringify({ ok: false, error: "Forbidden" }), {
+            status: 403,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          });
+        }
+      }
+
+      const authResult = await supabase.auth.admin.getUserById(userId);
+      const canonicalEmail = authResult.data.user?.email?.trim();
+      if (!canonicalEmail) {
+        return new Response(JSON.stringify({ ok: true, skipped: true, reason: "missing_account_email" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+
+      const { data: claimData, error: claimError } = await supabase.rpc("claim_inactive_retention_email", {
+        p_user_id: userId,
+        p_email: canonicalEmail,
+        p_sequence: sequence,
+        p_campaign_key: INACTIVE_CAMPAIGN_KEY,
+      });
+      if (claimError) throw claimError;
+
+      const claim = (Array.isArray(claimData) ? claimData[0] : claimData) as InactiveClaimRow | null;
+      if (!claim || claim.claim_status !== "claimed" || !claim.claimed_log_id || !claim.claimed_touch_index) {
+        return new Response(JSON.stringify({
+          ok: true,
+          skipped: true,
+          reason: claim?.claim_status || "claim_unavailable",
+        }), {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+
+      const logId = claim.claimed_log_id;
+      let providerAccepted = false;
+
+      try {
+        const { context, profileName } = await loadInactiveUserContext(supabase, userId, sequence, body);
+        const anchor = selectReturnAnchor(context);
+        const token = await signUnsubscribeToken(userId, supabaseServiceKey);
+        const unsubscribeUrl = `${appUrl}/unsubscribe?user_id=${encodeURIComponent(userId)}&token=${encodeURIComponent(token)}`;
+        const preferencesUrl = buildPreferencesUrl(appUrl);
+        const inactiveName = firstName(profileName || fullName, canonicalEmail);
+        const preview = buildInactiveEmail({
+          firstName: inactiveName,
+          touchIndex: claim.claimed_touch_index as InactiveTouchIndex,
+          anchor,
+          ctaUrl: appUrl,
+          preferencesUrl,
+          unsubscribeUrl,
+        });
+        const authenticatedCtaUrl = buildAuthenticatedReturnUrl({
+          appUrl,
+          targetPath: anchor.path,
+          logId,
+          templateKey: preview.templateKey,
+        });
+        const inactiveEmail = buildInactiveEmail({
+          firstName: inactiveName,
+          touchIndex: claim.claimed_touch_index as InactiveTouchIndex,
+          anchor,
+          ctaUrl: authenticatedCtaUrl,
+          preferencesUrl,
+          unsubscribeUrl,
+        });
+        const replyTo = Deno.env.get("RETENTION_REPLY_TO")?.trim()
+          || Deno.env.get("REPLY_TO_EMAIL")?.trim()
+          || "javier@creatives-takeover.com";
+        const sendResult = await resend.emails.send({
+          from: `Javier from Creatives Takeover <${fromEmail}>`,
+          to: [canonicalEmail],
+          replyTo,
+          subject: inactiveEmail.subject,
+          html: inactiveEmail.html,
+          text: `${inactiveEmail.text}\n\n${inactiveEmail.ctaLabel}: ${inactiveEmail.ctaUrl}\n\nManage preferences: ${preferencesUrl}\nUnsubscribe: ${unsubscribeUrl}`,
+        } as never);
+
+        if (sendResult?.error || !sendResult?.data?.id) {
+          const providerError = asRecord(sendResult?.error);
+          throw new Error(stringValue(providerError.message) || "Resend did not accept the inactive email");
+        }
+        providerAccepted = true;
+
+        const { data: finalized, error: finalizeError } = await supabase.rpc("finalize_inactive_retention_email", {
+          p_log_id: logId,
+          p_template_key: inactiveEmail.templateKey,
+          p_template_version: inactiveEmail.templateVersion,
+          p_cta_url: inactiveEmail.ctaUrl,
+          p_resend_id: sendResult.data.id,
+        });
+        if (finalizeError || finalized !== true) {
+          throw finalizeError || new Error("Inactive email delivery could not be finalized");
+        }
+
+        console.warn("send-retention-email: inactive email sent", {
+          userId,
+          sequence,
+          templateKey: inactiveEmail.templateKey,
+          touchIndex: claim.claimed_touch_index,
+          id: sendResult.data.id,
+        });
+
+        return new Response(JSON.stringify({
+          ok: true,
+          id: sendResult.data.id,
+          templateKey: inactiveEmail.templateKey,
+          touchIndex: claim.claimed_touch_index,
+        }), {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      } catch (inactiveError) {
+        if (!providerAccepted) {
+          await supabase.rpc("fail_inactive_retention_email", {
+            p_log_id: logId,
+            p_error: inactiveError instanceof Error ? inactiveError.message : "inactive_send_failed",
+          });
+        }
+        throw inactiveError;
+      }
+    }
+
+    const name = fullName?.trim() || "Founder";
+    const finalCtaUrl = ctaUrl || getDefaultCta(activationIntent, appUrl);
+    const finalCtaLabel = ctaLabel || getDefaultCtaLabel(activationIntent);
+    const emailContent = buildSequenceEmail({
+      name,
+      sequence,
+      intent: activationIntent,
+      mentorName,
+      headline: contextHeadline,
+      body: contextBody,
+      ctaUrl: finalCtaUrl,
+      ctaLabel: finalCtaLabel,
+      unreadMessageCount,
+      savedMentorCount,
+      niche,
+      weeklyCommitment,
+      weeklyOutcome,
+      weeklyOutcomeState,
+      activeDaysLast14,
+      suggestedFocus,
+    });
 
     // routine_reminder cadence is governed upstream (per-day dedup + global weekly
     // cap in process_routine_reminder_emails), so it is exempt from the 6-day

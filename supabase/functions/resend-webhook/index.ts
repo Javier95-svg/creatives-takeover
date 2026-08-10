@@ -64,6 +64,14 @@ function isClick(type: string) {
   return type === "email.clicked" || type === "clicked";
 }
 
+function isBounce(type: string) {
+  return type === "email.bounced" || type === "bounced";
+}
+
+function isComplaint(type: string) {
+  return type === "email.complained" || type === "complained";
+}
+
 serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") {
@@ -97,6 +105,8 @@ serve(async (req: Request): Promise<Response> => {
     const patch: Record<string, string> = {};
     if (isOpen(normalized.type)) patch.opened_at = normalized.eventAt;
     if (isClick(normalized.type)) patch.clicked_at = normalized.eventAt;
+    if (isBounce(normalized.type)) patch.bounced_at = normalized.eventAt;
+    if (isComplaint(normalized.type)) patch.complained_at = normalized.eventAt;
 
     if (Object.keys(patch).length === 0) {
       return new Response(JSON.stringify({ ok: true, updated: 0, ignored: normalized.type }), {

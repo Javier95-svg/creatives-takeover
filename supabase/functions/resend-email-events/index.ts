@@ -119,6 +119,14 @@ function isClickedEvent(eventType: string): boolean {
   return ["email.clicked", "clicked"].includes(eventType);
 }
 
+function isBouncedEvent(eventType: string): boolean {
+  return ["email.bounced", "bounced"].includes(eventType);
+}
+
+function isComplainedEvent(eventType: string): boolean {
+  return ["email.complained", "complained"].includes(eventType);
+}
+
 const supabaseUrl = getEnv("SUPABASE_URL");
 const supabaseServiceKey = getEnv("SUPABASE_SERVICE_ROLE_KEY");
 const webhookSecret = getEnv("RESEND_WEBHOOK_SECRET");
@@ -176,6 +184,8 @@ serve(async (req: Request): Promise<Response> => {
     const lifecycleEventAt = normalized.eventCreatedAtIso || new Date().toISOString();
     if (isOpenedEvent(normalized.type)) retentionPatch.opened_at = lifecycleEventAt;
     if (isClickedEvent(normalized.type)) retentionPatch.clicked_at = lifecycleEventAt;
+    if (isBouncedEvent(normalized.type)) retentionPatch.bounced_at = lifecycleEventAt;
+    if (isComplainedEvent(normalized.type)) retentionPatch.complained_at = lifecycleEventAt;
 
     if (Object.keys(retentionPatch).length > 0) {
       const { data: retentionRows, error: retentionError } = await supabase

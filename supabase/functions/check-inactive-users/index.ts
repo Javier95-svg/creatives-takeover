@@ -103,7 +103,7 @@ function getLastSeenAt(profile: ProfileRow) {
   );
 }
 
-function getDefaultCta(intent: ActivationIntent, appBaseUrl: string) {
+function getDefaultCta(intent: ActivationIntent | null, appBaseUrl: string) {
   switch (intent) {
     case "run_icp":
       return `${appBaseUrl}/icp-builder`;
@@ -115,12 +115,14 @@ function getDefaultCta(intent: ActivationIntent, appBaseUrl: string) {
       return `${appBaseUrl}/mentorship?mentorSource=booked-call`;
     case "build_demo":
       return `${appBaseUrl}/demo-studio/try`;
+    default:
+      return `${appBaseUrl}/dashboard`;
   }
 }
 
 function buildSequenceDecision(args: {
   appBaseUrl: string;
-  intent: ActivationIntent;
+  intent: ActivationIntent | null;
   activationCompleted: boolean;
   assets: UserAssetState;
   firstValueActionAt: string | null;
@@ -158,7 +160,9 @@ function buildSequenceDecision(args: {
                 ? "Open ICP Builder, generate one result, and save it before you disappear into passive browsing."
               : intent === "build_demo"
                 ? "Generate one interactive demo — upload screenshots or just describe your product — and save it before the momentum fades."
-              : "Book one discovery call before you keep browsing. It is the highest-intent action in the current funnel.",
+              : intent === "book_call"
+                ? "Book one discovery call before you keep browsing. Leave with one real next step instead of another passive session."
+                : "Open your Command Center and complete one useful action before exploring anything else.",
       };
     }
 
@@ -176,7 +180,9 @@ function buildSequenceDecision(args: {
                 ? "Generate one ICP result now so the product has a real saved asset to bring you back to."
               : intent === "build_demo"
                 ? "Build one interactive demo now — it takes 60 seconds and gives you a shareable asset to come back to."
-              : "Book one discovery call now so you leave with a real next step instead of another passive session.",
+              : intent === "book_call"
+                ? "Book one discovery call now so you leave with a real next step instead of another passive session."
+                : "Open your Command Center and choose the smallest useful action for today.",
       };
     }
 
@@ -397,7 +403,7 @@ async function sendRetentionEmail(args: {
   email: string;
   fullName: string | null;
   niche: string | null;
-  activationIntent: ActivationIntent;
+  activationIntent?: ActivationIntent | null;
   sequence: SequenceType;
   ctaUrl: string;
   contextHeadline: string;
@@ -503,11 +509,6 @@ serve(async (req: Request): Promise<Response> => {
               : assets.hasDiscoveryCall
                 ? "book_call"
                 : null));
-
-        if (!activationIntent) {
-          results.skipped++;
-          continue;
-        }
 
         const sequenceDecision = buildSequenceDecision({
           appBaseUrl,

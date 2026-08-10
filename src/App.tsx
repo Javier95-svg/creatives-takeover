@@ -24,6 +24,7 @@ import { useInteractionTelemetry } from "@/hooks/useInteractionTelemetry";
 import { captureReferralFromUrl } from "@/lib/referral";
 import { ActivationFocusShell } from '@/components/activation/ActivationFocusShell';
 import { ActivationResumeBanner } from '@/components/activation/ActivationResumeBanner';
+import { RetentionEmailAttribution } from '@/components/RetentionEmailAttribution';
 
 const PulseWidget = lazy(() => import("@/components/pulse/PulseWidget"));
 const MobileBottomNav = lazy(() =>
@@ -232,6 +233,7 @@ function App() {
                     <ScrollToTop />
                     <InteractionTelemetryBridge />
                     <ReferralCaptureBridge />
+                    <RetentionEmailAttribution />
                     <ActivationFocusShell />
                     <ActivationResumeBanner />
                     <UpgradePromptProvider>
