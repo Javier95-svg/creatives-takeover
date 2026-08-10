@@ -246,17 +246,17 @@ test('mentor availability portal is token protected and Google OAuth credentials
   assert.doesNotMatch(availability, /console\.(?:log|error|warn)\([^)]*token/i);
 });
 
-test('founders get Preply-style instant slots with the request fallback', () => {
+test('founders get a polished request-first booking flow without an empty instant calendar', () => {
   const booking = read('../src/pages/community/MentorBookingPage.tsx');
   const availabilityPage = read('../src/pages/community/MentorDiscoveryAvailabilityPage.tsx');
-  assert.match(booking, /createInstantDiscoveryCallBooking/);
-  assert.match(booking, /Select a date and time/);
+  assert.doesNotMatch(booking, /createInstantDiscoveryCallBooking/);
+  assert.doesNotMatch(booking, /visibleWeekDays\.map/);
+  assert.doesNotMatch(booking, /This mentor has not published instant-booking times yet/);
+  assert.match(booking, /CommunityMentorsWallpaper/);
+  assert.match(booking, /Book a free discovery call/);
+  assert.match(booking, /Choose your timezone, then propose three dates and times that work for you/);
   assert.match(booking, /Continue to call details/);
-  assert.match(booking, /visibleWeekDays\.map/);
-  assert.match(booking, /selectedDaySlots\.map/);
-  assert.match(booking, /Confirm Discovery Call/);
   assert.match(booking, /Propose three times/);
-  assert.match(booking, /No suitable time\?/);
   assert.match(booking, /private Google Meet link/);
   assert.match(availabilityPage, /Weekly availability/);
   assert.match(availabilityPage, /Connect Google Calendar/);
