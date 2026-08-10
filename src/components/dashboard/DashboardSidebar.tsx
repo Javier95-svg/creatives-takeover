@@ -30,7 +30,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { DashboardCustomization } from './DashboardCustomization';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getActivationPreferenceState } from '@/lib/activationState';
@@ -437,7 +436,16 @@ export const DashboardSidebarContent = ({ currentStage }: { currentStage: BizMap
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <DashboardCustomization />
+                <SidebarMenuButton
+                  asChild
+                  isActive={location.pathname === '/dashboard/settings'}
+                  tooltip="Settings"
+                >
+                  <Link to="/dashboard/settings" onClick={handleNavClick}>
+                    <Settings className="h-4 w-4" />
+                    <span>Settings</span>
+                  </Link>
+                </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
@@ -445,20 +453,6 @@ export const DashboardSidebarContent = ({ currentStage }: { currentStage: BizMap
       </SidebarContent>
 
       <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              isActive={location.pathname === '/dashboard/settings'}
-              tooltip="Settings"
-            >
-              <Link to="/dashboard/settings" onClick={handleNavClick}>
-                <Settings className="h-4 w-4" />
-                <span>Settings</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
         <div className="px-4 py-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
           <div className="flex items-center gap-1">
             <Command className="h-3 w-3" />
