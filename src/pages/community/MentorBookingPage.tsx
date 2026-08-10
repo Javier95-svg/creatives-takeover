@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Select,
   SelectContent,
@@ -49,9 +50,21 @@ import {
 
 type BookingStep = 'schedule' | 'details';
 type ProposedSlot = { date: string; time: string };
+type CoachingFormat = 'Hourly Rate Basis' | '8 Week Coaching Program';
+
+const COACHING_FORMAT_OPTIONS: Array<{ value: CoachingFormat; label: string; description: string }> = [
+  { value: 'Hourly Rate Basis', label: 'Hourly Rate', description: 'Flexible support booked by the hour.' },
+  { value: '8 Week Coaching Program', label: '8-week coaching', description: 'Structured support over eight weeks.' },
+];
 
 function proposedWallTime(slot: ProposedSlot) {
   return slot.date && slot.time ? `${slot.date}T${slot.time}` : '';
+}
+
+function buildRequestNotes(coachingFormat: CoachingFormat | '', notes: string) {
+  const coachingFormatNote = coachingFormat ? `Preferred coaching format: ${coachingFormat}` : '';
+  const additionalNotes = notes.trim() ? `Additional notes: ${notes.trim()}` : '';
+  return [coachingFormatNote, additionalNotes].filter(Boolean).join('\n\n');
 }
 
 function wallTimeToUtc(value: string, timezone: string) {
@@ -117,6 +130,7 @@ export default function MentorBookingPage() {
   const [error, setError] = useState('');
   const [topic, setTopic] = useState('');
   const [desiredOutcome, setDesiredOutcome] = useState('');
+  const [coachingFormat, setCoachingFormat] = useState<CoachingFormat | ''>('');
   const [notes, setNotes] = useState('');
   const [timezone, setTimezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
   const [slots, setSlots] = useState<ProposedSlot[]>([
@@ -180,10 +194,11 @@ export default function MentorBookingPage() {
 
   const detailsValidationError = useMemo(() => {
     if (topic.trim().length < 3 || topic.trim().length > 120) return 'Topic must be between 3 and 120 characters.';
-    if (desiredOutcome.trim().length < 10 || desiredOutcome.trim().length > 500) return 'Desired outcome must be between 10 and 500 characters.';
-    if (notes.length > 1000) return 'Notes cannot exceed 1,000 characters.';
+    if (!coachingFormat) return 'Choose the coaching format you are interested in.';
+    if (desiredOutcome.trim().length < 10 || desiredOutcome.trim().length > 500) return 'Project description must be between 10 and 500 characters.';
+    if (buildRequestNotes(coachingFormat, notes).length > 1000) return 'Notes cannot exceed 1,000 characters.';
     return '';
-  }, [desiredOutcome, notes, topic]);
+  }, [coachingFormat, desiredOutcome, notes, topic]);
 
   const validationError = scheduleValidationError || detailsValidationError;
   const hasEnoughCredits = (availability?.quotaStatus.totalCreditsAvailable ?? 0) >= 10;
@@ -211,7 +226,7 @@ export default function MentorBookingPage() {
         idempotencyKey: idempotencyKey.current,
         topic: topic.trim(),
         desiredOutcome: desiredOutcome.trim(),
-        notes: notes.trim() || undefined,
+        notes: buildRequestNotes(coachingFormat, notes) || undefined,
         timezone,
       };
       const response = await createDiscoveryCallRequest({
@@ -388,17 +403,43 @@ export default function MentorBookingPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="topic" className="font-semibold">What would you like help with?</Label>
-                    <Input id="topic" className="mt-2 h-12 rounded-xl border-border/70" value={topic} onChange={(event) => setTopic(event.target.value)} maxLength={120} placeholder="Fundraising strategy" autoFocus />
-                    <p className="mt-1 text-xs text-muted-foreground">A short topic helps the mentor prepare.</p>
+                    <Label htmlFor="topic" className="font-semibold">Which kind of support are you looking for?</Label>
+                    <Input id="topic" className="mt-2 h-12 rounded-xl border-border/70" value={topic} onChange={(event) => setTopic(event.target.value)} maxLength={120} placeholder="Fundraising, go-to-market, product strategy..." autoFocus />
+                    <p className="mt-1 text-xs text-muted-foreground">A specific topic helps the mentor prepare for your conversation.</p>
                   </div>
+
+                  <fieldset>
+                    <legend className="font-semibold">Which coaching format are you interested in?</legend>
+                    <RadioGroup
+                      className="mt-3 grid gap-3 sm:grid-cols-2"
+                      value={coachingFormat}
+                      onValueChange={(value) => setCoachingFormat(value as CoachingFormat)}
+                    >
+                      {COACHING_FORMAT_OPTIONS.map((option) => <Label
+                        key={option.value}
+                        htmlFor={`coaching-format-${option.value}`}
+                        className={cn(
+                          'flex cursor-pointer items-start gap-3 rounded-xl border border-border/70 bg-card p-4 font-normal transition-colors hover:border-primary/50 hover:bg-primary/[0.03]',
+                          coachingFormat === option.value && 'border-primary bg-primary/[0.06]',
+                        )}
+                      >
+                        <RadioGroupItem id={`coaching-format-${option.value}`} value={option.value} className="mt-0.5" />
+                        <span>
+                          <span className="block font-semibold text-foreground">{option.label}</span>
+                          <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">{option.description}</span>
+                        </span>
+                      </Label>)}
+                    </RadioGroup>
+                  </fieldset>
+
                   <div>
-                    <Label htmlFor="outcome" className="font-semibold">What outcome do you want from the call?</Label>
-                    <Textarea id="outcome" className="mt-2 min-h-32 rounded-xl border-border/70" value={desiredOutcome} onChange={(event) => setDesiredOutcome(event.target.value)} maxLength={500} placeholder="What decision or next step should this call help you reach?" />
+                    <Label htmlFor="outcome" className="font-semibold">Tell the mentor about your project</Label>
+                    <Textarea id="outcome" className="mt-2 min-h-36 rounded-xl border-border/70" value={desiredOutcome} onChange={(event) => setDesiredOutcome(event.target.value)} maxLength={500} placeholder="What are you building, who is it for, what stage are you at, and what is your biggest current challenge?" />
+                    <p className="mt-1 text-xs text-muted-foreground">Share enough context for the mentor to understand your project before the call.</p>
                   </div>
                   <details className="rounded-xl border border-border/70 bg-card p-4 shadow-sm">
                     <summary className="cursor-pointer text-sm font-semibold">Add optional notes</summary>
-                    <div className="mt-3"><Label htmlFor="notes" className="sr-only">Optional notes</Label><Textarea id="notes" className="rounded-xl border-border/70" value={notes} onChange={(event) => setNotes(event.target.value)} maxLength={1000} placeholder="Links, context, or questions for the mentor" /></div>
+                    <div className="mt-3"><Label htmlFor="notes" className="sr-only">Optional notes</Label><Textarea id="notes" className="rounded-xl border-border/70" value={notes} onChange={(event) => setNotes(event.target.value)} maxLength={900} placeholder="Links, context, or specific questions for the mentor" /></div>
                   </details>
 
                   <Alert><Coins className="h-4 w-4" /><AlertDescription>10 credits are held when you confirm. They are charged only after the confirmed time and private Google Meet link both exist.</AlertDescription></Alert>

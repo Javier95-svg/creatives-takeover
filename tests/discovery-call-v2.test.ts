@@ -139,6 +139,21 @@ test('booking proposals use the shared timezone catalog and explicit date and ti
   assert.match(timezoneDelivery, /NEW\.template_key = 'request_created'/);
 });
 
+test('call details capture support, coaching format, and project context for mentor review', () => {
+  const booking = read('../src/pages/community/MentorBookingPage.tsx');
+
+  assert.match(booking, /Which kind of support are you looking for\?/);
+  assert.match(booking, /Which coaching format are you interested in\?/);
+  assert.match(booking, /Hourly Rate Basis/);
+  assert.match(booking, /8 Week Coaching Program/);
+  assert.match(booking, /label: 'Hourly Rate'/);
+  assert.match(booking, /label: '8-week coaching'/);
+  assert.match(booking, /Tell the mentor about your project/);
+  assert.match(booking, /What are you building, who is it for, what stage are you at/);
+  assert.match(booking, /Preferred coaching format:/);
+  assert.match(booking, /if \(!coachingFormat\) return 'Choose the coaching format/);
+});
+
 test('mentor scheduling fields are private and public mentor reads are explicit', () => {
   const privacy = read('../supabase/migrations/20260808160000_enforce_private_mentor_discovery_fields.sql');
   const mentors = read('../src/hooks/useMentors.ts');
