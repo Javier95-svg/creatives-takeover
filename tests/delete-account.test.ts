@@ -56,7 +56,7 @@ test('backend cancels billing and removes owned storage before deleting the auth
 });
 
 test('account cleanup RPC is service-role only and rolls back blocked cleanup', () => {
-  const migration = read('../supabase/migrations/20260810120000_account_deletion_support.sql');
+  const migration = read('../supabase/migrations/20260810130000_account_deletion_support.sql');
 
   assert.match(migration, /storage\.objects[\s\S]*owner_id = p_user_id::text/);
   assert.match(migration, /DELETE FROM public\.profiles WHERE id = p_user_id/);
