@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import {
   ArrowLeft,
   CalendarDays,
@@ -10,6 +11,7 @@ import {
   Coins,
   Globe2,
   Loader2,
+  Save,
   Video,
 } from 'lucide-react';
 import Navigation from '@/components/Navigation';
@@ -51,6 +53,7 @@ import {
 type BookingStep = 'schedule' | 'details';
 type ProposedSlot = { date: string; time: string };
 type CoachingFormat = 'Hourly Rate Basis' | '8 Week Coaching Program';
+type ScheduleDraft = { version: 1; timezone: string; slots: ProposedSlot[]; savedAt: string };
 
 const COACHING_FORMAT_OPTIONS: Array<{ value: CoachingFormat; label: string; description: string }> = [
   { value: 'Hourly Rate Basis', label: 'Hourly Rate', description: 'Flexible support booked by the hour.' },
@@ -59,6 +62,16 @@ const COACHING_FORMAT_OPTIONS: Array<{ value: CoachingFormat; label: string; des
 
 function proposedWallTime(slot: ProposedSlot) {
   return slot.date && slot.time ? `${slot.date}T${slot.time}` : '';
+}
+
+function isScheduleDraft(value: unknown): value is ScheduleDraft {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Partial<ScheduleDraft>;
+  return candidate.version === 1
+    && typeof candidate.timezone === 'string'
+    && Array.isArray(candidate.slots)
+    && candidate.slots.length === 3
+    && candidate.slots.every((slot) => slot && typeof slot.date === 'string' && typeof slot.time === 'string');
 }
 
 function buildRequestNotes(coachingFormat: CoachingFormat | '', notes: string) {
@@ -138,7 +151,47 @@ export default function MentorBookingPage() {
     { date: '', time: '' },
     { date: '', time: '' },
   ]);
+  const [scheduleDraftReady, setScheduleDraftReady] = useState(false);
   const [step, setStep] = useState<BookingStep>('schedule');
+
+  const scheduleDraftKey = useMemo(
+    () => user?.id && id ? `discovery-call-schedule-draft:v1:${user.id}:${id}` : '',
+    [id, user?.id],
+  );
+
+  useEffect(() => {
+    if (!scheduleDraftKey) return;
+    setScheduleDraftReady(false);
+    try {
+      const storedDraft = localStorage.getItem(scheduleDraftKey);
+      if (storedDraft) {
+        const parsedDraft: unknown = JSON.parse(storedDraft);
+        if (isScheduleDraft(parsedDraft) && isValidTimezone(parsedDraft.timezone)) {
+          setTimezone(parsedDraft.timezone);
+          setSlots(parsedDraft.slots);
+        }
+      }
+    } catch {
+      localStorage.removeItem(scheduleDraftKey);
+    } finally {
+      setScheduleDraftReady(true);
+    }
+  }, [scheduleDraftKey]);
+
+  useEffect(() => {
+    if (!scheduleDraftReady || !scheduleDraftKey) return;
+    const draft: ScheduleDraft = {
+      version: 1,
+      timezone,
+      slots,
+      savedAt: new Date().toISOString(),
+    };
+    try {
+      localStorage.setItem(scheduleDraftKey, JSON.stringify(draft));
+    } catch {
+      // Explicit Save reports storage failures; background autosave stays quiet.
+    }
+  }, [scheduleDraftKey, scheduleDraftReady, slots, timezone]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -203,6 +256,22 @@ export default function MentorBookingPage() {
   const validationError = scheduleValidationError || detailsValidationError;
   const hasEnoughCredits = (availability?.quotaStatus.totalCreditsAvailable ?? 0) >= 10;
 
+  const saveScheduleDraft = () => {
+    if (!scheduleDraftKey) return;
+    const draft: ScheduleDraft = {
+      version: 1,
+      timezone,
+      slots,
+      savedAt: new Date().toISOString(),
+    };
+    try {
+      localStorage.setItem(scheduleDraftKey, JSON.stringify(draft));
+      toast.success('Your proposed times have been saved on this device.');
+    } catch {
+      toast.error('We could not save your proposed times on this device.');
+    }
+  };
+
   const continueToDetails = () => {
     if (scheduleValidationError) {
       setError(scheduleValidationError);
@@ -234,6 +303,9 @@ export default function MentorBookingPage() {
         slots: slots.map((slot) => ({ startsAt: wallTimeToUtc(proposedWallTime(slot), timezone)! })),
       });
       if (!response.success) throw new Error(response.error || 'Unable to reserve the Discovery Call.');
+      if (scheduleDraftKey) {
+        try { localStorage.removeItem(scheduleDraftKey); } catch { /* Submission already succeeded. */ }
+      }
       trackDiscoveryCallWorkflow('discovery_call_request_submitted', {
         discovery_call_id: response.callId,
         mentor_id: id,
@@ -385,9 +457,14 @@ export default function MentorBookingPage() {
                   <p className="mt-4 text-xs text-muted-foreground">Choose an exact date and time for every option. Each must be between 72 hours and 60 days from now.</p>
                 </div>
 
-                <Button className="h-12 w-full rounded-xl text-base font-semibold shadow-lg shadow-primary/15" type="button" disabled={!availability?.available || !hasEnoughCredits || Boolean(scheduleValidationError)} onClick={continueToDetails}>
-                  Continue to call details
-                </Button>
+                <div className="grid grid-cols-[auto_1fr] gap-3">
+                  <Button className="h-12 rounded-xl px-5 font-semibold" type="button" variant="outline" onClick={saveScheduleDraft}>
+                    <Save className="mr-2 h-4 w-4" />Save
+                  </Button>
+                  <Button className="h-12 rounded-xl text-base font-semibold shadow-lg shadow-primary/15" type="button" disabled={!availability?.available || !hasEnoughCredits || Boolean(scheduleValidationError)} onClick={continueToDetails}>
+                    Continue to call details
+                  </Button>
+                </div>
                 {scheduleValidationError && <p className="mt-2 text-center text-sm text-muted-foreground">{scheduleValidationError}</p>}
               </div> :
                 <form className="mx-auto max-w-2xl space-y-6" onSubmit={submit}>

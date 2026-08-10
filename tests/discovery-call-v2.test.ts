@@ -154,6 +154,20 @@ test('call details capture support, coaching format, and project context for men
   assert.match(booking, /if \(!coachingFormat\) return 'Choose the coaching format/);
 });
 
+test('step one autosaves and restores proposed times with an explicit Save action', () => {
+  const booking = read('../src/pages/community/MentorBookingPage.tsx');
+
+  assert.match(booking, /discovery-call-schedule-draft:v1:\$\{user\.id\}:\$\{id\}/);
+  assert.match(booking, /localStorage\.getItem\(scheduleDraftKey\)/);
+  assert.match(booking, /setTimezone\(parsedDraft\.timezone\)/);
+  assert.match(booking, /setSlots\(parsedDraft\.slots\)/);
+  assert.match(booking, /localStorage\.setItem\(scheduleDraftKey, JSON\.stringify\(draft\)\)/);
+  assert.match(booking, /localStorage\.removeItem\(scheduleDraftKey\)/);
+  assert.match(booking, /grid grid-cols-\[auto_1fr\] gap-3/);
+  assert.match(booking, /<Save className="mr-2 h-4 w-4" \/>Save/);
+  assert.match(booking, /Your proposed times have been saved on this device/);
+});
+
 test('mentor scheduling fields are private and public mentor reads are explicit', () => {
   const privacy = read('../supabase/migrations/20260808160000_enforce_private_mentor_discovery_fields.sql');
   const mentors = read('../src/hooks/useMentors.ts');
