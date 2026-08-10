@@ -294,3 +294,8 @@ verify_jwt = false
 # Invite-only founder sprint message generation; ownership is re-checked by RLS.
 [functions.first-customer-sprint-assistant]
 verify_jwt = true
+
+# Destructive account operation; the function verifies the bearer token again,
+# confirms password-based identities, cancels billing, and deletes server-side.
+[functions.delete-account]
+verify_jwt = true

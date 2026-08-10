@@ -94,6 +94,7 @@ const Demo = lazy(() => import("./pages/Demo"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Account = lazy(() => import("./pages/Account"));
 const SecuritySettings = lazy(() => import("./pages/SecuritySettings"));
+const DeleteAccountSettings = lazy(() => import("./pages/DeleteAccountSettings"));
 const DashboardSettingsPage = lazy(() => import("./pages/DashboardSettingsPage"));
 const SetupQuiz = lazy(() => import("./pages/SetupQuiz"));
 const Messages = lazy(() => import("./pages/Messages"));
@@ -377,6 +378,7 @@ function App() {
                         <Route path="/saved-mentors" element={<SavedMentorsPage />} />
                         <Route path="/account" element={<Account />} />
                         <Route path="/settings/security" element={<SecuritySettings />} />
+                        <Route path="/settings/delete-account" element={<DeleteAccountSettings />} />
                         <Route path="/setup-quiz" element={<SetupQuiz />} />
                         <Route path="/files" element={<Navigate to="/dashboard/files" replace />} />
                         <Route path="/focus-funnel" element={<Navigate to="/dashboard/tasks" replace />} />

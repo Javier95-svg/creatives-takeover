@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, LockKeyhole, Settings, UserRound } from 'lucide-react';
+import { ArrowRight, LockKeyhole, Settings, Trash2, UserRound } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,6 +55,26 @@ const DashboardSettingsPage = () => {
             <Button asChild className="w-full justify-between">
               <Link to="/settings/security">
                 Change password
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="border-destructive/35 bg-destructive/5 md:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-xl text-destructive">
+              <Trash2 className="h-5 w-5" aria-hidden="true" />
+              Delete account
+            </CardTitle>
+            <CardDescription>
+              Permanently remove your account, profile, projects, files, and access to Creatives Takeover.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="destructive" className="w-full justify-between sm:w-auto">
+              <Link to="/settings/delete-account">
+                Review account deletion
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </Button>
