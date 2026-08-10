@@ -254,7 +254,7 @@ test('founders get a polished request-first booking flow without an empty instan
   assert.doesNotMatch(booking, /This mentor has not published instant-booking times yet/);
   assert.match(booking, /CommunityMentorsWallpaper/);
   assert.match(booking, /Book a free discovery call/);
-  assert.match(booking, /Choose your timezone, then propose three dates and times that work for you/);
+  assert.match(booking, /Choose your timezone, then propose three timeslots that work for you/);
   assert.match(booking, /Continue to call details/);
   assert.match(booking, /Propose three times/);
   assert.match(booking, /private Google Meet link/);

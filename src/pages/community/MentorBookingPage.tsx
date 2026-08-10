@@ -290,7 +290,7 @@ export default function MentorBookingPage() {
               {step === 'schedule' ? <div className="mx-auto max-w-4xl">
                 <div className="mb-8 text-center">
                   <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Book a free discovery call</h2>
-                  <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">Choose your timezone, then propose three dates and times that work for you. The mentor will receive every option and can confirm one or suggest an alternative.</p>
+                  <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">Choose your timezone, then propose three timeslots that work for you. The mentor will receive every option and can confirm one or suggest an alternative.</p>
                 </div>
 
                 <div className="mb-6 grid gap-4 md:grid-cols-[1.25fr_1fr]">
