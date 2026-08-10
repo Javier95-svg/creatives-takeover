@@ -719,6 +719,7 @@ serve(async (req: Request): Promise<Response> => {
         const anchor = selectReturnAnchor(context);
         const token = await signUnsubscribeToken(userId, supabaseServiceKey);
         const unsubscribeUrl = `${appUrl}/unsubscribe?user_id=${encodeURIComponent(userId)}&token=${encodeURIComponent(token)}`;
+        const oneClickUnsubscribeUrl = `${supabaseUrl}/functions/v1/email-sequences?unsubscribe=1&user_id=${encodeURIComponent(userId)}&token=${encodeURIComponent(token)}`;
         const preferencesUrl = buildPreferencesUrl(appUrl);
         const inactiveName = firstName(profileName || fullName, canonicalEmail);
         const preview = buildInactiveEmail({
@@ -753,6 +754,10 @@ serve(async (req: Request): Promise<Response> => {
           subject: inactiveEmail.subject,
           html: inactiveEmail.html,
           text: `${inactiveEmail.text}\n\n${inactiveEmail.ctaLabel}: ${inactiveEmail.ctaUrl}\n\nManage preferences: ${preferencesUrl}\nUnsubscribe: ${unsubscribeUrl}`,
+          headers: {
+            "List-Unsubscribe": `<${oneClickUnsubscribeUrl}>`,
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+          },
         } as never);
 
         if (sendResult?.error || !sendResult?.data?.id) {

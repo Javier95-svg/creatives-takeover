@@ -629,9 +629,12 @@ async function handleUnsubscribe(req: Request) {
 serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const url = new URL(req.url);
+  if ((req.method === "GET" || req.method === "POST") && url.searchParams.get("unsubscribe") === "1") {
+    return handleUnsubscribe(req);
+  }
+
   if (req.method === "GET") {
-    const url = new URL(req.url);
-    if (url.searchParams.get("unsubscribe") === "1") return handleUnsubscribe(req);
     return json({ ok: false, error: "Not found" }, 404);
   }
 

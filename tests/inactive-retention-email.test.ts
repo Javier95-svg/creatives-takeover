@@ -183,6 +183,7 @@ test("canonical sender and frontend enforce campaign claims and authenticated at
   const attribution = read("../src/components/RetentionEmailAttribution.tsx");
   const app = read("../src/App.tsx");
   const lifecycle = read("../supabase/functions/email-sequences/index.ts");
+  const unsubscribePage = read("../src/pages/Unsubscribe.tsx");
 
   assert.match(sender, /claim_inactive_retention_email/);
   assert.match(sender, /finalize_inactive_retention_email/);
@@ -190,8 +191,15 @@ test("canonical sender and frontend enforce campaign claims and authenticated at
   assert.match(sender, /RETENTION_REPLY_TO/);
   assert.match(sender, /Javier from Creatives Takeover/);
   assert.match(sender, /EMAIL_SEQUENCE_UNSUBSCRIBE_SECRET/);
+  assert.match(sender, /"List-Unsubscribe"/);
+  assert.match(sender, /"List-Unsubscribe-Post": "List-Unsubscribe=One-Click"/);
   assert.match(attribution, /record_retention_email_return/);
   assert.match(app, /<RetentionEmailAttribution/);
+  assert.match(lifecycle, /req\.method === "GET" \|\| req\.method === "POST"/);
+  assert.match(unsubscribePage, /status.*'confirm'/);
+  assert.match(unsubscribePage, /Unsubscribe from retention emails/);
+  assert.match(unsubscribePage, /Account and security messages will still arrive/);
+  assert.doesNotMatch(unsubscribePage, /useEffect/);
   assert.match(lifecycle, /checkin_day7", filter: \(profile\) => wasActiveAfterSignup\(profile\)/);
   assert.doesNotMatch(lifecycle, /\{ day: 14, sequence: "reengagement_day14"/);
   assert.doesNotMatch(lifecycle, /\{ day: 30, sequence: "winback_day30"/);
