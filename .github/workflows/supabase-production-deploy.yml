@@ -54,12 +54,13 @@ jobs:
           set -o pipefail
           supabase db push --linked --password "$SUPABASE_DB_PASSWORD" 2>&1 | tee supabase-migration-apply.log
 
-      # Previously this deployed one hardcoded function (pmf-customer-discovery),
-      # so every other function was undeployed by default until someone
-      # remembered. The July 2026 audit found three functions the frontend was
-      # calling that returned 404 in production as a result. Now the changed set
-      # is derived from the commit.
+      # Legacy function-deployment implementation retained temporarily for log
+      # history. The independent push workflow is now the sole deployment owner.
       - name: Deploy changed edge functions
+        # Function deployment now has its own push-triggered workflow. Keeping
+        # this legacy step disabled prevents an older, slow CI run from rolling
+        # a newer function deployment back to an earlier commit.
+        if: ${{ false }}
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
@@ -133,4 +134,3 @@ jobs:
           name: supabase-production-${{ github.event.workflow_run.head_sha }}
           path: supabase-*.log
           retention-days: 14
-

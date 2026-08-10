@@ -76,3 +76,13 @@ test('backend verifies the current password before updating and emails only afte
   assert.match(edge, /to: \[user\.email\]/);
   assert.match(config, /\[functions\.change-password\][\s\S]*verify_jwt = true/);
 });
+
+test('edge functions deploy independently of unrelated application CI failures', () => {
+  const workflow = read('../.github/workflows/supabase-functions-deploy.yml');
+  const legacyWorkflow = read('../.github/workflows/supabase-production-deploy.yml');
+
+  assert.match(workflow, /push:[\s\S]*branches: \[main\][\s\S]*supabase\/functions\/\*\*/);
+  assert.match(workflow, /supabase functions deploy "\$name" --project-ref "\$SUPABASE_PROJECT_REF"/);
+  assert.doesNotMatch(workflow, /workflow_run|conclusion == 'success'/);
+  assert.match(legacyWorkflow, /- name: Deploy changed edge functions[\s\S]*?if: \$\{\{ false \}\}/);
+});

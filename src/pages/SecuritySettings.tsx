@@ -41,6 +41,22 @@ async function readFunctionError(error: unknown): Promise<string | null> {
   }
 }
 
+function getInvocationFallbackMessage(error: unknown): string {
+  const rawMessage = error && typeof error === "object" && "message" in error
+    ? String(error.message || "")
+    : "";
+
+  if (/jwt|unauthorized|session|401/i.test(rawMessage)) {
+    return "Your session expired. Please sign in again before changing your password.";
+  }
+
+  if (/fetch|relay|function|network|non-2xx|404/i.test(rawMessage)) {
+    return "The password service is temporarily unavailable. Please refresh and try again.";
+  }
+
+  return "We could not change your password. Please try again.";
+}
+
 const SecuritySettings = () => {
   const { user, loading: authLoading } = useAuth();
   const [currentPassword, setCurrentPassword] = useState("");
@@ -80,7 +96,7 @@ const SecuritySettings = () => {
 
       if (error) {
         const serverMessage = await readFunctionError(error);
-        throw new Error(serverMessage || "We could not change your password. Please try again.");
+        throw new Error(serverMessage || getInvocationFallbackMessage(error));
       }
 
       if (!data?.success) {
