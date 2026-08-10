@@ -39,6 +39,7 @@ const COUNTRY_TIMEZONES: Record<string, CountryTimezone> = {
   armenia: { country: "Armenia", timeZone: "Asia/Yerevan" },
   lithuania: { country: "Lithuania", timeZone: "Europe/Vilnius" },
   costarica: { country: "Costa Rica", timeZone: "America/Costa_Rica" },
+  colombia: { country: "Colombia", timeZone: "America/Bogota" },
   kenya: { country: "Kenya", timeZone: "Africa/Nairobi" },
   portugal: { country: "Portugal", timeZone: "Europe/Lisbon" },
   estonia: { country: "Estonia", timeZone: "Europe/Tallinn" },
@@ -125,6 +126,7 @@ const resolveCountryFromMentorName = (mentorName: string): string | null => {
   if (name.includes("marc") && name.includes("bright")) return "United Kingdom";
   if (name.includes("vashti") && name.includes("joseph")) return "France";
   if (name.includes("charlotte") && name.includes("joseph")) return "France";
+  if (name.includes("anissa") && name.includes("drissi")) return "France";
   if (name.includes("ramona") && name.includes("chihaia")) return "Romania";
   if (name.includes("dikshit") && name.includes("kukreja")) return "India";
   if (name.includes("delraj") && name.includes("uppal")) return "United Kingdom";
@@ -185,6 +187,51 @@ export const getTimezoneOptions = (referenceDate = new Date()) => {
 
 export const TIMEZONE_OPTIONS = getTimezoneOptions();
 
+export interface BookingTimezoneOption {
+  value: string;
+  label: string;
+  country: string | null;
+  offset: number;
+}
+
+/**
+ * IANA timezone choices for scheduling. This is built from the same country
+ * catalog that powers TIMEZONE_OPTIONS, so the marketplace filter and booking
+ * form cannot drift apart. Additional zones keep the browser's detected zone
+ * available even when there is no mentor from that country in the catalog.
+ */
+export const getBookingTimezoneOptions = (
+  referenceDate = new Date(),
+  additionalTimezones: string[] = []
+): BookingTimezoneOption[] => {
+  const byTimezone = new Map<string, { country: string | null; timeZone: string }>();
+
+  Object.values(COUNTRY_TIMEZONES).forEach(({ country, timeZone }) => {
+    const existing = byTimezone.get(timeZone);
+    if (!existing || (existing.country?.length ?? Infinity) > country.length) {
+      byTimezone.set(timeZone, { country, timeZone });
+    }
+  });
+
+  additionalTimezones.forEach((timeZone) => {
+    if (timeZone && getCurrentTimezoneOffset(timeZone, referenceDate) !== null) {
+      byTimezone.set(timeZone, byTimezone.get(timeZone) ?? { country: null, timeZone });
+    }
+  });
+
+  return Array.from(byTimezone.values())
+    .map(({ country, timeZone }) => {
+      const offset = getCurrentTimezoneOffset(timeZone, referenceDate) ?? 0;
+      return {
+        value: timeZone,
+        label: `${formatTimezoneLabel(offset)} - ${country ? `${country} - ` : ""}${timeZone.replaceAll("_", " ")}`,
+        country,
+        offset,
+      };
+    })
+    .sort((left, right) => left.offset - right.offset || left.label.localeCompare(right.label));
+};
+
 export const parseTimezoneOffset = (timezoneValue: string | null | undefined): number | null => {
   if (!timezoneValue) return null;
 
@@ -207,14 +254,22 @@ export const getMentorCountryForTimezone = (
   return resolveCountryFromMentorName(mentor.name);
 };
 
+export const getCountryTimezone = (country: string | null | undefined): string | null => {
+  if (!country) return null;
+  return COUNTRY_TIMEZONES[normalizeCountryKey(country)]?.timeZone ?? null;
+};
+
+export const getMentorTimezone = (
+  mentor: Pick<Mentor, "name" | "nationality">
+): string | null => getCountryTimezone(getMentorCountryForTimezone(mentor));
+
 export const getMentorTimezoneOffset = (
   mentor: Pick<Mentor, "name" | "nationality">,
   referenceDate = new Date()
 ): number | null => {
   const country = getMentorCountryForTimezone(mentor);
   if (!country) return null;
-  const normalizedCountry = normalizeCountryKey(country);
-  const timezone = COUNTRY_TIMEZONES[normalizedCountry]?.timeZone;
+  const timezone = getCountryTimezone(country);
   if (!timezone) return null;
 
   return getCurrentTimezoneOffset(timezone, referenceDate);

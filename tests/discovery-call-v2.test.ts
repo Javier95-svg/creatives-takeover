@@ -118,6 +118,27 @@ test('founder and public mentor routes use V2 service actions', () => {
   assert.doesNotMatch(auth, /oauth_calendly_redirect/);
 });
 
+test('booking proposals use the shared timezone catalog and explicit date and time controls', () => {
+  const booking = read('../src/pages/community/MentorBookingPage.tsx');
+  const timezones = read('../src/utils/mentorTimezone.ts');
+  const emails = read('../supabase/functions/_shared/discovery-call-emails.ts');
+  const timezoneDelivery = read('../supabase/migrations/20260810120000_discovery_call_request_timezone_delivery_v5.sql');
+
+  assert.match(booking, /getBookingTimezoneOptions/);
+  assert.match(booking, /SelectContent position="item-aligned" className="max-h-80"/);
+  assert.match(booking, /type="date"/);
+  assert.match(booking, /type="time"/);
+  assert.match(booking, /Mentor time:/);
+  assert.match(booking, /mentorDisplayTimezone/);
+  assert.match(timezones, /same country[\s\S]*catalog that powers TIMEZONE_OPTIONS/);
+  assert.match(timezones, /America\/Bogota/);
+  assert.match(timezones, /anissa[\s\S]*drissi[\s\S]*France/);
+  assert.match(emails, /dateStyle: "full", timeStyle: "short"/);
+  assert.match(emails, /Proposed times \(\$\{mentorTimezone\}\)/);
+  assert.match(timezoneDelivery, /s\.scheduling_timezone/);
+  assert.match(timezoneDelivery, /NEW\.template_key = 'request_created'/);
+});
+
 test('mentor scheduling fields are private and public mentor reads are explicit', () => {
   const privacy = read('../supabase/migrations/20260808160000_enforce_private_mentor_discovery_fields.sql');
   const mentors = read('../src/hooks/useMentors.ts');

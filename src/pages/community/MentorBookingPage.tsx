@@ -3,12 +3,14 @@ import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
+  CalendarDays,
   CalendarClock,
   Check,
   ChevronLeft,
   ChevronRight,
   Clock3,
   Coins,
+  Globe2,
   Loader2,
   Video,
 } from 'lucide-react';
@@ -20,6 +22,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMentors } from '@/hooks/useMentors';
@@ -32,10 +41,22 @@ import {
 import type { Mentor } from '@/types/mentor';
 import { trackDiscoveryCallWorkflow } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
+import {
+  formatTimezoneLabel,
+  getBookingTimezoneOptions,
+  getCurrentTimezoneOffset,
+  getMentorCountryForTimezone,
+  getMentorTimezone,
+} from '@/utils/mentorTimezone';
 
 type BookingPath = 'instant' | 'request';
 type BookingStep = 'schedule' | 'details';
 type InstantSlot = { startsAt: string; durationMinutes: number };
+type ProposedSlot = { date: string; time: string };
+
+function proposedWallTime(slot: ProposedSlot) {
+  return slot.date && slot.time ? `${slot.date}T${slot.time}` : '';
+}
 
 function wallTimeToUtc(value: string, timezone: string) {
   const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
@@ -96,6 +117,16 @@ function formatCalendarDate(value: string, options: Intl.DateTimeFormatOptions) 
   return new Intl.DateTimeFormat(undefined, { ...options, timeZone: 'UTC' }).format(calendarDate(value));
 }
 
+function formatProposedSlot(slot: ProposedSlot, sourceTimezone: string, targetTimezone: string) {
+  const utcValue = wallTimeToUtc(proposedWallTime(slot), sourceTimezone);
+  if (!utcValue) return '';
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: targetTimezone,
+  }).format(new Date(utcValue));
+}
+
 export default function MentorBookingPage() {
   const { id = '' } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -111,7 +142,11 @@ export default function MentorBookingPage() {
   const [desiredOutcome, setDesiredOutcome] = useState('');
   const [notes, setNotes] = useState('');
   const [timezone, setTimezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
-  const [slots, setSlots] = useState(['', '', '']);
+  const [slots, setSlots] = useState<ProposedSlot[]>([
+    { date: '', time: '' },
+    { date: '', time: '' },
+    { date: '', time: '' },
+  ]);
   const [selectedInstantSlot, setSelectedInstantSlot] = useState('');
   const [selectedCalendarDay, setSelectedCalendarDay] = useState('');
   const [calendarWeekStart, setCalendarWeekStart] = useState('');
@@ -147,6 +182,18 @@ export default function MentorBookingPage() {
 
   const timezoneIsValid = useMemo(() => isValidTimezone(timezone), [timezone]);
   const displayTimezone = timezoneIsValid ? timezone : 'UTC';
+  const mentorCountry = mentor ? getMentorCountryForTimezone(mentor) : null;
+  const mentorOriginTimezone = mentor ? getMentorTimezone(mentor) : null;
+  const configuredMentorTimezone = availability?.mentorTimezone;
+  const mentorDisplayTimezone = configuredMentorTimezone && configuredMentorTimezone !== 'UTC'
+    ? configuredMentorTimezone
+    : mentorOriginTimezone ?? configuredMentorTimezone ?? 'UTC';
+  const mentorTimezoneOffset = getCurrentTimezoneOffset(mentorDisplayTimezone) ?? 0;
+  const mentorTimezoneLabel = formatTimezoneLabel(mentorTimezoneOffset);
+  const timezoneOptions = useMemo(
+    () => getBookingTimezoneOptions(new Date(), [timezone, mentorDisplayTimezone]),
+    [mentorDisplayTimezone, timezone],
+  );
 
   const instantSlotsByDay = useMemo(() => {
     const grouped = new Map<string, InstantSlot[]>();
@@ -185,7 +232,7 @@ export default function MentorBookingPage() {
     if (availability?.bookingMode === 'instant' && availability.allowRequestFallback === false) {
       return 'This mentor has no bookable times in the next 30 days.';
     }
-    const normalized = slots.map((slot) => wallTimeToUtc(slot, timezone) ?? '');
+    const normalized = slots.map((slot) => wallTimeToUtc(proposedWallTime(slot), timezone) ?? '');
     if (normalized.some((slot) => !slot)) return 'Choose all three proposed times.';
     if (new Set(normalized).size !== 3) return 'The three proposed times must be different.';
     const minimum = Date.now() + 72 * 60 * 60 * 1000;
@@ -251,7 +298,7 @@ export default function MentorBookingPage() {
         ? await createInstantDiscoveryCallBooking({ ...common, startsAt: selectedInstantSlot })
         : await createDiscoveryCallRequest({
           ...common,
-          slots: slots.map((slot) => ({ startsAt: wallTimeToUtc(slot, timezone)! })),
+          slots: slots.map((slot) => ({ startsAt: wallTimeToUtc(proposedWallTime(slot), timezone)! })),
         });
       if (!response.success) throw new Error(response.error || 'Unable to reserve the Discovery Call.');
       trackDiscoveryCallWorkflow('discovery_call_request_submitted', {
@@ -391,8 +438,28 @@ export default function MentorBookingPage() {
 
                 <div className="mb-5">
                   <Label htmlFor="timezone">Your timezone</Label>
-                  <Input id="timezone" className="mt-1" value={timezone} onChange={(event) => { setTimezone(event.target.value); setSelectedInstantSlot(''); }} placeholder="America/Bogota" />
-                  <p className="mt-1 text-xs text-muted-foreground">Times update automatically. The confirmation also includes UTC.</p>
+                  <Select value={timezone} onValueChange={(value) => { setTimezone(value); setSelectedInstantSlot(''); }}>
+                    <SelectTrigger id="timezone" className="mt-1" aria-label="Your timezone">
+                      <SelectValue placeholder="Choose your timezone" />
+                    </SelectTrigger>
+                    <SelectContent position="item-aligned" className="max-h-80">
+                      {timezoneOptions.map((option) => <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <p className="mt-1 text-xs text-muted-foreground">Scroll to choose from the same timezone catalog used by the mentor marketplace. Times update automatically and confirmations include UTC.</p>
+                </div>
+
+                <div className="mb-5 flex items-start gap-3 rounded-xl border bg-primary/5 p-4">
+                  <Globe2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                  <div>
+                    <p className="text-sm font-semibold">{mentor?.name || 'Mentor'}'s timezone</p>
+                    <p className="text-sm text-foreground">
+                      {[mentorCountry, mentorDisplayTimezone, mentorTimezoneLabel].filter(Boolean).join(' · ')}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">Every option is converted to this timezone for the mentor before the email is sent.</p>
+                  </div>
                 </div>
 
                 {bookingPath === 'request' && <div className="mb-6 rounded-xl border bg-muted/20 p-4 sm:p-5">
@@ -401,9 +468,44 @@ export default function MentorBookingPage() {
                     {instantSlotsByDay.length > 0 && <Button type="button" variant="ghost" size="sm" onClick={() => chooseBookingPath('instant')}>Back to calendar</Button>}
                   </div>
                   <div className="space-y-3">
-                    {slots.map((value, index) => <div key={index}><Label htmlFor={`slot-${index}`}>Option {index + 1}</Label><Input id={`slot-${index}`} type="datetime-local" value={value} onChange={(event) => setSlots((current) => current.map((slot, slotIndex) => slotIndex === index ? event.target.value : slot))} /></div>)}
+                    {slots.map((slot, index) => {
+                      const founderPreview = formatProposedSlot(slot, displayTimezone, displayTimezone);
+                      const mentorPreview = formatProposedSlot(slot, displayTimezone, mentorDisplayTimezone);
+                      return <div key={index} className="rounded-lg border bg-background p-3">
+                        <p className="mb-3 text-sm font-semibold">Option {index + 1}</p>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div>
+                            <Label htmlFor={`slot-date-${index}`} className="flex items-center gap-2"><CalendarDays className="h-4 w-4" />Date</Label>
+                            <Input
+                              id={`slot-date-${index}`}
+                              className="mt-1"
+                              type="date"
+                              value={slot.date}
+                              min={dayKey(new Date(Date.now() + 72 * 60 * 60_000).toISOString(), displayTimezone)}
+                              max={dayKey(new Date(Date.now() + 60 * 24 * 60 * 60_000).toISOString(), displayTimezone)}
+                              onChange={(event) => setSlots((current) => current.map((value, slotIndex) => slotIndex === index ? { ...value, date: event.target.value } : value))}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor={`slot-time-${index}`} className="flex items-center gap-2"><Clock3 className="h-4 w-4" />Time</Label>
+                            <Input
+                              id={`slot-time-${index}`}
+                              className="mt-1"
+                              type="time"
+                              step={900}
+                              value={slot.time}
+                              onChange={(event) => setSlots((current) => current.map((value, slotIndex) => slotIndex === index ? { ...value, time: event.target.value } : value))}
+                            />
+                          </div>
+                        </div>
+                        {founderPreview && <div className="mt-3 space-y-1 text-xs">
+                          <p><span className="font-semibold">Your time:</span> {founderPreview} ({formatTimezoneLabel(getCurrentTimezoneOffset(displayTimezone) ?? 0)})</p>
+                          <p className="text-muted-foreground"><span className="font-semibold text-foreground">Mentor time:</span> {mentorPreview} ({mentorTimezoneLabel})</p>
+                        </div>}
+                      </div>;
+                    })}
                   </div>
-                  <p className="mt-3 text-xs text-muted-foreground">Each option must be 72 hours to 60 days away.</p>
+                  <p className="mt-3 text-xs text-muted-foreground">Choose an exact date and time for each option. Every option must be 72 hours to 60 days away.</p>
                 </div>}
 
                 {bookingPath === 'instant' && canRequestFallback && <div className="mb-6 text-center">
