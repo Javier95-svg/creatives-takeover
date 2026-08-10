@@ -23,7 +23,7 @@ const DashboardSettingsPage = () => {
       </header>
 
       <div className="grid gap-5 md:grid-cols-2">
-        <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
+        <Card className="border-border/60 bg-card/80 backdrop-blur-sm md:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-xl">
               <UserRound className="h-5 w-5 text-primary" aria-hidden="true" />
@@ -61,7 +61,7 @@ const DashboardSettingsPage = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-destructive/35 bg-destructive/5 md:col-span-2">
+        <Card className="border-destructive/35 bg-destructive/5">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-xl text-destructive">
               <Trash2 className="h-5 w-5" aria-hidden="true" />
