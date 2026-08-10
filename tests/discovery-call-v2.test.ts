@@ -229,8 +229,13 @@ test('founders get Preply-style instant slots with the request fallback', () => 
   const booking = read('../src/pages/community/MentorBookingPage.tsx');
   const availabilityPage = read('../src/pages/community/MentorDiscoveryAvailabilityPage.tsx');
   assert.match(booking, /createInstantDiscoveryCallBooking/);
-  assert.match(booking, /Choose an available time/);
+  assert.match(booking, /Select a date and time/);
+  assert.match(booking, /Continue to call details/);
+  assert.match(booking, /visibleWeekDays\.map/);
+  assert.match(booking, /selectedDaySlots\.map/);
+  assert.match(booking, /Confirm Discovery Call/);
   assert.match(booking, /Propose three times/);
+  assert.match(booking, /No suitable time\?/);
   assert.match(booking, /private Google Meet link/);
   assert.match(availabilityPage, /Weekly availability/);
   assert.match(availabilityPage, /Connect Google Calendar/);
