@@ -42,7 +42,7 @@ test('subscription checkout fails closed on the canonical plan and interval Pric
   assert.doesNotMatch(subscriptionBranch, /price_data|payment.?link|buy\.stripe\.com/i);
 });
 
-test('webhook delivery is durable and unresolved revenue events stay unprocessed', () => {
+test('webhook delivery is durable, unresolved revenue events retry, and anonymous expiries are acknowledged', () => {
   const source = read('../supabase/functions/stripe-webhook/index.ts');
   for (const eventType of [
     'checkout.session.completed',
@@ -59,6 +59,13 @@ test('webhook delivery is durable and unresolved revenue events stay unprocessed
   assert.match(source, /error_message: err\.message,[\s\S]*processed: false/);
   assert.match(source, /checkout_session_expired/);
   assert.match(source, /payment_failed/);
+
+  const expiredHandler = source.slice(
+    source.indexOf('async function handleCheckoutExpired'),
+    source.indexOf('async function handlePaymentFailure'),
+  );
+  assert.match(expiredHandler, /if \(!userId\) \{[\s\S]*skipping analytics[\s\S]*return;/);
+  assert.doesNotMatch(expiredHandler, /UNRESOLVED_CHECKOUT_USER/);
 });
 
 test('public mentor surfaces expose tracked Discovery Call requests without provider links', () => {

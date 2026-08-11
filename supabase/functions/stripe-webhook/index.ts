@@ -1459,7 +1459,17 @@ async function handleCheckoutExpired(
   const userId = row?.user_id
     ?? getMetadataString(session.metadata as Record<string, unknown> | null | undefined, ["user_id"])
     ?? (typeof session.client_reference_id === "string" ? session.client_reference_id : null);
-  if (!userId) throw new Error("UNRESOLVED_CHECKOUT_USER: expired session has no user");
+  if (!userId) {
+    // Expired Checkout Sessions can originate from legacy/static Payment Links
+    // and other abandoned flows that predate our stripe_checkout_sessions row.
+    // No payment completed and there is no revenue state to recover, so treating
+    // the missing analytics identity as a delivery failure only makes Stripe
+    // retry the same harmless event and eventually disable/alert the endpoint.
+    console.warn("[Checkout] Expired session is not linked to a user; skipping analytics", {
+      stripeSessionId: typeof session.id === "string" ? session.id : null,
+    });
+    return;
+  }
 
   await emitBusinessEvent({
     eventName: "checkout_session_expired",
