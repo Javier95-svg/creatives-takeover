@@ -104,9 +104,9 @@ const FOUNDER_ANSWER_ROUTES = founderAnswerPages.map((page) => ({
 export const INDEXABLE_ROUTES = [
   {
     path: "/",
-    title: "The Founders Compass | Creatives Takeover",
+    title: "Creatives Takeover | Startup Development Platform",
     description:
-      "Turn your idea into a validated startup through one evidence backed path for customer clarity, proof, PMF decisions, MVP building, GTM, and traction.",
+      "Creatives Takeover is a startup development platform that helps first-time founders validate ideas, build MVPs, launch, gain traction, and prepare to raise.",
     changefreq: "daily",
     priority: 1.0,
     heroHeading: "The Founders' Compass",
@@ -125,9 +125,9 @@ export const INDEXABLE_ROUTES = [
   },
   {
     path: "/about",
-    title: "About Creatives Takeover | Startup Development Platform",
+    title: "About Creatives Takeover | Our Mission and Team",
     description:
-      "Learn about Creatives Takeover, the startup development platform helping first-time founders validate ideas, build MVPs, launch, and prepare for fundraising.",
+      "Meet the team behind Creatives Takeover and learn how our mission, principles, and founder-first approach shape the platform we are building.",
     changefreq: "monthly",
     priority: 0.7,
     heroHeading: "About Creatives Takeover",

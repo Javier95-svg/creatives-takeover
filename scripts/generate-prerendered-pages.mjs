@@ -7,10 +7,11 @@ const TEMPLATE_PATH = path.join(DIST_DIR, "index.html");
 
 const PRIMARY_NAV = [
   { href: "/", label: "Home" },
-  { href: "/#startup-development-cycle", label: "How It Works" },
-  { href: "/build", label: "Tools and Outcomes" },
-  { href: "/mentorship", label: "Expert Support" },
-  { href: "/stories", label: "Founder Proof" },
+  { href: "/build", label: "Build" },
+  { href: "/mentorship", label: "Guidance" },
+  { href: "/podcast", label: "Podcast" },
+  { href: "/newspaper", label: "Newspaper" },
+  { href: "/about", label: "About" },
   { href: "/pricing", label: "Pricing" },
 ];
 
@@ -179,23 +180,9 @@ function replaceMetaByProperty(html, property, content) {
   return html.replace("</head>", `    ${replacement}\n  </head>`);
 }
 
-// Site-wide schema entities, kept identical to the index.html template so every
-// page reinforces the same WebSite/Organization identity.
-const WEBSITE_SCHEMA = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "@id": `${BASE_URL}/#website`,
-  url: `${BASE_URL}/`,
-  name: SITE_NAME,
-  description:
-    "An evidence backed founder system connecting customer clarity, proof, PMF decisions, MVP building, GTM execution, and verified traction.",
-  potentialAction: {
-    "@type": "SearchAction",
-    target: { "@type": "EntryPoint", urlTemplate: `${BASE_URL}/answers?q={search_term_string}` },
-    "query-input": "required name=search_term_string",
-  },
-};
-
+// Keep the Organization entity stable across public pages. WebSite identity
+// markup intentionally stays on the domain homepage, per Google's site-name
+// guidance, so inner routes do not compete with the homepage as the site root.
 const ORGANIZATION_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "Organization",
@@ -227,7 +214,7 @@ function buildStructuredData(routeConfig) {
   if (routeConfig.path === "/") return null; // homepage keeps the template block
 
   const canonical = `${BASE_URL}${routeConfig.path}`;
-  const data = [WEBSITE_SCHEMA, ORGANIZATION_SCHEMA];
+  const data = [ORGANIZATION_SCHEMA];
 
   if (routeConfig.breadcrumb && routeConfig.breadcrumb.length) {
     data.push({

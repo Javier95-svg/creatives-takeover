@@ -61,8 +61,8 @@ const Index = () => {
     <div className="min-h-screen relative">
       <HomeWallpaper variant="landing" />
       <SEO
-        title="The Founders Compass | Creatives Takeover"
-        description="Turn your idea into a validated startup through one evidence backed path for customer clarity, proof, PMF decisions, MVP building, GTM execution, and verified traction."
+        title="Creatives Takeover | Startup Development Platform"
+        description="Creatives Takeover is a startup development platform that helps first-time founders validate ideas, build MVPs, launch, gain traction, and prepare to raise."
         keywords="founder operating system, startup idea validation, customer decision brief, interactive product demo, product market fit evidence, MVP builder, go-to-market execution, traction engine, first-time solo founders"
         url="/"
         image="/og-founders-compass-2026-07.png"

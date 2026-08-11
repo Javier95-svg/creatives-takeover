@@ -132,8 +132,10 @@ export const createOrganizationSchema = () => ({
 export const createWebSiteSchema = () => ({
   "@context": "https://schema.org",
   "@type": "WebSite",
+  "@id": "https://creatives-takeover.com/#website",
   "name": "Creatives Takeover",
-  "url": "https://creatives-takeover.com",
+  "alternateName": "creatives-takeover.com",
+  "url": "https://creatives-takeover.com/",
   "potentialAction": {
     "@type": "SearchAction",
     "target": { "@type": "EntryPoint", "urlTemplate": "https://creatives-takeover.com/answers?q={search_term_string}" },
@@ -317,7 +319,7 @@ export const createAboutPageSchema = () => ({
   "@context": "https://schema.org",
   "@type": "AboutPage",
   "name": "About Creatives Takeover",
-  "description": "Learn about Creatives Takeover, the startup development platform helping first-time founders move from validation to launch and fundraising preparation.",
+  "description": "Meet the team behind Creatives Takeover and learn how our mission, principles, and founder-first approach shape the platform we are building.",
   "url": "https://creatives-takeover.com/about",
   "mainEntity": {
     "@type": "Organization",
