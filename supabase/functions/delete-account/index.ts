@@ -82,6 +82,8 @@ async function deleteOwnedStorageObjects(
 }
 
 serve(async (req: Request): Promise<Response> => {
+  const requestId = crypto.randomUUID();
+
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return json(405, { success: false, error: "Method not allowed." });
 
@@ -218,8 +220,20 @@ serve(async (req: Request): Promise<Response> => {
       p_user_id: user.id,
     });
     if (cleanupError) {
-      console.error("delete-account: data cleanup failed", { userId: user.id, message: cleanupError.message });
-      return json(500, { success: false, code: "DATA_CLEANUP_FAILED", error: "We could not safely remove all account data. Please try again." });
+      console.error("delete-account: data cleanup failed", {
+        requestId,
+        userId: user.id,
+        code: cleanupError.code,
+        message: cleanupError.message,
+        details: cleanupError.details,
+        hint: cleanupError.hint,
+      });
+      return json(500, {
+        success: false,
+        code: "DATA_CLEANUP_FAILED",
+        requestId,
+        error: "We could not safely remove all account data. Please try again.",
+      });
     }
 
     const { error: deleteError } = await adminClient.auth.admin.deleteUser(user.id);
