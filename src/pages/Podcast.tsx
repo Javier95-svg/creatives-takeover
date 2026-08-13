@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Plus, Mic } from "lucide-react";
 import Navigation from "@/components/Navigation";
@@ -24,7 +24,6 @@ import {
   type PodcastEpisode,
   type PodcastEpisodeInput,
 } from "@/hooks/usePodcastEpisodes";
-import { warmYouTubeEmbed } from "@/lib/podcast";
 
 const Podcast = () => {
   const {
@@ -41,14 +40,6 @@ const Podcast = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<PodcastEpisode | null>(null);
   const [pendingDelete, setPendingDelete] = useState<PodcastEpisode | null>(null);
-  const firstEpisodeVideoId = episodes[0]?.youtube_video_id;
-
-  useEffect(() => {
-    if (!firstEpisodeVideoId) return;
-    const timer = window.setTimeout(() => warmYouTubeEmbed(firstEpisodeVideoId), 1200);
-    return () => window.clearTimeout(timer);
-  }, [firstEpisodeVideoId]);
-
   const openAdd = () => {
     setEditing(null);
     setFormOpen(true);
@@ -95,7 +86,7 @@ const Podcast = () => {
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        <PodcastWallpaper />
+        <PodcastWallpaper paused={Boolean(playing)} />
         <Navigation />
 
         <main className="relative pb-20">

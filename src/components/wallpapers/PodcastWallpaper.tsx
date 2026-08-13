@@ -5,12 +5,19 @@
 // and finished with a readability veil so foreground text stays legible.
 
 // Deterministic equalizer bar heights so the baseline looks organic but stable.
-const EQ_BARS = Array.from({ length: 52 }, (_, i) =>
+const EQ_BARS = Array.from({ length: 28 }, (_, i) =>
   20 + (Math.sin(i * 1.3) * 0.5 + 0.5) * 64 + (Math.sin(i * 0.5) * 0.5 + 0.5) * 14
 );
 
-const PodcastWallpaper = () => (
-  <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+interface PodcastWallpaperProps {
+  paused?: boolean;
+}
+
+const PodcastWallpaper = ({ paused = false }: PodcastWallpaperProps) => (
+  <div
+    aria-hidden
+    className={`pointer-events-none fixed inset-0 z-0 overflow-hidden ${paused ? 'pw-paused' : ''}`}
+  >
     <style>{`
       @keyframes pw-ring {
         0%   { transform: translate(-50%, -50%) scale(0.18); opacity: 0; }
@@ -24,6 +31,7 @@ const PodcastWallpaper = () => (
       @media (prefers-reduced-motion: reduce) {
         .pw-anim { animation: none !important; }
       }
+      .pw-paused .pw-anim { animation-play-state: paused !important; }
     `}</style>
 
     {/* Base: dark stage with a glow spilling from the top */}

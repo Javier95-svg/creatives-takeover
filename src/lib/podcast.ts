@@ -5,7 +5,7 @@
 const YT_ID = /^[a-zA-Z0-9_-]{11}$/;
 const YOUTUBE_EMBED_ORIGIN = 'https://www.youtube.com';
 
-const warmedEmbeds = new Set<string>();
+let youtubeConnectionsWarmed = false;
 
 /**
  * Extract the 11-character YouTube video id from any common form:
@@ -77,21 +77,19 @@ function ensureHeadLink(id: string, rel: string, href: string, as?: string): voi
 }
 
 /**
- * Warm the exact YouTube player a visitor is likely to open next.
- * This keeps the episode list light, then shifts the heavy player boot to idle/hover.
+ * Warm only the connections needed by the YouTube player.
+ *
+ * Prefetching the embed document used to make every visitor download YouTube work
+ * before choosing a video. The autoplay URL opened by the player was different, so
+ * that speculative download was not reliably reused and competed with the page load.
  */
 export function warmYouTubeEmbed(videoId: string): void {
-  if (!YT_ID.test(videoId) || warmedEmbeds.has(videoId)) return;
-  warmedEmbeds.add(videoId);
+  if (!YT_ID.test(videoId) || youtubeConnectionsWarmed) return;
+  youtubeConnectionsWarmed = true;
 
   ensureHeadLink('podcast-youtube-preconnect', 'preconnect', YOUTUBE_EMBED_ORIGIN);
   ensureHeadLink('podcast-ytimg-preconnect', 'preconnect', 'https://i.ytimg.com');
-  ensureHeadLink(
-    `podcast-youtube-prefetch-${videoId}`,
-    'prefetch',
-    youtubeEmbedUrl(videoId, false),
-    'document'
-  );
+  ensureHeadLink('podcast-gstatic-preconnect', 'preconnect', 'https://www.gstatic.com');
 }
 
 /** Normalize a free-text hashtag into a `#word` token (letters/digits only). */

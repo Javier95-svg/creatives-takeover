@@ -53,3 +53,27 @@ test('known dead guide URLs do not return to the source tree', () => {
   assert.doesNotMatch(guides, /how-to-start-a-creative-business/);
   assert.doesNotMatch(guides, /productivity-frontier-vF\.pdf/);
 });
+
+test('podcast keeps YouTube work off the page load path and outside cross-origin isolation', () => {
+  const podcastPage = read('../src/pages/Podcast.tsx');
+  const podcastHelpers = read('../src/lib/podcast.ts');
+  const podcastPlayer = read('../src/components/podcast/PodcastPlayerModal.tsx');
+  const podcastWallpaper = read('../src/components/wallpapers/PodcastWallpaper.tsx');
+  const vercel = read('../vercel.json');
+
+  assert.doesNotMatch(podcastPage, /setTimeout\(\(\) => warmYouTubeEmbed/);
+  assert.doesNotMatch(podcastHelpers, /youtubeEmbedUrl\(videoId, false\)/);
+  assert.doesNotMatch(podcastPlayer, /credentialless/);
+  assert.doesNotMatch(podcastPlayer, /backdrop-blur/);
+  assert.match(podcastWallpaper, /pw-paused \.pw-anim \{ animation-play-state: paused/);
+
+  const config = JSON.parse(vercel) as {
+    headers: Array<{ source: string; headers: Array<{ key: string; value: string }> }>;
+  };
+  const catchAll = config.headers.find((entry) => entry.source === '/(.*)');
+  const mvpBuilder = config.headers.find((entry) => entry.source === '/mvp-builder');
+  assert.ok(catchAll);
+  assert.ok(mvpBuilder);
+  assert.equal(catchAll.headers.some((header) => header.key === 'Cross-Origin-Embedder-Policy'), false);
+  assert.equal(mvpBuilder.headers.some((header) => header.key === 'Cross-Origin-Embedder-Policy'), true);
+});

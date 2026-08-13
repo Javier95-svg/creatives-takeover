@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { createRequire } from "module";
@@ -73,12 +73,41 @@ function getManualChunk(id: string) {
     return "react-core";
   }
 
-  if (packageName === "@tanstack/react-query" || packageName === "@supabase/supabase-js" || packageName === "zustand") {
+  if (
+    packageName.startsWith("@supabase/") ||
+    packageName === "@tanstack/react-query" ||
+    packageName === "@tanstack/query-core" ||
+    packageName === "zustand"
+  ) {
     return "data-clients";
   }
 
   if (packageName.startsWith("@radix-ui/")) {
     return "radix-ui";
+  }
+
+  if (
+    packageName === "aria-hidden" ||
+    packageName === "tslib" ||
+    packageName === "get-nonce" ||
+    packageName === "react-style-singleton" ||
+    packageName === "react-remove-scroll-bar" ||
+    packageName === "react-remove-scroll" ||
+    packageName === "use-sidecar" ||
+    packageName === "use-callback-ref" ||
+    packageName.startsWith("@floating-ui/") ||
+    packageName === "clsx" ||
+    packageName === "class-variance-authority" ||
+    packageName === "tailwind-merge" ||
+    packageName === "lucide-react" ||
+    packageName === "next-themes" ||
+    packageName === "sonner"
+  ) {
+    return "ui-foundation";
+  }
+
+  if (packageName === "framer-motion" || packageName === "motion-dom" || packageName === "motion-utils") {
+    return "motion";
   }
 
   if (packageName.startsWith("@dnd-kit/")) {
@@ -136,9 +165,39 @@ function getManualChunk(id: string) {
   return `vendor-${sanitizeChunkName(packageName)}`;
 }
 
+function needsCrossOriginIsolation(requestUrl: string | undefined) {
+  if (!requestUrl) return false;
+  const pathname = new URL(requestUrl, "http://localhost").pathname;
+  return pathname === "/mvp-builder" || pathname.startsWith("/mvp-builder/");
+}
+
+function selectiveCrossOriginIsolation(): Plugin {
+  return {
+    name: "selective-cross-origin-isolation",
+    configureServer(server) {
+      server.middlewares.use((request, response, next) => {
+        if (needsCrossOriginIsolation(request.url)) {
+          response.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+          response.setHeader("Cross-Origin-Embedder-Policy", "credentialless");
+        }
+        next();
+      });
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use((request, response, next) => {
+        if (needsCrossOriginIsolation(request.url)) {
+          response.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+          response.setHeader("Cross-Origin-Embedder-Policy", "credentialless");
+        }
+        next();
+      });
+    },
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const plugins = [react()];
+  const plugins = [react(), selectiveCrossOriginIsolation()];
   
   // Only add componentTagger in development mode
   if (mode === 'development') {
@@ -152,18 +211,11 @@ export default defineConfig(({ mode }) => {
     server: {
       host: "::",
       port: 8080,
-      headers: {
-        "Cross-Origin-Opener-Policy": "same-origin",
-        "Cross-Origin-Embedder-Policy": "require-corp",
-      },
-    },
-    preview: {
-      headers: {
-        "Cross-Origin-Opener-Policy": "same-origin",
-        "Cross-Origin-Embedder-Policy": "require-corp",
-      },
     },
     plugins,
+    esbuild: mode === "production" ? {
+      pure: ["console.log", "console.debug"],
+    } : undefined,
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),

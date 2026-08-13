@@ -1,17 +1,8 @@
-import { useEffect, useState, type IframeHTMLAttributes } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Loader2, X } from "lucide-react";
 import { youtubeEmbedUrl, youtubeThumbnail } from "@/lib/podcast";
 import { cn } from "@/lib/utils";
-
-// The site is cross-origin isolated (COEP: credentialless, set in vercel.json for the
-// MVP Builder's webcontainers). Under that policy a plain cross-origin iframe is blocked,
-// so load the YouTube player as an anonymous/credentialless frame — it satisfies COEP
-// without YouTube needing to send its own COEP header. (Ignored by browsers that don't
-// support it, which also don't enforce the policy, so the plain embed still works there.)
-const credentiallessIframeProp = {
-  credentialless: "",
-} as unknown as IframeHTMLAttributes<HTMLIFrameElement>;
 
 interface PodcastPlayerModalProps {
   videoId: string;
@@ -43,7 +34,7 @@ const PodcastPlayerModal = ({ videoId, title, onClose }: PodcastPlayerModalProps
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 sm:p-8 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 sm:p-8 animate-in fade-in duration-200"
       role="dialog"
       aria-modal="true"
       aria-label={title}
@@ -72,13 +63,17 @@ const PodcastPlayerModal = ({ videoId, title, onClose }: PodcastPlayerModalProps
                 src={youtubeThumbnail(videoId)}
                 alt=""
                 aria-hidden
+                width={480}
+                height={360}
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
                 className="absolute inset-0 h-full w-full scale-105 object-cover opacity-40 blur-sm"
               />
               <Loader2 className="relative h-9 w-9 animate-spin text-white/90" />
             </div>
           )}
           <iframe
-            {...credentiallessIframeProp}
             src={youtubeEmbedUrl(videoId, true)}
             title={title}
             onLoad={() => setLoaded(true)}

@@ -46,6 +46,8 @@ const PodcastEpisodeBanner = ({
             <img
               src={youtubeThumbnail(episode.youtube_video_id)}
               alt={episode.title}
+              width={480}
+              height={360}
               loading="lazy"
               decoding="async"
               onError={() => setThumbError(true)}

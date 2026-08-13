@@ -5,7 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { UserProvider } from "@/contexts/UserContext";
 import { ProgressProvider } from "@/contexts/ProgressContext";
 import { UpgradePromptProvider } from "@/contexts/UpgradePromptContext";
@@ -18,15 +18,27 @@ import { shouldShowPulseForPath } from "@/config/pulseRoutes";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import ScrollToTop from "./components/ScrollToTop";
-import ProUpgradeBanner from "@/components/ProUpgradeBanner";
 import AdminRoute from "@/components/AdminRoute";
 import { useInteractionTelemetry } from "@/hooks/useInteractionTelemetry";
 import { captureReferralFromUrl } from "@/lib/referral";
-import { ActivationFocusShell } from '@/components/activation/ActivationFocusShell';
-import { ActivationResumeBanner } from '@/components/activation/ActivationResumeBanner';
-import { RetentionEmailAttribution } from '@/components/RetentionEmailAttribution';
 
 const PulseWidget = lazy(() => import("@/components/pulse/PulseWidget"));
+const ProUpgradeBanner = lazy(() => import("@/components/ProUpgradeBanner"));
+const ActivationFocusShell = lazy(() =>
+  import("@/components/activation/ActivationFocusShell").then((module) => ({
+    default: module.ActivationFocusShell,
+  }))
+);
+const ActivationResumeBanner = lazy(() =>
+  import("@/components/activation/ActivationResumeBanner").then((module) => ({
+    default: module.ActivationResumeBanner,
+  }))
+);
+const RetentionEmailAttribution = lazy(() =>
+  import("@/components/RetentionEmailAttribution").then((module) => ({
+    default: module.RetentionEmailAttribution,
+  }))
+);
 const MobileBottomNav = lazy(() =>
   import("@/components/mobile/MobileBottomNav").then((module) => ({
     default: module.MobileBottomNav,
@@ -206,6 +218,32 @@ const ReferralCaptureBridge = () => {
   return null;
 };
 
+const DeferredGlobalFeatures = () => {
+  const location = useLocation();
+  const { user, loading } = useAuth();
+  const params = new URLSearchParams(location.search);
+  const hasActivationJourney = params.get("activation") === "1";
+  const hasRetentionAttribution = params.has("retention_email_id");
+  const showAuthenticatedFeatures = !loading && Boolean(user);
+
+  return (
+    <>
+      {hasActivationJourney && (
+        <Suspense fallback={null}>
+          <ActivationFocusShell />
+        </Suspense>
+      )}
+      {showAuthenticatedFeatures && (
+        <Suspense fallback={null}>
+          <ActivationResumeBanner />
+          {hasRetentionAttribution && <RetentionEmailAttribution />}
+          {location.pathname === "/" && <ProUpgradeBanner />}
+        </Suspense>
+      )}
+    </>
+  );
+};
+
 const ToolRouteWithCreditGate = ({ children }: { children: ReactNode }) => (
   <>
     <CreditStatusBanner />
@@ -233,12 +271,9 @@ function App() {
                     <ScrollToTop />
                     <InteractionTelemetryBridge />
                     <ReferralCaptureBridge />
-                    <RetentionEmailAttribution />
-                    <ActivationFocusShell />
-                    <ActivationResumeBanner />
+                    <DeferredGlobalFeatures />
                     <UpgradePromptProvider>
                       <CreditGateProvider>
-                        <ProUpgradeBanner />
                         <Suspense fallback={null}>
                           <PulseWidgetWrapper />
                         </Suspense>
