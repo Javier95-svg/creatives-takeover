@@ -68,6 +68,8 @@ test('podcast keeps YouTube work off the page load path and outside cross-origin
   assert.match(podcastHelpers, /loadYouTubeIframeApi/);
   assert.match(podcastPlayer, /YouTube blocked embedded playback/);
   assert.match(podcastPlayer, /event\.data === 101 \|\| event\.data === 150/);
+  assert.match(podcastPlayer, /React-owned wrapper/);
+  assert.doesNotMatch(podcastPlayer, /ref=\{playerHostRef\}[\s\S]{0,160}playerStatus === "ready"/);
   assert.match(podcastWallpaper, /pw-paused \.pw-anim \{ animation-play-state: paused/);
 
   const config = JSON.parse(vercel) as {

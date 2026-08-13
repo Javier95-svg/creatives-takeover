@@ -133,14 +133,18 @@ const PodcastPlayerModal = ({ videoId, title, onClose }: PodcastPlayerModalProps
               <Loader2 className="relative h-9 w-9 animate-spin text-white/90" />
             </div>
           )}
+          {/* Keep visibility on a React-owned wrapper. YouTube replaces the host
+              element with its iframe, so state-driven classes on the host itself
+              can remain stuck on the generated iframe (audio plays, video hidden). */}
           <div
-            ref={playerHostRef}
             className={cn(
-              "h-full w-full transition-opacity duration-300",
+              "h-full w-full transition-opacity duration-300 [&_iframe]:h-full [&_iframe]:w-full",
               playerStatus === "ready" ? "opacity-100" : "opacity-0",
               (playerStatus === "blocked" || playerStatus === "error") && "invisible"
             )}
-          />
+          >
+            <div ref={playerHostRef} className="h-full w-full" />
+          </div>
           {(playerStatus === "blocked" || playerStatus === "error") && (
             <div className="absolute inset-0 z-20 flex items-center justify-center p-6 text-center">
               <img
