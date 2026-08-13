@@ -4,8 +4,44 @@
 
 const YT_ID = /^[a-zA-Z0-9_-]{11}$/;
 const YOUTUBE_EMBED_ORIGIN = 'https://www.youtube.com';
+const YOUTUBE_IFRAME_API_ID = 'youtube-iframe-api';
 
 let youtubeConnectionsWarmed = false;
+let youtubeIframeApiPromise: Promise<YouTubeIframeApi> | null = null;
+
+export interface YouTubeIframePlayer {
+  destroy: () => void;
+  playVideo: () => void;
+}
+
+interface YouTubePlayerEvent {
+  target: YouTubeIframePlayer;
+  data: number;
+}
+
+interface YouTubePlayerOptions {
+  videoId: string;
+  playerVars: Record<string, string | number>;
+  events: {
+    onReady: (event: YouTubePlayerEvent) => void;
+    onStateChange: (event: YouTubePlayerEvent) => void;
+    onError: (event: YouTubePlayerEvent) => void;
+  };
+}
+
+export interface YouTubeIframeApi {
+  Player: new (element: HTMLElement, options: YouTubePlayerOptions) => YouTubeIframePlayer;
+  PlayerState: {
+    BUFFERING: number;
+    PLAYING: number;
+    CUED: number;
+  };
+}
+
+type YouTubeApiWindow = Window & {
+  YT?: YouTubeIframeApi;
+  onYouTubeIframeAPIReady?: () => void;
+};
 
 /**
  * Extract the 11-character YouTube video id from any common form:
@@ -48,21 +84,47 @@ export function youtubeThumbnail(videoId: string): string {
   return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
 }
 
-/** Standard YouTube embed URL for the in-platform player. */
-export function youtubeEmbedUrl(videoId: string, autoplay = true): string {
-  const params = new URLSearchParams({
-    autoplay: autoplay ? '1' : '0',
-    rel: '0',
-    modestbranding: '1',
-    playsinline: '1',
-    iv_load_policy: '3',
-  });
+export function youtubeWatchUrl(videoId: string): string {
+  return `${YOUTUBE_EMBED_ORIGIN}/watch?v=${videoId}`;
+}
 
-  if (typeof window !== 'undefined') {
-    params.set('origin', window.location.origin);
+/** Load YouTube's API only after a visitor asks to play an episode. */
+export function loadYouTubeIframeApi(): Promise<YouTubeIframeApi> {
+  if (typeof window === 'undefined') {
+    return Promise.reject(new Error('YouTube playback requires a browser'));
   }
 
-  return `${YOUTUBE_EMBED_ORIGIN}/embed/${videoId}?${params.toString()}`;
+  const apiWindow = window as YouTubeApiWindow;
+  if (apiWindow.YT?.Player) return Promise.resolve(apiWindow.YT);
+  if (youtubeIframeApiPromise) return youtubeIframeApiPromise;
+
+  youtubeIframeApiPromise = new Promise<YouTubeIframeApi>((resolve, reject) => {
+    const previousReady = apiWindow.onYouTubeIframeAPIReady;
+    apiWindow.onYouTubeIframeAPIReady = () => {
+      previousReady?.();
+      if (apiWindow.YT?.Player) {
+        resolve(apiWindow.YT);
+      } else {
+        youtubeIframeApiPromise = null;
+        reject(new Error('YouTube iframe API initialized without a player'));
+      }
+    };
+
+    const existing = document.getElementById(YOUTUBE_IFRAME_API_ID) as HTMLScriptElement | null;
+    if (existing) return;
+
+    const script = document.createElement('script');
+    script.id = YOUTUBE_IFRAME_API_ID;
+    script.src = `${YOUTUBE_EMBED_ORIGIN}/iframe_api`;
+    script.async = true;
+    script.onerror = () => {
+      youtubeIframeApiPromise = null;
+      reject(new Error('Unable to load the YouTube iframe API'));
+    };
+    document.head.appendChild(script);
+  });
+
+  return youtubeIframeApiPromise;
 }
 
 function ensureHeadLink(id: string, rel: string, href: string, as?: string): void {
