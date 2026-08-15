@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Loader2, Search, Sparkles, Wrench } from "lucide-react";
-import SEO, { createBreadcrumbSchema, createOrganizationSchema } from "@/components/SEO";
+import SEO, { createBreadcrumbSchema, createCollectionSchema, createOrganizationSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import CommunityMentorsWallpaper from "@/components/wallpapers/CommunityMentorsWallpaper";
@@ -125,16 +125,16 @@ const ServiceMarketplaceHub = () => {
             { name: "Home", url: "/" },
             { name: "Marketplace", url: "/marketplace" },
           ]),
-          {
-            "@context": "https://schema.org",
-            "@type": "Service",
-            "name": "Founder Service Marketplace",
-            "description": "A curated service marketplace for founders and small business owners.",
-            "provider": { "@type": "Organization", "name": "Creatives Takeover", "url": "https://creatives-takeover.com" },
-            "serviceType": "Founder Services",
-            "areaServed": "Worldwide",
-            "url": "https://creatives-takeover.com/marketplace",
-          },
+          createCollectionSchema({
+            name: "Founder Service Marketplace",
+            description: "A curated service marketplace for founders and small business owners.",
+            url: "/marketplace",
+            items: services.map((service) => ({
+              name: service.name,
+              url: `/marketplace/${service.slug}`,
+              type: "Service",
+            })),
+          }),
         ]}
       />
       <div className="relative min-h-screen bg-background">

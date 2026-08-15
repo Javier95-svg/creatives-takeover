@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import SEO, { createOrganizationSchema, createBreadcrumbSchema } from "@/components/SEO";
+import SEO, { createOrganizationSchema, createBreadcrumbSchema, createCollectionSchema } from "@/components/SEO";
 import { Link, useSearchParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -22,6 +22,7 @@ import { normalizeMentorExpertiseList } from "@/utils/mentorExpertise";
 import { isMentorInExactTimezone, parseTimezoneOffset } from "@/utils/mentorTimezone";
 import { trackActivity } from "@/lib/activity";
 import { getMentorTrackExpertise, parseMentorTrack } from "@/lib/mentorDemand";
+import { generateMentorSlug } from "@/utils/mentorSlug";
 import { NetworkRelationshipInbox } from "@/components/mentor-marketplace/NetworkRelationshipInbox";
 
 import {
@@ -421,16 +422,16 @@ const MentorMarketplaceHub = () => {
             { name: "Home", url: "/" },
             { name: "Find a Startup Mentor", url: "/mentorship" }
           ]),
-          {
-            "@context": "https://schema.org",
-            "@type": "Service",
-            "name": "Startup Mentor Marketplace",
-            "description": "Connect with experienced startup mentors for 1-on-1 sessions covering fundraising, MVP planning, customer discovery, and go-to-market execution.",
-            "provider": { "@type": "Organization", "name": "Creatives Takeover", "url": "https://creatives-takeover.com" },
-            "serviceType": "Startup Mentorship",
-            "areaServed": "Worldwide",
-            "url": "https://creatives-takeover.com/mentorship"
-          }
+          createCollectionSchema({
+            name: "Startup Mentor Marketplace",
+            description: "Connect with experienced startup mentors for focused sessions covering fundraising, MVP planning, customer discovery, and go-to-market execution.",
+            url: "/mentorship",
+            items: mentors.map((mentor) => ({
+              name: mentor.name,
+              url: `/mentorship/${generateMentorSlug(mentor.name)}`,
+              type: "Person",
+            })),
+          })
         ]}
       />
 	      <div className="min-h-screen bg-background relative">

@@ -10,7 +10,6 @@ Disallow: /onboarding
 Disallow: /dashboard
 Disallow: /account
 Disallow: /messages
-Disallow: /profile
 Disallow: /setup-quiz
 Disallow: /focus-funnel
 Disallow: /core-metrics
@@ -42,7 +41,6 @@ Disallow: /onboarding
 Disallow: /dashboard
 Disallow: /account
 Disallow: /messages
-Disallow: /profile
 Disallow: /setup-quiz
 Disallow: /focus-funnel
 Disallow: /core-metrics
@@ -74,7 +72,6 @@ Disallow: /onboarding
 Disallow: /dashboard
 Disallow: /account
 Disallow: /messages
-Disallow: /profile
 Disallow: /setup-quiz
 Disallow: /focus-funnel
 Disallow: /core-metrics
@@ -106,7 +103,6 @@ Disallow: /onboarding
 Disallow: /dashboard
 Disallow: /account
 Disallow: /messages
-Disallow: /profile
 Disallow: /setup-quiz
 Disallow: /focus-funnel
 Disallow: /core-metrics
@@ -138,7 +134,6 @@ Disallow: /onboarding
 Disallow: /dashboard
 Disallow: /account
 Disallow: /messages
-Disallow: /profile
 Disallow: /setup-quiz
 Disallow: /focus-funnel
 Disallow: /core-metrics
@@ -170,7 +165,6 @@ Disallow: /onboarding
 Disallow: /dashboard
 Disallow: /account
 Disallow: /messages
-Disallow: /profile
 Disallow: /setup-quiz
 Disallow: /focus-funnel
 Disallow: /core-metrics
@@ -202,7 +196,6 @@ Disallow: /onboarding
 Disallow: /dashboard
 Disallow: /account
 Disallow: /messages
-Disallow: /profile
 Disallow: /setup-quiz
 Disallow: /focus-funnel
 Disallow: /core-metrics
@@ -234,7 +227,6 @@ Disallow: /onboarding
 Disallow: /dashboard
 Disallow: /account
 Disallow: /messages
-Disallow: /profile
 Disallow: /setup-quiz
 Disallow: /focus-funnel
 Disallow: /core-metrics

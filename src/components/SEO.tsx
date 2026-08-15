@@ -35,6 +35,9 @@ const SEO = ({
   structuredData,
   googleSiteVerification,
 }: SEOProps) => {
+  // Retained in the public interface for backwards compatibility. Search
+  // engines do not use meta keywords, so the component deliberately omits it.
+  void keywords;
   const baseUrl = 'https://creatives-takeover.com';
   const fullUrl = url ? `${baseUrl}${url}` : baseUrl;
   const canonicalUrl = canonical || fullUrl;
@@ -53,7 +56,8 @@ const SEO = ({
       {/* Basic Meta Tags */}
       <title>{optimizedTitle}</title>
       <meta name="description" content={optimizedDescription} />
-      {keywords && <meta name="keywords" content={keywords} />}
+      {/* `keywords` remains an input for schema/editorial consumers, but modern
+          search engines ignore the obsolete meta-keywords tag. */}
       {author && <meta name="author" content={author} />}
       {noindex && <meta name="robots" content="noindex,nofollow" />}
       {googleSiteVerification && <meta name="google-site-verification" content={googleSiteVerification} />}
@@ -83,8 +87,8 @@ const SEO = ({
       <meta name="twitter:description" content={optimizedDescription} />
       <meta name="twitter:image" content={fullImageUrl} />
       <meta name="twitter:image:alt" content={optimizedTitle} />
-      <meta name="twitter:site" content="@CreativesTakeover" />
-      <meta name="twitter:creator" content="@CreativesTakeover" />
+      <meta name="twitter:site" content="@Creatives_Rule" />
+      <meta name="twitter:creator" content="@Creatives_Rule" />
       
       {/* Structured Data (JSON-LD) */}
       {structuredData && (
@@ -155,6 +159,95 @@ export const createBreadcrumbSchema = (items: Array<{ name: string; url: string 
   }))
 });
 
+export const createWebPageSchema = (page: {
+  name: string;
+  description: string;
+  url: string;
+  type?: "WebPage" | "CollectionPage" | "ProfilePage";
+  mainEntity?: object;
+  mainEntityId?: string;
+}) => ({
+  "@context": "https://schema.org",
+  "@type": page.type || "WebPage",
+  "@id": `https://creatives-takeover.com${page.url}#webpage`,
+  name: page.name,
+  description: page.description,
+  url: `https://creatives-takeover.com${page.url}`,
+  isPartOf: { "@id": "https://creatives-takeover.com/#website" },
+  ...(page.mainEntity ? { mainEntity: page.mainEntity } : {}),
+  ...(page.mainEntityId ? { mainEntity: { "@id": page.mainEntityId } } : {}),
+});
+
+export const createPersonSchema = (person: {
+  name: string;
+  url: string;
+  description?: string;
+  image?: string | null;
+  jobTitle?: string | null;
+  sameAs?: Array<string | null | undefined>;
+}) => ({
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "@id": `https://creatives-takeover.com${person.url}#person`,
+  name: person.name,
+  url: `https://creatives-takeover.com${person.url}`,
+  ...(person.description ? { description: person.description } : {}),
+  ...(person.image ? { image: person.image } : {}),
+  ...(person.jobTitle ? { jobTitle: person.jobTitle } : {}),
+  ...(person.sameAs?.filter(Boolean).length ? { sameAs: person.sameAs.filter(Boolean) } : {}),
+});
+
+export const createCollectionSchema = (collection: {
+  name: string;
+  description: string;
+  url: string;
+  items: Array<{ name: string; url: string; type?: string }>;
+}) => ({
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "@id": `https://creatives-takeover.com${collection.url}#collection`,
+  name: collection.name,
+  description: collection.description,
+  url: `https://creatives-takeover.com${collection.url}`,
+  isPartOf: { "@id": "https://creatives-takeover.com/#website" },
+  mainEntity: {
+    "@type": "ItemList",
+    "@id": `https://creatives-takeover.com${collection.url}#items`,
+    numberOfItems: collection.items.length,
+    itemListElement: collection.items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      item: {
+        "@type": item.type || "Thing",
+        name: item.name,
+        url: `https://creatives-takeover.com${item.url}`,
+      },
+    })),
+  },
+});
+
+export const createIndividualServiceSchema = (service: {
+  name: string;
+  description: string;
+  url: string;
+  category?: string;
+  providerName?: string | null;
+  image?: string | null;
+}) => ({
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "@id": `https://creatives-takeover.com${service.url}#service`,
+  name: service.name,
+  description: service.description,
+  url: `https://creatives-takeover.com${service.url}`,
+  areaServed: "Worldwide",
+  ...(service.category ? { serviceType: service.category } : {}),
+  ...(service.image ? { image: service.image } : {}),
+  provider: service.providerName
+    ? { "@type": "Person", name: service.providerName }
+    : { "@id": "https://creatives-takeover.com/#organization" },
+});
+
 // Helper function to create Article schema
 export const createArticleSchema = (article: {
   title: string;
@@ -206,7 +299,7 @@ export const createArticleSchema = (article: {
   return schema;
 };
 
-// Helper function to create HowTo schema (unlocks rich step-by-step results in Google)
+// Helper function to describe step-by-step content with schema.org HowTo markup.
 export const createHowToSchema = (params: {
   name: string;
   description: string;

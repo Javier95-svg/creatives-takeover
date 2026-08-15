@@ -191,6 +191,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://creatives-takeover.com/marketplace</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://creatives-takeover.com/co-founder</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>

@@ -24,7 +24,6 @@ const NOINDEX_PREFIXES = [
   "/first-customer-sprint",
   "/auth",
   "/messages",
-  "/profile",
   "/mentorship/book/",
   "/mentorship/my-bookings",
   "/mentorship/calls/respond",

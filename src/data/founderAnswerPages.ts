@@ -19,6 +19,10 @@ export interface FounderAnswerPage {
   keyword: string;
   searchIntent: string;
   updatedLabel: string;
+  /** Original publication date. New or substantially revised entries should set this explicitly. */
+  publishedAt?: string;
+  /** Most recent substantive revision date. */
+  modifiedAt?: string;
   summary: string;
   quickAnswerItems: Array<{
     label: string;
@@ -39,6 +43,45 @@ export interface FounderAnswerPage {
   };
   faqs: FounderAnswerFAQ[];
   relatedSlugs: string[];
+}
+
+const FOUNDER_ANSWER_PROVENANCE: Record<string, { publishedAt: string; modifiedAt: string }> = {
+  "how-to-define-icp-for-startup": { publishedAt: "2026-05-17", modifiedAt: "2026-07-22" },
+  "ideal-customer-profile-template": { publishedAt: "2026-05-17", modifiedAt: "2026-07-22" },
+  "startup-positioning-examples": { publishedAt: "2026-05-17", modifiedAt: "2026-05-17" },
+  "how-to-validate-startup-idea": { publishedAt: "2026-05-17", modifiedAt: "2026-07-22" },
+  "waitlist-before-mvp": { publishedAt: "2026-05-17", modifiedAt: "2026-06-07" },
+  "product-market-fit-survey-questions": { publishedAt: "2026-05-17", modifiedAt: "2026-05-17" },
+  "mvp-builder-for-startups": { publishedAt: "2026-05-17", modifiedAt: "2026-07-22" },
+  "tech-stack-for-startup": { publishedAt: "2026-05-17", modifiedAt: "2026-05-17" },
+  "go-to-market-strategy-for-startup": { publishedAt: "2026-05-17", modifiedAt: "2026-07-22" },
+  "first-users-for-saas": { publishedAt: "2026-05-17", modifiedAt: "2026-05-17" },
+  "startup-launch-checklist": { publishedAt: "2026-05-17", modifiedAt: "2026-05-17" },
+  "pitch-deck-feedback-for-startups": { publishedAt: "2026-05-17", modifiedAt: "2026-07-22" },
+  "vc-search-for-startups": { publishedAt: "2026-05-17", modifiedAt: "2026-05-17" },
+  "accelerator-alternatives": { publishedAt: "2026-05-17", modifiedAt: "2026-06-06" },
+  "how-to-find-your-target-audience": { publishedAt: "2026-06-06", modifiedAt: "2026-07-22" },
+  "customer-interview-questions": { publishedAt: "2026-06-06", modifiedAt: "2026-07-22" },
+  "signs-your-startup-idea-is-good": { publishedAt: "2026-06-06", modifiedAt: "2026-07-22" },
+  "no-code-vs-code-for-mvp": { publishedAt: "2026-06-06", modifiedAt: "2026-07-22" },
+  "mvp-feature-prioritization": { publishedAt: "2026-06-06", modifiedAt: "2026-07-22" },
+  "how-to-get-first-100-users": { publishedAt: "2026-06-06", modifiedAt: "2026-07-22" },
+  "product-hunt-launch-guide": { publishedAt: "2026-06-06", modifiedAt: "2026-06-07" },
+  "cold-email-for-startups": { publishedAt: "2026-06-06", modifiedAt: "2026-07-22" },
+  "how-to-find-investors-for-startup": { publishedAt: "2026-06-06", modifiedAt: "2026-07-22" },
+  "pre-seed-vs-seed-funding": { publishedAt: "2026-06-06", modifiedAt: "2026-07-16" },
+  "startup-pitch-deck-outline": { publishedAt: "2026-05-17", modifiedAt: "2026-07-22" },
+};
+
+export function getFounderAnswerProvenance(page: FounderAnswerPage) {
+  const parsedUpdate = new Date(`${page.updatedLabel} 1`);
+  const fallbackDate = Number.isNaN(parsedUpdate.getTime())
+    ? new Date().toISOString().slice(0, 10)
+    : parsedUpdate.toISOString().slice(0, 10);
+  return FOUNDER_ANSWER_PROVENANCE[page.slug] || {
+    publishedAt: page.publishedAt || fallbackDate,
+    modifiedAt: page.modifiedAt || fallbackDate,
+  };
 }
 
 export const FOUNDER_ANSWER_CLUSTERS: Record<

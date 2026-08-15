@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, Link, useLocation } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
+import SEO, { createBreadcrumbSchema, createPersonSchema, createWebPageSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import CommunityMentorsWallpaper from "@/components/wallpapers/CommunityMentorsWallpaper";
@@ -11,6 +11,7 @@ import { useMentors } from "@/hooks/useMentors";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { generateMentorSlug } from "@/utils/mentorSlug";
 
 const MentorProfilePage = () => {
   const { id, slug: paramSlug } = useParams<{ id?: string; slug?: string }>();
@@ -106,10 +107,34 @@ const MentorProfilePage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{mentor.name} | Mentor Profile</title>
-        <meta name="description" content={mentor.bio.substring(0, 160)} />
-      </Helmet>
+      <SEO
+        title={`${mentor.name} | Startup Mentor`}
+        description={mentor.bio.substring(0, 160)}
+        url={`/mentorship/${generateMentorSlug(mentor.name)}`}
+        image={mentor.picture}
+        structuredData={[
+          createBreadcrumbSchema([
+            { name: "Home", url: "/" },
+            { name: "Startup Mentors", url: "/mentorship" },
+            { name: mentor.name, url: `/mentorship/${generateMentorSlug(mentor.name)}` },
+          ]),
+          createPersonSchema({
+            name: mentor.name,
+            description: mentor.bio,
+            url: `/mentorship/${generateMentorSlug(mentor.name)}`,
+            image: mentor.picture,
+            jobTitle: "Startup Mentor",
+            sameAs: [mentor.linkedin_url, mentor.twitter_x_url, mentor.website_url].filter(Boolean) as string[],
+          }),
+          createWebPageSchema({
+            name: `${mentor.name} | Startup Mentor`,
+            description: mentor.bio,
+            url: `/mentorship/${generateMentorSlug(mentor.name)}`,
+            type: "ProfilePage",
+            mainEntityId: `https://creatives-takeover.com/mentorship/${generateMentorSlug(mentor.name)}#person`,
+          }),
+        ]}
+      />
       <div className="min-h-screen bg-background relative">
         <CommunityMentorsWallpaper />
         <div className="relative z-10">

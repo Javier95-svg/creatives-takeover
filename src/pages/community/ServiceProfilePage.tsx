@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Edit, Loader2, Mail, MessageCircle } from "lucide-react";
-import SEO, { createBreadcrumbSchema, createOrganizationSchema } from "@/components/SEO";
+import SEO, { createBreadcrumbSchema, createIndividualServiceSchema, createOrganizationSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { PitchDeckViewer } from "@/components/service-marketplace/PitchDeckViewer";
@@ -120,6 +120,14 @@ const ServiceProfilePage = () => {
             { name: "Marketplace", url: "/marketplace" },
             { name: service.name, url: getServiceProfilePath(service) },
           ]),
+          createIndividualServiceSchema({
+            name: service.name,
+            description: service.description,
+            url: getServiceProfilePath(service),
+            category: SERVICE_CATEGORY_LABELS[service.category],
+            providerName: service.delivered_by_name,
+            image: service.banner_url,
+          }),
         ]}
       />
       <div className="min-h-screen bg-background">

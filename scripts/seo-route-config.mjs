@@ -3,6 +3,7 @@
 // data renders the React pages (FounderAnswerPage.tsx) and the prerendered HTML.
 import {
   founderAnswerPages,
+  getFounderAnswerProvenance,
   getRelatedFounderAnswerPages,
 } from "../src/data/founderAnswerPages.ts";
 
@@ -41,7 +42,6 @@ export const ROBOTS_DISALLOW = [
   "/dashboard",
   "/account",
   "/messages",
-  "/profile",
   "/setup-quiz",
   "/focus-funnel",
   "/core-metrics",
@@ -71,6 +71,8 @@ const FOUNDER_ANSWER_ROUTES = founderAnswerPages.map((page) => ({
   changefreq: "monthly",
   priority: 0.65,
   lastmod: updatedLabelToIso(page.updatedLabel),
+  publishedAt: page.publishedAt || getFounderAnswerProvenance(page).publishedAt,
+  modifiedAt: page.modifiedAt || getFounderAnswerProvenance(page).modifiedAt,
   heroHeading: page.title,
   heroCopy: page.summary,
   updatedLabel: page.updatedLabel,
@@ -258,6 +260,32 @@ export const INDEXABLE_ROUTES = [
     heroHeading: "Connect. Learn. Grow.",
     heroCopy:
       "Browse startup mentors, review expertise, and book practical sessions focused on execution, fundraising, product, and growth.",
+  },
+  {
+    path: "/marketplace",
+    title: "Founder Service Marketplace | Creatives Takeover",
+    description:
+      "Browse founder-ready services for sales, marketing, operations, automation, and technical support from specialists who understand early-stage companies.",
+    changefreq: "weekly",
+    priority: 0.8,
+    heroHeading: "Founder services that move the business forward",
+    heroCopy:
+      "Compare curated startup services, review provider expertise, and contact specialists for practical execution support.",
+    schemaType: "collection",
+    breadcrumb: [
+      { name: "Home", url: "/" },
+      { name: "Founder Service Marketplace", url: "/marketplace" },
+    ],
+    sections: [
+      {
+        heading: "Curated for early-stage execution",
+        copy: "Browse practical sales, marketing, operations, automation, and technical services designed for founders and small teams.",
+      },
+      {
+        heading: "Review before you contact",
+        copy: "Each active service has a dedicated profile with a clear description, named provider, category, and supporting materials when available.",
+      },
+    ],
   },
   {
     path: "/co-founder",

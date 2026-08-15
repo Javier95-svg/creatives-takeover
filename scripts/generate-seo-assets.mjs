@@ -43,6 +43,14 @@ function generateSitemapIndexXml() {
     <loc>${BASE_URL}/sitemap-articles.xml</loc>
     <lastmod>${now}</lastmod>
   </sitemap>
+  <sitemap>
+    <loc>${BASE_URL}/sitemap-entities.xml</loc>
+    <lastmod>${now}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${BASE_URL}/sitemap-published.xml</loc>
+    <lastmod>${now}</lastmod>
+  </sitemap>
 </sitemapindex>
 `;
 }

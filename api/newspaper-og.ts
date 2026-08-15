@@ -266,7 +266,7 @@ export default async function handler(request: Request): Promise<Response> {
   html = setMeta(html, 'name', 'twitter:image', ogImageUrl);
 
   // Article structured data (E-E-A-T: author, dates, publisher, image).
-  const authorName = 'Creatives Takeover';
+  const authorName = 'Creatives Takeover Editorial Team';
   const publishedIso = article.published_at || article.updated_at || new Date().toISOString();
   const modifiedIso = article.updated_at || publishedIso;
   html = injectJsonLd(html, {
@@ -275,11 +275,17 @@ export default async function handler(request: Request): Promise<Response> {
     headline: optimizedMetaTitle,
     description: metaDescription,
     image: ogImageUrl,
-    author: { '@type': 'Person', name: authorName },
+    author: {
+      '@type': 'Organization',
+      '@id': `${SITE_ORIGIN}/#organization`,
+      name: 'Creatives Takeover',
+      url: SITE_ORIGIN,
+    },
     publisher: {
       '@type': 'Organization',
+      '@id': `${SITE_ORIGIN}/#organization`,
       name: 'Creatives Takeover',
-      logo: { '@type': 'ImageObject', url: `${SITE_ORIGIN}/og-image.png` },
+      logo: { '@type': 'ImageObject', url: `${SITE_ORIGIN}/favicon-192x192.png` },
     },
     datePublished: publishedIso,
     dateModified: modifiedIso,

@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   FOUNDER_ANSWER_CLUSTERS,
   getFounderAnswerPage,
+  getFounderAnswerProvenance,
   getRelatedFounderAnswerPages,
 } from "@/data/founderAnswerPages";
 
@@ -42,6 +43,9 @@ export default function FounderAnswerPage() {
   const cluster = FOUNDER_ANSWER_CLUSTERS[page.cluster];
   const relatedPages = getRelatedFounderAnswerPages(page);
   const updatedIso = updatedLabelToIso(page.updatedLabel);
+  const provenance = getFounderAnswerProvenance(page);
+  const publishedIso = page.publishedAt || provenance.publishedAt || updatedIso;
+  const modifiedIso = page.modifiedAt || provenance.modifiedAt || updatedIso;
   const structuredData = [
     createBreadcrumbSchema([
       { name: "Home", url: "/" },
@@ -60,8 +64,8 @@ export default function FounderAnswerPage() {
       "@type": "Article",
       headline: page.title,
       description: page.metaDescription,
-      datePublished: updatedIso,
-      dateModified: updatedIso,
+      datePublished: publishedIso,
+      dateModified: modifiedIso,
       author: {
         "@type": "Person",
         "@id": "https://creatives-takeover.com/about#founder",
@@ -96,8 +100,8 @@ export default function FounderAnswerPage() {
         url={`/answers/${page.slug}`}
         type="article"
         author="Javier Peña"
-        publishedTime={updatedIso}
-        modifiedTime={updatedIso}
+        publishedTime={publishedIso}
+        modifiedTime={modifiedIso}
         structuredData={structuredData}
       />
       <div className="relative z-10">

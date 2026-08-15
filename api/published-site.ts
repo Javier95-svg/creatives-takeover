@@ -50,6 +50,62 @@ function injectAnalytics(html: string): string {
   return html.slice(0, idx) + ANALYTICS_SNIPPET + html.slice(idx);
 }
 
+function escapeHtml(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function setMeta(html: string, attr: 'name' | 'property', key: string, value: string): string {
+  const pattern = new RegExp(`(<meta\\s+${attr}=["']${key}["']\\s+content=["'])[^"']*(["'])`, 'i');
+  const tag = `<meta ${attr}="${key}" content="${escapeHtml(value)}">`;
+  return pattern.test(html) ? html.replace(pattern, `$1${escapeHtml(value)}$2`) : html.replace('</head>', `${tag}</head>`);
+}
+
+function injectSearchMetadata(
+  html: string,
+  slug: string,
+  title: string,
+  description: string,
+  imageUrl?: string | null,
+): string {
+  const canonical = `https://${slug}.${BASE_DOMAIN}/`;
+  const image = imageUrl || `https://${BASE_DOMAIN}/og-founders-compass-2026-07.png`;
+  html = /<title>[\s\S]*?<\/title>/i.test(html)
+    ? html.replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(title)}</title>`)
+    : html.replace('</head>', `<title>${escapeHtml(title)}</title></head>`);
+  html = setMeta(html, 'name', 'description', description);
+  html = setMeta(html, 'name', 'robots', 'index,follow,max-image-preview:large,max-snippet:-1');
+  html = setMeta(html, 'property', 'og:type', 'website');
+  html = setMeta(html, 'property', 'og:title', title);
+  html = setMeta(html, 'property', 'og:description', description);
+  html = setMeta(html, 'property', 'og:url', canonical);
+  html = setMeta(html, 'property', 'og:image', image);
+  html = setMeta(html, 'name', 'twitter:card', 'summary_large_image');
+  html = setMeta(html, 'name', 'twitter:title', title);
+  html = setMeta(html, 'name', 'twitter:description', description);
+  html = setMeta(html, 'name', 'twitter:image', image);
+  const canonicalTag = `<link rel="canonical" href="${canonical}">`;
+  html = /<link\s+rel=["']canonical["'][^>]*>/i.test(html)
+    ? html.replace(/<link\s+rel=["']canonical["'][^>]*>/i, canonicalTag)
+    : html.replace('</head>', `${canonicalTag}</head>`);
+  const schema = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      { '@type': 'WebSite', '@id': `${canonical}#website`, name: title, url: canonical, description },
+      {
+        '@type': 'SoftwareApplication',
+        '@id': `${canonical}#application`,
+        name: title,
+        url: canonical,
+        description,
+        applicationCategory: 'BusinessApplication',
+        operatingSystem: 'Web',
+        image,
+      },
+    ],
+  };
+  return html.replace('</head>', `<script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script></head>`);
+}
+
 function notFound(message: string): Response {
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -90,37 +146,68 @@ export default async function handler(req: Request): Promise<Response> {
   const url = new URL(req.url);
   let requestedPath = url.searchParams.get('p') ?? '';
   if (requestedPath.startsWith(':')) requestedPath = '';
+  const normalizedPath = requestedPath.replace(/^\/+/, '').toLowerCase();
+  const isRobotsRequest = normalizedPath === 'robots.txt';
+  const isSitemapRequest = normalizedPath === 'sitemap.xml';
+  const rpcPath = isRobotsRequest || isSitemapRequest ? 'index.html' : requestedPath;
 
   try {
-    const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_published_mvp_file`, {
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_published_mvp_file_v2`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         apikey: SUPABASE_KEY,
         Authorization: `Bearer ${SUPABASE_KEY}`,
       },
-      body: JSON.stringify({ p_slug: slug, p_path: requestedPath }),
+      body: JSON.stringify({ p_slug: slug, p_path: rpcPath }),
     });
 
     if (!resp.ok) {
       return notFound('This site could not be loaded right now.');
     }
 
-    const rows = (await resp.json()) as Array<{ content: string | null; filename: string | null }>;
+    const rows = (await resp.json()) as Array<{
+      content: string | null;
+      filename: string | null;
+      seo_indexable: boolean | null;
+      seo_title: string | null;
+      seo_description: string | null;
+      seo_image_url: string | null;
+    }>;
     const file = Array.isArray(rows) ? rows[0] : null;
     if (!file || file.content == null) {
       return notFound('There is no published page at this address yet.');
     }
 
+    const canonical = `https://${slug}.${BASE_DOMAIN}/`;
+    if (isRobotsRequest) {
+      const body = file.seo_indexable
+        ? `User-agent: *\nAllow: /\nSitemap: ${canonical}sitemap.xml\n`
+        : 'User-agent: *\nDisallow: /\n';
+      return new Response(body, { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=300' } });
+    }
+    if (isSitemapRequest) {
+      const body = file.seo_indexable
+        ? `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${canonical}</loc></url></urlset>\n`
+        : `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>\n`;
+      return new Response(body, { status: 200, headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=300', 'X-Robots-Tag': 'noindex' } });
+    }
+
     const contentType = contentTypeFor((file.filename ?? requestedPath) || 'index.html');
-    const body = contentType.startsWith('text/html') ? injectAnalytics(file.content) : file.content;
+    const isRootHtml = contentType.startsWith('text/html') && (!normalizedPath || normalizedPath === 'index.html');
+    let body = contentType.startsWith('text/html') ? injectAnalytics(file.content) : file.content;
+    if (isRootHtml && file.seo_indexable && file.seo_title && file.seo_description) {
+      body = injectSearchMetadata(body, slug, file.seo_title, file.seo_description, file.seo_image_url);
+    }
 
     return new Response(body, {
       status: 200,
       headers: {
         'Content-Type': contentType,
         'Cache-Control': 'public, max-age=60, stale-while-revalidate=300',
-        'X-Robots-Tag': 'noindex',
+        'X-Robots-Tag': isRootHtml && file.seo_indexable
+          ? 'index,follow,max-image-preview:large,max-snippet:-1'
+          : 'noindex,follow',
       },
     });
   } catch {

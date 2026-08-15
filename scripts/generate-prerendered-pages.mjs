@@ -241,6 +241,23 @@ function buildStructuredData(routeConfig) {
     });
   }
 
+  if (routeConfig.schemaType === "collection") {
+    data.push({
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "@id": `${canonical}#collection`,
+      name: routeConfig.heroHeading || routeConfig.title,
+      description: routeConfig.description,
+      url: canonical,
+      isPartOf: { "@id": `${BASE_URL}/#website` },
+      mainEntity: {
+        "@type": "ItemList",
+        "@id": `${canonical}#items`,
+        name: routeConfig.heroHeading || routeConfig.title,
+      },
+    });
+  }
+
   // Founder answer guides mirror FounderAnswerPage.tsx: HowTo + Article.
   if (routeConfig.path.startsWith("/answers/")) {
     const updatedIso = routeConfig.lastmod || new Date().toISOString().split("T")[0];
@@ -266,8 +283,8 @@ function buildStructuredData(routeConfig) {
       "@type": "Article",
       headline: routeConfig.heroHeading,
       description: routeConfig.description,
-      datePublished: updatedIso,
-      dateModified: updatedIso,
+      datePublished: routeConfig.publishedAt || updatedIso,
+      dateModified: routeConfig.modifiedAt || updatedIso,
       author: {
         "@type": "Person",
         "@id": `${BASE_URL}/about#founder`,

@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import SEO, { createBreadcrumbSchema, createPersonSchema, createWebPageSchema } from "@/components/SEO";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Navigation from "@/components/Navigation";
@@ -43,6 +44,7 @@ const PUBLIC_PROFILE_SELECT = [
   'youtube_url',
   'github_url',
   'tiktok_url',
+  'seo_indexable',
 ].join(', ');
 
 interface PublicProfileRow {
@@ -68,6 +70,7 @@ interface PublicProfileRow {
   youtube_url: string | null;
   github_url: string | null;
   tiktok_url: string | null;
+  seo_indexable: boolean | null;
 }
 
 interface Profile {
@@ -129,6 +132,9 @@ interface Profile {
     revenue?: number;
     growth_rate?: number;
   } | null;
+  seo_indexable: boolean;
+  search_indexing_requested?: boolean | null;
+  search_indexing_review_status?: 'not_requested' | 'pending' | 'approved' | 'rejected' | null;
 }
 
 const mapPublicProfile = (profile: PublicProfileRow): Profile => ({
@@ -171,6 +177,9 @@ const mapPublicProfile = (profile: PublicProfileRow): Profile => ({
   startup_links: null,
   traction_visible: false,
   traction_metrics: null,
+  seo_indexable: profile.seo_indexable === true,
+  search_indexing_requested: null,
+  search_indexing_review_status: null,
 });
 
 interface Post {
@@ -447,10 +456,38 @@ const Profile = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Creatives Takeover</title>
-        <meta name="description" content={`View ${profile.full_name || 'user'}'s profile and posts`} />
-      </Helmet>
+      <SEO
+        title={`${profile.full_name || profile.username || 'Founder'} | Founder Profile`}
+        description={
+          profile.positioning_line
+            ? `${profile.full_name || 'Founder'} — ${profile.positioning_line}`
+            : (profile.bio || `View ${profile.full_name || 'this founder'}'s public founder profile on Creatives Takeover.`)
+        }
+        url={`/profile/${profile.username}`}
+        image={profile.avatar_url || "/og-founders-compass-2026-07.png"}
+        noindex={!profile.seo_indexable}
+        structuredData={[
+          createBreadcrumbSchema([
+            { name: "Home", url: "/" },
+            { name: profile.full_name || profile.username || "Founder", url: `/profile/${profile.username}` },
+          ]),
+          createPersonSchema({
+            name: profile.full_name || profile.username || "Founder",
+            url: `/profile/${profile.username}`,
+            description: profile.positioning_line || profile.bio || undefined,
+            image: profile.avatar_url,
+            jobTitle: profile.founder_role || profile.role,
+            sameAs: [profile.website_url, profile.linkedin_url, profile.twitter_url, profile.github_url],
+          }),
+          createWebPageSchema({
+            type: "ProfilePage",
+            name: `${profile.full_name || profile.username || 'Founder'} — Founder Profile`,
+            description: profile.positioning_line || profile.bio || "Public founder profile on Creatives Takeover.",
+            url: `/profile/${profile.username}`,
+            mainEntity: { "@id": `https://creatives-takeover.com/profile/${profile.username}#person` },
+          }),
+        ]}
+      />
       <div className="relative min-h-screen overflow-hidden">
         <ProfileWallpaper />
         <div className="relative z-10">

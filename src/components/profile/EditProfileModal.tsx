@@ -51,6 +51,8 @@ interface EditProfileModalProps {
     looking_for: string[] | null;
     startup_links: any | null;
     user_preferences?: Record<string, unknown> | null;
+    search_indexing_requested?: boolean | null;
+    search_indexing_review_status?: 'not_requested' | 'pending' | 'approved' | 'rejected' | null;
   };
   onSuccess: () => void;
 }
@@ -95,6 +97,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
     public_stage_visible: accountabilityPreferences.public_stage_visible,
     auto_share_milestones: accountabilityPreferences.auto_share_milestones,
     timezone: accountabilityPreferences.timezone,
+    search_indexing_requested: profile.search_indexing_requested === true,
   });
   const [avatarFile, setAvatarFile] = useState<string | null>(null);
   const [showCropModal, setShowCropModal] = useState(false);
@@ -222,6 +225,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
           demo: formData.demo_url || undefined,
           loom: formData.loom_url || undefined,
         },
+        search_indexing_requested: formData.search_indexing_requested,
       };
 
       const { error } = await supabase
@@ -390,6 +394,25 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
               </div>
 
               <div className="space-y-4">
+                <div className="flex items-center justify-between rounded-xl border border-border/60 bg-background/70 p-4">
+                  <div className="space-y-1 pr-4">
+                    <p className="text-sm font-medium text-foreground">Request search engine visibility</p>
+                    <p className="text-xs text-muted-foreground">
+                      Opt in to a quality review for Google and AI answer engines. Your profile stays noindex until it is complete and approved.
+                    </p>
+                    {profile.search_indexing_review_status && profile.search_indexing_review_status !== 'not_requested' ? (
+                      <p className="text-xs font-medium capitalize text-primary">
+                        Review status: {profile.search_indexing_review_status}
+                      </p>
+                    ) : null}
+                  </div>
+                  <Switch
+                    checked={formData.search_indexing_requested}
+                    onCheckedChange={(checked) => setFormData({ ...formData, search_indexing_requested: checked })}
+                    aria-label="Request search engine visibility"
+                  />
+                </div>
+
                 <div className="flex items-center justify-between rounded-xl border border-border/60 bg-background/70 p-4">
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-foreground">Show stage on public profile</p>

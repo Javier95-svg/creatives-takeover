@@ -11,7 +11,7 @@
 //   2. Social-crawler OG meta tags for /icp/:slug/public (original behavior).
 
 export const config = {
-  matcher: ['/', '/index.html', '/icp/:slug*/public'],
+  matcher: ['/', '/index.html', '/robots.txt', '/sitemap.xml', '/icp/:slug*/public'],
 };
 
 const BOT_UA =
@@ -56,9 +56,10 @@ export default async function middleware(request: Request): Promise<Response | u
       const headers = new Headers();
       const contentType = res.headers.get('content-type');
       const cacheControl = res.headers.get('cache-control');
+      const xRobotsTag = res.headers.get('x-robots-tag');
       if (contentType) headers.set('content-type', contentType);
       headers.set('cache-control', cacheControl ?? 'public, max-age=60, stale-while-revalidate=300');
-      headers.set('x-robots-tag', 'noindex');
+      headers.set('x-robots-tag', xRobotsTag ?? 'noindex,follow');
       return new Response(res.body, { status: res.status, headers });
     } catch {
       return undefined; // fail open to the SPA rather than hard-error
