@@ -199,6 +199,55 @@
       "sourceFile": "src/components/dashboard/RecommendationFeedback.tsx",
       "requiredProperties": ["user_id", "surface", "recommendation_key", "relevance", "reason", "context_version"]
     },
+    "engagement_session_started": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/hooks/useEngagementSession.ts",
+      "requiredProperties": ["session_id", "section", "plan", "days_since_signup"]
+    },
+    "engagement_session_completed": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/hooks/useEngagementSession.ts",
+      "requiredProperties": ["session_id", "section", "plan", "days_since_signup", "active_seconds", "interaction_count", "meaningful_action_count", "completion_reason"]
+    },
+    "engagement_section_transitioned": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/hooks/useEngagementSession.ts",
+      "requiredProperties": ["session_id", "from_section", "to_section"]
+    },
+    "meaningful_action_completed": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/engagementSession.ts",
+      "requiredProperties": ["session_id", "section", "plan", "days_since_signup", "recommendation_key", "action_type", "credit_cost"]
+    },
+    "return_cue_created": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/returnCues.ts",
+      "requiredProperties": ["cue_id", "section", "reason_key", "scheduled_for"]
+    },
+    "return_cue_completed": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/returnCues.ts",
+      "requiredProperties": ["cue_id", "section", "reason_key"]
+    },
+    "credit_quote_viewed": {
+      "stage": "monetization",
+      "owner": "growth",
+      "source": "client",
+      "sourceFile": "src/hooks/useCreditQuote.ts",
+      "requiredProperties": ["feature", "plan", "credit_cost", "credits_available", "affordable", "purchase_recommendation", "source"]
+    },
     "activation_first_action_opened": {
       "stage": "activation",
       "owner": "product",
@@ -592,6 +641,26 @@
         "first_customer_sprint_completed",
         "first_customer_sprint_continuation_purchased"
       ]
+    },
+    {
+      "key": "first_30_day_momentum",
+      "name": "Signup to meaningful first-30-day momentum",
+      "windowDays": 30,
+      "steps": [
+        "signup_completed",
+        "engagement_session_started",
+        "meaningful_action_completed"
+      ]
+    },
+    {
+      "key": "return_cue_loop",
+      "name": "Return cue to completed follow-up",
+      "windowDays": 30,
+      "steps": [
+        "return_cue_created",
+        "engagement_session_started",
+        "return_cue_completed"
+      ]
     }
   ],
   "cohorts": [
@@ -628,6 +697,14 @@
         "baseCohort": "paying_founders",
         "excludedEvent": "tool_opened",
         "withinDays": 14
+      }
+    },
+    {
+      "key": "engaged_first_30_days",
+      "name": "Meaningfully engaged founders — first 30 days",
+      "definition": {
+        "event": "meaningful_action_completed",
+        "withinDays": 30
       }
     }
   ],
@@ -702,6 +779,19 @@
         "subscription_started"
       ],
       "externalMonitor": "public.revenue_checkout_alerts_v1"
+    },
+    {
+      "key": "first_30_day_engagement",
+      "name": "First 30 Day Engagement",
+      "insights": [
+        "first_30_day_momentum",
+        "return_cue_loop",
+        "engagement_session_started",
+        "engagement_session_completed",
+        "engagement_section_transitioned",
+        "meaningful_action_completed",
+        "credit_quote_viewed"
+      ]
     }
   ],
   "alerts": [
@@ -733,6 +823,14 @@
       "view": "public.revenue_checkout_alerts_v1",
       "condition": "row_exists",
       "severity": "critical"
+    },
+    {
+      "key": "engagement_session_zero_volume",
+      "system": "posthog",
+      "event": "engagement_session_started",
+      "windowHours": 24,
+      "condition": "count_equals_zero",
+      "severity": "warning"
     }
   ]
 }

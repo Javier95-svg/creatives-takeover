@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Building2, DollarSign, Lock } from "lucide-react";
+import { ExternalLink, Building2, DollarSign, Lock, Bookmark, BookmarkCheck } from "lucide-react";
 import { FundingOpportunity } from "@/types/funding";
 import { Link } from "react-router-dom";
 
@@ -10,12 +10,18 @@ interface FundingOpportunityCardProps {
   opportunity: FundingOpportunity;
   profileLink?: string;
   canViewProfile?: boolean;
+  saved?: boolean;
+  saving?: boolean;
+  onSave?: () => Promise<unknown>;
 }
 
 const FundingOpportunityCard = ({
   opportunity,
   profileLink,
   canViewProfile = true,
+  saved = false,
+  saving = false,
+  onSave,
 }: FundingOpportunityCardProps) => {
   const getFallbackLogo = (url?: string) => {
     if (!url) return null;
@@ -99,12 +105,27 @@ const FundingOpportunityCard = ({
         {/* View Details Button */}
         {profileLink ? (
           canViewProfile ? (
-            <Button asChild size="sm" className="w-full mt-auto">
-            <Link to={profileLink}>
-              View Details
-              <ExternalLink className="h-3 w-3 ml-1" />
-            </Link>
-            </Button>
+            <div className="mt-auto grid grid-cols-[1fr_auto] gap-2">
+              <Button asChild size="sm">
+                <Link to={profileLink}>
+                  View Details
+                  <ExternalLink className="h-3 w-3 ml-1" />
+                </Link>
+              </Button>
+              {onSave && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="min-h-11"
+                  disabled={saved || saving}
+                  aria-label={saved ? `${opportunity.title} is saved` : `Save ${opportunity.title} to pipeline`}
+                  onClick={() => void onSave()}
+                >
+                  {saved ? <BookmarkCheck className="mr-1 h-4 w-4" /> : <Bookmark className="mr-1 h-4 w-4" />}
+                  {saved ? 'Saved' : 'Save'}
+                </Button>
+              )}
+            </div>
           ) : (
             <Button asChild size="sm" className="w-full mt-auto" variant="secondary">
               <Link to="/pricing">

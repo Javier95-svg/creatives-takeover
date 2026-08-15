@@ -365,7 +365,7 @@ export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitl
     pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'WAITLIST_GENERATION' },
   },
   // creditFeature is PMF_SCORING — the key the live PMF Lab actually charges
-  // (5 credits) — so the quoted cost matches the charge on every plan.
+  // Social actions are free; plan access and fair-use limits remain enforceable.
   pmf_lab: {
     rookie: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PMF_SCORING' },
     starter: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PMF_SCORING' },
@@ -400,16 +400,16 @@ export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitl
   },
 
   discovery_calls: {
-    rookie: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'DISCOVERY_CALL' },
-    starter: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'DISCOVERY_CALL' },
-    rising: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'DISCOVERY_CALL' },
-    pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'DISCOVERY_CALL' },
+    rookie: { state: 'full', monetizationModel: 'quota_limited' },
+    starter: { state: 'full', monetizationModel: 'quota_limited' },
+    rising: { state: 'full', monetizationModel: 'quota_limited' },
+    pro: { state: 'full', monetizationModel: 'quota_limited' },
   },
   cofounder_posts: {
-    rookie: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'COFOUNDER_POST' },
-    starter: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'COFOUNDER_POST' },
-    rising: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'COFOUNDER_POST' },
-    pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'COFOUNDER_POST' },
+    rookie: { state: 'full', monetizationModel: 'quota_limited' },
+    starter: { state: 'full', monetizationModel: 'quota_limited' },
+    rising: { state: 'full', monetizationModel: 'quota_limited' },
+    pro: { state: 'full', monetizationModel: 'quota_limited' },
   },
   angels_community: {
     rookie: { state: 'locked', monetizationModel: 'plan_gated', visibility: 'hidden', requiredPlan: 'pro' },

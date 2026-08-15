@@ -2,16 +2,19 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Lock, MapPin, DollarSign, Building2, ArrowUpRight } from "lucide-react";
+import { Lock, MapPin, DollarSign, Building2, ArrowUpRight, Bookmark, BookmarkCheck } from "lucide-react";
 import { Investor } from "@/types/investor";
 import { Link } from "react-router-dom";
 
 interface VCCardProps {
   vc: Investor;
   canViewProfile?: boolean;
+  saved?: boolean;
+  saving?: boolean;
+  onSave?: () => Promise<unknown>;
 }
 
-const VCCard = ({ vc, canViewProfile = true }: VCCardProps) => {
+const VCCard = ({ vc, canViewProfile = true, saved = false, saving = false, onSave }: VCCardProps) => {
   const [resolvedLogo, setResolvedLogo] = useState<string | null>(vc.logo_url || null);
   const fallbackInitials = vc.firm_name
     .split(/\s+/)
@@ -112,12 +115,27 @@ const VCCard = ({ vc, canViewProfile = true }: VCCardProps) => {
         </div>
 
         {canViewProfile ? (
-          <Button asChild size="sm" className="w-full mt-auto">
-            <Link to={`/insighta/vc/${vc.slug}`}>
-              View Profile
-              <ArrowUpRight className="ml-1 h-3 w-3" />
-            </Link>
-          </Button>
+          <div className="mt-auto grid grid-cols-[1fr_auto] gap-2">
+            <Button asChild size="sm">
+              <Link to={`/insighta/vc/${vc.slug}`}>
+                View Profile
+                <ArrowUpRight className="ml-1 h-3 w-3" />
+              </Link>
+            </Button>
+            {onSave && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="min-h-11"
+                disabled={saved || saving}
+                aria-label={saved ? `${vc.firm_name} is saved` : `Save ${vc.firm_name} to pipeline`}
+                onClick={() => void onSave()}
+              >
+                {saved ? <BookmarkCheck className="mr-1 h-4 w-4" /> : <Bookmark className="mr-1 h-4 w-4" />}
+                {saved ? 'Saved' : 'Save'}
+              </Button>
+            )}
+          </div>
         ) : (
           <Button asChild size="sm" className="w-full mt-auto" variant="secondary">
             <Link to="/pricing">

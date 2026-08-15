@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { isDashboardAiRankingEnabled } from '@/lib/dashboardRollout';
 import { captureEvent } from '@/lib/analytics';
-import { isDashboardSnapshotV1, type DashboardAction, type DashboardSnapshotV1 } from '@/types/dashboardSnapshot';
+import { isDashboardSnapshot, type DashboardAction, type DashboardSnapshot } from '@/types/dashboardSnapshot';
 import { useFounderCycle } from '@/hooks/useFounderCycle';
 import {
   recommendationDecisionKey,
@@ -30,7 +30,7 @@ interface RankingResult {
 }
 
 interface DashboardDataContextValue {
-  snapshot: DashboardSnapshotV1 | null;
+  snapshot: DashboardSnapshot | null;
   primaryAction: DashboardAction | null;
   isLoading: boolean;
   isFetching: boolean;
@@ -47,7 +47,7 @@ interface DashboardDataContextValue {
 
 const DashboardDataContext = createContext<DashboardDataContextValue | null>(null);
 
-function uniqueCandidates(snapshot: DashboardSnapshotV1 | null): DashboardAction[] {
+function uniqueCandidates(snapshot: DashboardSnapshot | null): DashboardAction[] {
   if (!snapshot) return [];
   const byKey = new Map<string, DashboardAction>();
   [
@@ -71,7 +71,7 @@ function isCustomerUrgent(action: DashboardAction | null | undefined) {
     );
 }
 
-function candidateHash(candidates: DashboardAction[], snapshot: DashboardSnapshotV1 | null) {
+function candidateHash(candidates: DashboardAction[], snapshot: DashboardSnapshot | null) {
   const input = JSON.stringify({
     candidates: candidates.map(({ key, urgency, reasonCodes, estimatedMinutes, toolKey }) => ({
       key,
@@ -122,12 +122,17 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
     queryFn: async () => {
       const startedAt = performance.now();
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-      const { data, error } = await supabase.rpc('get_dashboard_snapshot_v1', { p_timezone: timezone });
+      let { data, error } = await supabase.rpc('get_dashboard_snapshot_v2' as never, { p_timezone: timezone } as never);
+      if (error?.code === '42883' || error?.message?.includes('get_dashboard_snapshot_v2')) {
+        const fallback = await supabase.rpc('get_dashboard_snapshot_v1', { p_timezone: timezone });
+        data = fallback.data;
+        error = fallback.error;
+      }
       if (error) {
         captureEvent('dashboard_snapshot_failed', { duration_ms: Math.round(performance.now() - startedAt), error_code: error.code });
         throw error;
       }
-      if (!isDashboardSnapshotV1(data)) {
+      if (!isDashboardSnapshot(data)) {
         captureEvent('dashboard_snapshot_failed', { duration_ms: Math.round(performance.now() - startedAt), error_code: 'invalid_contract' });
         throw new Error('Dashboard snapshot returned an unsupported contract');
       }

@@ -295,6 +295,14 @@ verify_jwt = false
 [functions.first-customer-sprint-assistant]
 verify_jwt = true
 
+# Server-authoritative credit costs and wallet forecasts for authenticated CTAs.
+[functions.credit-quote]
+verify_jwt = true
+
+# Cron/service-role coordinated in-app and lifecycle-email return cues.
+[functions.process-return-cues]
+verify_jwt = false
+
 # Destructive account operation; the function verifies the bearer token again,
 # confirms password-based identities, cancels billing, and deletes server-side.
 [functions.delete-account]

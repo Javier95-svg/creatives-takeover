@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { completeActivationJourney, trackRetentionEvent } from '@/lib/retentionSystem';
+import { recordMeaningfulAction } from '@/lib/engagementSession';
 
 export interface SavedMentor {
   id: string;
@@ -126,6 +127,14 @@ export const useMentorSaves = () => {
         mentorId: mentor.id,
         mentorName: mentor.name,
         actionUrl: '/saved-mentors',
+      });
+      recordMeaningfulAction({
+        actionType: 'mentor_saved',
+        section: 'network',
+        plan: typeof user.user_metadata?.subscription_tier === 'string' ? user.user_metadata.subscription_tier : 'unknown',
+        daysSinceSignup: Math.max(0, Math.floor((Date.now() - new Date(user.created_at).getTime()) / 86_400_000)),
+        entityType: 'mentor',
+        entityId: mentor.id,
       });
 
       toast.success(`${mentor.name} saved. We'll use this to bring you back to the right mentor at the right time.`);

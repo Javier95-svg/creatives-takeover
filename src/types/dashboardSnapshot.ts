@@ -198,6 +198,33 @@ export interface DashboardSnapshotV1 {
   recommendations: DashboardRecommendation[];
 }
 
+export interface DashboardSnapshotV2 extends Omit<DashboardSnapshotV1, 'version'> {
+  version: 2;
+  engagement: {
+    activeDays7: number;
+    meaningfulActions7: number;
+    weeklyGoal: number;
+    nextReturnCue: {
+      id: string;
+      sourceSection: string;
+      reasonKey: string;
+      scheduledFor: string;
+      ctaUrl: string;
+    } | null;
+  };
+  crossSectionFollowUps: {
+    insighta: Array<{
+      id: string;
+      entityType: 'vc' | 'accelerator';
+      entityId: string;
+      status: string;
+      nextActionAt: string;
+    }>;
+  };
+}
+
+export type DashboardSnapshot = DashboardSnapshotV1 | DashboardSnapshotV2;
+
 export function isDashboardSnapshotV1(value: unknown): value is DashboardSnapshotV1 {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const snapshot = value as Record<string, unknown>;
@@ -208,4 +235,16 @@ export function isDashboardSnapshotV1(value: unknown): value is DashboardSnapsho
     && Boolean(snapshot.people && typeof snapshot.people === 'object')
     && Boolean(snapshot.business && typeof snapshot.business === 'object')
     && Boolean(snapshot.workspace && typeof snapshot.workspace === 'object');
+}
+
+export function isDashboardSnapshot(value: unknown): value is DashboardSnapshot {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const snapshot = value as Record<string, unknown>;
+  if (snapshot.version !== 1 && snapshot.version !== 2) return false;
+  if (!isDashboardSnapshotV1({ ...snapshot, version: 1 })) return false;
+  if (snapshot.version === 2) {
+    return Boolean(snapshot.engagement && typeof snapshot.engagement === 'object')
+      && Boolean(snapshot.crossSectionFollowUps && typeof snapshot.crossSectionFollowUps === 'object');
+  }
+  return true;
 }

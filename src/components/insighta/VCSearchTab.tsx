@@ -11,6 +11,18 @@ import { useVCViewTracking } from "@/hooks/useVCViewTracking";
 import { VCFilters as VCFiltersType } from "@/types/insighta";
 import { PLAN_SUMMARIES } from "@/config/planPermissions";
 import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
+import { useInsightaPipeline } from "@/hooks/useInsightaPipeline";
+
+const VC_FILTERS_KEY = 'insighta:vc-filters:v1';
+
+const readSavedFilters = (): VCFiltersType => {
+  if (typeof window === 'undefined') return {};
+  try {
+    return JSON.parse(window.localStorage.getItem(VC_FILTERS_KEY) || '{}') as VCFiltersType;
+  } catch {
+    return {};
+  }
+};
 
 // How many cards the grid shows before the query resolves. Anonymous visitors
 // get a six-card preview; signed-in users can page through more, but reserving
@@ -18,7 +30,7 @@ import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
 const VC_PREVIEW_CARDS = 6;
 
 const VCSearchTab = () => {
-  const [filters, setFilters] = useState<VCFiltersType>({});
+  const [filters, setFilters] = useState<VCFiltersType>(readSavedFilters);
   const [page, setPage] = useState(1);
   const pageSize = 15;
   const { vcs, loading, error, total } = useVCSearch(filters, page, pageSize);
@@ -32,6 +44,7 @@ const VCSearchTab = () => {
     loading: vcViewLoading,
     isAuthenticated,
   } = useVCViewTracking();
+  const pipeline = useInsightaPipeline();
 
   const isLimitReached = !vcViewLoading && !hasUnlimitedViews && remaining === 0;
   const isLowRemaining = !vcViewLoading && !hasUnlimitedViews && remaining > 0 && remaining <= 1;
@@ -55,6 +68,14 @@ const VCSearchTab = () => {
   useEffect(() => {
     setPage(1);
   }, [filters?.investment_stage, filters?.industry, filters?.geographic_focus, filters?.check_size_min, filters?.check_size_max, filters?.search]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(VC_FILTERS_KEY, JSON.stringify(filters));
+    } catch {
+      // Filter persistence is a progressive enhancement.
+    }
+  }, [filters]);
 
   return (
     <div className="space-y-6">
@@ -123,7 +144,19 @@ const VCSearchTab = () => {
         </div>
       ) : (
         <>
-          <VCGrid vcs={vcs} canViewProfiles={canViewProfiles} isAuthenticated={isAuthenticated} />
+          <VCGrid
+            vcs={vcs}
+            canViewProfiles={canViewProfiles}
+            isAuthenticated={isAuthenticated}
+            isSaved={(id) => pipeline.isSaved('vc', id)}
+            saving={pipeline.pending}
+            onSave={(vc) => pipeline.saveItem({
+              entityType: 'vc',
+              entityId: vc.id,
+              entityLabel: vc.firm_name,
+              entityRoute: `/insighta/vc/${vc.slug}`,
+            })}
+          />
           <InsightaPagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </>
       )}

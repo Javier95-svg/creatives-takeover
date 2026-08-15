@@ -128,7 +128,7 @@ const AdminTools = () => {
               <CardContent className="p-6">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-primary/10 rounded-lg"><CalendarClock className="h-6 w-6 text-primary" /></div>
-                  <div className="flex-1"><h3 className="font-semibold mb-1">Discovery Calls</h3><p className="text-sm text-muted-foreground mb-3">Review requests, credit holds, outcomes, and email delivery.</p><Button asChild variant="outline" size="sm"><Link to="/mentorship/admin/discovery-calls">Manage Discovery Calls</Link></Button></div>
+                  <div className="flex-1"><h3 className="font-semibold mb-1">Discovery Calls</h3><p className="text-sm text-muted-foreground mb-3">Review requests, scheduling, outcomes, and email delivery.</p><Button asChild variant="outline" size="sm"><Link to="/mentorship/admin/discovery-calls">Manage Discovery Calls</Link></Button></div>
                 </div>
               </CardContent>
             </Card>

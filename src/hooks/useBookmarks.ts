@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { recordMeaningfulAction } from '@/lib/engagementSession';
 
 export interface Bookmark {
   id: string;
@@ -57,6 +58,14 @@ export const useBookmarks = () => {
       if (error) throw error;
 
       await fetchBookmarks();
+      recordMeaningfulAction({
+        actionType: 'research_saved',
+        section: 'resources',
+        plan: typeof user.user_metadata?.subscription_tier === 'string' ? user.user_metadata.subscription_tier : 'unknown',
+        daysSinceSignup: Math.max(0, Math.floor((Date.now() - new Date(user.created_at).getTime()) / 86_400_000)),
+        entityType: 'content',
+        entityId: postId,
+      });
       toast({
         title: "Bookmarked!",
         description: "Opportunity saved to your bookmarks.",

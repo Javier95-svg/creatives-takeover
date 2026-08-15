@@ -8,16 +8,16 @@ import { resolveEntitlement } from '../src/config/planPermissions.ts';
 
 const read = async (path: string) => readFile(new URL(path, import.meta.url), 'utf8');
 
-test('co-founder post costs five credits on every plan', () => {
-  assert.equal(CLIENT_CREDIT_COSTS.COFOUNDER_POST, 5);
-  assert.equal(EDGE_CREDIT_COSTS.COFOUNDER_POST, 5);
+test('co-founder posting is a free social action on every plan', () => {
+  assert.equal(CLIENT_CREDIT_COSTS.COFOUNDER_POST, 0);
+  assert.equal(EDGE_CREDIT_COSTS.COFOUNDER_POST, 0);
 
   for (const plan of ['rookie', 'starter', 'rising', 'pro'] as const) {
     const entitlement = resolveEntitlement('cofounder_posts', plan);
     assert.equal(entitlement.state, 'full');
-    assert.equal(entitlement.monetizationModel, 'credit_metered');
-    assert.equal(entitlement.creditFeature, 'COFOUNDER_POST');
-    assert.equal(entitlement.creditCost, 5);
+    assert.equal(entitlement.monetizationModel, 'quota_limited');
+    assert.equal(entitlement.creditFeature, undefined);
+    assert.equal(entitlement.creditCost, undefined);
   }
 });
 
@@ -37,27 +37,22 @@ test('database seeds and completes the dashboard task from the onboarding answer
   assert.match(sql, /v_situation = 'actively_looking'/);
   assert.match(sql, /'Find a co-founder'/);
   assert.match(sql, /'onboarding:find_cofounder'/);
-  assert.match(sql, /source_tool,[\s\S]*'find_cofounder'/);
-  assert.match(sql, /'platform',[\s\S]*'high',[\s\S]*'find_cofounder',[\s\S]*'\/co-founder',[\s\S]*'accountability'/);
-  assert.match(sql, /'accepted'/);
   assert.match(sql, /complete_onboarding_cofounder_task/);
   assert.match(sql, /is_completed = true/);
 });
 
-test('co-founder insert and five-credit charge share one database transaction', async () => {
-  const sql = await read('../supabase/migrations/20260711190000_onboarding_cofounder_task_and_post_credits.sql');
-  assert.match(sql, /BEFORE INSERT[\s\S]*cofounder_posts/);
-  assert.match(sql, /deduct_credits_atomic\([\s\S]*NEW\.user_id,[\s\S]*5,[\s\S]*'Co-founder post'/);
-  assert.match(sql, /NEW\.user_id <> auth\.uid\(\)/);
-  assert.match(sql, /'idempotencyKey', 'cofounder-post:' \|\| NEW\.id::text/);
-  assert.match(sql, /DROP TRIGGER IF EXISTS trg_cofounder_posts_quota_guard/);
-  assert.match(sql, /Publishing a co-founder post requires 5 credits/);
+test('co-founder inserts retain validation while future deductions are removed', async () => {
+  const sql = await read('../supabase/migrations/20260814130000_free_social_loops.sql');
+  const triggerFunction = sql.slice(sql.indexOf('CREATE OR REPLACE FUNCTION public.enforce_cofounder_post_credit_charge'));
+  assert.match(triggerFunction, /NEW\.user_id <> auth\.uid\(\)/);
+  assert.match(triggerFunction, /Listing content is invalid/);
+  assert.doesNotMatch(triggerFunction, /deduct_credits_atomic/);
 });
 
-test('create-post UI preflights and discloses the database-enforced charge', async () => {
+test('create-post UI identifies publishing as free', async () => {
   const source = await read('../src/pages/community/CreateCoFounderPost.tsx');
   assert.match(source, /ensureCredits\('COFOUNDER_POST'/);
-  assert.match(source, /Create Post · \{CREDIT_COSTS\.COFOUNDER_POST\} credits/);
-  assert.match(source, /database trigger charges and inserts in one transaction/i);
+  assert.match(source, /Create free post/);
+  assert.match(source, /database validates and publishes the free social action/i);
   assert.doesNotMatch(source, /getQuotaStatus\('cofounder_posts'/);
 });

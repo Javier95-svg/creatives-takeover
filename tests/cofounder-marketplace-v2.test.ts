@@ -5,6 +5,7 @@ import { createEmptyCofounderListing, validateCofounderListing } from '../src/ty
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const sql = read('../supabase/migrations/20260712120000_cofounder_marketplace_v2.sql');
+const freeSocialSql = read('../supabase/migrations/20260814130000_free_social_loops.sql');
 const targetedNotificationSql = read('../supabase/migrations/20260713120000_target_cofounder_post_notifications.sql');
 
 test('listing validation requires an actionable compatibility profile', () => {
@@ -27,7 +28,7 @@ test('marketplace schema keeps one active listing and expires listings after 30 
   assert.match(sql, /status IN \('draft', 'active', 'paused', 'expired', 'closed', 'archived'\)/);
 });
 
-test('publish and renewal use authenticated idempotent five-credit deductions', () => {
+test('legacy publish and renewal were authenticated and idempotent', () => {
   assert.match(sql, /publish_cofounder_listing_v2/);
   assert.match(sql, /renew_cofounder_listing_v2/);
   assert.match(sql, /v_user uuid := auth\.uid\(\)/);
@@ -67,6 +68,15 @@ test('the low-supply community feed and simple post editor are the default route
   assert.match(communityPage, /filteredPosts\.slice\(pageStart, pageStart \+ POSTS_PER_PAGE\)/);
   assert.match(communityPage, /aria-label="Co-founder post pages"/);
   assert.doesNotMatch(communityPage, /1\. Publish clearly|2\. Review founders|3\. Start a conversation/);
+});
+
+test('current publish and renewal preserve idempotency without deducting credits', () => {
+  assert.match(freeSocialSql, /social_action_idempotency/);
+  assert.match(freeSocialSql, /publish_cofounder_listing_v2_metered_legacy/);
+  assert.match(freeSocialSql, /renew_cofounder_listing_v2_metered_legacy/);
+  assert.match(freeSocialSql, /SET balance = v_balance, monthly_quota = v_quota/);
+  assert.match(freeSocialSql, /DELETE FROM public\.credit_transactions[\s\S]*COFOUNDER_POST/);
+  assert.match(freeSocialSql, /without deducting credits/i);
 });
 
 test('new co-founder posts notify only onboarding users who are actively looking', () => {

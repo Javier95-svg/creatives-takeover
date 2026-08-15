@@ -42,6 +42,7 @@ import {
 import type { Mentor } from '@/types/mentor';
 import { trackDiscoveryCallWorkflow } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
+import { recordMeaningfulAction } from '@/lib/engagementSession';
 import {
   formatTimezoneLabel,
   getBookingTimezoneOptions,
@@ -254,7 +255,9 @@ export default function MentorBookingPage() {
   }, [coachingFormat, desiredOutcome, notes, topic]);
 
   const validationError = scheduleValidationError || detailsValidationError;
-  const hasEnoughCredits = (availability?.quotaStatus.totalCreditsAvailable ?? 0) >= 10;
+  const hasEnoughCredits = availability?.quotaStatus.requiresCredits === true
+    ? (availability.quotaStatus.totalCreditsAvailable ?? 0) >= availability.quotaStatus.overageCreditCost
+    : true;
 
   const saveScheduleDraft = () => {
     if (!scheduleDraftKey) return;
@@ -313,6 +316,14 @@ export default function MentorBookingPage() {
         source: 'mentor_marketplace',
         booking_mode: 'request',
       });
+      recordMeaningfulAction({
+        actionType: 'booking_created',
+        section: 'network',
+        plan: typeof user?.user_metadata?.subscription_tier === 'string' ? user.user_metadata.subscription_tier : 'unknown',
+        daysSinceSignup: user ? Math.max(0, Math.floor((Date.now() - new Date(user.created_at).getTime()) / 86_400_000)) : 0,
+        entityType: 'discovery_call',
+        entityId: response.callId ?? null,
+      });
       navigate(`/mentorship/my-bookings?call=${response.callId}`, { replace: true });
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Unable to reserve the Discovery Call.');
@@ -347,7 +358,7 @@ export default function MentorBookingPage() {
                 <AvatarFallback>{mentorInitials}</AvatarFallback>
               </Avatar>
               <div className="min-w-0">
-                <CardTitle className="flex items-center gap-2 text-2xl tracking-tight sm:text-3xl"><CalendarClock className="h-6 w-6 text-primary" />Book a Discovery Call</CardTitle>
+                <CardTitle className="flex items-center gap-2 text-2xl tracking-tight sm:text-3xl"><CalendarClock className="h-6 w-6 text-primary" />Book a free discovery call</CardTitle>
                 <CardDescription className="mt-1.5 text-sm sm:text-base">30 focused minutes with {mentor?.name}</CardDescription>
               </div>
             </div>
@@ -371,13 +382,13 @@ export default function MentorBookingPage() {
             <div className="bg-gradient-to-b from-background to-muted/[0.08] p-5 sm:p-10">
               {!availability?.featureEnabled && <Alert className="mb-5"><AlertDescription>Discovery Calls are not enabled yet.</AlertDescription></Alert>}
               {availability?.featureEnabled && !availability.available && <Alert className="mb-5"><AlertDescription>This mentor is not accepting Discovery Calls. You can still send them a message.</AlertDescription></Alert>}
-              {availability?.featureEnabled && availability.available && !hasEnoughCredits && <Alert variant="destructive" className="mb-5"><AlertDescription>You need 10 available credits. <Link className="font-semibold underline" to="/pricing#credit-packs">Buy credits</Link> or <Link className="font-semibold underline" to="/pricing">compare plans</Link>.</AlertDescription></Alert>}
+              {availability?.featureEnabled && availability.available && !hasEnoughCredits && <Alert variant="destructive" className="mb-5"><AlertDescription>Your current plan quota does not allow another call right now. <Link className="font-semibold underline" to="/pricing">Compare plans</Link>.</AlertDescription></Alert>}
               {error && <Alert variant="destructive" className="mb-5"><AlertDescription>{error}</AlertDescription></Alert>}
 
               {step === 'schedule' ? <div className="mx-auto max-w-4xl">
                 <div className="mb-8 text-center">
                   <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Book a free discovery call</h2>
-                  <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">Choose your timezone, then propose three timeslots that work for you. The mentor will receive every option and can confirm one or suggest an alternative.</p>
+                  <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">Choose your timezone, then propose three timeslots that work for you. The mentor will receive every option and can confirm one or suggest an alternative. Once confirmed, both of you receive a private Google Meet link.</p>
                 </div>
 
                 <div className="mb-6 grid gap-4 md:grid-cols-[1.25fr_1fr]">
@@ -519,17 +530,17 @@ export default function MentorBookingPage() {
                     <div className="mt-3"><Label htmlFor="notes" className="sr-only">Optional notes</Label><Textarea id="notes" className="rounded-xl border-border/70" value={notes} onChange={(event) => setNotes(event.target.value)} maxLength={900} placeholder="Links, context, or specific questions for the mentor" /></div>
                   </details>
 
-                  <Alert><Coins className="h-4 w-4" /><AlertDescription>10 credits are held when you confirm. They are charged only after the confirmed time and private Google Meet link both exist.</AlertDescription></Alert>
+                  <Alert><Coins className="h-4 w-4" /><AlertDescription>Discovery Calls are free. Your request is still protected by scheduling, fair-use, and safety limits.</AlertDescription></Alert>
                   <div className="rounded-xl border border-border/70 bg-card p-4 text-sm shadow-sm">
                     <div className="flex items-center gap-2 font-medium"><Video className="h-4 w-4" />What happens next</div>
-                    <p className="mt-2 text-muted-foreground">The mentor receives your three options. Credits remain held until a time and private Google Meet are confirmed.</p>
+                    <p className="mt-2 text-muted-foreground">The mentor receives your three options. We create a private Google Meet after a time is confirmed.</p>
                   </div>
 
                   <div className="flex flex-col-reverse gap-3 sm:flex-row">
                     <Button type="button" variant="outline" className="h-12 rounded-xl sm:w-1/3" onClick={() => { setStep('schedule'); setError(''); }}>Back</Button>
                     <Button className="h-12 rounded-xl font-semibold shadow-lg shadow-primary/15 sm:flex-1" type="submit" disabled={submitting || !availability?.available || !hasEnoughCredits || Boolean(validationError)}>
                       {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Send request · 10 credits
+                      Send free request
                     </Button>
                   </div>
                   {detailsValidationError && <p className="text-center text-sm text-muted-foreground">{detailsValidationError}</p>}

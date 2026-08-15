@@ -9,9 +9,12 @@ interface VCGridProps {
   vcs: Investor[];
   canViewProfiles?: boolean;
   isAuthenticated?: boolean | null;
+  isSaved?: (id: string) => boolean;
+  saving?: boolean;
+  onSave?: (vc: Investor) => Promise<unknown>;
 }
 
-const VCGrid = ({ vcs, canViewProfiles = true, isAuthenticated = true }: VCGridProps) => {
+const VCGrid = ({ vcs, canViewProfiles = true, isAuthenticated = true, isSaved, saving, onSave }: VCGridProps) => {
   if (vcs.length === 0) {
     return (
       <div className="text-center py-12">
@@ -77,7 +80,14 @@ const VCGrid = ({ vcs, canViewProfiles = true, isAuthenticated = true }: VCGridP
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {vcs.map((vc) => (
-        <VCCard key={vc.id} vc={vc} canViewProfile={canViewProfiles} />
+        <VCCard
+          key={vc.id}
+          vc={vc}
+          canViewProfile={canViewProfiles}
+          saved={isSaved?.(vc.id)}
+          saving={saving}
+          onSave={onSave ? () => onSave(vc) : undefined}
+        />
       ))}
     </div>
   );

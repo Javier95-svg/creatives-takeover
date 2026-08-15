@@ -181,7 +181,7 @@ function ToolTile({ tile }: { tile: JourneyToolTile }) {
   );
 }
 
-export default function FounderJourneyPanel() {
+export default function FounderJourneyPanel({ showRecommendedAction = false }: { showRecommendedAction?: boolean }) {
   const { user } = useAuth();
   const {
     snapshot,
@@ -263,7 +263,7 @@ export default function FounderJourneyPanel() {
             description="Each tool you complete lights up here, so you always know where you stand across the whole journey."
           />
           <div className="mt-4 flex flex-wrap gap-2">
-            {primaryAction && recommendedRoute ? (
+            {showRecommendedAction && primaryAction && recommendedRoute ? (
               <Button asChild size="sm">
                 <Link to={recommendedRoute} onClick={handleRecommendedOpen}>
                   {primaryAction.title}
@@ -341,7 +341,7 @@ export default function FounderJourneyPanel() {
               </DialogContent>
             </Dialog>
           </div>
-          {primaryAction ? (
+          {showRecommendedAction && primaryAction ? (
             <RecommendationFeedback
               surface="command_center"
               recommendationKey={primaryAction.key}
@@ -378,7 +378,7 @@ export default function FounderJourneyPanel() {
           </div>
         </div>
 
-        {primaryAction && recommendedRoute ? (
+        {showRecommendedAction && primaryAction && recommendedRoute ? (
           <div className="mt-5 rounded-xl border border-primary/25 bg-primary/[0.05] p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">

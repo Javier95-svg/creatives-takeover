@@ -175,7 +175,7 @@ export async function checkAndDeductCredits(
       }, false);
     }
 
-    if (amount === 0 && entitlementFeature !== 'DISCOVERY_CALL') {
+    if (amount === 0) {
       const currentCredits = await getCurrentCreditSnapshot(userId, supabase);
       return await returnWithIdempotency({
         success: true,

@@ -22,6 +22,7 @@ import { normalizeMentorExpertiseList } from "@/utils/mentorExpertise";
 import { isMentorInExactTimezone, parseTimezoneOffset } from "@/utils/mentorTimezone";
 import { trackActivity } from "@/lib/activity";
 import { getMentorTrackExpertise, parseMentorTrack } from "@/lib/mentorDemand";
+import { NetworkRelationshipInbox } from "@/components/mentor-marketplace/NetworkRelationshipInbox";
 
 import {
   Pagination,
@@ -500,6 +501,8 @@ const MentorMarketplaceHub = () => {
                         </div>
                       </div>
                     )}
+
+                    <NetworkRelationshipInbox savedMentors={savedMentors} />
 
 	                  <div className="rounded-4xl border border-border/60 bg-background/80 p-4 shadow-sm dark:bg-slate-900/75 sm:p-5">
                     <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">

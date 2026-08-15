@@ -19,7 +19,7 @@ import { CREDIT_COSTS } from '@/config/constants';
 
 const CreateCoFounderPost = () => {
   const { user } = useAuth();
-  const { ensureCredits, getCreditActionQuote, showCreditReceipt } = useCreditActions();
+  const { ensureCredits, showCreditReceipt } = useCreditActions();
   const { refreshBalance } = useCredits();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -43,11 +43,6 @@ const CreateCoFounderPost = () => {
     { id: 'finance', label: 'Finance Co-Founder (CFO)', description: 'Fundraising, financial planning' },
   ];
 
-  const postQuote = getCreditActionQuote('COFOUNDER_POST', {
-    featureName: 'Co-founder post',
-    requiredCredits: CREDIT_COSTS.COFOUNDER_POST,
-  });
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -64,14 +59,13 @@ const CreateCoFounderPost = () => {
     const approvedCredits = ensureCredits('COFOUNDER_POST', {
       featureName: 'Co-founder post',
       requiredCredits: CREDIT_COSTS.COFOUNDER_POST,
-      description: 'Publishing a co-founder post costs 5 credits on every plan.',
+      description: 'Publishing a co-founder post is free on every plan.',
     });
     if (approvedCredits === null) return;
 
     setLoading(true);
     try {
-      // The database trigger charges and inserts in one transaction. If the
-      // charge fails, the post is not created; if the insert fails, the charge rolls back.
+      // The database validates and publishes the free social action atomically.
       const { data: createdPost, error } = await supabase
         .from('cofounder_posts')
         .insert({
@@ -106,9 +100,7 @@ const CreateCoFounderPost = () => {
     } catch (error: unknown) {
       console.error('Error creating co-founder post:', error);
       const message = error instanceof Error ? error.message : 'Unknown error';
-      toast.error(message.includes('Insufficient credits')
-        ? 'You need 5 credits to publish a co-founder post.'
-        : `Failed to create post: ${message}`);
+      toast.error(`Failed to create post: ${message}`);
     } finally {
       setLoading(false);
     }
@@ -156,7 +148,7 @@ const CreateCoFounderPost = () => {
               Tell potential co-founders about your project and what you're looking for
             </p>
             <p className="text-sm font-medium text-primary">
-              Publishing costs {postQuote.requiredCredits} credits on every plan.
+              Publishing is free. Trust, fair-use, and safety controls still apply.
             </p>
           </div>
 
@@ -364,7 +356,7 @@ const CreateCoFounderPost = () => {
                   ) : (
                     <>
                       <Save className="w-4 h-4 mr-2" />
-                      Create Post · {CREDIT_COSTS.COFOUNDER_POST} credits
+                      Create free post
                     </>
                   )}
                 </Button>

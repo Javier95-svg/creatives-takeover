@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Coins, Lock, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useCreditActions } from "@/hooks/useCreditActions";
+import { useCreditQuote } from "@/hooks/useCreditQuote";
 import type { CreditFeature } from "@/config/constants";
 import { PLAN_LABELS } from "@/config/planPermissions";
 import { trackCreditCostDisclosed } from "@/lib/analytics";
@@ -24,33 +25,44 @@ export function CreditCostNotice({
 }: CreditCostNoticeProps) {
   const { getCreditActionQuote } = useCreditActions();
   const quote = getCreditActionQuote(feature, { featureName });
+  const authoritativeQuote = useCreditQuote(feature, {
+    source: "credit_cost_notice",
+    enabled: quote.status !== "locked",
+  });
+  const serverQuote = authoritativeQuote.data;
+  const requiredCredits = serverQuote?.cost ?? quote.requiredCredits;
+  const totalAvailable = serverQuote?.available ?? quote.totalAvailable;
+  const balanceAfter = serverQuote?.balanceAfter ?? Math.max(0, totalAvailable - requiredCredits);
+  const isFree = quote.status !== "locked" && requiredCredits === 0;
 
   useEffect(() => {
     trackCreditCostDisclosed({
       feature_key: quote.feature,
-      credit_cost: quote.requiredCredits,
+      credit_cost: requiredCredits,
       current_plan: quote.currentTier,
-      credits_available: quote.totalAvailable,
-      status: quote.status,
+      credits_available: totalAvailable,
+      status: isFree ? "free" : quote.status,
       source_tool: quote.featureName,
     });
-  }, [quote.currentTier, quote.feature, quote.featureName, quote.requiredCredits, quote.status, quote.totalAvailable]);
+  }, [isFree, quote.currentTier, quote.feature, quote.featureName, quote.status, requiredCredits, totalAvailable]);
 
-  if (quote.status === "free" && !showFree) {
+  if (isFree && !showFree) {
     return null;
   }
 
   const icon = quote.status === "locked"
     ? <Lock className="h-3.5 w-3.5" />
-    : quote.status === "free"
+    : isFree
     ? <Sparkles className="h-3.5 w-3.5" />
     : <Coins className="h-3.5 w-3.5" />;
 
   const copy = quote.status === "locked"
     ? `Unlock with ${PLAN_LABELS[quote.requiredTier ?? "pro"]}`
-    : quote.status === "free"
+    : isFree
     ? "Free on your plan"
-    : `Costs ${quote.requiredCredits} credits - You have ${quote.totalAvailable} remaining`;
+    : serverQuote
+    ? `Costs ${requiredCredits} credits · ${balanceAfter} after this action${serverQuote.affordable ? "" : ` · ${serverQuote.recommendedPurchase === "top_up" ? "Top-up recommended" : "Plan recommended"}`}`
+    : `Costs ${requiredCredits} credits · ${totalAvailable} available`;
 
   if (variant === "inline") {
     return (

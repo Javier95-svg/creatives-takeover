@@ -64,14 +64,13 @@ export const CREDIT_COSTS = {
   PROMPT_GENERATION: 2,
 
   // Community Features
-  DISCOVERY_CALL: 10,
+  DISCOVERY_CALL: 0,
   SERVICE_MARKETPLACE_MESSAGE: 5,
   SERVICE_MARKETPLACE_EMAIL: 10,
-  // First message to each mentor is free; every message after that costs this.
-  // Enforced server-side by the charge_mentor_dm trigger on message insert.
-  MENTOR_DM: 3,
-  // Every successful Find a Co-Founder post is charged on insert by a DB trigger.
-  COFOUNDER_POST: 5,
+  // Mentor messages are free; server-side fair-use and safety controls still apply.
+  MENTOR_DM: 0,
+  // Co-founder publishing and renewal are free social actions.
+  COFOUNDER_POST: 0,
 } as const;
 
 // Type for credit cost feature names

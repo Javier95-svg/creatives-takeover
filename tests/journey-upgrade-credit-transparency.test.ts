@@ -43,7 +43,9 @@ test('metered tools disclose credit costs before action', () => {
   const pitchSource = readFileSync(new URL('../src/components/pitch-deck-analyzer/PitchDeckUploader.tsx', import.meta.url), 'utf8');
   const promptSource = readFileSync(new URL('../src/pages/PromptLibrary.tsx', import.meta.url), 'utf8');
 
-  assert.match(costNoticeSource, /Costs \$\{quote\.requiredCredits\} credits/);
+  assert.match(costNoticeSource, /useCreditQuote/);
+  assert.match(costNoticeSource, /Costs \$\{requiredCredits\} credits/);
+  assert.match(costNoticeSource, /\$\{balanceAfter\} after this action/);
   assert.match(waitlistSource, /feature="WAITLIST_GENERATION"/);
   assert.match(gtmSource, /feature="GTM_ANALYSIS"/);
   assert.match(mvpSource, /lastActionQuote\.creditCost/);

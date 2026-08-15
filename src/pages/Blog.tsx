@@ -12,6 +12,8 @@ import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect, useState } from "react";
 import { FundingFilters } from "@/types/funding";
 import { useSearchParams } from "react-router-dom";
+import { InsightaPipelinePanel } from "@/components/insighta/InsightaPipelinePanel";
+import { useInsightaPipeline } from "@/hooks/useInsightaPipeline";
 
 // Insighta: VC Search, Email Templates, Accelerator Hunt - v1.0
 interface BlogProps {
@@ -23,6 +25,7 @@ const Blog = ({ defaultTab = 'vc-search' }: BlogProps) => {
   const [searchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [fundingFilters, setFundingFilters] = useState<FundingFilters>({});
+  const pipeline = useInsightaPipeline();
 
   // Get tab from URL query parameter or use defaultTab prop
   const tabFromUrl = searchParams.get('tab') || defaultTab;
@@ -87,6 +90,16 @@ const Blog = ({ defaultTab = 'vc-search' }: BlogProps) => {
               Everything you need to connect with investors and raise capital
             </p>
           </div>
+
+          {pipeline.isAuthenticated && (
+            <InsightaPipelinePanel
+              items={pipeline.items}
+              loading={pipeline.loading}
+              pending={pipeline.pending}
+              onUpdate={pipeline.updateItem}
+              onRemove={pipeline.removeItem}
+            />
+          )}
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="adaptive-tabs grid w-full grid-cols-3 mb-8 rounded-full border border-border/70 bg-muted/40 p-1 shadow-sm">

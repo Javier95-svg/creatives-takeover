@@ -629,7 +629,7 @@ const AdminMentorEditor = () => {
                   <p className="mt-1 text-xs text-muted-foreground">Private. Request and booking emails are delivered here.</p>
                 </div>
                 <div className="flex items-center justify-between rounded-lg border p-4">
-                  <div><Label htmlFor="discovery_enabled">Discovery Calls enabled</Label><p className="text-xs text-muted-foreground">Allows founders to request a tracked 30-minute call for 10 credits.</p></div>
+                  <div><Label htmlFor="discovery_enabled">Discovery Calls enabled</Label><p className="text-xs text-muted-foreground">Allows founders to request a tracked, free 30-minute call.</p></div>
                   <Switch id="discovery_enabled" checked={discoverySettings.enabled} disabled={!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(discoverySettings.notificationEmail.trim())} onCheckedChange={(enabled) => setDiscoverySettings((current) => ({ ...current, enabled }))} />
                 </div>
                 <div className="grid gap-4 rounded-lg border p-4 sm:grid-cols-2">

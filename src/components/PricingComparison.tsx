@@ -68,7 +68,7 @@ const features: FeatureCategory[] = [
   {
     category: "Community",
     items: [
-      { feature: "Find a Co-Founder Posting", rookie: "5 credits/post", starter: "5 credits/post", rising: "5 credits/post", pro: "5 credits/post" },
+      { feature: "Find a Co-Founder Posting", rookie: "Free", starter: "Free", rising: "Free", pro: "Free" },
       { feature: "Find Your Angel", rookie: false, starter: false, rising: false, pro: "Included" },
     ],
   },

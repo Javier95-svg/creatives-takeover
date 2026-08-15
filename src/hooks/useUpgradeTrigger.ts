@@ -52,9 +52,9 @@ export const UPGRADE_TRIGGER_CONFIGS: Record<UpgradeTriggerKey, UpgradeTriggerCo
   rookie_quota_cofounder: {
     key: 'rookie_quota_cofounder',
     targetPlan: 'starter',
-    headline: 'You need credits for a co-founder post.',
-    body: 'Co-founder posting is open on every plan and costs 5 credits per published post.',
-    ctaLabel: 'Get more credits',
+    headline: 'Build a stronger co-founder search.',
+    body: 'Co-founder posting is free. Starter adds deeper validation tools to strengthen your listing and outreach.',
+    ctaLabel: 'See Starter',
   },
   starter_stage3_complete: {
     key: 'starter_stage3_complete',
@@ -66,9 +66,9 @@ export const UPGRADE_TRIGGER_CONFIGS: Record<UpgradeTriggerKey, UpgradeTriggerCo
   starter_quota_cofounder: {
     key: 'starter_quota_cofounder',
     targetPlan: 'rising',
-    headline: 'You need credits for a co-founder post.',
-    body: 'Co-founder posting is open on every plan and costs 5 credits per published post.',
-    ctaLabel: 'Get more credits',
+    headline: 'Turn co-founder interest into execution.',
+    body: 'Co-founder posting is free. Rising adds more build and launch capacity for teams ready to execute.',
+    ctaLabel: 'See Rising',
   },
   starter_tool_mvp: {
     key: 'starter_tool_mvp',

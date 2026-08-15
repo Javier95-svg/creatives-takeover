@@ -13,9 +13,21 @@ import { Lock, UserPlus } from "lucide-react";
 import { PLAN_SUMMARIES } from "@/config/planPermissions";
 import { PREVIEW_MODE_CONTENT_BLUR, PREVIEW_MODE_OVERLAY_BACKGROUND } from "@/components/ui/previewOverlayStyles";
 import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
+import { useInsightaPipeline } from "@/hooks/useInsightaPipeline";
+
+const ACCELERATOR_FILTERS_KEY = 'insighta:accelerator-filters:v1';
+
+const readSavedFilters = (): AcceleratorFiltersType => {
+  if (typeof window === 'undefined') return {};
+  try {
+    return JSON.parse(window.localStorage.getItem(ACCELERATOR_FILTERS_KEY) || '{}') as AcceleratorFiltersType;
+  } catch {
+    return {};
+  }
+};
 
 const AcceleratorHuntTab = () => {
-  const [filters, setFilters] = useState<AcceleratorFiltersType>({});
+  const [filters, setFilters] = useState<AcceleratorFiltersType>(readSavedFilters);
   const [page, setPage] = useState(1);
   const pageSize = 15;
   const { accelerators, loading, error, total } = useAcceleratorSearch(filters, page, pageSize);
@@ -29,6 +41,7 @@ const AcceleratorHuntTab = () => {
     loading: acceleratorViewLoading,
     isAuthenticated,
   } = useAcceleratorViewTracking();
+  const pipeline = useInsightaPipeline();
 
   const isLimitReached = !acceleratorViewLoading && !hasUnlimitedViews && remaining === 0;
   const isLowRemaining = !acceleratorViewLoading && !hasUnlimitedViews && remaining > 0 && remaining <= 1;
@@ -53,6 +66,14 @@ const AcceleratorHuntTab = () => {
   useEffect(() => {
     setPage(1);
   }, [filterResetKey]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(ACCELERATOR_FILTERS_KEY, JSON.stringify(filters));
+    } catch {
+      // Filter persistence is a progressive enhancement.
+    }
+  }, [filters]);
 
   return (
     <div className="space-y-6">
@@ -167,6 +188,14 @@ const AcceleratorHuntTab = () => {
                   opportunity={accelerator}
                   profileLink={`/insighta/accelerator/${accelerator.slug || accelerator.id}`}
                   canViewProfile={canViewProfiles}
+                  saved={pipeline.isSaved('accelerator', accelerator.id)}
+                  saving={pipeline.pending}
+                  onSave={() => pipeline.saveItem({
+                    entityType: 'accelerator',
+                    entityId: accelerator.id,
+                    entityLabel: accelerator.title,
+                    entityRoute: `/insighta/accelerator/${accelerator.slug || accelerator.id}`,
+                  })}
                 />
               ))}
             </div>

@@ -113,8 +113,8 @@ const creditBreakdown: {
   community: [
     {
       name: "Find a Co-Founder Posting",
-      description: `Available on every plan. Each successfully published cofounder post costs ${CREDIT_COSTS.COFOUNDER_POST} credits.`,
-      badge: `${CREDIT_COSTS.COFOUNDER_POST} credits`,
+      description: "Available on every plan. Publishing, renewing, and responding are free.",
+      badge: "Free",
       badgeVariant: "outline",
       badgeClassName: "bg-info-subtle dark:bg-info/30",
     },

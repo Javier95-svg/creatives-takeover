@@ -175,8 +175,8 @@ test('core entitlement rules reflect the pricing contract', () => {
 
   const rookieDiscoveryCalls = resolveEntitlement('discovery_calls', 'rookie');
   assert.equal(rookieDiscoveryCalls.state, 'full');
-  assert.equal(rookieDiscoveryCalls.monetizationModel, 'credit_metered');
-  assert.equal(rookieDiscoveryCalls.creditCost, 10);
+  assert.equal(rookieDiscoveryCalls.monetizationModel, 'quota_limited');
+  assert.equal(rookieDiscoveryCalls.creditCost, undefined);
 
   const risingAngelAccess = resolveEntitlement('angels_community', 'rising');
   assert.equal(risingAngelAccess.state, 'locked');

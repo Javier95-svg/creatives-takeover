@@ -514,9 +514,9 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
                   size="default"
                   className="h-10 min-w-0 px-1 text-xs transition-all duration-200 hover:shadow-md sm:px-3 sm:text-sm"
                 >
-                  <Link to={`/mentorship/book/${mentor.id}`} title="Request a 30-minute Discovery Call for 10 credits">
+                  <Link to={`/mentorship/book/${mentor.id}`} title="Request a free 30-minute Discovery Call">
                     <CalendarClock className="hidden h-4 w-4 shrink-0 sm:block" />
-                    Discovery Call
+                    Request Discovery Call
                   </Link>
                 </Button>
               ) : (
@@ -528,7 +528,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
                   className="h-10 min-w-0 px-1 text-xs sm:px-3 sm:text-sm"
                 >
                   <CalendarClock className="hidden h-4 w-4 shrink-0 sm:block" />
-                  Discovery Call
+                  Request Discovery Call
                 </Button>
               )}
               <Button
@@ -536,7 +536,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
                 onClick={handleSendMessage}
                 disabled={!hasMessagingAccount}
                 title={hasMessagingAccount
-                  ? "Your first message to this mentor is free; follow-ups cost 3 credits each."
+                  ? "Mentor messages are free; fair-use and safety limits still apply."
                   : "Direct messaging is not enabled for this mentor."}
                 className="h-10 min-w-0 px-1 text-xs transition-all duration-200 hover:shadow-md sm:px-3 sm:text-sm"
               >

@@ -24,6 +24,25 @@ import { useTaskCalendarEngine } from '@/hooks/useTaskCalendarEngine';
 import { getCompletionKey, getLocalDateKey, type RoutineTask } from '@/lib/routineTemplates';
 import { getTaskRuntimeStatus, shouldShowAsDailyCommand, toDateKey, type CalendarTaskRow } from '@/lib/taskCalendar';
 import { RecommendationFeedback } from '@/components/dashboard/RecommendationFeedback';
+import { useDashboardFocus } from '@/contexts/DashboardDataContext';
+import { getDashboardTool } from '@/config/dashboardToolRegistry';
+import { useCreditQuote } from '@/hooks/useCreditQuote';
+import type { CreditFeature } from '@/config/constants';
+import { cn } from '@/lib/utils';
+import { recordMeaningfulAction } from '@/lib/engagementSession';
+
+const CREDIT_FEATURE_BY_TOOL: Partial<Record<string, CreditFeature>> = {
+  demo_studio: 'WAITLIST_GENERATION',
+  waitlist_maker: 'WAITLIST_GENERATION',
+  pmf_lab: 'PMF_ANALYSIS',
+  mvp_builder: 'APP_BUILDER_GENERATE',
+  tech_stack: 'TECH_STACK_GENERATION',
+  gtm_strategist: 'GTM_ANALYSIS',
+  traction_engine: 'TRACTION_ENGINE_SCORECARD',
+  pitch_deck_analyzer: 'PITCH_DECK_ANALYZER',
+  decision_sprint: 'SPRINT_TASK_GENERATION',
+  insighta_test: 'FUNDRAISING_READINESS_ANALYSIS',
+};
 
 function getFirstName(value: string | null | undefined): string {
   const trimmed = (value ?? '').trim();
@@ -35,6 +54,13 @@ export default function DashboardTodayCockpit() {
   const { user } = useAuth();
   const routine = useRoutine();
   const dailyMission = useDailyMission();
+  const { snapshot, primaryAction, isOffline, isStale } = useDashboardFocus();
+  const primaryTool = primaryAction ? getDashboardTool(primaryAction.toolKey) : null;
+  const creditFeature = primaryAction ? CREDIT_FEATURE_BY_TOOL[primaryAction.toolKey] ?? null : null;
+  const creditQuote = useCreditQuote(creditFeature, {
+    source: 'dashboard_primary_action',
+    enabled: Boolean(primaryAction && creditFeature),
+  });
   const {
     completeTask,
     groupedTasks,
@@ -87,6 +113,11 @@ export default function DashboardTodayCockpit() {
     : null;
   const showWeeklyRow =
     weekly.weeklyMissionProgress != null || weekly.totalTasksThisWeek > 0 || routineMomentumVisible;
+  const engagementPlan = snapshot?.entitlements.plan
+    ?? (typeof user?.user_metadata?.subscription_tier === 'string' ? user.user_metadata.subscription_tier : 'unknown');
+  const engagementDays = user
+    ? Math.max(0, Math.floor((Date.now() - new Date(user.created_at).getTime()) / 86_400_000))
+    : 0;
 
   if (loading) {
     return <Skeleton className="mb-6 h-64 rounded-xl" />;
@@ -115,6 +146,94 @@ export default function DashboardTodayCockpit() {
             </>
           }
         />
+
+        <section
+          className="mt-5 rounded-2xl border border-primary/30 bg-background/80 p-4 shadow-sm sm:p-5"
+          aria-labelledby="dashboard-primary-action"
+        >
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <p id="dashboard-primary-action" className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+                  Do this next
+                </p>
+                {primaryAction ? <Badge variant="outline">About {primaryAction.estimatedMinutes} min</Badge> : null}
+                {creditFeature ? (
+                  <Badge variant={creditQuote.data?.affordable === false ? 'destructive' : 'secondary'}>
+                    {creditQuote.isLoading
+                      ? 'Checking credits…'
+                      : creditQuote.data?.giftApplied
+                        ? 'First use free'
+                        : `${creditQuote.data?.cost ?? 0} credits`}
+                  </Badge>
+                ) : <Badge variant="secondary">Free</Badge>}
+              </div>
+              <h2 className="mt-2 text-lg font-semibold text-foreground">
+                {primaryAction?.title ?? 'Plan one useful move for today'}
+              </h2>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+                {primaryAction?.description
+                  ?? 'Your command center will prioritize the next action as soon as you add a task, routine, or startup artifact.'}
+              </p>
+              {creditQuote.data ? (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {creditQuote.data.affordable
+                    ? `${creditQuote.data.balanceAfter} credits remain after this action${creditQuote.data.coveredNextActions > 0 ? `, enough for ${creditQuote.data.coveredNextActions} likely next action${creditQuote.data.coveredNextActions === 1 ? '' : 's'}` : ''}.`
+                    : `You need ${creditQuote.data.cost - creditQuote.data.available} more credits. A ${creditQuote.data.recommendedPurchase === 'top_up' ? 'top-up' : 'plan'} is the best fit.`}
+                </p>
+              ) : null}
+              {isOffline || isStale ? (
+                <p className="mt-2 text-xs text-warning">
+                  {isOffline ? 'You are offline. Showing your last saved priorities.' : 'Refreshing your latest progress…'}
+                </p>
+              ) : null}
+            </div>
+            <Button
+              asChild={Boolean(primaryAction && primaryTool)}
+              disabled={creditQuote.data?.affordable === false}
+              className="shrink-0"
+            >
+              {primaryAction && primaryTool ? (
+                <Link to={primaryTool.route}>
+                  Continue in {primaryTool.label}
+                  <ArrowRight className="ml-1.5 h-4 w-4" />
+                </Link>
+              ) : (
+                <span>Ready when you are</span>
+              )}
+            </Button>
+          </div>
+          {primaryAction ? (
+            <RecommendationFeedback
+              surface="command_center"
+              recommendationKey={primaryAction.key}
+              metadata={{ recommendation_family: primaryAction.toolKey }}
+            />
+          ) : null}
+          {snapshot && snapshot.focus.secondaryActions.length > 0 ? (
+            <div className="mt-4 border-t border-border/60 pt-3">
+              <p className="mb-2 text-xs font-medium text-muted-foreground">Then, if you have time</p>
+              <div className="grid gap-2 sm:grid-cols-3">
+                {snapshot.focus.secondaryActions.slice(0, 3).map((action) => {
+                  const tool = getDashboardTool(action.toolKey);
+                  return (
+                    <Link
+                      key={action.key}
+                      to={tool.route}
+                      className={cn(
+                        'rounded-lg border border-border/60 bg-card/70 px-3 py-2 text-sm transition-colors',
+                        'hover:border-primary/35 hover:bg-primary/[0.04]',
+                      )}
+                    >
+                      <span className="block truncate font-medium text-foreground">{action.title}</span>
+                      <span className="text-xs text-muted-foreground">{tool.label} · {action.estimatedMinutes} min</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+        </section>
 
         {totalCount > 0 ? (
           <div className="mt-5">
@@ -156,7 +275,14 @@ export default function DashboardTodayCockpit() {
                   size="sm"
                   variant="outline"
                   className="shrink-0"
-                  onClick={() => void dailyMission.markAsDone()}
+                  onClick={() => void dailyMission.markAsDone().then(() => recordMeaningfulAction({
+                    actionType: 'task_completed',
+                    section: 'dashboard',
+                    plan: engagementPlan,
+                    daysSinceSignup: engagementDays,
+                    entityType: 'daily_mission',
+                    entityId: dailyMission.mission?.id ?? null,
+                  }))}
                   disabled={dailyMission.completing}
                 >
                   {dailyMission.completing ? 'Saving...' : 'Mark done'}
@@ -205,7 +331,14 @@ export default function DashboardTodayCockpit() {
                     <li key={task.id}>
                       <button
                         type="button"
-                        onClick={() => void routine.setTaskStatus(task, 'daily', 'completed')}
+                        onClick={() => void routine.setTaskStatus(task, 'daily', 'completed').then(() => recordMeaningfulAction({
+                          actionType: 'routine_completed',
+                          section: 'dashboard',
+                          plan: engagementPlan,
+                          daysSinceSignup: engagementDays,
+                          entityType: 'routine_task',
+                          entityId: task.id,
+                        }))}
                         disabled={routine.isSaving}
                         className="flex w-full items-center gap-2.5 rounded-lg border border-border/50 bg-background/80 px-3 py-2 text-left transition-colors hover:border-primary/40 hover:bg-primary/[0.03]"
                       >
@@ -250,7 +383,14 @@ export default function DashboardTodayCockpit() {
                     <li key={task.id}>
                       <button
                         type="button"
-                        onClick={() => void completeTask(task, true)}
+                        onClick={() => void completeTask(task, true).then(() => recordMeaningfulAction({
+                          actionType: 'task_completed',
+                          section: 'dashboard',
+                          plan: engagementPlan,
+                          daysSinceSignup: engagementDays,
+                          entityType: 'task',
+                          entityId: task.id,
+                        }))}
                         className="flex w-full items-center gap-2.5 rounded-lg border border-border/50 bg-background/80 px-3 py-2 text-left transition-colors hover:border-primary/40 hover:bg-primary/[0.03]"
                       >
                         <Circle className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden="true" />
@@ -297,6 +437,22 @@ export default function DashboardTodayCockpit() {
                 to="/dashboard/routine"
               />
             ) : null}
+          </div>
+        ) : null}
+        {snapshot?.version === 2 ? (
+          <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-border/60 bg-background/60 px-4 py-3 text-xs text-muted-foreground">
+            <span className="font-semibold text-foreground">Weekly momentum</span>
+            <Badge variant="outline">{snapshot.engagement.activeDays7}/{snapshot.engagement.weeklyGoal} active days</Badge>
+            <Badge variant="outline">{snapshot.engagement.meaningfulActions7} meaningful actions</Badge>
+            {snapshot.engagement.nextReturnCue ? (
+              <Link to={snapshot.engagement.nextReturnCue.ctaUrl} className="ml-auto font-medium text-primary hover:underline">
+                Next return {new Date(snapshot.engagement.nextReturnCue.scheduledFor).toLocaleDateString()}
+              </Link>
+            ) : (
+              <Link to="/dashboard/routine" className="ml-auto font-medium text-primary hover:underline">
+                Schedule your next check-in
+              </Link>
+            )}
           </div>
         ) : null}
       </CardContent>

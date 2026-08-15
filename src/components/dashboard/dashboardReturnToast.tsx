@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { ToastAction } from '@/components/ui/toast';
 import { trackToolMilestoneDashboardReturnClicked } from '@/lib/analytics';
 import { supabase } from '@/integrations/supabase/client';
+import { recordMeaningfulAction } from '@/lib/engagementSession';
 
 export const DASHBOARD_RETURN_ROUTE = '/dashboard';
 const RETURN_LABEL = 'View command center';
@@ -20,6 +21,14 @@ function publishToolMilestone(tool: string) {
   });
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('ct:tool-milestone', { detail: { tool } }));
+    recordMeaningfulAction({
+      actionType: 'artifact_created',
+      section: tool === 'pitch_deck_analyzer' ? 'insighta' : 'bizmap',
+      plan: 'unknown',
+      daysSinceSignup: 0,
+      entityType: 'tool_output',
+      entityId: tool,
+    });
   }
 }
 

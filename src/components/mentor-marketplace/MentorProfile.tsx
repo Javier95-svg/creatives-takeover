@@ -521,20 +521,20 @@ export const MentorProfile = ({ mentor }: MentorProfileProps) => {
                     variant={mentor.discovery_call_available ? "default" : "outline"}
                     disabled={!mentor.discovery_call_available}
                     title={mentor.discovery_call_available
-                      ? "Request a 30-minute Discovery Call for 10 credits"
+                      ? "Request a free 30-minute Discovery Call"
                       : "Discovery Calls are unavailable for this mentor"}
                     onClick={() => navigate(`/mentorship/book/${mentor.id}`)}
                     className="h-10 min-w-0 px-1 text-xs transition-all duration-200 hover:shadow-md sm:px-3 sm:text-sm"
                   >
                     <CalendarClock className="hidden h-4 w-4 shrink-0 sm:block" />
-                    Discovery Call
+                    Request Discovery Call
                   </Button>
                   <Button
                     size="default"
                     onClick={handleSendMessage}
                     disabled={!hasMessagingAccount}
                     title={hasMessagingAccount
-                      ? "Your first message to this mentor is free; follow-ups cost 3 credits each."
+                      ? "Mentor messages are free; fair-use and safety limits still apply."
                       : "Direct messaging is not enabled for this mentor."}
                     className="h-10 min-w-0 px-1 text-xs transition-all duration-200 hover:shadow-md sm:px-3 sm:text-sm"
                   >

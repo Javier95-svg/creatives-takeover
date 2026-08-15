@@ -8,6 +8,7 @@ import { handleError, getUserMessage } from '@/lib/errors';
 import { completeActivationJourney, trackRetentionEvent } from '@/lib/retentionSystem';
 import { messagingV2 } from '@/lib/messagingV2';
 import { useQueryClient } from '@tanstack/react-query';
+import { recordMeaningfulAction } from '@/lib/engagementSession';
 
 export interface Conversation {
   id: string;
@@ -1108,6 +1109,15 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         }
       }
 
+      recordMeaningfulAction({
+        actionType: 'message_sent',
+        section: 'network',
+        plan: typeof user.user_metadata?.subscription_tier === 'string' ? user.user_metadata.subscription_tier : 'unknown',
+        daysSinceSignup: Math.max(0, Math.floor((Date.now() - new Date(user.created_at).getTime()) / 86_400_000)),
+        entityType: 'conversation',
+        entityId: conversationId,
+      });
+
       return persistedMessage;
     } catch (error) {
       if (uploadedPaths.length > 0) {
@@ -1119,13 +1129,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         senderId: user?.id
       });
 
-      // The mentor-DM charge trigger raises INSUFFICIENT_CREDITS when the sender
-      // can't afford the 3-credit message; surface that specifically.
-      const rawMessage = error instanceof Error ? error.message : String(error ?? '');
-      const isCreditBlock = /INSUFFICIENT_CREDITS/i.test(rawMessage) || /Messaging a mentor costs/i.test(rawMessage);
-      const errorMessage = isCreditBlock
-        ? 'Messaging a mentor costs 3 credits and your balance is too low. Top up to keep the conversation going.'
-        : getUserMessage(error);
+      const errorMessage = getUserMessage(error);
       const failedMessage: Message = {
         ...optimisticMessage,
         id: optimisticId,

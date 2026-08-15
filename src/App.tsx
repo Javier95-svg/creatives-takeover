@@ -20,6 +20,7 @@ import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import ScrollToTop from "./components/ScrollToTop";
 import AdminRoute from "@/components/AdminRoute";
 import { useInteractionTelemetry } from "@/hooks/useInteractionTelemetry";
+import { useEngagementSession } from "@/hooks/useEngagementSession";
 import { captureReferralFromUrl } from "@/lib/referral";
 
 const PulseWidget = lazy(() => import("@/components/pulse/PulseWidget"));
@@ -210,6 +211,11 @@ const InteractionTelemetryBridge = () => {
   return null;
 };
 
+const EngagementSessionBridge = () => {
+  useEngagementSession();
+  return null;
+};
+
 const ReferralCaptureBridge = () => {
   const location = useLocation();
   useEffect(() => {
@@ -270,6 +276,7 @@ function App() {
                   <Suspense fallback={<div style={{ minHeight: '100vh', background: '#1a1a2e' }} />}>
                     <ScrollToTop />
                     <InteractionTelemetryBridge />
+                    <EngagementSessionBridge />
                     <ReferralCaptureBridge />
                     <DeferredGlobalFeatures />
                     <UpgradePromptProvider>
