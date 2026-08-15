@@ -1,4 +1,4 @@
-import { useContext, useMemo } from 'react';
+import { useContext, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -30,6 +31,10 @@ import { useCreditQuote } from '@/hooks/useCreditQuote';
 import type { CreditFeature } from '@/config/constants';
 import { cn } from '@/lib/utils';
 import { recordMeaningfulAction } from '@/lib/engagementSession';
+import { captureEvent } from '@/lib/analytics';
+import { recordRecommendationOutcome } from '@/lib/recommendationLearning';
+import { rememberSocialRecommendation } from '@/lib/socialInteractionAnalytics';
+import { useFeatureFlagEnabled } from '@/hooks/usePosthogFeatureFlag';
 
 const CREDIT_FEATURE_BY_TOOL: Partial<Record<string, CreditFeature>> = {
   demo_studio: 'WAITLIST_GENERATION',
@@ -54,8 +59,11 @@ export default function DashboardTodayCockpit() {
   const { user } = useAuth();
   const routine = useRoutine();
   const dailyMission = useDailyMission();
+  const socialRecommendationsFlag = useFeatureFlagEnabled('dashboard-social-recommendations');
   const { snapshot, primaryAction, isOffline, isStale } = useDashboardFocus();
   const primaryTool = primaryAction ? getDashboardTool(primaryAction.toolKey) : null;
+  const primaryRoute = primaryAction?.actionUrl || primaryTool?.route || null;
+  const primaryInteraction = primaryAction?.interaction ?? null;
   const creditFeature = primaryAction ? CREDIT_FEATURE_BY_TOOL[primaryAction.toolKey] ?? null : null;
   const creditQuote = useCreditQuote(creditFeature, {
     source: 'dashboard_primary_action',
@@ -118,6 +126,44 @@ export default function DashboardTodayCockpit() {
   const engagementDays = user
     ? Math.max(0, Math.floor((Date.now() - new Date(user.created_at).getTime()) / 86_400_000))
     : 0;
+  const shownSocialKey = useRef<string | null>(null);
+  const socialSnapshot = socialRecommendationsFlag === true && snapshot?.version === 3 ? snapshot.social : null;
+
+  useEffect(() => {
+    if (!primaryAction?.interaction || shownSocialKey.current === primaryAction.key) return;
+    shownSocialKey.current = primaryAction.key;
+    captureEvent('social_recommendation_shown', {
+      recommendation_key: primaryAction.key,
+      interaction_type: primaryAction.interaction.type,
+      counterparty_type: primaryAction.interaction.counterpartyType,
+      source: 'dashboard_primary_action',
+      surface: 'command_center',
+      section: 'dashboard',
+      plan: engagementPlan,
+      days_since_signup: engagementDays,
+    });
+  }, [engagementDays, engagementPlan, primaryAction]);
+
+  const trackSocialClick = (action = primaryAction) => {
+    if (!action?.interaction) return;
+    rememberSocialRecommendation(action);
+    captureEvent('social_recommendation_clicked', {
+      recommendation_key: action.key,
+      interaction_type: action.interaction.type,
+      counterparty_type: action.interaction.counterpartyType,
+      source: 'dashboard',
+      surface: 'command_center',
+      section: 'dashboard',
+      plan: engagementPlan,
+      days_since_signup: engagementDays,
+    });
+    void recordRecommendationOutcome({
+      recommendationKey: action.key,
+      surface: 'command_center',
+      outcomeType: 'opened',
+      source: 'dashboard_social_recommendation',
+    }).catch(() => undefined);
+  };
 
   if (loading) {
     return <Skeleton className="mb-6 h-64 rounded-xl" />;
@@ -157,6 +203,7 @@ export default function DashboardTodayCockpit() {
                 <p id="dashboard-primary-action" className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
                   Do this next
                 </p>
+                {primaryInteraction ? <Badge variant="secondary">Connect with a person</Badge> : null}
                 {primaryAction ? <Badge variant="outline">About {primaryAction.estimatedMinutes} min</Badge> : null}
                 {creditFeature ? (
                   <Badge variant={creditQuote.data?.affordable === false ? 'destructive' : 'secondary'}>
@@ -168,9 +215,17 @@ export default function DashboardTodayCockpit() {
                   </Badge>
                 ) : <Badge variant="secondary">Free</Badge>}
               </div>
-              <h2 className="mt-2 text-lg font-semibold text-foreground">
-                {primaryAction?.title ?? 'Plan one useful move for today'}
-              </h2>
+              <div className="mt-2 flex items-center gap-3">
+                {primaryInteraction ? (
+                  <Avatar className="h-10 w-10 border">
+                    <AvatarImage src={primaryInteraction.avatarUrl ?? undefined} alt="" />
+                    <AvatarFallback>{primaryInteraction.displayName.slice(0, 1).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                ) : null}
+                <h2 className="text-lg font-semibold text-foreground">
+                  {primaryAction?.title ?? 'Plan one useful move for today'}
+                </h2>
+              </div>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
                 {primaryAction?.description
                   ?? 'Your command center will prioritize the next action as soon as you add a task, routine, or startup artifact.'}
@@ -189,13 +244,13 @@ export default function DashboardTodayCockpit() {
               ) : null}
             </div>
             <Button
-              asChild={Boolean(primaryAction && primaryTool)}
+              asChild={Boolean(primaryAction && primaryRoute)}
               disabled={creditQuote.data?.affordable === false}
               className="shrink-0"
             >
-              {primaryAction && primaryTool ? (
-                <Link to={primaryTool.route}>
-                  Continue in {primaryTool.label}
+              {primaryAction && primaryRoute ? (
+                <Link to={primaryRoute} onClick={() => trackSocialClick(primaryAction)}>
+                  {primaryInteraction?.ctaLabel ?? `Continue in ${primaryTool?.label ?? 'platform'}`}
                   <ArrowRight className="ml-1.5 h-4 w-4" />
                 </Link>
               ) : (
@@ -219,14 +274,15 @@ export default function DashboardTodayCockpit() {
                   return (
                     <Link
                       key={action.key}
-                      to={tool.route}
+                      to={action.actionUrl || tool.route}
+                      onClick={() => trackSocialClick(action)}
                       className={cn(
                         'rounded-lg border border-border/60 bg-card/70 px-3 py-2 text-sm transition-colors',
                         'hover:border-primary/35 hover:bg-primary/[0.04]',
                       )}
                     >
                       <span className="block truncate font-medium text-foreground">{action.title}</span>
-                      <span className="text-xs text-muted-foreground">{tool.label} · {action.estimatedMinutes} min</span>
+                      <span className="text-xs text-muted-foreground">{action.interaction?.ctaLabel ?? tool.label} · {action.estimatedMinutes} min</span>
                     </Link>
                   );
                 })}
@@ -234,6 +290,15 @@ export default function DashboardTodayCockpit() {
             </div>
           ) : null}
         </section>
+
+        {socialSnapshot ? (
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label="Relationship momentum this week">
+            <MetricTile label="Interactions" value={socialSnapshot.completedInteractions7} />
+            <MetricTile label="People reached" value={socialSnapshot.uniquePeople7} />
+            <MetricTile label="Replies sent" value={socialSnapshot.repliesSent7} />
+            <MetricTile label="Replies received" value={socialSnapshot.repliesReceived7} />
+          </div>
+        ) : null}
 
         {totalCount > 0 ? (
           <div className="mt-5">

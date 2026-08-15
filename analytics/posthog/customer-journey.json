@@ -227,6 +227,41 @@
       "sourceFile": "src/lib/engagementSession.ts",
       "requiredProperties": ["session_id", "section", "plan", "days_since_signup", "recommendation_key", "action_type", "credit_cost"]
     },
+    "social_recommendation_shown": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/components/dashboard/DashboardTodayCockpit.tsx",
+      "requiredProperties": ["recommendation_key", "interaction_type", "counterparty_type", "source", "surface"]
+    },
+    "social_recommendation_clicked": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/components/dashboard/DashboardTodayCockpit.tsx",
+      "requiredProperties": ["recommendation_key", "interaction_type", "counterparty_type", "source", "surface"]
+    },
+    "social_contact_cta_clicked": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/socialInteractionAnalytics.ts",
+      "requiredProperties": ["interaction_type", "counterparty_type", "source", "source_entity_type"]
+    },
+    "social_interaction_completed": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/socialInteractionAnalytics.ts",
+      "requiredProperties": ["interaction_type", "counterparty_type", "source", "source_entity_type", "recommendation_key", "recommended"]
+    },
+    "social_reply_received": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/socialInteractionAnalytics.ts",
+      "requiredProperties": ["interaction_type", "counterparty_type", "source", "source_entity_type"]
+    },
     "return_cue_created": {
       "stage": "retention",
       "owner": "product",
@@ -661,6 +696,16 @@
         "engagement_session_started",
         "return_cue_completed"
       ]
+    },
+    {
+      "key": "dashboard_social_interaction",
+      "name": "Dashboard recommendation to completed human interaction",
+      "windowDays": 7,
+      "steps": [
+        "social_recommendation_shown",
+        "social_recommendation_clicked",
+        "social_interaction_completed"
+      ]
     }
   ],
   "cohorts": [
@@ -790,6 +835,11 @@
         "engagement_session_completed",
         "engagement_section_transitioned",
         "meaningful_action_completed",
+        "dashboard_social_interaction",
+        "social_recommendation_shown",
+        "social_recommendation_clicked",
+        "social_interaction_completed",
+        "social_reply_received",
         "credit_quote_viewed"
       ]
     }

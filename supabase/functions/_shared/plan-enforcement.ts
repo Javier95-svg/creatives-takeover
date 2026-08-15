@@ -165,10 +165,10 @@ const FEATURE_RULES: Partial<Record<EnforcedFeature, Record<Plan, FeatureRule>>>
     pro: { mode: 'included' },
   },
   SERVICE_MARKETPLACE_MESSAGE: {
-    rookie: { mode: 'charge' },
-    starter: { mode: 'charge' },
-    rising: { mode: 'charge' },
-    pro: { mode: 'charge' },
+    rookie: { mode: 'included' },
+    starter: { mode: 'included' },
+    rising: { mode: 'included' },
+    pro: { mode: 'included' },
   },
   SERVICE_MARKETPLACE_EMAIL: {
     rookie: { mode: 'charge' },

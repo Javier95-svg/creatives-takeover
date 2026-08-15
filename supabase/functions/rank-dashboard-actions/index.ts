@@ -26,7 +26,16 @@ const DEFAULT_POLICY = "collective_bayesian_v2";
 const MAX_CANDIDATES = 10;
 const MAX_RATIONALE_LENGTH = 180;
 
-type Candidate = LearningCandidate;
+type PriorityBand = "human_reply" | "human_request" | "urgent_commitment" | "proactive_social" | "general";
+type Candidate = LearningCandidate & { priorityBand: PriorityBand };
+
+const PRIORITY_WEIGHT: Record<PriorityBand, number> = {
+  human_reply: 0,
+  human_request: 1,
+  urgent_commitment: 2,
+  proactive_social: 3,
+  general: 4,
+};
 
 interface PolicyConfig {
   active_policy_version: string;
@@ -56,6 +65,11 @@ function parseCandidates(value: unknown): Candidate[] {
     if (typeof row.key !== "string" || typeof row.toolKey !== "string" || seen.has(row.key)) return [];
     seen.add(row.key);
     const urgency = row.urgency === "high" || row.urgency === "low" ? row.urgency : "medium";
+    const priorityBand: PriorityBand =
+      row.priorityBand === "human_reply" || row.priorityBand === "human_request"
+        || row.priorityBand === "urgent_commitment" || row.priorityBand === "proactive_social"
+        ? row.priorityBand
+        : "general";
     return [{
       key: row.key.slice(0, 160),
       toolKey: row.toolKey.slice(0, 80),
@@ -64,6 +78,7 @@ function parseCandidates(value: unknown): Candidate[] {
         ? row.reasonCodes.filter((entry): entry is string => typeof entry === "string").slice(0, 8)
         : [],
       estimatedMinutes: Math.max(1, Math.min(240, Number(row.estimatedMinutes) || 15)),
+      priorityBand,
     }];
   });
 }
@@ -135,7 +150,7 @@ async function aiBaseRanking(
           {
             role: "system",
             content:
-              "Rank only the supplied founder action keys. Prefer deadlines, waiting human replies, commitments, stage blockers, stale signals, then optional growth. Return JSON with orderedCandidateKeys and rationaleByKey. Never invent or omit a key.",
+              "Rank only the supplied founder action keys inside their supplied priority band. Human replies and requests are protected ahead of commitments; never demote them. Return JSON with orderedCandidateKeys and rationaleByKey. Never invent or omit a key.",
           },
           { role: "user", content: JSON.stringify({ candidates }) },
         ],
@@ -219,9 +234,11 @@ serve(async (req) => {
     .map((candidate) => candidate.key);
   const unsuppressed = originalCandidates.filter((candidate) => !suppressedKeys.includes(candidate.key));
   const candidatePool = unsuppressed.length > 0 ? unsuppressed : [originalCandidates[0]];
+  const highestPriority = Math.min(...candidatePool.map((candidate) => PRIORITY_WEIGHT[candidate.priorityBand]));
+  const priorityPool = candidatePool.filter((candidate) => PRIORITY_WEIGHT[candidate.priorityBand] === highestPriority);
   const urgencyWeight = { high: 3, medium: 2, low: 1 } as const;
-  const highestUrgency = Math.max(...candidatePool.map((candidate) => urgencyWeight[candidate.urgency]));
-  const candidates = candidatePool.filter((candidate) => urgencyWeight[candidate.urgency] === highestUrgency);
+  const highestUrgency = Math.max(...priorityPool.map((candidate) => urgencyWeight[candidate.urgency]));
+  const candidates = priorityPool.filter((candidate) => urgencyWeight[candidate.urgency] === highestUrgency);
   const deterministicKey = candidates[0].key;
   const assignment = resolveAssignment(authData.user.id, snapshotHash, config);
   const segmentKeys = contextSegmentKeys(context);

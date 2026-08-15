@@ -9,6 +9,7 @@ import { completeActivationJourney, trackRetentionEvent } from '@/lib/retentionS
 import { messagingV2 } from '@/lib/messagingV2';
 import { useQueryClient } from '@tanstack/react-query';
 import { recordMeaningfulAction } from '@/lib/engagementSession';
+import { trackSocialInteractionCompleted, trackSocialReplyReceived } from '@/lib/socialInteractionAnalytics';
 
 export interface Conversation {
   id: string;
@@ -813,6 +814,10 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
                 queryKey: messagePageQueryKey(user.id, activeConversationId),
                 refetchType: 'none'
               });
+              const isReply = (messagesRef.current[activeConversationId] || []).some(
+                (message) => message.sender_id === user?.id && !message.id.startsWith('temp-')
+              );
+              if (isReply) trackSocialReplyReceived('messages_realtime');
             }
           }
 
@@ -913,6 +918,9 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     const optimisticTimestamp = new Date().toISOString();
     const hadUserMessageBefore = (messagesRef.current[conversationId] || []).some(
       (message) => message.sender_id === user.id && !message.id.startsWith('temp-')
+    );
+    const hadIncomingMessageBefore = (messagesRef.current[conversationId] || []).some(
+      (message) => message.sender_id !== user.id && !message.id.startsWith('temp-')
     );
     const existingSender = (messagesRef.current[conversationId] || []).find(
       (message) => message.sender_id === user.id
@@ -1116,6 +1124,12 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         daysSinceSignup: Math.max(0, Math.floor((Date.now() - new Date(user.created_at).getTime()) / 86_400_000)),
         entityType: 'conversation',
         entityId: conversationId,
+      });
+      trackSocialInteractionCompleted({
+        interactionType: hadIncomingMessageBefore ? 'reply_sent' : 'message_sent',
+        counterpartyType: 'founder',
+        source: 'messages',
+        sourceEntityType: 'conversation',
       });
 
       return persistedMessage;

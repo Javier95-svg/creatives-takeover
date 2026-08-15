@@ -258,6 +258,7 @@ export function useDashboardAction() {
           if (error) throw error;
           break;
         }
+        case 'open_social_action':
         case 'open_tool':
           return;
         default:

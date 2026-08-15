@@ -69,7 +69,7 @@ export const CREDIT_COSTS = {
 
   // Community Features
   DISCOVERY_CALL: 0,
-  SERVICE_MARKETPLACE_MESSAGE: 5,
+  SERVICE_MARKETPLACE_MESSAGE: 0,
   SERVICE_MARKETPLACE_EMAIL: 10,
   // Mentor messages are free; server-side fair-use and safety controls still apply.
   MENTOR_DM: 0,

@@ -13,11 +13,17 @@ import {
 } from '@/lib/recommendationLearning';
 import { trackRetentionEvent } from '@/lib/retentionSystem';
 
-const REASONS: Array<[RecommendationFeedbackReason, string]> = [
+const BASE_REASONS: Array<[RecommendationFeedbackReason, string]> = [
   ['already_completed', 'Already completed'],
   ['wrong_stage', 'Wrong stage'],
   ['wrong_goal', 'Wrong goal'],
   ['too_much_time', 'Too much time'],
+];
+
+const SOCIAL_REASONS: Array<[RecommendationFeedbackReason, string]> = [
+  ['already_contacted', 'Already contacted'],
+  ['not_right_person', 'Not the right person'],
+  ['remind_later', 'Remind me later'],
 ];
 
 export function RecommendationFeedback({
@@ -41,6 +47,7 @@ export function RecommendationFeedback({
     if (typeof activationIntent === 'string' && activationIntent.trim()) return activationIntent;
     return surface;
   }, [metadata.activation_intent, surface]);
+  const reasons = recommendationKey.startsWith('social:') ? SOCIAL_REASONS : BASE_REASONS;
 
   useEffect(() => {
     setSubmitted(false);
@@ -114,7 +121,7 @@ export function RecommendationFeedback({
         <div className="basis-full pt-1" role="group" aria-label="Why was this recommendation not relevant?">
           <p className="mb-1.5 text-xs text-muted-foreground">What was off?</p>
           <div className="flex flex-wrap gap-1.5">
-            {REASONS.map(([reason, label]) => (
+            {reasons.map(([reason, label]) => (
               <Button key={reason} type="button" size="sm" variant="outline" className="h-7 text-xs" onClick={() => submit('not_relevant', reason)}>
                 {label}
               </Button>

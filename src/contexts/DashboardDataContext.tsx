@@ -14,6 +14,7 @@ import {
   recordRecommendationDecision,
   type RecommendationAssignment,
 } from '@/lib/recommendationLearning';
+import { buildDashboardCandidateQueue, dashboardPriorityBand } from '@/lib/socialRecommendation';
 
 export const dashboardSnapshotQueryKey = (userId: string | null | undefined) => ['dashboard-snapshot-v1', userId] as const;
 
@@ -73,12 +74,13 @@ function isCustomerUrgent(action: DashboardAction | null | undefined) {
 
 function candidateHash(candidates: DashboardAction[], snapshot: DashboardSnapshot | null) {
   const input = JSON.stringify({
-    candidates: candidates.map(({ key, urgency, reasonCodes, estimatedMinutes, toolKey }) => ({
+    candidates: candidates.map(({ key, urgency, reasonCodes, estimatedMinutes, toolKey, priorityBand }) => ({
       key,
       urgency,
       reasonCodes,
       estimatedMinutes,
       toolKey,
+      priorityBand,
     })),
     materialSignals: snapshot ? {
       stage: snapshot.journey.currentStage,
@@ -103,6 +105,7 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
   const founderCycle = useFounderCycle();
   const queryClient = useQueryClient();
   const aiRankingFlag = useFeatureFlagEnabled('dashboard-ai-ranking');
+  const socialRecommendationsFlag = useFeatureFlagEnabled('dashboard-social-recommendations');
   const userId = user?.id ?? null;
   const [isOffline, setIsOffline] = useState(() => typeof navigator !== 'undefined' && !navigator.onLine);
   const recordedDecisionKeys = useRef(new Set<string>());
@@ -122,11 +125,16 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
     queryFn: async () => {
       const startedAt = performance.now();
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-      let { data, error } = await supabase.rpc('get_dashboard_snapshot_v2' as never, { p_timezone: timezone } as never);
+      let { data, error } = await supabase.rpc('get_dashboard_snapshot_v3' as never, { p_timezone: timezone } as never);
+      if (error?.code === '42883' || error?.message?.includes('get_dashboard_snapshot_v3')) {
+        const v2Fallback = await supabase.rpc('get_dashboard_snapshot_v2' as never, { p_timezone: timezone } as never);
+        data = v2Fallback.data;
+        error = v2Fallback.error;
+      }
       if (error?.code === '42883' || error?.message?.includes('get_dashboard_snapshot_v2')) {
-        const fallback = await supabase.rpc('get_dashboard_snapshot_v1', { p_timezone: timezone });
-        data = fallback.data;
-        error = fallback.error;
+        const v1Fallback = await supabase.rpc('get_dashboard_snapshot_v1', { p_timezone: timezone });
+        data = v1Fallback.data;
+        error = v1Fallback.error;
       }
       if (error) {
         captureEvent('dashboard_snapshot_failed', { duration_ms: Math.round(performance.now() - startedAt), error_code: error.code });
@@ -176,14 +184,17 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
 
   const candidates = useMemo(() => {
     const snapshotCandidates = uniqueCandidates(snapshotQuery.data ?? null);
-    if (!cyclePrimary || isCustomerUrgent(snapshotQuery.data?.focus.primaryAction)) {
-      return snapshotCandidates;
-    }
-    return [
-      cyclePrimary,
-      ...snapshotCandidates.filter((candidate) => candidate.key !== cyclePrimary.key),
-    ].slice(0, 10);
-  }, [cyclePrimary, snapshotQuery.data]);
+    const socialCandidates = socialRecommendationsFlag === true && snapshotQuery.data?.version === 3
+      ? snapshotQuery.data.social.candidates
+      : [];
+    const baseCandidates = !cyclePrimary || isCustomerUrgent(snapshotQuery.data?.focus.primaryAction)
+      ? snapshotCandidates
+      : [
+          cyclePrimary,
+          ...snapshotCandidates.filter((candidate) => candidate.key !== cyclePrimary.key),
+        ].slice(0, 10);
+    return buildDashboardCandidateQueue(baseCandidates, socialCandidates);
+  }, [cyclePrimary, snapshotQuery.data, socialRecommendationsFlag]);
   const rankableCandidates = candidates;
   const snapshotHash = useMemo(
     () => candidateHash(rankableCandidates, snapshotQuery.data ?? null),
@@ -201,12 +212,13 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
         body: {
           snapshotHash: rankingSnapshotHash,
           allowAi: aiRankingEnabled,
-          candidates: rankableCandidates.map(({ key, urgency, reasonCodes, estimatedMinutes, toolKey }) => ({
-            key,
-            urgency,
-            reasonCodes,
-            estimatedMinutes,
-            toolKey,
+          candidates: rankableCandidates.map((action) => ({
+            key: action.key,
+            urgency: action.urgency,
+            reasonCodes: action.reasonCodes,
+            estimatedMinutes: action.estimatedMinutes,
+            toolKey: action.toolKey,
+            priorityBand: dashboardPriorityBand(action),
           })),
         },
       });
@@ -217,6 +229,7 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!userId) return;
+    const onSocialChange = () => void queryClient.invalidateQueries({ queryKey: dashboardSnapshotQueryKey(userId) });
     const channel = supabase
       .channel(`dashboard-activity:${userId}`)
       .on(
@@ -224,6 +237,11 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
         { event: '*', schema: 'public', table: 'user_activity_log', filter: `user_id=eq.${userId}` },
         () => void queryClient.invalidateQueries({ queryKey: dashboardSnapshotQueryKey(userId) }),
       )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'social_interaction_events', filter: `actor_user_id=eq.${userId}` }, onSocialChange)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, onSocialChange)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'friend_requests' }, onSocialChange)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cofounder_interests' }, onSocialChange)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'discovery_calls' }, onSocialChange)
       .subscribe();
 
     const onToolMilestone = () => void queryClient.invalidateQueries({ queryKey: dashboardSnapshotQueryKey(userId) });
@@ -254,12 +272,27 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
   }, [rankableCandidates, rankingQuery.data, snapshotQuery.data]);
 
   const effectivePrimary = rankedPrimary;
+  const effectiveSecondary = useMemo(
+    () => candidates.filter((candidate) => candidate.key !== effectivePrimary?.key).slice(0, 3),
+    [candidates, effectivePrimary?.key],
+  );
+  const effectiveSnapshot = useMemo<DashboardSnapshot | null>(() => {
+    if (!snapshotQuery.data) return null;
+    return {
+      ...snapshotQuery.data,
+      focus: {
+        ...snapshotQuery.data.focus,
+        primaryAction: effectivePrimary,
+        secondaryActions: effectiveSecondary,
+      },
+    } as DashboardSnapshot;
+  }, [effectivePrimary, effectiveSecondary, snapshotQuery.data]);
 
   const decision = useMemo(() => {
     if (!effectivePrimary || !snapshotQuery.data) return null;
     const rankingSelectedKey = rankingQuery.data?.orderedCandidateKeys?.[0];
     const selectedByRanker = effectivePrimary.key === rankingSelectedKey;
-    const deterministicKey = snapshotQuery.data.focus.primaryAction?.key ?? effectivePrimary.key;
+    const deterministicKey = candidates[0]?.key ?? snapshotQuery.data.focus.primaryAction?.key ?? effectivePrimary.key;
     const policyVersion = selectedByRanker
       ? rankingQuery.data?.policyVersion ?? 'collective_v1'
       : effectivePrimary.key === cyclePrimary?.key
@@ -327,7 +360,7 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
   }, [decision, rankingSnapshotHash]);
 
   const value = useMemo<DashboardDataContextValue>(() => ({
-    snapshot: snapshotQuery.data ?? null,
+    snapshot: effectiveSnapshot,
     primaryAction: effectivePrimary,
     isLoading: snapshotQuery.isLoading,
     isFetching: snapshotQuery.isFetching,
@@ -342,7 +375,7 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
     refresh: async () => {
       await snapshotQuery.refetch();
     },
-  }), [decision, effectivePrimary, isOffline, snapshotQuery]);
+  }), [decision, effectivePrimary, effectiveSnapshot, isOffline, snapshotQuery]);
 
   return <DashboardDataContext.Provider value={value}>{children}</DashboardDataContext.Provider>;
 }

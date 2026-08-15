@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { trackSocialInteractionCompleted } from '@/lib/socialInteractionAnalytics';
 
 // Fired whenever connection-request state changes (a request is answered, or an
 // acceptance notification is acknowledged). Every `useSocial` instance listens
@@ -382,6 +383,12 @@ export const useSocial = (targetUserId?: string) => {
 
       setFriendStatus('pending_sent');
       toast.success('Connection request sent');
+      trackSocialInteractionCompleted({
+        interactionType: 'connection_request_sent',
+        counterpartyType: 'founder',
+        source: 'network',
+        sourceEntityType: 'friend_request',
+      });
     } catch (error) {
       console.error('Error sending friend request:', error);
       toast.error('Failed to send connection request');
@@ -414,6 +421,12 @@ export const useSocial = (targetUserId?: string) => {
       if (action === 'accept') {
         setFriendStatus('friends');
         toast.success('Connection request accepted');
+        trackSocialInteractionCompleted({
+          interactionType: 'connection_accepted',
+          counterpartyType: 'founder',
+          source: 'network',
+          sourceEntityType: 'friend_request',
+        });
       } else {
         toast.success('Connection request declined');
       }

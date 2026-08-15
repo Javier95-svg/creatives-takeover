@@ -7,6 +7,7 @@ import { useCreditActions } from "@/hooks/useCreditActions";
 import { useMessaging } from "@/hooks/useMessaging";
 import type { MarketplaceService } from "@/types/serviceMarketplace";
 import { getServiceProfilePath, resolveServiceMessageUserId } from "@/utils/serviceMarketplace";
+import { trackSocialContactCta } from "@/lib/socialInteractionAnalytics";
 
 export type ServiceMarketplaceContactAction = "message" | "email";
 
@@ -49,6 +50,12 @@ export function useServiceMarketplaceContact(service: MarketplaceService | null)
 
   const handleMessage = useCallback(async () => {
     if (!service) return;
+    trackSocialContactCta({
+      interactionType: "service_message",
+      counterpartyType: "service_provider",
+      source: "service_marketplace",
+      sourceEntityType: "service",
+    });
 
     const providerUserId = resolveServiceMessageUserId(service);
     if (!providerUserId) {
@@ -71,23 +78,14 @@ export function useServiceMarketplaceContact(service: MarketplaceService | null)
         return;
       }
 
-      const charged = await deductCredits("SERVICE_MARKETPLACE_MESSAGE", {
-        featureName: "Service Marketplace Message",
-        requiredCredits: CREDIT_COSTS.SERVICE_MARKETPLACE_MESSAGE,
-        description: "Send a direct message to a service provider.",
-        metadata: getCreditMetadata("message"),
-      });
-
-      if (charged) {
-        navigate(`/messages?conversationId=${conversationId}`);
-      }
+      navigate(`/messages?conversationId=${conversationId}`);
     } catch (error) {
       console.error("Error starting service conversation:", error);
       toast.error("Failed to start conversation. Please try again.");
     } finally {
       setChargingAction(null);
     }
-  }, [deductCredits, getCreditMetadata, navigate, requireAuthenticatedUser, service, startConversation, user?.id]);
+  }, [navigate, requireAuthenticatedUser, service, startConversation, user?.id]);
 
   const handleEmail = useCallback(async () => {
     if (!service) return;

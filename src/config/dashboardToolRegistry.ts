@@ -61,6 +61,7 @@ const definitions: DashboardToolDefinition[] = [
   { key: 'saved_mentors', label: 'Saved Mentors', route: '/saved-mentors', stage: 'MORE', icon: BookmarkCheck, inlineActions: ['remove_saved_mentor', 'create_follow_up_task'] },
   { key: 'find_mentor', label: 'Find a Mentor', route: '/mentorship', stage: 'IDENTITY', icon: Users, inlineActions: ['save_mentor', 'create_task', 'open_tool'] },
   { key: 'find_cofounder', label: 'Find a Co-Founder', route: '/co-founder', stage: 'IDENTITY', icon: Handshake, inlineActions: ['open_tool'] },
+  { key: 'marketplace', label: 'Marketplace', route: '/marketplace', stage: 'MORE', icon: Handshake, inlineActions: ['open_social_action', 'open_tool'] },
   { key: 'directories', label: 'Directories', route: '/directories', stage: 'TRACTION', icon: Search, entitlement: 'directories', inlineActions: ['open_tool'] },
   { key: 'decision_sprint', label: 'Decision Sprint', route: '/decision-sprint', stage: 'VALIDATING', icon: ClipboardList, inlineActions: ['open_tool'] },
   { key: 'find_angel', label: 'Find your Angel', route: '/investors', stage: 'FUNDRAISING', icon: Sparkles, entitlement: 'angels_community', inlineActions: ['open_tool'] },

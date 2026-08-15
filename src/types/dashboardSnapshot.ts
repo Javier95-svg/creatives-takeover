@@ -1,5 +1,21 @@
 export type DashboardUrgency = 'high' | 'medium' | 'low';
 
+export type DashboardPriorityBand =
+  | 'human_reply'
+  | 'human_request'
+  | 'urgent_commitment'
+  | 'proactive_social'
+  | 'general';
+
+export interface DashboardInteractionContext {
+  type: string;
+  counterpartyType: 'mentor' | 'service_provider' | 'cofounder' | 'founder';
+  counterpartyId: string | null;
+  displayName: string;
+  avatarUrl: string | null;
+  ctaLabel: string;
+}
+
 export type DashboardActionKind =
   | 'complete_task'
   | 'reschedule_task'
@@ -15,6 +31,7 @@ export type DashboardActionKind =
   | 'toggle_content_bookmark'
   | 'toggle_funding_bookmark'
   | 'create_task'
+  | 'open_social_action'
   | 'open_tool';
 
 export interface DashboardAction {
@@ -29,6 +46,9 @@ export interface DashboardAction {
   estimatedMinutes: number;
   dueAt: string | null;
   actionKind: DashboardActionKind;
+  actionUrl?: string | null;
+  priorityBand?: DashboardPriorityBand;
+  interaction?: DashboardInteractionContext | null;
 }
 
 export interface DashboardTask {
@@ -223,7 +243,18 @@ export interface DashboardSnapshotV2 extends Omit<DashboardSnapshotV1, 'version'
   };
 }
 
-export type DashboardSnapshot = DashboardSnapshotV1 | DashboardSnapshotV2;
+export interface DashboardSnapshotV3 extends Omit<DashboardSnapshotV2, 'version'> {
+  version: 3;
+  social: {
+    completedInteractions7: number;
+    uniquePeople7: number;
+    repliesSent7: number;
+    repliesReceived7: number;
+    candidates: DashboardAction[];
+  };
+}
+
+export type DashboardSnapshot = DashboardSnapshotV1 | DashboardSnapshotV2 | DashboardSnapshotV3;
 
 export function isDashboardSnapshotV1(value: unknown): value is DashboardSnapshotV1 {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -240,11 +271,16 @@ export function isDashboardSnapshotV1(value: unknown): value is DashboardSnapsho
 export function isDashboardSnapshot(value: unknown): value is DashboardSnapshot {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const snapshot = value as Record<string, unknown>;
-  if (snapshot.version !== 1 && snapshot.version !== 2) return false;
+  if (snapshot.version !== 1 && snapshot.version !== 2 && snapshot.version !== 3) return false;
   if (!isDashboardSnapshotV1({ ...snapshot, version: 1 })) return false;
-  if (snapshot.version === 2) {
-    return Boolean(snapshot.engagement && typeof snapshot.engagement === 'object')
+  if (snapshot.version === 2 || snapshot.version === 3) {
+    const hasV2Fields = Boolean(snapshot.engagement && typeof snapshot.engagement === 'object')
       && Boolean(snapshot.crossSectionFollowUps && typeof snapshot.crossSectionFollowUps === 'object');
+    if (!hasV2Fields) return false;
+    if (snapshot.version === 3) {
+      return Boolean(snapshot.social && typeof snapshot.social === 'object')
+        && Array.isArray((snapshot.social as Record<string, unknown>).candidates);
+    }
   }
   return true;
 }

@@ -6,7 +6,10 @@ export type RecommendationFeedbackReason =
   | 'already_completed'
   | 'wrong_stage'
   | 'wrong_goal'
-  | 'too_much_time';
+  | 'too_much_time'
+  | 'already_contacted'
+  | 'not_right_person'
+  | 'remind_later';
 
 export interface RecommendationCandidateExposure {
   key: string;
