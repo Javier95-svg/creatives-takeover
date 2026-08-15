@@ -110,35 +110,32 @@ AS $$
     );
 $$;
 
--- Rebuild the safe public projection and expose only the derived eligibility
--- value, not the moderation fields themselves.
-CREATE OR REPLACE VIEW public.public_profiles AS
-SELECT
-  p.id,
-  p.username,
-  p.full_name,
-  p.avatar_url,
-  p.bio,
-  p.positioning_line,
-  p.creative_niche,
-  p.followers_count,
-  p.following_count,
-  p.location,
-  p.startup_name,
-  p.startup_tagline,
-  p.startup_stage,
-  p.startup_industry,
-  p.website_url,
-  p.twitter_url,
-  p.linkedin_url,
-  p.instagram_url,
-  p.facebook_url,
-  p.youtube_url,
-  p.github_url,
-  p.tiktok_url,
-  p.country,
-  public.profile_is_search_indexable(p) AS seo_indexable
-FROM public.profiles p;
+-- Preserve the live public projection's exact column order. Production may
+-- contain additional safe fields (for example is_coach) that are not present
+-- in older repository snapshots. PostgreSQL matches CREATE OR REPLACE VIEW
+-- columns positionally, so rebuilding from a hard-coded list can be mistaken
+-- for a column rename. Append only the derived eligibility column instead.
+DO $$
+DECLARE
+  v_public_columns text;
+BEGIN
+  SELECT string_agg(format('p.%I', column_name), ', ' ORDER BY ordinal_position)
+  INTO v_public_columns
+  FROM information_schema.columns
+  WHERE table_schema = 'public'
+    AND table_name = 'public_profiles'
+    AND column_name <> 'seo_indexable';
+
+  IF v_public_columns IS NULL THEN
+    RAISE EXCEPTION 'public.public_profiles must exist before applying the SEO migration';
+  END IF;
+
+  EXECUTE format(
+    'CREATE OR REPLACE VIEW public.public_profiles AS SELECT %s, public.profile_is_search_indexable(p) AS seo_indexable FROM public.profiles p',
+    v_public_columns
+  );
+END;
+$$;
 
 REVOKE ALL ON TABLE public.public_profiles FROM PUBLIC, anon, authenticated;
 GRANT SELECT ON TABLE public.public_profiles TO anon, authenticated;

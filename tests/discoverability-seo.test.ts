@@ -102,6 +102,9 @@ test("founder and MVP indexing are review-gated server-side", () => {
   assert.match(migration, /profile_is_search_indexable/);
   assert.match(migration, /char_length\(btrim\(COALESCE\(p\.bio, ''\)\)\) >= 120/);
   assert.match(migration, /guard_search_indexing_review/);
+  assert.match(migration, /string_agg\(format\('p\.%I', column_name\), ', ' ORDER BY ordinal_position\)/);
+  assert.match(migration, /column_name <> 'seo_indexable'/);
+  assert.match(migration, /CREATE OR REPLACE VIEW public\.public_profiles AS SELECT %s/);
   assert.match(publishedSite, /seo_indexable/);
   assert.match(publishedSite, /index,follow,max-image-preview:large/);
   assert.match(publishedSite, /robots\.txt/);
