@@ -18,7 +18,7 @@ import {
   getStripeSubscriptionPeriodStart,
   getStripeSubscriptionPriceId,
 } from "../_shared/stripe-subscriptions.ts";
-import { TOP_UP_PACKS_CENTS, inferTierFromAmountCents } from "../_shared/pricing.ts";
+import { FIRST_CUSTOMER_SPRINT_OFFER, TOP_UP_PACKS_CENTS, inferTierFromAmountCents } from "../_shared/pricing.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
@@ -833,6 +833,28 @@ async function handleCheckoutCompleted(
   });
 
   if (session.mode === "payment") {
+    if (getMetadataString(combinedMetadata, ["purchase_type"]) === "service_offer") {
+      const applicationId = getMetadataString(combinedMetadata, ["purchase_context_id", "purchaseContextId"]);
+      const offerId = getMetadataString(combinedMetadata, ["offer_id", "offerId"]);
+      const amountCents = Number(session.amount_total ?? session.amount_subtotal ?? 0);
+      if (!resolvedUserId || !applicationId || offerId !== FIRST_CUSTOMER_SPRINT_OFFER.id || amountCents !== FIRST_CUSTOMER_SPRINT_OFFER.amount) {
+        throw new Error("INVALID_SERVICE_OFFER_CHECKOUT: paid sprint context is incomplete");
+      }
+      const { error: fulfillmentError } = await supabaseAdmin.rpc("fulfill_first_customer_sprint_offer_v1", {
+        p_founder_id: resolvedUserId,
+        p_application_id: applicationId,
+        p_checkout_session_id: session.id,
+        p_payment_intent_id: typeof session.payment_intent === "string" ? session.payment_intent : null,
+        p_amount_cents: amountCents,
+      });
+      if (fulfillmentError) throw fulfillmentError;
+      await emitBusinessEvent({
+        eventName: "first_customer_sprint_offer_purchased",
+        userId: resolvedUserId,
+        properties: { application_id: applicationId, offer_id: offerId, price_cents: amountCents },
+      });
+      return;
+    }
     await handleCreditPackPurchase({
       supabaseAdmin,
       resolvedUserId,
@@ -936,6 +958,20 @@ async function handleCheckoutCompleted(
       amount_usd: Number((amountCents / 100).toFixed(2)),
       stripe_customer_id: customerId ?? undefined,
     },
+  });
+}
+
+async function handleServiceOfferRefund(charge: any, supabaseAdmin: any) {
+  const paymentIntentId = typeof charge.payment_intent === "string" ? charge.payment_intent : null;
+  if (!paymentIntentId) return;
+  const purchase = await supabaseAdmin.from("first_customer_sprint_service_purchases")
+    .select("id,application_id,founder_id").eq("stripe_payment_intent_id", paymentIntentId).maybeSingle();
+  if (purchase.error || !purchase.data) return;
+  const refund = await supabaseAdmin.rpc("refund_first_customer_sprint_offer_v1", { p_payment_intent_id: paymentIntentId });
+  if (refund.error) throw refund.error;
+  await emitBusinessEvent({
+    eventName: "first_customer_sprint_offer_refunded", userId: purchase.data.founder_id,
+    properties: { application_id: purchase.data.application_id, payment_intent_id: paymentIntentId },
   });
 }
 
@@ -1635,6 +1671,9 @@ serve(async (req) => {
         break;
       case "payment_intent.succeeded":
         await handlePaymentIntentSucceeded(object, supabaseAdmin);
+        break;
+      case "charge.refunded":
+        await handleServiceOfferRefund(object, supabaseAdmin);
         break;
       case "customer.subscription.created":
       case "customer.subscription.updated":

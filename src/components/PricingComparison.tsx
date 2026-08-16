@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Check, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { GTM_STRATEGIST_PRICING } from "@/config/gtmStrategist";
 import { CREDIT_COSTS, getCreditCostForPlan } from "@/config/constants";
+import { PLAN_CATALOG, PLAN_CATALOG_BY_ID } from "@/config/planCatalog";
 
 type PlanKey = "rookie" | "starter" | "rising" | "pro";
 type FeatureValue = string | boolean;
@@ -29,18 +30,13 @@ interface FeatureCategory {
   items: FeatureItem[];
 }
 
-const plans: PlanConfig[] = [
-  { key: "rookie", name: "Rookie", price: "$0", period: "/month" },
-  { key: "starter", name: "Starter", price: "$9", period: "/month", isPopular: true },
-  { key: "rising", name: "Rising", price: "$29", period: "/month" },
-  { key: "pro", name: "Pro", price: "$65", period: "/month" },
-];
+const plans: PlanConfig[] = PLAN_CATALOG.map((plan) => ({ key: plan.id, name: plan.name, price: `$${plan.monthlyPrice}`, period: "/month", isPopular: plan.id === 'starter' }));
 
 const features: FeatureCategory[] = [
   {
     category: "Credits",
     items: [
-      { feature: "Monthly Credits", rookie: "50 credits", starter: "100 credits", rising: "250 credits", pro: "600 credits" },
+      { feature: "Monthly Credits", rookie: `${PLAN_CATALOG_BY_ID.rookie.monthlyCredits} credits`, starter: `${PLAN_CATALOG_BY_ID.starter.monthlyCredits} credits`, rising: `${PLAN_CATALOG_BY_ID.rising.monthlyCredits} credits`, pro: `${PLAN_CATALOG_BY_ID.pro.monthlyCredits} credits` },
     ],
   },
   {

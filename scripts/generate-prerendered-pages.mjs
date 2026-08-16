@@ -26,8 +26,8 @@ function buildFallbackHtml(routeConfig) {
   const nav = PRIMARY_NAV.map((item) => `<a href="${item.href}">${item.label}</a>`).join(" | ");
   const heroContent = routeConfig.path === "/"
     ? `<p>Creatives Takeover &middot; Founders Compass</p>
-          <p>Business Development platform for startup founders &amp; first-time business owners.</p>
-          <p>Define your ideal customer, prove demand, build your MVP, launch it, and find investment.</p>
+          <p>From an untested B2B SaaS idea to your first qualified customer conversations.</p>
+          <p>Build a free ICP or proof demo before signup, then carry the artifact into one connected evidence workflow.</p>
           <p><strong>No application. No cohort. No equity.</strong></p>
           <form action="/icp-builder" method="get">
             <label for="seo-hero-seed">Who is your ideal customer?</label>

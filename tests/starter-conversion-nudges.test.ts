@@ -6,14 +6,14 @@ test('pricing surfaces make Starter the visible first paid step', () => {
   const pricingSource = readFileSync(new URL('../src/components/Pricing.tsx', import.meta.url), 'utf8');
   const comparisonSource = readFileSync(new URL('../src/components/PricingComparison.tsx', import.meta.url), 'utf8');
 
-  assert.match(pricingSource, /key: "rookie"[\s\S]*key: "starter"[\s\S]*key: "rising"[\s\S]*key: "pro"/);
-  assert.match(pricingSource, /key: "starter"[\s\S]*highlight: "Most Popular"/);
+  assert.match(pricingSource, /PLAN_CATALOG\.map/);
+  assert.match(pricingSource, /starter: \{[^}]*highlight: "Most Popular"/);
   assert.match(pricingSource, /const isPopular = plan\.key === "starter"/);
   assert.match(pricingSource, /buttonVariant: "default"/);
   assert.match(pricingSource, /useState<BillingCycle>\("monthly"\)/);
 
-  assert.match(comparisonSource, /\{ key: "starter", name: "Starter", price: "\$9", period: "\/month", isPopular: true \}/);
-  assert.doesNotMatch(comparisonSource, /\{ key: "rising", name: "Rising", price: "\$29", period: "\/month", isPopular: true \}/);
+  assert.match(comparisonSource, /PLAN_CATALOG\.map/);
+  assert.match(comparisonSource, /isPopular: plan\.id === 'starter'/);
 });
 
 test('upgrade prompt gives Starter first-step treatment', () => {

@@ -508,6 +508,14 @@
       "stage": "acquisition", "owner": "product", "source": "client",
       "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["application_id", "acquisition_source", "qualified"]
     },
+    "first_customer_sprint_offer_checkout_started": {
+      "stage": "revenue", "owner": "product", "source": "client",
+      "sourceFile": "src/pages/FirstCustomerSprintApplicationPage.tsx", "requiredProperties": ["application_id", "offer_id"]
+    },
+    "first_customer_sprint_offer_purchased": {
+      "stage": "revenue", "owner": "product", "source": "server",
+      "sourceFile": "supabase/functions/stripe-webhook/index.ts", "requiredProperties": ["application_id", "offer_id", "price_cents"]
+    },
     "first_customer_sprint_viewed": {
       "stage": "activation", "owner": "product", "source": "client",
       "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "status"]
@@ -556,6 +564,10 @@
       "stage": "evidence", "owner": "product", "source": "client",
       "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "conversation_count"]
     },
+    "first_customer_sprint_demo_attached": {
+      "stage": "evidence", "owner": "product", "source": "client",
+      "sourceFile": "src/pages/FirstCustomerSprintPage.tsx", "requiredProperties": ["sprint_id", "demo_project_id"]
+    },
     "first_customer_sprint_completed": {
       "stage": "value", "owner": "product", "source": "client",
       "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "decision_category", "outreach_count", "conversation_count"]
@@ -575,6 +587,50 @@
     "first_customer_sprint_abandoned": {
       "stage": "retention", "owner": "product", "source": "client",
       "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "status", "decision_category"]
+    },
+    "category_cta_viewed": {
+      "stage": "acquisition", "owner": "growth", "source": "client",
+      "sourceFile": "src/components/Hero.tsx", "requiredProperties": ["placement"]
+    },
+    "category_cta_clicked": {
+      "stage": "acquisition", "owner": "growth", "source": "client",
+      "sourceFile": "src/components/Hero.tsx", "requiredProperties": ["placement", "destination"]
+    },
+    "external_connection_created": {
+      "stage": "activation", "owner": "product", "source": "client",
+      "sourceFile": "src/pages/EvidenceConnectionsPage.tsx", "requiredProperties": ["method", "provider_label"]
+    },
+    "external_evidence_import_completed": {
+      "stage": "evidence", "owner": "product", "source": "client",
+      "sourceFile": "src/pages/EvidenceConnectionsPage.tsx", "requiredProperties": ["method", "accepted_count", "duplicate_count", "rejected_count"]
+    },
+    "external_evidence_import_failed": {
+      "stage": "reliability", "owner": "engineering", "source": "client",
+      "sourceFile": "src/pages/EvidenceConnectionsPage.tsx", "requiredProperties": ["method"]
+    },
+    "proof_case_study_viewed": {
+      "stage": "acquisition", "owner": "growth", "source": "client",
+      "sourceFile": "src/pages/ProofPage.tsx", "requiredProperties": ["proof_case_id", "source"]
+    },
+    "build_spec_exported": {
+      "stage": "value", "owner": "product", "source": "client",
+      "sourceFile": "src/hooks/useMVPBuilder.ts", "requiredProperties": ["destination", "project_id", "evidence_source_count", "spec_version"]
+    },
+    "guest_artifact_completed": {
+      "stage": "activation", "owner": "product", "source": "server",
+      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["artifact_type"]
+    },
+    "decision_changed": {
+      "stage": "value", "owner": "product", "source": "server",
+      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["decision_category"]
+    },
+    "qualified_conversation": {
+      "stage": "evidence", "owner": "product", "source": "server",
+      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["verification_mode"]
+    },
+    "subscription_or_sprint_purchased": {
+      "stage": "revenue", "owner": "product", "source": "server",
+      "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["purchase_type"]
     },
     "generation_failed": {
       "stage": "reliability",
@@ -669,12 +725,29 @@
       "steps": [
         "first_customer_sprint_application_viewed",
         "first_customer_sprint_application_submitted",
+        "first_customer_sprint_offer_checkout_started",
+        "first_customer_sprint_offer_purchased",
         "first_customer_sprint_started",
         "first_customer_sprint_prospect_target_reached",
         "first_customer_sprint_outreach_target_reached",
         "first_customer_sprint_first_conversation",
         "first_customer_sprint_completed",
         "first_customer_sprint_continuation_purchased"
+      ]
+    },
+    {
+      "key": "executive_evidence_funnel_v2",
+      "name": "Guest artifact to costly external outcome",
+      "windowDays": 30,
+      "steps": [
+        "guest_artifact_completed",
+        "signup_completed",
+        "cycle_primary_action_started",
+        "customer_evidence_recorded",
+        "decision_changed",
+        "qualified_conversation",
+        "costly_commitment_recorded",
+        "subscription_or_sprint_purchased"
       ]
     },
     {

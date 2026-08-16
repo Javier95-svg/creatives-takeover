@@ -580,6 +580,15 @@ export const identify = (id: string, properties?: AnalyticsProperties) => {
   bootstrapPosthog();
 };
 
+// Semantic events used by the executive funnel. Server-side materialization
+// maps existing governed facts into these aliases without copying raw payloads.
+export const EXECUTIVE_EVIDENCE_FUNNEL_CONTRACT = {
+  guest_artifact_completed: ['artifact_type'],
+  decision_changed: ['decision_category'],
+  qualified_conversation: ['verification_mode'],
+  subscription_or_sprint_purchased: ['purchase_type'],
+} as const;
+
 export const captureAuthenticatedEvent = (
   eventName: string,
   userId: string | null | undefined,
@@ -1088,6 +1097,8 @@ export const trackRaiseTrackActivated = (properties: {
 export type FirstCustomerSprintEvent =
   | 'first_customer_sprint_application_viewed'
   | 'first_customer_sprint_application_submitted'
+  | 'first_customer_sprint_offer_checkout_started'
+  | 'first_customer_sprint_offer_purchased'
   | 'first_customer_sprint_viewed'
   | 'first_customer_sprint_started'
   | 'first_customer_sprint_prospect_target_reached'
@@ -1100,9 +1111,12 @@ export type FirstCustomerSprintEvent =
   | 'first_customer_sprint_checkpoint_recommendation_recorded'
   | 'first_customer_sprint_outreach_target_reached'
   | 'first_customer_sprint_first_conversation'
+  | 'first_customer_sprint_demo_attached'
   | 'first_customer_sprint_completed'
   | 'first_customer_sprint_review_submitted'
   | 'first_customer_sprint_continuation_checkout_started'
+  | 'first_customer_sprint_service_credit_earned'
+  | 'first_customer_sprint_service_credit_redeemed'
   | 'first_customer_sprint_abandoned';
 
 // Only operational dimensions are accepted here. Do not add message bodies,
@@ -1112,6 +1126,8 @@ export const trackFirstCustomerSprint = (event: FirstCustomerSprintEvent, proper
   application_id?: string;
   status?: string;
   business_model?: string | null;
+  product_stage?: string | null;
+  target_outcome?: string | null;
   acquisition_source?: string;
   qualified?: boolean;
   customer_count?: number;
@@ -1128,6 +1144,9 @@ export const trackFirstCustomerSprint = (event: FirstCustomerSprintEvent, proper
   would_recommend?: boolean;
   pack_id?: string;
   price_cents?: number;
+  offer_id?: string;
+  payment_status?: string;
+  demo_project_id?: string;
   credits_deducted?: number;
 }) => captureEvent(event, properties);
 

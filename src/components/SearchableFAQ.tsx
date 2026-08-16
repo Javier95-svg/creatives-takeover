@@ -69,7 +69,7 @@ const SearchableFAQ = () => {
       id: 5,
       category: "Pricing",
       question: "Do credits roll over to the next month?",
-      answer: "Credits do not roll over. They reset at the start of each billing cycle. If you regularly burn through your included credits before the cycle ends, the usual answer is either moving up a plan or buying extra credit packs.",
+      answer: "Included monthly credits do not roll over; they reset at the start of each billing cycle. Persistent project-pack credits remain available until used. If you regularly exhaust the monthly allowance, choose a larger plan or a project pack.",
       popular: false,
       tags: ["credits", "rollover", "monthly", "reset"]
     },
@@ -195,7 +195,7 @@ const SearchableFAQ = () => {
       id: 20,
       category: "Credits",
       question: "What happens when I run out of credits?",
-      answer: "When you run out of credits, the credit-powered actions stop until your next billing cycle or until you add more credits. Read-only and non-credit features like Stories, dashboards, and browsing remain available. The fastest path back is either a higher plan or a credit pack purchase.",
+      answer: "When you run out of credits, credit-powered actions stop until your next billing cycle or until you add a persistent project pack. Read-only and non-credit features like Stories, dashboards, and browsing remain available.",
       popular: true,
       tags: ["out of credits", "upgrade", "refresh", "limitations"]
     },

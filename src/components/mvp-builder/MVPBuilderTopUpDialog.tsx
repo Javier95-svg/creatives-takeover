@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { TOP_UP_PACKS } from '@/config/pricing';
+import { ACTIVE_PROJECT_PACKS } from '@/config/planCatalog';
 import { useSubscription } from '@/hooks/useSubscription';
 
 interface MVPBuilderTopUpDialogProps {
@@ -38,15 +38,15 @@ export const MVPBuilderTopUpDialog = ({
         <DialogHeader className="space-y-0 text-left">
           <DialogTitle className="flex items-center gap-2 text-base font-semibold text-white">
             <Zap className="h-4 w-4 text-white" />
-            Quick Top Ups
+            Project packs
           </DialogTitle>
           <DialogDescription className="sr-only">
-            Choose a credit top-up pack to continue to Stripe checkout.
+            Choose a persistent project pack to continue to Stripe checkout.
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-3 pt-1">
-          {TOP_UP_PACKS.map((pack) => {
+          {ACTIVE_PROJECT_PACKS.map((pack) => {
             const isPending = pendingPackId === pack.id;
             return (
               <Button

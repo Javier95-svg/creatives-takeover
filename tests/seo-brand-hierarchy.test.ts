@@ -5,7 +5,7 @@ import { INDEXABLE_ROUTES } from '../scripts/seo-route-config.mjs';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
-const homeTitle = 'Creatives Takeover | Startup Development Platform';
+const homeTitle = 'Creatives Takeover | From Idea to Customer Conversations';
 const aboutTitle = 'About Creatives Takeover | Our Mission and Team';
 
 test('the homepage owns the brand-led search title across every rendering path', () => {
@@ -26,7 +26,7 @@ test('the About page is differentiated from the homepage brand intent', () => {
   assert.ok(aboutPage.includes(`title="${aboutTitle}"`));
   assert.equal(aboutRoute?.title, aboutTitle);
   assert.notEqual(aboutRoute?.title, homeTitle);
-  assert.doesNotMatch(aboutRoute?.title ?? '', /Startup Development Platform/);
+  assert.doesNotMatch(aboutRoute?.title ?? '', /From Idea to Customer Conversations/);
 });
 
 test('crawler shells expose canonical primary links and reserve WebSite identity for home', () => {

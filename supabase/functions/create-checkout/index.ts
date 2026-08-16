@@ -8,6 +8,7 @@ import {
   PLAN_PRICING_CENTS,
   PLAN_MONTHLY_CREDITS,
   TOP_UP_PACKS_CENTS,
+  FIRST_CUSTOMER_SPRINT_OFFER,
   type BillingCycle as PricingBillingCycle,
   type PaidPlan,
 } from "../_shared/pricing.ts";
@@ -31,7 +32,7 @@ type PrefillInput = {
 };
 
 type BillingCycle = PricingBillingCycle;
-type PurchaseType = "subscription" | "credit_pack";
+type PurchaseType = "subscription" | "credit_pack" | "service_offer";
 
 class CheckoutConfigurationError extends Error {
   readonly code: string;
@@ -134,6 +135,7 @@ const buildStripeAddress = (
 
 const normalizePurchaseType = (value: unknown): PurchaseType => {
   const normalized = sanitizeString(value)?.toLowerCase();
+  if (normalized === "service_offer") return "service_offer";
   return normalized === "credit_pack" ? "credit_pack" : "subscription";
 };
 
@@ -344,6 +346,7 @@ serve(withErrorBoundary(async (req: Request) => {
     const billingCycle = normalizeBillingCycle(body.billingCycle);
     const requestedTier = sanitizeString(body.plan ?? body.tier)?.toLowerCase();
     const requestedPackId = sanitizeString(body.packId)?.toLowerCase();
+    const requestedOfferId = sanitizeString(body.offerId)?.toLowerCase();
     const purchaseSource = normalizePurchaseSource(body.purchaseSource);
     const purchaseContextId = normalizePurchaseContextId(body.purchaseContextId);
     const returnPath = normalizeReturnPath(body.returnPath);
@@ -371,9 +374,62 @@ serve(withErrorBoundary(async (req: Request) => {
       Deno.env.get("SITE_URL") ??
       "https://creatives-takeover.com";
 
+    if (purchaseType === "service_offer") {
+      if (requestedOfferId !== FIRST_CUSTOMER_SPRINT_OFFER.id || !purchaseContextId) {
+        throw new Error("Valid service offer and application context are required");
+      }
+      const authenticatedClient = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+        { global: { headers: { Authorization: authHeader } } },
+      );
+      const applicationResult = await authenticatedClient
+        .from("first_customer_sprint_applications")
+        .select("id,status,offer_version,payment_status")
+        .eq("id", purchaseContextId)
+        .eq("founder_id", user.id)
+        .maybeSingle();
+      const application = applicationResult.data;
+      if (applicationResult.error || !application || application.status !== "invited" || application.offer_version !== "concierge_299") {
+        throw new Error("An accepted paid sprint application is required");
+      }
+      if (application.payment_status === "paid") throw new Error("This sprint offer has already been purchased");
+      const metadata = buildMetadata({
+        purchase_type: "service_offer", offer_id: FIRST_CUSTOMER_SPRINT_OFFER.id,
+        user_id: user.id, user_email: user.email, purchase_source: purchaseSource ?? "first_customer_sprint",
+        purchase_context_id: purchaseContextId,
+      });
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        client_reference_id: user.id,
+        mode: "payment",
+        billing_address_collection: "auto",
+        customer_update: { address: "auto", name: "auto" },
+        line_items: [{ price_data: {
+          currency: "usd", unit_amount: FIRST_CUSTOMER_SPRINT_OFFER.amount,
+          product_data: {
+            name: FIRST_CUSTOMER_SPRINT_OFFER.name,
+            description: "30-day founder-led customer evidence sprint with one verified mentor checkpoint",
+          },
+        }, quantity: 1 }],
+        payment_intent_data: { metadata }, metadata,
+        success_url: `${origin}/subscription-success?purchase_type=service_offer&offer_id=${FIRST_CUSTOMER_SPRINT_OFFER.id}&session_id={CHECKOUT_SESSION_ID}&return_to=${encodeURIComponent("/first-customer-sprint")}`,
+        cancel_url: `${origin}/first-customer-sprint/apply`,
+      });
+      await recordCheckoutSession(supabaseAdmin, stripe, session, {
+        user_id: user.id, purchase_type: "service_offer", pack_id: FIRST_CUSTOMER_SPRINT_OFFER.id,
+        purchase_source: purchaseSource ?? "first_customer_sprint", amount_cents: FIRST_CUSTOMER_SPRINT_OFFER.amount,
+      });
+      await emitBusinessEvent({
+        eventName: "first_customer_sprint_offer_checkout_started", userId: user.id,
+        properties: { application_id: purchaseContextId, offer_id: FIRST_CUSTOMER_SPRINT_OFFER.id, price_cents: FIRST_CUSTOMER_SPRINT_OFFER.amount },
+      });
+      return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 });
+    }
+
     if (purchaseType === "credit_pack") {
       if (!requestedPackId || !CREDIT_PACKS[requestedPackId]) {
-        throw new Error("Valid credit pack is required");
+        throw new Error("Valid project pack is required");
       }
 
       const pack = CREDIT_PACKS[requestedPackId];
@@ -422,7 +478,7 @@ serve(withErrorBoundary(async (req: Request) => {
               currency: "usd",
               product_data: {
                 name: `${pack.name} (${pack.credits} Credits)`,
-                description: `${pack.credits} top-up credits for Creatives Takeover`,
+                description: `${pack.credits} persistent project-pack credits for Creatives Takeover`,
               },
               unit_amount: pack.amount,
             },

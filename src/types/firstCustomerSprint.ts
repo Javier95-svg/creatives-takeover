@@ -9,6 +9,10 @@ export type FirstCustomerSprintApplicationStatus = 'submitted' | 'invited' | 'de
 export type FirstCustomerAcquisitionSource = 'mentor_referral' | 'homepage' | 'current_user' | 'direct' | 'other';
 export type FirstCustomerRecentOutreach = 'last_30_days' | 'older' | 'never';
 export type FirstCustomerApplicationBlocker = 'prospect_list' | 'messaging' | 'confidence' | 'accountability' | 'replies' | 'conversion' | 'time';
+export type FirstCustomerProductStage = 'idea' | 'concept_demo' | 'working_product';
+export type FirstCustomerTargetOutcome = 'qualified_conversations' | 'commitment' | 'payment';
+export type FirstCustomerOfferVersion = 'legacy_free' | 'concierge_299';
+export type FirstCustomerPaymentStatus = 'not_required' | 'pending' | 'paid' | 'credited' | 'refunded';
 export type FirstCustomerPrimaryValue = 'structure' | 'messaging' | 'evidence' | 'mentor' | 'accountability';
 export type FirstCustomerPrimaryFriction = 'prospect_list' | 'messaging' | 'sending' | 'replies' | 'conversion' | 'time' | 'not_urgent' | 'none';
 export type FirstCustomerDecision =
@@ -67,6 +71,9 @@ export interface FirstCustomerSprint {
   review_note: string | null;
   review_submitted_at: string | null;
   continuation_from_sprint_id: string | null;
+  source_demo_project_id?: string | null;
+  target_outcome?: FirstCustomerTargetOutcome;
+  offer_version?: FirstCustomerOfferVersion;
   completed_at: string | null;
   created_at: string;
   updated_at: string;
@@ -80,7 +87,7 @@ export interface FirstCustomerSprintApplication {
   founder_owns_sales: boolean;
   has_sellable_product: boolean;
   customer_count: number;
-  estimated_annual_customer_value_usd: number;
+  estimated_annual_customer_value_usd: number | null;
   weekly_capacity_hours: number;
   can_name_ten_prospects: boolean;
   recent_outreach: FirstCustomerRecentOutreach;
@@ -95,18 +102,22 @@ export interface FirstCustomerSprintApplication {
   submitted_at: string;
   reviewed_at: string | null;
   invited_at: string | null;
+  product_stage: FirstCustomerProductStage;
+  target_outcome: FirstCustomerTargetOutcome;
+  offer_version: FirstCustomerOfferVersion;
+  payment_status: FirstCustomerPaymentStatus;
+  amount_paid_cents: number | null;
+  paid_at: string | null;
 }
 
 export interface FirstCustomerSprintApplicationInput {
-  businessModel: FirstCustomerSprintApplication['business_model'];
   founderOwnsSales: boolean;
-  hasSellableProduct: boolean;
   customerCount: number;
-  estimatedAnnualCustomerValueUsd: number;
+  estimatedAnnualCustomerValueUsd?: number | null;
   weeklyCapacityHours: number;
-  canNameTenProspects: boolean;
-  recentOutreach: FirstCustomerRecentOutreach;
   primaryBlocker: FirstCustomerApplicationBlocker;
+  productStage: FirstCustomerProductStage;
+  targetOutcome: FirstCustomerTargetOutcome;
   productUrl?: string;
   productSummary: string;
   acquisitionSource: FirstCustomerAcquisitionSource;
@@ -126,6 +137,15 @@ export interface FirstCustomerContinuation {
   paid: boolean;
   purchasedAt?: string;
   packId?: string;
+}
+
+export interface FirstCustomerDemoEvidence {
+  projectId: string;
+  completions: number;
+  ctaClicks: number;
+  leads: number;
+  signups: number;
+  verificationMode: 'platform_verified';
 }
 
 export interface FirstCustomerSprintContact {
@@ -223,6 +243,10 @@ export interface FirstCustomerSprintAdminApplication {
   wouldRecommend: boolean | null;
   paidContinuation: boolean;
   verifiedReferrals: number;
+  productStage?: FirstCustomerProductStage;
+  targetOutcome?: FirstCustomerTargetOutcome;
+  offerVersion?: FirstCustomerOfferVersion;
+  paymentStatus?: FirstCustomerPaymentStatus;
 }
 
 export interface FirstCustomerSprintAdminSnapshot {

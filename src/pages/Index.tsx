@@ -2,7 +2,9 @@ import { useEffect, lazy, Suspense, useRef } from "react";
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import ValuePropositionCards from "@/components/ValuePropositionCards";
+import EvidenceWorkflow from "@/components/EvidenceWorkflow";
 import UserReviews from "@/components/UserReviews";
+import { COMPETITIVE_HARDENING_FLAGS } from "@/config/competitiveHardeningFlags";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
 import StickyMobileCTA from "@/components/StickyMobileCTA";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
@@ -61,8 +63,8 @@ const Index = () => {
     <div className="min-h-screen relative">
       <HomeWallpaper variant="landing" />
       <SEO
-        title="Creatives Takeover | Startup Development Platform"
-        description="Creatives Takeover is a startup development platform that helps first-time founders validate ideas, build MVPs, launch, gain traction, and prepare to raise."
+        title="Creatives Takeover | From Idea to Customer Conversations"
+        description="Creatives Takeover moves an untested B2B SaaS idea to qualified customer conversations through one connected evidence workflow."
         keywords="founder operating system, startup idea validation, customer decision brief, interactive product demo, product market fit evidence, MVP builder, go-to-market execution, traction engine, first-time solo founders"
         url="/"
         image="/og-founders-compass-2026-07.png"
@@ -80,7 +82,7 @@ const Index = () => {
               </div>
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
-              <UserReviews />
+              {COMPETITIVE_HARDENING_FLAGS.categoryPositioningV2 ? <EvidenceWorkflow /> : <UserReviews />}
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
@@ -115,7 +117,7 @@ const Index = () => {
               </div>
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
-              <UserReviews />
+              {COMPETITIVE_HARDENING_FLAGS.categoryPositioningV2 ? <EvidenceWorkflow /> : <UserReviews />}
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">

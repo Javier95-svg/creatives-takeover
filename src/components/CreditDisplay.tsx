@@ -22,17 +22,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { PLAN_MONTHLY_CREDITS, normalizePlan } from "@/config/planPermissions";
 import { useNavigate } from "react-router-dom";
+import { ACTIVE_PROJECT_PACKS } from "@/config/planCatalog";
 
 interface CreditDisplayProps {
   variant?: "navigation" | "inline" | "detailed";
   showPurchaseButton?: boolean;
 }
 
-const QUICK_TOP_UP_PACKS = [
-  { id: "pack_20", label: "Starter Pack", credits: 20 },
-  { id: "pack_40", label: "Boost Pack", credits: 40 },
-  { id: "pack_60", label: "Power Pack", credits: 60 },
-] as const;
+const QUICK_TOP_UP_PACKS = ACTIVE_PROJECT_PACKS;
 
 export function CreditDisplay({ variant = "navigation", showPurchaseButton = false }: CreditDisplayProps) {
   const { balance, monthlyQuota, heldCredits, totalAvailable, loading, refreshBalance, CREDIT_COSTS } = useCredits();

@@ -44,10 +44,16 @@ export interface TopUpPack {
 
 /** One-time credit top-up packs (single platform wallet). */
 export const TOP_UP_PACKS: TopUpPack[] = [
-  { id: 'pack_20', credits: 20, priceUsd: 8, label: 'Starter Pack' },
-  { id: 'pack_40', credits: 40, priceUsd: 16, label: 'Boost Pack' },
-  { id: 'pack_60', credits: 60, priceUsd: 24, label: 'Power Pack' },
+  { id: 'pack_20', credits: 20, priceUsd: 8, label: 'Experiment Pack' },
+  { id: 'pack_40', credits: 40, priceUsd: 16, label: 'Validation Pack' },
+  { id: 'pack_60', credits: 60, priceUsd: 24, label: 'Launch Pack' },
 ];
+
+export const FIRST_CUSTOMER_SPRINT_OFFER = {
+  id: 'first_customer_sprint_2026_299',
+  amountCents: 29900,
+  name: 'First Customer Sprint',
+} as const;
 
 /**
  * Blended $ value of one subscription credit — the anchor for "X credits ≈ $Y"

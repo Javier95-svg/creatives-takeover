@@ -15,6 +15,7 @@ import { CREDIT_COSTS as CLIENT_CREDIT_COSTS } from '../src/config/constants.ts'
 import { GTM_STRATEGIST_PRICING } from '../src/config/gtmStrategist.ts';
 import { CREDIT_COSTS as EDGE_CREDIT_COSTS } from '../supabase/functions/_shared/credit-constants.ts';
 import { FEATURE_ENTITLEMENTS } from '../src/config/planPermissions.ts';
+import { PLAN_CATALOG, OUTCOME_WORKLOADS, PROJECT_PACKS } from '../src/config/planCatalog.ts';
 
 const PAID_PLANS: PaidPlan[] = ['starter', 'rising', 'pro'];
 
@@ -61,4 +62,12 @@ test('GTM price and entitlement stay aligned across UI, access, and Edge chargin
     assert.equal(FEATURE_ENTITLEMENTS.gtm_strategist[plan].state, 'full');
     assert.equal(FEATURE_ENTITLEMENTS.gtm_strategist[plan].creditFeature, 'GTM_ANALYSIS');
   }
+});
+
+test('canonical plan catalog and outcome workloads remain derived from executable configuration', () => {
+  assert.deepEqual(PLAN_CATALOG.map((plan) => plan.monthlyPrice), [0, 9, 29, 65]);
+  assert.deepEqual(PLAN_CATALOG.map((plan) => plan.monthlyCredits), [50, 100, 250, 600]);
+  assert.deepEqual(OUTCOME_WORKLOADS.map((workload) => workload.credits), [10, 8, 8]);
+  assert.deepEqual(PROJECT_PACKS.map((pack) => pack.label), ['Experiment Pack', 'Validation Pack', 'Launch Pack']);
+  assert.ok(PROJECT_PACKS.every((pack) => pack.persistent));
 });

@@ -79,8 +79,8 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
   const fallback = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   const prerender = readFileSync(new URL('../scripts/generate-prerendered-pages.mjs', import.meta.url), 'utf8');
   const paragraphs = [
-    'Business Development platform for startup founders & first-time business owners.',
-    'Define your ideal customer, prove demand, build your MVP, launch it, and find investment.',
+    'From an untested B2B SaaS idea to your first qualified customer conversations.',
+    'Build a free ICP or proof demo before signup, then carry the artifact into one connected evidence workflow.',
     'No application. No cohort. No equity.',
   ];
   const renderedSources = [hero, fallback, prerender].map((source) =>
@@ -120,12 +120,12 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
   assert.match(prerender, /Pro[\s\S]*\$65[\s\S]*Accelerate and Fundraise/);
 });
 
-test('hero scrolling cards retain the restored market data', () => {
+test('hero cards express the evidence workflow without unverified market claims', () => {
   const hero = readFileSync(new URL('../src/components/Hero.tsx', import.meta.url), 'utf8');
-  assert.match(hero, /value: "5", unit: "×", label: "Faster idea → MVP than pre-AI builders"/);
-  assert.match(hero, /value: "\$680B", unit: "\+", label: "Into AI-native startups since 2024"/);
-  assert.match(hero, /value: "1 in 4", label: "New 2026 launches are solo founders"/);
-  assert.match(hero, /value: "~18", unit: "mo", label: "Before incumbents close the AI-native gap"/);
+  assert.match(hero, /value: "PROVE"/);
+  assert.match(hero, /value: "SELL"/);
+  assert.match(hero, /value: "GROW"/);
+  assert.doesNotMatch(hero, /\$680B|1 in 4|~18/);
 });
 
 test('Pro expert support has a protected queue while the restored mentorship hero remains intact', () => {
