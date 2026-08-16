@@ -6,11 +6,13 @@ import {
   Compass,
   DollarSign,
   Gift,
+  Info,
   type LucideIcon,
   Menu,
+  Mic,
+  Newspaper,
   Rocket,
-  ShieldCheck,
-  Sparkles,
+  Wrench,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,14 +39,15 @@ type VisitorLink = { label: string; href: string; icon: LucideIcon; sectionId?: 
 type VisitorMenuItem = { label: string; href: string; icon: LucideIcon; description: string; analyticsTool?: string };
 type VisitorMenu = { label: string; icon: LucideIcon; tagline: string; taglineIcon?: LucideIcon; items: VisitorMenuItem[] };
 
-// Keep the visitor decision surface focused. Broader utilities remain reachable
-// through Resources and signed-in navigation.
+// Simple links, in display order. The Free Tools menu renders first. Final order:
+// Free Tools · Build · Guidance · Podcast · Newspaper · About · Pricing. Home is covered by the logo.
 const visitorLinks: VisitorLink[] = [
-  { label: "How It Works", href: "/", icon: Compass, sectionId: "how-it-works" },
-  { label: "First Customer Sprint", href: "/first-customer-sprint/apply", icon: Rocket },
-  { label: "Proof", href: "/proof", icon: ShieldCheck },
+  { label: "Build", href: "/build", icon: Wrench },
+  { label: "Guidance", href: "/mentorship", icon: Compass },
+  { label: "Podcast", href: "/podcast", icon: Mic },
+  { label: "Newspaper", href: "/newspaper", icon: Newspaper },
+  { label: "About", href: "/about", icon: Info },
   { label: "Pricing", href: "/pricing", icon: DollarSign },
-  { label: "Resources", href: "/resources", icon: Sparkles },
 ];
 
 // Free Tools menu — logged-out visitors can use these tools before signing up.
@@ -52,9 +55,9 @@ const visitorLinks: VisitorLink[] = [
 const freeToolsItems: VisitorMenuItem[] = FREE_TOOLS_NAV_ITEMS;
 
 const giftsMenu: VisitorMenu = {
-  label: "Try Free",
+  label: "Free Tools",
   icon: Gift,
-  tagline: "Create an ICP or proof demo before signup",
+  tagline: "From Creatives Takeover with 💙",
   items: freeToolsItems,
 };
 

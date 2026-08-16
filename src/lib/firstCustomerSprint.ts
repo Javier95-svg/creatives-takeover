@@ -14,14 +14,19 @@ export const FIRST_CUSTOMER_TARGETS = { prospects: 20, outreach: 10, conversatio
 
 export function qualifyFirstCustomerSprintApplication(
   input: Pick<FirstCustomerSprintApplicationInput,
-    'founderOwnsSales' | 'customerCount' | 'weeklyCapacityHours' | 'productStage' | 'targetOutcome'>,
+    'businessModel' | 'founderOwnsSales' | 'hasSellableProduct' | 'customerCount'
+    | 'estimatedAnnualCustomerValueUsd' | 'weeklyCapacityHours' | 'canNameTenProspects'
+    | 'recentOutreach'>,
 ): { qualified: boolean; reasons: string[] } {
   const reasons: string[] = [];
+  if (input.businessModel !== 'b2b_saas') reasons.push('The pilot is currently for B2B SaaS companies.');
   if (!input.founderOwnsSales) reasons.push('The participating founder must personally own sales.');
+  if (!input.hasSellableProduct) reasons.push('A working, sellable product is required.');
   if (input.customerCount < 0 || input.customerCount > 3) reasons.push('The pilot is for founders with 0–3 customers.');
+  if (input.estimatedAnnualCustomerValueUsd < 1000) reasons.push('Expected annual customer value must be at least $1,000.');
   if (input.weeklyCapacityHours < 2) reasons.push('At least two weekly hours are required.');
-  if (!['idea', 'concept_demo', 'working_product'].includes(input.productStage)) reasons.push('Select a valid product stage.');
-  if (!['qualified_conversations', 'commitment', 'payment'].includes(input.targetOutcome)) reasons.push('Select a valid target outcome.');
+  if (!input.canNameTenProspects) reasons.push('The founder must be able to name ten plausible prospects.');
+  if (input.recentOutreach !== 'last_30_days') reasons.push('The founder must have attempted outreach within 30 days.');
   return { qualified: reasons.length === 0, reasons };
 }
 
@@ -39,7 +44,8 @@ export function validateFirstCustomerIntake(input: {
   if (input.offer.trim().length < 3) errors.push('Define the offer you want to test.');
   if (input.targetSegment.trim().length < 3) errors.push('Define a specific target buyer.');
   if (input.problemHypothesis.trim().length < 3) errors.push('State the customer problem hypothesis.');
-  if (input.estimatedCustomerValueUsd < 0) errors.push('Estimated customer value cannot be negative.');
+  if (!input.proofUrl?.trim() && (input.proofDescription?.trim().length ?? 0) < 3) errors.push('Add a proof URL or describe a proof artifact.');
+  if (!(input.estimatedCustomerValueUsd > 0)) errors.push('Estimated customer value must be greater than zero.');
   if (!(input.weeklyCapacityHours >= 2)) errors.push('Reserve at least two hours each week.');
   return errors;
 }

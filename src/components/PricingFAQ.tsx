@@ -26,23 +26,23 @@ const PricingFAQ = () => {
       question: "What are credits and how do they work?",
       answer: `Credits are the usage currency for the AI-powered parts of the platform. Every plan includes a monthly credit grant: Rookie gets 50, Starter 100, Rising 250, and Pro 600.
 
-    The six core workflow tools are available across plans. ICP drafting starts free; metered AI actions show their credit cost before they run. For example, a PMF discovery plus evidence score is 10 credits, a proof demo plus evidence score is 8, and a researched GTM play plus Traction scorecard is 8.
+    GTM Strategist is available on every plan and uses 6 credits per researched generation; manual edits and weekly reviews are included. Other plan-gated tools follow the comparison table.
 
-    Plan differences primarily change monthly capacity, research limits, and expert/accountability access.`,
+    ICP Builder stays free across all four plans. Mentor browsing, messaging, and saving remain available from the community.`,
       relatedQuestions: [0, 5],
     },
     {
       question: "How should I choose the right plan?",
-      answer: `Choose by the outcome and monthly workload you need, not by an artificial stage gate.
+      answer: `Think about your founder stage, not just the credit number.
 
-Rookie is a free PROVE preview with 50 monthly credits. Starter supports a focused validation loop with 100. Rising gives 250 for repeated SELL and GROW experiments. Pro gives 600 plus deeper research and expert accountability. Your saved artifacts remain connected if you change plans.`,
+Rookie helps you clarify your ICP and first traction asset. Starter is for validating demand with PMF Lab, Email Templates, and more research/community access. Rising is for building and launching with MVP Builder, Tech Stack Builder, GTM Strategist, Directories, and Pitch Deck Analyzer. Pro is for fundraising and scaling with Find Your Angel, unlimited research views, and the largest credit runway.`,
       relatedQuestions: [1, 6],
     },
     {
       question: "Do unused credits roll over to the next month?",
       answer: `No. Included monthly credits reset on your billing-cycle boundary and do not roll over.
 
-One-time project packs do not reset or expire with the monthly allowance. Use them for a defined validation or launch workload without changing the subscription.`,
+If you routinely run out before the cycle ends, that usually means you should move up a plan or add credit packs for heavier execution windows.`,
       relatedQuestions: [0, 1],
     },
     {
@@ -68,9 +68,9 @@ That means billing, renewals, and checkout security all run on Stripe's infrastr
     },
     {
       question: "What's included in the Rookie plan?",
-      answer: `Rookie is free forever and includes 50 monthly credits. The six core workflow tools remain available; metered AI actions disclose their credit cost before execution. ICP drafting begins free, while Demo Studio, PMF scoring, MVP building, GTM research, and Traction actions draw from the same wallet.
+      answer: `Rookie is free forever and includes 50 credits per month. You get Dashboard Rookie Mode, ICP Builder for free, Demo Studio with credit usage, MVP Builder with per-action credit usage, Prompt Library access for free models only, Insighta Test, Newspaper, free mentor browsing, messaging and Discovery Calls, and free Find a Co-Founder posting.
 
-    Rookie keeps broader research and fundraising limits intentionally small. Use the comparison table for those capacity limits, not for core-workflow access.`,
+    VC Search and Accelerator Hunt are browse only on Rookie. GTM Strategist remains available using account credits, while other plan-gated tools follow the comparison table. Find Your Angel is not included.`,
       relatedQuestions: [0, 1],
     },
     {

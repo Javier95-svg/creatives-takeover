@@ -234,7 +234,7 @@ export default function DashboardTodayCockpit() {
                 <p className="mt-2 text-xs text-muted-foreground">
                   {creditQuote.data.affordable
                     ? `${creditQuote.data.balanceAfter} credits remain after this action${creditQuote.data.coveredNextActions > 0 ? `, enough for ${creditQuote.data.coveredNextActions} likely next action${creditQuote.data.coveredNextActions === 1 ? '' : 's'}` : ''}.`
-                    : `You need ${creditQuote.data.cost - creditQuote.data.available} more credits. A ${creditQuote.data.recommendedPurchase === 'top_up' ? 'project pack' : 'plan'} is the best fit.`}
+                    : `You need ${creditQuote.data.cost - creditQuote.data.available} more credits. A ${creditQuote.data.recommendedPurchase === 'top_up' ? 'top-up' : 'plan'} is the best fit.`}
                 </p>
               ) : null}
               {isOffline || isStale ? (

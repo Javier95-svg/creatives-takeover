@@ -373,7 +373,7 @@ serve(withErrorBoundary(async (req: Request) => {
 
     if (purchaseType === "credit_pack") {
       if (!requestedPackId || !CREDIT_PACKS[requestedPackId]) {
-        throw new Error("Valid project pack is required");
+        throw new Error("Valid credit pack is required");
       }
 
       const pack = CREDIT_PACKS[requestedPackId];
@@ -422,7 +422,7 @@ serve(withErrorBoundary(async (req: Request) => {
               currency: "usd",
               product_data: {
                 name: `${pack.name} (${pack.credits} Credits)`,
-                description: `${pack.credits} persistent project-pack credits for Creatives Takeover`,
+                description: `${pack.credits} top-up credits for Creatives Takeover`,
               },
               unit_amount: pack.amount,
             },

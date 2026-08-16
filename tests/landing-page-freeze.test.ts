@@ -14,10 +14,12 @@ const frozenFiles = {
   // input now creates a durable, claimable ICP result in place; Product mode
   // auto-starts Demo Studio; and unresolved/off rollout state safely uses the
   // established route handoff. Headline, lede, proof line, and stats are intact.
+  '../src/components/Hero.tsx': '72d57cef3a244a06ef9064463591e91063ebf62a7523034dfc54745c4eb948a6',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.
   '../src/components/EntrepreneurProblems.tsx': '82ef110ab254c5dc9e459afe5368761668c8d8fcfb6b1d076231f11ad03cf19d',
+  '../src/components/Navigation.tsx': '806bf8264b1b63f70098b590708247739789f16e4607da6ef239a0b7a1882146',
   // Re-pinned 2026-07-25 (delivery audit, Phase 1): AISpecializationTrends moved
   // from a static import to lazy() + Suspense, matching how HomeFAQ and
   // FounderAnswerLibraryTeaser are already loaded. It is the only homepage
@@ -34,6 +36,7 @@ const frozenFiles = {
   // 5dd4dbbb): 20234ac0810e38a9cf7fbc6497bd33ec7d3c1da7fc181d068a00dfe2c8ecb4d0
   // Rehashed 2026-08-01: Hero no longer takes a ctaHref prop, so both mount
   // sites drop it. Section order and content are unchanged.
+  '../src/pages/Index.tsx': 'b01c42308490bc9096edba8642b717f09716f7944a648caa43d48773df60c36d',
 } as const;
 
 test('the approved unauthenticated landing page remains frozen during core-tool work', () => {

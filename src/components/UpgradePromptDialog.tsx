@@ -23,13 +23,27 @@ import {
   type ContextualUpgradeTrigger,
 } from "@/lib/contextualUpgrade";
 import { toast } from "sonner";
-import { ACTIVE_PROJECT_PACKS } from "@/config/planCatalog";
 
-const packIcons = [Zap, Rocket, Flame] as const;
-const TOP_UP_PACKAGES = ACTIVE_PROJECT_PACKS.map((pack, index) => ({
-  ...pack,
-  icon: packIcons[index] ?? Zap,
-}));
+const TOP_UP_PACKAGES = [
+  {
+    label: "Starter Pack",
+    credits: 20,
+    id: "pack_20",
+    icon: Zap,
+  },
+  {
+    label: "Boost Pack",
+    credits: 40,
+    id: "pack_40",
+    icon: Rocket,
+  },
+  {
+    label: "Power Pack",
+    credits: 60,
+    id: "pack_60",
+    icon: Flame,
+  },
+] as const;
 
 type UpgradeReason = "credits" | "limit" | "feature";
 

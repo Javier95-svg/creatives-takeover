@@ -13,7 +13,6 @@ import {
   resolveDashboardMode,
   resolveEntitlement,
 } from '../src/config/planPermissions.ts';
-import { PLAN_CATALOG } from '../src/config/planCatalog.ts';
 
 test('normalizePlan keeps legacy creator users on rising', () => {
   assert.equal(normalizePlan('creator'), 'rising');
@@ -117,8 +116,11 @@ test('plan monthly credits stay aligned with pricing', () => {
 
 test('pricing page presents plan outcome labels', () => {
   const pricingSource = readFileSync(new URL('../src/components/Pricing.tsx', import.meta.url), 'utf8');
-  assert.match(pricingSource, /outcomeLabel: plan\.outcome/);
-  assert.deepEqual(PLAN_CATALOG.map((plan) => plan.outcome), ['PROVE Preview', 'PROVE', 'SELL + GROW', 'Expert + RAISE']);
+
+  assert.match(pricingSource, /outcomeLabel: "PROVE Preview"/);
+  assert.match(pricingSource, /outcomeLabel: "PROVE"/);
+  assert.match(pricingSource, /outcomeLabel: "SELL \+ GROW"/);
+  assert.match(pricingSource, /outcomeLabel: "Expert \+ RAISE"/);
 });
 
 test('core entitlement rules reflect the pricing contract', () => {

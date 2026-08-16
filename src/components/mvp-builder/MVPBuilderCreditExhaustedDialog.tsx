@@ -72,7 +72,7 @@ export const MVPBuilderCreditExhaustedDialog = ({
             Keep building your MVP
           </DialogTitle>
           <DialogDescription>
-            You have used all your credits. Upgrade your plan or add a persistent project pack to continue using MVP Builder.
+            You have used all your credits. Upgrade your plan or add a top-up pack to continue using MVP Builder.
           </DialogDescription>
         </DialogHeader>
 
@@ -94,7 +94,7 @@ export const MVPBuilderCreditExhaustedDialog = ({
           </Button>
 
           <div className="pt-2">
-            <div className="mb-2 text-sm font-medium">Or add a project pack</div>
+            <div className="mb-2 text-sm font-medium">Or top up your credits</div>
             <div className="grid gap-2 sm:grid-cols-3">
               {CREDIT_PACKS.map((pack) => (
                 <Button

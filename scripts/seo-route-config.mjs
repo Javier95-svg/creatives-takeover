@@ -106,14 +106,14 @@ const FOUNDER_ANSWER_ROUTES = founderAnswerPages.map((page) => ({
 export const INDEXABLE_ROUTES = [
   {
     path: "/",
-    title: "Creatives Takeover | From Idea to Customer Conversations",
+    title: "Creatives Takeover | Startup Development Platform",
     description:
-      "Creatives Takeover is the evidence-driven path from an untested B2B SaaS idea to qualified customer conversations across ICP, demos, PMF, MVP, GTM, and traction.",
+      "Creatives Takeover is a startup development platform that helps first-time founders validate ideas, build MVPs, launch, gain traction, and prepare to raise.",
     changefreq: "daily",
     priority: 1.0,
-    heroHeading: "Untested idea to customer conversations",
+    heroHeading: "The Founders' Compass",
     heroCopy:
-      "Build a free ICP or proof demo before signup, then carry the artifact into one connected evidence workflow.",
+      "Define your ideal customer, prove demand, build your MVP, launch it, and find investment.",
     sections: [
       {
         heading: "Reach value before signup",
@@ -260,15 +260,6 @@ export const INDEXABLE_ROUTES = [
     heroHeading: "Connect. Learn. Grow.",
     heroCopy:
       "Browse startup mentors, review expertise, and book practical sessions focused on execution, fundraising, product, and growth.",
-  },
-  {
-    path: "/proof",
-    title: "Founder Evidence and Outcomes | Creatives Takeover",
-    description: "Consent-controlled founder cases showing assumptions, actions, verified evidence, changed decisions, and external customer outcomes.",
-    changefreq: "weekly",
-    priority: 0.8,
-    heroHeading: "Evidence, not unsupported testimonials",
-    heroCopy: "Trace founder progress from assumption through action and verified evidence to a changed decision and external outcome.",
   },
   {
     path: "/marketplace",

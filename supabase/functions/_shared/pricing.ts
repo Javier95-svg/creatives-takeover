@@ -31,9 +31,9 @@ export interface TopUpPackCents {
 
 /** One-time credit top-up packs (single platform wallet), in cents. */
 export const TOP_UP_PACKS_CENTS: Record<string, TopUpPackCents> = {
-  pack_20: { amount: 800, credits: 20, name: "Experiment Pack" },
-  pack_40: { amount: 1600, credits: 40, name: "Validation Pack" },
-  pack_60: { amount: 2400, credits: 60, name: "Launch Pack" },
+  pack_20: { amount: 800, credits: 20, name: "Starter Pack" },
+  pack_40: { amount: 1600, credits: 40, name: "Boost Pack" },
+  pack_60: { amount: 2400, credits: 60, name: "Power Pack" },
 };
 
 /** Map a paid amount (cents) + interval back to its plan tier, or "rookie". */

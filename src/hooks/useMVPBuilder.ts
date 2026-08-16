@@ -7,7 +7,6 @@ import {
   trackMVPGenerationCompleted,
   trackMVPIntegrationConnected,
   trackToolOutputCreated,
-  captureEvent,
 } from '@/lib/analytics';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreditActions } from '@/hooks/useCreditActions';
@@ -78,7 +77,6 @@ import { MVP_PUBLISH_BASE_DOMAIN, buildPublicAppUrl } from '@/lib/mvp-builder/pu
 import { evaluateMvpQuality, hasMvpSuccessEventInstrumentation } from '@/lib/mvp-builder/qualityChecks';
 import { runMvpBrowserSmokeTest } from '@/lib/mvp-builder/smokeTest';
 import { createJourneyHandoff, trackJourneyEvent, upsertJourneyOutcome } from '@/lib/journeyOutcomes';
-import { buildSpecFiles } from '@/lib/evidenceBackedBuildSpec';
 
 export interface MVPMessage {
   id: string;
@@ -2863,7 +2861,7 @@ export function useMVPBuilder() {
       const required = ensureCredits(creditFeature, {
         featureName: featureLabel,
         requiredCredits: CREDIT_COSTS[creditFeature] ?? 0,
-        description: 'MVP Builder uses your regular account credit balance. If you run out, you can upgrade your plan or buy a persistent project pack.',
+        description: 'MVP Builder uses your regular account credit balance. If you run out, you can upgrade your plan or buy a credit pack.',
         allowPartialSpend: true,
         suppressCreditPrompt: true,
       });
@@ -3621,22 +3619,15 @@ export function useMVPBuilder() {
       toast.error('Generate a project before exporting code.');
       return;
     }
-    const specFiles = buildSpecFiles(setupInput);
-    const blob = buildMVPProjectZip([...projectFiles, ...specFiles]);
+    const blob = buildMVPProjectZip(projectFiles);
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
     link.download = `${(projectName || 'mvp').toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'mvp'}.zip`;
     link.click();
     URL.revokeObjectURL(url);
-    captureEvent('build_spec_exported', {
-      destination: 'zip',
-      project_id: projectId,
-      evidence_source_count: setupInput.evidenceManifest?.sources.length ?? 0,
-      spec_version: 1,
-    });
-    toast.success('Exported MVP source ZIP with Markdown and JSON evidence-backed build specs.');
-  }, [projectFiles, projectId, projectName, setupInput]);
+    toast.success('Exported MVP source ZIP.');
+  }, [projectFiles, projectName]);
 
   // Publish (auto-subdomain). Reserves a clean, globally-unique public link
   // ({slug}.creativestakeover.app) for projects without a connected custom domain.

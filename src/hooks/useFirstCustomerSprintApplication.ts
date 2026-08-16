@@ -31,14 +31,16 @@ export function useFirstCustomerSprintApplication() {
 
   const mutation = useMutation({
     mutationFn: async (input: FirstCustomerSprintApplicationInput) => {
-      const { data, error } = await client.rpc('submit_first_customer_sprint_application_v2', {
+      const { data, error } = await client.rpc('submit_first_customer_sprint_application_v1', {
+        p_business_model: input.businessModel,
         p_founder_owns_sales: input.founderOwnsSales,
+        p_has_sellable_product: input.hasSellableProduct,
         p_customer_count: input.customerCount,
-        p_estimated_annual_customer_value_usd: input.estimatedAnnualCustomerValueUsd || null,
+        p_estimated_annual_customer_value_usd: input.estimatedAnnualCustomerValueUsd,
         p_weekly_capacity_hours: input.weeklyCapacityHours,
+        p_can_name_ten_prospects: input.canNameTenProspects,
+        p_recent_outreach: input.recentOutreach,
         p_primary_blocker: input.primaryBlocker,
-        p_product_stage: input.productStage,
-        p_target_outcome: input.targetOutcome,
         p_product_url: input.productUrl || null,
         p_product_summary: input.productSummary,
         p_acquisition_source: input.acquisitionSource,

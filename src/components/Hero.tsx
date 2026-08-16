@@ -15,7 +15,6 @@ import { buildHeroProductPath, DEFAULT_HERO_MODE, type HeroMode } from "@/lib/he
 import { buildIcpSeedReturnPath, persistIcpSeed } from "@/lib/icpSeed";
 import { useFeatureFlagEnabled } from "@/hooks/usePosthogFeatureFlag";
 import { buildHeroResumePath, type HeroGuestArtifactRef } from "@/lib/heroIcpGeneration";
-import { captureEvent } from "@/lib/analytics";
 
 // Everything that generates lives behind this boundary so no part of it is in
 // the fold-blocking bundle. The input above is plain markup and stays typable
@@ -69,19 +68,19 @@ const DEFAULT_NAV: HeroNavItem[] = [
 ];
 
 const DEFAULT_STATS: HeroStat[] = [
-  { value: "PROVE", label: "Define the buyer and test the riskiest assumption" },
-  { value: "SELL", label: "Turn evidence into an offer and real conversations" },
-  { value: "GROW", label: "Verify traction and adapt the next decision" },
-  { value: "6", label: "Connected tools, one evidence workflow" },
+  { value: "5", unit: "×", label: "Faster idea → MVP than pre-AI builders" },
+  { value: "$680B", unit: "+", label: "Into AI-native startups since 2024" },
+  { value: "1 in 4", label: "New 2026 launches are solo founders" },
+  { value: "~18", unit: "mo", label: "Before incumbents close the AI-native gap" },
 ];
 
 const DEFAULT_LEDE = (
   <>
     <span className="ct-hero__lede-block">
-      From an untested B2B SaaS idea to your first qualified customer conversations.
+      Business Development platform for startup founders &amp; first-time business owners.
     </span>
     <span className="ct-hero__lede-block">
-      Build a free ICP or proof demo before signup, then carry the artifact into one connected evidence workflow.
+      Define your ideal customer, prove demand, build your MVP, launch it, and find investment.
     </span>
     <strong className="ct-hero__lede-final">No application. No cohort. No equity.</strong>
   </>
@@ -93,8 +92,8 @@ const SIGNED_IN_LEDE =
 const Hero = ({
   eyebrow = "Referral program available in your dashboard — invite friends and earn a free plan upgrade.",
   eyebrowPill = "New",
-  titleLine1 = "Untested idea to",
-  titleLine2 = "customer conversations",
+  titleLine1 = "The Founders'",
+  titleLine2 = "Compass",
   lede = DEFAULT_LEDE,
   dashboardUrl = "creatives-takeover.com/dashboard",
   dashboardBread = "Building · Stage 4 of 7",
@@ -155,7 +154,6 @@ const Hero = ({
         entries.forEach((entry) => {
           if (entry.isIntersecting && !hasTrackedView.current) {
             hasTrackedView.current = true;
-            captureEvent('category_cta_viewed', { placement: 'homepage_hero' });
             trackActivationEntry("activation_entry_opened", {
               entry_id: "hero_icp_builder",
               tool: "icp_builder",
@@ -218,7 +216,6 @@ const Hero = ({
 
     const { route, hasUrl } = classifyHeroInput(trimmed, heroMode);
     const isDemo = route === "demo";
-    captureEvent('category_cta_clicked', { placement: 'homepage_hero', destination: isDemo ? 'guest_demo' : 'guest_icp' });
     trackHeroInputSubmitted({
       char_count: trimmed.length,
       has_url: hasUrl,

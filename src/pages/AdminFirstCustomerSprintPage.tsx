@@ -49,7 +49,7 @@ export default function AdminFirstCustomerSprintPage() {
   });
   const review = useMutation({
     mutationFn: async ({ application, decision }: { application: FirstCustomerSprintAdminApplication; decision: 'invited' | 'declined' }) => {
-      const { error } = await client.rpc('review_first_customer_sprint_application_v2', {
+      const { error } = await client.rpc('review_first_customer_sprint_application_v1', {
         p_application_id: application.id,
         p_decision: decision,
         p_override_reason: overrideReasons[application.id]?.trim() || null,
@@ -89,6 +89,7 @@ export default function AdminFirstCustomerSprintPage() {
     },
     onError: (error: Error) => toast.error(error.message),
   });
+
   const summary = cohort.data?.summary ?? {};
   const mentorCount = summary.mentorInvited ?? 0;
   const publicCount = summary.publicInvited ?? 0;
@@ -100,7 +101,7 @@ export default function AdminFirstCustomerSprintPage() {
         <header>
           <Badge variant="secondary"><ShieldAlert className="mr-2 h-4 w-4" />Admin only</Badge>
           <h1 className="mt-3 text-3xl font-bold">First Customer Sprint cohort</h1>
-          <p className="mt-2 text-muted-foreground">Run one capacity-limited founder cohort and monitor applications, activation, external evidence, outcomes, and mentor delivery.</p>
+          <p className="mt-2 text-muted-foreground">Run the 5 mentor-referral / 5 public-applicant experiment and monitor behavior, outcomes, payment, and referrals.</p>
           <p className="mt-2 text-sm text-muted-foreground">Mentors share <code>/first-customer-sprint/apply?source=mentor&amp;mentorId=MENTOR_ID&amp;ref=THEIR_REFERRAL_CODE</code>. The backend verifies both values before counting the application as mentor-sourced.</p>
         </header>
 
@@ -133,7 +134,7 @@ export default function AdminFirstCustomerSprintPage() {
                       {application.qualificationReasons.length ? <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-muted-foreground">{application.qualificationReasons.map((reason) => <li key={reason}>{reason}</li>)}</ul> : null}
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className="rounded-lg border p-3"><strong>{application.annualCustomerValueUsd ? `$${application.annualCustomerValueUsd}` : 'Hypothesis'}</strong><p className="text-xs text-muted-foreground">Annual customer value</p></div>
+                      <div className="rounded-lg border p-3"><strong>${application.annualCustomerValueUsd}</strong><p className="text-xs text-muted-foreground">Annual customer value</p></div>
                       <div className="rounded-lg border p-3"><strong>{application.customerCount}</strong><p className="text-xs text-muted-foreground">Customers</p></div>
                       <div className="rounded-lg border p-3"><strong>{application.attached}</strong><p className="text-xs text-muted-foreground">Prospects</p></div>
                       <div className="rounded-lg border p-3"><strong>{application.sent}</strong><p className="text-xs text-muted-foreground">Messages</p></div>

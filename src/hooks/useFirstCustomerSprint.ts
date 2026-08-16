@@ -8,7 +8,6 @@ import { isFirstCustomerSprintSnapshot } from '@/lib/firstCustomerSprint';
 import type {
   FirstCustomerContinuation,
   FirstCustomerDecision,
-  FirstCustomerDemoEvidence,
   FirstCustomerMessageVariant,
   FirstCustomerSprintReviewInput,
   FirstCustomerSprintSnapshot,
@@ -65,7 +64,7 @@ export function useFirstCustomerSprint() {
     proofDescription?: string; estimatedCustomerValueUsd: number; weeklyCapacityHours: number;
     mentorDecisionQuestion?: string;
   }) => run.mutateAsync(async () => {
-    const { data, error } = await client.rpc('start_first_customer_sprint_v2', {
+    const { data, error } = await client.rpc('start_first_customer_sprint_v1', {
       p_offer: input.offer, p_target_segment: input.targetSegment,
       p_problem_hypothesis: input.problemHypothesis, p_proof_url: input.proofUrl || null,
       p_proof_description: input.proofDescription || null,
@@ -76,18 +75,6 @@ export function useFirstCustomerSprint() {
     if (error) throw error;
     return data;
   }), [run]);
-
-  const attachDemo = useCallback(async (sprintId: string, projectId: string) => run.mutateAsync(async () => {
-    const { data, error } = await client.rpc('attach_first_customer_sprint_demo_v1', { p_sprint_id: sprintId, p_demo_project_id: projectId });
-    if (error) throw error;
-    return data;
-  }), [run]);
-
-  const getDemoEvidence = useCallback(async (sprintId: string): Promise<FirstCustomerDemoEvidence | null> => {
-    const { data, error } = await client.rpc('get_first_customer_sprint_demo_evidence_v1', { p_sprint_id: sprintId });
-    if (error) throw error;
-    return data as FirstCustomerDemoEvidence | null;
-  }, []);
 
   const update = useCallback(async (sprintId: string, patch: Record<string, unknown>) => run.mutateAsync(async () => {
     const { data, error } = await client.rpc('update_first_customer_sprint_v1', { p_sprint_id: sprintId, p_patch: patch });
@@ -153,6 +140,6 @@ export function useFirstCustomerSprint() {
     isLoading: query.isLoading,
     error: query.error instanceof Error ? query.error : null,
     isSaving: run.isPending,
-    refresh, start, update, attachContact, attachDemo, getDemoEvidence, generateMessages, requestCheckpoint, complete, submitReview,
-  }), [attachContact, attachDemo, complete, enabled, generateMessages, getDemoEvidence, query.data, query.error, query.isLoading, refresh, requestCheckpoint, run.isPending, start, submitReview, update]);
+    refresh, start, update, attachContact, generateMessages, requestCheckpoint, complete, submitReview,
+  }), [attachContact, complete, enabled, generateMessages, query.data, query.error, query.isLoading, refresh, requestCheckpoint, run.isPending, start, submitReview, update]);
 }

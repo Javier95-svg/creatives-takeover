@@ -124,7 +124,7 @@ test('platform top-up catalog restores the requested Stripe payment links', () =
   assert.match(migration, /pack_40[\s\S]*aFa4gAegV8Grafc3nt0VO0i/);
   assert.match(migration, /pack_60[\s\S]*8x29AUc8N1dZevsgaf0VO0j/);
   // Pack catalog is the shared pricing source of truth; the webhook derives credits from it.
-  assert.match(pricing, /pack_20: \{ amount: 800, credits: 20, name: "Experiment Pack" \}/);
+  assert.match(pricing, /pack_20: \{ amount: 800, credits: 20, name: "Starter Pack" \}/);
   assert.match(webhook, /TOP_UP_PACKS_CENTS/);
   assert.match(webhook, /increment_credit_balance/);
 });

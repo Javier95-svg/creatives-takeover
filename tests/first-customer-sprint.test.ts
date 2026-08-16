@@ -24,26 +24,29 @@ test('a sprint lasts exactly 30 UTC days', () => {
   assert.equal(sprintEndDate(start).toISOString(), '2026-09-02T12:00:00.000Z');
 });
 
-test('V2 qualification accepts pre-product founders and applies only execution-fit filters', () => {
+test('pilot qualification applies the same demand filters to both acquisition sources', () => {
   const qualified = qualifyFirstCustomerSprintApplication({
-    founderOwnsSales: true, customerCount: 0, weeklyCapacityHours: 3,
-    productStage: 'idea', targetOutcome: 'qualified_conversations',
+    businessModel: 'b2b_saas', founderOwnsSales: true, hasSellableProduct: true,
+    customerCount: 1, estimatedAnnualCustomerValueUsd: 1200, weeklyCapacityHours: 3,
+    canNameTenProspects: true, recentOutreach: 'last_30_days',
   });
   assert.deepEqual(qualified, { qualified: true, reasons: [] });
 
   const unqualified = qualifyFirstCustomerSprintApplication({
-    founderOwnsSales: false, customerCount: 4, weeklyCapacityHours: 1,
-    productStage: 'idea', targetOutcome: 'payment',
+    businessModel: 'service', founderOwnsSales: false, hasSellableProduct: false,
+    customerCount: 4, estimatedAnnualCustomerValueUsd: 500, weeklyCapacityHours: 1,
+    canNameTenProspects: false, recentOutreach: 'never',
   });
   assert.equal(unqualified.qualified, false);
-  assert.equal(unqualified.reasons.length, 3);
+  assert.equal(unqualified.reasons.length, 8);
 });
 
-test('pre-product intake requires an offer, buyer, problem, and two weekly hours but treats proof and value as hypotheses', () => {
-  assert.equal(validateFirstCustomerIntake({ offer: '', targetSegment: '', problemHypothesis: '', estimatedCustomerValueUsd: 0, weeklyCapacityHours: 1 }).length, 4);
+test('intake requires an offer, buyer, problem, proof, customer value, and two weekly hours', () => {
+  assert.equal(validateFirstCustomerIntake({ offer: '', targetSegment: '', problemHypothesis: '', estimatedCustomerValueUsd: 0, weeklyCapacityHours: 1 }).length, 6);
   assert.deepEqual(validateFirstCustomerIntake({
     offer: 'A fixed-scope onboarding audit', targetSegment: 'B2B SaaS operations leads',
-    problemHypothesis: 'Manual onboarding loses expansion opportunities', estimatedCustomerValueUsd: 0, weeklyCapacityHours: 3,
+    problemHypothesis: 'Manual onboarding loses expansion opportunities', proofDescription: 'Clickable prototype',
+    estimatedCustomerValueUsd: 2500, weeklyCapacityHours: 3,
   }), []);
 });
 
@@ -130,32 +133,30 @@ test('checkpoint contract is admin-coordinated, redacted, and never deducts cred
   assert.match(assistant, /message_generation_count >= 2/);
 });
 
-test('V2 contract supports pre-product invite enrollment without a standalone checkout', () => {
-  const migration = readFileSync(new URL('../supabase/migrations/20260815180000_competitive_hardening_v1.sql', import.meta.url), 'utf8');
-  const retirement = readFileSync(new URL('../supabase/migrations/20260816180000_remove_first_customer_sprint_service_offer.sql', import.meta.url), 'utf8');
+test('demand-validation contract supports a balanced cohort, structured review, and paid continuation', () => {
+  const migration = readFileSync(new URL('../supabase/migrations/20260804120000_first_customer_sprint_demand_validation.sql', import.meta.url), 'utf8');
   const application = readFileSync(new URL('../src/pages/FirstCustomerSprintApplicationPage.tsx', import.meta.url), 'utf8');
   const admin = readFileSync(new URL('../src/pages/AdminFirstCustomerSprintPage.tsx', import.meta.url), 'utf8');
   const sprint = readFileSync(new URL('../src/pages/FirstCustomerSprintPage.tsx', import.meta.url), 'utf8');
   const checkout = readFileSync(new URL('../supabase/functions/create-checkout/index.ts', import.meta.url), 'utf8');
   const webhook = readFileSync(new URL('../supabase/functions/stripe-webhook/index.ts', import.meta.url), 'utf8');
 
-  assert.match(migration, /submit_first_customer_sprint_application_v2/);
-  assert.match(migration, /'idea','concept_demo','working_product'/);
-  assert.doesNotMatch(migration, /p_estimated_annual_customer_value_usd < 1000/);
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS public\.first_customer_sprint_applications/);
+  assert.match(migration, /p_business_model <> 'b2b_saas'/);
+  assert.match(migration, /p_estimated_annual_customer_value_usd < 1000/);
+  assert.match(migration, /p_recent_outreach <> 'last_30_days'/);
   assert.match(migration, /A reason is required to override qualification/);
   assert.match(migration, /JOIN public\.referral_codes code ON code\.user_id=mentor\.user_id/);
   assert.match(migration, /review_submitted_at IS NULL/);
+  assert.match(migration, /purchaseContextId/);
   assert.match(migration, /continuation_from_sprint_id/);
-  assert.match(retirement, /DROP FUNCTION IF EXISTS public\.fulfill_first_customer_sprint_offer_v1/);
-  assert.match(retirement, /DROP FUNCTION IF EXISTS public\.refund_first_customer_sprint_offer_v1/);
-  assert.match(retirement, /DROP TABLE IF EXISTS public\.first_customer_sprint_service_purchases/);
-  assert.match(retirement, /status = 'invited'[\s\S]*set_founder_cycle_beta_cohort_v1/);
-  assert.match(application, /Capacity-screened founder sprint/);
-  assert.match(application, /there is no separate payment step/i);
-  assert.doesNotMatch(application, /purchaseType: 'service_offer'|\$299|Enroll and pay/);
-  assert.doesNotMatch(admin, /paid founders|rerun credit|evaluate_first_customer_sprint_service_credit_v1/i);
-  assert.match(sprint, /Attach a published proof demo/);
-  assert.match(sprint, /existing \$8 Experiment Pack/);
-  assert.doesNotMatch(checkout, /service_offer|FIRST_CUSTOMER_SPRINT_OFFER/);
-  assert.doesNotMatch(webhook, /first_customer_sprint_offer_purchased|FIRST_CUSTOMER_SPRINT_OFFER/);
+  assert.match(migration, /one paid continuation only/);
+  assert.match(migration, /'mentorInvited'/);
+  assert.match(application, /mentor referrals and public applicants/);
+  assert.match(admin, /Mentor referrals/);
+  assert.match(admin, /Public\/current audience/);
+  assert.match(sprint, /Unlock sprint two for \$8/);
+  assert.match(checkout, /Complete and review the sprint before purchasing the continuation/);
+  assert.match(checkout, /continuation_from_sprint_id/);
+  assert.match(webhook, /first_customer_sprint_continuation_purchased/);
 });

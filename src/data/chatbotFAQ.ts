@@ -1,10 +1,4 @@
 import { FAQItem, FAQCategory, QuickActionType, createFAQItem } from '@/types/faq';
-import { PLAN_CATALOG_BY_ID } from '@/config/planCatalog';
-
-const rookiePlan = PLAN_CATALOG_BY_ID.rookie;
-const starterPlan = PLAN_CATALOG_BY_ID.starter;
-const risingPlan = PLAN_CATALOG_BY_ID.rising;
-const proPlan = PLAN_CATALOG_BY_ID.pro;
 
 // Business intelligence and analytics interfaces
 export interface FAQAnalytics {
@@ -63,8 +57,8 @@ export const chatbotFAQ: FAQItem[] = [
     keywords: ['price', 'cost', 'pricing', 'how much', 'plans', 'subscription', 'free'],
     synonyms: ['what does it cost', 'subscription price', 'plan costs'],
     question: 'How much does it cost?',
-    answer: `We offer four plans: ${rookiePlan.name} is free with ${rookiePlan.monthlyCredits} credits/month, ${starterPlan.name} is $${starterPlan.monthlyPrice}/month or $${starterPlan.yearlyPrice}/year with ${starterPlan.monthlyCredits} credits, ${risingPlan.name} is $${risingPlan.monthlyPrice}/month or $${risingPlan.yearlyPrice}/year with ${risingPlan.monthlyCredits} credits, and ${proPlan.name} is $${proPlan.monthlyPrice}/month or $${proPlan.yearlyPrice}/year with ${proPlan.monthlyCredits} credits. The six core workflow tools remain connected across plans; metered actions disclose their credit cost before execution.`,
-    shortAnswer: `Rookie, Starter, Rising, and Pro give you ${rookiePlan.monthlyCredits}, ${starterPlan.monthlyCredits}, ${risingPlan.monthlyCredits}, and ${proPlan.monthlyCredits} monthly credits respectively.`,
+    answer: 'We offer four plans: Rookie is free with 50 credits/month, Starter is $9/month or $79/year with 100 credits, Rising is $29/month or $239/year with 250 credits, and Pro is $65/month or $589/year with 600 credits. Demo Studio costs 4 credits on Rookie and 3 credits on paid plans. MVP Builder is available on every plan and charges per AI action.',
+    shortAnswer: 'Rookie, Starter, Rising, and Pro give you 50, 100, 250, and 600 monthly credits respectively.',
     category: FAQCategory.PRICING,
     priority: 8,
     quickActions: [
@@ -104,7 +98,7 @@ export const chatbotFAQ: FAQItem[] = [
     keywords: ['free', 'trial', 'demo', 'test', 'try', 'without paying'],
     synonyms: ['free version', 'trial period', 'demo version'],
     question: 'Can I try it for free?',
-    answer: `Yes. Rookie is free forever and gives you ${rookiePlan.monthlyCredits} monthly credits. You can build an ICP or proof demo before signup, then preserve that artifact when you create an account. The six core workflow tools remain connected; metered actions disclose their credit cost before execution.`,
+    answer: 'Yes. Rookie is free forever and gives you 10 monthly credits, free ICP Builder access, Insighta Test, Newspaper, and early-stage browsing or preview access across the platform. You can also schedule a live demo to see the full workflow before upgrading.',
     shortAnswer: 'Yes! Free tier available plus live demo options.',
     category: FAQCategory.PRICING,
     priority: 7,

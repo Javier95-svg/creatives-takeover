@@ -9,8 +9,6 @@ import PricingFAQ from "@/components/PricingFAQ";
 import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
 import { trackPricingViewed } from "@/lib/analytics";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
-import PricingWorkloadExamples from "@/components/PricingWorkloadExamples";
-import { PLAN_CATALOG } from "@/config/planCatalog";
 
 
 const PricingPage = () => {
@@ -19,7 +17,30 @@ const PricingPage = () => {
   }, []);
   // Structured data for pricing tiers
   const structuredData = [
-    ...PLAN_CATALOG.map((plan) => createProductSchema({ name: `Creatives Takeover ${plan.name} Plan`, description: `${plan.description} Includes ${plan.monthlyCredits} monthly credits.`, price: plan.monthlyPrice, currency: "USD" })),
+    createProductSchema({
+      name: "Creatives Takeover Rookie Plan",
+      description: "Clarify who to serve first with both visitor AHA previews, a customer decision workflow, and 50 monthly credits.",
+      price: 0,
+      currency: "USD"
+    }),
+    createProductSchema({
+      name: "Creatives Takeover Starter Plan",
+      description: "Validate demand with 100 monthly credits, Demo Studio proof workflows, PMF evidence, and structured execution.",
+      price: 9,
+      currency: "USD"
+    }),
+    createProductSchema({
+      name: "Creatives Takeover Rising Plan",
+      description: "Build and launch with 250 monthly credits, evidence backed MVP workflows, GTM execution, and traction measurement.",
+      price: 29,
+      currency: "USD"
+    }),
+    createProductSchema({
+      name: "Creatives Takeover Pro Plan",
+      description: "Accelerate and fundraise with 600 monthly credits, expert accountability within 48 hours, deeper research, and fundraising workflows.",
+      price: 65,
+      currency: "USD"
+    }),
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'Pricing', url: '/pricing' }
@@ -40,7 +61,6 @@ const PricingPage = () => {
         <div className="relative z-10">
           <Navigation />
           <Pricing />
-          <ScrollReveal><PricingWorkloadExamples /></ScrollReveal>
           <ScrollReveal>
             <PricingComparison />
           </ScrollReveal>

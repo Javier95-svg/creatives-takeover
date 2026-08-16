@@ -236,11 +236,6 @@ verify_jwt = true
 [functions.journey-outcome-service]
 verify_jwt = true
 
-# Webhook ingestion validates its own one-time bearer token. Authenticated
-# create/import actions still validate the Supabase session inside the handler.
-[functions.external-evidence]
-verify_jwt = false
-
 # ─── Recorded 2026-07-25 (delivery audit, Phase 4) ────────────────────────────
 # These were already deployed with verify_jwt = false but were never declared
 # here, so config.toml disagreed with production. That was harmless only while

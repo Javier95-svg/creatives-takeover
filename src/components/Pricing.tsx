@@ -9,19 +9,13 @@ import { useNavigate } from "react-router-dom";
 import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { useLocation } from "react-router-dom";
-import { PLAN_CATALOG } from "@/config/planCatalog";
+import { PLAN_HIGHLIGHTS, PLAN_MONTHLY_CREDITS } from "@/config/planPermissions";
+import { PLAN_PRICING } from "@/config/pricing";
 import { appendCheckoutIntentParam } from "@/lib/checkoutRedirect";
 import { RevealGroup } from "@/components/animations/ScrollReveal";
 
 type BillingCycle = "monthly" | "yearly";
 type PlanKey = "rookie" | "starter" | "rising" | "pro";
-
-const PLAN_COPY: Record<PlanKey, { subtitle: string; audience: string; yearlyEquivalent: string; savings: string | null; highlight?: string }> = {
-  rookie: { subtitle: "Take the first evidence action", audience: "Clarify who to serve, create an evidence plan, and take one action in the market.", yearlyEquivalent: "Free forever", savings: null },
-  starter: { subtitle: "Earn a costly commitment", audience: "Turn a customer hypothesis into qualified conversations, evidence, and a real commitment.", yearlyEquivalent: "$6.58/mo", savings: "Save 27%", highlight: "Most Popular" },
-  rising: { subtitle: "Win and retain customers", audience: "Use the customer pipeline, messaging, experiments, and metrics to reach repeatable revenue.", yearlyEquivalent: "$19.92/mo", savings: "Save 31%" },
-  pro: { subtitle: "Add human accountability", audience: "Run every loop with deeper reviews, expert accountability, and optional fundraising workflows.", yearlyEquivalent: "$49.08/mo", savings: "Save 25%" },
-};
 
 const PLAN_CONFIG: Array<{
   key: PlanKey;
@@ -36,7 +30,61 @@ const PLAN_CONFIG: Array<{
   credits: number;
   highlight?: string;
   features: string[];
-}> = PLAN_CATALOG.map((plan) => ({ key: plan.id, title: plan.name, outcomeLabel: plan.outcome, subtitle: PLAN_COPY[plan.id].subtitle, audience: PLAN_COPY[plan.id].audience, monthlyPrice: plan.monthlyPrice, yearlyPrice: plan.yearlyPrice, yearlyEquivalent: PLAN_COPY[plan.id].yearlyEquivalent, savings: PLAN_COPY[plan.id].savings, credits: plan.monthlyCredits, highlight: PLAN_COPY[plan.id].highlight, features: plan.features }));
+}> = [
+  {
+    key: "rookie",
+    title: "Rookie",
+    outcomeLabel: "PROVE Preview",
+    subtitle: "Take the first evidence action",
+    audience: "Clarify who to serve, create an evidence plan, and take one action in the market.",
+    monthlyPrice: PLAN_PRICING.rookie.monthly,
+    yearlyPrice: PLAN_PRICING.rookie.yearly,
+    yearlyEquivalent: "Free forever",
+    savings: null,
+    credits: PLAN_MONTHLY_CREDITS.rookie,
+    features: PLAN_HIGHLIGHTS.rookie,
+  },
+  {
+    key: "starter",
+    title: "Starter",
+    outcomeLabel: "PROVE",
+    subtitle: "Earn a costly commitment",
+    audience: "Turn a customer hypothesis into qualified conversations, evidence, and a real commitment.",
+    monthlyPrice: PLAN_PRICING.starter.monthly,
+    yearlyPrice: PLAN_PRICING.starter.yearly,
+    yearlyEquivalent: "$6.58/mo",
+    savings: "Save 27%",
+    credits: PLAN_MONTHLY_CREDITS.starter,
+    highlight: "Most Popular",
+    features: PLAN_HIGHLIGHTS.starter,
+  },
+  {
+    key: "rising",
+    title: "Rising",
+    outcomeLabel: "SELL + GROW",
+    subtitle: "Win and retain customers",
+    audience: "Use the customer pipeline, messaging, experiments, and metrics to reach repeatable revenue.",
+    monthlyPrice: PLAN_PRICING.rising.monthly,
+    yearlyPrice: PLAN_PRICING.rising.yearly,
+    yearlyEquivalent: "$19.92/mo",
+    savings: "Save 31%",
+    credits: PLAN_MONTHLY_CREDITS.rising,
+    features: PLAN_HIGHLIGHTS.rising,
+  },
+  {
+    key: "pro",
+    title: "Pro",
+    outcomeLabel: "Expert + RAISE",
+    subtitle: "Add human accountability",
+    audience: "Run every loop with deeper reviews, expert accountability, and optional fundraising workflows.",
+    monthlyPrice: PLAN_PRICING.pro.monthly,
+    yearlyPrice: PLAN_PRICING.pro.yearly,
+    yearlyEquivalent: "$49.08/mo",
+    savings: "Save 25%",
+    credits: PLAN_MONTHLY_CREDITS.pro,
+    features: PLAN_HIGHLIGHTS.pro,
+  },
+];
 
 const PLAN_CARD_STYLES: Record<PlanKey, { border: string; ring: string; button: string; buttonVariant: "default" | "outline" }> = {
   // Per-tier border colour identity (token-based, theme-aware); the recommended

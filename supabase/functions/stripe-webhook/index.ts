@@ -1636,8 +1636,6 @@ serve(async (req) => {
       case "payment_intent.succeeded":
         await handlePaymentIntentSucceeded(object, supabaseAdmin);
         break;
-      case "charge.refunded":
-        break;
       case "customer.subscription.created":
       case "customer.subscription.updated":
         await handleSubscriptionChange(object, supabaseAdmin, {

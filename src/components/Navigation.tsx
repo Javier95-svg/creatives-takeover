@@ -69,9 +69,7 @@ const Navigation = () => {
   // Icon mapping for navigation items
   const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
     "Home": Home,
-    "Core Workflow": Compass,
-    "Command Center": Home,
-    "Evidence": BarChart3,
+    "BizMap AI": Compass,
     "Insighta": Telescope,
     "Network": UsersIcon,
     "Podcast": Mic,
@@ -91,7 +89,7 @@ const Navigation = () => {
     | { type: 'label'; label: string }
     | SubmenuLinkItem;
 
-  const bizMapSubmenu: BizMapMenuItem[] = BIZMAP_STAGES.filter((stage) => stage.order <= 6).flatMap((stage) => [
+  const bizMapSubmenu: BizMapMenuItem[] = BIZMAP_STAGES.filter((stage) => stage.order <= 5).flatMap((stage) => [
     { type: 'label' as const, label: `Stage ${stage.numeral}: ${stage.title}` },
     ...stage.tools.map((tool) => ({
       name: tool.beta ? `${tool.name} (Beta)` : tool.name,
@@ -122,9 +120,6 @@ const Navigation = () => {
 
   // Resources submenu items
   const resourcesSubmenu = [
-    { name: "Proof", href: "/proof", icon: CheckSquare, description: "Verified founder evidence and outcomes." },
-    { name: "Pricing", href: "/pricing", icon: DollarSign, description: "Plans, workloads, and project packs." },
-    { name: "Podcast", href: "/podcast", icon: Mic, description: "Founder conversations." },
     { name: "Newspaper", href: "/newspaper", icon: FileText, description: "Business Cases & Founder Stories." },
     { name: "Email Templates", href: "/email-templates", icon: Mail, description: "Reach out smartly." },
     { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, description: "60 business models from 8 different industries." },
@@ -260,11 +255,13 @@ const Navigation = () => {
   };
 
   const navItems = [
-    { name: "Command Center", href: "/dashboard", tooltip: "Your current evidence, decisions, and next action", icon: Home },
-    { name: "Evidence", href: "/dashboard/evidence", tooltip: "Customer evidence and external connections", icon: BarChart3 },
-    { name: "Core Workflow", href: "/bizmap-ai", tooltip: "PROVE, SELL, and GROW with connected startup tools", icon: Compass },
+    { name: "Home", href: "/", tooltip: "Return to homepage", icon: Home },
+    { name: "BizMap AI", href: "/bizmap-ai", tooltip: "Validate, build, and launch with guided startup tools", icon: Compass },
     { name: "Network", href: "/mentorship", tooltip: "Mentors, angel investors, and co-founder matchmaking", icon: UsersIcon },
-    { name: "Resources", href: "/resources", tooltip: "Proof, pricing, stories, templates, and founder resources", icon: BookOpen },
+    { name: "Insighta", href: "/insighta", tooltip: "Funding opportunities and investment resources", icon: Telescope },
+    { name: "Podcast", href: "/podcast", tooltip: "Founders Unleashed — founder conversations", icon: Mic },
+    { name: "Newspaper", href: "/newspaper", tooltip: "Business cases & founder stories", icon: FileText },
+    { name: "Pricing", href: "/pricing", tooltip: "View plans and pricing options", icon: DollarSign }
   ];
 
   // Check if a nav item is active
@@ -329,10 +326,10 @@ const Navigation = () => {
                 <TabletNavigation
                   navItems={navItems}
                   submenus={{
-                    'Core Workflow': bizMapSubmenu,
+                    'BizMap AI': bizMapSubmenu,
                     Insighta: insightaSubmenu,
                     Network: communitySubmenu,
-                    Resources: resourcesSubmenu,
+                    More: resourcesSubmenu,
                   }}
                   getItemState={getMenuItemState}
                   onItemClick={(name) => trackClick(name, 'Navigation')}
@@ -348,7 +345,7 @@ const Navigation = () => {
                   const active = isActive(item.href);
 
                   // Special handling for BizMap AI with dropdown
-                  if (item.name === 'Core Workflow') {
+                  if (item.name === 'BizMap AI') {
                     return (
                       <DropdownMenu key={item.name}>
                         <Tooltip>
@@ -585,7 +582,7 @@ const Navigation = () => {
                   }
 
                   // Special handling for More with dropdown
-                  if (item.name === 'Resources') {
+                  if (item.name === 'More') {
                     return (
                       <DropdownMenu key={item.name}>
                         <Tooltip>
@@ -655,10 +652,10 @@ const Navigation = () => {
                             active
                               ? navTriggerActiveClass
                               : navTriggerInactiveClass,
-                            item.name === 'Core Workflow' && 'relative'
+                            item.name === 'BizMap AI' && 'relative'
                           )}
-                          onMouseEnter={item.name === 'Core Workflow' ? bizMapHover.handleMouseEnter : undefined}
-                          onMouseLeave={item.name === 'Core Workflow' ? bizMapHover.handleMouseLeave : undefined}
+                          onMouseEnter={item.name === 'BizMap AI' ? bizMapHover.handleMouseEnter : undefined}
+                          onMouseLeave={item.name === 'BizMap AI' ? bizMapHover.handleMouseLeave : undefined}
                         >
                           {Icon && <Icon className="h-4 w-4 flex-shrink-0 opacity-70 transition-opacity group-hover:opacity-100" />}
                           <span className="tracking-wide">{item.name}</span>
@@ -836,10 +833,10 @@ const Navigation = () => {
 
                     // Determine submenu for this item
                     const submenuMap: Record<string, { items: BizMapMenuItem[] }> = {
-                      'Core Workflow': { items: bizMapSubmenu.filter((s): s is SubmenuLinkItem => !('type' in s)) },
+                      'BizMap AI': { items: bizMapSubmenu.filter((s): s is SubmenuLinkItem => !('type' in s)) },
                       'Insighta': { items: insightaSubmenu },
                       'Network': { items: communitySubmenu },
-                      'Resources': { items: resourcesSubmenu },
+                      'More': { items: resourcesSubmenu },
                     };
                     const submenu = submenuMap[item.name];
 
@@ -904,7 +901,7 @@ const Navigation = () => {
                                 );
                               }
 
-	                              if (!subUnlocked && item.name === 'Core Workflow') {
+	                              if (!subUnlocked && item.name === 'BizMap AI') {
                                 return (
                                   <button
                                     key={sub.name}

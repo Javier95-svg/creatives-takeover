@@ -78,10 +78,6 @@ const Onboarding = lazy(() => import("./pages/Onboarding"));
 const FirstCustomerSprintPage = lazy(() => import("./pages/FirstCustomerSprintPage"));
 const FirstCustomerSprintApplicationPage = lazy(() => import("./pages/FirstCustomerSprintApplicationPage"));
 const AdminFirstCustomerSprintPage = lazy(() => import("./pages/AdminFirstCustomerSprintPage"));
-const ProofPage = lazy(() => import("./pages/ProofPage"));
-const ProofCaseStudyPage = lazy(() => import("./pages/ProofCaseStudyPage"));
-const AdminProofPage = lazy(() => import("./pages/AdminProofPage"));
-const EvidenceConnectionsPage = lazy(() => import("./pages/EvidenceConnectionsPage"));
 
 const Login = lazy(() => import("./pages/Login"));
 const Auth = lazy(() => import("./pages/Auth"));
@@ -311,9 +307,6 @@ function App() {
                         <Route path="/first-customer-sprint" element={<FirstCustomerSprintPage />} />
                         <Route path="/first-customer-sprint/apply" element={<FirstCustomerSprintApplicationPage />} />
                         <Route path="/admin/first-customer-sprint" element={<AdminRoute><AdminFirstCustomerSprintPage /></AdminRoute>} />
-                        <Route path="/proof" element={<ProofPage />} />
-                        <Route path="/proof/:slug" element={<ProofCaseStudyPage />} />
-                        <Route path="/admin/proof" element={<AdminRoute><AdminProofPage /></AdminRoute>} />
                         <Route path="/marketplace" element={<ServiceMarketplaceHub />} />
                         <Route path="/marketplace/admin/new" element={<AdminRoute><AdminServiceEditor /></AdminRoute>} />
                         <Route path="/marketplace/admin/edit/:id" element={<AdminRoute><AdminServiceEditor /></AdminRoute>} />
@@ -421,7 +414,6 @@ function App() {
                           <Route path="weekly-mission" element={<Navigate to="/dashboard/routine" replace />} />
                           <Route path="referral" element={<ReferralDashboardPage />} />
                           <Route path="settings" element={<DashboardSettingsPage />} />
-                          <Route path="evidence" element={<EvidenceConnectionsPage />} />
                           <Route path="focus-funnel" element={<Navigate to="/dashboard/tasks" replace />} />
                         </Route>
                         <Route path="/projects-dashboard" element={<ProjectsDashboard />} />
