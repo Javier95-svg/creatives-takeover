@@ -15,10 +15,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFirstCustomerSprint } from '@/hooks/useFirstCustomerSprint';
 import { useFirstCustomerSprintApplication } from '@/hooks/useFirstCustomerSprintApplication';
-import { FIRST_CUSTOMER_SPRINT_OFFER } from '@/config/planCatalog';
 import { COMPETITIVE_HARDENING_FLAGS } from '@/config/competitiveHardeningFlags';
 import { trackFirstCustomerSprint } from '@/lib/analytics';
-import { redirectToHostedCheckout, startCheckout } from '@/services/checkoutService';
 import type {
   FirstCustomerAcquisitionSource,
   FirstCustomerApplicationBlocker,
@@ -58,7 +56,6 @@ export default function FirstCustomerSprintApplicationPage() {
     productUrl: '',
     productSummary: '',
   });
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   useEffect(() => {
     if (!sprintApi.enabled || viewedRef.current) return;
@@ -115,26 +112,6 @@ export default function FirstCustomerSprintApplicationPage() {
     }
   };
 
-  const purchaseSprint = async () => {
-    if (!application?.id) return;
-    setCheckoutLoading(true);
-    try {
-      trackFirstCustomerSprint('first_customer_sprint_offer_checkout_started', {
-        application_id: application.id,
-        offer_id: FIRST_CUSTOMER_SPRINT_OFFER.id,
-      });
-      const checkout = await startCheckout({
-        purchaseType: 'service_offer',
-        offerId: FIRST_CUSTOMER_SPRINT_OFFER.id,
-        purchaseContextId: application.id,
-      });
-      redirectToHostedCheckout(checkout);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Checkout could not be started.');
-      setCheckoutLoading(false);
-    }
-  };
-
   const returnPath = `${location.pathname}${location.search}`;
   const application = applicationApi.application;
   const loading = authLoading || (Boolean(user) && applicationApi.isLoading);
@@ -145,7 +122,7 @@ export default function FirstCustomerSprintApplicationPage() {
       <Navigation />
       <main className="container mx-auto max-w-5xl space-y-8 px-4 pb-16 pt-28">
         <header className="rounded-2xl border border-primary/30 bg-primary/5 p-6 sm:p-8">
-          <Badge variant="outline">Capacity-screened concierge sprint</Badge>
+          <Badge variant="outline">Capacity-screened founder sprint</Badge>
           <h1 className="mt-4 max-w-3xl text-4xl font-bold">Get to three qualified buyer conversations in 30 days.</h1>
           <p className="mt-3 max-w-3xl text-muted-foreground">For pre-product and early B2B SaaS founders with 0–3 paying customers. You perform the outreach; Creatives Takeover keeps the target list, proof artifact, messages, evidence, and one mentor decision checkpoint focused.</p>
           <div className="mt-5 grid gap-3 text-sm sm:grid-cols-3">
@@ -153,31 +130,19 @@ export default function FirstCustomerSprintApplicationPage() {
             <div className="rounded-lg border bg-background/70 p-3"><strong>10</strong><p className="text-muted-foreground">messages sent manually</p></div>
             <div className="rounded-lg border bg-background/70 p-3"><strong>3</strong><p className="text-muted-foreground">qualified conversations</p></div>
           </div>
-          <p className="mt-4 text-xs text-muted-foreground">Idea, concept-demo, and working-product founders can apply. The $299 sprint is optional; self-service remains open with no application, cohort, or equity. You perform every outreach action.</p>
+          <p className="mt-4 text-xs text-muted-foreground">Idea, concept-demo, and working-product founders can apply. There is no separate sprint checkout; accepted founders use their existing Creatives Takeover account. You perform every outreach action.</p>
         </header>
 
         {!sprintApi.enabled ? (
           <Card><CardHeader><CardTitle>Applications are currently closed</CardTitle><CardDescription>The pilot remains behind its release switch.</CardDescription></CardHeader></Card>
         ) : !COMPETITIVE_HARDENING_FLAGS.firstCustomerSprintV2 && !sprintApi.enrolled ? (
-          <Card><CardHeader><CardTitle>New paid-sprint applications are paused</CardTitle><CardDescription>Legacy pilot participants keep their existing sprint and artifacts while the V2 release flag is off.</CardDescription></CardHeader></Card>
+          <Card><CardHeader><CardTitle>New sprint applications are paused</CardTitle><CardDescription>Existing pilot participants keep their sprint and artifacts while the V2 release flag is off.</CardDescription></CardHeader></Card>
         ) : loading ? <Loader2 className="mx-auto h-8 w-8 animate-spin" /> : !user ? (
           <Card><CardHeader><CardTitle>Apply with a founder account</CardTitle><CardDescription>Signing in connects the application to the founder who will execute the sprint and prevents anonymous submissions.</CardDescription></CardHeader><CardContent><Button asChild><Link to={`/signup?source=first-customer-sprint-application&return=${encodeURIComponent(returnPath)}`}>Create account to apply <ArrowRight className="ml-2 h-4 w-4" /></Link></Button></CardContent></Card>
-        ) : sprintApi.enrolled || (application?.status === 'invited' && application.payment_status === 'paid') ? (
+        ) : sprintApi.enrolled || application?.status === 'invited' ? (
           <Card className="border-success/30 bg-success/5"><CardHeader><CheckCircle2 className="mb-2 h-7 w-7 text-success" /><CardTitle>Your invitation is ready</CardTitle><CardDescription>Your application was accepted. Define the offer and begin the first 30-day sprint.</CardDescription></CardHeader><CardContent><Button asChild><Link to="/first-customer-sprint">Start the sprint <ArrowRight className="ml-2 h-4 w-4" /></Link></Button></CardContent></Card>
-        ) : application?.status === 'invited' ? (
-          <Card className="border-primary/30 bg-primary/5">
-            <CardHeader>
-              <Target className="mb-2 h-7 w-7 text-primary" />
-              <CardTitle>Your application was accepted</CardTitle>
-              <CardDescription>Enroll in the 30-day concierge sprint after payment. Your workspace, evidence ledger, target-list preparation, adaptive next action, and one verified mentor checkpoint are included.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-wrap items-center gap-4">
-              <div><p className="text-3xl font-bold">${FIRST_CUSTOMER_SPRINT_OFFER.priceUsd}</p><p className="text-xs text-muted-foreground">one-time; founder performs outreach</p></div>
-              <Button size="lg" disabled={checkoutLoading || !COMPETITIVE_HARDENING_FLAGS.paidSprintCheckout} onClick={purchaseSprint}>{checkoutLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}{COMPETITIVE_HARDENING_FLAGS.paidSprintCheckout ? 'Enroll and pay' : 'Checkout temporarily paused'}</Button>
-            </CardContent>
-          </Card>
         ) : application?.status === 'submitted' ? (
-          <Card><CardHeader><Target className="mb-2 h-7 w-7 text-primary" /><CardTitle>Application received</CardTitle><CardDescription>We are reviewing applicants for a rolling cohort of ten paid founders. Acceptance reserves capacity; enrollment begins only after payment.</CardDescription></CardHeader><CardContent className="space-y-3"><Badge variant={application.qualified ? 'default' : 'secondary'}>{application.qualified ? 'Core cohort fit' : 'Manual review required'}</Badge>{application.qualification_reasons.length ? <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">{application.qualification_reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul> : null}</CardContent></Card>
+          <Card><CardHeader><Target className="mb-2 h-7 w-7 text-primary" /><CardTitle>Application received</CardTitle><CardDescription>We are reviewing applicants for a capacity-limited rolling pilot. Acceptance unlocks the sprint workspace directly—there is no separate payment step.</CardDescription></CardHeader><CardContent className="space-y-3"><Badge variant={application.qualified ? 'default' : 'secondary'}>{application.qualified ? 'Core cohort fit' : 'Manual review required'}</Badge>{application.qualification_reasons.length ? <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">{application.qualification_reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul> : null}</CardContent></Card>
         ) : (
           <Card>
             <CardHeader><CardTitle>{application?.status === 'declined' ? 'Update your application' : 'Check the cohort fit'}</CardTitle><CardDescription>Applications are intentionally narrow so the cohort measures one consistent founder-led sales motion.</CardDescription></CardHeader>

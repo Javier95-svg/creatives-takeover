@@ -6,11 +6,10 @@ export type CheckoutBillingCycle = 'monthly' | 'yearly';
 export type CheckoutPlan = 'starter' | 'rising' | 'pro';
 
 export interface StartCheckoutInput {
-  purchaseType: 'subscription' | 'credit_pack' | 'service_offer';
+  purchaseType: 'subscription' | 'credit_pack';
   plan?: CheckoutPlan;
   billingCycle?: CheckoutBillingCycle;
   packId?: string;
-  offerId?: string;
   purchaseSource?: string;
   purchaseContextId?: string;
   returnPath?: string;
@@ -40,7 +39,6 @@ export async function startCheckout(input: StartCheckoutInput): Promise<StartChe
       plan: input.plan,
       billing_cycle: input.billingCycle,
       pack_id: input.packId,
-      offer_id: input.offerId,
       purchase_source: input.purchaseSource ?? 'unknown',
       error_code: 'AUTH_SESSION_MISSING',
     });
@@ -77,7 +75,6 @@ export async function startCheckout(input: StartCheckoutInput): Promise<StartChe
       plan: input.plan,
       billing_cycle: input.billingCycle,
       pack_id: input.packId,
-      offer_id: input.offerId,
       purchase_source: input.purchaseSource ?? 'unknown',
       error_code: errorCode,
     });

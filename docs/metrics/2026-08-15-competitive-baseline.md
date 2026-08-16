@@ -24,13 +24,13 @@ Every production extraction must:
 | --- | --- | --- | --- |
 | Supabase | Distinct non-internal users; artifact versions by type; journey handoffs; customer evidence events by verification mode; decision changes within seven days; qualified conversations; commitments; payments; sprint applications/enrollments/outcomes | Product analytics | Unavailable — run with production read access |
 | PostHog | Unique visitor → guest artifact → signup → first action → external evidence funnels; D7 and D30 return; homepage experiment exposure; pricing view → checkout | Growth | Unavailable — export governed insights or query HogQL |
-| Stripe | Active paid subscriptions, MRR, checkout conversion, cancellations, refunds, project-pack purchases, $299 sprint purchases | Finance | Unavailable — production Stripe export required |
+| Stripe | Active paid subscriptions, MRR, checkout conversion, cancellations, refunds, and project-pack purchases | Finance | Unavailable — production Stripe export required |
 
 ## Exact verification work
 
 1. Run the governed PostHog contract in `analytics/posthog/customer-journey.json`, using its global internal-user filter. Export counts and conversion by experiment variant.
 2. In Supabase, build founder-level cohorts from `journey_outcomes`, `customer_evidence_events`, `journey_handoffs`, `first_customer_sprint_applications`, `first_customer_sprints`, `external_evidence_events`, and artifact-version tables. Count a success only when `decision_changed_at` is from zero to seven days after the evidence timestamp.
-3. Join Stripe objects through `user_id` metadata and checkout-session records. Reconcile every paid subscription and sprint purchase to exactly one founder; report orphan and duplicate counts separately.
+3. Join Stripe objects through `user_id` metadata and checkout-session records. Reconcile every paid subscription and project-pack purchase to exactly one founder; report orphan and duplicate counts separately.
 4. Store the signed query/export references, extraction timestamp, metric definition version, and exclusion count with the snapshot.
 
 ## Release gates awaiting data
@@ -38,4 +38,4 @@ Every production extraction must:
 - Do not call a homepage A/B result directional below 200 unique visitors per variant.
 - Do not publish aggregate proof below an eligible denominator of ten.
 - Do not enable lower-priced packs until the previous 30-day action mix projects at least 70% gross margin at p95 model cost.
-- Do not open the second paid sprint cohort until service delivery remains below 30 minutes per founder per week and the outcome gates are met.
+- Do not expand the sprint pilot until mentor delivery remains below 30 minutes per founder per week and the outcome gates are met.

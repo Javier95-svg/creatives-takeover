@@ -16,15 +16,15 @@ Evidence cutoff: _fill after production extraction_
 
 Decision: **Scale / Iterate / Stop**
 
-- Accepted applicants / paid purchases / purchase conversion:
-- Paid founders with three qualified conversations:
-- Paid founders with a commitment or payment:
+- Accepted applicants / activated sprints / activation conversion:
+- Founders with three qualified conversations:
+- Founders with a commitment or payment:
 - Seven-day external-evidence activation:
 - Mentor checkpoint completion:
 - Median service minutes per founder per week:
-- Interview synthesis from every participant and at least five accepted non-buyers:
+- Interview synthesis from every participant and at least five accepted founders who did not activate:
 
-Do not expand merely because payment conversion passes; delivery capacity and evidence quality must pass too.
+Do not expand merely because application volume is high; activation, delivery capacity, and evidence quality must pass too.
 
 ## Native connector
 

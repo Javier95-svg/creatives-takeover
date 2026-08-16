@@ -508,14 +508,6 @@
       "stage": "acquisition", "owner": "product", "source": "client",
       "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["application_id", "acquisition_source", "qualified"]
     },
-    "first_customer_sprint_offer_checkout_started": {
-      "stage": "revenue", "owner": "product", "source": "client",
-      "sourceFile": "src/pages/FirstCustomerSprintApplicationPage.tsx", "requiredProperties": ["application_id", "offer_id"]
-    },
-    "first_customer_sprint_offer_purchased": {
-      "stage": "revenue", "owner": "product", "source": "server",
-      "sourceFile": "supabase/functions/stripe-webhook/index.ts", "requiredProperties": ["application_id", "offer_id", "price_cents"]
-    },
     "first_customer_sprint_viewed": {
       "stage": "activation", "owner": "product", "source": "client",
       "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "status"]
@@ -725,8 +717,6 @@
       "steps": [
         "first_customer_sprint_application_viewed",
         "first_customer_sprint_application_submitted",
-        "first_customer_sprint_offer_checkout_started",
-        "first_customer_sprint_offer_purchased",
         "first_customer_sprint_started",
         "first_customer_sprint_prospect_target_reached",
         "first_customer_sprint_outreach_target_reached",

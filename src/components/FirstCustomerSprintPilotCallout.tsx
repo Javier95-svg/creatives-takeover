@@ -14,7 +14,7 @@ export default function FirstCustomerSprintPilotCallout() {
       <div className="rounded-2xl border border-primary/25 bg-primary/5 p-6 sm:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-3xl">
-            <Badge variant="outline">$299 · capacity-screened concierge sprint</Badge>
+            <Badge variant="outline">Capacity-screened founder sprint</Badge>
             <h2 id="first-customer-pilot-title" className="mt-3 text-2xl font-bold sm:text-3xl">Reach three qualified buyer conversations in 30 days.</h2>
             <p className="mt-2 text-muted-foreground">For idea, concept-demo, and working-product B2B SaaS founders with 0–3 paying customers. We help prepare the target list, proof, and messages; you send every message and use one verified mentor checkpoint to decide what the evidence means.</p>
             <div className="mt-4 flex flex-wrap gap-4 text-sm text-muted-foreground">

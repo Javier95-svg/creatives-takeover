@@ -11,8 +11,6 @@ export type FirstCustomerRecentOutreach = 'last_30_days' | 'older' | 'never';
 export type FirstCustomerApplicationBlocker = 'prospect_list' | 'messaging' | 'confidence' | 'accountability' | 'replies' | 'conversion' | 'time';
 export type FirstCustomerProductStage = 'idea' | 'concept_demo' | 'working_product';
 export type FirstCustomerTargetOutcome = 'qualified_conversations' | 'commitment' | 'payment';
-export type FirstCustomerOfferVersion = 'legacy_free' | 'concierge_299';
-export type FirstCustomerPaymentStatus = 'not_required' | 'pending' | 'paid' | 'credited' | 'refunded';
 export type FirstCustomerPrimaryValue = 'structure' | 'messaging' | 'evidence' | 'mentor' | 'accountability';
 export type FirstCustomerPrimaryFriction = 'prospect_list' | 'messaging' | 'sending' | 'replies' | 'conversion' | 'time' | 'not_urgent' | 'none';
 export type FirstCustomerDecision =
@@ -73,7 +71,6 @@ export interface FirstCustomerSprint {
   continuation_from_sprint_id: string | null;
   source_demo_project_id?: string | null;
   target_outcome?: FirstCustomerTargetOutcome;
-  offer_version?: FirstCustomerOfferVersion;
   completed_at: string | null;
   created_at: string;
   updated_at: string;
@@ -104,10 +101,6 @@ export interface FirstCustomerSprintApplication {
   invited_at: string | null;
   product_stage: FirstCustomerProductStage;
   target_outcome: FirstCustomerTargetOutcome;
-  offer_version: FirstCustomerOfferVersion;
-  payment_status: FirstCustomerPaymentStatus;
-  amount_paid_cents: number | null;
-  paid_at: string | null;
 }
 
 export interface FirstCustomerSprintApplicationInput {
@@ -245,8 +238,6 @@ export interface FirstCustomerSprintAdminApplication {
   verifiedReferrals: number;
   productStage?: FirstCustomerProductStage;
   targetOutcome?: FirstCustomerTargetOutcome;
-  offerVersion?: FirstCustomerOfferVersion;
-  paymentStatus?: FirstCustomerPaymentStatus;
 }
 
 export interface FirstCustomerSprintAdminSnapshot {

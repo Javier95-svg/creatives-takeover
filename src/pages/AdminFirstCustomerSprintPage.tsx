@@ -89,16 +89,6 @@ export default function AdminFirstCustomerSprintPage() {
     },
     onError: (error: Error) => toast.error(error.message),
   });
-  const evaluateServiceCredit = useMutation({
-    mutationFn: async (sprintId: string) => {
-      const { data, error } = await client.rpc('evaluate_first_customer_sprint_service_credit_v1', { p_sprint_id: sprintId });
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => toast.success('Service-credit eligibility evaluated and recorded.'),
-    onError: (error: Error) => toast.error(error.message),
-  });
-
   const summary = cohort.data?.summary ?? {};
   const mentorCount = summary.mentorInvited ?? 0;
   const publicCount = summary.publicInvited ?? 0;
@@ -110,7 +100,7 @@ export default function AdminFirstCustomerSprintPage() {
         <header>
           <Badge variant="secondary"><ShieldAlert className="mr-2 h-4 w-4" />Admin only</Badge>
           <h1 className="mt-3 text-3xl font-bold">First Customer Sprint cohort</h1>
-          <p className="mt-2 text-muted-foreground">Run one rolling cohort of ten paid founders and monitor application-to-purchase, external evidence, outcomes, mentor delivery, and rerun-credit eligibility.</p>
+          <p className="mt-2 text-muted-foreground">Run one capacity-limited founder cohort and monitor applications, activation, external evidence, outcomes, and mentor delivery.</p>
           <p className="mt-2 text-sm text-muted-foreground">Mentors share <code>/first-customer-sprint/apply?source=mentor&amp;mentorId=MENTOR_ID&amp;ref=THEIR_REFERRAL_CODE</code>. The backend verifies both values before counting the application as mentor-sourced.</p>
         </header>
 
@@ -154,7 +144,6 @@ export default function AdminFirstCustomerSprintPage() {
                       {application.status === 'submitted' && !application.qualified ? <Input aria-label={`Override reason for ${application.email}`} placeholder="Override reason" value={overrideReasons[application.id] ?? ''} onChange={(event) => setOverrideReasons((current) => ({ ...current, [application.id]: event.target.value }))} /> : null}
                       {application.status === 'submitted' ? <><Button className="w-full" disabled={review.isPending} onClick={() => review.mutate({ application, decision: 'invited' })}><CheckCircle2 className="mr-2 h-4 w-4" />Invite</Button><Button className="w-full" variant="outline" disabled={review.isPending} onClick={() => review.mutate({ application, decision: 'declined' })}><XCircle className="mr-2 h-4 w-4" />Decline</Button></> : null}
                       {application.sprintStatus ? <div className="rounded-lg border p-3 text-xs"><strong>Sprint: {application.sprintStatus}</strong><p className="mt-1 text-muted-foreground">Mentor checkpoint: {application.mentorCheckpointCompleted ? 'yes' : 'no'} · Referrals: {application.verifiedReferrals}</p></div> : null}
-                      {application.sprintId && application.sprintStatus === 'completed' ? <Button className="w-full" size="sm" variant="outline" disabled={evaluateServiceCredit.isPending} onClick={() => evaluateServiceCredit.mutate(application.sprintId!)}>Evaluate $299 rerun credit</Button> : null}
                       {application.sprintId ? (() => {
                         const checkpoint = checkpoints.data?.find((item) => item.id === application.sprintId);
                         if (!checkpoint) return null;

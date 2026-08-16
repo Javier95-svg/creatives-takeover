@@ -83,10 +83,3 @@ export const PROJECT_PACKS = BASE_PROJECT_PACKS.map((pack) => ({
 }));
 
 export const ACTIVE_PROJECT_PACKS = PROJECT_PACKS;
-
-export const FIRST_CUSTOMER_SPRINT_OFFER = {
-  id: 'first_customer_sprint_2026_299',
-  priceUsd: 299,
-  durationDays: 30,
-  rerunCreditExpiresMonths: 12,
-} as const;

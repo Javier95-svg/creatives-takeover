@@ -32,23 +32,23 @@ test('external evidence ingestion hashes credentials, enforces idempotency, and 
   assert.doesNotMatch(edge, /posthog|amplitude/i);
 });
 
-test('paid sprint enrollment and refund are server-authoritative and idempotent', () => {
-  const migration = read('../supabase/migrations/20260815180000_competitive_hardening_v1.sql');
+test('standalone sprint commerce is retired and invitations unlock the existing workflow', () => {
+  const migration = read('../supabase/migrations/20260816180000_remove_first_customer_sprint_service_offer.sql');
+  const checkout = read('../supabase/functions/create-checkout/index.ts');
   const webhook = read('../supabase/functions/stripe-webhook/index.ts');
-  assert.match(migration, /stripe_checkout_session_id text NOT NULL UNIQUE/);
-  assert.match(migration, /UNIQUE \(application_id, offer_id\)/);
-  assert.match(migration, /set_founder_cycle_beta_cohort_v1\(p_founder_id,true\)/);
-  assert.match(migration, /refund_first_customer_sprint_offer_v1/);
-  assert.match(migration, /set_founder_cycle_beta_cohort_v1\(v_purchase\.founder_id,false\)/);
-  assert.match(migration, /offer_version<>'concierge_299'/);
-  assert.match(migration, /review_submitted_at>v_sprint\.ends_at/);
-  assert.match(webhook, /fulfill_first_customer_sprint_offer_v1/);
-  assert.match(webhook, /refund_first_customer_sprint_offer_v1/);
+  assert.match(migration, /set_founder_cycle_beta_cohort_v1\(v_application\.founder_id, true\)/);
+  assert.match(migration, /DROP TABLE IF EXISTS public\.first_customer_sprint_service_purchases/);
+  assert.match(migration, /DROP TABLE IF EXISTS public\.first_customer_sprint_service_credits/);
+  assert.match(migration, /DROP COLUMN IF EXISTS payment_status/);
+  assert.match(migration, /Experiment Pack purchase is required for the continuation/);
+  assert.doesNotMatch(checkout, /service_offer|FIRST_CUSTOMER_SPRINT_OFFER/);
+  assert.doesNotMatch(webhook, /service_offer|FIRST_CUSTOMER_SPRINT_OFFER|fulfill_first_customer_sprint_offer_v1/);
 });
 
 test('every competitive hardening surface has an independent rollback switch', () => {
   const flags = read('../src/config/competitiveHardeningFlags.ts');
-  for (const key of ['categoryPositioningV2','firstCustomerSprintV2','paidSprintCheckout','proofPublishing','externalEvidenceImport','projectPackPriceVariant']) {
+  for (const key of ['categoryPositioningV2','firstCustomerSprintV2','proofPublishing','externalEvidenceImport','projectPackPriceVariant']) {
     assert.match(flags, new RegExp(key));
   }
+  assert.doesNotMatch(flags, /paidSprintCheckout|VITE_PAID_SPRINT_CHECKOUT/);
 });

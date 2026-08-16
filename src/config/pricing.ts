@@ -49,12 +49,6 @@ export const TOP_UP_PACKS: TopUpPack[] = [
   { id: 'pack_60', credits: 60, priceUsd: 24, label: 'Launch Pack' },
 ];
 
-export const FIRST_CUSTOMER_SPRINT_OFFER = {
-  id: 'first_customer_sprint_2026_299',
-  amountCents: 29900,
-  name: 'First Customer Sprint',
-} as const;
-
 /**
  * Blended $ value of one subscription credit — the anchor for "X credits ≈ $Y"
  * framing and the reference point for any future top-up repricing. Derived from

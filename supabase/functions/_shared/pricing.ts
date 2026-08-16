@@ -36,12 +36,6 @@ export const TOP_UP_PACKS_CENTS: Record<string, TopUpPackCents> = {
   pack_60: { amount: 2400, credits: 60, name: "Launch Pack" },
 };
 
-export const FIRST_CUSTOMER_SPRINT_OFFER = {
-  id: "first_customer_sprint_2026_299",
-  amount: 29900,
-  name: "First Customer Sprint",
-} as const;
-
 /** Map a paid amount (cents) + interval back to its plan tier, or "rookie". */
 export function inferTierFromAmountCents(amount: number, interval?: string | null): Plan {
   if (!amount || amount <= 0) return "rookie";

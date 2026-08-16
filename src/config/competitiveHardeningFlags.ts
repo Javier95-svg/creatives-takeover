@@ -10,7 +10,6 @@ const runtimeEnv =
 export const COMPETITIVE_HARDENING_FLAGS = {
   categoryPositioningV2: enabledUnlessExplicitlyDisabled(runtimeEnv.VITE_CATEGORY_POSITIONING_V2),
   firstCustomerSprintV2: enabledUnlessExplicitlyDisabled(runtimeEnv.VITE_FIRST_CUSTOMER_SPRINT_V2),
-  paidSprintCheckout: enabledUnlessExplicitlyDisabled(runtimeEnv.VITE_PAID_SPRINT_CHECKOUT),
   proofPublishing: enabledUnlessExplicitlyDisabled(runtimeEnv.VITE_PROOF_PUBLISHING),
   externalEvidenceImport: enabledUnlessExplicitlyDisabled(runtimeEnv.VITE_EXTERNAL_EVIDENCE_IMPORT),
   projectPackPriceVariant: runtimeEnv.VITE_PROJECT_PACK_PRICE_VARIANT === 'lower_price',

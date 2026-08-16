@@ -130,8 +130,9 @@ test('checkpoint contract is admin-coordinated, redacted, and never deducts cred
   assert.match(assistant, /message_generation_count >= 2/);
 });
 
-test('V2 contract supports pre-product paid enrollment, structured review, and one verified rerun credit', () => {
+test('V2 contract supports pre-product invite enrollment without a standalone checkout', () => {
   const migration = readFileSync(new URL('../supabase/migrations/20260815180000_competitive_hardening_v1.sql', import.meta.url), 'utf8');
+  const retirement = readFileSync(new URL('../supabase/migrations/20260816180000_remove_first_customer_sprint_service_offer.sql', import.meta.url), 'utf8');
   const application = readFileSync(new URL('../src/pages/FirstCustomerSprintApplicationPage.tsx', import.meta.url), 'utf8');
   const admin = readFileSync(new URL('../src/pages/AdminFirstCustomerSprintPage.tsx', import.meta.url), 'utf8');
   const sprint = readFileSync(new URL('../src/pages/FirstCustomerSprintPage.tsx', import.meta.url), 'utf8');
@@ -144,15 +145,17 @@ test('V2 contract supports pre-product paid enrollment, structured review, and o
   assert.match(migration, /A reason is required to override qualification/);
   assert.match(migration, /JOIN public\.referral_codes code ON code\.user_id=mentor\.user_id/);
   assert.match(migration, /review_submitted_at IS NULL/);
-  assert.match(migration, /first_customer_sprint_service_purchases/);
-  assert.match(migration, /first_customer_sprint_service_credits/);
-  assert.match(migration, /amount_cents = 29900/);
   assert.match(migration, /continuation_from_sprint_id/);
-  assert.match(migration, /status='redeemed'/);
-  assert.match(application, /Capacity-screened concierge sprint/);
-  assert.match(application, /purchaseType: 'service_offer'/);
-  assert.match(admin, /rolling cohort of ten paid founders/);
+  assert.match(retirement, /DROP FUNCTION IF EXISTS public\.fulfill_first_customer_sprint_offer_v1/);
+  assert.match(retirement, /DROP FUNCTION IF EXISTS public\.refund_first_customer_sprint_offer_v1/);
+  assert.match(retirement, /DROP TABLE IF EXISTS public\.first_customer_sprint_service_purchases/);
+  assert.match(retirement, /status = 'invited'[\s\S]*set_founder_cycle_beta_cohort_v1/);
+  assert.match(application, /Capacity-screened founder sprint/);
+  assert.match(application, /there is no separate payment step/i);
+  assert.doesNotMatch(application, /purchaseType: 'service_offer'|\$299|Enroll and pay/);
+  assert.doesNotMatch(admin, /paid founders|rerun credit|evaluate_first_customer_sprint_service_credit_v1/i);
   assert.match(sprint, /Attach a published proof demo/);
-  assert.match(checkout, /service_offer/);
-  assert.match(webhook, /first_customer_sprint_offer_purchased/);
+  assert.match(sprint, /existing \$8 Experiment Pack/);
+  assert.doesNotMatch(checkout, /service_offer|FIRST_CUSTOMER_SPRINT_OFFER/);
+  assert.doesNotMatch(webhook, /first_customer_sprint_offer_purchased|FIRST_CUSTOMER_SPRINT_OFFER/);
 });
