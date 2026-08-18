@@ -1,4 +1,4 @@
-import { Component, ReactNode, Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
+import { ReactNode, Suspense, lazy, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, LayoutDashboard, User } from "lucide-react";
 
@@ -13,41 +13,17 @@ import { trackActivationEntry, trackActivationFunnelEvent } from "@/lib/activati
 import { classifyHeroInput, trackHeroInputFocused, trackHeroInputSubmitted } from "@/lib/heroFunnel";
 import { buildHeroProductPath, DEFAULT_HERO_MODE, type HeroMode } from "@/lib/heroFunnelRules";
 import { buildIcpSeedReturnPath, persistIcpSeed } from "@/lib/icpSeed";
-import { useFeatureFlagEnabled } from "@/hooks/usePosthogFeatureFlag";
-import { buildHeroResumePath, type HeroGuestArtifactRef } from "@/lib/heroIcpGeneration";
 
-// Everything that generates lives behind this boundary so no part of it is in
-// the fold-blocking bundle. The input above is plain markup and stays typable
-// while this loads.
-const HeroResultIsland = lazy(() => import("@/components/hero/HeroResultIsland"));
-
-/**
- * Catches the two ways the generation island can fail to appear: a rejected
- * dynamic import (a stale chunk hash after a deploy is the common one) and a
- * render crash inside it.
+/*
+ * The hero no longer generates anything in place.
  *
- * Either would otherwise be silent and permanent. `generationBusy` is cleared
- * only by the island itself, and the submit button is disabled while busy - so
- * a single failed click leaves BOTH hero CTAs dead until a reload, with no
- * error shown. On failure we hand off to the ICP Builder with the description
- * instead, so a click can never dead-end on the homepage.
+ * It used to render the customer brief on the homepage, behind a lazy island.
+ * That design never produced a single submission: `hero_input_submitted` was 0
+ * for its entire life, because visitors clicked the CTA before typing and the
+ * empty-field path only pulsed. Both modes now hand straight off to the tool
+ * that owns the work, carrying the description, so the hero has exactly one
+ * job - take the idea and get out of the way.
  */
-class HeroIslandBoundary extends Component<{ children: ReactNode; onError: () => void }, { failed: boolean }> {
-  state = { failed: false };
-
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-
-  componentDidCatch(error: Error) {
-    console.error("[Hero] generation island unavailable, handing off to ICP Builder:", error);
-    this.props.onError();
-  }
-
-  render() {
-    return this.state.failed ? null : this.props.children;
-  }
-}
 
 // Also lazy: it renders nothing until opened, but statically it dragged the
 // Radix dialog and ~20 lucide icons into the homepage's critical path. Homepage
@@ -132,61 +108,14 @@ const Hero = ({
   const { trackTriggerView, trackEngagement } = useConversionTracking();
   const location = useLocation();
   const navigate = useNavigate();
-  // Unknown is deliberately the safe route-based fallback. The underscore
-  // alias drains the pre-launch flag spelling for one release.
-  const inPlaceGenerationEnabled = useFeatureFlagEnabled("hero-single-input", ["hero_single_input"]) === true;
   const { set: setAttribution } = useCTAAttribution();
   const heroRef = useRef<HTMLElement>(null);
   const hasTrackedView = useRef(false);
   const [userUsername, setUserUsername] = useState<string | null>(null);
   const [isAudienceDialogOpen, setIsAudienceDialogOpen] = useState(false);
   const [hasOpenedAudienceDialog, setHasOpenedAudienceDialog] = useState(false);
-  const resumeTokenFromUrl = new URLSearchParams(location.search).get("resume");
   const [ideaText, setIdeaText] = useState("");
   const [heroMode, setHeroMode] = useState<HeroMode>(DEFAULT_HERO_MODE);
-  // The description generation is actually running against - held separately
-  // from ideaText so editing the field mid-generation doesn't restart it.
-  const [submittedIdea, setSubmittedIdea] = useState("");
-  const [generationRunId, setGenerationRunId] = useState(() => (resumeTokenFromUrl ? 1 : 0));
-  const [initialResumeToken, setInitialResumeToken] = useState<string | null>(resumeTokenFromUrl);
-  const [generationBusy, setGenerationBusy] = useState(false);
-  const islandMountedRef = useRef(false);
-
-  /**
-   * The guaranteed exit. Clears the busy lock first so the button is usable
-   * again even if navigation is blocked, then carries the description into the
-   * ICP Builder - which restores it from `?seed=` on arrival.
-   */
-  const handoffToIcpBuilder = useCallback((seed: string) => {
-    const trimmed = seed.trim();
-    setGenerationBusy(false);
-    if (!trimmed) return;
-    persistIcpSeed(trimmed);
-    navigate(buildIcpSeedReturnPath(trimmed));
-  }, [navigate]);
-
-  /**
-   * Backstop for the case the error boundary cannot see: a dynamic import that
-   * neither resolves nor rejects (a hung request for the chunk). The island
-   * reports its own mount, so this only fires when it genuinely never arrived.
-   * Ten seconds is far longer than the chunk needs and far shorter than the
-   * island's own 75s generation timeout, so it never pre-empts real work.
-   */
-  useEffect(() => {
-    if (!generationBusy || islandMountedRef.current) return;
-    const timer = setTimeout(() => {
-      if (islandMountedRef.current) return;
-      console.error("[Hero] generation island never mounted, handing off to ICP Builder");
-      handoffToIcpBuilder(submittedIdea);
-    }, 10_000);
-    return () => clearTimeout(timer);
-  }, [generationBusy, handoffToIcpBuilder, submittedIdea]);
-
-  useEffect(() => {
-    if (!resumeTokenFromUrl || resumeTokenFromUrl === initialResumeToken) return;
-    setInitialResumeToken(resumeTokenFromUrl);
-    setGenerationRunId((current) => current + 1);
-  }, [initialResumeToken, resumeTokenFromUrl]);
 
   useEffect(() => {
     if (!user) {
@@ -293,35 +222,16 @@ const Hero = ({
       is_authenticated: isAuthenticated,
     });
 
-    // Product mode hands off to Demo Studio rather than generating here. The
-    // demo generator needs screenshots - from text alone it returns a generic
-    // placeholder storyboard - so rendering that in the hero would be a worse
-    // first output than the page it comes from. The description is carried over
-    // so /demo-studio/try does not restart from an empty field.
+    // Both modes hand off immediately to the tool that owns the work, carrying
+    // the description so neither restarts from an empty field. Product mode
+    // always did this; idea mode used to generate on the homepage instead.
     if (isDemo) {
       navigate(buildHeroProductPath(trimmed));
       return;
     }
 
-    if (!inPlaceGenerationEnabled) {
-      persistIcpSeed(trimmed);
-      navigate(buildIcpSeedReturnPath(trimmed));
-      return;
-    }
-
-    setInitialResumeToken(null);
-    if (resumeTokenFromUrl) window.history.replaceState(window.history.state, "", location.pathname);
-    setSubmittedIdea(trimmed);
-    // Re-arm the watchdog: the island remounts on the new key, so a previous
-    // successful run must not vouch for this one.
-    islandMountedRef.current = false;
-    setGenerationBusy(true);
-    setGenerationRunId((current) => current + 1);
-  };
-
-  const handleArtifactReady = (artifactRef: HeroGuestArtifactRef) => {
-    const nextPath = buildHeroResumePath(artifactRef.resumeToken);
-    window.history.replaceState(window.history.state, "", nextPath);
+    persistIcpSeed(trimmed);
+    navigate(buildIcpSeedReturnPath(trimmed));
   };
 
   return (
@@ -379,7 +289,6 @@ const Hero = ({
                 onFirstFocus={trackHeroInputFocused}
                 mode={heroMode}
                 onModeChange={setHeroMode}
-                busy={generationBusy}
               />
               <div className="ct-hero__secondary-row">
                 <button type="button" className="ct-hero__audience-link" onClick={handleWhoIsThisForClick}>
@@ -389,36 +298,6 @@ const Hero = ({
             </>
           )}
         </div>
-
-        {!isAuthenticated && generationRunId > 0 ? (
-          <HeroIslandBoundary onError={() => handoffToIcpBuilder(submittedIdea)}>
-            <Suspense
-              fallback={
-                <p className="ct-hero__result-loading" role="status" aria-live="polite">
-                  Reading your idea…
-                </p>
-              }
-            >
-              <HeroResultIsland
-                key={`${generationRunId}:${initialResumeToken ?? submittedIdea}`}
-                description={submittedIdea}
-                runId={generationRunId}
-                resumeToken={initialResumeToken}
-                isAuthenticated={isAuthenticated}
-                onBusyChange={setGenerationBusy}
-                onArtifactReady={handleArtifactReady}
-                onMounted={() => {
-                  islandMountedRef.current = true;
-                }}
-                onFailureHandoff={() => handoffToIcpBuilder(submittedIdea)}
-                onRetry={() => {
-                  setGenerationBusy(true);
-                  setGenerationRunId((current) => current + 1);
-                }}
-              />
-            </Suspense>
-          </HeroIslandBoundary>
-        ) : null}
 
         {!isAuthenticated ? <div
           className="ct-hero__spotlight"

@@ -275,6 +275,17 @@ backgroundImage: {
 						transform: 'scale(1)'
 					}
 				},
+				/* Soft outward ring. Deliberately touches neither opacity nor
+				   transform: this runs on a primary CTA that must stay fully
+				   legible and must not shift layout while it pulses. */
+				'cta-attention': {
+					'0%, 100%': {
+						boxShadow: '0 0 0 0 hsl(var(--primary) / 0.5)'
+					},
+					'50%': {
+						boxShadow: '0 0 0 10px hsl(var(--primary) / 0)'
+					}
+				},
 				'bounce-subtle': {
 					'0%, 100%': {
 						transform: 'translateY(0)'
@@ -474,6 +485,7 @@ backgroundImage: {
 				'slide-in-right': 'slide-in-right 0.6s ease-out',
 				'zoom-in': 'zoom-in 0.5s ease-out',
 				'scale-in': 'zoom-in 0.3s ease-out',
+				'cta-attention': 'cta-attention 2.4s ease-in-out infinite',
 				'bounce-subtle': 'bounce-subtle 2s ease-in-out infinite',
 				'glow': 'glow 2s ease-in-out infinite',
 				'float': 'float 6s ease-in-out infinite',

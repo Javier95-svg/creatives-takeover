@@ -801,6 +801,14 @@ const ICPBuilder: React.FC = () => {
     }
   }, [session]);
 
+  // The generate step is the only one where the button is the whole point, and
+  // the only one a hero handoff lands on with the field already populated.
+  const showGenerateAttention =
+    (session.currentScreen === "fast_input" || session.currentScreen === "guided_workaround") &&
+    canContinue &&
+    loadingPhase === null &&
+    !synthesisError;
+
   const updateGuided = <K extends keyof IcpBuilderSession["guided"]>(field: K, value: IcpBuilderSession["guided"][K]) => {
     if (!hasStartedTypingRef.current) {
       hasStartedTypingRef.current = true;
@@ -1865,7 +1873,17 @@ const ICPBuilder: React.FC = () => {
             <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{getEnterHint(session.currentScreen)}</div>
             <Button
               type="button"
-              className="relative z-[80] h-12 min-w-[180px] self-end text-base font-semibold"
+              /*
+               * Pulses only on the generate step, and only once the field
+               * actually has something to submit. Visitors arriving from the
+               * hero land here with the description already filled in, so
+               * without a cue the page reads as finished rather than as one
+               * click away from a result. Stops the moment it is pressed, and
+               * respects prefers-reduced-motion.
+               */
+              className={`relative z-[80] h-12 min-w-[180px] self-end text-base font-semibold${
+                showGenerateAttention ? " animate-cta-attention motion-reduce:animate-none" : ""
+              }`}
               onClick={() => void handleContinue()}
               disabled={loadingPhase !== null || !canContinue}
             >
