@@ -12,6 +12,7 @@ import {
 import { ExternalLink, Lock } from "lucide-react";
 
 import type { IcpDraftDocument } from "@/lib/icpBuilderSession";
+import { computeViabilityScore, type ViabilityBand } from "@/lib/icpViabilityScore";
 
 type IcpFolioTone = "folio" | "platformPreview" | "landingPreview";
 export type IcpFolioSectionKey = "customer" | "pain" | "build" | "moat";
@@ -130,6 +131,51 @@ function SectionExplainerContent({
         </p>
         <p className="mt-1.5 text-sm leading-6 text-popover-foreground">{explainer.how}</p>
       </div>
+    </div>
+  );
+}
+
+const VIABILITY_BAND_STYLES: Record<ViabilityBand, { frame: string; value: string; label: string }> = {
+  strong: {
+    frame: "border-success/35 bg-success-subtle",
+    value: "text-success",
+    label: "text-success",
+  },
+  promising: {
+    frame: "border-warning/35 bg-warning-subtle",
+    value: "text-warning",
+    label: "text-warning",
+  },
+  needsWork: {
+    frame: "border-destructive/35 bg-destructive-subtle",
+    value: "text-destructive",
+    label: "text-destructive",
+  },
+};
+
+/**
+ * Sits beside the founder's own sentence, which is the only place a single
+ * number reads as a verdict on the idea rather than on the document.
+ *
+ * The one-line summary underneath is not decoration: an unexplained score
+ * invites the reader to dismiss it, and naming the weakest pillar turns
+ * curiosity about the number into a reason to read the section it points at.
+ */
+function ViabilityBadge({ draft }: { draft: IcpDraftDocument }) {
+  const { score, label, band, summary } = useMemo(() => computeViabilityScore(draft), [draft]);
+  const styles = VIABILITY_BAND_STYLES[band];
+
+  return (
+    <div className={`w-full shrink-0 rounded-2xl border px-4 py-3 sm:w-52 ${styles.frame}`}>
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-foreground/60">
+        Viability
+      </p>
+      <p className={`mt-1 text-3xl font-semibold leading-none ${styles.value}`}>
+        {score.toFixed(1)}
+        <span className="text-base font-medium text-foreground/50">/10</span>
+      </p>
+      <p className={`mt-1.5 text-sm font-semibold ${styles.label}`}>{label}</p>
+      <p className="mt-2 text-xs leading-5 text-foreground/60">{summary}</p>
     </div>
   );
 }
@@ -1145,12 +1191,17 @@ export function IcpFolioDocument({
               </div>
               {ideaDescription?.trim() ? (
                 <section className="mb-10 border-b border-border/60 pb-8">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-foreground/55">
-                    Your idea
-                  </p>
-                  <p className="mt-3 text-xl leading-8 text-foreground sm:text-2xl sm:leading-9">
-                    {ideaDescription.trim()}
-                  </p>
+                  <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-foreground/55">
+                        Your idea
+                      </p>
+                      <p className="mt-3 text-xl leading-8 text-foreground sm:text-2xl sm:leading-9">
+                        {ideaDescription.trim()}
+                      </p>
+                    </div>
+                    <ViabilityBadge draft={draft} />
+                  </div>
                 </section>
               ) : null}
               {unlockedVisibleSectionKeys.map((sectionKey) => (

@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Lock, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { persistOnboardingReturn } from "@/lib/authRedirect";
 import { normalizeIcpSeed, persistIcpSeed } from "@/lib/icpSeed";
@@ -120,9 +120,16 @@ export function IcpUnlockGate({
         ) : null}
 
         <div className="px-6 py-8 sm:px-10">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/25 bg-primary/10">
-            <Lock className="h-5 w-5 text-primary" aria-hidden="true" />
-          </div>
+          <img
+            src="/lovable-uploads/04a4b9d0-4213-4186-ba00-c7acd22bad98.png"
+            alt=""
+            aria-hidden="true"
+            width={56}
+            height={56}
+            loading="lazy"
+            decoding="async"
+            className="mx-auto h-14 w-14 object-contain"
+          />
 
           <div className="mt-5 space-y-2 text-center">
             <h2 className="text-2xl font-semibold tracking-tight">
