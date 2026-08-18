@@ -1216,6 +1216,33 @@
   color: var(--ct-muted-2);
 }
 
+/*
+ * The one instruction the visitor came for, sitting between the kicker and the
+ * persona. It needs weight without competing with the save card below it, so
+ * it takes an accent rule and a tint rather than becoming a second bordered
+ * card. Declared after .ct-hero__result-block and its `p` rule because both
+ * carry equal specificity - order is what makes these win.
+ */
+.ct-hero__result-firststep {
+  margin-top: 10px;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--ct-blue);
+  border-radius: 0 12px 12px 0;
+  background: var(--ct-eyebrow-bg);
+}
+
+.ct-hero__result-firststep .ct-hero__result-label {
+  color: var(--ct-blue);
+}
+
+.ct-hero__result-firststep p {
+  margin: 4px 0 0;
+  font-size: 17px;
+  line-height: 26px;
+  font-weight: 600;
+}
+
 .ct-hero__result-actions {
   display: flex;
   flex-direction: column;

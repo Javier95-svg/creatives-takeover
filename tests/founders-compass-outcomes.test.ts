@@ -100,7 +100,7 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
   // HERO_MODES rather than in the component, so the toggle, crawler fallback and
   // the prerendered pages cannot drift apart.
   const heroModes = readFileSync(new URL('../src/lib/heroFunnelRules.ts', import.meta.url), 'utf8');
-  const ctaLabels = [/Define ICP/, /Launch a live demo/];
+  const ctaLabels = [/Show me my first step/, /Launch a live demo/];
   ctaLabels.forEach((label) => {
     assert.match(heroModes, label);
     assert.match(fallback, label);

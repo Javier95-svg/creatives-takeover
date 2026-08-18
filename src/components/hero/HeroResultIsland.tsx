@@ -331,13 +331,27 @@ export function HeroResultIsland({
     <div className="ct-hero__result">
       {!hasUsefulOutput ? (
         <p className="ct-hero__result-loading" role="status" aria-live="polite">
-          {errorMessage || "Building your customer decision brief…"}
+          {errorMessage || "Working out your first step…"}
         </p>
       ) : null}
 
       {compact ? (
         <article className="ct-hero__result-card">
-          <p className="ct-hero__result-kicker">Your customer decision brief</p>
+          {/*
+            * The action leads; the analysis is the evidence for it.
+            *
+            * validationStep used to be the sixth cell of a six-cell grid, under
+            * a persona name and five blocks of research. Someone who arrived
+            * asking "what do I do next" had to read a document to find the
+            * answer. It is required by normalizeCompact, so it is always
+            * present whenever this card renders.
+            */}
+          <p className="ct-hero__result-kicker">Your first step</p>
+          <ResultBlock
+            className="ct-hero__result-firststep"
+            label="Do this first"
+            value={compact.validationStep}
+          />
           <h3 className="ct-hero__result-persona">{compact.personaName}</h3>
           {compact.roleLine ? <p className="ct-hero__result-line">{compact.roleLine}</p> : null}
           <div className="ct-hero__result-grid">
@@ -346,7 +360,6 @@ export function HeroResultIsland({
             <ResultBlock label="Buying trigger" value={compact.buyingTrigger} />
             <ResultBlock label="Do not target first" value={compact.nonFitSegment} />
             <ResultBlock label="Messaging hook" value={compact.messagingHook} />
-            <ResultBlock label="Validate this week" value={compact.validationStep} />
           </div>
           {runState === "deep_generating" || runState === "compact_ready" ? (
             <p className="ct-hero__result-pending" aria-live="polite">
@@ -378,10 +391,16 @@ export function HeroResultIsland({
         </div>
       ) : null}
 
+      {/*
+        * The save card trades on continuity, not storage. Asking someone to
+        * value "keeping a file" is a weak offer to a first-time founder;
+        * keeping their place in a sequence answers the question that brought
+        * them here.
+        */}
       {showSignupCard && guestRef ? (
         <div className="ct-hero__save-card">
-          <h3>Save this brief and keep building</h3>
-          <p>This result is preserved for seven days. Create a free account to keep it permanently and unlock its shareable version.</p>
+          <h3>Pick up where you left off</h3>
+          <p>Your first step is saved for seven days. Create a free account and we&apos;ll keep track of what&apos;s done and what&apos;s next.</p>
           <div className="ct-hero__save-card-actions">
             <button
               className="ct-hero__cta"
@@ -404,7 +423,7 @@ export function HeroResultIsland({
                 setPromptDismissed(true);
               }}
             >
-              Keep exploring
+              Not now
             </button>
           </div>
         </div>
@@ -416,7 +435,7 @@ export function HeroResultIsland({
           onOpenChange={setSignupOpen}
           seed={description}
           trigger="hero-icp-output"
-          title="Save your customer decision brief"
+          title="Save your first step"
           description="Create your founder profile in seconds. Your result will be claimed automatically."
           returnPathOverride={buildHeroClaimReturnPath(guestRef.resumeToken)}
           onBeforeAuthContinue={prepareSignup}
@@ -431,10 +450,10 @@ export function HeroResultIsland({
   );
 }
 
-function ResultBlock({ label, value }: { label: string; value: string }) {
+function ResultBlock({ label, value, className }: { label: string; value: string; className?: string }) {
   if (!value?.trim()) return null;
   return (
-    <div className="ct-hero__result-block">
+    <div className={className ? `ct-hero__result-block ${className}` : "ct-hero__result-block"}>
       <span className="ct-hero__result-label">{label}</span>
       <p>{value}</p>
     </div>

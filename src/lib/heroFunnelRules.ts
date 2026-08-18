@@ -40,15 +40,40 @@ export const HERO_MODES = {
   idea: {
     route: "icp",
     label: "Idea",
-    // Curly apostrophe, matching "The Founders' Compass" directly above it.
-    question: "Who’s your ideal customer?",
-    cta: "Define ICP",
+    /*
+     * Asks for the idea, not the customer.
+     *
+     * "Who's your ideal customer?" demanded the output as the price of the
+     * input: someone who does not know what to do next does not know who their
+     * ideal customer is - that is the thing they came here to find out. The
+     * generator derives the customer from the idea, so the question was also
+     * asking for more than the machine behind it needs.
+     *
+     * "What's your idea?" rather than product mode's "What are you building?" -
+     * the two must stay distinguishable, and someone who has not built anything
+     * yet is more comfortable saying "my idea" than "what I'm building".
+     *
+     * Curly apostrophe, matching "The Founders' Compass" directly above it.
+     */
+    question: "What’s your idea?",
+    // Names the payoff in the visitor's words. "Define ICP" gated the highest
+    // intent moment in the funnel behind an acronym a first-time founder has
+    // no reason to know.
+    cta: "Show me my first step",
+    /*
+     * Deliberately looser in register than product mode's crisp "a CRM for
+     * mobile car detailers". The previous set were well-specified customer
+     * segments, which taught the visitor that this level of precision was the
+     * price of entry - the opposite of the truth. "something that..." and "a
+     * way to..." teach that a rough sentence is enough, which is the actual bar
+     * the generator needs.
+     */
     placeholders: [
-      "freelance designers who lose track of client revisions",
-      "small law firms still booking consultations by phone",
-      "indie game studios with no publisher and no marketing budget",
-      "boutique fitness studios whose members quietly stop showing up",
-      "small importers buried in customs paperwork",
+      "an app that helps barbers stop losing no-shows",
+      "something that helps freelance designers handle client revisions",
+      "a simpler way for small law firms to book consultations",
+      "a way to track expenses for a small construction crew",
+      "something that nudges gym members who stopped showing up",
     ],
   },
   product: {

@@ -56,13 +56,23 @@ test('Idea is preselected so nobody has to choose before typing', () => {
 // "Launch a live demo" that produced a customer profile is the broken promise
 // this rebuild exists to remove.
 test('each mode pairs its question, CTA and destination coherently', () => {
-  assert.equal(HERO_MODES.idea.question, 'Who’s your ideal customer?');
-  assert.equal(HERO_MODES.idea.cta, 'Define ICP');
+  // Idea mode asks for the idea, not the customer: the customer is what the
+  // generator produces, so asking for it up front demanded the output as the
+  // price of the input.
+  assert.equal(HERO_MODES.idea.question, 'What’s your idea?');
+  assert.equal(HERO_MODES.idea.cta, 'Show me my first step');
   assert.equal(HERO_MODES.idea.route, 'icp');
 
   assert.equal(HERO_MODES.product.question, 'What are you building?');
   assert.equal(HERO_MODES.product.cta, 'Launch a live demo');
   assert.equal(HERO_MODES.product.route, 'demo');
+});
+
+// The two questions must stay distinguishable. If idea mode also asked "What
+// are you building?" the toggle would offer one question twice and the visitor
+// would have no way to tell the paths apart.
+test('the two modes ask different questions', () => {
+  assert.notEqual(HERO_MODES.idea.question, HERO_MODES.product.question);
 });
 
 // The typing animation cycles these. A full loop is roughly 15s per prompt, so
