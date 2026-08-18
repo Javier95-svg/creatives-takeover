@@ -60,7 +60,7 @@ test('each mode pairs its question, CTA and destination coherently', () => {
   // generator produces, so asking for it up front demanded the output as the
   // price of the input.
   assert.equal(HERO_MODES.idea.question, 'What’s your idea?');
-  assert.equal(HERO_MODES.idea.cta, 'Show me my first step');
+  assert.equal(HERO_MODES.idea.cta, 'Assess viability');
   assert.equal(HERO_MODES.idea.route, 'icp');
 
   assert.equal(HERO_MODES.product.question, 'What are you building?');

@@ -56,10 +56,11 @@ export const HERO_MODES = {
      * Curly apostrophe, matching "The Founders' Compass" directly above it.
      */
     question: "What’s your idea?",
-    // Names the payoff in the visitor's words. "Define ICP" gated the highest
-    // intent moment in the funnel behind an acronym a first-time founder has
-    // no reason to know.
-    cta: "Show me my first step",
+    // Plain language, not an acronym: "Define ICP" gated the highest-intent
+    // moment in the funnel behind a term a first-time founder has no reason to
+    // know. This names the question they actually arrive with - whether the
+    // idea is worth pursuing at all.
+    cta: "Assess viability",
     /*
      * Deliberately looser in register than product mode's crisp "a CRM for
      * mobile car detailers". The previous set were well-specified customer

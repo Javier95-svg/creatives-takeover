@@ -32,7 +32,7 @@ function buildFallbackHtml(routeConfig) {
           <form action="/icp-builder" method="get">
             <label for="seo-hero-seed">What is your idea?</label>
             <textarea id="seo-hero-seed" name="seed" minlength="3" required></textarea>
-            <button type="submit">Show me my first step</button>
+            <button type="submit">Assess viability</button>
           </form>
           <p>Already have a product? <a href="/demo-studio/try">Launch a live demo</a>.</p>`
     : `<p>${routeConfig.heroCopy || routeConfig.description}</p>`;
