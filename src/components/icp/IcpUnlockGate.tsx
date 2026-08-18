@@ -1,9 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, X } from "lucide-react";
-import { toast } from "sonner";
+import { Check, Lock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { persistOnboardingReturn } from "@/lib/authRedirect";
 import { normalizeIcpSeed, persistIcpSeed } from "@/lib/icpSeed";
 import {
@@ -11,14 +9,16 @@ import {
   trackICPUnlockClicked,
   trackICPUnlockGateShown,
 } from "@/lib/analytics";
-import {
-  getPendingReferralCode,
-  persistPendingReferralCode,
-} from "@/lib/referral";
 import type { StoredIcpArtifact } from "@/lib/icpBuilderSession";
-import { beginAttributedOAuthSignup } from "@/lib/signupAttribution";
 import { trackActivationFunnelEvent } from "@/lib/activationEntry";
-import SoftGateModal from "@/components/auth/SoftGateModal";
+
+// Mirrors GUEST_LOCKED_SECTIONS in IcpGuestResultView plus the decision brief,
+// which the folio moves behind the gate alongside them.
+const UNLOCKS = [
+  "What you are building, and what it replaces",
+  "Your moat and the competitive landscape",
+  "Who to serve first and what to validate",
+] as const;
 
 interface IcpUnlockGateProps {
   artifact: StoredIcpArtifact;
@@ -41,8 +41,6 @@ export function IcpUnlockGate({
 }: IcpUnlockGateProps) {
   const navigate = useNavigate();
   const normalizedSeed = useMemo(() => normalizeIcpSeed(seed), [seed]);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [softGateOpen, setSoftGateOpen] = useState(false);
 
 
   useEffect(() => {
@@ -65,58 +63,14 @@ export function IcpUnlockGate({
     });
   }, [artifact.draftDocument.confidence.level, normalizedSeed, returnPath]);
 
-  const handleGoogleContinue = async () => {
-    try {
-      trackICPUnlockClicked({
-        page_path: "/icp-builder",
-        method: "google",
-        surface: "inline_lock_block",
-      });
-      trackActivationFunnelEvent("activation_gate_clicked", {
-        entry_id: "icp_draft_unlock", tool: "icp_builder", source: "icp-draft-unlock",
-        step: "signup_google", is_authenticated: false, return_path: returnPath,
-      });
-      setIsGoogleLoading(true);
-      onBeforeAuthContinue?.();
-      persistIcpSeed(normalizedSeed);
-      beginAttributedOAuthSignup({
-        method: "google",
-        source: "icp-draft-unlock",
-        returnUrl: returnPath,
-        entryId: "icp_draft_unlock",
-      });
-      const pendingReferralCode = getPendingReferralCode();
-      if (pendingReferralCode) {
-        persistPendingReferralCode(pendingReferralCode);
-      }
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: {
-            access_type: "offline",
-            prompt: "select_account",
-          },
-        },
-      });
-
-      if (error) {
-        toast.error(`Google sign-up error: ${error.message}`);
-        setIsGoogleLoading(false);
-      }
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Google sign-up failed.");
-      setIsGoogleLoading(false);
-    }
-  };
-
-  // Opens the 2-field modal in place instead of navigating to /signup (4 fields
-  // plus a full page load). This is the highest-intent moment in the funnel —
-  // the visitor is looking at their own half-unlocked draft — so the previous
-  // behaviour of throwing away the page and asking for twice the input was the
-  // worst possible trade. SoftGateModal returns them here via returnPath.
-  const handleSignUpRedirect = () => {
+  /**
+   * One route to an account. The gate previously offered Google and email as
+   * co-equal buttons, which made the highest-intent moment in the funnel a
+   * choice rather than an action.
+   *
+   * Event names are unchanged so before/after stays comparable in PostHog.
+   */
+  const handleCreateAccount = () => {
     trackICPUnlockClicked({
       page_path: "/icp-builder",
       method: "email",
@@ -126,7 +80,10 @@ export function IcpUnlockGate({
       entry_id: "icp_draft_unlock", tool: "icp_builder", source: "icp-draft-unlock",
       step: "signup_email", is_authenticated: false, return_path: returnPath,
     });
-    setSoftGateOpen(true);
+    onBeforeAuthContinue?.();
+    persistIcpSeed(normalizedSeed);
+    persistOnboardingReturn(returnPath);
+    navigate(`/signup?source=icp-draft-unlock&return=${encodeURIComponent(returnPath)}`);
   };
 
   const handleLoginRedirect = () => {
@@ -142,7 +99,13 @@ export function IcpUnlockGate({
 
   return (
     <div className={`relative z-20 w-full ${className}`}>
-      <div className="w-full rounded-5xl border border-border/60 bg-white/95 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.45)] backdrop-blur dark:bg-slate-950/90 sm:overflow-hidden">
+      {/*
+        Narrower and more emphatic than the surrounding document: this is the
+        one element on the page that asks for something, so it should read as a
+        card sitting on top of the draft rather than another section of it.
+      */}
+      <div className="mx-auto w-full max-w-xl overflow-hidden rounded-3xl border border-primary/25 bg-background shadow-[0_24px_70px_-40px_hsl(var(--primary)/0.5)]">
+        <div className="h-1 w-full bg-gradient-to-r from-primary via-accent-teal to-primary" aria-hidden="true" />
         {onDismiss ? (
           <div className="flex justify-end px-6 pt-4 sm:px-8">
             <button
@@ -156,43 +119,38 @@ export function IcpUnlockGate({
           </div>
         ) : null}
 
-        <div className="px-6 py-6 sm:px-8">
-          <div className="space-y-2 text-center">
-            <h2 className="text-xl font-semibold tracking-tight">
-              Save this and keep going
+        <div className="px-6 py-8 sm:px-10">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/25 bg-primary/10">
+            <Lock className="h-5 w-5 text-primary" aria-hidden="true" />
+          </div>
+
+          <div className="mt-5 space-y-2 text-center">
+            <h2 className="text-2xl font-semibold tracking-tight">
+              The rest of your brief is ready
             </h2>
-            <p className="text-sm text-muted-foreground">
-              Your draft is saved in this browser. Create a free account to keep it and move to the next step.
+            <p className="mx-auto max-w-sm text-sm leading-6 text-muted-foreground">
+              Create a free account to unlock the full draft and keep it saved to your profile.
             </p>
           </div>
 
-          <div className="mt-5 space-y-3">
-            <Button
-              type="button"
-              className="h-12 w-full text-base font-semibold"
-              disabled={isGoogleLoading}
-              onClick={() => void handleGoogleContinue()}
-            >
-              {isGoogleLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing up...
-                </>
-              ) : (
-                "Continue with Google — it's free"
-              )}
-            </Button>
+          {/* Names what is behind the blur. A gate that does not say what it
+              is withholding reads as a paywall rather than an offer. */}
+          <ul className="mx-auto mt-6 max-w-sm space-y-2.5">
+            {UNLOCKS.map((item) => (
+              <li key={item} className="flex items-start gap-2.5 text-sm leading-6 text-foreground">
+                <Check className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
 
-            <Button
-              type="button"
-              variant="outline"
-              className="h-12 w-full text-base font-semibold"
-              disabled={isGoogleLoading}
-              onClick={handleSignUpRedirect}
-            >
-              Sign up with email — it's free
-            </Button>
-          </div>
+          <Button
+            type="button"
+            className="mt-7 h-14 w-full text-base font-semibold"
+            onClick={handleCreateAccount}
+          >
+            Create your account for free
+          </Button>
 
           <p className="mt-3 text-center text-xs text-muted-foreground">
             No credit card. Your draft saves to your account automatically.
@@ -202,7 +160,6 @@ export function IcpUnlockGate({
             <button
               type="button"
               className="text-sm font-medium text-primary transition-opacity hover:opacity-80"
-              disabled={isGoogleLoading}
               onClick={handleLoginRedirect}
             >
               I already have an account
@@ -210,22 +167,6 @@ export function IcpUnlockGate({
           </div>
         </div>
       </div>
-
-      <SoftGateModal
-        open={softGateOpen}
-        onOpenChange={setSoftGateOpen}
-        seed={normalizedSeed}
-        trigger="icp_draft_unlock"
-        title="Save this and keep going"
-        description="Two fields and this exact brief is yours, including five customer-interview tasks. Free, with no credit card."
-        returnPathOverride={returnPath}
-        signupSource="icp-draft-unlock"
-        entryId="icp_draft_unlock"
-        activationTool="icp_builder"
-        journeyTool="icp_builder"
-        artifactType="customer_decision_preview"
-        onBeforeAuthContinue={onBeforeAuthContinue}
-      />
     </div>
   );
 }

@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Lock } from "lucide-react";
 
 import type { IcpDraftDocument } from "@/lib/icpBuilderSession";
 
@@ -381,9 +381,15 @@ export function IcpFolioDocument({
     firstLockedSectionIndex === -1 ? orderedVisibleSectionKeys : orderedVisibleSectionKeys.slice(0, firstLockedSectionIndex);
   const lockedVisibleSectionKeys =
     firstLockedSectionIndex === -1 ? [] : orderedVisibleSectionKeys.slice(firstLockedSectionIndex);
+  /**
+   * Every visible section is listed, gated ones included. Hiding them made the
+   * draft look like a two-section document, so a reader had no way to know what
+   * an account would actually get them - the locked sections were both blurred
+   * and absent from the contents.
+   */
   const navigableSections = useMemo(
-    () => SECTION_NAV_ITEMS.filter((item) => visibleSectionSet.has(item.key) && !lockedSectionSet.has(item.key)),
-    [lockedSectionSet, visibleSectionSet],
+    () => SECTION_NAV_ITEMS.filter((item) => visibleSectionSet.has(item.key)),
+    [visibleSectionSet],
   );
   const showDecisionBrief = Boolean(
     draft.decisionBrief && (visibleSections === undefined || visibleSectionSet.has("build")),
@@ -621,6 +627,14 @@ export function IcpFolioDocument({
   };
 
   const handleJumpToSection = (sectionKey: IcpFolioSectionKey) => {
+    // A gated section is rendered but unreadable, so scrolling to it would land
+    // the reader in blur with no explanation. Send them to the gate instead -
+    // that is the thing standing between them and the section they asked for.
+    if (lockedSectionSet.has(sectionKey)) {
+      document.getElementById("icp-unlock")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
     const sectionNode = sectionRefs.current[sectionKey];
     if (!sectionNode) return;
 
@@ -1070,27 +1084,35 @@ export function IcpFolioDocument({
                 </p>
                 <div className="space-y-1">
                   {navigableSections.map((item) => {
-                    const isActive = item.key === activeNavSection;
+                    const isLocked = lockedSectionSet.has(item.key);
+                    const isActive = !isLocked && item.key === activeNavSection;
 
                     return (
                       <button
                         key={item.key}
                         type="button"
                         onClick={() => handleJumpToSection(item.key)}
+                        title={isLocked ? "Create a free account to read this section" : undefined}
                         className={`flex w-full items-center justify-between rounded-lg px-2 py-2 text-left transition-colors ${
                           isActive
                             ? "bg-foreground/[0.06] text-foreground"
-                            : "text-foreground/68 hover:bg-foreground/[0.04] hover:text-foreground"
+                            : isLocked
+                              ? "text-foreground/45 hover:bg-foreground/[0.04] hover:text-foreground/70"
+                              : "text-foreground/68 hover:bg-foreground/[0.04] hover:text-foreground"
                         }`}
                         aria-current={isActive ? "true" : undefined}
                       >
                         <span>{item.label}</span>
-                        <span
-                          className={`h-2 w-2 rounded-full transition-colors ${
-                            isActive ? "bg-primary" : "bg-border"
-                          }`}
-                          aria-hidden="true"
-                        />
+                        {isLocked ? (
+                          <Lock className="h-3 w-3 shrink-0 text-foreground/40" aria-label="Locked" />
+                        ) : (
+                          <span
+                            className={`h-2 w-2 rounded-full transition-colors ${
+                              isActive ? "bg-primary" : "bg-border"
+                            }`}
+                            aria-hidden="true"
+                          />
+                        )}
                       </button>
                     );
                   })}
