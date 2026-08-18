@@ -39,6 +39,17 @@ interface HeroResultIslandProps {
   onRetry: () => void;
   onBusyChange?: (busy: boolean) => void;
   onArtifactReady?: (artifact: HeroGuestArtifactRef) => void;
+  /**
+   * Fires once on mount so the hero can tell "the island is running" from "the
+   * lazy chunk never arrived". Without it a stalled import is indistinguishable
+   * from a slow generation, and the submit button stays disabled either way.
+   */
+  onMounted?: () => void;
+  /**
+   * Terminal failure with nothing to show. The visitor keeps their description
+   * and continues in the ICP Builder rather than being left on a dead card.
+   */
+  onFailureHandoff?: () => void;
 }
 
 const POLL_INTERVAL_MS = 2_500;
@@ -63,6 +74,8 @@ export function HeroResultIsland({
   onRetry,
   onBusyChange,
   onArtifactReady,
+  onMounted,
+  onFailureHandoff,
 }: HeroResultIslandProps) {
   const [runState, setRunState] = useState<HeroRunState>("compact_generating");
   const [compact, setCompact] = useState<HeroDecisionBrief | null>(null);
@@ -80,6 +93,14 @@ export function HeroResultIsland({
     initialResumeToken ? "homepage_resume" : "homepage_hero",
   );
   const promptTrackedRef = useRef<string | null>(null);
+
+  // Announce arrival before any generation work, so the hero's watchdog can
+  // stand down the moment the chunk is actually running.
+  useEffect(() => {
+    onMounted?.();
+  // Mount-only: re-firing on prop identity would defeat the point.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const applyDeepArtifact = useCallback((nextArtifact: StoredIcpArtifact, artifactId: string, startedAt: number) => {
     setArtifact(nextArtifact);
@@ -321,8 +342,26 @@ export function HeroResultIsland({
   if (runState === "failed" && !hasUsefulOutput) {
     return (
       <div className="ct-hero__result" role="status">
-        <p className="ct-hero__result-error">{errorMessage || "That did not generate. Try again."}</p>
-        <button type="button" className="ct-hero__cta ct-hero__result-retry" onClick={onRetry}>Try again</button>
+        <p className="ct-hero__result-error">
+          {errorMessage || "That did not generate."}
+        </p>
+        <div className="ct-hero__result-actions">
+          <button type="button" className="ct-hero__cta ct-hero__result-retry" onClick={onRetry}>Try again</button>
+          {/*
+            * Never a dead end. A visitor who got nothing here still has their
+            * description, and continuing in the builder is strictly better than
+            * a card whose only option is to retry something that just failed.
+            */}
+          {onFailureHandoff ? (
+            <button
+              type="button"
+              className="ct-hero__result-crosslink"
+              onClick={onFailureHandoff}
+            >
+              Continue in ICP Builder →
+            </button>
+          ) : null}
+        </div>
       </div>
     );
   }

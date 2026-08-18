@@ -1,4 +1,4 @@
-import { ReactNode, Suspense, lazy, useEffect, useRef, useState } from "react";
+import { Component, ReactNode, Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, LayoutDashboard, User } from "lucide-react";
 
@@ -20,6 +20,34 @@ import { buildHeroResumePath, type HeroGuestArtifactRef } from "@/lib/heroIcpGen
 // the fold-blocking bundle. The input above is plain markup and stays typable
 // while this loads.
 const HeroResultIsland = lazy(() => import("@/components/hero/HeroResultIsland"));
+
+/**
+ * Catches the two ways the generation island can fail to appear: a rejected
+ * dynamic import (a stale chunk hash after a deploy is the common one) and a
+ * render crash inside it.
+ *
+ * Either would otherwise be silent and permanent. `generationBusy` is cleared
+ * only by the island itself, and the submit button is disabled while busy - so
+ * a single failed click leaves BOTH hero CTAs dead until a reload, with no
+ * error shown. On failure we hand off to the ICP Builder with the description
+ * instead, so a click can never dead-end on the homepage.
+ */
+class HeroIslandBoundary extends Component<{ children: ReactNode; onError: () => void }, { failed: boolean }> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.error("[Hero] generation island unavailable, handing off to ICP Builder:", error);
+    this.props.onError();
+  }
+
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
 
 // Also lazy: it renders nothing until opened, but statically it dragged the
 // Radix dialog and ~20 lucide icons into the homepage's critical path. Homepage
@@ -122,6 +150,37 @@ const Hero = ({
   const [generationRunId, setGenerationRunId] = useState(() => (resumeTokenFromUrl ? 1 : 0));
   const [initialResumeToken, setInitialResumeToken] = useState<string | null>(resumeTokenFromUrl);
   const [generationBusy, setGenerationBusy] = useState(false);
+  const islandMountedRef = useRef(false);
+
+  /**
+   * The guaranteed exit. Clears the busy lock first so the button is usable
+   * again even if navigation is blocked, then carries the description into the
+   * ICP Builder - which restores it from `?seed=` on arrival.
+   */
+  const handoffToIcpBuilder = useCallback((seed: string) => {
+    const trimmed = seed.trim();
+    setGenerationBusy(false);
+    if (!trimmed) return;
+    persistIcpSeed(trimmed);
+    navigate(buildIcpSeedReturnPath(trimmed));
+  }, [navigate]);
+
+  /**
+   * Backstop for the case the error boundary cannot see: a dynamic import that
+   * neither resolves nor rejects (a hung request for the chunk). The island
+   * reports its own mount, so this only fires when it genuinely never arrived.
+   * Ten seconds is far longer than the chunk needs and far shorter than the
+   * island's own 75s generation timeout, so it never pre-empts real work.
+   */
+  useEffect(() => {
+    if (!generationBusy || islandMountedRef.current) return;
+    const timer = setTimeout(() => {
+      if (islandMountedRef.current) return;
+      console.error("[Hero] generation island never mounted, handing off to ICP Builder");
+      handoffToIcpBuilder(submittedIdea);
+    }, 10_000);
+    return () => clearTimeout(timer);
+  }, [generationBusy, handoffToIcpBuilder, submittedIdea]);
 
   useEffect(() => {
     if (!resumeTokenFromUrl || resumeTokenFromUrl === initialResumeToken) return;
@@ -253,6 +312,9 @@ const Hero = ({
     setInitialResumeToken(null);
     if (resumeTokenFromUrl) window.history.replaceState(window.history.state, "", location.pathname);
     setSubmittedIdea(trimmed);
+    // Re-arm the watchdog: the island remounts on the new key, so a previous
+    // successful run must not vouch for this one.
+    islandMountedRef.current = false;
     setGenerationBusy(true);
     setGenerationRunId((current) => current + 1);
   };
@@ -329,27 +391,33 @@ const Hero = ({
         </div>
 
         {!isAuthenticated && generationRunId > 0 ? (
-          <Suspense
-            fallback={
-              <p className="ct-hero__result-loading" role="status" aria-live="polite">
-                Reading your idea…
-              </p>
-            }
-          >
-            <HeroResultIsland
-              key={`${generationRunId}:${initialResumeToken ?? submittedIdea}`}
-              description={submittedIdea}
-              runId={generationRunId}
-              resumeToken={initialResumeToken}
-              isAuthenticated={isAuthenticated}
-              onBusyChange={setGenerationBusy}
-              onArtifactReady={handleArtifactReady}
-              onRetry={() => {
-                setGenerationBusy(true);
-                setGenerationRunId((current) => current + 1);
-              }}
-            />
-          </Suspense>
+          <HeroIslandBoundary onError={() => handoffToIcpBuilder(submittedIdea)}>
+            <Suspense
+              fallback={
+                <p className="ct-hero__result-loading" role="status" aria-live="polite">
+                  Reading your idea…
+                </p>
+              }
+            >
+              <HeroResultIsland
+                key={`${generationRunId}:${initialResumeToken ?? submittedIdea}`}
+                description={submittedIdea}
+                runId={generationRunId}
+                resumeToken={initialResumeToken}
+                isAuthenticated={isAuthenticated}
+                onBusyChange={setGenerationBusy}
+                onArtifactReady={handleArtifactReady}
+                onMounted={() => {
+                  islandMountedRef.current = true;
+                }}
+                onFailureHandoff={() => handoffToIcpBuilder(submittedIdea)}
+                onRetry={() => {
+                  setGenerationBusy(true);
+                  setGenerationRunId((current) => current + 1);
+                }}
+              />
+            </Suspense>
+          </HeroIslandBoundary>
         ) : null}
 
         {!isAuthenticated ? <div
