@@ -6,8 +6,6 @@ import Navigation from "@/components/Navigation";
 import SEO, { createBreadcrumbSchema, createFAQSchema, createSoftwareApplicationSchema } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { readIcpBuilderSession } from "@/lib/icpBuilderSession";
-import { useExitIntent } from "@/hooks/useExitIntent";
-import { ExitIntentModal } from "@/components/ExitIntentModal";
 import {
   trackActivationCompleted,
   trackICPBuilderOpened,
@@ -54,7 +52,6 @@ export default function ICPBuilderPage() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const hasTracked = useRef(false);
-  const { showExitIntent, closeExitIntent } = useExitIntent();
 
   useEffect(() => {
     if (hasTracked.current) return;
@@ -211,7 +208,6 @@ export default function ICPBuilderPage() {
         </Suspense>
       </main>
 
-      <ExitIntentModal isOpen={showExitIntent} onClose={closeExitIntent} />
     </div>
   );
 }

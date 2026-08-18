@@ -38,6 +38,12 @@ interface IcpFolioDocumentProps {
   visibleSections?: readonly IcpFolioSectionKey[];
   lockedSections?: readonly IcpFolioSectionKey[];
   lockedSectionBreak?: ReactNode;
+  /**
+   * The founder's own words, shown first so the document opens on what they
+   * typed rather than on the analysis. It is the one line a reader can verify
+   * at a glance, which is what makes the rest of the draft credible.
+   */
+  ideaDescription?: string;
 }
 
 const VIEWPORT_MARGIN = 16;
@@ -356,6 +362,7 @@ export function IcpFolioDocument({
   visibleSections,
   lockedSections = [],
   lockedSectionBreak,
+  ideaDescription,
 }: IcpFolioDocumentProps) {
   const visibleSectionSet = useMemo(
     () => new Set<IcpFolioSectionKey>(visibleSections ?? SECTION_NAV_ITEMS.map((item) => item.key)),
@@ -976,6 +983,75 @@ export function IcpFolioDocument({
   const surfaceBlurClasses = blurred ? "pointer-events-none select-none blur-[14px]" : "";
   const lockedSurfaceClasses = blurred ? "" : "pointer-events-none select-none blur-[12px] opacity-90";
 
+  // The decision brief is a synthesis, so it reads as a conclusion rather than
+  // an opener. When any section is gated it moves behind the gate with them -
+  // it is the highest-value block in the draft and the reason to create an
+  // account. With nothing gated (a saved draft) it simply closes the document.
+  const briefIsLocked = lockedVisibleSectionKeys.length > 0;
+  const decisionBriefNode =
+      showDecisionBrief && draft.decisionBrief ? (
+        <section className="mb-10 rounded-2xl border border-primary/20 bg-primary/[0.035] p-5 sm:p-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+            Customer Decision Brief
+          </p>
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
+            Who to serve first and what to validate
+          </h2>
+
+          <dl className="mt-6 grid gap-5 sm:grid-cols-2">
+            <div>
+              <dt className="text-sm font-semibold text-foreground">Primary segment</dt>
+              <dd className="mt-1 text-sm leading-6 text-foreground/75">{draft.decisionBrief.primarySegment}</dd>
+            </div>
+            <div>
+              <dt className="text-sm font-semibold text-foreground">Not the first segment</dt>
+              <dd className="mt-1 text-sm leading-6 text-foreground/75">{draft.decisionBrief.nonFitSegment}</dd>
+            </div>
+            <div>
+              <dt className="text-sm font-semibold text-foreground">Buying trigger</dt>
+              <dd className="mt-1 text-sm leading-6 text-foreground/75">{draft.decisionBrief.buyingTrigger}</dd>
+            </div>
+            <div>
+              <dt className="text-sm font-semibold text-foreground">Current alternative</dt>
+              <dd className="mt-1 text-sm leading-6 text-foreground/75">{draft.decisionBrief.currentAlternative}</dd>
+            </div>
+          </dl>
+
+          <div className="mt-6">
+            <h3 className="text-sm font-semibold text-foreground">Ranked pains</h3>
+            <ol className="mt-3 space-y-3">
+              {draft.decisionBrief.rankedPains.map((item) => (
+                <li key={`${item.rank}-${item.pain}`} className="rounded-xl border border-border/70 bg-background/80 p-3">
+                  <p className="text-sm font-semibold text-foreground">{item.rank}. {item.pain}</p>
+                  <p className="mt-1 text-xs leading-5 text-foreground/60">{item.evidence}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          {draft.decisionBrief.reachableChannels.length ? (
+            <div className="mt-6">
+              <h3 className="text-sm font-semibold text-foreground">Reachable channels</h3>
+              <p className="mt-2 text-sm leading-6 text-foreground/75">
+                {draft.decisionBrief.reachableChannels.join(" · ")}
+              </p>
+            </div>
+          ) : null}
+
+          <div className="mt-6 border-t border-border/70 pt-5">
+            <h3 className="text-sm font-semibold text-foreground">Five interview validation plan</h3>
+            <ol className="mt-3 space-y-3">
+              {draft.decisionBrief.interviewValidationPlan.map((item) => (
+                <li key={item.step} className="text-sm leading-6 text-foreground/75">
+                  <span className="font-semibold text-foreground">{item.step}. {item.question}</span>
+                  <span className="block text-xs leading-5 text-foreground/60">Success signal: {item.successSignal}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+      ) : null;
+
   return (
     <div className={`${wrapperClasses} ${className}`}>
       <div className="mx-auto w-full max-w-4xl">
@@ -1045,71 +1121,20 @@ export function IcpFolioDocument({
                   Creatives Takeover
                 </span>
               </div>
-              {showDecisionBrief && draft.decisionBrief ? (
-                <section className="mb-10 rounded-2xl border border-primary/20 bg-primary/[0.035] p-5 sm:p-6">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                    Customer Decision Brief
+              {ideaDescription?.trim() ? (
+                <section className="mb-10 border-b border-border/60 pb-8">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-foreground/55">
+                    Your idea
                   </p>
-                  <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
-                    Who to serve first and what to validate
-                  </h2>
-
-                  <dl className="mt-6 grid gap-5 sm:grid-cols-2">
-                    <div>
-                      <dt className="text-sm font-semibold text-foreground">Primary segment</dt>
-                      <dd className="mt-1 text-sm leading-6 text-foreground/75">{draft.decisionBrief.primarySegment}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-semibold text-foreground">Not the first segment</dt>
-                      <dd className="mt-1 text-sm leading-6 text-foreground/75">{draft.decisionBrief.nonFitSegment}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-semibold text-foreground">Buying trigger</dt>
-                      <dd className="mt-1 text-sm leading-6 text-foreground/75">{draft.decisionBrief.buyingTrigger}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-semibold text-foreground">Current alternative</dt>
-                      <dd className="mt-1 text-sm leading-6 text-foreground/75">{draft.decisionBrief.currentAlternative}</dd>
-                    </div>
-                  </dl>
-
-                  <div className="mt-6">
-                    <h3 className="text-sm font-semibold text-foreground">Ranked pains</h3>
-                    <ol className="mt-3 space-y-3">
-                      {draft.decisionBrief.rankedPains.map((item) => (
-                        <li key={`${item.rank}-${item.pain}`} className="rounded-xl border border-border/70 bg-background/80 p-3">
-                          <p className="text-sm font-semibold text-foreground">{item.rank}. {item.pain}</p>
-                          <p className="mt-1 text-xs leading-5 text-foreground/60">{item.evidence}</p>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-
-                  {draft.decisionBrief.reachableChannels.length ? (
-                    <div className="mt-6">
-                      <h3 className="text-sm font-semibold text-foreground">Reachable channels</h3>
-                      <p className="mt-2 text-sm leading-6 text-foreground/75">
-                        {draft.decisionBrief.reachableChannels.join(" · ")}
-                      </p>
-                    </div>
-                  ) : null}
-
-                  <div className="mt-6 border-t border-border/70 pt-5">
-                    <h3 className="text-sm font-semibold text-foreground">Five interview validation plan</h3>
-                    <ol className="mt-3 space-y-3">
-                      {draft.decisionBrief.interviewValidationPlan.map((item) => (
-                        <li key={item.step} className="text-sm leading-6 text-foreground/75">
-                          <span className="font-semibold text-foreground">{item.step}. {item.question}</span>
-                          <span className="block text-xs leading-5 text-foreground/60">Success signal: {item.successSignal}</span>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
+                  <p className="mt-3 text-xl leading-8 text-foreground sm:text-2xl sm:leading-9">
+                    {ideaDescription.trim()}
+                  </p>
                 </section>
               ) : null}
               {unlockedVisibleSectionKeys.map((sectionKey) => (
                 <div key={sectionKey}>{renderedSections[sectionKey]}</div>
               ))}
+              {briefIsLocked ? null : decisionBriefNode}
 
               {lockedVisibleSectionKeys.length > 0 ? (
                 <>
@@ -1123,6 +1148,7 @@ export function IcpFolioDocument({
                     aria-hidden={lockedSurfaceClasses.length > 0}
                     inert={lockedSurfaceClasses.length > 0 ? true : undefined}
                   >
+                    {briefIsLocked ? decisionBriefNode : null}
                     {lockedVisibleSectionKeys.map((sectionKey) => (
                       <div key={sectionKey}>{renderedSections[sectionKey]}</div>
                     ))}

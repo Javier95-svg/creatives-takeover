@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, ExternalLink, Loader2, X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,18 +44,6 @@ export function IcpUnlockGate({
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [softGateOpen, setSoftGateOpen] = useState(false);
 
-  const confidence = artifact.draftDocument.confidence;
-  const citedSignal = artifact.draftDocument.sources?.find((source) => Boolean(source.url));
-  const customerEvidence = artifact.draftDocument.customer.evidence;
-  const painEvidence = artifact.draftDocument.pain.evidence;
-  const fallbackSignal =
-    artifact.draftDocument.customer.evidence.evidence ||
-    artifact.draftDocument.pain.evidence.evidence;
-  const fallbackProvenance =
-    customerEvidence.provenance === "founder_input" || painEvidence.provenance === "founder_input"
-      ? "Founder hypothesis"
-      : "Model inference — validate this";
-  const assumptions = confidence.missingSignals.slice(0, 2);
 
   useEffect(() => {
     trackICPUnlockGateShown({
@@ -155,67 +143,18 @@ export function IcpUnlockGate({
   return (
     <div className={`relative z-20 w-full ${className}`}>
       <div className="w-full rounded-5xl border border-border/60 bg-white/95 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.45)] backdrop-blur dark:bg-slate-950/90 sm:overflow-hidden">
-        <div className="border-b border-border/50 px-6 py-5 sm:px-8">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="mb-3 text-caption font-semibold uppercase tracking-[0.22em] text-accent-teal">
-                Evidence check
-              </p>
-              <p className="text-base font-semibold text-foreground">
-                Know what is sourced, hypothesized, and inferred
-              </p>
-            </div>
-
-            {onDismiss ? (
-              <button
-                type="button"
-                aria-label="Close unlock prompt"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                onClick={onDismiss}
-              >
-                <X className="h-4 w-4" />
-              </button>
-            ) : null}
+        {onDismiss ? (
+          <div className="flex justify-end px-6 pt-4 sm:px-8">
+            <button
+              type="button"
+              aria-label="Close unlock prompt"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              onClick={onDismiss}
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
-
-          <div className="mt-4 rounded-3xl border border-border/60 bg-background/70 px-4 py-4">
-            {(citedSignal || fallbackSignal) ? (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  {citedSignal ? "Cited market signal" : fallbackProvenance}
-                </p>
-                <p className="mt-1 text-sm leading-6 text-foreground">
-                  {citedSignal?.detail || citedSignal?.title || fallbackSignal}
-                  {citedSignal?.url ? (
-                    <a
-                      href={citedSignal.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="ml-2 inline-flex items-center gap-1 font-medium text-primary hover:underline"
-                    >
-                      View source <ExternalLink className="h-3 w-3" />
-                    </a>
-                  ) : null}
-                </p>
-              </div>
-            ) : null}
-
-            {assumptions.length ? (
-              <div className="mt-4 rounded-2xl border border-warning/30 bg-warning-subtle px-3 py-3">
-                <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-foreground">
-                  <AlertCircle className="h-3.5 w-3.5" /> Assumptions to validate
-                </p>
-                <ul className="mt-2 space-y-1 text-sm leading-6 text-muted-foreground">
-                  {assumptions.map((assumption) => <li key={assumption}>{assumption}</li>)}
-                </ul>
-              </div>
-            ) : null}
-            <p className="mt-4 border-t border-border/60 pt-4 text-sm text-muted-foreground">
-              Confidence: <span className="font-semibold capitalize text-foreground">{confidence.level}</span>. {confidence.summary}
-            </p>
-          </div>
-
-        </div>
+        ) : null}
 
         <div className="px-6 py-6 sm:px-8">
           <div className="space-y-2 text-center">
