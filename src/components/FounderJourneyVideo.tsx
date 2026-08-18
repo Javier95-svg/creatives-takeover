@@ -71,7 +71,12 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
   useEffect(() => {
     if (!gifUrl) return;
 
-    if (isAdmin || typeof IntersectionObserver === 'undefined') {
+    // Admins are NOT exempt. They used to be, which meant every admin page view
+    // eagerly downloaded all seven GIFs (~141 MB) instead of the handful actually
+    // on screen — making the whole platform feel broken while signed in as admin.
+    // The upload affordance is a hover overlay on the frame and works regardless
+    // of whether the GIF itself has been fetched yet.
+    if (typeof IntersectionObserver === 'undefined') {
       setShouldLoadMedia(true);
       return;
     }
@@ -90,7 +95,7 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
 
     observer.observe(host);
     return () => observer.disconnect();
-  }, [gifUrl, isAdmin]);
+  }, [gifUrl]);
 
   const handleGifUpload = async (file: File) => {
     // Validate file type
