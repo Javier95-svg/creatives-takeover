@@ -10,12 +10,26 @@ import type { SavedMentor } from '@/hooks/useMentorSaves';
 import { useRetentionFeed } from '@/hooks/useRetentionFeed';
 import { supabase } from '@/integrations/supabase/client';
 import { scheduleReturnCue } from '@/lib/returnCues';
+import { cn } from '@/lib/utils';
 
-interface NetworkRelationshipInboxProps {
+interface RelationshipInboxProps {
   savedMentors: SavedMentor[];
+  /**
+   * Where the "Saved mentors" tile points. Defaults to the Saved Mentors lane;
+   * that lane passes its own destination so the tile is never a self-link.
+   */
+  savedMentorsHref?: string;
+  /** Lets the host surface attribute tile clicks to its own analytics. */
+  onTileClick?: (action: string) => void;
+  className?: string;
 }
 
-export function NetworkRelationshipInbox({ savedMentors }: NetworkRelationshipInboxProps) {
+export function RelationshipInbox({
+  savedMentors,
+  savedMentorsHref = '/saved-mentors',
+  onTileClick,
+  className,
+}: RelationshipInboxProps) {
   const { user } = useAuth();
   const retention = useRetentionFeed();
   const upcoming = useQuery({
@@ -58,7 +72,7 @@ export function NetworkRelationshipInbox({ savedMentors }: NetworkRelationshipIn
   if (!user) return null;
 
   return (
-    <Card className="border-accent-teal/25 bg-accent-teal/[0.04]">
+    <Card className={cn('border-accent-teal/25 bg-accent-teal/[0.04]', className)}>
       <CardHeader className="pb-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -70,19 +84,19 @@ export function NetworkRelationshipInbox({ savedMentors }: NetworkRelationshipIn
       </CardHeader>
       <CardContent className="grid gap-3 sm:grid-cols-3">
         <Button asChild variant="outline" className="h-auto min-h-20 justify-start gap-3 p-4 text-left">
-          <Link to="/saved-mentors">
+          <Link to={savedMentorsHref} onClick={() => onTileClick?.('saved_mentors')}>
             <BookmarkCheck className="h-5 w-5 shrink-0 text-primary" />
             <span><strong className="block text-base">{savedMentors.length}</strong><span className="text-xs text-muted-foreground">Saved mentors</span></span>
           </Link>
         </Button>
         <Button asChild variant="outline" className="h-auto min-h-20 justify-start gap-3 p-4 text-left">
-          <Link to="/messages">
+          <Link to="/messages" onClick={() => onTileClick?.('unread_conversations')}>
             <MessageCircle className="h-5 w-5 shrink-0 text-primary" />
             <span><strong className="block text-base">{retention.unreadMessageCount}</strong><span className="text-xs text-muted-foreground">Unread conversations</span></span>
           </Link>
         </Button>
         <Button asChild variant="outline" className="h-auto min-h-20 justify-start gap-3 p-4 text-left">
-          <Link to="/mentorship/my-bookings">
+          <Link to="/mentorship/my-bookings" onClick={() => onTileClick?.('upcoming_bookings')}>
             <CalendarClock className="h-5 w-5 shrink-0 text-primary" />
             <span><strong className="block text-base">{upcoming.data ?? 0}</strong><span className="text-xs text-muted-foreground">Upcoming bookings</span></span>
           </Link>

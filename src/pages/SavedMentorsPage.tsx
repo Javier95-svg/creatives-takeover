@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { RelationshipInbox } from '@/components/mentor-marketplace/RelationshipInbox';
 import { useAuth } from '@/contexts/AuthContext';
 import { SavedMentor, useMentorSaves } from '@/hooks/useMentorSaves';
 import { trackRetentionEvent } from '@/lib/retentionSystem';
@@ -81,28 +82,12 @@ const SavedMentorsPage = () => {
       subtitle="Your mentor follow-up queue lives here, outside the War Room."
     >
       <div className="space-y-6">
-        <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card shadow-sm">
-          <CardHeader className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="space-y-2">
-                <Badge variant="outline" className="w-fit">Sidebar subtab</Badge>
-                <CardTitle className="text-2xl">Keep mentor follow-up out of the War Room</CardTitle>
-                <CardDescription className="max-w-3xl text-sm sm:text-base">
-                  Saved Mentors now lives in its own dashboard lane so the War Room can stay focused on execution while mentor follow-up has enough room to breathe.
-                </CardDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">{visibleSavedMentors.length} saved</Badge>
-                <Button asChild variant="outline" size="sm">
-                  <Link to={SAVED_MARKETPLACE_URL} onClick={() => trackPageAction('open_saved_marketplace')}>
-                    Open saved feed
-                    <ArrowRight className="ml-1 h-4 w-4" />
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
+        <RelationshipInbox
+          savedMentors={visibleSavedMentors}
+          savedMentorsHref={SAVED_MARKETPLACE_URL}
+          onTileClick={(action) => trackPageAction(`inbox_${action}`)}
+          className="border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card shadow-sm"
+        />
 
         <div className="grid gap-6 xl:grid-cols-[1.18fr_0.82fr]">
           <div className="space-y-4">
