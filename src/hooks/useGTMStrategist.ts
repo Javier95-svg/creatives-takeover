@@ -29,6 +29,7 @@ import { evaluateGTMOutcome } from '@/lib/gtmOutcome';
 import {
   createJourneyEvidenceManifest,
   createJourneyHandoff,
+  findJourneyHandoff,
   trackJourneyEvent,
   upsertJourneyOutcome,
 } from '@/lib/journeyOutcomes';
@@ -127,7 +128,12 @@ const createMvpProjectPrefill = (row: Record<string, unknown>): Partial<GTMIntak
   };
 };
 
-const syncGTMJourneyOutcome = async (userId: string, artifactId: string, plan: GTMPlanV2) => {
+const syncGTMJourneyOutcome = async (
+  userId: string,
+  artifactId: string,
+  plan: GTMPlanV2,
+  lineage?: { validationContextId?: string | null; handoffId?: string | null },
+) => {
   try {
     const outcome = evaluateGTMOutcome(plan);
     const evidenceManifest = createJourneyEvidenceManifest([
@@ -172,6 +178,9 @@ const syncGTMJourneyOutcome = async (userId: string, artifactId: string, plan: G
       evidenceManifest,
       completionScore: outcome.completionScore,
       verificationMode: outcome.status === 'verified' ? 'corroborated' : 'unverified',
+      validationContextId: lineage?.validationContextId ?? null,
+      handoffId: lineage?.handoffId ?? null,
+      artifactVersion: plan.generatedAt,
     });
     return { ...outcome, outcomeId: (saved.outcome as { id?: string } | null)?.id ?? null };
   } catch (error) {
@@ -198,6 +207,9 @@ export function useGTMStrategist() {
   const [weeklyReview, setWeeklyReview] = useState<GTMWeeklyReview | null>(null);
   const [isReviewing, setIsReviewing] = useState(false);
   const [isRestoringPlan, setIsRestoringPlan] = useState(true);
+  const requestedMvpProjectId = new URLSearchParams(window.location.search).get('mvp');
+  const validationContextId = new URLSearchParams(window.location.search).get('context');
+  const [originatingHandoffId, setOriginatingHandoffId] = useState<string | null>(null);
 
   // On mount: restore explicitly saved GTM work and load available MVP import sources.
   useEffect(() => {
@@ -205,10 +217,14 @@ export function useGTMStrategist() {
     void loadExistingPlan();
     void loadMvpProjects();
   // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
-  }, [user]);
+  }, [requestedMvpProjectId, user]);
 
   const loadExistingPlan = useCallback(async () => {
     if (!user) return;
+    if (requestedMvpProjectId) {
+      setIsRestoringPlan(false);
+      return;
+    }
     try {
       const { data } = await supabase
         .from(GTM_TABLE)
@@ -268,7 +284,7 @@ export function useGTMStrategist() {
     } finally {
       setIsRestoringPlan(false);
     }
-  }, [user]);
+  }, [requestedMvpProjectId, user]);
 
   const loadMvpProjects = useCallback(async () => {
     if (!user) {
@@ -309,6 +325,17 @@ export function useGTMStrategist() {
     setSelectedMvpProjectId(project.id);
     setPrefillV2(project.prefill);
   }, [mvpProjects]);
+
+  useEffect(() => {
+    if (!requestedMvpProjectId || mvpProjects.length === 0) return;
+    const exactProject = mvpProjects.find((project) => project.id === requestedMvpProjectId);
+    if (!exactProject) return;
+    setSelectedMvpProjectId(exactProject.id);
+    setPrefillV2(exactProject.prefill);
+    void findJourneyHandoff('gtm_strategist', exactProject.id)
+      .then((handoff) => setOriginatingHandoffId(handoff?.id ?? null))
+      .catch(() => setOriginatingHandoffId(null));
+  }, [mvpProjects, requestedMvpProjectId]);
 
   const runAnalysis = useCallback(async (answers: GTMIntakeAnswers) => {
     if (!user) {
@@ -409,7 +436,7 @@ export function useGTMStrategist() {
       captureEvent('gtm_research_completed', { status: data.analysis.researchStatus, source_count: data.analysis.researchSources.length });
       trackToolOutputCreated('gtm_strategist', 'gtm_plan', { schema_version: 2 });
       if (data.planId ?? data.analysis.planId) {
-        void syncGTMJourneyOutcome(user.id, data.planId ?? data.analysis.planId, data.analysis);
+        void syncGTMJourneyOutcome(user.id, data.planId ?? data.analysis.planId, data.analysis, { validationContextId, handoffId: originatingHandoffId });
       }
       void trackCurrentActivationJourneyEvent(user.id, 'activation_first_output_generated', { intent: 'plan_gtm', tool: 'gtm_strategist' });
       showCreditReceipt('GTM_ANALYSIS', typeof data.creditsUsed === 'number' ? data.creditsUsed : credits, typeof data.newBalance === 'number' ? data.newBalance : undefined, { featureName: 'GTM Strategist' });
@@ -418,7 +445,7 @@ export function useGTMStrategist() {
       toast.error('Something went wrong while building your GTM system.');
       setPhase(regenerate && analysis ? 'results' : 'intake');
     }
-  }, [analysis, ensureCredits, handleCreditError, planId, showCreditReceipt, user]);
+  }, [analysis, ensureCredits, handleCreditError, originatingHandoffId, planId, showCreditReceipt, user, validationContextId]);
 
   const updatePlay = useCallback(async (nextPlay: GTMPlay) => {
     if (!user || !planId || !analysis || !isGTMPlanV2(analysis)) return;
@@ -446,7 +473,7 @@ export function useGTMStrategist() {
 
   const startPlaySprint = useCallback(async (play: GTMPlay) => {
     if (!user || !planId || !analysis || !isGTMPlanV2(analysis)) return;
-    const preActivation = await syncGTMJourneyOutcome(user.id, planId, analysis);
+    const preActivation = await syncGTMJourneyOutcome(user.id, planId, analysis, { validationContextId, handoffId: originatingHandoffId });
     if (!preActivation || preActivation.status === 'draft') {
       toast.error('Complete the GTM outcome contract before activating this play.');
       return;
@@ -493,12 +520,21 @@ export function useGTMStrategist() {
     setAnalysis(activatedPlan);
     captureEvent('gtm_traction_sprint_started', { plan_id: planId, play_id: play.id, channel_id: play.channelId, sprint_id: sprintId });
     {
-      const outcome = await syncGTMJourneyOutcome(user.id, planId, activatedPlan);
+      const outcome = await syncGTMJourneyOutcome(user.id, planId, activatedPlan, { validationContextId, handoffId: originatingHandoffId });
       if (outcome?.outcomeId) {
         await createJourneyHandoff({
           sourceOutcomeId: outcome.outcomeId,
           destinationTool: 'traction_engine',
-          payload: { planId, playId: play.id, sprintId, ...activationPayload },
+          payload: {
+            validationContextId,
+            sourceMvpProjectId: requestedMvpProjectId,
+            planId,
+            playId: play.id,
+            sprintId,
+            successEvent: analysis.metrics.primaryOutcome,
+            destinationRoute: `/traction-engine?sprint=${encodeURIComponent(sprintId)}${validationContextId ? `&context=${encodeURIComponent(validationContextId)}` : ''}`,
+            ...activationPayload,
+          },
           idempotencyKey: activationKey,
         });
       }
@@ -521,7 +557,7 @@ export function useGTMStrategist() {
       }
     }
     toast.success(`${play.channelName} sprint is active.`);
-  }, [analysis, planId, user]);
+  }, [analysis, originatingHandoffId, planId, requestedMvpProjectId, user, validationContextId]);
 
   const updateV2Plan = useCallback(async (nextPlan: GTMPlanV2) => {
     if (!user || !planId || !analysis || !isGTMPlanV2(analysis)) return;
@@ -656,7 +692,7 @@ export function useGTMStrategist() {
       trackGTMPlanSaved({ status });
 
       if (isGTMPlanV2(analysis)) {
-        await syncGTMJourneyOutcome(user.id, (data as { id?: string })?.id ?? planId ?? analysis.planId ?? 'gtm-plan', analysis);
+        await syncGTMJourneyOutcome(user.id, (data as { id?: string })?.id ?? planId ?? analysis.planId ?? 'gtm-plan', analysis, { validationContextId, handoffId: originatingHandoffId });
       }
 
       if (status === 'draft') {
@@ -714,7 +750,7 @@ export function useGTMStrategist() {
     } finally {
       setIsSaving(false);
     }
-  }, [user, analysis, planId, refreshProgress, navigate]);
+  }, [user, analysis, planId, refreshProgress, navigate, validationContextId, originatingHandoffId]);
 
   const exportPlan = useCallback(async () => {
     if (!analysis) return;

@@ -4,36 +4,36 @@ import { readFileSync } from 'node:fs';
 
 import { getPmfDecisionAction } from '../src/lib/pmfDecisionAction.ts';
 
-test('only a decision-grade Build routes into MVP Builder', () => {
+test('verified Build routes to evidence-backed handoff while provisional Build remains manual', () => {
   const verifiedBuild = getPmfDecisionAction({
     analysisId: 'analysis-1',
     decision: 'build',
     evidenceGrade: 'decision_grade',
+    pathwayEnabled: true,
   });
   assert.equal(verifiedBuild.destination, 'mvp_builder');
-  assert.equal(verifiedBuild.route, '/mvp-builder?source=pmf-decision');
+  assert.equal(verifiedBuild.route, '/mvp-builder?source=pmf-decision&pmf=analysis-1');
 
   const directionalBuild = getPmfDecisionAction({
     analysisId: 'analysis-2',
     decision: 'build',
     evidenceGrade: 'directional',
     nextExperiment: 'Interview five more operators.',
+    pathwayEnabled: true,
   });
-  assert.equal(directionalBuild.destination, 'pmf_discovery');
-  assert.equal(directionalBuild.route, '/pmf-lab');
+  assert.equal(directionalBuild.destination, 'mvp_builder');
+  assert.equal(directionalBuild.route, '/mvp-builder?source=provisional-pmf&pmf=analysis-2');
+  assert.match(directionalBuild.description, /stays Draft/);
 });
 
-test('Narrow, Pivot, and Stop remain in customer evidence gathering', () => {
-  for (const decision of ['narrow', 'pivot', 'stop'] as const) {
-    const action = getPmfDecisionAction({
-      analysisId: `analysis-${decision}`,
-      decision,
-      evidenceGrade: 'decision_grade',
-      nextExperiment: 'Test the next falsifiable assumption.',
-    });
-    assert.equal(action.destination, 'pmf_discovery');
-    assert.equal(action.ctaLabel, 'Find the next customer');
-  }
+test('Narrow and Pivot edit the exact ICP while Stop only reviews the recorded decision', () => {
+  const narrow = getPmfDecisionAction({ analysisId: 'analysis-narrow', decision: 'narrow', evidenceGrade: 'decision_grade', icpAnalysisId: 'icp-1', validationContextId: 'context-1', pathwayEnabled: true });
+  const pivot = getPmfDecisionAction({ analysisId: 'analysis-pivot', decision: 'pivot', evidenceGrade: 'decision_grade', icpAnalysisId: 'icp-1', pathwayEnabled: true });
+  const stop = getPmfDecisionAction({ analysisId: 'analysis-stop', decision: 'stop', evidenceGrade: 'decision_grade', validationContextId: 'context-1', pathwayEnabled: true });
+  assert.equal(narrow.route, '/icp/draft/icp-1?decision=narrow&context=context-1');
+  assert.equal(pivot.route, '/icp/draft/icp-1?decision=pivot');
+  assert.equal(stop.route, '/pmf-lab?outcome=analysis-stop&context=context-1');
+  assert.equal(stop.ctaLabel, 'Review recorded decision');
 });
 
 test('decision action migration is owner-scoped, idempotent, and hardens rate-limit storage', () => {

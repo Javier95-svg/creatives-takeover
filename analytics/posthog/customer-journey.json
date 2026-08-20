@@ -576,6 +576,41 @@
       "stage": "retention", "owner": "product", "source": "client",
       "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["sprint_id", "status", "decision_category"]
     },
+    "prebuild_context_started": {
+      "stage": "activation",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/prebuildContext.ts",
+      "requiredProperties": ["validation_context_id", "source_tool", "is_unscoped"]
+    },
+    "prebuild_decision_reached": {
+      "stage": "value",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/journeyOutcomes.ts",
+      "requiredProperties": ["validation_context_id", "decision", "outcome_status", "weighted_signal_count", "elapsed_ms"]
+    },
+    "insighta_readiness_routed": {
+      "stage": "value",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/components/blog/FundraisingReadinessToolkitAll.tsx",
+      "requiredProperties": ["destination_tool", "verdict"]
+    },
+    "insighta_prospect_saved": {
+      "stage": "value",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/hooks/useInsightaPipeline.ts",
+      "requiredProperties": ["entity_type", "pipeline_status", "plan"]
+    },
+    "insighta_pipeline_status_changed": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/hooks/useInsightaPipeline.ts",
+      "requiredProperties": ["entity_type", "pipeline_status", "outreach_started", "reply_received", "meeting_recorded", "follow_up_scheduled", "plan"]
+    },
     "generation_failed": {
       "stage": "reliability",
       "owner": "engineering",
@@ -585,6 +620,26 @@
     }
   },
   "funnels": [
+    {
+      "key": "insighta_readiness_to_outreach",
+      "name": "Insighta readiness to investor conversation",
+      "windowDays": 30,
+      "steps": [
+        "insighta_readiness_routed",
+        "insighta_prospect_saved",
+        "insighta_pipeline_status_changed"
+      ]
+    },
+    {
+      "key": "pmf_decision_within_14_days",
+      "name": "First validation context to evidence-backed PMF decision",
+      "windowDays": 14,
+      "steps": [
+        "prebuild_context_started",
+        "prebuild_decision_reached"
+      ],
+      "breakdowns": ["source_tool", "plan", "decision", "outcome_status"]
+    },
     {
       "key": "output_led_activation",
       "name": "Output-led visitor to active user",
@@ -710,6 +765,30 @@
   ],
   "cohorts": [
     {
+      "key": "eligible_pre_revenue_rookies_28d",
+      "name": "Eligible pre-revenue rookie validation contexts — last 28 days",
+      "definition": {
+        "event": "prebuild_context_started",
+        "withinDays": 28,
+        "propertyFilters": {
+          "founder_segment": "pre_revenue_rookie",
+          "is_internal": false,
+          "is_unscoped": false
+        }
+      }
+    },
+    {
+      "key": "evidence_backed_pmf_decisions_14d",
+      "name": "Evidence-backed PMF decisions — within 14 days",
+      "definition": {
+        "event": "prebuild_decision_reached",
+        "withinDays": 14,
+        "propertyFilters": {
+          "outcome_status": ["ready", "verified"]
+        }
+      }
+    },
+    {
       "key": "activated_founders_30d",
       "name": "Activated founders — last 30 days",
       "definition": {
@@ -754,6 +833,28 @@
     }
   ],
   "dashboards": [
+    {
+      "key": "pmf_north_star",
+      "name": "PMF North Star — 14-day evidence-backed decision",
+      "insights": [
+        "pmf_decision_within_14_days",
+        "prebuild_context_started",
+        "prebuild_decision_reached",
+        "activation_returned_day_2",
+        "activation_returned_day_7",
+        "generation_failed"
+      ]
+    },
+    {
+      "key": "insighta_outcomes",
+      "name": "Insighta traction and optional fundraising outcomes",
+      "insights": [
+        "insighta_readiness_to_outreach",
+        "insighta_readiness_routed",
+        "insighta_prospect_saved",
+        "insighta_pipeline_status_changed"
+      ]
+    },
     {
       "key": "output_led_funnel",
       "name": "Output-led acquisition and activation",

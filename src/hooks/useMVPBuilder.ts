@@ -3718,6 +3718,9 @@ export function useMVPBuilder() {
         artifactId: projectId,
         status: evidenceApproved && analyticsInstrumented ? 'ready' : 'draft',
         completionScore: evidenceApproved && analyticsInstrumented ? 92 : 65,
+        validationContextId: setupInput.validationContextId ?? null,
+        handoffId: setupInput.originatingHandoffId ?? null,
+        artifactVersion: String(projectVersions.length),
         qualityChecks,
         evidenceManifest: setupInput.evidenceManifest,
       }).then(async (saved) => {
@@ -3728,10 +3731,12 @@ export function useMVPBuilder() {
           sourceOutcomeId: outcomeId,
           destinationTool: 'gtm_strategist',
           payload: {
+            validationContextId: setupInput.validationContextId ?? null,
+            sourcePmfAnalysisId: setupInput.sourcePmfAnalysisId ?? null,
             sourceArtifactId: projectId,
             sourceArtifactVersion: String(projectVersions.length),
             deploymentUrl: data.url,
-            destinationRoute: '/go-to-market',
+            destinationRoute: `/go-to-market?source=mvp-handoff&mvp=${encodeURIComponent(projectId)}${setupInput.validationContextId ? `&context=${encodeURIComponent(setupInput.validationContextId)}` : ''}`,
           },
           idempotencyKey: `mvp:${projectId}:gtm`,
         });

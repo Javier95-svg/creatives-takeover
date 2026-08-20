@@ -120,7 +120,7 @@ export default function ProjectsDashboardPage() {
       if (!active || !icp) return;
       const { project } = icpArtifactToDemoBrief(icp.artifact);
       const [context, handoff] = await Promise.all([
-        ensurePrebuildContext({ userId: user.id, icpAnalysisId: icpParam, label: project.name }),
+        ensurePrebuildContext({ userId: user.id, icpAnalysisId: icpParam, label: project.name, sourceTool: 'demo_studio' }),
         findJourneyHandoff('demo_studio', icpParam).catch(() => null),
       ]);
       setName((prev) => prev || project.name);

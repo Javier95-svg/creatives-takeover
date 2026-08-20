@@ -198,6 +198,8 @@ const PMF_EVIDENCE_TABLE = 'pmf_context_evidence' as any;
 
 export interface PMFArtifactScope {
   validationContextId: string;
+  contextStartedAt?: string | null;
+  pathwayEnabled?: boolean;
   originatingHandoffId?: string | null;
   icpAnalysisId?: string | null;
   demoProjectId?: string | null;
@@ -428,13 +430,6 @@ export function usePMFLab(scope?: PMFArtifactScope | null) {
         analysis_id_present: Boolean(data.analysisId),
         external_sources: nextAnalysis.dataSources?.length ?? 0,
       });
-      if (scope?.validationContextId) trackPrebuildLineageEvent('prebuild_decision_reached', {
-        validationContextId: scope.validationContextId,
-        handoffId: scope.originatingHandoffId,
-        destinationTool: 'pmf_lab',
-        artifactId: data.analysisId ?? null,
-        decision: nextAnalysis.decision ?? getPmfDecision(nextAnalysis.overallScore),
-      });
       if (scope?.originatingHandoffId && data.analysisId) {
         void consumeJourneyHandoff(scope.originatingHandoffId, data.analysisId).then(() => {
           trackPrebuildLineageEvent('prebuild_handoff_consumed', {
@@ -449,6 +444,18 @@ export function usePMFLab(scope?: PMFArtifactScope | null) {
         const decisionGrade = nextAnalysis.evidenceGrade === 'decision_grade';
         const directional = signalCount >= 5 && (nextAnalysis.directEvidenceSignalCount ?? signalCount) >= 5;
         const outcomeStatus = decisionGrade ? 'verified' : directional ? 'ready' : 'draft';
+        if (scope?.validationContextId) trackPrebuildLineageEvent('prebuild_decision_reached', {
+          validationContextId: scope.validationContextId,
+          handoffId: scope.originatingHandoffId,
+          destinationTool: 'pmf_lab',
+          artifactId: data.analysisId,
+          decision: nextAnalysis.decision ?? getPmfDecision(nextAnalysis.overallScore),
+          outcomeStatus,
+          weightedSignalCount: signalCount,
+          elapsedMs: scope.contextStartedAt
+            ? Math.max(0, Date.now() - new Date(scope.contextStartedAt).getTime())
+            : undefined,
+        });
         const evidenceSources = [
           ...(nextAnalysis.evidenceAnswers?.interviews ?? []).map((interview, index) => ({
             sourceId: interview.sourceLeadId || `pmf:${data.analysisId}:interview:${interview.id || index + 1}`,
@@ -515,6 +522,9 @@ export function usePMFLab(scope?: PMFArtifactScope | null) {
           artifactId: data.analysisId,
           status: outcomeStatus,
           completionScore: Math.min(100, 55 + Math.round((Math.min(signalCount, PMF_REQUIRED_SIGNALS) / PMF_REQUIRED_SIGNALS) * 45)),
+          validationContextId: scope?.validationContextId ?? null,
+          handoffId: scope?.originatingHandoffId ?? null,
+          artifactVersion: nextAnalysis.generatedAt,
           qualityChecks: {
             report_generated: true,
             decision_present: Boolean(nextAnalysis.decision),
@@ -538,6 +548,11 @@ export function usePMFLab(scope?: PMFArtifactScope | null) {
             sourceOutcomeId: outcomeId,
             destinationTool: 'mvp_builder',
             payload: {
+              validationContextId: scope?.validationContextId ?? null,
+              icpAnalysisId: scope?.icpAnalysisId ?? null,
+              demoProjectId: scope?.demoProjectId ?? null,
+              demoId: scope?.demoId ?? null,
+              surveyId: scope?.surveyId ?? null,
               sourceArtifactId: data.analysisId,
               sourceArtifactVersion: nextAnalysis.generatedAt,
               decision: nextAnalysis.decision,
@@ -577,8 +592,8 @@ export function usePMFLab(scope?: PMFArtifactScope | null) {
     }
   }, [
     user, analysis, ensureCredits, handleCreditError, showCreditReceipt, fireJourneyUpgradePrompt,
-    loadTrend, persistInterviewEvidenceCount, scope?.validationContextId, scope?.originatingHandoffId,
-    scope?.icpAnalysisId, scope?.demoProjectId, scope?.demoId, scope?.surveyId,
+    loadTrend, persistInterviewEvidenceCount, scope?.validationContextId, scope?.contextStartedAt,
+    scope?.originatingHandoffId, scope?.icpAnalysisId, scope?.demoProjectId, scope?.demoId, scope?.surveyId,
   ]);
 
   const reScore = useCallback(async () => {
@@ -716,6 +731,9 @@ export function usePMFLab(scope?: PMFArtifactScope | null) {
           decision,
           evidenceGrade,
           nextExperiment: analysis.nextExperiment,
+          validationContextId: scope?.validationContextId ?? null,
+          icpAnalysisId: scope?.icpAnalysisId ?? null,
+          pathwayEnabled: scope?.pathwayEnabled,
         });
 
         try {
@@ -724,6 +742,9 @@ export function usePMFLab(scope?: PMFArtifactScope | null) {
             decision,
             evidenceGrade,
             nextExperiment: analysis.nextExperiment,
+            validationContextId: scope?.validationContextId ?? null,
+            icpAnalysisId: scope?.icpAnalysisId ?? null,
+            pathwayEnabled: scope?.pathwayEnabled,
           });
           captureEvent('pmf_decision_action_created', {
             decision,
@@ -775,7 +796,7 @@ export function usePMFLab(scope?: PMFArtifactScope | null) {
     } finally {
       setIsSaving(false);
     }
-  }, [user, analysis, analysisId, refreshActivation, refreshProgress, persistInterviewEvidenceCount]);
+  }, [user, analysis, analysisId, refreshActivation, refreshProgress, persistInterviewEvidenceCount, navigate, scope?.validationContextId, scope?.icpAnalysisId, scope?.pathwayEnabled]);
 
   const exportReport = useCallback(async () => {
     if (!analysis) return;

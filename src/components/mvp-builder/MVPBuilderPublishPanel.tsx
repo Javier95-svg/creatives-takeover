@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Check, Copy, ExternalLink, Globe, ShieldCheck } from 'lucide-react';
+import { Check, Copy, ExternalLink, Globe, ShieldCheck, Wrench } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAppBuilderDomain } from '@/hooks/useAppBuilderDomain';
 import { supabase } from '@/integrations/supabase/client';
 import { buildPublicAppUrl } from '@/lib/mvp-builder/publish';
@@ -172,6 +173,13 @@ export const MVPBuilderPublishPanel: React.FC<MVPBuilderPublishPanelProps> = ({
             Connect a custom domain below to use your own address instead.
           </p>
         )}
+        <Link
+          to={`/tech-stack?mvp=${encodeURIComponent(projectId)}`}
+          className="mt-3 inline-flex items-center gap-1.5 text-caption font-medium text-primary hover:underline"
+        >
+          <Wrench className="h-3.5 w-3.5" />
+          Review optional implementation stack
+        </Link>
       </div>
 
       <div className="mt-3 rounded-xl border border-border/60 bg-background/70 p-3">

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Check, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { GTM_STRATEGIST_PRICING } from "@/config/gtmStrategist";
 import { CREDIT_COSTS, getCreditCostForPlan } from "@/config/constants";
+import { getFounderTool } from "@/config/founderToolCatalog";
 
 type PlanKey = "rookie" | "starter" | "rising" | "pro";
 type FeatureValue = string | boolean;
@@ -36,6 +37,22 @@ const plans: PlanConfig[] = [
   { key: "pro", name: "Pro", price: "$65", period: "/month" },
 ];
 
+const toolName = {
+  icp: getFounderTool("icp_builder").name,
+  demo: getFounderTool("demo_studio").name,
+  pmf: getFounderTool("pmf_lab").name,
+  mvp: getFounderTool("mvp_builder").name,
+  stack: getFounderTool("tech_stack").name,
+  gtm: getFounderTool("gtm_strategist").name,
+  directories: getFounderTool("directories").name,
+  traction: getFounderTool("traction_engine").name,
+  vc: getFounderTool("vc_search").name,
+  accelerator: getFounderTool("accelerator_hunt").name,
+  email: getFounderTool("email_templates").name,
+  deck: getFounderTool("pitch_deck_analyzer").name,
+  readiness: getFounderTool("insighta_test").name,
+};
+
 const features: FeatureCategory[] = [
   {
     category: "Credits",
@@ -46,23 +63,24 @@ const features: FeatureCategory[] = [
   {
     category: "The Founders Compass: Startup Development Cycle",
     items: [
-      { feature: "ICP Builder", rookie: "Free on every plan", starter: "Free on every plan", rising: "Free on every plan", pro: "Free on every plan" },
-      { feature: "Demo Studio", rookie: `Unlocked; ${getCreditCostForPlan("WAITLIST_GENERATION", "rookie")} credits/use`, starter: `Unlocked; ${CREDIT_COSTS.WAITLIST_GENERATION} credits/use`, rising: `Unlocked; ${CREDIT_COSTS.WAITLIST_GENERATION} credits/use`, pro: `Unlocked; ${CREDIT_COSTS.WAITLIST_GENERATION} credits/use` },
-      { feature: "PMF Lab", rookie: "First score free; then credits", starter: "First score free; then credits", rising: "First score free; then credits", pro: "First score free; then credits" },
-      { feature: "MVP Builder", rookie: "Unlocked; uses credits", starter: "Unlocked; uses credits", rising: "Unlocked; uses credits", pro: "Unlocked; uses credits" },
-      { feature: "Tech Stack Builder", rookie: "First build free; then credits", starter: "First build free; then credits", rising: "First build free; then credits", pro: "First build free; then credits" },
-      { feature: "GTM Strategist", rookie: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation`, starter: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation`, rising: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation`, pro: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation` },
-      { feature: "Directories", rookie: "3 visits/month", starter: "10 visits/month", rising: "15 visits/month", pro: "Unlimited" },
+      { feature: toolName.icp, rookie: "Free on every plan", starter: "Free on every plan", rising: "Free on every plan", pro: "Free on every plan" },
+      { feature: toolName.demo, rookie: `Unlocked; ${getCreditCostForPlan("WAITLIST_GENERATION", "rookie")} credits/use`, starter: `Unlocked; ${CREDIT_COSTS.WAITLIST_GENERATION} credits/use`, rising: `Unlocked; ${CREDIT_COSTS.WAITLIST_GENERATION} credits/use`, pro: `Unlocked; ${CREDIT_COSTS.WAITLIST_GENERATION} credits/use` },
+      { feature: toolName.pmf, rookie: "First score free; then credits", starter: "First score free; then credits", rising: "First score free; then credits", pro: "First score free; then credits" },
+      { feature: toolName.mvp, rookie: "Unlocked; uses credits", starter: "Unlocked; uses credits", rising: "Unlocked; uses credits", pro: "Unlocked; uses credits" },
+      { feature: toolName.stack, rookie: "First build free; then credits", starter: "First build free; then credits", rising: "First build free; then credits", pro: "First build free; then credits" },
+      { feature: toolName.gtm, rookie: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation`, starter: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation`, rising: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation`, pro: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation` },
+      { feature: toolName.directories, rookie: "3 visits/month", starter: "10 visits/month", rising: "15 visits/month", pro: "Unlimited" },
     ],
   },
   {
     category: "Insighta",
     items: [
-      { feature: "VC Search", rookie: "Browse only", starter: "2 profile views/monthly", rising: "10 profile views/monthly", pro: "Unlimited profile views" },
-      { feature: "Accelerator Hunt", rookie: "Browse only", starter: "2 profile views/monthly", rising: "10 profile views/monthly", pro: "Unlimited profile views" },
-      { feature: "Email Templates", rookie: "Not included", starter: "Full access", rising: "Full access", pro: "Full access" },
-      { feature: "Pitch Deck Analyzer", rookie: "Quick Score free; then 10 credits", starter: "Quick Score free; then 10 credits", rising: "Quick Score free; then 10 credits", pro: "Quick Score free; then 10 credits" },
-      { feature: "Insighta Test", rookie: "Included", starter: "Included", rising: "Included", pro: "Included" },
+      { feature: toolName.traction, rookie: `${CREDIT_COSTS.TRACTION_ENGINE_SCORECARD} credits/weekly scorecard`, starter: `${CREDIT_COSTS.TRACTION_ENGINE_SCORECARD} credits/weekly scorecard`, rising: `${CREDIT_COSTS.TRACTION_ENGINE_SCORECARD} credits/weekly scorecard`, pro: `${CREDIT_COSTS.TRACTION_ENGINE_SCORECARD} credits/weekly scorecard` },
+      { feature: toolName.vc, rookie: "Browse only", starter: "2 profile views/monthly", rising: "10 profile views/monthly", pro: "Unlimited profile views" },
+      { feature: toolName.accelerator, rookie: "Browse only", starter: "2 profile views/monthly", rising: "10 profile views/monthly", pro: "Unlimited profile views" },
+      { feature: toolName.email, rookie: "Not included", starter: "Full access", rising: "Full access", pro: "Full access" },
+      { feature: toolName.deck, rookie: "Quick Score free; then 10 credits", starter: "Quick Score free; then 10 credits", rising: "Quick Score free; then 10 credits", pro: "Quick Score free; then 10 credits" },
+      { feature: toolName.readiness, rookie: "Included", starter: "Included", rising: "Included", pro: "Included" },
     ],
   },
   {

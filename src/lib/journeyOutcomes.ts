@@ -64,6 +64,9 @@ export interface JourneyOutcomeInput {
   evidenceManifest?: JourneyEvidenceManifest;
   completionScore?: number | null;
   verificationMode?: VerificationMode;
+  validationContextId?: string | null;
+  handoffId?: string | null;
+  artifactVersion?: string | null;
 }
 
 export interface JourneyHandoff {
@@ -175,7 +178,7 @@ export function trackJourneyEvent(event: JourneyEvent, properties: JourneyEventP
 
 export function trackPrebuildLineageEvent(
   event: 'prebuild_handoff_offered' | 'prebuild_handoff_opened' | 'prebuild_handoff_consumed' | 'prebuild_handoff_abandoned' | 'prebuild_evidence_collected' | 'prebuild_decision_reached',
-  properties: { validationContextId: string; handoffId?: string | null; sourceTool?: JourneyTool; destinationTool?: JourneyTool; artifactId?: string | null; evidenceType?: string; decision?: string },
+  properties: { validationContextId: string; handoffId?: string | null; sourceTool?: JourneyTool; destinationTool?: JourneyTool; artifactId?: string | null; evidenceType?: string; decision?: string; outcomeStatus?: JourneyOutcomeStatus; weightedSignalCount?: number; elapsedMs?: number },
 ) {
   captureEvent(event, {
     validation_context_id: properties.validationContextId,
@@ -185,6 +188,9 @@ export function trackPrebuildLineageEvent(
     artifact_id: properties.artifactId ?? undefined,
     evidence_type: properties.evidenceType,
     decision: properties.decision,
+    outcome_status: properties.outcomeStatus,
+    weighted_signal_count: properties.weightedSignalCount,
+    elapsed_ms: properties.elapsedMs,
   });
 }
 
@@ -199,6 +205,9 @@ export async function upsertJourneyOutcome(input: JourneyOutcomeInput) {
         qualityChecks: input.qualityChecks ?? {},
         evidenceManifest: input.evidenceManifest ?? createJourneyEvidenceManifest([]),
         verificationMode: input.verificationMode ?? "unverified",
+        validationContextId: input.validationContextId ?? null,
+        handoffId: input.handoffId ?? null,
+        artifactVersion: input.artifactVersion ?? null,
       },
     },
   });

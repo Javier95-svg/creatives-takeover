@@ -204,6 +204,8 @@ export default function LaunchComposerPage() {
             tool: 'demo_studio',
             artifactType: 'interactive_proof_page',
             artifactId: selectedDemo.id,
+            validationContextId: updated.validation_context_id ?? null,
+            artifactVersion: selectedDemo.updated_at,
             status: evaluation.status,
             qualityChecks,
             completionScore: evaluation.completionScore,

@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useTransition, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -118,6 +119,8 @@ const TechStack: React.FC = () => {
   const [generatedBudgetKey, setGeneratedBudgetKey] = useState<string | null>(null);
   const [hydratedStack, setHydratedStack] = useState(false);
   const [outputState, setOutputState] = useState<TechStackOutputState>('preview');
+  const [mvpPrefill, setMvpPrefill] = useState<{ id: string; title: string; count: number } | null>(null);
+  const mvpPrefillAttemptedRef = useRef(false);
   useActivationAbandonment({
     entry_id: 'tech_stack', tool: 'tech_stack_builder', source: 'tech_stack',
     step: 'before_full_plan', is_authenticated: Boolean(user),
@@ -132,6 +135,50 @@ const TechStack: React.FC = () => {
       entry_page: '/tech-stack', is_authenticated: Boolean(user),
     });
   }, [user]);
+
+  useEffect(() => {
+    const sourceMvpId = searchParams.get('mvp');
+    if (!user || !sourceMvpId || searchParams.get('hydrate') === '1' || mvpPrefillAttemptedRef.current) return;
+    mvpPrefillAttemptedRef.current = true;
+
+    void (async () => {
+      const { data, error } = await supabase
+        .from('mvp_projects')
+        .select('id, title, project_type, metadata')
+        .eq('user_id', user.id)
+        .eq('id', sourceMvpId)
+        .maybeSingle();
+      if (error || !data) return;
+
+      const row = data as {
+        id: string;
+        title?: string | null;
+        project_type?: string | null;
+        metadata?: Record<string, unknown> | null;
+      };
+      const metadata = row.metadata ?? {};
+      const framework = typeof metadata.framework === 'string' ? metadata.framework : row.project_type ?? '';
+      const integrations = metadata.integrations && typeof metadata.integrations === 'object'
+        ? metadata.integrations as Record<string, unknown>
+        : {};
+      const supabaseIntegration = integrations.supabase && typeof integrations.supabase === 'object'
+        ? integrations.supabase as Record<string, unknown>
+        : null;
+      const inferred: SelectedProducts = {};
+
+      if (/react/i.test(framework)) inferred.frontend = 'react';
+      if (supabaseIntegration && (
+        supabaseIntegration.connectionId
+        || supabaseIntegration.project
+        || supabaseIntegration.status === 'connected'
+      )) inferred.backend = 'supabase';
+
+      const count = Object.keys(inferred).length;
+      if (count === 0) return;
+      setSelectedProducts((current) => ({ ...inferred, ...current }));
+      setMvpPrefill({ id: row.id, title: row.title || 'Selected MVP', count });
+    })();
+  }, [searchParams, user]);
 
   const currentTier = (subscriptionData.subscription_tier || 'rookie').toLowerCase();
   useEffect(() => {
@@ -646,6 +693,19 @@ const TechStack: React.FC = () => {
 
   return (
     <div className="space-y-6 sm:space-y-8 pb-8">
+      {mvpPrefill && (
+        <Card className="border-primary/25 bg-primary/[0.04]">
+          <CardContent className="flex flex-col gap-2 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold">Prefilled from {mvpPrefill.title}</p>
+              <p className="text-xs text-muted-foreground">
+                {mvpPrefill.count} architecture selection{mvpPrefill.count === 1 ? '' : 's'} matched the published MVP. Review or replace them and choose the remaining categories manually.
+              </p>
+            </div>
+            <Badge variant="outline">Optional support</Badge>
+          </CardContent>
+        </Card>
+      )}
       <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

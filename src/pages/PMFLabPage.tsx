@@ -34,6 +34,8 @@ import { ensurePrebuildContext, getPrebuildContext, listPrebuildContexts, type P
 import { usePMFInterviews } from '@/hooks/usePMFInterviews';
 import { Button } from '@/components/ui/button';
 import { findJourneyHandoff, trackPrebuildLineageEvent } from '@/lib/journeyOutcomes';
+import { useFeatureFlagEnabled } from '@/hooks/usePosthogFeatureFlag';
+import { isPMFPathwayEnvironmentEnabled, PMF_PATHWAY_FEATURE_FLAG } from '@/lib/pmfPathwayRollout';
 
 const structuredData = [
   {
@@ -50,6 +52,8 @@ export default function PMFLabPage() {
   const publicTab = getPublicTabConfig('/pmf-lab');
   const { hasAccess, upgradeTarget } = usePlanAccess('pmf_lab');
   const markToolUsed = useLeanStartupStore(s => s.markToolUsed);
+  const pathwayFlag = useFeatureFlagEnabled(PMF_PATHWAY_FEATURE_FLAG);
+  const pathwayEnabled = isPMFPathwayEnvironmentEnabled() && pathwayFlag === true;
 
   const [icpPersonaName, setIcpPersonaName] = useState<string | null>(null);
   const [icpIndustry, setIcpIndustry] = useState<string | null>(null);
@@ -74,6 +78,7 @@ export default function PMFLabPage() {
   const [demoProjectId, setDemoProjectId] = useState<string | null>(searchParams.get('project'));
   const [demoId, setDemoId] = useState<string | null>(searchParams.get('demo'));
   const [contexts, setContexts] = useState<PrebuildValidationContext[]>([]);
+  const [contextStartedAt, setContextStartedAt] = useState<string | null>(null);
   // ?step=interviews is the conversation-stage entry point ICP Builder links to.
   // (?mode=discover, the distribution entry point Demo Studio links to after publish,
   // is applied in the `mode` initializer above so the first paint is already correct.)
@@ -93,9 +98,10 @@ export default function PMFLabPage() {
 
   useEffect(() => {
     if (!user || validationContextId || !icpParam) return;
-    void ensurePrebuildContext({ userId: user.id, icpAnalysisId: icpParam })
+    void ensurePrebuildContext({ userId: user.id, icpAnalysisId: icpParam, sourceTool: 'pmf_lab' })
       .then((context) => {
         setValidationContextId(context.id);
+        setContextStartedAt(context.created_at);
         const next = new URLSearchParams(searchParams);
         next.set('context', context.id);
         setSearchParams(next, { replace: true });
@@ -138,6 +144,7 @@ export default function PMFLabPage() {
         setValidationContextId(null);
         return;
       }
+      setContextStartedAt(context.created_at);
       const scopedIcpId = icpParam ?? context.icp_analysis_id;
       const icpBase = supabase
         .from('icp_analysis_results')
@@ -229,6 +236,10 @@ export default function PMFLabPage() {
 
   const scope = validationContextId ? {
     validationContextId,
+    pathwayEnabled,
+    contextStartedAt: contextStartedAt
+      ?? contexts.find((context) => context.id === validationContextId)?.created_at
+      ?? null,
     originatingHandoffId,
     icpAnalysisId: icpDraftId,
     demoProjectId,
@@ -385,8 +396,8 @@ export default function PMFLabPage() {
               ))}
             </div>
             <Button className="mt-5" variant="outline" onClick={() => {
-              void ensurePrebuildContext({ userId: user.id, explicitlyUnscoped: true })
-                .then((context) => { setContexts((items) => [context, ...items]); chooseContext(context); });
+              void ensurePrebuildContext({ userId: user.id, explicitlyUnscoped: true, sourceTool: 'pmf_lab' })
+                .then((context) => { setContextStartedAt(context.created_at); setContexts((items) => [context, ...items]); chooseContext(context); });
             }}>Create an unscoped evidence case</Button>
             <p className="mt-3 text-xs text-muted-foreground">Legacy surveys, reports, and Demo activity remain readable in their original views, but are not attached automatically.</p>
           </div>
@@ -676,6 +687,9 @@ export default function PMFLabPage() {
                           isCreatingSurvey={isCreatingSurvey}
                           onCreateSurvey={handleCreateSurvey}
                           customerDiscoverySignalCount={customerDiscoverySignals}
+                          validationContextId={validationContextId}
+                          icpAnalysisId={icpDraftId}
+                          pathwayEnabled={pathwayEnabled}
                         />
                       </div>
                     )}

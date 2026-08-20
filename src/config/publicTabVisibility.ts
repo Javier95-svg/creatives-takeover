@@ -139,16 +139,16 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
   '/traction-engine': {
     state: 'locked',
     featureName: 'Traction Engine',
-    description: 'Log weekly distribution experiments, score retention, and track Phase 7 fundraising readiness.',
+    description: 'Turn a GTM play into an attributed weekly sprint and decide what to double down on, iterate, or kill.',
     previewItems: [
       'Preview the weekly traction sprint and retention scorecard founders run before fundraising.',
       'See how channel efficiency, experiment quality, and retention combine into a single Traction Score.',
-      'Sign up to save weekly logs and unlock the Phase 7 readiness streak.',
+      'Sign up to save weekly logs and carry launch evidence into your traction decision.',
     ],
   },
   '/insighta-test': {
     state: 'preview',
-    featureName: 'Insighta Test',
+    featureName: 'Insighta Test — Fundraising Readiness',
     description: 'Measure your fundraising readiness before you start investor outreach.',
     previewItems: [
       'Preview the assessment experience and the themes it evaluates.',

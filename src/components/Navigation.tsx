@@ -43,6 +43,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { getPublicTabState } from "@/config/publicTabVisibility";
+import { getFounderTool } from "@/config/founderToolCatalog";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -100,14 +101,21 @@ const Navigation = () => {
   ]);
 
   // Insighta submenu items
+  const tractionTool = getFounderTool('traction_engine');
+  const vcTool = getFounderTool('vc_search');
+  const acceleratorTool = getFounderTool('accelerator_hunt');
+  const pitchTool = getFounderTool('pitch_deck_analyzer');
+  const readinessTool = getFounderTool('insighta_test');
+  const emailTool = getFounderTool('email_templates');
   const insightaSubmenu: BizMapMenuItem[] = [
     { type: 'label', label: "STAGE VI: TRACTION" },
-    { name: "Traction Engine", href: "/traction-engine", icon: LineChart, description: "Track weekly distribution and retention signals." },
-    { type: 'label', label: "STAGE VII: FUNDRAISE" },
-    { name: "VC Search", href: "/vc-search", icon: UsersIcon, description: "Browse venture capital firms." },
-    { name: "Accelerator Hunt", href: "/accelerator-hunt", icon: Rocket, description: "Find accelerator programs that fit your stage." },
-    { name: "Pitch Deck Analyzer", href: "/pitch-deck-analyzer", icon: BarChart3, description: "Analyze your pitch deck." },
-    { name: "Insighta Test", href: "/insighta-test", icon: FlaskConical, description: "Measure your fundraising readiness." },
+    { name: tractionTool.name, href: tractionTool.route, icon: LineChart, description: tractionTool.purpose },
+    { type: 'label', label: "STAGE VII: FUNDRAISING (OPTIONAL)" },
+    { name: readinessTool.name, href: readinessTool.route, icon: FlaskConical, description: readinessTool.purpose },
+    { name: pitchTool.name, href: pitchTool.route, icon: BarChart3, description: pitchTool.purpose },
+    { name: vcTool.name, href: vcTool.route, icon: UsersIcon, description: vcTool.purpose },
+    { name: acceleratorTool.name, href: acceleratorTool.route, icon: Rocket, description: acceleratorTool.purpose },
+    { name: emailTool.name, href: emailTool.route, icon: Mail, description: emailTool.purpose },
   ];
 
   // Community submenu items

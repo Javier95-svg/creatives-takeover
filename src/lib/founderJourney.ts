@@ -1,6 +1,15 @@
 import { BIZMAP_STAGES, BIZMAP_STAGE_ORDER, type BizMapStage } from './bizmapStages.ts';
 import type { FoundationalMilestone, ToolCompletionSignals } from './taskCalendar.ts';
 import type { OnboardingContextV1 } from './onboardingContext.ts';
+import type { JourneyOutcomeStatus, JourneyTool } from './journeyOutcomes.ts';
+
+export interface FounderJourneyOutcomeSignal {
+  artifactId: string;
+  status: JourneyOutcomeStatus;
+  verificationMode: string;
+  validationContextId: string | null;
+  updatedAt: string;
+}
 
 export interface TractionJourneySignal {
   latestScore: number | null;
@@ -45,6 +54,7 @@ export interface FounderJourneyExtras {
   pitchDeck: PitchDeckJourneySignal | null;
   mvpPublished: MvpPublishedJourneySignal | null;
   fundraisingActivity: FundraisingActivitySignal | null;
+  outcomes: Partial<Record<JourneyTool, FounderJourneyOutcomeSignal>>;
 }
 
 export const EMPTY_FOUNDER_JOURNEY_EXTRAS: FounderJourneyExtras = {
@@ -54,6 +64,7 @@ export const EMPTY_FOUNDER_JOURNEY_EXTRAS: FounderJourneyExtras = {
   pitchDeck: null,
   mvpPublished: null,
   fundraisingActivity: null,
+  outcomes: {},
 };
 
 export type JourneyStageStatus = 'complete' | 'current' | 'upcoming';
@@ -79,12 +90,19 @@ export interface JourneyToolTile {
   highlight: string | null;
   route: string;
   updatedAt: string | null;
+  role: 'core' | 'support' | 'fundraising';
+  outcomeStatus: JourneyOutcomeStatus | null;
+  verificationMode: string | null;
+  contextId: string | null;
 }
 
 export interface JourneyNextAction {
   key: string;
   label: string;
   route: string;
+  reason: string;
+  expectedEvidence: string;
+  artifactId: string | null;
 }
 
 export interface FounderJourneySnapshot {
@@ -175,7 +193,7 @@ function formatSignupSuffix(signupCount: number | null | undefined): string {
   return ` · ${signupCount} signup${signupCount === 1 ? '' : 's'}`;
 }
 
-type JourneyToolTileDraft = Omit<JourneyToolTile, 'stage' | 'isCurrentStage'>;
+type JourneyToolTileDraft = Omit<JourneyToolTile, 'stage' | 'isCurrentStage' | 'role' | 'outcomeStatus' | 'verificationMode' | 'contextId'>;
 
 const TILE_STAGES: Record<string, BizMapStage> = {
   'icp-builder': 'IDENTITY',
@@ -185,6 +203,8 @@ const TILE_STAGES: Record<string, BizMapStage> = {
   'gtm-strategist': 'LAUNCH',
   'traction-engine': 'TRACTION',
   'pitch-deck-analyzer': 'FUNDRAISING',
+  'tech-stack': 'BUILDING',
+  directories: 'LAUNCH',
 };
 
 function buildTools(inputs: BuildFounderJourneyInputs): JourneyToolTile[] {
@@ -306,6 +326,24 @@ function buildTools(inputs: BuildFounderJourneyInputs): JourneyToolTile[] {
     },
     tractionTile,
     {
+      key: 'tech-stack',
+      label: 'Tech Stack Builder',
+      status: toolSignals.techStackCompleted ? 'done' : 'not_started',
+      outputLine: toolSignals.techStackCompleted ? 'Optional stack review saved' : 'Review compatibility, costs, rollout, and risks',
+      highlight: 'Optional support',
+      route: '/tech-stack',
+      updatedAt: null,
+    },
+    {
+      key: 'directories',
+      label: 'Directories',
+      status: 'not_started',
+      outputLine: 'Attribute directory submissions to your GTM play',
+      highlight: 'Optional support',
+      route: '/directories',
+      updatedAt: null,
+    },
+    {
       key: 'pitch-deck-analyzer',
       label: 'Fundraising prep',
       status: pitchDeck ? 'done' : 'not_started',
@@ -321,7 +359,19 @@ function buildTools(inputs: BuildFounderJourneyInputs): JourneyToolTile[] {
 
   return drafts.map((draft) => {
     const stage = TILE_STAGES[draft.key] ?? 'IDENTITY';
-    return { ...draft, stage, isCurrentStage: stage === inputs.currentStage };
+    const outcomeKey = draft.key.replaceAll('-', '_') as keyof FounderJourneyExtras['outcomes'];
+    const outcome = inputs.extras.outcomes[outcomeKey];
+    return {
+      ...draft,
+      stage,
+      isCurrentStage: stage === inputs.currentStage,
+      role: ['tech-stack', 'directories'].includes(draft.key)
+        ? 'support'
+        : stage === 'FUNDRAISING' ? 'fundraising' : 'core',
+      outcomeStatus: outcome?.status ?? null,
+      verificationMode: outcome?.verificationMode ?? null,
+      contextId: outcome?.validationContextId ?? null,
+    };
   });
 }
 
@@ -331,20 +381,20 @@ function buildNextAction(inputs: BuildFounderJourneyInputs): JourneyNextAction |
     && !Object.values(inputs.toolSignals).some(Boolean)
   ) {
     const firstActionByIntent: Record<OnboardingContextV1['selectedIntent'], JourneyNextAction> = {
-      find_mentor: { key: 'intent:find-mentor', label: 'Find one mentor', route: '/mentorship?mentorSource=onboarding' },
-      build_demo: { key: 'intent:build-demo', label: 'Build your first demo', route: '/demo-studio/try' },
-      run_icp: { key: 'intent:run-icp', label: 'Define your first ICP', route: '/icp-builder?mode=fast' },
-      start_validation: { key: 'intent:start-validation', label: 'Validate one idea', route: '/decision-sprint' },
-      build_mvp: { key: 'intent:build-mvp', label: 'Scope your MVP', route: '/mvp-scope' },
-      plan_gtm: { key: 'intent:plan-gtm', label: 'Create your GTM plan', route: '/go-to-market' },
-      log_traction: { key: 'intent:log-traction', label: "Log this week's traction", route: '/traction-engine' },
-      analyze_pitch_deck: { key: 'intent:analyze-deck', label: 'Analyze your pitch deck', route: '/pitch-deck-analyzer' },
-      unlock_pitch_deck: { key: 'intent:unlock-deck', label: 'Resume your pitch analysis', route: '/pitch-deck-analyzer?hydrate=1' },
-      unlock_tech_stack: { key: 'intent:unlock-stack', label: 'Resume your tech stack', route: '/tech-stack?hydrate=1' },
-      unlock_insighta: { key: 'intent:unlock-insighta', label: 'Finish your diagnostic', route: '/insighta-test?hydrate=1' },
-      save_mentor: { key: 'intent:save-mentor', label: 'Save one mentor', route: '/mentorship?mentorSource=onboarding' },
-      send_message: { key: 'intent:send-message', label: 'Start one conversation', route: '/mentorship?mentorSource=onboarding' },
-      book_call: { key: 'intent:book-call', label: 'Message one mentor', route: '/mentorship?mentorSource=onboarding&activationIntent=send_message' },
+      find_mentor: { key: 'intent:find-mentor', label: 'Find one mentor', route: '/mentorship?mentorSource=onboarding', reason: 'You chose expert support as your first step.', expectedEvidence: 'One relevant mentor saved or contacted', artifactId: null },
+      build_demo: { key: 'intent:build-demo', label: 'Build your first demo', route: '/demo-studio/try', reason: 'A testable prototype is the fastest next proof.', expectedEvidence: 'A published demo with one measurable CTA', artifactId: null },
+      run_icp: { key: 'intent:run-icp', label: 'Define your first ICP', route: '/icp-builder?mode=fast', reason: 'Your first customer must be specific before testing demand.', expectedEvidence: 'A saved customer decision brief', artifactId: null },
+      start_validation: { key: 'intent:start-validation', label: 'Validate one idea', route: '/decision-sprint', reason: 'Customer evidence is the next uncertainty to reduce.', expectedEvidence: 'A customer conversation or costly commitment', artifactId: null },
+      build_mvp: { key: 'intent:build-mvp', label: 'Scope your MVP', route: '/mvp-scope', reason: 'You selected building as your immediate goal.', expectedEvidence: 'One customer, one job, and no more than three essential features', artifactId: null },
+      plan_gtm: { key: 'intent:plan-gtm', label: 'Create your GTM plan', route: '/go-to-market', reason: 'A focused acquisition play is your next operating step.', expectedEvidence: 'One primary channel, target, asset, and kill rule', artifactId: null },
+      log_traction: { key: 'intent:log-traction', label: "Log this week's traction", route: '/traction-engine', reason: 'Weekly evidence turns launch activity into a decision.', expectedEvidence: 'An attributed weekly traction log', artifactId: null },
+      analyze_pitch_deck: { key: 'intent:analyze-deck', label: 'Analyze your pitch deck', route: '/pitch-deck-analyzer', reason: 'You selected fundraising narrative as the current gap.', expectedEvidence: 'A deck analysis with resolved actions', artifactId: null },
+      unlock_pitch_deck: { key: 'intent:unlock-deck', label: 'Resume your pitch analysis', route: '/pitch-deck-analyzer?hydrate=1', reason: 'An unfinished pitch artifact is ready to continue.', expectedEvidence: 'A saved deck analysis', artifactId: null },
+      unlock_tech_stack: { key: 'intent:unlock-stack', label: 'Resume your tech stack', route: '/tech-stack?hydrate=1', reason: 'Your optional stack review is unfinished.', expectedEvidence: 'A costed compatibility and rollout report', artifactId: null },
+      unlock_insighta: { key: 'intent:unlock-insighta', label: 'Finish your diagnostic', route: '/insighta-test?hydrate=1', reason: 'Your fundraising readiness answers can be restored.', expectedEvidence: 'A readiness result with one routed next action', artifactId: null },
+      save_mentor: { key: 'intent:save-mentor', label: 'Save one mentor', route: '/mentorship?mentorSource=onboarding', reason: 'You chose a human support action.', expectedEvidence: 'One relevant mentor saved', artifactId: null },
+      send_message: { key: 'intent:send-message', label: 'Start one conversation', route: '/mentorship?mentorSource=onboarding', reason: 'A real conversation is the next useful signal.', expectedEvidence: 'One founder or mentor conversation started', artifactId: null },
+      book_call: { key: 'intent:book-call', label: 'Message one mentor', route: '/mentorship?mentorSource=onboarding&activationIntent=send_message', reason: 'A mentor conversation can unblock the current decision.', expectedEvidence: 'One mentor conversation requested', artifactId: null },
     };
     return firstActionByIntent[inputs.onboardingContext.selectedIntent];
   }
@@ -359,10 +409,13 @@ function buildNextAction(inputs: BuildFounderJourneyInputs): JourneyNextAction |
       key: firstIncompleteFoundation.key,
       label: firstIncompleteFoundation.title,
       route: firstIncompleteFoundation.route,
+      reason: `This is the next incomplete core outcome in your ${inputs.currentStage.toLowerCase()} stage.`,
+      expectedEvidence: firstIncompleteFoundation.description ?? firstIncompleteFoundation.title,
+      artifactId: null,
     };
   }
   if (!inputs.extras.traction?.phaseSevenReady) {
-    return { key: 'traction-weekly-log', label: "Log this week's traction", route: '/traction-engine' };
+    return { key: 'traction-weekly-log', label: "Log this week's traction", route: '/traction-engine', reason: 'Your core pathway needs attributed traction evidence.', expectedEvidence: 'One weekly log with channel, retention, efficiency, revenue, and a decision', artifactId: inputs.extras.outcomes.traction_engine?.artifactId ?? null };
   }
   return null;
 }

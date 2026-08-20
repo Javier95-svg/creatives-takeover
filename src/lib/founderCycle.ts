@@ -124,8 +124,8 @@ export const FOUNDER_LOOP_DEFINITIONS: Record<FounderLoop, {
       { name: 'GTM Strategist', route: '/go-to-market' },
       { name: 'PMF Discovery', route: '/pmf-lab' },
       { name: 'Demo Studio', route: '/demo-studio' },
-      { name: 'Growth Engine', route: '/traction-engine' },
-      { name: 'Tech Stack', route: '/tech-stack', support: true },
+      { name: 'Traction Engine', route: '/traction-engine' },
+      { name: 'Tech Stack Builder', route: '/tech-stack', support: true },
     ],
   },
   GROW: {
@@ -133,7 +133,7 @@ export const FOUNDER_LOOP_DEFINITIONS: Record<FounderLoop, {
     objective: 'Improve a repeatable acquisition channel, activation, retention, and revenue.',
     exit: 'Continuous operating loop; there is no artificial completion state.',
     tools: [
-      { name: 'Growth Engine', route: '/traction-engine' },
+      { name: 'Traction Engine', route: '/traction-engine' },
       { name: 'Core Metrics', route: '/core-metrics' },
       { name: 'GTM Strategist', route: '/go-to-market' },
     ],

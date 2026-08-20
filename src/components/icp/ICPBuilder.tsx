@@ -1074,6 +1074,7 @@ const ICPBuilder: React.FC = () => {
           userId: user.id,
           icpAnalysisId: analysisId,
           label: artifact.draftDocument.customer.personaName,
+          sourceTool: 'icp_builder',
         });
         const handoff = await createJourneyHandoff({
           sourceOutcomeId: outcomeId,

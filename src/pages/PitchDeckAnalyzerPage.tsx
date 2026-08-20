@@ -24,6 +24,8 @@ import type { PitchDeckGuestResult } from "@/types/pitchDeckAnalyzer";
 import { trackActivationFunnelEvent } from "@/lib/activationEntry";
 import { useActivationAbandonment } from "@/hooks/useActivationAbandonment";
 import { useFreeToolOpened } from "@/hooks/useFreeToolOpened";
+import { buildPitchEvidenceContext, type PitchEvidenceOutcomeRow } from "@/lib/pitchEvidenceContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const MAX_FILE_SIZE_MB = 20;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -54,6 +56,8 @@ export default function PitchDeckAnalyzerPage() {
   } = usePitchDeckAnalyzer();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [hydratedPitchDeck, setHydratedPitchDeck] = useState(false);
+  const [founderEvidenceContext, setFounderEvidenceContext] = useState('');
+  const [evidenceContextLoading, setEvidenceContextLoading] = useState(false);
   const entryTrackedRef = useRef(false);
   useActivationAbandonment({
     entry_id: 'pitch_deck_analyzer', tool: 'pitch_deck_analyzer', source: 'pitch_deck_analyzer',
@@ -99,6 +103,27 @@ export default function PitchDeckAnalyzerPage() {
       }
     });
   }, [hydratedPitchDeck, navigate, saveGuestResultAsAnalysis, searchParams, user]);
+
+  useEffect(() => {
+    if (!user) {
+      setFounderEvidenceContext('');
+      return;
+    }
+    let active = true;
+    setEvidenceContextLoading(true);
+    void (async () => {
+      const { data } = await (supabase as any)
+        .from('journey_outcomes')
+        .select('tool,artifact_id,status,quality_checks,evidence_manifest,updated_at')
+        .eq('user_id', user.id)
+        .in('tool', ['pmf_lab', 'mvp_builder', 'gtm_strategist', 'traction_engine'])
+        .order('updated_at', { ascending: false });
+      if (!active) return;
+      setFounderEvidenceContext(buildPitchEvidenceContext((data ?? []) as PitchEvidenceOutcomeRow[]));
+      setEvidenceContextLoading(false);
+    })();
+    return () => { active = false; };
+  }, [user]);
 
   const handleFileSelected = (file: File) => {
     if (file.type !== 'application/pdf') {
@@ -158,7 +183,7 @@ export default function PitchDeckAnalyzerPage() {
   // Authenticated: first full analysis is free (feature gift), then 10 credits each.
   const handleStartAssessment = async () => {
     if (!selectedFile) return;
-    await analyzePitchDeck(selectedFile);
+    await analyzePitchDeck(selectedFile, founderEvidenceContext);
   };
 
   const handleStartNew = () => {
@@ -400,6 +425,23 @@ export default function PitchDeckAnalyzerPage() {
                 </div>
               ) : (
                 <div className="space-y-6 animate-fade-in" style={{ animationDelay: '0.6s' }}>
+                  <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-semibold">Saved founder evidence</p>
+                        <p className="text-xs text-muted-foreground">Optional cross-check from your latest PMF, MVP, GTM, and traction outcomes. Edit or remove any claim before analysis.</p>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{evidenceContextLoading ? 'Loading…' : founderEvidenceContext ? 'Attributed context ready' : 'No saved evidence yet'}</span>
+                    </div>
+                    <textarea
+                      value={founderEvidenceContext}
+                      onChange={(event) => setFounderEvidenceContext(event.target.value.slice(0, 6000))}
+                      placeholder="Saved evidence will appear here when available. You can also add concise, verifiable context."
+                      rows={5}
+                      className="mt-3 w-full rounded-xl border border-border bg-background px-3 py-2 text-xs leading-5 text-foreground"
+                    />
+                    <p className="mt-2 text-xs text-muted-foreground">The analyzer still scores what is actually present in the deck and uses this context only to flag missing or conflicting claims.</p>
+                  </div>
                   <PitchDeckUploader
                     onFileSelected={handleFileSelected}
                     isAnalyzing={analyzing}

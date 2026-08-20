@@ -58,7 +58,7 @@ import { fetchJourneyEvidenceBrief } from '@/lib/mvp-builder/journeyEvidence';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { trackJourneyEvent } from '@/lib/journeyOutcomes';
+import { findJourneyHandoff, trackJourneyEvent } from '@/lib/journeyOutcomes';
 
 // ── Quick-start templates ────────────────────────────────────────────────────
 
@@ -351,15 +351,21 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
     }
     setIsLoadingEvidence(true);
     try {
-      const result = await fetchJourneyEvidenceBrief(user.id);
+      const params = new URLSearchParams(window.location.search);
+      const validationContextId = params.get('context');
+      const pmfAnalysisId = params.get('pmf');
+      const result = await fetchJourneyEvidenceBrief(user.id, { validationContextId, pmfAnalysisId });
       if (!result) {
-        toast.info('No saved evidence yet.', {
-          description: 'Run ICP Builder, Demo Studio, or PMF Lab first. Their outputs become your build brief.',
+        toast.info('Choose a validation context first.', {
+          description: 'Open MVP Builder from a PMF Build decision so evidence from another project is never substituted silently. You can still describe an unscoped build below.',
         });
         return;
       }
       setInput(result.brief);
       setBuilderMode('build');
+      const inboundHandoff = pmfAnalysisId
+        ? await findJourneyHandoff('mvp_builder', pmfAnalysisId).catch(() => null)
+        : null;
       onSetupInputChange({
         customPrompt: result.brief,
         prefillSource: 'journey_evidence',
@@ -370,6 +376,9 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
         successEvent: result.scope.successEvent,
         essentialFeatures: result.scope.essentialFeatures,
         evidenceApprovedAt: null,
+        validationContextId,
+        originatingHandoffId: inboundHandoff?.id ?? null,
+        sourcePmfAnalysisId: pmfAnalysisId,
       });
       requestAnimationFrame(() => textareaRef.current?.focus());
       const used = [result.sources.icp && 'ICP', result.sources.demo && 'Demo', result.sources.pmf && 'PMF Lab', result.sources.gtm && 'GTM plan']
@@ -694,6 +703,45 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                 {isLoadingEvidence ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4 text-info" />}
                 {isLoadingEvidence ? 'Loading your evidence…' : 'Use my saved evidence'}
               </Button>
+              {setupInput.buildEvidenceMode === 'evidence_backed' ? (
+                <div className="rounded-xl border border-info/25 bg-info/[0.07] p-4 text-left">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-info">Evidence-backed scope review</p>
+                    <Badge variant="outline" className="border-info/30 text-info">
+                      {setupInput.evidenceApprovedAt ? 'Approved' : 'Approval required'}
+                    </Badge>
+                  </div>
+                  <dl className="mt-3 space-y-2 text-xs">
+                    <div><dt className="font-medium text-white">One customer</dt><dd className="text-muted-foreground">{setupInput.coreCustomer || 'Not defined'}</dd></div>
+                    <div><dt className="font-medium text-white">One job</dt><dd className="text-muted-foreground">{setupInput.coreJob || 'Not defined'}</dd></div>
+                    <div><dt className="font-medium text-white">Measurable success event</dt><dd className="text-muted-foreground">{setupInput.successEvent || 'Not defined'}</dd></div>
+                    <div>
+                      <dt className="font-medium text-white">Essential features ({setupInput.essentialFeatures?.length ?? 0}/3)</dt>
+                      <dd className="text-muted-foreground">{setupInput.essentialFeatures?.filter(Boolean).join(' · ') || 'No essential features selected'}</dd>
+                    </div>
+                  </dl>
+                  <p className="mt-3 text-[11px] leading-4 text-muted-foreground">
+                    You can build without approving this scope, but the artifact stays Draft and will not complete the Building milestone.
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={setupInput.evidenceApprovedAt ? 'outline' : 'default'}
+                    className="mt-3 w-full gap-2"
+                    disabled={
+                      !setupInput.coreCustomer?.trim()
+                      || !setupInput.coreJob?.trim()
+                      || !setupInput.successEvent?.trim()
+                      || (setupInput.essentialFeatures?.filter((feature) => feature.trim()).length ?? 0) < 1
+                      || (setupInput.essentialFeatures?.filter((feature) => feature.trim()).length ?? 0) > 3
+                    }
+                    onClick={() => onSetupInputChange({ evidenceApprovedAt: new Date().toISOString() })}
+                  >
+                    <Check className="h-4 w-4" />
+                    {setupInput.evidenceApprovedAt ? 'Evidence scope approved' : 'Approve this MVP scope'}
+                  </Button>
+                </div>
+              ) : null}
             </div>
           ) : (
             <div className="space-y-4">

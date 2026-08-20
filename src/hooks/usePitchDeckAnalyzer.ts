@@ -96,7 +96,7 @@ export const usePitchDeckAnalyzer = () => {
   };
 
   // --- Authenticated: every analysis is credit-metered -----------------------
-  const analyzePitchDeck = async (file: File): Promise<PitchDeckAnalysis | null> => {
+  const analyzePitchDeck = async (file: File, founderEvidenceContext?: string): Promise<PitchDeckAnalysis | null> => {
     if (!user) {
       toast.error('Please sign in to analyze your pitch deck');
       return null;
@@ -124,6 +124,7 @@ export const usePitchDeckAnalyzer = () => {
         storagePath: uploadData.path,
         fileName: file.name,
         fileSize: file.size,
+        founderEvidenceContext: founderEvidenceContext?.trim().slice(0, 6000) || undefined,
       });
 
       if (!ok || !data?.success) {

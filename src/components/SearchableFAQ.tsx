@@ -111,7 +111,7 @@ const SearchableFAQ = () => {
       id: 10,
       category: "Community",
       question: "Can I share my startup and get feedback?",
-      answer: "Yes! You can share your startup journey through Founder Stories, showcase your progress in the community, and receive constructive feedback from other founders. Additionally, tools like Insighta Test help you gather structured feedback on your landing pages and value propositions from real users.",
+      answer: "Yes! You can share your startup journey through Founder Stories, showcase your progress in the community, and receive constructive feedback from other founders. Demo Studio and PMF Lab help you gather structured customer evidence before building.",
       popular: false,
       tags: ["feedback", "sharing", "founder stories", "insighta"]
     },
@@ -152,10 +152,10 @@ const SearchableFAQ = () => {
     {
       id: 15,
       category: "Features",
-      question: "What is Insighta Test?",
-      answer: "Insighta Test is our landing page and value proposition testing tool. It helps you validate your messaging, identify unclear elements, and optimize for conversions. It is included on every plan, including Rookie.",
+      question: "What is Insighta Test — Fundraising Readiness?",
+      answer: "Insighta Test — Fundraising Readiness diagnoses gaps in traction, fundraising narrative, and investor preparation. It recommends the most relevant existing Insighta workflow without promising funding, and it is included on every plan, including Rookie.",
       popular: false,
-      tags: ["insighta", "landing page", "testing", "validation", "conversion"]
+      tags: ["insighta", "fundraising readiness", "traction", "pitch deck", "investors"]
     },
     {
       id: 16,

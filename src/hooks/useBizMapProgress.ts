@@ -53,8 +53,8 @@ const PMF_EVIDENCE_TABLE = 'pmf_validation_evidence' as any;
 const MVP_ARTIFACTS_TABLE = 'mvp_builder_artifacts' as any;
 const GTM_PLANS_TABLE = 'gtm_plans' as any;
 const ICP_RESULTS_TABLE = 'icp_analysis_results' as any;
+const JOURNEY_OUTCOMES_TABLE = 'journey_outcomes' as any;
 const PMF_RESULTS_TABLE = getPmfResultsTableName();
-const TECH_STACK_TABLE = 'tech_stack_reports';
 
 function normalizeStage(value: unknown, fallback: BizMapStage): BizMapStage {
   if (typeof value !== 'string') return fallback;
@@ -81,7 +81,7 @@ function isCompleted(row: UserProgressRow, stage: BizMapStage): boolean {
 }
 
 function getCompletionUnlockedStage(progress: UserProgressRow): BizMapStage {
-  let highest: BizMapStage = 'FUNDRAISING';
+  let highest: BizMapStage = DEFAULT_HIGHEST_UNLOCKED_STAGE;
 
   if (progress.identity_completed_at && progress.prototype_completed_at) {
     highest = maxStage(highest, 'VALIDATING');
@@ -120,9 +120,9 @@ export const useBizMapProgress = () => {
       waitlistPagesRes,
       pmfEvidenceRes,
       mvpLatestRes,
-      techStackLatestRes,
       gtmLatestRes,
       pmfLatestRes,
+      journeyOutcomesRes,
     ] = await Promise.all([
       supabase
         .from(ICP_RESULTS_TABLE)
@@ -151,13 +151,6 @@ export const useBizMapProgress = () => {
         .limit(1)
         .maybeSingle(),
       supabase
-        .from(TECH_STACK_TABLE)
-        .select('created_at')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-      supabase
         .from(GTM_PLANS_TABLE)
         .select('saved_at, exported_at, created_at, status')
         .eq('user_id', userId)
@@ -174,6 +167,11 @@ export const useBizMapProgress = () => {
             .limit(1)
             .maybeSingle()
         : Promise.resolve({ data: null, error: null }),
+      supabase
+        .from(JOURNEY_OUTCOMES_TABLE)
+        .select('tool, status, completed_at, verified_at, reviewed_at, updated_at')
+        .eq('user_id', userId)
+        .order('updated_at', { ascending: false }),
     ]);
 
     if (pmfLatestRes?.error) {
@@ -191,7 +189,22 @@ export const useBizMapProgress = () => {
     const pmfEvidenceData = pmfEvidenceRes.data as any;
     const mvpData = mvpLatestRes.data as any;
     const gtmData = gtmLatestRes.data as any;
-    const techStackData = techStackLatestRes.data as any;
+    const outcomeRows = journeyOutcomesRes.error
+      ? []
+      : ((journeyOutcomesRes.data ?? []) as Array<{
+          tool: string;
+          status: string;
+          completed_at: string | null;
+          verified_at: string | null;
+          reviewed_at: string | null;
+          updated_at: string;
+        }>);
+    const hasOutcomeFor = (tool: string) => outcomeRows.some((row) => row.tool === tool);
+    const outcomeCompletedAt = (tool: string) => {
+      const row = outcomeRows.find((candidate) =>
+        candidate.tool === tool && ['ready', 'verified', 'reviewed'].includes(candidate.status));
+      return row?.reviewed_at ?? row?.verified_at ?? row?.completed_at ?? row?.updated_at ?? null;
+    };
 
     const validationSignals =
       Number(pmfEvidenceData?.interview_notes_count ?? 0) +
@@ -199,9 +212,7 @@ export const useBizMapProgress = () => {
     const requiredSignals = Number(pmfEvidenceData?.required_signals ?? PMF_REQUIRED_SIGNALS);
 
     const validatingCompleted =
-      !!pmfEvidenceData?.checklist_saved_at && validationSignals >= requiredSignals;
-
-    const buildingCompleted = !!mvpData && !!techStackData;
+      !!pmfEvidenceData?.checklist_saved_at && validationSignals >= Math.min(requiredSignals, 5);
 
     let prototypeCompletedAt: string | null = null;
     if (waitlistPages.length > 0) {
@@ -238,22 +249,28 @@ export const useBizMapProgress = () => {
     }
 
     return {
-      identityCompletedAt: (icpLatestRes.data as any)?.created_at ?? null,
-      prototypeCompletedAt,
+      identityCompletedAt: outcomeCompletedAt('icp_builder')
+        ?? (!hasOutcomeFor('icp_builder') ? (icpLatestRes.data as any)?.created_at ?? null : null),
+      prototypeCompletedAt: outcomeCompletedAt('demo_studio')
+        ?? (!hasOutcomeFor('demo_studio') ? prototypeCompletedAt : null),
       validatingCompletedAt:
-        validatingCompleted
+        outcomeCompletedAt('pmf_lab')
+        ?? (!hasOutcomeFor('pmf_lab') && validatingCompleted
           ? maxDate(
               (pmfLatestRes.data as any)?.created_at ?? null,
               pmfEvidenceData?.checklist_saved_at ?? null,
             )
-          : null,
+          : null),
       buildingCompletedAt:
-        buildingCompleted
-          ? maxDate(mvpData?.saved_at ?? mvpData?.created_at ?? null, techStackData?.created_at ?? null)
-          : null,
-      launchCompletedAt:
-        gtmData?.exported_at ?? gtmData?.saved_at ?? (gtmData ? gtmData.created_at : null),
-      tractionCompletedAt: null,
+        outcomeCompletedAt('mvp_builder')
+        ?? (!hasOutcomeFor('mvp_builder') && mvpData
+          ? mvpData.saved_at ?? mvpData.created_at ?? null
+          : null),
+      launchCompletedAt: outcomeCompletedAt('gtm_strategist')
+        ?? (!hasOutcomeFor('gtm_strategist')
+          ? gtmData?.exported_at ?? gtmData?.saved_at ?? (gtmData ? gtmData.created_at : null)
+          : null),
+      tractionCompletedAt: outcomeCompletedAt('traction_engine'),
       fundraisingCompletedAt: null,
     };
   }, []);
@@ -265,13 +282,13 @@ export const useBizMapProgress = () => {
       ...baseRow,
       current_stage: normalizeStage(baseRow.current_stage, DEFAULT_CURRENT_STAGE),
       highest_unlocked_stage: normalizeStage(baseRow.highest_unlocked_stage, DEFAULT_HIGHEST_UNLOCKED_STAGE),
-      identity_completed_at: maxDate(baseRow.identity_completed_at, signals.identityCompletedAt),
-      prototype_completed_at: maxDate(baseRow.prototype_completed_at, signals.prototypeCompletedAt),
-      validating_completed_at: maxDate(baseRow.validating_completed_at, signals.validatingCompletedAt),
-      building_completed_at: maxDate(baseRow.building_completed_at, signals.buildingCompletedAt),
-      launch_completed_at: maxDate(baseRow.launch_completed_at, signals.launchCompletedAt),
-      traction_completed_at: maxDate(baseRow.traction_completed_at ?? null, signals.tractionCompletedAt),
-      fundraising_completed_at: maxDate(baseRow.fundraising_completed_at ?? null, signals.fundraisingCompletedAt),
+      identity_completed_at: signals.identityCompletedAt,
+      prototype_completed_at: signals.prototypeCompletedAt,
+      validating_completed_at: signals.validatingCompletedAt,
+      building_completed_at: signals.buildingCompletedAt,
+      launch_completed_at: signals.launchCompletedAt,
+      traction_completed_at: signals.tractionCompletedAt,
+      fundraising_completed_at: signals.fundraisingCompletedAt,
     };
 
     const completionUnlocked = getCompletionUnlockedStage(nextRow);
@@ -369,7 +386,9 @@ export const useBizMapProgress = () => {
           .insert({
             user_id: userId,
             current_stage: assignedBizMapStage ?? DEFAULT_CURRENT_STAGE,
-            highest_unlocked_stage: 'FUNDRAISING' as BizMapStage,
+            highest_unlocked_stage: assignedBizMapStage
+              ? maxStage(DEFAULT_HIGHEST_UNLOCKED_STAGE, assignedBizMapStage)
+              : DEFAULT_HIGHEST_UNLOCKED_STAGE,
           })
           .select('*')
           .single();
@@ -391,7 +410,7 @@ export const useBizMapProgress = () => {
         row = {
           ...row,
           current_stage: assignedBizMapStage,
-          highest_unlocked_stage: 'FUNDRAISING' as BizMapStage,
+          highest_unlocked_stage: maxStage(DEFAULT_HIGHEST_UNLOCKED_STAGE, assignedBizMapStage),
         };
       }
 
@@ -439,7 +458,7 @@ export const useBizMapProgress = () => {
 
   const stageState = useMemo(() => {
     const row = progress;
-    const effectiveHighestUnlocked: BizMapStage = 'FUNDRAISING';
+    const effectiveHighestUnlocked = row?.highest_unlocked_stage ?? DEFAULT_HIGHEST_UNLOCKED_STAGE;
     return {
       IDENTITY: {
         unlocked: effectiveHighestUnlocked ? isStageUnlocked('IDENTITY', effectiveHighestUnlocked) : true,
@@ -495,7 +514,7 @@ export const useBizMapProgress = () => {
     progress,
     stageState,
     currentStage: progress?.current_stage ?? DEFAULT_CURRENT_STAGE,
-    highestUnlockedStage: 'FUNDRAISING' as BizMapStage,
+    highestUnlockedStage: progress?.highest_unlocked_stage ?? DEFAULT_HIGHEST_UNLOCKED_STAGE,
     hasFullBizMapAccess: true,
     refreshProgress,
     setCurrentStage,

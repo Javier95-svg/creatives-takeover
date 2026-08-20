@@ -607,6 +607,8 @@ export default function DemoEditorPage() {
           tool: 'demo_studio',
           artifactType: 'interactive_proof_page',
           artifactId: updated.id,
+          validationContextId: project?.validation_context_id ?? null,
+          artifactVersion: updated.updated_at,
           status: evaluation.status,
           qualityChecks,
           completionScore: evaluation.completionScore,

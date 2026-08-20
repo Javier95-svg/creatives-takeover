@@ -337,12 +337,13 @@ test('tiles carry their stage and flag the current one', () => {
 
   assert.deepEqual(
     snapshot.tools.map((tile) => tile.stage),
-    ['IDENTITY', 'PROTOTYPE', 'VALIDATING', 'BUILDING', 'LAUNCH', 'TRACTION', 'FUNDRAISING'],
+    ['IDENTITY', 'PROTOTYPE', 'VALIDATING', 'BUILDING', 'LAUNCH', 'TRACTION', 'BUILDING', 'LAUNCH', 'FUNDRAISING'],
   );
   assert.deepEqual(
     snapshot.tools.filter((tile) => tile.isCurrentStage).map((tile) => tile.key),
-    ['mvp-builder'],
+    ['mvp-builder', 'tech-stack'],
   );
+  assert.deepEqual(snapshot.tools.filter((tile) => tile.role === 'support').map((tile) => tile.key), ['tech-stack', 'directories']);
 });
 
 test('lastTouched picks the most recently updated tool', () => {

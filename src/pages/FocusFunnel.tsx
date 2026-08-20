@@ -4,7 +4,6 @@ import { Loader2 } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import { BizMapStageTasks } from '@/components/dashboard/BizMapStageTasks';
-import { BizMapJourneyProgress } from '@/components/dashboard/BizMapJourneyProgress';
 import { InterviewTrackerCard } from '@/components/dashboard/InterviewTrackerCard';
 import { StageMapRail } from '@/components/focus-funnel/StageMapRail';
 import { FundraisingFunnel } from '@/components/focus-funnel/FundraisingFunnel';
@@ -54,13 +53,6 @@ const FocusFunnel = () => {
                 {currentStage === 'VALIDATING' ? <InterviewTrackerCard /> : null}
               </div>
             </div>
-
-            <DashboardDisclosure
-              title="Stage details"
-              summary="Inspect journey milestones and saved outputs when you need the deeper map."
-            >
-              <BizMapJourneyProgress />
-            </DashboardDisclosure>
 
             <DashboardDisclosure
               title="Advanced planning"

@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { captureEvent } from '@/lib/analytics';
 
 export interface PrebuildValidationContext {
   id: string;
@@ -17,6 +18,7 @@ export async function ensurePrebuildContext(input: {
   icpAnalysisId?: string | null;
   label?: string | null;
   explicitlyUnscoped?: boolean;
+  sourceTool?: 'icp_builder' | 'demo_studio' | 'pmf_lab';
 }): Promise<PrebuildValidationContext> {
   const icpAnalysisId = input.explicitlyUnscoped ? null : input.icpAnalysisId ?? null;
 
@@ -54,6 +56,11 @@ export async function ensurePrebuildContext(input: {
     }
     throw error;
   }
+  captureEvent('prebuild_context_started', {
+    validation_context_id: (data as any).id,
+    source_tool: input.sourceTool ?? 'direct',
+    is_unscoped: Boolean(input.explicitlyUnscoped),
+  });
   return data as unknown as PrebuildValidationContext;
 }
 
@@ -78,4 +85,3 @@ export async function getPrebuildContext(userId: string, contextId: string) {
   if (error) throw error;
   return data as unknown as PrebuildValidationContext | null;
 }
-

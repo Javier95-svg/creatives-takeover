@@ -36,41 +36,60 @@ const asTextList = (value: unknown, max: number): string[] =>
 
 const bulletList = (items: string[]): string => items.map((item) => `- ${item}`).join('\n');
 
-export async function fetchJourneyEvidenceBrief(userId: string): Promise<JourneyEvidenceBrief | null> {
+export interface JourneyEvidenceScope {
+  validationContextId?: string | null;
+  pmfAnalysisId?: string | null;
+}
+
+export async function fetchJourneyEvidenceBrief(userId: string, scope: JourneyEvidenceScope = {}): Promise<JourneyEvidenceBrief | null> {
+  if (!scope.validationContextId && !scope.pmfAnalysisId) return null;
+
+  const contextRes = scope.validationContextId
+    ? await supabase
+      .from('prebuild_validation_contexts' as never)
+      .select('id,icp_analysis_id')
+      .eq('id', scope.validationContextId)
+      .eq('user_id', userId)
+      .maybeSingle()
+    : { data: null, error: null };
+  if (scope.validationContextId && (contextRes.error || !contextRes.data)) return null;
+  const context = asRecord(contextRes.data);
+  const scopedIcpId = asText(context.icp_analysis_id);
+
+  let icpQuery = supabase
+    .from('icp_analysis_results' as never)
+    .select('id, target_audience, business_description, analysis_data, created_at')
+    .eq('user_id', userId);
+  icpQuery = scopedIcpId ? icpQuery.eq('id', scopedIcpId) : icpQuery.eq('id', '__unscoped__');
+
+  let demoQuery = supabase
+    .from('demo_studio_projects' as never)
+    .select('id, name, tagline, category, launch_published, validation_context_id, created_at, updated_at')
+    .eq('owner_id', userId);
+  demoQuery = scope.validationContextId
+    ? demoQuery.eq('validation_context_id', scope.validationContextId)
+    : demoQuery.eq('id', '__unscoped__');
+
+  let pmfQuery = supabase
+    .from('pmf_analysis_results' as never)
+    .select('id, pmf_score, analysis_data, validation_context_id, created_at')
+    .eq('user_id', userId);
+  if (scope.pmfAnalysisId) pmfQuery = pmfQuery.eq('id', scope.pmfAnalysisId);
+  else if (scope.validationContextId) pmfQuery = pmfQuery.eq('validation_context_id', scope.validationContextId);
+
+  let outcomesQuery = supabase
+    .from('journey_outcomes' as never)
+    .select('tool,status,artifact_id,validation_context_id')
+    .eq('user_id', userId)
+    .in('status', ['ready', 'verified', 'reviewed']);
+  if (scope.validationContextId) outcomesQuery = outcomesQuery.eq('validation_context_id', scope.validationContextId);
+
   const [icpRes, demoRes, pmfRes, gtmRes, outcomesRes] = await Promise.all([
-    supabase
-      .from('icp_analysis_results' as never)
-      .select('id, target_audience, business_description, analysis_data, created_at')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from('demo_studio_projects' as never)
-      .select('id, name, tagline, category, launch_published, created_at, updated_at')
-      .eq('owner_id', userId)
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from('pmf_analysis_results' as never)
-      .select('id, pmf_score, analysis_data, created_at')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from('gtm_plans' as never)
-      .select('id, plan_title, plan_content, version, created_at, updated_at')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from('journey_outcomes' as never)
-      .select('tool,status,artifact_id')
-      .eq('user_id', userId)
-      .in('status', ['ready', 'verified', 'reviewed']),
+    icpQuery.maybeSingle(),
+    demoQuery.order('updated_at', { ascending: false }).limit(1).maybeSingle(),
+    pmfQuery.order('created_at', { ascending: false }).limit(1).maybeSingle(),
+    Promise.resolve({ data: null, error: null }),
+    outcomesQuery,
   ]);
 
   const icp = asRecord(icpRes.data);

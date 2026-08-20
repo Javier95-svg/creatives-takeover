@@ -55,6 +55,8 @@ import type {
   OnboardingEvidenceState,
 } from '@/lib/onboardingContext';
 import { cn } from '@/lib/utils';
+import { useFeatureFlagEnabled } from '@/hooks/usePosthogFeatureFlag';
+import { isPMFPathwayEnvironmentEnabled, PMF_PATHWAY_FEATURE_FLAG } from '@/lib/pmfPathwayRollout';
 
 const TILE_ICONS: Record<string, LucideIcon> = {
   'icp-builder': Target,
@@ -64,6 +66,8 @@ const TILE_ICONS: Record<string, LucideIcon> = {
   'gtm-strategist': Globe,
   'traction-engine': TrendingUp,
   'pitch-deck-analyzer': Presentation,
+  'tech-stack': Layers,
+  directories: Globe,
 };
 
 const EVIDENCE_ANSWER_LABELS: Record<OnboardingEvidenceState, string> = {
@@ -163,6 +167,11 @@ function ToolTile({ tile }: { tile: JourneyToolTile }) {
               {tile.highlight}
             </Badge>
           ) : null}
+          {tile.outcomeStatus ? (
+            <Badge variant="secondary" className="shrink-0 text-[10px] capitalize" title="Artifact evidence status, not a guarantee of business success">
+              {tile.outcomeStatus}
+            </Badge>
+          ) : null}
         </span>
         <span className="mt-0.5 block truncate text-xs text-muted-foreground">{tile.outputLine}</span>
         {tile.updatedAt ? (
@@ -190,6 +199,8 @@ export default function FounderJourneyPanel({ showRecommendedAction = false }: {
     stageIntelligence,
   } = useFounderJourneySnapshot();
   const { primaryAction, recommendationPolicy } = useDashboardFocus();
+  const pathwayFlag = useFeatureFlagEnabled(PMF_PATHWAY_FEATURE_FLAG);
+  const enhancedPathway = isPMFPathwayEnvironmentEnabled() && pathwayFlag === true;
   const viewedRef = useRef(false);
   const recommendedRoute = primaryAction ? getDashboardTool(primaryAction.toolKey).route : null;
   const assignedStage = Math.min(
@@ -364,7 +375,7 @@ export default function FounderJourneyPanel({ showRecommendedAction = false }: {
         <DashboardPanelHeader
           kicker="Startup journey"
           title="Where you stand"
-          badges={<Badge variant="secondary">{snapshot.stagesCompleted}/7 stages</Badge>}
+          badges={<Badge variant="secondary">{snapshot.stagesCompleted}/6 core stages</Badge>}
         />
 
         <Progress value={snapshot.progressPercent} className="mt-4 h-1.5" />
@@ -409,13 +420,19 @@ export default function FounderJourneyPanel({ showRecommendedAction = false }: {
             </div>
           </div>
         ) : snapshot.nextAction ? (
-          <div className="mt-5 flex justify-end">
-            <Button asChild size="sm" variant="outline">
+          <div className="mt-5 flex flex-col gap-3 rounded-xl border border-primary/25 bg-primary/[0.05] p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Recommended next</p>
+              <p className="mt-1 text-sm font-semibold text-foreground">{snapshot.nextAction.label}</p>
+              {enhancedPathway ? <p className="mt-1 text-xs text-muted-foreground">{snapshot.nextAction.reason}</p> : null}
+              {enhancedPathway ? <p className="mt-1 text-xs text-muted-foreground"><span className="font-medium text-foreground">Expected evidence:</span> {snapshot.nextAction.expectedEvidence}</p> : null}
+            </div>
+            <Button asChild size="sm" variant="outline" className="shrink-0">
               <Link
                 to={snapshot.nextAction.route}
                 onClick={() => trackDashboardJourneyContinueClicked({ milestone_key: snapshot.nextAction?.key })}
               >
-                Continue: {snapshot.nextAction.label}
+                {enhancedPathway ? 'Continue exact artifact' : `Continue: ${snapshot.nextAction.label}`}
                 <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
               </Link>
             </Button>
@@ -423,10 +440,20 @@ export default function FounderJourneyPanel({ showRecommendedAction = false }: {
         ) : null}
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {snapshot.tools.map((tile) => (
+          {snapshot.tools.filter((tile) => enhancedPathway ? tile.role === 'core' : tile.role !== 'support').map((tile) => (
             <ToolTile key={tile.key} tile={tile} />
           ))}
         </div>
+
+        {enhancedPathway ? <div className="mt-5 border-t border-border/60 pt-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Optional support and fundraising</p>
+          <p className="mt-1 text-xs text-muted-foreground">These tools can accelerate a core outcome but never block or inflate journey completion.</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {snapshot.tools.filter((tile) => tile.role !== 'core').map((tile) => (
+              <ToolTile key={tile.key} tile={tile} />
+            ))}
+          </div>
+        </div> : null}
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs">
           <Link to="/bizmap-ai" className="font-medium text-primary hover:underline">

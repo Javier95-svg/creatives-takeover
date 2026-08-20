@@ -45,6 +45,9 @@ interface PMFReadinessReportProps {
   isCreatingSurvey: boolean;
   onCreateSurvey: () => void;
   customerDiscoverySignalCount?: number;
+  validationContextId?: string | null;
+  icpAnalysisId?: string | null;
+  pathwayEnabled?: boolean;
 }
 
 const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
@@ -67,6 +70,9 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
   isCreatingSurvey,
   onCreateSurvey,
   customerDiscoverySignalCount = 0,
+  validationContextId,
+  icpAnalysisId,
+  pathwayEnabled,
 }) => {
   const [interviewPreviewOpen, setInterviewPreviewOpen] = useState(false);
   const decision = analysis.decision ?? getPmfDecision(analysis.overallScore);
@@ -102,6 +108,9 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
     decision,
     evidenceGrade: analysis.evidenceGrade ?? confidence.grade,
     nextExperiment: analysis.nextExperiment,
+    validationContextId,
+    icpAnalysisId,
+    pathwayEnabled,
   });
 
   // Primary Finding — lowest-scoring dimension

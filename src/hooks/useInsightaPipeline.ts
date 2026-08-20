@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { recordMeaningfulAction } from '@/lib/engagementSession';
 import { scheduleReturnCue } from '@/lib/returnCues';
+import { captureEvent } from '@/lib/analytics';
 
 export const INSIGHTA_PIPELINE_STATUSES = [
   'saved',
@@ -107,6 +108,11 @@ export function useInsightaPipeline() {
         entityType: item.entity_type,
         entityId: item.entity_id,
       });
+      captureEvent('insighta_prospect_saved', {
+        entity_type: item.entity_type,
+        pipeline_status: item.status,
+        plan,
+      });
       toast.success(`${item.entity_label} added to your research pipeline.`);
     },
     onError: (error: Error) => toast.error(error.message || 'Could not save this research item.'),
@@ -151,6 +157,15 @@ export function useInsightaPipeline() {
         daysSinceSignup: signupDays,
         entityType: item.entity_type,
         entityId: item.entity_id,
+      });
+      captureEvent('insighta_pipeline_status_changed', {
+        entity_type: item.entity_type,
+        pipeline_status: item.status,
+        outreach_started: item.status === 'contacted',
+        reply_received: item.status === 'replied',
+        meeting_recorded: item.status === 'meeting',
+        follow_up_scheduled: Boolean(item.next_action_at),
+        plan,
       });
       toast.success('Research pipeline updated.');
     },

@@ -19,6 +19,7 @@ export async function countLatest(
 
 export async function fetchToolCompletionSignals(userId: string): Promise<ToolCompletionSignals> {
   const [
+    outcomesRes,
     icpCompleted,
     waitlistCompleted,
     pmfScored,
@@ -27,6 +28,10 @@ export async function fetchToolCompletionSignals(userId: string): Promise<ToolCo
     techStackCompleted,
     gtmCompleted,
   ] = await Promise.all([
+    supabase
+      .from('journey_outcomes' as any)
+      .select('tool,status')
+      .eq('user_id', userId),
     countLatest('icp_analysis_results', userId),
     countLatest('waitlist_pages', userId, (query) => query.in('status', ['published', 'exported'])),
     countLatest('pmf_analysis_results', userId),
@@ -39,13 +44,18 @@ export async function fetchToolCompletionSignals(userId: string): Promise<ToolCo
     countLatest('gtm_plans', userId, (query) => query.in('status', ['saved', 'exported'])),
   ]);
 
+  const outcomeRows = outcomesRes.error ? [] : ((outcomesRes.data ?? []) as Array<{ tool: string; status: string }>);
+  const hasOutcome = (tool: string) => outcomeRows.some((row) => row.tool === tool);
+  const completedOutcome = (tool: string) => outcomeRows.some((row) =>
+    row.tool === tool && ['ready', 'verified', 'reviewed'].includes(row.status));
+
   return {
-    icpCompleted,
-    waitlistCompleted,
-    pmfCompleted: pmfScored || pmfEvidenceCaptured,
-    mvpCompleted,
+    icpCompleted: completedOutcome('icp_builder') || (!hasOutcome('icp_builder') && icpCompleted),
+    waitlistCompleted: completedOutcome('demo_studio') || (!hasOutcome('demo_studio') && waitlistCompleted),
+    pmfCompleted: completedOutcome('pmf_lab') || (!hasOutcome('pmf_lab') && (pmfScored || pmfEvidenceCaptured)),
+    mvpCompleted: completedOutcome('mvp_builder') || (!hasOutcome('mvp_builder') && mvpCompleted),
     techStackCompleted,
-    gtmCompleted,
+    gtmCompleted: completedOutcome('gtm_strategist') || (!hasOutcome('gtm_strategist') && gtmCompleted),
   };
 }
 
@@ -76,6 +86,7 @@ export async function fetchFounderJourneyExtras(userId: string): Promise<Founder
     waitlistPageRes,
     vcViewsRes,
     acceleratorViewsRes,
+    outcomesRes,
   ] = await Promise.all([
     supabase
       .from('traction_engine_weekly_logs' as any)
@@ -134,6 +145,11 @@ export async function fetchFounderJourneyExtras(userId: string): Promise<Founder
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .gte('viewed_at', monthStart),
+    supabase
+      .from('journey_outcomes' as any)
+      .select('tool,artifact_id,status,verification_mode,validation_context_id,updated_at')
+      .eq('user_id', userId)
+      .order('updated_at', { ascending: false }),
   ]);
 
   const tractionRows = tractionRes.error
@@ -166,6 +182,20 @@ export async function fetchFounderJourneyExtras(userId: string): Promise<Founder
   const acceleratorViews = acceleratorViewsRes.error
     ? (warnAndNull<number>('accelerator_views', acceleratorViewsRes.error) ?? 0)
     : Number(acceleratorViewsRes.count ?? 0);
+  const journeyOutcomeRows = outcomesRes.error
+    ? (warnAndNull<any[]>('journey_outcomes', outcomesRes.error) ?? [])
+    : ((outcomesRes.data as any[]) ?? []);
+  const outcomes = Object.fromEntries(
+    journeyOutcomeRows
+      .filter((row, index, rows) => rows.findIndex((candidate) => candidate.tool === row.tool) === index)
+      .map((row) => [row.tool, {
+        artifactId: row.artifact_id,
+        status: row.status,
+        verificationMode: row.verification_mode,
+        validationContextId: row.validation_context_id ?? null,
+        updatedAt: row.updated_at,
+      }]),
+  ) as FounderJourneyExtras['outcomes'];
 
   // Demand signups depend on the ids fetched above, so they run as a second stage.
   const demoProjectIds = demoProjectRows.map((row) => row.id).filter(Boolean);
@@ -193,6 +223,7 @@ export async function fetchFounderJourneyExtras(userId: string): Promise<Founder
   const fundraisingViews = vcViews + acceleratorViews;
 
   return {
+    outcomes,
     traction: tractionRow
       ? {
           latestScore: tractionRow.combined_score ?? null,

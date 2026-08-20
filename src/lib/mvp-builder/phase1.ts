@@ -53,6 +53,9 @@ export interface MVPBuilderSetupInput {
   successEvent?: string;
   essentialFeatures?: string[];
   evidenceApprovedAt?: string | null;
+  validationContextId?: string | null;
+  originatingHandoffId?: string | null;
+  sourcePmfAnalysisId?: string | null;
   evidenceManifest?: {
     version: 1 | 2;
     generatedAt: string;

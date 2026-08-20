@@ -442,6 +442,15 @@ serve(async (req) => {
       const artifactId = textValue(input.artifactId, 200);
       if (!artifactType || !artifactId) return json({ error: 'Artifact type and id are required' }, 400);
       if (artifactType !== ARTIFACT_TYPES[tool]) return json({ error: 'Artifact type does not match this tool contract' }, 400);
+      const validationContextId = textValue(input.validationContextId, 100) || null;
+      const sourceHandoffId = textValue(input.handoffId, 100) || null;
+      const artifactVersion = textValue(input.artifactVersion, 100) || null;
+      if (validationContextId) {
+        const { data: ownedContext, error: contextError } = await supabase
+          .from('prebuild_validation_contexts').select('id')
+          .eq('id', validationContextId).eq('user_id', user.id).maybeSingle();
+        if (contextError || !ownedContext) return json({ error: 'The selected validation context was not found' }, 404);
+      }
 
       const clientQualityChecks = recordValue(input.qualityChecks) as Record<string, boolean | number | string | null>;
       const authoritativeChecks = await loadAuthoritativeChecks(supabase, user.id, tool, artifactId);
@@ -465,10 +474,22 @@ serve(async (req) => {
       const now = new Date().toISOString();
       const requestedManifest = recordValue(input.evidenceManifest);
       const requestedSources = arrayValue(requestedManifest.sources).map(recordValue);
-      const { data: pendingHandoffs, error: pendingError } = await supabase.from('journey_handoffs')
-        .select('id,source_outcome_id,source_version_id').eq('user_id', user.id)
-        .eq('destination_tool', tool).eq('status', 'pending');
+      const pendingResult = sourceHandoffId
+        ? await supabase.from('journey_handoffs')
+          .select('id,source_outcome_id,source_version_id,payload').eq('user_id', user.id)
+          .eq('id', sourceHandoffId).eq('destination_tool', tool).eq('status', 'pending')
+        : { data: [], error: null };
+      const { data: pendingHandoffs, error: pendingError } = pendingResult;
       if (pendingError) throw pendingError;
+      if (sourceHandoffId && (pendingHandoffs?.length ?? 0) !== 1) {
+        return json({ error: 'The selected handoff is unavailable or has already been consumed' }, 409);
+      }
+      if (sourceHandoffId && validationContextId) {
+        const handoffContext = textValue(recordValue(pendingHandoffs?.[0]?.payload).validationContextId, 100);
+        if (handoffContext && handoffContext !== validationContextId) {
+          return json({ error: 'The handoff belongs to a different validation context' }, 409);
+        }
+      }
       const sourceOutcomeIds = [...new Set((pendingHandoffs ?? []).map((handoff) => handoff.source_outcome_id))];
       const sourceVersionIds = [...new Set((pendingHandoffs ?? []).map((handoff) => handoff.source_version_id))];
       const { data: sourceOutcomes } = sourceOutcomeIds.length
@@ -510,6 +531,9 @@ serve(async (req) => {
         stage: STAGES[tool],
         artifact_type: artifactType,
         artifact_id: artifactId,
+        validation_context_id: validationContextId,
+        source_handoff_id: sourceHandoffId,
+        artifact_version: artifactVersion,
         status: evaluation.status,
         quality_checks: { ...qualityChecks, _evaluation: evaluation },
         evidence_manifest: evidenceManifest,

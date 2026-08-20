@@ -42,6 +42,7 @@ import { ASSESSMENT_QUESTIONS, INDUSTRY_OPTIONS, BUSINESS_MODEL_OPTIONS, SCORE_L
 import { trackActivationFunnelEvent } from "@/lib/activationEntry";
 import { useActivationAbandonment } from "@/hooks/useActivationAbandonment";
 import { buildInsightaPublicInsights } from "@/lib/insightaPublicInsights";
+import { getInsightaReadinessRoute } from "@/lib/insightaReadinessRouting";
 
 // Legacy interface kept for backwards compatibility
 type AIAnalysis = EnhancedAIAnalysis;
@@ -181,6 +182,11 @@ const FundraisingReadinessToolkitAll = () => {
       criticalMinimums: threshold.critical_minimums,
     });
   }, [averageScore, context.founder_stage, scores, visibleQuestions]);
+  const routedNextAction = useMemo(() => getInsightaReadinessRoute({
+    scores,
+    verdict: aiAnalysis?.verdict ?? null,
+    founderStage: (context.founder_stage ?? 'validation') as FounderStage,
+  }), [aiAnalysis?.verdict, context.founder_stage, scores]);
 
   // Context step handlers
   const handleStageContextSubmit = () => {
@@ -831,7 +837,14 @@ const FundraisingReadinessToolkitAll = () => {
 
                 <div className="rounded-2xl border border-primary/25 bg-primary/5 p-4">
                   <p className="text-xs font-semibold uppercase tracking-wider text-primary">Your next best action</p>
-                  <p className="mt-2 text-sm leading-6 text-foreground">{publicDiagnostic.nextAction}</p>
+                  <p className="mt-2 text-sm font-medium text-foreground">{routedNextAction.title}</p>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">{routedNextAction.reason}</p>
+                  <Button className="mt-3" size="sm" onClick={() => {
+                    captureEvent('insighta_readiness_routed', { destination_tool: routedNextAction.key, verdict: 'public_result' });
+                    navigate(routedNextAction.route);
+                  }}>
+                    Continue <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -949,6 +962,19 @@ const FundraisingReadinessToolkitAll = () => {
               )}>
                 <p className="text-sm font-medium mb-2">Summary</p>
                 <p className="text-sm text-muted-foreground">{aiAnalysis.summary}</p>
+              </div>
+
+              <div className="rounded-2xl border border-primary/25 bg-primary/5 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">Routed next action</p>
+                <p className="mt-2 text-sm font-semibold text-foreground">{routedNextAction.title}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{routedNextAction.reason}</p>
+                <Button className="mt-3" size="sm" onClick={() => {
+                  captureEvent('insighta_readiness_routed', { destination_tool: routedNextAction.key, verdict: aiAnalysis.verdict });
+                  navigate(routedNextAction.route);
+                }}>
+                  Continue to {routedNextAction.key === 'traction_engine' ? 'Traction Engine' : routedNextAction.key === 'pitch_deck_analyzer' ? 'Pitch Deck Analyzer' : routedNextAction.key === 'vc_search' ? 'VC Search' : 'Accelerator Hunt'}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
               </div>
 
               {/* Strengths */}

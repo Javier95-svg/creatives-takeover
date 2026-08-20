@@ -1,7 +1,18 @@
+import { getFounderTool, type FounderToolKey } from '@/config/founderToolCatalog';
+
 export interface PulseRouteContext {
   pathPrefix: string;
   toolName: string;
   toolPurpose: string;
+}
+
+function founderToolContext(key: FounderToolKey, pathPrefix?: string): PulseRouteContext {
+  const tool = getFounderTool(key);
+  return {
+    pathPrefix: pathPrefix ?? tool.route,
+    toolName: tool.name,
+    toolPurpose: tool.purpose,
+  };
 }
 
 export const PULSE_ROUTE_CONTEXTS: PulseRouteContext[] = [
@@ -10,121 +21,33 @@ export const PULSE_ROUTE_CONTEXTS: PulseRouteContext[] = [
     toolName: "Creatives Takeover",
     toolPurpose: "helping visitors understand the product, find the right tool, and decide where to start",
   },
-  {
-    pathPrefix: "/icp-builder",
-    toolName: "ICP Builder",
-    toolPurpose: "helping the founder define their ideal customer, pain points, and positioning",
-  },
-  {
-    pathPrefix: "/bizmap-ai/icp-builder",
-    toolName: "ICP Builder",
-    toolPurpose: "helping the founder define their ideal customer, pain points, and positioning",
-  },
-  {
-    pathPrefix: "/pmf-lab",
-    toolName: "PMF Lab",
-    toolPurpose: "helping the founder interpret validation evidence and product-market fit signals",
-  },
-  {
-    pathPrefix: "/bizmap-ai/pmf-lab",
-    toolName: "PMF Lab",
-    toolPurpose: "helping the founder interpret validation evidence and product-market fit signals",
-  },
-  {
-    pathPrefix: "/demo-studio",
-    toolName: "Demo Studio",
-    toolPurpose: "helping the founder build an interactive demo, record a VSL, and publish a launch page",
-  },
-  {
-    pathPrefix: "/tech-stack",
-    toolName: "Tech Stack Builder",
-    toolPurpose: "helping the founder choose practical tools and implementation paths",
-  },
-  {
-    pathPrefix: "/bizmap-ai/tech-stack",
-    toolName: "Tech Stack Builder",
-    toolPurpose: "helping the founder choose practical tools and implementation paths",
-  },
-  {
-    pathPrefix: "/go-to-market",
-    toolName: "GTM Strategist",
-    toolPurpose: "helping the founder plan positioning, channels, and first customers",
-  },
-  {
-    pathPrefix: "/client-acquisition",
-    toolName: "GTM Strategist",
-    toolPurpose: "helping the founder plan positioning, channels, and first customers",
-  },
-  {
-    pathPrefix: "/pitch-deck-analyzer",
-    toolName: "Pitch Deck Analyzer",
-    toolPurpose: "helping the founder improve fundraising clarity and investor readiness",
-  },
-  {
-    pathPrefix: "/insighta/pitch-deck-analyzer",
-    toolName: "Pitch Deck Analyzer",
-    toolPurpose: "helping the founder improve fundraising clarity and investor readiness",
-  },
-  {
-    pathPrefix: "/directories",
-    toolName: "Directories",
-    toolPurpose: "helping the founder find relevant launch, investor, and growth resources",
-  },
+  founderToolContext('icp_builder'),
+  founderToolContext('icp_builder', '/bizmap-ai/icp-builder'),
+  founderToolContext('pmf_lab'),
+  founderToolContext('pmf_lab', '/bizmap-ai/pmf-lab'),
+  founderToolContext('demo_studio'),
+  founderToolContext('tech_stack'),
+  founderToolContext('tech_stack', '/bizmap-ai/tech-stack'),
+  founderToolContext('gtm_strategist'),
+  founderToolContext('gtm_strategist', '/client-acquisition'),
+  founderToolContext('pitch_deck_analyzer'),
+  founderToolContext('pitch_deck_analyzer', '/insighta/pitch-deck-analyzer'),
+  founderToolContext('directories'),
   {
     pathPrefix: "/marketplace",
     toolName: "Service Marketplace",
     toolPurpose: "helping the founder compare service providers and start direct conversations",
   },
-  {
-    pathPrefix: "/vc-search",
-    toolName: "VC Search",
-    toolPurpose: "helping the founder identify relevant investors and prepare outreach",
-  },
-  {
-    pathPrefix: "/insighta/vc-search",
-    toolName: "VC Search",
-    toolPurpose: "helping the founder identify relevant investors and prepare outreach",
-  },
-  {
-    pathPrefix: "/accelerator-hunt",
-    toolName: "Accelerator Hunt",
-    toolPurpose: "helping the founder find accelerator opportunities that fit their stage",
-  },
-  {
-    pathPrefix: "/insighta/accelerator-hunt",
-    toolName: "Accelerator Hunt",
-    toolPurpose: "helping the founder find accelerator opportunities that fit their stage",
-  },
-  {
-    pathPrefix: "/email-templates",
-    toolName: "Email Templates",
-    toolPurpose: "helping the founder write clearer outreach and follow-up messages",
-  },
-  {
-    pathPrefix: "/insighta/email-templates",
-    toolName: "Email Templates",
-    toolPurpose: "helping the founder write clearer outreach and follow-up messages",
-  },
-  {
-    pathPrefix: "/insighta-test",
-    toolName: "Insighta Test",
-    toolPurpose: "helping the founder understand market and opportunity signals",
-  },
-  {
-    pathPrefix: "/insighta/test",
-    toolName: "Insighta Test",
-    toolPurpose: "helping the founder understand market and opportunity signals",
-  },
-  {
-    pathPrefix: "/traction-engine",
-    toolName: "Traction Engine",
-    toolPurpose: "helping the founder turn traction signals into practical growth actions",
-  },
-  {
-    pathPrefix: "/insighta/traction-engine",
-    toolName: "Traction Engine",
-    toolPurpose: "helping the founder turn traction signals into practical growth actions",
-  },
+  founderToolContext('vc_search'),
+  founderToolContext('vc_search', '/insighta/vc-search'),
+  founderToolContext('accelerator_hunt'),
+  founderToolContext('accelerator_hunt', '/insighta/accelerator-hunt'),
+  founderToolContext('email_templates'),
+  founderToolContext('email_templates', '/insighta/email-templates'),
+  founderToolContext('insighta_test'),
+  founderToolContext('insighta_test', '/insighta/test'),
+  founderToolContext('traction_engine'),
+  founderToolContext('traction_engine', '/insighta/traction-engine'),
   {
     pathPrefix: "/decision-sprint",
     toolName: "Decision Sprint",

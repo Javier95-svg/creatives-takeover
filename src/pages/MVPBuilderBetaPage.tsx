@@ -259,7 +259,7 @@ export default function MVPBuilderBetaPage() {
             <Badge className="bg-primary/10 text-primary border-primary/20">Stage IV: BUILDING</Badge>
             <h1 className="text-3xl md:text-5xl font-bold creatives-font takeover-gradient">MVP Builder</h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Beta mode: save your MVP scope/spec so Stage IV can be completed once Tech Stack is also saved.
+              Save an evidence-backed MVP scope/spec to complete Stage IV. Tech Stack Builder remains optional support.
             </p>
           </div>
 
@@ -276,7 +276,7 @@ export default function MVPBuilderBetaPage() {
                 </div>
                 <div className="space-y-1 text-sm text-muted-foreground">
                   <p>
-                    Save your MVP scope here, then save your Tech Stack selection to complete Stage IV.
+                    Save and approve your MVP scope here to complete Stage IV. Use Tech Stack Builder when you want implementation guidance.
                   </p>
                   {lastSavedLabel && <p>Last saved: {lastSavedLabel}</p>}
                 </div>
@@ -294,7 +294,7 @@ export default function MVPBuilderBetaPage() {
                 )}
                 <Button asChild variant="outline">
                   <Link to="/tech-stack">
-                    Open Tech Stack
+                    Open optional Tech Stack Builder
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
@@ -306,7 +306,7 @@ export default function MVPBuilderBetaPage() {
             <CardHeader>
               <CardTitle>Scope Spec</CardTitle>
               <CardDescription>
-                Completion criteria: saved scope/spec + saved Tech Stack selection.
+                Completion criteria: an approved MVP scope/spec. A stack report does not block this milestone.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
