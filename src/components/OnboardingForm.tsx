@@ -89,6 +89,7 @@ import {
   completeOnboardingSession,
   saveOnboardingProgress,
 } from '@/lib/onboardingSession';
+import { buildOnboardingFailureMessage } from '@/lib/onboardingFailureMessage';
 
 interface OnboardingData {
   stageAnswers: Partial<FounderStageQuizAnswersV3>;
@@ -556,6 +557,7 @@ export const OnboardingForm = ({ session, onComplete }: OnboardingFormProps) => 
   const [startedAt] = useState(Date.now());
   const stepEnteredAt = useRef(Date.now());
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+  const [completionAttempts, setCompletionAttempts] = useState(0);
 
   const [formData, setFormData] = useState<OnboardingData>(() => {
     try {
@@ -1166,7 +1168,14 @@ export const OnboardingForm = ({ session, onComplete }: OnboardingFormProps) => 
     } catch (error) {
       setHandoff(null);
       console.error('Failed to save onboarding data:', error);
-      toast.error('Failed to save onboarding data. Please try again.');
+      // Completion runs from the activation step, so surface the message in
+      // that step's alert slot too -- a toast disappears and leaves a founder
+      // who cannot finish setup with nothing to act on.
+      const attempt = completionAttempts + 1;
+      setCompletionAttempts(attempt);
+      const message = buildOnboardingFailureMessage(attempt, session.id);
+      setErrors((prev) => ({ ...prev, activationIntent: message }));
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }

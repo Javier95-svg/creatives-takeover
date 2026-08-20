@@ -39,6 +39,7 @@ import {
   completeOnboardingSession,
   saveOnboardingProgress,
 } from '@/lib/onboardingSession';
+import { buildOnboardingFailureMessage } from '@/lib/onboardingFailureMessage';
 import { mapFounderStageToBusinessStage } from '@/lib/stageDiagnostic';
 import {
   ensureActivationGateVariant,
@@ -240,6 +241,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
   const [existingPreferences, setExistingPreferences] = useState<Record<string, unknown>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [completionAttempts, setCompletionAttempts] = useState(0);
   const [explicitIntent, setExplicitIntent] = useState(Boolean(session.answers.selectedIntent));
   const headingRef = useRef<HTMLHeadingElement>(null);
   const completedRef = useRef(session.status === 'completed');
@@ -610,7 +612,13 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
       onComplete?.(buildActivationJourneyUrl(context.selectedIntent, journey.journeyId, journey.resumeUrl));
     } catch (completionError) {
       console.error('Failed to complete adaptive onboarding', completionError);
-      toast.error('We could not save your launchpad. Your answers are still here - please try again.');
+      // Keep this in the step's alert slot, not only in a toast: a founder who
+      // cannot finish setup needs the way out to stay on screen.
+      const attempt = completionAttempts + 1;
+      setCompletionAttempts(attempt);
+      const message = buildOnboardingFailureMessage(attempt, session.id);
+      setError(message);
+      toast.error(message);
     } finally {
       setIsSaving(false);
     }
