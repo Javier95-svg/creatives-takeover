@@ -187,7 +187,7 @@ REVOKE ALL ON FUNCTION public.sync_cofounder_interest_dashboard_task_v1() FROM P
 REVOKE ALL ON FUNCTION public.nudge_cofounder_listing_expiry_v1() FROM PUBLIC, anon, authenticated;
 
 -- Fail loudly at apply time if any of these inserts loses the column again.
-DO $guard$
+DO $$
 DECLARE
   v_missing text[];
 BEGIN
@@ -211,4 +211,4 @@ BEGIN
       array_to_string(v_missing, ', ');
   END IF;
 END
-$guard$;
+$$;
