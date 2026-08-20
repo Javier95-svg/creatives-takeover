@@ -28,6 +28,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSkeleton,
   useSidebar,
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
@@ -146,6 +147,23 @@ const normalizePreferences = (raw: LegacySidebarPreferences | null | undefined):
   return merged;
 };
 
+// Everything the sidebar needs from `profiles` before it can decide which
+// entries belong to this account. Cached per user id for the lifetime of the
+// tab so route changes (which remount the sidebar) repaint the settled panel
+// instead of the pre-fetch guess.
+interface SidebarPersonalization {
+  preferences: SidebarPreferences;
+  reduceOnboardingNav: boolean;
+  activationIntent: ActivationIntent | null;
+}
+
+const sidebarPersonalizationCache = new Map<string, SidebarPersonalization>();
+
+// Rows rendered while personalization/plan are still unknown. Matches the
+// settled panel's shape (a nav block plus tool groups) so resolving swaps
+// content in without shifting the surrounding layout.
+const SIDEBAR_SKELETON_ROWS = 5;
+
 interface ToolItem {
   toolKey: DashboardSidebarToolKey;
   path: string;
@@ -171,45 +189,77 @@ function registryToolItem(
   };
 }
 
-export const DashboardSidebarContent = ({ currentStage }: { currentStage: BizMapStage }) => {
+export const DashboardSidebarContent = ({ currentStage }: { currentStage: BizMapStage | null }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { setOpenMobile, isMobile } = useSidebar();
-  const { user } = useAuth();
-  const { subscriptionData } = useSubscription();
+  const { user, loading: authLoading } = useAuth();
+  // Tiers are pricing data the sidebar never reads; skipping them keeps
+  // `subscriptionLoading` tied to the plan lookup that actually gates entries.
+  const { subscriptionData, loading: subscriptionLoading } = useSubscription({ fetchTiers: false });
   const incompleteTaskCount = useContext(TaskCountContext);
   const { activeSection, setActiveSection } = useDashboardNavigation();
-  const [sidebarPreferences, setSidebarPreferences] = useState<SidebarPreferences>(defaultSidebarPreferences);
-  const [reduceOnboardingNav, setReduceOnboardingNav] = useState(false);
-  const [activationIntent, setActivationIntent] = useState<ActivationIntent | null>(null);
+  const userId = user?.id ?? null;
+  const [loadedPersonalization, setLoadedPersonalization] = useState<
+    { userId: string; value: SidebarPersonalization } | null
+  >(null);
   const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
   const modeConfig = getDashboardModeConfig(resolveDashboardMode(currentPlan));
 
-  useEffect(() => {
-    const loadPreferences = async () => {
-      if (!user) return;
+  // Read the cache during render (not in an effect) so a remount paints the
+  // known-good panel on the first frame rather than one frame later.
+  const personalization =
+    (loadedPersonalization && loadedPersonalization.userId === userId ? loadedPersonalization.value : null)
+    ?? (userId ? sidebarPersonalizationCache.get(userId) ?? null : null);
 
+  const sidebarPreferences = personalization?.preferences ?? defaultSidebarPreferences;
+  const reduceOnboardingNav = personalization?.reduceOnboardingNav ?? false;
+  const activationIntent = personalization?.activationIntent ?? null;
+
+  // Until both the profile row and the plan are known, every entry we could
+  // render is a guess — `defaultSidebarPreferences` shows tools the stored
+  // preferences hide, and an unresolved plan reads as the lowest tier. Render
+  // placeholders instead of a panel that visibly rewrites itself.
+  const signedOut = !authLoading && !userId;
+  const isPersonalized = personalization !== null || signedOut;
+  const isPlanKnown = signedOut || (!authLoading && !subscriptionLoading);
+  const entriesResolved = isPersonalized && isPlanKnown;
+
+  useEffect(() => {
+    if (!user) return;
+    let isCancelled = false;
+    const activeUserId = user.id;
+
+    const loadPreferences = async () => {
       const { data } = await supabase
         .from('profiles')
         .select('sidebar_preferences, user_preferences, onboarding_completed')
-        .eq('id', user.id)
+        .eq('id', activeUserId)
         .single();
 
-      if (data?.sidebar_preferences) {
-        setSidebarPreferences(normalizePreferences(data.sidebar_preferences as LegacySidebarPreferences));
-      }
+      if (isCancelled) return;
 
       const activationPreferenceState = getActivationPreferenceState(data?.user_preferences);
-      setActivationIntent(activationPreferenceState.activationIntent);
-      setReduceOnboardingNav(
-        shouldReduceOnboardingNav(
+      const value: SidebarPersonalization = {
+        preferences: data?.sidebar_preferences
+          ? normalizePreferences(data.sidebar_preferences as LegacySidebarPreferences)
+          : defaultSidebarPreferences,
+        reduceOnboardingNav: shouldReduceOnboardingNav(
           { onboarding_completed: data?.onboarding_completed, user_preferences: data?.user_preferences },
           user.created_at,
         ),
-      );
+        activationIntent: activationPreferenceState.activationIntent,
+      };
+
+      sidebarPersonalizationCache.set(activeUserId, value);
+      setLoadedPersonalization({ userId: activeUserId, value });
     };
 
     void loadPreferences();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [user]);
 
   const handleNavClick = () => {
@@ -329,7 +379,16 @@ export const DashboardSidebarContent = ({ currentStage }: { currentStage: BizMap
 
   const removeTool = async (prefKey: keyof SidebarPreferences) => {
     const updatedPreferences: SidebarPreferences = { ...sidebarPreferences, [prefKey]: false };
-    setSidebarPreferences(updatedPreferences);
+    const updatedPersonalization: SidebarPersonalization = {
+      preferences: updatedPreferences,
+      reduceOnboardingNav,
+      activationIntent,
+    };
+
+    if (userId) {
+      sidebarPersonalizationCache.set(userId, updatedPersonalization);
+      setLoadedPersonalization({ userId, value: updatedPersonalization });
+    }
 
     if (user) {
       try {
@@ -357,79 +416,96 @@ export const DashboardSidebarContent = ({ currentStage }: { currentStage: BizMap
       </SidebarHeader>
 
       <SidebarContent className="dashboard-sidebar-scroll pr-2">
-        <SidebarGroup>
-          <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {dashboardNavItems.map((item) => {
-                const isTasksItem = item.path === '/dashboard/tasks';
-                const target = buildNavTarget(item.path, item.sectionId);
-                return (
-                  <SidebarMenuItem key={target}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isNavItemActive(item.path, item.sectionId)}
-                      tooltip={item.description ? `${item.label}: ${item.description}` : item.label}
-                    >
-                      <Link
-                        to={target}
-                        onClick={item.sectionId ? handleDashboardSectionClick(item.sectionId, item.path) : handleNavClick}
-                        className="flex w-full items-center gap-2"
-                      >
-                        <item.icon className="h-4 w-4 shrink-0" />
-                        <span className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-                          <span className="block text-sm leading-tight">{item.label}</span>
-                        </span>
-                        {isTasksItem && incompleteTaskCount > 0 && (
-                          <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-caption font-semibold text-primary-foreground group-data-[collapsible=icon]:hidden">
-                            {incompleteTaskCount > 99 ? '99+' : incompleteTaskCount}
-                          </span>
-                        )}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {groupToolItemsByStage(toolsItems).map((group) => (
-          <SidebarGroup key={group.id}>
-            <SidebarGroupLabel className={cn(group.id === currentStage && 'text-primary')}>
-              {group.label}
-            </SidebarGroupLabel>
+        {!entriesResolved ? (
+          <SidebarGroup>
+            <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
-                {group.items.map((item) => (
-                  <SidebarMenuItem key={item.path}>
-                    <div className="flex items-center w-full group/tool">
-                      <SidebarMenuButton asChild tooltip={item.label} className="flex-1">
-                        <Link to={item.path} onClick={handleNavClick}>
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.label}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                      {!UNIVERSAL_MORE_TOOL_KEYS.has(item.toolKey) ? (
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            void removeTool(item.prefKey);
-                          }}
-                          className="opacity-0 group-hover/tool:opacity-100 p-1 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all mr-1 group-data-[collapsible=icon]:hidden"
-                          title={`Remove ${item.label}`}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      ) : null}
-                    </div>
+              <SidebarMenu aria-busy="true">
+                {Array.from({ length: SIDEBAR_SKELETON_ROWS }, (_, index) => (
+                  <SidebarMenuItem key={`sidebar-loading-${index}`}>
+                    <SidebarMenuSkeleton showIcon />
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-        ))}
+        ) : (
+          <>
+            <SidebarGroup>
+              <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {dashboardNavItems.map((item) => {
+                    const isTasksItem = item.path === '/dashboard/tasks';
+                    const target = buildNavTarget(item.path, item.sectionId);
+                    return (
+                      <SidebarMenuItem key={target}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isNavItemActive(item.path, item.sectionId)}
+                          tooltip={item.description ? `${item.label}: ${item.description}` : item.label}
+                        >
+                          <Link
+                            to={target}
+                            onClick={item.sectionId ? handleDashboardSectionClick(item.sectionId, item.path) : handleNavClick}
+                            className="flex w-full items-center gap-2"
+                          >
+                            <item.icon className="h-4 w-4 shrink-0" />
+                            <span className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+                              <span className="block text-sm leading-tight">{item.label}</span>
+                            </span>
+                            {isTasksItem && incompleteTaskCount > 0 && (
+                              <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-caption font-semibold text-primary-foreground group-data-[collapsible=icon]:hidden">
+                                {incompleteTaskCount > 99 ? '99+' : incompleteTaskCount}
+                              </span>
+                            )}
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            {groupToolItemsByStage(toolsItems).map((group) => (
+              <SidebarGroup key={group.id}>
+                <SidebarGroupLabel className={cn(group.id === currentStage && 'text-primary')}>
+                  {group.label}
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {group.items.map((item) => (
+                      <SidebarMenuItem key={item.path}>
+                        <div className="flex items-center w-full group/tool">
+                          <SidebarMenuButton asChild tooltip={item.label} className="flex-1">
+                            <Link to={item.path} onClick={handleNavClick}>
+                              <item.icon className="h-4 w-4" />
+                              <span>{item.label}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                          {!UNIVERSAL_MORE_TOOL_KEYS.has(item.toolKey) ? (
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                void removeTool(item.prefKey);
+                              }}
+                              className="opacity-0 group-hover/tool:opacity-100 p-1 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all mr-1 group-data-[collapsible=icon]:hidden"
+                              title={`Remove ${item.label}`}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          ) : null}
+                        </div>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            ))}
+          </>
+        )}
 
         <SidebarGroup>
           <SidebarGroupLabel>Personalize</SidebarGroupLabel>
@@ -465,6 +541,9 @@ export const DashboardSidebarContent = ({ currentStage }: { currentStage: BizMap
 };
 
 export const DashboardSidebar = () => {
-  const { currentStage } = useBizMapProgress();
-  return <DashboardSidebarContent currentStage={currentStage} />;
+  const { currentStage, loading } = useBizMapProgress();
+  // `currentStage` falls back to IDENTITY while progress loads, which would
+  // highlight the first journey group on every mount and then jump to the real
+  // stage. Withhold the highlight until the stage is actually known.
+  return <DashboardSidebarContent currentStage={loading ? null : currentStage} />;
 };
