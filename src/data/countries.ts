@@ -194,3 +194,28 @@ export const COUNTRY_OPTIONS = [
   "Zambia",
   "Zimbabwe",
 ] as const;
+
+/**
+ * Best-effort guess from the browser locale, matched back onto COUNTRY_OPTIONS
+ * so the result is always a value the country selects can actually hold.
+ *
+ * Used to prefill rather than to ask: country feeds mentor matching and routine
+ * scheduling, and a founder should not spend a setup step on something the
+ * browser already knows. Returns null when the locale carries no region.
+ */
+export function detectCountryFromLocale(): string | null {
+  try {
+    const region = (navigator.language || '').split('-')[1];
+    if (!region || region.length !== 2) return null;
+    const name = new Intl.DisplayNames(['en'], { type: 'region' }).of(region.toUpperCase());
+    if (!name) return null;
+    const lower = name.toLowerCase();
+    return (
+      COUNTRY_OPTIONS.find((country) => country.toLowerCase() === lower) ??
+      COUNTRY_OPTIONS.find((country) => country.toLowerCase().startsWith(lower)) ??
+      null
+    );
+  } catch {
+    return null;
+  }
+}

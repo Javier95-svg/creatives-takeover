@@ -12,6 +12,7 @@ import { useFeatureGating } from '@/hooks/useFeatureGating';
 import { useSubscription } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
 import { ANGEL_SECTOR_OPTIONS } from '@/data/angelSectors';
+import { detectCountryFromLocale } from '@/data/countries';
 import { normalizePlan } from '@/config/planPermissions';
 import {
   ACTIVATION_CATALOG,
@@ -234,6 +235,13 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
       : Array.isArray(session.answers.sectors)
         ? session.answers.sectors
         : [],
+    // This flow has no country step, but country feeds mentor matching and
+    // routine scheduling. Prefill from the browser locale rather than spending
+    // a step on it; a resumed session keeps whatever it already had.
+    country: localFallback?.answers.country
+      || session.answers.country
+      || detectCountryFromLocale()
+      || '',
   });
   const [currentStep, setCurrentStep] = useState(
     localFallback?.currentStep ?? Math.min(session.current_step, CORE_STEPS - 1),
@@ -378,25 +386,25 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
     setError(null);
   };
 
-  const validateStep = () => {
-    if (currentStep === 0) {
+  const validateStepAt = (step: number) => {
+    if (step === 0) {
       const length = answers.startupBrief.trim().length;
       if (length < 20 || length > 280) return 'Write 20 to 280 characters about what you build and who it serves.';
     }
-    if (currentStep === 1 && !answers.businessModel) return 'Choose the business model that fits best.';
-    if (currentStep === 2) {
+    if (step === 1 && !answers.businessModel) return 'Choose the business model that fits best.';
+    if (step === 2) {
       if (!answers.evidenceState) return 'Choose the strongest evidence you have today.';
       if (requiresCustomerCount(answers.evidenceState) && !answers.customerCountBand) {
         return 'Choose your current paying-customer range.';
       }
     }
-    if (currentStep === 3) {
+    if (step === 3) {
       if (!answers.primaryGoal) return 'Choose the most important 30-day outcome.';
       if (requiresFundraisingStatus(answers.primaryGoal, answers.blocker) && !answers.fundraisingStatus) {
         return 'Choose your current fundraising status.';
       }
     }
-    if (currentStep === 4) {
+    if (step === 4) {
       if (!answers.blocker) return 'Choose the blocker most likely to stop that outcome.';
       if (requiresCofounderSituation(answers.blocker) && !answers.cofounderSituation) {
         return 'Tell us whether you are actively looking for a co-founder.';
@@ -405,8 +413,29 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
         return 'Choose your current fundraising status.';
       }
     }
-    if (currentStep === 5 && !answers.weeklyCapacityHours) return 'Choose the time you can protect each week.';
-    if (currentStep === 6 && !answers.selectedIntent) return 'Choose a first action.';
+    if (step === 5) {
+      if (!answers.weeklyCapacityHours) return 'Choose the time you can protect each week.';
+      if (!answers.runwayMonths) return 'Choose how long you can keep going at your current burn.';
+    }
+    if (step === 6 && !answers.selectedIntent) return 'Choose a first action.';
+    return null;
+  };
+
+  const validateStep = () => validateStepAt(currentStep);
+
+  /**
+   * The first step that is still missing an answer, or null.
+   *
+   * A session started before a question became required can reach the last
+   * step with an earlier answer missing. Rather than refusing to finish with a
+   * message about a question that is not on screen, send the founder back to
+   * the step that actually needs them.
+   */
+  const findIncompleteStep = () => {
+    for (let step = 0; step < CORE_STEPS; step += 1) {
+      const message = validateStepAt(step);
+      if (message) return { step, message };
+    }
     return null;
   };
 
@@ -450,8 +479,18 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
   };
 
   const handleComplete = async () => {
-    if (!user || !isAdaptiveOnboardingComplete(answers)) {
-      setError('Complete the required answers before opening your first action.');
+    if (!user) return;
+    if (!isAdaptiveOnboardingComplete(answers)) {
+      // Point at the step that is actually missing rather than stating a
+      // generic rule, so a session that predates a newly required question
+      // has somewhere to go.
+      const incomplete = findIncompleteStep();
+      if (incomplete) {
+        setCurrentStep(incomplete.step);
+        setError(incomplete.message);
+      } else {
+        setError('Complete the required answers before opening your first action.');
+      }
       return;
     }
     setIsSaving(true);
@@ -742,7 +781,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
           <div className="mt-3"><ChoiceGrid options={CAPACITY_OPTIONS} value={answers.weeklyCapacityHours} onSelect={(weeklyCapacityHours) => patchAnswers({ weeklyCapacityHours })} /></div>
           <div className="mt-6">
             <p className="mb-1 text-sm font-semibold">How long can you keep going at your current burn?</p>
-            <p className="mb-3 text-xs text-muted-foreground">Optional. A short runway changes which action is worth doing first.</p>
+            <p className="mb-3 text-xs text-muted-foreground">A short runway changes which action is worth doing first. Pick &ldquo;Not burning money yet&rdquo; if that is closer.</p>
             <ChoiceGrid options={RUNWAY_OPTIONS} value={answers.runwayMonths} onSelect={(runwayMonths) => patchAnswers({ runwayMonths })} columns={2} />
           </div>
           <fieldset className="mt-6">

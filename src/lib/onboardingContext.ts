@@ -427,6 +427,11 @@ export function isAdaptiveOnboardingComplete(answers: OnboardingAnswersV1) {
   if (briefLength < 20 || briefLength > 280) return false;
   if (!answers.businessModel || !answers.evidenceState || !answers.primaryGoal || !answers.blocker) return false;
   if (!answers.weeklyCapacityHours || !answers.selectedIntent) return false;
+  // Runway is what deriveUrgencyBand keys on, and an unstated runway silently
+  // resolves to 'stable' -- which is indistinguishable from a founder who
+  // genuinely has years of cash. Left optional, almost everyone landed there
+  // and the whole urgency path (mission overrides, ranking tilt) sat idle.
+  if (!answers.runwayMonths) return false;
   if (requiresCustomerCount(answers.evidenceState) && !answers.customerCountBand) return false;
   if (requiresFundraisingStatus(answers.primaryGoal, answers.blocker) && !answers.fundraisingStatus) return false;
   if (requiresCofounderSituation(answers.blocker) && !answers.cofounderSituation) return false;

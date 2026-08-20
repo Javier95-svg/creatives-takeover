@@ -21,6 +21,9 @@ const completeAnswers: OnboardingAnswersV1 = {
   primaryGoal: 'reach_three_customers',
   blocker: 'sales_conversion',
   weeklyCapacityHours: 5,
+  workingDays: [],
+  runwayMonths: '6_12',
+  revenueBand: '',
   fundraisingStatus: '',
   cofounderSituation: '',
   sectors: ['SaaS'],
@@ -37,6 +40,9 @@ test('adaptive branches require only relevant follow-up answers', () => {
   assert.equal(requiresCofounderSituation('sales_conversion'), false);
   assert.equal(isAdaptiveOnboardingComplete(completeAnswers), true);
   assert.equal(isAdaptiveOnboardingComplete({ ...completeAnswers, startupBrief: 'too short' }), false);
+  // Runway drives urgencyBand, and an unstated runway is indistinguishable
+  // from a comfortable one, so it is required rather than optional.
+  assert.equal(isAdaptiveOnboardingComplete({ ...completeAnswers, runwayMonths: '' }), false);
 });
 
 test('context derives SELL loop, stage, recommendation decision, and sales routine', () => {

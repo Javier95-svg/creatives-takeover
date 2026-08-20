@@ -25,7 +25,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ANGEL_SECTOR_OPTIONS } from '@/data/angelSectors';
-import { COUNTRY_OPTIONS } from '@/data/countries';
+import { COUNTRY_OPTIONS, detectCountryFromLocale } from '@/data/countries';
 import {
   captureEvent,
   trackOnboardingAbandoned,
@@ -494,24 +494,8 @@ function readOnboardingDraft(userId: string | undefined): string | null {
   return localStorage.getItem(key) ?? sessionStorage.getItem(key);
 }
 
-// Best-effort guess from the browser locale so most users just confirm their
-// country instead of searching for it.
-function detectCountryFromLocale(): string | null {
-  try {
-    const region = (navigator.language || '').split('-')[1];
-    if (!region || region.length !== 2) return null;
-    const name = new Intl.DisplayNames(['en'], { type: 'region' }).of(region.toUpperCase());
-    if (!name) return null;
-    const lower = name.toLowerCase();
-    return (
-      COUNTRY_OPTIONS.find((country) => country.toLowerCase() === lower) ??
-      COUNTRY_OPTIONS.find((country) => country.toLowerCase().startsWith(lower)) ??
-      null
-    );
-  } catch {
-    return null;
-  }
-}
+// detectCountryFromLocale now lives in @/data/countries so the adaptive flow,
+// which has no country step, can prefill from the same source.
 
 function hasCompleteStageAnswers(stageAnswers: Partial<FounderStageQuizAnswersV3>) {
   return FOUNDER_STAGE_QUESTIONS.every((question) => Boolean(stageAnswers[question.id]));
