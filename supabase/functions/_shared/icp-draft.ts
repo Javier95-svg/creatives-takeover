@@ -114,10 +114,93 @@ type DraftDocument = {
   };
   nextActions: Array<{ title: string; description: string; route: string }>;
   sources: DraftSource[];
+  viabilityAssessment: ViabilityAssessment;
+  fieldProvenance: FieldProvenanceMap;
 };
+
+/**
+ * Which fields the model actually answered, and which ones we backfilled.
+ *
+ * Every backfill below is readable prose ("The cost of leaving this pain
+ * unsolved still needs to be made explicit"), which made a missing field
+ * indistinguishable from an answered one to anything reading the document.
+ * Downstream scoring treated that filler as a filled field and handed out full
+ * credit for it, so entire scoring pillars were constants. Recording the
+ * distinction here is what lets the scorer and the outcome contract tell a real
+ * answer from a placeholder.
+ */
+export type FieldProvenance = "model" | "fallback";
+export type FieldProvenanceMap = Record<string, FieldProvenance>;
+
+export type ViabilityDimensionKey =
+  | "painSeverity"
+  | "willingnessToPay"
+  | "competitiveIntensity"
+  | "reachability"
+  | "founderEdge";
+
+export interface ViabilityDimension {
+  /** 0 - 100. Low is a legitimate, expected answer. */
+  score: number;
+  rationale: string;
+  /** Whether the judgement rests on retrieved evidence or on model inference. */
+  basis: "evidence" | "inference";
+  sourceIds: string[];
+}
+
+export type ViabilityAssessment = Record<ViabilityDimensionKey, ViabilityDimension>;
+
+export const VIABILITY_DIMENSION_KEYS: readonly ViabilityDimensionKey[] = [
+  "painSeverity",
+  "willingnessToPay",
+  "competitiveIntensity",
+  "reachability",
+  "founderEdge",
+] as const;
 
 function cleanText(value: unknown, fallback: string) {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : fallback;
+}
+
+/**
+ * `cleanText` that records whether the value came from the model or the fallback.
+ *
+ * Paths are dotted and stable ("pain.costOfInaction"), because readers on the
+ * other side of the wire look fields up by path rather than walking the object.
+ */
+function createFieldTracker() {
+  const provenance: FieldProvenanceMap = {};
+  const track = (path: string, value: unknown, fallback: string) => {
+    const answered = typeof value === "string" && value.trim().length > 0;
+    provenance[path] = answered ? "model" : "fallback";
+    return answered ? (value as string).trim() : fallback;
+  };
+  return { provenance, track };
+}
+
+function normalizeViabilityDimension(value: unknown, sourceIds: string[]): ViabilityDimension {
+  const raw = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  const rawScore = typeof raw.score === "number" && Number.isFinite(raw.score) ? raw.score : null;
+  const referenced = Array.isArray(raw.sourceIds)
+    ? raw.sourceIds.filter((id): id is string => typeof id === "string" && sourceIds.includes(id))
+    : [];
+  // An omitted dimension is not a neutral one. Defaulting to a midpoint would
+  // let a model that skipped the question inflate the verdict, so an unanswered
+  // dimension scores at the bottom of the "unknown" range instead.
+  return {
+    score: rawScore === null ? 25 : Math.round(Math.min(Math.max(rawScore, 0), 100)),
+    rationale: cleanText(raw.rationale, "The model did not assess this dimension."),
+    basis: raw.basis === "evidence" && referenced.length > 0 ? "evidence" : "inference",
+    sourceIds: referenced,
+  };
+}
+
+function normalizeViabilityAssessment(value: unknown, sourceIds: string[]): ViabilityAssessment {
+  const raw = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  return VIABILITY_DIMENSION_KEYS.reduce((assessment, key) => {
+    assessment[key] = normalizeViabilityDimension(raw[key], sourceIds);
+    return assessment;
+  }, {} as ViabilityAssessment);
 }
 
 function normalizeConfidence(value: unknown, fallback: SectionConfidence = "medium"): SectionConfidence {
@@ -151,14 +234,24 @@ function buildSectionEvidence(
     provenance: SectionEvidence["provenance"];
     sourceIds?: string[];
   },
+  citableSourceIds: string[] = [],
+  confidenceCeiling: (value: SectionConfidence) => SectionConfidence = (value) => value,
 ): SectionEvidence {
+  // Only ids we actually retrieved survive. The model is asked to cite, but a
+  // citation it invented would otherwise let a section claim grounding it does
+  // not have, and grounding is what the confidence ceiling keys off.
+  const claimed = Array.isArray(value?.sourceIds)
+    ? value.sourceIds.filter((id): id is string => typeof id === "string" && citableSourceIds.includes(id))
+    : [];
+  const sourceIds = claimed.length > 0 ? claimed : fallback.sourceIds ?? [];
+  const confidence = confidenceCeiling(normalizeConfidence(value?.confidence, fallback.confidence ?? "medium"));
   return {
-    confidence: normalizeConfidence(value?.confidence, fallback.confidence ?? "medium"),
+    confidence: confidence === "high" && sourceIds.length === 0 ? "medium" : confidence,
     evidence: cleanText(value?.evidence, fallback.evidence),
     missingSignalPrompt:
       typeof value?.missingSignalPrompt === "string" ? value.missingSignalPrompt : fallback.missingSignalPrompt ?? null,
-    provenance: fallback.provenance,
-    sourceIds: fallback.sourceIds ?? [],
+    provenance: sourceIds.length > 0 ? "external_source" : fallback.provenance,
+    sourceIds,
   };
 }
 
@@ -241,17 +334,23 @@ function buildFounderEvidence(request: DraftRequestShape) {
 
 function buildDraftPrompt(request: DraftRequestShape, enrichment: DraftEnrichment) {
   const evidence = buildFounderEvidence(request);
-  const competitorBlock = enrichment.competitorLinks.length > 0
-    ? enrichment.competitorLinks.map((item) => `- ${item.name}${item.url ? ` (${item.url})` : ""}`).join("\n")
-    : "- No reliable competitor links were found from enrichment.";
+  // Split by whether we can actually cite the thing. The previous prompt listed
+  // model-recalled competitor names under a heading that called them "retrieved
+  // competitor pages", which invited the model to treat its own recall as
+  // external corroboration and rate its confidence accordingly.
+  const citableSources = enrichment.sources.filter((source) => Boolean(source.url));
+  const uncitedCompetitors = enrichment.competitorLinks.filter((item) => !item.url);
   const marketSignalBlock = enrichment.marketSignals.length > 0
     ? enrichment.marketSignals.map((signal) => `- ${signal}`).join("\n")
     : "- No external market signals were available for this run.";
-  const sourceBlock = enrichment.sources.length > 0
-    ? enrichment.sources
-        .map((source) => `- [${source.type}] ${source.title}${source.detail ? ` (${source.detail})` : ""}${source.url ? ` — ${source.url}` : ""}`)
+  const sourceBlock = citableSources.length > 0
+    ? citableSources
+        .map((source) => `- [${source.sourceId}] (${source.type}) ${source.title}${source.detail ? ` — ${source.detail}` : ""} — ${source.url}`)
         .join("\n")
-    : "- No real evidence sources were retrieved for this run.";
+    : "- Nothing was retrieved for this run. No section may claim high confidence.";
+  const uncitedBlock = uncitedCompetitors.length > 0
+    ? uncitedCompetitors.map((item) => `- ${item.name}`).join("\n")
+    : "- None.";
 
   return `You are generating a founder-ready ICP Draft strong enough to replace a paid strategy session.
 Return valid JSON only.
@@ -265,10 +364,23 @@ The draft must explicitly answer:
 Critical rules:
 - Every claim must be anchored in the founder evidence below.
 - Use the founder's own language when possible.
-- If evidence is insufficient, say so explicitly.
+- OMIT any field you cannot determine. Leave it out of the JSON entirely.
+  Do NOT write a sentence describing that the field is unknown, and do NOT
+  write filler like "this still needs to be clarified". An omitted field is
+  recorded as an open question and shown to the founder as one. A filler
+  sentence is indistinguishable from an answer and actively misleads them.
 - Never fake precision or fill a gap with vague startup language.
 - Competition must only name plausible direct competitors. If confidence is low, keep the list short or empty and explain what signal is missing.
 - Keep the document sharp and readable in under 5 minutes.
+
+Evidence rules:
+- Each "evidence" object must return "sourceIds": the ids of the retrieved
+  sources that support that section, drawn only from the RETRIEVED EVIDENCE
+  block below.
+- A section may only claim "confidence":"high" if its sourceIds is non-empty.
+  With no retrieved sources, the highest honest confidence is "medium", and
+  "low" where the founder gave you little to work with.
+- Never cite an id that is not listed, and never invent a URL.
 
 Return this exact JSON shape:
 {
@@ -294,7 +406,7 @@ Return this exact JSON shape:
       "whereToFind":["string"],
       "triggerContext":"string",
       "actionTrigger":"string",
-      "evidence":{"confidence":"high|medium|low","evidence":"string","missingSignalPrompt":"string|null"}
+      "evidence":{"confidence":"high|medium|low","evidence":"string","missingSignalPrompt":"string|null","sourceIds":["string"]}
     },
     "pain":{
       "quote":"string",
@@ -302,14 +414,14 @@ Return this exact JSON shape:
       "whyItHurts":"string",
       "triggerMoment":"string",
       "costOfInaction":"string",
-      "evidence":{"confidence":"high|medium|low","evidence":"string","missingSignalPrompt":"string|null"}
+      "evidence":{"confidence":"high|medium|low","evidence":"string","missingSignalPrompt":"string|null","sourceIds":["string"]}
     },
     "build":{
       "valueProposition":"string",
       "replaces":["string"],
       "coreFeatures":[{"title":"string","description":"string"}],
       "outcome":"string",
-      "evidence":{"confidence":"high|medium|low","evidence":"string","missingSignalPrompt":"string|null"}
+      "evidence":{"confidence":"high|medium|low","evidence":"string","missingSignalPrompt":"string|null","sourceIds":["string"]}
     },
     "moat":{
       "moatType":"string",
@@ -318,19 +430,49 @@ Return this exact JSON shape:
       "whyHardToCopy":"string",
       "incumbentGap":"string",
       "startupsToStudy":[{"name":"string","url":"string|null"}],
-      "evidence":{"confidence":"high|medium|low","evidence":"string","missingSignalPrompt":"string|null"}
+      "evidence":{"confidence":"high|medium|low","evidence":"string","missingSignalPrompt":"string|null","sourceIds":["string"]}
     },
     "competition":{
       "summary":"string",
       "directCompetitors":[{"name":"string","url":"string|null","doesWell":"string","gap":"string"}],
       "exploitableGap":"string",
-      "evidence":{"confidence":"high|medium|low","evidence":"string","missingSignalPrompt":"string|null"}
+      "evidence":{"confidence":"high|medium|low","evidence":"string","missingSignalPrompt":"string|null","sourceIds":["string"]}
     },
     "confidence":{"level":"high|medium|low","summary":"string","missingSignals":["string"]},
-    "nextActions":[{"title":"string","description":"string","route":"waitlist|pmf|mvp|gtm|mentor"}]
+    "nextActions":[{"title":"string","description":"string","route":"waitlist|pmf|mvp|gtm|mentor"}],
+    "viabilityAssessment":{
+      "painSeverity":{"score":0,"rationale":"string","basis":"evidence|inference","sourceIds":["string"]},
+      "willingnessToPay":{"score":0,"rationale":"string","basis":"evidence|inference","sourceIds":["string"]},
+      "competitiveIntensity":{"score":0,"rationale":"string","basis":"evidence|inference","sourceIds":["string"]},
+      "reachability":{"score":0,"rationale":"string","basis":"evidence|inference","sourceIds":["string"]},
+      "founderEdge":{"score":0,"rationale":"string","basis":"evidence|inference","sourceIds":["string"]}
+    }
   },
   "enrichment":{"contradictionFlag":boolean,"mentorDomain":"string|null"}
 }
+
+How to score viabilityAssessment (0-100 each, and be willing to score low):
+- These are a judgement about THIS BUSINESS, not about how complete the document
+  is. A low score is a useful, expected answer. Do not cluster everything in the
+  60-80 range. If the idea is weak, say so with the numbers.
+- painSeverity: how expensive and how frequent the problem is for the customer.
+  A mild annoyance people live with scores under 30 no matter how relatable it
+  is. Reserve 80+ for pain that already costs money, time, or customers today.
+- willingnessToPay: is there an existing budget line and a person who owns it?
+  Consumers paying out of pocket for a nice-to-have score under 30. A business
+  already paying for a worse tool scores high.
+- competitiveIntensity: INVERTED. Score LOW when the category is crowded and
+  commoditised, HIGH when the niche is genuinely underserved. A generic idea in
+  a saturated consumer category (habit trackers, meal planners, to-do apps,
+  budgeting apps) must score under 30.
+- reachability: can this exact segment be reached repeatedly and affordably
+  through a channel that already exists? "Everyone" is not reachable and scores
+  under 25. A segment that gathers in a known place scores high.
+- founderEdge: score on what the founder actually stated. If no specific
+  advantage was given, score under 20 and say that plainly in the rationale.
+  Do not invent an edge on their behalf.
+- basis must be "evidence" only when sourceIds is non-empty; otherwise
+  "inference".
 
 Rules for output quality:
 - The pain section must commit to one primary pain only.
@@ -359,17 +501,16 @@ Founder evidence:
 - Persona heavily edited by founder: ${evidence.personaEditedSignificantly ? "yes" : "no"}
 - Missing founder signals: ${evidence.missingSignals.length > 0 ? evidence.missingSignals.join(" | ") : "None"}
 
-Research enrichment:
-Competitor links:
-${competitorBlock}
-
-Market signals:
-${marketSignalBlock}
-
-Real evidence sources (verbatim community discussions and competitor pages retrieved for this run):
+RETRIEVED EVIDENCE (real, fetched for this run, safe to cite by id):
 ${sourceBlock}
 
-When real evidence sources are present, ground the pain quote, behaviors, "where to find them", and competitor claims in them, and prefer the customers' actual wording. Never invent a source or a URL that is not listed above.`;
+MODEL-RECALLED COMPETITORS (unverified, no source, DO NOT cite as evidence):
+${uncitedBlock}
+
+Market signals (derived from the retrieved evidence above):
+${marketSignalBlock}
+
+Ground the pain quote, behaviors, "where to find them", and competitor claims in the RETRIEVED EVIDENCE block, and prefer the customers' actual wording from it. Anything in the MODEL-RECALLED block may be discussed as background but must never be presented as retrieved evidence and must never appear in a sourceIds array. Never invent a source or a URL that is not listed above.`;
 }
 
 function buildDashboardContext(draftDocument: DraftDocument) {
@@ -426,19 +567,27 @@ function buildDashboardContext(draftDocument: DraftDocument) {
 
 function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEnrichment): DraftDocument {
   const overallConfidence = normalizeConfidence(parsed?.confidence?.level, "medium");
+  const { provenance, track } = createFieldTracker();
+  const citableSourceIds = enrichment.sources.filter((source) => Boolean(source.url)).map((source) => source.sourceId ?? "");
+  // With nothing retrieved, "high" cannot be earned. The prompt says so, but the
+  // prompt is a request and this is the guarantee.
+  const confidenceCeiling = (value: SectionConfidence): SectionConfidence =>
+    value === "high" && citableSourceIds.length === 0 ? "medium" : value;
 
-  return {
+  const document: DraftDocument = {
     gatePreview: {
       personaName: cleanText(parsed?.gatePreview?.personaName, cleanText(parsed?.customer?.personaName, "Ideal customer")),
       roleLine: cleanText(parsed?.gatePreview?.roleLine, cleanText(parsed?.customer?.roleLine, "Founder-aligned buyer")),
       painLine: cleanText(parsed?.gatePreview?.painLine, cleanText(parsed?.pain?.quote, "The core pain still needs sharper founder evidence.")),
     },
     decisionBrief: {
-      primarySegment: cleanText(
-        parsed?.decisionBrief?.primarySegment,
-        cleanText(parsed?.customer?.roleLine, "The best-fit early customer still needs to be narrowed."),
+      primarySegment: track(
+        "decisionBrief.primarySegment",
+        parsed?.decisionBrief?.primarySegment ?? parsed?.customer?.roleLine,
+        "The best-fit early customer still needs to be narrowed.",
       ),
-      nonFitSegment: cleanText(
+      nonFitSegment: track(
+        "decisionBrief.nonFitSegment",
         parsed?.decisionBrief?.nonFitSegment,
         "Adjacent customers without the same urgent trigger are not the first segment to serve.",
       ),
@@ -447,12 +596,16 @@ function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEn
           ? parsed.decisionBrief.rankedPains.filter((item: any) => item && typeof item === "object")
           : [];
         const item = candidates[index];
+        // The list is always padded to 3 so the layout is stable, but each slot
+        // records whether it was actually answered. Counting length alone was
+        // how "three ranked pains" became a check that could never fail.
         return {
           rank: index + 1,
-          pain: cleanText(
-            item?.pain,
+          pain: track(
+            `decisionBrief.rankedPains.${index}`,
+            item?.pain ?? (index === 0 ? parsed?.pain?.quote : null),
             index === 0
-              ? cleanText(parsed?.pain?.quote, "The primary pain still needs direct customer language.")
+              ? "The primary pain still needs direct customer language."
               : `Secondary pain ${index + 1} still needs interview evidence.`,
           ),
           evidence: cleanText(
@@ -463,15 +616,16 @@ function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEn
           ),
         };
       }),
-      buyingTrigger: cleanText(
-        parsed?.decisionBrief?.buyingTrigger,
-        cleanText(parsed?.customer?.actionTrigger, cleanText(parsed?.pain?.triggerMoment, "The buying trigger still needs validation.")),
+      buyingTrigger: track(
+        "decisionBrief.buyingTrigger",
+        parsed?.decisionBrief?.buyingTrigger ?? parsed?.customer?.actionTrigger ?? parsed?.pain?.triggerMoment,
+        "The buying trigger still needs validation.",
       ),
-      currentAlternative: cleanText(
-        parsed?.decisionBrief?.currentAlternative,
-        Array.isArray(parsed?.build?.replaces) && parsed.build.replaces[0]
-          ? String(parsed.build.replaces[0])
-          : "The current manual or competing alternative still needs to be named in interviews.",
+      currentAlternative: track(
+        "decisionBrief.currentAlternative",
+        parsed?.decisionBrief?.currentAlternative
+          ?? (Array.isArray(parsed?.build?.replaces) && parsed.build.replaces[0] ? String(parsed.build.replaces[0]) : null),
+        "The current manual or competing alternative still needs to be named in interviews.",
       ),
       reachableChannels: normalizeList(
         parsed?.decisionBrief?.reachableChannels ?? parsed?.customer?.whereToFind,
@@ -490,43 +644,43 @@ function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEn
         ];
         return {
           step: index + 1,
-          question: cleanText(item?.question, defaultQuestions[index]),
+          question: track(`decisionBrief.interviewValidationPlan.${index}`, item?.question, defaultQuestions[index]),
           successSignal: cleanText(item?.successSignal, "Capture a specific recent behavior, not a hypothetical preference."),
         };
       }),
     },
     customer: {
-      personaName: cleanText(parsed?.customer?.personaName, "Ideal customer"),
-      roleLine: cleanText(parsed?.customer?.roleLine, "Founder-aligned buyer"),
+      personaName: track("customer.personaName", parsed?.customer?.personaName, "Ideal customer"),
+      roleLine: track("customer.roleLine", parsed?.customer?.roleLine, "Founder-aligned buyer"),
       metaLine: cleanText(parsed?.customer?.metaLine, ""),
-      summary: cleanText(parsed?.customer?.summary, "The customer profile still needs a more specific description."),
+      summary: track("customer.summary", parsed?.customer?.summary, "The customer profile still needs a more specific description."),
       behaviors: normalizeList(parsed?.customer?.behaviors, 4),
       motivations: normalizeList(parsed?.customer?.motivations, 3),
       whereToFind: normalizeList(parsed?.customer?.whereToFind, 5),
-      triggerContext: cleanText(parsed?.customer?.triggerContext, "The trigger context still needs clearer founder evidence."),
-      actionTrigger: cleanText(parsed?.customer?.actionTrigger, "The specific buying trigger still needs to be clarified."),
+      triggerContext: track("customer.triggerContext", parsed?.customer?.triggerContext, "The trigger context still needs clearer founder evidence."),
+      actionTrigger: track("customer.actionTrigger", parsed?.customer?.actionTrigger, "The specific buying trigger still needs to be clarified."),
       evidence: buildSectionEvidence(parsed?.customer?.evidence, {
         confidence: overallConfidence,
         evidence: "Customer profile grounded in the founder evidence provided.",
         missingSignalPrompt: "What moment makes this customer actively search for a better solution?",
         provenance: "founder_input",
-      }),
+      }, citableSourceIds, confidenceCeiling),
     },
     pain: {
-      quote: cleanText(parsed?.pain?.quote, "The founder still needs to name one pain sharp enough to build around."),
-      rootCause: cleanText(parsed?.pain?.rootCause, "The root cause still needs a sharper explanation."),
-      whyItHurts: cleanText(parsed?.pain?.whyItHurts, "The consequence of this pain still needs clearer detail."),
-      triggerMoment: cleanText(parsed?.pain?.triggerMoment, "The trigger moment still needs a clearer founder example."),
-      costOfInaction: cleanText(parsed?.pain?.costOfInaction, "The cost of leaving this pain unsolved still needs to be made explicit."),
+      quote: track("pain.quote", parsed?.pain?.quote, "The founder still needs to name one pain sharp enough to build around."),
+      rootCause: track("pain.rootCause", parsed?.pain?.rootCause, "The root cause still needs a sharper explanation."),
+      whyItHurts: track("pain.whyItHurts", parsed?.pain?.whyItHurts, "The consequence of this pain still needs clearer detail."),
+      triggerMoment: track("pain.triggerMoment", parsed?.pain?.triggerMoment, "The trigger moment still needs a clearer founder example."),
+      costOfInaction: track("pain.costOfInaction", parsed?.pain?.costOfInaction, "The cost of leaving this pain unsolved still needs to be made explicit."),
       evidence: buildSectionEvidence(parsed?.pain?.evidence, {
         confidence: overallConfidence,
         evidence: "Pain diagnosis grounded in the founder's pain and workaround inputs.",
         missingSignalPrompt: "Describe one recent moment where this pain caused delay, lost trust, or lost money.",
         provenance: "founder_input",
-      }),
+      }, citableSourceIds, confidenceCeiling),
     },
     build: {
-      valueProposition: cleanText(parsed?.build?.valueProposition, "The first product promise still needs to be made more concrete."),
+      valueProposition: track("build.valueProposition", parsed?.build?.valueProposition, "The first product promise still needs to be made more concrete."),
       replaces: normalizeList(parsed?.build?.replaces, 4),
       coreFeatures: Array.isArray(parsed?.build?.coreFeatures)
         ? parsed.build.coreFeatures
@@ -537,20 +691,20 @@ function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEn
               description: cleanText(item?.description, "Translate the customer pain into one decisive capability."),
             }))
         : [],
-      outcome: cleanText(parsed?.build?.outcome, "The immediate customer outcome still needs a sharper articulation."),
+      outcome: track("build.outcome", parsed?.build?.outcome, "The immediate customer outcome still needs a sharper articulation."),
       evidence: buildSectionEvidence(parsed?.build?.evidence, {
         confidence: overallConfidence,
         evidence: "Build recommendation grounded in the founder's stated problem and solution direction.",
         missingSignalPrompt: "What should the customer stop doing manually once this product works?",
         provenance: "model_inference",
-      }),
+      }, citableSourceIds, confidenceCeiling),
     },
     moat: {
       moatType: cleanText(parsed?.moat?.moatType, "Founder advantage"),
-      edge: cleanText(parsed?.moat?.edge, "The founder advantage still needs a clearer niche-specific explanation."),
-      edgeSource: cleanText(parsed?.moat?.edgeSource, "The source of the advantage is not yet explicit enough."),
-      whyHardToCopy: cleanText(parsed?.moat?.whyHardToCopy, "Why this advantage is hard to copy still needs stronger proof."),
-      incumbentGap: cleanText(parsed?.moat?.incumbentGap, "The incumbent gap still needs to be stated more sharply."),
+      edge: track("moat.edge", parsed?.moat?.edge, "The founder advantage still needs a clearer niche-specific explanation."),
+      edgeSource: track("moat.edgeSource", parsed?.moat?.edgeSource, "The source of the advantage is not yet explicit enough."),
+      whyHardToCopy: track("moat.whyHardToCopy", parsed?.moat?.whyHardToCopy, "Why this advantage is hard to copy still needs stronger proof."),
+      incumbentGap: track("moat.incumbentGap", parsed?.moat?.incumbentGap, "The incumbent gap still needs to be stated more sharply."),
       startupsToStudy: Array.isArray(parsed?.moat?.startupsToStudy)
         ? parsed.moat.startupsToStudy
             .filter((item: any) => item && typeof item === "object" && typeof item.name === "string")
@@ -565,40 +719,54 @@ function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEn
         evidence: "Moat statement grounded in the founder's edge and workflow positioning.",
         missingSignalPrompt: "What access, trust, distribution, or lived insight do you have that others do not?",
         provenance: "model_inference",
-      }),
+      }, citableSourceIds, confidenceCeiling),
     },
     competition: {
-      summary: cleanText(parsed?.competition?.summary, "The competitive landscape still needs more signal before it can be stated confidently."),
+      summary: track("competition.summary", parsed?.competition?.summary, "The competitive landscape still needs more signal before it can be stated confidently."),
+      // Retrieved competitors carry a URL and can be verified. Model-recalled
+      // ones cannot, and are kept only as unlinked background: scoring counts
+      // the linked ones, so recall alone can no longer earn differentiation
+      // credit the way an invented list used to.
       directCompetitors: Array.isArray(parsed?.competition?.directCompetitors)
         ? parsed.competition.directCompetitors
             .filter((item: any) => item && typeof item === "object" && typeof item.name === "string")
             .slice(0, 3)
-            .map((item: any) => ({
-              name: cleanText(item?.name, "Competitor"),
-              url: typeof item?.url === "string" && item.url.trim().length > 0 ? item.url : null,
-              doesWell: cleanText(item?.doesWell, "Recognized alternative in the broader category."),
-              gap: cleanText(item?.gap, "The niche-specific gap still needs clearer evidence."),
-            }))
+            .map((item: any) => {
+              const name = cleanText(item?.name, "Competitor");
+              const retrieved = enrichment.competitorLinks.find(
+                (link) => link.url && link.name.toLowerCase() === name.toLowerCase(),
+              );
+              const claimed = typeof item?.url === "string" && item.url.trim().length > 0 ? item.url.trim() : null;
+              return {
+                name,
+                // Prefer the URL we actually fetched. Only accept the model's
+                // own URL when it matches something in the retrieved set.
+                url: retrieved?.url
+                  ?? (claimed && enrichment.sources.some((source) => source.url === claimed) ? claimed : null),
+                doesWell: cleanText(item?.doesWell, "Recognized alternative in the broader category."),
+                gap: cleanText(item?.gap, "The niche-specific gap still needs clearer evidence."),
+              };
+            })
         : enrichment.competitorLinks.slice(0, 3).map((item) => ({
             name: item.name,
             url: item.url,
             doesWell: "Recognized alternative in the broader category.",
             gap: "The niche-specific gap still needs clearer evidence.",
           })),
-      exploitableGap: cleanText(parsed?.competition?.exploitableGap, "The exploitable competitive gap still needs clearer founder or market evidence."),
+      exploitableGap: track("competition.exploitableGap", parsed?.competition?.exploitableGap, "The exploitable competitive gap still needs clearer founder or market evidence."),
       evidence: buildSectionEvidence(parsed?.competition?.evidence, {
         confidence: overallConfidence === "low" ? "low" : "medium",
         evidence:
-          enrichment.marketSignals.length > 0 || enrichment.competitorLinks.length > 0
-            ? "Competition informed by founder evidence plus targeted market-signal enrichment."
+          citableSourceIds.length > 0
+            ? "Competition informed by founder evidence plus retrieved community and competitor sources."
             : "Competition inferred from founder evidence only; treat this section as provisional.",
         missingSignalPrompt: "Name the tools, services, or manual alternatives this customer uses today so the competitive landscape can be sharpened.",
-        provenance: enrichment.sources.some((source) => Boolean(source.url)) ? "external_source" : "model_inference",
-        sourceIds: enrichment.sources.filter((source) => Boolean(source.url)).map((source) => source.sourceId ?? ""),
-      }),
+        provenance: citableSourceIds.length > 0 ? "external_source" : "model_inference",
+        sourceIds: citableSourceIds,
+      }, citableSourceIds, confidenceCeiling),
     },
     confidence: {
-      level: overallConfidence,
+      level: confidenceCeiling(overallConfidence),
       summary: cleanText(parsed?.confidence?.summary, "This draft should be treated as directional until stronger founder evidence is added."),
       missingSignals: normalizeList(parsed?.confidence?.missingSignals, 5),
     },
@@ -615,7 +783,11 @@ function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEn
     // Citations are attached deterministically from real retrieved evidence so
     // they always render, regardless of what the model echoes back.
     sources: enrichment.sources.slice(0, 8),
+    viabilityAssessment: normalizeViabilityAssessment(parsed?.viabilityAssessment, citableSourceIds),
+    fieldProvenance: provenance,
   };
+
+  return document;
 }
 
 export async function generateIcpDraftArtifact({

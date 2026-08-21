@@ -1,4 +1,8 @@
-import type { IcpDraftDocument } from "@/lib/icpBuilderSession";
+import type {
+  IcpDraftDocument,
+  IcpViabilityAssessment,
+  IcpViabilityDimensionKey,
+} from "@/lib/icpBuilderSession";
 
 export type IcpPreviewExplainerKey = "customer" | "pain" | "build" | "moat";
 
@@ -19,6 +23,59 @@ export interface IcpSamplePreviewProfile {
   label: string;
   draft: IcpDraftDocument;
 }
+
+
+/**
+ * These samples are hand-authored and complete, so every field is a real
+ * answer. Spelling that out keeps the preview honest: the folio marks
+ * unanswered fields as open questions, and a sample with no provenance map
+ * would fall back to legacy scoring and hide the viability breakdown that the
+ * preview is meant to show off.
+ */
+const ANSWERED_PATHS = [
+  'decisionBrief.primarySegment',
+  'decisionBrief.nonFitSegment',
+  'decisionBrief.rankedPains.0',
+  'decisionBrief.rankedPains.1',
+  'decisionBrief.rankedPains.2',
+  'decisionBrief.buyingTrigger',
+  'decisionBrief.currentAlternative',
+  'decisionBrief.interviewValidationPlan.0',
+  'decisionBrief.interviewValidationPlan.1',
+  'decisionBrief.interviewValidationPlan.2',
+  'decisionBrief.interviewValidationPlan.3',
+  'decisionBrief.interviewValidationPlan.4',
+  'customer.personaName',
+  'customer.roleLine',
+  'customer.summary',
+  'customer.triggerContext',
+  'customer.actionTrigger',
+  'pain.quote',
+  'pain.rootCause',
+  'pain.whyItHurts',
+  'pain.triggerMoment',
+  'pain.costOfInaction',
+  'build.valueProposition',
+  'build.outcome',
+  'moat.edge',
+  'moat.edgeSource',
+  'moat.whyHardToCopy',
+  'moat.incumbentGap',
+  'competition.summary',
+  'competition.exploitableGap',
+] as const;
+
+const sampleFieldProvenance = (): IcpDraftDocument['fieldProvenance'] =>
+  Object.fromEntries(ANSWERED_PATHS.map((path) => [path, 'model' as const]));
+
+const sampleViability = (
+  scores: Record<IcpViabilityDimensionKey, number>,
+  rationales: Record<IcpViabilityDimensionKey, string>,
+): IcpViabilityAssessment =>
+  (Object.keys(scores) as IcpViabilityDimensionKey[]).reduce((assessment, key) => {
+    assessment[key] = { score: scores[key], rationale: rationales[key], basis: 'evidence', sourceIds: [] };
+    return assessment;
+  }, {} as IcpViabilityAssessment);
 
 const aiPoweredPersonalFinanceCoachDraft: IcpDraftDocument = {
   gatePreview: {
@@ -201,6 +258,23 @@ const aiPoweredPersonalFinanceCoachDraft: IcpDraftDocument = {
       route: "/mvp-builder",
     },
   ],
+  fieldProvenance: sampleFieldProvenance(),
+  viabilityAssessment: sampleViability(
+    {
+        "painSeverity": 72,
+        "willingnessToPay": 58,
+        "competitiveIntensity": 34,
+        "reachability": 66,
+        "founderEdge": 61
+    },
+    {
+        "painSeverity": "Money anxiety recurs monthly and already costs these households in missed savings and late fees.",
+        "willingnessToPay": "They already pay for budgeting apps, so a budget line exists, but it is small and personal.",
+        "competitiveIntensity": "Personal finance apps are a crowded consumer category; the coaching angle is the only real opening.",
+        "reachability": "Concentrated in personal-finance communities and creator audiences that can be reached repeatedly.",
+        "founderEdge": "Behavioural coaching model is specific, though it is not yet hard for an incumbent to copy."
+    },
+  ),
 };
 
 const creatorAnalyticsGrowthPlatformDraft: IcpDraftDocument = {
@@ -384,6 +458,23 @@ const creatorAnalyticsGrowthPlatformDraft: IcpDraftDocument = {
       route: "/mvp-builder",
     },
   ],
+  fieldProvenance: sampleFieldProvenance(),
+  viabilityAssessment: sampleViability(
+    {
+        "painSeverity": 68,
+        "willingnessToPay": 74,
+        "competitiveIntensity": 41,
+        "reachability": 78,
+        "founderEdge": 55
+    },
+    {
+        "painSeverity": "Cross-platform reporting is a weekly time sink that directly delays sponsorship revenue.",
+        "willingnessToPay": "Creators nearing full-time income already buy tooling and treat it as a business cost.",
+        "competitiveIntensity": "Several analytics tools exist, but few connect the data to revenue decisions for solo creators.",
+        "reachability": "Creators cluster publicly and talk about their stack, so reaching them is cheap and repeatable.",
+        "founderEdge": "The revenue-linked framing is differentiated, but the underlying data is available to anyone."
+    },
+  ),
 };
 
 const sustainabilityComplianceConsultingDraft: IcpDraftDocument = {
@@ -567,6 +658,23 @@ const sustainabilityComplianceConsultingDraft: IcpDraftDocument = {
       route: "/mvp-builder",
     },
   ],
+  fieldProvenance: sampleFieldProvenance(),
+  viabilityAssessment: sampleViability(
+    {
+        "painSeverity": 81,
+        "willingnessToPay": 86,
+        "competitiveIntensity": 57,
+        "reachability": 49,
+        "founderEdge": 70
+    },
+    {
+        "painSeverity": "Reporting deadlines are externally imposed and carry regulatory and contractual consequences.",
+        "willingnessToPay": "Compliance is an owned budget line with an accountable executive, which is the strongest buying signal here.",
+        "competitiveIntensity": "Big-four incumbents serve the top end and leave mid-market firms underserved.",
+        "reachability": "Buyers are dispersed across industries and reachable mainly through slow, relationship-led channels.",
+        "founderEdge": "Regulatory depth in a niche is genuinely hard to copy quickly."
+    },
+  ),
 };
 
 const aiVoiceAssistantForSeniorsDraft: IcpDraftDocument = {
@@ -750,6 +858,23 @@ const aiVoiceAssistantForSeniorsDraft: IcpDraftDocument = {
       route: "/mvp-builder",
     },
   ],
+  fieldProvenance: sampleFieldProvenance(),
+  viabilityAssessment: sampleViability(
+    {
+        "painSeverity": 76,
+        "willingnessToPay": 63,
+        "competitiveIntensity": 52,
+        "reachability": 38,
+        "founderEdge": 47
+    },
+    {
+        "painSeverity": "Isolation and missed medication carry real health consequences, and families feel the pain acutely.",
+        "willingnessToPay": "Adult children pay on the senior behalf, which works, but the purchase is emotional and episodic.",
+        "competitiveIntensity": "General voice assistants exist but are not designed for this cohort, leaving a real gap.",
+        "reachability": "The buyer and the user are different people, and neither gathers in an obvious low-cost channel.",
+        "founderEdge": "Accessibility-first design is a credible edge but not yet backed by proprietary access or data."
+    },
+  ),
 };
 
 export const SAMPLE_ICP_PREVIEW_SAMPLES: IcpSamplePreviewProfile[] = [

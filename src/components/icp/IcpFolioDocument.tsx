@@ -9,9 +9,10 @@ import {
   useState,
 } from "react";
 
-import { ExternalLink, Lock } from "lucide-react";
+import { ChevronDown, ExternalLink, HelpCircle, Lock } from "lucide-react";
 
-import type { IcpDraftDocument } from "@/lib/icpBuilderSession";
+import type { IcpDraftDocument, IcpViabilityDimensionKey } from "@/lib/icpBuilderSession";
+import { fieldIsReal } from "@/lib/icpFieldProvenance";
 import { computeViabilityScore, type ViabilityBand } from "@/lib/icpViabilityScore";
 
 type IcpFolioTone = "folio" | "platformPreview" | "landingPreview";
@@ -158,15 +159,23 @@ const VIABILITY_BAND_STYLES: Record<ViabilityBand, { frame: string; value: strin
  * number reads as a verdict on the idea rather than on the document.
  *
  * The one-line summary underneath is not decoration: an unexplained score
- * invites the reader to dismiss it, and naming the weakest pillar turns
+ * invites the reader to dismiss it, and naming the weakest driver turns
  * curiosity about the number into a reason to read the section it points at.
+ *
+ * The breakdown expands rather than sitting open, because the number is the
+ * headline and five bars beside the founder's sentence would bury it. It is
+ * rendered here rather than in the moat section on purpose: two of the sections
+ * feeding the score are gated for logged-out readers, and a verdict a reader
+ * cannot audit is worth less than no verdict.
  */
 function ViabilityBadge({ draft }: { draft: IcpDraftDocument }) {
-  const { score, label, band, summary } = useMemo(() => computeViabilityScore(draft), [draft]);
+  const result = useMemo(() => computeViabilityScore(draft), [draft]);
+  const { score, label, band, summary, dimensions, pillars, rigor, basis } = result;
   const styles = VIABILITY_BAND_STYLES[band];
+  const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className={`w-full shrink-0 rounded-2xl border px-4 py-3 sm:w-52 ${styles.frame}`}>
+    <div className={`w-full shrink-0 rounded-2xl border px-4 py-3 sm:w-60 ${styles.frame}`}>
       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-foreground/60">
         Viability
       </p>
@@ -176,7 +185,90 @@ function ViabilityBadge({ draft }: { draft: IcpDraftDocument }) {
       </p>
       <p className={`mt-1.5 text-sm font-semibold ${styles.label}`}>{label}</p>
       <p className="mt-2 text-xs leading-5 text-foreground/60">{summary}</p>
+
+      {basis === "full" && dimensions.length > 0 ? (
+        <>
+          <button
+            type="button"
+            onClick={() => setExpanded((value) => !value)}
+            aria-expanded={expanded}
+            className="mt-3 flex w-full items-center justify-between gap-2 rounded-pill-sm text-xs font-semibold text-foreground/70 transition-colors hover:text-foreground"
+          >
+            How this is scored
+            <ChevronDown className={`icon-sm transition-transform ${expanded ? "rotate-180" : ""}`} />
+          </button>
+          {expanded ? (
+            <div className="mt-3 space-y-2.5 border-t border-border/60 pt-3" data-icp-viability-breakdown>
+              {dimensions.map((dimension) => (
+                <ViabilityMeter
+                  key={dimension.key}
+                  label={dimension.label}
+                  ratio={dimension.ratio}
+                  detail={draft.viabilityAssessment?.[dimension.key as IcpViabilityDimensionKey]?.rationale}
+                />
+              ))}
+              <div className="border-t border-border/60 pt-2.5">
+                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-foreground/50">
+                  Evidence quality
+                </p>
+                <p className="mt-1 text-xs leading-5 text-foreground/60">
+                  These do not raise the verdict. They hold it down when the draft rests on
+                  assumption, currently at {Math.round(rigor * 100)}%.
+                </p>
+                <div className="mt-2 space-y-2">
+                  {pillars.map((pillar) => (
+                    <ViabilityMeter key={pillar.key} label={pillar.label} ratio={pillar.ratio} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </>
+      ) : null}
     </div>
+  );
+}
+
+function ViabilityMeter({ label, ratio, detail }: { label: string; ratio: number; detail?: string }) {
+  const percent = Math.round(ratio * 100);
+  // One ramp for every meter so a reader can compare bars across the two
+  // groups without decoding a second colour language.
+  const tone = percent >= 65 ? "bg-success" : percent >= 35 ? "bg-warning" : "bg-destructive";
+
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-2">
+        <p className="text-xs font-medium capitalize text-foreground/75">{label}</p>
+        <p className="text-xs tabular-nums text-foreground/55">{percent}</p>
+      </div>
+      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-pill-sm bg-foreground/10">
+        <div className={`h-full rounded-pill-sm ${tone}`} style={{ width: `${Math.max(percent, 2)}%` }} />
+      </div>
+      {detail ? <p className="mt-1 text-[0.7rem] leading-4 text-foreground/55">{detail}</p> : null}
+    </div>
+  );
+}
+
+/**
+ * A field the model never answered, shown as the open question it is.
+ *
+ * The generator backfills unanswered fields with prose that describes the gap
+ * ("The incumbent gap still needs to be stated more sharply"). Rendered in the
+ * same weight as everything around it, that reads as a finding, and a founder
+ * scanning the page cannot tell which lines are conclusions and which are
+ * holes. Same words, demoted, plus a label that says which it is.
+ */
+function DraftValue({ draft, path, value }: { draft: IcpDraftDocument; path: string; value: string }) {
+  if (fieldIsReal(draft, path)) return <>{value}</>;
+
+  return (
+    <span className="flex flex-col items-start gap-1.5">
+      <span className="inline-flex items-center gap-1.5 rounded-pill-sm border border-border/70 px-2 py-0.5 text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-foreground/55">
+        <HelpCircle className="icon-sm" aria-hidden />
+        Open question
+      </span>
+      <span className="italic text-foreground/55">{value}</span>
+    </span>
   );
 }
 
@@ -804,16 +896,18 @@ export function IcpFolioDocument({
 
           <dl className="mt-8 grid gap-6 sm:grid-cols-2">
             {[
-              { label: "Root cause", value: draft.pain.rootCause },
-              { label: "Why it hurts", value: draft.pain.whyItHurts },
-              { label: "Trigger moment", value: draft.pain.triggerMoment },
-              { label: "Cost of inaction", value: draft.pain.costOfInaction },
+              { label: "Root cause", value: draft.pain.rootCause, path: "pain.rootCause" },
+              { label: "Why it hurts", value: draft.pain.whyItHurts, path: "pain.whyItHurts" },
+              { label: "Trigger moment", value: draft.pain.triggerMoment, path: "pain.triggerMoment" },
+              { label: "Cost of inaction", value: draft.pain.costOfInaction, path: "pain.costOfInaction" },
             ].map((item) => (
               <div key={item.label}>
                 <dt className="text-sm font-semibold text-foreground dark:text-foreground/88">
                   {item.label}
                 </dt>
-                <dd className="mt-2 text-sm leading-7 text-foreground">{item.value}</dd>
+                <dd className="mt-2 text-sm leading-7 text-foreground">
+                  <DraftValue draft={draft} path={item.path} value={item.value} />
+                </dd>
               </div>
             ))}
           </dl>
@@ -928,7 +1022,7 @@ export function IcpFolioDocument({
                   Why it is hard to copy
                 </dt>
                 <dd className="mt-2 text-sm leading-7 text-foreground">
-                  {draft.moat.whyHardToCopy}
+                  <DraftValue draft={draft} path="moat.whyHardToCopy" value={draft.moat.whyHardToCopy} />
                 </dd>
               </div>
             </dl>
@@ -938,7 +1032,7 @@ export function IcpFolioDocument({
                 Why incumbents miss it
               </h3>
               <p className="mt-2 text-sm leading-7 text-foreground">
-                {draft.moat.incumbentGap}
+                <DraftValue draft={draft} path="moat.incumbentGap" value={draft.moat.incumbentGap} />
               </p>
             </div>
 
@@ -1019,7 +1113,7 @@ export function IcpFolioDocument({
                 Gap to exploit
               </h3>
               <p className="mt-2 text-sm leading-7 text-foreground">
-                {draft.competition.exploitableGap}
+                <DraftValue draft={draft} path="competition.exploitableGap" value={draft.competition.exploitableGap} />
               </p>
             </div>
 
@@ -1061,19 +1155,19 @@ export function IcpFolioDocument({
           <dl className="mt-6 grid gap-5 sm:grid-cols-2">
             <div>
               <dt className="text-sm font-semibold text-foreground">Primary segment</dt>
-              <dd className="mt-1 text-sm leading-6 text-foreground/75">{draft.decisionBrief.primarySegment}</dd>
+              <dd className="mt-1 text-sm leading-6 text-foreground/75"><DraftValue draft={draft} path="decisionBrief.primarySegment" value={draft.decisionBrief.primarySegment} /></dd>
             </div>
             <div>
               <dt className="text-sm font-semibold text-foreground">Not the first segment</dt>
-              <dd className="mt-1 text-sm leading-6 text-foreground/75">{draft.decisionBrief.nonFitSegment}</dd>
+              <dd className="mt-1 text-sm leading-6 text-foreground/75"><DraftValue draft={draft} path="decisionBrief.nonFitSegment" value={draft.decisionBrief.nonFitSegment} /></dd>
             </div>
             <div>
               <dt className="text-sm font-semibold text-foreground">Buying trigger</dt>
-              <dd className="mt-1 text-sm leading-6 text-foreground/75">{draft.decisionBrief.buyingTrigger}</dd>
+              <dd className="mt-1 text-sm leading-6 text-foreground/75"><DraftValue draft={draft} path="decisionBrief.buyingTrigger" value={draft.decisionBrief.buyingTrigger} /></dd>
             </div>
             <div>
               <dt className="text-sm font-semibold text-foreground">Current alternative</dt>
-              <dd className="mt-1 text-sm leading-6 text-foreground/75">{draft.decisionBrief.currentAlternative}</dd>
+              <dd className="mt-1 text-sm leading-6 text-foreground/75"><DraftValue draft={draft} path="decisionBrief.currentAlternative" value={draft.decisionBrief.currentAlternative} /></dd>
             </div>
           </dl>
 

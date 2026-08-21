@@ -12,6 +12,8 @@ import {
   type FastInput,
   type GuidedInput,
 } from "../_shared/icp-draft.ts";
+import { gatherIcpEvidence } from "../_shared/icp-evidence.ts";
+import { computeIcpViabilityScore } from "../_shared/icp-viability-score.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -110,6 +112,8 @@ function validateGuidedInput(input: GuidedInput | null | undefined) {
 // the path still has to be bounded. Mirrors demo-studio-generator.
 const PREVIEW_RATE_LIMIT_PER_MIN = 5;
 const FIRST_SLICE_TIMEOUT_MS = 10_000;
+/** Retrieval budget. The draft generator itself gets a separate 38s ceiling. */
+const ENRICHMENT_BUDGET_MS = 15_000;
 
 function getClientIp(req: Request): string {
   const forwarded = req.headers.get("x-forwarded-for") || "";
@@ -313,109 +317,69 @@ Startup idea:
 ${seed}`;
 }
 
-async function fetchMarketSignals(serviceClient: any, req: Request, request: DraftRequestShape) {
-  const authHeader = req.headers.get("Authorization") || "";
-  if (!authHeader) {
-    return { marketSignals: [] as string[], competitors: [] as Array<{ name: string; url: string | null }>, sources: [] as DraftSource[] };
-  }
+/**
+ * Retrieve real, citable evidence for a draft.
+ *
+ * Previously this cross-invoked market-validation-engine, which requires an
+ * authenticated user and 10 credits. Every logged-out Hero run therefore got a
+ * 401 and generated its draft with zero sources, which capped its evidence
+ * score and made the same idea score a full point lower than when signed in.
+ * The shared retrieval module needs neither auth nor credits, so both paths
+ * now get the same grounding.
+ */
+async function fetchMarketSignals(request: DraftRequestShape) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  const empty = () => ({
+    marketSignals: [] as string[],
+    competitors: [] as Array<{ name: string; url: string | null }>,
+    sources: [] as DraftSource[],
+  });
+  if (!supabaseUrl || !serviceRoleKey) return empty();
+
+  const description =
+    request.entryMode === "guided"
+      ? [request.guidedInput?.seed, request.guidedInput?.pain].filter(Boolean).join(". ")
+      : request.fastInput?.description || "";
+  const audienceHint =
+    request.entryMode === "guided"
+      ? request.guidedInput?.specificity || request.guidedInput?.persona?.role || ""
+      : "";
 
   try {
-    const businessIdea =
-      request.entryMode === "guided"
-        ? request.guidedInput?.seed || ""
-        : request.fastInput?.description || "";
-    const targetMarket =
-      request.entryMode === "guided"
-        ? request.guidedInput?.specificity || request.guidedInput?.persona.role
-        : "";
+    const evidence = await gatherIcpEvidence({
+      description,
+      audienceHint,
+      // Bounded so a slow retrieval can never eat the draft-generation budget
+      // and push the client into its own timeout.
+      deadlineAt: Date.now() + ENRICHMENT_BUDGET_MS,
+      supabaseUrl,
+      serviceRoleKey,
+    });
 
-    // Enrichment is optional. Cap it so a slow market-validation call can never
-    // eat the draft-generation budget and push the client into a timeout.
-    const validationResponse = await Promise.race([
-      serviceClient.functions.invoke("market-validation-engine", {
-        body: {
-          business_idea: businessIdea,
-          target_market: targetMarket,
-        },
-        headers: {
-          Authorization: authHeader,
-        },
-      }),
-      new Promise<{ data: null }>((resolve) => setTimeout(() => resolve({ data: null }), 10000)),
-    ]);
+    if (evidence.sources.length === 0) {
+      console.warn("ICP analyzer retrieved no evidence", evidence.diagnostics);
+    }
 
-    const score = (validationResponse as { data?: { validation_score?: any } })?.data?.validation_score;
-    const competitors = (score?.top_competitors || [])
-      .slice(0, 3)
-      .map((item: any) => ({
-        name: item?.name || "",
-        url: item?.website || null,
-      }))
-      .filter((item: { name: string; url: string | null }) => item.name);
-    const marketSignals = [
-      ...(score?.top_competitors || []).slice(0, 3).map((item: any) => item?.name).filter(Boolean),
-      ...(score?.reddit_discussions || []).slice(0, 2).map((item: any) => item?.title).filter(Boolean),
-      ...(score?.competitor_gaps || [])
-        .slice(0, 2)
-        .map((item: any) =>
-          typeof item === "string"
-            ? item
-            : item?.gap_description || item?.gap || item?.category,
-        )
-        .filter(Boolean),
-    ];
-
-    // Real, citable evidence: verbatim community discussions + competitor pages,
-    // each kept with its source URL so the draft can cite where claims come from.
-    const sources: DraftSource[] = [
-      ...(score?.reddit_discussions || [])
-        .slice(0, 5)
-        .map((item: any): DraftSource | null => {
-          const title = typeof item?.title === "string" ? item.title.trim() : "";
-          if (!title) return null;
-          const sub = item?.subreddit ? `r/${item.subreddit}` : null;
-          const upvotes = typeof item?.upvotes === "number" ? `${item.upvotes} upvotes` : null;
-          const detail = [sub, upvotes].filter(Boolean).join(" · ") || null;
-          return {
-            type: "community",
-            title,
-            url: typeof item?.url === "string" && item.url.trim() ? item.url : null,
-            detail,
-          };
-        })
-        .filter((item: DraftSource | null): item is DraftSource => Boolean(item)),
-      ...(score?.top_competitors || [])
-        .slice(0, 4)
-        .map((item: any): DraftSource | null => {
-          const name = typeof item?.name === "string" ? item.name.trim() : "";
-          if (!name) return null;
-          return {
-            type: "competitor",
-            title: name,
-            url: typeof item?.website === "string" && item.website.trim() ? item.website : null,
-            detail: "Competitor",
-          };
-        })
-        .filter((item: DraftSource | null): item is DraftSource => Boolean(item)),
-    ];
-
-    return { marketSignals, competitors, sources };
+    return {
+      marketSignals: evidence.marketSignals,
+      competitors: evidence.competitors,
+      sources: evidence.sources,
+    };
   } catch (error) {
-    console.warn("ICP analyzer enrichment failed, continuing without market signals", error);
-    return { marketSignals: [] as string[], competitors: [] as Array<{ name: string; url: string | null }>, sources: [] as DraftSource[] };
+    console.warn("ICP analyzer enrichment failed, continuing without evidence", error);
+    return empty();
   }
 }
 
 async function generateAndPersistHeroDeep({
   serviceClient,
   openaiApiKey,
-  req,
   artifactId,
   description,
 }: {
   serviceClient: any;
   openaiApiKey: string;
-  req: Request;
   artifactId: string;
   description: string;
 }) {
@@ -425,7 +389,7 @@ async function generateAndPersistHeroDeep({
   };
 
   try {
-    const enrichment = await fetchMarketSignals(serviceClient, req, request);
+    const enrichment = await fetchMarketSignals(request);
     const generated = await generateIcpDraftArtifact({
       openaiApiKey,
       request,
@@ -483,13 +447,21 @@ function buildStoredArtifactPayload(artifact: Record<string, any>) {
     artifact?.founderInputs?.mode === "guided"
       ? artifact?.founderInputs?.guided?.specificity || artifact?.founderInputs?.guided?.persona?.role || artifact?.draftDocument?.customer?.roleLine || null
       : artifact?.draftDocument?.customer?.roleLine || null;
-  const confidenceLevel = artifact?.draftDocument?.confidence?.level;
+  /*
+   * The stored score is the same number the founder sees on the badge.
+   *
+   * It used to be an 82/64/41 ladder keyed off the single overall confidence
+   * token, which meant the dashboard and the draft could show two different
+   * verdicts for the same artifact, and neither one read the idea.
+   */
+  const draftDocument = artifact?.draftDocument;
+  const viability = draftDocument ? computeIcpViabilityScore(draftDocument) : null;
 
   return {
     businessDescription,
     targetAudience,
-    nicheScore: confidenceLevel === "high" ? 82 : confidenceLevel === "medium" ? 64 : 41,
-    verdict: confidenceLevel === "high" ? "Highly Viable" : confidenceLevel === "medium" ? "Promising" : "Needs Refinement",
+    nicheScore: viability ? Math.round(viability.score * 10) : 41,
+    verdict: viability ? viability.label : "Needs work",
   };
 }
 
@@ -674,7 +646,6 @@ serve(async (req) => {
       const deepPromise = generateAndPersistHeroDeep({
         serviceClient,
         openaiApiKey,
-        req,
         artifactId,
         description: payload.description,
       }).catch((error) => {
@@ -790,7 +761,6 @@ serve(async (req) => {
           EdgeRuntime.waitUntil(generateAndPersistHeroDeep({
             serviceClient,
             openaiApiKey,
-            req,
             artifactId: guest.id,
             description: inputDescription,
           }).catch((error) => console.error("Hero deep retry failed", { artifactId: guest.id, error })));
@@ -827,7 +797,6 @@ serve(async (req) => {
             guest.deep_payload = await generateAndPersistHeroDeep({
               serviceClient,
               openaiApiKey,
-              req,
               artifactId: guest.id,
               description: inputDescription,
             });
@@ -1092,7 +1061,7 @@ serve(async (req) => {
     }
 
     try {
-      const enrichment = await fetchMarketSignals(serviceClient, req, payload);
+      const enrichment = await fetchMarketSignals(payload);
       const generated = await generateIcpDraftArtifact({
         openaiApiKey,
         request: payload,

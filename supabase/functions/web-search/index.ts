@@ -148,23 +148,53 @@ serve(async (req) => {
 
     const data = await response.json();
     const answer = data.choices?.[0]?.message?.content || '';
-    const citations = data.citations || [];
+    /*
+     * Perplexity returns `citations` as an array of bare URL strings, and puts
+     * the titled records in `search_results`. Reading `.url` off a string
+     * yields undefined, so every source used to come back with an empty url
+     * and the citation list came back empty. Accept both shapes: prefer
+     * search_results when present, fall back to citations either way.
+     */
+    const rawCitations: any[] = Array.isArray(data.citations) ? data.citations : [];
+    const searchResults: any[] = Array.isArray(data.search_results) ? data.search_results : [];
+    const normalizedCitations = (searchResults.length > 0 ? searchResults : rawCitations)
+      .map((citation: any, index: number) => {
+        if (typeof citation === 'string') {
+          return { url: citation, title: '', snippet: '', relevance: undefined, publishedDate: undefined, index };
+        }
+        return {
+          url: citation?.url || citation?.source || '',
+          title: citation?.title || citation?.name || '',
+          snippet: citation?.snippet || citation?.summary || '',
+          relevance: citation?.relevance,
+          publishedDate: citation?.published_date || citation?.date || undefined,
+          index,
+        };
+      })
+      .filter((citation) => Boolean(citation.url));
 
-    console.log(`✅ Web search completed: ${citations.length} citations found`);
+    console.log(`✅ Web search completed: ${normalizedCitations.length} citations found`);
 
-    // Extract sources from citations
-    const sources: WebSearchSource[] = citations.slice(0, maxResults).map((citation: any, index: number) => {
-      return {
-        url: citation.url || citation.source || '',
-        title: citation.title || citation.name || `Source ${index + 1}`,
-        snippet: citation.snippet || citation.summary || '',
-        relevanceScore: citation.relevance || 1.0 - (index * 0.1), // Default scoring
-        publishedDate: citation.published_date || citation.date || undefined,
-      };
-    });
+    const hostLabel = (url: string) => {
+      try {
+        return new URL(url).hostname.replace(/^www\./, '');
+      } catch {
+        return '';
+      }
+    };
+
+    const sources: WebSearchSource[] = normalizedCitations.slice(0, maxResults).map((citation, index) => ({
+      url: citation.url,
+      // A bare URL still deserves a readable label, and the host is the honest
+      // one. "Source 3" told the caller nothing about what it was citing.
+      title: citation.title || hostLabel(citation.url) || `Source ${index + 1}`,
+      snippet: citation.snippet,
+      relevanceScore: citation.relevance ?? 1.0 - (index * 0.1),
+      publishedDate: citation.publishedDate,
+    }));
 
     // Extract unique citation URLs for easy reference
-    const citationUrls = [...new Set(citations.map((c: any) => c.url || c.source).filter(Boolean))];
+    const citationUrls = [...new Set(normalizedCitations.map((citation) => citation.url))];
 
     const searchResponse: WebSearchResponse = {
       success: true,

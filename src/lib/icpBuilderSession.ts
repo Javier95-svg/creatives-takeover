@@ -50,6 +50,32 @@ export interface IcpDraftCompetitor {
   gap: string;
 }
 
+/**
+ * Whether the generator got this field from the model or backfilled it.
+ *
+ * Optional because drafts generated before this existed do not carry it;
+ * readers go through `fieldIsReal` in icpFieldProvenance.ts, which falls back
+ * to matching the historical backfill strings.
+ */
+export type IcpFieldProvenance = "model" | "fallback";
+
+export type IcpViabilityDimensionKey =
+  | "painSeverity"
+  | "willingnessToPay"
+  | "competitiveIntensity"
+  | "reachability"
+  | "founderEdge";
+
+export interface IcpViabilityDimension {
+  /** 0 - 100. Low is a legitimate answer, not a failure to assess. */
+  score: number;
+  rationale: string;
+  basis: "evidence" | "inference";
+  sourceIds: string[];
+}
+
+export type IcpViabilityAssessment = Record<IcpViabilityDimensionKey, IcpViabilityDimension>;
+
 export interface IcpDraftDocument {
   gatePreview: {
     personaName: string;
@@ -118,6 +144,9 @@ export interface IcpDraftDocument {
     route: string;
   }>;
   sources?: IcpDraftSource[];
+  viabilityAssessment?: IcpViabilityAssessment;
+  /** Dotted field path to whether the model answered it. */
+  fieldProvenance?: Record<string, IcpFieldProvenance>;
 }
 
 export interface IcpDraftSource {
