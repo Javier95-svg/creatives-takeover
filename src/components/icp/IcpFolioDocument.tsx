@@ -14,6 +14,8 @@ import { ChevronDown, ExternalLink, HelpCircle, Lock } from "lucide-react";
 import type { IcpDraftDocument, IcpViabilityDimensionKey } from "@/lib/icpBuilderSession";
 import { fieldIsReal } from "@/lib/icpFieldProvenance";
 import { computeViabilityScore, type ViabilityBand } from "@/lib/icpViabilityScore";
+import { IcpVerdictSpread } from "@/components/icp/IcpVerdictSpread";
+import type { IcpScoreCard } from "@/lib/icpScoreCard";
 
 type IcpFolioTone = "folio" | "platformPreview" | "landingPreview";
 export type IcpFolioSectionKey = "customer" | "pain" | "build" | "moat";
@@ -46,6 +48,8 @@ interface IcpFolioDocumentProps {
    * at a glance, which is what makes the rest of the draft credible.
    */
   ideaDescription?: string;
+  /** Passed straight through to the verdict spread on shared pages. */
+  frozenScoreCard?: IcpScoreCard | null;
 }
 
 const VIEWPORT_MARGIN = 16;
@@ -501,6 +505,7 @@ export function IcpFolioDocument({
   lockedSections = [],
   lockedSectionBreak,
   ideaDescription,
+  frozenScoreCard = null,
 }: IcpFolioDocumentProps) {
   const visibleSectionSet = useMemo(
     () => new Set<IcpFolioSectionKey>(visibleSections ?? SECTION_NAV_ITEMS.map((item) => item.key)),
@@ -1283,21 +1288,31 @@ export function IcpFolioDocument({
                   Creatives Takeover
                 </span>
               </div>
-              {ideaDescription?.trim() ? (
-                <section className="mb-10 border-b border-border/60 pb-8">
-                  <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-foreground/55">
-                        Your idea
-                      </p>
-                      <p className="mt-3 text-xl leading-8 text-foreground sm:text-2xl sm:leading-9">
-                        {ideaDescription.trim()}
-                      </p>
-                    </div>
+              {/*
+                * Rendered unconditionally, unlike the header it replaces.
+                *
+                * The old idea+badge block was gated on ideaDescription, which
+                * only the guest view passes - so the score, the one thing
+                * "Assess viability" promises, was invisible on the saved draft
+                * and on every shared link. The verdict is the output; it does
+                * not depend on whether we happen to have the founder's sentence
+                * to show above it.
+                */}
+              <div className="mb-10 border-b border-border/60 pb-8">
+                <IcpVerdictSpread
+                  draft={draft}
+                  ideaDescription={ideaDescription}
+                  frozenCard={frozenScoreCard}
+                />
+                <details className="mt-4 group">
+                  <summary className="cursor-pointer list-none text-xs font-semibold text-foreground/60 transition-colors hover:text-foreground">
+                    How this score is calculated
+                  </summary>
+                  <div className="mt-3 flex justify-start">
                     <ViabilityBadge draft={draft} />
                   </div>
-                </section>
-              ) : null}
+                </details>
+              </div>
               {unlockedVisibleSectionKeys.map((sectionKey) => (
                 <div key={sectionKey}>{renderedSections[sectionKey]}</div>
               ))}

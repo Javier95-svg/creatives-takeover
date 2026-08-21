@@ -13,6 +13,13 @@ function truncate(s: string, max: number): string {
   return s.length > max ? `${s.slice(0, max - 1)}…` : s;
 }
 
+/** Mirrors the band thresholds in icpViabilityScore.ts (50 and 80 of 100). */
+function scoreColor(score: number): string {
+  if (score >= 80) return '#4ade80';
+  if (score >= 50) return '#32b8c6';
+  return '#fb923c';
+}
+
 export default async function handler(request: Request) {
   const url = new URL(request.url);
   const slug = url.searchParams.get('slug') ?? '';
@@ -21,6 +28,13 @@ export default async function handler(request: Request) {
   let roleLine = '';
   let painQuote = '';
   let valueProposition = '';
+  // The score is the reason anyone clicks a shared link, so it is read from the
+  // frozen card rather than recomputed: the scorer lives in src/ and this is an
+  // edge function, and a number that drifted from what the founder posted would
+  // be worse than no number at all.
+  let displayScore: number | null = null;
+  let verdictLabel = '';
+  let ideaLine = '';
 
   if (slug && SUPABASE_KEY) {
     try {
@@ -36,12 +50,22 @@ export default async function handler(request: Request) {
         painQuote = (doc.pain as { quote?: string })?.quote ?? '';
         valueProposition = (doc.build as { valueProposition?: string })?.valueProposition ?? '';
       }
+      const card = (records[0]?.snapshot as { scoreCard?: Record<string, unknown> } | undefined)?.scoreCard;
+      if (card && typeof card.displayScore === 'number') {
+        displayScore = card.displayScore;
+        verdictLabel = typeof card.verdictLabel === 'string' ? card.verdictLabel : '';
+        ideaLine = typeof card.idea === 'string' ? card.idea : '';
+      }
     } catch { /* use defaults */ }
   }
 
   const shortPain = truncate(painQuote, 110);
   const shortValue = truncate(valueProposition, 120);
-  const nameSize = personaName.length > 32 ? 44 : personaName.length > 22 ? 52 : 60;
+  const shortIdea = ideaLine ? truncate(ideaLine, 90) : '';
+  // Leave room for the score block in the top-right corner.
+  const nameSize = displayScore !== null
+    ? (personaName.length > 26 ? 38 : 46)
+    : (personaName.length > 32 ? 44 : personaName.length > 22 ? 52 : 60);
 
   return new ImageResponse(
     (
@@ -84,6 +108,52 @@ export default async function handler(request: Request) {
           }}
         />
 
+        {/* Score — the headline of the card. A shared link says "78/100"
+            before it says anything else, because that is the claim the founder
+            is making and the thing their friend reacts to. */}
+        {displayScore !== null ? (
+          <div
+            style={{
+              position: 'absolute',
+              top: '56px',
+              right: '72px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'baseline',
+                color: scoreColor(displayScore),
+                fontSize: '128px',
+                fontWeight: '700',
+                lineHeight: '1',
+                letterSpacing: '-0.04em',
+              }}
+            >
+              {String(displayScore)}
+              <span style={{ fontSize: '40px', color: 'rgba(255,255,255,0.35)', fontWeight: '600' }}>/100</span>
+            </div>
+            {verdictLabel ? (
+              <div
+                style={{
+                  marginTop: '10px',
+                  color: scoreColor(displayScore),
+                  fontSize: '20px',
+                  fontWeight: '700',
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  display: 'flex',
+                }}
+              >
+                {verdictLabel}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
         {/* Top badge */}
         <div
           style={{
@@ -106,9 +176,27 @@ export default async function handler(request: Request) {
               display: 'flex',
             }}
           >
-            ICP DRAFT · CREATIVES TAKEOVER
+            STARTUP VIABILITY · CREATIVES TAKEOVER
           </div>
         </div>
+
+        {/* The founder's own sentence, when the card carried one. It is what
+            makes a stranger's score legible to their friend. */}
+        {shortIdea ? (
+          <div
+            style={{
+              color: 'rgba(255,255,255,0.6)',
+              fontSize: '22px',
+              lineHeight: '1.4',
+              marginBottom: '16px',
+              maxWidth: '680px',
+              display: 'flex',
+              flexWrap: 'wrap',
+            }}
+          >
+            {shortIdea}
+          </div>
+        ) : null}
 
         {/* Persona name */}
         <div

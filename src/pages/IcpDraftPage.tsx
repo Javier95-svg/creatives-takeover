@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2, Download, Loader2, PencilLine, Share2, Sparkles } from "lucide-react";
 import { IcpDraftShareBar } from "@/components/icp/IcpDraftShareBar";
@@ -21,6 +21,7 @@ import { readHeroGuestArtifact } from "@/lib/heroIcpGeneration";
 import type { StoredIcpArtifact } from "@/lib/icpBuilderSession";
 import { trackActivationFunnelEvent } from "@/lib/activationEntry";
 import { trackJourneyEvent } from "@/lib/journeyOutcomes";
+import { buildIcpScoreCard } from "@/lib/icpScoreCard";
 
 function slugifyFileName(value: string) {
   return value.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase() || "icp-draft";
@@ -47,6 +48,19 @@ export default function IcpDraftPage() {
     roleLine: string;
   } | null>(null);
   const isUnlockSource = searchParams.get("source") === "icp-unlock";
+  // Built here rather than read back from the share row: the founder sees the
+  // bar before a share link exists, and the copy has to name their score either
+  // way. upsertIcpDraftShare freezes the same card onto the snapshot.
+  const scoreCard = useMemo(
+    () =>
+      artifact
+        ? buildIcpScoreCard(artifact.draftDocument, {
+            idea: artifact.founderInputs.fastDescription,
+            generatedAt: artifact.generatedAt,
+          })
+        : null,
+    [artifact],
+  );
 
   useEffect(() => {
     const load = async () => {
@@ -374,6 +388,7 @@ export default function IcpDraftPage() {
         bottomBar={
           <div className="space-y-3">
             <IcpDraftShareBar
+              scoreCard={scoreCard}
               shareUrl={shareModalData?.url ?? null}
               returnPath={`/icp/draft/${draftId ?? ""}`}
               onShare={handleShareForBar}

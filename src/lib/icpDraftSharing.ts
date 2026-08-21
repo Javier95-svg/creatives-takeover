@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { IcpDraftDocument, StoredIcpArtifact } from "@/lib/icpBuilderSession";
+import { buildIcpScoreCard, type IcpScoreCard } from "@/lib/icpScoreCard";
 
 const SHARED_OUTPUTS_TABLE = "bizmap_shared_outputs";
 
@@ -7,6 +8,13 @@ export interface IcpDraftSharedSnapshot {
   documentVersion: 1;
   generatedAt: string;
   draftDocument: IcpDraftDocument;
+  /**
+   * The verdict as it stood when this link was created.
+   *
+   * Absent on links shared before the card existed, so every reader must fall
+   * back to recomputing from draftDocument rather than assuming it is there.
+   */
+  scoreCard?: IcpScoreCard;
 }
 
 export interface IcpDraftSharedRecord {
@@ -48,6 +56,10 @@ export function createIcpDraftSharedPayload(artifact: StoredIcpArtifact) {
     documentVersion: 1,
     generatedAt: artifact.generatedAt,
     draftDocument: artifact.draftDocument,
+    scoreCard: buildIcpScoreCard(artifact.draftDocument, {
+      idea: artifact.founderInputs.fastDescription,
+      generatedAt: artifact.generatedAt,
+    }),
   };
 
   return { title, summary, snapshot };

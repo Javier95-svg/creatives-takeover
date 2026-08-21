@@ -13,8 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 
-const SHARE_COPY =
-  "Just mapped my ICP using @CreativesTakeover — this is exactly who I'm building for. If you're an early-stage founder still guessing at your customer, run this. It takes 60 seconds.";
+import { buildIcpShareText, type IcpScoreCard } from "@/lib/icpScoreCard";
 
 interface IcpDraftShareBarProps {
   /** The public share URL for this draft. Null if sharing not yet set up (will trigger share setup first). */
@@ -30,6 +29,11 @@ interface IcpDraftShareBarProps {
   isSaving?: boolean;
   isSharing?: boolean;
   onBeforeAuthContinue?: () => void;
+  /**
+   * Drives the post text. Without it the bar falls back to the pre-score copy,
+   * which describes the document rather than making a claim about the idea.
+   */
+  scoreCard?: IcpScoreCard | null;
 }
 
 export function IcpDraftShareBar({
@@ -41,6 +45,7 @@ export function IcpDraftShareBar({
   isSaving = false,
   isSharing = false,
   onBeforeAuthContinue,
+  scoreCard = null,
 }: IcpDraftShareBarProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -99,7 +104,7 @@ export function IcpDraftShareBar({
     if (!url) return;
 
     const encoded = encodeURIComponent(url);
-    const textEncoded = encodeURIComponent(SHARE_COPY);
+    const textEncoded = encodeURIComponent(buildIcpShareText(scoreCard));
 
     const shareUrls: Record<typeof platform, string> = {
       linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encoded}`,
@@ -122,7 +127,9 @@ export function IcpDraftShareBar({
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/70 bg-background/80 px-5 py-3.5 shadow-sm backdrop-blur">
-      <span className="text-sm font-semibold text-foreground/70">Share your ICP Draft</span>
+      <span className="text-sm font-semibold text-foreground/70">
+        {scoreCard ? `Share your ${scoreCard.displayScore}/100` : "Share your ICP Draft"}
+      </span>
 
       <div className="flex flex-wrap items-center gap-2">
         {/* Copy link */}

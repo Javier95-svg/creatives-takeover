@@ -133,6 +133,40 @@ export interface IcpDraftDocument {
     exploitableGap: string;
     evidence: IcpDraftSectionEvidence;
   };
+  /**
+   * The five links the older document never carried. Optional because drafts
+   * generated before the chain existed are still readable and still shared;
+   * every consumer must degrade rather than crash on an archived draft.
+   */
+  market?: {
+    category: string;
+    whoBuysToday: string;
+    demandSignal: string;
+    whyNow: string;
+    evidence: IcpDraftSectionEvidence;
+  };
+  pricing?: {
+    model: string;
+    hypothesis: string;
+    anchor: string;
+    budgetOwner: string;
+    evidence: IcpDraftSectionEvidence;
+  };
+  risks?: IcpDraftRisk[];
+  experiment?: {
+    title: string;
+    hypothesis: string;
+    method: string;
+    sampleSize: string;
+    passSignal: string;
+    failSignal: string;
+    timeboxDays: number;
+  };
+  recommendation?: {
+    headline: string;
+    reasoning: string;
+    nextMove: string;
+  };
   confidence: {
     level: IcpConfidenceLevel;
     summary: string;
@@ -153,6 +187,20 @@ export interface IcpDraftDocument {
   viabilityAssessment?: IcpViabilityAssessment;
   /** Dotted field path to whether the model answered it. */
   fieldProvenance?: Record<string, IcpFieldProvenance>;
+}
+
+export type IcpRiskType =
+  | "demand"
+  | "willingness_to_pay"
+  | "competition"
+  | "channel"
+  | "execution";
+
+export interface IcpDraftRisk {
+  rank: number;
+  type: IcpRiskType;
+  risk: string;
+  disprovedBy: string;
 }
 
 export interface IcpDraftSource {

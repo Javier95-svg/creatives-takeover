@@ -116,6 +116,37 @@ type DraftDocument = {
     exploitableGap: string;
     evidence: SectionEvidence;
   };
+  market: {
+    category: string;
+    whoBuysToday: string;
+    demandSignal: string;
+    whyNow: string;
+    evidence: SectionEvidence;
+  };
+  pricing: {
+    model: string;
+    /** A concrete number or range. The whole point is to commit to one. */
+    hypothesis: string;
+    anchor: string;
+    budgetOwner: string;
+    evidence: SectionEvidence;
+  };
+  risks: DraftRisk[];
+  experiment: {
+    title: string;
+    hypothesis: string;
+    method: string;
+    sampleSize: string;
+    /** Stated before the test runs, so the result cannot be rationalised after. */
+    passSignal: string;
+    failSignal: string;
+    timeboxDays: number;
+  };
+  recommendation: {
+    headline: string;
+    reasoning: string;
+    nextMove: string;
+  };
   confidence: {
     level: SectionConfidence;
     summary: string;
@@ -140,6 +171,32 @@ type DraftDocument = {
  * distinction here is what lets the scorer and the outcome contract tell a real
  * answer from a placeholder.
  */
+export type RiskType =
+  | "demand"
+  | "willingness_to_pay"
+  | "competition"
+  | "channel"
+  | "execution";
+
+export const RISK_TYPES: readonly RiskType[] = [
+  "demand",
+  "willingness_to_pay",
+  "competition",
+  "channel",
+  "execution",
+] as const;
+
+export interface DraftRisk {
+  rank: number;
+  type: RiskType;
+  risk: string;
+  /**
+   * The observation that would settle it. A risk a founder cannot test is a
+   * worry, not a risk, and belongs in neither the document nor the experiment.
+   */
+  disprovedBy: string;
+}
+
 export type FieldProvenance = "model" | "fallback";
 export type FieldProvenanceMap = Record<string, FieldProvenance>;
 
@@ -366,11 +423,18 @@ function buildDraftPrompt(request: DraftRequestShape, enrichment: DraftEnrichmen
   return `You are generating a founder-ready ICP Draft strong enough to replace a paid strategy session.
 Return valid JSON only.
 
-The draft must explicitly answer:
-1. The single most important pain point to solve first.
-2. The exact ideal customer profile with behavior, motivation, and trigger context.
-3. The founder's unfair advantage or moat, tied to this niche.
-4. The competitive landscape: direct competitors, what they do well, and the specific gap the founder can exploit.
+The draft is a decision chain. It must run end to end and finish with a call:
+market -> competitors -> customer -> willingness to pay -> risks -> experiment -> recommendation.
+
+Each link must explicitly answer:
+1. The market: what category this is, who already pays in it, and why now.
+2. The competitive landscape: direct competitors, what they do well, and the specific gap the founder can exploit.
+3. The exact ideal customer profile with behavior, motivation, and trigger context.
+4. The single most important pain point to solve first.
+5. A willingness-to-pay hypothesis with a real number attached.
+6. The ranked risks that would kill this, each with the observation that settles it.
+7. One experiment the founder can run this week, with its pass bar written down first.
+8. A recommendation: what to actually do, stated plainly.
 
 Critical rules:
 - Every claim must be anchored in the founder evidence below.
@@ -449,6 +513,31 @@ Return this exact JSON shape:
       "exploitableGap":"string",
       "evidence":{"confidence":"high|medium|low","evidence":"string","missingSignalPrompt":"string|null","sourceIds":["string"]}
     },
+    "market":{
+      "category":"string",
+      "whoBuysToday":"string",
+      "demandSignal":"string",
+      "whyNow":"string",
+      "evidence":{"confidence":"high|medium|low","evidence":"string","missingSignalPrompt":"string|null","sourceIds":["string"]}
+    },
+    "pricing":{
+      "model":"string",
+      "hypothesis":"string",
+      "anchor":"string",
+      "budgetOwner":"string",
+      "evidence":{"confidence":"high|medium|low","evidence":"string","missingSignalPrompt":"string|null","sourceIds":["string"]}
+    },
+    "risks":[{"rank":1,"type":"demand|willingness_to_pay|competition|channel|execution","risk":"string","disprovedBy":"string"}],
+    "experiment":{
+      "title":"string",
+      "hypothesis":"string",
+      "method":"string",
+      "sampleSize":"string",
+      "passSignal":"string",
+      "failSignal":"string",
+      "timeboxDays":7
+    },
+    "recommendation":{"headline":"string","reasoning":"string","nextMove":"string"},
     "confidence":{"level":"high|medium|low","summary":"string","missingSignals":["string"]},
     "nextActions":[{"title":"string","description":"string","route":"waitlist|pmf|mvp|gtm|mentor"}],
     "viabilityAssessment":{
@@ -495,6 +584,54 @@ Rules for output quality:
 - nonFitSegment must name the closest adjacent segment the founder should deliberately avoid first.
 - interviewValidationPlan must contain exactly 5 concrete interview steps with a question and an observable success signal.
 - nextActions must be concrete and usable in the next week.
+
+Market:
+- "category" must name the category a buyer would recognise, not a slogan.
+- "whoBuysToday" must name who already spends money in this category. If nobody
+  does, say that plainly: it is the single most important fact about the market.
+- "demandSignal" must point at observable behaviour (spend, search, complaints,
+  workarounds), not at market-size projections. Never quote a TAM figure you
+  cannot cite from the RETRIEVED EVIDENCE block.
+- "whyNow" must name a change that made this newly possible or newly urgent. If
+  nothing changed, omit it rather than inventing a trend.
+
+Pricing (willingness to pay):
+- "hypothesis" MUST contain a specific number or range with a currency and a
+  billing unit, e.g. "$40-80 per shop per month" or "$1,500 one-off per audit".
+  A hypothesis without a number is useless and must be omitted entirely.
+- "anchor" must name what this customer already pays today for the alternative,
+  including the cost of the manual workaround in hours or wages. That anchor is
+  what makes the number defensible.
+- "budgetOwner" must name the role that signs off. "The user" is only correct
+  for genuine consumer purchases; say so explicitly when it is.
+- This is a hypothesis, not a price list. State it as something to test.
+
+Risks:
+- Return 3 to 5 risks, ranked with the most likely to kill the company first.
+- Rank by what would end this, not by what is easiest to fix.
+- "disprovedBy" must be an observation the founder could actually make in weeks,
+  not a study. "Talk to users" is not an answer; name what they must hear.
+- Do not pad the list with generic startup risks (competition from big tech,
+  hiring, funding) unless they specifically threaten THIS idea.
+- Include at least one risk drawn from the lowest-scoring viability dimension.
+
+Experiment:
+- Exactly one experiment. It must attack the #1 risk above, not a lesser one.
+- "method" must be executable by one founder with no budget and no product.
+- "sampleSize" must be a specific number of people or attempts.
+- "passSignal" and "failSignal" must both be observable and mutually exclusive,
+  and must be stated as counts or behaviours, never as sentiment.
+- "timeboxDays" must be 14 or fewer.
+
+Recommendation:
+- "headline" is one sentence, under 100 characters, and must commit. Never hedge
+  and never say "it depends".
+- "reasoning" must cite the specific link in the chain that drove the call: the
+  market, the competition, the pricing anchor, or the top risk.
+- "nextMove" is the single thing to do first, this week.
+- Do NOT state an overall verdict word or a score. The platform derives the
+  verdict from the viability dimensions so that the number and the words can
+  never disagree. Write the reasoning as if the reader can already see it.
 
 Founder evidence:
 - Entry mode: ${evidence.entryMode}
@@ -574,6 +711,53 @@ function buildDashboardContext(draftDocument: DraftDocument) {
       },
     ],
   };
+}
+
+/**
+ * True when a price hypothesis actually names a figure.
+ *
+ * "Founders would likely pay a monthly subscription" is the sentence the model
+ * reaches for when it does not know, and it is indistinguishable from a real
+ * answer to every reader and every downstream check. Requiring a digit is a
+ * crude test that happens to catch exactly this.
+ */
+function containsPriceFigure(value: unknown): boolean {
+  return typeof value === "string" && /d/.test(value);
+}
+
+/** An experiment longer than a fortnight does not get run. */
+function clampTimebox(value: unknown): number {
+  const raw = typeof value === "number" && Number.isFinite(value) ? Math.round(value) : 7;
+  return Math.min(Math.max(raw, 1), 14);
+}
+
+/**
+ * Risks are not padded to a fixed length.
+ *
+ * Every other list in this document pads for layout stability, but an invented
+ * risk is worse than a short list: it sends the founder to test something that
+ * was never a threat. A single real risk beats five, three of which are filler.
+ */
+function normalizeRisks(value: unknown, track: (path: string, value: unknown, fallback: string) => string): DraftRisk[] {
+  const candidates = Array.isArray(value) ? value.filter((item) => item && typeof item === "object") : [];
+  const risks = candidates.slice(0, 5).map((item: any, index: number) => ({
+    rank: index + 1,
+    type: (RISK_TYPES as readonly string[]).includes(item?.type) ? (item.type as RiskType) : "execution",
+    risk: track(`risks.${index}`, item?.risk, "An unnamed risk."),
+    disprovedBy: cleanText(item?.disprovedBy, "Decide what observation would settle this before you test it."),
+  }));
+
+  if (risks.length > 0) return risks.filter((risk) => risk.risk !== "An unnamed risk.");
+
+  // No risks at all is itself a finding, and the founder should see it framed
+  // as one rather than as an empty panel.
+  track("risks.0", null, "");
+  return [{
+    rank: 1,
+    type: "demand",
+    risk: "No risks were identified, which usually means the idea has not been described concretely enough to threaten.",
+    disprovedBy: "Describe the idea in one specific sentence and re-run the assessment.",
+  }];
 }
 
 function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEnrichment): DraftDocument {
@@ -775,6 +959,89 @@ function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEn
         provenance: citableSourceIds.length > 0 ? "external_source" : "model_inference",
         sourceIds: citableSourceIds,
       }, citableSourceIds, confidenceCeiling),
+    },
+    market: {
+      category: track("market.category", parsed?.market?.category, "The category this competes in still needs to be named."),
+      whoBuysToday: track(
+        "market.whoBuysToday",
+        parsed?.market?.whoBuysToday,
+        "Who already pays for something in this category still needs to be established.",
+      ),
+      demandSignal: track(
+        "market.demandSignal",
+        parsed?.market?.demandSignal,
+        "No observable demand signal has been found for this idea yet.",
+      ),
+      whyNow: track("market.whyNow", parsed?.market?.whyNow, "What makes this urgent now rather than three years ago is still unstated."),
+      evidence: buildSectionEvidence(parsed?.market?.evidence, {
+        confidence: citableSourceIds.length > 0 ? overallConfidence : "low",
+        evidence:
+          citableSourceIds.length > 0
+            ? "Market read informed by retrieved community and competitor sources."
+            : "Market read inferred from founder evidence only; treat the sizing as unverified.",
+        missingSignalPrompt: "What proof exists that people already spend money to solve this?",
+        provenance: citableSourceIds.length > 0 ? "external_source" : "model_inference",
+        sourceIds: citableSourceIds,
+      }, citableSourceIds, confidenceCeiling),
+    },
+    pricing: {
+      model: track("pricing.model", parsed?.pricing?.model, "How this would charge still needs to be decided."),
+      // Guarded rather than tracked directly: a hypothesis with no number in it
+      // is the failure mode the prompt warns about, and it reads as an answer.
+      hypothesis: track(
+        "pricing.hypothesis",
+        containsPriceFigure(parsed?.pricing?.hypothesis) ? parsed.pricing.hypothesis : null,
+        "No price hypothesis has been committed to yet. Pick a number before you test.",
+      ),
+      anchor: track(
+        "pricing.anchor",
+        parsed?.pricing?.anchor,
+        "What this customer already spends on the current workaround is still unknown.",
+      ),
+      budgetOwner: track("pricing.budgetOwner", parsed?.pricing?.budgetOwner, "Who signs off on this spend still needs to be identified."),
+      evidence: buildSectionEvidence(parsed?.pricing?.evidence, {
+        confidence: "low",
+        evidence: "Willingness to pay is a hypothesis until someone is asked for money.",
+        missingSignalPrompt: "What does this customer pay today for the tool or workaround this replaces?",
+        provenance: "model_inference",
+      }, citableSourceIds, confidenceCeiling),
+    },
+    risks: normalizeRisks(parsed?.risks, track),
+    experiment: {
+      title: track("experiment.title", parsed?.experiment?.title, "The next experiment still needs to be designed."),
+      hypothesis: track(
+        "experiment.hypothesis",
+        parsed?.experiment?.hypothesis,
+        "State what you believe is true before you test it.",
+      ),
+      method: track("experiment.method", parsed?.experiment?.method, "The method for testing the top risk still needs to be chosen."),
+      sampleSize: track("experiment.sampleSize", parsed?.experiment?.sampleSize, "Decide how many people you need to hear from."),
+      passSignal: track(
+        "experiment.passSignal",
+        parsed?.experiment?.passSignal,
+        "Write down what would count as a pass before you start.",
+      ),
+      failSignal: track(
+        "experiment.failSignal",
+        parsed?.experiment?.failSignal,
+        "Write down what would count as a fail before you start.",
+      ),
+      // Clamped rather than defaulted: an experiment scoped past a fortnight is
+      // a project, and founders stop running it.
+      timeboxDays: clampTimebox(parsed?.experiment?.timeboxDays),
+    },
+    recommendation: {
+      headline: track("recommendation.headline", parsed?.recommendation?.headline, "This idea needs more evidence before it earns a call."),
+      reasoning: track(
+        "recommendation.reasoning",
+        parsed?.recommendation?.reasoning,
+        "The draft did not commit to reasoning for a recommendation.",
+      ),
+      nextMove: track(
+        "recommendation.nextMove",
+        parsed?.recommendation?.nextMove ?? parsed?.experiment?.title,
+        "Run the experiment above before making a build decision.",
+      ),
     },
     confidence: {
       level: confidenceCeiling(overallConfidence),

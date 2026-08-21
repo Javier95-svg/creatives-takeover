@@ -14,6 +14,7 @@ import { normalizeIcpDraftDocument } from "@/lib/icpDraftArtifacts";
 import { downloadIcpDraftDocx, downloadIcpDraftPdf } from "@/lib/icpDraftExport";
 import { buildArtifactReferralPath, trackArtifactReferralClicked } from "@/lib/artifactReferral";
 import type { IcpDraftDocument } from "@/lib/icpBuilderSession";
+import { isIcpScoreCard, type IcpScoreCard } from "@/lib/icpScoreCard";
 
 function slugifyFileName(value: string) {
   return value.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase() || "icp-draft";
@@ -22,6 +23,7 @@ function slugifyFileName(value: string) {
 export default function IcpPublicDraftPage() {
   const { draftId } = useParams<{ draftId: string }>();
   const [draft, setDraft] = useState<IcpDraftDocument | null>(null);
+  const [scoreCard, setScoreCard] = useState<IcpScoreCard | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const documentRef = useRef<HTMLDivElement>(null);
@@ -37,6 +39,8 @@ export default function IcpPublicDraftPage() {
         const record = await getIcpDraftShareBySlug(draftId);
         if (record && isIcpDraftSharedSnapshot(record.snapshot)) {
           setDraft(normalizeIcpDraftDocument(record.snapshot.draftDocument));
+          const card = (record.snapshot as { scoreCard?: unknown }).scoreCard;
+          if (isIcpScoreCard(card)) setScoreCard(card);
         }
       } catch (error) {
         console.error("Failed to load public ICP Draft", error);
@@ -91,8 +95,12 @@ export default function IcpPublicDraftPage() {
     );
   }
 
-  const pageTitle = `${draft.customer.personaName} — ICP Draft`;
-  const pageDescription = `${draft.customer.roleLine}. ${draft.build.valueProposition}`.slice(0, 155);
+  const pageTitle = scoreCard
+    ? `This startup idea scored ${scoreCard.displayScore}/100`
+    : `${draft.customer.personaName} — ICP Draft`;
+  const pageDescription = scoreCard
+    ? `${scoreCard.idea ?? draft.customer.roleLine} · ${scoreCard.verdictLabel}. ${scoreCard.summary}`.slice(0, 155)
+    : `${draft.customer.roleLine}. ${draft.build.valueProposition}`.slice(0, 155);
   const ogImageUrl = `https://creatives-takeover.com/api/og-icp?slug=${draftId ?? ""}`;
 
   return (
@@ -107,10 +115,12 @@ export default function IcpPublicDraftPage() {
       <IcpProgressBar progress={100} />
       <IcpFolioDocument
         draft={draft}
+        frozenScoreCard={scoreCard}
         documentRef={documentRef}
         footer={
           <div className="space-y-6 pb-4">
             <IcpDraftShareBar
+              scoreCard={scoreCard}
               shareUrl={typeof window !== "undefined" ? window.location.href : ""}
               returnPath={`/icp/${draftId ?? ""}/public`}
               isSaving={isSaving}

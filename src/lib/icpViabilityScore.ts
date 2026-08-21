@@ -56,6 +56,11 @@ export interface ViabilityScore {
   basis: "full" | "legacy";
   /** True when nothing citable was retrieved, which caps the score. */
   ungrounded: boolean;
+  /** The same score out of 100, for display only. */
+  displayScore: number;
+  /** The one-word call, derived so it can never contradict the number. */
+  verdict: ViabilityVerdict;
+  verdictLabel: string;
 }
 
 const CONFIDENCE_WEIGHT: Record<IcpDraftSectionEvidence["confidence"], number> = {
@@ -102,6 +107,49 @@ const BAND_LABELS: Record<ViabilityBand, string> = {
   strong: "Strong",
   promising: "Promising",
   needsWork: "Needs work",
+};
+
+
+export type ViabilityVerdict = "build" | "narrow" | "investigate" | "stop";
+
+/**
+ * The score, restated out of 100.
+ *
+ * The internal scale stays 1-10: it is persisted as niche_score, compared
+ * across drafts, and covered by two test suites, so rescaling it would rewrite
+ * history. This is presentation only, and lossless at one decimal (7.8 -> 78).
+ * Every founder-facing surface reads this; nothing computes on it.
+ */
+export function toDisplayScore(score: number): number {
+  return Math.round(score * 10);
+}
+
+/**
+ * The one-word call, derived from the score rather than written by the model.
+ *
+ * The generator is explicitly forbidden from stating a verdict. If it wrote one
+ * it would eventually disagree with the badge beside it, and a document that
+ * says "promising" next to 31/100 teaches the founder that neither number means
+ * anything. Deriving it is the only way the two can never drift apart.
+ *
+ * "stop" is a real, reachable outcome. A validation engine that cannot tell
+ * someone their idea is bad is a compliment machine.
+ */
+export function resolveViabilityVerdict(score: number, ungrounded: boolean): ViabilityVerdict {
+  if (score < 3.5) return "stop";
+  // A capped score means we could not corroborate anything, so the honest call
+  // is to go and look rather than to build on an uncorroborated read.
+  if (ungrounded && score >= VIABILITY_THRESHOLDS.strong - 0.1) return "investigate";
+  if (score < VIABILITY_THRESHOLDS.promising) return "investigate";
+  if (score < VIABILITY_THRESHOLDS.strong) return "narrow";
+  return "build";
+}
+
+export const VERDICT_LABELS: Record<ViabilityVerdict, string> = {
+  build: "Build it",
+  narrow: "Narrow it first",
+  investigate: "Investigate before building",
+  stop: "Stop and rethink",
 };
 
 const PLACEHOLDER_HOSTS = new Set(["example.com", "example.org", "localhost"]);
@@ -254,6 +302,9 @@ export function computeViabilityScore(draft: IcpDraftDocument): ViabilityScore {
     pillars,
     basis: dimensions ? "full" : "legacy",
     ungrounded,
+    displayScore: toDisplayScore(score),
+    verdict: resolveViabilityVerdict(score, ungrounded),
+    verdictLabel: VERDICT_LABELS[resolveViabilityVerdict(score, ungrounded)],
   };
 }
 
