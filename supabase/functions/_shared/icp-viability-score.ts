@@ -153,11 +153,15 @@ export function computeIcpViabilityScore(draft: DraftDocument): ServerViabilityS
   const competitorCount = (draft.competition?.directCompetitors ?? []).filter((competitor) =>
     isAuthenticCitation(competitor.url),
   ).length;
-  const differentiationPillar =
+  // Same treatment as the citation term: a competitor count that can never be
+  // earned without retrieval must not dock every founder 0.9 of 3.0.
+  const namedGaps =
     (isReal(draft, "moat.whyHardToCopy") ? 1 : 0) * 0.8 +
     (isReal(draft, "moat.incumbentGap") ? 1 : 0) * 0.7 +
-    (Math.min(competitorCount, 3) / 3) * 0.9 +
     (isReal(draft, "competition.exploitableGap") ? 1 : 0) * 0.6;
+  const differentiationPillar = retrievalRan
+    ? namedGaps + (Math.min(competitorCount, 3) / 3) * 0.9
+    : namedGaps * (3 / 2.1);
 
   const rigor =
     (clamp(evidencePillar / 4, 0, 1) * 4 +

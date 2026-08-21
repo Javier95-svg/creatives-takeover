@@ -172,13 +172,23 @@ function computeRigorPillars(draft: IcpDraftDocument): ViabilityDriver[] {
     (fieldIsReal(draft, "pain.triggerMoment") ? 1 : 0) * 0.6 +
     (fieldIsReal(draft, "decisionBrief.buyingTrigger") ? 1 : 0) * 0.6;
 
-  // Differentiation: a named gap an incumbent leaves open.
+  /*
+   * Differentiation: a named gap an incumbent leaves open.
+   *
+   * The competitor term counts only competitors we could link, which is
+   * impossible when retrieval never ran. Left in, it would dock every founder
+   * 0.9 of 3.0 for a credential they do not control, and "weakest on
+   * differentiation" would become the new hardcoded verdict. Same treatment as
+   * the citation term above: drop it and rescale rather than score it a miss.
+   */
   const competitorCount = countLinkedCompetitors(draft);
-  const differentiation =
+  const namedGaps =
     (fieldIsReal(draft, "moat.whyHardToCopy") ? 1 : 0) * 0.8 +
     (fieldIsReal(draft, "moat.incumbentGap") ? 1 : 0) * 0.7 +
-    (Math.min(competitorCount, 3) / 3) * 0.9 +
     (fieldIsReal(draft, "competition.exploitableGap") ? 1 : 0) * 0.6;
+  const differentiation = retrievalRan
+    ? namedGaps + (Math.min(competitorCount, 3) / 3) * 0.9
+    : namedGaps * (3 / 2.1);
 
   return [
     { key: "evidence", label: "evidence", ratio: clamp(evidence / 4, 0, 1) },
