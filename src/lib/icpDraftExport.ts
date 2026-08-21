@@ -64,6 +64,23 @@ export async function downloadIcpDraftPdf(target: HTMLElement, fileName: string)
         .forEach((node) => {
           node.style.display = "none";
         });
+      /*
+       * The document is presented as two tabs, so at capture time one panel is
+       * always hidden. Reveal both: a downloaded "ICP Draft" that silently
+       * omitted half the document because of which tab was open would be worse
+       * than no download. The tab nav itself is screen chrome and comes out.
+       */
+      clonedDoc
+        .querySelectorAll<HTMLElement>("[data-icp-tab-panel]")
+        .forEach((node) => {
+          node.classList.remove("hidden");
+          node.style.display = "";
+        });
+      clonedDoc
+        .querySelectorAll<HTMLElement>("[data-icp-tab-nav]")
+        .forEach((node) => {
+          node.style.display = "none";
+        });
     },
   });
 

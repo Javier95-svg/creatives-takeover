@@ -136,6 +136,7 @@ const PMFLabPage = lazy(() => import("./pages/PMFLabPage"));
 const ICPBuilderPage = lazy(() => import("./pages/IcpBuilderPage"));
 const IcpDraftPage = lazy(() => import("./pages/IcpDraftPage"));
 const IcpPublicDraftPage = lazy(() => import("./pages/IcpPublicDraftPage"));
+const IcpPublicScorePage = lazy(() => import("./pages/IcpPublicScorePage"));
 const ValidateJourneyPage = lazy(() => import("./pages/ValidateJourneyPage"));
 const TechStackPage = lazy(() => import("./pages/TechStackPage"));
 const AppBuilderPage = lazy(() => import("./pages/AppBuilderPage"));
@@ -357,6 +358,9 @@ function App() {
                         <Route path="/icp-builder" element={<RouteErrorBoundary routeName="ICP Builder"><ToolRouteWithCreditGate><ICPBuilderPage /></ToolRouteWithCreditGate></RouteErrorBoundary>} />
                         <Route path="/icp/draft/:draftId" element={<IcpDraftPage />} />
                         <Route path="/icp/:draftId/public" element={<IcpPublicDraftPage />} />
+                        {/* Guest-shareable score card. Deliberately short and
+                            memorable: this is the link that gets pasted. */}
+                        <Route path="/idea/:slug" element={<IcpPublicScorePage />} />
                         <Route path="/bizmap-ai/icp-builder" element={<Navigate to="/icp-builder" replace />} />
                         <Route path="/decision-sprint" element={<ToolRouteWithCreditGate><ValidateJourneyPage /></ToolRouteWithCreditGate>} />
                         <Route path="/validate" element={<ToolRouteWithCreditGate><ValidateJourney /></ToolRouteWithCreditGate>} />

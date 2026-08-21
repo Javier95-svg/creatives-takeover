@@ -34,6 +34,14 @@ interface IcpDraftShareBarProps {
    * which describes the document rather than making a claim about the idea.
    */
   scoreCard?: IcpScoreCard | null;
+  /**
+   * Lets a signed-out founder share without being sent to signup first.
+   *
+   * Only the score card is published in that case, so this does not open up
+   * anything the unlock gate protects. Saving a PDF or DOCX still requires an
+   * account, because those carry the full document.
+   */
+  allowAnonymousShare?: boolean;
 }
 
 export function IcpDraftShareBar({
@@ -46,6 +54,7 @@ export function IcpDraftShareBar({
   isSharing = false,
   onBeforeAuthContinue,
   scoreCard = null,
+  allowAnonymousShare = false,
 }: IcpDraftShareBarProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -54,8 +63,8 @@ export function IcpDraftShareBar({
 
   const signUpPath = `/signup?source=icp-draft-share&return=${encodeURIComponent(returnPath)}`;
 
-  const requireAuth = (action: string): boolean => {
-    if (user) return true;
+  const requireAuth = (action: string, anonymousAllowed = false): boolean => {
+    if (user || anonymousAllowed) return true;
     toast.info(`Create a free account to ${action} your ICP Draft.`);
     onBeforeAuthContinue?.();
     navigate(signUpPath);
@@ -85,7 +94,7 @@ export function IcpDraftShareBar({
   };
 
   const handleCopyLink = async () => {
-    if (!requireAuth("share")) return;
+    if (!requireAuth("share", allowAnonymousShare)) return;
     const url = await getOrCreateShareUrl();
     if (!url) return;
     try {
@@ -99,7 +108,7 @@ export function IcpDraftShareBar({
   };
 
   const handleSocialShare = async (platform: "x" | "linkedin" | "facebook") => {
-    if (!requireAuth("share")) return;
+    if (!requireAuth("share", allowAnonymousShare)) return;
     const url = await getOrCreateShareUrl();
     if (!url) return;
 

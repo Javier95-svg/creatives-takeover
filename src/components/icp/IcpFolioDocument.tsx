@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 
-import { ChevronDown, ExternalLink, HelpCircle, Lock } from "lucide-react";
+import { ChevronDown, ExternalLink, Gauge, HelpCircle, Lock, UserRound } from "lucide-react";
 
 import type { IcpDraftDocument, IcpViabilityDimensionKey } from "@/lib/icpBuilderSession";
 import { fieldIsReal } from "@/lib/icpFieldProvenance";
@@ -19,6 +19,56 @@ import type { IcpScoreCard } from "@/lib/icpScoreCard";
 
 type IcpFolioTone = "folio" | "platformPreview" | "landingPreview";
 export type IcpFolioSectionKey = "customer" | "pain" | "build" | "moat";
+export type IcpFolioTab = "score" | "draft";
+
+/**
+ * One of the two top-level entry points. A button rather than a link: it swaps
+ * a panel in place, and a reader who lands mid-document should not have the
+ * page jump.
+ */
+function FolioTabCard({
+  active,
+  onSelect,
+  eyebrow,
+  title,
+  detail,
+  icon,
+}: {
+  active: boolean;
+  onSelect: () => void;
+  eyebrow: string;
+  title: string;
+  detail: string;
+  icon: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={active}
+      className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 text-left transition-colors ${
+        active
+          ? "border-accent-teal/50 bg-accent-teal/[0.07]"
+          : "border-border/60 bg-background/60 hover:border-border hover:bg-background"
+      }`}
+    >
+      <span
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+          active ? "bg-accent-teal/15 text-accent-teal" : "bg-foreground/5 text-foreground/50"
+        }`}
+      >
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-foreground/50">
+          {eyebrow}
+        </span>
+        <span className="mt-0.5 block truncate text-base font-semibold text-foreground">{title}</span>
+        <span className="block truncate text-xs text-foreground/55">{detail}</span>
+      </span>
+    </button>
+  );
+}
 type IcpExplainerPlacement = "top" | "bottom";
 
 interface IcpSectionExplainer {
@@ -547,6 +597,36 @@ export function IcpFolioDocument({
   });
   const explainerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobileViewport();
+  const [activeTab, setActiveTab] = useState<IcpFolioTab>("score");
+  /*
+   * The score shown on the tab card comes from the frozen share card when there
+   * is one, so a shared page's tab and its spread can never disagree.
+   */
+  const tabScore = useMemo(() => {
+    if (frozenScoreCard) {
+      return { displayScore: frozenScoreCard.displayScore, verdictLabel: frozenScoreCard.verdictLabel };
+    }
+    const computed = computeViabilityScore(draft);
+    return { displayScore: computed.displayScore, verdictLabel: computed.verdictLabel };
+  }, [draft, frozenScoreCard]);
+
+  /*
+   * The guest unlock gate lives inside the draft panel, and the sticky mobile
+   * CTA is an anchor to #icp-unlock rendered outside this component. An anchor
+   * pointing into a display:none subtree scrolls nowhere, so the CTA would look
+   * broken while the score tab was open. Follow the hash to the right tab.
+   */
+  useEffect(() => {
+    const followHash = () => {
+      if (typeof window !== "undefined" && window.location.hash === "#icp-unlock") {
+        setActiveTab("draft");
+      }
+    };
+    followHash();
+    window.addEventListener("hashchange", followHash);
+    return () => window.removeEventListener("hashchange", followHash);
+  }, []);
+
   const [activeSection, setActiveSection] = useState<IcpFolioSectionKey | null>(null);
   const [activeNavSection, setActiveNavSection] = useState<IcpFolioSectionKey>(initialNavSection);
   const [dismissedSection, setDismissedSection] = useState<IcpFolioSectionKey | null>(null);
@@ -1289,6 +1369,39 @@ export function IcpFolioDocument({
                 </span>
               </div>
               {/*
+                * Two entry points rather than one vertical flow.
+                *
+                * The score and the draft are different questions - "is this
+                * worth doing" and "who is it for" - and stacking them buried
+                * the second one below the fold, where most readers never
+                * reached it. Both are now addressable from the top.
+                *
+                * Panels are hidden with a class rather than unmounted, and the
+                * PDF export reveals every [data-icp-tab-panel] in its cloned
+                * document. Unmounting would have silently produced a download
+                * containing only whichever tab happened to be open.
+                */}
+              <div data-icp-tab-nav className="mb-8 grid gap-3 sm:grid-cols-2">
+                <FolioTabCard
+                  active={activeTab === "score"}
+                  onSelect={() => setActiveTab("score")}
+                  eyebrow="Idea score"
+                  title={`${tabScore.displayScore}/100`}
+                  detail={tabScore.verdictLabel}
+                  icon={<Gauge className="h-4 w-4" aria-hidden />}
+                />
+                <FolioTabCard
+                  active={activeTab === "draft"}
+                  onSelect={() => setActiveTab("draft")}
+                  eyebrow="ICP draft"
+                  title={draft.customer.personaName}
+                  detail={draft.customer.roleLine}
+                  icon={<UserRound className="h-4 w-4" aria-hidden />}
+                />
+              </div>
+
+              <div data-icp-tab-panel="score" className={activeTab === "score" ? "" : "hidden"}>
+              {/*
                 * Rendered unconditionally, unlike the header it replaces.
                 *
                 * The old idea+badge block was gated on ideaDescription, which
@@ -1313,6 +1426,9 @@ export function IcpFolioDocument({
                   </div>
                 </details>
               </div>
+              </div>
+
+              <div data-icp-tab-panel="draft" className={activeTab === "draft" ? "" : "hidden"}>
               {unlockedVisibleSectionKeys.map((sectionKey) => (
                 <div key={sectionKey}>{renderedSections[sectionKey]}</div>
               ))}
@@ -1387,6 +1503,7 @@ export function IcpFolioDocument({
                   </ul>
                 </div>
               ) : null}
+              </div>
 
             {activeSection && sectionExplainers?.[activeSection] && explainerPosition ? (
               <div

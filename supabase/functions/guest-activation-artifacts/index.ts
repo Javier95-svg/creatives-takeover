@@ -29,6 +29,13 @@ async function hashToken(token: string) {
   return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+/** Short, unguessable slug suffix. Server-side so slugs cannot be squatted. */
+function createSlugSuffix() {
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes).map((b) => b.toString(36).padStart(2, "0")).join("").slice(0, 12);
+}
+
 function clientIp(req: Request) {
   return (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "unknown";
 }
@@ -82,6 +89,108 @@ serve(async (req) => {
         nativeArtifactId: published.native_artifact_id,
         shareSlug: published.share_slug,
       });
+    }
+
+    /*
+     * Publish a guest's score card, before they have an account.
+     *
+     * The distribution loop only runs if the founder can share the moment they
+     * see their number; requiring signup first puts the ask at exactly the wrong
+     * point. What gets published is only the score card, never the draft, so
+     * giving this away costs nothing that the unlock gate was selling.
+     *
+     * Deliberately unauthenticated and IP-rate-limited, matching create_demo.
+     * Possession of the resume token is the authorization: it is a 256-bit
+     * value we only ever handed to this browser.
+     */
+    if (operation === "publish_score") {
+      const { error: rateError } = await serviceClient.rpc("assert_rate_limit", {
+        p_key: `guest_score_publish:${clientIp(req)}`,
+        p_user_id: null,
+        p_max_per_minute: 5,
+      });
+      if (rateError) {
+        return json({ success: false, error: "Too many share attempts. Wait a minute and try again.", errorCode: "RATE_LIMITED" }, 429);
+      }
+
+      const resumeToken = typeof body.resumeToken === "string" ? body.resumeToken.trim() : "";
+      const scoreCard = body.scoreCard;
+      if (resumeToken.length < 32) {
+        return json({ success: false, error: "The artifact share details are invalid." }, 422);
+      }
+      // Validate the shape we are about to serve publicly rather than trusting
+      // the caller: this object is echoed to strangers and to the OG renderer.
+      if (
+        !scoreCard || typeof scoreCard !== "object" ||
+        typeof scoreCard.displayScore !== "number" ||
+        !Number.isFinite(scoreCard.displayScore) ||
+        typeof scoreCard.verdict !== "string"
+      ) {
+        return json({ success: false, error: "The score card is invalid." }, 422);
+      }
+
+      const tokenHash = await hashToken(resumeToken);
+      const { data: existing, error: readError } = await serviceClient
+        .from("guest_activation_artifacts")
+        .select("id, share_slug, deep_payload")
+        .eq("resume_token_hash", tokenHash)
+        .gt("expires_at", new Date().toISOString())
+        .maybeSingle();
+      if (readError) throw readError;
+      if (!existing) return json({ success: false, error: "This artifact is unavailable." }, 404);
+
+      // Reuse the slug on repeat shares so a link already posted keeps working.
+      const shareSlug = existing.share_slug || `idea-${createSlugSuffix()}`;
+
+      /*
+       * A published link has to outlive the 7-day guest TTL.
+       * prune_expired_guest_activation_artifacts DELETEs on expiry every night,
+       * so without this the founder's post would outlive the page it points at.
+       */
+      const publishedExpiry = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+      const nextPayload = {
+        ...(existing.deep_payload && typeof existing.deep_payload === "object" ? existing.deep_payload : {}),
+        publicScoreCard: scoreCard,
+      };
+
+      const { error: publishError } = await serviceClient
+        .from("guest_activation_artifacts")
+        .update({
+          share_slug: shareSlug,
+          deep_payload: nextPayload,
+          expires_at: publishedExpiry,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existing.id);
+      if (publishError) throw publishError;
+
+      return json({ success: true, shareSlug });
+    }
+
+    /*
+     * Read a published score card by slug.
+     *
+     * This function is the entire access control for it: RLS on
+     * guest_activation_artifacts is enabled with no policies, so anon cannot
+     * reach the table directly and cannot select deep_payload by any other
+     * route. Only the card is returned - never the draft, the resume token
+     * hash, or anything else on the row.
+     */
+    if (operation === "read_score") {
+      const slug = typeof body.shareSlug === "string" ? body.shareSlug.trim().toLowerCase() : "";
+      if (!/^[a-z0-9][a-z0-9-]{2,95}$/.test(slug)) {
+        return json({ success: false, error: "Not found." }, 404);
+      }
+      const { data: row, error: readError } = await serviceClient
+        .from("guest_activation_artifacts")
+        .select("deep_payload")
+        .eq("share_slug", slug)
+        .gt("expires_at", new Date().toISOString())
+        .maybeSingle();
+      if (readError) throw readError;
+      const card = row?.deep_payload?.publicScoreCard ?? null;
+      if (!card) return json({ success: false, error: "Not found." }, 404);
+      return json({ success: true, scoreCard: card });
     }
 
     if (operation === "create_demo") {

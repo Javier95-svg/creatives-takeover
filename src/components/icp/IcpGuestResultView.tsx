@@ -1,7 +1,14 @@
+import { useMemo } from "react";
+import { toast } from "sonner";
+
+import { IcpDraftShareBar } from "@/components/icp/IcpDraftShareBar";
 import { IcpFolioDocument } from "@/components/icp/IcpFolioDocument";
 import { IcpUnlockGate } from "@/components/icp/IcpUnlockGate";
 import type { StoredIcpArtifact } from "@/lib/icpBuilderSession";
 import { ICP_GUEST_VISIBLE_SECTIONS } from "@/lib/icpUnlockFlow";
+import { buildIcpScoreCard } from "@/lib/icpScoreCard";
+import { getGuestScoreCardUrl, publishGuestScoreCard } from "@/lib/guestActivationArtifacts";
+import { readHeroGuestArtifact } from "@/lib/heroIcpGeneration";
 
 interface IcpGuestResultViewProps {
   artifact: StoredIcpArtifact;
@@ -30,6 +37,36 @@ export function IcpGuestResultView({
   onBeforeAuthContinue,
   onEmailLinkRequest,
 }: IcpGuestResultViewProps) {
+  const scoreCard = useMemo(
+    () =>
+      buildIcpScoreCard(artifact.draftDocument, {
+        idea: artifact.founderInputs.fastDescription ?? seed,
+        generatedAt: artifact.generatedAt,
+      }),
+    [artifact, seed],
+  );
+
+  /*
+   * Minting the link is what makes the loop run, and it has to happen here:
+   * this is the one moment the founder is looking at their own number. Asking
+   * them to create an account first puts the request at the point of least
+   * willingness. Only the card is published; the draft stays behind the gate.
+   */
+  const handleShare = async (): Promise<string | null> => {
+    const guest = readHeroGuestArtifact();
+    if (!guest?.resumeToken) {
+      toast.error("Could not create a share link for this result.");
+      return null;
+    }
+    try {
+      const slug = await publishGuestScoreCard(guest.resumeToken, scoreCard);
+      return getGuestScoreCardUrl(slug);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not create a share link.");
+      return null;
+    }
+  };
+
   return (
     <div className="pb-20 md:pb-0">
       <IcpFolioDocument
@@ -38,6 +75,16 @@ export function IcpGuestResultView({
         ideaDescription={artifact.founderInputs.fastDescription ?? seed}
         visibleSections={ICP_GUEST_VISIBLE_SECTIONS}
         lockedSections={GUEST_LOCKED_SECTIONS}
+        bottomBar={
+          <IcpDraftShareBar
+            scoreCard={scoreCard}
+            allowAnonymousShare
+            shareUrl={null}
+            returnPath={returnPath}
+            onShare={handleShare}
+            onBeforeAuthContinue={onBeforeAuthContinue}
+          />
+        }
         lockedSectionBreak={
           <div id="icp-unlock" className="scroll-mt-24">
             <IcpUnlockGate

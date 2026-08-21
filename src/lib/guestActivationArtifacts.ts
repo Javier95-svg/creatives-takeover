@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { TryDraft } from "@/lib/demoStudio/tryDraft";
+import type { IcpScoreCard } from "@/lib/icpScoreCard";
 
 export interface DemoGuestArtifactRef {
   artifactId: string;
@@ -20,6 +21,43 @@ async function invoke<T>(body: unknown): Promise<T> {
     throw new Error(message);
   }
   return data as T;
+}
+
+/**
+ * Publish a guest's score card and get back a public slug.
+ *
+ * Callable with no account: the resume token is the authorization. Only the
+ * card crosses the wire, so nothing behind the unlock gate is given away.
+ */
+export async function publishGuestScoreCard(
+  resumeToken: string,
+  scoreCard: IcpScoreCard,
+): Promise<string> {
+  const result = await invoke<{ success?: boolean; shareSlug?: string; error?: string }>({
+    operation: "publish_score",
+    resumeToken,
+    scoreCard,
+  });
+  if (!result.success || !result.shareSlug) {
+    throw new Error(result.error || "Could not create a share link.");
+  }
+  return result.shareSlug;
+}
+
+export async function readGuestScoreCard(shareSlug: string): Promise<IcpScoreCard | null> {
+  try {
+    const result = await invoke<{ success?: boolean; scoreCard?: IcpScoreCard }>({
+      operation: "read_score",
+      shareSlug,
+    });
+    return result.success && result.scoreCard ? result.scoreCard : null;
+  } catch {
+    return null;
+  }
+}
+
+export function getGuestScoreCardUrl(slug: string) {
+  return `${window.location.origin}/idea/${slug}`;
 }
 
 export async function createDemoGuestArtifact(draft: TryDraft, source: string): Promise<DemoGuestArtifactRef> {

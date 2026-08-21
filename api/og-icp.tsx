@@ -36,6 +36,37 @@ export default async function handler(request: Request) {
   let verdictLabel = '';
   let ideaLine = '';
 
+  /*
+   * Guest score cards live behind the edge function, not in a table anon can
+   * read: RLS on guest_activation_artifacts has no policies by design, so the
+   * function is the only way in. That is also what guarantees this renderer
+   * cannot accidentally surface anything but the card.
+   */
+  const ideaSlug = url.searchParams.get('idea') ?? '';
+  if (ideaSlug && SUPABASE_KEY) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/guest-activation-artifacts`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ operation: 'read_score', shareSlug: ideaSlug }),
+      });
+      const payload = await res.json() as { scoreCard?: Record<string, unknown> };
+      const card = payload?.scoreCard;
+      if (card && typeof card.displayScore === 'number') {
+        displayScore = card.displayScore;
+        verdictLabel = typeof card.verdictLabel === 'string' ? card.verdictLabel : '';
+        ideaLine = typeof card.idea === 'string' ? card.idea : '';
+        personaName = typeof card.personaName === 'string' ? card.personaName : personaName;
+        roleLine = typeof card.roleLine === 'string' ? card.roleLine : '';
+        painQuote = typeof card.painLine === 'string' ? card.painLine : '';
+      }
+    } catch { /* use defaults */ }
+  }
+
   if (slug && SUPABASE_KEY) {
     try {
       const res = await fetch(

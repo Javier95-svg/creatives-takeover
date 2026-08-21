@@ -369,6 +369,25 @@ export function IcpVerdictSpread({
       ) : null}
 
       {action ? <div className="mt-6">{action}</div> : null}
+
+      {/*
+        * Attribution lives on the score box specifically, not just on the
+        * document watermark below it. This box is the part that gets
+        * screenshotted and shared, and a number travelling around LinkedIn
+        * with nothing naming its source is a lost referral every time.
+        */}
+      <div className="mt-6 flex items-center gap-2 border-t border-border/50 pt-4">
+        <img
+          src="/lovable-uploads/04a4b9d0-4213-4186-ba00-c7acd22bad98.png"
+          alt=""
+          className="h-6 w-6 rounded-lg object-cover"
+          draggable={false}
+        />
+        <span className="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-foreground/45">
+          Creatives Takeover
+        </span>
+        <span className="ml-auto text-[0.7rem] text-foreground/35">creatives-takeover.com</span>
+      </div>
     </section>
   );
 }
