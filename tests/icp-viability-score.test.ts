@@ -320,6 +320,41 @@ test('rigor damps the verdict without ever carrying it', () => {
   assert.ok(thin.score > 1, 'thin evidence must not zero out a genuinely good idea');
 });
 
+test('a missing retrieval credential is not scored against the founder', () => {
+  /*
+   * Reddit killed unauthenticated API access, so without REDDIT_CLIENT_ID the
+   * retrieval leg returns nothing. If that read as "no evidence exists for your
+   * idea", every founder on the platform would see a capped score and an
+   * apology because of an unset secret on our side.
+   */
+  const sameIdea = allDimensions(85);
+  const searchedAndFoundNothing = draft({ sources: 0, dimensions: sameIdea, answered: 'all', confidence: 'high' });
+  const neverSearched = draft({ sources: 0, dimensions: sameIdea, answered: 'all', confidence: 'high' });
+  neverSearched.evidenceRetrieval = 'unavailable';
+
+  const searched = computeViabilityScore(searchedAndFoundNothing);
+  const notSearched = computeViabilityScore(neverSearched);
+
+  assert.equal(searched.ungrounded, true, 'searching and finding nothing is a real signal');
+  assert.equal(notSearched.ungrounded, false, 'never searching is not the founder’s problem');
+  assert.ok(notSearched.score > searched.score, `${notSearched.score} should beat ${searched.score}`);
+  assert.ok(!notSearched.summary.includes('No outside evidence'), notSearched.summary);
+});
+
+test('with retrieval unavailable the evidence pillar rescales instead of scoring a miss', () => {
+  const fixture = draft({ sources: 0, confidence: 'high', answered: 'all', dimensions: allDimensions(90) });
+  fixture.evidenceRetrieval = 'unavailable';
+
+  const result = computeViabilityScore(fixture);
+  const evidence = result.pillars.find((pillar) => pillar.key === 'evidence');
+
+  assert.ok(evidence);
+  // All-high confidence with the citation term dropped should max the pillar,
+  // rather than being stuck at 0.75 because a source count it could never earn.
+  assert.equal(evidence.ratio, 1);
+  assert.equal(result.band, 'strong', 'a strong idea must still be able to reach strong');
+});
+
 test('drafts generated before viabilityAssessment still score', () => {
   const legacy = computeViabilityScore(draft({ dimensions: null, sources: 2, confidence: 'high' }));
 

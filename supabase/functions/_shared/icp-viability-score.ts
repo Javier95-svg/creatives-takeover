@@ -135,7 +135,13 @@ export function computeIcpViabilityScore(draft: DraftDocument): ServerViabilityS
     sections.reduce((total, section) => total + (CONFIDENCE_WEIGHT[section.confidence] ?? 0.2), 0) /
     (sections.length || 1);
   const sourceCount = (draft.sources ?? []).filter((source) => isAuthenticCitation(source.url)).length;
-  const evidencePillar = averageConfidence * 3 + (Math.min(sourceCount, 4) / 4) * 1;
+  // See the client copy: a missing credential must not read as "no evidence
+  // exists for your idea". Drop the citation term and rescale when retrieval
+  // never ran, and only call a draft ungrounded if we actually searched.
+  const retrievalRan = draft.evidenceRetrieval !== "unavailable";
+  const evidencePillar = retrievalRan
+    ? averageConfidence * 3 + (Math.min(sourceCount, 4) / 4) * 1
+    : averageConfidence * 3 * (4 / 3);
 
   const answeredPains = [0, 1, 2].filter((index) => isReal(draft, `decisionBrief.rankedPains.${index}`)).length;
   const clarityPillar =
@@ -167,7 +173,7 @@ export function computeIcpViabilityScore(draft: DraftDocument): ServerViabilityS
       }, 0)
     : rigor;
 
-  const ungrounded = sourceCount === 0;
+  const ungrounded = retrievalRan && sourceCount === 0;
   const raw = 1 + 9 * viability * (0.55 + 0.45 * rigor);
   const capped = ungrounded ? Math.min(raw, VIABILITY_THRESHOLDS.strong - 0.1) : raw;
   const score = Math.round(clamp(capped, 1, 10) * 10) / 10;

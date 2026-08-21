@@ -144,6 +144,12 @@ export interface IcpDraftDocument {
     route: string;
   }>;
   sources?: IcpDraftSource[];
+  /**
+   * "unavailable" means no retrieval source was reachable, which is a fact
+   * about our configuration rather than a signal about the founder's market.
+   * Absent on drafts generated before retrieval existed.
+   */
+  evidenceRetrieval?: "ok" | "unavailable";
   viabilityAssessment?: IcpViabilityAssessment;
   /** Dotted field path to whether the model answered it. */
   fieldProvenance?: Record<string, IcpFieldProvenance>;

@@ -38,6 +38,15 @@ export interface DraftEnrichment {
   marketSignals: string[];
   competitorLinks: Array<{ name: string; url: string | null }>;
   sources: DraftSource[];
+  /**
+   * Whether any retrieval source was reachable at all.
+   *
+   * "We looked and found nothing" is a real signal about the niche. "We never
+   * looked, because no credential is configured" is a fact about our own
+   * infrastructure and must not be scored against the founder. Defaults to
+   * true so callers that omit it keep the stricter, evidence-expecting path.
+   */
+  retrievalAvailable?: boolean;
 }
 
 type SectionConfidence = "high" | "medium" | "low";
@@ -114,6 +123,8 @@ type DraftDocument = {
   };
   nextActions: Array<{ title: string; description: string; route: string }>;
   sources: DraftSource[];
+  /** "unavailable" means retrieval never ran, not that the niche is empty. */
+  evidenceRetrieval: "ok" | "unavailable";
   viabilityAssessment: ViabilityAssessment;
   fieldProvenance: FieldProvenanceMap;
 };
@@ -783,6 +794,7 @@ function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEn
     // Citations are attached deterministically from real retrieved evidence so
     // they always render, regardless of what the model echoes back.
     sources: enrichment.sources.slice(0, 8),
+    evidenceRetrieval: enrichment.retrievalAvailable === false ? "unavailable" : "ok",
     viabilityAssessment: normalizeViabilityAssessment(parsed?.viabilityAssessment, citableSourceIds),
     fieldProvenance: provenance,
   };
@@ -806,6 +818,7 @@ export async function generateIcpDraftArtifact({
       ...source,
       sourceId: source.sourceId || `source-${index + 1}`,
     })),
+    retrievalAvailable: enrichment?.retrievalAvailable ?? true,
   };
 
   // Hard timeout so a hung OpenAI request fails fast and clean instead of

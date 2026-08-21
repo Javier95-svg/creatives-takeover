@@ -334,6 +334,7 @@ async function fetchMarketSignals(request: DraftRequestShape) {
     marketSignals: [] as string[],
     competitors: [] as Array<{ name: string; url: string | null }>,
     sources: [] as DraftSource[],
+    retrievalAvailable: false,
   });
   if (!supabaseUrl || !serviceRoleKey) return empty();
 
@@ -365,6 +366,7 @@ async function fetchMarketSignals(request: DraftRequestShape) {
       marketSignals: evidence.marketSignals,
       competitors: evidence.competitors,
       sources: evidence.sources,
+      retrievalAvailable: evidence.retrievalAvailable,
     };
   } catch (error) {
     console.warn("ICP analyzer enrichment failed, continuing without evidence", error);
@@ -397,6 +399,7 @@ async function generateAndPersistHeroDeep({
         marketSignals: enrichment.marketSignals,
         competitorLinks: enrichment.competitors,
         sources: enrichment.sources,
+        retrievalAvailable: enrichment.retrievalAvailable,
       },
     });
     const { error } = await serviceClient
@@ -1069,6 +1072,7 @@ serve(async (req) => {
           marketSignals: enrichment.marketSignals,
           competitorLinks: enrichment.competitors,
           sources: enrichment.sources,
+          retrievalAvailable: enrichment.retrievalAvailable,
         },
       });
 

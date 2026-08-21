@@ -32,6 +32,14 @@ export interface IcpEvidenceResult {
   sources: DraftSource[];
   competitors: Array<{ name: string; url: string | null }>;
   marketSignals: string[];
+  /**
+   * Whether any retrieval source was actually reachable.
+   *
+   * "We looked and found nothing" is a real signal about the niche. "We never
+   * looked because no credential is configured" is a fact about our infra and
+   * must not be scored against the founder. Scoring needs to tell them apart.
+   */
+  retrievalAvailable: boolean;
   diagnostics: {
     reddit: RedditSourceState;
     redditPostsConsidered: number;
@@ -44,12 +52,12 @@ const MAX_COMMUNITY_SOURCES = 5;
 const MAX_COMPETITOR_SOURCES = 4;
 /** Below this rank score a post is noise, and citing noise is worse than citing nothing. */
 const MIN_RANK_SCORE = 35;
-
 function emptyResult(reddit: RedditSourceState, startedAt: number): IcpEvidenceResult {
   return {
     sources: [],
     competitors: [],
     marketSignals: [],
+    retrievalAvailable: false,
     diagnostics: {
       reddit,
       redditPostsConsidered: 0,
@@ -69,10 +77,16 @@ function emptyResult(reddit: RedditSourceState, startedAt: number): IcpEvidenceR
  */
 async function gatherCommunityEvidence(
   input: IcpEvidenceInput,
-): Promise<{ posts: RedditPost[]; ranked: ReturnType<typeof rankDiscoveryPosts>; state: RedditSourceState }> {
+): Promise<{
+  posts: RedditPost[];
+  ranked: ReturnType<typeof rankDiscoveryPosts>;
+  state: RedditSourceState;
+  /** False when Reddit OAuth is not configured at all, rather than configured and empty. */
+  available: boolean;
+}> {
   const reddit = await createRedditClient({ deadlineAt: input.deadlineAt });
-  if (reddit.sourceState.status !== "available") {
-    return { posts: [], ranked: [], state: reddit.sourceState };
+  if (reddit.sourceState.status !== 'available') {
+    return { posts: [], ranked: [], state: reddit.sourceState, available: false };
   }
 
   const queries = buildDiscoveryQueries(
@@ -80,19 +94,19 @@ async function gatherCommunityEvidence(
       problem: input.description,
       targetAudience: input.audienceHint,
     },
-    "problem_discovery",
+    'problem_discovery',
   );
 
   const batches = await Promise.all(
     queries.slice(0, 3).map((query) =>
       reddit
-        .searchReddit(query, { sort: "relevance", time: "year", limit: 25 })
+        .searchReddit(query, { sort: 'relevance', time: 'year', limit: 25 })
         .catch(() => [] as RedditPost[]),
     ),
   );
   const posts = batches.flat();
-  const ranked = rankDiscoveryPosts(posts, queries, new Set(), 12, "problem_discovery");
-  return { posts, ranked, state: reddit.sourceState };
+  const ranked = rankDiscoveryPosts(posts, queries, new Set(), 12, 'problem_discovery');
+  return { posts, ranked, state: reddit.sourceState, available: true };
 }
 
 /**
@@ -180,6 +194,7 @@ export async function gatherIcpEvidence(input: IcpEvidenceInput): Promise<IcpEvi
       posts: [] as RedditPost[],
       ranked: [] as ReturnType<typeof rankDiscoveryPosts>,
       state: { status: "api_unavailable", reason: "reddit_leg_threw" } as RedditSourceState,
+      available: false,
     })),
     gatherCompetitorEvidence(input).catch(() => ({
       competitors: [] as Array<{ name: string; url: string | null }>,
@@ -221,6 +236,7 @@ export async function gatherIcpEvidence(input: IcpEvidenceInput): Promise<IcpEvi
     sources,
     competitors: competition.competitors,
     marketSignals,
+    retrievalAvailable: community.available || competition.status === "available",
     diagnostics: {
       reddit: community.state,
       redditPostsConsidered: community.posts.length,

@@ -147,7 +147,20 @@ function computeRigorPillars(draft: IcpDraftDocument): ViabilityDriver[] {
     sections.reduce((total, section) => total + (CONFIDENCE_WEIGHT[section.confidence] ?? 0.2), 0) /
     (sections.length || 1);
   const sourceCount = countAuthenticSources(draft);
-  const evidence = averageConfidence * 3 + (Math.min(sourceCount, 4) / 4) * 1;
+
+  /*
+   * When retrieval never ran, the citation term is dropped and the pillar is
+   * rescaled rather than scored as a miss.
+   *
+   * Otherwise a platform-side gap (an unset or expired API credential) would
+   * read to every founder as "no evidence exists for your idea", which is a
+   * statement about our configuration, not their market. Only score the
+   * absence of citations when we actually went looking.
+   */
+  const retrievalRan = draft.evidenceRetrieval !== "unavailable";
+  const evidence = retrievalRan
+    ? averageConfidence * 3 + (Math.min(sourceCount, 4) / 4) * 1
+    : averageConfidence * 3 * (4 / 3);
 
   // Problem clarity: a sharp, triggered, costly pain is the strongest early
   // signal. Each term asks whether the field was actually answered, not whether
@@ -188,7 +201,10 @@ export function computeViabilityScore(draft: IcpDraftDocument): ViabilityScore {
   const pillars = computeRigorPillars(draft);
   const rigor = (pillars[0].ratio * 4 + pillars[1].ratio * 3 + pillars[2].ratio * 3) / 10;
   const dimensions = computeDimensions(draft);
-  const ungrounded = countAuthenticSources(draft) === 0;
+  // Only "ungrounded" if we searched and came back empty. If retrieval never
+  // ran there is nothing for the founder to act on, so neither the cap nor the
+  // warning applies.
+  const ungrounded = draft.evidenceRetrieval !== "unavailable" && countAuthenticSources(draft) === 0;
 
   /*
    * Drafts generated before viabilityAssessment existed have no business
