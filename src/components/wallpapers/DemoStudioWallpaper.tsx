@@ -1,4 +1,21 @@
-const DemoStudioWallpaper = () => {
+interface DemoStudioWallpaperProps {
+  /**
+   * Drift the storyboard frames, breathe the hotspot rings, and run the
+   * timeline bars.
+   *
+   * Opt-in rather than always on: the Demo Studio dashboard is a working
+   * surface where a moving backdrop competes with the founder's own projects,
+   * while the try page is a landing moment that benefits from looking alive.
+   *
+   * Every animation is behind Tailwind's `motion-safe:` variant, so a visitor
+   * who has asked their system for reduced motion gets the static version.
+   */
+  animated?: boolean;
+}
+
+const DemoStudioWallpaper = ({ animated = false }: DemoStudioWallpaperProps) => {
+  const motion = (classes: string) => (animated ? classes : '');
+
   const storyboardFrames = [
     { top: '11%', left: '6%', width: '11rem', height: '7rem', opacity: 0.34 },
     { top: '29%', left: '3%', width: '14rem', height: '8rem', opacity: 0.28 },
@@ -46,22 +63,38 @@ const DemoStudioWallpaper = () => {
       {/* Storyboard strip */}
       <div className="absolute left-0 top-0 hidden h-full w-[23rem] md:block">
         {storyboardFrames.map((frame, index) => (
+          /*
+           * Two elements, because both want `transform`. The outer one drifts
+           * and the inner one holds the rotation - collapsed into one, the
+           * animation's transform would replace the rotate and the frames would
+           * straighten out the moment they started moving.
+           */
           <div
             key={index}
-            className="absolute rounded-2xl border border-white/[0.18] bg-background/[0.35] shadow-2xl backdrop-blur-sm"
+            className={motion(
+              index === 1 ? 'motion-safe:animate-panel-drift-slow' : 'motion-safe:animate-panel-drift',
+            )}
             style={{
+              position: 'absolute',
               top: frame.top,
               left: frame.left,
               width: frame.width,
               height: frame.height,
               opacity: frame.opacity,
-              transform: `rotate(${index === 1 ? -4 : 3}deg)`,
+              // Staggered so the three read as separate objects rather than one
+              // sheet moving together.
+              animationDelay: `${index * 1.6}s`,
             }}
           >
-            <div className="absolute left-3 right-3 top-3 h-2 rounded-full bg-white/[0.18]" />
-            <div className="absolute left-3 top-7 h-10 w-16 rounded-lg border border-white/[0.14] bg-white/10" />
-            <div className="absolute bottom-3 left-3 h-2 w-20 rounded-full bg-sky-300/[0.45]" />
-            <div className="absolute bottom-3 right-3 h-2 w-12 rounded-full bg-emerald-300/[0.35]" />
+            <div
+              className="relative h-full w-full rounded-2xl border border-white/[0.18] bg-background/[0.35] shadow-2xl backdrop-blur-sm"
+              style={{ transform: `rotate(${index === 1 ? -4 : 3}deg)` }}
+            >
+              <div className="absolute left-3 right-3 top-3 h-2 rounded-full bg-white/[0.18]" />
+              <div className="absolute left-3 top-7 h-10 w-16 rounded-lg border border-white/[0.14] bg-white/10" />
+              <div className="absolute bottom-3 left-3 h-2 w-20 rounded-full bg-sky-300/[0.45]" />
+              <div className="absolute bottom-3 right-3 h-2 w-12 rounded-full bg-emerald-300/[0.35]" />
+            </div>
           </div>
         ))}
       </div>
@@ -78,15 +111,29 @@ const DemoStudioWallpaper = () => {
         <div className="absolute right-16 top-40 h-3 w-40 rounded-full bg-white/10" />
         <div className="absolute right-16 top-[12.5rem] h-3 w-32 rounded-full bg-white/10" />
 
-        <div className="absolute left-[39%] top-[38%] h-8 w-8 rounded-full border border-sky-300/70 bg-sky-300/15 shadow-[0_0_0_12px_rgba(56,189,248,0.08)]" />
-        <div className="absolute right-[18%] top-[50%] h-7 w-7 rounded-full border border-emerald-300/[0.65] bg-emerald-300/15 shadow-[0_0_0_10px_rgba(34,197,94,0.08)]" />
+        {/* Hotspots breathe: this is the one motion that says "a demo is
+            playing here" rather than "the page is decorated". */}
+        <div
+          className={`absolute left-[39%] top-[38%] h-8 w-8 rounded-full border border-sky-300/70 bg-sky-300/15 shadow-[0_0_0_12px_rgba(56,189,248,0.08)] ${motion('motion-safe:animate-pulse-glow')}`}
+        />
+        <div
+          className={`absolute right-[18%] top-[50%] h-7 w-7 rounded-full border border-emerald-300/[0.65] bg-emerald-300/15 shadow-[0_0_0_10px_rgba(34,197,94,0.08)] ${motion('motion-safe:animate-pulse-glow')}`}
+          style={{ animationDelay: '1.4s' }}
+        />
         <div className="absolute bottom-9 left-7 right-7 h-12 rounded-2xl border border-white/10 bg-black/20">
           <div className="absolute left-5 top-1/2 h-3 w-3 -translate-y-1/2 rounded-full border border-white/40" />
           {timelineBars.map((bar, index) => (
             <div
               key={index}
-              className="absolute top-1/2 h-2 -translate-y-1/2 rounded-full"
-              style={{ left: bar.left, width: bar.width, backgroundColor: bar.color }}
+              className={`absolute top-1/2 h-2 -translate-y-1/2 rounded-full ${motion('motion-safe:animate-timeline-sweep')}`}
+              // Sequential delays make the highlight travel left to right along
+              // the timeline instead of all five bars blinking at once.
+              style={{
+                left: bar.left,
+                width: bar.width,
+                backgroundColor: bar.color,
+                animationDelay: `${index * 0.32}s`,
+              }}
             />
           ))}
         </div>

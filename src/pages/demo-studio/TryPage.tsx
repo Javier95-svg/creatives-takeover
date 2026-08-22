@@ -1104,7 +1104,7 @@ export default function TryPage() {
         description="Add your product URL and a few screenshots, and turn them into an interactive click-through prototype with AI-written captions. Finish and publish it in Demo Studio."
         type="product"
       />
-      <DemoStudioWallpaper />
+      <DemoStudioWallpaper animated />
       <div className="relative z-10 mx-auto w-full max-w-3xl px-4">
         <Link
           to="/"
@@ -1124,7 +1124,7 @@ export default function TryPage() {
 
         {steps ? (
           <div className="space-y-5">
-            <section className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-5" aria-labelledby="demo-ready-heading">
+            <section className="rounded-2xl border border-emerald-400/25 bg-emerald-950 p-5 shadow-2xl shadow-black/50" aria-labelledby="demo-ready-heading">
               {/*
                 * "Your demo is ready" claimed a finished thing. What this is
                 * is a working prototype of one: the frames and captions are
@@ -1168,7 +1168,7 @@ export default function TryPage() {
                 })
               }
             />
-            <div className="flex flex-col items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-5 text-center">
+            <div className="flex flex-col items-center gap-3 rounded-xl border border-white/10 bg-slate-950 p-5 text-center shadow-2xl shadow-black/50">
               {usedPlaceholders && (
                 <p className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/15 px-3 py-1 text-xs font-medium text-indigo-200">
                   <ImagePlus className="h-3.5 w-3.5" />
@@ -1220,7 +1220,7 @@ export default function TryPage() {
                               e.preventDefault();
                               void handleResumeEmailSubmit();
                             }}
-                            className="border-white/15 bg-white/5 pl-9 text-white placeholder:text-white/40"
+                            className="border-white/15 bg-slate-900 pl-9 text-white placeholder:text-white/40"
                           />
                         </div>
                         <Button
@@ -1240,7 +1240,12 @@ export default function TryPage() {
             </div>
           </div>
         ) : (
-          <div className="space-y-6 rounded-xl border border-white/10 bg-white/5 p-6">
+          /* Opaque, not translucent. The wallpaper behind this card has frames,
+             grid lines and colour bars in it, and at bg-white/5 all of that read
+             straight through the fields - including through the text someone was
+             typing. A backdrop is only decoration if it stays behind the
+             content. */
+          <div className="space-y-6 rounded-xl border border-white/10 bg-slate-950 p-6 shadow-2xl shadow-black/50">
             <div>
               <Label htmlFor="product-description" className="text-sm font-medium text-white">
                 Describe your product <span className="text-red-300">*</span>
@@ -1260,7 +1265,7 @@ export default function TryPage() {
                   markInputStarted();
                   setDescription(e.target.value);
                 }}
-                className="mt-2 border-white/15 bg-white/5 text-white placeholder:text-white/40"
+                className="mt-2 border-white/15 bg-slate-900 text-white placeholder:text-white/40"
               />
             </div>
 
@@ -1282,7 +1287,7 @@ export default function TryPage() {
                   markInputStarted();
                   setContextUrl(e.target.value);
                 }}
-                className="mt-2 border-white/15 bg-white/5 text-white placeholder:text-white/40"
+                className="mt-2 border-white/15 bg-slate-900 text-white placeholder:text-white/40"
               />
             </div>
 

@@ -473,6 +473,27 @@ backgroundImage: {
 						filter: 'brightness(1.4) contrast(1.15)',
 						boxShadow: 'inset 0 0 25px rgba(255, 255, 255, 0.4), inset 0 0 15px rgba(59, 130, 246, 0.5), 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(59, 130, 246, 0.7), 0 0 60px rgba(239, 68, 68, 0.5), 0 0 80px rgba(16, 185, 129, 0.4), 0 0 100px rgba(59, 130, 246, 0.6), 0 0 120px rgba(255, 255, 255, 0.3)'
 					}
+				},
+				/*
+				 * Ambient drift for wallpaper PANELS, as opposed to particles.
+				 *
+				 * float/drift/orbit and the rest spin a full 360deg and animate
+				 * opacity, which is right for a speck of light and wrong for a
+				 * rectangle meant to read as a UI frame. These translate only,
+				 * so a panel keeps the opacity and rotation it was given.
+				 */
+				'panel-drift': {
+					'0%, 100%': { transform: 'translate3d(0, 0, 0)' },
+					'50%': { transform: 'translate3d(0, -14px, 0)' }
+				},
+				'panel-drift-slow': {
+					'0%, 100%': { transform: 'translate3d(0, 0, 0)' },
+					'50%': { transform: 'translate3d(0, 12px, 0)' }
+				},
+				/* Runs a highlight along the demo timeline bars. */
+				'timeline-sweep': {
+					'0%, 100%': { opacity: '0.45' },
+					'50%': { opacity: '1' }
 				}
 			},
 			animation: {
@@ -501,6 +522,9 @@ backgroundImage: {
 				'rgb-pulse': 'rgb-pulse 3s ease-in-out infinite',
 				'rgb-glow-rotate': 'rgb-glow-rotate 6s linear infinite',
 				'lightbulb-shine': 'lightbulb-shine 3s ease-in-out infinite',
+				'panel-drift': 'panel-drift 9s ease-in-out infinite',
+				'panel-drift-slow': 'panel-drift-slow 13s ease-in-out infinite',
+				'timeline-sweep': 'timeline-sweep 3.2s ease-in-out infinite',
 				'subtle-flicker': 'subtle-flicker 2.5s ease-in-out infinite',
 				'text-flicker': 'text-flicker 3s ease-in-out infinite'
 			}
