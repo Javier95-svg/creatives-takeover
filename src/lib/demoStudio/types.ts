@@ -120,6 +120,30 @@ export interface DemoStudioStoryboardStep {
   speaker_notes: string;
   hotspot_label: string;
   suggested_action: HotspotAction;
+  /**
+   * Which uploaded screenshot this step describes, 0-based.
+   *
+   * Previously the two were matched by array position, so upload order WAS
+   * narrative order and a caption could describe a screen it was not sitting
+   * on. Optional because only the vision draft path returns it; readers fall
+   * back to positional matching.
+   */
+  screenshot_index?: number;
+  /**
+   * Where to put the pointer, normalized 0-1 against the screenshot.
+   *
+   * Absent when the model could not identify an element, in which case callers
+   * use DEMO_STUDIO_TRY_HOTSPOT. A fixed rectangle on every step is not a
+   * hotspot, it is a sticker.
+   */
+  hotspot?: { x: number; y: number; w: number; h: number };
+  /** What the model actually saw. Used to detect unreadable or non-product screens. */
+  screen_summary?: string;
+  /**
+   * True when this step is template filler rather than a description of the
+   * screen. Filler must never render as narration - see getUsableTryStoryboard.
+   */
+  isFallback?: boolean;
 }
 
 export interface DemoStudioVslScript {

@@ -21,6 +21,14 @@ interface DemoStudioGeneratorRequest {
   draft?: boolean;
   /** Draft-only: align generated storyboard steps with the visitor's uploaded screenshot count. */
   stepCount?: number;
+  /**
+   * Draft-only: JPEG data URLs of the visitor's screenshots.
+   *
+   * Without these the model wrote the storyboard blind and the client matched
+   * captions to images by array position, so a caption could describe a screen
+   * it was not sitting on. Capped and size-checked before they reach the model.
+   */
+  screenshots?: string[];
   project?: {
     id?: string;
     name?: string;
@@ -181,10 +189,42 @@ Rules:
 - The selected mode is ${mode}. Return only the keys needed for that mode, except full_kit must return all keys.`;
 }
 
+/** Bounds the vision payload. 3 screens at ~1024px is the client's own cap. */
+const MAX_VISION_SCREENSHOTS = 3;
+const MAX_SCREENSHOT_BYTES = 1_500_000;
+
+function usableScreenshots(body: DemoStudioGeneratorRequest): string[] {
+  if (body.draft !== true) return [];
+  const list = Array.isArray(body.screenshots) ? body.screenshots : [];
+  return list
+    .filter((url) => typeof url === "string" && url.startsWith("data:image/") && url.length <= MAX_SCREENSHOT_BYTES)
+    .slice(0, MAX_VISION_SCREENSHOTS);
+}
+
+/**
+ * The user turn, multimodal when the visitor gave us screens to look at.
+ *
+ * `detail: "high"` is deliberate and costs roughly 765 tokens per image: the
+ * model has to read button and column labels to describe a screen or place a
+ * pointer on it, and "low" downsamples to 512px where UI text stops being
+ * legible. Bounded by MAX_VISION_SCREENSHOTS and the draft rate limit.
+ */
+function buildUserContent(body: DemoStudioGeneratorRequest, mode: Mode) {
+  const text = buildUserPrompt(body, mode);
+  const screenshots = mode === "storyboard" ? usableScreenshots(body) : [];
+  if (screenshots.length === 0) return text;
+
+  return [
+    { type: "text", text },
+    ...screenshots.map((url) => ({ type: "image_url", image_url: { url, detail: "high" } })),
+  ];
+}
+
 function buildUserPrompt(body: DemoStudioGeneratorRequest, mode: Mode): string {
   const project = body.project || {};
   const brief = body.brief || {};
   const draftStoryboardCount = body.draft === true && mode === "storyboard" ? normalizeDraftStepCount(body.stepCount) : null;
+  const screenshotCount = mode === "storyboard" ? usableScreenshots(body).length : 0;
   return `Generate Demo Studio assets.
 
 PROJECT
@@ -226,6 +266,28 @@ OUTPUT SCHEMA
   }
 }
 
+${screenshotCount > 0 ? `
+SCREENSHOTS
+${screenshotCount} screenshot(s) of the real product are attached, in the order the founder uploaded them (index 0 first).
+
+For storyboard mode, every step MUST additionally return:
+- "screenshot_index": the 0-based index of the attached screenshot that step describes.
+  Use each index exactly once. Order the STEPS so they tell a coherent story -
+  the upload order is not necessarily the right narrative order.
+- "screen_summary": one sentence stating what is actually visible on that screen.
+- "hotspot": {"x","y","w","h"} as fractions of the image (0-1, origin top-left),
+  placed over the specific element the caption refers to. Omit "hotspot" entirely
+  if you cannot identify a specific element - do not guess a position.
+
+Rules for looking at the screens:
+- Describe what is genuinely on screen. Never invent a feature, number or label
+  you cannot see.
+- If a screenshot is a marketing or landing page rather than product UI, say so
+  in its "screen_summary" and place it first if it is an intro, never as the
+  payoff step.
+- If a screen is unreadable, say that plainly in "screen_summary" rather than
+  writing a plausible-sounding caption for it.
+` : ""}
 Mode: ${mode}
 ${draftStoryboardCount ? `For storyboard mode return exactly ${draftStoryboardCount} storyboard steps and no other keys.` : "For storyboard mode return only storyboard."}
 For vsl_scripts mode return only vsl_scripts.
@@ -254,7 +316,7 @@ async function generateKit(
         model: "gpt-4o",
         messages: [
           { role: "system", content: buildSystemPrompt(mode) },
-          { role: "user", content: buildUserPrompt(body, mode) },
+          { role: "user", content: buildUserContent(body, mode) },
         ],
         response_format: { type: "json_object" },
         temperature: 0.65,

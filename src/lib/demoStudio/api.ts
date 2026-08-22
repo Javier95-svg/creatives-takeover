@@ -284,9 +284,24 @@ export interface DemoStudioDraftStoryboardResult {
 export async function generateDemoStudioDraftStoryboard(args: {
   contextUrl?: string;
   productName?: string;
-  /** Zero-asset mode: a one-line product description standing in for screenshots. */
+  /** A one-line product description. Feeds product_promise when nothing better exists. */
   description?: string;
   stepCount?: DemoStudioTryStepCount;
+  /**
+   * Who the demo is aimed at, from the ICP draft or asked inline.
+   *
+   * Without this the generator receives getDefaultBrief() boilerplate - audience
+   * "people evaluating this product", problem "they are not convinced yet" - and
+   * writes a generic narrative because it was given a generic one to work from.
+   */
+  brief?: Partial<Pick<DemoStudioBrief, 'audience' | 'problem' | 'product_promise' | 'aha_moment'>>;
+  /**
+   * JPEG data URLs of the founder's screenshots, for the vision pass.
+   *
+   * Omitted, generation falls back to writing captions without seeing anything,
+   * which is what made captions land on unrelated screens.
+   */
+  screenshots?: string[];
 }): Promise<DemoStudioDraftStoryboardResult> {
   const trimmedUrl = args.contextUrl?.trim() || '';
   let host = '';
@@ -300,13 +315,26 @@ export async function generateDemoStudioDraftStoryboard(args: {
   }
   const name = deriveTryProductName(trimmedUrl, args.productName);
   const stepCount = normalizeTryStepCount(args.stepCount);
-  const brief = getDefaultBrief({ name });
   const description = args.description?.trim() || '';
-  if (description) {
-    brief.product_promise = description.slice(0, 300);
-  } else if (trimmedUrl) {
-    brief.product_promise = brief.product_promise || `Product shown at ${host || trimmedUrl}`;
+  /*
+   * The caller's brief wins over the defaults. Previously only product_promise
+   * was overridden, so a founder's description was the ONLY real signal and the
+   * audience/problem the generator worked from were placeholder sentences about
+   * the demo itself.
+   */
+  const supplied = Object.fromEntries(
+    Object.entries(args.brief ?? {}).filter(([, value]) => typeof value === 'string' && value.trim()),
+  );
+  const brief = { ...getDefaultBrief({ name }), ...supplied };
+  if (!supplied.product_promise) {
+    if (description) {
+      brief.product_promise = description.slice(0, 300);
+    } else if (trimmedUrl) {
+      brief.product_promise = brief.product_promise || `Product shown at ${host || trimmedUrl}`;
+    }
   }
+
+  const screenshots = (args.screenshots ?? []).filter((url) => typeof url === 'string' && url.startsWith('data:image'));
 
   const { data, error } = await supabase.functions.invoke('demo-studio-generator', {
     body: {
@@ -315,6 +343,7 @@ export async function generateDemoStudioDraftStoryboard(args: {
       stepCount,
       project: { id: 'try', name, tagline: null, category: null },
       brief,
+      screenshots,
     },
   });
   if (error) throw new Error(await readFunctionErrorMessage(error, 'Could not generate your demo preview.'));

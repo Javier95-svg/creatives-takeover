@@ -33,18 +33,64 @@ function cleanText(value: unknown, max: number): string {
   return typeof value === 'string' ? value.trim().slice(0, max) : '';
 }
 
+/** A normalized 0-1 rectangle, or null when the model gave us nothing usable. */
+function normalizeHotspot(value: unknown): DemoStudioStoryboardStep['hotspot'] | undefined {
+  const row = value as Partial<Record<'x' | 'y' | 'w' | 'h', unknown>> | null | undefined;
+  if (!row || typeof row !== 'object') return undefined;
+  const nums = (['x', 'y', 'w', 'h'] as const).map((key) => {
+    const raw = row[key];
+    return typeof raw === 'number' && Number.isFinite(raw) ? raw : null;
+  });
+  if (nums.some((n) => n === null)) return undefined;
+  const [x, y, w, h] = nums as number[];
+  // Reject anything outside the frame rather than clamping: a hotspot the model
+  // placed off-screen is a sign it did not find the element, and a clamped
+  // guess pinned to an edge looks deliberate.
+  if (w <= 0 || h <= 0) return undefined;
+  if (x < 0 || y < 0 || x + w > 1 || y + h > 1) return undefined;
+  return { x, y, w, h };
+}
+
 function normalizeStoryboardStep(step: unknown): DemoStudioStoryboardStep | null {
   const row = (step ?? {}) as Partial<DemoStudioStoryboardStep>;
   const title = cleanText(row.title, 80);
   const caption = cleanText(row.caption, 220);
   if (!title || !caption) return null;
+  const screenshotIndex =
+    typeof row.screenshot_index === 'number' && Number.isInteger(row.screenshot_index) && row.screenshot_index >= 0
+      ? row.screenshot_index
+      : undefined;
   return {
     title,
     caption,
     speaker_notes: cleanText(row.speaker_notes, 700) || 'Briefly explain what the viewer should notice on this screen.',
     hotspot_label: cleanText(row.hotspot_label, 80) || 'Continue',
     suggested_action: row.suggested_action === 'goto' || row.suggested_action === 'url' ? row.suggested_action : 'next',
+    screenshot_index: screenshotIndex,
+    hotspot: normalizeHotspot(row.hotspot),
+    screen_summary: cleanText(row.screen_summary, 300) || undefined,
   };
+}
+
+/**
+ * The screenshot ordering the model proposed, or null if it is not trustworthy.
+ *
+ * A partial or repeated mapping is worse than no mapping: it silently puts some
+ * captions on the wrong screens while looking deliberate. Only a complete
+ * permutation of the available indices is accepted; anything else falls back to
+ * upload order, which is at least the founder's own doing.
+ */
+export function resolveScreenshotOrder(
+  storyboard: DemoStudioStoryboardStep[],
+  shotCount: number,
+): number[] | null {
+  if (storyboard.length !== shotCount) return null;
+  const indices = storyboard.map((step) => step.screenshot_index);
+  if (indices.some((index) => typeof index !== 'number')) return null;
+  const seen = new Set(indices as number[]);
+  if (seen.size !== shotCount) return null;
+  if ((indices as number[]).some((index) => index < 0 || index >= shotCount)) return null;
+  return indices as number[];
 }
 
 function isGenericStoryboardStep(step: DemoStudioStoryboardStep): boolean {
@@ -95,6 +141,19 @@ export function buildTryFallbackStoryboard(args: {
   ];
 }
 
+/**
+ * Fallback copy is stage directions, not narration.
+ *
+ * buildTryFallbackStoryboard writes instructions TO a demo author ("This screen
+ * makes the result clear and gives the viewer a reason to keep going"). Swapped
+ * in silently, that reached founders as a description of their own product and
+ * was indistinguishable from a real caption. Marking it lets the UI show it as
+ * the gap it is, the same way the ICP folio treats an unanswered field.
+ */
+function asFallbackStep(step: DemoStudioStoryboardStep): DemoStudioStoryboardStep {
+  return { ...step, isFallback: true };
+}
+
 export function getUsableTryStoryboard(
   storyboard: unknown,
   args: { contextUrl?: string; productName?: string; stepCount?: unknown } = {},
@@ -105,10 +164,10 @@ export function getUsableTryStoryboard(
     .map(normalizeStoryboardStep)
     .filter((step): step is DemoStudioStoryboardStep => Boolean(step))
     .slice(0, desiredCount)
-    .map((step, index) => (isGenericStoryboardStep(step) ? fallback[index] : step));
+    .map((step, index) => (isGenericStoryboardStep(step) ? asFallbackStep(fallback[index]) : step));
 
   while (normalized.length < desiredCount) {
-    normalized.push(fallback[normalized.length]);
+    normalized.push(asFallbackStep(fallback[normalized.length]));
   }
 
   return normalized;
@@ -230,14 +289,25 @@ export function buildTryPreviewSteps(args: {
   const createdAt = args.createdAt ?? new Date().toISOString();
   const count = Math.min(args.shots.length, args.storyboard.length, DEMO_STUDIO_TRY_MAX_SCREENSHOTS);
 
+  /*
+   * The storyboard decides which screenshot each step describes, when it can be
+   * trusted to. Matching by array position was why a caption reading "Advanced
+   * Analytics" ended up on a marketing homepage: it was third in both lists and
+   * nothing checked. resolveScreenshotOrder returns null unless the mapping is a
+   * complete permutation, so a partial answer degrades to upload order rather
+   * than shuffling captions onto the wrong screens.
+   */
+  const order = resolveScreenshotOrder(args.storyboard.slice(0, count), count);
+
   return Array.from({ length: count }, (_, index) => {
     const step = args.storyboard[index];
+    const shotIndex = order ? order[index] : index;
     return {
       id: `try-${index}`,
       demo_id: 'try',
       position: index,
       asset_type: 'image',
-      asset_url: args.shots[index].url,
+      asset_url: args.shots[shotIndex].url,
       asset_width: null,
       asset_height: null,
       title: step.title,
@@ -250,7 +320,15 @@ export function buildTryPreviewSteps(args: {
             {
               id: `try-hs-${index}`,
               step_id: `try-${index}`,
-              ...DEMO_STUDIO_TRY_HOTSPOT,
+              // The model's coordinates when it found the element; the shared
+              // constant only as a fallback. The same rectangle on every step of
+              // every demo is not a hotspot, it is a sticker.
+              //
+              // Re-validated here rather than trusting the caller: this builder
+              // is also reachable with storyboards that never passed through
+              // normalizeStoryboardStep, and an off-frame rectangle would be
+              // spread straight onto the step.
+              ...(normalizeHotspot(step.hotspot) ?? DEMO_STUDIO_TRY_HOTSPOT),
               type: 'tooltip',
               label: step.hotspot_label,
               action: 'next',

@@ -43,9 +43,13 @@ import {
   deriveTryProductName,
   getUsableTryStoryboard,
   normalizeTryStepCount,
+  resolveScreenshotOrder,
   type DemoStudioTryStepCount,
 } from '@/lib/demoStudio/tryPreview';
 import type { DemoStepWithHotspots } from '@/lib/demoStudio/types';
+import type { IcpToDemoBriefResult } from '@/lib/icpToDemoBrief';
+
+type IcpDemoBriefPatch = IcpToDemoBriefResult['patch'];
 import { resolveIcpSource } from '@/lib/icpHandoffSource';
 import { icpArtifactToDemoBrief } from '@/lib/icpToDemoBrief';
 import { captureEvent } from '@/lib/analytics';
@@ -222,6 +226,22 @@ export default function TryPage() {
   // does not restart from a blank textarea. Never overwrites typed input, and stays out
   // of the way of the hydrate/resume paths, which restore their own state.
   const [icpSeeded, setIcpSeeded] = useState(false);
+  /**
+   * Who the demo is for, from the ICP draft. Null until one resolves, which is
+   * what makes the two inline questions below appear.
+   */
+  const [icpBrief, setIcpBrief] = useState<IcpDemoBriefPatch | null>(null);
+  // Asked inline only when no ICP exists, filling the same two brief slots.
+  const [manualAudience, setManualAudience] = useState('');
+  const [manualProblem, setManualProblem] = useState('');
+  /** True when the model put the screens in a different order than they were uploaded. */
+  const [reordered, setReordered] = useState(false);
+  /**
+   * Positions whose copy is template filler rather than a description of the
+   * screen. Tracked here rather than on the built step, which mirrors the DB
+   * row shape and should not carry presentation state.
+   */
+  const [fallbackPositions, setFallbackPositions] = useState<Set<number>>(new Set());
   useEffect(() => {
     if (icpSeeded || isReturning || resumeToken || authLoading) return;
     if (description.trim() || steps) return;
@@ -229,10 +249,20 @@ export default function TryPage() {
     void (async () => {
       const icp = await resolveIcpSource({ userId: user?.id ?? null, draftId: icpParam });
       if (!active || !icp) return;
-      const seed = icpArtifactToDemoBrief(icp.artifact).tryDescription;
-      if (!seed) return;
+      /*
+       * Keep the whole brief, not just the flattened sentence.
+       *
+       * This only ever took .tryDescription and threw away .patch - the real
+       * audience, problem and aha moment the ICP draft had already produced. The
+       * generator then received getDefaultBrief() boilerplate ("Early adopters
+       * and prospective customers evaluating Your product") and wrote a generic
+       * narrative because it was handed a generic one.
+       */
+      const mapped = icpArtifactToDemoBrief(icp.artifact);
+      if (!mapped.tryDescription) return;
       setIcpSeeded(true);
-      setDescription((prev) => (prev.trim() ? prev : seed));
+      setIcpBrief(mapped.patch);
+      setDescription((prev) => (prev.trim() ? prev : mapped.tryDescription));
     })();
     return () => {
       active = false;
@@ -474,6 +504,19 @@ export default function TryPage() {
       );
       return;
     }
+    /*
+     * A demo is aimed at somebody. With no ICP to inherit from we ask for the
+     * same two things it would have supplied, rather than falling back to
+     * "people evaluating this product" and producing an unaimed narrative.
+     */
+    if (!icpBrief && !manualAudience.trim()) {
+      failValidation('missing_audience', 'Say who this demo is for — it decides what the story opens on.');
+      return;
+    }
+    if (!icpBrief && !manualProblem.trim()) {
+      failValidation('missing_problem', 'Say what the problem costs them today, so the demo can lead with it.');
+      return;
+    }
     const runId = ++runIdRef.current;
     outputArtifactIdRef.current = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
       ? crypto.randomUUID()
@@ -510,15 +553,35 @@ export default function TryPage() {
       // and the frames are always the founder's own. The placeholder branch that
       // used to live here is what produced concept frames dressed as a demo.
       const stepCount: DemoStudioTryStepCount = normalizeTryStepCount(shots.length);
+      /*
+       * Downscale here, before generating, so the model can actually look at the
+       * screens. The same helper already ran after generation to serialize the
+       * draft; 1024px is the size at which UI labels stay legible to vision
+       * without making the payload unreasonable on a free, unauthenticated path.
+       */
+      const screenshots = await Promise.all(
+        shots.map((shot) => fileToDownscaledDataUrl(shot.file, 1024, 0.7).catch(() => '')),
+      );
+      if (runId !== runIdRef.current) return;
+
       const draftResult = await generateDemoStudioDraftStoryboard({
         contextUrl,
         description: trimmedDescription,
         stepCount,
+        brief: icpBrief ?? { audience: manualAudience.trim(), problem: manualProblem.trim() },
+        screenshots: screenshots.filter(Boolean),
       });
       // Ignore the response if the user started over or left during generation.
       if (runId !== runIdRef.current) return;
       const productName = inferTryProductName(contextUrl, trimmedDescription, draftResult.steps[0]?.title);
       const usableStoryboard = getUsableTryStoryboard(draftResult.steps, { contextUrl, productName, stepCount });
+      // Disclosed in the result, never silent: a reorder the founder cannot see
+      // is one they cannot correct, and a wrong order looks deliberate.
+      const order = resolveScreenshotOrder(usableStoryboard.slice(0, shots.length), shots.length);
+      setReordered(Boolean(order && order.some((shotIndex, position) => shotIndex !== position)));
+      setFallbackPositions(
+        new Set(usableStoryboard.map((step, position) => (step.isFallback ? position : -1)).filter((p) => p >= 0)),
+      );
       const built = buildTryPreviewSteps({ shots, storyboard: usableStoryboard });
       if (built.length === 0) {
         throw new Error("We couldn't turn those screenshots into a demo. Try again in a moment.");
@@ -1148,10 +1211,34 @@ export default function TryPage() {
                   </figure>
                 ))}
               </div>
+              {reordered && (
+                <p className="mt-3 text-xs text-emerald-200/80">
+                  We arranged your screens into a story order, which is not the order you uploaded them in.
+                  Reorder them however you like in Demo Studio.
+                </p>
+              )}
               <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
-                <div><dt className="font-semibold text-white">Customer problem</dt><dd className="mt-1 text-white/65">{steps[0]?.caption}</dd></div>
-                <div><dt className="font-semibold text-white">Product journey</dt><dd className="mt-1 text-white/65">{steps[Math.min(1, steps.length - 1)]?.caption}</dd></div>
-                <div><dt className="font-semibold text-white">Outcome</dt><dd className="mt-1 text-white/65">{steps[steps.length - 1]?.caption}</dd></div>
+                {[
+                  { label: 'Customer problem', position: 0 },
+                  { label: 'Product journey', position: Math.min(1, steps.length - 1) },
+                  { label: 'Outcome', position: steps.length - 1 },
+                ].map(({ label, position }) => (
+                  <div key={label}>
+                    <dt className="font-semibold text-white">{label}</dt>
+                    {/*
+                      * A step we could not write real copy for says so. The
+                      * filler text is written TO a demo author ("This screen
+                      * makes the result clear...") and rendering it plainly made
+                      * it indistinguishable from a description of the founder's
+                      * own product.
+                      */}
+                    <dd className={`mt-1 ${fallbackPositions.has(position) ? 'italic text-white/40' : 'text-white/65'}`}>
+                      {fallbackPositions.has(position)
+                        ? "We couldn't read this screen well enough to describe it — add a clearer screenshot, or write this step yourself in Demo Studio."
+                        : steps[position]?.caption}
+                    </dd>
+                  </div>
+                ))}
               </dl>
             </section>
             <DemoPlayer
@@ -1268,6 +1355,58 @@ export default function TryPage() {
                 className="mt-2 border-white/15 bg-slate-900 text-white placeholder:text-white/40"
               />
             </div>
+
+            {/*
+              * Only when no ICP draft supplied them. A demo is aimed at
+              * somebody; without these two the generator falls back to
+              * "prospective customers evaluating your product", which is what
+              * produced captions that could have described any SaaS at all.
+              */}
+            {icpBrief ? null : (
+              <>
+                <div>
+                  <Label htmlFor="demo-audience" className="text-sm font-medium text-white">
+                    Who is this demo for? <span className="text-red-300">*</span>
+                  </Label>
+                  <p className="mt-1 text-xs text-white/60">
+                    The more specific the buyer, the sharper the story. "Practice managers at two-doctor clinics" beats "businesses".
+                  </p>
+                  <Input
+                    id="demo-audience"
+                    required
+                    maxLength={180}
+                    placeholder="e.g. Practice managers at small dental clinics"
+                    value={manualAudience}
+                    onChange={(e) => {
+                      markInputStarted();
+                      setManualAudience(e.target.value);
+                    }}
+                    className="mt-2 border-white/15 bg-slate-900 text-white placeholder:text-white/40"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="demo-problem" className="text-sm font-medium text-white">
+                    What does the problem cost them today? <span className="text-red-300">*</span>
+                  </Label>
+                  <p className="mt-1 text-xs text-white/60">
+                    Time, money or customers lost. This is what the demo opens on.
+                  </p>
+                  <Input
+                    id="demo-problem"
+                    required
+                    maxLength={240}
+                    placeholder="e.g. Around 15% of appointments are no-shows and nobody chases them"
+                    value={manualProblem}
+                    onChange={(e) => {
+                      markInputStarted();
+                      setManualProblem(e.target.value);
+                    }}
+                    className="mt-2 border-white/15 bg-slate-900 text-white placeholder:text-white/40"
+                  />
+                </div>
+              </>
+            )}
 
             <div>
               <Label htmlFor="context-url" className="text-sm font-medium text-white">
