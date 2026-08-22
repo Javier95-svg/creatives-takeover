@@ -1947,9 +1947,6 @@ const ICPBuilder: React.FC = () => {
             </button>
           </div>
           <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
-          <p className="rounded-2xl border border-accent-teal/20 bg-accent-teal/5 px-4 py-3 text-sm font-medium leading-6 text-foreground">
-            Best-fit customer, core pain, buying trigger, evidence gaps, and interview direction.
-          </p>
         </div>
 
         <div className="space-y-2">
