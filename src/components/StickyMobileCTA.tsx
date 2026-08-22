@@ -67,7 +67,7 @@ const StickyMobileCTA = () => {
                 });
               }}
             >
-              <span>Launch a live demo</span>
+              <span>Build my demo</span>
               <ArrowRight className="ml-2 w-5 h-5" />
             </Link>
           </Button>

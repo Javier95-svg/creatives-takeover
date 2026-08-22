@@ -5,6 +5,7 @@ import test from 'node:test';
 import { evaluateGTMOutcome } from '../src/lib/gtmOutcome.ts';
 import { evaluateMvpQuality } from '../src/lib/mvp-builder/qualityChecks.ts';
 import { getPmfConfidence, getPmfDecision } from '../src/lib/pmfConfidence.ts';
+import { HERO_MODES } from '../src/lib/heroFunnelRules.ts';
 import type { GTMPlanV2 } from '../src/lib/gtmV2.ts';
 
 test('PMF confidence changes exactly at five, ten, and twenty five weighted signals', () => {
@@ -99,12 +100,19 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
   // The hero field has two modes, and the question + CTA for each live in
   // HERO_MODES rather than in the component, so the toggle, crawler fallback and
   // the prerendered pages cannot drift apart.
-  const heroModes = readFileSync(new URL('../src/lib/heroFunnelRules.ts', import.meta.url), 'utf8');
-  const ctaLabels = [/Assess viability/, /Launch a live demo/];
+  /*
+   * Derived from HERO_MODES rather than pinned as literals.
+   *
+   * These were hardcoded regexes, which meant that when Product mode's CTA
+   * changed the assertion kept passing against a *comment* in heroFunnelRules
+   * that mentioned the old label - the exact drift between the live hero and
+   * the crawler sources that this check exists to catch.
+   */
+  const ctaLabels = Object.values(HERO_MODES).map((mode) => mode.cta);
+  assert.equal(ctaLabels.length, 2);
   ctaLabels.forEach((label) => {
-    assert.match(heroModes, label);
-    assert.match(fallback, label);
-    assert.match(prerender, label);
+    assert.ok(fallback.includes(label), `crawler fallback is missing the "${label}" CTA`);
+    assert.ok(prerender.includes(label), `prerender template is missing the "${label}" CTA`);
   });
   // Both aha routes must stay linked and crawlable - they have organic entries.
   [fallback, prerender].forEach((source) => {

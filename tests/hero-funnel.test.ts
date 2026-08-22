@@ -63,8 +63,12 @@ test('each mode pairs its question, CTA and destination coherently', () => {
   assert.equal(HERO_MODES.idea.cta, 'Assess viability');
   assert.equal(HERO_MODES.idea.route, 'icp');
 
+  // Product mode used to read "Launch a live demo", which was true only while
+  // the builder would generate from a sentence alone. It now needs the
+  // founder's product URL and real screenshots, so the visitor lands on a short
+  // form - and a CTA promising a live demo would be broken by the next screen.
   assert.equal(HERO_MODES.product.question, 'What are you building?');
-  assert.equal(HERO_MODES.product.cta, 'Launch a live demo');
+  assert.equal(HERO_MODES.product.cta, 'Build my demo');
   assert.equal(HERO_MODES.product.route, 'demo');
 });
 

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { AlertTriangle, ImagePlus, Loader2, Mail, Sparkles, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, ImagePlus, Loader2, Mail, Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import SEO from '@/components/SEO';
@@ -38,7 +38,6 @@ import {
   DEMO_STUDIO_TRY_HOTSPOT,
   DEMO_STUDIO_TRY_MAX_SCREENSHOTS,
   DEMO_STUDIO_TRY_MIN_SCREENSHOTS,
-  buildPlaceholderShotFiles,
   buildTryFallbackStoryboard,
   buildTryPreviewSteps,
   deriveTryProductName,
@@ -46,7 +45,7 @@ import {
   normalizeTryStepCount,
   type DemoStudioTryStepCount,
 } from '@/lib/demoStudio/tryPreview';
-import type { DemoStepWithHotspots, DemoStudioStoryboardStep } from '@/lib/demoStudio/types';
+import type { DemoStepWithHotspots } from '@/lib/demoStudio/types';
 import { resolveIcpSource } from '@/lib/icpHandoffSource';
 import { icpArtifactToDemoBrief } from '@/lib/icpToDemoBrief';
 import { captureEvent } from '@/lib/analytics';
@@ -65,8 +64,7 @@ import {
 } from '@/lib/journeyOutcomes';
 import { trackFirstOutputGenerated, trackSignupPromptShown } from '@/lib/heroFunnel';
 import { persistOutputSignupContext } from '@/lib/outputSignupContext';
-import { getSafeSessionStorage } from '@/lib/safeStorage';
-import { buildDemoAutoStartGuardKey } from '@/lib/heroFunnelRules';
+import DemoStudioWallpaper from '@/components/wallpapers/DemoStudioWallpaper';
 import {
   claimDemoGuestArtifact,
   createDemoGuestArtifact,
@@ -132,7 +130,6 @@ export default function TryPage() {
   const [searchParams] = useSearchParams();
   const entrySource = searchParams.get('source') === 'hero-product' ? 'hero-product' : 'demo_try';
   const heroSeed = (searchParams.get('seed') || '').trim().slice(0, 5000);
-  const shouldAutoStart = searchParams.get('autostart') === '1' && entrySource === 'hero-product';
   const entryTrackedRef = useRef(false);
   const isReturning = searchParams.get('hydrate') === '1';
   // Resume-email link (?resume=<token>) — hydrate takes precedence if both appear.
@@ -192,7 +189,7 @@ export default function TryPage() {
   const generationStartedAtRef = useRef<number | null>(null);
   const assetModeRef = useRef<TryDraftAssetMode>('generated_placeholders');
   const inputStartedRef = useRef(false);
-  const autoStartAttemptedRef = useRef(false);
+  const guestRestoreAttemptedRef = useRef(false);
   const outputArtifactIdRef = useRef<string | null>(null);
   const outputGeneratedAtRef = useRef<number | null>(null);
   const outputLatencyMsRef = useRef<number>(0);
@@ -355,21 +352,14 @@ export default function TryPage() {
     return promise;
   }, [entrySource, guestArtifactRef, persistDraft]);
 
-  // Zero-asset mode: replace the shot list with generated placeholder frames so
-  // the save/persist pipeline works exactly as if the visitor had uploaded them.
-  const createPlaceholderShots = useCallback(
-    async (storyboard: DemoStudioStoryboardStep[]): Promise<Shot[]> => {
-      const productName = inferTryProductName(contextUrl, description);
-      const files = await buildPlaceholderShotFiles({ productName, storyboard });
-      const placeholders = files.map((file) => ({ file, url: URL.createObjectURL(file) }));
-      shotsRef.current.forEach((shot) => URL.revokeObjectURL(shot.url));
-      // Sync the ref immediately so persistDraft sees the frames before React re-renders.
-      shotsRef.current = placeholders;
-      setShots(placeholders);
-      return placeholders;
-    },
-    [contextUrl, description],
-  );
+  /*
+   * createPlaceholderShots lived here, generating frames when the visitor
+   * uploaded none. Screenshots are required now, so nothing can reach it.
+   *
+   * Restoring a draft that WAS built that way still works and is untouched:
+   * restoreFromDraft rebuilds its shots from the stored data URLs and reads
+   * draft.assetMode, never regenerating the frames.
+   */
 
   // Shared tail of a successful generation (AI or client fallback): show the
   // player, emit funnel events, and stash the anonymous draft.
@@ -447,23 +437,41 @@ export default function TryPage() {
   };
 
   const handleGenerate = async () => {
-    const isNoAssets = shots.length === 0;
-    const mode: TryInputMode = isNoAssets ? 'no_assets' : 'screenshots';
+    /*
+     * All three inputs are required now.
+     *
+     * The description alone was enough to run, but on the anonymous path it is
+     * the only real signal the generator gets: it becomes brief.product_promise
+     * while audience, problem and aha_moment stay boilerplate from
+     * getDefaultBrief(). With no screenshots the run also falls back to
+     * generated placeholder frames, so the output was AI captions over invented
+     * UI - a concept storyboard being presented as a demo. The URL is what
+     * gives the product a real name instead of "Your product".
+     */
+    const mode: TryInputMode = 'screenshots';
     const trimmedDescription = description.trim();
-    if (!trimmedDescription) {
+    const trimmedUrl = contextUrl.trim();
+    const failValidation = (reason: string, message: string) => {
       trackActivationFunnelEvent('activation_validation_failed', {
         entry_id: 'demo_try', tool: 'demo_studio', source: 'demo_try', step: 'input',
-        is_authenticated: Boolean(user), reason: 'missing_description',
+        is_authenticated: Boolean(user), reason,
       });
-      toast.error('Describe your product first.');
+      toast.error(message);
+    };
+
+    if (!trimmedDescription) {
+      failValidation('missing_description', 'Describe your product first.');
       return;
     }
-    if (!isNoAssets && shots.length < MIN_SCREENSHOTS) {
-      trackActivationFunnelEvent('activation_validation_failed', {
-        entry_id: 'demo_try', tool: 'demo_studio', source: 'demo_try', step: 'input',
-        is_authenticated: Boolean(user), reason: 'too_few_screenshots',
-      });
-      toast.error(`Add at least ${MIN_SCREENSHOTS} screenshots first.`);
+    if (!trimmedUrl) {
+      failValidation('missing_url', 'Add your product URL so the demo can name and describe it accurately.');
+      return;
+    }
+    if (shots.length < MIN_SCREENSHOTS) {
+      failValidation(
+        shots.length === 0 ? 'missing_screenshots' : 'too_few_screenshots',
+        `Add at least ${MIN_SCREENSHOTS} screenshots — they become the frames of your demo.`,
+      );
       return;
     }
     const runId = ++runIdRef.current;
@@ -498,7 +506,10 @@ export default function TryPage() {
       });
     }
     try {
-      const stepCount: DemoStudioTryStepCount = isNoAssets ? 3 : normalizeTryStepCount(shots.length);
+      // Screenshots are required, so the step count always follows the uploads
+      // and the frames are always the founder's own. The placeholder branch that
+      // used to live here is what produced concept frames dressed as a demo.
+      const stepCount: DemoStudioTryStepCount = normalizeTryStepCount(shots.length);
       const draftResult = await generateDemoStudioDraftStoryboard({
         contextUrl,
         description: trimmedDescription,
@@ -508,15 +519,9 @@ export default function TryPage() {
       if (runId !== runIdRef.current) return;
       const productName = inferTryProductName(contextUrl, trimmedDescription, draftResult.steps[0]?.title);
       const usableStoryboard = getUsableTryStoryboard(draftResult.steps, { contextUrl, productName, stepCount });
-      const activeShots = isNoAssets ? await createPlaceholderShots(usableStoryboard) : shots;
-      if (runId !== runIdRef.current) return;
-      const built = buildTryPreviewSteps({ shots: activeShots, storyboard: usableStoryboard });
+      const built = buildTryPreviewSteps({ shots, storyboard: usableStoryboard });
       if (built.length === 0) {
-        throw new Error(
-          isNoAssets
-            ? "We couldn't build your demo preview. Try again in a moment."
-            : "We couldn't turn those screenshots into a demo. Try again in a moment.",
-        );
+        throw new Error("We couldn't turn those screenshots into a demo. Try again in a moment.");
       }
       finalizeGeneratedSteps({
         built,
@@ -539,15 +544,14 @@ export default function TryPage() {
       }
 
       try {
-        const stepCount: DemoStudioTryStepCount = isNoAssets ? 3 : normalizeTryStepCount(shots.length);
+        const stepCount: DemoStudioTryStepCount = normalizeTryStepCount(shots.length);
         const fallbackStoryboard = buildTryFallbackStoryboard({
           contextUrl,
           productName: inferTryProductName(contextUrl, trimmedDescription),
           stepCount,
         });
-        const activeShots = isNoAssets ? await createPlaceholderShots(fallbackStoryboard) : shots;
         if (runId !== runIdRef.current) return;
-        const built = buildTryPreviewSteps({ shots: activeShots, storyboard: fallbackStoryboard });
+        const built = buildTryPreviewSteps({ shots, storyboard: fallbackStoryboard });
         if (built.length >= MIN_SCREENSHOTS) {
           finalizeGeneratedSteps({ built, runId, fallback: true, mode });
           return;
@@ -648,50 +652,40 @@ export default function TryPage() {
     persistPromiseRef.current = Promise.resolve(true);
   }, []);
 
-  // Hero Product mode has already collected and validated the founder's input.
-  // Auto-build once per seed. On refresh, restore the serialized or server-side
-  // result instead of replaying generation; StrictMode sees the same guard.
+  /*
+   * Restore a demo from a ?guest=<token> link.
+   *
+   * This used to sit inside the hero auto-start effect, so it only ran for
+   * visitors who arrived from Product mode with autostart set. Auto-generation
+   * is gone - a demo now needs the founder's real screenshots, so there is
+   * nothing that can be generated on arrival - but restoring is a separate
+   * capability and a ?guest= link has to work however it was opened.
+   *
+   * ?hydrate=1 has its own restore further down and takes precedence.
+   */
   useEffect(() => {
-    if (!shouldAutoStart || isReturning || resumeToken || steps || generating || autoStartAttemptedRef.current) return;
-    if (!heroSeed || description.trim() !== heroSeed) return;
-    const guardKey = buildDemoAutoStartGuardKey(heroSeed);
-    const storage = getSafeSessionStorage();
-    autoStartAttemptedRef.current = true;
+    if (!guestArtifactToken || isReturning || resumeToken || steps || generating || guestRestoreAttemptedRef.current) {
+      return;
+    }
+    guestRestoreAttemptedRef.current = true;
 
-    const restoreOrGenerate = async () => {
-      if (guestArtifactToken) {
-        try {
-          const restored = await loadDemoGuestArtifact(guestArtifactToken);
-          saveTryDraft(restored.draft);
-          setGuestArtifactRef({
-            artifactId: restored.artifactId || 'restored-demo',
-            resumeToken: guestArtifactToken,
-            expiresAt: restored.expiresAt || new Date(Date.now() + 7 * 86_400_000).toISOString(),
-          });
-          await restoreFromDraft(restored.draft);
-          return;
-        } catch (restoreError) {
-          setError(restoreError instanceof Error ? restoreError.message : 'This demo result could not be restored.');
-          return;
-        }
+    const restore = async () => {
+      try {
+        const restored = await loadDemoGuestArtifact(guestArtifactToken);
+        saveTryDraft(restored.draft);
+        setGuestArtifactRef({
+          artifactId: restored.artifactId || 'restored-demo',
+          resumeToken: guestArtifactToken,
+          expiresAt: restored.expiresAt || new Date(Date.now() + 7 * 86_400_000).toISOString(),
+        });
+        await restoreFromDraft(restored.draft);
+      } catch (restoreError) {
+        setError(restoreError instanceof Error ? restoreError.message : 'This demo result could not be restored.');
       }
-
-      if (storage.getItem(guardKey) === '1') {
-        const draft = readTryDraft();
-        if (draft) await restoreFromDraft(draft);
-        return;
-      }
-
-      storage.setItem(guardKey, '1');
-      markInputStarted();
-      void handleGenerate();
     };
 
-    void restoreOrGenerate();
-  // handleGenerate intentionally reads the current page state after the seed
-  // effect has populated it; adding the function as a dependency would replay.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [description, generating, guestArtifactToken, heroSeed, isReturning, resumeToken, restoreFromDraft, shouldAutoStart, steps]);
+    void restore();
+  }, [generating, guestArtifactToken, isReturning, resumeToken, restoreFromDraft, steps]);
 
   // Resume-email link: fetch the server-stored draft, re-arm sessionStorage, and
   // show the result view so the visitor lands exactly where they left off.
@@ -1097,17 +1091,26 @@ export default function TryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 py-10 text-white">
+    /*
+     * `dark` is scoped here on purpose. Every surface on this page is written
+     * white-on-dark, but DemoStudioWallpaper paints from theme tokens, so a
+     * light-mode visitor would get a pale wallpaper under white text. Scoping
+     * the class pins the tokens dark for this page only, the way .mvp-surface
+     * does for the builder.
+     */
+    <div className="dark relative min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 py-10 text-white">
       <SEO
-        title="Try Demo Studio - build an interactive demo in seconds"
-        description="Upload a few screenshots - or just describe your product - and instantly turn it into an interactive demo with AI-written captions. No signup required."
+        title="Try Demo Studio - turn your screenshots into an interactive demo"
+        description="Add your product URL and a few screenshots, and turn them into an interactive click-through prototype with AI-written captions. Finish and publish it in Demo Studio."
         type="product"
       />
-      <div className="mx-auto w-full max-w-3xl px-4">
+      <DemoStudioWallpaper />
+      <div className="relative z-10 mx-auto w-full max-w-3xl px-4">
         <Link
           to="/"
-          className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-white/70 transition hover:text-white"
+          className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white shadow-sm backdrop-blur transition hover:border-white/35 hover:bg-white/20"
         >
+          <ArrowLeft className="h-4 w-4" />
           Back to platform
         </Link>
         <div className="mb-8 text-center">
@@ -1117,20 +1120,22 @@ export default function TryPage() {
           <h1 className="text-3xl font-semibold sm:text-4xl [text-shadow:0_0_18px_rgba(99,102,241,0.55)]">
             Turn your product into an interactive story
           </h1>
-          <p className="mx-auto mt-3 max-w-xl text-sm text-white/70">
-            Describe it, optionally add screenshots, and preview the customer problem, product journey,
-            and outcome before signup. Uploaded UI becomes a product demo; generated frames stay clearly labeled as a concept.
-          </p>
         </div>
 
         {steps ? (
           <div className="space-y-5">
             <section className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-5" aria-labelledby="demo-ready-heading">
+              {/*
+                * "Your demo is ready" claimed a finished thing. What this is
+                * is a working prototype of one: the frames and captions are
+                * real, but the flow is unedited and unpublished. Demo Studio is
+                * where it gets finished, which is the whole point of the page.
+                */}
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-300">
-                {usedPlaceholders ? 'Concept demo / storyboard' : 'Interactive product demo'}
+                {usedPlaceholders ? 'Concept storyboard' : 'Interactive prototype'}
               </p>
               <h2 id="demo-ready-heading" className="mt-2 text-2xl font-semibold">
-                Your {steps.length === 3 ? 'three-step' : `${steps.length}-step`} demo is ready
+                Your {steps.length === 3 ? 'three-step' : `${steps.length}-step`} prototype is ready
               </h2>
               <p className="mt-1 text-base font-medium text-white/90">{resultProductName}</p>
               <div className="mt-4 grid grid-cols-3 gap-2">
@@ -1154,7 +1159,7 @@ export default function TryPage() {
               mode="preview"
               showWatermark
               productName={resultProductName}
-              ctaLabel="Publish free and get my share link"
+              ctaLabel={user ? 'Publish free and get my share link' : 'Finish this in Demo Studio'}
               onCtaClick={() => void handleSave()}
               onComplete={() =>
                 void trackDemoEvent('demo_complete', {
@@ -1171,12 +1176,14 @@ export default function TryPage() {
                 </p>
               )}
               <p className="text-sm text-white/80">
-                Publish this demo free to get its share link. No credit card required.
+                {user
+                  ? 'Publish this demo free to get its share link. No credit card required.'
+                  : 'Open it in Demo Studio free to edit the flow, add hotspots, and publish a share link. No credit card required.'}
               </p>
               <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">
                 <Button onClick={() => void handleSave()} disabled={saving} className="w-full gap-2 sm:w-auto">
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                  Publish free and get my share link
+                  {user ? 'Publish free and get my share link' : 'Finish this in Demo Studio'}
                 </Button>
                 <Button
                   variant="outline"
@@ -1259,15 +1266,16 @@ export default function TryPage() {
 
             <div>
               <Label htmlFor="context-url" className="text-sm font-medium text-white">
-                Product URL <span className="font-normal text-white/50">(optional)</span>
+                Product URL <span className="text-red-300">*</span>
               </Label>
               <p className="mt-1 text-xs text-white/60">
-                Helps the AI write sharper captions. We don't capture the page; your screenshots are the visuals.
+                This is where your product gets its name in the demo. We don't capture the page; your screenshots are the visuals.
               </p>
               <Input
                 id="context-url"
                 type="url"
                 inputMode="url"
+                required
                 placeholder="https://yourproduct.com"
                 value={contextUrl}
                 onChange={(e) => {
@@ -1280,10 +1288,10 @@ export default function TryPage() {
 
             <div>
               <Label className="text-sm font-medium text-white">
-                Product screenshots <span className="font-normal text-white/50">(optional)</span>
+                Product screenshots <span className="text-red-300">*</span>
               </Label>
               <p className="mt-1 text-xs text-white/60">
-                Add {MIN_SCREENSHOTS}–{MAX_SCREENSHOTS} PNG or JPG images for an interactive product demo. With none, you get a clearly labeled concept storyboard.
+                Add {MIN_SCREENSHOTS}–{MAX_SCREENSHOTS} PNG or JPG images. These become the actual frames of your demo, so real screens are what make it a demo rather than a concept.
               </p>
               <div className="mt-3 grid grid-cols-3 gap-3">
                 {shots.map((shot) => (

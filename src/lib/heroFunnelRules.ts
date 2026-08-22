@@ -81,7 +81,14 @@ export const HERO_MODES = {
     route: "demo",
     label: "Product",
     question: "What are you building?",
-    cta: "Launch a live demo",
+    /*
+     * Not "Launch a live demo" any more. The demo needs the founder's real
+     * screenshots and URL to be a demo rather than captions over invented
+     * frames, so the visitor now lands on a short form instead of watching
+     * something generate immediately. A CTA that promises a live demo and
+     * delivers a form is the kind of small lie that costs the next click.
+     */
+    cta: "Build my demo",
     placeholders: [
       "a scheduling tool for independent hairdressers",
       "an invoicing app for freelance photographers",
@@ -131,18 +138,18 @@ export function resolveHeroArtifactState({
   return "compact_generating";
 }
 
+/**
+ * Carries the founder's sentence to the demo builder without starting a run.
+ *
+ * `autostart=1` is gone. Generating on arrival was only possible because the
+ * page would accept a description alone, and that path produces generated
+ * placeholder frames - AI captions over invented UI, which is what made the
+ * output read as a slide deck rather than a demo. The builder now needs the
+ * product URL and real screenshots, so the seed prefills the form and the
+ * founder completes it.
+ */
 export function buildHeroProductPath(seed: string): string {
-  return `/demo-studio/try?seed=${encodeURIComponent(seed.trim())}&autostart=1&source=hero-product`;
-}
-
-export function buildDemoAutoStartGuardKey(seed: string): string {
-  let hash = 2166136261;
-  const normalized = seed.trim();
-  for (let index = 0; index < normalized.length; index += 1) {
-    hash ^= normalized.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-  return `ct_demo_try_autostart_${(hash >>> 0).toString(36)}`;
+  return `/demo-studio/try?seed=${encodeURIComponent(seed.trim())}&source=hero-product`;
 }
 
 /** Idea is the default: it is the only path that delivers an output in the hero. */

@@ -34,7 +34,7 @@ function buildFallbackHtml(routeConfig) {
             <textarea id="seo-hero-seed" name="seed" minlength="3" required></textarea>
             <button type="submit">Assess viability</button>
           </form>
-          <p>Already have a product? <a href="/demo-studio/try">Launch a live demo</a>.</p>`
+          <p>Already have a product? <a href="/demo-studio/try">Build my demo</a>.</p>`
     : `<p>${routeConfig.heroCopy || routeConfig.description}</p>`;
   const authorByline = routeConfig.path.startsWith("/answers/")
     ? `<p>By <a href="/about#founder">Javier Peña, Founder &amp; CEO</a></p>`
