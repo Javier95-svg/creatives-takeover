@@ -1251,21 +1251,29 @@ export function IcpFolioDocument({
               {/* Watermark — elegantly branded, visible but unobtrusive.
                   Hidden during PDF capture (the export stamps the brand on every
                   page instead via data-icp-watermark). */}
-              <div
-                data-icp-watermark
-                className="pointer-events-none absolute bottom-6 right-6 z-10 flex select-none flex-col items-center gap-1 opacity-30"
-                aria-hidden
-              >
-                <img
-                  src="/lovable-uploads/04a4b9d0-4213-4186-ba00-c7acd22bad98.png"
-                  alt=""
-                  className="h-9 w-9 rounded-lg object-cover"
-                  draggable={false}
-                />
-                <span className="text-caption font-semibold uppercase tracking-[0.18em] text-foreground">
-                  Creatives Takeover
-                </span>
-              </div>
+              {/*
+                * Draft tab only. The score card carries its own logo and
+                * wordmark, so on that tab this was a second mark a few hundred
+                * pixels below the first. It stays on the draft, where it is the
+                * document's watermark rather than duplicate branding.
+                */}
+              {activeTab === "draft" ? (
+                <div
+                  data-icp-watermark
+                  className="pointer-events-none absolute bottom-6 right-6 z-10 flex select-none flex-col items-center gap-1 opacity-30"
+                  aria-hidden
+                >
+                  <img
+                    src="/lovable-uploads/04a4b9d0-4213-4186-ba00-c7acd22bad98.png"
+                    alt=""
+                    className="h-9 w-9 rounded-lg object-cover"
+                    draggable={false}
+                  />
+                  <span className="text-caption font-semibold uppercase tracking-[0.18em] text-foreground">
+                    Creatives Takeover
+                  </span>
+                </div>
+              ) : null}
               {/*
                 * Two entry points rather than one vertical flow.
                 *
