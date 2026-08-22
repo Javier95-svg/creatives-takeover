@@ -55,7 +55,24 @@ export default async function handler(request: Request) {
         body: JSON.stringify({ operation: 'read_score', shareSlug: ideaSlug }),
       });
       const payload = await res.json() as { scoreCard?: Record<string, unknown> };
-      const card = payload?.scoreCard;
+      let card = payload?.scoreCard;
+
+      /*
+       * A score can be published from either side of signup. Guests live behind
+       * the edge function; account holders live in bizmap_shared_outputs under
+       * source_type "icp_score", which anon can read because that row carries
+       * only the card. Miss this fallback and every logged-in founder's shared
+       * link renders a scoreless card.
+       */
+      if (!card) {
+        const fallback = await fetch(
+          `${SUPABASE_URL}/rest/v1/bizmap_shared_outputs?slug=eq.${encodeURIComponent(ideaSlug)}&source_type=eq.icp_score&visibility=in.(unlisted,public)&select=snapshot&limit=1`,
+          { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } },
+        );
+        const rows = (await fallback.json()) as Array<{ snapshot?: { scoreCard?: Record<string, unknown> } }>;
+        card = rows[0]?.snapshot?.scoreCard;
+      }
+
       if (card && typeof card.displayScore === 'number') {
         displayScore = card.displayScore;
         verdictLabel = typeof card.verdictLabel === 'string' ? card.verdictLabel : '';

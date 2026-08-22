@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { IcpDraftDocument, StoredIcpArtifact } from "@/lib/icpBuilderSession";
-import { buildIcpScoreCard, type IcpScoreCard } from "@/lib/icpScoreCard";
+import { buildIcpScoreCard, isIcpScoreCard, type IcpScoreCard } from "@/lib/icpScoreCard";
 
 const SHARED_OUTPUTS_TABLE = "bizmap_shared_outputs";
 
@@ -67,6 +67,89 @@ export function createIcpDraftSharedPayload(artifact: StoredIcpArtifact) {
 
 export function getIcpDraftPublicUrl(slug: string) {
   return `${window.location.origin}/icp/${slug}/public`;
+}
+
+/**
+ * Publish an account holder's score card.
+ *
+ * Kept separate from upsertIcpDraftShare, which snapshots the whole draft. The
+ * shareable unit is the score, so this row carries ONLY the card: the public
+ * page fetches its snapshot from the browser, and a snapshot containing the
+ * draft would be readable by anyone with the link no matter what renders.
+ *
+ * source_type "icp_score" rather than "icp" so the two can never be confused
+ * by a reader, an OG renderer, or a future query.
+ */
+export async function upsertIcpScoreShare({
+  userId,
+  sourceId,
+  card,
+}: {
+  userId: string;
+  sourceId: string;
+  card: IcpScoreCard;
+}) {
+  const title = `Idea score ${card.displayScore}/100`;
+  const summary = card.idea ?? card.roleLine;
+
+  const { data: existing, error: existingError } = await supabase
+    .from(SHARED_OUTPUTS_TABLE)
+    .select("id, slug, visibility")
+    .eq("user_id", userId)
+    .eq("source_type", "icp_score")
+    .eq("source_id", sourceId)
+    .maybeSingle();
+  if (existingError) throw existingError;
+
+  // Reuse the slug so a link already posted keeps resolving.
+  if (existing) {
+    const { error } = await supabase
+      .from(SHARED_OUTPUTS_TABLE)
+      .update({
+        title,
+        summary,
+        snapshot: { scoreCard: card },
+        visibility: existing.visibility === "private" ? "unlisted" : existing.visibility,
+        published_at: new Date().toISOString(),
+      })
+      .eq("id", existing.id)
+      .eq("user_id", userId);
+    if (error) throw error;
+    return existing.slug as string;
+  }
+
+  const slug = `idea-${createRandomSuffix()}${createRandomSuffix()}`;
+  const { error } = await supabase.from(SHARED_OUTPUTS_TABLE).insert({
+    user_id: userId,
+    source_type: "icp_score",
+    source_id: sourceId,
+    slug,
+    title,
+    summary,
+    snapshot: { scoreCard: card },
+    visibility: "unlisted",
+    published_at: new Date().toISOString(),
+  });
+  if (error) throw error;
+  return slug;
+}
+
+/** Reads a published score card by slug. Returns only the card. */
+export async function getIcpScoreShareBySlug(slug: string): Promise<IcpScoreCard | null> {
+  const { data, error } = await supabase
+    .from(SHARED_OUTPUTS_TABLE)
+    .select("snapshot")
+    .eq("slug", slug)
+    .eq("source_type", "icp_score")
+    .in("visibility", ["unlisted", "public"])
+    .maybeSingle();
+  if (error || !data) return null;
+  const card = (data.snapshot as { scoreCard?: unknown } | null)?.scoreCard;
+  return isIcpScoreCard(card) ? card : null;
+}
+
+export function getIcpScorePublicUrl(slug: string) {
+  return `${window.location.origin}/idea/${slug}`;
 }
 
 export async function upsertIcpDraftShare({

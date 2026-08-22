@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, CheckCircle2, Download, Loader2, PencilLine, Share2, Sparkles } from "lucide-react";
-import { IcpDraftShareBar } from "@/components/icp/IcpDraftShareBar";
-import { IcpShareModal } from "@/components/icp/IcpShareModal";
+import { ArrowLeft, ArrowRight, CheckCircle2, Download, FileText, Loader2, PencilLine, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import { IcpFolioDocument } from "@/components/icp/IcpFolioDocument";
@@ -14,10 +12,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { captureEvent, trackICPUnlockedDraftOpened } from "@/lib/analytics";
 import { normalizeStoredArtifact } from "@/lib/icpDraftArtifacts";
-import { getIcpDraftPublicUrl, upsertIcpDraftShare } from "@/lib/icpDraftSharing";
+import { getIcpScorePublicUrl, upsertIcpScoreShare } from "@/lib/icpDraftSharing";
+import { IcpScoreShareModal } from "@/components/icp/IcpScoreShareModal";
 import { downloadIcpDraftDocx, downloadIcpDraftPdf } from "@/lib/icpDraftExport";
-import { publishGuestActivationArtifact } from "@/lib/guestActivationArtifacts";
-import { readHeroGuestArtifact } from "@/lib/heroIcpGeneration";
 import type { StoredIcpArtifact } from "@/lib/icpBuilderSession";
 import { trackActivationFunnelEvent } from "@/lib/activationEntry";
 import { trackJourneyEvent } from "@/lib/journeyOutcomes";
@@ -41,16 +38,10 @@ export default function IcpDraftPage() {
   const [showLegacy, setShowLegacy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [isSharing, setIsSharing] = useState(false);
-  const [shareModalData, setShareModalData] = useState<{
-    url: string;
-    personaName: string;
-    roleLine: string;
-  } | null>(null);
   const isUnlockSource = searchParams.get("source") === "icp-unlock";
-  // Built here rather than read back from the share row: the founder sees the
-  // bar before a share link exists, and the copy has to name their score either
-  // way. upsertIcpDraftShare freezes the same card onto the snapshot.
+  // Built here rather than read back from a share row: the founder sees the
+  // score long before any link exists, and the share copy has to name it either
+  // way. upsertIcpScoreShare freezes this same card when a link is minted.
   const scoreCard = useMemo(
     () =>
       artifact
@@ -157,53 +148,21 @@ export default function IcpDraftPage() {
     }
   };
 
-  const handleShare = async () => {
-    if (!artifact || !user || !draftId) return;
-    setIsSharing(true);
+  /*
+   * Mints a score-card link, not a draft link.
+   *
+   * The score is the shareable unit: it is what a stranger can react to, and
+   * the draft is a working document that costs the account its value once it is
+   * public. upsertIcpScoreShare stores only the card.
+   */
+  const handleShareScore = async (): Promise<string | null> => {
+    if (!scoreCard || !user || !draftId) return null;
     try {
-      const record = await upsertIcpDraftShare({
-        userId: user.id,
-        sourceId: draftId,
-        artifact,
-      });
-      const guestArtifact = readHeroGuestArtifact();
-      if (guestArtifact) {
-        void publishGuestActivationArtifact(guestArtifact.resumeToken, draftId, record.slug).catch(() => {});
-      }
-      const shareUrl = getIcpDraftPublicUrl(record.slug);
-      setShareModalData({
-        url: shareUrl,
-        personaName: artifact.draftDocument.customer.personaName,
-        roleLine: artifact.draftDocument.customer.roleLine,
-      });
-    } catch (error) {
-      console.error("Failed to create ICP share link", error);
-      toast.error("Could not create a share link right now.");
-    } finally {
-      setIsSharing(false);
-    }
-  };
-
-  // Returns the public URL for the share bar (creates the share if needed).
-  const handleShareForBar = async (): Promise<string | null> => {
-    if (!artifact || !user || !draftId) return null;
-    setIsSharing(true);
-    try {
-      const record = await upsertIcpDraftShare({
-        userId: user.id,
-        sourceId: draftId,
-        artifact,
-      });
-      const guestArtifact = readHeroGuestArtifact();
-      if (guestArtifact) {
-        void publishGuestActivationArtifact(guestArtifact.resumeToken, draftId, record.slug).catch(() => {});
-      }
-      return getIcpDraftPublicUrl(record.slug);
+      const slug = await upsertIcpScoreShare({ userId: user.id, sourceId: draftId, card: scoreCard });
+      return getIcpScorePublicUrl(slug);
     } catch {
       toast.error("Could not create a share link right now.");
       return null;
-    } finally {
-      setIsSharing(false);
     }
   };
 
@@ -378,31 +337,27 @@ export default function IcpDraftPage() {
                 {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                 Download PDF
               </Button>
-              <Button type="button" variant="outline" className="gap-2" onClick={() => void handleShare()} disabled={isSharing}>
-                {isSharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
-                Share
+              <Button type="button" variant="outline" className="gap-2" onClick={() => void handleSaveDocx()} disabled={isDownloadingDocx}>
+                {isDownloadingDocx ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+                Download DOCX
               </Button>
             </div>
           </div>
         }
-        bottomBar={
-          <div className="space-y-3">
-            <IcpDraftShareBar
-              scoreCard={scoreCard}
-              shareUrl={shareModalData?.url ?? null}
-              returnPath={`/icp/draft/${draftId ?? ""}`}
-              onShare={handleShareForBar}
-              onSavePdf={handleDownload}
-              onSaveDocx={handleSaveDocx}
-              isSaving={isDownloading || isDownloadingDocx}
-              isSharing={isSharing}
-            />
-            <div className="flex justify-center">
-              <Button type="button" className="gap-2" onClick={handleDemoStudioClick}>
-                Create my prospect demo
+        scoreAction={
+          scoreCard ? (
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Button type="button" size="lg" className="gap-2" onClick={handleDemoStudioClick}>
+                Create my demo
+                <ArrowRight className="h-4 w-4" />
               </Button>
+              <IcpScoreShareModal
+                card={scoreCard}
+                onResolveUrl={handleShareScore}
+                autoOpenKey={draftId ?? null}
+              />
             </div>
-          </div>
+          ) : null
         }
       />
 
@@ -410,16 +365,6 @@ export default function IcpDraftPage() {
         <div className="mx-auto max-w-6xl px-4 pb-4 sm:px-6 lg:px-8">
           <IcpEvidenceCheck userId={user.id} />
         </div>
-      ) : null}
-
-      {shareModalData ? (
-        <IcpShareModal
-          isOpen={Boolean(shareModalData)}
-          onClose={() => setShareModalData(null)}
-          shareUrl={shareModalData.url}
-          personaName={shareModalData.personaName}
-          roleLine={shareModalData.roleLine}
-        />
       ) : null}
 
       {legacyAvailable ? (

@@ -6,6 +6,7 @@ import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { readGuestScoreCard } from "@/lib/guestActivationArtifacts";
+import { getIcpScoreShareBySlug } from "@/lib/icpDraftSharing";
 import type { IcpScoreCard } from "@/lib/icpScoreCard";
 import { buildArtifactReferralPath, trackArtifactReferralClicked } from "@/lib/artifactReferral";
 
@@ -41,7 +42,14 @@ export default function IcpPublicScorePage() {
         setLoading(false);
         return;
       }
-      const result = await readGuestScoreCard(slug);
+      /*
+       * A score can be published from either side of signup, so a slug is
+       * looked up in both stores. Guests live behind the edge function because
+       * anon cannot read guest_activation_artifacts; account holders live in
+       * bizmap_shared_outputs under source_type "icp_score". Both return only
+       * the card.
+       */
+      const result = (await readGuestScoreCard(slug)) ?? (await getIcpScoreShareBySlug(slug));
       if (!cancelled) {
         setCard(result);
         setLoading(false);

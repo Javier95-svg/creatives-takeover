@@ -9,11 +9,11 @@ import {
   useState,
 } from "react";
 
-import { ChevronDown, ExternalLink, Gauge, HelpCircle, Lock, UserRound } from "lucide-react";
+import { ExternalLink, Gauge, HelpCircle, Lock, UserRound } from "lucide-react";
 
-import type { IcpDraftDocument, IcpViabilityDimensionKey } from "@/lib/icpBuilderSession";
+import type { IcpDraftDocument } from "@/lib/icpBuilderSession";
 import { fieldIsReal } from "@/lib/icpFieldProvenance";
-import { computeViabilityScore, type ViabilityBand } from "@/lib/icpViabilityScore";
+import { computeViabilityScore } from "@/lib/icpViabilityScore";
 import { IcpVerdictSpread } from "@/components/icp/IcpVerdictSpread";
 import type { IcpScoreCard } from "@/lib/icpScoreCard";
 
@@ -100,6 +100,15 @@ interface IcpFolioDocumentProps {
   ideaDescription?: string;
   /** Passed straight through to the verdict spread on shared pages. */
   frozenScoreCard?: IcpScoreCard | null;
+  /**
+   * The next step, rendered inside the score card itself.
+   *
+   * This is where the scoring breakdown used to sit. A founder who has just
+   * been told what their idea scores is at the highest intent they will be all
+   * session, and spending that space on an appendix asked them to audit the
+   * number rather than act on it.
+   */
+  scoreAction?: ReactNode;
 }
 
 const VIEWPORT_MARGIN = 16;
@@ -190,118 +199,6 @@ function SectionExplainerContent({
   );
 }
 
-const VIABILITY_BAND_STYLES: Record<ViabilityBand, { frame: string; value: string; label: string }> = {
-  strong: {
-    frame: "border-success/35 bg-success-subtle",
-    value: "text-success",
-    label: "text-success",
-  },
-  promising: {
-    frame: "border-warning/35 bg-warning-subtle",
-    value: "text-warning",
-    label: "text-warning",
-  },
-  needsWork: {
-    frame: "border-destructive/35 bg-destructive-subtle",
-    value: "text-destructive",
-    label: "text-destructive",
-  },
-};
-
-/**
- * Sits beside the founder's own sentence, which is the only place a single
- * number reads as a verdict on the idea rather than on the document.
- *
- * The one-line summary underneath is not decoration: an unexplained score
- * invites the reader to dismiss it, and naming the weakest driver turns
- * curiosity about the number into a reason to read the section it points at.
- *
- * The breakdown expands rather than sitting open, because the number is the
- * headline and five bars beside the founder's sentence would bury it. It is
- * rendered here rather than in the moat section on purpose: two of the sections
- * feeding the score are gated for logged-out readers, and a verdict a reader
- * cannot audit is worth less than no verdict.
- */
-function ViabilityBadge({ draft }: { draft: IcpDraftDocument }) {
-  const result = useMemo(() => computeViabilityScore(draft), [draft]);
-  const { score, label, band, summary, dimensions, pillars, rigor, basis } = result;
-  const styles = VIABILITY_BAND_STYLES[band];
-  const [expanded, setExpanded] = useState(false);
-
-  return (
-    <div className={`w-full shrink-0 rounded-2xl border px-4 py-3 sm:w-60 ${styles.frame}`}>
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-foreground/60">
-        Viability
-      </p>
-      <p className={`mt-1 text-3xl font-semibold leading-none ${styles.value}`}>
-        {score.toFixed(1)}
-        <span className="text-base font-medium text-foreground/50">/10</span>
-      </p>
-      <p className={`mt-1.5 text-sm font-semibold ${styles.label}`}>{label}</p>
-      <p className="mt-2 text-xs leading-5 text-foreground/60">{summary}</p>
-
-      {basis === "full" && dimensions.length > 0 ? (
-        <>
-          <button
-            type="button"
-            onClick={() => setExpanded((value) => !value)}
-            aria-expanded={expanded}
-            className="mt-3 flex w-full items-center justify-between gap-2 rounded-pill-sm text-xs font-semibold text-foreground/70 transition-colors hover:text-foreground"
-          >
-            How this is scored
-            <ChevronDown className={`icon-sm transition-transform ${expanded ? "rotate-180" : ""}`} />
-          </button>
-          {expanded ? (
-            <div className="mt-3 space-y-2.5 border-t border-border/60 pt-3" data-icp-viability-breakdown>
-              {dimensions.map((dimension) => (
-                <ViabilityMeter
-                  key={dimension.key}
-                  label={dimension.label}
-                  ratio={dimension.ratio}
-                  detail={draft.viabilityAssessment?.[dimension.key as IcpViabilityDimensionKey]?.rationale}
-                />
-              ))}
-              <div className="border-t border-border/60 pt-2.5">
-                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-foreground/50">
-                  Evidence quality
-                </p>
-                <p className="mt-1 text-xs leading-5 text-foreground/60">
-                  These do not raise the verdict. They hold it down when the draft rests on
-                  assumption, currently at {Math.round(rigor * 100)}%.
-                </p>
-                <div className="mt-2 space-y-2">
-                  {pillars.map((pillar) => (
-                    <ViabilityMeter key={pillar.key} label={pillar.label} ratio={pillar.ratio} />
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : null}
-        </>
-      ) : null}
-    </div>
-  );
-}
-
-function ViabilityMeter({ label, ratio, detail }: { label: string; ratio: number; detail?: string }) {
-  const percent = Math.round(ratio * 100);
-  // One ramp for every meter so a reader can compare bars across the two
-  // groups without decoding a second colour language.
-  const tone = percent >= 65 ? "bg-success" : percent >= 35 ? "bg-warning" : "bg-destructive";
-
-  return (
-    <div>
-      <div className="flex items-baseline justify-between gap-2">
-        <p className="text-xs font-medium capitalize text-foreground/75">{label}</p>
-        <p className="text-xs tabular-nums text-foreground/55">{percent}</p>
-      </div>
-      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-pill-sm bg-foreground/10">
-        <div className={`h-full rounded-pill-sm ${tone}`} style={{ width: `${Math.max(percent, 2)}%` }} />
-      </div>
-      {detail ? <p className="mt-1 text-[0.7rem] leading-4 text-foreground/55">{detail}</p> : null}
-    </div>
-  );
-}
 
 /**
  * A field the model never answered, shown as the open question it is.
@@ -556,6 +453,7 @@ export function IcpFolioDocument({
   lockedSectionBreak,
   ideaDescription,
   frozenScoreCard = null,
+  scoreAction,
 }: IcpFolioDocumentProps) {
   const visibleSectionSet = useMemo(
     () => new Set<IcpFolioSectionKey>(visibleSections ?? SECTION_NAV_ITEMS.map((item) => item.key)),
@@ -1411,20 +1309,13 @@ export function IcpFolioDocument({
                 * not depend on whether we happen to have the founder's sentence
                 * to show above it.
                 */}
-              <div className="mb-10 border-b border-border/60 pb-8">
+              <div className="mb-10">
                 <IcpVerdictSpread
                   draft={draft}
                   ideaDescription={ideaDescription}
                   frozenCard={frozenScoreCard}
+                  action={scoreAction}
                 />
-                <details className="mt-4 group">
-                  <summary className="cursor-pointer list-none text-xs font-semibold text-foreground/60 transition-colors hover:text-foreground">
-                    How this score is calculated
-                  </summary>
-                  <div className="mt-3 flex justify-start">
-                    <ViabilityBadge draft={draft} />
-                  </div>
-                </details>
               </div>
               </div>
 

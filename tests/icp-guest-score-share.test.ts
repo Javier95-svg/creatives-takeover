@@ -85,6 +85,56 @@ test('the unlock gate stays reachable when the score tab is open', () => {
   assert.match(folio, /#icp-unlock/);
 });
 
+/**
+ * The score card is the shareable unit; the ICP draft is not. A control that
+ * still publishes the draft is a trapdoor around that decision, so the draft
+ * page must not be able to mint one.
+ */
+test('the draft page can no longer publish the ICP draft', () => {
+  const draftPage = readFileSync(new URL('../src/pages/IcpDraftPage.tsx', import.meta.url), 'utf8');
+  assert.doesNotMatch(draftPage, /upsertIcpDraftShare/);
+  assert.doesNotMatch(draftPage, /getIcpDraftPublicUrl/);
+  assert.match(draftPage, /upsertIcpScoreShare/);
+});
+
+test('an account holder share stores only the card, not the draft', () => {
+  const sharing = readFileSync(new URL('../src/lib/icpDraftSharing.ts', import.meta.url), 'utf8');
+  const fn = sharing.slice(sharing.indexOf('export async function upsertIcpScoreShare'));
+  const body = fn.slice(0, fn.indexOf('export async function getIcpScoreShareBySlug'));
+
+  // bizmap_shared_outputs is readable by anon for unlisted/public rows, so
+  // anything in this snapshot is public regardless of what the page renders.
+  assert.match(body, /snapshot: \{ scoreCard: card \}/);
+  assert.doesNotMatch(body, /draftDocument/);
+  assert.match(body, /source_type: "icp_score"/);
+});
+
+/**
+ * A share prompt that reopens on every visit stops being a prompt and starts
+ * being a reason to leave.
+ */
+test('the share popup auto-opens at most once per idea', () => {
+  const modal = readFileSync(new URL('../src/components/icp/IcpScoreShareModal.tsx', import.meta.url), 'utf8');
+  assert.match(modal, /getSafeLocalStorage/);
+  assert.match(modal, /storage\?\.getItem\(key\)/);
+  assert.match(modal, /storage\?\.setItem\(key, "1"\)/);
+  // It must not fire the instant the score renders, which would cover the
+  // number before the founder has read it.
+  assert.match(modal, /AUTO_OPEN_DELAY_MS = 7_000/);
+});
+
+/**
+ * DOCX export used to live in the removed share bar's Save dropdown. Losing a
+ * format nobody asked to remove is the kind of regression that only surfaces
+ * when a founder goes looking for it.
+ */
+test('both export formats survive the share bar removal', () => {
+  const draftPage = readFileSync(new URL('../src/pages/IcpDraftPage.tsx', import.meta.url), 'utf8');
+  assert.match(draftPage, /Download PDF/);
+  assert.match(draftPage, /Download DOCX/);
+  assert.match(draftPage, /handleSaveDocx/);
+});
+
 test('the public score page is routed and never touches a draft document', () => {
   assert.match(app, /path="\/idea\/:slug"/);
 

@@ -1,7 +1,11 @@
 import { useMemo } from "react";
 import { toast } from "sonner";
 
-import { IcpDraftShareBar } from "@/components/icp/IcpDraftShareBar";
+import { useNavigate } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { IcpScoreShareModal } from "@/components/icp/IcpScoreShareModal";
 import { IcpFolioDocument } from "@/components/icp/IcpFolioDocument";
 import { IcpUnlockGate } from "@/components/icp/IcpUnlockGate";
 import type { StoredIcpArtifact } from "@/lib/icpBuilderSession";
@@ -37,6 +41,8 @@ export function IcpGuestResultView({
   onBeforeAuthContinue,
   onEmailLinkRequest,
 }: IcpGuestResultViewProps) {
+  const navigate = useNavigate();
+  const signUpPath = `/signup?source=icp-score-cta&return=${encodeURIComponent(returnPath)}`;
   const scoreCard = useMemo(
     () =>
       buildIcpScoreCard(artifact.draftDocument, {
@@ -75,15 +81,27 @@ export function IcpGuestResultView({
         ideaDescription={artifact.founderInputs.fastDescription ?? seed}
         visibleSections={ICP_GUEST_VISIBLE_SECTIONS}
         lockedSections={GUEST_LOCKED_SECTIONS}
-        bottomBar={
-          <IcpDraftShareBar
-            scoreCard={scoreCard}
-            allowAnonymousShare
-            shareUrl={null}
-            returnPath={returnPath}
-            onShare={handleShare}
-            onBeforeAuthContinue={onBeforeAuthContinue}
-          />
+        scoreAction={
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Button
+              type="button"
+              size="lg"
+              variant="outline"
+              className="gap-2"
+              onClick={() => {
+                onBeforeAuthContinue?.();
+                navigate(signUpPath);
+              }}
+            >
+              Create my demo
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+            <IcpScoreShareModal
+              card={scoreCard}
+              onResolveUrl={handleShare}
+              autoOpenKey={artifact.generatedAt}
+            />
+          </div>
         }
         lockedSectionBreak={
           <div id="icp-unlock" className="scroll-mt-24">
