@@ -86,6 +86,82 @@ test('the unlock gate stays reachable when the score tab is open', () => {
 });
 
 /**
+ * The share path authorizes against a guest artifact, and for a long time the
+ * only writer of those was start_hero_generation - an operation the funnel
+ * stopped calling when the hero moved to handing off to the builder. Previews
+ * were generated daily while guest_activation_artifacts sat empty, so every
+ * downstream guest capability (resume, claim, publish a score) was unreachable.
+ */
+test('a signed-out preview is persisted as a guest artifact', () => {
+  const analyzer = readFileSync(
+    new URL('../supabase/functions/icp-analyzer/index.ts', import.meta.url),
+    'utf8',
+  );
+  const preview = analyzer.slice(analyzer.indexOf('if (payload.mode === "preview") {'));
+  const body = preview.slice(0, preview.indexOf('const analysisId = await storeArtifact'));
+
+  assert.match(body, /guest_activation_artifacts/, 'the preview must record a guest artifact');
+  assert.match(body, /resume_token_hash: resumeTokenHash/);
+  assert.match(body, /deep_payload: generated\.artifact/);
+  assert.match(body, /resumeToken,/, 'the token must reach the browser');
+  assert.match(body, /expiresAt: guestExpiresAt/);
+});
+
+test('a failed guest insert still returns the draft', () => {
+  const analyzer = readFileSync(
+    new URL('../supabase/functions/icp-analyzer/index.ts', import.meta.url),
+    'utf8',
+  );
+  const preview = analyzer.slice(analyzer.indexOf('if (payload.mode === "preview") {'));
+  const body = preview.slice(0, preview.indexOf('const analysisId = await storeArtifact'));
+  // A founder who just waited for a draft must see it even if persistence
+  // fails. They lose sharing and resume, not the result they waited for.
+  assert.match(body, /catch \(guestError\)/);
+  assert.match(body, /resumeToken = null/);
+});
+
+test('the builder stores the token the share flow reads', () => {
+  const builder = readFileSync(new URL('../src/components/icp/ICPBuilder.tsx', import.meta.url), 'utf8');
+  const guestView = readFileSync(
+    new URL('../src/components/icp/IcpGuestResultView.tsx', import.meta.url),
+    'utf8',
+  );
+  assert.match(builder, /persistHeroGuestArtifact/);
+  // Both sides must use the same key, or sharing silently no-ops.
+  assert.match(guestView, /readHeroGuestArtifact/);
+});
+
+/**
+ * The link is what a founder pastes into a post, so it should say what it is
+ * before anyone clicks. A random string reads like a tracking URL.
+ */
+test('score links are derived from the idea, like article slugs', () => {
+  const guestFunction2 = readFileSync(
+    new URL('../supabase/functions/guest-activation-artifacts/index.ts', import.meta.url),
+    'utf8',
+  );
+  const sharing = readFileSync(new URL('../src/lib/icpDraftSharing.ts', import.meta.url), 'utf8');
+
+  for (const source of [guestFunction2, sharing]) {
+    assert.match(source, /function buildScoreSlug/);
+    // Never "/idea/idea-..." - the route already says idea.
+    assert.doesNotMatch(source, /`idea-\$\{createSlugSuffix\(\)\}`/);
+  }
+
+  // Reproduce the slug rule both copies implement.
+  const slugify = (idea: string) => {
+    const words = idea.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').split('-').filter(Boolean);
+    return words.slice(0, 8).join('-').slice(0, 60).replace(/-+$/g, '');
+  };
+  const stem = slugify('An AI phone/WhatsApp receptionist that answers patient questions, books appointments');
+  assert.equal(stem, 'an-ai-phone-whatsapp-receptionist-that-answers-patient');
+  // Must survive the read_score validator.
+  assert.match(`${stem}-a1b2c3d4`, /^[a-z0-9][a-z0-9-]{2,95}$/);
+  // An empty idea must not produce a bare trailing dash.
+  assert.equal(slugify('!!!'), '');
+});
+
+/**
  * The score card is the shareable unit; the ICP draft is not. A control that
  * still publishes the draft is a trapdoor around that decision, so the draft
  * page must not be able to mint one.

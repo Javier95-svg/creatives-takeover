@@ -1077,10 +1077,58 @@ serve(async (req) => {
       });
 
       if (payload.mode === "preview") {
+        /*
+         * Persist the preview as a guest artifact and hand back a resume token.
+         *
+         * This path generated a draft and returned it to the browser without
+         * recording anything, so a signed-out founder's result existed only in
+         * their tab. Everything downstream that keys off a guest artifact -
+         * resuming from a link, claiming on signup, publishing a score card -
+         * was unreachable from the funnel people actually use, which is why
+         * guest_activation_artifacts sat empty while previews were being
+         * generated daily. The only writer was start_hero_generation, and the
+         * hero stopped generating in place when it moved to handing off to the
+         * builder.
+         *
+         * Best-effort: a founder who just waited for a draft must still see it
+         * if the insert fails. They lose sharing and resume, not the result.
+         */
+        let resumeToken: string | null = createResumeToken();
+        let guestArtifactId: string | null = null;
+        let guestExpiresAt: string | null = null;
+        try {
+          const resumeTokenHash = await hashResumeToken(resumeToken);
+          const { data: guestRow, error: guestInsertError } = await serviceClient
+            .from("guest_activation_artifacts")
+            .insert({
+              artifact_type: "icp",
+              source: cleanOptionalText(payload.source) || "icp_builder_preview",
+              input_payload: {
+                entryMode: payload.entryMode,
+                fastInput: payload.fastInput ?? null,
+                guidedInput: payload.guidedInput ?? null,
+              },
+              deep_payload: generated.artifact,
+              resume_token_hash: resumeTokenHash,
+              generation_status: "deep_ready",
+            })
+            .select("id, expires_at")
+            .single();
+          if (guestInsertError || !guestRow) throw guestInsertError;
+          guestArtifactId = String(guestRow.id);
+          guestExpiresAt = String(guestRow.expires_at);
+        } catch (guestError) {
+          console.error("Could not persist ICP preview as a guest artifact", guestError);
+          resumeToken = null;
+        }
+
         return new Response(JSON.stringify({
           success: true,
           status: generated.status,
           artifact: generated.artifact,
+          resumeToken,
+          guestArtifactId,
+          expiresAt: guestExpiresAt,
         }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });

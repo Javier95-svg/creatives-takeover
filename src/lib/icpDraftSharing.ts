@@ -118,7 +118,7 @@ export async function upsertIcpScoreShare({
     return existing.slug as string;
   }
 
-  const slug = `idea-${createRandomSuffix()}${createRandomSuffix()}`;
+  const slug = buildScoreSlug(card.idea ?? card.roleLine);
   const { error } = await supabase.from(SHARED_OUTPUTS_TABLE).insert({
     user_id: userId,
     source_type: "icp_score",
@@ -146,6 +146,21 @@ export async function getIcpScoreShareBySlug(slug: string): Promise<IcpScoreCard
   if (error || !data) return null;
   const card = (data.snapshot as { scoreCard?: unknown } | null)?.scoreCard;
   return isIcpScoreCard(card) ? card : null;
+}
+
+/**
+ * Mirrors buildScoreSlug in guest-activation-artifacts, so a score link looks
+ * the same whether it was published before or after signup.
+ */
+function buildScoreSlug(idea: string | null) {
+  const words = (idea ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .split("-")
+    .filter(Boolean);
+  const stem = words.slice(0, 8).join("-").slice(0, 60).replace(/-+$/g, "");
+  return stem ? `${stem}-${createRandomSuffix()}` : `score-${createRandomSuffix()}${createRandomSuffix()}`;
 }
 
 export function getIcpScorePublicUrl(slug: string) {

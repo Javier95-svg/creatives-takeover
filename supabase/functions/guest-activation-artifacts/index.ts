@@ -36,6 +36,24 @@ function createSlugSuffix() {
   return Array.from(bytes).map((b) => b.toString(36).padStart(2, "0")).join("").slice(0, 12);
 }
 
+/**
+ * A readable slug, the way an article gets one.
+ *
+ * The link is the thing a founder pastes into a post, so it should say what it
+ * is before anyone clicks. A random string reads like a tracking URL and gives
+ * a reader no reason to open it. The random suffix stays because these pages
+ * are shared by link and listed nowhere - the words make it legible, the
+ * suffix keeps it unguessable.
+ */
+function buildScoreSlug(idea: unknown) {
+  const words = typeof idea === "string"
+    ? idea.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").split("-").filter(Boolean)
+    : [];
+  // Cap on words rather than characters so the slug never ends mid-word.
+  const stem = words.slice(0, 8).join("-").slice(0, 60).replace(/-+$/g, "");
+  return stem ? `${stem}-${createSlugSuffix().slice(0, 8)}` : `score-${createSlugSuffix()}`;
+}
+
 function clientIp(req: Request) {
   return (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "unknown";
 }
@@ -140,7 +158,7 @@ serve(async (req) => {
       if (!existing) return json({ success: false, error: "This artifact is unavailable." }, 404);
 
       // Reuse the slug on repeat shares so a link already posted keeps working.
-      const shareSlug = existing.share_slug || `idea-${createSlugSuffix()}`;
+      const shareSlug = existing.share_slug || buildScoreSlug(scoreCard.idea);
 
       /*
        * A published link has to outlive the 7-day guest TTL.

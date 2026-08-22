@@ -82,7 +82,7 @@ import {
 } from "@/lib/journeyOutcomes";
 import { evaluateIcpArtifact } from "@/lib/icpOutcome";
 import { ensurePrebuildContext } from "@/lib/prebuildContext";
-import { claimHeroGuestArtifact } from "@/lib/heroIcpGeneration";
+import { claimHeroGuestArtifact, persistHeroGuestArtifact } from "@/lib/heroIcpGeneration";
 
 const ICP_RESULTS_TABLE = "icp_analysis_results";
 const SEED_TIMEOUT_MS = 25000;
@@ -163,6 +163,14 @@ type IcpDraftGenerationResponse = {
   artifact?: StoredIcpArtifact;
   analysisId?: string;
   error?: string;
+  /**
+   * Present on previews: the guest artifact the draft was persisted as. Null
+   * when that insert failed, in which case the founder still gets their draft
+   * but cannot share or resume it.
+   */
+  resumeToken?: string | null;
+  guestArtifactId?: string | null;
+  expiresAt?: string | null;
 };
 
 type IcpUnlockEmailPayload = {
@@ -1204,6 +1212,20 @@ const ICPBuilder: React.FC = () => {
       }
 
       const artifact = data.artifact as StoredIcpArtifact;
+
+      /*
+       * Record the guest artifact this preview was stored as, using the same
+       * localStorage key the hero used to write. Everything that needs to act
+       * on a signed-out founder's result - publishing a score card, resuming
+       * from a link, claiming on signup - reads it from there.
+       */
+      if (!persist && data.resumeToken && data.guestArtifactId && data.expiresAt) {
+        persistHeroGuestArtifact({
+          artifactId: data.guestArtifactId,
+          resumeToken: data.resumeToken,
+          expiresAt: data.expiresAt,
+        });
+      }
 
       if (!persist) {
         trackICPPreviewReady({
