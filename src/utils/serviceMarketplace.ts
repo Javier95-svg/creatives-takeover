@@ -8,12 +8,15 @@ export const HARSH_BOTPRO_EMAIL = "harsh.ladani@botprosolutions.com";
 export const HARSH_BOTPRO_USER_ID = "4ceda6be-fc20-420f-aba1-cee3a1416f59";
 export const DIEGO_SHEFA_EMAIL = "realtopw@gmail.com";
 export const DIEGO_SHEFA_USER_ID = "948c1768-f299-4442-8302-99da3588ca08";
+export const JIDOKA_GROUP_EMAIL = "bd@jidokagroup.com";
+export const JIDOKA_GROUP_USER_ID = "a16ea40e-8470-41ce-910d-5bea9a00818c";
 
 const SERVICE_MESSAGE_USER_IDS_BY_EMAIL: Record<string, string> = {
   [DARYA_GETMARKETING_EMAIL]: DARYA_GETMARKETING_USER_ID,
   [ADAM_APICEFLOW_EMAIL]: ADAM_APICEFLOW_USER_ID,
   [HARSH_BOTPRO_EMAIL]: HARSH_BOTPRO_USER_ID,
   [DIEGO_SHEFA_EMAIL]: DIEGO_SHEFA_USER_ID,
+  [JIDOKA_GROUP_EMAIL]: JIDOKA_GROUP_USER_ID,
 };
 
 export function generateServiceSlug(value: string) {
