@@ -267,7 +267,7 @@ const Navigation = () => {
     { name: "BizMap AI", href: "/bizmap-ai", tooltip: "Validate, build, and launch with guided startup tools", icon: Compass },
     { name: "Network", href: "/mentorship", tooltip: "Mentors, angel investors, and co-founder matchmaking", icon: UsersIcon },
     { name: "Insighta", href: "/insighta", tooltip: "Funding opportunities and investment resources", icon: Telescope },
-    { name: "Podcast", href: "/podcast", tooltip: "Founders Unleashed — founder conversations", icon: Mic },
+    { name: "Podcast", href: "/podcast", tooltip: "Founders Unleashed podcast", icon: Mic },
     { name: "Newspaper", href: "/newspaper", tooltip: "Business cases & founder stories", icon: FileText },
     { name: "Pricing", href: "/pricing", tooltip: "View plans and pricing options", icon: DollarSign }
   ];

@@ -152,8 +152,8 @@ const SearchableFAQ = () => {
     {
       id: 15,
       category: "Features",
-      question: "What is Insighta Test — Fundraising Readiness?",
-      answer: "Insighta Test — Fundraising Readiness diagnoses gaps in traction, fundraising narrative, and investor preparation. It recommends the most relevant existing Insighta workflow without promising funding, and it is included on every plan, including Rookie.",
+      question: "What is Insighta Test?",
+      answer: "Insighta Test diagnoses gaps in traction, fundraising narrative, and investor preparation. It recommends the most relevant existing Insighta workflow without promising funding, and it is included on every plan, including Rookie.",
       popular: false,
       tags: ["insighta", "fundraising readiness", "traction", "pitch deck", "investors"]
     },
