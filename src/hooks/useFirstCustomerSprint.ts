@@ -18,6 +18,7 @@ import type {
 const client = supabase as any;
 
 export const firstCustomerSprintQueryKey = (userId?: string | null) => ['first-customer-sprint-v1', userId] as const;
+export const ctMentorUnlockQueryKey = (userId?: string | null) => ['ct-mentor-unlock-v1', userId] as const;
 
 export function isFirstCustomerSprintKillSwitchEnabled(posthogFlag?: boolean): boolean {
   if (import.meta.env.VITE_FIRST_CUSTOMER_SPRINT_V1 === 'false') return false;
@@ -45,12 +46,32 @@ export function useFirstCustomerSprint() {
       return { ...data, continuation: (continuation.data ?? { paid: false }) as FirstCustomerContinuation };
     },
   });
+  const ctMentorUnlock = useQuery({
+    queryKey: ctMentorUnlockQueryKey(user?.id),
+    enabled: Boolean(user?.id),
+    staleTime: 10_000,
+    retry: 1,
+    queryFn: async (): Promise<{ id: string; createdAt: string } | null> => {
+      const { data, error } = await client
+        .from('ct_access_unlocks')
+        .select('id,created_at')
+        .eq('user_id', user!.id)
+        .eq('benefit', 'mentor_checkpoint')
+        .is('consumed_at', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) return null;
+      return data ? { id: data.id, createdAt: data.created_at } : null;
+    },
+  });
 
   const refresh = useCallback(async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: firstCustomerSprintQueryKey(user?.id) }),
       queryClient.invalidateQueries({ queryKey: ['founder-customer-contacts', user?.id] }),
       queryClient.invalidateQueries({ queryKey: ['founder-cycle-v1', user?.id] }),
+      queryClient.invalidateQueries({ queryKey: ctMentorUnlockQueryKey(user?.id) }),
     ]);
   }, [queryClient, user?.id]);
 
@@ -142,7 +163,9 @@ export function useFirstCustomerSprint() {
     snapshot: query.data ?? null,
     isLoading: query.isLoading,
     error: query.error instanceof Error ? query.error : null,
+    ctMentorUnlocked: Boolean(ctMentorUnlock.data),
+    ctMentorUnlock: ctMentorUnlock.data ?? null,
     isSaving: run.isPending,
     refresh, start, update, attachContact, generateMessages, requestCheckpoint, complete, submitReview,
-  }), [attachContact, complete, enabled, generateMessages, query.data, query.error, query.isLoading, refresh, requestCheckpoint, run.isPending, start, submitReview, update]);
+  }), [attachContact, complete, ctMentorUnlock.data, enabled, generateMessages, query.data, query.error, query.isLoading, refresh, requestCheckpoint, run.isPending, start, submitReview, update]);
 }

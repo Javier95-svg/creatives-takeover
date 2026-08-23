@@ -2,12 +2,27 @@ import { BIZMAP_STAGES, BIZMAP_STAGE_ORDER, type BizMapStage } from './bizmapSta
 import type { FoundationalMilestone, ToolCompletionSignals } from './taskCalendar.ts';
 import type { OnboardingContextV1 } from './onboardingContext.ts';
 import type { JourneyOutcomeStatus, JourneyTool } from './journeyOutcomes.ts';
+import { STARTUP_STAGE_EXECUTION_LOOPS, type EvidenceLevel, type ExperimentResult, type FounderExecutionLoop } from './marketExperiment.ts';
 
 export interface FounderJourneyOutcomeSignal {
   artifactId: string;
   status: JourneyOutcomeStatus;
   verificationMode: string;
   validationContextId: string | null;
+  updatedAt: string;
+}
+
+export interface CTVerificationClaimSignal {
+  id: string;
+  sourceTool: JourneyTool | null;
+  claim: string;
+  claimType: string;
+  evidenceLevel: EvidenceLevel;
+  result: ExperimentResult;
+  status: 'pending' | 'verified' | 'rejected' | 'expired' | 'legacy';
+  missingEvidence: string[];
+  nextAction: string | null;
+  unlockedBenefit: string | null;
   updatedAt: string;
 }
 
@@ -55,6 +70,7 @@ export interface FounderJourneyExtras {
   mvpPublished: MvpPublishedJourneySignal | null;
   fundraisingActivity: FundraisingActivitySignal | null;
   outcomes: Partial<Record<JourneyTool, FounderJourneyOutcomeSignal>>;
+  verificationClaims: CTVerificationClaimSignal[];
 }
 
 export const EMPTY_FOUNDER_JOURNEY_EXTRAS: FounderJourneyExtras = {
@@ -65,6 +81,7 @@ export const EMPTY_FOUNDER_JOURNEY_EXTRAS: FounderJourneyExtras = {
   mvpPublished: null,
   fundraisingActivity: null,
   outcomes: {},
+  verificationClaims: [],
 };
 
 export type JourneyStageStatus = 'complete' | 'current' | 'upcoming';
@@ -78,6 +95,7 @@ export interface JourneyStageNode {
   optional: boolean;
   hasActivity: boolean;
   route: string;
+  executionLoop: FounderExecutionLoop;
 }
 
 export interface JourneyToolTile {
@@ -94,6 +112,7 @@ export interface JourneyToolTile {
   outcomeStatus: JourneyOutcomeStatus | null;
   verificationMode: string | null;
   contextId: string | null;
+  ctClaim: CTVerificationClaimSignal | null;
 }
 
 export interface JourneyNextAction {
@@ -164,10 +183,14 @@ function buildStages(inputs: BuildFounderJourneyInputs): JourneyStageNode[] {
 
   return BIZMAP_STAGE_ORDER.map((stage) => {
     const definition = BIZMAP_STAGES.find((entry) => entry.id === stage);
-    // Traction completion is display-only here: derived from Phase-7 readiness,
-    // never written back to user_progress (useBizMapProgress owns writes).
+    // The legacy score remains supporting context. It can only complete the
+    // display stage when at least one acquisition claim is independently CT Verified.
+    const hasVerifiedAcquisition = extras.verificationClaims.some((claim) => (
+      claim.evidenceLevel === 'ct_verified'
+      && ['acquisition_execution', 'repeatable_channel'].includes(claim.claimType)
+    ));
     const completed = Boolean(
-      stageState[stage]?.completed || (stage === 'TRACTION' && extras.traction?.phaseSevenReady),
+      stageState[stage]?.completed || (stage === 'TRACTION' && extras.traction?.phaseSevenReady && hasVerifiedAcquisition),
     );
 
     return {
@@ -178,6 +201,7 @@ function buildStages(inputs: BuildFounderJourneyInputs): JourneyStageNode[] {
       optional: stage === 'FUNDRAISING',
       hasActivity: stageHasActivity(stage, toolSignals, extras),
       route: stagePrimaryRoute(stage),
+      executionLoop: STARTUP_STAGE_EXECUTION_LOOPS[stage],
     } satisfies JourneyStageNode;
   });
 }
@@ -193,7 +217,7 @@ function formatSignupSuffix(signupCount: number | null | undefined): string {
   return ` · ${signupCount} signup${signupCount === 1 ? '' : 's'}`;
 }
 
-type JourneyToolTileDraft = Omit<JourneyToolTile, 'stage' | 'isCurrentStage' | 'role' | 'outcomeStatus' | 'verificationMode' | 'contextId'>;
+type JourneyToolTileDraft = Omit<JourneyToolTile, 'stage' | 'isCurrentStage' | 'role' | 'outcomeStatus' | 'verificationMode' | 'contextId' | 'ctClaim'>;
 
 const TILE_STAGES: Record<string, BizMapStage> = {
   'icp-builder': 'IDENTITY',
@@ -361,6 +385,7 @@ function buildTools(inputs: BuildFounderJourneyInputs): JourneyToolTile[] {
     const stage = TILE_STAGES[draft.key] ?? 'IDENTITY';
     const outcomeKey = draft.key.replaceAll('-', '_') as keyof FounderJourneyExtras['outcomes'];
     const outcome = inputs.extras.outcomes[outcomeKey];
+    const ctClaim = inputs.extras.verificationClaims.find((claim) => claim.sourceTool === outcomeKey) ?? null;
     return {
       ...draft,
       stage,
@@ -371,6 +396,7 @@ function buildTools(inputs: BuildFounderJourneyInputs): JourneyToolTile[] {
       outcomeStatus: outcome?.status ?? null,
       verificationMode: outcome?.verificationMode ?? null,
       contextId: outcome?.validationContextId ?? null,
+      ctClaim,
     };
   });
 }
@@ -414,8 +440,12 @@ function buildNextAction(inputs: BuildFounderJourneyInputs): JourneyNextAction |
       artifactId: null,
     };
   }
-  if (!inputs.extras.traction?.phaseSevenReady) {
-    return { key: 'traction-weekly-log', label: "Log this week's traction", route: '/traction-engine', reason: 'Your core pathway needs attributed traction evidence.', expectedEvidence: 'One weekly log with channel, retention, efficiency, revenue, and a decision', artifactId: inputs.extras.outcomes.traction_engine?.artifactId ?? null };
+  const hasVerifiedAcquisition = inputs.extras.verificationClaims.some((claim) => (
+    claim.evidenceLevel === 'ct_verified'
+    && ['acquisition_execution', 'repeatable_channel'].includes(claim.claimType)
+  ));
+  if (!inputs.extras.traction?.phaseSevenReady || !hasVerifiedAcquisition) {
+    return { key: 'traction-weekly-log', label: "Evaluate this week's acquisition evidence", route: '/traction-engine', reason: 'Your core pathway needs a pre-registered sample, observed result, and explicit decision.', expectedEvidence: 'One metric-level acquisition claim with its denominator, source, threshold, and decision', artifactId: inputs.extras.outcomes.traction_engine?.artifactId ?? null };
   }
   return null;
 }

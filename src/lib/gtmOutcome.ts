@@ -12,7 +12,7 @@ export interface GTMOutcomeEvaluation {
     tractionSprintCreated: boolean;
   };
   completionScore: number;
-  status: "draft" | "ready" | "verified";
+  status: "draft" | "ready";
 }
 
 export function evaluateGTMOutcome(plan: GTMPlanV2): GTMOutcomeEvaluation {
@@ -66,6 +66,8 @@ export function evaluateGTMOutcome(plan: GTMPlanV2): GTMOutcomeEvaluation {
   return {
     checks,
     completionScore,
-    status: planReady ? (tractionSprintCreated ? "verified" : "ready") : "draft",
+    // A runnable or activated plan is ready for execution. Verification belongs
+    // to the observed market claim, never to the generated plan or sprint.
+    status: planReady ? "ready" : "draft",
   };
 }

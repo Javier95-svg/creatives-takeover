@@ -15,6 +15,7 @@ import { captureEvent } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 import type { GTMPlanV2, GTMPlay, GTMWeeklyReview, GTMWeeklyReviewInput } from '@/lib/gtmV2';
 import { evaluateGTMOutcome } from '@/lib/gtmOutcome';
+import { buildGTMActionPacket, selectExecutableGTMPlays } from '@/lib/marketExperiment';
 import GTMExecutionOS from './GTMExecutionOS';
 import GTMEvidenceManager from './GTMEvidenceManager';
 import GTMPipelineBoard from './GTMPipelineBoard';
@@ -49,12 +50,13 @@ const decisionStyles: Record<string, string> = {
   kill: 'border-destructive/30 bg-destructive/5 text-destructive',
 };
 
-function PlayEditor({ play, planId, onSave, onStartSprint }: { play: GTMPlay; planId: string; onSave: (play: GTMPlay) => Promise<void>; onStartSprint: (play: GTMPlay) => Promise<void> }) {
+function PlayEditor({ play, plan, planId, onSave, onStartSprint }: { play: GTMPlay; plan: GTMPlanV2; planId: string; onSave: (play: GTMPlay) => Promise<void>; onStartSprint: (play: GTMPlay) => Promise<void> }) {
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(play);
   useEffect(() => setDraft(play), [play]);
   const directories = play.recommendedDirectoryIds.map(findLaunchDirectory).filter(Boolean);
+  const actionPacket = buildGTMActionPacket(plan, play);
   const directoryStates = ['recommended', 'visited', 'submitted', 'live', 'skipped'] as const;
 
   const advanceDirectory = (directoryId: string) => {
@@ -104,6 +106,19 @@ function PlayEditor({ play, planId, onSave, onStartSprint }: { play: GTMPlay; pl
             <div className="rounded-xl border border-warning/30 bg-warning/5 p-3"><p className="text-xs font-semibold uppercase tracking-wider text-warning">Kill rule</p><p className="mt-2 text-sm">{play.killRule || 'Add a measurable kill rule before activating this play.'}</p></div>
             {play.structuredKillRule ? <p className="text-xs text-muted-foreground">Measured rule: {play.structuredKillRule.metric} {play.structuredKillRule.operator} {play.structuredKillRule.threshold} for {play.structuredKillRule.observationWindowWeeks} weeks after at least {play.structuredKillRule.minSampleSize} observations.</p> : null}
             <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</p><ul className="mt-2 space-y-2">{play.actions.map((action) => <li key={action} className="flex items-start gap-2 text-sm"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{action}</li>)}</ul></div>
+            <div className="rounded-xl border border-primary/25 bg-primary/5 p-4">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div><p className="text-xs font-semibold uppercase tracking-wider text-primary">Acquisition action packet</p><p className="mt-1 text-xs text-muted-foreground">Pre-registered when you start the experiment.</p></div>
+                <Badge variant="outline">{actionPacket.minimumSampleSize} minimum sample</Badge>
+              </div>
+              <div className="mt-3 grid gap-3 text-sm md:grid-cols-2">
+                <div><p className="text-xs font-medium text-muted-foreground">Prospect criteria</p><p className="mt-1">{actionPacket.prospectCriteria}</p></div>
+                <div><p className="text-xs font-medium text-muted-foreground">List instruction</p><p className="mt-1">{actionPacket.listBuildingInstruction}</p></div>
+                <div><p className="text-xs font-medium text-muted-foreground">Approved message</p><p className="mt-1">{actionPacket.approvedMessage}</p></div>
+                <div><p className="text-xs font-medium text-muted-foreground">Quota and decision rule</p><p className="mt-1">{actionPacket.dailyQuota}/day · {actionPacket.weeklyQuota}/week · {actionPacket.targetValue} {actionPacket.targetMetric.replaceAll('_', ' ')}</p></div>
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">CTA: {actionPacket.cta} · Change one variable only after the observation window closes.</p>
+            </div>
           </>
         )}
         <div className="grid gap-3 border-t border-border/60 pt-4 md:grid-cols-2">
@@ -127,6 +142,9 @@ export default function GTMWorkspace({ plan, planId, weeklyReview, isSaving, isE
   const [reviewInput, setReviewInput] = useState<GTMWeeklyReviewInput>(weeklyReview?.reviewInput ?? { wins: '', misses: '', objections: '', customerLanguage: '', blockers: '', notes: '' });
   const primaryPlay = plan.plays.find((play) => play.status === 'active') ?? plan.plays[0];
   const outcome = evaluateGTMOutcome(plan);
+  const executablePlays = selectExecutableGTMPlays(plan);
+  const firstCustomerEligible = plan.intake.businessModel === 'b2b_saas'
+    && ['founder_led_sales', 'sales_assisted'].includes(plan.thesis.motion);
   const outcomeLabels: Record<keyof typeof outcome.checks, string> = {
     primaryChannel: 'Primary channel', fallbackChannel: 'Fallback channel', evidenceBackedMessaging: 'Evidence backed messaging',
     usableCampaignAssets: 'Usable assets', sixWeekTargets: 'Six week targets', budgetAndTimeConstraints: 'Budget and time constraints',
@@ -142,7 +160,7 @@ export default function GTMWorkspace({ plan, planId, weeklyReview, isSaving, isE
       </div>
 
       <Card className="border-primary/20 bg-primary/5">
-        <CardHeader className="pb-3"><div className="flex flex-wrap items-center justify-between gap-2"><div><CardTitle className="text-base">GTM outcome contract</CardTitle><p className="mt-1 text-sm text-muted-foreground">Begin one measurable acquisition play with every execution constraint attached.</p></div><Badge variant="outline">{outcome.completionScore}% {outcome.status}</Badge></div></CardHeader>
+        <CardHeader className="pb-3"><div className="flex flex-wrap items-center justify-between gap-2"><div><CardTitle className="text-base">Acquisition experiment contract</CardTitle><p className="mt-1 text-sm text-muted-foreground">A complete plan is ready to execute. CT Verified is earned later from trustworthy external evidence.</p></div><Badge variant="outline">{outcome.completionScore}% {outcome.status}</Badge></div></CardHeader>
         <CardContent className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{Object.entries(outcome.checks).map(([key, complete]) => <div key={key} className="flex items-center gap-2 text-xs"><Check className={cn('h-3.5 w-3.5', complete ? 'text-success' : 'text-muted-foreground/40')} /><span className={complete ? 'text-foreground' : 'text-muted-foreground'}>{outcomeLabels[key as keyof typeof outcome.checks]}</span></div>)}</CardContent>
       </Card>
 
@@ -172,9 +190,10 @@ export default function GTMWorkspace({ plan, planId, weeklyReview, isSaving, isE
         </TabsContent>
 
         <TabsContent value="activate" className="mt-6 space-y-4">
-          <div><h2 className="text-lg font-semibold">Runnable GTM plays</h2><p className="text-sm text-muted-foreground">Edit the founder-controlled play, then activate it through the right platform. Manual changes are free.</p></div>
+          <div><h2 className="text-lg font-semibold">Primary play and fallback</h2><p className="text-sm text-muted-foreground">Execute one pre-registered acquisition experiment. The fallback stays available if measured evidence kills the primary play.</p></div>
+          {firstCustomerEligible ? <Card className="border-success/25 bg-success/5"><CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-semibold">B2B founder-led execution</p><p className="text-sm text-muted-foreground">Use the First Customer Sprint for a named prospect list, manual outreach, customer evidence, and the mentor decision checkpoint.</p></div><Button variant="outline" onClick={() => window.location.assign('/first-customer-sprint')}>Open First Customer Sprint<ArrowRight className="ml-2 h-4 w-4" /></Button></CardContent></Card> : null}
           <GTMExecutionOS plan={plan} planId={planId} mode="execute" onUpdatePlan={onUpdatePlan} />
-          {plan.plays.map((play) => <PlayEditor key={play.id} play={play} planId={planId} onSave={onUpdatePlay} onStartSprint={onStartSprint} />)}
+          {executablePlays.map((play) => <PlayEditor key={play.id} play={play} plan={plan} planId={planId} onSave={onUpdatePlay} onStartSprint={onStartSprint} />)}
         </TabsContent>
 
         <TabsContent value="review" className="mt-6 space-y-5">

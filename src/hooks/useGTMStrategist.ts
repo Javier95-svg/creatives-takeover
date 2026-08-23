@@ -27,6 +27,13 @@ import {
 } from '@/lib/gtmV2';
 import { evaluateGTMOutcome } from '@/lib/gtmOutcome';
 import {
+  buildGTMActionPacket,
+} from '@/lib/marketExperiment';
+import {
+  findLatestPublishedDemo,
+  preregisterGTMMarketExperiment,
+} from '@/lib/marketExperimentClient';
+import {
   createJourneyEvidenceManifest,
   createJourneyHandoff,
   findJourneyHandoff,
@@ -177,7 +184,9 @@ const syncGTMJourneyOutcome = async (
       },
       evidenceManifest,
       completionScore: outcome.completionScore,
-      verificationMode: outcome.status === 'verified' ? 'corroborated' : 'unverified',
+      // This is artifact readiness only. CT verification is evaluated later
+      // against metric-level external evidence in verification_claims.
+      verificationMode: 'unverified',
       validationContextId: lineage?.validationContextId ?? null,
       handoffId: lineage?.handoffId ?? null,
       artifactVersion: plan.generatedAt,
@@ -478,6 +487,27 @@ export function useGTMStrategist() {
       toast.error('Complete the GTM outcome contract before activating this play.');
       return;
     }
+    const { data: killedRows } = await (supabase as any)
+      .from('traction_engine_experiments')
+      .select('created_at')
+      .eq('user_id', user.id)
+      .ilike('channel', play.channelName)
+      .eq('decision', 'kill')
+      .order('created_at', { ascending: false })
+      .limit(1);
+    const latestKillAt = killedRows?.[0]?.created_at ? new Date(killedRows[0].created_at).getTime() : 0;
+    const hasNewEvidence = (analysis.evidenceItems ?? []).some((item) => (
+      item.verified
+      && Boolean(item.createdAt)
+      && new Date(item.createdAt!).getTime() > latestKillAt
+    ));
+    if (latestKillAt > 0 && !hasNewEvidence) {
+      toast.error('This channel was previously killed by measured evidence.', {
+        description: 'Add newer verified evidence or choose the fallback play before reactivating it.',
+      });
+      return;
+    }
+    const publishedDemo = await findLatestPublishedDemo(user.id);
     const fallback = analysis.channels.find((channel) => channel.role === 'secondary');
     const attributedUrls: Array<{ label: string; url: string }> = [];
     if (analysis.intake.productUrl) {
@@ -491,6 +521,7 @@ export function useGTMStrategist() {
         // The readiness contract will keep an invalid destination visible for correction.
       }
     }
+    const actionPacket = buildGTMActionPacket(analysis, play, publishedDemo);
     const activationPayload = {
       metric: play.metric,
       target: play.target,
@@ -500,6 +531,8 @@ export function useGTMStrategist() {
       assetIds: (analysis.assets ?? []).filter((asset) => asset.playId === play.id).map((asset) => asset.id),
       taskIds: (analysis.tasks ?? []).filter((task) => task.playId === play.id).map((task) => task.id),
       attributedUrls,
+      actionPacket,
+      sourceDemoId: publishedDemo?.id ?? null,
       reviewDueAt: new Date(Date.now() + 7 * 86_400_000).toISOString(),
     };
     const activationKey = `gtm:${planId}:${play.id}`;
@@ -519,6 +552,37 @@ export function useGTMStrategist() {
     const activatedPlan = { ...analysis, plays: analysis.plays.map((item) => item.id === play.id ? activatedPlay : item) };
     setAnalysis(activatedPlan);
     captureEvent('gtm_traction_sprint_started', { plan_id: planId, play_id: play.id, channel_id: play.channelId, sprint_id: sprintId });
+    let marketExperimentId: string | null = null;
+    try {
+      const registered = await preregisterGTMMarketExperiment({
+        userId: user.id,
+        planId,
+        play,
+        plan: analysis,
+        tractionSprintId: sprintId,
+        demo: publishedDemo,
+        sourceOutcomeVersions: {
+          gtm: analysis.generatedAt,
+          ...(validationContextId ? { validationContext: validationContextId } : {}),
+        },
+      });
+      marketExperimentId = registered.id;
+      await (supabase as any)
+        .from('traction_engine_sprints')
+        .update({ activation_payload: { ...activationPayload, marketExperimentId } })
+        .eq('id', sprintId)
+        .eq('user_id', user.id);
+      captureEvent('gtm_market_experiment_preregistered', {
+        plan_id: planId,
+        play_id: play.id,
+        experiment_id: marketExperimentId,
+        target_metric: registered.actionPacket.targetMetric,
+        minimum_sample_size: registered.actionPacket.minimumSampleSize,
+      });
+    } catch (experimentError) {
+      console.warn('The Traction sprint started, but CT experiment registration will need a retry:', experimentError);
+      toast.warning('Sprint started, but the CT evidence contract could not be registered yet.');
+    }
     {
       const outcome = await syncGTMJourneyOutcome(user.id, planId, activatedPlan, { validationContextId, handoffId: originatingHandoffId });
       if (outcome?.outcomeId) {
@@ -531,6 +595,7 @@ export function useGTMStrategist() {
             planId,
             playId: play.id,
             sprintId,
+            marketExperimentId,
             successEvent: analysis.metrics.primaryOutcome,
             destinationRoute: `/traction-engine?sprint=${encodeURIComponent(sprintId)}${validationContextId ? `&context=${encodeURIComponent(validationContextId)}` : ''}`,
             ...activationPayload,
@@ -546,17 +611,10 @@ export function useGTMStrategist() {
         gtm_plan_id: planId,
         gtm_play_id: play.id,
       });
-      if (outcome?.status === 'verified') {
-        trackJourneyEvent('journey_stage_outcome_completed', {
-          tool: 'gtm_strategist',
-          artifact_type: 'gtm_acquisition_play',
-          artifact_id: planId,
-          outcome_status: 'verified',
-          completion_score: outcome.completionScore,
-        });
-      }
     }
-    toast.success(`${play.channelName} sprint is active.`);
+    toast.success(`${play.channelName} experiment is pre-registered and active.`, {
+      description: 'The plan is ready; CT Verified is earned only from the observed result.',
+    });
   }, [analysis, originatingHandoffId, planId, requestedMvpProjectId, user, validationContextId]);
 
   const updateV2Plan = useCallback(async (nextPlan: GTMPlanV2) => {

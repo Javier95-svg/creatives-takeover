@@ -65,14 +65,15 @@ const gtmPlan = (withSprint: boolean): GTMPlanV2 => ({
   generatedAt: '2026-07-19T00:00:00.000Z',
 });
 
-test('GTM is ready as a plan and verified only after its attributed Traction sprint exists', () => {
+test('GTM remains ready after activation because sprint creation is not verification', () => {
   const ready = evaluateGTMOutcome(gtmPlan(false));
   assert.equal(ready.status, 'ready');
   assert.equal(ready.checks.tractionSprintCreated, false);
 
-  const verified = evaluateGTMOutcome(gtmPlan(true));
-  assert.equal(verified.status, 'verified');
-  assert.equal(verified.completionScore, 100);
+  const activated = evaluateGTMOutcome(gtmPlan(true));
+  assert.equal(activated.status, 'ready');
+  assert.equal(activated.checks.tractionSprintCreated, true);
+  assert.equal(activated.completionScore, 100);
 });
 
 test('fixed hero copy and server rendered pricing remain available without JavaScript', () => {

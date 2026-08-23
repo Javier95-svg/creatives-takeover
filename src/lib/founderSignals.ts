@@ -87,6 +87,7 @@ export async function fetchFounderJourneyExtras(userId: string): Promise<Founder
     vcViewsRes,
     acceleratorViewsRes,
     outcomesRes,
+    verificationClaimsRes,
   ] = await Promise.all([
     supabase
       .from('traction_engine_weekly_logs' as any)
@@ -150,6 +151,11 @@ export async function fetchFounderJourneyExtras(userId: string): Promise<Founder
       .select('tool,artifact_id,status,verification_mode,validation_context_id,updated_at')
       .eq('user_id', userId)
       .order('updated_at', { ascending: false }),
+    supabase
+      .from('verification_claims' as any)
+      .select('id,source_tool,claim,claim_type,evidence_level,result,status,missing_evidence,next_action,unlocked_benefit,updated_at')
+      .eq('user_id', userId)
+      .order('updated_at', { ascending: false }),
   ]);
 
   const tractionRows = tractionRes.error
@@ -196,6 +202,22 @@ export async function fetchFounderJourneyExtras(userId: string): Promise<Founder
         updatedAt: row.updated_at,
       }]),
   ) as FounderJourneyExtras['outcomes'];
+  const verificationClaimRows = verificationClaimsRes.error
+    ? (warnAndNull<any[]>('verification_claims', verificationClaimsRes.error) ?? [])
+    : ((verificationClaimsRes.data as any[]) ?? []);
+  const verificationClaims: FounderJourneyExtras['verificationClaims'] = verificationClaimRows.map((row) => ({
+    id: row.id,
+    sourceTool: row.source_tool ?? null,
+    claim: row.claim,
+    claimType: row.claim_type,
+    evidenceLevel: row.evidence_level,
+    result: row.result,
+    status: row.status,
+    missingEvidence: Array.isArray(row.missing_evidence) ? row.missing_evidence : [],
+    nextAction: row.next_action ?? null,
+    unlockedBenefit: row.unlocked_benefit ?? null,
+    updatedAt: row.updated_at,
+  }));
 
   // Demand signups depend on the ids fetched above, so they run as a second stage.
   const demoProjectIds = demoProjectRows.map((row) => row.id).filter(Boolean);
@@ -224,6 +246,7 @@ export async function fetchFounderJourneyExtras(userId: string): Promise<Founder
 
   return {
     outcomes,
+    verificationClaims,
     traction: tractionRow
       ? {
           latestScore: tractionRow.combined_score ?? null,

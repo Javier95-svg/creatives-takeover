@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { Resend } from "npm:resend@2.0.0";
 import { getUserFromAuth } from "../_shared/credit-deduction.ts";
+import { emitBusinessEvent } from "../_shared/analytics.ts";
 
 // Public endpoint: the public launch page (a logged-out visitor) submits a signup.
 // verify_jwt stays true — supabase-js attaches the anon JWT for anonymous callers,
@@ -226,6 +227,17 @@ serve(async (req) => {
       if (!demo) return json({ success: false, error: 'Published demo not found.' }, 404);
     }
 
+    /*
+     * A founder submitting their own lead form is not demand.
+     *
+     * Marked rather than rejected: testing the form end to end is a reasonable
+     * thing to do before sharing the link, and a hard block would push founders
+     * into a private window where the test proves less. The proof-loop funnel
+     * and the evidence triggers filter these out instead.
+     */
+    const caller = await getUserFromAuth(req);
+    const ownerView = Boolean(caller?.id && caller.id === project.owner_id);
+
     const { data: signup, error: signupError } = await admin
       .from("demo_studio_signups")
       .insert({
@@ -233,6 +245,7 @@ serve(async (req) => {
         demo_id: demoId,
         email,
         verified: true,
+        owner_view: ownerView,
         referrer: body.referrer ?? null,
         vsl_variation_seen: body.vslVariationSeen ?? null,
       })
@@ -247,8 +260,41 @@ serve(async (req) => {
       project_id: projectId,
       type: "signup",
       verified: true,
+      owner_view: ownerView,
       meta: { vsl_variation_seen: body.vslVariationSeen ?? null, referrer: body.referrer ?? null, source: "edge" },
     });
+
+    /*
+     * The north star: this founder has been answered by a real stranger.
+     *
+     * Emitted server-side because the moment belongs to the visitor, not the
+     * founder, who is not on any page when it happens. A client-side event would
+     * simply never fire.
+     *
+     * Once per founder, ever. Counting every lead would turn the headline number
+     * into volume, and one enthusiastic stranger would read as traction. The
+     * count below includes the row just inserted, so 1 means this was the first.
+     */
+    if (!ownerView) {
+      try {
+        const { count } = await admin
+          .from("customer_evidence_events")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", project.owner_id)
+          .eq("event_type", "stranger_identified");
+        if (count === 1) {
+          await emitBusinessEvent({
+            eventName: "external_proof_received",
+            userId: project.owner_id,
+            // Operational dimensions only. Never the stranger's email.
+            properties: { source_tool: "demo_studio", project_id: projectId, demo_id: demoId },
+          });
+        }
+      } catch (proofError) {
+        // A missed milestone event must never cost the founder a real lead.
+        console.warn("demo-studio-lead: proof milestone check failed", proofError);
+      }
+    }
 
     const { data: launchPage } = await admin
       .from("demo_studio_launch_pages")

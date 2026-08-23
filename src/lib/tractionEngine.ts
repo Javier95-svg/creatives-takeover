@@ -1,4 +1,4 @@
-export type TractionDecision = 'double_down' | 'iterate' | 'kill';
+export type TractionDecision = 'double_down' | 'iterate' | 'narrow' | 'pivot' | 'kill';
 
 export type TractionProductCategory =
   | 'saas'

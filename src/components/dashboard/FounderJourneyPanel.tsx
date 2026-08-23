@@ -130,7 +130,7 @@ function StageNode({ node }: { node: JourneyStageNode }) {
       </span>
       {node.optional ? (
         <span className="text-[9px] uppercase tracking-wide text-muted-foreground">Optional</span>
-      ) : null}
+      ) : <span className="text-[9px] font-semibold uppercase tracking-wide text-primary/75">{node.executionLoop}</span>}
     </Link>
   );
 }
@@ -172,8 +172,14 @@ function ToolTile({ tile }: { tile: JourneyToolTile }) {
               {tile.outcomeStatus}
             </Badge>
           ) : null}
+          {tile.ctClaim ? (
+            <Badge variant="outline" className={cn('shrink-0 text-[10px]', tile.ctClaim.evidenceLevel === 'ct_verified' && 'border-success/40 bg-success/10 text-success')}>
+              {tile.ctClaim.evidenceLevel === 'ct_verified' ? 'CT Verified' : tile.ctClaim.evidenceLevel.replaceAll('_', ' ')}
+            </Badge>
+          ) : null}
         </span>
         <span className="mt-0.5 block truncate text-xs text-muted-foreground">{tile.outputLine}</span>
+        {tile.ctClaim ? <span className="mt-1 block text-[10px] text-muted-foreground"><span className="capitalize">{tile.ctClaim.result}</span> · {tile.ctClaim.missingEvidence[0] ?? tile.ctClaim.nextAction ?? 'Evidence requirements satisfied'}</span> : null}
         {tile.updatedAt ? (
           <span className="mt-0.5 block text-[10px] text-muted-foreground/70">
             Updated {formatDistanceToNow(new Date(tile.updatedAt), { addSuffix: true })}
@@ -203,6 +209,9 @@ export default function FounderJourneyPanel({ showRecommendedAction = false }: {
   const enhancedPathway = isPMFPathwayEnvironmentEnabled() && pathwayFlag === true;
   const viewedRef = useRef(false);
   const recommendedRoute = primaryAction ? getDashboardTool(primaryAction.toolKey).route : null;
+  const proofClaims = snapshot.tools
+    .map((tile) => tile.ctClaim)
+    .filter((claim, index, claims) => Boolean(claim) && claims.findIndex((candidate) => candidate?.id === claim?.id) === index);
   const assignedStage = Math.min(
     6,
     Math.max(
@@ -444,6 +453,11 @@ export default function FounderJourneyPanel({ showRecommendedAction = false }: {
             <ToolTile key={tile.key} tile={tile} />
           ))}
         </div>
+
+        {proofClaims.length > 0 ? <div className="mt-5 rounded-xl border border-success/25 bg-success/5 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2"><div><p className="text-xs font-semibold uppercase tracking-[0.14em] text-success">Portable proof history</p><p className="mt-1 text-sm font-semibold">CT verifies the evidence and observed result—not startup success.</p></div><Badge variant="outline">{proofClaims.filter((claim) => claim?.evidenceLevel === 'ct_verified').length} CT Verified</Badge></div>
+          <div className="mt-3 space-y-2">{proofClaims.slice(0, 3).map((claim) => claim ? <div key={claim.id} className="rounded-lg border bg-background/70 p-3 text-xs"><div className="flex flex-wrap items-start justify-between gap-2"><p className="font-medium text-foreground">{claim.claim}</p><Badge variant="outline" className="capitalize">{claim.result}</Badge></div><p className="mt-1 text-muted-foreground">{claim.nextAction}</p>{claim.unlockedBenefit === 'mentor_checkpoint' ? <p className="mt-1 font-medium text-success">Mentor checkpoint unlocked</p> : null}</div> : null)}</div>
+        </div> : null}
 
         {enhancedPathway ? <div className="mt-5 border-t border-border/60 pt-4">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Optional support and fundraising</p>

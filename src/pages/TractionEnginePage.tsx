@@ -70,6 +70,19 @@ import {
 } from '@/lib/analytics';
 import { evaluateGTMKillRule, type GTMKillRule, type GTMKillRuleStatus, type GTMPlay } from '@/lib/gtmV2';
 import {
+  evaluateDecisionReadiness,
+  mapVerificationClaim,
+  normalizeAcquisitionMetric,
+  type ChangedExperimentVariable,
+  type VerificationClaim,
+} from '@/lib/marketExperiment';
+import {
+  createNextMarketExperimentVersion,
+  evaluateMarketExperiment,
+  recordExperimentDecision,
+  recordFounderObservation,
+} from '@/lib/marketExperimentClient';
+import {
   createJourneyEvidenceManifest,
   listJourneyAssumptions,
   recordJourneyAssumptionSignal,
@@ -89,7 +102,7 @@ type SprintRow = {
   status: 'active' | 'closed';
   source_gtm_plan_id?: string | null;
   source_gtm_play_id?: string | null;
-  activation_payload?: { killRule?: GTMKillRule } | null;
+  activation_payload?: { killRule?: GTMKillRule; marketExperimentId?: string; actionPacket?: { minimumSampleSize?: number; targetMetric?: string; targetValue?: number } } | null;
   kill_rule_status?: GTMKillRuleStatus;
 };
 
@@ -107,15 +120,26 @@ type ExperimentDraft = TractionExperimentInput & {
   decisionRationale: string;
   assumptionFingerprint?: string;
   assumptionStatus?: 'confirmed' | 'rejected';
+  sampleSize: number;
+  minimumSampleSize: number;
+  marketExperimentId?: string;
+  changedVariable?: ChangedExperimentVariable;
+  nextVariableValue: string;
 };
 
 const decisionLabels: Record<TractionDecision, string> = {
   double_down: 'Double Down',
   iterate: 'Iterate',
+  narrow: 'Narrow ICP',
+  pivot: 'Pivot',
   kill: 'Kill',
 };
 
-const metricOptions = ['Signups', 'Clicks', 'Replies', 'DMs', 'Activation events', 'Revenue', 'Organic visits'];
+const metricOptions = [
+  'Prospects', 'Sent', 'Delivered', 'Replies', 'Positive replies', 'Meetings',
+  'Attended', 'Offers', 'Commitments', 'Payments', 'Qualified views',
+  'Demo completions', 'CTA clicks', 'Signups', 'Activations', 'D7 retained', 'D30 retained',
+];
 
 const createExperimentDraft = (): ExperimentDraft => ({
   localId: crypto.randomUUID(),
@@ -125,9 +149,13 @@ const createExperimentDraft = (): ExperimentDraft => ({
   targetMetric: 'Signups',
   targetValue: 10,
   resultValue: 0,
+  sampleSize: 0,
+  minimumSampleSize: 10,
   timeInvestedHours: 2,
   decision: 'iterate',
   decisionRationale: '',
+  changedVariable: 'message',
+  nextVariableValue: '',
 });
 
 const defaultRetention: TractionRetentionInput = {
@@ -160,7 +188,7 @@ const TRACTION_TABS: Array<{ id: TractionTab; step: number; label: string; subti
   { id: 'recent',    step: 3, label: 'Recent Weeks',            subtitle: 'Log what happened',
     description: 'Review your last five saved scorecards. Spot trends and check your streak before committing to this week.' },
   { id: 'signal',    step: 4, label: 'Weekly Signal',           subtitle: 'Review your results',
-    description: 'Your score rolls up from the three previous steps. Save to lock in your streak and check Phase 7 readiness.' },
+    description: 'Review sample size, threshold, evidence trust, and the next decision. The score remains supporting context.' },
 ];
 
 function StepNav({ active, onSelect }: { active: TractionTab; onSelect: (t: TractionTab) => void }) {
@@ -258,6 +286,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
   const [decisionWeekCount, setDecisionWeekCount] = useState(0);
   const [consecutiveWeekCount, setConsecutiveWeekCount] = useState(0);
   const [verifiedWeekCount, setVerifiedWeekCount] = useState(0);
+  const [verificationClaims, setVerificationClaims] = useState<VerificationClaim[]>([]);
   const [journeyAssumptions, setJourneyAssumptions] = useState<JourneyAssumption[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -272,7 +301,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const gtmPlanId = searchParams.get('planId');
   const gtmPlayId = searchParams.get('playId');
-  const [gtmSource, setGtmSource] = useState<{ planId: string; playId: string; channel: string; killRule?: GTMKillRule } | null>(null);
+  const [gtmSource, setGtmSource] = useState<{ planId: string; playId: string; channel: string; killRule?: GTMKillRule; marketExperimentId?: string } | null>(null);
   const activeTab = (searchParams.get('step') as TractionTab) ?? 'sprint';
   const setActiveTab = (tab: TractionTab) => {
     const next = new URLSearchParams(searchParams);
@@ -299,10 +328,10 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
   const loadTractionData = async () => {
     if (!userId) return;
     setLoading(true);
-    const [sprintsRes, logsRes, decisionsRes] = await Promise.all([
+    const [sprintsRes, logsRes, decisionsRes, claimsRes] = await Promise.all([
       supabase
         .from(SPRINTS_TABLE)
-        .select('id, channel, cycle_start_date, status, activation_payload, kill_rule_status')
+        .select('id, channel, cycle_start_date, status, source_gtm_plan_id, source_gtm_play_id, activation_payload, kill_rule_status')
         .eq('user_id', userId)
         .eq('status', 'active')
         .order('cycle_start_date', { ascending: false }),
@@ -316,6 +345,11 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         .from(EXPERIMENTS_TABLE)
         .select('weekly_log_id')
         .eq('user_id', userId),
+      (supabase as any)
+        .from('verification_claims')
+        .select('id,experiment_id,source_tool,claim_type,claim,evidence_level,result,status,policy_version,missing_evidence,next_action,unlocked_benefit,evaluation,decided_at,verified_at,updated_at')
+        .eq('user_id', userId)
+        .order('updated_at', { ascending: false }),
     ]);
 
     if (sprintsRes.error) {
@@ -330,9 +364,15 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
       const rows = (logsRes.data ?? []) as WeeklyLogRow[];
       setRecentLogs(rows);
       setConsecutiveWeekCount(calculateConsecutiveLoggedWeeks(rows.map((row) => row.week_start_date)));
-      setVerifiedWeekCount(rows.filter((row) => ['platform', 'corroborated'].includes(row.score_breakdown?.retentionSource ?? '')).length);
+      // Retention source never verifies a separate acquisition claim.
+      setVerifiedWeekCount(0);
     }
     if (!decisionsRes.error) setDecisionWeekCount(new Set((decisionsRes.data ?? []).map((row) => row.weekly_log_id)).size);
+    if (!claimsRes.error) {
+      const claims = (claimsRes.data ?? []).map((row: Record<string, unknown>) => mapVerificationClaim(row));
+      setVerificationClaims(claims);
+      setVerifiedWeekCount(claims.filter((claim) => claim.status === 'verified').length);
+    }
     setLoading(false);
   };
 
@@ -454,7 +494,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
   // plan/play exactly. The localStorage branch remains only for V1 briefs.
   useEffect(() => {
     let active = true;
-    const importExperiment = (input: { channel: string; hypothesis: string; targetMetric: string; targetValue?: number }) => {
+    const importExperiment = (input: { channel: string; hypothesis: string; targetMetric: string; targetValue?: number; minimumSampleSize?: number; marketExperimentId?: string }) => {
       setExperiments((items) => {
         const imported: ExperimentDraft = { ...createExperimentDraft(), ...input, targetValue: input.targetValue ?? 10 };
         const pristine = items.length === 1 && !items[0].channel.trim() && !items[0].hypothesis.trim() && !items[0].actionTaken.trim();
@@ -478,8 +518,25 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
           return;
         }
         const play = data.play_content as GTMPlay;
-        importExperiment({ channel: play.channelName, hypothesis: play.hypothesis, targetMetric: play.metric, targetValue: play.target });
-        setGtmSource({ planId: gtmPlanId, playId: gtmPlayId, channel: play.channelName, killRule: play.structuredKillRule });
+        const { data: marketExperiment } = await (supabase as any)
+          .from('market_experiments')
+          .select('id,target_metric,target_value,minimum_sample_size,status')
+          .eq('user_id', userId)
+          .eq('source_gtm_plan_id', gtmPlanId)
+          .eq('source_gtm_play_id', gtmPlayId)
+          .in('status', ['preregistered', 'running', 'evaluated'])
+          .order('version', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        importExperiment({
+          channel: play.channelName,
+          hypothesis: play.hypothesis,
+          targetMetric: marketExperiment?.target_metric ?? play.metric,
+          targetValue: Number(marketExperiment?.target_value ?? play.target),
+          minimumSampleSize: Number(marketExperiment?.minimum_sample_size ?? play.structuredKillRule?.minSampleSize ?? 10),
+          marketExperimentId: marketExperiment?.id,
+        });
+        setGtmSource({ planId: gtmPlanId, playId: gtmPlayId, channel: play.channelName, killRule: play.structuredKillRule, marketExperimentId: marketExperiment?.id });
         setRetention((current) => ({ ...current, primaryAcquisitionChannel: current.primaryAcquisitionChannel || play.channelName }));
         captureEvent('gtm_traction_handoff_opened', { plan_id: gtmPlanId, play_id: gtmPlayId, channel_id: play.channelId });
         toast.success(`${play.channelName} play imported.`, { description: `${play.metric} target: ${play.target}. Results will sync to the weekly GTM review.` });
@@ -567,10 +624,23 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
       if (!experiment.hypothesis.trim()) return 'Every experiment needs a hypothesis.';
       if (!experiment.actionTaken.trim()) return 'Every experiment needs an action taken.';
       if (!experiment.targetMetric.trim()) return 'Every experiment needs a target metric.';
+      if (experiment.sampleSize < 0) return 'The observed sample cannot be negative.';
+      if (['iterate', 'narrow', 'pivot'].includes(experiment.decision) && !experiment.changedVariable) {
+        return 'Choose the one variable that will change in the next experiment.';
+      }
+      if (['iterate', 'narrow', 'pivot'].includes(experiment.decision) && !experiment.nextVariableValue.trim()) {
+        return 'Enter the new value for the next experiment version.';
+      }
       if (experiment.assumptionFingerprint && !experiment.assumptionStatus) {
         return 'Mark the linked ICP assumption as confirmed or rejected.';
       }
-      const recommendation = score.recommendedDecisions[experiments.indexOf(experiment)];
+      const recommendation = evaluateDecisionReadiness({
+        targetValue: experiment.targetValue,
+        observedValue: experiment.resultValue,
+        minimumSampleSize: experiment.minimumSampleSize,
+        sampleSize: experiment.sampleSize,
+        verificationModes: ['founder_reported'],
+      }).recommendedDecision;
       if (recommendation && experiment.decision !== recommendation && experiment.decisionRationale.trim().length < 12) {
         return 'Explain why you are overriding the recommended traction decision.';
       }
@@ -692,12 +762,63 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
       const { error: experimentError } = await supabase.from(EXPERIMENTS_TABLE).insert(experimentRows);
       if (experimentError) throw experimentError;
 
-      const retentionIsPlatformVerified = Boolean(
-        platformSnapshot
-        && retention.newUsers === platformSnapshot.newUsers
-        && retention.sevenDayActiveUsers === platformSnapshot.sevenDay
-        && retention.thirtyDayActiveUsers === platformSnapshot.thirtyDay
-      );
+      const claimEvaluations = await Promise.all(experiments.map(async (experiment) => {
+        const sprint = sprintByChannel.get(experiment.channel.trim().toLowerCase());
+        const marketExperimentId = experiment.marketExperimentId
+          ?? sprint?.activation_payload?.marketExperimentId
+          ?? (gtmSource?.channel.trim().toLowerCase() === experiment.channel.trim().toLowerCase()
+            ? gtmSource.marketExperimentId
+            : undefined);
+        if (!marketExperimentId) return null;
+        const readiness = evaluateDecisionReadiness({
+          targetValue: experiment.targetValue,
+          observedValue: experiment.resultValue,
+          minimumSampleSize: experiment.minimumSampleSize,
+          sampleSize: experiment.sampleSize,
+          verificationModes: ['founder_reported'],
+        });
+        await recordFounderObservation({
+          userId,
+          experimentId: marketExperimentId,
+          metric: normalizeAcquisitionMetric(experiment.targetMetric),
+          value: experiment.resultValue,
+          denominator: experiment.sampleSize,
+          sourceType: 'traction_weekly_log',
+          sourceId: (log as { id: string }).id,
+          verificationMode: 'founder_reported',
+          provenance: { weekStartDate: currentWeekStart, channel: experiment.channel.trim() },
+          capturedAt: `${currentWeekStart}T00:00:00.000Z`,
+          idempotencyKey: `traction:${(log as { id: string }).id}:${marketExperimentId}:${normalizeAcquisitionMetric(experiment.targetMetric)}`,
+        });
+        await recordExperimentDecision({
+          userId,
+          experimentId: marketExperimentId,
+          decision: experiment.decision,
+          result: readiness.result,
+          changedVariable: ['iterate', 'narrow', 'pivot'].includes(experiment.decision)
+            ? experiment.changedVariable ?? 'message'
+            : null,
+          rationale: experiment.decisionRationale.trim()
+            || `${experiment.channel.trim()}: observed ${experiment.resultValue} ${experiment.targetMetric.toLowerCase()} from a sample of ${experiment.sampleSize}.`,
+        });
+        const claim = await evaluateMarketExperiment(marketExperimentId);
+        if (['iterate', 'narrow', 'pivot'].includes(experiment.decision)) {
+          const nextVersion = await createNextMarketExperimentVersion({
+            experimentId: marketExperimentId,
+            changedVariable: experiment.changedVariable ?? 'message',
+            newValue: experiment.nextVariableValue,
+          });
+          return { claim, nextVersion };
+        }
+        return { claim, nextVersion: null };
+      }));
+      const newlyVerifiedClaim = claimEvaluations.find((evaluation) => evaluation?.claim?.status === 'verified')?.claim;
+      if (newlyVerifiedClaim) {
+        toast.success('CT Verified execution earned.', {
+          description: `${newlyVerifiedClaim.result} result verified. Your mentor checkpoint is unlocked.`,
+        });
+      }
+
       const attributedAssumptionSignals = experiments.filter((experiment) => (
         Boolean(experiment.assumptionFingerprint && experiment.assumptionStatus)
       ));
@@ -710,7 +831,9 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
             participantFingerprint: `traction:${(log as { id: string }).id}:${experiment.channel.trim().toLowerCase()}`,
             status: experiment.assumptionStatus!,
             rationale: `${experiment.channel.trim()}: ${experiment.actionTaken.trim()} Result ${experiment.resultValue} against ${experiment.targetValue}.`,
-            verificationMode: retentionIsPlatformVerified ? 'platform_verified' : 'founder_reported',
+            // The acquisition result above is founder entered. A separately
+            // platform-verified retention snapshot cannot upgrade this signal.
+            verificationMode: 'founder_reported',
           })));
         } catch (assumptionError) {
           console.warn('Traction was saved, but its ICP assumption feedback will retry later:', assumptionError);
@@ -757,10 +880,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
       const sixWeekLedger = consecutiveWeeks >= 6;
       const distinctDecisionWeeks = new Set((ledgerDecisions ?? []).map((item) => item.weekly_log_id)).size;
       const threeMeasuredDecisions = distinctDecisionWeeks >= 3;
-      const platformOrCorroboratedWeeks = (ledgerLogs ?? []).filter((item) => {
-        const breakdown = item.score_breakdown as { retentionSource?: string } | null;
-        return breakdown?.retentionSource === 'platform' || breakdown?.retentionSource === 'corroborated';
-      }).length;
+      const ctVerifiedAcquisitionClaims = claimEvaluations.filter((evaluation) => evaluation?.claim?.status === 'verified').length;
       const logsById = new Map((ledgerLogs ?? []).map((item) => [item.id, item]));
       const activeSprintRows = Array.from(sprintByChannel.values());
       for (const sprint of activeSprintRows) {
@@ -800,12 +920,12 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         revenue_where_available: (ledgerLogs ?? []).every((item) => item.revenue === null || Number.isFinite(Number(item.revenue))),
         decision_recommendations: (ledgerDecisions ?? []).every((item) => Boolean((item as { recommended_decision?: string }).recommended_decision)),
         exportable_report: sixWeekLedger && threeMeasuredDecisions,
-        three_verified_weeks: platformOrCorroboratedWeeks >= 3,
+        ct_verified_acquisition_claim: ctVerifiedAcquisitionClaims > 0,
       };
       const completedChecks = Object.values(qualityChecks).filter(Boolean).length;
-      const outcomeStatus = sixWeekLedger && threeMeasuredDecisions
-        ? platformOrCorroboratedWeeks >= 3 ? 'verified' : 'ready'
-        : 'draft';
+      // This outcome says the decision ledger is usable. Claim verification is
+      // intentionally kept in verification_claims, even when CT Verified exists.
+      const outcomeStatus = sixWeekLedger && threeMeasuredDecisions ? 'ready' : 'draft';
       const outcomeManifest = createJourneyEvidenceManifest([
         ...(ledgerLogs ?? []).map((item) => {
           const breakdown = item.score_breakdown as { retentionSource?: string } | null;
@@ -834,17 +954,17 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
       await upsertJourneyOutcome({
         userId,
         tool: 'traction_engine',
-        artifactType: 'verified_traction_ledger',
+        artifactType: 'traction_decision_ledger',
         artifactId: `traction-ledger-${userId}`,
         status: outcomeStatus,
         qualityChecks,
         evidenceManifest: outcomeManifest,
         completionScore: Math.round((completedChecks / Object.keys(qualityChecks).length) * 100),
-        verificationMode: outcomeStatus === 'verified' ? 'platform_verified' : sixWeekLedger ? 'founder_reported' : 'unverified',
+        verificationMode: sixWeekLedger ? 'founder_reported' : 'unverified',
       });
       trackJourneyEvent('journey_stage_outcome_completed', {
         tool: 'traction_engine',
-        artifact_type: 'verified_traction_ledger',
+        artifact_type: 'traction_decision_ledger',
         artifact_id: `traction-ledger-${userId}`,
         outcome_status: outcomeStatus,
         week_count: ledgerLogs?.length ?? 0,
@@ -853,8 +973,8 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
 
       localStorage.removeItem('ct_traction_draft');
       showDashboardReturnToast({
-        message: score.phaseSevenReady ? 'Saved. Phase 7 readiness unlocked.' : 'Traction week saved.',
-        description: 'Your traction score is live on your command center.',
+        message: 'Traction evidence and decision saved.',
+        description: newlyVerifiedClaim ? 'A CT Verified claim and mentor unlock were added to your proof history.' : 'Continue the same experiment until its sample and evidence requirements are met.',
         tool: 'traction-engine',
         navigate,
       });
@@ -870,7 +990,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
   const hasInput = experiments.some((e) => e.channel.trim() || e.resultValue > 0) || retention.newUsers > 0;
   const showScore = hasInput || recentLogs.length > 0;
   const readyLedger = consecutiveWeekCount >= 6 && decisionWeekCount >= 3;
-  const verifiedLedger = readyLedger && verifiedWeekCount >= 3;
+  const verifiedLedger = verifiedWeekCount > 0;
 
   return (
     <div className="space-y-8">
@@ -880,9 +1000,9 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
             <span className="takeover-gradient creatives-font">Traction Engine</span>
           </h1>
           <div className="max-w-2xl space-y-3 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
-            <p className="font-medium text-foreground/85">Traction is a pattern, not a spike.</p>
-            <p>Start with the acquisition channels your GTM Strategist surfaced and run one focused experiment each week. Log what you shipped, measure who came back, and repeat.</p>
-            <p>Show up consistently and the score takes care of itself. Three consecutive weeks above the threshold means you have a repeatable growth loop and the Fundraise stage is within reach.</p>
+            <p className="font-medium text-foreground/85">Traction is an observed acquisition decision, not a completion score.</p>
+            <p>Run the pre-registered GTM experiment, record the full denominator and result, then double down, narrow, iterate, pivot, or kill.</p>
+            <p>Retention stays in the GROW view and never upgrades separately founder-reported acquisition evidence.</p>
           </div>
         </div>
         <div className="w-full max-w-lg justify-self-end rounded-lg border border-border/70 bg-card/60 p-4">
@@ -890,11 +1010,11 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
             <>
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">This week's score</p>
+                  <p className="text-sm text-muted-foreground">Supporting weekly score</p>
                   <p className={cn('mt-1 text-4xl font-bold', scoreColor(score.combinedScore))}>{score.combinedScore}</p>
                 </div>
                 <Badge className={cn(score.phaseSevenReady ? 'bg-success' : score.combinedScore >= 75 ? 'bg-success' : score.combinedScore >= 50 ? 'bg-warning' : 'bg-destructive')}>
-                  {score.phaseSevenReady ? 'Phase 7 Ready' : `${score.consistencyStreakWeeks} week streak`}
+                  {verifiedLedger ? 'CT proof recorded' : `${score.consistencyStreakWeeks} week streak`}
                 </Badge>
               </div>
               {score.scoreDelta !== null && (
@@ -1046,13 +1166,24 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                 </div>
               )}
 
-              {experiments.map((experiment, index) => (
+              {experiments.map((experiment, index) => {
+                const claim = verificationClaims.find((item) => item.experimentId === experiment.marketExperimentId);
+                const readiness = evaluateDecisionReadiness({
+                  targetValue: experiment.targetValue,
+                  observedValue: experiment.resultValue,
+                  minimumSampleSize: experiment.minimumSampleSize,
+                  sampleSize: experiment.sampleSize,
+                  verificationModes: claim?.evidenceLevel === 'ct_verified'
+                    ? ['platform_verified']
+                    : claim?.evidenceLevel === 'corroborated' ? ['corroborated'] : ['founder_reported'],
+                });
+                return (
                 <div key={experiment.localId} className="space-y-4 rounded-lg border border-border/70 bg-background/70 p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold">Experiment {index + 1}</p>
                       <p className="text-xs text-muted-foreground">
-                        {score.experimentScores[index]?.pass ? 'Passing target' : 'Needs more signal'}
+                        {readiness.result} · {readiness.evidenceLevel.replaceAll('_', ' ')}
                       </p>
                     </div>
                     <Button
@@ -1076,6 +1207,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                     <Field label="Channel">
                       <Input
                         value={experiment.channel}
+                        disabled={Boolean(experiment.marketExperimentId)}
                         onChange={(event) => updateExperiment(experiment.localId, { channel: event.target.value })}
                         placeholder="LinkedIn founder content"
                       />
@@ -1083,6 +1215,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                     <Field label="Target Metric">
                       <Select
                         value={experiment.targetMetric}
+                        disabled={Boolean(experiment.marketExperimentId)}
                         onValueChange={(value) => updateExperiment(experiment.localId, { targetMetric: value })}
                       >
                         <SelectTrigger>
@@ -1100,6 +1233,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                   <Field label="Hypothesis">
                     <Textarea
                       value={experiment.hypothesis}
+                      disabled={Boolean(experiment.marketExperimentId)}
                       onChange={(event) => updateExperiment(experiment.localId, { hypothesis: event.target.value })}
                       placeholder="Posting a specific problem-solution thread will generate 10 qualified signups this week."
                     />
@@ -1152,12 +1286,13 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                     </div>
                   )}
 
-                  <div className="grid gap-4 md:grid-cols-4">
+                  <div className="grid gap-4 md:grid-cols-5">
                     <Field label="Target">
                       <Input
                         type="number"
                         min="0"
                         value={experiment.targetValue}
+                        disabled={Boolean(experiment.marketExperimentId)}
                         onChange={(event) => updateExperiment(experiment.localId, { targetValue: numberFromInput(event.target.value) })}
                       />
                     </Field>
@@ -1168,6 +1303,15 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                         value={experiment.resultValue}
                         onChange={(event) => updateExperiment(experiment.localId, { resultValue: numberFromInput(event.target.value) })}
                       />
+                    </Field>
+                    <Field label="New sample in this log">
+                      <Input
+                        type="number"
+                        min="0"
+                        value={experiment.sampleSize}
+                        onChange={(event) => updateExperiment(experiment.localId, { sampleSize: numberFromInput(event.target.value) })}
+                      />
+                      <p className="text-xs text-muted-foreground">Pre-registered minimum: {experiment.minimumSampleSize}</p>
                     </Field>
                     <Field label="Hours">
                       <Input
@@ -1180,7 +1324,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                     </Field>
                     <Field label="Decision">
                       <p className="mb-2 rounded-md border border-primary/20 bg-primary/5 px-2.5 py-2 text-xs text-primary">
-                        Engine recommendation: {decisionLabels[score.recommendedDecisions[index] ?? 'iterate']}
+                        Evidence recommendation: {decisionLabels[readiness.recommendedDecision]}
                       </p>
                       <Select
                         value={experiment.decision}
@@ -1195,7 +1339,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                           ))}
                         </SelectContent>
                       </Select>
-                      {experiment.decision !== (score.recommendedDecisions[index] ?? 'iterate') && (
+                      {experiment.decision !== readiness.recommendedDecision && (
                         <Textarea
                           className="mt-2"
                           rows={2}
@@ -1204,11 +1348,38 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                           placeholder="Explain why you are overriding the recommendation."
                         />
                       )}
-                      <p className="text-xs text-muted-foreground">Hit target → double down. Close → iterate. Far off → kill.</p>
+                      <p className="text-xs text-muted-foreground">Reach the sample first, then compare the result with the pre-registered threshold.</p>
                     </Field>
                   </div>
+                  {['iterate', 'narrow', 'pivot'].includes(experiment.decision) ? (
+                    <div className="grid gap-4 rounded-lg border border-warning/25 bg-warning/5 p-3 md:grid-cols-3">
+                      <Field label="One variable to change next">
+                        <Select value={experiment.changedVariable ?? 'message'} onValueChange={(value) => updateExperiment(experiment.localId, { changedVariable: value as ChangedExperimentVariable })}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {(['audience', 'problem', 'offer', 'message', 'channel', 'asset', 'cta', 'target'] as ChangedExperimentVariable[]).map((variable) => (
+                              <SelectItem key={variable} value={variable}>{variable.replaceAll('_', ' ')}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </Field>
+                      <Field label="New value in the next version">
+                        <Input
+                          value={experiment.nextVariableValue}
+                          onChange={(event) => updateExperiment(experiment.localId, { nextVariableValue: event.target.value })}
+                          placeholder={experiment.changedVariable === 'target' ? 'Numeric target' : `New ${experiment.changedVariable ?? 'message'}`}
+                        />
+                      </Field>
+                      <div className="text-xs text-muted-foreground"><p className="font-medium text-foreground">Preserve causality</p><p className="mt-1">The next version keeps every other input fixed and preserves this experiment permanently.</p></div>
+                    </div>
+                  ) : null}
+                  <div className={cn('rounded-lg border p-3 text-sm', readiness.ctVerified ? 'border-success/30 bg-success/5' : 'border-border/70 bg-muted/20')}>
+                    <div className="flex flex-wrap items-center justify-between gap-2"><p className="font-semibold">{readiness.ctVerified ? 'CT Verified result' : 'Evidence still in progress'}</p><Badge variant="outline" className="capitalize">{readiness.result}</Badge></div>
+                    <p className="mt-1 text-xs text-muted-foreground">{readiness.missingEvidence.length > 0 ? readiness.missingEvidence.join(' · ') : 'The execution and result are externally verified. A successful result was not required.'}</p>
+                  </div>
                 </div>
-              ))}
+                );
+              })}
 
               <Button type="button" variant="outline" className="gap-2" onClick={addExperiment} disabled={experiments.length >= 2}>
                 <Plus className="h-4 w-4" />
@@ -1341,18 +1512,18 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                       }}
                     >
                       <LineChart className="h-3.5 w-3.5" />
-                      {verifiedLedger ? 'Export verified report' : 'Export progress report'}
+                      Export evidence report
                     </Button>
                   )}
                   <Badge variant="outline" className="shrink-0 text-xs text-muted-foreground">Step 3 of 4</Badge>
                 </div>
               </div>
-              <CardDescription>{loading ? 'Loading history...' : 'Your latest saved traction scorecards. The report exports the ledger with platform verified and founder reported source badges.'}</CardDescription>
+              <CardDescription>{loading ? 'Loading history...' : 'Your latest decision history. CT claims are verified per acquisition metric; retention provenance remains separate.'}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className={cn('rounded-lg border p-3', verifiedLedger ? 'border-success/30 bg-success/5' : 'border-border/70 bg-muted/20')}>
-                <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-semibold">Verified traction ledger</p><Badge variant="outline">{verifiedLedger ? 'Verified' : 'In progress'}</Badge></div>
-                <p className="mt-2 text-xs text-muted-foreground">{Math.min(consecutiveWeekCount, 6)}/6 consecutive weeks · {Math.min(decisionWeekCount, 3)}/3 distinct decision weeks · {Math.min(verifiedWeekCount, 3)}/3 verified weeks</p>
+                <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-semibold">CT proof history</p><Badge variant="outline">{verifiedLedger ? 'CT Verified claim available' : 'Evidence in progress'}</Badge></div>
+                <p className="mt-2 text-xs text-muted-foreground">{Math.min(consecutiveWeekCount, 6)}/6 consecutive weeks · {Math.min(decisionWeekCount, 3)}/3 distinct decision weeks · {verifiedWeekCount} CT Verified acquisition claim{verifiedWeekCount === 1 ? '' : 's'}</p>
               </div>
               {recentLogs.length === 0 ? (
                 <div className="space-y-1">
@@ -1395,7 +1566,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                 </CardTitle>
                 <Badge variant="outline" className="shrink-0 text-xs text-muted-foreground">Step 4 of 4</Badge>
               </div>
-              <CardDescription>Equal weighting across consistency, efficiency, experiment quality, and retention.</CardDescription>
+              <CardDescription>Decision readiness comes from sample, threshold, and evidence trust. The legacy score remains supporting context.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {([
@@ -1438,14 +1609,14 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{score.channelQualitySignal}</p>
               </div>
               <div className="rounded-lg border border-border/70 bg-background/70 p-4">
-                <p className="text-sm font-semibold">Phase 7 readiness</p>
+                <p className="text-sm font-semibold">Growth evidence readiness</p>
                 <div className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
-                  {score.phaseSevenReady ? (
+                  {readyLedger ? (
                     <CheckCircle2 className="mt-0.5 h-4 w-4 text-success" />
                   ) : (
                     <XCircle className="mt-0.5 h-4 w-4 text-muted-foreground" />
                   )}
-                  <span>{score.phaseSevenReady ? 'Three consecutive 75+ weeks reached.' : 'Needs three consecutive weeks at 75+.'}</span>
+                  <span>{readyLedger ? 'Six-week decision ledger is ready.' : 'Build six consecutive weeks with at least three measured decisions.'}</span>
                 </div>
               </div>
               <Button
@@ -1482,7 +1653,7 @@ export default function TractionEnginePage() {
   const { user } = useAuth();
   const publicTab = {
     featureName: 'Traction Engine',
-    description: 'Track weekly distribution experiments, retention signals, and Phase 7 readiness.',
+    description: 'Evaluate pre-registered acquisition experiments, metric-level evidence, decisions, and retention signals.',
   };
   const tractionFaqs = [
     {
@@ -1490,8 +1661,8 @@ export default function TractionEnginePage() {
       answer: "It blends four equally weighted dimensions: consistency streak, channel efficiency, experiment quality, and retention health, benchmarked by product category.",
     },
     {
-      question: "What is Phase 7 readiness in traction scoring?",
-      answer: "Three consecutive weeks at 75 or above flag Phase 7 readiness, which gives founders a defensible traction story before walking into investor conversations.",
+      question: "What makes an acquisition result CT Verified?",
+      answer: "The experiment must reach its pre-registered sample and the result must be supported by platform-recorded or reviewer-verified customer evidence. Passing the target is not required.",
     },
     {
       question: "Why should founders track distribution experiments weekly?",
@@ -1518,7 +1689,7 @@ export default function TractionEnginePage() {
     <div className="relative min-h-screen overflow-hidden bg-background">
       <SEO
         title="Traction Engine - Creatives Takeover"
-        description="Track weekly distribution experiments, retention health, and Phase 7 fundraising readiness with a deterministic Traction Score."
+        description="Run pre-registered acquisition experiments, evaluate trustworthy customer evidence, and make clear double-down, iterate, narrow, pivot, or kill decisions."
         keywords="traction engine, distribution experiments, retention scorecard, startup traction tracker"
         url="/traction-engine"
         structuredData={structuredData}

@@ -73,7 +73,7 @@ test('stage completion follows stageState and marks the current stage', () => {
   assert.equal(snapshot.isEmpty, false);
 });
 
-test('TRACTION stage completes from phase-7 readiness (display-only)', () => {
+test('TRACTION stage needs both score readiness and a CT Verified acquisition claim', () => {
   const extras: Partial<FounderJourneyExtras> = {
     traction: {
       latestScore: 81,
@@ -81,6 +81,11 @@ test('TRACTION stage completes from phase-7 readiness (display-only)', () => {
       phaseSevenReady: true,
       updatedAt: '2026-07-08T09:00:00.000Z',
     },
+    verificationClaims: [{
+      id: 'claim-1', sourceTool: 'traction_engine', claim: 'Founder outreach produced 3 meetings from 20 prospects.',
+      claimType: 'acquisition_execution', evidenceLevel: 'ct_verified', result: 'passed', status: 'verified',
+      missingEvidence: [], nextAction: 'Double down', unlockedBenefit: 'mentor_checkpoint', updatedAt: '2026-07-08T10:00:00.000Z',
+    }],
   };
   const snapshot = buildFounderJourneySnapshot(makeInputs({ extras }));
 
@@ -165,11 +170,17 @@ test('tech stack alone marks the MVP tile as started', () => {
 test('next action ends at traction while Capital remains optional', () => {
   const withFoundationsDone = makeInputs({ toolSignals: ALL_TOOL_SIGNALS });
   assert.equal(buildFounderJourneySnapshot(withFoundationsDone).nextAction?.key, 'traction-weekly-log');
+  const verifiedClaim: FounderJourneyExtras['verificationClaims'][number] = {
+    id: 'claim-ready', sourceTool: 'traction_engine', claim: 'Acquisition execution verified',
+    claimType: 'acquisition_execution', evidenceLevel: 'ct_verified', result: 'passed', status: 'verified',
+    missingEvidence: [], nextAction: 'Double down', unlockedBenefit: 'mentor_checkpoint', updatedAt: '2026-07-06T12:00:00.000Z',
+  };
 
   const withTractionReady = makeInputs({
     toolSignals: ALL_TOOL_SIGNALS,
     extras: {
       traction: { latestScore: 90, weekStartDate: '2026-07-06', phaseSevenReady: true, updatedAt: null },
+      verificationClaims: [verifiedClaim],
     },
   });
   const completedCore = buildFounderJourneySnapshot(withTractionReady);
@@ -180,6 +191,7 @@ test('next action ends at traction while Capital remains optional', () => {
     toolSignals: ALL_TOOL_SIGNALS,
     extras: {
       traction: { latestScore: 90, weekStartDate: '2026-07-06', phaseSevenReady: true, updatedAt: null },
+      verificationClaims: [verifiedClaim],
       pitchDeck: { overallScore: 75, verdict: 'Promising', createdAt: '2026-07-02T00:00:00.000Z' },
     },
   });
