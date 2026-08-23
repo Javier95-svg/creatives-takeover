@@ -105,3 +105,145 @@ export function collectOpenQuestions(draft: IcpDraftDocument): string[] {
     .map(([path]) => path);
   return Array.from(new Set([...fromProvenance]));
 }
+
+/**
+ * What each tracked path is called when a founder reads it.
+ *
+ * `collectOpenQuestions` returns the generator's dotted paths, which are the
+ * right key to store and the wrong string to show anyone. The labels are
+ * phrased as the thing that is still unknown rather than as a field name,
+ * because the list is read as a to-do ("you still have to find out who signs
+ * off"), not as a schema.
+ *
+ * Paths the generator stopped tracking keep their entry: an old draft still
+ * carries them, and an unlabelled path falls back to a readable form of the
+ * path itself rather than disappearing from the count.
+ */
+export const ICP_FIELD_LABELS: Readonly<Record<string, string>> = {
+  "customer.personaName": "What to call this customer",
+  "customer.roleLine": "The buyer's role and context",
+  "customer.summary": "Who this customer actually is",
+  "customer.triggerContext": "The situation they are in when they act",
+  "customer.actionTrigger": "What makes them start looking",
+
+  "pain.quote": "The pain in the customer's own words",
+  "pain.rootCause": "What actually causes the pain",
+  "pain.whyItHurts": "Why the pain is worth paying to remove",
+  "pain.triggerMoment": "The moment the pain becomes urgent",
+  "pain.costOfInaction": "What it costs them to do nothing",
+
+  "decisionBrief.primarySegment": "The one segment to serve first",
+  "decisionBrief.nonFitSegment": "The segment to deliberately not serve",
+  "decisionBrief.buyingTrigger": "The event that makes them buy",
+  "decisionBrief.currentAlternative": "What they use instead today",
+
+  "build.valueProposition": "The promise the product makes",
+  "build.outcome": "The outcome the customer gets",
+
+  "moat.edge": "The founder's unfair advantage",
+  "moat.edgeSource": "Where that advantage comes from",
+  "moat.whyHardToCopy": "Why it is hard to copy",
+  "moat.incumbentGap": "The gap incumbents leave open",
+
+  "competition.summary": "Who else is solving this",
+  "competition.exploitableGap": "The gap worth attacking",
+
+  "market.category": "The category this competes in",
+  "market.whoBuysToday": "Who already pays for this",
+  "market.demandSignal": "Evidence that demand exists",
+  "market.whyNow": "Why this is possible now",
+
+  "pricing.hypothesis": "What to charge",
+  "pricing.anchor": "What they pay for this today",
+  "pricing.budgetOwner": "Who signs off on the spend",
+  "pricing.model": "How the pricing is structured",
+
+  "experiment.hypothesis": "What the next test is trying to prove",
+  "experiment.title": "The next test to run",
+  "experiment.method": "How to run that test",
+  "experiment.sampleSize": "How many people the test needs",
+  "experiment.passSignal": "What counts as a pass",
+  "experiment.failSignal": "What counts as a fail",
+
+  "recommendation.headline": "The call on this idea",
+  "recommendation.reasoning": "Why that is the call",
+  "recommendation.nextMove": "The first move to make",
+};
+
+/** Indexed paths are generated, so they are labelled by prefix rather than listed. */
+const INDEXED_FIELD_LABELS: ReadonlyArray<[prefix: string, label: (position: number) => string]> = [
+  ["decisionBrief.rankedPains.", (position) => `Customer pain #${position}`],
+  ["decisionBrief.interviewValidationPlan.", (position) => `Interview question #${position}`],
+  ["risks.", (position) => `Risk #${position}`],
+];
+
+/**
+ * Turn a tracked path into something a founder can read.
+ *
+ * Never returns an empty string. An unmapped path is a labelling gap, not a
+ * reason to drop a genuine unknown out of the list.
+ */
+export function labelForIcpField(path: string): string {
+  const exact = ICP_FIELD_LABELS[path];
+  if (exact) return exact;
+
+  for (const [prefix, label] of INDEXED_FIELD_LABELS) {
+    if (!path.startsWith(prefix)) continue;
+    const index = Number(path.slice(prefix.length));
+    if (Number.isInteger(index) && index >= 0) return label(index + 1);
+  }
+
+  // "pain.costOfInaction" -> "Pain cost of inaction". Ugly, but honest and rare.
+  return path
+    .split(".")
+    .flatMap((segment) => segment.replace(/([a-z0-9])([A-Z])/g, "$1 $2").split(" "))
+    .filter(Boolean)
+    .map((word) => word.toLowerCase())
+    .join(" ")
+    .replace(/^./, (character) => character.toUpperCase());
+}
+
+export interface IcpOpenQuestion {
+  path: string;
+  label: string;
+}
+
+/**
+ * The open questions, labelled and ordered for display.
+ *
+ * Ordered by the label map's own key order rather than by the provenance
+ * object's insertion order, so two drafts with the same gaps list them the
+ * same way. Unmapped paths sort last.
+ */
+export function collectLabelledOpenQuestions(draft: IcpDraftDocument): IcpOpenQuestion[] {
+  const order = Object.keys(ICP_FIELD_LABELS);
+  const rank = (path: string) => {
+    const index = order.indexOf(path);
+    return index === -1 ? order.length : index;
+  };
+
+  return collectOpenQuestions(draft)
+    .map((path) => ({ path, label: labelForIcpField(path) }))
+    .sort((left, right) => rank(left.path) - rank(right.path) || left.path.localeCompare(right.path));
+}
+
+/**
+ * How much of the draft is answered rather than backfilled.
+ *
+ * Separate from the scorer's `rigor`, which weights three pillars and feeds the
+ * verdict. This is the plain count behind it, so the interface can say "11 of
+ * 42 answered" next to a number the founder would otherwise have to take on
+ * faith. Returns nulls rather than zeros for a draft that predates provenance
+ * tracking: no data is not the same claim as nothing answered.
+ */
+export function summarizeIcpAnswered(draft: IcpDraftDocument): {
+  answered: number;
+  open: number;
+  tracked: number;
+} | null {
+  const entries = Object.entries(draft.fieldProvenance ?? {});
+  if (entries.length === 0) return null;
+
+  const open = entries.filter(([, provenance]) => provenance === "fallback").length;
+  return { answered: entries.length - open, open, tracked: entries.length };
+}

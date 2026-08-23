@@ -1089,6 +1089,7 @@ export type FirstCustomerSprintEvent =
   | 'first_customer_sprint_application_viewed'
   | 'first_customer_sprint_application_submitted'
   | 'first_customer_sprint_viewed'
+  | 'first_customer_sprint_icp_seeded'
   | 'first_customer_sprint_started'
   | 'first_customer_sprint_prospect_target_reached'
   | 'first_customer_sprint_message_selected'
@@ -1129,6 +1130,11 @@ export const trackFirstCustomerSprint = (event: FirstCustomerSprintEvent, proper
   pack_id?: string;
   price_cents?: number;
   credits_deducted?: number;
+  // How much of the intake the ICP could fill, and which draft it came from.
+  // Counts and identifiers only: never the segment, offer, or hypothesis text.
+  seeded_field_count?: number;
+  icp_origin?: 'param' | 'latest' | 'session';
+  icp_draft_id?: string | null;
 }) => captureEvent(event, properties);
 
 export type DiscoveryCallWorkflowEvent =

@@ -9,7 +9,11 @@ import {
   Target,
 } from "lucide-react";
 
-import { fieldIsReal } from "@/lib/icpFieldProvenance";
+import {
+  collectLabelledOpenQuestions,
+  fieldIsReal,
+  summarizeIcpAnswered,
+} from "@/lib/icpFieldProvenance";
 import {
   computeViabilityScore,
   type ViabilityBand,
@@ -202,6 +206,103 @@ const BAND_LABELS: Record<ViabilityBand, string> = {
   needsWork: "Needs work",
 };
 
+/**
+ * The second number.
+ *
+ * The verdict answers "is this idea any good". This answers "and how much do
+ * you actually know", which is the half every other idea validator leaves out:
+ * a confident report on four answered fields and a confident report on thirty
+ * look identical once they are prose. The scorer already damps the verdict by
+ * this value, so showing it is not adding a claim, it is showing the reader the
+ * claim the number was already making.
+ *
+ * Deliberately phrased as answered-versus-open rather than as a percentage.
+ * "11 of 42 answered" is checkable against the list below it; "26% rigor" is
+ * another opaque score sitting next to an opaque score.
+ */
+function EvidenceReadout({
+  rigor,
+  answered,
+  open,
+}: {
+  rigor: number | null;
+  answered: number | null;
+  open: number | null;
+}) {
+  if (rigor === null && answered === null) return null;
+
+  const percent = rigor === null ? null : Math.round(rigor * 100);
+  const tone = percent === null
+    ? "text-foreground/60"
+    : percent >= 60
+      ? "text-success"
+      : percent >= 35
+        ? "text-warning"
+        : "text-destructive";
+
+  return (
+    <div className="flex flex-col items-start gap-1 sm:items-end">
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-foreground/55">Evidence</p>
+      {answered !== null && open !== null ? (
+        <p className={`text-sm font-semibold tabular-nums ${tone}`}>
+          {answered} of {answered + open} answered
+        </p>
+      ) : null}
+      {percent !== null ? (
+        <div className="flex items-center gap-2">
+          <div className="h-1 w-24 overflow-hidden rounded-full bg-foreground/10">
+            <div
+              className={`h-full rounded-full ${
+                percent >= 60 ? "bg-success" : percent >= 35 ? "bg-warning" : "bg-destructive"
+              }`}
+              style={{ width: `${Math.max(percent, 2)}%` }}
+            />
+          </div>
+          <span className="text-xs tabular-nums text-foreground/45">{percent}%</span>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * The gaps, named.
+ *
+ * Every entry here is a field the generator backfilled with readable prose
+ * rather than an answer. The spread already italicises those inline, but inline
+ * italics are only visible to someone reading every panel; the point of the
+ * count above is that it is visible to someone reading nothing, and this is
+ * what makes the count checkable rather than another number to trust.
+ */
+function OpenQuestions({ items }: { items: Array<{ path: string; label: string }> }) {
+  if (items.length === 0) return null;
+
+  return (
+    <details className="group mt-5 rounded-2xl border border-border/60 bg-background/60 p-4">
+      <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold text-foreground/80">
+        <ShieldQuestion className="h-4 w-4 shrink-0 text-warning" aria-hidden />
+        <span>
+          Still guessing about {items.length} thing{items.length === 1 ? "" : "s"}
+        </span>
+        <span className="ml-auto text-xs font-normal text-foreground/45 group-open:hidden">Show</span>
+        <span className="ml-auto hidden text-xs font-normal text-foreground/45 group-open:inline">Hide</span>
+      </summary>
+      <ul className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
+        {items.map((item) => (
+          <li key={item.path} className="flex items-start gap-2 text-sm leading-6 text-foreground/70">
+            <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-warning" aria-hidden />
+            <span>{item.label}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 text-xs leading-5 text-foreground/50">
+        Each one is a question the draft answered with a placeholder rather than a finding. The
+        experiment above is how you close the ones that matter.
+      </p>
+    </details>
+  );
+}
+
 export function IcpVerdictSpread({
   draft,
   ideaDescription,
@@ -223,6 +324,26 @@ export function IcpVerdictSpread({
     : computed;
   const styles = VERDICT_STYLES[result.verdict];
   const idea = (ideaDescription ?? frozenCard?.idea ?? "").trim();
+
+  /*
+   * Same rule as the score: a share is a claim someone made in public, so a
+   * card that recorded its own evidence figures renders those, and only a card
+   * from before they were recorded falls back to reading the draft. Otherwise a
+   * later edit silently rewrites what a founder said they shared.
+   */
+  const answeredSummary = useMemo(() => summarizeIcpAnswered(draft), [draft]);
+  const evidence = frozenCard && typeof frozenCard.rigor === "number"
+    ? {
+        rigor: frozenCard.rigor,
+        answered: frozenCard.answeredFields ?? null,
+        open: frozenCard.openQuestionCount ?? null,
+      }
+    : {
+        rigor: computed.rigor,
+        answered: answeredSummary?.answered ?? null,
+        open: answeredSummary?.open ?? null,
+      };
+  const openQuestions = useMemo(() => collectLabelledOpenQuestions(draft), [draft]);
 
   const { market, pricing, risks, experiment, recommendation } = draft;
   // A draft generated before the chain existed still renders the verdict, which
@@ -288,12 +409,20 @@ export function IcpVerdictSpread({
               style={{ width: `${Math.max(result.displayScore, 2)}%` }}
             />
           </div>
+
+          {/* The two numbers sit together because neither means much alone. */}
+          <div className="mt-3 border-t border-border/50 pt-3">
+            <EvidenceReadout rigor={evidence.rigor} answered={evidence.answered} open={evidence.open} />
+          </div>
         </div>
       </div>
 
       <div className="mt-6 border-t border-border/60 pt-5">
         <ChainRibbon tone="text-foreground/30" />
       </div>
+
+      {/* Withheld on the public score card, which is the teaser, not the audit. */}
+      {!compact ? <OpenQuestions items={openQuestions} /> : null}
 
       {!compact && hasChainDetail ? (
         <div className="mt-6 grid gap-4 md:grid-cols-2">

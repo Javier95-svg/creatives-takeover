@@ -8,6 +8,7 @@ import {
   resolveViabilityBand,
   VIABILITY_THRESHOLDS,
 } from '../src/lib/icpViabilityScore.ts';
+import { buildIcpScoreCard, buildIcpShareText } from '../src/lib/icpScoreCard.ts';
 
 type Confidence = 'high' | 'medium' | 'low';
 type DimensionKey =
@@ -361,4 +362,55 @@ test('drafts generated before viabilityAssessment still score', () => {
   assert.equal(legacy.basis, 'legacy');
   assert.equal(legacy.dimensions.length, 0);
   assert.ok(legacy.score > 1 && legacy.score <= 10);
+});
+
+/*
+ * The score card is the frozen, publishable half of an assessment. Rigor now
+ * travels on it for the same reason the score does: a shared card is a claim
+ * someone made in public, and recomputing either number on read means a later
+ * edit rewrites what they said.
+ */
+
+test('the score card carries the rigor half, not just the verdict', () => {
+  const thin = buildIcpScoreCard(draft({ answered: ['decisionBrief.primarySegment'] }));
+  const full = buildIcpScoreCard(draft({ answered: 'all', sources: 2, linkedCompetitors: 2 }));
+
+  assert.equal(typeof thin.rigor, 'number');
+  assert.equal(typeof thin.openQuestionCount, 'number');
+  assert.ok(
+    (thin.rigor ?? 1) < (full.rigor ?? 0),
+    'a draft answering one field must not record the same rigor as a complete one',
+  );
+  assert.equal(thin.answeredFields, 1);
+  assert.equal((thin.answeredFields ?? 0) + (thin.openQuestionCount ?? 0), TRACKED_PATHS.length);
+});
+
+test('the card records the rigor that was true when it was built', () => {
+  const thin = draft({ answered: ['decisionBrief.primarySegment'] });
+  const card = buildIcpScoreCard(thin);
+
+  // The same draft later gains answers. The already-published card must not move.
+  const improved = buildIcpScoreCard(draft({ answered: 'all', sources: 2 }));
+  assert.notEqual(card.rigor, improved.rigor);
+  assert.equal(card.rigor, buildIcpScoreCard(thin).rigor, 'scoring the same draft twice must agree');
+});
+
+test('a thin draft shares the honest post, a well-evidenced one shares the plain score', () => {
+  const thin = buildIcpScoreCard(draft({ answered: ['decisionBrief.primarySegment'], dimensions: allDimensions(90) }));
+  const full = buildIcpScoreCard(draft({ answered: 'all', sources: 3, linkedCompetitors: 3, dimensions: allDimensions(90) }));
+
+  // Only meaningful for a positive verdict: a stop/investigate card already has
+  // the stronger post available in its top risk.
+  if (thin.verdict !== 'stop' && thin.verdict !== 'investigate') {
+    assert.match(buildIcpShareText(thin), /still guessing about \d+ things/);
+  }
+  assert.doesNotMatch(buildIcpShareText(full), /still guessing about/);
+});
+
+test('a card shared before rigor existed still renders rather than reading as zero', () => {
+  const legacy = { ...buildIcpScoreCard(draft()), rigor: undefined, openQuestionCount: undefined };
+
+  assert.equal(legacy.rigor, undefined);
+  // The share text must fall through to the plain variant, not claim zero unknowns.
+  assert.doesNotMatch(buildIcpShareText(legacy as any), /still guessing about/);
 });

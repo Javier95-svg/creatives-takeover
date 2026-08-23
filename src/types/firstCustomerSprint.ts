@@ -33,6 +33,12 @@ export interface FirstCustomerSprint {
   starts_at: string;
   ends_at: string;
   business_model_snapshot: FounderBusinessModel | null;
+  /**
+   * The ICP draft that seeded this intake. Null when the founder filled it in
+   * unaided, and absent entirely on a snapshot read before the lineage migration
+   * is applied, which is why it is optional rather than just nullable.
+   */
+  icp_analysis_id?: string | null;
   customer_count_snapshot: number;
   primary_goal_snapshot: string | null;
   offer: string | null;

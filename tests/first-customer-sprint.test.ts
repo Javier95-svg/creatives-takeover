@@ -12,6 +12,7 @@ import {
   sprintEndDate,
   validateFirstCustomerIntake,
 } from '../src/lib/firstCustomerSprint.ts';
+import { icpArtifactToFirstCustomerSprint } from '../src/lib/icpToFirstCustomerSprint.ts';
 import type { FirstCustomerEvidenceCounts, FirstCustomerSprint } from '../src/types/firstCustomerSprint.ts';
 
 const evidence = (patch: Partial<FirstCustomerEvidenceCounts> = {}): FirstCustomerEvidenceCounts => ({
@@ -159,4 +160,136 @@ test('demand-validation contract supports a balanced cohort, structured review, 
   assert.match(checkout, /Complete and review the sprint before purchasing the continuation/);
   assert.match(checkout, /continuation_from_sprint_id/);
   assert.match(webhook, /first_customer_sprint_continuation_purchased/);
+});
+
+/*
+ * ICP handoff into the sprint intake.
+ *
+ * The governing rule is that nothing the generator backfilled may be seeded.
+ * Backfill prose reads perfectly well in an input box, so a founder would accept
+ * it as their own finding and then send outreach built on it. This is the surface
+ * where that costs real prospect contacts, which is why the guard lives here and
+ * not only in the scorer.
+ */
+
+const icpArtifact = (patch: { document?: Record<string, any>; provenance?: Record<string, string> } = {}) => ({
+  version: 3,
+  generatedAt: '2026-08-22T10:00:00.000Z',
+  draftDocument: {
+    gatePreview: { personaName: 'Priya', roleLine: 'Ops lead', painLine: 'L' },
+    customer: { personaName: 'Priya', roleLine: 'Ops lead at a 40-person SaaS', summary: 'S' },
+    pain: { quote: 'q', rootCause: 'r', whyItHurts: 'Invoices go unchased for weeks' },
+    build: { valueProposition: 'Chase every overdue invoice automatically', outcome: 'o', coreFeatures: [] },
+    decisionBrief: {
+      primarySegment: 'Ops leads at 20 to 100 person B2B SaaS companies',
+      currentAlternative: 'a shared spreadsheet and calendar reminders',
+      rankedPains: [
+        { rank: 1, pain: 'Chasing invoices eats a full day every month', evidence: 'e' },
+        { rank: 2, pain: 'Secondary pain 2 still needs interview evidence.', evidence: 'e' },
+      ],
+    },
+    pricing: { hypothesis: 'h', anchor: 'They pay about $2,400 a year for a bookkeeper to do this', budgetOwner: 'b', model: 'm' },
+    risks: [{ rank: 1, type: 'demand', risk: 'Ops leads may not own this budget', disprovedBy: 'Three ops leads confirm they can sign off' }],
+    // Every path the mapper can read, declared. An unrecorded path falls through
+    // to the legacy string check and reads as answered, so a partial fixture would
+    // quietly let a fallback candidate through and the guard below would pass for
+    // the wrong reason.
+    fieldProvenance: {
+      'decisionBrief.primarySegment': 'model',
+      'decisionBrief.currentAlternative': 'model',
+      'decisionBrief.rankedPains.0': 'model',
+      'decisionBrief.rankedPains.1': 'fallback',
+      'build.valueProposition': 'model',
+      'build.outcome': 'model',
+      'pricing.anchor': 'model',
+      'pricing.hypothesis': 'model',
+      'customer.personaName': 'model',
+      'customer.roleLine': 'model',
+      'customer.summary': 'model',
+      'pain.whyItHurts': 'model',
+      'pain.quote': 'model',
+      'pain.rootCause': 'model',
+      'risks.0': 'model',
+      ...patch.provenance,
+    },
+    ...patch.document,
+  },
+} as any);
+
+test('the sprint intake is seeded from the ICP rather than left blank', () => {
+  const mapped = icpArtifactToFirstCustomerSprint(icpArtifact());
+
+  assert.equal(mapped.intake.targetSegment, 'Ops leads at 20 to 100 person B2B SaaS companies');
+  assert.equal(mapped.intake.offer, 'Chase every overdue invoice automatically');
+  assert.match(mapped.intake.problemHypothesis, /Chasing invoices eats a full day every month/);
+  assert.match(mapped.intake.problemHypothesis, /Today they work around it with a shared spreadsheet/);
+  assert.match(mapped.intake.mentorDecisionQuestion, /Ops leads may not own this budget/);
+  assert.equal(mapped.intake.estimatedCustomerValueUsd, '2400');
+  assert.equal(mapped.personaName, 'Priya');
+  assert.equal(mapped.seededFieldCount, 5);
+});
+
+test('a backfilled field is never seeded into the intake', () => {
+  const mapped = icpArtifactToFirstCustomerSprint(
+    icpArtifact({
+      provenance: {
+        // Each field and its fallback candidates, so the guard is what stops the
+        // seed rather than the mapper simply running out of places to look.
+        'decisionBrief.primarySegment': 'fallback',
+        'customer.roleLine': 'fallback',
+        'customer.summary': 'fallback',
+        'build.valueProposition': 'fallback',
+        'build.outcome': 'fallback',
+        'decisionBrief.rankedPains.0': 'fallback',
+        'pain.whyItHurts': 'fallback',
+        'pain.quote': 'fallback',
+        'pain.rootCause': 'fallback',
+        'risks.0': 'fallback',
+      },
+    }),
+  );
+
+  // The strings are still present on the document; the guard is provenance, not emptiness.
+  assert.equal(mapped.intake.targetSegment, '', 'a backfilled segment must not reach the intake');
+  assert.equal(mapped.intake.mentorDecisionQuestion, '', 'a backfilled risk must not reach the intake');
+  assert.doesNotMatch(mapped.intake.problemHypothesis, /Chasing invoices eats a full day/);
+});
+
+test('the top ranked pain is skipped when only the lower-ranked one is real', () => {
+  const mapped = icpArtifactToFirstCustomerSprint(
+    icpArtifact({
+      provenance: { 'decisionBrief.rankedPains.0': 'fallback', 'decisionBrief.rankedPains.1': 'model' },
+    }),
+  );
+
+  assert.match(mapped.intake.problemHypothesis, /Secondary pain 2/);
+});
+
+test('an unparseable pricing anchor yields no number rather than a guess', () => {
+  // The sprint weighs the founder's hours against this figure, so a wrong guess
+  // is worse than an empty field the founder has to fill in deliberately.
+  const mapped = icpArtifactToFirstCustomerSprint(
+    icpArtifact({ document: { pricing: { hypothesis: 'h', anchor: 'roughly what a part-time hire costs', budgetOwner: 'b', model: 'm' } } }),
+  );
+
+  assert.equal(mapped.intake.estimatedCustomerValueUsd, '');
+});
+
+test('shorthand pricing anchors are read at the right magnitude', () => {
+  const k = icpArtifactToFirstCustomerSprint(
+    icpArtifact({ document: { pricing: { anchor: 'about $18k a year today', hypothesis: 'h', budgetOwner: 'b', model: 'm' } } }),
+  );
+  assert.equal(k.intake.estimatedCustomerValueUsd, '18000');
+});
+
+test('a draft that answered nothing seeds nothing, so the form asks rather than invents', () => {
+  const mapped = icpArtifactToFirstCustomerSprint(
+    icpArtifact({
+      provenance: Object.fromEntries(
+        Object.keys(icpArtifact().draftDocument.fieldProvenance).map((path) => [path, 'fallback']),
+      ),
+    }),
+  );
+
+  assert.equal(mapped.seededFieldCount, 0);
 });

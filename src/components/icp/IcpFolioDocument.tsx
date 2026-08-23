@@ -12,7 +12,7 @@ import {
 import { ExternalLink, Gauge, HelpCircle, Lock, UserRound } from "lucide-react";
 
 import type { IcpDraftDocument } from "@/lib/icpBuilderSession";
-import { fieldIsReal } from "@/lib/icpFieldProvenance";
+import { collectLabelledOpenQuestions, fieldIsReal } from "@/lib/icpFieldProvenance";
 import { computeViabilityScore } from "@/lib/icpViabilityScore";
 import { IcpVerdictSpread } from "@/components/icp/IcpVerdictSpread";
 import type { IcpScoreCard } from "@/lib/icpScoreCard";
@@ -459,6 +459,7 @@ export function IcpFolioDocument({
     () => new Set<IcpFolioSectionKey>(visibleSections ?? SECTION_NAV_ITEMS.map((item) => item.key)),
     [visibleSections],
   );
+  const openQuestions = useMemo(() => collectLabelledOpenQuestions(draft), [draft]);
   const lockedSectionSet = useMemo(
     () => new Set<IcpFolioSectionKey>(lockedSections.filter((sectionKey) => visibleSectionSet.has(sectionKey))),
     [lockedSections, visibleSectionSet],
@@ -1186,6 +1187,33 @@ export function IcpFolioDocument({
               ))}
             </ol>
           </div>
+
+          {/*
+            * The gaps collected, directly under the instrument for closing them.
+            * `DraftValue` already marks each one where it sits, but a reader who
+            * skims the document never assembles the list, and the list is the
+            * part that says what to do next.
+            */}
+          {openQuestions.length ? (
+            <div className="mt-6 border-t border-border/70 pt-5">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <HelpCircle className="h-4 w-4 shrink-0 text-warning" aria-hidden />
+                Still unanswered ({openQuestions.length})
+              </h3>
+              <p className="mt-2 text-xs leading-5 text-foreground/60">
+                This draft answered these with a placeholder rather than a finding. They are what the
+                interviews above are for.
+              </p>
+              <ul className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
+                {openQuestions.map((item) => (
+                  <li key={item.path} className="flex items-start gap-2 text-sm leading-6 text-foreground/70">
+                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-warning" aria-hidden />
+                    <span>{item.label}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </section>
       ) : null;
 

@@ -127,3 +127,80 @@ test('PMF interviews and Traction weeks can append attributed ICP confidence sig
   assert.match(traction, /recordJourneyAssumptionSignal/);
   assert.match(traction, /It never rewrites the original customer decision/);
 });
+
+/*
+ * The ICP handoff must be creatable at draft-save time.
+ *
+ * The ICP contract requires five completed interviews, those interviews are
+ * logged in PMF Lab, and a founder only reaches PMF Lab by following this
+ * handoff. Gating the row on 'ready' therefore made the first link in the chain
+ * unreachable and journey_handoffs held no rows at all. The contract itself is
+ * unchanged: these tests pin the exception narrow and the stamping honest.
+ */
+
+const journeyService = readFileSync(
+  new URL('../supabase/functions/journey-outcome-service/index.ts', import.meta.url),
+  'utf8',
+);
+const icpBuilder = readFileSync(new URL('../src/components/icp/ICPBuilder.tsx', import.meta.url), 'utf8');
+
+test('the ICP outcome still cannot reach ready at save time', () => {
+  // The premise of the whole fix. If this ever passes, the exception below is
+  // dead weight and should be removed rather than left to rot.
+  const atSaveTime = evaluateOutcomeContract({ tool: 'icp_builder', qualityChecks: allTrue([
+    'primary_segment', 'non_fit_segment', 'three_ranked_pains', 'buying_trigger', 'current_alternative',
+    'reachable_channels', 'authentic_citation', 'confidence_level', 'assumptions_registered',
+  ]) });
+  assert.equal(atSaveTime.status, 'draft');
+  assert.equal(atSaveTime.nextAction, 'Create the five-interview validation plan.');
+});
+
+test('create_handoff admits a draft ICP, and only for the demo_studio destination', () => {
+  const block = journeyService.slice(journeyService.indexOf("action === 'create_handoff'"));
+  const body = block.slice(0, block.indexOf("action === 'find_handoff'"));
+
+  assert.match(body, /isProvisionalPair/, 'the exception must be named, not inlined');
+  assert.match(
+    body,
+    /outcome\.tool === 'icp_builder' && destinationTool === 'demo_studio'/,
+    'the exception must be pinned to exactly one source and destination pair',
+  );
+  assert.match(body, /!isProvisionalPair/, 'every other pair must still be gated on ready/verified');
+  // The verified-Build gate on the MVP handoff is a separate, stricter rule and
+  // must not have been loosened alongside this one.
+  assert.match(body, /MVP handoff requires a verified Build decision/);
+});
+
+test('a handoff records the source status it was actually created at', () => {
+  const block = journeyService.slice(journeyService.indexOf("action === 'create_handoff'"));
+  const body = block.slice(0, block.indexOf("action === 'find_handoff'"));
+
+  assert.match(body, /sourceStatus: outcome\.status/, 'the status must be stamped from the row');
+  assert.match(body, /sourceCompletionScore: outcome\.completion_score/);
+  // Taking it from the request body would let a client claim its own provenance.
+  assert.doesNotMatch(body, /sourceStatus: (textValue\(body|body\.)/);
+});
+
+test('the qualified payload overwrites the provisional row instead of being ignored', () => {
+  const signalBlock = journeyService.slice(journeyService.indexOf('assumptionsTested: true'));
+  const upsert = signalBlock.slice(0, signalBlock.indexOf('Could not create ICP handoff'));
+
+  assert.match(upsert, /idempotency_key: `icp:\$\{assumption\.source_artifact_id\}:demo`/);
+  assert.match(
+    upsert,
+    /ignoreDuplicates: false/,
+    'ignoreDuplicates:true would silently discard the better-evidenced payload',
+  );
+});
+
+test('the ICP builder no longer returns early before creating the handoff', () => {
+  const block = icpBuilder.slice(icpBuilder.indexOf('Record the handoff at save time'));
+  const body = block.slice(0, block.indexOf('trackPrebuildLineageEvent'));
+
+  assert.doesNotMatch(
+    body,
+    /if \(!\['ready', 'verified'\]\.includes\(saved\.evaluation\.status\)\) return;/,
+    'the status gate that made the handoff unreachable must stay removed',
+  );
+  assert.match(body, /idempotencyKey: `icp:\$\{analysisId\}:demo`/, 'the key must match the signal path exactly');
+});

@@ -1069,13 +1069,21 @@ const ICPBuilder: React.FC = () => {
           artifact.generatedAt,
         ),
       })).then(async (saved) => {
-        // The ICP outcome contract requires five independent assumption signals, which can
-        // only come from interviews logged in PMF Lab. At save time the status is always
-        // 'draft', so this branch never ran — that is why no ICP handoff existed despite
-        // 31 saved drafts. The handoff is now created server-side in journey-outcome-service
-        // when a fifth assumption signal flips the outcome to ready/verified. Kept here only
-        // for the case where an already-qualified draft is re-saved.
-        if (!['ready', 'verified'].includes(saved.evaluation.status)) return;
+        /*
+         * Record the handoff at save time, whatever the outcome status.
+         *
+         * The ICP contract requires five independent assumption signals, which
+         * only come from PMF Lab interviews, so at save time the status is
+         * always 'draft'. This used to return early on that, and the founder
+         * only reaches PMF Lab by following the handoff, so the first link in
+         * the chain could never be created and journey_handoffs stayed empty
+         * across every saved draft.
+         *
+         * The contract still decides what counts as verified. The row carries
+         * the real status (stamped server-side), and the same idempotency key
+         * means the signal path later upgrades this exact row in place rather
+         * than creating a second one.
+         */
         const outcomeId = (saved.outcome as { id?: string } | null)?.id;
         if (!outcomeId) return;
         const context = await ensurePrebuildContext({
@@ -1103,6 +1111,7 @@ const ICPBuilder: React.FC = () => {
         trackPrebuildLineageEvent('prebuild_handoff_offered', {
           validationContextId: context.id, handoffId: handoff.id, sourceTool: 'icp_builder',
           destinationTool: 'demo_studio', artifactId: analysisId,
+          outcomeStatus: saved.evaluation.status,
         });
       }).catch((outcomeError) => console.error('Could not update journey outcome', outcomeError));
       trackJourneyEvent('journey_stage_outcome_completed', {

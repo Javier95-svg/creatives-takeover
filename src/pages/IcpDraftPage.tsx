@@ -19,6 +19,8 @@ import type { StoredIcpArtifact } from "@/lib/icpBuilderSession";
 import { trackActivationFunnelEvent } from "@/lib/activationEntry";
 import { trackJourneyEvent } from "@/lib/journeyOutcomes";
 import { buildIcpScoreCard } from "@/lib/icpScoreCard";
+import { isFirstCustomerSprintKillSwitchEnabled } from "@/hooks/useFirstCustomerSprint";
+import { useFeatureFlagEnabled } from "@/hooks/usePosthogFeatureFlag";
 
 function slugifyFileName(value: string) {
   return value.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase() || "icp-draft";
@@ -31,6 +33,9 @@ export default function IcpDraftPage() {
   const { user } = useAuth();
   const documentRef = useRef<HTMLDivElement>(null);
   const hasTrackedUnlockOpenRef = useRef(false);
+  // The flag alone, not the full sprint hook: this page only needs to know whether
+  // the door exists, and the hook fires an RPC that every draft view would pay for.
+  const sprintEnabled = isFirstCustomerSprintKillSwitchEnabled(useFeatureFlagEnabled('first-customer-sprint-v1'));
 
   const [artifact, setArtifact] = useState<StoredIcpArtifact | null>(null);
   const [legacyAnalysis, setLegacyAnalysis] = useState<Record<string, unknown> | null>(null);
@@ -300,12 +305,12 @@ export default function IcpDraftPage() {
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
-          <div className="relative mt-5 grid gap-3 border-t border-white/10 pt-5 sm:grid-cols-2">
+          <div className={`relative mt-5 grid gap-3 border-t border-white/10 pt-5 ${sprintEnabled ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
             <Link
               to={`/demo-studio?icp=${draftId ?? ""}`}
               className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white transition hover:bg-white/10"
             >
-              <span className="font-semibold">Demo Studio â€” recommended next</span>
+              <span className="font-semibold">Demo Studio, recommended next</span>
               <span className="mt-1 block text-white/60">Turn this exact draft into a shareable interactive demo.</span>
             </Link>
             <Link
@@ -315,6 +320,21 @@ export default function IcpDraftPage() {
               <span className="font-semibold">I already have conversations</span>
               <span className="mt-1 block text-white/60">Log what you heard, then see whether interview and demand signals support build, narrow, pivot, or stop.</span>
             </Link>
+            {/*
+              * The third exit: a founder who wants buyers rather than another
+              * artifact. Gated on the release flag only, not on enrolment: the
+              * sprint page shows an application to a founder outside the cohort,
+              * which is the intended path into the pilot rather than a dead end.
+              */}
+            {sprintEnabled ? (
+              <Link
+                to={`/first-customer-sprint?icp=${draftId ?? ""}`}
+                className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white transition hover:bg-white/10"
+              >
+                <span className="font-semibold">I want customers now</span>
+                <span className="mt-1 block text-white/60">Carry this segment, offer, and pain straight into a 30-day first-customer sprint.</span>
+              </Link>
+            ) : null}
           </div>
         </div>
       </div>

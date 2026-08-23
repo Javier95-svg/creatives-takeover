@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { ArrowRight, CheckCircle2, ClipboardCopy, Loader2, Pause, Printer, RefreshCw, Users } from 'lucide-react';
 import { toast } from 'sonner';
@@ -16,6 +16,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFirstCustomerSprint } from '@/hooks/useFirstCustomerSprint';
 import { useFounderCycle } from '@/hooks/useFounderCycle';
+import { resolveIcpSource } from '@/lib/icpHandoffSource';
+import { icpArtifactToFirstCustomerSprint } from '@/lib/icpToFirstCustomerSprint';
 import { useMentorRecommendations } from '@/hooks/useMentorRecommendations';
 import { useSubscription } from '@/hooks/useSubscription';
 import { trackFirstCustomerSprint } from '@/lib/analytics';
@@ -58,6 +60,8 @@ function SectionHeading({ number, title, description, state }: { number: number;
 
 export default function FirstCustomerSprintPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const icpParam = searchParams.get('icp');
   const { user, loading: authLoading } = useAuth();
   const cycle = useFounderCycle();
   const sprintApi = useFirstCustomerSprint();
@@ -69,6 +73,11 @@ export default function FirstCustomerSprintPage() {
     offer: '', targetSegment: '', problemHypothesis: '', proofUrl: '', proofDescription: '',
     estimatedCustomerValueUsd: '', weeklyCapacityHours: '', mentorDecisionQuestion: '',
   });
+  const [icpSeeded, setIcpSeeded] = useState(false);
+  /** Set once the ICP fills at least one intake field, which is what makes the provenance line appear. */
+  const [icpSeedSummary, setIcpSeedSummary] = useState<
+    { count: number; personaName: string; origin: 'param' | 'latest' | 'session'; draftId: string | null } | null
+  >(null);
   const [variants, setVariants] = useState<FirstCustomerMessageVariant[]>([]);
   const [existingContactId, setExistingContactId] = useState('');
   const [decision, setDecision] = useState<FirstCustomerDecision>('continue');
@@ -102,6 +111,57 @@ export default function FirstCustomerSprintPage() {
       mentorDecisionQuestion: current.mentorDecisionQuestion || snapshot?.cycleDefaults?.primaryGoal || cycle.snapshot?.primaryGoal || '',
     }));
   }, [cycle.snapshot, snapshot?.cycleDefaults?.primaryGoal, snapshot?.cycleDefaults?.weeklyCapacityHours, sprint]);
+
+  /*
+   * Seed the intake from the founder's ICP draft.
+   *
+   * The sprint asks for a segment, an offer and a problem hypothesis, which is
+   * exactly what the ICP already produced and what a founder would otherwise
+   * retype from memory into an empty form, usually less precisely than the draft
+   * states it. `icpArtifactToFirstCustomerSprint` refuses to pass along anything
+   * the generator backfilled, so an empty box here means the draft genuinely does
+   * not know, not that the handoff dropped it.
+   *
+   * Guarded the same way as the Demo Studio handoff: runs once, never while a
+   * sprint exists (the hydrate effect below owns the fields then), and never
+   * overwrites a field the founder has already typed into.
+   */
+  useEffect(() => {
+    if (icpSeeded || sprint || authLoading || !user?.id) return;
+    let active = true;
+    void (async () => {
+      const icp = await resolveIcpSource({ userId: user.id, draftId: icpParam });
+      if (!active || !icp) return;
+      const mapped = icpArtifactToFirstCustomerSprint(icp.artifact);
+      if (mapped.seededFieldCount === 0) return;
+      setIcpSeeded(true);
+      setIcpSeedSummary({
+        count: mapped.seededFieldCount,
+        personaName: mapped.personaName,
+        origin: icp.origin,
+        draftId: icp.draftId,
+      });
+      setIntake((current) => ({
+        ...current,
+        offer: current.offer.trim() || mapped.intake.offer,
+        targetSegment: current.targetSegment.trim() || mapped.intake.targetSegment,
+        problemHypothesis: current.problemHypothesis.trim() || mapped.intake.problemHypothesis,
+        mentorDecisionQuestion: current.mentorDecisionQuestion.trim() || mapped.intake.mentorDecisionQuestion,
+        estimatedCustomerValueUsd:
+          current.estimatedCustomerValueUsd.trim() || mapped.intake.estimatedCustomerValueUsd,
+      }));
+      trackFirstCustomerSprint('first_customer_sprint_icp_seeded', {
+        seeded_field_count: mapped.seededFieldCount,
+        icp_origin: icp.origin,
+        icp_draft_id: icp.draftId,
+      });
+    })();
+    return () => {
+      active = false;
+    };
+    // The intake is read through the setState updater rather than as a dependency,
+    // so this runs once per entry instead of re-firing on every keystroke.
+  }, [icpSeeded, sprint, authLoading, user?.id, icpParam]);
 
   useEffect(() => {
     if (!sprint) return;
@@ -158,10 +218,16 @@ export default function FirstCustomerSprintPage() {
     };
     const errors = validateFirstCustomerIntake(normalized);
     if (errors.length) { toast.error(errors[0]); return; }
-    const created = await sprintApi.start(normalized) as { id?: string } | undefined;
+    // Attribution only. The intake text is already normalized above and is not
+    // re-read from the draft, so a founder's edits are what actually get saved.
+    const created = await sprintApi.start({
+      ...normalized,
+      icpAnalysisId: icpSeedSummary?.draftId ?? null,
+    }) as { id?: string } | undefined;
     if (created?.id) {
       trackFirstCustomerSprint('first_customer_sprint_started', {
         sprint_id: created.id, status: 'active', business_model: cycle.snapshot?.businessModel,
+        seeded_field_count: icpSeedSummary?.count, icp_draft_id: icpSeedSummary?.draftId ?? null,
       });
       try { await sprintApi.generateMessages(created.id); }
       catch (generationError) { console.warn('Using deterministic message templates', generationError); }
@@ -284,6 +350,8 @@ export default function FirstCustomerSprintPage() {
     <><Helmet><title>Start your First Customer Sprint</title><meta name="robots" content="noindex,nofollow" /></Helmet><Navigation /><main className="container mx-auto max-w-4xl px-4 py-16 pt-28"><div className="mb-8"><Badge>Invite accepted</Badge><h1 className="mt-3 text-4xl font-bold">Reach three qualified buyer conversations in 30 days</h1><p className="mt-3 text-muted-foreground">You perform the outreach. The product keeps the evidence, messaging, and one mentor checkpoint focused; it does not guarantee a sale.</p></div><Card><CardHeader><CardTitle>Define the sprint</CardTitle><CardDescription>All fields stay editable. A beta-cohort invitation can override the normal B2B SaaS/service eligibility rule.</CardDescription></CardHeader><CardContent className="space-y-4">
       <div className="grid gap-3 rounded-lg border bg-muted/30 p-3 text-sm sm:grid-cols-3"><p><strong>Business model:</strong> {snapshot?.cycleDefaults?.businessModel?.replaceAll('_', ' ') ?? cycle.snapshot?.businessModel?.replaceAll('_', ' ') ?? 'Not set'}</p><p><strong>Current customers:</strong> {snapshot?.cycleDefaults?.customerCount ?? cycle.snapshot?.customerCount ?? 0}</p><p><strong>Primary goal:</strong> {snapshot?.cycleDefaults?.primaryGoal ?? cycle.snapshot?.primaryGoal ?? 'Win the first customer'}</p></div>
       {cycle.snapshot && (!['b2b_saas', 'service'].includes(cycle.snapshot.businessModel ?? '') || cycle.snapshot.customerCount > 3) ? <div className="rounded-lg border border-warning/30 bg-warning/5 p-3 text-sm"><strong>Beta override:</strong> your recorded model/customer count is outside the normal pilot criteria, but your admin invitation allows you to proceed.</div> : null}
+      {/* Named rather than silent: a prefilled field a founder cannot account for is one they will not check. */}
+      {icpSeedSummary ? <div className="rounded-lg border border-primary/25 bg-primary/5 p-3 text-sm"><strong>Prefilled from your ICP draft{icpSeedSummary.personaName ? ` (${icpSeedSummary.personaName})` : ''}.</strong> {icpSeedSummary.count} field{icpSeedSummary.count === 1 ? '' : 's'} carried over{icpSeedSummary.origin === 'latest' ? ', taken from your most recent draft' : ''}. Anything your draft was still guessing about was left blank on purpose. Edit all of it before you start.</div> : null}
       <div className="grid gap-4 sm:grid-cols-2"><label className="space-y-1 text-sm"><span>Offer *</span><Input value={intake.offer} onChange={(e) => setIntake((v) => ({ ...v, offer: e.target.value }))} placeholder="A concrete result for a defined buyer" /></label><label className="space-y-1 text-sm"><span>Target buyer *</span><Input value={intake.targetSegment} onChange={(e) => setIntake((v) => ({ ...v, targetSegment: e.target.value }))} placeholder="e.g. operations leads at 20–100 person SaaS" /></label></div>
       <label className="block space-y-1 text-sm"><span>Problem hypothesis *</span><Textarea value={intake.problemHypothesis} onChange={(e) => setIntake((v) => ({ ...v, problemHypothesis: e.target.value }))} /></label>
       <div className="grid gap-4 sm:grid-cols-2"><label className="space-y-1 text-sm"><span>Proof URL</span><Input type="url" value={intake.proofUrl} onChange={(e) => setIntake((v) => ({ ...v, proofUrl: e.target.value }))} /></label><label className="space-y-1 text-sm"><span>Or proof description *</span><Input value={intake.proofDescription} onChange={(e) => setIntake((v) => ({ ...v, proofDescription: e.target.value }))} placeholder="prototype, case study, prior result…" /></label></div>

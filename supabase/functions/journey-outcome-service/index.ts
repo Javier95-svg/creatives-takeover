@@ -389,11 +389,12 @@ serve(async (req) => {
             verified_at: evaluation.status === 'verified' ? new Date().toISOString() : null,
           }).eq('id', currentIcp.id).eq('user_id', user.id);
 
-          // The ICP outcome can only reach ready/verified here: its contract requires five
-          // independent assumption signals, which arrive from PMF Lab interviews, never at
-          // draft-save time. The client tried to create this handoff when saving the draft,
-          // where the status is always 'draft' — which is why no ICP handoff has ever been
-          // created. Create it at the one moment the outcome actually qualifies.
+          // The draft-save path now records a provisional handoff, so by the time a
+          // fifth signal lands there is usually already a row under this key. This
+          // block is the upgrade: same idempotency key, same row, but pointing at
+          // the qualified version and carrying assumptionsTested. The upsert below
+          // must therefore overwrite rather than ignore the duplicate, or the
+          // better-evidenced payload would be silently dropped on the floor.
           if (['ready', 'verified'].includes(evaluation.status)) {
             const { data: icpVersion } = await supabase.from('journey_outcome_versions')
               .select('id').eq('journey_outcome_id', currentIcp.id)
@@ -422,9 +423,13 @@ serve(async (req) => {
                   sourceArtifactId: assumption.source_artifact_id,
                   assumptionsTested: true,
                   destinationRoute: `/demo-studio?icp=${assumption.source_artifact_id}`,
+                  sourceStatus: evaluation.status,
+                  sourceCompletionScore: evaluation.completionScore,
                 },
                 idempotency_key: `icp:${assumption.source_artifact_id}:demo`,
-              }, { onConflict: 'user_id,idempotency_key', ignoreDuplicates: true });
+                // `status` is deliberately absent: an already-consumed handoff keeps
+                // its consumed state through this upgrade rather than reopening.
+              }, { onConflict: 'user_id,idempotency_key', ignoreDuplicates: false });
               // Never fail the signal write because the handoff bookkeeping did.
               if (handoffError) console.error('Could not create ICP handoff', handoffError);
             }
@@ -570,9 +575,24 @@ serve(async (req) => {
         return json({ error: 'Source outcome, destination tool, and idempotency key are required' }, 400);
       }
       const { data: outcome, error: outcomeError } = await supabase.from('journey_outcomes')
-        .select('id,status,tool,quality_checks').eq('id', sourceOutcomeId).eq('user_id', user.id).single();
+        .select('id,status,tool,quality_checks,completion_score').eq('id', sourceOutcomeId).eq('user_id', user.id).single();
       if (outcomeError || !outcome) return json({ error: 'Source outcome was not found' }, 404);
-      if (!['ready', 'verified', 'reviewed'].includes(outcome.status)) {
+      /*
+       * The ICP contract cannot reach 'ready' at save time: it requires five
+       * completed interviews and an authentic citation, and interviews are
+       * logged in PMF Lab, which a founder only reaches THROUGH this handoff.
+       * Gating the row on 'ready' therefore made the first link in the chain
+       * unreachable, which is why journey_handoffs held no rows at all.
+       *
+       * The contract itself is not relaxed. A provisional handoff is recorded
+       * and stamped with the status it was created at, so a reader can always
+       * tell a draft-backed handoff from an evidence-backed one, and the
+       * evidence restore path downstream already derives its confidence from
+       * completion_score, so a thin ICP self-limits rather than inflating
+       * whatever it is handed to.
+       */
+      const isProvisionalPair = outcome.tool === 'icp_builder' && destinationTool === 'demo_studio';
+      if (!['ready', 'verified', 'reviewed'].includes(outcome.status) && !isProvisionalPair) {
         return json({ error: 'Complete the source outcome before handing it to the next tool' }, 409);
       }
       if (outcome.tool === 'pmf_lab' && destinationTool === 'mvp_builder') {
@@ -598,7 +618,13 @@ serve(async (req) => {
         source_outcome_id: outcome.id,
         source_version_id: version.id,
         destination_tool: destinationTool,
-        payload: recordValue(body.payload),
+        // Stamped server-side rather than taken from the caller: the whole point
+        // of the field is that it records what was actually true of the source.
+        payload: {
+          ...recordValue(body.payload),
+          sourceStatus: outcome.status,
+          sourceCompletionScore: outcome.completion_score ?? null,
+        },
         idempotency_key: idempotencyKey,
       }, { onConflict: 'user_id,idempotency_key', ignoreDuplicates: false }).select('*').single();
       if (error) throw error;

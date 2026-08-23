@@ -3,9 +3,12 @@ import assert from 'node:assert/strict';
 
 import {
   ICP_LEGACY_FALLBACK_STRINGS,
+  collectLabelledOpenQuestions,
   collectOpenQuestions,
   fieldIsReal,
+  labelForIcpField,
   rankedPainIsReal,
+  summarizeIcpAnswered,
 } from '../src/lib/icpFieldProvenance.ts';
 
 function baseDraft(overrides: Record<string, any> = {}) {
@@ -121,4 +124,64 @@ test('the frozen snapshot covers the generator fallbacks it was taken from', () 
   ]) {
     assert.ok(ICP_LEGACY_FALLBACK_STRINGS.has(sentence), `missing from snapshot: ${sentence}`);
   }
+});
+
+test('every open question renders as a readable label, never as a dotted path', () => {
+  const draft = baseDraft({
+    fieldProvenance: {
+      'decisionBrief.buyingTrigger': 'fallback',
+      'pain.costOfInaction': 'fallback',
+      'pricing.budgetOwner': 'fallback',
+      'decisionBrief.primarySegment': 'model',
+    },
+  });
+
+  const questions = collectLabelledOpenQuestions(draft);
+  assert.equal(questions.length, 3);
+  for (const question of questions) {
+    assert.ok(question.label.length > 0, `empty label for ${question.path}`);
+    assert.ok(!question.label.includes('.'), `raw path leaked into the label: ${question.label}`);
+  }
+  assert.equal(questions.find((item) => item.path === 'pricing.budgetOwner')?.label, 'Who signs off on the spend');
+});
+
+test('indexed paths are labelled by position rather than dropped', () => {
+  assert.equal(labelForIcpField('decisionBrief.rankedPains.0'), 'Customer pain #1');
+  assert.equal(labelForIcpField('decisionBrief.interviewValidationPlan.4'), 'Interview question #5');
+  assert.equal(labelForIcpField('risks.2'), 'Risk #3');
+});
+
+test('an unmapped path still produces a label instead of vanishing from the count', () => {
+  // A genuine unknown must never be hidden because the label map fell behind
+  // the generator. The fallback is ugly on purpose; silence would be worse.
+  const draft = baseDraft({ fieldProvenance: { 'somethingNew.futureField': 'fallback' } });
+
+  const questions = collectLabelledOpenQuestions(draft);
+  assert.equal(questions.length, 1);
+  assert.equal(questions[0].label, 'Something new future field');
+});
+
+test('open questions are ordered identically for two drafts carrying the same gaps', () => {
+  const gaps = { 'pricing.budgetOwner': 'fallback', 'decisionBrief.buyingTrigger': 'fallback' };
+  const reversed = { 'decisionBrief.buyingTrigger': 'fallback', 'pricing.budgetOwner': 'fallback' };
+
+  assert.deepEqual(
+    collectLabelledOpenQuestions(baseDraft({ fieldProvenance: gaps })).map((item) => item.path),
+    collectLabelledOpenQuestions(baseDraft({ fieldProvenance: reversed })).map((item) => item.path),
+  );
+});
+
+test('the answered summary counts both halves and distinguishes an untracked draft', () => {
+  const draft = baseDraft({
+    fieldProvenance: {
+      'decisionBrief.primarySegment': 'model',
+      'pain.triggerMoment': 'model',
+      'decisionBrief.buyingTrigger': 'fallback',
+    },
+  });
+
+  assert.deepEqual(summarizeIcpAnswered(draft), { answered: 2, open: 1, tracked: 3 });
+  // A draft from before provenance existed knows nothing, which is not the same
+  // claim as knowing that nothing was answered.
+  assert.equal(summarizeIcpAnswered(baseDraft()), null);
 });

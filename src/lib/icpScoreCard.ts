@@ -3,7 +3,7 @@ import type { IcpDraftDocument } from "@/lib/icpBuilderSession";
 // module is loaded directly by node:test, which does not resolve the "@/"
 // alias. The type-only import above is erased before resolution, so it stays.
 import { computeViabilityScore } from "./icpViabilityScore.ts";
-import { fieldIsReal } from "./icpFieldProvenance.ts";
+import { fieldIsReal, summarizeIcpAnswered } from "./icpFieldProvenance.ts";
 
 /**
  * The shareable half of an assessment.
@@ -41,6 +41,20 @@ export interface IcpScoreCard {
   summary: string;
   ungrounded: boolean;
 
+  /**
+   * 0 - 1. How well-evidenced the draft was, frozen alongside the score.
+   *
+   * The verdict is already damped by this, so publishing the score without it
+   * hands a reader half the claim: 61/100 built on four answered fields and
+   * 61/100 built on thirty are not the same statement. Optional because cards
+   * shared before this existed cannot be back-filled, and a missing value must
+   * read as "not recorded" rather than as zero.
+   */
+  rigor?: number;
+  /** Fields the model answered, and fields it backfilled. Null before tracking. */
+  answeredFields?: number;
+  openQuestionCount?: number;
+
   /** The founder's own sentence, when we have it. */
   idea: string | null;
   personaName: string;
@@ -69,6 +83,7 @@ export function buildIcpScoreCard(
 ): IcpScoreCard {
   const result = computeViabilityScore(draft);
   const topRisk = draft.risks?.[0];
+  const answered = summarizeIcpAnswered(draft);
 
   return {
     version: 1,
@@ -79,6 +94,10 @@ export function buildIcpScoreCard(
     verdictLabel: result.verdictLabel,
     summary: result.summary,
     ungrounded: result.ungrounded,
+
+    rigor: result.rigor,
+    answeredFields: answered?.answered,
+    openQuestionCount: answered?.open,
 
     idea: options.idea?.trim() || null,
     personaName: draft.customer.personaName,
@@ -116,6 +135,13 @@ export function buildIcpScoreCard(
  * Kept under ~240 characters so it survives X's limit once the ~23-character
  * URL is appended.
  */
+/**
+ * Below this the draft is mostly inference, which changes what the score means
+ * and therefore what an honest share of it says. Matches the point at which the
+ * scorer's damping term is already costing the verdict more than it grants.
+ */
+export const LOW_RIGOR_THRESHOLD = 0.5;
+
 export function buildIcpShareText(card: IcpScoreCard | null): string {
   if (!card) return LEGACY_SHARE_COPY;
 
@@ -130,6 +156,20 @@ export function buildIcpShareText(card: IcpScoreCard | null): string {
 
 Better to find that out now. Test yours:`
       : `I ran my startup idea through @CreativesTakeover and it scored ${scoreLine}. Market, competitors, customer, pricing and risks in two minutes. Better to find out now. Test yours:`;
+  }
+
+  /*
+   * A good score on a thin draft is the most misleading post available, so it
+   * is the one place the share text names the rigor explicitly. Every other
+   * validator posts the number alone; the number plus the size of what is still
+   * unknown is the whole claim, and it reads as confident rather than hedged.
+   */
+  if (typeof card.rigor === "number" && card.rigor < LOW_RIGOR_THRESHOLD && (card.openQuestionCount ?? 0) > 0) {
+    return `My startup idea scored ${scoreLine} on @CreativesTakeover, and it told me I'm still guessing about ${card.openQuestionCount} things.
+
+Most idea validators only score the pitch. This scores what you actually know.
+
+Test yours:`;
   }
 
   return `My startup idea scored ${scoreLine} on @CreativesTakeover.

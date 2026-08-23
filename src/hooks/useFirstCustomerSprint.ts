@@ -63,6 +63,8 @@ export function useFirstCustomerSprint() {
     offer: string; targetSegment: string; problemHypothesis: string; proofUrl?: string;
     proofDescription?: string; estimatedCustomerValueUsd: number; weeklyCapacityHours: number;
     mentorDecisionQuestion?: string;
+    /** The draft that seeded the intake, when one did. Verified against the caller server-side. */
+    icpAnalysisId?: string | null;
   }) => run.mutateAsync(async () => {
     const { data, error } = await client.rpc('start_first_customer_sprint_v1', {
       p_offer: input.offer, p_target_segment: input.targetSegment,
@@ -71,6 +73,7 @@ export function useFirstCustomerSprint() {
       p_estimated_customer_value_usd: input.estimatedCustomerValueUsd,
       p_weekly_capacity_hours: input.weeklyCapacityHours,
       p_mentor_decision_question: input.mentorDecisionQuestion || null,
+      p_icp_analysis_id: input.icpAnalysisId || null,
     });
     if (error) throw error;
     return data;
