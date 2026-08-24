@@ -100,6 +100,33 @@ function candidateHash(candidates: DashboardAction[], snapshot: DashboardSnapsho
   return (hash >>> 0).toString(16);
 }
 
+/**
+ * Whether the snapshot RPC failed because that version of the function is absent.
+ *
+ * Only a missing function should send us down to an older snapshot version. The
+ * previous check also matched any error whose message merely *mentioned* the
+ * function name, and because v3 calls v2 calls v1, PostgreSQL's PL/pgSQL CONTEXT
+ * chain names all three on every error raised anywhere inside them. So a plain
+ * runtime failure in v1 read as "v2 is missing" and we re-called v1 directly.
+ * That made things strictly worse: v1 is the one version that is not SECURITY
+ * DEFINER, so the retry ran under RLS and surfaced a policy recursion (42P17)
+ * in place of the real error. It is why 42P17 outnumbered the underlying 42P01
+ * four to one in production.
+ *
+ * 42883 is undefined_function. The message check is kept only as a belt-and-braces
+ * fallback for drivers that drop the code, and now requires the "does not exist"
+ * wording alongside the name rather than the name on its own.
+ */
+function isMissingSnapshotFunction(
+  error: { code?: string; message?: string } | null,
+  functionName: string,
+): boolean {
+  if (!error) return false;
+  if (error.code === '42883') return true;
+  const message = error.message ?? '';
+  return message.includes(functionName) && message.includes('does not exist');
+}
+
 export function DashboardDataProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const founderCycle = useFounderCycle();
@@ -126,12 +153,12 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
       const startedAt = performance.now();
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
       let { data, error } = await supabase.rpc('get_dashboard_snapshot_v3' as never, { p_timezone: timezone } as never);
-      if (error?.code === '42883' || error?.message?.includes('get_dashboard_snapshot_v3')) {
+      if (isMissingSnapshotFunction(error, 'get_dashboard_snapshot_v3')) {
         const v2Fallback = await supabase.rpc('get_dashboard_snapshot_v2' as never, { p_timezone: timezone } as never);
         data = v2Fallback.data;
         error = v2Fallback.error;
       }
-      if (error?.code === '42883' || error?.message?.includes('get_dashboard_snapshot_v2')) {
+      if (isMissingSnapshotFunction(error, 'get_dashboard_snapshot_v2')) {
         const v1Fallback = await supabase.rpc('get_dashboard_snapshot_v1', { p_timezone: timezone });
         data = v1Fallback.data;
         error = v1Fallback.error;
