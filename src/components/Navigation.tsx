@@ -106,16 +106,14 @@ const Navigation = () => {
   const acceleratorTool = getFounderTool('accelerator_hunt');
   const pitchTool = getFounderTool('pitch_deck_analyzer');
   const readinessTool = getFounderTool('insighta_test');
-  const emailTool = getFounderTool('email_templates');
   const insightaSubmenu: BizMapMenuItem[] = [
     { type: 'label', label: "STAGE VI: TRACTION" },
-    { name: tractionTool.name, href: tractionTool.route, icon: LineChart, description: tractionTool.purpose },
-    { type: 'label', label: "STAGE VII: FUNDRAISING (OPTIONAL)" },
-    { name: readinessTool.name, href: readinessTool.route, icon: FlaskConical, description: readinessTool.purpose },
-    { name: pitchTool.name, href: pitchTool.route, icon: BarChart3, description: pitchTool.purpose },
-    { name: vcTool.name, href: vcTool.route, icon: UsersIcon, description: vcTool.purpose },
-    { name: acceleratorTool.name, href: acceleratorTool.route, icon: Rocket, description: acceleratorTool.purpose },
-    { name: emailTool.name, href: emailTool.route, icon: Mail, description: emailTool.purpose },
+    { name: tractionTool.name, href: tractionTool.route, icon: LineChart, description: "Track weekly distribution and retention signals." },
+    { type: 'label', label: "STAGE VII: FUNDRAISE" },
+    { name: vcTool.name, href: vcTool.route, icon: UsersIcon, description: "Browse venture capital firms." },
+    { name: acceleratorTool.name, href: acceleratorTool.route, icon: Rocket, description: "Find accelerator programs that fit your stage." },
+    { name: pitchTool.name, href: pitchTool.route, icon: BarChart3, description: "Analyze your pitch deck." },
+    { name: readinessTool.name, href: readinessTool.route, icon: FlaskConical, description: "Measure your fundraising readiness." },
   ];
 
   // Community submenu items
