@@ -24,6 +24,19 @@ interface IcpUnlockGateProps {
   artifact: StoredIcpArtifact;
   seed?: string;
   returnPath: string;
+  /**
+   * The sections actually withheld from guests, passed in rather than assumed.
+   *
+   * `locked_after` used to be the hardcoded string "none", set on 2026-08-01
+   * when the draft was briefly ungated. The gate came back seventeen days later
+   * (1fa06101, "gate the payoff") and this was never updated, so every gate
+   * impression since has reported that nothing was locked while build and moat
+   * were. That is the one property the 2026-08-01 commit kept specifically so
+   * the before/after stayed comparable in PostHog, and it has been reporting
+   * the wrong regime ever since. Deriving it from the real list means it cannot
+   * drift again the next time the gate moves.
+   */
+  lockedSections?: readonly string[];
   onBeforeAuthContinue?: () => void;
   onEmailLinkRequest?: (email: string) => Promise<void>;
   onDismiss?: () => void;
@@ -34,6 +47,7 @@ export function IcpUnlockGate({
   artifact,
   seed = "",
   returnPath,
+  lockedSections = [],
   onBeforeAuthContinue,
   onEmailLinkRequest,
   onDismiss,
@@ -43,15 +57,20 @@ export function IcpUnlockGate({
   const normalizedSeed = useMemo(() => normalizeIcpSeed(seed), [seed]);
 
 
+  const lockedAfter = useMemo(
+    () => (lockedSections.length === 0 ? "none" : [...lockedSections].sort().join("+")),
+    [lockedSections],
+  );
+
   useEffect(() => {
     trackICPUnlockGateShown({
       page_path: "/icp-builder",
       has_seed: Boolean(normalizedSeed),
       confidence: artifact.draftDocument.confidence.level,
       layout: "inline",
-      // Nothing is locked any more. Kept (rather than dropped) so the event
-      // shape stays stable and before/after is comparable in PostHog.
-      locked_after: "none",
+      // Reports the regime actually in force: "none" while ungated, otherwise
+      // the withheld sections, e.g. "build+moat". See lockedSections above.
+      locked_after: lockedAfter,
     });
     trackActivationFunnelEvent("activation_gate_shown", {
       entry_id: "icp_draft_unlock",
@@ -61,7 +80,7 @@ export function IcpUnlockGate({
       is_authenticated: false,
       return_path: returnPath,
     });
-  }, [artifact.draftDocument.confidence.level, normalizedSeed, returnPath]);
+  }, [artifact.draftDocument.confidence.level, normalizedSeed, returnPath, lockedAfter]);
 
   /**
    * One route to an account. The gate previously offered Google and email as

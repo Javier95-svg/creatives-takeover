@@ -109,6 +109,7 @@ export function IcpGuestResultView({
               artifact={artifact}
               seed={seed}
               returnPath={returnPath}
+              lockedSections={GUEST_LOCKED_SECTIONS}
               onBeforeAuthContinue={onBeforeAuthContinue}
               onEmailLinkRequest={onEmailLinkRequest}
             />
