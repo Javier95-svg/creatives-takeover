@@ -234,6 +234,49 @@ function extractMarketInsights(redditData: RedditDiscussion[]): {
   return insights;
 }
 
+/**
+ * How much a founder should trust this validation, graded by what corroborated it.
+ *
+ * The previous rule asked the model to rate its own confidence and then wrote that
+ * answer through untouched whenever Reddit returned nothing. Reddit now 403s every
+ * unauthenticated caller, so "nothing" is the only thing it returns, and the single
+ * validation this table has ever stored reads `confidence_level: "high"` next to
+ * `data_sources: [{ type: "ai_inference", reliability_score: 75 }]`. The founder is
+ * shown that as a green "high confidence" badge. A model grading its own guess is
+ * not evidence, and presenting it as high confidence is worse than returning
+ * nothing, because a founder acts on it.
+ *
+ * So the model's self-assessment is discarded. Confidence is a function of external
+ * corroboration only, and with no external source the answer is always 'low'. The
+ * old rule was wrong in the other direction too: it forced 'high' the moment a
+ * single Reddit post came back, so one stray thread outranked the model entirely.
+ *
+ * This mirrors the platform's own evidence ladder, where a self-report can never be
+ * promoted into a verified claim.
+ */
+function gradeValidationConfidence(corroboratingSourceCount: number): {
+  level: 'low' | 'medium' | 'high';
+  reliabilityScore: number;
+  caveat: string | null;
+} {
+  if (corroboratingSourceCount <= 0) {
+    return {
+      level: 'low',
+      reliabilityScore: 25,
+      caveat:
+        'No external source corroborated this. Every figure here is a language model estimate, not measured market data. Treat it as a hypothesis to test, not a finding.',
+    };
+  }
+  if (corroboratingSourceCount < 5) {
+    return {
+      level: 'medium',
+      reliabilityScore: 55,
+      caveat: `Partially corroborated by ${corroboratingSourceCount} external discussion(s). A small sample, so treat the direction as a signal and the numbers as estimates.`,
+    };
+  }
+  return { level: 'high', reliabilityScore: 80, caveat: null };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -539,6 +582,13 @@ Provide a comprehensive market validation analysis.`
       customer_segments: validationData.customer_segments || []
     };
 
+    // Grade the result by what actually corroborated it, never by the model's
+    // opinion of its own output. See gradeValidationConfidence above.
+    const confidence = gradeValidationConfidence(redditDiscussions.length);
+    if (confidence.caveat) {
+      console.warn(`Validation stored as ${confidence.level} confidence: ${confidence.caveat}`);
+    }
+
     // Store validation in database
     const { data: validationScore, error: dbError } = await supabase
       .from('market_validation_scores')
@@ -559,10 +609,16 @@ Provide a comprehensive market validation analysis.`
         differentiation_opportunities: validationData.differentiation_opportunities || [],
         customer_needs_data: customerNeedsData,
         reddit_discussions: redditDiscussions.length > 0 ? redditDiscussions : [],
-        confidence_level: redditDiscussions.length > 0 ? 'high' : validationData.confidence_level,
+        confidence_level: confidence.level,
         data_sources: [
-          { name: 'AI Analysis', type: 'ai_inference', reliability_score: 75 },
-          ...(redditDiscussions.length > 0 ? [{ name: 'Reddit Communities', type: 'api', reliability_score: 85, url: 'https://www.reddit.com' }] : [])
+          {
+            name: 'AI model inference',
+            type: 'ai_inference',
+            corroborated: redditDiscussions.length > 0,
+            reliability_score: confidence.reliabilityScore,
+            ...(confidence.caveat ? { caveat: confidence.caveat } : {}),
+          },
+          ...(redditDiscussions.length > 0 ? [{ name: 'Reddit Communities', type: 'api', corroborated: true, reliability_score: 85, url: 'https://www.reddit.com' }] : [])
         ]
       })
       .select()
@@ -579,6 +635,9 @@ Provide a comprehensive market validation analysis.`
       JSON.stringify({
         success: true,
         validation_score: validationScore,
+        // Surfaced at the top level so the client does not have to dig through
+        // data_sources to find out the numbers are uncorroborated model output.
+        evidence_caveat: confidence.caveat,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
