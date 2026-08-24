@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useMentorSaves } from "@/hooks/useMentorSaves";
 import { useCallback, useEffect, useRef } from "react";
 import { clearPendingValueCapture, persistPendingValueCapture, readPendingValueCapture } from "@/lib/valueCapture";
+import { useDiscoveryCallsFeature } from "@/hooks/useDiscoveryCallsFeature";
 
 interface MentorProfileProps {
   mentor: MentorProfileType;
@@ -31,6 +32,13 @@ export const MentorProfile = ({ mentor }: MentorProfileProps) => {
   const saveButton = buildSaveButtonState(mentor.id);
   const SaveButtonIcon = saveButton.icon;
   const hasMessagingAccount = Boolean(mentor.user_id?.trim());
+  /*
+   * See MentorCard: the per-mentor flag cannot see the edge feature switch, so
+   * this button could invite a booking the page then refused. Only an explicit
+   * `false` closes it.
+   */
+  const discoveryCallsEnabled = useDiscoveryCallsFeature();
+  const canRequestDiscoveryCall = Boolean(mentor.discovery_call_available) && discoveryCallsEnabled !== false;
   const hasConsumedPendingAction = useRef(false);
   
   // Truncate bio for display
@@ -518,11 +526,13 @@ export const MentorProfile = ({ mentor }: MentorProfileProps) => {
                 <div className="grid grid-cols-3 gap-2 pt-2">
                   <Button
                     size="default"
-                    variant={mentor.discovery_call_available ? "default" : "outline"}
-                    disabled={!mentor.discovery_call_available}
-                    title={mentor.discovery_call_available
+                    variant={canRequestDiscoveryCall ? "default" : "outline"}
+                    disabled={!canRequestDiscoveryCall}
+                    title={canRequestDiscoveryCall
                       ? "Request a free 30-minute Discovery Call"
-                      : "Discovery Calls are unavailable for this mentor"}
+                      : discoveryCallsEnabled === false
+                        ? "Discovery Calls are not open yet"
+                        : "Discovery Calls are unavailable for this mentor"}
                     onClick={() => navigate(`/mentorship/book/${mentor.id}`)}
                     className="h-10 min-w-0 px-1 text-xs transition-all duration-200 hover:shadow-md sm:px-3 sm:text-sm"
                   >

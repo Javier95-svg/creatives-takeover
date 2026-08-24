@@ -24,6 +24,15 @@ export interface DiscoveryCallQuotaStatus {
   canBookNow: boolean;
   totalCreditsAvailable: number;
   overageCreditCost: number;
+  /**
+   * Whether Discovery Calls are switched on at all, server-side.
+   *
+   * Optional because older deployments of the edge function do not send it. Treat
+   * `undefined` as unknown rather than as off: the browse surfaces only degrade
+   * their CTA on an explicit `false`, so an outdated function or a signed-out
+   * visitor keeps the normal booking path.
+   */
+  featureEnabled?: boolean;
   [key: string]: unknown;
 }
 

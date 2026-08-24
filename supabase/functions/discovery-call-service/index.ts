@@ -65,7 +65,23 @@ serve(async (req) => {
 
   if (action === "getQuotaStatus") {
     const { data, error } = await admin.rpc("get_discovery_call_quota_status", { p_user_id: user.id });
-    return rpcResponse(data, error);
+    /*
+     * Report the feature flag alongside the quota.
+     *
+     * Whether Discovery Calls are switched on lives in an edge env var
+     * (DISCOVERY_CALL_REQUESTS_V2_ENABLED), while the per-mentor bookable flag
+     * comes from a database function that cannot see it. The mentor list and
+     * profile only read the database flag, so with the feature off they render
+     * an enabled "Request Discovery Call" button that lands on a page refusing
+     * the booking. Four founders hit that dead end after the V2 rollout, one of
+     * them reloading the same booking page seven times.
+     *
+     * getAvailability already returns featureEnabled, but it is per-mentor and
+     * far too heavy for a list. Attaching it here gives the browse surfaces one
+     * cheap, cacheable source of truth.
+     */
+    if (error) return rpcResponse(data, error);
+    return rpcResponse({ ...(data ?? {}), featureEnabled: isDiscoveryCallV2Enabled() }, null);
   }
 
   if (action === "getAvailability") {

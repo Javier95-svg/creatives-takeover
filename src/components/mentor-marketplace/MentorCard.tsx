@@ -10,6 +10,7 @@ import { getCountryFlag } from "@/utils/countryFlags";
 import { useMessaging } from "@/hooks/useMessaging";
 import { toast } from "sonner";
 import { generateMentorSlug } from "@/utils/mentorSlug";
+import { useDiscoveryCallsFeature } from "@/hooks/useDiscoveryCallsFeature";
 import { useMentorSaves } from "@/hooks/useMentorSaves";
 import { clearPendingValueCapture, persistPendingValueCapture, readPendingValueCapture } from "@/lib/valueCapture";
 import { useMemo } from "react";
@@ -32,6 +33,15 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
   const saveButton = buildSaveButtonState(mentor.id);
   const SaveButtonIcon = saveButton.icon;
   const hasMessagingAccount = Boolean(mentor.user_id?.trim());
+  /*
+   * `mentor.discovery_call_available` only knows the per-mentor half: active,
+   * enabled, and holding a valid notification email. Whether the feature is on
+   * at all is an edge env var the database function cannot see, so this button
+   * could sit enabled while the booking page refused every request. Only an
+   * explicit `false` closes it; unknown keeps the existing path.
+   */
+  const discoveryCallsEnabled = useDiscoveryCallsFeature();
+  const canRequestDiscoveryCall = Boolean(mentor.discovery_call_available) && discoveryCallsEnabled !== false;
   const hasConsumedPendingAction = useRef(false);
 
   // Truncate bio if too long
@@ -508,7 +518,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
 
             {/* Action Buttons */}
             <div className="grid grid-cols-3 gap-2 pt-2">
-              {mentor.discovery_call_available ? (
+              {canRequestDiscoveryCall ? (
                 <Button
                   asChild
                   size="default"
@@ -524,7 +534,9 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
                   size="default"
                   variant="outline"
                   disabled
-                  title="Discovery Calls are unavailable for this mentor"
+                  title={discoveryCallsEnabled === false
+                    ? "Discovery Calls are not open yet"
+                    : "Discovery Calls are unavailable for this mentor"}
                   className="h-10 min-w-0 px-1 text-xs sm:px-3 sm:text-sm"
                 >
                   <CalendarClock className="hidden h-4 w-4 shrink-0 sm:block" />
