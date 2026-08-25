@@ -26,6 +26,7 @@ export interface Day1Profile {
   quiz_completed: boolean | null;
   quiz_current_stage: string | null;
   user_preferences?: Json | null;
+  sidebar_preferences?: Json | null;
 }
 
 interface Day1WelcomeProps {

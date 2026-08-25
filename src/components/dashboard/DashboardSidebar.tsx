@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useMemo } from 'react';
 import { TaskCountContext } from './TaskCountContext';
 import {
   BookmarkCheck,
@@ -45,7 +45,8 @@ import {
 } from '@/config/planPermissions';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useDashboardNavigation } from '@/contexts/DashboardNavigationContext';
-import { useBizMapProgress } from '@/hooks/useBizMapProgress';
+import { useDashboardJourney } from '@/contexts/DashboardDataContext';
+import { useDashboardBootstrapProfile } from '@/contexts/DashboardBootstrapContext';
 import { cn } from '@/lib/utils';
 import { groupToolItemsByStage } from '@/lib/sidebarJourneyGroups';
 import { shouldReduceOnboardingNav } from '@/lib/onboardingPath';
@@ -194,6 +195,7 @@ export const DashboardSidebarContent = ({ currentStage }: { currentStage: BizMap
   const navigate = useNavigate();
   const { setOpenMobile, isMobile } = useSidebar();
   const { user, loading: authLoading } = useAuth();
+  const bootstrapProfile = useDashboardBootstrapProfile();
   // Tiers are pricing data the sidebar never reads; skipping them keeps
   // `subscriptionLoading` tied to the plan lookup that actually gates entries.
   const { subscriptionData, loading: subscriptionLoading } = useSubscription({ fetchTiers: false });
@@ -208,9 +210,22 @@ export const DashboardSidebarContent = ({ currentStage }: { currentStage: BizMap
 
   // Read the cache during render (not in an effect) so a remount paints the
   // known-good panel on the first frame rather than one frame later.
+  const bootstrapPersonalization = useMemo(() => user && bootstrapProfile
+    ? ({
+        preferences: bootstrapProfile.sidebar_preferences
+          ? normalizePreferences(bootstrapProfile.sidebar_preferences as LegacySidebarPreferences)
+          : defaultSidebarPreferences,
+        reduceOnboardingNav: shouldReduceOnboardingNav(
+          { onboarding_completed: bootstrapProfile.onboarding_completed, user_preferences: bootstrapProfile.user_preferences },
+          user.created_at,
+        ),
+        activationIntent: getActivationPreferenceState(bootstrapProfile.user_preferences).activationIntent,
+      } satisfies SidebarPersonalization)
+    : null, [bootstrapProfile, user]);
   const personalization =
     (loadedPersonalization && loadedPersonalization.userId === userId ? loadedPersonalization.value : null)
-    ?? (userId ? sidebarPersonalizationCache.get(userId) ?? null : null);
+    ?? (userId ? sidebarPersonalizationCache.get(userId) ?? null : null)
+    ?? bootstrapPersonalization;
 
   const sidebarPreferences = personalization?.preferences ?? defaultSidebarPreferences;
   const reduceOnboardingNav = personalization?.reduceOnboardingNav ?? false;
@@ -226,41 +241,19 @@ export const DashboardSidebarContent = ({ currentStage }: { currentStage: BizMap
   const entriesResolved = isPersonalized && isPlanKnown;
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !bootstrapPersonalization) return;
     let isCancelled = false;
     const activeUserId = user.id;
 
-    const loadPreferences = async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('sidebar_preferences, user_preferences, onboarding_completed')
-        .eq('id', activeUserId)
-        .single();
-
-      if (isCancelled) return;
-
-      const activationPreferenceState = getActivationPreferenceState(data?.user_preferences);
-      const value: SidebarPersonalization = {
-        preferences: data?.sidebar_preferences
-          ? normalizePreferences(data.sidebar_preferences as LegacySidebarPreferences)
-          : defaultSidebarPreferences,
-        reduceOnboardingNav: shouldReduceOnboardingNav(
-          { onboarding_completed: data?.onboarding_completed, user_preferences: data?.user_preferences },
-          user.created_at,
-        ),
-        activationIntent: activationPreferenceState.activationIntent,
-      };
-
-      sidebarPersonalizationCache.set(activeUserId, value);
-      setLoadedPersonalization({ userId: activeUserId, value });
-    };
-
-    void loadPreferences();
+    if (!isCancelled) {
+      sidebarPersonalizationCache.set(activeUserId, bootstrapPersonalization);
+      setLoadedPersonalization({ userId: activeUserId, value: bootstrapPersonalization });
+    }
 
     return () => {
       isCancelled = true;
     };
-  }, [user]);
+  }, [bootstrapPersonalization, user]);
 
   const handleNavClick = () => {
     if (isMobile) {
@@ -541,9 +534,9 @@ export const DashboardSidebarContent = ({ currentStage }: { currentStage: BizMap
 };
 
 export const DashboardSidebar = () => {
-  const { currentStage, loading } = useBizMapProgress();
-  // `currentStage` falls back to IDENTITY while progress loads, which would
-  // highlight the first journey group on every mount and then jump to the real
-  // stage. Withhold the highlight until the stage is actually known.
-  return <DashboardSidebarContent currentStage={loading ? null : currentStage} />;
+  const { journey, isLoading } = useDashboardJourney();
+  const currentStage = journey?.currentStage as BizMapStage | undefined;
+  // Keep the group neutral until the snapshot is settled so the sidebar does
+  // not flash the first stage and then correct itself.
+  return <DashboardSidebarContent currentStage={isLoading || !currentStage ? null : currentStage} />;
 };

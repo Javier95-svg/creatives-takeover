@@ -1,22 +1,15 @@
-import { Suspense, lazy, useEffect, type ReactNode } from "react";
-import { MotionConfig } from "framer-motion";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Suspense, lazy, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { UserProvider } from "@/contexts/UserContext";
-import { ProgressProvider } from "@/contexts/ProgressContext";
 import { UpgradePromptProvider } from "@/contexts/UpgradePromptContext";
-import { CreditGateProvider } from "@/contexts/CreditGateContext";
-import CreditStatusBanner from "@/components/CreditStatusBanner";
 import MobileOptimization from "@/components/MobileOptimization";
 import VersionUpdateBanner from "@/components/VersionUpdateBanner";
 import { useVersionCheck } from "@/hooks/useVersionCheck";
 import { shouldShowPulseForPath } from "@/config/pulseRoutes";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
+import { RoutePerformanceTelemetry } from '@/components/performance/RoutePerformanceTelemetry';
 import ScrollToTop from "./components/ScrollToTop";
 import AdminRoute from "@/components/AdminRoute";
 import { useInteractionTelemetry } from "@/hooks/useInteractionTelemetry";
@@ -50,6 +43,8 @@ const Analytics = lazy(() =>
     default: module.Analytics,
   }))
 );
+const CreditGateRoute = lazy(() => import('@/components/CreditGateRoute'));
+const AppOverlays = lazy(() => import('@/components/AppOverlays'));
 
 const Index = lazy(() => import("./pages/Index"));
 const About = lazy(() => import("./pages/About"));
@@ -251,37 +246,27 @@ const DeferredGlobalFeatures = () => {
   );
 };
 
-const ToolRouteWithCreditGate = ({ children }: { children: ReactNode }) => (
-  <>
-    <CreditStatusBanner />
-    {children}
-  </>
-);
+const ToolRouteWithCreditGate = CreditGateRoute;
 
 function App() {
   const { hasUpdate, refreshApp } = useVersionCheck();
 
   return (
     <ErrorBoundary>
-      <MotionConfig reducedMotion="user">
-        <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <UserProvider>
-            <ProgressProvider>
-              <TooltipProvider>
                 {hasUpdate && <VersionUpdateBanner onRefresh={refreshApp} />}
                 <MobileOptimization />
-                <Toaster />
-                <Sonner />
+                <Suspense fallback={null}><AppOverlays /></Suspense>
                 <BrowserRouter>
                   <Suspense fallback={<div style={{ minHeight: '100vh', background: '#1a1a2e' }} />}>
                     <ScrollToTop />
                     <InteractionTelemetryBridge />
                     <EngagementSessionBridge />
                     <ReferralCaptureBridge />
+                    <RoutePerformanceTelemetry />
                     <DeferredGlobalFeatures />
                     <UpgradePromptProvider>
-                      <CreditGateProvider>
                         <Suspense fallback={null}>
                           <PulseWidgetWrapper />
                         </Suspense>
@@ -472,16 +457,11 @@ function App() {
                         <Suspense fallback={null}>
                           <MobileBottomNav />
                         </Suspense>
-                      </CreditGateProvider>
                     </UpgradePromptProvider>
                   </Suspense>
                 </BrowserRouter>
-              </TooltipProvider>
-            </ProgressProvider>
-          </UserProvider>
         </AuthProvider>
-        </QueryClientProvider>
-      </MotionConfig>
+      </QueryClientProvider>
       <Suspense fallback={null}>
         <Analytics />
       </Suspense>

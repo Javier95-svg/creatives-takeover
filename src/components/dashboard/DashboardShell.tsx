@@ -10,10 +10,10 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { DashboardNavigationProvider } from '@/contexts/DashboardNavigationContext';
 import { DashboardDataProvider, useDashboardData } from '@/contexts/DashboardDataContext';
+import { DashboardBootstrapProvider } from '@/contexts/DashboardBootstrapContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useFeatureGating } from '@/hooks/useFeatureGating';
-import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { useSubscription } from '@/hooks/useSubscription';
 import { normalizePlan, resolveDashboardMode } from '@/config/planPermissions';
 import { shouldRedirectToGuidedOnboarding } from '@/lib/guidedOnboarding';
@@ -29,10 +29,7 @@ import { DashboardStreakChip } from './DashboardStreakChip';
 import { DashboardTabsHost } from './DashboardTabsHost';
 import { DashboardMetricsContext, TaskCountContext, type DashboardWeeklyMetrics } from './TaskCountContext';
 import { ModeToggle, type DashboardMode } from './modes/ModeToggle';
-import { useFeatureFlagEnabled } from '@/hooks/usePosthogFeatureFlag';
-import { captureEvent } from '@/lib/analytics';
 import { getActivationPreferenceState } from '@/lib/activationState';
-import type { DashboardSnapshotV1 } from '@/types/dashboardSnapshot';
 
 const DASHBOARD_MAX_WIDTH = 'max-w-7xl';
 const completedDashboardProfileCache = new Map<string, Day1Profile>();
@@ -122,50 +119,24 @@ function DashboardFrameContent({
   );
 }
 
-function LegacyDashboardFrame({ shadowSnapshot }: { shadowSnapshot?: DashboardSnapshotV1 | null }) {
-  const dashboardMetrics = useDashboardMetrics();
-  const incompleteTaskCount = Math.max(dashboardMetrics.totalTasksToday - dashboardMetrics.tasksCompletedToday, 0);
-  const weeklyMetrics = useMemo<DashboardWeeklyMetrics>(
-    () => ({
-      weeklyMissionGoal: dashboardMetrics.weeklyMissionGoal,
-      weeklyMissionProgress: dashboardMetrics.weeklyMissionProgress,
-      tasksCompletedThisWeek: dashboardMetrics.tasksCompletedThisWeek,
-      totalTasksThisWeek: dashboardMetrics.totalTasksThisWeek,
-    }),
-    [dashboardMetrics],
-  );
-
-  useEffect(() => {
-    if (!shadowSnapshot || dashboardMetrics.isLoading) return;
-    const snapshotOpenToday = shadowSnapshot.focus.dueToday.length;
-    captureEvent('dashboard_snapshot_shadow_compared', {
-      contract_version: shadowSnapshot.version,
-      status: snapshotOpenToday === incompleteTaskCount ? 'match' : 'mismatch',
-      legacy_open_today: incompleteTaskCount,
-      snapshot_open_today: snapshotOpenToday,
-      snapshot_overdue: shadowSnapshot.focus.overdueCount,
-    });
-  }, [dashboardMetrics.isLoading, incompleteTaskCount, shadowSnapshot]);
-
-  return (
-    <DashboardFrameContent
-      incompleteTaskCount={incompleteTaskCount}
-      weeklyMetrics={weeklyMetrics}
-      useLegacyStreak
-    />
-  );
-}
-
-function DashboardFrameWithData({ enableShadowComparison }: { enableShadowComparison: boolean }) {
+function DashboardFrameWithData() {
   const { snapshot } = useDashboardData();
-  return <LegacyDashboardFrame shadowSnapshot={enableShadowComparison ? snapshot : null} />;
+  const incompleteTaskCount = snapshot?.focus.dueToday.filter((task) => !task.completed).length ?? 0;
+  const weeklyMission = snapshot?.focus.weeklyMission ?? null;
+  const weeklyMetrics: DashboardWeeklyMetrics = {
+    weeklyMissionGoal: weeklyMission?.title ?? null,
+    weeklyMissionProgress: weeklyMission?.progress ?? null,
+    tasksCompletedThisWeek: 0,
+    totalTasksThisWeek: 0,
+  };
+
+  return <DashboardFrameContent incompleteTaskCount={incompleteTaskCount} weeklyMetrics={weeklyMetrics} />;
 }
 
 function DashboardFrame() {
-  const shadowFlag = useFeatureFlagEnabled('dashboard-command-center-shadow');
   return (
     <DashboardDataProvider>
-      <DashboardFrameWithData enableShadowComparison={Boolean(shadowFlag)} />
+      <DashboardFrameWithData />
     </DashboardDataProvider>
   );
 }
@@ -206,7 +177,7 @@ export function DashboardShell() {
 
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('dashboard_bootstrap_source, onboarding_completed, onboarding_steps_completed, quiz_completed, quiz_current_stage, quiz_biggest_challenge, user_preferences')
+        .select('dashboard_bootstrap_source, onboarding_completed, onboarding_steps_completed, quiz_completed, quiz_current_stage, quiz_biggest_challenge, user_preferences, sidebar_preferences')
         .eq('id', userId)
         .single();
 
@@ -309,7 +280,9 @@ export function DashboardShell() {
 
   return (
     <ErrorBoundary>
-      <DashboardFrame />
+      <DashboardBootstrapProvider profile={day1Profile}>
+        <DashboardFrame />
+      </DashboardBootstrapProvider>
     </ErrorBoundary>
   );
 }

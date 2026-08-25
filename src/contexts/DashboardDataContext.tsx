@@ -8,7 +8,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { isDashboardAiRankingEnabled } from '@/lib/dashboardRollout';
 import { captureEvent } from '@/lib/analytics';
 import { isDashboardSnapshot, type DashboardAction, type DashboardSnapshot } from '@/types/dashboardSnapshot';
-import { useFounderCycle } from '@/hooks/useFounderCycle';
 import {
   recommendationDecisionKey,
   recordRecommendationDecision,
@@ -59,17 +58,6 @@ function uniqueCandidates(snapshot: DashboardSnapshot | null): DashboardAction[]
     if (candidate) byKey.set(candidate.key, candidate);
   });
   return [...byKey.values()].slice(0, 10);
-}
-
-function isCustomerUrgent(action: DashboardAction | null | undefined) {
-  if (!action) return false;
-  const reasonText = action.reasonCodes.join(' ').toLowerCase();
-  return action.kind === 'human_reply'
-    || (
-      action.urgency === 'high'
-      && ['messages', 'pmf_lab', 'gtm_strategist'].includes(action.toolKey)
-      && /(reply|follow.?up|interview|meeting|overdue|customer)/.test(reasonText)
-    );
 }
 
 function candidateHash(candidates: DashboardAction[], snapshot: DashboardSnapshot | null) {
@@ -129,7 +117,6 @@ function isMissingSnapshotFunction(
 
 export function DashboardDataProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const founderCycle = useFounderCycle();
   const queryClient = useQueryClient();
   const aiRankingFlag = useFeatureFlagEnabled('dashboard-ai-ranking');
   const socialRecommendationsFlag = useFeatureFlagEnabled('dashboard-social-recommendations');
@@ -175,53 +162,19 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
         duration_ms: Math.round(performance.now() - startedAt),
         payload_bytes: JSON.stringify(data).length,
         contract_version: data.version,
+        request_source: 'command_center',
       });
       return data;
     },
   });
-
-  const cyclePrimary = useMemo<DashboardAction | null>(() => {
-    const action = founderCycle.snapshot?.primaryAction;
-    if (!founderCycle.showCycle || !action) return null;
-    const routeTool = action.route.startsWith('/pmf-lab')
-      ? 'pmf_lab'
-      : action.route.startsWith('/go-to-market')
-        ? 'gtm_strategist'
-        : action.route.startsWith('/traction-engine')
-          ? 'traction_engine'
-          : action.route.startsWith('/core-metrics')
-            ? 'core_metrics'
-          : action.route.startsWith('/icp-builder')
-            ? 'icp_builder'
-            : 'founder_cycle';
-    return {
-      key: `cycle:${action.key}`,
-      kind: 'journey',
-      toolKey: routeTool,
-      entityId: null,
-      title: action.title,
-      description: `${action.description} Expected evidence: ${action.expectedEvidence.replaceAll('_', ' ')}.`,
-      urgency: 'high',
-      reasonCodes: ['external_customer_evidence', action.reason],
-      estimatedMinutes: 20,
-      dueAt: null,
-      actionKind: 'open_tool',
-    };
-  }, [founderCycle.showCycle, founderCycle.snapshot?.primaryAction]);
 
   const candidates = useMemo(() => {
     const snapshotCandidates = uniqueCandidates(snapshotQuery.data ?? null);
     const socialCandidates = socialRecommendationsFlag === true && snapshotQuery.data?.version === 3
       ? snapshotQuery.data.social.candidates
       : [];
-    const baseCandidates = !cyclePrimary || isCustomerUrgent(snapshotQuery.data?.focus.primaryAction)
-      ? snapshotCandidates
-      : [
-          cyclePrimary,
-          ...snapshotCandidates.filter((candidate) => candidate.key !== cyclePrimary.key),
-        ].slice(0, 10);
-    return buildDashboardCandidateQueue(baseCandidates, socialCandidates);
-  }, [cyclePrimary, snapshotQuery.data, socialRecommendationsFlag]);
+    return buildDashboardCandidateQueue(snapshotCandidates, socialCandidates);
+  }, [snapshotQuery.data, socialRecommendationsFlag]);
   const rankableCandidates = candidates;
   const snapshotHash = useMemo(
     () => candidateHash(rankableCandidates, snapshotQuery.data ?? null),
@@ -231,7 +184,9 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
   const rankingSnapshotHash = `${snapshotHash}:${aiRankingEnabled ? 'ai' : 'rules'}`;
   const rankingQuery = useQuery({
     queryKey: ['dashboard-action-ranking', userId, rankingSnapshotHash],
-    enabled: Boolean(userId) && rankableCandidates.length > 0,
+    // The snapshot order is the deterministic baseline. Do not make an
+    // additional edge-function request unless the experiment is explicitly on.
+    enabled: Boolean(userId) && aiRankingEnabled && rankableCandidates.length > 0,
     staleTime: 24 * 60 * 60_000,
     retry: false,
     queryFn: async (): Promise<RankingResult | null> => {
@@ -322,9 +277,7 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
     const deterministicKey = candidates[0]?.key ?? snapshotQuery.data.focus.primaryAction?.key ?? effectivePrimary.key;
     const policyVersion = selectedByRanker
       ? rankingQuery.data?.policyVersion ?? 'collective_v1'
-      : effectivePrimary.key === cyclePrimary?.key
-        ? 'founder_cycle_v1'
-        : 'deterministic_v1';
+      : 'deterministic_v1';
     const assignment: RecommendationAssignment = selectedByRanker
       ? rankingQuery.data?.assignment ?? 'learned'
       : 'baseline';
@@ -352,7 +305,6 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
     };
   }, [
     candidates,
-    cyclePrimary?.key,
     effectivePrimary,
     rankingQuery.data,
     rankingSnapshotHash,

@@ -29,9 +29,11 @@ const totals = assets.reduce(
 );
 
 const budgets = {
-  initialJsRequests: 10,
-  initialGzipBytes: 390 * 1024,
-  entryRawBytes: 180 * 1024,
+  // Keep the shell below the audited 328KB gzip baseline. New dependencies
+  // must earn their way into the first-load path instead of silently growing it.
+  initialJsRequests: 6,
+  initialGzipBytes: 340 * 1024,
+  entryRawBytes: 140 * 1024,
 };
 
 const failures = [];

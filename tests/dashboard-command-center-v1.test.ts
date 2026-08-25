@@ -91,7 +91,7 @@ test('client uses one snapshot query and a single activity invalidation stream',
   assert.match(source, /invalidateQueries/);
 });
 
-test('canonical command center stays visible while snapshot validation remains shadow-only', () => {
+test('canonical command center uses the snapshot without a legacy shadow data path', () => {
   const dashboard = read('../src/pages/Dashboard.tsx');
   const shell = read('../src/components/dashboard/DashboardShell.tsx');
   const provider = read('../src/contexts/DashboardDataContext.tsx');
@@ -100,8 +100,8 @@ test('canonical command center stays visible while snapshot validation remains s
 
   assert.doesNotMatch(dashboard, /ExecutionDashboardHome|dashboard-command-center-v2|isExecutionDashboardEnabled/);
   assert.doesNotMatch(shell, /dashboard-command-center-v2|founder-execution-cycle-v1|SnapshotDashboardFrame/);
-  assert.match(shell, /dashboard-command-center-shadow/);
-  assert.match(shell, /dashboard_snapshot_shadow_compared/);
+  assert.doesNotMatch(shell, /dashboard-command-center-shadow|dashboard_snapshot_shadow_compared/);
+  assert.doesNotMatch(provider, /useFounderCycle|founder_cycle/);
   assert.match(provider, /dashboard-ai-ranking/);
   assert.doesNotMatch(rollout, /isExecutionDashboardEnabled|VITE_DASHBOARD_V2_ROLLOUT_PERCENT/);
   assert.doesNotMatch(envExample, /VITE_DASHBOARD_V2_ROLLOUT_PERCENT/);

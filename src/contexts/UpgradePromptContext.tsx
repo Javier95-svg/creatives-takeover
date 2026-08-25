@@ -1,7 +1,7 @@
-import { createContext, useCallback, useContext, useState } from "react";
-import UpgradePromptDialog, {
-  UpgradePromptDialogProps,
-} from "@/components/UpgradePromptDialog";
+import { createContext, lazy, Suspense, useCallback, useContext, useState } from "react";
+import type { UpgradePromptDialogProps } from "@/components/UpgradePromptDialog";
+
+const UpgradePromptDialog = lazy(() => import('@/components/UpgradePromptDialog'));
 
 type UpgradePromptOptions = Omit<UpgradePromptDialogProps, "open" | "onOpenChange">;
 
@@ -28,15 +28,19 @@ export const UpgradePromptProvider = ({ children }: { children: React.ReactNode 
   return (
     <UpgradePromptContext.Provider value={{ openUpgradePrompt, closeUpgradePrompt }}>
       {children}
-      <UpgradePromptDialog
-        open={Boolean(prompt)}
-        onOpenChange={(open) => {
-          if (!open) {
-            setPrompt(null);
-          }
-        }}
-        {...(prompt || {})}
-      />
+      {prompt ? (
+        <Suspense fallback={null}>
+          <UpgradePromptDialog
+            open
+            onOpenChange={(open) => {
+              if (!open) {
+                setPrompt(null);
+              }
+            }}
+            {...prompt}
+          />
+        </Suspense>
+      ) : null}
     </UpgradePromptContext.Provider>
   );
 };

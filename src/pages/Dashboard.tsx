@@ -1,10 +1,10 @@
 import { Helmet } from 'react-helmet-async';
 import { useSearchParams } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import StartupHomeCommandCenter from '@/components/dashboard/StartupHomeCommandCenter';
-import DashboardTodayCockpit from '@/components/dashboard/DashboardTodayCockpit';
+import DashboardTodayCockpit from '@/components/dashboard/DashboardTodaySnapshot';
 import PlatformUpdates from '@/components/dashboard/PlatformUpdates';
 import FounderJourneyPanel from '@/components/dashboard/FounderJourneyPanel';
 import DashboardFocusEditor from '@/components/dashboard/DashboardFocusEditor';
@@ -17,7 +17,7 @@ import { ExitIntentModal } from '@/components/ExitIntentModal';
 import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
-import { supabase } from '@/integrations/supabase/client';
+import { useDashboardBootstrapProfile } from '@/contexts/DashboardBootstrapContext';
 import { trackDashboardFounderSignalsExpanded } from '@/lib/analytics';
 import {
   getActivationPreferenceState,
@@ -50,108 +50,61 @@ const Dashboard = () => {
   const fromIcpBuilder = searchParams.get('from') === 'icp_builder';
   const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
   const daysSinceSignup = getDaysSinceSignup(userCreatedAt);
-  const [activationState, setActivationState] = useState<DashboardActivationState>({
-    loading: true,
-    showFirstResultBanner: false,
-    activationIntent: null,
-    continueUrl: null,
-    firstArtifactLabel: null,
-    firstArtifactType: null,
-    onboardingSessionId: null,
-    flowVersion: null,
-    rolloutVariant: null,
-  });
+  const profile = useDashboardBootstrapProfile();
+  const activationState = useMemo<DashboardActivationState>(() => {
+    if (!profile) {
+      return {
+        loading: Boolean(userId), showFirstResultBanner: false, activationIntent: null,
+        continueUrl: null, firstArtifactLabel: null, firstArtifactType: null,
+        onboardingSessionId: null, flowVersion: null, rolloutVariant: null,
+      };
+    }
+    const preferenceState = getActivationPreferenceState(profile.user_preferences);
+    const preferences = profile.user_preferences && typeof profile.user_preferences === 'object' && !Array.isArray(profile.user_preferences)
+      ? profile.user_preferences as Record<string, unknown>
+      : {};
+    return {
+      loading: false,
+      showFirstResultBanner: shouldShowFirstResultMode({
+        onboardingCompleted: profile.onboarding_completed,
+        userPreferences: profile.user_preferences,
+      }),
+      activationIntent: preferenceState.activationIntent,
+      continueUrl: preferenceState.firstArtifactResumeUrl,
+      firstArtifactLabel: preferenceState.firstArtifactLabel,
+      firstArtifactType: preferenceState.firstArtifactType,
+      onboardingSessionId: typeof preferences.onboardingSessionId === 'string' ? preferences.onboardingSessionId : null,
+      flowVersion: typeof preferences.onboardingFlowVersion === 'string' ? preferences.onboardingFlowVersion : null,
+      rolloutVariant: typeof preferences.onboardingRolloutVariant === 'string' ? preferences.onboardingRolloutVariant : null,
+    };
+  }, [profile, userId]);
+  const showFirstResultBanner = activationState.showFirstResultBanner;
 
   useEffect(() => {
-    let cancelled = false;
-
-    const loadActivationState = async () => {
-      if (!userId) {
-        setActivationState({
-          loading: false,
-          showFirstResultBanner: false,
-          activationIntent: null,
-          continueUrl: null,
-          firstArtifactLabel: null,
-          firstArtifactType: null,
-          onboardingSessionId: null,
-          flowVersion: null,
-          rolloutVariant: null,
-        });
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('onboarding_completed, user_preferences')
-        .eq('id', userId)
-        .maybeSingle();
-
-      if (cancelled) return;
-
-      if (error) {
-        setActivationState({
-          loading: false,
-          showFirstResultBanner: false,
-          activationIntent: null,
-          continueUrl: null,
-          firstArtifactLabel: null,
-          firstArtifactType: null,
-          onboardingSessionId: null,
-          flowVersion: null,
-          rolloutVariant: null,
-        });
-        return;
-      }
-
-      const preferenceState = getActivationPreferenceState(data?.user_preferences);
-      const preferences = data?.user_preferences && typeof data.user_preferences === 'object' && !Array.isArray(data.user_preferences)
-        ? data.user_preferences as Record<string, unknown>
-        : {};
-      const showFirstResultBanner = shouldShowFirstResultMode({
-        onboardingCompleted: data?.onboarding_completed,
-        userPreferences: data?.user_preferences,
-      });
-
-      setActivationState({
-        loading: false,
-        showFirstResultBanner,
-        activationIntent: preferenceState.activationIntent,
-        // Only surface a resume card when a real artifact deep link exists.
-        continueUrl: preferenceState.firstArtifactResumeUrl,
-        firstArtifactLabel: preferenceState.firstArtifactLabel,
-        firstArtifactType: preferenceState.firstArtifactType,
-        onboardingSessionId: typeof preferences.onboardingSessionId === 'string' ? preferences.onboardingSessionId : null,
-        flowVersion: typeof preferences.onboardingFlowVersion === 'string' ? preferences.onboardingFlowVersion : null,
-        rolloutVariant: typeof preferences.onboardingRolloutVariant === 'string' ? preferences.onboardingRolloutVariant : null,
-      });
-
-      void trackRetentionEvent('dashboard_viewed', {
-        user_id: userId,
-        activation_intent: preferenceState.activationIntent,
-        source: 'dashboard',
-        plan: currentPlan,
-        days_since_signup: getDaysSinceSignup(userCreatedAt),
-        first_artifact_type: preferenceState.firstArtifactType,
-        first_result_mode: showFirstResultBanner,
-        onboarding_session_id: preferences.onboardingSessionId ?? null,
-        flow_version: preferences.onboardingFlowVersion ?? null,
-        rollout_variant: preferences.onboardingRolloutVariant ?? null,
-      });
-      trackActivationReturnMilestones({
-        userId,
-        userCreatedAt,
-        activationIntent: preferenceState.activationIntent,
-        source: 'dashboard',
-        plan: currentPlan,
-      });
-    };
-
-    void loadActivationState();
-
-    return () => {
-      cancelled = true;
-    };
+    if (!userId || activationState.loading) return;
+    void trackRetentionEvent('dashboard_viewed', {
+      user_id: userId,
+      activation_intent: activationState.activationIntent,
+      source: 'dashboard',
+      plan: currentPlan,
+      days_since_signup: getDaysSinceSignup(userCreatedAt),
+      first_artifact_type: activationState.firstArtifactType,
+      first_result_mode: showFirstResultBanner,
+      onboarding_session_id: activationState.onboardingSessionId,
+      flow_version: activationState.flowVersion,
+      rollout_variant: activationState.rolloutVariant,
+    });
+    trackActivationReturnMilestones({
+      userId,
+      userCreatedAt,
+      activationIntent: activationState.activationIntent,
+      source: 'dashboard',
+      plan: currentPlan,
+    });
+  // DashboardShell resolves the bootstrap profile before this component mounts.
+  // Keep analytics stable through auth/session refreshes without retriggering on
+  // unrelated object identity changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPlan, userCreatedAt, userId]);
 
   const dismissIcpBanner = () => {
@@ -191,7 +144,7 @@ const Dashboard = () => {
           </button>
         </div>
       ) : null}
-      {!activationState.loading && activationState.showFirstResultBanner && activationState.activationIntent ? (
+      {!activationState.loading && showFirstResultBanner && activationState.activationIntent ? (
         <FirstResultActivationCard
           activationIntent={activationState.activationIntent}
           userId={user?.id}
