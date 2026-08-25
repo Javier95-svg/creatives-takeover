@@ -1,17 +1,13 @@
 import type { CSSProperties } from "react";
 import {
   ArrowUpRight,
-  Boxes,
   FlaskConical,
-  GraduationCap,
-  Handshake,
   LayoutDashboard,
   Lightbulb,
   Map,
   Rocket,
   Target,
   Users,
-  Code,
   type LucideIcon,
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -35,6 +31,7 @@ type JourneyAction = {
   title: string;
   outcome: string;
   description: string;
+  cta: string;
   icon: LucideIcon;
   accentName: string;
   accent: string;
@@ -55,52 +52,52 @@ type JourneyAction = {
 
 const journeySteps: JourneyStep[] = [
   {
-    phase: "The Starting Point",
-    challenge: "Scattered ideas without a clear direction",
-    pathway: "BizMap AI guides you from scattered thoughts to a strategic plan—clarifying your market, competitors, and next steps in one conversation.",
-    icon: Lightbulb,
+    phase: "Customer Clarity",
+    challenge: "Know exactly who you're building for",
+    pathway: "Turn a broad audience into one specific buyer, urgent problem, buying trigger, and clear reason to choose you.",
+    icon: Target,
     accentColor: "blue",
   },
   {
-    phase: "Finding Direction",
-    challenge: "Aligning your product with a genuine market need",
-    pathway: "The Dashboard breaks down your vision into weekly sprints, tracks progress, and keeps you accountable—transforming busyness into real momentum.",
-    icon: Target,
+    phase: "Prove Value",
+    challenge: "See whether customers care before you build",
+    pathway: "Transform your idea into an interactive proof page that explains the problem, demonstrates your solution, and captures real customer interest.",
+    icon: Lightbulb,
     accentColor: "green",
   },
   {
-    phase: "Lack of Experience",
-    challenge: "Navigating Uncertainty and Decision-Making",
-    pathway: "Our Community connects you with mentors and fellow founders who've navigated these exact challenges—offering guidance, feedback, and genuine support.",
-    icon: Users,
+    phase: "Demand Validation",
+    challenge: "Replace opinions with customer evidence",
+    pathway: "Bring customer conversations, objections, and behavioral signals together to make a grounded Build, Narrow, Pivot, or Stop decision.",
+    icon: FlaskConical,
     accentColor: "red",
   },
   {
-    phase: "Working Smartly",
-    challenge: "Task prioritization and resource management",
-    pathway: "BizMap AI helps define your ICP, select the right channels, and craft a go-to-market strategy based on proven frameworks—no more guessing.",
-    icon: Map,
+    phase: "Product Building",
+    challenge: "Build the smallest product that proves the value",
+    pathway: "Turn validated customer needs into a focused, working MVP without wasting time and budget on unnecessary features.",
+    icon: Rocket,
     accentColor: "blue",
   },
   {
-    phase: "Seeking Resources",
-    challenge: "Fundraising feels impossible without the right connections",
-    pathway: "Meet your Investor",
-    icon: Rocket,
+    phase: "Go to Market",
+    challenge: "Turn your offer into a measurable customer experiment",
+    pathway: "Choose one audience, offer, message, and acquisition channel, then learn from real buyer responses.",
+    icon: Map,
     accentColor: "amber",
   },
   {
-    phase: "Tech Stack Selection",
-    challenge: "The Tech Stack Dilemma",
-    pathway: "Build your Tech Stack",
-    icon: Code,
+    phase: "Traction",
+    challenge: "Learn what to repeat, improve, or stop",
+    pathway: "Track acquisition and retention signals across consistent experiments so your next growth decision is backed by evidence.",
+    icon: LayoutDashboard,
     accentColor: "blue",
   },
   {
-    phase: "Founder's Mental Tax",
-    challenge: "High risk of burnout",
-    pathway: "Find a Co-Founder",
-    icon: LayoutDashboard,
+    phase: "Fundraising — When Ready",
+    challenge: "Know when your business is ready for investor conversations",
+    pathway: "Assess your readiness, strengthen your pitch, and focus on investors and accelerators that fit your business.",
+    icon: Users,
     accentColor: "green",
   },
 ];
@@ -108,9 +105,10 @@ const journeySteps: JourneyStep[] = [
 const journeyActions: JourneyAction[] = [
   {
     to: "/icp-builder",
-    title: "Define Your ICP",
-    outcome: "Target Correctly",
-    description: "Identify who to serve, what they need, and how to position your offer.",
+    title: "Define Your Ideal Customer",
+    outcome: "A focused customer decision",
+    description: "Choose one buyer, urgent pain, buying trigger, and reason to choose you. Start with a customer decision you can test—not another assumption.",
+    cta: "Define my customer",
     icon: Target,
     accentName: "cobalt",
     accent: "218 89% 60%",
@@ -129,11 +127,12 @@ const journeyActions: JourneyAction[] = [
     delay: "0s",
   },
   {
-    to: "/pmf-lab",
-    title: "Validate Demand",
-    outcome: "Understand the Market",
-    description: "Turn customer evidence into a clear Build, Narrow, Pivot, or Stop decision.",
-    icon: FlaskConical,
+    to: "/demo-studio",
+    title: "Make Your Idea Testable",
+    outcome: "A live proof page",
+    description: "Create an interactive page that explains the problem, demonstrates your solution, and captures customer interest before you build the full product.",
+    cta: "Create my proof page",
+    icon: Lightbulb,
     accentName: "teal",
     accent: "183 75% 42%",
     accentSoft: "182 61% 95%",
@@ -151,11 +150,12 @@ const journeyActions: JourneyAction[] = [
     delay: "0.18s",
   },
   {
-    to: "/mentorship",
-    title: "Find a Mentor",
-    outcome: "Expert guidance",
-    description: "Get focused feedback from experienced founders and leave with clear next steps.",
-    icon: GraduationCap,
+    to: "/pmf-lab",
+    title: "Decide What the Evidence Says",
+    outcome: "A clear product decision",
+    description: "Combine customer conversations, objections, and behavioral signals into a grounded Build, Narrow, Pivot, or Stop decision.",
+    cta: "Validate my idea",
+    icon: FlaskConical,
     accentName: "coral",
     accent: "13 84% 63%",
     accentSoft: "18 100% 96%",
@@ -173,11 +173,12 @@ const journeyActions: JourneyAction[] = [
     delay: "0.3s",
   },
   {
-    to: "/dashboard",
-    title: "Dashboard: Your Project Co-Pilot",
-    outcome: "Daily Focus",
-    description: "Prioritize tasks, track weekly progress, and stay accountable in one workspace.",
-    icon: LayoutDashboard,
+    to: "/mvp-builder",
+    title: "Build What Customers Asked For",
+    outcome: "A working MVP",
+    description: "Turn validated needs into a focused product, define the essential workflow, and avoid spending time and budget on unnecessary features.",
+    cta: "Build my MVP",
+    icon: Rocket,
     accentName: "amber",
     accent: "42 92% 57%",
     accentSoft: "46 100% 95%",
@@ -195,11 +196,12 @@ const journeyActions: JourneyAction[] = [
     delay: "0.12s",
   },
   {
-    to: "/investors",
-    title: "Find Investors",
-    outcome: "Angel Investor Network",
-    description: "Find relevant investors by stage and sector, then start targeted conversations.",
-    icon: Users,
+    to: "/go-to-market",
+    title: "Reach Your First Customers",
+    outcome: "A focused acquisition play",
+    description: "Choose one audience, offer, message, and channel. Run a focused outreach cycle, record what happens, and learn from real buyer responses.",
+    cta: "Plan my launch",
+    icon: Map,
     accentName: "emerald",
     accent: "154 59% 43%",
     accentSoft: "152 54% 95%",
@@ -217,11 +219,12 @@ const journeyActions: JourneyAction[] = [
     delay: "0.22s",
   },
   {
-    to: "/tech-stack",
-    title: "Build Your Tech Stack",
-    outcome: "Stack and budget",
-    description: "Choose the right tools for your MVP and see the cost before you build.",
-    icon: Boxes,
+    to: "/traction-engine",
+    title: "Turn Activity Into Traction",
+    outcome: "Comparable growth evidence",
+    description: "Track acquisition and retention signals across consistent experiments. See what creates genuine customer movement and decide what to do next.",
+    cta: "Track my traction",
+    icon: LayoutDashboard,
     accentName: "indigo-steel",
     accent: "226 31% 57%",
     accentSoft: "228 43% 96%",
@@ -239,11 +242,12 @@ const journeyActions: JourneyAction[] = [
     delay: "0.36s",
   },
   {
-    to: "/co-founder",
-    title: "Find a Co-Founder",
-    outcome: "Shared execution",
-    description: "Find a complementary founder to share responsibilities and move faster together.",
-    icon: Handshake,
+    to: "/insighta-test",
+    title: "Raise With Better Evidence",
+    outcome: "Investor-ready preparation",
+    description: "Assess your readiness, strengthen your pitch, and identify investors and accelerators that fit your stage, sector, and goals.",
+    cta: "Check my readiness",
+    icon: Users,
     accentName: "raspberry",
     accent: "338 72% 58%",
     accentSoft: "336 100% 96%",
@@ -337,7 +341,7 @@ const EntrepreneurProblems = () => {
               </p>
             </div>
             <span className="journey-action-card__cta">
-              Open tool
+              {action.cta}
               <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
             </span>
           </div>
@@ -353,13 +357,13 @@ const EntrepreneurProblems = () => {
         {/* Section Header */}
         <ScrollReveal className="text-center mb-14 sm:mb-16 max-w-3xl mx-auto">
           <Badge variant="outline" className="homepage-section-badge mb-5">
-            Own Your Path
+            One Connected Founder Workspace
           </Badge>
           <h2 id="journey-heading" className="homepage-section-title founder-journey-section__title text-3xl sm:text-4xl lg:text-[2.9rem] mb-5">
-            Every Founder's Journey is Unique
+            From Idea to Evidence. From Evidence to Growth.
           </h2>
           <p className="homepage-section-copy founder-journey-section__copy mx-auto text-base sm:text-lg">
-            But the challenges are universal. Here's how we clear the path from idea to launch, removing bottlenecks at every stage.
+            Start wherever you are. Creatives Takeover helps you identify what matters now, take the next useful action, and carry everything you learn into the next stage.
           </p>
         </ScrollReveal>
 
