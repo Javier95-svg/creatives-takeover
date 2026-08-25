@@ -1,13 +1,17 @@
 import type { CSSProperties } from "react";
 import {
   ArrowUpRight,
+  Boxes,
+  FlaskConical,
   GraduationCap,
   Handshake,
   LayoutDashboard,
   Lightbulb,
+  Map,
   Rocket,
   Target,
   Users,
+  Code,
   type LucideIcon,
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -31,7 +35,6 @@ type JourneyAction = {
   title: string;
   outcome: string;
   description: string;
-  cta: string;
   icon: LucideIcon;
   accentName: string;
   accent: string;
@@ -52,52 +55,52 @@ type JourneyAction = {
 
 const journeySteps: JourneyStep[] = [
   {
-    phase: "Customer Clarity",
-    challenge: "Unclear who you're building for",
-    pathway: "Define your ideal customer, their core problem, and why your offer matters.",
+    phase: "The Starting Point",
+    challenge: "Scattered ideas without a clear direction",
+    pathway: "BizMap AI guides you from scattered thoughts to a strategic plan—clarifying your market, competitors, and next steps in one conversation.",
     icon: Lightbulb,
     accentColor: "blue",
   },
   {
-    phase: "Validate Demand",
-    challenge: "Building before knowing what customers want",
-    pathway: "Use customer evidence to decide whether to build, narrow, pivot, or stop.",
+    phase: "Finding Direction",
+    challenge: "Aligning your product with a genuine market need",
+    pathway: "The Dashboard breaks down your vision into weekly sprints, tracks progress, and keeps you accountable—transforming busyness into real momentum.",
     icon: Target,
     accentColor: "green",
   },
   {
     phase: "Lack of Experience",
     challenge: "Navigating Uncertainty and Decision-Making",
-    pathway: "Connect with experienced founders for focused guidance, honest feedback, and clear next steps.",
-    icon: GraduationCap,
+    pathway: "Our Community connects you with mentors and fellow founders who've navigated these exact challenges—offering guidance, feedback, and genuine support.",
+    icon: Users,
     accentColor: "red",
   },
   {
-    phase: "Focused Execution",
-    challenge: "Too many priorities and no clear next step",
-    pathway: "Prioritize tasks, track progress, and keep your work connected in one place.",
-    icon: LayoutDashboard,
+    phase: "Working Smartly",
+    challenge: "Task prioritization and resource management",
+    pathway: "BizMap AI helps define your ICP, select the right channels, and craft a go-to-market strategy based on proven frameworks—no more guessing.",
+    icon: Map,
     accentColor: "blue",
   },
   {
-    phase: "Product Building",
-    challenge: "Turning a validated idea into a working product",
-    pathway: "Build the core product your customers need without unnecessary features.",
+    phase: "Seeking Resources",
+    challenge: "Fundraising feels impossible without the right connections",
+    pathway: "Meet your Investor",
     icon: Rocket,
     accentColor: "amber",
   },
   {
-    phase: "Access to Investors",
-    challenge: "Finding investors who fit your business",
-    pathway: "Discover angel investors that match your industry and stage.",
-    icon: Users,
+    phase: "Tech Stack Selection",
+    challenge: "The Tech Stack Dilemma",
+    pathway: "Build your Tech Stack",
+    icon: Code,
     accentColor: "blue",
   },
   {
     phase: "Founder's Mental Tax",
     challenge: "High risk of burnout",
-    pathway: "Find a complementary founder to share responsibilities and move faster together.",
-    icon: Handshake,
+    pathway: "Find a Co-Founder",
+    icon: LayoutDashboard,
     accentColor: "green",
   },
 ];
@@ -106,10 +109,9 @@ const journeyActions: JourneyAction[] = [
   {
     to: "/icp-builder",
     title: "Define Your ICP",
-    outcome: "Focused positioning",
-    description: "Identify your ideal customer, their core problem, and why your offer matters.",
-    cta: "Open tool",
-    icon: Lightbulb,
+    outcome: "Target Correctly",
+    description: "Identify who to serve, what they need, and how to position your offer.",
+    icon: Target,
     accentName: "cobalt",
     accent: "218 89% 60%",
     accentSoft: "212 100% 97%",
@@ -129,10 +131,9 @@ const journeyActions: JourneyAction[] = [
   {
     to: "/pmf-lab",
     title: "Validate Demand",
-    outcome: "Evidence-based decisions",
-    description: "Use customer evidence to decide whether to build, narrow, pivot, or stop.",
-    cta: "Open tool",
-    icon: Target,
+    outcome: "Understand the Market",
+    description: "Turn customer evidence into a clear Build, Narrow, Pivot, or Stop decision.",
+    icon: FlaskConical,
     accentName: "teal",
     accent: "183 75% 42%",
     accentSoft: "182 61% 95%",
@@ -154,7 +155,6 @@ const journeyActions: JourneyAction[] = [
     title: "Find a Mentor",
     outcome: "Expert guidance",
     description: "Get focused feedback from experienced founders and leave with clear next steps.",
-    cta: "Open tool",
     icon: GraduationCap,
     accentName: "coral",
     accent: "13 84% 63%",
@@ -174,10 +174,9 @@ const journeyActions: JourneyAction[] = [
   },
   {
     to: "/dashboard",
-    title: "Your Founder Dashboard",
-    outcome: "Clear next steps",
-    description: "Prioritize tasks, track progress, and keep your work connected in one place.",
-    cta: "Open tool",
+    title: "Dashboard: Your Project Co-Pilot",
+    outcome: "Daily Focus",
+    description: "Prioritize tasks, track weekly progress, and stay accountable in one workspace.",
     icon: LayoutDashboard,
     accentName: "amber",
     accent: "42 92% 57%",
@@ -196,12 +195,11 @@ const journeyActions: JourneyAction[] = [
     delay: "0.12s",
   },
   {
-    to: "/mvp-builder",
-    title: "Build Your MVP",
-    outcome: "Working product",
-    description: "Create the core product your customers need without unnecessary features.",
-    cta: "Open tool",
-    icon: Rocket,
+    to: "/investors",
+    title: "Find Investors",
+    outcome: "Angel Investor Network",
+    description: "Find relevant investors by stage and sector, then start targeted conversations.",
+    icon: Users,
     accentName: "emerald",
     accent: "154 59% 43%",
     accentSoft: "152 54% 95%",
@@ -219,12 +217,11 @@ const journeyActions: JourneyAction[] = [
     delay: "0.22s",
   },
   {
-    to: "/investors",
-    title: "Find Investors",
-    outcome: "Angel investor network",
-    description: "Discover angel investors that match your industry and stage.",
-    cta: "Open tool",
-    icon: Users,
+    to: "/tech-stack",
+    title: "Build Your Tech Stack",
+    outcome: "Stack and budget",
+    description: "Choose the right tools for your MVP and see the cost before you build.",
+    icon: Boxes,
     accentName: "indigo-steel",
     accent: "226 31% 57%",
     accentSoft: "228 43% 96%",
@@ -246,7 +243,6 @@ const journeyActions: JourneyAction[] = [
     title: "Find a Co-Founder",
     outcome: "Shared execution",
     description: "Find a complementary founder to share responsibilities and move faster together.",
-    cta: "Open tool",
     icon: Handshake,
     accentName: "raspberry",
     accent: "338 72% 58%",
@@ -341,7 +337,7 @@ const EntrepreneurProblems = () => {
               </p>
             </div>
             <span className="journey-action-card__cta">
-              {action.cta}
+              Open tool
               <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
             </span>
           </div>
@@ -357,13 +353,13 @@ const EntrepreneurProblems = () => {
         {/* Section Header */}
         <ScrollReveal className="text-center mb-14 sm:mb-16 max-w-3xl mx-auto">
           <Badge variant="outline" className="homepage-section-badge mb-5">
-            One Connected Founder Workspace
+            Own Your Path
           </Badge>
           <h2 id="journey-heading" className="homepage-section-title founder-journey-section__title text-3xl sm:text-4xl lg:text-[2.9rem] mb-5">
-            From Idea to Evidence. From Evidence to Growth.
+            Every Founder's Journey is Unique
           </h2>
           <p className="homepage-section-copy founder-journey-section__copy mx-auto text-base sm:text-lg">
-            Start where you are, take the next useful action, and carry what you learn forward.
+            But the challenges are universal. Here's how we clear the path from idea to launch, removing bottlenecks at every stage.
           </p>
         </ScrollReveal>
 
