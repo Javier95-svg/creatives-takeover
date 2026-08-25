@@ -5,7 +5,6 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  buildRoutineSuggestions,
   createRoutineConfig,
   DEFAULT_REMINDER_CHANNELS,
   getDateKeyInTimezone,
@@ -18,7 +17,6 @@ import {
   parseRoutineGoal,
   serializeReminderPreferences,
   serializeRoutineConfig,
-  type LegacyWeeklyCommitment,
   type RoutineCompletion,
   type RoutineCompletionStatus,
   type RoutineConfig,
@@ -93,7 +91,6 @@ export function useRoutine() {
   const [reminderChannels, setReminderChannels] = useState<RoutineReminderChannels>(DEFAULT_REMINDER_CHANNELS);
   const [currentCompletions, setCurrentCompletions] = useState<RoutineCompletion[]>([]);
   const [historyCompletions, setHistoryCompletions] = useState<RoutineCompletion[]>([]);
-  const [legacyCommitments, setLegacyCommitments] = useState<LegacyWeeklyCommitment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -110,7 +107,6 @@ export function useRoutine() {
       setConfig(null);
       setCurrentCompletions([]);
       setHistoryCompletions([]);
-      setLegacyCommitments([]);
       setReminderChannels(DEFAULT_REMINDER_CHANNELS);
       return;
     }
@@ -122,10 +118,10 @@ export function useRoutine() {
 
     try {
       const historyStart = getDateKeyInTimezone(subDays(new Date(), 90), timezone);
-      const [profileResult, currentCompletionResult, historyCompletionResult, legacyResult, notificationPreferencesResult] = await Promise.all([
+      const [profileResult, currentCompletionResult, historyCompletionResult, notificationPreferencesResult] = await Promise.all([
         supabase
           .from('profiles')
-          .select('routine_primary_goal, routine_config, routine_reminder_preferences, user_preferences, quiz_current_stage, quiz_biggest_challenge, creative_niche, startup_stage, startup_name, startup_industry')
+          .select('routine_primary_goal, routine_config, routine_reminder_preferences, user_preferences')
           .eq('id', userId)
           .maybeSingle(),
         supabase
@@ -139,12 +135,6 @@ export function useRoutine() {
           .eq('user_id', userId)
           .gte('period_date', historyStart)
           .order('period_date', { ascending: false }),
-        supabase
-          .from('weekly_missions')
-          .select('id, mission_goal, week_start_date, week_end_date, status, commitment_outcome, reflection_text')
-          .eq('user_id', userId)
-          .order('week_start_date', { ascending: false })
-          .limit(6),
         notificationDb
           .from('notification_preferences')
           .select('routine_in_app_enabled, routine_email_enabled, routine_reminders')
@@ -155,7 +145,6 @@ export function useRoutine() {
       if (profileResult.error) throw profileResult.error;
       if (currentCompletionResult.error) throw currentCompletionResult.error;
       if (historyCompletionResult.error) throw historyCompletionResult.error;
-      if (legacyResult.error) throw legacyResult.error;
       if (notificationPreferencesResult.error) throw notificationPreferencesResult.error;
 
       const profileRow = profileResult.data as RoutineProfileSnapshot | null;
@@ -169,7 +158,6 @@ export function useRoutine() {
       });
       setCurrentCompletions(((currentCompletionResult.data ?? []) as RoutineCompletionRow[]).map(normalizeCompletion));
       setHistoryCompletions(((historyCompletionResult.data ?? []) as RoutineCompletionRow[]).map(normalizeCompletion));
-      setLegacyCommitments((legacyResult.data ?? []) as LegacyWeeklyCommitment[]);
     } catch (err) {
       console.error('Failed to load routine:', err);
       setError(err instanceof Error ? err.message : 'Failed to load routine');
@@ -374,7 +362,6 @@ export function useRoutine() {
       completion.period_date < last7Key,
   ).length;
   const selectedGoal = parseRoutineGoal(profile?.routine_primary_goal) ?? config?.primaryGoal ?? null;
-  const suggestions = useMemo(() => profile ? buildRoutineSuggestions(profile, config) : [], [config, profile]);
 
   return {
     profile,
@@ -388,8 +375,6 @@ export function useRoutine() {
     currentCompletions,
     historyCompletions,
     completionByKey,
-    legacyCommitments,
-    suggestions,
     isLoading,
     isSaving,
     error,

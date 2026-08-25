@@ -14,7 +14,6 @@ import {
   MapPin,
   Plus,
   Repeat2,
-  RotateCcw,
   Sparkles,
   TrendingUp,
   Trash2,
@@ -30,18 +29,6 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useRoutine } from '@/hooks/useRoutine';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
@@ -586,8 +573,6 @@ export default function YourRoutinePage() {
     weeklyTasks,
     completionByKey,
     historyCompletions,
-    legacyCommitments,
-    suggestions,
     isLoading,
     isSaving,
     error,
@@ -601,7 +586,6 @@ export default function YourRoutinePage() {
   } = useRoutine();
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState<RoutineConfig | null>(null);
-  const [resetGoal, setResetGoal] = useState<RoutineGoal | null>(null);
 
   useEffect(() => {
     markToolUsed('routine');
@@ -613,20 +597,6 @@ export default function YourRoutinePage() {
 
   const routineGoalLabel = getGoalLabel(selectedGoal);
   const activeTaskCount = useMemo(() => config?.tasks.filter((task) => task.active).length ?? 0, [config]);
-
-  const handleResetToGoal = async (goal: RoutineGoal) => {
-    await saveConfig(createRoutineConfig(goal));
-    setResetGoal(null);
-    setIsEditing(false);
-  };
-
-  const handleAddSuggestion = async (task: RoutineTask) => {
-    if (!config) return;
-    await saveConfig({
-      ...config,
-      tasks: [...config.tasks, { ...task, order: config.tasks.length }],
-    });
-  };
 
   const handleSaveDraft = async () => {
     if (!draft) return;
@@ -753,99 +723,7 @@ export default function YourRoutinePage() {
             <RoutineMomentumCard config={config} completions={historyCompletions} timezone={timezone} stats={stats} />
           </div>
 
-          <DashboardDisclosure
-            title="Manage routine"
-            summary="Add suggested habits, revise the template, or review preserved history."
-          >
-            <aside className="grid gap-4 lg:grid-cols-2">
-            <Card className="border-border/70 bg-card/80">
-              <CardHeader>
-                <CardTitle className="text-lg">Recommended updates</CardTitle>
-                <CardDescription>Based on your profile and quiz. Add only what fits.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {suggestions.map((task) => (
-                  <div key={task.id} className="rounded-lg border border-border/70 bg-background/75 p-3">
-                    <div className="mb-3 flex items-center justify-between gap-2">
-                      <Badge variant="secondary" className="capitalize">{task.cadence}</Badge>
-                      <Button size="sm" variant="outline" onClick={() => void handleAddSuggestion(task)} disabled={isSaving}>
-                        Add
-                      </Button>
-                    </div>
-                    <p className="text-sm font-medium leading-6">{task.title}</p>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            <Card className="border-border/70 bg-card/80">
-              <CardHeader>
-                <CardTitle className="text-lg">Reset template</CardTitle>
-                <CardDescription>Replace the active routine without deleting completion history.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Select value={resetGoal ?? config.primaryGoal} onValueChange={(goal) => setResetGoal(goal as RoutineGoal)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ROUTINE_GOAL_OPTIONS.map((goal) => (
-                      <SelectItem key={goal.value} value={goal.value}>{goal.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild><Button variant="outline" className="w-full" disabled={!resetGoal || resetGoal === config.primaryGoal || isSaving}><RotateCcw className="mr-2 h-4 w-4" />Reset this template</Button></AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader><AlertDialogTitle>Replace your current routine?</AlertDialogTitle><AlertDialogDescription>This replaces future routine tasks with the {getGoalLabel(resetGoal)} template. Your completion history stays intact.</AlertDialogDescription></AlertDialogHeader>
-                    <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => { if (resetGoal) void handleResetToGoal(resetGoal); }}>Replace routine</AlertDialogAction></AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <RotateCcw className="h-3.5 w-3.5" />
-                  Resetting changes future tasks only.
-                </div>
-              </CardContent>
-            </Card>
-            </aside>
-          </DashboardDisclosure>
         </div>
-
-        <DashboardDisclosure
-          title="Past weekly commitments"
-          summary="Read-only history preserved from the old Weekly Mission workspace."
-        >
-        <Card className="border-border/70 bg-card/80">
-          <CardHeader>
-            <CardTitle className="text-lg">Past weekly commitments</CardTitle>
-            <CardDescription>Read-only history preserved from the old Weekly Mission workspace.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {legacyCommitments.length > 0 ? (
-              legacyCommitments.map((commitment) => (
-                <div key={commitment.id} className="rounded-lg border border-border/70 bg-background/75 p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-xs uppercase tracking-normal text-muted-foreground">
-                      {new Date(commitment.week_start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(commitment.week_end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </p>
-                    <Badge variant={commitment.commitment_outcome === 'missed' || commitment.status === 'abandoned' ? 'outline' : 'secondary'}>
-                      {commitment.commitment_outcome === 'missed' || commitment.status === 'abandoned' ? 'Not done' : commitment.status || 'Saved'}
-                    </Badge>
-                  </div>
-                  <p className="mt-2 text-sm font-medium leading-6">{commitment.mission_goal}</p>
-                  {commitment.reflection_text?.trim() ? (
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">Reflection: {commitment.reflection_text.trim()}</p>
-                  ) : null}
-                </div>
-              ))
-            ) : (
-              <div className="rounded-lg border border-dashed border-border/70 bg-background/75 p-5 text-sm text-muted-foreground">
-                No past weekly commitments yet.
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        </DashboardDisclosure>
       </div>
     </>
   );
