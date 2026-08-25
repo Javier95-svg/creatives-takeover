@@ -18,7 +18,9 @@ const frozenFiles = {
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.
-  '../src/components/EntrepreneurProblems.tsx': '82ef110ab254c5dc9e459afe5368761668c8d8fcfb6b1d076231f11ad03cf19d',
+  // Rehashed 2026-08-25 for the approved copy-only replacement of the Tech
+  // Stack row with the MVP Builder offer and its /build destination.
+  '../src/components/EntrepreneurProblems.tsx': '18fe64d8e3bf4d6660267fb374ab8dea14363d06f09177ae059490c7458e02cf',
   // Updated for the canonical core-tool navigation: support tools no longer
   // appear as stage prerequisites, while Stage VII retains its original name
   // and order.
