@@ -357,13 +357,13 @@ const EntrepreneurProblems = () => {
         {/* Section Header */}
         <ScrollReveal className="text-center mb-14 sm:mb-16 max-w-3xl mx-auto">
           <Badge variant="outline" className="homepage-section-badge mb-5">
-            Tools, Guidance &amp; Network
+            One Connected Founder Workspace
           </Badge>
           <h2 id="journey-heading" className="homepage-section-title founder-journey-section__title text-3xl sm:text-4xl lg:text-[2.9rem] mb-5">
-            Everything You Need to Move Your Business Forward
+            From Idea to Evidence. From Evidence to Growth.
           </h2>
           <p className="homepage-section-copy founder-journey-section__copy mx-auto text-base sm:text-lg">
-            Creatives Takeover combines connected business-building tools, personalized execution, and access to mentors, investors, and potential co-founders—so you can make better decisions and move with less friction.
+            Start wherever you are. Creatives Takeover helps you identify what matters now, take the next useful action, and carry everything you learn into the next stage.
           </p>
         </ScrollReveal>
 
