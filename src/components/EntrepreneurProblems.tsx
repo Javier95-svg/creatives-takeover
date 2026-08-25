@@ -91,7 +91,7 @@ const journeySteps: JourneyStep[] = [
   },
   {
     phase: "MVP Building",
-    challenge: "Turning a validated idea into a working product",
+    challenge: "Deciding what your first version actually needs",
     pathway: "Build the core product your customers need without unnecessary features.",
     icon: Code,
     accentColor: "blue",
