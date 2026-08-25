@@ -15,7 +15,6 @@ import {
   Plus,
   Repeat2,
   Sparkles,
-  TrendingUp,
   Trash2,
 } from 'lucide-react';
 
@@ -37,10 +36,8 @@ import { cn } from '@/lib/utils';
 import {
   ROUTINE_GOAL_OPTIONS,
   createCustomRoutineTask,
-  createRoutineConfig,
   getDateKeyInTimezone,
   getCompletionKey,
-  getRoutineTasksForToday,
   getWeekEndLabelInTimezone,
   getWeekStartKeyInTimezone,
   type RoutineCadence,
@@ -237,23 +234,77 @@ function ReminderScheduleCard({
   );
 }
 
-function RoutineMomentumCard({ config, completions, timezone, stats }: { config: RoutineConfig; completions: Array<{ period_type: string; period_date: string; status: string }>; timezone: string; stats: { dailyStreak: number; completedLast7: number; completedPrev7: number; consistencyPercentage: number } }) {
-  const historyByDate = useMemo(() => {
-    const completed = new Map<string, number>();
-    completions.filter((completion) => completion.period_type === 'daily' && completion.status === 'completed').forEach((completion) => completed.set(completion.period_date, (completed.get(completion.period_date) ?? 0) + 1));
-    return completed;
-  }, [completions]);
-  const days = useMemo(() => Array.from({ length: 28 }, (_, index) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (27 - index));
-    const key = getDateKeyInTimezone(date, timezone);
-    const total = getRoutineTasksForToday(config, date, timezone).length;
-    const completed = historyByDate.get(key) ?? 0;
-    return { key, total, completed, date };
-  }), [config, historyByDate, timezone]);
-  const trend = stats.completedLast7 - stats.completedPrev7;
+function RoutineFocusCard({
+  todayTasks,
+  weeklyTasks,
+  completionByKey,
+  timezone,
+  isSaving,
+  onComplete,
+  onCustomize,
+}: {
+  todayTasks: RoutineTask[];
+  weeklyTasks: RoutineTask[];
+  completionByKey: ReadonlyMap<string, { status: string }>;
+  timezone: string;
+  isSaving: boolean;
+  onComplete: (task: RoutineTask, periodType: RoutinePeriodType) => void;
+  onCustomize: () => void;
+}) {
+  const todayKey = getDateKeyInTimezone(new Date(), timezone);
+  const weekKey = getWeekStartKeyInTimezone(new Date(), timezone);
+  const statusFor = (task: RoutineTask, periodType: RoutinePeriodType) => completionByKey.get(
+    getCompletionKey(task.id, periodType, periodType === 'daily' ? todayKey : weekKey),
+  )?.status;
+  const isHandled = (task: RoutineTask, periodType: RoutinePeriodType) => {
+    const status = statusFor(task, periodType);
+    return status === 'completed' || status === 'skipped';
+  };
+  const nextTodayTask = todayTasks.find((task) => !isHandled(task, 'daily'));
+  const nextWeeklyTask = weeklyTasks.find((task) => !isHandled(task, 'weekly'));
+  const nextTask = nextTodayTask ?? nextWeeklyTask ?? null;
+  const nextPeriodType: RoutinePeriodType = nextTodayTask ? 'daily' : 'weekly';
+  const todayHandled = todayTasks.filter((task) => isHandled(task, 'daily')).length;
+  const weeklyHandled = weeklyTasks.filter((task) => isHandled(task, 'weekly')).length;
+  const scheduledTaskCount = todayTasks.length + weeklyTasks.length;
 
-  return <Card className="border-border/70 bg-card/90"><CardHeader><CardTitle className="flex items-center gap-2 text-lg"><TrendingUp className="h-5 w-5 text-primary" />Consistency & momentum</CardTitle><CardDescription>Your last 28 days of scheduled founder habits.</CardDescription></CardHeader><CardContent className="space-y-5"><div className="grid grid-cols-3 gap-3"><div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Current streak</p><p className="mt-1 text-xl font-semibold">{stats.dailyStreak} days</p></div><div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">28-day consistency</p><p className="mt-1 text-xl font-semibold">{stats.consistencyPercentage}%</p></div><div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Week over week</p><p className={cn('mt-1 text-xl font-semibold', trend > 0 && 'text-success', trend < 0 && 'text-destructive')}>{trend > 0 ? '+' : ''}{trend} habits</p></div></div><div><div className="mb-2 flex items-center justify-between"><p className="text-sm font-medium">28-day check-in map</p><p className="text-xs text-muted-foreground">Darker = more completed</p></div><div className="grid grid-cols-7 gap-1.5">{days.map((day) => { const ratio = day.total ? Math.min(1, day.completed / day.total) : 0; return <div key={day.key} title={`${day.key}: ${day.completed}/${day.total} completed`} className={cn('aspect-square rounded-sm border border-border/50', day.total === 0 && 'bg-muted/30', ratio > 0 && ratio < 1 && 'bg-primary/35', ratio >= 1 && 'bg-primary')} />; })}</div></div></CardContent></Card>;
+  return (
+    <Card className="overflow-hidden border-primary/30 bg-gradient-to-br from-primary/15 via-card to-card">
+      <CardContent className="p-5 sm:p-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0">
+            <Badge variant="outline" className="mb-3 border-primary/30 bg-background/60">
+              {nextTask ? 'Next action' : scheduledTaskCount ? 'Routine cleared' : 'Routine needs a task'}
+            </Badge>
+            <h2 className="text-xl font-semibold text-foreground sm:text-2xl">
+              {nextTask?.title ?? (scheduledTaskCount ? 'Everything scheduled is handled' : 'Choose one repeatable action')}
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+              {nextTask
+                ? `${nextPeriodType === 'daily' ? 'Finish this today' : 'Complete this before the week ends'} before adding more work.`
+                : scheduledTaskCount
+                  ? 'You have completed or intentionally skipped every scheduled action. Return when the next task is due.'
+                  : 'Add a concrete daily or weekly task so Routine can keep your next move visible.'}
+            </p>
+            <p className="mt-3 text-xs font-medium text-muted-foreground">
+              {todayHandled}/{todayTasks.length} handled today · {weeklyHandled}/{weeklyTasks.length} handled this week
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+            {nextTask ? (
+              <Button size="lg" onClick={() => onComplete(nextTask, nextPeriodType)} disabled={isSaving}>
+                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                Mark done
+              </Button>
+            ) : null}
+            <Button size="lg" variant="outline" onClick={onCustomize} disabled={isSaving}>
+              {scheduledTaskCount ? 'Adjust routine' : 'Add a task'}
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 function RoutineSetupCard({ onStart, isSaving }: { onStart: (goal: RoutineGoal) => void; isSaving: boolean }) {
@@ -394,12 +445,35 @@ function RoutineTaskSection({
   onClearStatus: (task: RoutineTask, periodType: RoutinePeriodType) => void;
 }) {
   const periodDate = periodType === 'daily' ? getDateKeyInTimezone(new Date(), timezone) : getWeekStartKeyInTimezone(new Date(), timezone);
+  const statuses = tasks.map((task) => completionByKey.get(getCompletionKey(task.id, periodType, periodDate))?.status);
+  const completedCount = statuses.filter((status) => status === 'completed').length;
+  const skippedCount = statuses.filter((status) => status === 'skipped').length;
+  const handledCount = completedCount + skippedCount;
+  const remainingCount = tasks.length - handledCount;
+  const handledPercentage = tasks.length > 0 ? Math.round((handledCount / tasks.length) * 100) : 0;
 
   return (
     <Card className="border-border/70 bg-card/80">
-      <CardHeader>
-        <CardTitle className="text-lg">{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+      <CardHeader className="space-y-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <CardTitle className="text-lg">{title}</CardTitle>
+            <CardDescription className="mt-1">{description}</CardDescription>
+          </div>
+          {tasks.length > 0 ? (
+            <Badge variant={remainingCount === 0 ? 'secondary' : 'outline'}>
+              {remainingCount === 0 ? 'All handled' : `${remainingCount} remaining`}
+            </Badge>
+          ) : null}
+        </div>
+        {tasks.length > 0 ? (
+          <div className="space-y-1.5">
+            <Progress value={handledPercentage} className="h-1.5" aria-label={`${title}: ${handledCount} of ${tasks.length} handled`} />
+            <p className="text-xs text-muted-foreground">
+              {completedCount} completed{skippedCount ? ` · ${skippedCount} skipped` : ''}
+            </p>
+          </div>
+        ) : null}
       </CardHeader>
       <CardContent className="space-y-3">
         {tasks.length > 0 ? (
@@ -487,7 +561,7 @@ function RoutineEditor({
       <CardContent className="space-y-5">
         <div className="space-y-3">
           {draft.tasks.map((task, index) => (
-            <div key={task.id} className="grid gap-3 rounded-lg border border-border/70 bg-background/75 p-3 md:grid-cols-[minmax(0,1fr)_150px_auto] md:items-center">
+            <div key={task.id} className={cn('grid gap-3 rounded-lg border border-border/70 bg-background/75 p-3 md:grid-cols-[minmax(0,1fr)_150px_auto] md:items-center', !task.active && 'opacity-70')}>
               <Input value={task.title} onChange={(event) => updateTask(task.id, { title: event.target.value })} />
               <Select
                 value={task.cadence}
@@ -507,7 +581,18 @@ function RoutineEditor({
                   <SelectItem value="weekly">Weekly</SelectItem>
                 </SelectContent>
               </Select>
-              <div className="flex justify-end gap-1">
+              <div className="flex flex-wrap items-center justify-end gap-1">
+                <div className="mr-2 flex items-center gap-2">
+                  <Label htmlFor={`routine-task-active-${task.id}`} className="text-xs text-muted-foreground">
+                    {task.active ? 'Active' : 'Paused'}
+                  </Label>
+                  <Switch
+                    id={`routine-task-active-${task.id}`}
+                    checked={task.active}
+                    onCheckedChange={(active) => updateTask(task.id, { active })}
+                    aria-label={`${task.active ? 'Pause' : 'Activate'} ${task.title}`}
+                  />
+                </div>
                 <Button size="icon" variant="ghost" onClick={() => moveTask(task.id, -1)} disabled={index === 0} aria-label="Move task up">
                   <ArrowUp className="h-4 w-4" />
                 </Button>
@@ -572,7 +657,6 @@ export default function YourRoutinePage() {
     todayTasks,
     weeklyTasks,
     completionByKey,
-    historyCompletions,
     isLoading,
     isSaving,
     error,
@@ -597,6 +681,11 @@ export default function YourRoutinePage() {
 
   const routineGoalLabel = getGoalLabel(selectedGoal);
   const activeTaskCount = useMemo(() => config?.tasks.filter((task) => task.active).length ?? 0, [config]);
+  const handledCurrentCount = stats.completedCurrentCount + stats.skippedCurrentCount;
+  const remainingCurrentCount = Math.max(0, stats.totalCurrentCount - handledCurrentCount);
+  const handledProgressPercentage = stats.totalCurrentCount > 0
+    ? Math.round((handledCurrentCount / stats.totalCurrentCount) * 100)
+    : 0;
 
   const handleSaveDraft = async () => {
     if (!draft) return;
@@ -664,13 +753,13 @@ export default function YourRoutinePage() {
             />
             <div className="flex flex-wrap gap-2">
               <Badge variant="secondary">
-                {stats.completedCurrentCount}/{stats.totalCurrentCount} this period
+                {remainingCurrentCount} remaining
               </Badge>
-              <Badge variant="outline">{stats.progressPercentage}% progress</Badge>
-              <Badge variant="outline">{stats.dailyStreak} day streak</Badge>
+              <Badge variant="outline">{stats.completedCurrentCount}/{stats.totalCurrentCount} completed</Badge>
+              {stats.skippedCurrentCount > 0 ? <Badge variant="outline">{stats.skippedCurrentCount} skipped</Badge> : null}
               <Badge variant="outline">{activeTaskCount} active tasks</Badge>
             </div>
-            <Progress value={stats.progressPercentage} className="h-2" />
+            <Progress value={handledProgressPercentage} className="h-2" aria-label={`${handledCurrentCount} of ${stats.totalCurrentCount} current tasks handled`} />
           </CardHeader>
         </Card>
 
@@ -689,10 +778,18 @@ export default function YourRoutinePage() {
 
         <div className="space-y-6">
           <div className="space-y-6">
-            <LectureOfTheDay />
+            <RoutineFocusCard
+              todayTasks={todayTasks}
+              weeklyTasks={weeklyTasks}
+              completionByKey={completionByKey}
+              timezone={timezone}
+              isSaving={isSaving}
+              onComplete={(task, periodType) => void setTaskStatus(task, periodType, 'completed')}
+              onCustomize={() => setIsEditing(true)}
+            />
             <RoutineTaskSection
               title="Today"
-              description="The daily habits scheduled for today."
+              description="Finish the next scheduled action before adding more work."
               tasks={todayTasks}
               periodType="daily"
               completionByKey={completionByKey}
@@ -703,7 +800,7 @@ export default function YourRoutinePage() {
             />
             <RoutineTaskSection
               title="This Week"
-              description={`Weekly habits due by ${getWeekEndLabelInTimezone(new Date(), timezone)}.`}
+              description={`Protect time for these outcomes before ${getWeekEndLabelInTimezone(new Date(), timezone)}.`}
               tasks={weeklyTasks}
               periodType="weekly"
               completionByKey={completionByKey}
@@ -712,6 +809,7 @@ export default function YourRoutinePage() {
               onSetStatus={(task, periodType, status) => void setTaskStatus(task, periodType, status)}
               onClearStatus={(task, periodType) => void clearTaskStatus(task, periodType)}
             />
+            <LectureOfTheDay />
             <ReminderScheduleCard
               preferences={reminderPreferences}
               channels={reminderChannels}
@@ -720,7 +818,6 @@ export default function YourRoutinePage() {
               onPreferencesChange={(preferences, nextTimezone) => void updateReminderPreferences(preferences, nextTimezone)}
               onChannelsChange={(channels) => void updateReminderChannels(channels)}
             />
-            <RoutineMomentumCard config={config} completions={historyCompletions} timezone={timezone} stats={stats} />
           </div>
 
         </div>

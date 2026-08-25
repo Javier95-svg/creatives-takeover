@@ -35,7 +35,7 @@ test('legacy reminder preferences keep a safe schedule default', () => {
   assert.deepEqual(parseReminderPreferences(null), { enabled: false, time: '09:00' });
 });
 
-test('routine upgrade has separate channels, local SQL scheduling, and snapshot pending count', () => {
+test('routine upgrade prioritizes the next action, editable tasks, and local reminders', () => {
   const migration = read('../supabase/migrations/20260825090000_routine_dashboard_timezone_upgrade.sql');
   const page = read('../src/pages/YourRoutinePage.tsx');
   const sidebar = read('../src/components/dashboard/DashboardSidebar.tsx');
@@ -46,8 +46,13 @@ test('routine upgrade has separate channels, local SQL scheduling, and snapshot 
   assert.match(migration, /get_dashboard_snapshot_v4/);
   assert.match(migration, /pendingCount/);
   assert.match(page, /ReminderScheduleCard/);
-  assert.match(page, /RoutineMomentumCard/);
+  assert.match(page, /RoutineFocusCard/);
+  assert.match(page, /Mark done/);
+  assert.match(page, /routine-task-active-/);
+  assert.match(page, /All handled/);
   assert.match(page, /Array\.from\(\{ length: 96 \}/);
-  assert.match(page, /28-day check-in map/);
+  assert.doesNotMatch(page, /RoutineMomentumCard/);
+  assert.doesNotMatch(page, /28-day check-in map/);
+  assert.doesNotMatch(page, /Consistency & momentum/);
   assert.match(sidebar, /routinePendingCount/);
 });
