@@ -276,7 +276,10 @@ export default function FounderJourneyPanel({ showRecommendedAction = false }: {
     return <Skeleton className="mb-6 h-48 rounded-xl" />;
   }
 
-  if (outcomeJourney.snapshot?.journey) {
+  // The outcome spine governs execution through Repeat. Stage VII remains the
+  // existing Insighta/Fundraising experience; the internal `capital` state is
+  // a gate, not a new dashboard entry or replacement for Insighta.
+  if (outcomeJourney.snapshot?.journey && outcomeJourney.snapshot.journey.current_stage !== 'capital') {
     const journey = outcomeJourney.snapshot.journey;
     const currentContract = OUTCOME_JOURNEY_CONTRACTS[journey.current_stage];
     const currentRun = outcomeJourney.snapshot.stageRuns
@@ -290,12 +293,11 @@ export default function FounderJourneyPanel({ showRecommendedAction = false }: {
         <CardContent className="p-5 sm:p-6">
           <DashboardPanelHeader kicker="Current business outcome" title={`${currentContract.label}: ${currentContract.outcome}`} description="A saved artifact can make the work usable. Only the observable outcome advances this journey." />
           <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
-            {OUTCOME_JOURNEY_STAGE_KEYS.map((stage) => {
+            {OUTCOME_JOURNEY_STAGE_KEYS.filter((stage) => stage !== 'capital').map((stage) => {
               const contract = OUTCOME_JOURNEY_CONTRACTS[stage];
               const current = stage === journey.current_stage;
               const achieved = achievedStages.has(stage);
-              const lockedCapital = stage === 'capital' && !journey.capital_eligible_at;
-              return <div key={stage} className={cn('min-w-24 rounded-lg border px-3 py-2 text-center', current && 'border-primary bg-primary/5', achieved && 'border-success/30 bg-success/5', lockedCapital && 'opacity-50')}><p className="text-xs font-semibold">{contract.stageNumber}. {contract.label}</p><p className="mt-1 text-[10px] text-muted-foreground">{current ? currentRun?.outcome_state?.replaceAll('_', ' ') ?? 'not started' : achieved ? 'outcome reached' : lockedCapital ? 'locked' : 'available'}</p></div>;
+              return <div key={stage} className={cn('min-w-24 rounded-lg border px-3 py-2 text-center', current && 'border-primary bg-primary/5', achieved && 'border-success/30 bg-success/5')}><p className="text-xs font-semibold">{contract.stageNumber}. {contract.label}</p><p className="mt-1 text-[10px] text-muted-foreground">{current ? currentRun?.outcome_state?.replaceAll('_', ' ') ?? 'not started' : achieved ? 'outcome reached' : 'available'}</p></div>;
             })}
           </div>
           <div className="mt-4 rounded-xl border bg-background/70 p-4">

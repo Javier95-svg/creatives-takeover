@@ -20,6 +20,15 @@ test('the seven contracts each promise one observable business outcome', () => {
   }
 });
 
+test('the internal Capital gate never creates a replacement for Insighta Stage VII', () => {
+  const dashboard = readFileSync(new URL('../src/components/dashboard/FounderJourneyPanel.tsx', import.meta.url), 'utf8');
+  assert.match(dashboard, /current_stage !== 'capital'/);
+  assert.match(dashboard, /filter\(\(stage\) => stage !== 'capital'\)/);
+  const catalog = readFileSync(new URL('../src/config/founderToolCatalog.ts', import.meta.url), 'utf8');
+  assert.match(catalog, /key: 'insighta_test'[\s\S]*?name: 'Insighta Test'/);
+  assert.doesNotMatch(catalog, /Insighta Test — Fundraising Readiness/);
+});
+
 test('stage assessment chooses the earliest missing outcome but lets the qualified pilot enter Acquire', () => {
   assert.equal(assessOutcomeJourneyEntry({ specificTarget: false, liveBuyerProof: false, qualifiedBuyerEvidence: false, measurableSuccessEvent: false, completedAcquisitionCycle: false, repeatedDemand: false }), 'target');
   assert.equal(assessOutcomeJourneyEntry({ specificTarget: true, liveBuyerProof: true, qualifiedBuyerEvidence: false, measurableSuccessEvent: false, completedAcquisitionCycle: false, repeatedDemand: false }), 'validate');
