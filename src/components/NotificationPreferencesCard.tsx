@@ -20,6 +20,7 @@ interface Prefs {
   product_updates: boolean;
   investor_updates: boolean;
   dm_email_enabled: boolean;
+  connection_request_email_enabled: boolean;
   dm_push_enabled: boolean;
 }
 
@@ -33,6 +34,7 @@ const DEFAULTS: Prefs = {
   product_updates: true,
   investor_updates: false,
   dm_email_enabled: true,
+  connection_request_email_enabled: true,
   dm_push_enabled: true,
 };
 
@@ -54,7 +56,7 @@ export function NotificationPreferencesCard() {
       try {
         const { data } = await db
           .from("notification_preferences")
-          .select("push_enabled, routine_reminders, routine_in_app_enabled, routine_email_enabled, task_reminders, retention_emails, product_updates, investor_updates, dm_email_enabled, dm_push_enabled")
+          .select("push_enabled, routine_reminders, routine_in_app_enabled, routine_email_enabled, task_reminders, retention_emails, product_updates, investor_updates, dm_email_enabled, connection_request_email_enabled, dm_push_enabled")
           .eq("user_id", user.id)
           .maybeSingle();
         if (!cancelled && data) setPrefs({ ...DEFAULTS, ...data });
@@ -103,6 +105,7 @@ export function NotificationPreferencesCard() {
 
   const rows: Array<{ key: keyof Prefs; label: string; desc: string }> = [
     { key: "dm_email_enabled", label: "Message emails", desc: "Email me when someone sends a direct message." },
+    { key: "connection_request_email_enabled", label: "Connection request emails", desc: "Email me when a founder sends me a connection request." },
     { key: "dm_push_enabled", label: "Message push notifications", desc: "Send direct-message alerts to subscribed devices." },
     { key: "routine_in_app_enabled", label: "Routine in-app reminders", desc: "Show routine nudges in the platform at your selected routine time." },
     { key: "routine_email_enabled", label: "Routine email fallback", desc: "Email a recovery nudge after three inactive days, if your routine is enabled." },
