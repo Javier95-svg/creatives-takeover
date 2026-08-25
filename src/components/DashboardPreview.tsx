@@ -45,7 +45,7 @@ const DashboardPreview = () => {
         {/* Header Section */}
         <div className="text-center mb-12 animate-fade-in">
           <h1 className="text-headline-lg sm:text-headline-xl font-bold mb-4 text-foreground">
-            Your Founder Command Center
+            Your Founder Progress Tracker
           </h1>
           <p className="text-body sm:text-body-lg text-muted-foreground max-w-2xl mx-auto">
             Your strategic planning hub to organize, prioritize, and track projects designed for founders who demand clarity and control.
@@ -305,7 +305,7 @@ const DashboardPreview = () => {
           <Card className="border-primary/20 bg-card p-8">
             <CardContent className="p-0 space-y-6">
               <div className="space-y-2">
-                <h2 className="text-2xl sm:text-3xl font-bold">Ready to Access Your Command Center?</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold">Ready to Access Your Progress Tracker?</h2>
                 <p className="text-muted-foreground max-w-2xl mx-auto">
                   Organize projects, track milestones, and execute with precision — all in one strategic planning hub.
                 </p>
@@ -317,7 +317,7 @@ const DashboardPreview = () => {
                     size="lg" 
                     className="w-full sm:w-auto h-12 px-8 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-primary-foreground font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                   >
-                    Sign Up to Access Your Command Center
+                    Sign Up to Access Your Progress Tracker
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>

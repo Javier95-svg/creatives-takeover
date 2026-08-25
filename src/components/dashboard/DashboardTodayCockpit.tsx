@@ -228,7 +228,7 @@ export default function DashboardTodayCockpit() {
               </div>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
                 {primaryAction?.description
-                  ?? 'Your command center will prioritize the next action as soon as you add a task, routine, or startup artifact.'}
+                  ?? 'Your Progress Tracker will prioritize the next action as soon as you add a task, routine, or startup artifact.'}
               </p>
               {creditQuote.data ? (
                 <p className="mt-2 text-xs text-muted-foreground">

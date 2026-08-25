@@ -5,7 +5,7 @@ const dashboardTourSteps = [
   {
     id: "welcome",
     title: "Welcome to Your Dashboard! 📊",
-    description: "Your Founder Command Center tracks your business progress, daily goals, tasks, and projects. Everything you need to stay organized and motivated.",
+    description: "Your Founder Progress Tracker tracks your business progress, daily goals, tasks, and projects. Everything you need to stay organized and motivated.",
     position: "center" as const,
   },
   {

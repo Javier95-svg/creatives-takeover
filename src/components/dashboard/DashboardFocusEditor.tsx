@@ -110,7 +110,7 @@ export default function DashboardFocusEditor() {
       });
       await refetch();
       setOpen(false);
-      toast.success('Command Center focus updated.');
+      toast.success('Progress Tracker focus updated.');
     } catch (error) {
       console.error('Unable to update dashboard focus', error);
       toast.error('We could not update your focus. Please try again.');
@@ -136,7 +136,7 @@ export default function DashboardFocusEditor() {
             <div>
               <p className="text-sm font-semibold">Sharpen your recommendations</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Your Command Center is ranking from an estimate. Tell us {missing.join(' and ')} to
+                Your Progress Tracker is ranking from an estimate. Tell us {missing.join(' and ')} to
                 make it specific to you.
               </p>
             </div>
@@ -154,9 +154,9 @@ export default function DashboardFocusEditor() {
             </Button>
           </DialogTrigger>
         )}
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>Edit your Command Center focus</DialogTitle>
+            <DialogTitle>Edit your Progress Tracker focus</DialogTitle>
             <DialogDescription>
               These changes shape future missions, your operating loop, routine, and recommendation ranking.
             </DialogDescription>

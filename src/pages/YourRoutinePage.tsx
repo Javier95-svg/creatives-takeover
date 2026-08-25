@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { Link } from 'react-router-dom';
 import {
+  ArrowRight,
   ArrowDown,
   ArrowUp,
+  BookOpen,
   CheckCircle2,
   Clock3,
   Loader2,
@@ -26,6 +29,7 @@ import { Switch } from '@/components/ui/switch';
 import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
 import { useRoutine } from '@/hooks/useRoutine';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import {
   ROUTINE_GOAL_OPTIONS,
@@ -44,6 +48,81 @@ import {
 
 const DEFAULT_DAILY_DAYS = [1, 2, 3, 4, 5];
 const DEFAULT_WEEKLY_DAYS = [5];
+
+type DailyReadingArticle = {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  banner_image_url: string | null;
+};
+
+function stableHash(value: string) {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = ((hash << 5) - hash + value.charCodeAt(index)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+export function selectLectureOfTheDay(articles: DailyReadingArticle[], date = new Date()) {
+  if (!articles.length) return null;
+
+  // A stable shuffled order plus the local day number gives every founder the
+  // same recommendation for a day and rotates to a different article tomorrow.
+  const shuffled = [...articles].sort((left, right) => stableHash(left.id) - stableHash(right.id));
+  const dayNumber = Math.floor(new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime() / 86_400_000);
+  return shuffled[dayNumber % shuffled.length] ?? null;
+}
+
+function LectureOfTheDay() {
+  const [article, setArticle] = useState<DailyReadingArticle | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    void supabase
+      .from('stories_articles')
+      .select('id, slug, title, excerpt, banner_image_url')
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .limit(100)
+      .then(({ data, error }) => {
+        if (!active || error) return;
+        setArticle(selectLectureOfTheDay((data ?? []) as DailyReadingArticle[]));
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (!article) return null;
+
+  return (
+    <Card className="overflow-hidden border-primary/20 bg-card/90">
+      <CardContent className="flex gap-4 p-4 sm:p-5">
+        <div className="h-20 w-24 shrink-0 overflow-hidden rounded-lg bg-primary/10 sm:h-24 sm:w-36">
+          {article.banner_image_url ? (
+            <img src={article.banner_image_url} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center"><BookOpen className="h-6 w-6 text-primary/60" /></div>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+            <BookOpen className="h-3.5 w-3.5" /> Lecture of the Day
+          </p>
+          <h2 className="mt-1.5 line-clamp-2 text-base font-semibold leading-6 text-foreground">{article.title}</h2>
+          {article.excerpt ? <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">{article.excerpt}</p> : null}
+          <Link to={`/newspaper/${article.slug}`} className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+            Read article <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 function getGoalLabel(goal: string | null | undefined) {
   return ROUTINE_GOAL_OPTIONS.find((option) => option.value === goal)?.label ?? 'Routine';
@@ -440,6 +519,7 @@ export default function YourRoutinePage() {
           <title>Your Routine - Creatives Takeover</title>
         </Helmet>
         <RoutineSetupCard onStart={(goal) => void initializeRoutine(goal)} isSaving={isSaving} />
+        <div className="mt-6"><LectureOfTheDay /></div>
       </>
     );
   }
@@ -490,6 +570,7 @@ export default function YourRoutinePage() {
 
         <div className="space-y-6">
           <div className="space-y-6">
+            <LectureOfTheDay />
             <RoutineTaskSection
               title="Today"
               description="The daily habits scheduled for today."

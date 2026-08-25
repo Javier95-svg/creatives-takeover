@@ -139,7 +139,7 @@ test('first-result prompt is compact, responsive, non-dismissible, and keeps act
   assert.match(banner, /Finish your first result/);
   assert.match(banner, /trackRetentionEvent\('activation_first_action_opened'/);
   assert.doesNotMatch(banner, /handleDismiss|aria-label="Dismiss"|CheckCircle2/);
-  assert.match(tour, /Command Center, your daily operating view/);
+  assert.match(tour, /Progress Tracker, your daily operating view/);
   assert.doesNotMatch(tour, /Home, your daily command center/);
 });
 

@@ -64,7 +64,7 @@ export default function DashboardTodaySnapshot() {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2"><p id="dashboard-primary-action" className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Do this next</p>{primaryAction ? <Badge variant="outline">About {primaryAction.estimatedMinutes} min</Badge> : null}</div>
               <h2 className="mt-2 text-lg font-semibold text-foreground">{primaryAction?.title ?? 'Plan one useful move for today'}</h2>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">{primaryAction?.description ?? 'Your command center will prioritize the next action as soon as you add a task, routine, or startup artifact.'}</p>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">{primaryAction?.description ?? 'Your Progress Tracker will prioritize the next action as soon as you add a task, routine, or startup artifact.'}</p>
               {isOffline || isStale ? <p className="mt-2 text-xs text-warning">{isOffline ? 'You are offline. Showing your last saved priorities.' : 'Refreshing your latest progress…'}</p> : null}
             </div>
             <Button asChild={Boolean(actionRoute)} disabled={!actionRoute} className="shrink-0">

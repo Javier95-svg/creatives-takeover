@@ -740,7 +740,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
     if (currentStep === 3) {
       return (
         <>
-          <StepHeading title="What outcome matters most in the next 30 days?" description="Your Command Center will prioritize this outcome over a generic startup checklist." ref={headingRef} />
+          <StepHeading title="What outcome matters most in the next 30 days?" description="Your Progress Tracker will prioritize this outcome over a generic startup checklist." ref={headingRef} />
           <div className="mt-5"><ChoiceGrid options={GOAL_OPTIONS} value={answers.primaryGoal} onSelect={(primaryGoal) => patchAnswers({ primaryGoal })} /></div>
           {requiresFundraisingStatus(answers.primaryGoal, answers.blocker) ? (
             <div className="mt-6">
@@ -832,7 +832,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
     const selected = ACTIVATION_CATALOG[selectedIntent];
     return (
       <>
-        <StepHeading title="Your Command Center focus is ready" description="Review how your answers will shape the dashboard, then open your first useful action." ref={headingRef} />
+        <StepHeading title="Your Progress Tracker focus is ready" description="Review how your answers will shape the dashboard, then open your first useful action." ref={headingRef} />
         <div className="mt-5 rounded-xl border border-accent-teal/30 bg-accent-teal/10 p-5">
           <div className="flex flex-wrap items-center gap-2">
             <Badge>{draftContext.founderLoop} loop</Badge>
@@ -940,7 +940,7 @@ const StepHeading = ({
   ref: RefObject<HTMLHeadingElement>;
 }) => (
   <div>
-    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-accent-teal">Personalize your Command Center</p>
+    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-accent-teal">Personalize your Progress Tracker</p>
     <h2 ref={ref} tabIndex={-1} className="font-space-grotesk text-2xl font-semibold tracking-tight outline-none sm:text-3xl">{title}</h2>
     <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
   </div>
