@@ -220,7 +220,7 @@ const journeyActions: JourneyAction[] = [
     to: "/build",
     title: "Build Your MVP",
     outcome: "Working product",
-    description: "Create the core product your customers need without unnecessary features.",
+    description: "Create a working MVP, launch sooner, and improve it with real feedback.",
     icon: Boxes,
     accentName: "indigo-steel",
     accent: "226 31% 57%",

@@ -20,7 +20,7 @@ const frozenFiles = {
   // Content, visual order, actions, and responsive layout remain unchanged.
   // Rehashed 2026-08-25 for the approved copy-only replacement of the Tech
   // Stack row with the MVP Builder offer and its /build destination.
-  '../src/components/EntrepreneurProblems.tsx': '18fe64d8e3bf4d6660267fb374ab8dea14363d06f09177ae059490c7458e02cf',
+  '../src/components/EntrepreneurProblems.tsx': 'a1f382a397f1f6df8ac911da96f59ac7d06d0cbd6f1e09cc112beaa6eb59b237',
   // Updated for the canonical core-tool navigation: support tools no longer
   // appear as stage prerequisites, while Stage VII retains its original name
   // and order.
