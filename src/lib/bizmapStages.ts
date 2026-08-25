@@ -52,7 +52,6 @@ const CORE_TOOL_ICONS: Record<string, LucideIcon> = {
   pmf_lab: FlaskConical,
   mvp_builder: Rocket,
   gtm_strategist: Globe,
-  first_customer_sprint: Compass,
   traction_engine: Globe,
   insighta_test: FlaskConical,
   pitch_deck_analyzer: Layers,
@@ -157,7 +156,7 @@ export const STAGE_TASKS: Record<BizMapStage, StageTaskTemplate[]> = {
   ],
   LAUNCH: [
     { id: 'launch-gtm-play', stage: 'LAUNCH', title: 'Create one measurable acquisition play', priority: 'high', route: '/go-to-market' },
-    { id: 'launch-first-customer-cycle', stage: 'LAUNCH', title: 'Complete the first customer acquisition cycle', priority: 'high', route: '/first-customer-sprint' },
+    { id: 'launch-directories', stage: 'LAUNCH', title: 'Submit your launch to relevant directories', priority: 'high', route: '/directories' },
   ],
   TRACTION: [
     { id: 'traction-repeat-cycle', stage: 'TRACTION', title: 'Repeat the same acquisition motion in a second cycle', priority: 'high', route: '/traction-engine' },

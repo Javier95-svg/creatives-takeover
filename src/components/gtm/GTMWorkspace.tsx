@@ -143,8 +143,6 @@ export default function GTMWorkspace({ plan, planId, weeklyReview, isSaving, isE
   const primaryPlay = plan.plays.find((play) => play.status === 'active') ?? plan.plays[0];
   const outcome = evaluateGTMOutcome(plan);
   const executablePlays = selectExecutableGTMPlays(plan);
-  const firstCustomerEligible = plan.intake.businessModel === 'b2b_saas'
-    && ['founder_led_sales', 'sales_assisted'].includes(plan.thesis.motion);
   const outcomeLabels: Record<keyof typeof outcome.checks, string> = {
     primaryChannel: 'Primary channel', fallbackChannel: 'Fallback channel', evidenceBackedMessaging: 'Evidence backed messaging',
     usableCampaignAssets: 'Usable assets', sixWeekTargets: 'Six week targets', budgetAndTimeConstraints: 'Budget and time constraints',
@@ -191,7 +189,7 @@ export default function GTMWorkspace({ plan, planId, weeklyReview, isSaving, isE
 
         <TabsContent value="activate" className="mt-6 space-y-4">
           <div><h2 className="text-lg font-semibold">Primary play and fallback</h2><p className="text-sm text-muted-foreground">Execute one pre-registered acquisition experiment. The fallback stays available if measured evidence kills the primary play.</p></div>
-          {firstCustomerEligible ? <Card className="border-success/25 bg-success/5"><CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-semibold">B2B founder-led execution</p><p className="text-sm text-muted-foreground">Use the First Customer Sprint for a named prospect list, manual outreach, customer evidence, and the mentor decision checkpoint.</p></div><Button variant="outline" onClick={() => window.location.assign('/first-customer-sprint')}>Open First Customer Sprint<ArrowRight className="ml-2 h-4 w-4" /></Button></CardContent></Card> : null}
+          <Card className="border-success/25 bg-success/5"><CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-semibold">First customer cycle</p><p className="text-sm text-muted-foreground">Run this GTM funnel step with a named prospect list, manual outreach, customer evidence, and a decision checkpoint.</p></div><Button variant="outline" onClick={() => navigate('/first-customer-sprint?source=gtm')}>Run customer acquisition cycle<ArrowRight className="ml-2 h-4 w-4" /></Button></CardContent></Card>
           <GTMExecutionOS plan={plan} planId={planId} mode="execute" onUpdatePlan={onUpdatePlan} />
           {executablePlays.map((play) => <PlayEditor key={play.id} play={play} plan={plan} planId={planId} onSave={onUpdatePlay} onStartSprint={onStartSprint} />)}
         </TabsContent>
