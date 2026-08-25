@@ -507,9 +507,9 @@
       "sourceFile": "src/lib/analytics.ts",
       "requiredProperties": ["operating_loop", "activation_source"]
     },
-    "first_customer_sprint_cta_clicked": {
-      "stage": "acquisition", "owner": "growth", "source": "client",
-      "sourceFile": "src/components/FirstCustomerSprintPilotCallout.tsx", "requiredProperties": ["source", "outcome"]
+    "dashboard_platform_update_opened": {
+      "stage": "retention", "owner": "product", "source": "client",
+      "sourceFile": "src/components/dashboard/PlatformUpdates.tsx", "requiredProperties": ["update_id"]
     },
     "outcome_journey_assessed": {
       "stage": "activation", "owner": "product", "source": "client",

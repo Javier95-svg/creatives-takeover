@@ -37,9 +37,10 @@ const frozenFiles = {
   //
   // Previous hash (approved homepage restored from 1325b121, the parent of
   // 5dd4dbbb): 20234ac0810e38a9cf7fbc6497bd33ec7d3c1da7fc181d068a00dfe2c8ecb4d0
-  // Rehashed 2026-08-01: Hero no longer takes a ctaHref prop, so both mount
-  // sites drop it. Section order and content are unchanged.
-  '../src/pages/Index.tsx': 'fba67637f476f003cd98bbd98b62e5b73673c75c5805a72921b8ecffb650727a',
+  // Rehashed 2026-08-24: the First Customer Sprint pilot announcement moved
+  // from the public homepage to the authenticated Command Center, where
+  // platform upgrades and founder-accountability work belong.
+  '../src/pages/Index.tsx': 'a30910fd67677bb08b01a31a8d820ffa93f608aa6c87a4e80dc71578ba75d8c8',
 } as const;
 
 test('the approved unauthenticated landing page remains frozen during core-tool work', () => {

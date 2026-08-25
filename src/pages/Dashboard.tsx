@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 
 import StartupHomeCommandCenter from '@/components/dashboard/StartupHomeCommandCenter';
 import DashboardTodayCockpit from '@/components/dashboard/DashboardTodayCockpit';
+import PlatformUpdates from '@/components/dashboard/PlatformUpdates';
 import FounderJourneyPanel from '@/components/dashboard/FounderJourneyPanel';
 import DashboardFocusEditor from '@/components/dashboard/DashboardFocusEditor';
 import FounderStageIntelligenceCard from '@/components/dashboard/FounderStageIntelligenceCard';
@@ -208,6 +209,7 @@ const Dashboard = () => {
         />
       ) : null}
       <DashboardTodayCockpit />
+      <PlatformUpdates />
       <FounderJourneyPanel />
       <DashboardFocusEditor />
       <FounderStageIntelligenceCard />

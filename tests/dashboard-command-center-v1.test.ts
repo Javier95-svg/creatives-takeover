@@ -113,6 +113,7 @@ test('first-result and resume banners lead into the complete command center', ()
   const firstResult = dashboard.lastIndexOf('<FirstResultActivationCard');
   const resume = dashboard.lastIndexOf('<ContinueArtifactCard');
   const today = dashboard.lastIndexOf('<DashboardTodayCockpit');
+  const updates = dashboard.lastIndexOf('<PlatformUpdates');
   const journey = dashboard.lastIndexOf('<FounderJourneyPanel');
   const disclosure = dashboard.lastIndexOf('<DashboardDisclosure');
   const exitIntent = dashboard.lastIndexOf('<ExitIntentModal');
@@ -120,6 +121,8 @@ test('first-result and resume banners lead into the complete command center', ()
   assert.ok(firstResult > 0);
   assert.ok(firstResult < resume);
   assert.ok(resume < today);
+  assert.ok(today < updates);
+  assert.ok(updates < journey);
   assert.ok(today < journey);
   assert.ok(journey < disclosure);
   assert.ok(disclosure < exitIntent);
@@ -151,7 +154,7 @@ test('every completed account receives the canonical utility routes and dashboar
   );
   assert.match(sidebar, /!isUniversalMoreTool && !modeConfig\.visibleTools\.includes/);
   assert.match(sidebar, /!isUniversalMoreTool && !sidebarPreferences\[item\.prefKey\]/);
-  assert.match(dashboard, /<DashboardTodayCockpit \/>[\s\S]*<FounderJourneyPanel \/>/);
+  assert.match(dashboard, /<DashboardTodayCockpit \/>[\s\S]*<PlatformUpdates \/>[\s\S]*<FounderJourneyPanel \/>/);
   assert.match(dashboard, /title="More founder signals"[\s\S]*<StartupHomeCommandCenter \/>/);
   assert.match(founderSignals, /lg:grid-cols-2/);
   assert.match(founderSignals, /title="Your startup info"/);
