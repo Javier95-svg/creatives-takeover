@@ -273,7 +273,7 @@ export default function BizMapJourneyHubPage() {
                       }`}
                     >
                       {state?.completed ? <CheckCircle2 className="mr-1 inline h-3.5 w-3.5" /> : <Circle className="mr-1 inline h-3.5 w-3.5" />}
-                      Stage {stage.numeral}{stage.optionalOverlay ? ' · Optional' : ''}
+                      Stage {stage.numeral}
                     </div>
                   );
                 })}

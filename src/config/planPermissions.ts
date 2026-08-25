@@ -284,7 +284,7 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
   pro: {
     label: 'Expert Execution Mode',
     badgeDescription: 'Accountability and RAISE',
-    subtitle: 'All operating loops with expert support and optional fundraising.',
+    subtitle: 'All operating loops with expert support and fundraising.',
     sectionIds: ['mode-support', 'mode-fundraising', 'mode-usage', 'routine', 'your-tasks'],
     activeStages: [1, 2, 3, 4, 5],
     previewStages: [],
@@ -323,7 +323,7 @@ export const FEATURE_LABELS: Record<FeatureKey, string> = {
   pitch_deck_analyzer: 'Pitch Deck Analyzer',
   prompt_library: 'Prompt Library',
   prompt_library_export: 'Prompt Library export',
-  insighta_test: 'Fundraising Readiness',
+  insighta_test: 'Insighta Test',
   newspaper: 'Newspaper',
   profile: 'Profile',
 };

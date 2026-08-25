@@ -67,7 +67,7 @@ const ValuePropositionCards = () => {
       title: "Access to VCs and Accelerators",
       subtitle: "Insighta",
       buttonLabel: "Fundraising Tools",
-      description: "Raising money starts with knowing who to talk to. VC Search lets you explore a curated database of venture capital firms filtered by industry, stage, and check size so you can build a targeted list instead of pitching blind. Find your Angel connects you directly with angel investors who are actively looking to back early stage founders.\n\nStart with Fundraising Readiness, then use Pitch Deck Analyzer to sharpen your presentation and VC Search to build a focused investor list. Supplemental outreach tools remain available when you need them.",
+      description: "Raising money starts with knowing who to talk to. VC Search lets you explore a curated database of venture capital firms filtered by industry, stage, and check size so you can build a targeted list instead of pitching blind. Find your Angel connects you directly with angel investors who are actively looking to back early stage founders.\n\nUse VC Search to build a focused investor list, then Pitch Deck Analyzer to sharpen your presentation, and Insighta Test to assess your readiness. Supplemental outreach tools remain available when you need them.",
       cta: "Explore Investors",
       link: "/vc-search",
       image: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&h=600&fit=crop&q=80&fm=webp",

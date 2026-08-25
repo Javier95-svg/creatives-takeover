@@ -145,7 +145,7 @@ export const METRIC_DEFINITIONS: AnalysisMetric[] = [
   },
   {
     key: 'fundraisingReadiness',
-    name: 'Fundraising Readiness',
+    name: 'Insighta Test',
     score: 0,
     weight: 0.10,
     description: 'Round appropriateness and investor fit',

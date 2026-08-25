@@ -108,10 +108,10 @@ const Navigation = () => {
   const insightaSubmenu: BizMapMenuItem[] = [
     { type: 'label', label: "STAGE VI: TRACTION" },
     { name: tractionTool.name, href: tractionTool.route, icon: LineChart, description: "Track weekly distribution and retention signals." },
-    { type: 'label', label: "STAGE VII: OPTIONAL FUNDRAISING" },
-    { name: readinessTool.name, href: readinessTool.route, icon: FlaskConical, description: "Decide whether you are ready to raise." },
-    { name: pitchTool.name, href: pitchTool.route, icon: BarChart3, description: "Analyze your pitch deck." },
+    { type: 'label', label: "STAGE VII: FUNDRAISING" },
     { name: vcTool.name, href: vcTool.route, icon: UsersIcon, description: "Build a focused investor list." },
+    { name: pitchTool.name, href: pitchTool.route, icon: BarChart3, description: "Analyze your pitch deck." },
+    { name: readinessTool.name, href: readinessTool.route, icon: FlaskConical, description: "Measure your fundraising readiness." },
   ];
 
   // Community submenu items

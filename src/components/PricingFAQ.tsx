@@ -68,7 +68,7 @@ That means billing, renewals, and checkout security all run on Stripe's infrastr
     },
     {
       question: "What's included in the Rookie plan?",
-      answer: `Rookie is free forever and includes 50 credits per month. You get Dashboard Rookie Mode, ICP Builder for free, Demo Studio with credit usage, MVP Builder with per-action credit usage, Prompt Library access for free models only, Fundraising Readiness, Newspaper, free mentor browsing, messaging and Discovery Calls, and free Find a Co-Founder posting.
+      answer: `Rookie is free forever and includes 50 credits per month. You get Dashboard Rookie Mode, ICP Builder for free, Demo Studio with credit usage, MVP Builder with per-action credit usage, Prompt Library access for free models only, Insighta Test, Newspaper, free mentor browsing, messaging and Discovery Calls, and free Find a Co-Founder posting.
 
     VC Search and Accelerator Hunt are browse only on Rookie. GTM Strategist remains available using account credits, while other plan-gated tools follow the comparison table. Find Your Angel is not included.`,
       relatedQuestions: [0, 1],

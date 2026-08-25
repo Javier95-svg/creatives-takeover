@@ -295,14 +295,14 @@ const FundraisingReadinessToolkitAll = () => {
     if (!featureAccess.hasAccess) {
       openUpgradePrompt({
         reason: 'feature',
-        featureName: 'Fundraising Readiness',
+        featureName: 'Insighta Test',
         requiredTier: featureAccess.requiredTier as Plan | undefined,
         description: featureAccess.message,
       });
       return;
     }
     const requiredCredits = confirmCreditCharge
-      ? ensureCredits('FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Fundraising Readiness' })
+      ? ensureCredits('FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Insighta Test' })
       : 0;
     if (requiredCredits === null) return;
 
@@ -352,14 +352,14 @@ const FundraisingReadinessToolkitAll = () => {
       }
 
       if (error) {
-        if (handleCreditError(error, data, 'FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Fundraising Readiness' })) {
+        if (handleCreditError(error, data, 'FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Insighta Test' })) {
           throw new Error('Insufficient credits');
         }
         throw error;
       }
 
       if (data?.error) {
-        if (handleCreditError(null, data, 'FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Fundraising Readiness' })) {
+        if (handleCreditError(null, data, 'FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Insighta Test' })) {
           throw new Error('Insufficient credits');
         }
         throw new Error(data.error);
@@ -761,7 +761,7 @@ const FundraisingReadinessToolkitAll = () => {
                 <div className="flex items-center gap-3">
                   <Rocket className="h-6 w-6 text-primary" />
                   <div>
-                    <CardTitle className="text-2xl">Your Fundraising Readiness</CardTitle>
+                    <CardTitle className="text-2xl">Your Insighta Test</CardTitle>
                     <CardDescription className="mt-1">
                       Your free top-line score, based on your answers.
                     </CardDescription>

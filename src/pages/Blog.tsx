@@ -28,7 +28,7 @@ const Blog = () => {
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      "name": "Insighta — Traction and Optional Fundraising",
+      "name": "Insighta — Traction and Fundraising",
       "description": "Measure traction, improve investor readiness, research relevant prospects, and continue outreach without implying funding is guaranteed.",
       "url": "https://creatives-takeover.com/insighta",
       "publisher": {
@@ -49,8 +49,8 @@ const Blog = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Insighta: Traction & Fundraising Readiness | Creatives Takeover"
-        description="Run attributed traction sprints first, then use optional fundraising readiness, deck analysis, investor research, and outreach workflows."
+        title="Insighta: Traction & Fundraising | Creatives Takeover"
+        description="Run attributed traction sprints first, then use Insighta Test, deck analysis, investor research, and outreach workflows."
         keywords="startup traction engine, fundraising readiness, investor outreach tools, vc search, pitch deck analysis"
         url="/insighta"
         structuredData={structuredData}
@@ -89,7 +89,7 @@ const Blog = () => {
           </div>
 
           <div className="mb-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Optional fundraising pipeline</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Stage VII: Fundraising</p>
             <h2 className="mt-1 text-2xl font-semibold">Research, save, and continue outreach</h2>
             <p className="mt-2 text-sm text-muted-foreground">Editable filters and saved prospects remain in your control. Insighta measures actions, replies, and meetings—never guaranteed funding.</p>
           </div>

@@ -81,7 +81,7 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
     const featureLower = feature.toLowerCase();
     
     if (featureLower.includes('fundraising') || featureLower.includes('readiness')) {
-      return ' Fundraising Readiness is included on every plan.';
+      return ' Insighta Test is included on every plan.';
     }
     if (featureLower.includes('waitlist') || featureLower.includes('demo studio')) {
       const waitlistCost = getCreditCostForPlan('WAITLIST_GENERATION', normalizedTier) ?? CREDIT_COSTS.WAITLIST_GENERATION;
@@ -113,7 +113,7 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
       return ` PMF Lab is unlocked on your plan. Your first evidence score is free, then it costs ${CREDIT_COSTS.PMF_SCORING} credits per score.`;
     }
     if (featureLower.includes('insighta') || featureLower.includes('test')) {
-      return ' Fundraising Readiness is included on every plan.';
+      return ' Insighta Test is included on every plan.';
     }
     if (featureLower.includes('investor') || featureLower.includes('matching')) {
       return ' Find Your Angel unlocks on Pro.';

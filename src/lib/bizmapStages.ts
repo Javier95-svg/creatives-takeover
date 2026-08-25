@@ -129,7 +129,7 @@ export const BIZMAP_STAGES: BizMapStageDefinition[] = [
     order: 7,
     numeral: 'VII',
     title: 'FUNDRAISING',
-    description: 'Optional: prepare for a raise once your traction is verified.',
+    description: 'Prepare for a raise once your traction is verified.',
     tools: BIZMAP_TOOLS.filter((tool) => tool.stage === 'FUNDRAISING'),
     optionalOverlay: true,
   },
@@ -164,9 +164,9 @@ export const STAGE_TASKS: Record<BizMapStage, StageTaskTemplate[]> = {
     { id: 'traction-verify-signal', stage: 'TRACTION', title: 'Verify one qualified buyer signal', priority: 'high', route: '/traction-engine' },
   ],
   FUNDRAISING: [
-    { id: 'fundraising-readiness', stage: 'FUNDRAISING', title: 'Diagnose fundraising readiness', priority: 'high', route: '/insighta-test' },
-    { id: 'fundraising-pitch-deck', stage: 'FUNDRAISING', title: 'Review your pitch deck narrative', priority: 'high', route: '/pitch-deck-analyzer' },
     { id: 'fundraising-investor-list', stage: 'FUNDRAISING', title: 'Build a target investor list', priority: 'high', route: '/vc-search' },
+    { id: 'fundraising-pitch-deck', stage: 'FUNDRAISING', title: 'Review your pitch deck narrative', priority: 'high', route: '/pitch-deck-analyzer' },
+    { id: 'fundraising-readiness', stage: 'FUNDRAISING', title: 'Complete the Insighta Test', priority: 'high', route: '/insighta-test' },
   ],
 };
 

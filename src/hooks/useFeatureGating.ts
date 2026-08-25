@@ -264,7 +264,7 @@ export function useFeatureGating() {
       case 'icp_analysis':
         return { hasAccess: true };
 
-      // Fundraising Readiness (included for all tiers)
+      // Insighta Test (included for all tiers)
       case 'insighta_test':
         return { hasAccess: true };
 

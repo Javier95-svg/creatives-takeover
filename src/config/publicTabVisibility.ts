@@ -148,7 +148,7 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
   },
   '/insighta-test': {
     state: 'preview',
-    featureName: 'Fundraising Readiness',
+    featureName: 'Insighta Test',
     description: 'Measure your fundraising readiness before you start investor outreach.',
     previewItems: [
       'Preview the assessment experience and the themes it evaluates.',

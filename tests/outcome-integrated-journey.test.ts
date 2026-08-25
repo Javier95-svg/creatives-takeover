@@ -25,8 +25,8 @@ test('the internal Capital gate never creates a replacement for Insighta Stage V
   assert.match(dashboard, /current_stage !== 'capital'/);
   assert.match(dashboard, /filter\(\(stage\) => stage !== 'capital'\)/);
   const catalog = readFileSync(new URL('../src/config/founderToolCatalog.ts', import.meta.url), 'utf8');
-  assert.match(catalog, /key: 'insighta_test'[\s\S]*?name: 'Fundraising Readiness'/);
-  assert.doesNotMatch(catalog, /Insighta Test — Fundraising Readiness/);
+  assert.match(catalog, /key: 'insighta_test'[\s\S]*?name: 'Insighta Test'/);
+  assert.doesNotMatch(catalog, /Fundraising Readiness/);
 });
 
 test('stage assessment chooses the earliest missing outcome but lets the qualified pilot enter Acquire', () => {

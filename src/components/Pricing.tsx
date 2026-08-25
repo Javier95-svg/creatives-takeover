@@ -76,7 +76,7 @@ const PLAN_CONFIG: Array<{
     title: "Pro",
     outcomeLabel: "Expert + RAISE",
     subtitle: "Add human accountability",
-    audience: "Run every loop with deeper reviews, expert accountability, and optional fundraising workflows.",
+    audience: "Run every loop with deeper reviews, expert accountability, and fundraising workflows.",
     monthlyPrice: PLAN_PRICING.pro.monthly,
     yearlyPrice: PLAN_PRICING.pro.yearly,
     yearlyEquivalent: "$49.08/mo",

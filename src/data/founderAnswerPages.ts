@@ -1685,7 +1685,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
       "A target investor list for that stage",
     ],
     cta: {
-      label: "Check Fundraising Readiness",
+      label: "Take the Insighta Test",
       href: "/insighta/test?utm_source=seo&utm_medium=answer_page&utm_campaign=preseed_vs_seed",
       description: "Assess whether your evidence matches the stage you want to raise at.",
     },

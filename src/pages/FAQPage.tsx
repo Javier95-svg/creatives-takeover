@@ -29,7 +29,7 @@ const FAQPage = () => {
       },
       {
         question: "Can I try it for free?",
-        answer: "Yes. Rookie is free forever with 50 credits per month and no credit card required. You get free ICP Builder access, Fundraising Readiness, Newspaper, early-stage browsing or preview access, and community browsing features."
+        answer: "Yes. Rookie is free forever with 50 credits per month and no credit card required. You get free ICP Builder access, Insighta Test, Newspaper, early-stage browsing or preview access, and community browsing features."
       },
       {
         question: "Is my business idea safe?",

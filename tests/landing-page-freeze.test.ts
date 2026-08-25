@@ -19,9 +19,10 @@ const frozenFiles = {
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.
   '../src/components/EntrepreneurProblems.tsx': '82ef110ab254c5dc9e459afe5368761668c8d8fcfb6b1d076231f11ad03cf19d',
-  // Updated for the canonical core-tool navigation: optional/support tools no
-  // longer appear as stage prerequisites.
-  '../src/components/Navigation.tsx': 'a9be6811b8584fbe464b0abea770b03d2474c328998691998934202bf52c1fb7',
+  // Updated for the canonical core-tool navigation: support tools no longer
+  // appear as stage prerequisites, while Stage VII retains its original name
+  // and order.
+  '../src/components/Navigation.tsx': '5c62d5aa861c94a25aca804451f95d089a0d825b339c5e7dfbc8c6ee434037c0',
   // Re-pinned 2026-07-25 (delivery audit, Phase 1): AISpecializationTrends moved
   // from a static import to lazy() + Suspense, matching how HomeFAQ and
   // FounderAnswerLibraryTeaser are already loaded. It is the only homepage

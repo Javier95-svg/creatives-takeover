@@ -26,7 +26,7 @@ test('BizMap and Insighta ownership follows the PMF journey', () => {
   assert.equal(FOUNDER_TOOLS_BY_KEY.directories.role, 'support');
   assert.deepEqual(
     getCoreFounderToolsForStage('FUNDRAISING').map((tool) => tool.key),
-    ['insighta_test', 'pitch_deck_analyzer', 'vc_search'],
+    ['vc_search', 'pitch_deck_analyzer', 'insighta_test'],
   );
   assert.equal(FOUNDER_TOOLS_BY_KEY.insighta_test.stage, 'FUNDRAISING');
 });
@@ -34,7 +34,7 @@ test('BizMap and Insighta ownership follows the PMF journey', () => {
 test('canonical visible names are standardized', () => {
   assert.equal(FOUNDER_TOOLS_BY_KEY.traction_engine.name, 'Traction Engine');
   assert.equal(FOUNDER_TOOLS_BY_KEY.tech_stack.name, 'Tech Stack Builder');
-  assert.equal(FOUNDER_TOOLS_BY_KEY.insighta_test.name, 'Fundraising Readiness');
+  assert.equal(FOUNDER_TOOLS_BY_KEY.insighta_test.name, 'Insighta Test');
 });
 
 test('navigation, dashboard, pricing, SEO, FAQs, and Pulse consume the catalog contract', () => {
@@ -52,6 +52,6 @@ test('navigation, dashboard, pricing, SEO, FAQs, and Pulse consume the catalog c
   }
 
   const faq = readFileSync(new URL('../src/components/SearchableFAQ.tsx', import.meta.url), 'utf8');
-  assert.match(faq, /What is Fundraising Readiness\?/);
-  assert.doesNotMatch(faq, /Fundraising Readiness is our landing page and value proposition testing tool/);
+  assert.match(faq, /What is Insighta Test\?/);
+  assert.doesNotMatch(faq, /Insighta Test is our landing page and value proposition testing tool/);
 });
