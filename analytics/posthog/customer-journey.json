@@ -115,6 +115,13 @@
       "sourceFile": "src/lib/heroFunnel.ts",
       "requiredProperties": ["route", "source", "anonymous_artifact_id", "has_output"]
     },
+    "external_proof_received": {
+      "stage": "evidence",
+      "owner": "product",
+      "source": "server",
+      "sourceFile": "supabase/functions/demo-studio-lead/index.ts",
+      "requiredProperties": ["source_tool", "project_id"]
+    },
     "artifact_claim_succeeded": {
       "stage": "activation",
       "owner": "product",
@@ -500,6 +507,26 @@
       "sourceFile": "src/lib/analytics.ts",
       "requiredProperties": ["operating_loop", "activation_source"]
     },
+    "first_customer_sprint_cta_clicked": {
+      "stage": "acquisition", "owner": "growth", "source": "client",
+      "sourceFile": "src/components/FirstCustomerSprintPilotCallout.tsx", "requiredProperties": ["source", "outcome"]
+    },
+    "outcome_journey_assessed": {
+      "stage": "activation", "owner": "product", "source": "client",
+      "sourceFile": "src/lib/retentionSystem.ts", "requiredProperties": ["journey_id", "entry_stage", "activation_intent", "acquisition_source"]
+    },
+    "outcome_stage_entered": {
+      "stage": "activation", "owner": "product", "source": "client",
+      "sourceFile": "src/hooks/useOutcomeJourney.ts", "requiredProperties": ["journey_id", "stage_run_id", "stage", "cohort_key", "acquisition_source"]
+    },
+    "journey_evidence_submitted": {
+      "stage": "evidence", "owner": "product", "source": "client",
+      "sourceFile": "src/hooks/useOutcomeJourney.ts", "requiredProperties": ["journey_id", "stage_run_id", "sprint_id", "experiment_id", "evidence_type", "review_status"]
+    },
+    "journey_evidence_reviewed": {
+      "stage": "evidence", "owner": "operations", "source": "client",
+      "sourceFile": "src/pages/AdminFirstCustomerSprintPage.tsx", "requiredProperties": ["evidence_submission_id", "review_status"]
+    },
     "first_customer_sprint_application_viewed": {
       "stage": "acquisition", "owner": "product", "source": "client",
       "sourceFile": "src/lib/analytics.ts", "requiredProperties": ["acquisition_source"]
@@ -620,6 +647,22 @@
     }
   },
   "funnels": [
+    {
+      "key": "outcome_integrated_pilot",
+      "name": "Invited founder to repeatable-demand evidence",
+      "windowDays": 45,
+      "steps": [
+        "first_customer_sprint_application_submitted",
+        "first_customer_sprint_started",
+        "first_customer_sprint_prospect_target_reached",
+        "first_customer_sprint_outreach_target_reached",
+        "journey_evidence_submitted",
+        "journey_evidence_reviewed",
+        "first_customer_sprint_completed",
+        "first_customer_sprint_continuation_purchased"
+      ],
+      "breakdowns": ["acquisition_source", "cohort_key", "stage"]
+    },
     {
       "key": "insighta_readiness_to_outreach",
       "name": "Insighta readiness to investor conversation",

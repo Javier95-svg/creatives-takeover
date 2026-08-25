@@ -11,15 +11,14 @@ const allTrue = (keys: string[]) => Object.fromEntries(keys.map((key) => [key, t
 
 test('server-authoritative contracts never promote an incomplete artifact', () => {
   const icp = evaluateOutcomeContract({ tool: 'icp_builder', qualityChecks: allTrue([
-    'primary_segment', 'non_fit_segment', 'three_ranked_pains', 'buying_trigger', 'current_alternative',
-    'reachable_channels', 'confidence_level', 'assumptions_registered', 'five_interview_plan',
+    'primary_segment', 'non_fit_segment', 'buying_trigger', 'current_alternative',
+    'reachable_channels', 'assumptions_registered',
   ]) });
   assert.equal(icp.status, 'draft');
-  assert.equal(icp.nextAction, 'Add at least one valid, non-placeholder market citation.');
+  assert.equal(icp.nextAction, 'Choose the one urgent pain you will test first.');
 
   const demo = evaluateOutcomeContract({ tool: 'demo_studio', qualityChecks: allTrue([
-    'interactive_steps', 'working_hotspots', 'captions_complete', 'single_cta', 'lead_capture', 'analytics',
-    'mobile_ready', 'published', 'no_unresolved_placeholders',
+    'buyer_promise', 'interactive_proof', 'single_cta', 'analytics', 'published', 'no_unresolved_placeholders',
   ]) });
   assert.equal(demo.status, 'draft');
   assert.equal(demo.nextAction, 'Repair every broken interaction.');
@@ -27,15 +26,14 @@ test('server-authoritative contracts never promote an incomplete artifact', () =
 
 test('ready and verified have consistent meanings across the contracts', () => {
   const ready = evaluateOutcomeContract({ tool: 'traction_engine', qualityChecks: allTrue([
-    'six_consecutive_weeks', 'three_distinct_decision_weeks', 'source_badges', 'acquisition_efficiency',
-    'retention', 'revenue_where_available', 'decision_recommendations', 'exportable_report',
+    'first_cycle_decision', 'two_comparable_cycles', 'buyer_signal_each_cycle', 'source_badges',
   ]), verificationMode: 'founder_reported' });
   assert.equal(ready.status, 'ready');
   assert.equal(ready.verificationMode, 'founder_reported');
 
   const verified = evaluateOutcomeContract({
     tool: 'traction_engine',
-    qualityChecks: { ...Object.fromEntries(ready.checks.map((check) => [check.id, true])), three_verified_weeks: true },
+    qualityChecks: { ...Object.fromEntries(ready.checks.map((check) => [check.id, true])), one_verified_buyer_signal: true },
     verificationMode: 'platform_verified',
   });
   assert.equal(verified.status, 'verified');
@@ -97,9 +95,10 @@ test('the outcome service reloads owned artifacts and versions attributed assump
   assert.match(service, /source_version_id/);
   assert.match(service, /provenance: `journey_handoff:/);
   assert.match(service, /consumed_artifact_id: artifactId/);
-  assert.match(service, /MVP handoff requires a verified Build decision backed by decision-grade evidence/);
+  assert.match(service, /MVP handoff requires a Build decision backed by three independent buyer signals and one documented objection/);
   assert.match(service, /checks\.decision !== 'build'/);
-  assert.match(service, /checks\.decision_grade !== true/);
+  assert.match(service, /checks\.three_independent_signals !== true/);
+  assert.match(service, /checks\.documented_objection !== true/);
 });
 
 test('MVP Builder opens with an empty typing bar and never auto-loads evidence into it', () => {
@@ -144,15 +143,13 @@ const journeyService = readFileSync(
 );
 const icpBuilder = readFileSync(new URL('../src/components/icp/ICPBuilder.tsx', import.meta.url), 'utf8');
 
-test('the ICP outcome still cannot reach ready at save time', () => {
-  // The premise of the whole fix. If this ever passes, the exception below is
-  // dead weight and should be removed rather than left to rot.
+test('a complete falsifiable ICP can reach ready without pretending AI research is buyer evidence', () => {
   const atSaveTime = evaluateOutcomeContract({ tool: 'icp_builder', qualityChecks: allTrue([
-    'primary_segment', 'non_fit_segment', 'three_ranked_pains', 'buying_trigger', 'current_alternative',
-    'reachable_channels', 'authentic_citation', 'confidence_level', 'assumptions_registered',
+    'primary_segment', 'non_fit_segment', 'urgent_pain', 'buying_trigger', 'current_alternative',
+    'reachable_channels', 'three_reachable_accounts', 'assumptions_registered',
   ]) });
-  assert.equal(atSaveTime.status, 'draft');
-  assert.equal(atSaveTime.nextAction, 'Create the five-interview validation plan.');
+  assert.equal(atSaveTime.status, 'ready');
+  assert.equal(atSaveTime.verificationMode, 'unverified');
 });
 
 test('create_handoff admits a draft ICP, and only for the demo_studio destination', () => {
@@ -166,9 +163,9 @@ test('create_handoff admits a draft ICP, and only for the demo_studio destinatio
     'the exception must be pinned to exactly one source and destination pair',
   );
   assert.match(body, /!isProvisionalPair/, 'every other pair must still be gated on ready/verified');
-  // The verified-Build gate on the MVP handoff is a separate, stricter rule and
+  // The evidence-backed Build gate on the MVP handoff is a separate rule and
   // must not have been loosened alongside this one.
-  assert.match(body, /MVP handoff requires a verified Build decision/);
+  assert.match(body, /MVP handoff requires a Build decision backed by three independent buyer signals/);
 });
 
 test('a handoff records the source status it was actually created at', () => {
@@ -203,4 +200,82 @@ test('the ICP builder no longer returns early before creating the handoff', () =
     'the status gate that made the handoff unreachable must stay removed',
   );
   assert.match(body, /idempotencyKey: `icp:\$\{analysisId\}:demo`/, 'the key must match the signal path exactly');
+});
+
+/*
+ * The proof loop.
+ *
+ * The platform's one defensible property is that it hosts the artifacts founders
+ * put in front of buyers, so it witnesses the market's response rather than being
+ * told about it. That is worth nothing if a founder's own pageviews count as
+ * market evidence, so owner exclusion is what these pin hardest.
+ */
+
+const proofMigration = readFileSync(
+  new URL('../supabase/migrations/20260823120000_proof_loop_funnel.sql', import.meta.url),
+  'utf8',
+);
+const demoEventFn = readFileSync(
+  new URL('../supabase/functions/demo-studio-event/index.ts', import.meta.url),
+  'utf8',
+);
+const demoLeadFn = readFileSync(
+  new URL('../supabase/functions/demo-studio-lead/index.ts', import.meta.url),
+  'utf8',
+);
+
+test('owner views are resolved from the token, never from the request body', () => {
+  for (const [name, source] of [['event', demoEventFn], ['lead', demoLeadFn]] as const) {
+    assert.match(source, /getUserFromAuth\(req\)/, `${name} must resolve the caller server-side`);
+    assert.match(source, /owner_view: ownerView/, `${name} must stamp the resolved value`);
+    // A body-supplied flag would be trivially omitted by the one party with a
+    // motive to inflate their own numbers.
+    assert.doesNotMatch(source, /ownerView\s*=\s*(Boolean\()?body\./, `${name} must not trust the body`);
+  }
+});
+
+test('owner traffic is marked rather than discarded', () => {
+  // Dropping the row would make the endpoint impossible to debug from its own
+  // data, and would quietly hide a founder's preview from them entirely.
+  assert.match(demoEventFn, /const ownerView = Boolean\(/);
+  assert.doesNotMatch(demoEventFn, /if \(ownerView\) return json/);
+});
+
+test('the evidence triggers refuse owner previews and unverified beacons', () => {
+  const block = proofMigration.slice(proofMigration.indexOf('sync_demo_event_to_customer_evidence_v1()'));
+  const body = block.slice(0, block.indexOf('CREATE TRIGGER'));
+  assert.match(body, /NEW\.owner_view IS TRUE OR NEW\.verified IS NOT TRUE/);
+
+  // The pre-existing signup sync predated owner_view and would have counted a
+  // founder's own test submission as demand.
+  const signupBlock = proofMigration.slice(proofMigration.indexOf('sync_demo_signup_to_founder_cycle_v1()'));
+  assert.match(signupBlock, /IF NEW\.owner_view IS TRUE THEN RETURN NEW/);
+});
+
+test('a single stranger cannot be counted twice at the identified step', () => {
+  const block = proofMigration.slice(proofMigration.indexOf('sync_demo_event_to_customer_evidence_v1()'));
+  const body = block.slice(0, block.indexOf('CREATE TRIGGER'));
+  // demo-studio-lead writes BOTH a signup row and a 'signup' event. If the event
+  // trigger also mapped 'signup', one lead would produce two identified rows.
+  assert.doesNotMatch(body, /WHEN NEW\.type = 'signup'/);
+  assert.match(body, /'signup' is deliberately absent/);
+  assert.match(body, /ON CONFLICT \(user_id, idempotency_key\) DO NOTHING/);
+});
+
+test('the north-star event fires once per founder, not once per lead', () => {
+  const block = demoLeadFn.slice(demoLeadFn.indexOf('external_proof_received') - 1200);
+  assert.match(block, /eq\("event_type", "stranger_identified"\)/);
+  assert.match(block, /count === 1/, 'must fire only when this is the first identified event');
+  assert.match(block, /if \(!ownerView\)/, 'a founder testing their own form is not proof');
+  // A stranger's email must never reach analytics.
+  const propsLine = block.slice(block.indexOf('properties:'), block.indexOf('properties:') + 200);
+  assert.doesNotMatch(propsLine, /email/);
+});
+
+test('the funnel is admin-only and headlines the identified step', () => {
+  const fn = proofMigration.slice(proofMigration.indexOf('get_proof_loop_funnel_v1()'));
+  assert.match(fn, /has_role\(auth\.uid\(\), 'admin'::app_role\)/, 'must reuse the established admin guard');
+  for (const key of ['reachedIdentified', 'reachedActed', 'reachedViewed']) {
+    assert.ok(fn.includes(key), `${key} must be reported so a bad headline is diagnosable`);
+  }
 });

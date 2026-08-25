@@ -7,7 +7,6 @@ import { Separator } from '@/components/ui/separator';
 import { CheckSquare, ChevronDown, ChevronUp, Clock, Calendar, LineChart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { GTMChannelRecommendation } from '@/hooks/useGTMStrategist';
-import { saveGTMTractionHandoff } from '@/lib/gtmTractionHandoff';
 import { captureEvent } from '@/lib/analytics';
 import {
   findMeasuredPerformance,
@@ -66,7 +65,7 @@ const GTMChannelCard: React.FC<GTMChannelCardProps> = ({ channel, rank, measured
   // Turn this recommendation into a runnable Traction Engine experiment:
   // the plan's own week-one action becomes the hypothesis, so the founder
   // starts the sprint from what the brief told them to do — no retyping.
-  const runAsTractionSprint = () => {
+  const runAcquisitionSprint = () => {
     const primaryAction = channel.weekOneActions?.[0]?.trim();
     const primaryTactic = channel.tactics?.[0];
     const hypothesis = primaryAction
@@ -75,18 +74,13 @@ const GTMChannelCard: React.FC<GTMChannelCardProps> = ({ channel, rank, measured
         ? `${primaryTactic.title}: ${primaryTactic.description}`.slice(0, 400)
         : `Run one focused ${channel.channel} experiment and measure signups this week.`;
 
-    saveGTMTractionHandoff({
-      channel: channel.channel,
-      targetMetric: 'Signups',
-      hypothesis,
-      fitScore: channel.fitScore,
-    });
     captureEvent('gtm_channel_sprint_started', {
       channel: channel.channel,
       fit_score: channel.fitScore,
       rank,
+      destination: 'first_customer_sprint',
     });
-    navigate('/traction-engine?step=sprint');
+    navigate(`/first-customer-sprint?source=gtm&channel=${encodeURIComponent(channel.channel)}&hypothesis=${encodeURIComponent(hypothesis)}`);
   };
 
   return (
@@ -155,7 +149,7 @@ const GTMChannelCard: React.FC<GTMChannelCardProps> = ({ channel, rank, measured
           <div className="rounded-lg border border-info/25 bg-info/5 px-3 py-2.5 space-y-1.5">
             <div className="flex items-center justify-between gap-3">
               <p className="text-xs font-semibold uppercase tracking-wider text-info">Predicted vs. measured</p>
-              <Button type="button" size="sm" variant="outline" className="shrink-0 gap-1.5" onClick={runAsTractionSprint}>
+              <Button type="button" size="sm" variant="outline" className="shrink-0 gap-1.5" onClick={runAcquisitionSprint}>
                 <LineChart className="h-3.5 w-3.5" />
                 Log another week
               </Button>
@@ -178,9 +172,9 @@ const GTMChannelCard: React.FC<GTMChannelCardProps> = ({ channel, rank, measured
             <p className="text-xs text-muted-foreground">
               Don't let this stay a document — run it as a measured weekly experiment.
             </p>
-            <Button type="button" size="sm" variant="outline" className="shrink-0 gap-1.5" onClick={runAsTractionSprint}>
+            <Button type="button" size="sm" variant="outline" className="shrink-0 gap-1.5" onClick={runAcquisitionSprint}>
               <LineChart className="h-3.5 w-3.5" />
-              Run as Traction sprint
+              Run acquisition sprint
             </Button>
           </div>
         )}

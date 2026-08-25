@@ -174,6 +174,10 @@ const syncGTMJourneyOutcome = async (
       status: outcome.status,
       qualityChecks: {
         primary_channel: outcome.checks.primaryChannel,
+        one_offer: outcome.checks.oneOffer,
+        one_message: outcome.checks.oneMessage,
+        ten_prospect_sample: outcome.checks.tenProspectSample,
+        acquisition_cycle_ready: outcome.checks.acquisitionCycleReady,
         fallback_channel: outcome.checks.fallbackChannel,
         claim_level_evidence: outcome.checks.evidenceBackedMessaging,
         usable_campaign_assets: outcome.checks.usableCampaignAssets,
@@ -181,6 +185,7 @@ const syncGTMJourneyOutcome = async (
         budget_and_time_constraints: outcome.checks.budgetAndTimeConstraints,
         structured_kill_rule: outcome.checks.structuredKillRule,
         traction_sprint_created: outcome.checks.tractionSprintCreated,
+        buyer_signal_recorded: false,
       },
       evidenceManifest,
       completionScore: outcome.completionScore,

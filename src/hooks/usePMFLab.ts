@@ -441,9 +441,11 @@ export function usePMFLab(scope?: PMFArtifactScope | null) {
       }
       if (data.analysisId) {
         const signalCount = nextAnalysis.evidenceSignalCount ?? conversationCount;
-        const decisionGrade = nextAnalysis.evidenceGrade === 'decision_grade';
-        const directional = signalCount >= 5 && (nextAnalysis.directEvidenceSignalCount ?? signalCount) >= 5;
-        const outcomeStatus = decisionGrade ? 'verified' : directional ? 'ready' : 'draft';
+        const directSignalCount = nextAnalysis.directEvidenceSignalCount ?? signalCount;
+        const documentedObjection = (nextAnalysis.evidenceAnswers?.interviews ?? answers.interviews ?? [])
+          .some((interview) => Boolean(interview.objections?.trim() || interview.missingFeatures?.trim()));
+        const outcomeReady = Boolean(nextAnalysis.decision) && signalCount >= 3 && directSignalCount >= 3 && documentedObjection;
+        const outcomeStatus = outcomeReady ? 'ready' : 'draft';
         if (scope?.validationContextId) trackPrebuildLineageEvent('prebuild_decision_reached', {
           validationContextId: scope.validationContextId,
           handoffId: scope.originatingHandoffId,
@@ -530,17 +532,19 @@ export function usePMFLab(scope?: PMFArtifactScope | null) {
             decision_present: Boolean(nextAnalysis.decision),
             decision: nextAnalysis.decision ?? null,
             weighted_sources_present: evidenceSources.length > 0,
+            three_independent_signals: signalCount >= 3 && directSignalCount >= 3,
+            documented_objection: documentedObjection,
             directional_signals: signalCount >= 5,
             emerging_patterns: signalCount >= 10,
-            decision_grade: decisionGrade,
+            decision_grade: nextAnalysis.evidenceGrade === 'decision_grade',
+            reviewed_buyer_signal: false,
             duplicates_removed: true,
           },
           evidenceManifest: createJourneyEvidenceManifest(evidenceSources, nextAnalysis.generatedAt),
         }).then(async (saved) => {
           if (
-            saved.evaluation.status !== 'verified' ||
-            nextAnalysis.decision !== 'build' ||
-            nextAnalysis.evidenceGrade !== 'decision_grade'
+            !['ready', 'verified'].includes(saved.evaluation.status) ||
+            nextAnalysis.decision !== 'build'
           ) return;
           const outcomeId = (saved.outcome as { id?: string } | null)?.id;
           if (!outcomeId) return;

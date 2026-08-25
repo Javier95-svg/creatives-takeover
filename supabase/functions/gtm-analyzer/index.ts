@@ -78,7 +78,8 @@ function validatedSixWeekPlan(value: unknown, plays: Array<{ actions: string[] }
 
 async function researchGTM(intake: GTMIntakeV2) {
   const apiKey = Deno.env.get('PERPLEXITY_API_KEY');
-  if (!apiKey) return { status: 'unavailable' as const, answer: '', sources: [] as Array<Record<string, unknown>> };
+  const retrievedAt = new Date().toISOString();
+  if (!apiKey) return { provider: 'perplexity' as const, providerStatus: 'not_configured' as const, status: 'unavailable' as const, answer: '', sources: [] as Array<Record<string, unknown>>, sourceCount: 0, retrievedAt };
   try {
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
@@ -102,10 +103,10 @@ async function researchGTM(intake: GTMIntakeV2) {
       ? { id: `research-${index + 1}`, title: `Source ${index + 1}`, url: citation, kind: 'external', verifiedAt: new Date().toISOString() }
       : { id: `research-${index + 1}`, title: citation.title || citation.name || `Source ${index + 1}`, url: citation.url || citation.source || '', snippet: citation.snippet || citation.summary, publishedDate: citation.published_date || citation.date, kind: 'external', verifiedAt: new Date().toISOString() })
       .filter((source: any) => /^https?:\/\//.test(source.url));
-    return { status: sources.length >= 3 ? 'complete' as const : sources.length > 0 ? 'limited' as const : 'unavailable' as const, answer: data.choices?.[0]?.message?.content || '', sources };
+    return { provider: 'perplexity' as const, providerStatus: sources.length > 0 ? 'healthy' as const : 'empty' as const, status: sources.length >= 3 ? 'complete' as const : sources.length > 0 ? 'limited' as const : 'unavailable' as const, answer: data.choices?.[0]?.message?.content || '', sources, sourceCount: sources.length, retrievedAt };
   } catch (error) {
     console.warn('GTM live research unavailable:', error);
-    return { status: 'unavailable' as const, answer: '', sources: [] as Array<Record<string, unknown>> };
+    return { provider: 'perplexity' as const, providerStatus: 'unhealthy' as const, status: 'unavailable' as const, answer: '', sources: [] as Array<Record<string, unknown>>, sourceCount: 0, retrievedAt };
   }
 }
 
@@ -303,7 +304,11 @@ Return only JSON with this shape:
   if (typeof content !== 'string') throw new Error('GTM strategy response was empty');
   const strategic = JSON.parse(content) as Record<string, any>;
   const narratives = strategic.channelNarratives && typeof strategic.channelNarratives === 'object' ? strategic.channelNarratives : {};
-  const confidence = research.status === 'complete' && intake.buyingTrigger?.trim() ? 'high' : research.status === 'unavailable' ? 'low' : 'medium';
+  const confidence = research.status === 'complete' && intake.buyingTrigger?.trim()
+    ? 'high'
+    : research.status === 'limited'
+      ? 'medium'
+      : 'low';
   const channels = selected.map((item, index) => ({
     id: item.rule.id,
     name: item.rule.name,
@@ -381,19 +386,26 @@ Return only JSON with this shape:
     ...research.sources.map((source: any) => source.id).filter(Boolean),
     ...evidenceItems.map((item) => item.id),
   ]);
+  const externalSourceIds = new Set(research.sources.map((source: any) => source.id).filter(Boolean));
   const claimAttributions = (Array.isArray(strategic.claimAttributions) ? strategic.claimAttributions : [])
     .slice(0, 30)
     .map((claim: any, index: number) => {
       const sourceIds = safeStringArray(claim?.sourceIds).filter((id) => validSourceIds.has(id)).slice(0, 6);
       const area = ['positioning', 'channel', 'competitor', 'buyer', 'economics'].includes(claim?.area) ? claim.area : 'positioning';
-      const confidence = ['high', 'medium', 'low'].includes(claim?.confidence) ? claim.confidence : sourceIds.length > 0 ? 'medium' : 'low';
+      const externalCount = sourceIds.filter((id) => externalSourceIds.has(id)).length;
+      const confidence = research.status === 'complete' && externalCount >= 2
+        ? 'high'
+        : externalCount > 0
+          ? 'medium'
+          : 'low';
       return {
         id: `claim-${index + 1}`,
         claim: safeText(claim?.claim, '', 500),
         area,
         sourceIds,
         confidence,
-        assumption: Boolean(claim?.assumption) || sourceIds.length === 0,
+        assumption: Boolean(claim?.assumption) || externalCount === 0,
+        confidenceBasis: externalCount > 0 ? 'external_sources' : 'hypothesis_only',
       };
     })
     .filter((claim: any) => claim.claim.length > 0);
@@ -403,6 +415,10 @@ Return only JSON with this shape:
     summaryInsight: safeText(strategic.summaryInsight, `Focus on ${channels[0].name} first, use ${channels[1].name} as the controlled secondary bet, and let weekly evidence decide what scales.`),
     intake,
     researchStatus: research.status,
+    researchProvider: research.provider,
+    researchProviderStatus: research.providerStatus,
+    researchRetrievedAt: research.retrievedAt,
+    researchSourceCount: research.sourceCount,
     researchSources: research.sources,
     evidenceItems,
     claimAttributions,

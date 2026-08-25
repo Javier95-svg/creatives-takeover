@@ -1,6 +1,6 @@
 # Creatives Takeover
 
-> Last updated: 2026-08-15
+> Last updated: 2026-08-24
 
 > Creatives Takeover is a business development platform for first-time startup founders. It combines AI tools that draft startup artifacts (ideal customer profile, MVP scope, go-to-market plan, pitch deck review) with a marketplace of reviewed human startup mentors who can be booked directly. Founders keep 100% equity: there is no application, no cohort, and no accelerator commitment.
 
@@ -8,10 +8,10 @@
 
 Creatives Takeover serves early-stage founders, indie hackers, and solo builders who are moving from an idea to a launched product. The platform is organized around six sequential outcomes — clarify, validate, build, launch, get traction, and fundraise — and evidence collected at each step carries forward to the next.
 
-Two things distinguish it from single-purpose AI idea-validation tools:
+Two things distinguish it from general AI assistants and from single-purpose idea-validation tools:
 
-- **Human mentors are bookable, not simulated.** reviewed startup mentors publish real availability, and founders book discovery calls directly with them.
-- **A curated funding database, not model recall.** reviewed investor and funding-opportunity records are maintained as structured records with stage and thesis attributes.
+- **Outputs record what they do not know.** Each generated field is marked as either model-answered or backfilled by the generator, and the viability score is damped by that ratio, so a confident draft resting on little evidence cannot score highly. Unanswered fields are listed back to the founder as open questions rather than presented as findings.
+- **Viewer responses are observed, not self-reported.** Founder demos, launch pages, waitlists, surveys, and published MVP sites are hosted on the platform, so views, interactions, and signups from non-owner visitors are recorded first-hand. Owner previews are marked and excluded from evidence.
 
 ## Pricing
 

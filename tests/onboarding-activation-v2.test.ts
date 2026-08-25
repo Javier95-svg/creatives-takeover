@@ -9,7 +9,7 @@ import {
   recommendActivation,
 } from '../src/lib/activationJourneyV2.ts';
 
-const available = ['find_mentor', 'build_demo', 'run_icp', 'start_validation', 'build_mvp', 'plan_gtm', 'log_traction', 'analyze_pitch_deck'] as const;
+const available = ['find_mentor', 'build_demo', 'run_icp', 'start_validation', 'build_mvp', 'first_customer_sprint', 'plan_gtm', 'log_traction', 'analyze_pitch_deck'] as const;
 
 test('blockers map to stage-aligned first wins', () => {
   const cases = [
@@ -17,7 +17,7 @@ test('blockers map to stage-aligned first wins', () => {
     ['demand_validation', 'idea_only', 'start_validation'],
     ['demand_validation', 'prototype_demo', 'build_demo'],
     ['product_build', 'mvp_beta', 'build_mvp'],
-    ['go_to_market', 'live_product', 'plan_gtm'],
+    ['go_to_market', 'live_product', 'first_customer_sprint'],
     ['traction_growth', 'scaling_product', 'log_traction'],
     ['fundraising', 'live_product', 'analyze_pitch_deck'],
     ['solo', 'idea_only', 'find_mentor'],
@@ -80,4 +80,78 @@ test('migration persists atomically and exposes an admin-only unique-journey fun
   assert.match(sql, /user_roles[\s\S]*role = 'admin'/);
   assert.match(sql, /count\(DISTINCT user_id\)/);
   for (const breakdown of ['byIntent', 'byStage', 'bySource', 'byPlan', 'byDevice']) assert.match(sql, new RegExp(`'${breakdown}'`));
+});
+
+/*
+ * Publish-first routing.
+ *
+ * The catalog's defining problem was that every intent terminated in a document
+ * only its author reads, which is precisely the half of the product a general AI
+ * assistant already does for twenty dollars a month. `publish_proof` is the only
+ * entry whose output leaves the platform, and these pin both that it can be
+ * reached and that the flag genuinely reverses.
+ */
+
+const availableWithProof = [...available, 'publish_proof'] as const;
+
+test('a demand blocker routes to publishing once the flag is on', () => {
+  for (const productStatus of ['idea_only', 'prototype_demo'] as const) {
+    const on = recommendActivation({
+      assignedStage: 2, blocker: 'demand_validation', productStatus,
+      availableIntents: [...availableWithProof], publishProofFirst: true,
+    });
+    assert.equal(on.intent, 'publish_proof', `${productStatus} should publish when the flag is on`);
+  }
+});
+
+test('the flag off reproduces the previous routing exactly', () => {
+  const cases = [
+    ['idea_only', 'start_validation'],
+    ['prototype_demo', 'build_demo'],
+  ] as const;
+  for (const [productStatus, expected] of cases) {
+    for (const publishProofFirst of [false, undefined]) {
+      const result = recommendActivation({
+        assignedStage: 2, blocker: 'demand_validation', productStatus,
+        availableIntents: [...availableWithProof], publishProofFirst,
+      });
+      assert.equal(result.intent, expected, `flag ${String(publishProofFirst)} must not change routing`);
+    }
+  }
+});
+
+test('publishing never displaces a blocker it does not answer', () => {
+  // A founder blocked on fundraising is not helped by publishing a demo. The
+  // flag is scoped to the demand blocker and the two earliest stages, and this
+  // is what stops it becoming a blanket redirect.
+  for (const [blocker, expected] of [
+    ['customer_clarity', 'run_icp'],
+    ['product_build', 'build_mvp'],
+    ['fundraising', 'analyze_pitch_deck'],
+  ] as const) {
+    const result = recommendActivation({
+      assignedStage: 5, blocker, productStatus: 'live_product',
+      availableIntents: [...availableWithProof], publishProofFirst: true,
+    });
+    assert.equal(result.intent, expected);
+  }
+});
+
+test('publish_proof survives intent normalization', () => {
+  assert.equal(normalizeActivationIntent('publish_proof'), 'publish_proof');
+});
+
+test('the publish intent is the only one whose output leaves the platform', () => {
+  const entry = ACTIVATION_CATALOG.publish_proof;
+  assert.ok(entry, 'publish_proof must exist in the catalog');
+  assert.doesNotMatch(entry.output, /^A saved /, 'the output must not be another private document');
+  assert.match(entry.output, /URL/i, 'the output must name the live address');
+  assert.match(entry.steps[2], /Publish/i, 'the last step must be publishing, not saving');
+
+  // The property that made this necessary, asserted so it cannot silently return:
+  // every other entry does terminate in something only the founder sees.
+  const othersEndPrivate = Object.values(ACTIVATION_CATALOG)
+    .filter((candidate) => candidate.intent !== 'publish_proof')
+    .every((candidate) => !/URL/i.test(candidate.output));
+  assert.equal(othersEndPrivate, true, 'if another intent now publishes, widen this test rather than deleting it');
 });

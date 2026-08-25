@@ -1,35 +1,58 @@
-name: Deploy Supabase production
+name: Release reviewed Supabase migrations
 
 on:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
+  workflow_dispatch:
+    inputs:
+      schema_backup_reference:
+        description: Verified production backup or PITR reference created before this release
+        required: true
+        type: string
+      ledger_reconciliation_record:
+        description: Link or change record proving live schema and migration-ledger reconciliation
+        required: true
+        type: string
+      reviewed_migrations:
+        description: Comma-separated migration timestamps or full migration names approved for this release
+        required: true
+        type: string
+      apply_reviewed_migrations:
+        description: Apply after ledger checks and dry-run; false performs a rehearsal only
+        required: true
+        default: false
+        type: boolean
 
 concurrency:
   group: supabase-production
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+  release:
     runs-on: ubuntu-latest
     environment: production
     permissions:
       contents: read
     steps:
-      - name: Check out the verified commit
+      - name: Check out the reviewed commit
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
-          # The parent commit is needed to work out which edge functions changed.
           fetch-depth: 2
+
+      - name: Validate manual release attestations
+        env:
+          BACKUP_REFERENCE: ${{ inputs.schema_backup_reference }}
+          LEDGER_RECORD: ${{ inputs.ledger_reconciliation_record }}
+        run: |
+          test -n "$BACKUP_REFERENCE"
+          test -n "$LEDGER_RECORD"
+          test "${#BACKUP_REFERENCE}" -ge 8
+          test "${#LEDGER_RECORD}" -ge 8
 
       - name: Install pinned Supabase CLI
         uses: supabase/setup-cli@v1
         with:
           version: 2.98.2
 
-      - name: Link production project
+      - name: Link production and capture the live ledger
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
@@ -37,8 +60,15 @@ jobs:
         run: |
           set -o pipefail
           supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD" 2>&1 | tee supabase-link.log
+          supabase migration list --linked 2>&1 | tee supabase-migration-ledger-before.log
 
-      - name: Preview pending migrations
+      - name: Capture pre-release public schema
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: supabase db dump --linked --schema public --file production-public-schema-before.sql
+
+      - name: Dry-run the migration set
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
@@ -46,91 +76,70 @@ jobs:
           set -o pipefail
           supabase db push --linked --dry-run --password "$SUPABASE_DB_PASSWORD" 2>&1 | tee supabase-migration-dry-run.log
 
-      - name: Apply migrations
+      - name: Reject unreviewed pending migrations
+        env:
+          REVIEWED_MIGRATIONS: ${{ inputs.reviewed_migrations }}
+        run: node scripts/verify-pilot-release.mjs supabase-migration-dry-run.log | tee supabase-reviewed-migrations.log
+
+      - name: Lint the linked public schema
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: supabase db lint --linked --schema public --level error 2>&1 | tee supabase-db-lint.log
+
+      - name: Apply only the reviewed dry-run
+        if: ${{ inputs.apply_reviewed_migrations }}
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: |
           set -o pipefail
           supabase db push --linked --password "$SUPABASE_DB_PASSWORD" 2>&1 | tee supabase-migration-apply.log
+          supabase migration list --linked 2>&1 | tee supabase-migration-ledger-after.log
 
-      # Legacy function-deployment implementation retained temporarily for log
-      # history. The independent push workflow is now the sole deployment owner.
-      - name: Deploy changed edge functions
-        # Function deployment now has its own push-triggered workflow. Keeping
-        # this legacy step disabled prevents an older, slow CI run from rolling
-        # a newer function deployment back to an earlier commit.
-        if: ${{ false }}
+      - name: Verify pilot schema, RPCs, RLS, storage, and public proof-loop triggers
+        if: ${{ inputs.apply_reviewed_migrations }}
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set -o pipefail
+          curl --silent --show-error --fail --request POST "https://${SUPABASE_PROJECT_REF}.supabase.co/rest/v1/rpc/get_outcome_journey_release_health_v1" --header "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" --header "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" --header "Content-Type: application/json" --data '{}' | tee supabase-pilot-health.log
+          node -e "const fs=require('fs');const x=JSON.parse(fs.readFileSync('supabase-pilot-health.log','utf8'));if(!x.healthy)process.exit(1)"
 
-          changed_files="$(git diff --name-only HEAD~1 HEAD -- supabase/functions/ || true)"
-          if [ -z "$changed_files" ]; then
-            echo "No edge function changes in this commit." | tee supabase-function-deploy.log
-            exit 0
-          fi
-          echo "Changed under supabase/functions/:"; echo "$changed_files"
+      - name: Verify live market providers with a controlled query
+        if: ${{ inputs.apply_reviewed_migrations }}
+        env:
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -o pipefail
+          curl --silent --show-error --fail --request POST "https://${SUPABASE_PROJECT_REF}.supabase.co/functions/v1/market-provider-health" --header "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" --header "Content-Type: application/json" --data '{}' | tee supabase-provider-health.log
 
-          targets=""
+      # Edge Functions deploy through supabase-functions-deploy.yml so they remain
+      # independent of schema-release failures and cannot be deployed twice here.
+      - name: Deploy changed edge functions
+        if: ${{ false }}
+        run: echo "Handled by the independent Supabase functions workflow."
 
-          # Directly edited functions.
-          for f in $changed_files; do
-            name="$(echo "$f" | awk -F/ '{print $3}')"
-            case "$name" in
-              _*|"") continue ;;
-            esac
-            targets="$targets $name"
-          done
+      - name: Record deployment health
+        if: ${{ always() }}
+        env:
+          BACKUP_REFERENCE: ${{ inputs.schema_backup_reference }}
+          LEDGER_RECORD: ${{ inputs.ledger_reconciliation_record }}
+          REVIEWED_MIGRATIONS: ${{ inputs.reviewed_migrations }}
+          APPLIED: ${{ inputs.apply_reviewed_migrations }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          jq -n --arg sha "$RELEASE_SHA" --arg backup "$BACKUP_REFERENCE" --arg ledger "$LEDGER_RECORD" --arg migrations "$REVIEWED_MIGRATIONS" --arg applied "$APPLIED" --arg completedAt "$(date -u +%FT%TZ)" '{sha:$sha,backupReference:$backup,ledgerReconciliationRecord:$ledger,reviewedMigrations:$migrations,applied:($applied=="true"),completedAt:$completedAt,pilotFlagsEnabled:false}' > supabase-release-health.json
 
-          # A change under _shared/ affects every function that imports it, and
-          # those keep running the old bundled copy until redeployed.
-          shared_changed="$(echo "$changed_files" | grep '^supabase/functions/_shared/' || true)"
-          for shared in $shared_changed; do
-            base="$(basename "$shared")"
-            echo "Shared module changed: $base — finding importers"
-            while IFS= read -r importer; do
-              name="$(echo "$importer" | awk -F/ '{print $3}')"
-              case "$name" in
-                _*|"") continue ;;
-              esac
-              targets="$targets $name"
-            done <<< "$(grep -rl "_shared/$base" supabase/functions --include='index.ts' || true)"
-          done
-
-          targets="$(echo "$targets" | tr ' ' '\n' | sed '/^$/d' | sort -u)"
-          if [ -z "$targets" ]; then
-            echo "Nothing deployable resolved." | tee supabase-function-deploy.log
-            exit 0
-          fi
-
-          echo "Deploying:"; echo "$targets"
-          for name in $targets; do
-            if [ ! -f "supabase/functions/$name/index.ts" ]; then
-              echo "Skipping $name (no index.ts — likely deleted)"
-              continue
-            fi
-            # config.toml is the source of truth for verify_jwt; pass the flag
-            # explicitly so a public function is not silently re-gated on deploy.
-            flags=""
-            if awk -v fn="$name" '
-                 $0 == "[functions." fn "]" { inblock = 1; next }
-                 /^\[/ { inblock = 0 }
-                 inblock && /verify_jwt[[:space:]]*=[[:space:]]*false/ { found = 1 }
-                 END { exit !found }
-               ' supabase/config.toml; then
-              flags="--no-verify-jwt"
-              echo "$name: verify_jwt=false in config.toml, deploying with --no-verify-jwt"
-            fi
-            supabase functions deploy "$name" --project-ref "$SUPABASE_PROJECT_REF" $flags
-          done 2>&1 | tee supabase-function-deploy.log
-
-      - name: Upload sanitized deployment logs
+      - name: Upload sanitized release evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: supabase-production-${{ github.event.workflow_run.head_sha }}
-          path: supabase-*.log
-          retention-days: 14
+          name: supabase-production-${{ github.sha }}
+          path: |
+            supabase-*.log
+            supabase-release-health.json
+            production-public-schema-before.sql
+          retention-days: 30

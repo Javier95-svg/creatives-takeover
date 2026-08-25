@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useFeatureFlagEnabled } from '@/hooks/usePosthogFeatureFlag';
+import { isPublishProofFirstEnabled, PUBLISH_PROOF_FIRST_FLAG } from '@/lib/publishProofRollout';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -460,7 +461,7 @@ const ACTIVATION_CARDS: ActivationCard[] = [
   },
 ];
 
-const V2_ONBOARDING_INTENTS: ActivationIntent[] = ['find_mentor', 'build_demo', 'run_icp', 'start_validation', 'build_mvp', 'plan_gtm', 'log_traction', 'analyze_pitch_deck'];
+const V2_ONBOARDING_INTENTS: ActivationIntent[] = ['find_mentor', 'build_demo', 'run_icp', 'start_validation', 'build_mvp', 'first_customer_sprint', 'plan_gtm', 'log_traction', 'analyze_pitch_deck'];
 
 const emptyOnboardingData: OnboardingData = {
   stageAnswers: {},
@@ -741,6 +742,7 @@ export const OnboardingForm = ({ session, onComplete }: OnboardingFormProps) => 
       }
     });
   }, [checkFeatureAccess, creditsLoading, currentPlan, existingPreferences.activationIntent, totalAvailable]);
+  const publishProofFirst = isPublishProofFirstEnabled(useFeatureFlagEnabled(PUBLISH_PROOF_FIRST_FLAG));
   const recommendation = useMemo<ActivationRecommendation | null>(() => {
     if (!diagnostic || !effectiveStageAnswers.blocker || !effectiveStageAnswers.productStatus) return null;
     return recommendActivation({
@@ -749,8 +751,9 @@ export const OnboardingForm = ({ session, onComplete }: OnboardingFormProps) => 
       productStatus: effectiveStageAnswers.productStatus,
       userPreferences: existingPreferences,
       availableIntents,
+      publishProofFirst,
     });
-  }, [availableIntents, diagnostic, effectiveStageAnswers.blocker, effectiveStageAnswers.productStatus, existingPreferences]);
+  }, [availableIntents, diagnostic, effectiveStageAnswers.blocker, effectiveStageAnswers.productStatus, existingPreferences, publishProofFirst]);
 
   useEffect(() => {
     if (!activationV2Enabled || explicitIntentChoice || !recommendation) return;

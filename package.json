@@ -18,7 +18,8 @@
     "lint:fix": "eslint . --fix",
     "test:smoke": "playwright test",
     "test:messages:performance": "node scripts/check-messages-performance.mjs",
-    "test:bundle:performance": "node scripts/check-initial-bundle.mjs"
+    "test:bundle:performance": "node scripts/check-initial-bundle.mjs",
+    "release:verify-pilot": "node scripts/verify-pilot-release.mjs"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.23.6",

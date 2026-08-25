@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
-import { trackFirstCustomerSprint } from '@/lib/analytics';
+import { captureEvent, trackFirstCustomerSprint } from '@/lib/analytics';
 import type { FirstCustomerSprintAdminApplication, FirstCustomerSprintAdminSnapshot } from '@/types/firstCustomerSprint';
 
 // Generated Supabase types follow the additive migration deployment.
@@ -28,6 +28,7 @@ export default function AdminFirstCustomerSprintPage() {
   const queryClient = useQueryClient();
   const [overrideReasons, setOverrideReasons] = useState<Record<string, string>>({});
   const [scheduledFor, setScheduledFor] = useState<Record<string, string>>({});
+  const [evidenceRejectionReasons, setEvidenceRejectionReasons] = useState<Record<string, string>>({});
   const cohort = useQuery({
     queryKey: ['first-customer-sprint-cohort-admin-v1'],
     queryFn: async (): Promise<FirstCustomerSprintAdminSnapshot> => {
@@ -45,6 +46,24 @@ export default function AdminFirstCustomerSprintPage() {
         .neq('checkpoint_status', 'not_requested');
       if (error) throw error;
       return (data ?? []) as Array<Record<string, string | null>>;
+    },
+  });
+  const outcomeScorecard = useQuery({
+    queryKey: ['outcome-journey-pilot-scorecard-v1'],
+    queryFn: async () => {
+      const { data, error } = await client.rpc('get_outcome_journey_pilot_scorecard_v1');
+      if (error) throw error;
+      return data as { invitedDenominator: number; expansionEligible: boolean; summary: Record<string, number>; founders: Array<Record<string, string | number | boolean | null>> };
+    },
+  });
+  const evidenceQueue = useQuery({
+    queryKey: ['journey-evidence-review-queue-v1'],
+    queryFn: async () => {
+      const { data, error } = await client.from('journey_evidence_submissions')
+        .select('id,user_id,evidence_type,object_path,safe_summary,status,submitted_at,rejection_reason')
+        .order('submitted_at', { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as Array<{ id: string; user_id: string; evidence_type: string; object_path: string | null; safe_summary: string; status: 'pending' | 'approved' | 'rejected'; submitted_at: string; rejection_reason: string | null }>;
     },
   });
   const review = useMutation({
@@ -89,6 +108,34 @@ export default function AdminFirstCustomerSprintPage() {
     },
     onError: (error: Error) => toast.error(error.message),
   });
+  const reviewEvidence = useMutation({
+    mutationFn: async ({ submissionId, decision }: { submissionId: string; decision: 'approved' | 'rejected' }) => {
+      const { error } = await client.rpc('review_journey_evidence_v1', {
+        p_submission_id: submissionId,
+        p_decision: decision,
+        p_rejection_reason: decision === 'rejected' ? evidenceRejectionReasons[submissionId]?.trim() || null : null,
+      });
+      if (error) throw error;
+      captureEvent('journey_evidence_reviewed', {
+        evidence_submission_id: submissionId,
+        review_status: decision,
+      });
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['journey-evidence-review-queue-v1'] }),
+        queryClient.invalidateQueries({ queryKey: ['outcome-journey-pilot-scorecard-v1'] }),
+      ]);
+      toast.success('Evidence review saved.');
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const openEvidence = async (objectPath: string) => {
+    const { data, error } = await client.storage.from('journey-evidence-private').createSignedUrl(objectPath, 300);
+    if (error || !data?.signedUrl) { toast.error(error?.message || 'Could not open evidence.'); return; }
+    window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+  };
 
   const summary = cohort.data?.summary ?? {};
   const mentorCount = summary.mentorInvited ?? 0;
@@ -101,7 +148,7 @@ export default function AdminFirstCustomerSprintPage() {
         <header>
           <Badge variant="secondary"><ShieldAlert className="mr-2 h-4 w-4" />Admin only</Badge>
           <h1 className="mt-3 text-3xl font-bold">First Customer Sprint cohort</h1>
-          <p className="mt-2 text-muted-foreground">Run the 5 mentor-referral / 5 public-applicant experiment and monitor behavior, outcomes, payment, and referrals.</p>
+          <p className="mt-2 text-muted-foreground">Run the eight-founder outcome pilot and monitor acquisition execution, evidence review, the Traction handoff, repeatability, payment, and referrals.</p>
           <p className="mt-2 text-sm text-muted-foreground">Mentors share <code>/first-customer-sprint/apply?source=mentor&amp;mentorId=MENTOR_ID&amp;ref=THEIR_REFERRAL_CODE</code>. The backend verifies both values before counting the application as mentor-sourced.</p>
         </header>
 
@@ -113,11 +160,33 @@ export default function AdminFirstCustomerSprintPage() {
               {SUMMARY_CARDS.map(([label, key]) => <Card key={key}><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">{label}</CardTitle></CardHeader><CardContent><p className="text-3xl font-bold">{summary[key] ?? 0}</p></CardContent></Card>)}
             </section>
 
+            <Card className="border-primary/20">
+              <CardHeader><div className="flex flex-wrap items-start justify-between gap-3"><div><CardTitle>Outcome funnel</CardTitle><CardDescription>Sequential founders keyed by invitation and journey, not separate tool-output totals.</CardDescription></div><Badge variant={outcomeScorecard.data?.expansionEligible ? 'default' : 'secondary'}>{outcomeScorecard.data?.expansionEligible ? 'Expansion threshold met' : 'Expansion paused'}</Badge></div></CardHeader>
+              <CardContent className="space-y-5"><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+                {([
+                  ['Invited', outcomeScorecard.data?.invitedDenominator ?? 0],
+                  ['Sent 10 ≤30d', outcomeScorecard.data?.summary?.sentTenWithin30Days ?? 0],
+                  ['Verified signal ≤30d', outcomeScorecard.data?.summary?.verifiedFirstSignalWithin30Days ?? 0],
+                  ['Traction ≤48h', outcomeScorecard.data?.summary?.enteredTractionWithin48Hours ?? 0],
+                  ['Repeatable ≤45d', outcomeScorecard.data?.summary?.repeatableDemandWithin45Days ?? 0],
+                  ['Pending reviews', outcomeScorecard.data?.summary?.pendingReviews ?? 0],
+                ] as const).map(([label, value]) => <div key={label} className="rounded-lg border p-3"><p className="text-2xl font-bold">{value}</p><p className="text-xs text-muted-foreground">{label}</p></div>)}
+              </div>{outcomeScorecard.data?.founders?.length ? <div className="space-y-2 border-t pt-4"><p className="text-sm font-semibold">Founder sequence</p>{outcomeScorecard.data.founders.map((founder) => <div key={String(founder.founder_id)} className="grid gap-2 rounded-lg border p-3 text-xs sm:grid-cols-6"><span className="font-mono">{String(founder.founder_id).slice(0, 8)}</span><span>Stage: {String(founder.current_stage ?? 'not started')}</span><span>{Number(founder.time_in_current_stage_hours ?? 0)}h in stage</span><span>{Number(founder.messages_sent ?? 0)}/10 sent</span><span>{founder.verified_signal_at ? 'Signal verified' : 'Awaiting verification'}</span><span>{String(founder.acquisition_source ?? 'unknown')}</span></div>)}</div> : null}
+              </CardContent>
+            </Card>
+
             <Card>
-              <CardHeader><CardTitle>Mixed-cohort allocation</CardTitle><CardDescription>Keep five places available for each source during the initial recruitment window.</CardDescription></CardHeader>
+              <CardHeader><CardTitle>Private evidence review queue</CardTitle><CardDescription>Approve only redacted evidence that corroborates the linked buyer event. Approval creates a separate immutable reviewer-verified observation.</CardDescription></CardHeader>
+              <CardContent className="space-y-3">
+                {evidenceQueue.data?.length ? evidenceQueue.data.map((submission) => <div key={submission.id} className="grid gap-3 rounded-lg border p-4 lg:grid-cols-[minmax(0,1fr)_auto]"><div><div className="flex flex-wrap gap-2"><Badge variant="outline">{submission.evidence_type.replaceAll('_', ' ')}</Badge><Badge>{submission.status}</Badge></div><p className="mt-2 text-sm">{submission.safe_summary}</p><p className="mt-1 text-xs text-muted-foreground">Submitted {new Date(submission.submitted_at).toLocaleString()}</p>{submission.rejection_reason ? <p className="mt-1 text-xs text-destructive">{submission.rejection_reason}</p> : null}</div><div className="min-w-52 space-y-2">{submission.object_path ? <Button className="w-full" variant="outline" onClick={() => void openEvidence(submission.object_path!)}><ExternalLink className="mr-2 h-4 w-4" />Open redacted proof</Button> : null}{submission.status === 'pending' ? <><Input placeholder="Rejection reason" value={evidenceRejectionReasons[submission.id] ?? ''} onChange={(event) => setEvidenceRejectionReasons((current) => ({ ...current, [submission.id]: event.target.value }))} /><Button className="w-full" disabled={reviewEvidence.isPending} onClick={() => reviewEvidence.mutate({ submissionId: submission.id, decision: 'approved' })}><CheckCircle2 className="mr-2 h-4 w-4" />Approve</Button><Button className="w-full" variant="outline" disabled={reviewEvidence.isPending} onClick={() => reviewEvidence.mutate({ submissionId: submission.id, decision: 'rejected' })}><XCircle className="mr-2 h-4 w-4" />Reject</Button></> : null}</div></div>) : <p className="text-sm text-muted-foreground">No evidence submissions yet.</p>}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle>Cohort source mix</CardTitle><CardDescription>The pilot is capped at eight invited founders; source mix is monitored rather than hard-gated.</CardDescription></CardHeader>
               <CardContent className="grid gap-5 sm:grid-cols-2">
-                <div><div className="flex justify-between text-sm"><span>Mentor referrals</span><span>{mentorCount}/5</span></div><Progress className="mt-2" value={Math.min(100, mentorCount / 5 * 100)} /></div>
-                <div><div className="flex justify-between text-sm"><span>Public/current audience</span><span>{publicCount}/5</span></div><Progress className="mt-2" value={Math.min(100, publicCount / 5 * 100)} /></div>
+                <div><div className="flex justify-between text-sm"><span>Mentor referrals</span><span>{mentorCount}/8</span></div><Progress className="mt-2" value={Math.min(100, mentorCount / 8 * 100)} /></div>
+                <div><div className="flex justify-between text-sm"><span>Public/current audience</span><span>{publicCount}/8</span></div><Progress className="mt-2" value={Math.min(100, publicCount / 8 * 100)} /></div>
               </CardContent>
             </Card>
 

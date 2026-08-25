@@ -5,9 +5,17 @@ import { requiresGuidedOnboarding } from '@/lib/guidedOnboarding';
 import { triggerEmailSequenceEvent } from '@/lib/emailSequences';
 import { mapFounderStageToBizMapStage, STAGES, type FounderStageId } from '@/lib/stageDiagnostic';
 import { parseActivationJourney, type ActivationJourneyV2 } from '@/lib/activationJourneyV2';
+import { stageForLegacyActivationIntent } from '@/lib/outcomeJourney';
 import { recordArtifactStageEvidence } from '@/lib/stageIntelligence';
 
 export type ActivationIntent =
+  /**
+   * The only intent whose output leaves the platform and can be answered by
+   * someone other than the founder. Every other entry terminates in a saved
+   * document that nobody but its author ever sees.
+   */
+  | 'publish_proof'
+  | 'first_customer_sprint'
   | 'build_demo'
   | 'find_mentor'
   | 'run_icp'
@@ -25,6 +33,9 @@ export type ActivationIntent =
 export type ActivationArtifactIntent = 'save_mentor' | 'send_message' | 'book_call';
 export type ActivationGateVariant = 'control' | 'forced_gate';
 export type RetentionArtifactType =
+  /** A live URL a stranger can open, not a document saved to an account. */
+  | 'published_proof'
+  | 'acquisition_cycle'
   | 'demo_studio_draft'
   | 'pitch_deck_analysis'
   | 'tech_stack_report'
@@ -398,6 +409,47 @@ export async function startActivationJourney(params: StartActivationParams) {
     flow_version: params.flowVersion ?? null,
     rollout_variant: params.rolloutVariant ?? null,
   });
+
+  const requestedOutcomeStage = stageForLegacyActivationIntent(params.activationIntent);
+  const outcomeStage = requestedOutcomeStage === 'capital' ? 'repeat' : requestedOutcomeStage;
+  if (outcomeStage) {
+    const { data, error } = await supabase.rpc('start_outcome_journey_v1', {
+      p_entry_stage: outcomeStage,
+      p_entry_evidence: {
+        activationIntent: params.activationIntent,
+        assignedStage: params.assignedStage ?? null,
+        primaryPain: params.primaryPain,
+        quizAnswers: params.quizAnswersV3 ?? null,
+      },
+      p_cohort_key: 'onboarding',
+      p_acquisition_source: 'onboarding',
+    });
+    if (error) {
+      // Keep legacy onboarding resumable during the feature-flagged migration,
+      // including clients that briefly race the database release.
+      console.warn('Outcome journey activation did not persist.', error);
+    } else {
+      const journeyId = typeof data === 'object' && data && 'journey' in data
+        ? (data as { journey?: { id?: string } }).journey?.id
+        : null;
+      const stageRunId = typeof data === 'object' && data && 'stageRun' in data
+        ? (data as { stageRun?: { id?: string } }).stageRun?.id
+        : null;
+      captureEvent('outcome_journey_assessed', {
+        journey_id: journeyId ?? null,
+        entry_stage: outcomeStage,
+        activation_intent: params.activationIntent,
+        acquisition_source: 'onboarding',
+      });
+      captureEvent('outcome_stage_entered', {
+        journey_id: journeyId ?? null,
+        stage_run_id: stageRunId ?? null,
+        stage: outcomeStage,
+        cohort_key: 'onboarding',
+        acquisition_source: 'onboarding',
+      });
+    }
+  }
 
   void triggerEmailSequenceEvent('onboarding_complete', params.userId).catch((error) => {
     console.warn('Onboarding email enrichment did not complete.', error);

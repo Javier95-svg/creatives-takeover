@@ -33,6 +33,9 @@ export interface FirstCustomerSprint {
   starts_at: string;
   ends_at: string;
   business_model_snapshot: FounderBusinessModel | null;
+  journey_id?: string | null;
+  stage_run_id?: string | null;
+  market_experiment_id?: string | null;
   /**
    * The ICP draft that seeded this intake. Null when the founder filled it in
    * unaided, and absent entirely on a snapshot read before the lineage migration

@@ -52,14 +52,16 @@ test('decision action migration is owner-scoped, idempotent, and hardens rate-li
   assert.match(migration, /TO authenticated/);
 });
 
-test('client handoff and MVP evidence import both enforce the verified Build gate', () => {
+test('client handoff and MVP evidence import enforce the three-signal Build outcome', () => {
   const pmfHook = readFileSync(new URL('../src/hooks/usePMFLab.ts', import.meta.url), 'utf8');
   const mvpEvidence = readFileSync(new URL('../src/lib/mvp-builder/journeyEvidence.ts', import.meta.url), 'utf8');
 
-  assert.match(pmfHook, /saved\.evaluation\.status !== 'verified'/);
+  assert.match(pmfHook, /!\['ready', 'verified'\]\.includes\(saved\.evaluation\.status\)/);
   assert.match(pmfHook, /nextAnalysis\.decision !== 'build'/);
-  assert.match(pmfHook, /nextAnalysis\.evidenceGrade !== 'decision_grade'/);
-  assert.match(mvpEvidence, /pmfOutcome\?\.status === 'verified'/);
+  assert.match(pmfHook, /signalCount >= 3/);
+  assert.match(pmfHook, /documentedObjection/);
+  assert.match(mvpEvidence, /\['ready', 'verified'\]\.includes\(pmfOutcome\?\.status/);
   assert.match(mvpEvidence, /decision === 'build'/);
-  assert.match(mvpEvidence, /evidenceGrade === 'decision_grade'/);
+  assert.match(mvpEvidence, /directSignalCount >= 3/);
+  assert.match(mvpEvidence, /interviewObjection/);
 });

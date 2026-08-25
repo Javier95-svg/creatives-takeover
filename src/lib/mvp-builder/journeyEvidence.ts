@@ -170,13 +170,23 @@ export async function fetchJourneyEvidenceBrief(userId: string, scope: JourneyEv
   const decision = asText(pmfData.decision);
   const evidenceGrade = asText(pmfData.evidenceGrade);
   const pmfOutcome = readyOutcomes.find((outcome) => outcome.tool === 'pmf_lab');
-  const verifiedBuildEvidence = Boolean(
-    pmfOutcome?.status === 'verified' &&
+  const evidenceAnswers = asRecord(pmfData.evidenceAnswers);
+  const interviewObjection = Array.isArray(evidenceAnswers.interviews)
+    && evidenceAnswers.interviews.some((value) => {
+      const interview = asRecord(value);
+      return Boolean(asText(interview.objections) || asText(interview.missingFeatures));
+    });
+  const signalCount = Number(pmfData.evidenceSignalCount ?? 0);
+  const directSignalCount = Number(pmfData.directEvidenceSignalCount ?? signalCount);
+  const buildDecisionEvidence = Boolean(
+    ['ready', 'verified'].includes(pmfOutcome?.status ?? '') &&
     pmfOutcome.artifact_id === asText(pmf.id) &&
     decision === 'build' &&
-    evidenceGrade === 'decision_grade',
+    signalCount >= 3 &&
+    directSignalCount >= 3 &&
+    (objections.length > 0 || interviewObjection),
   );
-  if (verifiedBuildEvidence && (missingFeatures.length || objections.length || buyingSignals.length)) {
+  if (buildDecisionEvidence && (missingFeatures.length || objections.length || buyingSignals.length)) {
     sources.pmf = true;
     const header = pmfScore !== null
       ? `WHAT VALIDATION SAYS (PMF score ${pmfScore}/100${verdictLabel ? ` — ${verdictLabel}` : ''}):`

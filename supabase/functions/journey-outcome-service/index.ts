@@ -79,6 +79,12 @@ async function loadAuthoritativeChecks(
     const assumptionPrompts = ['customer', 'pain', 'build'].map((key) => (
       recordValue(recordValue(document[key]).evidence).missingSignalPrompt
     )).filter(hasText);
+    const reachableAccounts = [
+      ...arrayValue(brief.reachableAccounts),
+      ...arrayValue(brief.exampleAccounts),
+      ...arrayValue(document.exampleAccounts),
+      ...arrayValue(brief.interviewValidationPlan),
+    ].filter((account) => hasText(account) || Object.values(recordValue(account)).some(hasText));
     const { data: assumptions } = await supabase.from('journey_assumptions')
       .select('id').eq('user_id', userId).eq('source_artifact_id', artifactId);
     const assumptionIds = (assumptions ?? []).map((item) => item.id);
@@ -91,10 +97,12 @@ async function loadAuthoritativeChecks(
     return {
       primary_segment: hasText(brief.primarySegment),
       non_fit_segment: hasText(brief.nonFitSegment),
+      urgent_pain: arrayValue(brief.rankedPains).map(recordValue).some((pain) => hasText(pain.pain)),
       three_ranked_pains: arrayValue(brief.rankedPains).map(recordValue).filter((pain) => hasText(pain.pain)).length >= 3,
       buying_trigger: hasText(brief.buyingTrigger),
       current_alternative: hasText(brief.currentAlternative),
       reachable_channels: arrayValue(brief.reachableChannels).filter(hasText).length > 0,
+      three_reachable_accounts: reachableAccounts.length >= 3,
       authentic_citation: sources.some((source) => authenticUrl(source.url)),
       confidence_level: ['low', 'medium', 'high'].includes(textValue(confidence.level, 20)),
       assumptions_registered: (assumptions?.length ?? 0) > 0 && missingSignals.length + assumptionPrompts.length > 0,
@@ -102,6 +110,7 @@ async function loadAuthoritativeChecks(
         .filter((item) => hasText(item.question) && hasText(item.successSignal)).length === 5,
       five_interview_signals: independentSignals >= 5,
       assumptions_resolved: independentSignals >= 5 && resolvedSignals >= 5,
+      external_target_signal: independentSignals >= 1,
     };
   }
 
@@ -137,6 +146,8 @@ async function loadAuthoritativeChecks(
     const demoEndCta = hasText(theme.endCtaLabel) && authenticUrl(theme.endCtaHref);
     const launchWired = Boolean(launch && launch.primary_demo_id === artifactId);
     return {
+      buyer_promise: stepRows.some((step) => hasText(step.caption)) || hasText(theme.endCtaLabel),
+      interactive_proof: stepRows.length >= 1 && (hotspots?.length ?? 0) > 0 && !brokenHotspot,
       interactive_steps: stepRows.length >= 2,
       working_hotspots: (hotspots?.length ?? 0) > 0 && !brokenHotspot,
       captions_complete: stepRows.length >= 2 && stepRows.every((step) => hasText(step.caption)),
@@ -155,15 +166,26 @@ async function loadAuthoritativeChecks(
       .select('analysis_data,data_sources').eq('id', artifactId).eq('user_id', userId).maybeSingle();
     if (error || !data) throw new Error('The PMF report was not found for this account');
     const analysis = recordValue(data.analysis_data);
+    const evidenceAnswers = recordValue(analysis.evidenceAnswers);
+    const interviewObjection = arrayValue(evidenceAnswers.interviews).some((value) => {
+      const interview = recordValue(value);
+      return hasText(interview.objections) || hasText(interview.missingFeatures);
+    });
     const signalCount = Number(analysis.evidenceSignalCount ?? 0);
     const directCount = Number(analysis.directEvidenceSignalCount ?? signalCount);
     return {
       report_generated: Object.keys(analysis).length > 0,
       decision_present: hasText(analysis.decision),
       weighted_sources_present: signalCount > 0 || arrayValue(data.data_sources).length > 0,
+      three_independent_signals: signalCount >= 3 && directCount >= 3,
+      documented_objection: arrayValue(analysis.objections).some(hasText)
+        || arrayValue(analysis.unmetNeeds).some(hasText)
+        || hasText(analysis.primaryObjection)
+        || interviewObjection,
       directional_signals: signalCount >= 5 && directCount >= 5,
       emerging_patterns: signalCount >= 10 && directCount >= 5,
       decision_grade: analysis.evidenceGrade === 'decision_grade' && signalCount >= 25 && directCount >= 5,
+      reviewed_buyer_signal: false,
       duplicates_removed: Number.isFinite(Number(analysis.duplicateEvidenceCount ?? 0)),
     };
   }
@@ -199,6 +221,7 @@ async function loadAuthoritativeChecks(
       analytics_injected_on_publish: hasText(setup.successEvent) && /analytics|track\s*\(|captureEvent|data-event/i.test(source),
       published,
       external_success_event: false,
+      platform_observed_publish: published && smoke.passed === true && hasText(setup.successEvent),
     };
   }
 
@@ -219,6 +242,9 @@ async function loadAuthoritativeChecks(
     const killRule = recordValue(primaryPlay?.structuredKillRule);
     return {
       primary_channel: Boolean(primary),
+      one_offer: hasText(primaryPlay?.offer),
+      one_message: hasText(primaryPlay?.message) || hasText(messaging.ctaCopy),
+      ten_prospect_sample: Number(killRule.minSampleSize) >= 10,
       fallback_channel: channels.some((channel) => channel.role === 'secondary'),
       claim_level_evidence: hasText(messaging.headline) && hasText(messaging.hookLine) && claims.length > 0
         && claims.every((claim) => arrayValue(claim.sourceIds).length > 0),
@@ -228,36 +254,48 @@ async function loadAuthoritativeChecks(
       budget_and_time_constraints: Number(primaryPlay?.weeklyTimeHours) > 0 && Number(primaryPlay?.weeklyBudget) >= 0,
       structured_kill_rule: hasText(killRule.metric) && Number.isFinite(Number(killRule.threshold))
         && Number(killRule.observationWindowWeeks) > 0 && Number(killRule.minSampleSize) > 0,
+      acquisition_cycle_ready: Boolean(primaryPlay && hasText(primaryPlay.audience) && hasText(primaryPlay.offer)
+        && hasText(primaryPlay.message) && Number(killRule.minSampleSize) >= 10),
       traction_sprint_created: hasText(primaryPlay?.tractionSprintId),
+      buyer_signal_recorded: false,
     };
   }
 
   if (artifactId !== `traction-ledger-${userId}`) throw new Error('The Traction ledger id is invalid for this account');
-  const { data: logs, error } = await supabase.from('traction_engine_weekly_logs')
-    .select('id,week_start_date,seven_day_active_users,thirty_day_active_users,revenue,score_breakdown')
-    .eq('user_id', userId).order('week_start_date', { ascending: false }).limit(6);
-  if (error || !logs?.length) throw new Error('The Traction ledger was not found for this account');
-  const logIds = logs.map((log) => log.id);
-  const { data: decisions } = await supabase.from('traction_engine_experiments')
-    .select('weekly_log_id,efficiency_score,recommended_decision').eq('user_id', userId).in('weekly_log_id', logIds);
-  const weekTimes = [...new Set(logs.map((log) => new Date(`${log.week_start_date}T00:00:00Z`).getTime()))].sort((a, b) => b - a);
-  let consecutive = weekTimes.length > 0 ? 1 : 0;
-  for (let index = 1; index < weekTimes.length; index += 1) {
-    if (Math.round((weekTimes[index - 1] - weekTimes[index]) / 604800000) !== 1) break;
-    consecutive += 1;
+  const { data: marketExperiments, error: marketError } = await supabase.from('market_experiments')
+    .select('id,audience,offer,channel,status').eq('user_id', userId).in('execution_loop', ['SELL', 'GROW']);
+  if (marketError) throw marketError;
+  const experimentIds = (marketExperiments ?? []).map((experiment) => experiment.id);
+  const { data: observations, error: observationError } = experimentIds.length
+    ? await supabase.from('market_experiment_observations')
+      .select('experiment_id,metric,value,verification_mode').eq('user_id', userId).in('experiment_id', experimentIds)
+    : { data: [], error: null };
+  if (observationError) throw observationError;
+  const buyerMetrics = new Set(['replies', 'positive_replies', 'meetings', 'attended', 'commitments', 'payments']);
+  const cycles = (marketExperiments ?? []).map((experiment) => {
+    const cycleObservations = (observations ?? []).filter((observation) => observation.experiment_id === experiment.id);
+    return {
+      ...experiment,
+      buyerSignals: cycleObservations.filter((observation) => buyerMetrics.has(observation.metric))
+        .reduce((sum, observation) => sum + Number(observation.value ?? 0), 0),
+      verified: cycleObservations.some((observation) => buyerMetrics.has(observation.metric)
+        && ['platform_verified', 'reviewer_verified'].includes(observation.verification_mode)),
+      hasSources: cycleObservations.filter((observation) => buyerMetrics.has(observation.metric))
+        .every((observation) => hasText(observation.verification_mode)),
+    };
+  });
+  const motionGroups = new Map<string, typeof cycles>();
+  for (const cycle of cycles.filter((candidate) => candidate.buyerSignals > 0)) {
+    const key = [cycle.audience, cycle.offer, cycle.channel].map((value) => textValue(value, 300).toLowerCase()).join('|');
+    motionGroups.set(key, [...(motionGroups.get(key) ?? []), cycle]);
   }
-  const verifiedWeeks = logs.filter((log) => ['platform', 'corroborated'].includes(textValue(recordValue(log.score_breakdown).retentionSource, 30))).length;
-  const distinctDecisionWeeks = new Set((decisions ?? []).map((decision) => decision.weekly_log_id)).size;
+  const repeatedMotion = [...motionGroups.values()].find((group) => group.length >= 2) ?? [];
   return {
-    six_consecutive_weeks: consecutive >= 6,
-    three_distinct_decision_weeks: distinctDecisionWeeks >= 3,
-    source_badges: logs.every((log) => ['platform', 'manual', 'corroborated'].includes(textValue(recordValue(log.score_breakdown).retentionSource, 30))),
-    acquisition_efficiency: (decisions ?? []).every((decision) => Number.isFinite(Number(decision.efficiency_score))),
-    retention: logs.every((log) => Number.isFinite(Number(log.seven_day_active_users)) && Number.isFinite(Number(log.thirty_day_active_users))),
-    revenue_where_available: logs.every((log) => log.revenue === null || Number.isFinite(Number(log.revenue))),
-    decision_recommendations: (decisions ?? []).length > 0 && (decisions ?? []).every((decision) => hasText(decision.recommended_decision)),
-    exportable_report: consecutive >= 6 && distinctDecisionWeeks >= 3,
-    three_verified_weeks: verifiedWeeks >= 3,
+    first_cycle_decision: cycles.some((cycle) => cycle.status === 'evaluated' && cycle.buyerSignals > 0),
+    two_comparable_cycles: repeatedMotion.length >= 2,
+    buyer_signal_each_cycle: repeatedMotion.length >= 2 && repeatedMotion.every((cycle) => cycle.buyerSignals > 0),
+    source_badges: repeatedMotion.length >= 2 && repeatedMotion.every((cycle) => cycle.hasSources),
+    one_verified_buyer_signal: repeatedMotion.some((cycle) => cycle.verified),
   };
 }
 
@@ -460,17 +498,17 @@ serve(async (req) => {
       const clientQualityChecks = recordValue(input.qualityChecks) as Record<string, boolean | number | string | null>;
       const authoritativeChecks = await loadAuthoritativeChecks(supabase, user.id, tool, artifactId);
       const qualityChecks = { ...clientQualityChecks, ...authoritativeChecks };
-      const verificationMode: VerificationMode = tool === 'icp_builder' && authoritativeChecks.five_interview_signals === true
+      const verificationMode: VerificationMode = tool === 'icp_builder' && authoritativeChecks.external_target_signal === true
         ? 'corroborated'
         : tool === 'demo_studio' && authoritativeChecks.external_activity === true
           ? 'platform_verified'
-          : tool === 'pmf_lab' && authoritativeChecks.decision_grade === true
+          : tool === 'pmf_lab' && authoritativeChecks.reviewed_buyer_signal === true
             ? 'corroborated'
-            : tool === 'mvp_builder' && authoritativeChecks.evidence_manifest_approved === true
-              ? 'corroborated'
-              : tool === 'gtm_strategist' && authoritativeChecks.traction_sprint_created === true
+            : tool === 'mvp_builder' && authoritativeChecks.platform_observed_publish === true
                 ? 'platform_verified'
-                : tool === 'traction_engine' && authoritativeChecks.three_verified_weeks === true
+              : tool === 'gtm_strategist' && authoritativeChecks.buyer_signal_recorded === true
+                ? 'platform_verified'
+                : tool === 'traction_engine' && authoritativeChecks.one_verified_buyer_signal === true
                   ? 'platform_verified'
                   : tool === 'traction_engine' || tool === 'pmf_lab'
                     ? 'founder_reported'
@@ -577,20 +615,9 @@ serve(async (req) => {
       const { data: outcome, error: outcomeError } = await supabase.from('journey_outcomes')
         .select('id,status,tool,quality_checks,completion_score').eq('id', sourceOutcomeId).eq('user_id', user.id).single();
       if (outcomeError || !outcome) return json({ error: 'Source outcome was not found' }, 404);
-      /*
-       * The ICP contract cannot reach 'ready' at save time: it requires five
-       * completed interviews and an authentic citation, and interviews are
-       * logged in PMF Lab, which a founder only reaches THROUGH this handoff.
-       * Gating the row on 'ready' therefore made the first link in the chain
-       * unreachable, which is why journey_handoffs held no rows at all.
-       *
-       * The contract itself is not relaxed. A provisional handoff is recorded
-       * and stamped with the status it was created at, so a reader can always
-       * tell a draft-backed handoff from an evidence-backed one, and the
-       * evidence restore path downstream already derives its confidence from
-       * completion_score, so a thin ICP self-limits rather than inflating
-       * whatever it is handed to.
-       */
+      // A provisional ICP-to-Proof handoff remains available for imported or
+      // legacy journeys. The destination sees the source status and can never
+      // mistake a hypothesis for externally validated evidence.
       const isProvisionalPair = outcome.tool === 'icp_builder' && destinationTool === 'demo_studio';
       if (!['ready', 'verified', 'reviewed'].includes(outcome.status) && !isProvisionalPair) {
         return json({ error: 'Complete the source outcome before handing it to the next tool' }, 409);
@@ -598,12 +625,13 @@ serve(async (req) => {
       if (outcome.tool === 'pmf_lab' && destinationTool === 'mvp_builder') {
         const checks = recordValue(outcome.quality_checks);
         if (
-          outcome.status !== 'verified' ||
+          !['ready', 'verified', 'reviewed'].includes(outcome.status) ||
           checks.decision !== 'build' ||
-          checks.decision_grade !== true
+          checks.three_independent_signals !== true ||
+          checks.documented_objection !== true
         ) {
           return json({
-            error: 'MVP handoff requires a verified Build decision backed by decision-grade evidence',
+            error: 'MVP handoff requires a Build decision backed by three independent buyer signals and one documented objection',
           }, 409);
         }
       }

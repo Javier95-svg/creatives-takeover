@@ -10,6 +10,10 @@ export interface GTMOutcomeEvaluation {
     budgetAndTimeConstraints: boolean;
     structuredKillRule: boolean;
     tractionSprintCreated: boolean;
+    oneOffer: boolean;
+    oneMessage: boolean;
+    tenProspectSample: boolean;
+    acquisitionCycleReady: boolean;
   };
   completionScore: number;
   status: "draft" | "ready";
@@ -49,6 +53,10 @@ export function evaluateGTMOutcome(plan: GTMPlanV2): GTMOutcomeEvaluation {
       && primaryPlay.structuredKillRule.minSampleSize > 0,
   );
   const tractionSprintCreated = Boolean(primaryPlay?.tractionSprintId);
+  const oneOffer = Boolean(primaryPlay?.offer.trim());
+  const oneMessage = Boolean(primaryPlay?.message.trim());
+  const tenProspectSample = (primaryPlay?.structuredKillRule?.minSampleSize ?? 0) >= 10;
+  const acquisitionCycleReady = Boolean(primaryChannel && oneOffer && oneMessage && tenProspectSample && structuredKillRule);
   const checks = {
     primaryChannel,
     fallbackChannel,
@@ -58,10 +66,14 @@ export function evaluateGTMOutcome(plan: GTMPlanV2): GTMOutcomeEvaluation {
     budgetAndTimeConstraints,
     structuredKillRule,
     tractionSprintCreated,
+    oneOffer,
+    oneMessage,
+    tenProspectSample,
+    acquisitionCycleReady,
   };
-  const values = Object.values(checks);
+  const values = [primaryChannel, oneOffer, oneMessage, tenProspectSample, budgetAndTimeConstraints, structuredKillRule, acquisitionCycleReady];
   const completionScore = Math.round((values.filter(Boolean).length / values.length) * 100);
-  const planReady = values.slice(0, -1).every(Boolean);
+  const planReady = values.every(Boolean);
 
   return {
     checks,

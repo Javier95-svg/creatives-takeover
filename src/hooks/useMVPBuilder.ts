@@ -3710,6 +3710,7 @@ export function useMVPBuilder() {
         published: true,
         analytics_injected_on_publish: analyticsInstrumented,
         external_success_event: false,
+        platform_observed_publish: analyticsInstrumented,
       };
       void upsertJourneyOutcome({
         userId: user.id,

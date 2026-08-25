@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import CustomerEvidenceWorkspace from '@/components/founder-cycle/CustomerEvidenceWorkspace';
+import JourneyEvidenceSubmissionCard from '@/components/JourneyEvidenceSubmissionCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,16 +16,19 @@ import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFirstCustomerSprint } from '@/hooks/useFirstCustomerSprint';
+import { useOutcomeJourney } from '@/hooks/useOutcomeJourney';
 import { useFounderCycle } from '@/hooks/useFounderCycle';
 import { resolveIcpSource } from '@/lib/icpHandoffSource';
 import { icpArtifactToFirstCustomerSprint } from '@/lib/icpToFirstCustomerSprint';
 import { useMentorRecommendations } from '@/hooks/useMentorRecommendations';
 import { useSubscription } from '@/hooks/useSubscription';
 import { trackFirstCustomerSprint } from '@/lib/analytics';
+import { consumeGTMTractionHandoff } from '@/lib/gtmTractionHandoff';
 import {
   FIRST_CUSTOMER_TARGETS,
   buildFirstCustomerMentorBrief,
   canCompleteFirstCustomerSprint,
+  deriveFirstCustomerStep,
   mentorBriefText,
   validateFirstCustomerIntake,
 } from '@/lib/firstCustomerSprint';
@@ -65,6 +69,7 @@ export default function FirstCustomerSprintPage() {
   const { user, loading: authLoading } = useAuth();
   const cycle = useFounderCycle();
   const sprintApi = useFirstCustomerSprint();
+  const outcomeJourney = useOutcomeJourney();
   const subscription = useSubscription();
   const snapshot = sprintApi.snapshot;
   const sprint = snapshot?.sprint ?? null;
@@ -111,6 +116,20 @@ export default function FirstCustomerSprintPage() {
       mentorDecisionQuestion: current.mentorDecisionQuestion || snapshot?.cycleDefaults?.primaryGoal || cycle.snapshot?.primaryGoal || '',
     }));
   }, [cycle.snapshot, snapshot?.cycleDefaults?.primaryGoal, snapshot?.cycleDefaults?.weeklyCapacityHours, sprint]);
+
+  useEffect(() => {
+    if (sprint) return;
+    const legacy = consumeGTMTractionHandoff();
+    const channel = searchParams.get('channel') || legacy?.channel || '';
+    const hypothesis = searchParams.get('hypothesis') || legacy?.hypothesis || '';
+    if (!channel && !hypothesis) return;
+    setIntake((current) => ({
+      ...current,
+      problemHypothesis: current.problemHypothesis.trim() || hypothesis,
+      mentorDecisionQuestion: current.mentorDecisionQuestion.trim()
+        || `Should we repeat, revise, or stop the ${channel || 'selected'} acquisition motion after ten messages?`,
+    }));
+  }, [searchParams, sprint]);
 
   /*
    * Seed the intake from the founder's ICP draft.
@@ -218,6 +237,11 @@ export default function FirstCustomerSprintPage() {
     };
     const errors = validateFirstCustomerIntake(normalized);
     if (errors.length) { toast.error(errors[0]); return; }
+    await outcomeJourney.start({
+      stage: 'acquire',
+      cohortKey: 'first_customer_pilot',
+      acquisitionSource: searchParams.get('source') || 'first_customer_sprint',
+    });
     // Attribution only. The intake text is already normalized above and is not
     // re-read from the draft, so a founder's edits are what actually get saved.
     const created = await sprintApi.start({
@@ -232,7 +256,7 @@ export default function FirstCustomerSprintPage() {
       try { await sprintApi.generateMessages(created.id); }
       catch (generationError) { console.warn('Using deterministic message templates', generationError); }
     }
-  }, 'Your 30-day sprint has started.');
+  }, 'Your 30-day acquisition cycle has started.');
 
   const saveMessages = () => {
     if (!sprint) return;
@@ -309,7 +333,9 @@ export default function FirstCustomerSprintPage() {
         attached_count: evidence.attachedProspects, outreach_count: evidence.contactedProspects,
         conversation_count: evidence.conversations, business_model: sprint.business_model_snapshot,
       });
-    }, 'Sprint completed. Your evidence and decision are preserved.');
+    }, evidence.replies > 0 || evidence.conversations > 0 || evidence.commitments > 0 || evidence.payments > 0
+      ? 'Acquisition cycle completed. Your buyer signal is being handed to Traction Engine.'
+      : 'Acquisition cycle completed. Your evidence-backed loop-back decision is preserved.');
   };
 
   const submitReview = () => {
@@ -364,6 +390,7 @@ export default function FirstCustomerSprintPage() {
   if (sprint.status === 'completed') return (
     <><Helmet><title>Completed First Customer Sprint | Creatives Takeover</title><meta name="robots" content="noindex,nofollow" /></Helmet><Navigation /><main className="container mx-auto min-h-screen max-w-4xl space-y-6 px-4 py-24"><Card className="border-success/30 bg-success/5"><CardHeader><Badge className="w-fit" variant="outline">Completed {sprint.completed_at ? new Date(sprint.completed_at).toLocaleDateString() : ''}</Badge><CardTitle className="text-3xl">Your sprint evidence is preserved</CardTitle><CardDescription>You finished with a {sprint.final_decision?.replaceAll('_', ' ')} decision.</CardDescription></CardHeader><CardContent><div className="grid gap-3 sm:grid-cols-3"><div className="rounded-lg border bg-background p-4"><p className="text-2xl font-bold">{evidence.contactedProspects}</p><p className="text-xs text-muted-foreground">Messages sent</p></div><div className="rounded-lg border bg-background p-4"><p className="text-2xl font-bold">{evidence.conversations}</p><p className="text-xs text-muted-foreground">Conversations</p></div><div className="rounded-lg border bg-background p-4"><p className="text-2xl font-bold">{evidence.commitments + evidence.payments}</p><p className="text-xs text-muted-foreground">Commitments/payments</p></div></div>{sprint.final_notes ? <div className="mt-4 rounded-lg border bg-background p-4 text-sm"><strong>Final notes:</strong> {sprint.final_notes}</div> : null}</CardContent></Card>
       {!sprint.review_submitted_at ? <Card><CardHeader><CardTitle>Review the execution system</CardTitle><CardDescription>This structured review determines what should change before another sprint. Notes stay private and never enter analytics.</CardDescription></CardHeader><CardContent className="space-y-4"><div className="grid gap-4 sm:grid-cols-3"><label className="space-y-1 text-sm"><span>Value score (1–10)</span><Input type="number" min="1" max="10" value={valueScore} onChange={(event) => setValueScore(event.target.value)} /></label><label className="space-y-1 text-sm"><span>Most valuable</span><select className="h-10 w-full rounded-md border bg-background px-3" value={primaryValue} onChange={(event) => setPrimaryValue(event.target.value as FirstCustomerPrimaryValue)}><option value="structure">Execution structure</option><option value="messaging">Messaging</option><option value="evidence">Evidence tracking</option><option value="mentor">Mentor judgment</option><option value="accountability">Accountability</option></select></label><label className="space-y-1 text-sm"><span>Biggest friction</span><select className="h-10 w-full rounded-md border bg-background px-3" value={primaryFriction} onChange={(event) => setPrimaryFriction(event.target.value as FirstCustomerPrimaryFriction)}><option value="none">No major friction</option><option value="prospect_list">Finding prospects</option><option value="messaging">Preparing messages</option><option value="sending">Actually sending</option><option value="replies">Getting replies</option><option value="conversion">Converting conversations</option><option value="time">Finding time</option><option value="not_urgent">Low urgency</option></select></label></div><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={wouldRecommend} onChange={(event) => setWouldRecommend(event.target.checked)} />I would recommend this sprint to another B2B SaaS founder.</label><Textarea maxLength={1000} value={reviewNote} onChange={(event) => setReviewNote(event.target.value)} placeholder="What should we keep or change? Optional." /><Button disabled={sprintApi.isSaving || Number(valueScore) < 1 || Number(valueScore) > 10} onClick={submitReview}>Submit review</Button></CardContent></Card> : sprint.continuation_from_sprint_id ? <Card><CardHeader><CardTitle>Demand-validation pilot complete</CardTitle><CardDescription>You completed both 30-day cycles. Your review and customer evidence are preserved for the cohort decision.</CardDescription></CardHeader></Card> : snapshot?.continuation?.paid ? <Card className="border-primary/30 bg-primary/5"><CardHeader><CardTitle>Your second sprint is unlocked</CardTitle><CardDescription>The attributed continuation purchase was confirmed. Start another 30-day cycle using the evidence and decision you just created.</CardDescription></CardHeader><CardContent><Button size="lg" disabled={sprintApi.isSaving} onClick={startSprint}>Start the second sprint <ArrowRight className="ml-2 h-4 w-4" /></Button></CardContent></Card> : <Card><CardHeader><CardTitle>Continue for a second 30-day sprint</CardTitle><CardDescription>Make a dedicated $8 purchase for 20 credits. This real commitment unlocks another sprint and is tracked separately from ordinary credit purchases.</CardDescription></CardHeader><CardContent className="flex flex-wrap gap-2"><Button size="lg" disabled={subscription.actionLoading} onClick={() => void purchaseContinuation()}>{subscription.actionLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Unlock sprint two for $8</Button><Button variant="outline" onClick={() => void sprintApi.refresh()}>Refresh purchase status</Button></CardContent></Card>}
+      {(evidence.replies > 0 || evidence.conversations > 0 || evidence.commitments > 0 || evidence.payments > 0) ? <JourneyEvidenceSubmissionCard sprintId={sprint.id} stageRunId={sprint.stage_run_id} experimentId={sprint.market_experiment_id} /> : null}
       <div className="flex flex-wrap gap-2"><Button asChild variant="outline"><Link to="/dashboard/referral">Invite another founder</Link></Button><Button asChild variant="ghost"><Link to="/bizmap-ai">Return to Founder Execution Cycle</Link></Button></div>
     </main><Footer /></>
   );
@@ -371,13 +398,21 @@ export default function FirstCustomerSprintPage() {
   const brief = sprint.mentor_brief_snapshot ?? buildFirstCustomerMentorBrief(sprint, snapshot?.contacts ?? [], evidence);
   const mentorUnlocked = Boolean(sprint.selected_message_variant)
     && (evidence.attachedProspects >= 10 || sprintApi.ctMentorUnlocked);
-  const completionEligible = Boolean(sprint.mentor_checkpoint_completed_at)
-    && (Boolean(snapshot?.canComplete) || canCompleteFirstCustomerSprint(evidence, decision, decisionNotes));
+  const completionEligible = canCompleteFirstCustomerSprint(evidence, decision, decisionNotes);
+  const derivedStep = deriveFirstCustomerStep({
+    status: sprint.status,
+    endsAt: sprint.ends_at,
+    selectedMessage: sprint.selected_message_variant,
+    checkpointComplete: Boolean(sprint.mentor_checkpoint_completed_at),
+    evidence,
+    finalDecision: decision,
+    finalNotes: decisionNotes,
+  });
 
   return (
     <><Helmet><title>First Customer Sprint | Creatives Takeover</title><meta name="robots" content="noindex,nofollow" /></Helmet><Navigation /><main className="container mx-auto max-w-6xl space-y-8 px-4 py-16 pt-28">
-      <header className="rounded-2xl border border-primary/30 bg-primary/5 p-6"><div className="flex flex-wrap items-start justify-between gap-4"><div><div className="flex flex-wrap gap-2"><Badge>{sprint.status}</Badge>{snapshot?.awaitingFinalReview ? <Badge variant="destructive">Awaiting final review</Badge> : null}<Badge variant="outline">Ends {new Date(sprint.ends_at).toLocaleDateString()}</Badge></div><h1 className="mt-3 text-3xl font-bold">First Customer Sprint</h1><p className="mt-2 max-w-3xl text-muted-foreground">The next action is based on your weakest target. Nothing is auto-sent and every customer signal remains founder-controlled.</p></div><div className="min-w-56 rounded-xl border bg-background/70 p-4"><p className="text-xs text-muted-foreground">Recommended next step</p><p className="mt-1 font-semibold">{snapshot?.derivedStep?.replaceAll('_', ' ')}</p></div></div>
-      <div className="mt-6 grid gap-3 sm:grid-cols-3"><div><div className="flex justify-between text-xs"><span>Prospects</span><span>{evidence.attachedProspects}/20</span></div><Progress className="mt-2" value={Math.min(100, evidence.attachedProspects / 20 * 100)} /></div><div><div className="flex justify-between text-xs"><span>Messages sent</span><span>{evidence.contactedProspects}/10</span></div><Progress className="mt-2" value={Math.min(100, evidence.contactedProspects / 10 * 100)} /></div><div><div className="flex justify-between text-xs"><span>Conversations</span><span>{evidence.conversations}/3</span></div><Progress className="mt-2" value={Math.min(100, evidence.conversations / 3 * 100)} /></div></div></header>
+      <header className="rounded-2xl border border-primary/30 bg-primary/5 p-6"><div className="flex flex-wrap items-start justify-between gap-4"><div><div className="flex flex-wrap gap-2"><Badge>{sprint.status}</Badge>{snapshot?.awaitingFinalReview ? <Badge variant="destructive">Awaiting final review</Badge> : null}<Badge variant="outline">Ends {new Date(sprint.ends_at).toLocaleDateString()}</Badge></div><h1 className="mt-3 text-3xl font-bold">First Customer Sprint</h1><p className="mt-2 max-w-3xl text-muted-foreground">Complete one acquisition cycle: 10 qualified prospects, 10 founder-sent messages, and a buyer-backed decision. Nothing is auto-sent.</p></div><div className="min-w-56 rounded-xl border bg-background/70 p-4"><p className="text-xs text-muted-foreground">Recommended next step</p><p className="mt-1 font-semibold">{derivedStep.replaceAll('_', ' ')}</p></div></div>
+      <div className="mt-6 grid gap-3 sm:grid-cols-3"><div><div className="flex justify-between text-xs"><span>Qualified prospects</span><span>{evidence.attachedProspects}/{FIRST_CUSTOMER_TARGETS.prospects}</span></div><Progress className="mt-2" value={Math.min(100, evidence.attachedProspects / FIRST_CUSTOMER_TARGETS.prospects * 100)} /></div><div><div className="flex justify-between text-xs"><span>Messages sent</span><span>{evidence.contactedProspects}/{FIRST_CUSTOMER_TARGETS.outreach}</span></div><Progress className="mt-2" value={Math.min(100, evidence.contactedProspects / FIRST_CUSTOMER_TARGETS.outreach * 100)} /></div><div><div className="flex justify-between text-xs"><span>Buyer signals</span><span>{evidence.replies + evidence.conversations + evidence.commitments + evidence.payments}</span></div><Progress className="mt-2" value={(evidence.replies + evidence.conversations + evidence.commitments + evidence.payments) > 0 ? 100 : 0} /></div></div></header>
 
       <Card><CardHeader><SectionHeading number={1} title="Sprint focus" description="Keep the offer, buyer, hypothesis, proof, capacity, and mentor decision question current as evidence changes." state="complete" /></CardHeader><CardContent className="space-y-3"><div className="grid gap-3 sm:grid-cols-2"><label className="space-y-1 text-sm"><span>Offer</span><Input value={intake.offer} onChange={(e) => setIntake((v) => ({ ...v, offer: e.target.value }))} /></label><label className="space-y-1 text-sm"><span>Target buyer</span><Input value={intake.targetSegment} onChange={(e) => setIntake((v) => ({ ...v, targetSegment: e.target.value }))} /></label></div><label className="block space-y-1 text-sm"><span>Problem hypothesis</span><Textarea value={intake.problemHypothesis} onChange={(e) => setIntake((v) => ({ ...v, problemHypothesis: e.target.value }))} /></label><div className="grid gap-3 sm:grid-cols-2"><label className="space-y-1 text-sm"><span>Proof URL</span><Input type="url" value={intake.proofUrl} onChange={(e) => setIntake((v) => ({ ...v, proofUrl: e.target.value }))} /></label><label className="space-y-1 text-sm"><span>Proof description</span><Input value={intake.proofDescription} onChange={(e) => setIntake((v) => ({ ...v, proofDescription: e.target.value }))} /></label></div><div className="grid gap-3 sm:grid-cols-2"><label className="space-y-1 text-sm"><span>Estimated customer value (USD)</span><Input type="number" min="1" value={intake.estimatedCustomerValueUsd} onChange={(e) => setIntake((v) => ({ ...v, estimatedCustomerValueUsd: e.target.value }))} /></label><label className="space-y-1 text-sm"><span>Weekly capacity</span><Input type="number" min="2" value={intake.weeklyCapacityHours} onChange={(e) => setIntake((v) => ({ ...v, weeklyCapacityHours: e.target.value }))} /></label></div><label className="block space-y-1 text-sm"><span>Mentor decision question</span><Textarea value={intake.mentorDecisionQuestion} onChange={(e) => setIntake((v) => ({ ...v, mentorDecisionQuestion: e.target.value }))} /></label><Button variant="outline" onClick={saveIntake}>Save sprint focus</Button></CardContent></Card>
 
@@ -386,16 +421,17 @@ export default function FirstCustomerSprintPage() {
 
       <Card id="message-preparation"><CardHeader><SectionHeading number={3} title="Prepare three messages" description="Edit the discovery-led, problem-led, and offer-led variants. Pick one primary message before outreach." state={sprint.selected_message_variant ? `${sprint.selected_message_variant} selected` : 'selection required'} /></CardHeader><CardContent className="space-y-4">{variants.map((variant, index) => <div key={variant.key} className="rounded-xl border p-4"><div className="mb-2 flex items-center justify-between gap-2"><div><p className="font-semibold">{variant.label}</p><p className="text-xs text-muted-foreground">Personalizes only the founder-provided first name field.</p></div>{sprint.selected_message_variant === variant.key ? <Badge>Primary</Badge> : null}</div><Textarea className="min-h-28" value={variant.body} onChange={(e) => setVariants((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, body: e.target.value } : item))} /><div className="mt-3 flex gap-2"><Button size="sm" variant={sprint.selected_message_variant === variant.key ? 'secondary' : 'default'} onClick={() => selectMessage(variant.key)}>Use as primary</Button></div></div>)}<div className="flex flex-wrap gap-2"><Button variant="outline" onClick={saveMessages}>Save edits</Button><Button variant="ghost" disabled={sprint.message_generation_count >= 2 || sprintApi.isSaving} onClick={() => void safely(() => sprintApi.generateMessages(sprint.id), 'Three new variants generated.')}><RefreshCw className="mr-2 h-4 w-4" />Regenerate once {sprint.message_generation_count >= 2 ? '(used)' : ''}</Button></div></CardContent></Card>
 
-      <Card id="mentor-checkpoint"><CardHeader><SectionHeading number={4} title="Mentor checkpoint" description="Unlock this checkpoint with 10 attached prospects or one qualifying CT Verified execution claim, plus a selected message. The mentor interprets the evidence; they do not retroactively verify the raw events." state={sprint.mentor_checkpoint_completed_at ? 'verified with recommendation' : sprintApi.ctMentorUnlocked ? 'CT Verified access unlocked' : sprint.checkpoint_status} /></CardHeader><CardContent className="space-y-5">
+      <Card id="mentor-checkpoint"><CardHeader><SectionHeading number={4} title="Optional mentor checkpoint" description="Use a mentor when you want a second opinion on the motion. This support step does not block the acquisition outcome." state={sprint.mentor_checkpoint_completed_at ? 'recommendation recorded' : 'optional'} /></CardHeader><CardContent className="space-y-5">
         <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={createBrief}><ClipboardCopy className="mr-2 h-4 w-4" />Create and copy brief</Button><Button variant="outline" onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" />Print brief</Button></div>
         <div className="first-customer-brief whitespace-pre-wrap rounded-xl border bg-background p-5 text-sm">{mentorBriefText(brief)}</div>
         {sprintApi.ctMentorUnlocked ? <div className="rounded-lg border border-success/30 bg-success/5 p-3 text-sm"><strong>CT Verified access:</strong> a qualifying acquisition execution unlocked this mentor checkpoint.</div> : null}
         <div className="grid gap-4 md:grid-cols-2">{mentors.loading ? <Loader2 className="h-6 w-6 animate-spin" /> : mentors.recommendations.map(({ mentor, reason }) => <div key={mentor.id} className="rounded-xl border p-4"><div className="flex items-start gap-3"><Users className="mt-1 h-5 w-5 text-primary" /><div><p className="font-semibold">{mentor.name}</p><p className="mt-1 text-sm text-muted-foreground">{reason}</p><Button className="mt-3" size="sm" disabled={!mentorUnlocked || sprintApi.isSaving || ['requested','scheduled','completed'].includes(sprint.checkpoint_status)} onClick={() => requestCheckpoint(mentor.id)}>{mentorUnlocked ? (sprint.checkpoint_status === 'not_requested' || sprint.checkpoint_status === 'cancelled' ? 'Request mentor checkpoint' : `Checkpoint ${sprint.checkpoint_status}`) : 'Attach 10 prospects or earn CT Verified access, then select a message'}</Button></div></div></div>)}</div>
         {sprint.checkpoint_scheduled_for ? <div className="rounded-lg border bg-muted/30 p-3 text-sm"><strong>Scheduled:</strong> {new Date(sprint.checkpoint_scheduled_for).toLocaleString()}</div> : null}
-        <div className="rounded-xl border border-primary/20 bg-primary/5 p-4"><h3 className="font-semibold">Mentor recommendation</h3><p className="mt-1 text-sm text-muted-foreground">Record what changed after the checkpoint. Completion counts only after this recommendation and admin verification both exist.</p><div className="mt-3 grid gap-3 sm:grid-cols-[240px_minmax(0,1fr)]"><select className="h-10 rounded-md border bg-background px-3 text-sm" value={decision} onChange={(e) => setDecision(e.target.value as FirstCustomerDecision)}>{DECISIONS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select><Textarea value={decisionNotes} onChange={(e) => setDecisionNotes(e.target.value)} placeholder="What did the mentor change in your segment, offer, message, channel, or decision?" /></div><Button className="mt-3" variant="outline" disabled={!['scheduled','completed'].includes(sprint.checkpoint_status)} onClick={recordCheckpoint}>Record mentor recommendation</Button></div>
+        <div className="rounded-xl border border-primary/20 bg-primary/5 p-4"><h3 className="font-semibold">Cycle decision</h3><p className="mt-1 text-sm text-muted-foreground">Record the decision produced by buyer evidence. A mentor may help interpret it, but the evidence—not a checkpoint—determines the outcome.</p><div className="mt-3 grid gap-3 sm:grid-cols-[240px_minmax(0,1fr)]"><select className="h-10 rounded-md border bg-background px-3 text-sm" value={decision} onChange={(e) => setDecision(e.target.value as FirstCustomerDecision)}>{DECISIONS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select><Textarea value={decisionNotes} onChange={(e) => setDecisionNotes(e.target.value)} placeholder="What did the buyer evidence change in your segment, offer, message, channel, or decision?" /></div>{['scheduled','completed'].includes(sprint.checkpoint_status) ? <Button className="mt-3" variant="outline" onClick={recordCheckpoint}>Save mentor recommendation</Button> : null}</div>
       </CardContent></Card>
 
-      <Card><CardHeader><SectionHeading number={5} title="Execute and review" description="Keep sending manually, record real customer evidence above, and finish when one of the evidence paths is met." state={completionEligible ? 'eligible to complete' : 'evidence in progress'} /></CardHeader><CardContent><div className="grid gap-3 sm:grid-cols-5">{[['Contacted', evidence.contactedProspects], ['Replies', evidence.replies], ['Conversations', evidence.conversations], ['Commitments', evidence.commitments], ['Payments', evidence.payments]].map(([label, value]) => <div key={String(label)} className="rounded-lg border p-3 text-center"><p className="text-2xl font-bold">{value}</p><p className="text-xs text-muted-foreground">{label}</p></div>)}</div><div className="mt-5 rounded-lg border p-4 text-sm"><p className="font-semibold">Completion paths</p><ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground"><li>3 completed qualified conversations; or</li><li>1 commitment or payment; or</li><li>10 messages sent plus an evidence-backed pivot/pause decision and notes.</li></ul></div><div className="mt-5 flex flex-wrap gap-2"><Button size="lg" disabled={!completionEligible || sprintApi.isSaving} onClick={completeSprint}><CheckCircle2 className="mr-2 h-4 w-4" />Complete sprint</Button>{sprint.status !== 'paused' ? <Button variant="outline" onClick={() => void safely(async () => { await sprintApi.update(sprint.id, { status: 'paused' }); trackFirstCustomerSprint('first_customer_sprint_abandoned', { sprint_id: sprint.id, status: 'paused', decision_category: 'pause' }); }, 'Sprint paused. Your work is preserved.')}><Pause className="mr-2 h-4 w-4" />Pause</Button> : <Button variant="outline" onClick={() => void safely(() => sprintApi.update(sprint.id, { status: 'active' }), 'Sprint resumed.')}>Resume sprint</Button>}</div></CardContent></Card>
+      <Card><CardHeader><SectionHeading number={5} title="Execute and decide" description="Keep sending manually, record real buyer evidence, and finish with the decision for the next cycle." state={completionEligible ? 'decision ready' : 'evidence in progress'} /></CardHeader><CardContent><div className="grid gap-3 sm:grid-cols-5">{[['Contacted', evidence.contactedProspects], ['Replies', evidence.replies], ['Conversations', evidence.conversations], ['Commitments', evidence.commitments], ['Payments', evidence.payments]].map(([label, value]) => <div key={String(label)} className="rounded-lg border p-3 text-center"><p className="text-2xl font-bold">{value}</p><p className="text-xs text-muted-foreground">{label}</p></div>)}</div><div className="mt-5 rounded-lg border p-4 text-sm"><p className="font-semibold">Completion paths</p><ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground"><li>After 10 messages, any buyer response, conversation, commitment, or payment can advance to Repeat; or</li><li>after all 10 attempts, record an evidence-backed repeat, loop-back, or pause decision with notes.</li></ul></div><div className="mt-5 flex flex-wrap gap-2"><Button size="lg" disabled={!completionEligible || sprintApi.isSaving} onClick={completeSprint}><CheckCircle2 className="mr-2 h-4 w-4" />Complete cycle</Button>{sprint.status !== 'paused' ? <Button variant="outline" onClick={() => void safely(async () => { await sprintApi.update(sprint.id, { status: 'paused' }); trackFirstCustomerSprint('first_customer_sprint_abandoned', { sprint_id: sprint.id, status: 'paused', decision_category: 'pause' }); }, 'Sprint paused. Your work is preserved.')}><Pause className="mr-2 h-4 w-4" />Pause</Button> : <Button variant="outline" onClick={() => void safely(() => sprintApi.update(sprint.id, { status: 'active' }), 'Sprint resumed.')}>Resume sprint</Button>}</div></CardContent></Card>
+      {(evidence.replies > 0 || evidence.conversations > 0 || evidence.commitments > 0 || evidence.payments > 0) ? <JourneyEvidenceSubmissionCard sprintId={sprint.id} stageRunId={sprint.stage_run_id} experimentId={sprint.market_experiment_id} /> : null}
     </main><Footer /><style>{`@media print { body * { visibility: hidden !important; } .first-customer-brief, .first-customer-brief * { visibility: visible !important; } .first-customer-brief { position: absolute; inset: 0; border: 0; white-space: pre-wrap; } }`}</style></>
   );
 }

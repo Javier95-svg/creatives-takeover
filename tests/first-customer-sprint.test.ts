@@ -62,16 +62,17 @@ test('next action follows the weakest target and overdue work is preserved for f
   const base = { status: 'active' as const, endsAt: '2026-09-02T00:00:00.000Z', selectedMessage: null, checkpointComplete: false, evidence: evidence() };
   assert.equal(deriveFirstCustomerStep(base, new Date('2026-08-10')), 'target_list');
   assert.equal(deriveFirstCustomerStep({ ...base, evidence: evidence({ attachedProspects: 10 }) }, new Date('2026-08-10')), 'message_preparation');
-  assert.equal(deriveFirstCustomerStep({ ...base, selectedMessage: 'problem', evidence: evidence({ attachedProspects: 10 }) }, new Date('2026-08-10')), 'mentor_checkpoint');
+  assert.equal(deriveFirstCustomerStep({ ...base, selectedMessage: 'problem', evidence: evidence({ attachedProspects: 10 }) }, new Date('2026-08-10')), 'execution');
   assert.equal(deriveFirstCustomerStep(base, new Date('2026-09-03')), 'awaiting_final_review');
 });
 
-test('all three completion paths are evidence-backed', () => {
-  assert.equal(canCompleteFirstCustomerSprint(evidence({ conversations: 3 })), true);
-  assert.equal(canCompleteFirstCustomerSprint(evidence({ commitments: 1 })), true);
-  assert.equal(canCompleteFirstCustomerSprint(evidence({ payments: 1 })), true);
+test('completion requires the ten-message cycle and then a signal or explicit decision', () => {
+  assert.equal(canCompleteFirstCustomerSprint(evidence({ contactedProspects: 10, replies: 1 })), true);
+  assert.equal(canCompleteFirstCustomerSprint(evidence({ contactedProspects: 10, conversations: 1 })), true);
+  assert.equal(canCompleteFirstCustomerSprint(evidence({ contactedProspects: 10, commitments: 1 })), true);
+  assert.equal(canCompleteFirstCustomerSprint(evidence({ contactedProspects: 10, payments: 1 })), true);
   assert.equal(canCompleteFirstCustomerSprint(evidence({ contactedProspects: 10 }), 'pivot', 'Segment was too broad.'), true);
-  assert.equal(canCompleteFirstCustomerSprint(evidence({ contactedProspects: 10 }), 'continue', 'Keep going.'), false);
+  assert.equal(canCompleteFirstCustomerSprint(evidence({ contactedProspects: 10 }), 'continue', 'Keep going.'), true);
   assert.equal(canCompleteFirstCustomerSprint(evidence({ contactedProspects: 9 }), 'pause', 'Insufficient signal.'), false);
 });
 

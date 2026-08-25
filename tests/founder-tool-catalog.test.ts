@@ -17,7 +17,7 @@ test('canonical catalog has unique keys, routes, and analytics keys', () => {
 test('BizMap and Insighta ownership follows the PMF journey', () => {
   assert.deepEqual(
     getFounderToolsForProduct('bizmap').filter((tool) => tool.role === 'core').map((tool) => tool.key),
-    ['icp_builder', 'demo_studio', 'pmf_lab', 'mvp_builder', 'gtm_strategist'],
+    ['icp_builder', 'demo_studio', 'pmf_lab', 'mvp_builder', 'gtm_strategist', 'first_customer_sprint'],
   );
   assert.equal(FOUNDER_TOOLS_BY_KEY.traction_engine.productArea, 'insighta');
   assert.equal(FOUNDER_TOOLS_BY_KEY.traction_engine.stage, 'TRACTION');

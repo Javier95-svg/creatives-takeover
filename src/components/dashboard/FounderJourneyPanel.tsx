@@ -35,6 +35,7 @@ import { RecommendationFeedback } from '@/components/dashboard/RecommendationFee
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardFocus } from '@/contexts/DashboardDataContext';
 import { useFounderJourneySnapshot } from '@/hooks/useFounderJourneySnapshot';
+import { useOutcomeJourney } from '@/hooks/useOutcomeJourney';
 import { getDashboardTool } from '@/config/dashboardToolRegistry';
 import {
   trackDashboardJourneyContinueClicked,
@@ -57,6 +58,7 @@ import type {
 import { cn } from '@/lib/utils';
 import { useFeatureFlagEnabled } from '@/hooks/usePosthogFeatureFlag';
 import { isPMFPathwayEnvironmentEnabled, PMF_PATHWAY_FEATURE_FLAG } from '@/lib/pmfPathwayRollout';
+import { OUTCOME_JOURNEY_CONTRACTS, OUTCOME_JOURNEY_STAGE_KEYS } from '@/lib/outcomeJourney';
 
 const TILE_ICONS: Record<string, LucideIcon> = {
   'icp-builder': Target,
@@ -204,6 +206,7 @@ export default function FounderJourneyPanel({ showRecommendedAction = false }: {
     onboarding,
     stageIntelligence,
   } = useFounderJourneySnapshot();
+  const outcomeJourney = useOutcomeJourney();
   const { primaryAction, recommendationPolicy } = useDashboardFocus();
   const pathwayFlag = useFeatureFlagEnabled(PMF_PATHWAY_FEATURE_FLAG);
   const enhancedPathway = isPMFPathwayEnvironmentEnabled() && pathwayFlag === true;
@@ -269,8 +272,39 @@ export default function FounderJourneyPanel({ showRecommendedAction = false }: {
     });
   }, [isLoading, snapshot]);
 
-  if (isLoading) {
+  if (isLoading || outcomeJourney.isLoading) {
     return <Skeleton className="mb-6 h-48 rounded-xl" />;
+  }
+
+  if (outcomeJourney.snapshot?.journey) {
+    const journey = outcomeJourney.snapshot.journey;
+    const currentContract = OUTCOME_JOURNEY_CONTRACTS[journey.current_stage];
+    const currentRun = outcomeJourney.snapshot.stageRuns
+      .filter((run) => run.stage === journey.current_stage)
+      .sort((left, right) => right.attempt_number - left.attempt_number)[0];
+    const achievedStages = new Set(outcomeJourney.snapshot.stageRuns
+      .filter((run) => run.outcome_state === 'achieved' || run.outcome_state === 'verified')
+      .map((run) => run.stage));
+    return (
+      <Card className="mb-6 border-primary/25 bg-card/80">
+        <CardContent className="p-5 sm:p-6">
+          <DashboardPanelHeader kicker="Current business outcome" title={`${currentContract.label}: ${currentContract.outcome}`} description="A saved artifact can make the work usable. Only the observable outcome advances this journey." />
+          <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
+            {OUTCOME_JOURNEY_STAGE_KEYS.map((stage) => {
+              const contract = OUTCOME_JOURNEY_CONTRACTS[stage];
+              const current = stage === journey.current_stage;
+              const achieved = achievedStages.has(stage);
+              const lockedCapital = stage === 'capital' && !journey.capital_eligible_at;
+              return <div key={stage} className={cn('min-w-24 rounded-lg border px-3 py-2 text-center', current && 'border-primary bg-primary/5', achieved && 'border-success/30 bg-success/5', lockedCapital && 'opacity-50')}><p className="text-xs font-semibold">{contract.stageNumber}. {contract.label}</p><p className="mt-1 text-[10px] text-muted-foreground">{current ? currentRun?.outcome_state?.replaceAll('_', ' ') ?? 'not started' : achieved ? 'outcome reached' : lockedCapital ? 'locked' : 'available'}</p></div>;
+            })}
+          </div>
+          <div className="mt-4 rounded-xl border bg-background/70 p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-wider text-primary">Next evidence</p><p className="mt-1 font-semibold">{currentRun?.branch_reason ?? currentContract.observableMinimum.join(' · ')}</p><p className="mt-1 text-xs text-muted-foreground">Artifact: {currentRun?.artifact_state ?? 'missing'} · Outcome: {currentRun?.outcome_state?.replaceAll('_', ' ') ?? 'not started'}{currentRun?.outcome_state === 'verified' ? ' · CT evidence recorded' : ''}</p></div><Button asChild><Link to={currentContract.route} onClick={() => trackDashboardJourneyContinueClicked({ milestone_key: `outcome:${journey.current_stage}` })}>Continue this outcome<ArrowRight className="ml-2 h-4 w-4" /></Link></Button></div>
+          </div>
+          <div className="mt-3 flex items-center justify-between gap-3 text-xs text-muted-foreground"><span>Journey entry: {OUTCOME_JOURNEY_CONTRACTS[journey.entry_stage].label} · Contract {journey.contract_version}</span><Link className="text-primary hover:underline" to="/bizmap-ai">Browse secondary tools</Link></div>
+        </CardContent>
+      </Card>
+    );
   }
 
   if (snapshot.isEmpty) {
@@ -279,8 +313,8 @@ export default function FounderJourneyPanel({ showRecommendedAction = false }: {
         <CardContent className="p-5 sm:p-6">
           <DashboardPanelHeader
             kicker="Startup journey"
-            title="Your journey starts with one saved artifact."
-            description="Each tool you complete lights up here, so you always know where you stand across the whole journey."
+            title="Start with the earliest missing business outcome."
+            description="We will place you from your existing evidence, then keep every tool secondary to the outcome you need next."
           />
           <div className="mt-4 flex flex-wrap gap-2">
             {showRecommendedAction && primaryAction && recommendedRoute ? (

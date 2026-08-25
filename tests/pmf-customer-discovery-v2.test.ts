@@ -249,7 +249,10 @@ test('client surfaces flags, filters, pipeline, export, and interview linkage', 
   assert.match(pipeline, /Export CSV/);
   assert.match(pipeline, /Active leads/);
   assert.match(interview, /sourceLeadId/);
-  assert.match(workflow, /workflow_run:/);
+  assert.match(workflow, /workflow_dispatch:/);
+  assert.match(workflow, /schema_backup_reference:/);
+  assert.match(workflow, /ledger_reconciliation_record:/);
+  assert.match(workflow, /supabase db push --linked --dry-run/);
   assert.match(workflow, /environment: production/);
   assert.match(workflow, /version: 2\.98\.2/);
 });

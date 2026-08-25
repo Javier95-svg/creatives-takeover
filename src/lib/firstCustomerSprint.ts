@@ -10,7 +10,7 @@ import type {
   FirstCustomerSprintSnapshot,
 } from '@/types/firstCustomerSprint';
 
-export const FIRST_CUSTOMER_TARGETS = { prospects: 20, outreach: 10, conversations: 3, mentorCheckpoints: 1 } as const;
+export const FIRST_CUSTOMER_TARGETS = { prospects: 10, outreach: 10, conversations: 1, mentorCheckpoints: 0 } as const;
 
 export function qualifyFirstCustomerSprintApplication(
   input: Pick<FirstCustomerSprintApplicationInput,
@@ -76,7 +76,6 @@ export function deriveFirstCustomerStep(input: {
   if (now.getTime() > new Date(input.endsAt).getTime()) return 'awaiting_final_review';
   if (input.evidence.attachedProspects < 10) return 'target_list';
   if (!input.selectedMessage) return 'message_preparation';
-  if (!input.checkpointComplete) return 'mentor_checkpoint';
   if (input.evidence.contactedProspects < 10) return 'execution';
   return canCompleteFirstCustomerSprint(input.evidence, input.finalDecision, input.finalNotes) ? 'complete' : 'review';
 }
@@ -86,12 +85,12 @@ export function canCompleteFirstCustomerSprint(
   decision?: FirstCustomerDecision | null,
   notes?: string | null,
 ): boolean {
-  return evidence.conversations >= 3
+  if (evidence.contactedProspects < 10) return false;
+  return evidence.replies > 0
+    || evidence.conversations > 0
     || evidence.commitments > 0
     || evidence.payments > 0
-    || (evidence.contactedProspects >= 10
-      && (decision === 'pivot' || decision === 'pause')
-      && (notes?.trim().length ?? 0) >= 3);
+    || (Boolean(decision) && (notes?.trim().length ?? 0) >= 3);
 }
 
 export function buildFirstCustomerMentorBrief(

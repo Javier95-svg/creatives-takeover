@@ -37,7 +37,6 @@ import {
   type TractionProductCategory,
   type TractionRetentionInput,
 } from '@/lib/tractionEngine';
-import { consumeGTMTractionHandoff } from '@/lib/gtmTractionHandoff';
 import { exportTractionReportPdf } from '@/lib/tractionReport';
 import {
   Activity,
@@ -90,6 +89,7 @@ import {
   type JourneyAssumption,
   upsertJourneyOutcome,
 } from '@/lib/journeyOutcomes';
+import { useOutcomeJourney } from '@/hooks/useOutcomeJourney';
 
 const SPRINTS_TABLE = 'traction_engine_sprints' as const;
 const LOGS_TABLE = 'traction_engine_weekly_logs' as const;
@@ -102,7 +102,7 @@ type SprintRow = {
   status: 'active' | 'closed';
   source_gtm_plan_id?: string | null;
   source_gtm_play_id?: string | null;
-  activation_payload?: { killRule?: GTMKillRule; marketExperimentId?: string; actionPacket?: { minimumSampleSize?: number; targetMetric?: string; targetValue?: number } } | null;
+  activation_payload?: { killRule?: GTMKillRule; marketExperimentId?: string; sourceSprintId?: string; audience?: string; offer?: string; firstBuyerSignal?: boolean; hypothesis?: string; targetMetric?: string; targetValue?: number; minimumSampleSize?: number; actionPacket?: { minimumSampleSize?: number; targetMetric?: string; targetValue?: number } } | null;
   kill_rule_status?: GTMKillRuleStatus;
 };
 
@@ -263,6 +263,7 @@ function Field({
 }
 
 function TractionEngineWorkflow({ userId }: { userId?: string }) {
+  const outcomeJourney = useOutcomeJourney();
   const navigate = useNavigate();
   const { deductCredits } = useCreditActions();
   const currentWeekStart = useMemo(() => getCurrentWeekStart(), []);
@@ -285,7 +286,6 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
   const [recentLogs, setRecentLogs] = useState<WeeklyLogRow[]>([]);
   const [decisionWeekCount, setDecisionWeekCount] = useState(0);
   const [consecutiveWeekCount, setConsecutiveWeekCount] = useState(0);
-  const [verifiedWeekCount, setVerifiedWeekCount] = useState(0);
   const [verificationClaims, setVerificationClaims] = useState<VerificationClaim[]>([]);
   const [journeyAssumptions, setJourneyAssumptions] = useState<JourneyAssumption[]>([]);
   const [loading, setLoading] = useState(false);
@@ -365,13 +365,11 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
       setRecentLogs(rows);
       setConsecutiveWeekCount(calculateConsecutiveLoggedWeeks(rows.map((row) => row.week_start_date)));
       // Retention source never verifies a separate acquisition claim.
-      setVerifiedWeekCount(0);
     }
     if (!decisionsRes.error) setDecisionWeekCount(new Set((decisionsRes.data ?? []).map((row) => row.weekly_log_id)).size);
     if (!claimsRes.error) {
       const claims = (claimsRes.data ?? []).map((row: Record<string, unknown>) => mapVerificationClaim(row));
       setVerificationClaims(claims);
-      setVerifiedWeekCount(claims.filter((claim) => claim.status === 'verified').length);
     }
     setLoading(false);
   };
@@ -542,15 +540,36 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         toast.success(`${play.channelName} play imported.`, { description: `${play.metric} target: ${play.target}. Results will sync to the weekly GTM review.` });
         return;
       }
-      const handoff = consumeGTMTractionHandoff();
-      if (!handoff) return;
-      importExperiment({ channel: handoff.channel, hypothesis: handoff.hypothesis, targetMetric: handoff.targetMetric || 'Signups' });
-      toast.success(`${handoff.channel} imported from your GTM plan.`);
     };
     void loadHandoff();
     return () => { active = false; };
   // eslint-disable-next-line react-hooks/exhaustive-deps -- import each URL handoff once
   }, [gtmPlanId, gtmPlayId, userId]);
+
+  useEffect(() => {
+    const handedOff = activeSprints.find((sprint) => sprint.activation_payload?.firstBuyerSignal);
+    if (!handedOff?.activation_payload) return;
+    const payload = handedOff.activation_payload;
+    setExperiments((items) => {
+      if (items.some((item) => item.marketExperimentId === payload.marketExperimentId)) return items;
+      const pristine = items.length === 1 && !items[0].channel.trim() && !items[0].hypothesis.trim();
+      const imported: ExperimentDraft = {
+        ...createExperimentDraft(),
+        channel: handedOff.channel,
+        hypothesis: payload.hypothesis || `Repeat the buyer signal from the ${handedOff.channel} acquisition cycle.`,
+        actionTaken: `Repeat the same ${payload.audience || 'ICP'}, offer, and channel from First Customer Sprint.`,
+        targetMetric: payload.targetMetric || 'Replies',
+        targetValue: Number(payload.targetValue ?? 1),
+        minimumSampleSize: Number(payload.minimumSampleSize ?? 10),
+        marketExperimentId: payload.marketExperimentId,
+      };
+      return pristine ? [imported] : [...items, imported];
+    });
+    setRetention((current) => ({
+      ...current,
+      primaryAcquisitionChannel: current.primaryAcquisitionChannel || handedOff.channel,
+    }));
+  }, [activeSprints]);
 
   const closeSprint = async (sprint: SprintRow) => {
     if (!userId) return;
@@ -876,10 +895,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         : { data: [], error: null };
       if (decisionError) throw decisionError;
 
-      const consecutiveWeeks = calculateConsecutiveLoggedWeeks((ledgerLogs ?? []).map((item) => item.week_start_date));
-      const sixWeekLedger = consecutiveWeeks >= 6;
       const distinctDecisionWeeks = new Set((ledgerDecisions ?? []).map((item) => item.weekly_log_id)).size;
-      const threeMeasuredDecisions = distinctDecisionWeeks >= 3;
       const ctVerifiedAcquisitionClaims = claimEvaluations.filter((evaluation) => evaluation?.claim?.status === 'verified').length;
       const logsById = new Map((ledgerLogs ?? []).map((item) => [item.id, item]));
       const activeSprintRows = Array.from(sprintByChannel.values());
@@ -912,20 +928,16 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         return ['platform', 'manual', 'corroborated'].includes(breakdown?.retentionSource ?? '');
       });
       const qualityChecks = {
-        three_distinct_decision_weeks: threeMeasuredDecisions,
-        six_consecutive_weeks: sixWeekLedger,
+        first_cycle_decision: (ledgerDecisions ?? []).length > 0,
+        two_comparable_cycles: false,
+        buyer_signal_each_cycle: false,
         source_badges: hasSourceBadges,
-        acquisition_efficiency: (ledgerDecisions ?? []).every((item) => Number.isFinite(Number(item.efficiency_score))),
-        retention: (ledgerLogs ?? []).every((item) => Number.isFinite(Number(item.seven_day_active_users)) && Number.isFinite(Number(item.thirty_day_active_users))),
-        revenue_where_available: (ledgerLogs ?? []).every((item) => item.revenue === null || Number.isFinite(Number(item.revenue))),
-        decision_recommendations: (ledgerDecisions ?? []).every((item) => Boolean((item as { recommended_decision?: string }).recommended_decision)),
-        exportable_report: sixWeekLedger && threeMeasuredDecisions,
-        ct_verified_acquisition_claim: ctVerifiedAcquisitionClaims > 0,
+        one_verified_buyer_signal: ctVerifiedAcquisitionClaims > 0,
       };
       const completedChecks = Object.values(qualityChecks).filter(Boolean).length;
-      // This outcome says the decision ledger is usable. Claim verification is
-      // intentionally kept in verification_claims, even when CT Verified exists.
-      const outcomeStatus = sixWeekLedger && threeMeasuredDecisions ? 'ready' : 'draft';
+      // The service reloads immutable market experiments and decides whether
+      // the same acquisition motion actually produced signal twice.
+      const outcomeStatus = 'draft';
       const outcomeManifest = createJourneyEvidenceManifest([
         ...(ledgerLogs ?? []).map((item) => {
           const breakdown = item.score_breakdown as { retentionSource?: string } | null;
@@ -951,7 +963,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
           label: `${gtmSource.channel} GTM play`,
         }] : []),
       ]);
-      await upsertJourneyOutcome({
+      const savedOutcome = await upsertJourneyOutcome({
         userId,
         tool: 'traction_engine',
         artifactType: 'traction_decision_ledger',
@@ -960,13 +972,14 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         qualityChecks,
         evidenceManifest: outcomeManifest,
         completionScore: Math.round((completedChecks / Object.keys(qualityChecks).length) * 100),
-        verificationMode: sixWeekLedger ? 'founder_reported' : 'unverified',
+        verificationMode: 'founder_reported',
       });
+      const authoritativeOutcomeStatus = savedOutcome.evaluation.status;
       trackJourneyEvent('journey_stage_outcome_completed', {
         tool: 'traction_engine',
         artifact_type: 'traction_decision_ledger',
         artifact_id: `traction-ledger-${userId}`,
-        outcome_status: outcomeStatus,
+        outcome_status: authoritativeOutcomeStatus,
         week_count: ledgerLogs?.length ?? 0,
         decision_count: distinctDecisionWeeks,
       });
@@ -979,6 +992,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         navigate,
       });
       await loadTractionData();
+      await outcomeJourney.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not save Traction Engine log.');
     } finally {
@@ -989,8 +1003,13 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
   const isFirstTime = !loading && recentLogs.length === 0 && activeSprints.length === 0;
   const hasInput = experiments.some((e) => e.channel.trim() || e.resultValue > 0) || retention.newUsers > 0;
   const showScore = hasInput || recentLogs.length > 0;
-  const readyLedger = consecutiveWeekCount >= 6 && decisionWeekCount >= 3;
-  const verifiedLedger = verifiedWeekCount > 0;
+  const repeatRun = outcomeJourney.snapshot?.stageRuns
+    .filter((run) => run.stage === 'repeat')
+    .sort((left, right) => right.attempt_number - left.attempt_number)[0];
+  const readyLedger = repeatRun?.outcome_state === 'achieved' || repeatRun?.outcome_state === 'verified';
+  const verifiedLedger = repeatRun?.outcome_state === 'verified';
+  const comparableSignalCycles = Number(repeatRun?.evidence_summary?.comparableSignalCycles ?? 0);
+  const firstCustomerHandoff = activeSprints.find((sprint) => sprint.activation_payload?.firstBuyerSignal);
 
   return (
     <div className="space-y-8">
@@ -1046,6 +1065,19 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
           )}
         </div>
       </section>
+
+      {firstCustomerHandoff ? (
+        <section className="rounded-xl border border-primary/25 bg-primary/5 p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <Badge variant="outline">First Customer Sprint handoff</Badge>
+              <h2 className="mt-2 text-lg font-semibold">Your first buyer signal is already attached.</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Repeat the same ICP, offer, and {firstCustomerHandoff.channel} channel once more. Change only one variable if the evidence says to iterate.</p>
+            </div>
+            <Badge>{comparableSignalCycles}/2 signal cycles</Badge>
+          </div>
+        </section>
+      ) : null}
 
       <section className="rounded-xl border border-success/20 bg-success/5 p-5">
           <p className="mb-4 text-center text-sm font-semibold text-success dark:text-success">
@@ -1523,7 +1555,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
             <CardContent className="space-y-3">
               <div className={cn('rounded-lg border p-3', verifiedLedger ? 'border-success/30 bg-success/5' : 'border-border/70 bg-muted/20')}>
                 <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-semibold">CT proof history</p><Badge variant="outline">{verifiedLedger ? 'CT Verified claim available' : 'Evidence in progress'}</Badge></div>
-                <p className="mt-2 text-xs text-muted-foreground">{Math.min(consecutiveWeekCount, 6)}/6 consecutive weeks · {Math.min(decisionWeekCount, 3)}/3 distinct decision weeks · {verifiedWeekCount} CT Verified acquisition claim{verifiedWeekCount === 1 ? '' : 's'}</p>
+                <p className="mt-2 text-xs text-muted-foreground">{comparableSignalCycles}/2 comparable buyer-signal cycles · {verifiedLedger ? 'at least one signal verified' : 'verification still required'} · {recentLogs.length} decision log{recentLogs.length === 1 ? '' : 's'} retained</p>
               </div>
               {recentLogs.length === 0 ? (
                 <div className="space-y-1">
@@ -1616,7 +1648,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                   ) : (
                     <XCircle className="mt-0.5 h-4 w-4 text-muted-foreground" />
                   )}
-                  <span>{readyLedger ? 'Six-week decision ledger is ready.' : 'Build six consecutive weeks with at least three measured decisions.'}</span>
+                  <span>{readyLedger ? 'First repeatable demand has been demonstrated across two comparable cycles.' : repeatRun?.branch_reason ?? 'Repeat the same ICP, offer, and channel in a second acquisition cycle.'}</span>
                 </div>
               </div>
               <Button

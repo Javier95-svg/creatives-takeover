@@ -21,6 +21,8 @@ import {
   getStageAvailableIntents,
   recommendActivation,
 } from '@/lib/activationJourneyV2';
+import { isPublishProofFirstEnabled, PUBLISH_PROOF_FIRST_FLAG } from '@/lib/publishProofRollout';
+import { useFeatureFlagEnabled } from '@/hooks/usePosthogFeatureFlag';
 import {
   deriveOnboardingContextV1,
   deriveStageAnswersFromOnboarding,
@@ -60,6 +62,7 @@ const AVAILABLE_INTENTS: ActivationIntent[] = [
   'run_icp',
   'start_validation',
   'build_mvp',
+  'first_customer_sprint',
   'plan_gtm',
   'log_traction',
   'analyze_pitch_deck',
@@ -343,13 +346,15 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
     }),
     [answers],
   );
+  const publishProofFirst = isPublishProofFirstEnabled(useFeatureFlagEnabled(PUBLISH_PROOF_FIRST_FLAG));
   const recommendation = useMemo(() => recommendActivation({
     assignedStage: draftContext.assignedStage,
     blocker: stageAnswers.blocker,
     productStatus: stageAnswers.productStatus,
     userPreferences: existingPreferences,
     availableIntents,
-  }), [availableIntents, draftContext.assignedStage, existingPreferences, stageAnswers.blocker, stageAnswers.productStatus]);
+    publishProofFirst,
+  }), [availableIntents, draftContext.assignedStage, existingPreferences, publishProofFirst, stageAnswers.blocker, stageAnswers.productStatus]);
 
   useEffect(() => {
     if (explicitIntent || !recommendation) return;

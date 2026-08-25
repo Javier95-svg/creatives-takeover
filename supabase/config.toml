@@ -295,6 +295,10 @@ verify_jwt = false
 [functions.first-customer-sprint-assistant]
 verify_jwt = true
 
+# Service-role-only controlled query used by the production release gate.
+[functions.market-provider-health]
+verify_jwt = true
+
 # Server-authoritative credit costs and wallet forecasts for authenticated CTAs.
 [functions.credit-quote]
 verify_jwt = true

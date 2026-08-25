@@ -17,7 +17,7 @@ export interface OutcomeCheck {
 }
 
 export interface OutcomeEvaluation {
-  evaluatorVersion: '2';
+  evaluatorVersion: '3';
   completionScore: number;
   checks: OutcomeCheck[];
   warnings: string[];
@@ -42,31 +42,24 @@ const CONTRACTS: Record<JourneyTool, ContractDefinition> = {
     required: [
       ['primary_segment', 'Choose one primary customer segment.'],
       ['non_fit_segment', 'Name one segment you will not serve first.'],
-      ['three_ranked_pains', 'Rank at least three customer pains.'],
+      ['urgent_pain', 'Choose the one urgent pain you will test first.'],
       ['buying_trigger', 'Define the event that makes the customer act.'],
       ['current_alternative', 'Document the customer\'s current alternative.'],
       ['reachable_channels', 'Name at least one reachable customer channel.'],
-      ['authentic_citation', 'Add at least one valid, non-placeholder market citation.'],
-      ['confidence_level', 'Assign an evidence confidence level.'],
+      ['three_reachable_accounts', 'Name three reachable example accounts.'],
       ['assumptions_registered', 'Record the assumptions that still require validation.'],
-      ['five_interview_plan', 'Create the five-interview validation plan.'],
     ],
     verified: [
-      ['five_interview_signals', 'Complete five independent customer interviews.'],
-      ['assumptions_resolved', 'Mark the tested assumptions confirmed or rejected.'],
+      ['external_target_signal', 'Corroborate the target with an independent buyer signal.'],
     ],
   },
   demo_studio: {
     required: [
-      ['interactive_steps', 'Add at least two complete interactive steps.'],
-      ['working_hotspots', 'Resolve every missing or invalid hotspot action.'],
-      ['captions_complete', 'Add a clear caption to every step.'],
+      ['buyer_promise', 'State one buyer-testable promise.'],
+      ['interactive_proof', 'Add one working interaction a buyer can experience.'],
       ['single_cta', 'Configure one working call to action.'],
-      ['lead_capture', 'Enable and validate lead capture.'],
-      ['analytics', 'Enable demo view, completion, and CTA analytics.'],
-      ['mobile_ready', 'Pass the mobile layout check.'],
+      ['analytics', 'Enable view and CTA measurement.'],
       ['published', 'Publish the proof page to a public URL.'],
-      ['no_unresolved_placeholders', 'Replace all unresolved placeholder frames.'],
       ['no_broken_interactions', 'Repair every broken interaction.'],
     ],
     verified: [['external_activity', 'Collect a non-owner completion, CTA action, or lead.']],
@@ -76,54 +69,46 @@ const CONTRACTS: Record<JourneyTool, ContractDefinition> = {
       ['report_generated', 'Generate the source-weighted PMF report.'],
       ['decision_present', 'Produce a Build, Narrow, Pivot, or Stop decision.'],
       ['weighted_sources_present', 'Attach the evidence used by the decision.'],
-      ['directional_signals', 'Collect at least five independent weighted signals.'],
+      ['three_independent_signals', 'Collect at least three independent qualified buyer signals.'],
+      ['documented_objection', 'Record one buyer objection or unmet need.'],
       ['duplicates_removed', 'Resolve duplicate or dependent evidence.'],
     ],
-    verified: [['decision_grade', 'Collect twenty-five independent weighted signals.']],
+    verified: [['reviewed_buyer_signal', 'Verify at least one of the buyer signals.']],
   },
   mvp_builder: {
     required: [
-      ['evidence_manifest_approved', 'Approve the evidence manifest before claiming an evidence-backed MVP.'],
       ['one_customer', 'Select one primary customer.'],
       ['one_core_job', 'Define one core customer job.'],
       ['success_event', 'Define and instrument one success event.'],
       ['feature_budget', 'Limit the essential build scope to three features.'],
-      ['project_generated', 'Generate the project files.'],
-      ['preview_ready', 'Open a working primary preview.'],
       ['primary_flow_present', 'Add one executable primary customer flow.'],
       ['primary_flow_smoke_test', 'Pass the executable primary-flow smoke test.'],
-      ['responsive_ui', 'Pass the responsive layout check.'],
       ['no_runtime_errors', 'Resolve all preview and runtime errors.'],
-      ['rollback_support', 'Save a rollback version.'],
       ['analytics_injected_on_publish', 'Instrument the primary success event.'],
       ['published', 'Publish the working MVP.'],
     ],
-    verified: [['external_success_event', 'Record a non-owner primary success event.']],
+    verified: [['platform_observed_publish', 'Confirm the live workflow and success-event instrumentation.']],
   },
   gtm_strategist: {
     required: [
       ['primary_channel', 'Choose one primary acquisition channel.'],
-      ['fallback_channel', 'Choose one fallback acquisition channel.'],
-      ['claim_level_evidence', 'Cite evidence for every non-assumption messaging claim.'],
-      ['usable_campaign_assets', 'Create a usable asset for the primary play.'],
-      ['six_week_targets', 'Define six weeks of targets and actions.'],
+      ['one_offer', 'Choose the one offer this cycle will test.'],
+      ['one_message', 'Choose the founder-controlled message this cycle will use.'],
+      ['ten_prospect_sample', 'Pre-register a sample of at least ten qualified prospects.'],
       ['budget_and_time_constraints', 'Set the weekly time and budget constraints.'],
       ['structured_kill_rule', 'Define a measurable kill rule with threshold, window, and sample size.'],
+      ['acquisition_cycle_ready', 'Prepare the acquisition cycle for First Customer Sprint.'],
     ],
-    verified: [['traction_sprint_created', 'Activate and link the primary Traction sprint.']],
+    verified: [['buyer_signal_recorded', 'Record a qualified buyer response, conversation, commitment, or payment.']],
   },
   traction_engine: {
     required: [
-      ['six_consecutive_weeks', 'Complete six consecutive weekly logs.'],
-      ['three_distinct_decision_weeks', 'Make measured decisions in at least three different weeks.'],
-      ['source_badges', 'Label the provenance of every weekly result.'],
-      ['acquisition_efficiency', 'Calculate acquisition efficiency for each measured play.'],
-      ['retention', 'Record seven-day and thirty-day retention.'],
-      ['revenue_where_available', 'Include revenue where it is available.'],
-      ['decision_recommendations', 'Record the recommended decision and any override rationale.'],
-      ['exportable_report', 'Generate the complete six-week traction report.'],
+      ['first_cycle_decision', 'Complete and review the first acquisition cycle.'],
+      ['two_comparable_cycles', 'Run the same ICP, offer, and channel in two separate cycles.'],
+      ['buyer_signal_each_cycle', 'Record a qualified buyer signal in each cycle.'],
+      ['source_badges', 'Label the provenance of every buyer signal.'],
     ],
-    verified: [['three_verified_weeks', 'Use corroborated or platform-verified evidence in at least three weeks.']],
+    verified: [['one_verified_buyer_signal', 'Verify at least one buyer signal through the platform or a reviewer.']],
   },
 };
 
@@ -152,7 +137,7 @@ export function evaluateOutcomeContract(input: OutcomeContractInput): OutcomeEva
   const status = verifiedPassed ? 'verified' : requiredPassed ? 'ready' : 'draft';
 
   return {
-    evaluatorVersion: '2',
+    evaluatorVersion: '3',
     completionScore,
     checks,
     warnings: verification.filter((check) => !check.passed).map((check) => check.message),

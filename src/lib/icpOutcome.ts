@@ -33,10 +33,14 @@ export function evaluateIcpArtifact(
   const qualityChecks = {
     primary_segment: fieldIsReal(draft, 'decisionBrief.primarySegment'),
     non_fit_segment: fieldIsReal(draft, 'decisionBrief.nonFitSegment'),
+    urgent_pain: rankedPainIsReal(draft, 0),
     three_ranked_pains: [0, 1, 2].every((index) => rankedPainIsReal(draft, index)),
     buying_trigger: fieldIsReal(draft, 'decisionBrief.buyingTrigger'),
     current_alternative: fieldIsReal(draft, 'decisionBrief.currentAlternative'),
     reachable_channels: (brief?.reachableChannels.filter((channel) => channel.trim()).length ?? 0) > 0,
+    three_reachable_accounts: [0, 1, 2].every((index) =>
+      fieldIsReal(draft, `decisionBrief.interviewValidationPlan.${index}`),
+    ),
     authentic_citation: (draft.sources ?? []).some((source) => isAuthenticIcpCitation(source.url)),
     confidence_level: Boolean(draft.confidence.level),
     assumptions_registered: assumptions.length > 0,
@@ -45,6 +49,7 @@ export function evaluateIcpArtifact(
     ),
     five_interview_signals: independentInterviews.size >= 5,
     assumptions_resolved: independentInterviews.size >= 5 && resolvedInterviews.length >= 5,
+    external_target_signal: independentInterviews.size >= 1,
   };
 
   return {
@@ -52,7 +57,7 @@ export function evaluateIcpArtifact(
     evaluation: evaluateOutcomeContract({
       tool: 'icp_builder',
       qualityChecks,
-      verificationMode: independentInterviews.size >= 5 ? 'corroborated' : 'unverified',
+      verificationMode: independentInterviews.size >= 1 ? 'corroborated' : 'unverified',
     }),
     assumptions,
   };
