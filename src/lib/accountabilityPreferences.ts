@@ -71,6 +71,16 @@ export function getBrowserTimezone() {
   }
 }
 
+export function normalizeTimezone(value: unknown) {
+  if (typeof value !== 'string' || !value.trim()) return getBrowserTimezone();
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: value });
+    return value;
+  } catch {
+    return 'UTC';
+  }
+}
+
 function coerceHour(value: unknown) {
   const numeric = typeof value === 'number' ? value : Number(value);
   if (!Number.isFinite(numeric)) {
@@ -138,9 +148,7 @@ export function normalizeAccountabilityPreferences(
   userPreferences: Record<string, unknown> | null | undefined,
 ): AccountabilityPreferences {
   const preferences = getPreferenceRecord(userPreferences);
-  const timezone = typeof preferences.timezone === 'string' && preferences.timezone.trim()
-    ? preferences.timezone
-    : getBrowserTimezone();
+  const timezone = normalizeTimezone(preferences.timezone);
 
   return {
     weekly_checkin_day: isWeeklyCheckinDay(preferences.weekly_checkin_day)

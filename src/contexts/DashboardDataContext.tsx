@@ -139,7 +139,12 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
     queryFn: async () => {
       const startedAt = performance.now();
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-      let { data, error } = await supabase.rpc('get_dashboard_snapshot_v3' as never, { p_timezone: timezone } as never);
+      let { data, error } = await supabase.rpc('get_dashboard_snapshot_v4' as never, { p_timezone: timezone } as never);
+      if (isMissingSnapshotFunction(error, 'get_dashboard_snapshot_v4')) {
+        const v3Fallback = await supabase.rpc('get_dashboard_snapshot_v3' as never, { p_timezone: timezone } as never);
+        data = v3Fallback.data;
+        error = v3Fallback.error;
+      }
       if (isMissingSnapshotFunction(error, 'get_dashboard_snapshot_v3')) {
         const v2Fallback = await supabase.rpc('get_dashboard_snapshot_v2' as never, { p_timezone: timezone } as never);
         data = v2Fallback.data;

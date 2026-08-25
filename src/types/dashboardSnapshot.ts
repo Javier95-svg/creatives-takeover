@@ -74,6 +74,7 @@ export interface DashboardRoutineSummary {
   configured: boolean;
   completed: number;
   total: number;
+  pendingCount?: number;
   items: DashboardRoutineItem[];
 }
 

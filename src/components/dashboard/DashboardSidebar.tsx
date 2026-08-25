@@ -45,7 +45,7 @@ import {
 } from '@/config/planPermissions';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useDashboardNavigation } from '@/contexts/DashboardNavigationContext';
-import { useDashboardJourney } from '@/contexts/DashboardDataContext';
+import { useDashboardData, useDashboardJourney } from '@/contexts/DashboardDataContext';
 import { useDashboardBootstrapProfile } from '@/contexts/DashboardBootstrapContext';
 import { cn } from '@/lib/utils';
 import { groupToolItemsByStage } from '@/lib/sidebarJourneyGroups';
@@ -201,6 +201,7 @@ export const DashboardSidebarContent = ({ currentStage }: { currentStage: BizMap
   const { subscriptionData, loading: subscriptionLoading } = useSubscription({ fetchTiers: false });
   const incompleteTaskCount = useContext(TaskCountContext);
   const { activeSection, setActiveSection } = useDashboardNavigation();
+  const { snapshot } = useDashboardData();
   const userId = user?.id ?? null;
   const [loadedPersonalization, setLoadedPersonalization] = useState<
     { userId: string; value: SidebarPersonalization } | null
@@ -430,6 +431,8 @@ export const DashboardSidebarContent = ({ currentStage }: { currentStage: BizMap
                 <SidebarMenu>
                   {dashboardNavItems.map((item) => {
                     const isTasksItem = item.path === '/dashboard/tasks';
+                    const isRoutineItem = item.path === '/dashboard/routine';
+                    const routinePendingCount = snapshot?.focus.routine.pendingCount ?? 0;
                     const target = buildNavTarget(item.path, item.sectionId);
                     return (
                       <SidebarMenuItem key={target}>
@@ -450,6 +453,11 @@ export const DashboardSidebarContent = ({ currentStage }: { currentStage: BizMap
                             {isTasksItem && incompleteTaskCount > 0 && (
                               <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-caption font-semibold text-primary-foreground group-data-[collapsible=icon]:hidden">
                                 {incompleteTaskCount > 99 ? '99+' : incompleteTaskCount}
+                              </span>
+                            )}
+                            {isRoutineItem && routinePendingCount > 0 && (
+                              <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-caption font-semibold text-primary-foreground group-data-[collapsible=icon]:hidden">
+                                {routinePendingCount > 99 ? '99+' : routinePendingCount}
                               </span>
                             )}
                           </Link>

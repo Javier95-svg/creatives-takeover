@@ -13,6 +13,8 @@ import { toast } from "sonner";
 interface Prefs {
   push_enabled: boolean;
   routine_reminders: boolean;
+  routine_in_app_enabled: boolean;
+  routine_email_enabled: boolean;
   task_reminders: boolean;
   retention_emails: boolean;
   product_updates: boolean;
@@ -24,6 +26,8 @@ interface Prefs {
 const DEFAULTS: Prefs = {
   push_enabled: true,
   routine_reminders: true,
+  routine_in_app_enabled: true,
+  routine_email_enabled: true,
   task_reminders: true,
   retention_emails: true,
   product_updates: true,
@@ -50,7 +54,7 @@ export function NotificationPreferencesCard() {
       try {
         const { data } = await db
           .from("notification_preferences")
-          .select("push_enabled, routine_reminders, task_reminders, retention_emails, product_updates, investor_updates, dm_email_enabled, dm_push_enabled")
+          .select("push_enabled, routine_reminders, routine_in_app_enabled, routine_email_enabled, task_reminders, retention_emails, product_updates, investor_updates, dm_email_enabled, dm_push_enabled")
           .eq("user_id", user.id)
           .maybeSingle();
         if (!cancelled && data) setPrefs({ ...DEFAULTS, ...data });
@@ -68,6 +72,9 @@ export function NotificationPreferencesCard() {
   const save = async (patch: Partial<Prefs>) => {
     if (!user) return;
     const next = { ...prefs, ...patch };
+    if (Object.prototype.hasOwnProperty.call(patch, 'routine_in_app_enabled') || Object.prototype.hasOwnProperty.call(patch, 'routine_email_enabled')) {
+      next.routine_reminders = next.routine_in_app_enabled || next.routine_email_enabled;
+    }
     setPrefs(next);
     try {
       const { error } = await db
@@ -75,14 +82,6 @@ export function NotificationPreferencesCard() {
         .upsert({ user_id: user.id, ...next, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
       if (error) throw error;
 
-      // The routine reminder cron keys off profiles.routine_reminder_preferences.enabled,
-      // so keep that in sync when the routine toggle changes.
-      if (Object.prototype.hasOwnProperty.call(patch, "routine_reminders")) {
-        await db
-          .from("profiles")
-          .update({ routine_reminder_preferences: { enabled: next.routine_reminders, time: "09:00" } })
-          .eq("id", user.id);
-      }
     } catch (error) {
       logError("Failed to save notification preferences", error, { userId: user.id });
       toast.error("Couldn't save that preference. Try again.");
@@ -105,7 +104,8 @@ export function NotificationPreferencesCard() {
   const rows: Array<{ key: keyof Prefs; label: string; desc: string }> = [
     { key: "dm_email_enabled", label: "Message emails", desc: "Email me when someone sends a direct message." },
     { key: "dm_push_enabled", label: "Message push notifications", desc: "Send direct-message alerts to subscribed devices." },
-    { key: "routine_reminders", label: "Daily routine reminders", desc: "A nudge to check off today's founder habits and keep your streak." },
+    { key: "routine_in_app_enabled", label: "Routine in-app reminders", desc: "Show routine nudges in the platform at your selected routine time." },
+    { key: "routine_email_enabled", label: "Routine email fallback", desc: "Email a recovery nudge after three inactive days, if your routine is enabled." },
     { key: "task_reminders", label: "Task & deadline reminders", desc: "Heads-up when a task is due or overdue." },
     { key: "retention_emails", label: "Progress & re-engagement emails", desc: "Weekly progress and occasional come-back nudges by email." },
     { key: "product_updates", label: "Product updates", desc: "Major new features and announcements." },

@@ -36,6 +36,11 @@ export interface RoutineReminderPreferences {
   time: string;
 }
 
+export interface RoutineReminderChannels {
+  inAppEnabled: boolean;
+  emailEnabled: boolean;
+}
+
 export interface RoutineCompletion {
   id: string;
   routine_task_id: string;
@@ -61,6 +66,7 @@ export interface RoutineProfileSnapshot {
   routine_primary_goal: string | null;
   routine_config: Json | null;
   routine_reminder_preferences: Json | null;
+  user_preferences: Json | null;
   quiz_current_stage: string | null;
   quiz_biggest_challenge: string | null;
   creative_niche: string | null;
@@ -137,6 +143,11 @@ const ROUTINE_TEMPLATES: Record<RoutineGoal, Omit<RoutineTask, 'order' | 'active
 export const DEFAULT_REMINDER_PREFERENCES: RoutineReminderPreferences = {
   enabled: false,
   time: '09:00',
+};
+
+export const DEFAULT_REMINDER_CHANNELS: RoutineReminderChannels = {
+  inAppEnabled: true,
+  emailEnabled: true,
 };
 
 /**
@@ -284,6 +295,35 @@ export function getLocalDateKey(date = new Date()) {
   return format(date, 'yyyy-MM-dd');
 }
 
+function getTimezoneParts(date: Date, timezone: string) {
+  try {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      weekday: 'short',
+    }).formatToParts(date);
+    const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+    const weekday = ({ Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 } as Record<string, number>)[values.weekday] ?? 0;
+    return { year: Number(values.year), month: Number(values.month), day: Number(values.day), weekday };
+  } catch {
+    return { year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate(), weekday: date.getDay() };
+  }
+}
+
+export function getDateKeyInTimezone(date = new Date(), timezone = 'UTC') {
+  const parts = getTimezoneParts(date, timezone);
+  return `${parts.year.toString().padStart(4, '0')}-${parts.month.toString().padStart(2, '0')}-${parts.day.toString().padStart(2, '0')}`;
+}
+
+export function getWeekStartKeyInTimezone(date = new Date(), timezone = 'UTC') {
+  const parts = getTimezoneParts(date, timezone);
+  const localMidnight = new Date(Date.UTC(parts.year, parts.month - 1, parts.day));
+  localMidnight.setUTCDate(localMidnight.getUTCDate() - ((parts.weekday + 6) % 7));
+  return localMidnight.toISOString().slice(0, 10);
+}
+
 export function getWeekStartKey(date = new Date()) {
   return format(startOfWeek(date, { weekStartsOn: 1 }), 'yyyy-MM-dd');
 }
@@ -292,8 +332,15 @@ export function getWeekEndLabel(date = new Date()) {
   return format(endOfWeek(date, { weekStartsOn: 1 }), 'MMM d');
 }
 
-export function getRoutineTasksForToday(config: RoutineConfig, date = new Date()) {
-  const day = date.getDay();
+export function getWeekEndLabelInTimezone(date = new Date(), timezone = 'UTC') {
+  const start = getWeekStartKeyInTimezone(date, timezone);
+  const end = new Date(`${start}T00:00:00Z`);
+  end.setUTCDate(end.getUTCDate() + 6);
+  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }).format(end);
+}
+
+export function getRoutineTasksForToday(config: RoutineConfig, date = new Date(), timezone?: string) {
+  const day = timezone ? getTimezoneParts(date, timezone).weekday : date.getDay();
   return config.tasks
     .filter((task) => task.active && task.cadence === 'daily' && task.days.includes(day))
     .sort((a, b) => a.order - b.order);

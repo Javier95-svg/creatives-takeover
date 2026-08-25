@@ -7,11 +7,12 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   buildRoutineSuggestions,
   createRoutineConfig,
+  DEFAULT_REMINDER_CHANNELS,
+  getDateKeyInTimezone,
   getCompletionKey,
-  getLocalDateKey,
   getRoutineTasksForToday,
   getRoutineTasksForWeek,
-  getWeekStartKey,
+  getWeekStartKeyInTimezone,
   parseReminderPreferences,
   parseRoutineConfig,
   parseRoutineGoal,
@@ -25,8 +26,12 @@ import {
   type RoutinePeriodType,
   type RoutineProfileSnapshot,
   type RoutineReminderPreferences,
+  type RoutineReminderChannels,
   type RoutineTask,
 } from '@/lib/routineTemplates';
+import { mergeAccountabilityPreferences, normalizeAccountabilityPreferences } from '@/lib/accountabilityPreferences';
+
+const notificationDb = supabase as unknown as { from: (table: string) => any };
 
 type RoutineCompletionRow = {
   id: string;
@@ -51,7 +56,7 @@ function normalizeRoutineOrder(tasks: RoutineTask[]) {
   return tasks.map((task, index) => ({ ...task, order: index }));
 }
 
-function calculateDailyStreak(completions: RoutineCompletion[]) {
+function calculateDailyStreak(completions: RoutineCompletion[], timezone: string) {
   const completedDates = new Set(
     completions
       .filter((completion) => completion.period_type === 'daily' && completion.status === 'completed')
@@ -61,7 +66,7 @@ function calculateDailyStreak(completions: RoutineCompletion[]) {
   let streak = 0;
   let cursor = new Date();
 
-  while (completedDates.has(getLocalDateKey(cursor))) {
+  while (completedDates.has(getDateKeyInTimezone(cursor, timezone))) {
     streak += 1;
     cursor = subDays(cursor, 1);
   }
@@ -85,6 +90,7 @@ export function useRoutine() {
   const [profile, setProfile] = useState<RoutineProfileSnapshot | null>(null);
   const [config, setConfig] = useState<RoutineConfig | null>(null);
   const [reminderPreferences, setReminderPreferences] = useState<RoutineReminderPreferences>(() => parseReminderPreferences(null));
+  const [reminderChannels, setReminderChannels] = useState<RoutineReminderChannels>(DEFAULT_REMINDER_CHANNELS);
   const [currentCompletions, setCurrentCompletions] = useState<RoutineCompletion[]>([]);
   const [historyCompletions, setHistoryCompletions] = useState<RoutineCompletion[]>([]);
   const [legacyCommitments, setLegacyCommitments] = useState<LegacyWeeklyCommitment[]>([]);
@@ -93,8 +99,9 @@ export function useRoutine() {
   const [error, setError] = useState<string | null>(null);
   const loadedUserIdRef = useRef<string | null>(null);
 
-  const todayKey = getLocalDateKey();
-  const weekKey = getWeekStartKey();
+  const timezone = normalizeAccountabilityPreferences(profile?.user_preferences as Record<string, unknown> | null | undefined).timezone;
+  const todayKey = getDateKeyInTimezone(new Date(), timezone);
+  const weekKey = getWeekStartKeyInTimezone(new Date(), timezone);
 
   const refresh = useCallback(async () => {
     if (!userId) {
@@ -104,6 +111,7 @@ export function useRoutine() {
       setCurrentCompletions([]);
       setHistoryCompletions([]);
       setLegacyCommitments([]);
+      setReminderChannels(DEFAULT_REMINDER_CHANNELS);
       return;
     }
 
@@ -113,11 +121,11 @@ export function useRoutine() {
     setError(null);
 
     try {
-      const historyStart = getLocalDateKey(subDays(new Date(), 90));
-      const [profileResult, currentCompletionResult, historyCompletionResult, legacyResult] = await Promise.all([
+      const historyStart = getDateKeyInTimezone(subDays(new Date(), 90), timezone);
+      const [profileResult, currentCompletionResult, historyCompletionResult, legacyResult, notificationPreferencesResult] = await Promise.all([
         supabase
           .from('profiles')
-          .select('routine_primary_goal, routine_config, routine_reminder_preferences, quiz_current_stage, quiz_biggest_challenge, creative_niche, startup_stage, startup_name, startup_industry')
+          .select('routine_primary_goal, routine_config, routine_reminder_preferences, user_preferences, quiz_current_stage, quiz_biggest_challenge, creative_niche, startup_stage, startup_name, startup_industry')
           .eq('id', userId)
           .maybeSingle(),
         supabase
@@ -137,17 +145,28 @@ export function useRoutine() {
           .eq('user_id', userId)
           .order('week_start_date', { ascending: false })
           .limit(6),
+        notificationDb
+          .from('notification_preferences')
+          .select('routine_in_app_enabled, routine_email_enabled, routine_reminders')
+          .eq('user_id', userId)
+          .maybeSingle(),
       ]);
 
       if (profileResult.error) throw profileResult.error;
       if (currentCompletionResult.error) throw currentCompletionResult.error;
       if (historyCompletionResult.error) throw historyCompletionResult.error;
       if (legacyResult.error) throw legacyResult.error;
+      if (notificationPreferencesResult.error) throw notificationPreferencesResult.error;
 
       const profileRow = profileResult.data as RoutineProfileSnapshot | null;
       setProfile(profileRow);
       setConfig(parseRoutineConfig(profileRow?.routine_config));
       setReminderPreferences(parseReminderPreferences(profileRow?.routine_reminder_preferences));
+      const notificationPreferences = notificationPreferencesResult.data;
+      setReminderChannels({
+        inAppEnabled: notificationPreferences?.routine_in_app_enabled ?? notificationPreferences?.routine_reminders ?? true,
+        emailEnabled: notificationPreferences?.routine_email_enabled ?? notificationPreferences?.routine_reminders ?? true,
+      });
       setCurrentCompletions(((currentCompletionResult.data ?? []) as RoutineCompletionRow[]).map(normalizeCompletion));
       setHistoryCompletions(((historyCompletionResult.data ?? []) as RoutineCompletionRow[]).map(normalizeCompletion));
       setLegacyCommitments((legacyResult.data ?? []) as LegacyWeeklyCommitment[]);
@@ -158,7 +177,7 @@ export function useRoutine() {
       loadedUserIdRef.current = userId;
       setIsLoading(false);
     }
-  }, [todayKey, userId, weekKey]);
+  }, [timezone, todayKey, userId, weekKey]);
 
   useEffect(() => {
     void refresh();
@@ -201,7 +220,7 @@ export function useRoutine() {
     toast.success('Your routine is ready');
   }, [saveConfig]);
 
-  const updateReminderPreferences = useCallback(async (preferences: RoutineReminderPreferences) => {
+  const updateReminderPreferences = useCallback(async (preferences: RoutineReminderPreferences, nextTimezone?: string) => {
     if (!userId) return;
 
     setIsSaving(true);
@@ -214,10 +233,42 @@ export function useRoutine() {
         .eq('id', userId);
 
       if (updateError) throw updateError;
+      if (nextTimezone && nextTimezone !== timezone) {
+        const { error: timezoneError } = await supabase
+          .from('profiles')
+          .update({ user_preferences: mergeAccountabilityPreferences(profile?.user_preferences as Record<string, unknown> | null | undefined, { timezone: nextTimezone }) })
+          .eq('id', userId);
+        if (timezoneError) throw timezoneError;
+        await refresh();
+      }
       toast.success(preferences.enabled ? 'Routine reminder preference saved' : 'Routine reminders turned off');
     } catch (err) {
       console.error('Failed to save routine reminder preferences:', err);
       toast.error('Failed to save reminder preference');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [profile?.user_preferences, refresh, timezone, userId]);
+
+  const updateReminderChannels = useCallback(async (channels: RoutineReminderChannels) => {
+    if (!userId) return;
+    setIsSaving(true);
+    setReminderChannels(channels);
+    try {
+      const { error: updateError } = await notificationDb
+        .from('notification_preferences')
+        .upsert({
+          user_id: userId,
+          routine_in_app_enabled: channels.inAppEnabled,
+          routine_email_enabled: channels.emailEnabled,
+          routine_reminders: channels.inAppEnabled || channels.emailEnabled,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+      if (updateError) throw updateError;
+      toast.success('Routine delivery preferences saved');
+    } catch (err) {
+      console.error('Failed to save routine delivery preferences:', err);
+      toast.error('Failed to save routine delivery preferences');
     } finally {
       setIsSaving(false);
     }
@@ -292,7 +343,7 @@ export function useRoutine() {
     );
   }, [currentCompletions]);
 
-  const todayTasks = useMemo(() => config ? getRoutineTasksForToday(config) : [], [config]);
+  const todayTasks = useMemo(() => config ? getRoutineTasksForToday(config, new Date(), timezone) : [], [config, timezone]);
   const weeklyTasks = useMemo(() => config ? getRoutineTasksForWeek(config) : [], [config]);
   const allCurrentTasks = useMemo(() => [
     ...todayTasks.map((task) => ({ task, periodType: 'daily' as const, periodDate: todayKey })),
@@ -307,12 +358,12 @@ export function useRoutine() {
   }).length;
   const totalCurrentCount = allCurrentTasks.length;
   const progressPercentage = totalCurrentCount > 0 ? Math.round((completedCurrentCount / totalCurrentCount) * 100) : 0;
-  const dailyStreak = calculateDailyStreak(historyCompletions);
+  const dailyStreak = calculateDailyStreak(historyCompletions, timezone);
   const consistencyPercentage = calculateConsistency(historyCompletions);
   // RET-008: visible momentum — completed actions this week vs the week before,
   // so progress compounds in front of the founder instead of resetting daily.
-  const last7Key = getLocalDateKey(subDays(new Date(), 7));
-  const prev14Key = getLocalDateKey(subDays(new Date(), 14));
+  const last7Key = getDateKeyInTimezone(subDays(new Date(), 7), timezone);
+  const prev14Key = getDateKeyInTimezone(subDays(new Date(), 14), timezone);
   const completedLast7 = historyCompletions.filter(
     (completion) => completion.status === 'completed' && completion.period_date >= last7Key,
   ).length;
@@ -330,9 +381,12 @@ export function useRoutine() {
     config,
     selectedGoal,
     reminderPreferences,
+    reminderChannels,
+    timezone,
     todayTasks,
     weeklyTasks,
     currentCompletions,
+    historyCompletions,
     completionByKey,
     legacyCommitments,
     suggestions,
@@ -352,6 +406,7 @@ export function useRoutine() {
     initializeRoutine,
     saveConfig,
     updateReminderPreferences,
+    updateReminderChannels,
     setTaskStatus,
     clearTaskStatus,
     refresh,

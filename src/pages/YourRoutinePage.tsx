@@ -5,14 +5,18 @@ import {
   ArrowRight,
   ArrowDown,
   ArrowUp,
+  Bell,
   BookOpen,
   CheckCircle2,
   Clock3,
   Loader2,
+  Mail,
+  MapPin,
   Plus,
   Repeat2,
   RotateCcw,
   Sparkles,
+  TrendingUp,
   Trash2,
 } from 'lucide-react';
 
@@ -27,6 +31,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useRoutine } from '@/hooks/useRoutine';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,16 +51,20 @@ import {
   ROUTINE_GOAL_OPTIONS,
   createCustomRoutineTask,
   createRoutineConfig,
+  getDateKeyInTimezone,
   getCompletionKey,
-  getLocalDateKey,
-  getWeekEndLabel,
-  getWeekStartKey,
+  getRoutineTasksForToday,
+  getWeekEndLabelInTimezone,
+  getWeekStartKeyInTimezone,
   type RoutineCadence,
   type RoutineConfig,
   type RoutineGoal,
+  type RoutineReminderChannels,
+  type RoutineReminderPreferences,
   type RoutinePeriodType,
   type RoutineTask,
 } from '@/lib/routineTemplates';
+import { getBrowserTimezone } from '@/lib/accountabilityPreferences';
 
 const DEFAULT_DAILY_DAYS = [1, 2, 3, 4, 5];
 const DEFAULT_WEEKLY_DAYS = [5];
@@ -126,6 +146,127 @@ function LectureOfTheDay() {
 
 function getGoalLabel(goal: string | null | undefined) {
   return ROUTINE_GOAL_OPTIONS.find((option) => option.value === goal)?.label ?? 'Routine';
+}
+
+const REMINDER_TIMES = Array.from({ length: 96 }, (_, index) => {
+  const hour = Math.floor(index / 4);
+  const minute = (index % 4) * 15;
+  return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+});
+
+function getTimezoneOptions() {
+  const browserTimezone = getBrowserTimezone();
+  const intl = Intl as typeof Intl & { supportedValuesOf?: (key: 'timeZone') => string[] };
+  const options = intl.supportedValuesOf?.('timeZone') ?? [
+    'UTC', 'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
+    'America/Bogota', 'America/Sao_Paulo', 'Europe/London', 'Europe/Paris', 'Europe/Berlin',
+    'Asia/Dubai', 'Asia/Kolkata', 'Asia/Singapore', 'Asia/Tokyo', 'Australia/Sydney',
+  ];
+  return Array.from(new Set([browserTimezone, 'UTC', ...options]));
+}
+
+const TIMEZONE_OPTIONS = getTimezoneOptions();
+
+function formatReminderPreview(time: string, timezone: string) {
+  const [scheduledHour, scheduledMinute] = time.split(':').map(Number);
+  const current = new Intl.DateTimeFormat('en-US', { timeZone: timezone, hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date());
+  const values = Object.fromEntries(current.map((part) => [part.type, part.value]));
+  const isTomorrow = Number(values.hour) > scheduledHour || (Number(values.hour) === scheduledHour && Number(values.minute) >= scheduledMinute);
+  const formattedTime = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' }).format(new Date(Date.UTC(2020, 0, 1, scheduledHour, scheduledMinute)));
+  return `${isTomorrow ? 'Tomorrow' : 'Today'} at ${formattedTime} (${timezone})`;
+}
+
+function TimezonePicker({ value, onChange, disabled }: { value: string; onChange: (timezone: string) => void; disabled?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const matchingOptions = TIMEZONE_OPTIONS.filter((timezone) => timezone.toLowerCase().includes(query.trim().toLowerCase())).slice(0, 100);
+
+  return (
+    <>
+      <Button type="button" variant="outline" className="w-full justify-start font-normal" onClick={() => setOpen(true)} disabled={disabled}>
+        <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />{value}
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-hidden sm:max-w-lg">
+          <DialogHeader><DialogTitle>Choose your timezone</DialogTitle></DialogHeader>
+          <Input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search e.g. Bogota, London, Tokyo" />
+          <div className="max-h-80 overflow-y-auto rounded-lg border">
+            {matchingOptions.map((timezone) => (
+              <button
+                key={timezone}
+                type="button"
+                className={cn('flex w-full items-center px-3 py-2.5 text-left text-sm hover:bg-muted', timezone === value && 'bg-primary/10 font-medium text-primary')}
+                onClick={() => { onChange(timezone); setOpen(false); setQuery(''); }}
+              >
+                {timezone}
+              </button>
+            ))}
+            {!matchingOptions.length ? <p className="p-4 text-sm text-muted-foreground">No supported timezone found.</p> : null}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function ReminderScheduleCard({
+  preferences,
+  channels,
+  timezone,
+  isSaving,
+  onPreferencesChange,
+  onChannelsChange,
+}: {
+  preferences: RoutineReminderPreferences;
+  channels: RoutineReminderChannels;
+  timezone: string;
+  isSaving: boolean;
+  onPreferencesChange: (preferences: RoutineReminderPreferences, timezone?: string) => void;
+  onChannelsChange: (channels: RoutineReminderChannels) => void;
+}) {
+  return (
+    <Card className="border-primary/20 bg-card/90">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg"><Bell className="h-5 w-5 text-primary" />Reminder schedule</CardTitle>
+        <CardDescription>Set one local check-in time. We only nudge you when scheduled habits are still waiting.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <div className="flex items-center justify-between gap-4 rounded-lg border border-border/70 bg-background/70 p-3">
+          <div><Label htmlFor="routine-reminder">Daily routine reminder</Label><p className="mt-1 text-xs text-muted-foreground">Pause all Routine reminder delivery.</p></div>
+          <Switch id="routine-reminder" checked={preferences.enabled} onCheckedChange={(enabled) => onPreferencesChange({ ...preferences, enabled })} disabled={isSaving} />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2"><Label htmlFor="routine-reminder-time">Time</Label><Select value={preferences.time} onValueChange={(time) => onPreferencesChange({ ...preferences, time })} disabled={isSaving || !preferences.enabled}><SelectTrigger id="routine-reminder-time"><SelectValue /></SelectTrigger><SelectContent>{REMINDER_TIMES.map((time) => <SelectItem key={time} value={time}>{time}</SelectItem>)}</SelectContent></Select></div>
+          <div className="space-y-2"><Label>Timezone</Label><TimezonePicker value={timezone} disabled={isSaving || !preferences.enabled} onChange={(nextTimezone) => onPreferencesChange(preferences, nextTimezone)} /></div>
+        </div>
+        <div className="rounded-lg bg-muted/50 px-3 py-2 text-xs text-muted-foreground"><Clock3 className="mr-1.5 inline h-3.5 w-3.5" />Next reminder window: <span className="font-medium text-foreground">{formatReminderPreview(preferences.time, timezone)}</span></div>
+        <div className="space-y-3 border-t pt-4">
+          <p className="text-sm font-medium">Delivery channels</p>
+          <div className="flex items-center justify-between gap-4"><div><Label>In-app reminder</Label><p className="mt-1 text-xs text-muted-foreground">Shows in your notifications at the scheduled time.</p></div><Switch checked={channels.inAppEnabled} disabled={isSaving || !preferences.enabled} onCheckedChange={(inAppEnabled) => onChannelsChange({ ...channels, inAppEnabled })} /></div>
+          <div className="flex items-center justify-between gap-4"><div><Label className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" />Email fallback</Label><p className="mt-1 text-xs text-muted-foreground">Recovery email after 3 inactive days; never a same-time duplicate.</p></div><Switch checked={channels.emailEnabled} disabled={isSaving || !preferences.enabled} onCheckedChange={(emailEnabled) => onChannelsChange({ ...channels, emailEnabled })} /></div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function RoutineMomentumCard({ config, completions, timezone, stats }: { config: RoutineConfig; completions: Array<{ period_type: string; period_date: string; status: string }>; timezone: string; stats: { dailyStreak: number; completedLast7: number; completedPrev7: number; consistencyPercentage: number } }) {
+  const historyByDate = useMemo(() => {
+    const completed = new Map<string, number>();
+    completions.filter((completion) => completion.period_type === 'daily' && completion.status === 'completed').forEach((completion) => completed.set(completion.period_date, (completed.get(completion.period_date) ?? 0) + 1));
+    return completed;
+  }, [completions]);
+  const days = useMemo(() => Array.from({ length: 28 }, (_, index) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (27 - index));
+    const key = getDateKeyInTimezone(date, timezone);
+    const total = getRoutineTasksForToday(config, date, timezone).length;
+    const completed = historyByDate.get(key) ?? 0;
+    return { key, total, completed, date };
+  }), [config, historyByDate, timezone]);
+  const trend = stats.completedLast7 - stats.completedPrev7;
+
+  return <Card className="border-border/70 bg-card/90"><CardHeader><CardTitle className="flex items-center gap-2 text-lg"><TrendingUp className="h-5 w-5 text-primary" />Consistency & momentum</CardTitle><CardDescription>Your last 28 days of scheduled founder habits.</CardDescription></CardHeader><CardContent className="space-y-5"><div className="grid grid-cols-3 gap-3"><div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Current streak</p><p className="mt-1 text-xl font-semibold">{stats.dailyStreak} days</p></div><div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">28-day consistency</p><p className="mt-1 text-xl font-semibold">{stats.consistencyPercentage}%</p></div><div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Week over week</p><p className={cn('mt-1 text-xl font-semibold', trend > 0 && 'text-success', trend < 0 && 'text-destructive')}>{trend > 0 ? '+' : ''}{trend} habits</p></div></div><div><div className="mb-2 flex items-center justify-between"><p className="text-sm font-medium">28-day check-in map</p><p className="text-xs text-muted-foreground">Darker = more completed</p></div><div className="grid grid-cols-7 gap-1.5">{days.map((day) => { const ratio = day.total ? Math.min(1, day.completed / day.total) : 0; return <div key={day.key} title={`${day.key}: ${day.completed}/${day.total} completed`} className={cn('aspect-square rounded-sm border border-border/50', day.total === 0 && 'bg-muted/30', ratio > 0 && ratio < 1 && 'bg-primary/35', ratio >= 1 && 'bg-primary')} />; })}</div></div></CardContent></Card>;
 }
 
 function RoutineSetupCard({ onStart, isSaving }: { onStart: (goal: RoutineGoal) => void; isSaving: boolean }) {
@@ -250,6 +391,7 @@ function RoutineTaskSection({
   tasks,
   periodType,
   completionByKey,
+  timezone,
   isSaving,
   onSetStatus,
   onClearStatus,
@@ -259,11 +401,12 @@ function RoutineTaskSection({
   tasks: RoutineTask[];
   periodType: RoutinePeriodType;
   completionByKey: ReadonlyMap<string, { status: string }>;
+  timezone: string;
   isSaving: boolean;
   onSetStatus: (task: RoutineTask, periodType: RoutinePeriodType, status: 'completed' | 'skipped') => void;
   onClearStatus: (task: RoutineTask, periodType: RoutinePeriodType) => void;
 }) {
-  const periodDate = periodType === 'daily' ? getLocalDateKey() : getWeekStartKey();
+  const periodDate = periodType === 'daily' ? getDateKeyInTimezone(new Date(), timezone) : getWeekStartKeyInTimezone(new Date(), timezone);
 
   return (
     <Card className="border-border/70 bg-card/80">
@@ -437,9 +580,12 @@ export default function YourRoutinePage() {
     config,
     selectedGoal,
     reminderPreferences,
+    reminderChannels,
+    timezone,
     todayTasks,
     weeklyTasks,
     completionByKey,
+    historyCompletions,
     legacyCommitments,
     suggestions,
     isLoading,
@@ -449,11 +595,13 @@ export default function YourRoutinePage() {
     initializeRoutine,
     saveConfig,
     updateReminderPreferences,
+    updateReminderChannels,
     setTaskStatus,
     clearTaskStatus,
   } = useRoutine();
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState<RoutineConfig | null>(null);
+  const [resetGoal, setResetGoal] = useState<RoutineGoal | null>(null);
 
   useEffect(() => {
     markToolUsed('routine');
@@ -468,6 +616,7 @@ export default function YourRoutinePage() {
 
   const handleResetToGoal = async (goal: RoutineGoal) => {
     await saveConfig(createRoutineConfig(goal));
+    setResetGoal(null);
     setIsEditing(false);
   };
 
@@ -577,55 +726,38 @@ export default function YourRoutinePage() {
               tasks={todayTasks}
               periodType="daily"
               completionByKey={completionByKey}
+              timezone={timezone}
               isSaving={isSaving}
               onSetStatus={(task, periodType, status) => void setTaskStatus(task, periodType, status)}
               onClearStatus={(task, periodType) => void clearTaskStatus(task, periodType)}
             />
             <RoutineTaskSection
               title="This Week"
-              description={`Weekly habits due by ${getWeekEndLabel()}.`}
+              description={`Weekly habits due by ${getWeekEndLabelInTimezone(new Date(), timezone)}.`}
               tasks={weeklyTasks}
               periodType="weekly"
               completionByKey={completionByKey}
+              timezone={timezone}
               isSaving={isSaving}
               onSetStatus={(task, periodType, status) => void setTaskStatus(task, periodType, status)}
               onClearStatus={(task, periodType) => void clearTaskStatus(task, periodType)}
             />
+            <ReminderScheduleCard
+              preferences={reminderPreferences}
+              channels={reminderChannels}
+              timezone={timezone}
+              isSaving={isSaving}
+              onPreferencesChange={(preferences, nextTimezone) => void updateReminderPreferences(preferences, nextTimezone)}
+              onChannelsChange={(channels) => void updateReminderChannels(channels)}
+            />
+            <RoutineMomentumCard config={config} completions={historyCompletions} timezone={timezone} stats={stats} />
           </div>
 
           <DashboardDisclosure
-            title="Routine settings and history"
-            summary="Reminders, suggestions, templates, and old commitments stay here when you need them."
+            title="Manage routine"
+            summary="Add suggested habits, revise the template, or review preserved history."
           >
-            <aside className="grid gap-4 lg:grid-cols-3">
-            <Card className="border-border/70 bg-card/80">
-              <CardHeader>
-                <CardTitle className="text-lg">Reminder preference</CardTitle>
-                <CardDescription>Saved for in-app reminders. Delivery can be connected by a backend reminder worker.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between gap-3">
-                  <Label htmlFor="routine-reminder">Nudge me to check in</Label>
-                  <Switch
-                    id="routine-reminder"
-                    checked={reminderPreferences.enabled}
-                    onCheckedChange={(enabled) => void updateReminderPreferences({ ...reminderPreferences, enabled })}
-                    disabled={isSaving}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="routine-reminder-time">Preferred time</Label>
-                  <Input
-                    id="routine-reminder-time"
-                    type="time"
-                    value={reminderPreferences.time}
-                    onChange={(event) => void updateReminderPreferences({ ...reminderPreferences, time: event.target.value })}
-                    disabled={isSaving || !reminderPreferences.enabled}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
+            <aside className="grid gap-4 lg:grid-cols-2">
             <Card className="border-border/70 bg-card/80">
               <CardHeader>
                 <CardTitle className="text-lg">Recommended updates</CardTitle>
@@ -652,7 +784,7 @@ export default function YourRoutinePage() {
                 <CardDescription>Replace the active routine without deleting completion history.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Select value={config.primaryGoal} onValueChange={(goal) => void handleResetToGoal(goal as RoutineGoal)}>
+                <Select value={resetGoal ?? config.primaryGoal} onValueChange={(goal) => setResetGoal(goal as RoutineGoal)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -662,6 +794,13 @@ export default function YourRoutinePage() {
                     ))}
                   </SelectContent>
                 </Select>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild><Button variant="outline" className="w-full" disabled={!resetGoal || resetGoal === config.primaryGoal || isSaving}><RotateCcw className="mr-2 h-4 w-4" />Reset this template</Button></AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader><AlertDialogTitle>Replace your current routine?</AlertDialogTitle><AlertDialogDescription>This replaces future routine tasks with the {getGoalLabel(resetGoal)} template. Your completion history stays intact.</AlertDialogDescription></AlertDialogHeader>
+                    <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => { if (resetGoal) void handleResetToGoal(resetGoal); }}>Replace routine</AlertDialogAction></AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <RotateCcw className="h-3.5 w-3.5" />
                   Resetting changes future tasks only.
