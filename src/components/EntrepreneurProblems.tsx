@@ -87,7 +87,7 @@ const journeySteps: JourneyStep[] = [
     accentColor: "amber",
   },
   {
-    phase: "Access to Capital",
+    phase: "Access to Investors",
     challenge: "Finding the right investors shouldn't depend on who you already know",
     pathway: "Discover angel investors aligned with your industry, stage, and ambition, then focus your outreach on the strongest matches.",
     icon: Users,
