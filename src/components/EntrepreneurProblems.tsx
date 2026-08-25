@@ -53,15 +53,15 @@ type JourneyAction = {
 const journeySteps: JourneyStep[] = [
   {
     phase: "Customer Clarity",
-    challenge: "Turn scattered thinking into a plan you can act on",
-    pathway: "Bring your customer, market, product, and launch thinking into one connected workspace with a clear next move.",
+    challenge: "Unclear who you're building for",
+    pathway: "Define your ideal customer, their core problem, and why your offer matters.",
     icon: Lightbulb,
     accentColor: "blue",
   },
   {
     phase: "Validate Demand",
-    challenge: "Know what customers want before you overbuild",
-    pathway: "Test your assumptions with customer conversations and behavioral signals before committing more time and money.",
+    challenge: "Building before knowing what customers want",
+    pathway: "Use customer evidence to decide whether to build, narrow, pivot, or stop.",
     icon: Target,
     accentColor: "green",
   },
@@ -74,22 +74,22 @@ const journeySteps: JourneyStep[] = [
   },
   {
     phase: "Focused Execution",
-    challenge: "Know what matters now—and what can wait",
-    pathway: "Turn strategy into weekly priorities, focused tasks, and visible progress inside one connected workspace.",
+    challenge: "Too many priorities and no clear next step",
+    pathway: "Prioritize tasks, track progress, and keep your work connected in one place.",
     icon: LayoutDashboard,
     accentColor: "blue",
   },
   {
-    phase: "Build Without Barriers",
-    challenge: "Turn a validated idea into something customers can use",
-    pathway: "Create the essential customer workflow and move from plan to a working product without assembling a fragmented stack.",
+    phase: "Product Building",
+    challenge: "Turning a validated idea into a working product",
+    pathway: "Build the core product your customers need without unnecessary features.",
     icon: Rocket,
     accentColor: "amber",
   },
   {
     phase: "Access to Investors",
-    challenge: "Finding the right investors shouldn't depend on who you already know",
-    pathway: "Discover angel investors aligned with your industry, stage, and ambition, then focus your outreach on the strongest matches.",
+    challenge: "Finding investors who fit your business",
+    pathway: "Discover angel investors that match your industry and stage.",
     icon: Users,
     accentColor: "blue",
   },
@@ -105,10 +105,10 @@ const journeySteps: JourneyStep[] = [
 const journeyActions: JourneyAction[] = [
   {
     to: "/icp-builder",
-    title: "Your Business, Mapped Out",
-    outcome: "Strategic clarity",
-    description: "Bring your customer, market, validation, product, and launch thinking into one connected workspace. BizMap AI turns uncertainty into a focused plan and a clear next move.",
-    cta: "Explore BizMap AI",
+    title: "Define Your ICP",
+    outcome: "Focused positioning",
+    description: "Identify your ideal customer, their core problem, and why your offer matters.",
+    cta: "Open tool",
     icon: Lightbulb,
     accentName: "cobalt",
     accent: "218 89% 60%",
@@ -128,10 +128,10 @@ const journeyActions: JourneyAction[] = [
   },
   {
     to: "/pmf-lab",
-    title: "Validate With Real Evidence",
-    outcome: "Smarter product decisions",
-    description: "Test assumptions with customer conversations and behavioral signals, then decide whether to Build, Narrow, Pivot, or Stop before committing more time and money.",
-    cta: "Validate my idea",
+    title: "Validate Demand",
+    outcome: "Evidence-based decisions",
+    description: "Use customer evidence to decide whether to build, narrow, pivot, or stop.",
+    cta: "Open tool",
     icon: Target,
     accentName: "teal",
     accent: "183 75% 42%",
@@ -174,10 +174,10 @@ const journeyActions: JourneyAction[] = [
   },
   {
     to: "/dashboard",
-    title: "Your Personalized Founder Dashboard",
+    title: "Your Founder Dashboard",
     outcome: "Clear next steps",
-    description: "Turn strategy into weekly priorities, focused tasks, and visible progress. Your workspace keeps the work connected so momentum doesn't get lost between tools.",
-    cta: "Open dashboard",
+    description: "Prioritize tasks, track progress, and keep your work connected in one place.",
+    cta: "Open tool",
     icon: LayoutDashboard,
     accentName: "amber",
     accent: "42 92% 57%",
@@ -197,10 +197,10 @@ const journeyActions: JourneyAction[] = [
   },
   {
     to: "/mvp-builder",
-    title: "Build and Launch Your MVP",
-    outcome: "A working product",
-    description: "Create the essential customer workflow, choose the right setup, and move from plan to a live product without stitching together a fragmented stack.",
-    cta: "Build my MVP",
+    title: "Build Your MVP",
+    outcome: "Working product",
+    description: "Create the core product your customers need without unnecessary features.",
+    cta: "Open tool",
     icon: Rocket,
     accentName: "emerald",
     accent: "154 59% 43%",
@@ -220,10 +220,10 @@ const journeyActions: JourneyAction[] = [
   },
   {
     to: "/investors",
-    title: "Find the Right Angel Investors",
+    title: "Find Investors",
     outcome: "Angel investor network",
-    description: "Discover angels interested in early-stage businesses and focus your outreach on people aligned with your industry, stage, and ambition.",
-    cta: "Explore investors",
+    description: "Discover angel investors that match your industry and stage.",
+    cta: "Open tool",
     icon: Users,
     accentName: "indigo-steel",
     accent: "226 31% 57%",
@@ -363,7 +363,7 @@ const EntrepreneurProblems = () => {
             From Idea to Evidence. From Evidence to Growth.
           </h2>
           <p className="homepage-section-copy founder-journey-section__copy mx-auto text-base sm:text-lg">
-            Start wherever you are. Creatives Takeover helps you identify what matters now, take the next useful action, and carry everything you learn into the next stage.
+            Start where you are, take the next useful action, and carry what you learn forward.
           </p>
         </ScrollReveal>
 
