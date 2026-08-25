@@ -33,7 +33,7 @@ export default function BizMapJourneyHubPage() {
   const {
     currentStage,
     stageState,
-    setCurrentStage,
+    fundraisingOverlay,
   } = useBizMapProgress();
   const [primaryAction, setPrimaryAction] = useState<BizMapPrimaryAction>({
     title: 'Build your demo and pitch video',
@@ -49,8 +49,9 @@ export default function BizMapJourneyHubPage() {
   );
 
   const progressValue = useMemo(() => {
-    const completedStages = BIZMAP_STAGES.filter((stage) => stageState[stage.id]?.completed).length;
-    return Math.round((completedStages / BIZMAP_STAGES.length) * 100);
+    const operatingStages = BIZMAP_STAGES.filter((stage) => !stage.optionalOverlay);
+    const completedStages = operatingStages.filter((stage) => stageState[stage.id]?.completed).length;
+    return Math.round((completedStages / operatingStages.length) * 100);
   }, [stageState]);
 
   useEffect(() => {
@@ -263,10 +264,8 @@ export default function BizMapJourneyHubPage() {
                   const state = stageState[stage.id];
                   const isActive = stage.id === currentStage;
                   return (
-                    <button
+                    <div
                       key={stage.id}
-                      type="button"
-                      onClick={() => setCurrentStage(stage.id)}
                       className={`rounded-full border px-3 py-1 text-xs transition-colors ${
                         isActive
                           ? 'border-primary bg-primary/10 text-primary'
@@ -274,8 +273,8 @@ export default function BizMapJourneyHubPage() {
                       }`}
                     >
                       {state?.completed ? <CheckCircle2 className="mr-1 inline h-3.5 w-3.5" /> : <Circle className="mr-1 inline h-3.5 w-3.5" />}
-                      Stage {stage.numeral}
-                    </button>
+                      Stage {stage.numeral}{stage.optionalOverlay ? ' · Optional' : ''}
+                    </div>
                   );
                 })}
               </div>
@@ -293,7 +292,11 @@ export default function BizMapJourneyHubPage() {
                       <CardTitle className="text-xl">
                         Stage {stage.numeral}: {stage.title}
                       </CardTitle>
-                      {isCompleted ? (
+                      {stage.optionalOverlay ? (
+                        <Badge variant={fundraisingOverlay.eligible ? 'secondary' : 'outline'}>
+                          {fundraisingOverlay.eligible ? fundraisingOverlay.status.replace('_', ' ') : 'Unlocks after verified traction'}
+                        </Badge>
+                      ) : isCompleted ? (
                         <Badge className="bg-success/10 text-success border-success/30">Completed</Badge>
                       ) : (
                         <Badge variant="secondary">In progress</Badge>
@@ -302,6 +305,11 @@ export default function BizMapJourneyHubPage() {
                     <CardDescription>{stage.description}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
+                    {stage.optionalOverlay ? (
+                      <p className="text-xs text-muted-foreground">
+                        Fundraising never replaces customer execution. Complete verified traction first, then use these tools in order.
+                      </p>
+                    ) : null}
                     {stage.tools.map((tool) => {
                       const ToolIcon = tool.icon;
 

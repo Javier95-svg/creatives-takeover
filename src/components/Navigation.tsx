@@ -103,17 +103,15 @@ const Navigation = () => {
   // Insighta submenu items
   const tractionTool = getFounderTool('traction_engine');
   const vcTool = getFounderTool('vc_search');
-  const acceleratorTool = getFounderTool('accelerator_hunt');
   const pitchTool = getFounderTool('pitch_deck_analyzer');
   const readinessTool = getFounderTool('insighta_test');
   const insightaSubmenu: BizMapMenuItem[] = [
     { type: 'label', label: "STAGE VI: TRACTION" },
     { name: tractionTool.name, href: tractionTool.route, icon: LineChart, description: "Track weekly distribution and retention signals." },
-    { type: 'label', label: "STAGE VII: FUNDRAISE" },
-    { name: vcTool.name, href: vcTool.route, icon: UsersIcon, description: "Browse venture capital firms." },
-    { name: acceleratorTool.name, href: acceleratorTool.route, icon: Rocket, description: "Find accelerator programs that fit your stage." },
+    { type: 'label', label: "STAGE VII: OPTIONAL FUNDRAISING" },
+    { name: readinessTool.name, href: readinessTool.route, icon: FlaskConical, description: "Decide whether you are ready to raise." },
     { name: pitchTool.name, href: pitchTool.route, icon: BarChart3, description: "Analyze your pitch deck." },
-    { name: readinessTool.name, href: readinessTool.route, icon: FlaskConical, description: "Measure your fundraising readiness." },
+    { name: vcTool.name, href: vcTool.route, icon: UsersIcon, description: "Build a focused investor list." },
   ];
 
   // Community submenu items

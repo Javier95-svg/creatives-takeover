@@ -2,43 +2,22 @@ import SEO, { createBreadcrumbSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import VCSearchTab from "@/components/insighta/VCSearchTab";
-import EmailTemplatesTab from "@/components/insighta/EmailTemplatesTab";
-import AcceleratorHuntTab from "@/components/insighta/AcceleratorHuntTab";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowRight, BarChart3, Mail, Presentation, Rocket, Users } from "lucide-react";
+import { ArrowRight, BarChart3, Presentation } from "lucide-react";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
-import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useEffect } from "react";
+import { Link } from "react-router-dom";
 import { InsightaPipelinePanel } from "@/components/insighta/InsightaPipelinePanel";
 import { useInsightaPipeline } from "@/hooks/useInsightaPipeline";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getFounderTool } from "@/config/founderToolCatalog";
 
-// Insighta: VC Search, Email Templates, Accelerator Hunt - v1.0
-interface BlogProps {
-  defaultTab?: 'vc-search' | 'email-templates' | 'accelerator-hunt';
-}
-
-const Blog = ({ defaultTab = 'vc-search' }: BlogProps) => {
+const Blog = () => {
   const { trackPageVisit } = useReadingAnalytics();
-  const [searchParams] = useSearchParams();
   const pipeline = useInsightaPipeline();
   const tractionTool = getFounderTool('traction_engine');
   const readinessTool = getFounderTool('insighta_test');
   const pitchTool = getFounderTool('pitch_deck_analyzer');
-
-  // Get tab from URL query parameter or use defaultTab prop
-  const tabFromUrl = searchParams.get('tab') || defaultTab;
-  const [activeTab, setActiveTab] = useState<string>(tabFromUrl);
-
-  // Update active tab when URL changes or defaultTab changes
-  useEffect(() => {
-    const tab = searchParams.get('tab') || defaultTab;
-    if (['vc-search', 'email-templates', 'accelerator-hunt'].includes(tab)) {
-      setActiveTab(tab);
-    }
-  }, [searchParams, defaultTab]);
 
   // Track page visit when component mounts
   useEffect(() => {
@@ -125,34 +104,7 @@ const Blog = ({ defaultTab = 'vc-search' }: BlogProps) => {
             />
           )}
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="adaptive-tabs grid w-full grid-cols-3 mb-8 rounded-full border border-border/70 bg-muted/40 p-1 shadow-sm">
-              <TabsTrigger value="vc-search" className="flex items-center gap-2 rounded-full data-[state=active]:shadow-md">
-                <Users className="h-4 w-4" />
-                <span>VC Search</span>
-              </TabsTrigger>
-              <TabsTrigger value="email-templates" className="flex items-center gap-2 rounded-full data-[state=active]:shadow-md">
-                <Mail className="h-4 w-4" />
-                <span>Email Templates</span>
-              </TabsTrigger>
-              <TabsTrigger value="accelerator-hunt" className="flex items-center gap-2 rounded-full data-[state=active]:shadow-md">
-                <Rocket className="h-4 w-4" />
-                <span>Accelerator Hunt</span>
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="vc-search">
-              <VCSearchTab />
-            </TabsContent>
-
-            <TabsContent value="email-templates">
-              <EmailTemplatesTab />
-            </TabsContent>
-
-            <TabsContent value="accelerator-hunt">
-              <AcceleratorHuntTab />
-            </TabsContent>
-          </Tabs>
+          <VCSearchTab />
         </section>
       </main>
       <Footer />

@@ -18,11 +18,12 @@ test('groups tools by journey stage in BIZMAP_STAGE_ORDER', () => {
 
   assert.deepEqual(
     groups.map((group) => group.id),
-    ['IDENTITY', 'PROTOTYPE', 'VALIDATING', 'BUILDING', 'LAUNCH', 'FUNDRAISING'],
+    ['IDENTITY', 'PROTOTYPE', 'VALIDATING', 'BUILDING', 'LAUNCH', 'FUNDRAISING', 'MORE'],
   );
   const building = groups.find((group) => group.id === 'BUILDING');
-  // Input order preserved within a group.
-  assert.deepEqual(building?.items.map((entry) => entry.path), ['/tech-stack', '/mvp-builder']);
+  // Supplemental tools no longer compete with the core journey.
+  assert.deepEqual(building?.items.map((entry) => entry.path), ['/mvp-builder']);
+  assert.deepEqual(groups.at(-1)?.items.map((entry) => entry.path), ['/tech-stack']);
   assert.equal(groups.find((group) => group.id === 'IDENTITY')?.label, 'I · Identity');
   assert.equal(groups.find((group) => group.id === 'VALIDATING')?.label, 'III · Validation');
 });

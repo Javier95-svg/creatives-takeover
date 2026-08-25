@@ -74,7 +74,7 @@ export default function FounderCycleDashboardPanel({ fallback }: { fallback: Rea
         <Button asChild variant="outline" size="sm" className="mt-4">
           <Link to="/bizmap-ai">Open the full execution cycle</Link>
         </Button>
-        {firstCustomerSprint.enabled && firstCustomerSprint.enrolled ? (
+        {firstCustomerSprint.enabled ? (
           <div className="mt-4 flex flex-col gap-3 rounded-xl border border-primary/25 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-semibold">30-day First Customer Sprint</p>

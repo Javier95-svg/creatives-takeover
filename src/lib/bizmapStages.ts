@@ -1,6 +1,6 @@
-import { Bot, Boxes, Compass, FlaskConical, Globe, Layers, Rocket, Target } from 'lucide-react';
+import { Bot, Compass, FlaskConical, Globe, Layers, Rocket, Target } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { getFounderTool } from '../config/founderToolCatalog.ts';
+import { getCoreFounderToolsForStage } from '../config/founderToolCatalog.ts';
 
 export const BIZMAP_STAGE_ORDER = [
   'IDENTITY',
@@ -31,6 +31,7 @@ export interface BizMapStageDefinition {
   title: string;
   description: string;
   tools: BizMapToolDefinition[];
+  optionalOverlay?: boolean;
 }
 
 export interface StageTaskTemplate {
@@ -42,99 +43,37 @@ export interface StageTaskTemplate {
 }
 
 export const DEFAULT_CURRENT_STAGE: BizMapStage = 'IDENTITY';
-export const DEFAULT_HIGHEST_UNLOCKED_STAGE: BizMapStage = 'PROTOTYPE';
+export const DEFAULT_HIGHEST_UNLOCKED_STAGE: BizMapStage = 'IDENTITY';
 export const PMF_REQUIRED_SIGNALS = 25;
 
-export const BIZMAP_TOOLS: BizMapToolDefinition[] = [
-  {
-    id: 'icp-builder',
-    name: getFounderTool('icp_builder').name,
-    route: getFounderTool('icp_builder').route,
-    stage: 'IDENTITY',
-    description: getFounderTool('icp_builder').purpose,
-    icon: Target,
-  },
-  {
-    id: 'waitlist-maker',
-    name: getFounderTool('demo_studio').name,
-    route: getFounderTool('demo_studio').route,
-    stage: 'PROTOTYPE',
-    description: getFounderTool('demo_studio').purpose,
-    icon: Layers,
-  },
-  {
-    id: 'pmf-lab',
-    name: getFounderTool('pmf_lab').name,
-    route: getFounderTool('pmf_lab').route,
-    stage: 'VALIDATING',
-    description: getFounderTool('pmf_lab').purpose,
-    icon: FlaskConical,
-  },
-  {
-    id: 'mvp-builder',
-    name: getFounderTool('mvp_builder').name,
-    route: getFounderTool('mvp_builder').route,
-    stage: 'BUILDING',
-    description: getFounderTool('mvp_builder').purpose,
-    icon: Rocket,
-  },
-  {
-    id: 'tech-stack',
-    name: getFounderTool('tech_stack').name,
-    route: getFounderTool('tech_stack').route,
-    stage: 'BUILDING',
-    description: getFounderTool('tech_stack').purpose,
-    icon: Boxes,
-  },
-  {
-    id: 'gtm-strategist',
-    name: getFounderTool('gtm_strategist').name,
-    route: getFounderTool('gtm_strategist').route,
-    stage: 'LAUNCH',
-    description: getFounderTool('gtm_strategist').purpose,
-    icon: Globe,
-  },
-  {
-    id: 'traction-growth',
-    name: getFounderTool('traction_engine').name,
-    route: getFounderTool('traction_engine').route,
-    stage: 'TRACTION',
-    description: getFounderTool('traction_engine').purpose,
-    icon: Globe,
-  },
-  {
-    id: 'vc-search',
-    name: getFounderTool('vc_search').name,
-    route: getFounderTool('vc_search').route,
-    stage: 'FUNDRAISING',
-    description: getFounderTool('vc_search').purpose,
-    icon: Target,
-  },
-  {
-    id: 'accelerator-hunt',
-    name: getFounderTool('accelerator_hunt').name,
-    route: getFounderTool('accelerator_hunt').route,
-    stage: 'FUNDRAISING',
-    description: getFounderTool('accelerator_hunt').purpose,
-    icon: Rocket,
-  },
-  {
-    id: 'pitch-deck-analyzer',
-    name: getFounderTool('pitch_deck_analyzer').name,
-    route: getFounderTool('pitch_deck_analyzer').route,
-    stage: 'FUNDRAISING',
-    description: getFounderTool('pitch_deck_analyzer').purpose,
-    icon: Layers,
-  },
-  {
-    id: 'launch-directories',
-    name: getFounderTool('directories').name,
-    route: getFounderTool('directories').route,
-    stage: 'LAUNCH',
-    description: getFounderTool('directories').purpose,
-    icon: Compass,
-  },
-];
+const CORE_TOOL_ICONS: Record<string, LucideIcon> = {
+  icp_builder: Target,
+  demo_studio: Layers,
+  pmf_lab: FlaskConical,
+  mvp_builder: Rocket,
+  gtm_strategist: Globe,
+  first_customer_sprint: Compass,
+  traction_engine: Globe,
+  insighta_test: FlaskConical,
+  pitch_deck_analyzer: Layers,
+  vc_search: Target,
+};
+
+/**
+ * The visible journey is derived exclusively from the canonical founder tool
+ * catalog. Support products keep their routes, but never become a progress
+ * requirement or a competing "next step".
+ */
+export const BIZMAP_TOOLS: BizMapToolDefinition[] = BIZMAP_STAGE_ORDER.flatMap((stage) =>
+  getCoreFounderToolsForStage(stage).map((tool) => ({
+    id: tool.key,
+    name: tool.name,
+    route: tool.route,
+    stage,
+    description: tool.purpose,
+    icon: CORE_TOOL_ICONS[tool.key] ?? Compass,
+  })),
+);
 
 export const BIZMAP_STAGES: BizMapStageDefinition[] = [
   {
@@ -174,7 +113,7 @@ export const BIZMAP_STAGES: BizMapStageDefinition[] = [
     order: 5,
     numeral: 'V',
     title: 'LAUNCH',
-    description: 'Build the GTM system and move from product to traction.',
+    description: 'Run one focused acquisition play and make a buyer-backed decision.',
     tools: BIZMAP_TOOLS.filter((tool) => tool.stage === 'LAUNCH'),
   },
   {
@@ -190,8 +129,9 @@ export const BIZMAP_STAGES: BizMapStageDefinition[] = [
     order: 7,
     numeral: 'VII',
     title: 'FUNDRAISING',
-    description: 'Prepare the investor narrative, target list, and data room for the raise.',
+    description: 'Optional: prepare for a raise once your traction is verified.',
     tools: BIZMAP_TOOLS.filter((tool) => tool.stage === 'FUNDRAISING'),
+    optionalOverlay: true,
   },
 ];
 
@@ -213,26 +153,20 @@ export const STAGE_TASKS: Record<BizMapStage, StageTaskTemplate[]> = {
   ],
   BUILDING: [
     { id: 'building-scope', stage: 'BUILDING', title: 'Save MVP scope and product spec', priority: 'high', route: '/mvp-builder' },
-    { id: 'building-stack', stage: 'BUILDING', title: 'Save Tech Stack recommendation', priority: 'high', route: '/tech-stack' },
-    { id: 'building-estimate', stage: 'BUILDING', title: 'Estimate budget and build timeline', priority: 'medium', route: '/mvp-builder' },
+    { id: 'building-live-workflow', stage: 'BUILDING', title: 'Publish one sellable customer workflow', priority: 'high', route: '/mvp-builder' },
   ],
   LAUNCH: [
-    { id: 'launch-channels', stage: 'LAUNCH', title: 'Define first distribution channels', priority: 'high', route: '/go-to-market' },
-    { id: 'launch-checklist', stage: 'LAUNCH', title: 'Save launch checklist and KPIs', priority: 'medium', route: '/go-to-market' },
-    { id: 'launch-plan-export', stage: 'LAUNCH', title: 'Save/export GTM plan', priority: 'high', route: '/go-to-market' },
+    { id: 'launch-gtm-play', stage: 'LAUNCH', title: 'Create one measurable acquisition play', priority: 'high', route: '/go-to-market' },
+    { id: 'launch-first-customer-cycle', stage: 'LAUNCH', title: 'Complete the first customer acquisition cycle', priority: 'high', route: '/first-customer-sprint' },
   ],
   TRACTION: [
-    { id: 'traction-channel-test', stage: 'TRACTION', title: 'Choose one acquisition channel to test this week', priority: 'high', route: '/insighta' },
-    { id: 'traction-retention-review', stage: 'TRACTION', title: 'Review first-month retention and activation drop-off', priority: 'high', route: '/core-metrics' },
-    { id: 'traction-revenue-funnel', stage: 'TRACTION', title: 'Map the revenue funnel from visitor to paid customer', priority: 'medium', route: '/go-to-market' },
-    { id: 'traction-growth-experiment', stage: 'TRACTION', title: 'Launch one measurable growth experiment', priority: 'high', route: '/insighta' },
+    { id: 'traction-repeat-cycle', stage: 'TRACTION', title: 'Repeat the same acquisition motion in a second cycle', priority: 'high', route: '/traction-engine' },
+    { id: 'traction-verify-signal', stage: 'TRACTION', title: 'Verify one qualified buyer signal', priority: 'high', route: '/traction-engine' },
   ],
   FUNDRAISING: [
+    { id: 'fundraising-readiness', stage: 'FUNDRAISING', title: 'Diagnose fundraising readiness', priority: 'high', route: '/insighta-test' },
     { id: 'fundraising-pitch-deck', stage: 'FUNDRAISING', title: 'Review your pitch deck narrative', priority: 'high', route: '/pitch-deck-analyzer' },
     { id: 'fundraising-investor-list', stage: 'FUNDRAISING', title: 'Build a target investor list', priority: 'high', route: '/vc-search' },
-    { id: 'fundraising-accelerator-shortlist', stage: 'FUNDRAISING', title: 'Shortlist accelerator programs that fit your stage', priority: 'medium', route: '/accelerator-hunt' },
-    { id: 'fundraising-traction-story', stage: 'FUNDRAISING', title: 'Write the traction story investors should remember', priority: 'high', route: '/go-to-market' },
-    { id: 'fundraising-data-room', stage: 'FUNDRAISING', title: 'Prepare a lightweight data room checklist', priority: 'medium', route: '/vc-search' },
   ],
 };
 

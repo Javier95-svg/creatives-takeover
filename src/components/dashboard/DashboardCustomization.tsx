@@ -300,7 +300,7 @@ export const DashboardCustomization = () => {
                 />
                 <ToggleItem
                   id="insighta-test"
-                  title="Insighta Test"
+                  title="Fundraising Readiness"
                   description="Measure fundraising readiness"
                   checked={preferences.showInsightaTest}
                   onToggle={() => togglePreference('showInsightaTest')}

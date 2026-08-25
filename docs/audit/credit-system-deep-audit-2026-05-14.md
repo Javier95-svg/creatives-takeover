@@ -22,7 +22,7 @@ This inventory follows the product-facing **Compare Our Plans** table sections: 
 | Insighta | Accelerator Hunt | Quota-gated access | Browse all; profile views by plan | 0 | Code-confirmed |
 | Insighta | Email Templates | Plan-gated access | Starter+ | 0 | Code-confirmed |
 | Insighta | Pitch Deck Analyzer | Credit-metered analysis | Rising+ | 6 per analysis | Code-confirmed |
-| Insighta | Insighta Test | Free diagnostic | All plans | 0 | Code-confirmed |
+| Insighta | Fundraising Readiness | Free diagnostic | All plans | 0 | Code-confirmed |
 | Community | Discovery Calls / Mentorship | Quota-gated community value | 1/2/3/unlimited by plan | 0; no silent credit overage | Code-confirmed |
 | Community | Find a Co-Founder Posting | Quota-gated community value | 1/2/unlimited/unlimited by plan | 0 | Code-confirmed |
 | Community | Find Your Angel | Plan-gated premium access | Pro only | 0 | Code-confirmed |

@@ -262,12 +262,12 @@ const FundraisingReadinessToolkit = () => {
     }
 
       // Check feature access and credits
-      const requiredCredits = ensureCredits('FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Insighta Test' });
+      const requiredCredits = ensureCredits('FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Fundraising Readiness' });
     const featureAccess = checkFeatureAccess('insighta_test');
     if (!featureAccess.hasAccess) {
       openUpgradePrompt({
         reason: 'feature',
-        featureName: 'Insighta Test',
+        featureName: 'Fundraising Readiness',
         requiredTier: featureAccess.requiredTier as Plan | undefined,
         description: featureAccess.message,
       });
@@ -290,14 +290,14 @@ const FundraisingReadinessToolkit = () => {
       });
 
         if (error) {
-          if (handleCreditError(error, data, 'FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Insighta Test' })) {
+          if (handleCreditError(error, data, 'FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Fundraising Readiness' })) {
             throw new Error('Insufficient credits');
           }
           throw error;
         }
 
         if (data?.error) {
-          if (handleCreditError(null, data, 'FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Insighta Test' })) {
+          if (handleCreditError(null, data, 'FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Fundraising Readiness' })) {
             throw new Error('Insufficient credits');
           }
           throw new Error(data.error);
@@ -340,7 +340,7 @@ const FundraisingReadinessToolkit = () => {
           <div className="inline-flex items-center gap-2 mb-6">
             <Rocket className="h-6 w-6 text-primary" />
             <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent leading-tight pb-2">
-              Insighta Test
+              Fundraising Readiness
             </h2>
           </div>
           <p className="text-muted-foreground text-lg mt-4 max-w-2xl mx-auto">

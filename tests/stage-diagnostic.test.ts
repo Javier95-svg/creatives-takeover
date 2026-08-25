@@ -80,7 +80,7 @@ test('repeatable growth and revenue assigns Traction', () => {
     blocker: 'traction_growth',
   }));
   assert.equal(result.assignedStage, 6);
-  assert.ok(STAGE_TASKS.TRACTION.some((task) => task.id === 'traction-growth-experiment'));
+  assert.ok(STAGE_TASKS.TRACTION.some((task) => task.id === 'traction-repeat-cycle'));
 });
 
 test('active investor conversations preserve Traction as the operating stage and add a capital overlay', () => {

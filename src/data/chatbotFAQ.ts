@@ -98,7 +98,7 @@ export const chatbotFAQ: FAQItem[] = [
     keywords: ['free', 'trial', 'demo', 'test', 'try', 'without paying'],
     synonyms: ['free version', 'trial period', 'demo version'],
     question: 'Can I try it for free?',
-    answer: 'Yes. Rookie is free forever and gives you 10 monthly credits, free ICP Builder access, Insighta Test, Newspaper, and early-stage browsing or preview access across the platform. You can also schedule a live demo to see the full workflow before upgrading.',
+    answer: 'Yes. Rookie is free forever and gives you 10 monthly credits, free ICP Builder access, Fundraising Readiness, Newspaper, and early-stage browsing or preview access across the platform. You can also schedule a live demo to see the full workflow before upgrading.',
     shortAnswer: 'Yes! Free tier available plus live demo options.',
     category: FAQCategory.PRICING,
     priority: 7,

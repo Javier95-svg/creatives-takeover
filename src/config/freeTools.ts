@@ -25,8 +25,8 @@ export const FREE_TOOLS_NAV_ITEMS: FreeToolNavItem[] = [
     analyticsTool: 'pitch_deck_analyzer',
   },
   {
-    label: 'Insighta Test',
-    name: 'Insighta Test',
+    label: 'Fundraising Readiness',
+    name: 'Fundraising Readiness',
     href: '/insighta-test',
     icon: FlaskConical,
     description: 'Check your fundraising readiness in minutes.',

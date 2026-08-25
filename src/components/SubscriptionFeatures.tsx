@@ -103,7 +103,7 @@ const creditBreakdown: {
       badgeClassName: "bg-info-subtle dark:bg-info/30",
     },
     {
-      name: "Insighta Test",
+      name: "Fundraising Readiness",
       description: "Included on every plan.",
       badge: "Included",
       badgeVariant: "outline",

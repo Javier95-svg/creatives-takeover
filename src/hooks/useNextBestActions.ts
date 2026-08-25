@@ -1,21 +1,11 @@
 import { useMemo } from 'react';
-import {
-  Compass,
-  Trophy,
-  Handshake,
-  Star,
-  Zap,
-  Target,
-  Moon,
-  type LucideIcon,
-} from 'lucide-react';
+import { Compass, Handshake, Moon, Star, Target, Trophy, type LucideIcon } from 'lucide-react';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
-import { useBizMapStageTasks } from '@/hooks/useBizMapStageTasks';
 import { useDailyChallenges } from '@/hooks/useDailyChallenges';
 import { useCommitments } from '@/hooks/useCommitments';
 import { useReputation } from '@/hooks/useReputation';
 import { useAuth } from '@/contexts/AuthContext';
-import { BIZMAP_STAGES, getNextStage, type BizMapStage } from '@/lib/bizmapStages';
+import { BIZMAP_STAGES } from '@/lib/bizmapStages';
 
 export type ActionCategory = 'bizmap' | 'community' | 'fundraising' | 'daily';
 export type ActionUrgency = 'high' | 'medium' | 'low';
@@ -32,154 +22,53 @@ export interface NextAction {
   reason: string;
 }
 
+/** Recommendations follow earned outcomes, never manually checked checklist items. */
 export const useNextBestActions = (): NextAction[] => {
   const { user } = useAuth();
-  const { currentStage, highestUnlockedStage, stageState } = useBizMapProgress();
-  const { nextIncompleteTask, completionPercent } = useBizMapStageTasks(currentStage as BizMapStage | null);
+  const { currentStage } = useBizMapProgress();
   const { todaysChallenge, isCompleted: challengeDone } = useDailyChallenges(user?.id);
   const { userActiveCommitments } = useCommitments();
   const { reputation } = useReputation(user?.id);
 
-  const actions = useMemo<NextAction[]>(() => {
+  return useMemo<NextAction[]>(() => {
     const result: NextAction[] = [];
     const hour = new Date().getHours();
-
-    // 1. Overdue commitment
-    const overdueCommitment = userActiveCommitments.find((c) => {
-      const due = new Date(c.target_date);
-      return due <= new Date();
-    });
-    if (overdueCommitment) {
+    const overdue = userActiveCommitments.find((commitment) => new Date(commitment.target_date) <= new Date());
+    if (overdue) {
       result.push({
-        id: 'overdue-commitment',
-        title: `Review commitment: "${overdueCommitment.commitment_text.slice(0, 40)}${overdueCommitment.commitment_text.length > 40 ? '…' : ''}"`,
-        description: 'Your commitment deadline has passed. Mark it as achieved or reflect on it.',
-        actionRoute: '/mentorship',
-        category: 'community',
-        estimatedMinutes: 5,
-        urgency: 'high',
-        icon: Handshake,
-        reason: 'Commitment deadline reached',
+        id: 'overdue-commitment', title: `Review commitment: "${overdue.commitment_text.slice(0, 40)}${overdue.commitment_text.length > 40 ? '…' : ''}"`,
+        description: 'Your commitment deadline has passed. Mark it as achieved or reflect on it.', actionRoute: '/mentorship',
+        category: 'community', estimatedMinutes: 5, urgency: 'high', icon: Handshake, reason: 'Commitment deadline reached',
       });
     }
 
-    // 2. Next BizMap stage task
-    if (nextIncompleteTask) {
-      const stageDef = BIZMAP_STAGES.find((s) => s.id === currentStage);
+    const stage = BIZMAP_STAGES.find((item) => item.id === currentStage);
+    const coreTool = stage?.tools[0];
+    if (stage && coreTool) {
       result.push({
-        id: 'bizmap-next-task',
-        title: nextIncompleteTask.title,
-        description: `Continue your ${stageDef?.title ?? currentStage} stage progress.`,
-        actionRoute: nextIncompleteTask.route,
-        category: 'bizmap',
-        estimatedMinutes: 15,
-        urgency: 'high',
-        icon: Compass,
-        reason: `You're in Stage ${stageDef?.numeral}: ${stageDef?.title}`,
+        id: 'bizmap-next-stage-outcome', title: `Earn your ${stage.title.toLowerCase()} outcome`,
+        description: `Continue your Stage ${stage.numeral} evidence through ${coreTool.name}.`, actionRoute: coreTool.route,
+        category: 'bizmap', estimatedMinutes: 15, urgency: 'high', icon: Compass,
+        reason: `You're in Stage ${stage.numeral}: ${stage.title}`,
       });
     }
 
-    // 3. Stage completion → next stage unlocked
-    const nextStage = getNextStage(currentStage as BizMapStage);
-    if (
-      nextStage &&
-      completionPercent === 100 &&
-      (stageState as any)?.[nextStage]?.unlocked &&
-      !(stageState as any)?.[nextStage]?.completed
-    ) {
-      const nextDef = BIZMAP_STAGES.find((s) => s.id === nextStage);
-      result.push({
-        id: 'stage-unlocked',
-        title: `Stage ${nextDef?.numeral} unlocked: ${nextDef?.title}`,
-        description: `You've completed the current stage. Start Stage ${nextDef?.numeral} now!`,
-        actionRoute: '/bizmap-ai',
-        category: 'bizmap',
-        estimatedMinutes: 10,
-        urgency: 'high',
-        icon: Zap,
-        reason: `Stage ${BIZMAP_STAGES.find((s) => s.id === currentStage)?.numeral} is complete`,
-      });
-    }
-
-    // 4. Daily challenge
     if (todaysChallenge && !challengeDone) {
-      result.push({
-        id: 'daily-challenge',
-        title: todaysChallenge.challenge_title,
-        description: `Earn ${todaysChallenge.reward_points} reputation points by completing today's challenge.`,
-        actionRoute: '/mentorship',
-        category: 'community',
-        estimatedMinutes: 10,
-        urgency: hour < 12 ? 'medium' : 'low',
-        icon: Trophy,
-        reason: 'Build your community reputation',
-      });
+      result.push({ id: 'daily-challenge', title: todaysChallenge.challenge_title,
+        description: `Earn ${todaysChallenge.reward_points} reputation points by completing today's challenge.`, actionRoute: '/mentorship',
+        category: 'community', estimatedMinutes: 10, urgency: hour < 12 ? 'medium' : 'low', icon: Trophy, reason: 'Build your community reputation' });
     }
-
-    // 5. Close to next reputation level
-    if (reputation) {
-      const xpPct =
-        reputation.next_level_threshold > 0
-          ? (reputation.total_points / reputation.next_level_threshold) * 100
-          : 0;
-      if (xpPct >= 80) {
-        result.push({
-          id: 'reputation-level',
-          title: `You're ${Math.round(100 - xpPct)}% away from Level ${reputation.level + 1}`,
-          description: 'Complete a challenge or engage with the community to level up.',
-          actionRoute: '/mentorship',
-          category: 'community',
-          estimatedMinutes: 5,
-          urgency: 'low',
-          icon: Star,
-          reason: `Current level: ${reputation.level_name}`,
-        });
-      }
+    if (reputation && reputation.next_level_threshold > 0 && (reputation.total_points / reputation.next_level_threshold) * 100 >= 80) {
+      result.push({ id: 'reputation-level', title: `You're ${Math.round(100 - (reputation.total_points / reputation.next_level_threshold) * 100)}% away from Level ${reputation.level + 1}`,
+        description: 'Complete a challenge or engage with the community to level up.', actionRoute: '/mentorship', category: 'community', estimatedMinutes: 5, urgency: 'low', icon: Star, reason: `Current level: ${reputation.level_name}` });
     }
-
-    // 6. Morning prompt — set today's priorities
     if (hour >= 6 && hour < 12 && result.length < 5) {
-      result.push({
-        id: 'morning-priorities',
-        title: "Set today's top 3 priorities",
-        description: 'Start your morning with clear focus. Define your top priorities for the day.',
-        actionRoute: '/dashboard',
-        category: 'daily',
-        estimatedMinutes: 3,
-        urgency: 'medium',
-        icon: Target,
-        reason: 'Morning routine — set your intentions',
-      });
+      result.push({ id: 'morning-priorities', title: "Set today's top 3 priorities", description: 'Start your morning with clear focus.', actionRoute: '/dashboard', category: 'daily', estimatedMinutes: 3, urgency: 'medium', icon: Target, reason: 'Morning routine' });
     }
-
-    // 7. Evening reflection
     if (hour >= 18 && result.length < 5) {
-      result.push({
-        id: 'evening-reflection',
-        title: 'Log your progress for today',
-        description: "Reflect on what you accomplished and set tomorrow's intentions.",
-        actionRoute: '/dashboard',
-        category: 'daily',
-        estimatedMinutes: 5,
-        urgency: 'low',
-        icon: Moon,
-        reason: 'Evening check-in routine',
-      });
+      result.push({ id: 'evening-reflection', title: 'Log your progress for today', description: "Reflect on what you accomplished and set tomorrow's intentions.", actionRoute: '/dashboard', category: 'daily', estimatedMinutes: 5, urgency: 'low', icon: Moon, reason: 'Evening check-in' });
     }
-
-    // Sort: high urgency first, then medium, then low
-    const urgencyOrder: Record<ActionUrgency, number> = { high: 0, medium: 1, low: 2 };
-    return result.sort((a, b) => urgencyOrder[a.urgency] - urgencyOrder[b.urgency]).slice(0, 5);
-  }, [
-    currentStage,
-    nextIncompleteTask,
-    completionPercent,
-    stageState,
-    todaysChallenge,
-    challengeDone,
-    userActiveCommitments,
-    reputation,
-  ]);
-
-  return actions;
+    const urgency = { high: 0, medium: 1, low: 2 } as const;
+    return result.sort((a, b) => urgency[a.urgency] - urgency[b.urgency]).slice(0, 5);
+  }, [challengeDone, currentStage, reputation, todaysChallenge, userActiveCommitments]);
 };

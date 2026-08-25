@@ -138,11 +138,11 @@ export default function FounderExecutionCycle({ embedded = false }: { embedded?:
         </CardContent>
       </Card>
 
-      {firstCustomerSprint.enabled && firstCustomerSprint.enrolled ? (
+      {firstCustomerSprint.enabled ? (
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <Badge variant="outline">Invite-only increment</Badge>
+              <Badge variant="outline">Stage V core workflow</Badge>
               <h2 className="mt-2 text-xl font-semibold">First Customer Sprint</h2>
               <p className="mt-1 text-sm text-muted-foreground">Turn the SELL loop into a focused 30-day target, messaging, mentor, and evidence cycle.</p>
             </div>

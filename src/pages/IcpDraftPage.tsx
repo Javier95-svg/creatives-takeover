@@ -19,8 +19,6 @@ import type { StoredIcpArtifact } from "@/lib/icpBuilderSession";
 import { trackActivationFunnelEvent } from "@/lib/activationEntry";
 import { trackJourneyEvent } from "@/lib/journeyOutcomes";
 import { buildIcpScoreCard } from "@/lib/icpScoreCard";
-import { isFirstCustomerSprintKillSwitchEnabled } from "@/hooks/useFirstCustomerSprint";
-import { useFeatureFlagEnabled } from "@/hooks/usePosthogFeatureFlag";
 
 function slugifyFileName(value: string) {
   return value.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase() || "icp-draft";
@@ -33,9 +31,7 @@ export default function IcpDraftPage() {
   const { user } = useAuth();
   const documentRef = useRef<HTMLDivElement>(null);
   const hasTrackedUnlockOpenRef = useRef(false);
-  // The flag alone, not the full sprint hook: this page only needs to know whether
-  // the door exists, and the hook fires an RPC that every draft view would pay for.
-  const sprintEnabled = isFirstCustomerSprintKillSwitchEnabled(useFeatureFlagEnabled('first-customer-sprint-v1'));
+  const sprintEnabled = true;
 
   const [artifact, setArtifact] = useState<StoredIcpArtifact | null>(null);
   const [legacyAnalysis, setLegacyAnalysis] = useState<Record<string, unknown> | null>(null);

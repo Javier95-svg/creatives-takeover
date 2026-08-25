@@ -159,8 +159,8 @@ export const FOUNDER_TOOL_CATALOG = [
     productArea: 'insighta',
     stage: 'FUNDRAISING',
     stageNumber: 7,
-    role: 'support',
-    name: 'Insighta Test',
+    role: 'core',
+    name: 'Fundraising Readiness',
     route: '/insighta-test',
     purpose: 'Measure your fundraising readiness.',
     promisedArtifact: 'Fundraising readiness diagnostic',
@@ -173,7 +173,7 @@ export const FOUNDER_TOOL_CATALOG = [
     productArea: 'insighta',
     stage: 'FUNDRAISING',
     stageNumber: 7,
-    role: 'support',
+    role: 'core',
     name: 'Pitch Deck Analyzer',
     route: '/pitch-deck-analyzer',
     purpose: 'Analyze your pitch deck.',
@@ -187,7 +187,7 @@ export const FOUNDER_TOOL_CATALOG = [
     productArea: 'insighta',
     stage: 'FUNDRAISING',
     stageNumber: 7,
-    role: 'support',
+    role: 'core',
     name: 'VC Search',
     route: '/vc-search',
     purpose: 'Browse venture capital firms.',
@@ -246,4 +246,13 @@ export function getFounderToolsForProduct(productArea: FounderProductArea) {
 
 export function getFounderToolsForStage(stage: FounderJourneyStage) {
   return FOUNDER_TOOL_CATALOG.filter((tool) => tool.stage === stage);
+}
+
+/** The guided journey only renders tools a founder must use to earn a stage outcome. */
+export function getCoreFounderToolsForStage(stage: FounderJourneyStage) {
+  return getFounderToolsForStage(stage).filter((tool) => tool.role === 'core');
+}
+
+export function getCoreFounderToolsForProduct(productArea: FounderProductArea) {
+  return getFounderToolsForProduct(productArea).filter((tool) => tool.role === 'core');
 }

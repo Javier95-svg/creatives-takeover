@@ -323,7 +323,7 @@ export const FEATURE_LABELS: Record<FeatureKey, string> = {
   pitch_deck_analyzer: 'Pitch Deck Analyzer',
   prompt_library: 'Prompt Library',
   prompt_library_export: 'Prompt Library export',
-  insighta_test: 'Insighta Test',
+  insighta_test: 'Fundraising Readiness',
   newspaper: 'Newspaper',
   profile: 'Profile',
 };

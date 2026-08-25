@@ -2,22 +2,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  BIZMAP_STAGE_ORDER,
   DEFAULT_CURRENT_STAGE,
   DEFAULT_HIGHEST_UNLOCKED_STAGE,
-  PMF_REQUIRED_SIGNALS,
-  getNextStage,
-  getStageIndex,
   isStageUnlocked,
-  maxStage,
   type BizMapStage,
 } from '@/lib/bizmapStages';
-import { mapFounderStageToBizMapStage, type FounderStageId } from '@/lib/stageDiagnostic';
 import {
-  getPmfResultsTableName,
-  handlePmfResultsTableError,
-  isPmfResultsTableAvailable,
-} from '@/lib/pmfResultsTable';
+  deriveFounderProgress,
+  type FundraisingOverlayStatus,
+  type JourneyOutcomeSignal,
+} from '@/lib/founderProgress';
 
 interface UserProgressRow {
   user_id: string;
@@ -28,82 +22,28 @@ interface UserProgressRow {
   validating_completed_at: string | null;
   building_completed_at: string | null;
   launch_completed_at: string | null;
-  traction_completed_at?: string | null;
-  fundraising_completed_at?: string | null;
+  traction_completed_at: string | null;
+  /** Legacy-only: fundraising is now an overlay, not an operating-stage completion. */
+  fundraising_completed_at: string | null;
   created_at: string;
   updated_at: string;
 }
 
-interface CompletionSignals {
-  identityCompletedAt: string | null;
-  prototypeCompletedAt: string | null;
-  validatingCompletedAt: string | null;
-  buildingCompletedAt: string | null;
-  launchCompletedAt: string | null;
-  tractionCompletedAt: string | null;
-  fundraisingCompletedAt: string | null;
+interface FundraisingOverlay {
+  eligible: boolean;
+  status: FundraisingOverlayStatus;
+  readinessCompletedAt: string | null;
+  pitchDeckCompletedAt: string | null;
+  savedInvestorCount: number;
 }
-
-import { loadPrototypeStageArtifact } from '@/lib/prototypeStageSource';
 
 const USER_PROGRESS_TABLE = 'user_progress' as any;
-const WAITLIST_TABLE = 'waitlist_pages' as any;
-const WAITLIST_SIGNUPS_TABLE = 'waitlist_signups' as any;
-const PMF_EVIDENCE_TABLE = 'pmf_validation_evidence' as any;
-const MVP_ARTIFACTS_TABLE = 'mvp_builder_artifacts' as any;
-const GTM_PLANS_TABLE = 'gtm_plans' as any;
-const ICP_RESULTS_TABLE = 'icp_analysis_results' as any;
-const JOURNEY_OUTCOMES_TABLE = 'journey_outcomes' as any;
-const PMF_RESULTS_TABLE = getPmfResultsTableName();
 
-function normalizeStage(value: unknown, fallback: BizMapStage): BizMapStage {
-  if (typeof value !== 'string') return fallback;
-  if ((BIZMAP_STAGE_ORDER as readonly string[]).includes(value)) {
-    return value as BizMapStage;
-  }
-  return fallback;
-}
-
-function maxDate(a: string | null, b: string | null): string | null {
-  if (!a) return b;
-  if (!b) return a;
-  return new Date(a).getTime() >= new Date(b).getTime() ? a : b;
-}
-
-function isCompleted(row: UserProgressRow, stage: BizMapStage): boolean {
-  if (stage === 'IDENTITY') return !!row.identity_completed_at;
-  if (stage === 'PROTOTYPE') return !!row.prototype_completed_at;
-  if (stage === 'VALIDATING') return !!row.validating_completed_at;
-  if (stage === 'BUILDING') return !!row.building_completed_at;
-  if (stage === 'LAUNCH') return !!row.launch_completed_at;
-  if (stage === 'TRACTION') return !!row.traction_completed_at;
-  return !!row.fundraising_completed_at;
-}
-
-function getCompletionUnlockedStage(progress: UserProgressRow): BizMapStage {
-  let highest: BizMapStage = DEFAULT_HIGHEST_UNLOCKED_STAGE;
-
-  if (progress.identity_completed_at && progress.prototype_completed_at) {
-    highest = maxStage(highest, 'VALIDATING');
-  }
-
-  if (progress.validating_completed_at) {
-    highest = maxStage(highest, 'BUILDING');
-  }
-
-  if (progress.building_completed_at) {
-    highest = maxStage(highest, 'LAUNCH');
-  }
-
-  if (progress.launch_completed_at) {
-    highest = maxStage(highest, 'TRACTION');
-  }
-
-  if (progress.traction_completed_at) {
-    highest = maxStage(highest, 'FUNDRAISING');
-  }
-
-  return highest;
+function dateFromRow(row: Record<string, unknown> | null | undefined) {
+  if (!row) return null;
+  return typeof row.updated_at === 'string' ? row.updated_at
+    : typeof row.created_at === 'string' ? row.created_at
+      : null;
 }
 
 export const useBizMapProgress = () => {
@@ -112,313 +52,97 @@ export const useBizMapProgress = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<UserProgressRow | null>(null);
+  const [fundraisingOverlay, setFundraisingOverlay] = useState<FundraisingOverlay>({
+    eligible: false, status: 'not_eligible', readinessCompletedAt: null, pitchDeckCompletedAt: null, savedInvestorCount: 0,
+  });
   const loadedUserIdRef = useRef<string | null>(null);
 
-  const fetchCompletionSignals = useCallback(async (userId: string): Promise<CompletionSignals> => {
-    const [
-      icpLatestRes,
-      waitlistPagesRes,
-      pmfEvidenceRes,
-      mvpLatestRes,
-      gtmLatestRes,
-      pmfLatestRes,
-      journeyOutcomesRes,
-    ] = await Promise.all([
-      supabase
-        .from(ICP_RESULTS_TABLE)
-        .select('created_at')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-      supabase
-        .from(WAITLIST_TABLE)
-        .select('id, published_at, exported_at, created_at, mark_ready_at, status')
-        .eq('user_id', userId)
-        .in('status', ['published', 'exported'])
-        .order('updated_at', { ascending: false }),
-      supabase
-        .from(PMF_EVIDENCE_TABLE)
-        .select('checklist_saved_at, interview_notes_count, survey_results_count, required_signals')
-        .eq('user_id', userId)
-        .maybeSingle(),
-      supabase
-        .from(MVP_ARTIFACTS_TABLE)
-        .select('saved_at, created_at, status')
-        .eq('user_id', userId)
-        .eq('status', 'saved')
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-      supabase
-        .from(GTM_PLANS_TABLE)
-        .select('saved_at, exported_at, created_at, status')
-        .eq('user_id', userId)
-        .in('status', ['saved', 'exported'])
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-      isPmfResultsTableAvailable()
-        ? supabase
-            .from(PMF_RESULTS_TABLE)
-            .select('created_at')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle()
-        : Promise.resolve({ data: null, error: null }),
-      supabase
-        .from(JOURNEY_OUTCOMES_TABLE)
-        .select('tool, status, completed_at, verified_at, reviewed_at, updated_at')
-        .eq('user_id', userId)
-        .order('updated_at', { ascending: false }),
+  const evaluate = useCallback(async (baseRow: UserProgressRow) => {
+    const [outcomesRes, sprintRes, readinessRes, pitchRes, prospectsRes] = await Promise.all([
+      (supabase as any).from('journey_outcomes').select('tool,status,completed_at,verified_at,reviewed_at,updated_at')
+        .eq('user_id', baseRow.user_id).order('updated_at', { ascending: false }),
+      (supabase as any).from('first_customer_sprints').select('completed_at,updated_at').eq('founder_id', baseRow.user_id)
+        .eq('status', 'completed').order('completed_at', { ascending: false }).limit(1).maybeSingle(),
+      (supabase as any).from('fundraising_readiness_assessments').select('created_at,updated_at').eq('user_id', baseRow.user_id)
+        .order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      (supabase as any).from('pitch_deck_uploads').select('created_at,updated_at').eq('user_id', baseRow.user_id)
+        .order('updated_at', { ascending: false }).limit(1).maybeSingle(),
+      (supabase as any).from('insighta_pipeline_items').select('id', { count: 'exact', head: true }).eq('user_id', baseRow.user_id)
+        .eq('entity_type', 'vc'),
     ]);
 
-    if (pmfLatestRes?.error) {
-      handlePmfResultsTableError(pmfLatestRes.error);
-    }
-
-    const waitlistPages = (waitlistPagesRes.data as Array<{
-      id: string;
-      published_at: string | null;
-      exported_at: string | null;
-      created_at: string | null;
-      mark_ready_at: string | null;
-      status: string;
-    }> | null) ?? [];
-    const pmfEvidenceData = pmfEvidenceRes.data as any;
-    const mvpData = mvpLatestRes.data as any;
-    const gtmData = gtmLatestRes.data as any;
-    const outcomeRows = journeyOutcomesRes.error
-      ? []
-      : ((journeyOutcomesRes.data ?? []) as Array<{
-          tool: string;
-          status: string;
-          completed_at: string | null;
-          verified_at: string | null;
-          reviewed_at: string | null;
-          updated_at: string;
-        }>);
-    const hasOutcomeFor = (tool: string) => outcomeRows.some((row) => row.tool === tool);
-    const outcomeCompletedAt = (tool: string) => {
-      const row = outcomeRows.find((candidate) =>
-        candidate.tool === tool && ['ready', 'verified', 'reviewed'].includes(candidate.status));
-      return row?.reviewed_at ?? row?.verified_at ?? row?.completed_at ?? row?.updated_at ?? null;
-    };
-
-    const validationSignals =
-      Number(pmfEvidenceData?.interview_notes_count ?? 0) +
-      Number(pmfEvidenceData?.survey_results_count ?? 0);
-    const requiredSignals = Number(pmfEvidenceData?.required_signals ?? PMF_REQUIRED_SIGNALS);
-
-    const validatingCompleted =
-      !!pmfEvidenceData?.checklist_saved_at && validationSignals >= Math.min(requiredSignals, 5);
-
-    let prototypeCompletedAt: string | null = null;
-    if (waitlistPages.length > 0) {
-      const readyAtDates = waitlistPages
-        .map((page) => page.mark_ready_at)
-        .filter((value): value is string => !!value);
-
-      if (readyAtDates.length > 0) {
-        prototypeCompletedAt = readyAtDates.sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
-      } else {
-        const pageIds = waitlistPages.map((page) => page.id);
-        if (pageIds.length > 0) {
-          const signupLatestRes = await supabase
-            .from(WAITLIST_SIGNUPS_TABLE)
-            .select('created_at')
-            .in('waitlist_page_id', pageIds)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-
-          const signupAt = (signupLatestRes.data as { created_at?: string } | null)?.created_at ?? null;
-          if (signupAt) {
-            prototypeCompletedAt = signupAt;
-          }
-        }
-      }
-    }
-
-    // A published Demo Studio demo completes the prototype stage just as a published
-    // waitlist page does. Without this, founders on the current tool stall at Identity.
-    const demoPrototype = await loadPrototypeStageArtifact(userId, { publishedOnly: true });
-    if (demoPrototype.published) {
-      prototypeCompletedAt = maxDate(prototypeCompletedAt, demoPrototype.completedAt);
-    }
-
-    return {
-      identityCompletedAt: outcomeCompletedAt('icp_builder')
-        ?? (!hasOutcomeFor('icp_builder') ? (icpLatestRes.data as any)?.created_at ?? null : null),
-      prototypeCompletedAt: outcomeCompletedAt('demo_studio')
-        ?? (!hasOutcomeFor('demo_studio') ? prototypeCompletedAt : null),
-      validatingCompletedAt:
-        outcomeCompletedAt('pmf_lab')
-        ?? (!hasOutcomeFor('pmf_lab') && validatingCompleted
-          ? maxDate(
-              (pmfLatestRes.data as any)?.created_at ?? null,
-              pmfEvidenceData?.checklist_saved_at ?? null,
-            )
-          : null),
-      buildingCompletedAt:
-        outcomeCompletedAt('mvp_builder')
-        ?? (!hasOutcomeFor('mvp_builder') && mvpData
-          ? mvpData.saved_at ?? mvpData.created_at ?? null
-          : null),
-      launchCompletedAt: outcomeCompletedAt('gtm_strategist')
-        ?? (!hasOutcomeFor('gtm_strategist')
-          ? gtmData?.exported_at ?? gtmData?.saved_at ?? (gtmData ? gtmData.created_at : null)
-          : null),
-      tractionCompletedAt: outcomeCompletedAt('traction_engine'),
-      fundraisingCompletedAt: null,
-    };
-  }, []);
-
-  const syncProgress = useCallback(async (baseRow: UserProgressRow): Promise<UserProgressRow> => {
-    const signals = await fetchCompletionSignals(baseRow.user_id);
+    const derived = deriveFounderProgress({
+      outcomes: outcomesRes.error ? [] : ((outcomesRes.data ?? []) as JourneyOutcomeSignal[]),
+      firstCustomerSprintCompletedAt: sprintRes.error ? null : dateFromRow(sprintRes.data),
+      fundraisingReadinessCompletedAt: readinessRes.error ? null : dateFromRow(readinessRes.data),
+      pitchDeckCompletedAt: pitchRes.error ? null : dateFromRow(pitchRes.data),
+      savedInvestorCount: prospectsRes.error ? 0 : Number(prospectsRes.count ?? 0),
+    });
 
     const nextRow: UserProgressRow = {
       ...baseRow,
-      current_stage: normalizeStage(baseRow.current_stage, DEFAULT_CURRENT_STAGE),
-      highest_unlocked_stage: normalizeStage(baseRow.highest_unlocked_stage, DEFAULT_HIGHEST_UNLOCKED_STAGE),
-      identity_completed_at: signals.identityCompletedAt,
-      prototype_completed_at: signals.prototypeCompletedAt,
-      validating_completed_at: signals.validatingCompletedAt,
-      building_completed_at: signals.buildingCompletedAt,
-      launch_completed_at: signals.launchCompletedAt,
-      traction_completed_at: signals.tractionCompletedAt,
-      fundraising_completed_at: signals.fundraisingCompletedAt,
+      current_stage: derived.currentStage,
+      highest_unlocked_stage: derived.highestUnlockedStage,
+      identity_completed_at: derived.completedAt.IDENTITY,
+      prototype_completed_at: derived.completedAt.PROTOTYPE,
+      validating_completed_at: derived.completedAt.VALIDATING,
+      building_completed_at: derived.completedAt.BUILDING,
+      launch_completed_at: derived.completedAt.LAUNCH,
+      traction_completed_at: derived.completedAt.TRACTION,
+      fundraising_completed_at: baseRow.fundraising_completed_at,
     };
+    return { nextRow, fundraisingOverlay: derived.fundraisingOverlay };
+  }, []);
 
-    const completionUnlocked = getCompletionUnlockedStage(nextRow);
-    nextRow.highest_unlocked_stage = completionUnlocked;
-
-    if (getStageIndex(nextRow.current_stage) > getStageIndex(nextRow.highest_unlocked_stage)) {
-      nextRow.current_stage = nextRow.highest_unlocked_stage;
-    }
-
-    while (isCompleted(nextRow, nextRow.current_stage)) {
-      const followingStage = getNextStage(nextRow.current_stage);
-      if (!followingStage || !isStageUnlocked(followingStage, nextRow.highest_unlocked_stage)) {
-        break;
-      }
-      nextRow.current_stage = followingStage;
-    }
-
-    const hasChanges =
-      nextRow.current_stage !== baseRow.current_stage ||
-      nextRow.highest_unlocked_stage !== baseRow.highest_unlocked_stage ||
-      nextRow.identity_completed_at !== baseRow.identity_completed_at ||
-      nextRow.prototype_completed_at !== baseRow.prototype_completed_at ||
-      nextRow.validating_completed_at !== baseRow.validating_completed_at ||
-      nextRow.building_completed_at !== baseRow.building_completed_at ||
-      nextRow.launch_completed_at !== baseRow.launch_completed_at ||
-      nextRow.traction_completed_at !== baseRow.traction_completed_at ||
-      nextRow.fundraising_completed_at !== baseRow.fundraising_completed_at;
-
-    if (hasChanges) {
-      const { data } = await supabase
-        .from(USER_PROGRESS_TABLE)
-        .update({
-          current_stage: nextRow.current_stage,
-          highest_unlocked_stage: nextRow.highest_unlocked_stage,
-          identity_completed_at: nextRow.identity_completed_at,
-          prototype_completed_at: nextRow.prototype_completed_at,
-          validating_completed_at: nextRow.validating_completed_at,
-          building_completed_at: nextRow.building_completed_at,
-          launch_completed_at: nextRow.launch_completed_at,
-          traction_completed_at: nextRow.traction_completed_at,
-          fundraising_completed_at: nextRow.fundraising_completed_at,
-        })
-        .eq('user_id', nextRow.user_id)
-        .select('*')
-        .single();
-
-      if (data) {
-        return data as UserProgressRow;
-      }
-    }
-
-    return nextRow;
-  }, [fetchCompletionSignals]);
+  const syncProgress = useCallback(async (baseRow: UserProgressRow) => {
+    const { nextRow, fundraisingOverlay: overlay } = await evaluate(baseRow);
+    const changed = [
+      'current_stage', 'highest_unlocked_stage', 'identity_completed_at', 'prototype_completed_at',
+      'validating_completed_at', 'building_completed_at', 'launch_completed_at', 'traction_completed_at',
+    ].some((key) => nextRow[key as keyof UserProgressRow] !== baseRow[key as keyof UserProgressRow]);
+    if (!changed) return { row: nextRow, overlay };
+    const { data, error: updateError } = await (supabase as any).from(USER_PROGRESS_TABLE).update({
+      current_stage: nextRow.current_stage,
+      highest_unlocked_stage: nextRow.highest_unlocked_stage,
+      identity_completed_at: nextRow.identity_completed_at,
+      prototype_completed_at: nextRow.prototype_completed_at,
+      validating_completed_at: nextRow.validating_completed_at,
+      building_completed_at: nextRow.building_completed_at,
+      launch_completed_at: nextRow.launch_completed_at,
+      traction_completed_at: nextRow.traction_completed_at,
+    }).eq('user_id', nextRow.user_id).select('*').single();
+    if (updateError) throw updateError;
+    return { row: data as UserProgressRow, overlay };
+  }, [evaluate]);
 
   const initializeProgress = useCallback(async () => {
     if (!userId) {
       loadedUserIdRef.current = null;
       setProgress(null);
+      setFundraisingOverlay({ eligible: false, status: 'not_eligible', readinessCompletedAt: null, pitchDeckCompletedAt: null, savedInvestorCount: 0 });
       setLoading(false);
       return;
     }
-
-    if (loadedUserIdRef.current !== userId) {
-      setLoading(true);
-    }
+    if (loadedUserIdRef.current !== userId) setLoading(true);
     setError(null);
-
     try {
-      const progressRes = await supabase
-        .from(USER_PROGRESS_TABLE)
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
-      const profileRes = await supabase
-        .from('profiles')
-        .select('assigned_stage')
-        .eq('id', userId)
-        .maybeSingle();
-
-      const { data: existingData, error: selectError } = progressRes;
-
-      if (selectError) {
-        throw selectError;
-      }
-
-      let row = existingData as UserProgressRow | null;
-      const assignedStage = (profileRes.data as { assigned_stage?: number | null } | null)?.assigned_stage;
-      const assignedBizMapStage = assignedStage && assignedStage >= 1 && assignedStage <= 7
-        ? mapFounderStageToBizMapStage(assignedStage as FounderStageId) as BizMapStage
-        : null;
-
+      const { data: existing, error: selectError } = await (supabase as any).from(USER_PROGRESS_TABLE)
+        .select('*').eq('user_id', userId).maybeSingle();
+      if (selectError) throw selectError;
+      let row = existing as UserProgressRow | null;
       if (!row) {
-        const { data: insertedData, error: insertError } = await supabase
-          .from(USER_PROGRESS_TABLE)
-          .insert({
-            user_id: userId,
-            current_stage: assignedBizMapStage ?? DEFAULT_CURRENT_STAGE,
-            highest_unlocked_stage: assignedBizMapStage
-              ? maxStage(DEFAULT_HIGHEST_UNLOCKED_STAGE, assignedBizMapStage)
-              : DEFAULT_HIGHEST_UNLOCKED_STAGE,
-          })
-          .select('*')
-          .single();
-
-        if (insertError) {
-          throw insertError;
-        }
-
-        row = insertedData as UserProgressRow;
-      } else if (
-        assignedBizMapStage &&
-        row.current_stage === DEFAULT_CURRENT_STAGE &&
-        !row.identity_completed_at &&
-        !row.prototype_completed_at &&
-        !row.validating_completed_at &&
-        !row.building_completed_at &&
-        !row.launch_completed_at
-      ) {
-        row = {
-          ...row,
-          current_stage: assignedBizMapStage,
-          highest_unlocked_stage: maxStage(DEFAULT_HIGHEST_UNLOCKED_STAGE, assignedBizMapStage),
-        };
+        const { data, error: insertError } = await (supabase as any).from(USER_PROGRESS_TABLE).insert({
+          user_id: userId, current_stage: DEFAULT_CURRENT_STAGE, highest_unlocked_stage: DEFAULT_HIGHEST_UNLOCKED_STAGE,
+        }).select('*').single();
+        if (insertError) throw insertError;
+        row = data as UserProgressRow;
       }
-
       const synced = await syncProgress(row);
-      setProgress(synced);
+      setProgress(synced.row);
+      setFundraisingOverlay(synced.overlay);
     } catch (err) {
-      console.error('Failed to load BizMap progress:', err);
-      setError('Unable to load BizMap progress right now.');
+      console.error('Failed to load founder progress:', err);
+      setError('Unable to load founder progress right now.');
       setProgress(null);
     } finally {
       loadedUserIdRef.current = userId;
@@ -426,99 +150,34 @@ export const useBizMapProgress = () => {
     }
   }, [syncProgress, userId]);
 
-  useEffect(() => {
-    void initializeProgress();
-  }, [initializeProgress]);
-
-  const refreshProgress = useCallback(async () => {
-    await initializeProgress();
-  }, [initializeProgress]);
-
-  const setCurrentStage = useCallback(
-    async (stage: BizMapStage): Promise<boolean> => {
-      if (!progress || !userId) return false;
-
-      const { data, error: updateError } = await supabase
-        .from(USER_PROGRESS_TABLE)
-        .update({ current_stage: stage })
-        .eq('user_id', userId)
-        .select('*')
-        .single();
-
-      if (updateError) {
-        console.error('Failed to set current BizMap stage:', updateError);
-        return false;
-      }
-
-      setProgress(data as UserProgressRow);
-      return true;
-    },
-    [progress, userId],
-  );
+  useEffect(() => { void initializeProgress(); }, [initializeProgress]);
 
   const stageState = useMemo(() => {
-    const row = progress;
-    const effectiveHighestUnlocked = row?.highest_unlocked_stage ?? DEFAULT_HIGHEST_UNLOCKED_STAGE;
-    return {
-      IDENTITY: {
-        unlocked: effectiveHighestUnlocked ? isStageUnlocked('IDENTITY', effectiveHighestUnlocked) : true,
-        completed: !!row?.identity_completed_at,
-        completedAt: row?.identity_completed_at ?? null,
-      },
-      PROTOTYPE: {
-        unlocked: effectiveHighestUnlocked ? isStageUnlocked('PROTOTYPE', effectiveHighestUnlocked) : true,
-        completed: !!row?.prototype_completed_at,
-        completedAt: row?.prototype_completed_at ?? null,
-      },
-      VALIDATING: {
-        unlocked: effectiveHighestUnlocked ? isStageUnlocked('VALIDATING', effectiveHighestUnlocked) : false,
-        completed: !!row?.validating_completed_at,
-        completedAt: row?.validating_completed_at ?? null,
-      },
-      BUILDING: {
-        unlocked: effectiveHighestUnlocked ? isStageUnlocked('BUILDING', effectiveHighestUnlocked) : false,
-        completed: !!row?.building_completed_at,
-        completedAt: row?.building_completed_at ?? null,
-      },
-      LAUNCH: {
-        unlocked: effectiveHighestUnlocked ? isStageUnlocked('LAUNCH', effectiveHighestUnlocked) : false,
-        completed: !!row?.launch_completed_at,
-        completedAt: row?.launch_completed_at ?? null,
-      },
-      TRACTION: {
-        unlocked: effectiveHighestUnlocked ? isStageUnlocked('TRACTION', effectiveHighestUnlocked) : false,
-        completed: !!row?.traction_completed_at,
-        completedAt: row?.traction_completed_at ?? null,
-      },
-      FUNDRAISING: {
-        unlocked: effectiveHighestUnlocked ? isStageUnlocked('FUNDRAISING', effectiveHighestUnlocked) : false,
-        completed: !!row?.fundraising_completed_at,
-        completedAt: row?.fundraising_completed_at ?? null,
-      },
-    } as Record<BizMapStage, { unlocked: boolean; completed: boolean; completedAt: string | null }>;
-  }, [progress]);
-
-  const isToolRouteUnlocked = useCallback(
-    () => true,
-    [],
-  );
-
-  const getLockReasonForRoute = useCallback(
-    () => null,
-    [],
-  );
+    const highest = progress?.highest_unlocked_stage ?? DEFAULT_HIGHEST_UNLOCKED_STAGE;
+    const lookup: Record<BizMapStage, keyof UserProgressRow | null> = {
+      IDENTITY: 'identity_completed_at', PROTOTYPE: 'prototype_completed_at', VALIDATING: 'validating_completed_at',
+      BUILDING: 'building_completed_at', LAUNCH: 'launch_completed_at', TRACTION: 'traction_completed_at', FUNDRAISING: null,
+    };
+    return Object.fromEntries((Object.keys(lookup) as BizMapStage[]).map((stage) => {
+      const key = lookup[stage];
+      return [stage, {
+        unlocked: stage === 'FUNDRAISING' ? fundraisingOverlay.eligible : isStageUnlocked(stage, highest),
+        completed: key ? Boolean(progress?.[key]) : false,
+        completedAt: key ? (progress?.[key] as string | null | undefined ?? null) : null,
+      }];
+    })) as Record<BizMapStage, { unlocked: boolean; completed: boolean; completedAt: string | null }>;
+  }, [fundraisingOverlay.eligible, progress]);
 
   return {
-    loading,
-    error,
-    progress,
-    stageState,
+    loading, error, progress, stageState,
     currentStage: progress?.current_stage ?? DEFAULT_CURRENT_STAGE,
     highestUnlockedStage: progress?.highest_unlocked_stage ?? DEFAULT_HIGHEST_UNLOCKED_STAGE,
+    fundraisingOverlay,
     hasFullBizMapAccess: true,
-    refreshProgress,
-    setCurrentStage,
-    isToolRouteUnlocked,
-    getLockReasonForRoute,
+    refreshProgress: initializeProgress,
+    // Progress is evidence-driven; direct routes remain advisory rather than blocked.
+    setCurrentStage: async (stage: BizMapStage) => stage === progress?.current_stage,
+    isToolRouteUnlocked: () => true,
+    getLockReasonForRoute: () => null,
   };
 };

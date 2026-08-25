@@ -2,7 +2,6 @@ import { useCallback, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { useFeatureFlagEnabled } from '@/hooks/usePosthogFeatureFlag';
 import { supabase } from '@/integrations/supabase/client';
 import { isFirstCustomerSprintSnapshot } from '@/lib/firstCustomerSprint';
 import type {
@@ -20,16 +19,15 @@ const client = supabase as any;
 export const firstCustomerSprintQueryKey = (userId?: string | null) => ['first-customer-sprint-v1', userId] as const;
 export const ctMentorUnlockQueryKey = (userId?: string | null) => ['ct-mentor-unlock-v1', userId] as const;
 
-export function isFirstCustomerSprintKillSwitchEnabled(posthogFlag?: boolean): boolean {
-  if (import.meta.env.VITE_FIRST_CUSTOMER_SPRINT_V1 === 'false') return false;
-  return posthogFlag === true || import.meta.env.VITE_FIRST_CUSTOMER_SPRINT_V1 === 'true';
+/** Kept for callers during the rollout; the standard journey now always exposes Stage V. */
+export function isFirstCustomerSprintKillSwitchEnabled(_posthogFlag?: boolean): boolean {
+  return true;
 }
 
 export function useFirstCustomerSprint() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const posthogFlag = useFeatureFlagEnabled('first-customer-sprint-v1');
-  const enabled = isFirstCustomerSprintKillSwitchEnabled(posthogFlag);
+  const enabled = true;
 
   const query = useQuery({
     queryKey: firstCustomerSprintQueryKey(user?.id),
@@ -159,7 +157,7 @@ export function useFirstCustomerSprint() {
 
   return useMemo(() => ({
     enabled,
-    enrolled: Boolean(query.data?.enrolled),
+    enrolled: Boolean(user?.id),
     snapshot: query.data ?? null,
     isLoading: query.isLoading,
     error: query.error instanceof Error ? query.error : null,

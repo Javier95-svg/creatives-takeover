@@ -45,7 +45,7 @@ const SearchableFAQ = () => {
       id: 2,
       category: "Pricing",
       question: "Is there a free plan available?",
-      answer: "Yes. Rookie is completely free forever with no credit card required. You get 50 credits per month, free ICP Builder access, Insighta Test, Newspaper, mentor and co-founder browsing, mentor messaging and saving, preview access to later-stage tools, and free co-founder posting.",
+      answer: "Yes. Rookie is completely free forever with no credit card required. You get 50 credits per month, free ICP Builder access, Fundraising Readiness, Newspaper, mentor and co-founder browsing, mentor messaging and saving, preview access to later-stage tools, and free co-founder posting.",
       popular: true,
       tags: ["free", "rookie", "no credit card", "credits"]
     },
@@ -152,8 +152,8 @@ const SearchableFAQ = () => {
     {
       id: 15,
       category: "Features",
-      question: "What is Insighta Test?",
-      answer: "Insighta Test diagnoses gaps in traction, fundraising narrative, and investor preparation. It recommends the most relevant existing Insighta workflow without promising funding, and it is included on every plan, including Rookie.",
+      question: "What is Fundraising Readiness?",
+      answer: "Fundraising Readiness diagnoses gaps in traction, fundraising narrative, and investor preparation. It recommends the most relevant existing Insighta workflow without promising funding, and it is included on every plan, including Rookie.",
       popular: false,
       tags: ["insighta", "fundraising readiness", "traction", "pitch deck", "investors"]
     },

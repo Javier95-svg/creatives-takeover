@@ -189,7 +189,7 @@ test('credit audit main inventory follows Compare Our Plans tools only', () => {
     'Accelerator Hunt',
     'Email Templates',
     'Pitch Deck Analyzer',
-    'Insighta Test',
+    'Fundraising Readiness',
     'Discovery Calls',
     'Find a Co-Founder Posting',
     'Find Your Angel',

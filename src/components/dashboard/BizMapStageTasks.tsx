@@ -163,7 +163,7 @@ export function BizMapStageTasks() {
         <CardDescription>
           {currentStage === 'IDENTITY' && draftTasks.length > 0
             ? 'These next steps come from your latest ICP Draft.'
-            : 'Stage-aware recommendations update as you unlock the next stage.'}
+            : 'This is a personal checklist. Your stage advances only when the required evidence is earned in its core tool.'}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

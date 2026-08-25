@@ -21,7 +21,7 @@ const CREDIT_FEATURE_LABELS: Record<CreditFeature, string> = {
   MARKET_RESEARCH: 'Market Research',
   MARKET_VALIDATION: 'Market Validation',
   FINANCIAL_ANALYSIS: 'Financial Analysis',
-  FUNDRAISING_READINESS_ANALYSIS: 'Insighta Test',
+  FUNDRAISING_READINESS_ANALYSIS: 'Fundraising Readiness',
   BUSINESS_INSIGHTS: 'Business Insights',
   PMF_ANALYSIS: 'Product-Market Fit Lab',
   PMF_SCORING: 'PMF Evidence Score',

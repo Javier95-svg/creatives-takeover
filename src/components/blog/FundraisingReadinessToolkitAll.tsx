@@ -295,14 +295,14 @@ const FundraisingReadinessToolkitAll = () => {
     if (!featureAccess.hasAccess) {
       openUpgradePrompt({
         reason: 'feature',
-        featureName: 'Insighta Test',
+        featureName: 'Fundraising Readiness',
         requiredTier: featureAccess.requiredTier as Plan | undefined,
         description: featureAccess.message,
       });
       return;
     }
     const requiredCredits = confirmCreditCharge
-      ? ensureCredits('FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Insighta Test' })
+      ? ensureCredits('FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Fundraising Readiness' })
       : 0;
     if (requiredCredits === null) return;
 
@@ -352,14 +352,14 @@ const FundraisingReadinessToolkitAll = () => {
       }
 
       if (error) {
-        if (handleCreditError(error, data, 'FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Insighta Test' })) {
+        if (handleCreditError(error, data, 'FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Fundraising Readiness' })) {
           throw new Error('Insufficient credits');
         }
         throw error;
       }
 
       if (data?.error) {
-        if (handleCreditError(null, data, 'FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Insighta Test' })) {
+        if (handleCreditError(null, data, 'FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Fundraising Readiness' })) {
           throw new Error('Insufficient credits');
         }
         throw new Error(data.error);
