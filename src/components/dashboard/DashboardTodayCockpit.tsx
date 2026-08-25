@@ -35,6 +35,8 @@ import { captureEvent } from '@/lib/analytics';
 import { recordRecommendationOutcome } from '@/lib/recommendationLearning';
 import { rememberSocialRecommendation } from '@/lib/socialInteractionAnalytics';
 import { useFeatureFlagEnabled } from '@/hooks/usePosthogFeatureFlag';
+import { useFirstCustomerSprint } from '@/hooks/useFirstCustomerSprint';
+import { usePlanAccess } from '@/hooks/usePlanAccess';
 
 const CREDIT_FEATURE_BY_TOOL: Partial<Record<string, CreditFeature>> = {
   demo_studio: 'WAITLIST_GENERATION',
@@ -61,6 +63,8 @@ export default function DashboardTodayCockpit() {
   const dailyMission = useDailyMission();
   const socialRecommendationsFlag = useFeatureFlagEnabled('dashboard-social-recommendations');
   const { snapshot, primaryAction, isOffline, isStale } = useDashboardFocus();
+  const firstCustomerProof = useFirstCustomerSprint();
+  const proofAccess = usePlanAccess('first_customer_proof');
   const primaryTool = primaryAction ? getDashboardTool(primaryAction.toolKey) : null;
   const primaryRoute = primaryAction?.actionUrl || primaryTool?.route || null;
   const primaryInteraction = primaryAction?.interaction ?? null;
@@ -128,6 +132,14 @@ export default function DashboardTodayCockpit() {
     : 0;
   const shownSocialKey = useRef<string | null>(null);
   const socialSnapshot = socialRecommendationsFlag === true && snapshot?.version === 3 ? snapshot.social : null;
+  const proofSprint = firstCustomerProof.snapshot?.sprint ?? null;
+  const proofEvidence = firstCustomerProof.snapshot?.evidence ?? { attachedProspects: 0, contactedProspects: 0, replies: 0, conversations: 0, commitments: 0, payments: 0 };
+  const showCustomerProof = proofAccess.hasAccess && proofSprint?.status !== 'completed';
+  const proofNextAction = proofEvidence.attachedProspects < 10
+    ? `Build the prospect list (${proofEvidence.attachedProspects}/10)`
+    : proofEvidence.contactedProspects < 10
+      ? `Send and record outreach (${proofEvidence.contactedProspects}/10)`
+      : 'Record the buyer-evidence decision';
 
   useEffect(() => {
     if (!primaryAction?.interaction || shownSocialKey.current === primaryAction.key) return;
@@ -290,6 +302,19 @@ export default function DashboardTodayCockpit() {
             </div>
           ) : null}
         </section>
+
+        {showCustomerProof ? (
+          <section className="mt-5 rounded-2xl border border-success/30 bg-success/5 p-4 sm:p-5" aria-labelledby="first-customer-proof">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="flex flex-wrap items-center gap-2"><Badge variant="outline">First Customer Proof</Badge><Badge variant="secondary">Stage V: GTM</Badge></div>
+                <h2 id="first-customer-proof" className="mt-2 text-lg font-semibold">{proofNextAction}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{proofEvidence.attachedProspects}/10 qualified prospects · {proofEvidence.contactedProspects}/10 founder-sent messages · {proofEvidence.replies + proofEvidence.conversations + proofEvidence.commitments + proofEvidence.payments} buyer signals. Complete the next task to turn activity into a defensible decision.</p>
+              </div>
+              <Button asChild className="shrink-0"><Link to="/go-to-market?workspace=first-customer-proof">{proofSprint ? 'Continue proof' : 'Start proof'}<ArrowRight className="ml-1.5 h-4 w-4" /></Link></Button>
+            </div>
+          </section>
+        ) : null}
 
         {socialSnapshot ? (
           <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label="Relationship momentum this week">

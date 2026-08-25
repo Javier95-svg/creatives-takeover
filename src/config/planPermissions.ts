@@ -63,6 +63,7 @@ export type DashboardSidebarToolKey =
   | 'mvp_builder'
   | 'tech_stack'
   | 'gtm_strategist'
+  | 'first_customer_proof'
   | 'directories'
   | 'find_mentor'
   | 'find_cofounder'
@@ -223,8 +224,9 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
   ],
   rising: [
     '250 monthly credits',
+    'First Customer Proof: prospects, messages, buyer evidence, and a decision',
     'SELL and self-serve GROW workflows',
-    'Prospect pipeline, messaging, experiments, and metrics',
+    'Prospect pipeline, experiments, and metrics',
     'Full Prompt Library with export actions',
     'VC Search & Accelerator Hunt: 10 profile views/month',
     'Pitch Deck Analyzer with transparent credit costs',
@@ -233,7 +235,7 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
     '600 monthly credits and the Pro War Room',
     'Substantive expert response within 48 hours',
     'Find Your Angel investor matching',
-    'All execution loops plus optional RAISE workflows',
+    'All execution loops plus optional Stage VII fundraising workflows',
     'Priority founder support and deeper research',
     'Unlimited VC Search & Accelerator profile views',
   ],
@@ -311,6 +313,7 @@ export const FEATURE_LABELS: Record<FeatureKey, string> = {
   mvp_builder: 'MVP Builder',
   tech_stack: 'Tech Stack Builder',
   gtm_strategist: 'GTM Strategist',
+  first_customer_proof: 'First Customer Proof',
   directories: 'Directories',
   discovery_calls: 'Discovery Calls',
   cofounder_posts: 'Find a Co-Founder posts',
@@ -389,6 +392,14 @@ export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitl
     starter: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'GTM_ANALYSIS' },
     rising: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'GTM_ANALYSIS' },
     pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'GTM_ANALYSIS' },
+  },
+  // Planning stays previewable. Executing and preserving the buyer-evidence
+  // loop is the paid SELL outcome on Rising and Pro.
+  first_customer_proof: {
+    rookie: { state: 'preview_only', monetizationModel: 'plan_gated', requiredPlan: 'rising' },
+    starter: { state: 'preview_only', monetizationModel: 'plan_gated', requiredPlan: 'rising' },
+    rising: { state: 'full', monetizationModel: 'plan_gated' },
+    pro: { state: 'full', monetizationModel: 'plan_gated' },
   },
   // Open to every plan, metered like VC Search: a few free directory "Visit"
   // opens per month, then upgrade for more. Pro is unlimited.

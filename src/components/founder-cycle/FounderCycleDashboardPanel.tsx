@@ -77,10 +77,10 @@ export default function FounderCycleDashboardPanel({ fallback }: { fallback: Rea
         {firstCustomerSprint.enabled ? (
           <div className="mt-4 flex flex-col gap-3 rounded-xl border border-primary/25 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-semibold">30-day First Customer Sprint</p>
-              <p className="text-xs text-muted-foreground">20 prospects, 10 manual messages, one mentor checkpoint, and customer evidence.</p>
+              <p className="text-sm font-semibold">First Customer Proof</p>
+              <p className="text-xs text-muted-foreground">10 qualified prospects, 10 founder-sent messages, and a decision from customer evidence.</p>
             </div>
-            <Button asChild size="sm"><Link to="/first-customer-sprint">{firstCustomerSprint.snapshot?.sprint ? 'Continue sprint' : 'Start sprint'}<ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
+            <Button asChild size="sm"><Link to="/go-to-market?workspace=first-customer-proof">{firstCustomerSprint.snapshot?.sprint ? 'Continue proof' : 'Open proof'}<ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
           </div>
         ) : null}
         <FounderCycleActionFeedback

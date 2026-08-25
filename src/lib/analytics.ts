@@ -1086,6 +1086,19 @@ export const trackRaiseTrackActivated = (properties: {
 }) => captureEvent('raise_track_activated', properties);
 
 export type FirstCustomerSprintEvent =
+  | 'acquisition_preview_viewed'
+  | 'acquisition_upgrade_shown'
+  | 'acquisition_upgrade_clicked'
+  | 'acquisition_rising_upgrade_completed'
+  | 'acquisition_gtm_play_generated'
+  | 'acquisition_cycle_started'
+  | 'acquisition_prospects_reached'
+  | 'acquisition_messages_reached'
+  | 'acquisition_buyer_signal_recorded'
+  | 'acquisition_cycle_decision_completed'
+  | 'acquisition_traction_handoff_started'
+  | 'acquisition_pro_review_requested'
+  | 'acquisition_pro_review_responded'
   | 'first_customer_sprint_application_viewed'
   | 'first_customer_sprint_application_submitted'
   | 'first_customer_sprint_viewed'
@@ -1111,6 +1124,8 @@ export type FirstCustomerSprintEvent =
 export const trackFirstCustomerSprint = (event: FirstCustomerSprintEvent, properties: {
   sprint_id?: string;
   application_id?: string;
+  gtm_plan_id?: string;
+  gtm_play_id?: string | null;
   status?: string;
   business_model?: string | null;
   acquisition_source?: string;

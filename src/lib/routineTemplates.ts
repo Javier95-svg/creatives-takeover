@@ -150,6 +150,14 @@ export const DEFAULT_REMINDER_CHANNELS: RoutineReminderChannels = {
   emailEnabled: true,
 };
 
+/** Suggested only when a founder actively runs First Customer Proof. */
+export const FIRST_CUSTOMER_PROOF_ROUTINE_TASKS: Omit<RoutineTask, 'order' | 'active'>[] = [
+  { id: 'first-customer-proof-prospects', title: 'Add qualified prospects to First Customer Proof', cadence: 'daily', days: [1, 2], source: 'suggested' },
+  { id: 'first-customer-proof-outreach', title: 'Personalize and manually send First Customer Proof outreach', cadence: 'daily', days: [2, 3, 4], source: 'suggested' },
+  { id: 'first-customer-proof-evidence', title: 'Log buyer replies, conversations, commitments, or payments', cadence: 'daily', days: WEEKDAYS, source: 'suggested' },
+  { id: 'first-customer-proof-decision', title: 'Review buyer evidence and record the next decision', cadence: 'weekly', days: FRIDAY, source: 'suggested' },
+];
+
 /**
  * Spread `count` picks as evenly as possible across the days the founder works,
  * so a reduced-capacity routine lands on distinct days instead of clustering.

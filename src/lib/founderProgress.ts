@@ -8,6 +8,8 @@ export type FundraisingOverlayStatus = 'not_eligible' | 'eligible' | 'preparing'
 
 export interface JourneyOutcomeSignal {
   tool: string;
+  artifact_type?: string;
+  quality_checks?: Record<string, unknown> | null;
   status: string;
   completed_at?: string | null;
   verified_at?: string | null;
@@ -44,16 +46,21 @@ function outcomeDate(outcomes: readonly JourneyOutcomeSignal[], tool: string, st
   return candidate?.reviewed_at ?? candidate?.verified_at ?? candidate?.completed_at ?? candidate?.updated_at ?? null;
 }
 
+function firstCustomerProofDate(outcomes: readonly JourneyOutcomeSignal[]) {
+  const candidate = outcomes.find((outcome) => outcome.tool === 'gtm_strategist'
+    && outcome.artifact_type === 'first_customer_proof'
+    && outcome.quality_checks?.buyerProofEarned === true
+    && READY_STATUSES.has(outcome.status));
+  return candidate?.reviewed_at ?? candidate?.verified_at ?? candidate?.completed_at ?? candidate?.updated_at ?? null;
+}
+
 /** Pure, shared completion evaluator. Draft artifacts never complete a stage. */
 export function deriveFounderProgress(evidence: FounderProgressEvidence): DerivedFounderProgress {
   const identity = outcomeDate(evidence.outcomes, 'icp_builder', READY_STATUSES);
   const prototype = outcomeDate(evidence.outcomes, 'demo_studio', READY_STATUSES);
   const validating = outcomeDate(evidence.outcomes, 'pmf_lab', READY_STATUSES);
   const building = outcomeDate(evidence.outcomes, 'mvp_builder', READY_STATUSES);
-  const gtm = outcomeDate(evidence.outcomes, 'gtm_strategist', READY_STATUSES);
-  const launch = gtm && evidence.firstCustomerSprintCompletedAt
-    ? evidence.firstCustomerSprintCompletedAt
-    : null;
+  const launch = firstCustomerProofDate(evidence.outcomes);
   const traction = outcomeDate(evidence.outcomes, 'traction_engine', VERIFIED_STATUSES);
 
   const completedAt: Record<BizMapStage, string | null> = {

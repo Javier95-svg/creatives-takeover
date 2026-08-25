@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   createRoutineConfig,
   DEFAULT_REMINDER_CHANNELS,
+  FIRST_CUSTOMER_PROOF_ROUTINE_TASKS,
   getDateKeyInTimezone,
   getCompletionKey,
   getRoutineTasksForToday,
@@ -208,6 +209,19 @@ export function useRoutine() {
     toast.success('Your routine is ready');
   }, [saveConfig]);
 
+  const addFirstCustomerProofTasks = useCallback(async () => {
+    const base = config ?? createRoutineConfig('launch_product');
+    const existingIds = new Set(base.tasks.map((task) => task.id));
+    const additions = FIRST_CUSTOMER_PROOF_ROUTINE_TASKS
+      .filter((task) => !existingIds.has(task.id))
+      .map((task, index) => ({ ...task, active: true, order: base.tasks.length + index }));
+    if (!additions.length) {
+      toast.success('First Customer Proof tasks are already in your routine');
+      return;
+    }
+    await saveConfig({ ...base, tasks: [...base.tasks, ...additions] });
+  }, [config, saveConfig]);
+
   const updateReminderPreferences = useCallback(async (preferences: RoutineReminderPreferences, nextTimezone?: string) => {
     if (!userId) return;
 
@@ -389,6 +403,7 @@ export function useRoutine() {
       completedPrev7,
     },
     initializeRoutine,
+    addFirstCustomerProofTasks,
     saveConfig,
     updateReminderPreferences,
     updateReminderChannels,

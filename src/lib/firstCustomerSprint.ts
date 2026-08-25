@@ -85,6 +85,7 @@ export function canCompleteFirstCustomerSprint(
   decision?: FirstCustomerDecision | null,
   notes?: string | null,
 ): boolean {
+  if (evidence.attachedProspects < FIRST_CUSTOMER_TARGETS.prospects) return false;
   if (evidence.contactedProspects < 10) return false;
   return evidence.replies > 0
     || evidence.conversations > 0

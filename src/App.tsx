@@ -70,8 +70,6 @@ const IPPolicy = lazy(() => import("./pages/IPPolicy"));
 const Signup = lazy(() => import("./pages/Signup"));
 const BizMapJourneyHubPage = lazy(() => import("./pages/BizMapJourneyHubPage"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
-const FirstCustomerSprintPage = lazy(() => import("./pages/FirstCustomerSprintPage"));
-const FirstCustomerSprintApplicationPage = lazy(() => import("./pages/FirstCustomerSprintApplicationPage"));
 const AdminFirstCustomerSprintPage = lazy(() => import("./pages/AdminFirstCustomerSprintPage"));
 
 const Login = lazy(() => import("./pages/Login"));
@@ -194,6 +192,14 @@ const LegacyCommunityRedirect = () => {
   return <Navigate to={`${nextPath}${location.search}${location.hash}`} replace />;
 };
 
+const LegacyFirstCustomerProofRedirect = () => {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  params.set('workspace', 'first-customer-proof');
+  params.set('legacy', 'first-customer-sprint');
+  return <Navigate to={`/go-to-market?${params.toString()}${location.hash}`} replace />;
+};
+
 const PulseWidgetWrapper = () => {
   const location = useLocation();
 
@@ -290,8 +296,8 @@ function App() {
                         <Route path="/mentorship/book/:id" element={<MentorBookingPage />} />
                         <Route path="/mentorship/calls/respond" element={<MentorDiscoveryResponsePage />} />
                         <Route path="/mentorship/calls/availability" element={<MentorDiscoveryAvailabilityPage />} />
-                        <Route path="/first-customer-sprint" element={<FirstCustomerSprintPage />} />
-                        <Route path="/first-customer-sprint/apply" element={<FirstCustomerSprintApplicationPage />} />
+                        <Route path="/first-customer-sprint" element={<LegacyFirstCustomerProofRedirect />} />
+                        <Route path="/first-customer-sprint/apply" element={<LegacyFirstCustomerProofRedirect />} />
                         <Route path="/admin/first-customer-sprint" element={<AdminRoute><AdminFirstCustomerSprintPage /></AdminRoute>} />
                         <Route path="/marketplace" element={<ServiceMarketplaceHub />} />
                         <Route path="/marketplace/admin/new" element={<AdminRoute><AdminServiceEditor /></AdminRoute>} />

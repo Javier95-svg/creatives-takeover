@@ -142,11 +142,11 @@ export default function FounderExecutionCycle({ embedded = false }: { embedded?:
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <Badge variant="outline">Stage V core workflow</Badge>
-              <h2 className="mt-2 text-xl font-semibold">First Customer Sprint</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Turn the SELL loop into a focused 30-day target, messaging, mentor, and evidence cycle.</p>
+              <Badge variant="outline">Stage V: GTM Strategist</Badge>
+              <h2 className="mt-2 text-xl font-semibold">First Customer Proof</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Run a focused 10-prospect, 10-message GTM cycle and decide from real buyer evidence.</p>
             </div>
-            <Button asChild><Link to="/first-customer-sprint">{firstCustomerSprint.snapshot?.sprint ? 'Continue sprint' : 'Start sprint'}<ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
+            <Button asChild><Link to="/go-to-market?workspace=first-customer-proof">{firstCustomerSprint.snapshot?.sprint ? 'Continue First Customer Proof' : 'Open First Customer Proof'}<ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
           </CardContent>
         </Card>
       ) : null}

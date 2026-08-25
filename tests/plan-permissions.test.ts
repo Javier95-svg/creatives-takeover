@@ -44,8 +44,9 @@ test('plan highlights match the authoritative four-plan contract', () => {
 
   assert.deepEqual(PLAN_HIGHLIGHTS.rising, [
     '250 monthly credits',
+    'First Customer Proof: prospects, messages, buyer evidence, and a decision',
     'SELL and self-serve GROW workflows',
-    'Prospect pipeline, messaging, experiments, and metrics',
+    'Prospect pipeline, experiments, and metrics',
     'Full Prompt Library with export actions',
     'VC Search & Accelerator Hunt: 10 profile views/month',
     'Pitch Deck Analyzer with transparent credit costs',
@@ -55,7 +56,7 @@ test('plan highlights match the authoritative four-plan contract', () => {
     '600 monthly credits and the Pro War Room',
     'Substantive expert response within 48 hours',
     'Find Your Angel investor matching',
-    'All execution loops plus optional RAISE workflows',
+    'All execution loops plus optional Stage VII fundraising workflows',
     'Priority founder support and deeper research',
     'Unlimited VC Search & Accelerator profile views',
   ]);

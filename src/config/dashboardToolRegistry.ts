@@ -75,6 +75,7 @@ const definitions: DashboardToolDefinition[] = [
   { ...catalogTool('mvp_builder', Rocket, ['open_tool']), key: 'mvp_builder' },
   { ...catalogTool('tech_stack', Zap, ['open_tool']), key: 'tech_stack' },
   { ...catalogTool('gtm_strategist', Globe2, ['open_tool']), key: 'gtm_strategist' },
+  { ...catalogTool('first_customer_sprint', Globe2, ['open_tool'], 'first_customer_proof'), key: 'first_customer_proof' },
   { ...catalogTool('traction_engine', LineChart, ['open_tool']), key: 'traction_engine' },
   { ...catalogTool('pitch_deck_analyzer', Presentation, ['open_tool']), key: 'pitch_deck_analyzer' },
   { key: 'saved_mentors', label: 'Saved Mentors', route: '/saved-mentors', stage: 'MORE', icon: BookmarkCheck, inlineActions: ['remove_saved_mentor', 'create_follow_up_task'] },

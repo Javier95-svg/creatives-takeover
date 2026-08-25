@@ -5,7 +5,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { isFirstCustomerSprintSnapshot } from '@/lib/firstCustomerSprint';
 import type {
-  FirstCustomerContinuation,
   FirstCustomerDecision,
   FirstCustomerMessageVariant,
   FirstCustomerSprintReviewInput,
@@ -38,10 +37,7 @@ export function useFirstCustomerSprint() {
       const { data, error } = await client.rpc('get_first_customer_sprint_snapshot_v1');
       if (error) throw error;
       if (!isFirstCustomerSprintSnapshot(data)) throw new Error('Invalid first customer sprint snapshot');
-      if (!data.sprint || data.sprint.status !== 'completed') return data;
-      const continuation = await client.rpc('get_first_customer_sprint_continuation_v1', { p_sprint_id: data.sprint.id });
-      if (continuation.error) throw continuation.error;
-      return { ...data, continuation: (continuation.data ?? { paid: false }) as FirstCustomerContinuation };
+      return data;
     },
   });
   const ctMentorUnlock = useQuery({
@@ -112,6 +108,16 @@ export function useFirstCustomerSprint() {
     return data;
   }), [run]);
 
+  const linkToGtm = useCallback(async (sprintId: string, gtmPlanId: string, gtmPlayId?: string | null) => run.mutateAsync(async () => {
+    const { data, error } = await client.rpc('link_first_customer_proof_to_gtm_v1', {
+      p_sprint_id: sprintId,
+      p_gtm_plan_id: gtmPlanId,
+      p_gtm_play_id: gtmPlayId ?? null,
+    });
+    if (error) throw error;
+    return data;
+  }), [run]);
+
   const generateMessages = useCallback(async (sprintId: string) => run.mutateAsync(async () => {
     const { data, error } = await client.functions.invoke('first-customer-sprint-assistant', {
       body: { action: 'generate_messages', sprintId },
@@ -164,6 +170,6 @@ export function useFirstCustomerSprint() {
     ctMentorUnlocked: Boolean(ctMentorUnlock.data),
     ctMentorUnlock: ctMentorUnlock.data ?? null,
     isSaving: run.isPending,
-    refresh, start, update, attachContact, generateMessages, requestCheckpoint, complete, submitReview,
-  }), [attachContact, complete, ctMentorUnlock.data, enabled, generateMessages, query.data, query.error, query.isLoading, refresh, requestCheckpoint, run.isPending, start, submitReview, update]);
+    refresh, start, update, attachContact, linkToGtm, generateMessages, requestCheckpoint, complete, submitReview,
+  }), [attachContact, complete, ctMentorUnlock.data, enabled, generateMessages, linkToGtm, query.data, query.error, query.isLoading, refresh, requestCheckpoint, run.isPending, start, submitReview, update]);
 }

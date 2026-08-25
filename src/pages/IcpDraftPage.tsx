@@ -324,7 +324,7 @@ export default function IcpDraftPage() {
               */}
             {sprintEnabled ? (
               <Link
-                to={`/first-customer-sprint?icp=${draftId ?? ""}`}
+                to={`/go-to-market?workspace=first-customer-proof&icp=${draftId ?? ""}`}
                 className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white transition hover:bg-white/10"
               >
                 <span className="font-semibold">I want customers now</span>

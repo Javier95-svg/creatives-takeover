@@ -20,6 +20,8 @@ import { useDashboardFocus } from '@/contexts/DashboardDataContext';
 import { getDashboardTool } from '@/config/dashboardToolRegistry';
 import { cn } from '@/lib/utils';
 import { captureEvent } from '@/lib/analytics';
+import { useFirstCustomerSprint } from '@/hooks/useFirstCustomerSprint';
+import { usePlanAccess } from '@/hooks/usePlanAccess';
 
 function firstName(value: string | null | undefined) {
   const name = value?.trim();
@@ -33,6 +35,8 @@ function firstName(value: string | null | undefined) {
 export default function DashboardTodaySnapshot() {
   const { user } = useAuth();
   const { snapshot, primaryAction, isLoading, isOffline, isStale } = useDashboardFocus();
+  const firstCustomerProof = useFirstCustomerSprint();
+  const proofAccess = usePlanAccess('first_customer_proof');
   const actionTool = primaryAction ? getDashboardTool(primaryAction.toolKey) : null;
   const actionRoute = primaryAction?.actionUrl || actionTool?.route || null;
   const routine = snapshot?.focus.routine;
@@ -44,6 +48,14 @@ export default function DashboardTodaySnapshot() {
   const routineProgress = routineTotal > 0 ? Math.round((routineCompleted / routineTotal) * 100) : 0;
   const dailyMission = snapshot?.focus.dailyMission ?? null;
   const weeklyMission = snapshot?.focus.weeklyMission ?? null;
+  const proofSprint = firstCustomerProof.snapshot?.sprint ?? null;
+  const proofEvidence = firstCustomerProof.snapshot?.evidence ?? { attachedProspects: 0, contactedProspects: 0, replies: 0, conversations: 0, commitments: 0, payments: 0 };
+  const showCustomerProof = proofAccess.hasAccess && proofSprint?.status !== 'completed';
+  const proofNextAction = proofEvidence.attachedProspects < 10
+    ? `Build the prospect list (${proofEvidence.attachedProspects}/10)`
+    : proofEvidence.contactedProspects < 10
+      ? `Send and record outreach (${proofEvidence.contactedProspects}/10)`
+      : 'Record the buyer-evidence decision';
 
   if (isLoading) return <Skeleton className="mb-6 h-64 rounded-xl" />;
 
@@ -72,6 +84,8 @@ export default function DashboardTodaySnapshot() {
             </Button>
           </div>
         </section>
+
+        {showCustomerProof ? <section className="mt-5 rounded-2xl border border-success/30 bg-success/5 p-4 sm:p-5" aria-labelledby="first-customer-proof"><div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><div className="flex flex-wrap items-center gap-2"><Badge variant="outline">First Customer Proof</Badge><Badge variant="secondary">Stage V: GTM</Badge></div><h2 id="first-customer-proof" className="mt-2 text-lg font-semibold">{proofNextAction}</h2><p className="mt-1 text-sm text-muted-foreground">{proofEvidence.attachedProspects}/10 qualified prospects · {proofEvidence.contactedProspects}/10 founder-sent messages · {proofEvidence.replies + proofEvidence.conversations + proofEvidence.commitments + proofEvidence.payments} buyer signals. Complete the next task to turn activity into a defensible decision.</p></div><Button asChild className="shrink-0"><Link to="/go-to-market?workspace=first-customer-proof">{proofSprint ? 'Continue proof' : 'Start proof'}<ArrowRight className="ml-1.5 h-4 w-4" /></Link></Button></div></section> : null}
 
         {dailyMission ? <div className="mt-5 rounded-xl border border-primary/25 bg-primary/[0.06] p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="flex items-center gap-1.5 text-label font-semibold uppercase tracking-[0.16em] text-primary/80"><Zap className="h-3.5 w-3.5" />Daily mission</p><p className="mt-1.5 text-sm leading-6 text-foreground">{dailyMission.title}</p></div>{dailyMission.completed ? <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-success"><CheckCircle2 className="h-3.5 w-3.5" />Done</span> : <Button asChild size="sm" variant="outline"><Link to="/dashboard/routine">Open routine</Link></Button>}</div></div> : null}
 

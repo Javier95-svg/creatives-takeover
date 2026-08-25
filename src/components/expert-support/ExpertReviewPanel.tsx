@@ -13,6 +13,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
 import { normalizePlan } from '@/config/planPermissions';
 import { trackJourneyEvent, type JourneyTool } from '@/lib/journeyOutcomes';
+import { captureEvent } from '@/lib/analytics';
 
 type OutcomeRow = {
   id: string;
@@ -133,6 +134,11 @@ export default function ExpertReviewPanel({ isAdmin = false }: { isAdmin?: boole
       artifact_id: selectedOutcome.id,
       review_id: data.id,
     });
+    captureEvent('acquisition_pro_review_requested', {
+      tool_key: selectedOutcome.tool,
+      stage_id: 'launch',
+      artifact_type: selectedOutcome.artifact_type,
+    });
     setRequest('');
     toast.success('Expert review requested.', { description: 'Your 48 hour response window has started.' });
     await loadQueue();
@@ -172,6 +178,12 @@ export default function ExpertReviewPanel({ isAdmin = false }: { isAdmin?: boole
         artifact_type: review.artifact_type || undefined,
         artifact_id: review.journey_outcome_id || undefined,
         review_id: review.id,
+        sla_status: new Date(respondedAt) <= new Date(review.response_due_at) ? 'met' : 'missed',
+      });
+      captureEvent('acquisition_pro_review_responded', {
+        tool_key: review.tool,
+        stage_id: 'launch',
+        artifact_type: review.artifact_type || null,
         sla_status: new Date(respondedAt) <= new Date(review.response_due_at) ? 'met' : 'missed',
       });
     }

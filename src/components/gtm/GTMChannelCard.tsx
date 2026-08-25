@@ -78,9 +78,9 @@ const GTMChannelCard: React.FC<GTMChannelCardProps> = ({ channel, rank, measured
       channel: channel.channel,
       fit_score: channel.fitScore,
       rank,
-      destination: 'first_customer_sprint',
+      destination: 'first_customer_proof',
     });
-    navigate(`/first-customer-sprint?source=gtm&channel=${encodeURIComponent(channel.channel)}&hypothesis=${encodeURIComponent(hypothesis)}`);
+    navigate(`/go-to-market?workspace=first-customer-proof&source=gtm&channel=${encodeURIComponent(channel.channel)}&hypothesis=${encodeURIComponent(hypothesis)}`);
   };
 
   return (

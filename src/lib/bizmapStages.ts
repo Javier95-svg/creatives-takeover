@@ -1,6 +1,6 @@
 import { Bot, Compass, FlaskConical, Globe, Layers, Rocket, Target } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { getCoreFounderToolsForStage } from '../config/founderToolCatalog.ts';
+import { getCoreFounderToolsForStage, getFounderToolsForStage } from '../config/founderToolCatalog.ts';
 
 export const BIZMAP_STAGE_ORDER = [
   'IDENTITY',
@@ -64,7 +64,9 @@ const CORE_TOOL_ICONS: Record<string, LucideIcon> = {
  * requirement or a competing "next step".
  */
 export const BIZMAP_TOOLS: BizMapToolDefinition[] = BIZMAP_STAGE_ORDER.flatMap((stage) =>
-  getCoreFounderToolsForStage(stage).map((tool) => ({
+  [...getCoreFounderToolsForStage(stage), ...(stage === 'LAUNCH'
+    ? getFounderToolsForStage(stage).filter((tool) => tool.key === 'directories')
+    : [])].map((tool) => ({
     id: tool.key,
     name: tool.name,
     route: tool.route,
@@ -156,7 +158,7 @@ export const STAGE_TASKS: Record<BizMapStage, StageTaskTemplate[]> = {
   ],
   LAUNCH: [
     { id: 'launch-gtm-play', stage: 'LAUNCH', title: 'Create one measurable acquisition play', priority: 'high', route: '/go-to-market' },
-    { id: 'launch-directories', stage: 'LAUNCH', title: 'Submit your launch to relevant directories', priority: 'high', route: '/directories' },
+    { id: 'launch-first-customer-proof', stage: 'LAUNCH', title: 'Run First Customer Proof: 10 prospects, 10 messages, and a decision', priority: 'high', route: '/go-to-market?workspace=first-customer-proof' },
   ],
   TRACTION: [
     { id: 'traction-repeat-cycle', stage: 'TRACTION', title: 'Repeat the same acquisition motion in a second cycle', priority: 'high', route: '/traction-engine' },

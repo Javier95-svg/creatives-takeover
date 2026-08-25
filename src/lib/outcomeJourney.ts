@@ -90,8 +90,8 @@ export const OUTCOME_JOURNEY_CONTRACTS: Record<OutcomeJourneyStageKey, OutcomeJo
     observableMinimum: ['one_customer', 'one_job', 'live_url', 'smoke_test', 'success_event'],
   },
   acquire: {
-    stage: 'acquire', stageNumber: 5, label: 'Acquire', coreTool: 'first_customer_sprint', route: '/first-customer-sprint',
-    outcome: 'Complete one pre-registered acquisition cycle and make a buyer-backed decision.',
+    stage: 'acquire', stageNumber: 5, label: 'Acquire', coreTool: 'gtm_strategist', route: '/go-to-market?workspace=first-customer-proof',
+    outcome: 'Run First Customer Proof: complete one acquisition cycle and make an evidence-backed buyer decision.',
     observableMinimum: ['one_icp', 'one_offer', 'one_channel', 'ten_prospects', 'ten_messages', 'cycle_decision'],
   },
   repeat: {

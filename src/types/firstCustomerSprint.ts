@@ -36,6 +36,9 @@ export interface FirstCustomerSprint {
   journey_id?: string | null;
   stage_run_id?: string | null;
   market_experiment_id?: string | null;
+  /** GTM workspace lineage; optional during the legacy-record rollout. */
+  gtm_plan_id?: string | null;
+  gtm_play_id?: string | null;
   /**
    * The ICP draft that seeded this intake. Null when the founder filled it in
    * unaided, and absent entirely on a snapshot read before the lineage migration

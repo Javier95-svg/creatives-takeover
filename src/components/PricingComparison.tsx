@@ -69,6 +69,7 @@ const features: FeatureCategory[] = [
       { feature: toolName.mvp, rookie: "Unlocked; uses credits", starter: "Unlocked; uses credits", rising: "Unlocked; uses credits", pro: "Unlocked; uses credits" },
       { feature: toolName.stack, rookie: "First build free; then credits", starter: "First build free; then credits", rising: "First build free; then credits", pro: "First build free; then credits" },
       { feature: toolName.gtm, rookie: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation`, starter: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation`, rising: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation`, pro: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation` },
+      { feature: "First Customer Proof", rookie: "Preview", starter: "Preview after validation", rising: "Included: 10 prospects, outreach, evidence, decision", pro: "Included + 48-hour expert review" },
       { feature: toolName.directories, rookie: "3 visits/month", starter: "10 visits/month", rising: "15 visits/month", pro: "Unlimited" },
     ],
   },

@@ -25,7 +25,7 @@ test('a sprint lasts exactly 30 UTC days', () => {
   assert.equal(sprintEndDate(start).toISOString(), '2026-09-02T12:00:00.000Z');
 });
 
-test('pilot qualification applies the same demand filters to both acquisition sources', () => {
+test('legacy pilot qualification remains readable while First Customer Proof no longer depends on it', () => {
   const qualified = qualifyFirstCustomerSprintApplication({
     businessModel: 'b2b_saas', founderOwnsSales: true, hasSellableProduct: true,
     customerCount: 1, estimatedAnnualCustomerValueUsd: 1200, weeklyCapacityHours: 3,
@@ -67,13 +67,14 @@ test('next action follows the weakest target and overdue work is preserved for f
 });
 
 test('completion requires the ten-message cycle and then a signal or explicit decision', () => {
-  assert.equal(canCompleteFirstCustomerSprint(evidence({ contactedProspects: 10, replies: 1 })), true);
-  assert.equal(canCompleteFirstCustomerSprint(evidence({ contactedProspects: 10, conversations: 1 })), true);
-  assert.equal(canCompleteFirstCustomerSprint(evidence({ contactedProspects: 10, commitments: 1 })), true);
-  assert.equal(canCompleteFirstCustomerSprint(evidence({ contactedProspects: 10, payments: 1 })), true);
-  assert.equal(canCompleteFirstCustomerSprint(evidence({ contactedProspects: 10 }), 'pivot', 'Segment was too broad.'), true);
-  assert.equal(canCompleteFirstCustomerSprint(evidence({ contactedProspects: 10 }), 'continue', 'Keep going.'), true);
-  assert.equal(canCompleteFirstCustomerSprint(evidence({ contactedProspects: 9 }), 'pause', 'Insufficient signal.'), false);
+  const tenProspects = { attachedProspects: 10, contactedProspects: 10 };
+  assert.equal(canCompleteFirstCustomerSprint(evidence({ ...tenProspects, replies: 1 })), true);
+  assert.equal(canCompleteFirstCustomerSprint(evidence({ ...tenProspects, conversations: 1 })), true);
+  assert.equal(canCompleteFirstCustomerSprint(evidence({ ...tenProspects, commitments: 1 })), true);
+  assert.equal(canCompleteFirstCustomerSprint(evidence({ ...tenProspects, payments: 1 })), true);
+  assert.equal(canCompleteFirstCustomerSprint(evidence(tenProspects), 'pivot', 'Segment was too broad.'), true);
+  assert.equal(canCompleteFirstCustomerSprint(evidence(tenProspects), 'continue', 'Keep going.'), true);
+  assert.equal(canCompleteFirstCustomerSprint(evidence({ attachedProspects: 9, contactedProspects: 10 }), 'pause', 'Insufficient signal.'), false);
 });
 
 test('mentor brief redacts contact notes, profile URLs, and other private fields', () => {
@@ -91,20 +92,16 @@ test('mentor brief redacts contact notes, profile URLs, and other private fields
   assert.match(serialized, /Prospect 1|qualified/);
 });
 
-test('database contract enforces invitation, ownership, idempotency, call/contact validation, and completion', () => {
-  const migration = readFileSync(new URL('../supabase/migrations/20260803120000_first_customer_sprint_v1.sql', import.meta.url), 'utf8');
-  assert.match(migration, /first_customer_sprints_one_open_per_founder/);
-  assert.match(migration, /WHERE status IN \('draft', 'active', 'paused'\)/);
-  assert.match(migration, /first_customer_sprint_contacts[\s\S]*UNIQUE \(sprint_id, contact_id\)/);
-  assert.match(migration, /beta_cohort/);
-  assert.match(migration, /public\.has_role\(auth\.uid\(\), 'admin'::app_role\)/);
+test('First Customer Proof enforces Rising access, ownership, a ten-by-ten sample, and GTM-attributed outcomes', () => {
+  const migration = readFileSync(new URL('../supabase/migrations/20260825130000_first_customer_proof_loop.sql', import.meta.url), 'utf8');
+  assert.match(migration, /status IN \('draft', 'active', 'paused'\)/);
+  assert.match(migration, /first_customer_proof_has_access_v1/);
+  assert.match(migration, /IN \('rising', 'pro'\)/);
   assert.match(migration, /founder_id=auth\.uid\(\)/);
-  assert.match(migration, /founder_customer_contacts WHERE id=p_contact_id AND user_id=auth\.uid\(\)/);
-  assert.match(migration, /discovery_calls[\s\S]*founder_id=auth\.uid\(\)[\s\S]*mentor_id=p_mentor_id/);
   assert.match(migration, /metadata->>'sprintId'=p_sprint_id::text/);
-  assert.match(migration, /v_conversations>=3 OR v_commitments>0 OR v_payments>0/);
-  assert.match(migration, /p_final_decision IN \('pivot','pause'\)/);
-  assert.match(migration, /ENABLE ROW LEVEL SECURITY/);
+  assert.match(migration, /v_attached < 10 OR v_sent < 10/);
+  assert.match(migration, /'first_customer_proof'/);
+  assert.match(migration, /'gtm_strategist', 'launch'/);
   assert.match(migration, /GRANT EXECUTE[\s\S]*TO authenticated/);
 });
 
@@ -135,32 +132,14 @@ test('checkpoint contract is admin-coordinated, redacted, and never deducts cred
   assert.match(assistant, /message_generation_count >= 2/);
 });
 
-test('demand-validation contract supports a balanced cohort, structured review, and paid continuation', () => {
-  const migration = readFileSync(new URL('../supabase/migrations/20260804120000_first_customer_sprint_demand_validation.sql', import.meta.url), 'utf8');
-  const application = readFileSync(new URL('../src/pages/FirstCustomerSprintApplicationPage.tsx', import.meta.url), 'utf8');
-  const admin = readFileSync(new URL('../src/pages/AdminFirstCustomerSprintPage.tsx', import.meta.url), 'utf8');
+test('First Customer Proof replaces public pilot entry and one-time continuation purchase', () => {
+  const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8');
   const sprint = readFileSync(new URL('../src/pages/FirstCustomerSprintPage.tsx', import.meta.url), 'utf8');
-  const checkout = readFileSync(new URL('../supabase/functions/create-checkout/index.ts', import.meta.url), 'utf8');
-  const webhook = readFileSync(new URL('../supabase/functions/stripe-webhook/index.ts', import.meta.url), 'utf8');
-
-  assert.match(migration, /CREATE TABLE IF NOT EXISTS public\.first_customer_sprint_applications/);
-  assert.match(migration, /p_business_model <> 'b2b_saas'/);
-  assert.match(migration, /p_estimated_annual_customer_value_usd < 1000/);
-  assert.match(migration, /p_recent_outreach <> 'last_30_days'/);
-  assert.match(migration, /A reason is required to override qualification/);
-  assert.match(migration, /JOIN public\.referral_codes code ON code\.user_id=mentor\.user_id/);
-  assert.match(migration, /review_submitted_at IS NULL/);
-  assert.match(migration, /purchaseContextId/);
-  assert.match(migration, /continuation_from_sprint_id/);
-  assert.match(migration, /one paid continuation only/);
-  assert.match(migration, /'mentorInvited'/);
-  assert.match(application, /mentor referrals and public applicants/);
-  assert.match(admin, /Mentor referrals/);
-  assert.match(admin, /Public\/current audience/);
-  assert.match(sprint, /Unlock sprint two for \$8/);
-  assert.match(checkout, /Complete and review the sprint before purchasing the continuation/);
-  assert.match(checkout, /continuation_from_sprint_id/);
-  assert.match(webhook, /first_customer_sprint_continuation_purchased/);
+  assert.match(app, /LegacyFirstCustomerProofRedirect/);
+  assert.match(app, /path="\/first-customer-sprint\/apply" element={<LegacyFirstCustomerProofRedirect/);
+  assert.match(sprint, /First Customer Proof/);
+  assert.doesNotMatch(sprint, /Unlock sprint two for \$8/);
+  assert.doesNotMatch(sprint, /purchaseContinuation/);
 });
 
 /*

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, BarChart3, BookOpen, Check, ExternalLink, FileDown, FolderSearch, Loader2, Pencil, RefreshCw, Rocket, Save, Share2, Target } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ import { buildGTMActionPacket, selectExecutableGTMPlays } from '@/lib/marketExpe
 import GTMExecutionOS from './GTMExecutionOS';
 import GTMEvidenceManager from './GTMEvidenceManager';
 import GTMPipelineBoard from './GTMPipelineBoard';
+import { FirstCustomerProofWorkspace } from '@/pages/FirstCustomerSprintPage';
 
 interface GTMWorkspaceProps {
   plan: GTMPlanV2;
@@ -138,7 +139,8 @@ function PlayEditor({ play, plan, planId, onSave, onStartSprint }: { play: GTMPl
 }
 
 export default function GTMWorkspace({ plan, planId, weeklyReview, isSaving, isExporting, isReviewing, onSave, onExport, onShare, onRegenerate, onUpdatePlay, onUpdatePlan, onStartSprint, onWeeklyReview }: GTMWorkspaceProps) {
-  const [tab, setTab] = useState('overview');
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState(() => searchParams.get('workspace') === 'first-customer-proof' ? 'customer-proof' : 'overview');
   const [reviewInput, setReviewInput] = useState<GTMWeeklyReviewInput>(weeklyReview?.reviewInput ?? { wins: '', misses: '', objections: '', customerLanguage: '', blockers: '', notes: '' });
   const primaryPlay = plan.plays.find((play) => play.status === 'active') ?? plan.plays[0];
   const outcome = evaluateGTMOutcome(plan);
@@ -163,10 +165,11 @@ export default function GTMWorkspace({ plan, planId, weeklyReview, isSaving, isE
       </Card>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-2xl p-1 md:grid-cols-4">
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-2xl p-1 md:grid-cols-5">
           <TabsTrigger value="overview" className="gap-2"><Target className="h-4 w-4" />Command center</TabsTrigger>
           <TabsTrigger value="strategy" className="gap-2"><BookOpen className="h-4 w-4" />Strategy</TabsTrigger>
           <TabsTrigger value="activate" className="gap-2"><Rocket className="h-4 w-4" />Activate</TabsTrigger>
+          <TabsTrigger value="customer-proof" className="gap-2"><Check className="h-4 w-4" />First Customer Proof</TabsTrigger>
           <TabsTrigger value="review" className="gap-2"><BarChart3 className="h-4 w-4" />Weekly review</TabsTrigger>
         </TabsList>
 
@@ -189,9 +192,13 @@ export default function GTMWorkspace({ plan, planId, weeklyReview, isSaving, isE
 
         <TabsContent value="activate" className="mt-6 space-y-4">
           <div><h2 className="text-lg font-semibold">Primary play and fallback</h2><p className="text-sm text-muted-foreground">Execute one pre-registered acquisition experiment. The fallback stays available if measured evidence kills the primary play.</p></div>
-          <Card className="border-success/25 bg-success/5"><CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-semibold">First customer cycle</p><p className="text-sm text-muted-foreground">Run this GTM funnel step with a named prospect list, manual outreach, customer evidence, and a decision checkpoint.</p></div><Button variant="outline" onClick={() => navigate('/first-customer-sprint?source=gtm')}>Run customer acquisition cycle<ArrowRight className="ml-2 h-4 w-4" /></Button></CardContent></Card>
+          <Card className="border-success/25 bg-success/5"><CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-semibold">First Customer Proof</p><p className="text-sm text-muted-foreground">Turn this GTM play into 10 qualified prospects, 10 founder-sent messages, buyer evidence, and the next decision.</p></div><Button variant="outline" onClick={() => setTab('customer-proof')}>Open First Customer Proof<ArrowRight className="ml-2 h-4 w-4" /></Button></CardContent></Card>
           <GTMExecutionOS plan={plan} planId={planId} mode="execute" onUpdatePlan={onUpdatePlan} />
           {executablePlays.map((play) => <PlayEditor key={play.id} play={play} plan={plan} planId={planId} onSave={onUpdatePlay} onStartSprint={onStartSprint} />)}
+        </TabsContent>
+
+        <TabsContent value="customer-proof" className="mt-6">
+          <FirstCustomerProofWorkspace embedded gtmPlanId={planId} />
         </TabsContent>
 
         <TabsContent value="review" className="mt-6 space-y-5">

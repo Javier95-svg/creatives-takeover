@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
@@ -8,6 +9,7 @@ import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
 import GTMWorkspaceIntake from '@/components/gtm/GTMWorkspaceIntake';
 import GTMWorkspace from '@/components/gtm/GTMWorkspace';
+import { FirstCustomerProofWorkspace } from '@/pages/FirstCustomerSprintPage';
 import GTMAnalysisLoader from '@/components/gtm/GTMAnalysisLoader';
 import GTMStrategistWallpaper from '@/components/wallpapers/GTMStrategistWallpaper';
 import { BizMapShareDialog } from '@/components/bizmap/BizMapShareDialog';
@@ -52,6 +54,7 @@ const faqs = [
 ];
 
 export default function GTMStrategistPage() {
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const publicTab = getPublicTabConfig('/go-to-market');
   const { hasAccess, upgradeTarget } = usePlanAccess('gtm_strategist');
@@ -81,6 +84,7 @@ export default function GTMStrategistPage() {
     resumeWorkspace,
   } = useGTMStrategist();
   const v2Analysis = analysis && isGTMPlanV2(analysis) ? analysis : null;
+  const isFirstCustomerProofWorkspace = searchParams.get('workspace') === 'first-customer-proof';
 
   useEffect(() => {
     markToolUsed('gtm-strategist');
@@ -117,7 +121,10 @@ export default function GTMStrategistPage() {
             ) : hasAccess ? (
               <>
                 {isRestoringPlan ? <GTMAnalysisLoader /> : null}
-                {!isRestoringPlan && phase === 'intake' ? (
+                {!isRestoringPlan && isFirstCustomerProofWorkspace && (!v2Analysis || !planId) ? (
+                  <FirstCustomerProofWorkspace embedded />
+                ) : null}
+                {!isRestoringPlan && phase === 'intake' && !isFirstCustomerProofWorkspace ? (
                   <GTMWorkspaceIntake
                     prefill={v2Analysis?.intake ?? prefillV2}
                     draftScope={selectedMvpProjectId ? `mvp-${selectedMvpProjectId}` : planId ? `plan-${planId}` : 'manual'}

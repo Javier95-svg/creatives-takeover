@@ -557,7 +557,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         ...createExperimentDraft(),
         channel: handedOff.channel,
         hypothesis: payload.hypothesis || `Repeat the buyer signal from the ${handedOff.channel} acquisition cycle.`,
-        actionTaken: `Repeat the same ${payload.audience || 'ICP'}, offer, and channel from First Customer Sprint.`,
+        actionTaken: `Repeat the same ${payload.audience || 'ICP'}, offer, and channel from First Customer Proof.`,
         targetMetric: payload.targetMetric || 'Replies',
         targetValue: Number(payload.targetValue ?? 1),
         minimumSampleSize: Number(payload.minimumSampleSize ?? 10),
@@ -1070,7 +1070,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         <section className="rounded-xl border border-primary/25 bg-primary/5 p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <Badge variant="outline">First Customer Sprint handoff</Badge>
+              <Badge variant="outline">First Customer Proof handoff</Badge>
               <h2 className="mt-2 text-lg font-semibold">Your first buyer signal is already attached.</h2>
               <p className="mt-1 text-sm text-muted-foreground">Repeat the same ICP, offer, and {firstCustomerHandoff.channel} channel once more. Change only one variable if the evidence says to iterate.</p>
             </div>

@@ -59,7 +59,7 @@ export const useBizMapProgress = () => {
 
   const evaluate = useCallback(async (baseRow: UserProgressRow) => {
     const [outcomesRes, sprintRes, readinessRes, pitchRes, prospectsRes] = await Promise.all([
-      (supabase as any).from('journey_outcomes').select('tool,status,completed_at,verified_at,reviewed_at,updated_at')
+      (supabase as any).from('journey_outcomes').select('tool,artifact_type,quality_checks,status,completed_at,verified_at,reviewed_at,updated_at')
         .eq('user_id', baseRow.user_id).order('updated_at', { ascending: false }),
       (supabase as any).from('first_customer_sprints').select('completed_at,updated_at').eq('founder_id', baseRow.user_id)
         .eq('status', 'completed').order('completed_at', { ascending: false }).limit(1).maybeSingle(),
