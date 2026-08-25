@@ -7,7 +7,9 @@ export async function countLatest(
   userId: string,
   extra?: (query: any) => any,
 ): Promise<boolean> {
-  let query = supabase.from(table as any).select('id', { count: 'exact', head: true }).eq('user_id', userId);
+  // pmf_validation_evidence is intentionally a one-row-per-founder table and
+  // has no surrogate `id`; user_id is present on every table used here.
+  let query = supabase.from(table as any).select('user_id', { count: 'exact', head: true }).eq('user_id', userId);
   if (extra) query = extra(query);
   const { count, error } = await query;
   if (error) {

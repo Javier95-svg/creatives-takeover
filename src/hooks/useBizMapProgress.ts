@@ -63,9 +63,11 @@ export const useBizMapProgress = () => {
         .eq('user_id', baseRow.user_id).order('updated_at', { ascending: false }),
       (supabase as any).from('first_customer_sprints').select('completed_at,updated_at').eq('founder_id', baseRow.user_id)
         .eq('status', 'completed').order('completed_at', { ascending: false }).limit(1).maybeSingle(),
-      (supabase as any).from('fundraising_readiness_assessments').select('created_at,updated_at').eq('user_id', baseRow.user_id)
+      // Legacy readiness rows have created_at but no updated_at.
+      (supabase as any).from('fundraising_readiness_assessments').select('created_at').eq('user_id', baseRow.user_id)
         .order('created_at', { ascending: false }).limit(1).maybeSingle(),
-      (supabase as any).from('pitch_deck_uploads').select('created_at,updated_at').eq('user_id', baseRow.user_id)
+      // Pitch Deck Analyzer persists analyses, not a pitch_deck_uploads table.
+      (supabase as any).from('pitch_deck_analyses').select('created_at,updated_at').eq('user_id', baseRow.user_id)
         .order('updated_at', { ascending: false }).limit(1).maybeSingle(),
       (supabase as any).from('insighta_pipeline_items').select('id', { count: 'exact', head: true }).eq('user_id', baseRow.user_id)
         .eq('entity_type', 'vc'),
