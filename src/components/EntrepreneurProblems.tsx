@@ -52,14 +52,14 @@ type JourneyAction = {
 
 const journeySteps: JourneyStep[] = [
   {
-    phase: "From Idea to Direction",
+    phase: "Customer Clarity",
     challenge: "Turn scattered thinking into a plan you can act on",
     pathway: "Bring your customer, market, product, and launch thinking into one connected workspace with a clear next move.",
     icon: Lightbulb,
     accentColor: "blue",
   },
   {
-    phase: "Prove Value",
+    phase: "Validate Demand",
     challenge: "Know what customers want before you overbuild",
     pathway: "Test your assumptions with customer conversations and behavioral signals before committing more time and money.",
     icon: Target,
@@ -104,7 +104,7 @@ const journeySteps: JourneyStep[] = [
 
 const journeyActions: JourneyAction[] = [
   {
-    to: "/bizmap-ai",
+    to: "/icp-builder",
     title: "Your Business, Mapped Out",
     outcome: "Strategic clarity",
     description: "Bring your customer, market, validation, product, and launch thinking into one connected workspace. BizMap AI turns uncertainty into a focused plan and a clear next move.",
