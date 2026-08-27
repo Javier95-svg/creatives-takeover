@@ -271,7 +271,7 @@ const VisitorNavbar = () => {
                 height={44}
                 decoding="async"
               />
-              <span className="hidden min-w-0 flex-col leading-tight xl:flex">
+              <span className="hidden shrink-0 flex-col whitespace-nowrap leading-tight 2xl:flex">
                 <span className="font-space-grotesk text-sm font-semibold text-foreground">
                   Creatives Takeover
                 </span>
