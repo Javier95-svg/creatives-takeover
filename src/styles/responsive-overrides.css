@@ -527,6 +527,11 @@
 
 /* On compact horizontal navbars, trade utility spacing for clearer section spacing. */
 @media (min-width: 769px) and (max-width: 1599px) {
+  .signed-in-navbar-logo-slot .site-nav-logo {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
   .signed-in-communication-actions {
     gap: 0 !important;
   }
