@@ -308,9 +308,9 @@ const Navigation = () => {
                 : "bg-background/72 border-border/68 shadow-[0_12px_32px_-26px_rgba(15,23,42,0.2)]"
             )}
           >
-          <div ref={mobileBarRef} className="flex items-center h-16 md:h-[70px] px-3 sm:px-4 lg:px-6 border-0">
+          <div ref={mobileBarRef} className="signed-in-navbar-row flex items-center h-16 md:h-[70px] px-3 sm:px-4 lg:px-6 border-0">
             {/* Logo with Enhanced Hover Effects - Fixed width to prevent layout shifts */}
-            <div className="flex items-center border-0 flex-shrink-0 w-16 min-w-[4rem]">
+            <div className="signed-in-navbar-logo-slot flex items-center border-0 flex-shrink-0 w-16 min-w-[4rem]">
               <Link to="/" className="flex items-center justify-center w-full rounded-xl" aria-label="Home">
                 <img
                   src={ctLogoPolished}
@@ -351,7 +351,7 @@ const Navigation = () => {
                             <p>{item.tooltip}</p>
                           </TooltipContent>
                         </Tooltip>
-                        <DropdownMenuContent align="start" className={cn("w-80 md:w-72 sm:w-64 max-h-[min(520px,80vh)] overflow-y-auto overscroll-contain", navDropdownClass)}>
+                        <DropdownMenuContent align="start" className={cn("bizmap-nav-dropdown-scroll w-80 md:w-72 sm:w-64 max-h-[min(520px,80vh)] overflow-y-scroll overscroll-contain", navDropdownClass)}>
                           <DropdownMenuLabel>Validate ✅ Build 🛠️ Launch 🚀</DropdownMenuLabel>
                           <DropdownMenuSeparator />
 	                          {bizMapSubmenu.map((subItem, idx) => {
@@ -657,11 +657,11 @@ const Navigation = () => {
             )}
 
             {/* Desktop & Tablet CTA */}
-            <div className="desktop-nav-actions flex items-center gap-3 !border-0 ml-auto flex-shrink-0">
+            <div className="desktop-nav-actions signed-in-nav-actions flex items-center gap-3 !border-0 ml-auto flex-shrink-0">
               {loading ? (
                 <div className="w-8 h-8 animate-pulse bg-muted rounded-full" />
               ) : user ? (
-                <div className="flex items-center gap-2 self-center">
+                <div className="signed-in-account-actions flex items-center gap-2 self-center">
                   <CreditDisplay variant="navigation" showPurchaseButton={true} />
                   <div className="flex items-center gap-1">
                     <Button

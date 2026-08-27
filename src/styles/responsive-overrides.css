@@ -407,9 +407,34 @@
   }
 }
 
-/* Preserve the signed-in desktop navbar at wide widths; collapse links below its content breakpoint. */
+/* Preserve every signed-in nav section when the row has room; collapse only below its content breakpoint. */
 .signed-in-desktop-nav {
   display: none !important;
+}
+
+.bizmap-nav-dropdown-scroll {
+  max-height: min(520px, 80vh) !important;
+  overflow-y: scroll !important;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.65) hsl(var(--muted) / 0.35);
+}
+
+.bizmap-nav-dropdown-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.bizmap-nav-dropdown-scroll::-webkit-scrollbar-track {
+  background: hsl(var(--muted) / 0.35);
+  border-radius: 999px;
+}
+
+.bizmap-nav-dropdown-scroll::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.65);
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: content-box;
 }
 
 @media (min-width: 769px) {
@@ -418,7 +443,7 @@
   }
 }
 
-@media (min-width: 1440px) {
+@media (min-width: 1100px) {
   .signed-in-desktop-nav {
     display: flex !important;
   }
@@ -426,5 +451,35 @@
   .mobile-nav-trigger,
   .mobile-nav-panel {
     display: none !important;
+  }
+}
+
+@media (min-width: 1100px) and (max-width: 1439px) {
+  .signed-in-navbar-row {
+    padding-inline: 0.75rem !important;
+  }
+
+  .signed-in-navbar-logo-slot {
+    width: 3.5rem !important;
+    min-width: 3.5rem !important;
+  }
+
+  .signed-in-desktop-nav {
+    gap: 0 !important;
+    padding-inline: 0.25rem !important;
+  }
+
+  .signed-in-desktop-nav .nav-item-hover-effect {
+    gap: 0.375rem !important;
+    padding-inline: 0.5rem !important;
+    font-size: 0.8125rem !important;
+  }
+
+  .signed-in-nav-actions {
+    gap: 0.5rem !important;
+  }
+
+  .signed-in-account-actions {
+    gap: 0.25rem !important;
   }
 }
