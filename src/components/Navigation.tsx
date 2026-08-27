@@ -325,8 +325,8 @@ const Navigation = () => {
             </div>
 
             {/* Tablet Navigation */}
-            {deviceType === 'tablet' && (
-              <div className="flex-1 flex items-center justify-center min-w-0">
+            {deviceType === 'desktop' && (
+              <div className="hidden min-w-0 flex-1 items-center justify-center min-[1024px]:flex min-[1440px]:hidden">
                 <TabletNavigation
                   navItems={navItems}
                   submenus={{
@@ -343,7 +343,7 @@ const Navigation = () => {
 
             {/* Desktop Navigation */}
             {deviceType === 'desktop' && (
-              <div className="flex items-center justify-center flex-1 min-w-0 px-2 lg:px-4 !border-0 gap-1.5">
+              <div className="hidden items-center justify-center flex-1 min-w-0 px-2 lg:px-4 !border-0 gap-1.5 min-[1440px]:flex">
                 {navItems.map((item) => {
                   const Icon = item.icon || iconMap[item.name];
                   const active = isActive(item.href);
@@ -675,7 +675,7 @@ const Navigation = () => {
             )}
 
             {/* Desktop & Tablet CTA */}
-            <div className="desktop-nav-actions flex items-center gap-3 !border-0 ml-auto flex-shrink-0">
+            <div className="desktop-nav-actions hidden items-center gap-3 !border-0 ml-auto flex-shrink-0 min-[1024px]:flex">
               {loading ? (
                 <div className="w-8 h-8 animate-pulse bg-muted rounded-full" />
               ) : user ? (
