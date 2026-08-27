@@ -142,7 +142,7 @@ const VisitorNavbar = () => {
           if (open) handleMenuOpen(menu, "desktop");
         }}
       >
-        <DropdownMenuTrigger className={cn(navItemClass(menuActive(menu)), "inline-flex shrink-0 items-center gap-2 whitespace-nowrap")}>
+        <DropdownMenuTrigger className={cn(navItemClass(menuActive(menu)), "inline-flex shrink-0 translate-x-2 items-center gap-2 whitespace-nowrap")}>
           <MenuIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
           {menu.label}
           <ChevronDown className="h-3 w-3 opacity-60" aria-hidden="true" />
