@@ -19,7 +19,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import ThemeToggle from "@/components/ThemeToggle";
 import VisitorNavbar from "@/components/VisitorNavbar";
 import { useDeviceType } from "@/hooks/use-device-type";
-import { TabletNavigation } from "@/components/navigation/TabletNavigation";
 import ctLogoPolished from "@/assets/ct-logo-polished-borders.webp";
 import {
   DropdownMenu,
@@ -324,26 +323,9 @@ const Navigation = () => {
               </Link>
             </div>
 
-            {/* Tablet Navigation */}
-            {deviceType === 'desktop' && (
-              <div className="signed-in-nav-compact flex-1 items-center justify-center min-w-0">
-                <TabletNavigation
-                  navItems={navItems}
-                  submenus={{
-                    'BizMap AI': bizMapSubmenu,
-                    Insighta: insightaSubmenu,
-                    Network: communitySubmenu,
-                    More: resourcesSubmenu,
-                  }}
-                  getItemState={getMenuItemState}
-                  onItemClick={(name) => trackClick(name, 'Navigation')}
-                />
-              </div>
-            )}
-
             {/* Desktop Navigation */}
             {deviceType === 'desktop' && (
-              <div className="signed-in-nav-desktop items-center justify-center flex-1 min-w-0 px-2 lg:px-4 !border-0 gap-1.5">
+              <div className="signed-in-desktop-nav flex items-center justify-center flex-1 min-w-0 px-2 lg:px-4 !border-0 gap-1.5">
                 {navItems.map((item) => {
                   const Icon = item.icon || iconMap[item.name];
                   const active = isActive(item.href);

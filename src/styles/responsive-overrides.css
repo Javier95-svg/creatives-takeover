@@ -407,46 +407,24 @@
   }
 }
 
-/* Signed-in navigation has three explicit modes: drawer, compact, and full desktop. */
-.signed-in-nav-compact,
-.signed-in-nav-desktop {
+/* Preserve the signed-in desktop navbar at wide widths; collapse links below its content breakpoint. */
+.signed-in-desktop-nav {
   display: none !important;
 }
 
-@media (min-width: 769px) and (max-width: 1023px) {
-  .mobile-nav-panel {
-    backdrop-filter: blur(20px);
-  }
-
+@media (min-width: 769px) {
   .desktop-nav-actions {
-    display: none !important;
-  }
-
-  .mobile-nav-link {
-    min-height: 44px;
-    width: 100%;
-  }
-}
-
-@media (min-width: 1024px) and (max-width: 1439px) {
-  .signed-in-nav-compact {
     display: flex !important;
   }
 }
 
 @media (min-width: 1440px) {
-  .signed-in-nav-desktop {
+  .signed-in-desktop-nav {
     display: flex !important;
   }
-}
 
-@media (min-width: 1024px) {
   .mobile-nav-trigger,
   .mobile-nav-panel {
     display: none !important;
-  }
-
-  .desktop-nav-actions {
-    display: flex !important;
   }
 }
