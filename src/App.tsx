@@ -299,10 +299,10 @@ function App() {
                         <Route path="/first-customer-sprint" element={<LegacyFirstCustomerProofRedirect />} />
                         <Route path="/first-customer-sprint/apply" element={<LegacyFirstCustomerProofRedirect />} />
                         <Route path="/admin/first-customer-sprint" element={<AdminRoute><AdminFirstCustomerSprintPage /></AdminRoute>} />
-                        <Route path="/marketplace" element={<ServiceMarketplaceHub />} />
+                        <Route path="/marketplace" element={<ToolRouteWithCreditGate><ServiceMarketplaceHub /></ToolRouteWithCreditGate>} />
                         <Route path="/marketplace/admin/new" element={<AdminRoute><AdminServiceEditor /></AdminRoute>} />
                         <Route path="/marketplace/admin/edit/:id" element={<AdminRoute><AdminServiceEditor /></AdminRoute>} />
-                        <Route path="/marketplace/:slug" element={<ServiceProfilePage />} />
+                        <Route path="/marketplace/:slug" element={<ToolRouteWithCreditGate><ServiceProfilePage /></ToolRouteWithCreditGate>} />
                         <Route path="/co-founder" element={<CofounderMarketplaceRoute />} />
                         <Route path="/co-founder/create" element={<CofounderListingEditorRoute />} />
                         <Route path="/co-founder/edit/:postId" element={<CofounderListingEditorRoute />} />

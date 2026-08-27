@@ -29,3 +29,16 @@ test('soft and hard gates emit upgrade prompt analytics', () => {
   assert.match(bannerSource, /Upgrade to Starter for 100 credits\/month/);
   assert.match(contextSource, /trigger: "hard_gate_modal"/);
 });
+
+test('credit-spending marketplace routes render inside the credit gate provider', () => {
+  const appSource = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8');
+
+  assert.match(
+    appSource,
+    /path="\/marketplace" element=\{<ToolRouteWithCreditGate><ServiceMarketplaceHub \/><\/ToolRouteWithCreditGate>\}/,
+  );
+  assert.match(
+    appSource,
+    /path="\/marketplace\/:slug" element=\{<ToolRouteWithCreditGate><ServiceProfilePage \/><\/ToolRouteWithCreditGate>\}/,
+  );
+});
