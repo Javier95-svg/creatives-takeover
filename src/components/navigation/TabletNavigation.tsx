@@ -85,7 +85,7 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
 
   return (
     <TooltipProvider>
-      <nav className="flex items-center justify-center gap-3 lg:gap-4 px-4">
+      <nav className="signed-in-tablet-nav-links flex items-center justify-center gap-3 lg:gap-4 px-4">
         {visibleItems.map((item) => {
           const isActive = location.pathname === item.href || 
             (item.href !== "/" && location.pathname.startsWith(item.href));
@@ -134,7 +134,7 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
                     </TooltipContent>
                   )}
                 </Tooltip>
-                <DropdownMenuContent align="center" className="w-56 sm:w-64 max-w-[90vw]">
+                <DropdownMenuContent align="center" className={cn("w-56 sm:w-64 max-w-[90vw]", item.name === "BizMap AI" && "bizmap-nav-dropdown-scroll")}>
                   {submenu.map((subItem, index) => {
                     if ('type' in subItem && subItem.type === 'label') {
                       return (
@@ -188,6 +188,7 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
               <TooltipTrigger asChild>
                 <Link
                   to={item.href}
+                  data-nav-item={item.name}
                   onClick={() => onItemClick?.(item.name)}
                   className={triggerClassName}
                 >

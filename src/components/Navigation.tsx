@@ -19,6 +19,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import ThemeToggle from "@/components/ThemeToggle";
 import VisitorNavbar from "@/components/VisitorNavbar";
 import { useDeviceType } from "@/hooks/use-device-type";
+import { TabletNavigation } from "@/components/navigation/TabletNavigation";
 import ctLogoPolished from "@/assets/ct-logo-polished-borders.webp";
 import {
   DropdownMenu,
@@ -323,6 +324,22 @@ const Navigation = () => {
               </Link>
             </div>
 
+            {/* Tablet navigation keeps every section visible below the full desktop breakpoint. */}
+            {deviceType !== 'mobile' && (
+              <div className="signed-in-tablet-nav flex-1 items-center justify-center min-w-0">
+                <TabletNavigation
+                  navItems={navItems}
+                  submenus={{
+                    'BizMap AI': bizMapSubmenu,
+                    Insighta: insightaSubmenu,
+                    Network: communitySubmenu,
+                    More: resourcesSubmenu,
+                  }}
+                  getItemState={getMenuItemState}
+                  onItemClick={(name) => trackClick(name, 'Navigation')}
+                />
+              </div>
+            )}
             {/* Desktop Navigation */}
             {deviceType === 'desktop' && (
               <div className="signed-in-desktop-nav flex items-center justify-center flex-1 min-w-0 px-2 lg:px-4 !border-0 gap-1.5">
@@ -632,6 +649,7 @@ const Navigation = () => {
                       <TooltipTrigger asChild>
                         <Link
                           to={item.href}
+                          data-nav-item={item.name}
                           onClick={() => trackClick(item.name, 'Navigation')}
                           className={cn(
                             navTriggerBaseClass,
