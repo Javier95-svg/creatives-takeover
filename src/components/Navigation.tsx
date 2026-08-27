@@ -325,8 +325,8 @@ const Navigation = () => {
             </div>
 
             {/* Tablet Navigation */}
-            {deviceType === 'tablet' && (
-              <div className="flex-1 flex items-center justify-center min-w-0">
+            {deviceType === 'desktop' && (
+              <div className="signed-in-nav-compact flex-1 items-center justify-center min-w-0">
                 <TabletNavigation
                   navItems={navItems}
                   submenus={{
@@ -343,7 +343,7 @@ const Navigation = () => {
 
             {/* Desktop Navigation */}
             {deviceType === 'desktop' && (
-              <div className="flex items-center justify-center flex-1 min-w-0 px-2 lg:px-4 !border-0 gap-1.5">
+              <div className="signed-in-nav-desktop items-center justify-center flex-1 min-w-0 px-2 lg:px-4 !border-0 gap-1.5">
                 {navItems.map((item) => {
                   const Icon = item.icon || iconMap[item.name];
                   const active = isActive(item.href);
