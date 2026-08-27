@@ -649,7 +649,6 @@ const Navigation = () => {
                       <TooltipTrigger asChild>
                         <Link
                           to={item.href}
-                          data-nav-item={item.name}
                           onClick={() => trackClick(item.name, 'Navigation')}
                           className={cn(
                             navTriggerBaseClass,
@@ -681,7 +680,7 @@ const Navigation = () => {
               ) : user ? (
                 <div className="signed-in-account-actions flex items-center gap-2 self-center">
                   <CreditDisplay variant="navigation" showPurchaseButton={true} />
-                  <div className="flex items-center gap-1">
+                  <div className="signed-in-communication-actions flex items-center gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -716,7 +715,7 @@ const Navigation = () => {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
-                        className={cn("cursor-pointer self-center outline-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 nav-action-button h-[42px] w-[42px] rounded-2xl")}
+                        className={cn("signed-in-avatar-trigger cursor-pointer self-center outline-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 nav-action-button h-[42px] w-[42px] rounded-2xl")}
                         style={{ height: 42, width: 42, flexShrink: 0 }}
                       >
                         {/* Explicit pixel sizing on both the container and the image

@@ -188,7 +188,6 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
               <TooltipTrigger asChild>
                 <Link
                   to={item.href}
-                  data-nav-item={item.name}
                   onClick={() => onItemClick?.(item.name)}
                   className={triggerClassName}
                 >
