@@ -7,11 +7,13 @@ import {
   DollarSign,
   Gift,
   Info,
+  LibraryBig,
   type LucideIcon,
   Menu,
   Mic,
   Newspaper,
   Rocket,
+  Store,
   Wrench,
   X,
 } from "lucide-react";
@@ -44,8 +46,7 @@ type VisitorMenu = { label: string; icon: LucideIcon; tagline: string; taglineIc
 const visitorLinks: VisitorLink[] = [
   { label: "Build", href: "/build", icon: Wrench },
   { label: "Guidance", href: "/mentorship", icon: Compass },
-  { label: "Podcast", href: "/podcast", icon: Mic },
-  { label: "Newspaper", href: "/newspaper", icon: Newspaper },
+  { label: "Marketplace", href: "/marketplace", icon: Store },
   { label: "About", href: "/about", icon: Info },
   { label: "Pricing", href: "/pricing", icon: DollarSign },
 ];
@@ -59,6 +60,26 @@ const giftsMenu: VisitorMenu = {
   icon: Gift,
   tagline: "From Creatives Takeover with 💙",
   items: freeToolsItems,
+};
+
+const contentMenu: VisitorMenu = {
+  label: "Content",
+  icon: LibraryBig,
+  tagline: "Stories and conversations for founders",
+  items: [
+    {
+      label: "Podcast",
+      href: "/podcast",
+      icon: Mic,
+      description: "Hear candid conversations with founders.",
+    },
+    {
+      label: "Newspaper",
+      href: "/newspaper",
+      icon: Newspaper,
+      description: "Read business cases and founder stories.",
+    },
+  ],
 };
 
 const VisitorNavbar = () => {
@@ -133,6 +154,11 @@ const VisitorNavbar = () => {
     });
   };
 
+  const menuItemAnalytics = (menu: VisitorMenu, item: VisitorMenuItem, source: string) =>
+    menu.label === "Free Tools"
+      ? { tool: item.analyticsTool ?? item.label, source }
+      : { item: item.label, menu: menu.label, source };
+
   const renderDesktopMenu = (menu: VisitorMenu) => {
     const MenuIcon = menu.icon;
     const TaglineIcon = menu.taglineIcon;
@@ -142,7 +168,7 @@ const VisitorNavbar = () => {
           if (open) handleMenuOpen(menu, "desktop");
         }}
       >
-        <DropdownMenuTrigger className={cn(navItemClass(menuActive(menu)), "inline-flex shrink-0 translate-x-2 items-center gap-2 whitespace-nowrap")}>
+        <DropdownMenuTrigger className={cn(navItemClass(menuActive(menu)), "inline-flex items-center gap-2")}>
           <MenuIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
           {menu.label}
           <ChevronDown className="h-3 w-3 opacity-60" aria-hidden="true" />
@@ -161,10 +187,10 @@ const VisitorNavbar = () => {
                   to={item.href}
                   onClick={() => {
                     trackNavClick(`${menu.label} - ${item.label}`);
-                    captureEvent("free_tool_nav_click", {
-                      tool: item.analyticsTool ?? item.label,
-                      source: "visitor_navbar_desktop",
-                    });
+                    captureEvent(
+                      menu.label === "Free Tools" ? "free_tool_nav_click" : "visitor_menu_item_click",
+                      menuItemAnalytics(menu, item, "visitor_navbar_desktop")
+                    );
                   }}
                   className="cursor-pointer"
                 >
@@ -224,10 +250,10 @@ const VisitorNavbar = () => {
                   className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
                   onClick={() => {
                     trackNavClick(`Mobile ${menu.label} - ${item.label}`);
-                    captureEvent("free_tool_nav_click", {
-                      tool: item.analyticsTool ?? item.label,
-                      source: "visitor_navbar_mobile",
-                    });
+                    captureEvent(
+                      menu.label === "Free Tools" ? "free_tool_nav_click" : "visitor_menu_item_click",
+                      menuItemAnalytics(menu, item, "visitor_navbar_mobile")
+                    );
                   }}
                 >
                   <ItemIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -281,7 +307,22 @@ const VisitorNavbar = () => {
 
             <div className="hidden flex-1 items-center justify-center gap-1 lg:flex">
               {renderDesktopMenu(giftsMenu)}
-              {visitorLinks.map((item) => {
+              {visitorLinks.slice(0, 3).map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.label}
+                    to={item.href}
+                    className={cn(linkClassName(item.href, item.sectionId), "inline-flex items-center gap-2")}
+                    onClick={(event) => handleNavClick(event, item)}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {item.label}
+                  </Link>
+                );
+              })}
+              {renderDesktopMenu(contentMenu)}
+              {visitorLinks.slice(3).map((item) => {
                 const Icon = item.icon;
                 return (
                   <Link
@@ -337,7 +378,27 @@ const VisitorNavbar = () => {
             <div className="min-h-0">
               <div className="space-y-2 border-t border-border/70 px-3 py-4 sm:px-4">
                 {renderMobileMenu(giftsMenu)}
-                {visitorLinks.map((item) => {
+                {visitorLinks.slice(0, 3).map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.label}
+                      to={item.href}
+                      className={cn(
+                        "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors",
+                        isActive(item.href, item.sectionId)
+                          ? "bg-background text-foreground"
+                          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                      )}
+                      onClick={(event) => handleNavClick(event, item, `Mobile ${item.label}`)}
+                    >
+                      <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+                {renderMobileMenu(contentMenu)}
+                {visitorLinks.slice(3).map((item) => {
                   const Icon = item.icon;
                   return (
                     <Link
