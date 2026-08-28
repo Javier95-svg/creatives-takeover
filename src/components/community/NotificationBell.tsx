@@ -18,6 +18,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState, useTransition } from 'react';
 import { cn } from '@/lib/utils';
 import { trackActivity } from '@/lib/activity';
+import charlotteJosephProfile from '@/assets/charlotte-joseph.webp';
 
 export const NotificationBell = () => {
   const { user } = useAuth();
@@ -253,6 +254,7 @@ export const NotificationBell = () => {
 
   const getNotificationImage = (notification: CommunityNotification) => {
     const metadata = notification?.metadata || {};
+    const podcastTitle = typeof metadata.title === 'string' ? metadata.title.toLowerCase() : '';
 
     if (notification.notification_type === 'mentor_banner_created') {
       return metadata.image_url || metadata.picture || notification.actor.avatar;
@@ -267,6 +269,9 @@ export const NotificationBell = () => {
     }
 
     if (notification.notification_type === 'podcast_episode_published') {
+      if (podcastTitle.includes('charlotte') && podcastTitle.includes('joseph')) {
+        return charlotteJosephProfile;
+      }
       return metadata.image_url || metadata.thumbnail_url || notification.actor.avatar;
     }
 
