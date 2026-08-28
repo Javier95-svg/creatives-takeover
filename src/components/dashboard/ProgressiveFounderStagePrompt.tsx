@@ -116,22 +116,22 @@ export function ProgressiveFounderStagePrompt() {
   if (!visible) return null;
 
   return (
-    <Card className="border-primary/20 bg-primary/[0.04] shadow-sm">
-      <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-end sm:justify-between">
+    <Card className="mx-auto max-w-5xl border-primary/20 bg-primary/[0.04] shadow-none">
+      <CardContent className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0 flex-1 space-y-3">
           <div className="flex items-start gap-3">
             <span className="mt-0.5 rounded-full bg-primary/10 p-2 text-primary">
               <Sparkles className="h-4 w-4" aria-hidden="true" />
             </span>
             <div>
-              <p className="font-semibold text-foreground">Tailor your next tasks</p>
+              <p className="text-sm font-semibold text-foreground">Improve your recommendations</p>
               <p className="text-sm text-muted-foreground">
-                One optional question helps us prioritize the right work. You can skip it.
+                Add your current stage so today’s plan can prioritize more accurately.
               </p>
             </div>
           </div>
-          <div className="max-w-sm space-y-2">
-            <Label htmlFor="progressive-founder-stage">What stage are you at?</Label>
+          <div className="max-w-sm space-y-1.5">
+            <Label className="sr-only" htmlFor="progressive-founder-stage">What stage are you at?</Label>
             <Select value={stage} onValueChange={setStage}>
               <SelectTrigger id="progressive-founder-stage">
                 <SelectValue placeholder="Choose your current stage" />

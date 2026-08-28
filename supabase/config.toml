@@ -133,6 +133,9 @@ verify_jwt = true
 [functions.task-reminder-service]
 verify_jwt = false
 
+[functions.ensure-daily-task-plan]
+verify_jwt = true
+
 [functions.chatbot-ai-engine]
 verify_jwt = false
 

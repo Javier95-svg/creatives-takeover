@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { ProgressiveFounderStagePrompt } from '@/components/dashboard/ProgressiveFounderStagePrompt';
-import { TaskCalendarCommandCenter } from '@/components/dashboard/TaskCalendarCommandCenter';
+import { TaskTodayWorkspace } from '@/components/dashboard/TaskTodayWorkspace';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
 
 const TasksPage = () => {
@@ -11,11 +11,11 @@ const TasksPage = () => {
   return (
     <>
       <Helmet>
-        <title>Tasks Calendar — Creatives Takeover</title>
+        <title>Today's Tasks — Creatives Takeover</title>
       </Helmet>
-      <div className="space-y-4">
+      <div className="space-y-5">
         <ProgressiveFounderStagePrompt />
-        <TaskCalendarCommandCenter />
+        <TaskTodayWorkspace />
       </div>
     </>
   );

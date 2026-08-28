@@ -8,22 +8,17 @@ import { fetchToolCompletionSignals } from '@/lib/founderSignals';
 import {
   addDaysToDateKey,
   buildCalendarDays,
-  findCarryForwardPlatformTask,
   getDayTaskStatus,
   getFoundationalMilestones,
   groupTasksByDate,
-  isPlatformTaskExpired,
-  selectSmartTaskRecommendation,
   sortTasksForDay,
   toDateKey,
   type CalendarTaskRow,
   type RecommendationEventType,
-  type RecommendationEventRow,
   type RecommendationFeedbackAction,
   type TaskCalendarView,
   type TaskPriority,
   type ToolCompletionSignals,
-  type WeeklyMissionSignal,
 } from '@/lib/taskCalendar';
 import type { BizMapStage } from '@/lib/bizmapStages';
 
@@ -48,17 +43,6 @@ function deadlineForDate(dateKey: string): string {
   return endOfDay(new Date(`${dateKey}T00:00:00`)).toISOString();
 }
 
-function isPlatformTaskForDate(task: CalendarTaskRow, dateKey: string): boolean {
-  return (
-    task.task_date === dateKey &&
-    (task.task_source === 'platform' || task.ai_generated === true) &&
-    task.recommendation_status !== 'dismissed' &&
-    !task.recommendation_key?.startsWith('tool:') &&
-    task.intent_type !== 'foundational' &&
-    task.is_foundational !== true
-  );
-}
-
 function cooldownUntil(days: number): string {
   const date = new Date();
   date.setDate(date.getDate() + days);
@@ -73,12 +57,9 @@ export function useTaskCalendarEngine() {
   const [anchorDate, setAnchorDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(toDateKey(new Date()));
   const [tasks, setTasks] = useState<CalendarTaskRow[]>([]);
-  const [events, setEvents] = useState<RecommendationEventRow[]>([]);
-  const [weeklyMission, setWeeklyMission] = useState<WeeklyMissionSignal | null>(null);
   const [toolSignals, setToolSignals] = useState<ToolCompletionSignals>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isMutating, setIsMutating] = useState(false);
-  const ensuredTodayRef = useRef<string | null>(null);
   const loadedUserIdRef = useRef<string | null>(null);
 
   const calendarDays = useMemo(() => buildCalendarDays(anchorDate, view), [anchorDate, view]);
@@ -97,33 +78,10 @@ export function useTaskCalendarEngine() {
   }, [calendarDays, groupedTasks]);
   const foundationalMilestones = useMemo(() => getFoundationalMilestones(toolSignals), [toolSignals]);
 
-  const fetchWeeklyMission = useCallback(async (userId: string): Promise<WeeklyMissionSignal | null> => {
-    const today = toDateKey(new Date());
-    const { data, error } = await supabase
-      .from('weekly_missions' as any)
-      .select('id, mission_goal, completion_percentage')
-      .eq('user_id', userId)
-      .eq('status', 'active')
-      .lte('week_start_date', today)
-      .gte('week_end_date', today)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error) {
-      console.warn('Unable to read weekly mission for task recommendation context', error);
-      return null;
-    }
-
-    return (data as WeeklyMissionSignal | null) ?? null;
-  }, []);
-
   const fetchTasks = useCallback(async () => {
     if (!userId) {
       loadedUserIdRef.current = null;
       setTasks([]);
-      setEvents([]);
-      setWeeklyMission(null);
       setToolSignals({});
       setIsLoading(false);
       return;
@@ -132,7 +90,7 @@ export function useTaskCalendarEngine() {
     if (loadedUserIdRef.current !== userId) {
       setIsLoading(true);
     }
-    const [tasksResult, eventsResult, nextSignals, nextWeeklyMission] = await Promise.all([
+    const [tasksResult, nextSignals] = await Promise.all([
       supabase
         .from(TASK_TABLE)
         .select('*')
@@ -140,14 +98,7 @@ export function useTaskCalendarEngine() {
         .order('task_date', { ascending: true })
         .order('created_at', { ascending: true })
         .limit(500),
-      supabase
-        .from(RECOMMENDATION_EVENTS_TABLE)
-        .select('recommendation_key, event_type, created_at')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(100),
       fetchToolCompletionSignals(userId),
-      fetchWeeklyMission(userId),
     ]);
 
     if (tasksResult.error) {
@@ -157,18 +108,10 @@ export function useTaskCalendarEngine() {
       setTasks((tasksResult.data ?? []) as CalendarTaskRow[]);
     }
 
-    if (eventsResult.error) {
-      console.warn('Failed to load recommendation events', eventsResult.error);
-      setEvents([]);
-    } else {
-      setEvents((eventsResult.data ?? []) as RecommendationEventRow[]);
-    }
-
     setToolSignals(nextSignals);
-    setWeeklyMission(nextWeeklyMission);
     loadedUserIdRef.current = userId;
     setIsLoading(false);
-  }, [fetchWeeklyMission, userId]);
+  }, [userId]);
 
   const logRecommendationEvent = useCallback(async (
     task: CalendarTaskRow,
@@ -207,137 +150,10 @@ export function useTaskCalendarEngine() {
     if (error) console.warn('Unable to sync Startup Development Cycle task progress', error);
   }, [userId]);
 
-  const ensureTodayRecommendation = useCallback(async () => {
-    if (!userId) return;
-    const today = toDateKey(new Date());
-    if (ensuredTodayRef.current === `${userId}:${today}:${tasks.length}:${events.length}:${currentStage}`) return;
-    ensuredTodayRef.current = `${userId}:${today}:${tasks.length}:${events.length}:${currentStage}`;
-
-    const hasAnyPlatformTaskToday = tasks.some((task) => isPlatformTaskForDate(task, today));
-    if (hasAnyPlatformTaskToday) return;
-
-    // Carry an open suggestion forward instead of stacking a duplicate row per
-    // day; expire it after CARRY_FORWARD_MAX_AGE_DAYS so a different
-    // recommendation can rotate in.
-    const effectiveEvents = [...events];
-    const carryForwardTask = findCarryForwardPlatformTask(tasks, today);
-
-    if (carryForwardTask && !isPlatformTaskExpired(carryForwardTask, today)) {
-      const { error } = await supabase
-        .from(TASK_TABLE)
-        .update({
-          task_date: today,
-          deadline_time: deadlineForDate(today),
-          rescheduled_from_date: carryForwardTask.task_date,
-          rescheduled_at: new Date().toISOString(),
-        })
-        .eq('id', carryForwardTask.id);
-
-      if (error) {
-        console.warn('Unable to carry forward daily recommendation', error);
-        return;
-      }
-
-      await logRecommendationEvent(carryForwardTask, 'rescheduled', {
-        carryForward: true,
-        from: carryForwardTask.task_date,
-        to: today,
-      });
-      await fetchTasks();
-      return;
-    }
-
-    if (carryForwardTask) {
-      const { error } = await supabase
-        .from(TASK_TABLE)
-        .update({
-          recommendation_status: 'dismissed',
-          dismissed_at: new Date().toISOString(),
-        })
-        .eq('id', carryForwardTask.id);
-
-      if (error) {
-        console.warn('Unable to expire stale daily recommendation', error);
-        return;
-      }
-
-      await logRecommendationEvent(carryForwardTask, 'dismissed', { autoExpired: true });
-      // The freshly logged dismissal is not in state yet — include it so the
-      // selection below does not immediately re-pick the expired key.
-      if (carryForwardTask.recommendation_key) {
-        effectiveEvents.unshift({
-          recommendation_key: carryForwardTask.recommendation_key,
-          event_type: 'dismissed',
-          created_at: new Date().toISOString(),
-        });
-      }
-    }
-
-    const recommendation = selectSmartTaskRecommendation({
-      currentStage,
-      today,
-      tasks,
-      events: effectiveEvents,
-      toolSignals,
-      weeklyMission,
-    });
-
-    if (!recommendation) return;
-
-    const { data: inserted, error } = await supabase
-      .from(TASK_TABLE)
-      .insert({
-        user_id: userId,
-        task_text: recommendation.title,
-        task_description: recommendation.description,
-        task_date: today,
-        deadline_time: deadlineForDate(today),
-        priority: recommendation.priority,
-        is_completed: false,
-        ai_generated: true,
-        task_source: 'platform',
-        recommendation_status: 'suggested',
-        recommendation_key: recommendation.key,
-        recommendation_reason: recommendation.reason,
-        startup_stage_tag: recommendation.stage,
-        source_route: recommendation.sourceRoute ?? null,
-        contributes_to_weekly_mission: recommendation.contributesToWeeklyMission ?? false,
-        intent_type: recommendation.intentType ?? 'daily_momentum',
-        source_tool: recommendation.sourceTool ?? null,
-        is_foundational: recommendation.isFoundational ?? false,
-        cooldown_until: null,
-        max_suggestions: recommendation.maxSuggestions ?? 5,
-        seen_count: 0,
-        last_seen_at: null,
-        feedback_status: null,
-        business_impact_score: recommendation.priority === 'high' ? 8 : 6,
-        effort_estimate: 2,
-        stage_alignment_score: 8,
-      })
-      .select('id')
-      .single();
-
-    if (error) {
-      console.warn('Unable to create daily recommendation', error);
-      return;
-    }
-
-    // Suggestion history powers the rotation + repeat cooldown in the engine.
-    await logRecommendationEvent(
-      { ...(inserted as { id: string }), recommendation_key: recommendation.key } as CalendarTaskRow,
-      'suggested',
-    );
-
-    await fetchTasks();
-  }, [currentStage, events, fetchTasks, logRecommendationEvent, tasks, toolSignals, userId, weeklyMission]);
 
   useEffect(() => {
     void fetchTasks();
   }, [fetchTasks]);
-
-  useEffect(() => {
-    void ensureTodayRecommendation();
-  }, [ensureTodayRecommendation]);
 
   useEffect(() => {
     if (!userId) return;

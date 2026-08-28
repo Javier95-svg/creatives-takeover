@@ -68,6 +68,11 @@ export interface CalendarTaskRow {
   rescheduled_at?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
+  estimated_minutes?: number | null;
+  effort_estimate?: number | null;
+  business_impact_score?: number | null;
+  stage_alignment_score?: number | null;
+  user_modified_at?: string | null;
 }
 
 export interface RecommendationEventRow {

@@ -2367,6 +2367,7 @@ export type Database = {
           deadline_time: string | null
           dismissed_at: string | null
           effort_estimate: number | null
+          estimated_minutes: number
           feedback_status: string | null
           id: string
           intent_type: string | null
@@ -2392,6 +2393,7 @@ export type Database = {
           task_source: string | null
           task_text: string
           updated_at: string | null
+          user_modified_at: string | null
           user_id: string
         }
         Insert: {
@@ -2406,6 +2408,7 @@ export type Database = {
           deadline_time?: string | null
           dismissed_at?: string | null
           effort_estimate?: number | null
+          estimated_minutes?: number | null
           feedback_status?: string | null
           id?: string
           intent_type?: string | null
@@ -2431,6 +2434,7 @@ export type Database = {
           task_source?: string | null
           task_text: string
           updated_at?: string | null
+          user_modified_at?: string | null
           user_id: string
         }
         Update: {
@@ -2445,6 +2449,7 @@ export type Database = {
           deadline_time?: string | null
           dismissed_at?: string | null
           effort_estimate?: number | null
+          estimated_minutes?: number | null
           feedback_status?: string | null
           id?: string
           intent_type?: string | null
@@ -2470,6 +2475,7 @@ export type Database = {
           task_source?: string | null
           task_text?: string
           updated_at?: string | null
+          user_modified_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -8889,6 +8895,9 @@ export type Database = {
       }
     }
     Functions: {
+      get_today_task_plan_v1: { Args: { p_additional?: boolean; p_timezone?: string }; Returns: Json }
+      reorder_today_task_plan_v1: { Args: { p_record_user_action?: boolean; p_task_ids: string[]; p_timezone?: string }; Returns: Json }
+      act_on_task_recommendation_v1: { Args: { p_action: string; p_payload?: Json; p_task_id: string; p_timezone?: string }; Returns: Json }
       get_inbox_v1: { Args: { p_cursor?: string | null; p_limit?: number; p_section?: string }; Returns: Json }
       get_inbox_v2: { Args: { p_cursor?: string | null; p_limit?: number; p_section?: string }; Returns: Json }
       get_message_page_v1: { Args: { p_anchor_message_id?: string | null; p_before_created_at?: string | null; p_before_id?: string | null; p_conversation_id: string; p_limit?: number }; Returns: Json }

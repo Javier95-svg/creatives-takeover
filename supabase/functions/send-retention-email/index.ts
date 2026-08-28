@@ -33,6 +33,7 @@ type SequenceType =
   | "milestone_celebration"
   | "profile_incomplete_nudge"
   | "routine_reminder"
+  | "task_plan_digest"
   | "celebration";
 
 interface RetentionEmailRequest {
@@ -589,6 +590,18 @@ function buildSequenceEmail(args: {
         }),
       };
 
+    case "task_plan_digest":
+      return {
+        subject: `${args.name}, your three founder priorities are ready`,
+        html: buildEmailShell({
+          title: "Your plan for today",
+          intro: args.headline || "Three focused actions are ready, ranked from your stage, goals, and current progress.",
+          body: args.body || "Start with the first action. You can replace or snooze anything that no longer fits, and the plan will adapt.",
+          ctaLabel: args.ctaLabel,
+          ctaUrl: args.ctaUrl,
+        }),
+      };
+
     case "celebration":
       return {
         subject: `You created a real return trigger`,
@@ -830,7 +843,7 @@ serve(async (req: Request): Promise<Response> => {
     // routine_reminder cadence is governed upstream (per-day dedup + global weekly
     // cap in process_routine_reminder_emails), so it is exempt from the 6-day
     // per-sequence guard that protects the slower lifecycle sequences.
-    if (sequence !== "routine_reminder") {
+    if (sequence !== "routine_reminder" && sequence !== "task_plan_digest") {
       const sixDaysAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString();
       const { data: existingSend } = await supabase
         .from("retention_email_log")
