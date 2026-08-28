@@ -75,6 +75,8 @@ test('today-first backend guarantees three slots with repair, carry, cron, and d
   assert.doesNotMatch(hook, /ensureTodayRecommendation/);
   assert.match(migration, /progress_blockers/);
   assert.match(migration, /customer_evidence_events/);
+  assert.match(migration, /to_regclass\('public\.progress_blockers'\)/);
+  assert.match(migration, /v_progress_blocker IS NOT NULL/);
   assert.match(migration, /averageMinutesToFirstCompletion/);
   assert.match(migration, /user_reordered_at/);
   assert.match(page, /Do this next/);

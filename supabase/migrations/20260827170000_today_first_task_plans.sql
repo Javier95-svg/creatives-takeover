@@ -182,6 +182,10 @@ DECLARE
   v_deadline timestamptz;
   v_candidate record;
   v_carry record;
+  v_progress_blocker jsonb;
+  v_progress_milestone jsonb;
+  v_customer_evidence jsonb;
+  v_suppressed_keys jsonb := '{}'::jsonb;
 BEGIN
   IF p_user IS NULL OR p_plan_date IS NULL THEN RAISE EXCEPTION 'User and plan date are required'; END IF;
   IF p_target_count < 3 OR p_target_count > 10 THEN RAISE EXCEPTION 'Target count must be between 3 and 10'; END IF;
@@ -217,6 +221,52 @@ BEGIN
   v_context := jsonb_strip_nulls(jsonb_build_object(
     'stage',v_stage,'goal',v_goal,'blocker',v_blocker,'weeklyCapacityHours',v_capacity,'loop',v_loop
   ));
+
+  -- These context modules are optional across installations. Dynamic SQL
+  -- prevents a missing module from invalidating task generation for everyone.
+  IF to_regclass('public.progress_blockers') IS NOT NULL THEN
+    EXECUTE $query$
+      SELECT to_jsonb(blocker) FROM (
+        SELECT id,blocker_title,blocker_description,severity
+        FROM public.progress_blockers
+        WHERE user_id=$1 AND status IN ('open','in_progress','escalated')
+        ORDER BY CASE severity WHEN 'critical' THEN 0 WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END,
+          identified_at
+        LIMIT 1
+      ) blocker
+    $query$ INTO v_progress_blocker USING p_user;
+  END IF;
+  IF to_regclass('public.progress_milestones') IS NOT NULL THEN
+    EXECUTE $query$
+      SELECT to_jsonb(milestone) FROM (
+        SELECT id,milestone_name,milestone_description,status,completion_percentage
+        FROM public.progress_milestones
+        WHERE user_id=$1 AND status IN ('not_started','in_progress','blocked')
+          AND COALESCE(completion_percentage,0)<100
+        ORDER BY CASE status WHEN 'blocked' THEN 0 WHEN 'in_progress' THEN 1 ELSE 2 END,
+          updated_at DESC
+        LIMIT 1
+      ) milestone
+    $query$ INTO v_progress_milestone USING p_user;
+  END IF;
+  IF to_regclass('public.customer_evidence_events') IS NOT NULL THEN
+    EXECUTE $query$
+      SELECT to_jsonb(evidence) FROM (
+        SELECT id,active_loop,event_type
+        FROM public.customer_evidence_events
+        WHERE user_id=$1 AND occurred_at>=now()-interval '3 days'
+          AND event_type IN ('reply_received','interview_scheduled','outreach_sent','commitment_received','customer_lost')
+        ORDER BY occurred_at DESC LIMIT 1
+      ) evidence
+    $query$ INTO v_customer_evidence USING p_user;
+  END IF;
+  IF to_regclass('public.founder_cycle_action_feedback') IS NOT NULL THEN
+    EXECUTE $query$
+      SELECT COALESCE(jsonb_object_agg(action_key,true),'{}'::jsonb)
+      FROM public.founder_cycle_action_feedback
+      WHERE user_id=$1 AND feedback_status='not_relevant' AND cooldown_until>now()
+    $query$ INTO v_suppressed_keys USING p_user;
+  END IF;
 
   INSERT INTO public.daily_task_plans(user_id,plan_date,timezone,status,context_hash,context_snapshot,generation_attempts)
   VALUES(p_user,p_plan_date,p_timezone,'building',md5(v_context::text),v_context,1)
@@ -337,37 +387,24 @@ BEGIN
         '/dashboard','high',20,9,9,'accountability','dashboard'
       WHERE NULLIF(v_blocker,'') IS NOT NULL
       UNION ALL
-      SELECT 'progress-blocker:'||b.id::text,
-        'Resolve: '||b.blocker_title,
-        left(COALESCE(NULLIF(b.blocker_description,''),'Choose the next controllable step and complete it today.'),500),
+      SELECT 'progress-blocker:'||(v_progress_blocker->>'id'),
+        'Resolve: '||(v_progress_blocker->>'blocker_title'),
+        left(COALESCE(NULLIF(v_progress_blocker->>'blocker_description',''),'Choose the next controllable step and complete it today.'),500),
         'This unresolved blocker is constraining progress in your current journey.',
         '/dashboard','high',20,
-        CASE b.severity WHEN 'critical' THEN 10 WHEN 'high' THEN 9 ELSE 8 END,
+        CASE v_progress_blocker->>'severity' WHEN 'critical' THEN 10 WHEN 'high' THEN 9 ELSE 8 END,
         10,'accountability','dashboard'
-      FROM (
-        SELECT * FROM public.progress_blockers
-        WHERE user_id=p_user AND status IN ('open','in_progress','escalated')
-        ORDER BY CASE severity WHEN 'critical' THEN 0 WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END,
-          identified_at
-        LIMIT 1
-      ) b
+      WHERE v_progress_blocker IS NOT NULL
       UNION ALL
-      SELECT 'progress-milestone:'||m.id::text,
-        'Advance: '||m.milestone_name,
-        left(COALESCE(NULLIF(m.milestone_description,''),'Complete the smallest step that visibly advances this milestone.'),500),
+      SELECT 'progress-milestone:'||(v_progress_milestone->>'id'),
+        'Advance: '||(v_progress_milestone->>'milestone_name'),
+        left(COALESCE(NULLIF(v_progress_milestone->>'milestone_description',''),'Complete the smallest step that visibly advances this milestone.'),500),
         'This active milestone is one of your clearest unfinished commitments.',
         '/dashboard','medium',25,8,9,'stage_action','dashboard'
-      FROM (
-        SELECT * FROM public.progress_milestones
-        WHERE user_id=p_user AND status IN ('not_started','in_progress','blocked')
-          AND COALESCE(completion_percentage,0)<100
-        ORDER BY CASE status WHEN 'blocked' THEN 0 WHEN 'in_progress' THEN 1 ELSE 2 END,
-          updated_at DESC
-        LIMIT 1
-      ) m
+      WHERE v_progress_milestone IS NOT NULL
       UNION ALL
-      SELECT 'evidence-next:'||e.id::text,
-        CASE e.event_type
+      SELECT 'evidence-next:'||(v_customer_evidence->>'id'),
+        CASE v_customer_evidence->>'event_type'
           WHEN 'reply_received' THEN 'Reply to the customer who responded'
           WHEN 'interview_scheduled' THEN 'Prepare for your next customer interview'
           WHEN 'outreach_sent' THEN 'Follow up on your latest outreach'
@@ -375,7 +412,7 @@ BEGIN
           WHEN 'customer_lost' THEN 'Capture why the customer was lost'
           ELSE 'Act on your latest customer signal'
         END,
-        CASE e.event_type
+        CASE v_customer_evidence->>'event_type'
           WHEN 'reply_received' THEN 'Respond while the conversation is warm and ask for one concrete next step.'
           WHEN 'interview_scheduled' THEN 'Write the three highest-value questions you need answered.'
           WHEN 'outreach_sent' THEN 'Review responses and send the most relevant follow-up.'
@@ -384,16 +421,11 @@ BEGIN
           ELSE 'Review the signal and complete the next external action it supports.'
         END,
         'Recent customer evidence should outrank lower-impact internal planning.',
-        CASE WHEN e.active_loop='SELL' THEN '/go-to-market' WHEN e.active_loop='GROW' THEN '/traction-engine' ELSE '/pmf-lab' END,
+        CASE WHEN v_customer_evidence->>'active_loop'='SELL' THEN '/go-to-market' WHEN v_customer_evidence->>'active_loop'='GROW' THEN '/traction-engine' ELSE '/pmf-lab' END,
         'high',20,10,10,
-        CASE WHEN e.event_type IN ('reply_received','outreach_sent','commitment_received') THEN 'follow_up' ELSE 'customer_evidence' END,
-        CASE WHEN e.active_loop='SELL' THEN 'gtm-strategist' WHEN e.active_loop='GROW' THEN 'traction-engine' ELSE 'pmf-lab' END
-      FROM (
-        SELECT * FROM public.customer_evidence_events
-        WHERE user_id=p_user AND occurred_at>=now()-interval '3 days'
-          AND event_type IN ('reply_received','interview_scheduled','outreach_sent','commitment_received','customer_lost')
-        ORDER BY occurred_at DESC LIMIT 1
-      ) e
+        CASE WHEN v_customer_evidence->>'event_type' IN ('reply_received','outreach_sent','commitment_received') THEN 'follow_up' ELSE 'customer_evidence' END,
+        CASE WHEN v_customer_evidence->>'active_loop'='SELL' THEN 'gtm-strategist' WHEN v_customer_evidence->>'active_loop'='GROW' THEN 'traction-engine' ELSE 'pmf-lab' END
+      WHERE v_customer_evidence IS NOT NULL
       UNION ALL
       SELECT 'weekly:'||w.id::text,'Move this week''s mission forward: '||w.mission_goal,
         'Block one focused session that directly advances the weekly commitment.',
@@ -425,11 +457,7 @@ BEGIN
       SELECT 1 FROM public.daily_tasks t WHERE t.user_id=p_user AND t.recommendation_key=c.key
         AND ((t.is_completed AND t.completed_at>=now()-interval '30 days') OR t.cooldown_until>now())
     )
-    AND NOT EXISTS (
-      SELECT 1 FROM public.founder_cycle_action_feedback f
-      WHERE f.user_id=p_user AND f.action_key=c.key
-        AND f.feedback_status='not_relevant' AND f.cooldown_until>now()
-    )
+    AND NOT (v_suppressed_keys ? c.key)
     ORDER BY source_order,score DESC,key
   LOOP
     EXIT WHEN v_count>=p_target_count;
