@@ -6,7 +6,6 @@ import {
   Clapperboard,
   Compass,
   DollarSign,
-  Gift,
   Info,
   type LucideIcon,
   Menu,
@@ -32,17 +31,12 @@ import { cn } from "@/lib/utils";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { captureEvent } from "@/lib/analytics";
-import { FREE_TOOLS_NAV_ITEMS } from "@/config/freeTools";
 
 type VisitorLink = { label: string; href: string; icon: LucideIcon; sectionId?: string };
-// `analyticsTool` carries the snake_case key so nav clicks and the tool pages
-// report the same `tool` value and can be joined in one funnel — the nav used to
-// send display labels ("Pitch Deck Analyzer") against the pages' "pitch_deck_analyzer".
-type VisitorMenuItem = { label: string; href: string; icon: LucideIcon; description: string; analyticsTool?: string };
+type VisitorMenuItem = { label: string; href: string; icon: LucideIcon; description: string };
 type VisitorMenu = { label: string; icon: LucideIcon; tagline: string; taglineIcon?: LucideIcon; items: VisitorMenuItem[] };
 
-// Simple links, in display order. The Free Tools menu renders first. Final order:
-// Free Tools · Build · Guidance · Podcast · Newspaper · About · Pricing. Home is covered by the logo.
+// Simple links, in display order. Home is covered by the brand lockup.
 const visitorLinks: VisitorLink[] = [
   { label: "Build", href: "/build", icon: Wrench },
   { label: "Guidance", href: "/mentorship", icon: Compass },
@@ -50,17 +44,6 @@ const visitorLinks: VisitorLink[] = [
   { label: "About", href: "/about", icon: Info },
   { label: "Pricing", href: "/pricing", icon: DollarSign },
 ];
-
-// Free Tools menu — logged-out visitors can use these tools before signing up.
-// Each lands on a usable public experience that gates only the deliverable.
-const freeToolsItems: VisitorMenuItem[] = FREE_TOOLS_NAV_ITEMS;
-
-const giftsMenu: VisitorMenu = {
-  label: "Free Tools",
-  icon: Gift,
-  tagline: "From Creatives Takeover with 💙",
-  items: freeToolsItems,
-};
 
 const contentMenu: VisitorMenu = {
   label: "Content",
@@ -148,16 +131,14 @@ const VisitorNavbar = () => {
 
   const handleMenuOpen = (menu: VisitorMenu, source: "desktop" | "mobile") => {
     trackNavClick(menu.label);
-    captureEvent(menu.label === "Free Tools" ? "free_tools_menu_opened" : "visitor_menu_opened", {
+    captureEvent("visitor_menu_opened", {
       menu: menu.label,
       source: `visitor_navbar_${source}`,
     });
   };
 
   const menuItemAnalytics = (menu: VisitorMenu, item: VisitorMenuItem, source: string) =>
-    menu.label === "Free Tools"
-      ? { tool: item.analyticsTool ?? item.label, source }
-      : { item: item.label, menu: menu.label, source };
+    ({ item: item.label, menu: menu.label, source });
 
   const renderDesktopMenu = (menu: VisitorMenu) => {
     const MenuIcon = menu.icon;
@@ -187,10 +168,7 @@ const VisitorNavbar = () => {
                   to={item.href}
                   onClick={() => {
                     trackNavClick(`${menu.label} - ${item.label}`);
-                    captureEvent(
-                      menu.label === "Free Tools" ? "free_tool_nav_click" : "visitor_menu_item_click",
-                      menuItemAnalytics(menu, item, "visitor_navbar_desktop")
-                    );
+                    captureEvent("visitor_menu_item_click", menuItemAnalytics(menu, item, "visitor_navbar_desktop"));
                   }}
                   className="cursor-pointer"
                 >
@@ -250,10 +228,7 @@ const VisitorNavbar = () => {
                   className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
                   onClick={() => {
                     trackNavClick(`Mobile ${menu.label} - ${item.label}`);
-                    captureEvent(
-                      menu.label === "Free Tools" ? "free_tool_nav_click" : "visitor_menu_item_click",
-                      menuItemAnalytics(menu, item, "visitor_navbar_mobile")
-                    );
+                    captureEvent("visitor_menu_item_click", menuItemAnalytics(menu, item, "visitor_navbar_mobile"));
                   }}
                 >
                   <ItemIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -297,7 +272,7 @@ const VisitorNavbar = () => {
                 height={44}
                 decoding="async"
               />
-              <span className="hidden shrink-0 flex-col whitespace-nowrap leading-tight 2xl:flex">
+              <span className="hidden shrink-0 flex-col whitespace-nowrap leading-tight xl:flex">
                 <span className="font-space-grotesk text-sm font-semibold text-foreground">
                   Creatives Takeover
                 </span>
@@ -306,7 +281,6 @@ const VisitorNavbar = () => {
             </Link>
 
             <div className="hidden flex-1 items-center justify-center gap-1 lg:flex">
-              {renderDesktopMenu(giftsMenu)}
               {visitorLinks.slice(0, 3).map((item) => {
                 const Icon = item.icon;
                 return (
@@ -377,7 +351,6 @@ const VisitorNavbar = () => {
           >
             <div className="min-h-0">
               <div className="space-y-2 border-t border-border/70 px-3 py-4 sm:px-4">
-                {renderMobileMenu(giftsMenu)}
                 {visitorLinks.slice(0, 3).map((item) => {
                   const Icon = item.icon;
                   return (
