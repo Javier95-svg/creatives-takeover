@@ -10,6 +10,8 @@ test('visitor navbar replaces Free Tools with the desktop brand lockup', () => {
   assert.match(source, /Creatives Takeover/);
   assert.match(source, /Think\. Build\. Ship\. Connect\./);
   assert.match(source, /leading-tight xl:flex/);
+  assert.match(source, /flex shrink-0 items-center gap-4/);
+  assert.match(source, /xl:pr-5/);
 });
 
 test('visitor navigation keeps the intended public destinations', () => {

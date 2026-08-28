@@ -260,7 +260,7 @@ const VisitorNavbar = () => {
           <div className="flex h-16 items-center gap-3 px-3 sm:px-4 lg:h-[70px] lg:px-6">
             <Link
               to="/"
-              className="flex min-w-0 items-center gap-4 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="flex shrink-0 items-center gap-4 rounded-xl pr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 xl:pr-5"
               aria-label="Creatives Takeover home"
               onClick={() => trackNavClick("Logo")}
             >
@@ -280,7 +280,7 @@ const VisitorNavbar = () => {
               </span>
             </Link>
 
-            <div className="hidden flex-1 items-center justify-center gap-1 lg:flex">
+            <div className="hidden min-w-0 flex-1 items-center justify-center gap-1 lg:flex">
               {visitorLinks.slice(0, 3).map((item) => {
                 const Icon = item.icon;
                 return (
