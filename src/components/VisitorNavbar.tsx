@@ -3,11 +3,11 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   ChevronDown,
+  Clapperboard,
   Compass,
   DollarSign,
   Gift,
   Info,
-  LibraryBig,
   type LucideIcon,
   Menu,
   Mic,
@@ -64,8 +64,8 @@ const giftsMenu: VisitorMenu = {
 
 const contentMenu: VisitorMenu = {
   label: "Content",
-  icon: LibraryBig,
-  tagline: "Stories and conversations for founders",
+  icon: Clapperboard,
+  tagline: "Leisure Time🍿",
   items: [
     {
       label: "Podcast",
