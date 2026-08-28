@@ -65,6 +65,8 @@ test('today-first backend guarantees three slots with repair, carry, cron, and d
   assert.match(migration, /carried_forward/);
   assert.match(migration, /get_today_task_plan_v1/);
   assert.match(migration, /process_due_daily_task_plans_v1/);
+  assert.match(migration, /JOIN auth\.users auth_user ON auth_user\.id=p\.id/);
+  assert.match(migration, /IF EXISTS \(SELECT 1 FROM auth\.users existing_user/);
   assert.match(migration, /\*\/15 \* \* \* \*/);
   assert.match(migration, /dispatch_daily_task_plan_digests_v1/);
   assert.match(migration, /EXTRACT\(hour FROM now\(\) AT TIME ZONE/);

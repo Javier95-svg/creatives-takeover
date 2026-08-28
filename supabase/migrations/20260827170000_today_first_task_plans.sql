@@ -656,6 +656,7 @@ BEGIN
   FOR r IN
     SELECT p.id,zone.name timezone,(now() AT TIME ZONE zone.name)::date local_date
     FROM public.profiles p
+    JOIN auth.users auth_user ON auth_user.id=p.id
     CROSS JOIN LATERAL (SELECT public.resolve_task_plan_timezone_v1(p.id,'UTC') name) zone
     WHERE NOT EXISTS (
       SELECT 1 FROM public.daily_task_plans d
@@ -667,8 +668,12 @@ BEGIN
     BEGIN
       PERFORM public.ensure_task_plan_for_user_v1(r.id,v_date,v_zone,3); v_count:=v_count+1;
     EXCEPTION WHEN OTHERS THEN
-      INSERT INTO public.daily_task_plan_runs(user_id,plan_date,source,status,error_code,error_message)
-      VALUES(r.id,v_date,'scheduler','failed',SQLSTATE,left(SQLERRM,1000));
+      -- A user can be deleted after the batch cursor is materialized. Avoid
+      -- masking the original generation error with a diagnostic-row FK error.
+      IF EXISTS (SELECT 1 FROM auth.users existing_user WHERE existing_user.id=r.id) THEN
+        INSERT INTO public.daily_task_plan_runs(user_id,plan_date,source,status,error_code,error_message)
+        VALUES(r.id,v_date,'scheduler','failed',SQLSTATE,left(SQLERRM,1000));
+      END IF;
       RAISE WARNING 'Task plan generation failed user=% date=%: %',r.id,v_date,SQLERRM;
     END;
   END LOOP;
@@ -709,7 +714,9 @@ CREATE OR REPLACE FUNCTION public.get_task_plan_health_v1(p_from date DEFAULT cu
 RETURNS jsonb LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public AS $$
   WITH expected AS (
     SELECT count(*)::numeric founder_days
-    FROM public.profiles CROSS JOIN generate_series(p_from,p_to,interval '1 day')
+    FROM public.profiles
+    JOIN auth.users expected_user ON expected_user.id=profiles.id
+    CROSS JOIN generate_series(p_from,p_to,interval '1 day')
   ), plan_stats AS (
     SELECT plan.id,plan.status,plan.fallback_used,plan.generated_at,
       count(i.id)::numeric item_count,
