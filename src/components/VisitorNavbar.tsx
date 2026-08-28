@@ -273,10 +273,10 @@ const VisitorNavbar = () => {
                 decoding="async"
               />
               <span className="hidden shrink-0 flex-col whitespace-nowrap leading-tight xl:flex">
-                <span className="font-space-grotesk text-sm font-semibold text-foreground">
+                <span className="font-space-grotesk text-[13px] font-semibold text-foreground">
                   Creatives Takeover
                 </span>
-                <span className="text-label text-muted-foreground">Think. Build. Ship. Connect.</span>
+                <span className="text-[11px] tracking-[0.01em] text-muted-foreground">Think. Build. Ship. Connect.</span>
               </span>
             </Link>
 
@@ -312,7 +312,7 @@ const VisitorNavbar = () => {
               })}
             </div>
 
-            <div className="ml-auto hidden items-center gap-2 lg:flex">
+            <div className="ml-auto hidden items-center gap-2 pl-2 lg:flex xl:pl-4">
               <ThemeToggle />
               <Button asChild variant="ghost" size="sm">
                 <Link to="/login" onClick={() => trackNavClick("Sign In")}>
