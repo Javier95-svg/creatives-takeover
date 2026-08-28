@@ -63,7 +63,7 @@ const communitySubmenu: SubmenuItem[] = [
 // Icon mapping for navigation items
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   "Home": Home,
-  "BizMap AI": Bot,
+  "BizMap": Bot,
   "Prompt Library": BookOpen,
   "Insighta": TrendingUp,
   "Community": Users,
@@ -99,7 +99,7 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
           
           // Color-code navigation items semantically
           let colorClass = '';
-          if (item.name === 'BizMap AI' || item.name === 'Prompt Library') {
+          if (item.name === 'BizMap' || item.name === 'Prompt Library') {
             colorClass = 'hover:text-planning';
           } else if (item.name === 'Community' || item.name === 'Stories' || item.name === 'About Us') {
             colorClass = 'hover:text-action';
@@ -139,7 +139,7 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
                     </TooltipContent>
                   )}
                 </Tooltip>
-                <DropdownMenuContent align="center" className={cn("w-56 sm:w-64 max-w-[90vw]", item.name === "BizMap AI" && "bizmap-nav-dropdown-scroll")}>
+                <DropdownMenuContent align="center" className={cn("w-56 sm:w-64 max-w-[90vw]", item.name === "BizMap" && "bizmap-nav-dropdown-scroll")}>
                   {submenu.map((subItem, index) => {
                     if ('type' in subItem && subItem.type === 'label') {
                       return (

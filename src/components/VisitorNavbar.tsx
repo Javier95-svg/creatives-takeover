@@ -51,16 +51,16 @@ const contentMenu: VisitorMenu = {
   tagline: "Leisure Time🍿",
   items: [
     {
-      label: "Podcast",
-      href: "/podcast",
-      icon: Mic,
-      description: "Hear candid conversations with founders.",
-    },
-    {
       label: "Newspaper",
       href: "/newspaper",
       icon: Newspaper,
       description: "Read business cases and founder stories.",
+    },
+    {
+      label: "Podcast",
+      href: "/podcast",
+      icon: Mic,
+      description: "Hear candid conversations with founders.",
     },
   ],
 };

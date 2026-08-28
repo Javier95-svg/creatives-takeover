@@ -22,3 +22,7 @@ test('visitor navigation keeps the intended public destinations', () => {
     assert.match(source, new RegExp(`label: "${label}"`));
   }
 });
+
+test('visitor Content menu lists Newspaper before Podcast', () => {
+  assert.match(source, /const contentMenu:[\s\S]*?label: "Newspaper"[\s\S]*?label: "Podcast"/);
+});

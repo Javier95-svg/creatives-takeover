@@ -26,8 +26,9 @@ const frozenFiles = {
   // and order.
   // Rehashed 2026-08-28 for the approved authenticated-nav regrouping: Podcast
   // and Newspaper now live under Content, while Accelerator Hunt and Tech Stack
-  // Builder live under Resources. The signed-out navbar remains unchanged.
-  '../src/components/Navigation.tsx': '84b5c09ad4df6bbf0c21da7a32b565eca92900b21cf01a387ce14fa18eda0e8b',
+  // Builder live under Resources, and the top-level label is shortened to
+  // BizMap. The signed-out navbar remains unchanged.
+  '../src/components/Navigation.tsx': '7d34bd98e1973885326cff9e2ec36e1577b1853c4d9f1b7810ee1736f7789a57',
   // Re-pinned 2026-07-25 (delivery audit, Phase 1): AISpecializationTrends moved
   // from a static import to lazy() + Suspense, matching how HomeFAQ and
   // FounderAnswerLibraryTeaser are already loaded. It is the only homepage

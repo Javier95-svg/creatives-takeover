@@ -70,7 +70,7 @@ const Navigation = () => {
   // Icon mapping for navigation items
   const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
     "Home": Home,
-    "BizMap AI": Compass,
+    "BizMap": Compass,
     "Insighta": Telescope,
     "Network": UsersIcon,
     "Content": Clapperboard,
@@ -124,8 +124,8 @@ const Navigation = () => {
 
   // Content submenu -- mirrors the visitor navbar.
   const contentSubmenu = [
-    { name: "Podcast", href: "/podcast", icon: Mic, description: "Hear candid conversations with founders." },
     { name: "Newspaper", href: "/newspaper", icon: Newspaper, description: "Read business cases and founder stories." },
+    { name: "Podcast", href: "/podcast", icon: Mic, description: "Hear candid conversations with founders." },
   ];
 
   // Practical founder resources that sit outside the core guided journeys.
@@ -265,7 +265,7 @@ const Navigation = () => {
 
   const navItems = [
     { name: "Home", href: "/", tooltip: "Return to homepage", icon: Home },
-    { name: "BizMap AI", href: "/bizmap-ai", tooltip: "Validate, build, and launch with guided startup tools", icon: Compass },
+    { name: "BizMap", href: "/bizmap-ai", tooltip: "Validate, build, and launch with guided startup tools", icon: Compass },
     { name: "Network", href: "/mentorship", tooltip: "Mentors, angel investors, and co-founder matchmaking", icon: UsersIcon },
     { name: "Insighta", href: "/insighta", tooltip: "Funding opportunities and investment resources", icon: Telescope },
     { name: "Content", href: "/podcast", tooltip: "Podcast conversations and founder stories", icon: Clapperboard },
@@ -341,7 +341,7 @@ const Navigation = () => {
                 <TabletNavigation
                   navItems={navItems}
                   submenus={{
-                    'BizMap AI': bizMapSubmenu,
+                    BizMap: bizMapSubmenu,
                     Insighta: insightaSubmenu,
                     Network: communitySubmenu,
                     Content: contentSubmenu,
@@ -361,7 +361,7 @@ const Navigation = () => {
                   const active = isActive(item.href);
 
                   // Special handling for BizMap AI with dropdown
-                  if (item.name === 'BizMap AI') {
+                  if (item.name === 'BizMap') {
                     return (
                       <DropdownMenu key={item.name}>
                         <Tooltip>
@@ -621,7 +621,7 @@ const Navigation = () => {
                         </Tooltip>
                         <DropdownMenuContent align="start" className="w-72 md:w-56 sm:w-full max-w-[calc(100vw-2rem)]">
                           <DropdownMenuLabel>
-                            {item.name === 'Content' ? 'Leisure Time🍿' : 'Founder Resources'}
+                            {item.name === 'Content' ? 'Leisure Time🍿' : 'Some Gifts 🎁'}
                           </DropdownMenuLabel>
                           <DropdownMenuSeparator />
 	                          {submenuItems.map((subItem) => {
@@ -671,10 +671,10 @@ const Navigation = () => {
                             active
                               ? navTriggerActiveClass
                               : navTriggerInactiveClass,
-                            item.name === 'BizMap AI' && 'relative'
+                            item.name === 'BizMap' && 'relative'
                           )}
-                          onMouseEnter={item.name === 'BizMap AI' ? bizMapHover.handleMouseEnter : undefined}
-                          onMouseLeave={item.name === 'BizMap AI' ? bizMapHover.handleMouseLeave : undefined}
+                          onMouseEnter={item.name === 'BizMap' ? bizMapHover.handleMouseEnter : undefined}
+                          onMouseLeave={item.name === 'BizMap' ? bizMapHover.handleMouseLeave : undefined}
                         >
                           {Icon && <Icon className="h-4 w-4 flex-shrink-0 opacity-70 transition-opacity group-hover:opacity-100" />}
                           <span className="tracking-wide">{item.name}</span>
@@ -852,7 +852,7 @@ const Navigation = () => {
 
                     // Determine submenu for this item
                     const submenuMap: Record<string, { items: BizMapMenuItem[] }> = {
-                      'BizMap AI': { items: bizMapSubmenu.filter((s): s is SubmenuLinkItem => !('type' in s)) },
+                      'BizMap': { items: bizMapSubmenu.filter((s): s is SubmenuLinkItem => !('type' in s)) },
                       'Insighta': { items: insightaSubmenu },
                       'Network': { items: communitySubmenu },
                       'Content': { items: contentSubmenu },
@@ -921,7 +921,7 @@ const Navigation = () => {
                                 );
                               }
 
-	                              if (!subUnlocked && item.name === 'BizMap AI') {
+	                              if (!subUnlocked && item.name === 'BizMap') {
                                 return (
                                   <button
                                     key={sub.name}
