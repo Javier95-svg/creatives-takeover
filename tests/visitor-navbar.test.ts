@@ -8,7 +8,7 @@ test('visitor navbar replaces Free Tools with the desktop brand lockup', () => {
   assert.doesNotMatch(source, /Free Tools/);
   assert.doesNotMatch(source, /FREE_TOOLS_NAV_ITEMS/);
   assert.match(source, /Creatives Takeover/);
-  assert.match(source, /Think\. Build\. Ship\. Connect\./);
+  assert.match(source, /Think\. Test\. Ship\./);
   assert.match(source, /leading-tight xl:flex/);
   assert.match(source, /flex shrink-0 items-center gap-4/);
   assert.match(source, /xl:pr-5/);
