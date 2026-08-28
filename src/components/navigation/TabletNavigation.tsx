@@ -13,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Home,
   Bot,
   BookOpen,
   TrendingUp,
@@ -62,7 +61,6 @@ const communitySubmenu: SubmenuItem[] = [
 
 // Icon mapping for navigation items
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  "Home": Home,
   "BizMap": Bot,
   "Prompt Library": BookOpen,
   "Insighta": TrendingUp,
@@ -85,7 +83,7 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
 
   return (
     <TooltipProvider>
-      <nav className="signed-in-tablet-nav-links flex items-center justify-center gap-3 lg:gap-4 px-4">
+      <nav className="signed-in-tablet-nav-links flex w-full items-center justify-evenly gap-1 px-2">
         {visibleItems.map((item) => {
           const Icon = item.icon || iconMap[item.name];
           const submenu = submenus?.[item.name] ?? (item.name === "Community" ? communitySubmenu : undefined);

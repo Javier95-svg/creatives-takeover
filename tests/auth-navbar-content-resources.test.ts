@@ -7,7 +7,7 @@ const source = readFileSync(new URL('../src/components/Navigation.tsx', import.m
 test('authenticated navbar groups content and resources in the intended order', () => {
   const navItems = source.slice(source.indexOf('const navItems = ['), source.indexOf('// Check if a nav item is active'));
 
-  const orderedLabels = ['Home', 'BizMap', 'Network', 'Insighta', 'Content', 'Resources', 'Pricing'];
+  const orderedLabels = ['BizMap', 'Network', 'Insighta', 'Content', 'Resources', 'Pricing'];
   let previousIndex = -1;
   for (const label of orderedLabels) {
     const currentIndex = navItems.indexOf(`name: "${label}"`);
@@ -18,6 +18,16 @@ test('authenticated navbar groups content and resources in the intended order', 
   assert.doesNotMatch(navItems, /name: "Podcast"/);
   assert.doesNotMatch(navItems, /name: "Newspaper"/);
   assert.doesNotMatch(navItems, /name: "BizMap AI"/);
+  assert.doesNotMatch(navItems, /name: "Home"/);
+  assert.match(source, /to="\/"[\s\S]*?aria-label="Creatives Takeover home"/);
+});
+
+test('authenticated navbar distributes the remaining sections evenly', () => {
+  const responsiveSource = readFileSync(new URL('../src/styles/responsive-overrides.css', import.meta.url), 'utf8');
+
+  assert.match(source, /signed-in-desktop-nav[^"]*justify-evenly/);
+  assert.match(source, /signed-in-tablet-nav-links[^"]*w-full[^"]*justify-evenly/);
+  assert.match(responsiveSource, /\.signed-in-desktop-nav \{[\s\S]*?justify-content: space-evenly !important/);
 });
 
 test('authenticated Content and Resources menus expose the requested destinations', () => {

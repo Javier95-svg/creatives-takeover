@@ -547,7 +547,8 @@
 
 @media (min-width: 1100px) and (max-width: 1599px) {
   .signed-in-desktop-nav {
-    justify-content: center !important;
-    gap: clamp(0.25rem, 0.45vw, 0.5rem) !important;
+    justify-content: space-evenly !important;
+    gap: clamp(0.25rem, 0.55vw, 0.75rem) !important;
+    padding-inline: clamp(0.25rem, 0.8vw, 0.75rem) !important;
   }
 }

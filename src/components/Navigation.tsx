@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, BookOpen, Users as UsersIcon, Newspaper, DollarSign, ChevronDown, Rocket, FlaskConical, Lightbulb, Target, BriefcaseBusiness, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles, Mic, Lock, Compass, Telescope, Clapperboard } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, BookOpen, Users as UsersIcon, Newspaper, DollarSign, ChevronDown, Rocket, FlaskConical, Lightbulb, Target, BriefcaseBusiness, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles, Mic, Lock, Compass, Telescope, Clapperboard } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -69,7 +69,6 @@ const Navigation = () => {
 
   // Icon mapping for navigation items
   const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-    "Home": Home,
     "BizMap": Compass,
     "Insighta": Telescope,
     "Network": UsersIcon,
@@ -264,7 +263,6 @@ const Navigation = () => {
   };
 
   const navItems = [
-    { name: "Home", href: "/", tooltip: "Return to homepage", icon: Home },
     { name: "BizMap", href: "/bizmap-ai", tooltip: "Validate, build, and launch with guided startup tools", icon: Compass },
     { name: "Network", href: "/mentorship", tooltip: "Mentors, angel investors, and co-founder matchmaking", icon: UsersIcon },
     { name: "Insighta", href: "/insighta", tooltip: "Funding opportunities and investment resources", icon: Telescope },
@@ -323,7 +321,12 @@ const Navigation = () => {
           <div ref={mobileBarRef} className="signed-in-navbar-row flex items-center h-16 md:h-[70px] px-3 sm:px-4 lg:px-6 border-0">
             {/* Logo with Enhanced Hover Effects - Fixed width to prevent layout shifts */}
             <div className="signed-in-navbar-logo-slot flex items-center border-0 flex-shrink-0 w-16 min-w-[4rem]">
-              <Link to="/" className="flex items-center justify-center w-full rounded-xl" aria-label="Home">
+              <Link
+                to="/"
+                className="flex items-center justify-center w-full rounded-xl"
+                aria-label="Creatives Takeover home"
+                onClick={() => trackClick('Logo', 'Navigation')}
+              >
                 <img
                   src={ctLogoPolished}
                   alt="Creatives Takeover Logo"
@@ -355,7 +358,7 @@ const Navigation = () => {
 
             {/* Desktop Navigation */}
             {deviceType === 'desktop' && (
-              <div className="signed-in-desktop-nav flex items-center justify-center flex-1 min-w-0 px-2 lg:px-4 !border-0 gap-1.5">
+              <div className="signed-in-desktop-nav flex flex-1 min-w-0 items-center justify-evenly gap-2 px-2 lg:px-4 !border-0">
                 {navItems.map((item) => {
                   const Icon = item.icon || iconMap[item.name];
                   const active = isActive(item.href);
