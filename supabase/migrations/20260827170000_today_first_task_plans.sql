@@ -97,6 +97,18 @@ CREATE INDEX IF NOT EXISTS daily_task_plan_deliveries_pending_idx
 CREATE INDEX IF NOT EXISTS daily_task_plan_runs_health_idx
   ON public.daily_task_plan_runs(plan_date,status,fallback_used,created_at);
 
+-- Preserve legacy intent values while allowing externally focused task-plan
+-- actions to be stored without collapsing them into generic stage work.
+ALTER TABLE public.daily_tasks
+  DROP CONSTRAINT IF EXISTS daily_tasks_intent_type_check;
+ALTER TABLE public.daily_tasks
+  ADD CONSTRAINT daily_tasks_intent_type_check CHECK (
+    intent_type IS NULL OR intent_type IN (
+      'daily_momentum','weekly_mission','stage_action','accountability',
+      'foundational','customer_evidence','follow_up'
+    )
+  );
+
 -- The Today workspace records richer accountability interactions than the
 -- legacy calendar. Keep the historical values and add explicit edit/order
 -- signals for recommendation learning.
