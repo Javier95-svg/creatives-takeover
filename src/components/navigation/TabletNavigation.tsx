@@ -87,10 +87,15 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
     <TooltipProvider>
       <nav className="signed-in-tablet-nav-links flex items-center justify-center gap-3 lg:gap-4 px-4">
         {visibleItems.map((item) => {
-          const isActive = location.pathname === item.href || 
-            (item.href !== "/" && location.pathname.startsWith(item.href));
           const Icon = item.icon || iconMap[item.name];
           const submenu = submenus?.[item.name] ?? (item.name === "Community" ? communitySubmenu : undefined);
+          const submenuActive = submenu?.some((subItem) =>
+            !('type' in subItem) &&
+            (location.pathname === subItem.href || location.pathname.startsWith(`${subItem.href}/`)),
+          ) ?? false;
+          const isActive = location.pathname === item.href ||
+            (item.href !== "/" && location.pathname.startsWith(item.href)) ||
+            submenuActive;
           
           // Color-code navigation items semantically
           let colorClass = '';
@@ -209,4 +214,3 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
     </TooltipProvider>
   );
 };
-

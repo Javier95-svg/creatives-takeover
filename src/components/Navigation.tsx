@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, BookOpen, Users as UsersIcon, FileText, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, BriefcaseBusiness, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles, Mic, Lock, Compass, Telescope } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, BookOpen, Users as UsersIcon, Newspaper, DollarSign, ChevronDown, Rocket, FlaskConical, Lightbulb, Target, BriefcaseBusiness, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles, Mic, Lock, Compass, Telescope, Clapperboard } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -73,8 +73,8 @@ const Navigation = () => {
     "BizMap AI": Compass,
     "Insighta": Telescope,
     "Network": UsersIcon,
-    "Podcast": Mic,
-    "Newspaper": FileText,
+    "Content": Clapperboard,
+    "Resources": BookOpen,
     "Pricing": DollarSign,
   };
 
@@ -122,11 +122,16 @@ const Navigation = () => {
     { name: "Marketplace", href: "/marketplace", icon: BriefcaseBusiness, description: "Grow your business with niche services." },
   ];
 
-  // Resources submenu items
+  // Content submenu -- mirrors the visitor navbar.
+  const contentSubmenu = [
+    { name: "Podcast", href: "/podcast", icon: Mic, description: "Hear candid conversations with founders." },
+    { name: "Newspaper", href: "/newspaper", icon: Newspaper, description: "Read business cases and founder stories." },
+  ];
+
+  // Practical founder resources that sit outside the core guided journeys.
   const resourcesSubmenu = [
-    { name: "Newspaper", href: "/newspaper", icon: FileText, description: "Business Cases & Founder Stories." },
-    { name: "Email Templates", href: "/email-templates", icon: Mail, description: "Reach out smartly." },
-    { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, description: "60 business models from 8 different industries." },
+    { name: "Accelerator Hunt", href: "/accelerator-hunt", icon: Rocket, description: "Find accelerator programs matched to your startup." },
+    { name: "Tech Stack Builder", href: "/tech-stack", icon: Settings, description: "Choose a practical stack for your product." },
   ];
 
   const routeFeatureMap: Partial<Record<string, FeatureKey>> = {
@@ -263,8 +268,8 @@ const Navigation = () => {
     { name: "BizMap AI", href: "/bizmap-ai", tooltip: "Validate, build, and launch with guided startup tools", icon: Compass },
     { name: "Network", href: "/mentorship", tooltip: "Mentors, angel investors, and co-founder matchmaking", icon: UsersIcon },
     { name: "Insighta", href: "/insighta", tooltip: "Funding opportunities and investment resources", icon: Telescope },
-    { name: "Podcast", href: "/podcast", tooltip: "Founders Unleashed podcast", icon: Mic },
-    { name: "Newspaper", href: "/newspaper", tooltip: "Business cases & founder stories", icon: FileText },
+    { name: "Content", href: "/podcast", tooltip: "Podcast conversations and founder stories", icon: Clapperboard },
+    { name: "Resources", href: "/accelerator-hunt", tooltip: "Practical tools and opportunities for founders", icon: BookOpen },
     { name: "Pricing", href: "/pricing", tooltip: "View plans and pricing options", icon: DollarSign }
   ];
 
@@ -277,6 +282,12 @@ const Navigation = () => {
       return ["/mentorship", "/marketplace", "/co-founder", "/investors"].some((path) =>
         location.pathname.startsWith(path),
       );
+    }
+    if (href === "/podcast") {
+      return ["/podcast", "/newspaper"].some((path) => location.pathname.startsWith(path));
+    }
+    if (href === "/accelerator-hunt") {
+      return ["/accelerator-hunt", "/tech-stack"].some((path) => location.pathname.startsWith(path));
     }
     return location.pathname.startsWith(href);
   };
@@ -333,13 +344,15 @@ const Navigation = () => {
                     'BizMap AI': bizMapSubmenu,
                     Insighta: insightaSubmenu,
                     Network: communitySubmenu,
-                    More: resourcesSubmenu,
+                    Content: contentSubmenu,
+                    Resources: resourcesSubmenu,
                   }}
                   getItemState={getMenuItemState}
                   onItemClick={(name) => trackClick(name, 'Navigation')}
                 />
               </div>
             )}
+
             {/* Desktop Navigation */}
             {deviceType === 'desktop' && (
               <div className="signed-in-desktop-nav flex items-center justify-center flex-1 min-w-0 px-2 lg:px-4 !border-0 gap-1.5">
@@ -584,8 +597,9 @@ const Navigation = () => {
                     );
                   }
 
-                  // Special handling for More with dropdown
-                  if (item.name === 'More') {
+                  // Content and Resources use compact, focused submenus.
+                  if (item.name === 'Content' || item.name === 'Resources') {
+                    const submenuItems = item.name === 'Content' ? contentSubmenu : resourcesSubmenu;
                     return (
                       <DropdownMenu key={item.name}>
                         <Tooltip>
@@ -606,9 +620,11 @@ const Navigation = () => {
                           </TooltipContent>
                         </Tooltip>
                         <DropdownMenuContent align="start" className="w-72 md:w-56 sm:w-full max-w-[calc(100vw-2rem)]">
-                          <DropdownMenuLabel>Resources for Founders 🗂️</DropdownMenuLabel>
+                          <DropdownMenuLabel>
+                            {item.name === 'Content' ? 'Leisure Time🍿' : 'Founder Resources'}
+                          </DropdownMenuLabel>
                           <DropdownMenuSeparator />
-	                          {resourcesSubmenu.map((subItem) => {
+	                          {submenuItems.map((subItem) => {
 	                            const SubIcon = subItem.icon;
                             const publicTabState = getMenuItemState(subItem.href);
 
@@ -839,7 +855,8 @@ const Navigation = () => {
                       'BizMap AI': { items: bizMapSubmenu.filter((s): s is SubmenuLinkItem => !('type' in s)) },
                       'Insighta': { items: insightaSubmenu },
                       'Network': { items: communitySubmenu },
-                      'More': { items: resourcesSubmenu },
+                      'Content': { items: contentSubmenu },
+                      'Resources': { items: resourcesSubmenu },
                     };
                     const submenu = submenuMap[item.name];
 
