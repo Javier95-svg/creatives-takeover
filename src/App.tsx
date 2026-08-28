@@ -344,7 +344,7 @@ function App() {
                         <Route path="/bizmap-ai" element={<BizMapJourneyHubPage />} />
                         <Route path="/pmf-lab" element={<RouteErrorBoundary routeName="PMF Lab"><PMFLabPage /></RouteErrorBoundary>} />
                         <Route path="/bizmap-ai/pmf-lab" element={<Navigate to="/pmf-lab" replace />} />
-                        <Route path="/tech-stack" element={<TechStackPage />} />
+                        <Route path="/tech-stack" element={<ToolRouteWithCreditGate><TechStackPage /></ToolRouteWithCreditGate>} />
                         <Route path="/bizmap-ai/tech-stack" element={<Navigate to="/tech-stack" replace />} />
                         <Route path="/icp-builder" element={<RouteErrorBoundary routeName="ICP Builder"><ToolRouteWithCreditGate><ICPBuilderPage /></ToolRouteWithCreditGate></RouteErrorBoundary>} />
                         <Route path="/icp/draft/:draftId" element={<IcpDraftPage />} />

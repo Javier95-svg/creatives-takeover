@@ -42,3 +42,14 @@ test('credit-spending marketplace routes render inside the credit gate provider'
     /path="\/marketplace\/:slug" element=\{<ToolRouteWithCreditGate><ServiceProfilePage \/><\/ToolRouteWithCreditGate>\}/,
   );
 });
+
+test('Tech Stack renders inside the credit gate provider and participates in route gating', () => {
+  const appSource = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8');
+  const contextSource = readFileSync(new URL('../src/contexts/CreditGateContext.tsx', import.meta.url), 'utf8');
+
+  assert.match(
+    appSource,
+    /path="\/tech-stack" element=\{<ToolRouteWithCreditGate><TechStackPage \/><\/ToolRouteWithCreditGate>\}/,
+  );
+  assert.match(contextSource, /TOOL_CREDIT_GATE_PATHS = \[[\s\S]*?"\/tech-stack"/);
+});

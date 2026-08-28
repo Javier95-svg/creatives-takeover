@@ -16,6 +16,7 @@ const TOOL_CREDIT_GATE_PATHS = [
   "/decision-sprint",
   "/demo-studio/classic",
   "/insighta-test",
+  "/tech-stack",
 ];
 
 type CreditGateContextValue = {
