@@ -1,136 +1,51 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent, type RefObject } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Link } from 'react-router-dom';
 import {
-  ArrowRight,
   ArrowDown,
   ArrowUp,
-  Bell,
-  BookOpen,
+  CalendarDays,
+  Check,
   CheckCircle2,
-  Clock3,
   Loader2,
-  Mail,
-  MapPin,
+  MoreHorizontal,
+  Pause,
+  Pencil,
+  Play,
   Plus,
   Repeat2,
-  Sparkles,
+  Settings2,
   Trash2,
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
-import { DashboardPanelHeader } from '@/components/dashboard/DashboardPanel';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useRoutine } from '@/hooks/useRoutine';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
-import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import {
-  ROUTINE_GOAL_OPTIONS,
   createCustomRoutineTask,
-  getDateKeyInTimezone,
   getCompletionKey,
-  getWeekEndLabelInTimezone,
-  getWeekStartKeyInTimezone,
+  getDateKeyInTimezone,
+  getMonthStartKeyInTimezone,
   type RoutineCadence,
   type RoutineConfig,
-  type RoutineGoal,
-  type RoutineReminderChannels,
   type RoutineReminderPreferences,
-  type RoutinePeriodType,
   type RoutineTask,
 } from '@/lib/routineTemplates';
-import { getBrowserTimezone } from '@/lib/accountabilityPreferences';
-
-const DEFAULT_DAILY_DAYS = [1, 2, 3, 4, 5];
-const DEFAULT_WEEKLY_DAYS = [5];
-
-type DailyReadingArticle = {
-  id: string;
-  slug: string;
-  title: string;
-  excerpt: string | null;
-  banner_image_url: string | null;
-};
-
-function stableHash(value: string) {
-  let hash = 0;
-  for (let index = 0; index < value.length; index += 1) {
-    hash = ((hash << 5) - hash + value.charCodeAt(index)) | 0;
-  }
-  return Math.abs(hash);
-}
-
-export function selectLectureOfTheDay(articles: DailyReadingArticle[], date = new Date()) {
-  if (!articles.length) return null;
-
-  // A stable shuffled order plus the local day number gives every founder the
-  // same recommendation for a day and rotates to a different article tomorrow.
-  const shuffled = [...articles].sort((left, right) => stableHash(left.id) - stableHash(right.id));
-  const dayNumber = Math.floor(new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime() / 86_400_000);
-  return shuffled[dayNumber % shuffled.length] ?? null;
-}
-
-function LectureOfTheDay() {
-  const [article, setArticle] = useState<DailyReadingArticle | null>(null);
-
-  useEffect(() => {
-    let active = true;
-
-    void supabase
-      .from('stories_articles')
-      .select('id, slug, title, excerpt, banner_image_url')
-      .eq('status', 'published')
-      .order('published_at', { ascending: false })
-      .limit(100)
-      .then(({ data, error }) => {
-        if (!active || error) return;
-        setArticle(selectLectureOfTheDay((data ?? []) as DailyReadingArticle[]));
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  if (!article) return null;
-
-  return (
-    <Card className="overflow-hidden border-primary/20 bg-card/90">
-      <CardContent className="flex gap-4 p-4 sm:p-5">
-        <div className="h-20 w-24 shrink-0 overflow-hidden rounded-lg bg-primary/10 sm:h-24 sm:w-36">
-          {article.banner_image_url ? (
-            <img src={article.banner_image_url} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center"><BookOpen className="h-6 w-6 text-primary/60" /></div>
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-            <BookOpen className="h-3.5 w-3.5" /> Lecture of the Day
-          </p>
-          <h2 className="mt-1.5 line-clamp-2 text-base font-semibold leading-6 text-foreground">{article.title}</h2>
-          {article.excerpt ? <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">{article.excerpt}</p> : null}
-          <Link to={`/newspaper/${article.slug}`} className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
-            Read article <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function getGoalLabel(goal: string | null | undefined) {
-  return ROUTINE_GOAL_OPTIONS.find((option) => option.value === goal)?.label ?? 'Routine';
-}
 
 const REMINDER_TIMES = Array.from({ length: 96 }, (_, index) => {
   const hour = Math.floor(index / 4);
@@ -138,690 +53,644 @@ const REMINDER_TIMES = Array.from({ length: 96 }, (_, index) => {
   return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
 });
 
-function getTimezoneOptions() {
-  const browserTimezone = getBrowserTimezone();
-  const intl = Intl as typeof Intl & { supportedValuesOf?: (key: 'timeZone') => string[] };
-  const options = intl.supportedValuesOf?.('timeZone') ?? [
-    'UTC', 'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
-    'America/Bogota', 'America/Sao_Paulo', 'Europe/London', 'Europe/Paris', 'Europe/Berlin',
-    'Asia/Dubai', 'Asia/Kolkata', 'Asia/Singapore', 'Asia/Tokyo', 'Australia/Sydney',
-  ];
-  return Array.from(new Set([browserTimezone, 'UTC', ...options]));
+function cadenceLabel(cadence: RoutineCadence) {
+  return cadence === 'daily' ? 'Daily' : 'Monthly';
 }
 
-const TIMEZONE_OPTIONS = getTimezoneOptions();
+function periodLabel(cadence: RoutineCadence, timezone: string) {
+  if (cadence === 'daily') {
+    return new Intl.DateTimeFormat('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      timeZone: timezone,
+    }).format(new Date());
+  }
 
-function formatReminderPreview(time: string, timezone: string) {
-  const [scheduledHour, scheduledMinute] = time.split(':').map(Number);
-  const current = new Intl.DateTimeFormat('en-US', { timeZone: timezone, hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date());
-  const values = Object.fromEntries(current.map((part) => [part.type, part.value]));
-  const isTomorrow = Number(values.hour) > scheduledHour || (Number(values.hour) === scheduledHour && Number(values.minute) >= scheduledMinute);
-  const formattedTime = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' }).format(new Date(Date.UTC(2020, 0, 1, scheduledHour, scheduledMinute)));
-  return `${isTomorrow ? 'Tomorrow' : 'Today'} at ${formattedTime} (${timezone})`;
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'long',
+    year: 'numeric',
+    timeZone: timezone,
+  }).format(new Date());
 }
 
-function TimezonePicker({ value, onChange, disabled }: { value: string; onChange: (timezone: string) => void; disabled?: boolean }) {
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState('');
-  const matchingOptions = TIMEZONE_OPTIONS.filter((timezone) => timezone.toLowerCase().includes(query.trim().toLowerCase())).slice(0, 100);
-
-  return (
-    <>
-      <Button type="button" variant="outline" className="w-full justify-start font-normal" onClick={() => setOpen(true)} disabled={disabled}>
-        <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />{value}
-      </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-hidden sm:max-w-lg">
-          <DialogHeader><DialogTitle>Choose your timezone</DialogTitle></DialogHeader>
-          <Input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search e.g. Bogota, London, Tokyo" />
-          <div className="max-h-80 overflow-y-auto rounded-lg border">
-            {matchingOptions.map((timezone) => (
-              <button
-                key={timezone}
-                type="button"
-                className={cn('flex w-full items-center px-3 py-2.5 text-left text-sm hover:bg-muted', timezone === value && 'bg-primary/10 font-medium text-primary')}
-                onClick={() => { onChange(timezone); setOpen(false); setQuery(''); }}
-              >
-                {timezone}
-              </button>
-            ))}
-            {!matchingOptions.length ? <p className="p-4 text-sm text-muted-foreground">No supported timezone found.</p> : null}
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-}
-
-function ReminderScheduleCard({
-  preferences,
-  channels,
-  timezone,
-  isSaving,
-  onPreferencesChange,
-  onChannelsChange,
+function CadencePicker({
+  value,
+  onChange,
+  compact = false,
 }: {
-  preferences: RoutineReminderPreferences;
-  channels: RoutineReminderChannels;
-  timezone: string;
-  isSaving: boolean;
-  onPreferencesChange: (preferences: RoutineReminderPreferences, timezone?: string) => void;
-  onChannelsChange: (channels: RoutineReminderChannels) => void;
+  value: RoutineCadence;
+  onChange: (cadence: RoutineCadence) => void;
+  compact?: boolean;
 }) {
   return (
-    <Card className="border-primary/20 bg-card/90">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg"><Bell className="h-5 w-5 text-primary" />Reminder schedule</CardTitle>
-        <CardDescription>Set one local check-in time. We only nudge you when scheduled habits are still waiting.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-5">
-        <div className="flex items-center justify-between gap-4 rounded-lg border border-border/70 bg-background/70 p-3">
-          <div><Label htmlFor="routine-reminder">Daily routine reminder</Label><p className="mt-1 text-xs text-muted-foreground">Pause all Routine reminder delivery.</p></div>
-          <Switch id="routine-reminder" checked={preferences.enabled} onCheckedChange={(enabled) => onPreferencesChange({ ...preferences, enabled })} disabled={isSaving} />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2"><Label htmlFor="routine-reminder-time">Time</Label><Select value={preferences.time} onValueChange={(time) => onPreferencesChange({ ...preferences, time })} disabled={isSaving || !preferences.enabled}><SelectTrigger id="routine-reminder-time"><SelectValue /></SelectTrigger><SelectContent>{REMINDER_TIMES.map((time) => <SelectItem key={time} value={time}>{time}</SelectItem>)}</SelectContent></Select></div>
-          <div className="space-y-2"><Label>Timezone</Label><TimezonePicker value={timezone} disabled={isSaving || !preferences.enabled} onChange={(nextTimezone) => onPreferencesChange(preferences, nextTimezone)} /></div>
-        </div>
-        <div className="rounded-lg bg-muted/50 px-3 py-2 text-xs text-muted-foreground"><Clock3 className="mr-1.5 inline h-3.5 w-3.5" />Next reminder window: <span className="font-medium text-foreground">{formatReminderPreview(preferences.time, timezone)}</span></div>
-        <div className="space-y-3 border-t pt-4">
-          <p className="text-sm font-medium">Delivery channels</p>
-          <div className="flex items-center justify-between gap-4"><div><Label>In-app reminder</Label><p className="mt-1 text-xs text-muted-foreground">Shows in your notifications at the scheduled time.</p></div><Switch checked={channels.inAppEnabled} disabled={isSaving || !preferences.enabled} onCheckedChange={(inAppEnabled) => onChannelsChange({ ...channels, inAppEnabled })} /></div>
-          <div className="flex items-center justify-between gap-4"><div><Label className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" />Email fallback</Label><p className="mt-1 text-xs text-muted-foreground">Recovery email after 3 inactive days; never a same-time duplicate.</p></div><Switch checked={channels.emailEnabled} disabled={isSaving || !preferences.enabled} onCheckedChange={(emailEnabled) => onChannelsChange({ ...channels, emailEnabled })} /></div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function RoutineFocusCard({
-  todayTasks,
-  weeklyTasks,
-  completionByKey,
-  timezone,
-  isSaving,
-  onComplete,
-  onCustomize,
-}: {
-  todayTasks: RoutineTask[];
-  weeklyTasks: RoutineTask[];
-  completionByKey: ReadonlyMap<string, { status: string }>;
-  timezone: string;
-  isSaving: boolean;
-  onComplete: (task: RoutineTask, periodType: RoutinePeriodType) => void;
-  onCustomize: () => void;
-}) {
-  const todayKey = getDateKeyInTimezone(new Date(), timezone);
-  const weekKey = getWeekStartKeyInTimezone(new Date(), timezone);
-  const statusFor = (task: RoutineTask, periodType: RoutinePeriodType) => completionByKey.get(
-    getCompletionKey(task.id, periodType, periodType === 'daily' ? todayKey : weekKey),
-  )?.status;
-  const isHandled = (task: RoutineTask, periodType: RoutinePeriodType) => {
-    const status = statusFor(task, periodType);
-    return status === 'completed' || status === 'skipped';
-  };
-  const nextTodayTask = todayTasks.find((task) => !isHandled(task, 'daily'));
-  const nextWeeklyTask = weeklyTasks.find((task) => !isHandled(task, 'weekly'));
-  const nextTask = nextTodayTask ?? nextWeeklyTask ?? null;
-  const nextPeriodType: RoutinePeriodType = nextTodayTask ? 'daily' : 'weekly';
-  const todayHandled = todayTasks.filter((task) => isHandled(task, 'daily')).length;
-  const weeklyHandled = weeklyTasks.filter((task) => isHandled(task, 'weekly')).length;
-  const scheduledTaskCount = todayTasks.length + weeklyTasks.length;
-
-  return (
-    <Card className="overflow-hidden border-primary/30 bg-gradient-to-br from-primary/15 via-card to-card">
-      <CardContent className="p-5 sm:p-6">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="min-w-0">
-            <Badge variant="outline" className="mb-3 border-primary/30 bg-background/60">
-              {nextTask ? 'Next action' : scheduledTaskCount ? 'Routine cleared' : 'Routine needs a task'}
-            </Badge>
-            <h2 className="text-xl font-semibold text-foreground sm:text-2xl">
-              {nextTask?.title ?? (scheduledTaskCount ? 'Everything scheduled is handled' : 'Choose one repeatable action')}
-            </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              {nextTask
-                ? `${nextPeriodType === 'daily' ? 'Finish this today' : 'Complete this before the week ends'} before adding more work.`
-                : scheduledTaskCount
-                  ? 'You have completed or intentionally skipped every scheduled action. Return when the next task is due.'
-                  : 'Add a concrete daily or weekly task so Routine can keep your next move visible.'}
-            </p>
-            <p className="mt-3 text-xs font-medium text-muted-foreground">
-              {todayHandled}/{todayTasks.length} handled today · {weeklyHandled}/{weeklyTasks.length} handled this week
-            </p>
-          </div>
-          <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-            {nextTask ? (
-              <Button size="lg" onClick={() => onComplete(nextTask, nextPeriodType)} disabled={isSaving}>
-                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
-                Mark done
-              </Button>
-            ) : null}
-            <Button size="lg" variant="outline" onClick={onCustomize} disabled={isSaving}>
-              {scheduledTaskCount ? 'Adjust routine' : 'Add a task'}
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function RoutineSetupCard({ onStart, isSaving }: { onStart: (goal: RoutineGoal) => void; isSaving: boolean }) {
-  const [selectedGoal, setSelectedGoal] = useState<RoutineGoal>('validate_idea');
-
-  return (
-    <Card className="border-primary/20 bg-card/90">
-      <CardHeader className="space-y-3">
-        <Badge variant="outline" className="w-fit">First visit</Badge>
-        <CardTitle className="flex items-center gap-2 text-2xl">
-          <Repeat2 className="h-5 w-5 text-primary" />
-          Build your founder routine
-        </CardTitle>
-        <CardDescription className="max-w-2xl">
-          Pick the main startup goal for this season. We will suggest a simple daily and weekly routine you can edit.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-5">
-        <div className="grid gap-3 md:grid-cols-2">
-          {ROUTINE_GOAL_OPTIONS.map((goal) => (
-            <button
-              key={goal.value}
-              type="button"
-              onClick={() => setSelectedGoal(goal.value)}
-              className={cn(
-                'rounded-lg border border-border/70 bg-background/75 p-4 text-left transition-colors hover:border-primary/30',
-                selectedGoal === goal.value && 'border-primary/50 bg-primary/10',
-              )}
-            >
-              <p className="text-sm font-semibold text-foreground">{goal.label}</p>
-              <p className="mt-1 text-sm leading-6 text-muted-foreground">{goal.description}</p>
-            </button>
-          ))}
-        </div>
-        <Button onClick={() => onStart(selectedGoal)} disabled={isSaving} className="w-full sm:w-auto">
-          {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-          Generate my routine
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
-
-function TaskChecklistRow({
-  task,
-  periodType,
-  completion,
-  isSaving,
-  onSetStatus,
-  onClearStatus,
-}: {
-  task: RoutineTask;
-  periodType: RoutinePeriodType;
-  completion?: { status: string } | null;
-  isSaving: boolean;
-  onSetStatus: (task: RoutineTask, periodType: RoutinePeriodType, status: 'completed' | 'skipped') => void;
-  onClearStatus: (task: RoutineTask, periodType: RoutinePeriodType) => void;
-}) {
-  const isCompleted = completion?.status === 'completed';
-  const isSkipped = completion?.status === 'skipped';
-
-  return (
-    <div
-      className={cn(
-        'rounded-lg border border-border/70 bg-background/75 p-4',
-        isCompleted && 'border-success/20 bg-success/10',
-        isSkipped && 'border-warning/20 bg-warning/10',
-      )}
-    >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex min-w-0 gap-3">
-          <div className="mt-0.5">
-            {isCompleted ? (
-              <CheckCircle2 className="h-5 w-5 text-success" />
-            ) : isSkipped ? (
-              <Clock3 className="h-5 w-5 text-warning" />
-            ) : (
-              <span className="block h-5 w-5 rounded-full border border-muted-foreground/50" />
-            )}
-          </div>
-          <div className="min-w-0">
-            <p className={cn('text-sm font-medium leading-6 text-foreground', isCompleted && 'line-through')}>
-              {task.title}
-            </p>
-            <p className="text-xs capitalize text-muted-foreground">{task.cadence}</p>
-            {isSkipped ? (
-              <p className="mt-1 text-xs text-warning dark:text-warning">Skipped for this period. You can still mark it done.</p>
-            ) : null}
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2 sm:justify-end">
-          {completion ? (
-            <Button size="sm" variant="outline" onClick={() => onClearStatus(task, periodType)} disabled={isSaving}>
-              Reset
-            </Button>
-          ) : null}
-          <Button
-            size="sm"
-            variant={isCompleted ? 'secondary' : 'default'}
-            onClick={() => onSetStatus(task, periodType, 'completed')}
-            disabled={isSaving || isCompleted}
-          >
-            Done
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => onSetStatus(task, periodType, 'skipped')}
-            disabled={isSaving || isSkipped}
-          >
-            Skip
-          </Button>
-        </div>
-      </div>
+    <div className="inline-flex rounded-xl bg-muted/70 p-1" role="group" aria-label="Routine frequency">
+      {(['daily', 'monthly'] as const).map((cadence) => (
+        <button
+          key={cadence}
+          type="button"
+          onClick={() => onChange(cadence)}
+          className={cn(
+            'rounded-lg font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            compact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm',
+            value === cadence
+              ? 'bg-background text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground',
+          )}
+          aria-pressed={value === cadence}
+        >
+          {cadenceLabel(cadence)}
+        </button>
+      ))}
     </div>
   );
 }
 
-function RoutineTaskSection({
-  title,
-  description,
-  tasks,
-  periodType,
-  completionByKey,
-  timezone,
+function RoutineComposer({
+  cadence,
+  onCadenceChange,
+  onAdd,
   isSaving,
-  onSetStatus,
-  onClearStatus,
+  inputRef,
 }: {
-  title: string;
-  description: string;
-  tasks: RoutineTask[];
-  periodType: RoutinePeriodType;
-  completionByKey: ReadonlyMap<string, { status: string }>;
-  timezone: string;
+  cadence: RoutineCadence;
+  onCadenceChange: (cadence: RoutineCadence) => void;
+  onAdd: (title: string, cadence: RoutineCadence) => void;
   isSaving: boolean;
-  onSetStatus: (task: RoutineTask, periodType: RoutinePeriodType, status: 'completed' | 'skipped') => void;
-  onClearStatus: (task: RoutineTask, periodType: RoutinePeriodType) => void;
+  inputRef: RefObject<HTMLInputElement>;
 }) {
-  const periodDate = periodType === 'daily' ? getDateKeyInTimezone(new Date(), timezone) : getWeekStartKeyInTimezone(new Date(), timezone);
-  const statuses = tasks.map((task) => completionByKey.get(getCompletionKey(task.id, periodType, periodDate))?.status);
-  const completedCount = statuses.filter((status) => status === 'completed').length;
-  const skippedCount = statuses.filter((status) => status === 'skipped').length;
-  const handledCount = completedCount + skippedCount;
-  const remainingCount = tasks.length - handledCount;
-  const handledPercentage = tasks.length > 0 ? Math.round((handledCount / tasks.length) * 100) : 0;
+  const [title, setTitle] = useState('');
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const nextTitle = title.trim();
+    if (!nextTitle) return;
+    onAdd(nextTitle, cadence);
+    setTitle('');
+  };
 
   return (
-    <Card className="border-border/70 bg-card/80">
-      <CardHeader className="space-y-3">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <CardTitle className="text-lg">{title}</CardTitle>
-            <CardDescription className="mt-1">{description}</CardDescription>
-          </div>
-          {tasks.length > 0 ? (
-            <Badge variant={remainingCount === 0 ? 'secondary' : 'outline'}>
-              {remainingCount === 0 ? 'All handled' : `${remainingCount} remaining`}
-            </Badge>
-          ) : null}
-        </div>
-        {tasks.length > 0 ? (
-          <div className="space-y-1.5">
-            <Progress value={handledPercentage} className="h-1.5" aria-label={`${title}: ${handledCount} of ${tasks.length} handled`} />
-            <p className="text-xs text-muted-foreground">
-              {completedCount} completed{skippedCount ? ` · ${skippedCount} skipped` : ''}
-            </p>
-          </div>
-        ) : null}
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {tasks.length > 0 ? (
-          tasks.map((task) => (
-            <TaskChecklistRow
-              key={task.id}
-              task={task}
-              periodType={periodType}
-              completion={completionByKey.get(getCompletionKey(task.id, periodType, periodDate))}
-              isSaving={isSaving}
-              onSetStatus={onSetStatus}
-              onClearStatus={onClearStatus}
+    <Card className="border-primary/20 bg-card/90 shadow-sm">
+      <CardContent className="p-3 sm:p-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-border/70 bg-background px-3">
+            <Plus className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+            <Input
+              ref={inputRef}
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="What do you want to keep doing?"
+              aria-label="New routine title"
+              className="h-12 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
             />
-          ))
-        ) : (
-          <div className="rounded-lg border border-dashed border-border/70 bg-background/70 p-5 text-sm text-muted-foreground">
-            No {periodType} tasks are active for this period.
           </div>
-        )}
+          <div className="flex items-center justify-between gap-3">
+            <CadencePicker value={cadence} onChange={onCadenceChange} compact />
+            <Button type="submit" disabled={!title.trim() || isSaving} className="shrink-0">
+              {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Add routine
+            </Button>
+          </div>
+        </form>
       </CardContent>
     </Card>
   );
 }
 
-function RoutineEditor({
-  draft,
-  onDraftChange,
+function RoutineEditDialog({
+  task,
+  open,
+  onOpenChange,
   onSave,
-  onCancel,
   isSaving,
 }: {
-  draft: RoutineConfig;
-  onDraftChange: (draft: RoutineConfig) => void;
-  onSave: () => void;
-  onCancel: () => void;
+  task: RoutineTask | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (task: RoutineTask, title: string, cadence: RoutineCadence) => void;
   isSaving: boolean;
 }) {
-  const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [newTaskCadence, setNewTaskCadence] = useState<RoutineCadence>('daily');
+  const [title, setTitle] = useState('');
+  const [cadence, setCadence] = useState<RoutineCadence>('daily');
 
-  const updateTask = (taskId: string, updates: Partial<RoutineTask>) => {
-    onDraftChange({
-      ...draft,
-      tasks: draft.tasks.map((task) => task.id === taskId ? { ...task, ...updates } : task),
-    });
-  };
+  useEffect(() => {
+    if (!task) return;
+    setTitle(task.title);
+    setCadence(task.cadence);
+  }, [task]);
 
-  const moveTask = (taskId: string, direction: -1 | 1) => {
-    const tasks = [...draft.tasks].sort((a, b) => a.order - b.order);
-    const index = tasks.findIndex((task) => task.id === taskId);
-    const targetIndex = index + direction;
-    if (index < 0 || targetIndex < 0 || targetIndex >= tasks.length) return;
-    const [task] = tasks.splice(index, 1);
-    tasks.splice(targetIndex, 0, task);
-    onDraftChange({ ...draft, tasks: tasks.map((item, order) => ({ ...item, order })) });
-  };
-
-  const removeTask = (taskId: string) => {
-    onDraftChange({
-      ...draft,
-      tasks: draft.tasks
-        .filter((task) => task.id !== taskId)
-        .map((task, order) => ({ ...task, order })),
-    });
-  };
-
-  const addTask = () => {
-    if (!newTaskTitle.trim()) return;
-    onDraftChange({
-      ...draft,
-      tasks: [
-        ...draft.tasks,
-        createCustomRoutineTask(newTaskTitle, newTaskCadence, draft.tasks.length),
-      ],
-    });
-    setNewTaskTitle('');
-  };
+  if (!task) return null;
 
   return (
-    <Card className="border-border/70 bg-card/80">
-      <CardHeader>
-        <CardTitle>Edit routine</CardTitle>
-        <CardDescription>Add, remove, edit, and reorder the tasks that define your rhythm.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-5">
-        <div className="space-y-3">
-          {draft.tasks.map((task, index) => (
-            <div key={task.id} className={cn('grid gap-3 rounded-lg border border-border/70 bg-background/75 p-3 md:grid-cols-[minmax(0,1fr)_150px_auto] md:items-center', !task.active && 'opacity-70')}>
-              <Input value={task.title} onChange={(event) => updateTask(task.id, { title: event.target.value })} />
-              <Select
-                value={task.cadence}
-                onValueChange={(value) => {
-                  const cadence = value as RoutineCadence;
-                  updateTask(task.id, {
-                    cadence,
-                    days: cadence === 'daily' ? DEFAULT_DAILY_DAYS : DEFAULT_WEEKLY_DAYS,
-                  });
-                }}
-              >
-                <SelectTrigger aria-label="Task cadence">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="flex flex-wrap items-center justify-end gap-1">
-                <div className="mr-2 flex items-center gap-2">
-                  <Label htmlFor={`routine-task-active-${task.id}`} className="text-xs text-muted-foreground">
-                    {task.active ? 'Active' : 'Paused'}
-                  </Label>
-                  <Switch
-                    id={`routine-task-active-${task.id}`}
-                    checked={task.active}
-                    onCheckedChange={(active) => updateTask(task.id, { active })}
-                    aria-label={`${task.active ? 'Pause' : 'Activate'} ${task.title}`}
-                  />
-                </div>
-                <Button size="icon" variant="ghost" onClick={() => moveTask(task.id, -1)} disabled={index === 0} aria-label="Move task up">
-                  <ArrowUp className="h-4 w-4" />
-                </Button>
-                <Button size="icon" variant="ghost" onClick={() => moveTask(task.id, 1)} disabled={index === draft.tasks.length - 1} aria-label="Move task down">
-                  <ArrowDown className="h-4 w-4" />
-                </Button>
-                <Button size="icon" variant="ghost" onClick={() => removeTask(task.id)} aria-label="Remove task">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <Separator />
-
-        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_150px_auto] md:items-end">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit routine</DialogTitle>
+          <DialogDescription>Change the name or how often this routine resets.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-5 py-2">
           <div className="space-y-2">
-            <Label htmlFor="routine-new-task">Add task</Label>
+            <Label htmlFor="edit-routine-title">Routine</Label>
             <Input
-              id="routine-new-task"
-              value={newTaskTitle}
-              onChange={(event) => setNewTaskTitle(event.target.value)}
-              placeholder="e.g., Message one target customer"
+              id="edit-routine-title"
+              autoFocus
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && title.trim()) onSave(task, title.trim(), cadence);
+              }}
             />
           </div>
-          <Select value={newTaskCadence} onValueChange={(value) => setNewTaskCadence(value as RoutineCadence)}>
-            <SelectTrigger aria-label="New task cadence">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="daily">Daily</SelectItem>
-              <SelectItem value="weekly">Weekly</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button onClick={addTask} disabled={!newTaskTitle.trim()}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add
-          </Button>
+          <div className="space-y-2">
+            <Label>Frequency</Label>
+            <div><CadencePicker value={cadence} onChange={setCadence} /></div>
+          </div>
         </div>
-
-        <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-          <Button variant="outline" onClick={onCancel} disabled={isSaving}>Cancel</Button>
-          <Button onClick={onSave} disabled={isSaving || draft.tasks.every((task) => !task.title.trim())}>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>Cancel</Button>
+          <Button onClick={() => onSave(task, title.trim(), cadence)} disabled={!title.trim() || isSaving}>
             {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Save routine
+            Save changes
           </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ReminderDialog({
+  open,
+  onOpenChange,
+  preferences,
+  timezone,
+  onSave,
+  isSaving,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  preferences: RoutineReminderPreferences;
+  timezone: string;
+  onSave: (preferences: RoutineReminderPreferences) => void;
+  isSaving: boolean;
+}) {
+  const [draft, setDraft] = useState(preferences);
+
+  useEffect(() => {
+    if (open) setDraft(preferences);
+  }, [open, preferences]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Routine reminder</DialogTitle>
+          <DialogDescription>Choose one gentle daily check-in. You can turn it off at any time.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-5 py-2">
+          <div className="flex items-center justify-between gap-4 rounded-xl border border-border/70 p-4">
+            <div>
+              <Label htmlFor="routine-reminder-enabled">Remind me</Label>
+              <p className="mt-1 text-xs text-muted-foreground">Uses your existing notification channels.</p>
+            </div>
+            <Switch
+              id="routine-reminder-enabled"
+              checked={draft.enabled}
+              onCheckedChange={(enabled) => setDraft((current) => ({ ...current, enabled }))}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="routine-reminder-time">Time</Label>
+            <Select
+              value={draft.time}
+              onValueChange={(time) => setDraft((current) => ({ ...current, time }))}
+              disabled={!draft.enabled}
+            >
+              <SelectTrigger id="routine-reminder-time"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {REMINDER_TIMES.map((time) => <SelectItem key={time} value={time}>{time}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">Timezone: {timezone}</p>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>Cancel</Button>
+          <Button onClick={() => onSave(draft)} disabled={isSaving}>
+            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Save reminder
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function RoutineRow({
+  task,
+  completed,
+  disabled,
+  canMoveUp,
+  canMoveDown,
+  onToggle,
+  onEdit,
+  onMove,
+  onPause,
+  onDelete,
+}: {
+  task: RoutineTask;
+  completed: boolean;
+  disabled: boolean;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  onToggle: () => void;
+  onEdit: () => void;
+  onMove: (direction: -1 | 1) => void;
+  onPause: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div className={cn('group flex items-center gap-3 px-4 py-3.5 sm:px-5', completed && 'bg-muted/25')}>
+      <button
+        type="button"
+        onClick={onToggle}
+        disabled={disabled}
+        className={cn(
+          'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          completed
+            ? 'border-primary bg-primary text-primary-foreground'
+            : 'border-muted-foreground/40 bg-background hover:border-primary hover:bg-primary/5',
+        )}
+        aria-label={completed ? `Mark ${task.title} incomplete` : `Complete ${task.title}`}
+      >
+        {completed ? <Check className="h-3.5 w-3.5" /> : null}
+      </button>
+
+      <div className="min-w-0 flex-1">
+        <p className={cn('truncate text-sm font-medium text-foreground', completed && 'text-muted-foreground line-through')}>
+          {task.title}
+        </p>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          {task.cadence === 'daily' ? 'Repeats every day' : 'Priority for this month'}
+        </p>
+      </div>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-muted-foreground" aria-label={`Manage ${task.title}`}>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuItem onClick={onEdit}><Pencil className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onMove(-1)} disabled={!canMoveUp}><ArrowUp className="mr-2 h-4 w-4" />Move up</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onMove(1)} disabled={!canMoveDown}><ArrowDown className="mr-2 h-4 w-4" />Move down</DropdownMenuItem>
+          <DropdownMenuItem onClick={onPause}><Pause className="mr-2 h-4 w-4" />Pause</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
+            <Trash2 className="mr-2 h-4 w-4" />Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }
 
 export default function YourRoutinePage() {
-  const markToolUsed = useLeanStartupStore(s => s.markToolUsed);
+  const markToolUsed = useLeanStartupStore((state) => state.markToolUsed);
   const {
     config,
     selectedGoal,
     reminderPreferences,
-    reminderChannels,
     timezone,
-    todayTasks,
-    weeklyTasks,
     completionByKey,
     isLoading,
     isSaving,
     error,
-    stats,
-    initializeRoutine,
     saveConfig,
     updateReminderPreferences,
-    updateReminderChannels,
     setTaskStatus,
     clearTaskStatus,
   } = useRoutine();
-  const [isEditing, setIsEditing] = useState(false);
-  const [draft, setDraft] = useState<RoutineConfig | null>(null);
+
+  const [selectedCadence, setSelectedCadence] = useState<RoutineCadence>('daily');
+  const [composerCadence, setComposerCadence] = useState<RoutineCadence>('daily');
+  const [editingTask, setEditingTask] = useState<RoutineTask | null>(null);
+  const [deletingTask, setDeletingTask] = useState<RoutineTask | null>(null);
+  const [reminderOpen, setReminderOpen] = useState(false);
+  const [pausedOpen, setPausedOpen] = useState(false);
+  const composerRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     markToolUsed('routine');
   }, [markToolUsed]);
 
-  useEffect(() => {
-    if (config) setDraft(config);
-  }, [config]);
-
-  const routineGoalLabel = getGoalLabel(selectedGoal);
-  const activeTaskCount = useMemo(() => config?.tasks.filter((task) => task.active).length ?? 0, [config]);
-  const handledCurrentCount = stats.completedCurrentCount + stats.skippedCurrentCount;
-  const remainingCurrentCount = Math.max(0, stats.totalCurrentCount - handledCurrentCount);
-  const handledProgressPercentage = stats.totalCurrentCount > 0
-    ? Math.round((handledCurrentCount / stats.totalCurrentCount) * 100)
+  const allTasks = useMemo(
+    () => [...(config?.tasks ?? [])].sort((left, right) => left.order - right.order),
+    [config],
+  );
+  const visibleTasks = useMemo(
+    () => allTasks.filter((task) => task.cadence === selectedCadence && task.active),
+    [allTasks, selectedCadence],
+  );
+  const pausedTasks = useMemo(
+    () => allTasks.filter((task) => task.cadence === selectedCadence && !task.active),
+    [allTasks, selectedCadence],
+  );
+  const periodDate = selectedCadence === 'daily'
+    ? getDateKeyInTimezone(new Date(), timezone)
+    : getMonthStartKeyInTimezone(new Date(), timezone);
+  const isCompleted = (task: RoutineTask) => completionByKey.get(
+    getCompletionKey(task.id, selectedCadence, periodDate),
+  )?.status === 'completed';
+  const pendingTasks = visibleTasks.filter((task) => !isCompleted(task));
+  const completedTasks = visibleTasks.filter(isCompleted);
+  const completedPercentage = visibleTasks.length
+    ? Math.round((completedTasks.length / visibleTasks.length) * 100)
     : 0;
+  const dailyCount = allTasks.filter((task) => task.active && task.cadence === 'daily').length;
+  const monthlyCount = allTasks.filter((task) => task.active && task.cadence === 'monthly').length;
 
-  const handleSaveDraft = async () => {
-    if (!draft) return;
-    await saveConfig({
-      ...draft,
-      tasks: draft.tasks
-        .filter((task) => task.title.trim())
-        .map((task, order) => ({ ...task, title: task.title.trim(), order })),
-    });
-    setIsEditing(false);
+  const persistTasks = async (tasks: RoutineTask[]) => {
+    const nextConfig: RoutineConfig = config
+      ? { ...config, tasks }
+      : {
+          version: 1,
+          primaryGoal: selectedGoal ?? 'validate_idea',
+          tasks,
+          updatedAt: new Date().toISOString(),
+        };
+    await saveConfig(nextConfig);
+  };
+
+  const handleAdd = async (title: string, cadence: RoutineCadence) => {
+    const task = createCustomRoutineTask(title, cadence, allTasks.length);
+    await persistTasks([...allTasks, task]);
+    setSelectedCadence(cadence);
+  };
+
+  const handleEdit = async (task: RoutineTask, title: string, cadence: RoutineCadence) => {
+    await persistTasks(allTasks.map((item) => item.id === task.id
+      ? {
+          ...item,
+          title,
+          cadence,
+          days: cadence === 'daily' ? [0, 1, 2, 3, 4, 5, 6] : [],
+        }
+      : item));
+    setEditingTask(null);
+    setSelectedCadence(cadence);
+  };
+
+  const handleMove = async (task: RoutineTask, direction: -1 | 1) => {
+    const ordered = [...allTasks];
+    const cadenceTasks = ordered.filter((item) => item.cadence === task.cadence && item.active);
+    const cadenceIndex = cadenceTasks.findIndex((item) => item.id === task.id);
+    const target = cadenceTasks[cadenceIndex + direction];
+    if (!target) return;
+    const sourceIndex = ordered.findIndex((item) => item.id === task.id);
+    const targetIndex = ordered.findIndex((item) => item.id === target.id);
+    [ordered[sourceIndex], ordered[targetIndex]] = [ordered[targetIndex], ordered[sourceIndex]];
+    await persistTasks(ordered);
+  };
+
+  const handlePause = async (task: RoutineTask, active: boolean) => {
+    await persistTasks(allTasks.map((item) => item.id === task.id ? { ...item, active } : item));
+  };
+
+  const handleDelete = async () => {
+    if (!deletingTask) return;
+    await persistTasks(allTasks.filter((task) => task.id !== deletingTask.id));
+    setDeletingTask(null);
+  };
+
+  const handleReminderSave = async (preferences: RoutineReminderPreferences) => {
+    await updateReminderPreferences(preferences);
+    setReminderOpen(false);
   };
 
   if (isLoading) {
     return (
-      <Card className="border-border/70 bg-card/80">
-        <CardContent className="flex items-center gap-3 p-6 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Loading your routine...
-        </CardContent>
-      </Card>
+      <div className="flex min-h-52 items-center justify-center gap-3 text-sm text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin" />Loading your routines...
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Card className="border-destructive/20 bg-card/90">
-        <CardHeader>
-          <CardTitle className="text-destructive">Your routine could not load</CardTitle>
-          <CardDescription>{error}</CardDescription>
-        </CardHeader>
+      <Card className="border-destructive/25 bg-card/90">
+        <CardContent className="p-6">
+          <h1 className="font-semibold text-destructive">Your routines could not load</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{error}</p>
+        </CardContent>
       </Card>
-    );
-  }
-
-  if (!config) {
-    return (
-      <>
-        <Helmet>
-          <title>Your Routine - Creatives Takeover</title>
-        </Helmet>
-        <RoutineSetupCard onStart={(goal) => void initializeRoutine(goal)} isSaving={isSaving} />
-        <div className="mt-6"><LectureOfTheDay /></div>
-      </>
     );
   }
 
   return (
     <>
-      <Helmet>
-        <title>Your Routine - Creatives Takeover</title>
-      </Helmet>
-      <div className="space-y-6">
-        <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card">
-          <CardHeader className="space-y-4">
-            <DashboardPanelHeader
-              kicker="Founder routine"
-              title="Your Routine"
-              description="Keep the repeatable actions visible, finishable, and aligned with your current startup goal."
-              badges={<Badge variant="outline" className="w-fit">{routineGoalLabel}</Badge>}
-              action={
-                <Button variant="outline" onClick={() => setIsEditing((value) => !value)}>
-                  {isEditing ? 'Close editor' : 'Customize routine'}
-                </Button>
-              }
-            />
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="secondary">
-                {remainingCurrentCount} remaining
-              </Badge>
-              <Badge variant="outline">{stats.completedCurrentCount}/{stats.totalCurrentCount} completed</Badge>
-              {stats.skippedCurrentCount > 0 ? <Badge variant="outline">{stats.skippedCurrentCount} skipped</Badge> : null}
-              <Badge variant="outline">{activeTaskCount} active tasks</Badge>
+      <Helmet><title>Routines - Creatives Takeover</title></Helmet>
+
+      <div className="mx-auto max-w-4xl space-y-6 pb-12">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="mb-2 flex items-center gap-2 text-sm font-medium text-primary">
+              <Repeat2 className="h-4 w-4" />Routines
             </div>
-            <Progress value={handledProgressPercentage} className="h-2" aria-label={`${handledCurrentCount} of ${stats.totalCurrentCount} current tasks handled`} />
-          </CardHeader>
-        </Card>
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Keep your priorities simple.</h1>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
+              Add the actions you want to repeat, then check them off as you go.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={() => setReminderOpen(true)} aria-label="Routine reminder settings" className="relative">
+              <Settings2 className="h-4 w-4" />
+              {reminderPreferences.enabled ? <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-primary" /> : null}
+            </Button>
+            <Button onClick={() => composerRef.current?.focus()}>
+              <Plus className="mr-2 h-4 w-4" />Add routine
+            </Button>
+          </div>
+        </header>
 
-        {isEditing && draft ? (
-          <RoutineEditor
-            draft={draft}
-            onDraftChange={setDraft}
-            onSave={() => void handleSaveDraft()}
-            onCancel={() => {
-              setDraft(config);
-              setIsEditing(false);
-            }}
-            isSaving={isSaving}
-          />
-        ) : null}
+        <RoutineComposer
+          cadence={composerCadence}
+          onCadenceChange={setComposerCadence}
+          onAdd={(title, cadence) => void handleAdd(title, cadence)}
+          isSaving={isSaving}
+          inputRef={composerRef}
+        />
 
-        <div className="space-y-6">
-          <div className="space-y-6">
-            <RoutineFocusCard
-              todayTasks={todayTasks}
-              weeklyTasks={weeklyTasks}
-              completionByKey={completionByKey}
-              timezone={timezone}
-              isSaving={isSaving}
-              onComplete={(task, periodType) => void setTaskStatus(task, periodType, 'completed')}
-              onCustomize={() => setIsEditing(true)}
-            />
-            <RoutineTaskSection
-              title="Today"
-              description="Finish the next scheduled action before adding more work."
-              tasks={todayTasks}
-              periodType="daily"
-              completionByKey={completionByKey}
-              timezone={timezone}
-              isSaving={isSaving}
-              onSetStatus={(task, periodType, status) => void setTaskStatus(task, periodType, status)}
-              onClearStatus={(task, periodType) => void clearTaskStatus(task, periodType)}
-            />
-            <RoutineTaskSection
-              title="This Week"
-              description={`Protect time for these outcomes before ${getWeekEndLabelInTimezone(new Date(), timezone)}.`}
-              tasks={weeklyTasks}
-              periodType="weekly"
-              completionByKey={completionByKey}
-              timezone={timezone}
-              isSaving={isSaving}
-              onSetStatus={(task, periodType, status) => void setTaskStatus(task, periodType, status)}
-              onClearStatus={(task, periodType) => void clearTaskStatus(task, periodType)}
-            />
-            <LectureOfTheDay />
-            <ReminderScheduleCard
-              preferences={reminderPreferences}
-              channels={reminderChannels}
-              timezone={timezone}
-              isSaving={isSaving}
-              onPreferencesChange={(preferences, nextTimezone) => void updateReminderPreferences(preferences, nextTimezone)}
-              onChannelsChange={(channels) => void updateReminderChannels(channels)}
-            />
+        <section aria-labelledby="routine-list-title">
+          <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 id="routine-list-title" className="text-lg font-semibold text-foreground">
+                  {selectedCadence === 'daily' ? 'Today' : 'This month'}
+                </h2>
+                {visibleTasks.length ? <Badge variant="secondary">{pendingTasks.length} left</Badge> : null}
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">{periodLabel(selectedCadence, timezone)}</p>
+            </div>
+            <div className="inline-flex w-fit rounded-xl border border-border/70 bg-card p-1">
+              <button
+                type="button"
+                onClick={() => setSelectedCadence('daily')}
+                className={cn('rounded-lg px-4 py-2 text-sm font-medium transition-colors', selectedCadence === 'daily' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}
+              >
+                Daily <span className="ml-1 opacity-70">{dailyCount}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedCadence('monthly')}
+                className={cn('rounded-lg px-4 py-2 text-sm font-medium transition-colors', selectedCadence === 'monthly' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}
+              >
+                Monthly <span className="ml-1 opacity-70">{monthlyCount}</span>
+              </button>
+            </div>
           </div>
 
-        </div>
+          <Card className="overflow-hidden border-border/70 bg-card/90 shadow-sm">
+            {visibleTasks.length ? (
+              <>
+                <div className="border-b border-border/60 px-4 py-3 sm:px-5">
+                  <div className="mb-1.5 flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{completedTasks.length} of {visibleTasks.length} complete</span>
+                    <span className="font-medium text-foreground">{completedPercentage}%</span>
+                  </div>
+                  <Progress value={completedPercentage} className="h-1.5" />
+                </div>
+
+                <div className="divide-y divide-border/60">
+                  {pendingTasks.map((task, index) => (
+                    <RoutineRow
+                      key={task.id}
+                      task={task}
+                      completed={false}
+                      disabled={isSaving}
+                      canMoveUp={index > 0}
+                      canMoveDown={index < pendingTasks.length - 1}
+                      onToggle={() => void setTaskStatus(task, selectedCadence, 'completed')}
+                      onEdit={() => setEditingTask(task)}
+                      onMove={(direction) => void handleMove(task, direction)}
+                      onPause={() => void handlePause(task, false)}
+                      onDelete={() => setDeletingTask(task)}
+                    />
+                  ))}
+                  {completedTasks.length ? (
+                    <div className="bg-muted/20 px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground sm:px-5">
+                      Completed
+                    </div>
+                  ) : null}
+                  {completedTasks.map((task) => (
+                    <RoutineRow
+                      key={task.id}
+                      task={task}
+                      completed
+                      disabled={isSaving}
+                      canMoveUp={false}
+                      canMoveDown={false}
+                      onToggle={() => void clearTaskStatus(task, selectedCadence)}
+                      onEdit={() => setEditingTask(task)}
+                      onMove={() => undefined}
+                      onPause={() => void handlePause(task, false)}
+                      onDelete={() => setDeletingTask(task)}
+                    />
+                  ))}
+                </div>
+              </>
+            ) : (
+              <CardContent className="flex flex-col items-center px-6 py-14 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  {selectedCadence === 'daily' ? <CheckCircle2 className="h-6 w-6" /> : <CalendarDays className="h-6 w-6" />}
+                </div>
+                <h3 className="mt-4 font-semibold text-foreground">
+                  No {selectedCadence} routines yet
+                </h3>
+                <p className="mt-1 max-w-sm text-sm leading-6 text-muted-foreground">
+                  {selectedCadence === 'daily'
+                    ? 'Start with one small action you want to complete every day.'
+                    : 'Add the few outcomes you want to protect this month.'}
+                </p>
+                <Button
+                  variant="outline"
+                  className="mt-5"
+                  onClick={() => {
+                    setComposerCadence(selectedCadence);
+                    composerRef.current?.focus();
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" />Add your first routine
+                </Button>
+              </CardContent>
+            )}
+          </Card>
+
+          {pausedTasks.length ? (
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={() => setPausedOpen((current) => !current)}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground"
+                aria-expanded={pausedOpen}
+              >
+                {pausedOpen ? 'Hide' : 'Show'} paused routines ({pausedTasks.length})
+              </button>
+              {pausedOpen ? (
+                <div className="mt-2 overflow-hidden rounded-xl border border-border/60 bg-card/60 divide-y divide-border/60">
+                  {pausedTasks.map((task) => (
+                    <div key={task.id} className="flex items-center gap-3 px-4 py-3">
+                      <Pause className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">{task.title}</span>
+                      <Button variant="ghost" size="sm" onClick={() => void handlePause(task, true)} disabled={isSaving}>
+                        <Play className="mr-2 h-3.5 w-3.5" />Resume
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setDeletingTask(task)} aria-label={`Delete ${task.title}`}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </section>
       </div>
+
+      <RoutineEditDialog
+        task={editingTask}
+        open={Boolean(editingTask)}
+        onOpenChange={(open) => { if (!open) setEditingTask(null); }}
+        onSave={(task, title, cadence) => void handleEdit(task, title, cadence)}
+        isSaving={isSaving}
+      />
+
+      <ReminderDialog
+        open={reminderOpen}
+        onOpenChange={setReminderOpen}
+        preferences={reminderPreferences}
+        timezone={timezone}
+        onSave={(preferences) => void handleReminderSave(preferences)}
+        isSaving={isSaving}
+      />
+
+      <Dialog open={Boolean(deletingTask)} onOpenChange={(open) => { if (!open) setDeletingTask(null); }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete routine?</DialogTitle>
+            <DialogDescription>
+              “{deletingTask?.title}” will be removed from your routine. Past completion history will remain.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletingTask(null)} disabled={isSaving}>Cancel</Button>
+            <Button variant="destructive" onClick={() => void handleDelete()} disabled={isSaving}>
+              {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+              Delete routine
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

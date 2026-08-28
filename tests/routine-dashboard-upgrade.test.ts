@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 
 import {
   getDateKeyInTimezone,
+  getMonthStartKeyInTimezone,
   getRoutineTasksForToday,
   getWeekStartKeyInTimezone,
   parseReminderPreferences,
@@ -12,10 +13,11 @@ import {
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
-test('routine dates and schedule obey the founder timezone', () => {
+test('routine reset dates obey the founder timezone and daily actions stay visible', () => {
   const instant = new Date('2026-01-05T01:00:00.000Z');
   assert.equal(getDateKeyInTimezone(instant, 'America/Los_Angeles'), '2026-01-04');
   assert.equal(getWeekStartKeyInTimezone(instant, 'America/Los_Angeles'), '2025-12-29');
+  assert.equal(getMonthStartKeyInTimezone(instant, 'America/Los_Angeles'), '2026-01-01');
 
   const config: RoutineConfig = {
     version: 1,
@@ -26,7 +28,10 @@ test('routine dates and schedule obey the founder timezone', () => {
       { id: 'monday', title: 'Monday task', cadence: 'daily', days: [1], source: 'custom', order: 1, active: true },
     ],
   };
-  assert.deepEqual(getRoutineTasksForToday(config, instant, 'America/Los_Angeles').map((task) => task.id), ['sunday']);
+  assert.deepEqual(
+    getRoutineTasksForToday(config, instant, 'America/Los_Angeles').map((task) => task.id),
+    ['sunday', 'monday'],
+  );
 });
 
 test('legacy reminder preferences keep a safe schedule default', () => {
@@ -35,24 +40,25 @@ test('legacy reminder preferences keep a safe schedule default', () => {
   assert.deepEqual(parseReminderPreferences(null), { enabled: false, time: '09:00' });
 });
 
-test('routine upgrade prioritizes the next action, editable tasks, and local reminders', () => {
-  const migration = read('../supabase/migrations/20260825090000_routine_dashboard_timezone_upgrade.sql');
+test('routine redesign keeps creation, daily/monthly focus, and management obvious', () => {
+  const migration = read('../supabase/migrations/20260827120000_routine_monthly_redesign.sql');
   const page = read('../src/pages/YourRoutinePage.tsx');
   const sidebar = read('../src/components/dashboard/DashboardSidebar.tsx');
 
-  assert.match(migration, /routine_in_app_enabled/);
-  assert.match(migration, /routine_email_enabled/);
-  assert.match(migration, /now\(\) AT TIME ZONE zone\.name/);
+  assert.match(migration, /period_type IN \('daily', 'monthly', 'weekly'\)/);
+  assert.match(migration, /v_month_start/);
   assert.match(migration, /get_dashboard_snapshot_v4/);
   assert.match(migration, /pendingCount/);
-  assert.match(page, /ReminderScheduleCard/);
-  assert.match(page, /RoutineFocusCard/);
-  assert.match(page, /Mark done/);
-  assert.match(page, /routine-task-active-/);
-  assert.match(page, /All handled/);
-  assert.match(page, /Array\.from\(\{ length: 96 \}/);
-  assert.doesNotMatch(page, /RoutineMomentumCard/);
-  assert.doesNotMatch(page, /28-day check-in map/);
-  assert.doesNotMatch(page, /Consistency & momentum/);
+  assert.match(page, /RoutineComposer/);
+  assert.match(page, /What do you want to keep doing\?/);
+  assert.match(page, /Daily/);
+  assert.match(page, /Monthly/);
+  assert.match(page, /Move up/);
+  assert.match(page, /Pause/);
+  assert.match(page, /Delete routine/);
+  assert.doesNotMatch(page, /LectureOfTheDay/);
+  assert.doesNotMatch(page, /RoutineFocusCard/);
+  assert.doesNotMatch(page, /ReminderScheduleCard/);
+  assert.doesNotMatch(page, /ROUTINE_GOAL_OPTIONS/);
   assert.match(sidebar, /routinePendingCount/);
 });

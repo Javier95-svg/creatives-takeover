@@ -1,4 +1,4 @@
-import { endOfWeek, format, startOfWeek } from 'date-fns';
+import { format } from 'date-fns';
 
 import type { Json } from '@/integrations/supabase/types';
 
@@ -9,10 +9,12 @@ export type RoutineGoal =
   | 'launch_product'
   | 'raise_funding';
 
-export type RoutineCadence = 'daily' | 'weekly';
+export type RoutineCadence = 'daily' | 'monthly';
 export type RoutineTaskSource = 'template' | 'custom' | 'suggested';
 export type RoutineCompletionStatus = 'completed' | 'skipped';
-export type RoutinePeriodType = 'daily' | 'weekly';
+// `weekly` remains readable for completion history created before the monthly
+// redesign. New routine writes use only daily or monthly.
+export type RoutinePeriodType = 'daily' | 'monthly' | 'weekly';
 
 export interface RoutineTask {
   id: string;
@@ -108,6 +110,7 @@ export const ROUTINE_GOAL_OPTIONS: Array<{
 ];
 
 const WEEKDAYS = [1, 2, 3, 4, 5];
+const EVERY_DAY = [0, 1, 2, 3, 4, 5, 6];
 const MONDAY = [1];
 const WEDNESDAY = [3];
 const FRIDAY = [5];
@@ -116,27 +119,27 @@ const ROUTINE_TEMPLATES: Record<RoutineGoal, Omit<RoutineTask, 'order' | 'active
   validate_idea: [
     { id: 'validate-daily-customer-signal', title: 'Capture one customer signal or objection', cadence: 'daily', days: WEEKDAYS, source: 'template' },
     { id: 'validate-daily-assumption', title: 'Write the riskiest assumption for today', cadence: 'daily', days: WEEKDAYS, source: 'template' },
-    { id: 'validate-weekly-interviews', title: 'Review customer conversations and update the ICP', cadence: 'weekly', days: FRIDAY, source: 'template' },
+    { id: 'validate-monthly-interviews', title: 'Review customer conversations and update the ICP', cadence: 'monthly', days: FRIDAY, source: 'template' },
   ],
   find_cofounders: [
     { id: 'cofounder-daily-outreach', title: 'Send one thoughtful cofounder outreach message', cadence: 'daily', days: WEEKDAYS, source: 'template' },
     { id: 'cofounder-daily-follow-up', title: 'Follow up with one promising founder or operator', cadence: 'daily', days: WEEKDAYS, source: 'template' },
-    { id: 'cofounder-weekly-scorecard', title: 'Review fit signals and update your cofounder criteria', cadence: 'weekly', days: FRIDAY, source: 'template' },
+    { id: 'cofounder-monthly-scorecard', title: 'Review fit signals and update your cofounder criteria', cadence: 'monthly', days: FRIDAY, source: 'template' },
   ],
   grow_audience: [
     { id: 'audience-daily-post', title: 'Publish or draft one founder-learning post', cadence: 'daily', days: WEEKDAYS, source: 'template' },
     { id: 'audience-daily-engage', title: 'Reply to five relevant people in your niche', cadence: 'daily', days: WEEKDAYS, source: 'template' },
-    { id: 'audience-weekly-review', title: 'Review audience signals and pick next week\'s content angle', cadence: 'weekly', days: FRIDAY, source: 'template' },
+    { id: 'audience-monthly-review', title: 'Review audience signals and pick next month\'s content angle', cadence: 'monthly', days: FRIDAY, source: 'template' },
   ],
   launch_product: [
     { id: 'launch-daily-build', title: 'Ship one small product improvement', cadence: 'daily', days: WEEKDAYS, source: 'template' },
     { id: 'launch-daily-feedback', title: 'Ask one user or prospect for feedback', cadence: 'daily', days: WEEKDAYS, source: 'template' },
-    { id: 'launch-weekly-release', title: 'Publish a release note or launch update', cadence: 'weekly', days: WEDNESDAY, source: 'template' },
+    { id: 'launch-monthly-release', title: 'Publish a release note or launch update', cadence: 'monthly', days: WEDNESDAY, source: 'template' },
   ],
   raise_funding: [
     { id: 'funding-daily-proof', title: 'Strengthen one proof point for the investor story', cadence: 'daily', days: WEEKDAYS, source: 'template' },
     { id: 'funding-daily-investor', title: 'Research or follow up with one aligned investor', cadence: 'daily', days: WEEKDAYS, source: 'template' },
-    { id: 'funding-weekly-pipeline', title: 'Review investor pipeline and next-step status', cadence: 'weekly', days: MONDAY, source: 'template' },
+    { id: 'funding-monthly-pipeline', title: 'Review investor pipeline and next-step status', cadence: 'monthly', days: MONDAY, source: 'template' },
   ],
 };
 
@@ -155,7 +158,7 @@ export const FIRST_CUSTOMER_PROOF_ROUTINE_TASKS: Omit<RoutineTask, 'order' | 'ac
   { id: 'first-customer-proof-prospects', title: 'Add qualified prospects to First Customer Proof', cadence: 'daily', days: [1, 2], source: 'suggested' },
   { id: 'first-customer-proof-outreach', title: 'Personalize and manually send First Customer Proof outreach', cadence: 'daily', days: [2, 3, 4], source: 'suggested' },
   { id: 'first-customer-proof-evidence', title: 'Log buyer replies, conversations, commitments, or payments', cadence: 'daily', days: WEEKDAYS, source: 'suggested' },
-  { id: 'first-customer-proof-decision', title: 'Review buyer evidence and record the next decision', cadence: 'weekly', days: FRIDAY, source: 'suggested' },
+  { id: 'first-customer-proof-decision', title: 'Review buyer evidence and record the next decision', cadence: 'monthly', days: FRIDAY, source: 'suggested' },
 ];
 
 /**
@@ -201,7 +204,7 @@ export function createRoutineConfig(
     .sort((a, b) => a - b);
 
   const capacitySizedTasks = ROUTINE_TEMPLATES[goal]
-    .filter((task, index) => weeklyCapacityHours === 2 ? index === 0 || task.cadence === 'weekly' : true)
+    .filter((task, index) => weeklyCapacityHours === 2 ? index === 0 || task.cadence === 'monthly' : true)
     .map((task, index) => {
       const fitted = fitDaysToWorkingWeek(task.days, week);
       // At ~5h/week a daily cadence on every working day is not realistic for
@@ -247,7 +250,9 @@ export function parseRoutineConfig(value: Json | null | undefined): RoutineConfi
         const task = item as Record<string, unknown>;
         const id = typeof task.id === 'string' && task.id.trim() ? task.id : `routine-task-${index}`;
         const title = typeof task.title === 'string' ? task.title.trim() : '';
-        const cadence = task.cadence === 'weekly' ? 'weekly' : 'daily';
+        // Existing routines used `weekly`; treating those as monthly keeps every
+        // founder's saved priority while moving the product to the simpler model.
+        const cadence = task.cadence === 'monthly' || task.cadence === 'weekly' ? 'monthly' : 'daily';
         const source =
           task.source === 'custom' || task.source === 'suggested' || task.source === 'template'
             ? task.source
@@ -325,6 +330,11 @@ export function getDateKeyInTimezone(date = new Date(), timezone = 'UTC') {
   return `${parts.year.toString().padStart(4, '0')}-${parts.month.toString().padStart(2, '0')}-${parts.day.toString().padStart(2, '0')}`;
 }
 
+export function getMonthStartKeyInTimezone(date = new Date(), timezone = 'UTC') {
+  const parts = getTimezoneParts(date, timezone);
+  return `${parts.year.toString().padStart(4, '0')}-${parts.month.toString().padStart(2, '0')}-01`;
+}
+
 export function getWeekStartKeyInTimezone(date = new Date(), timezone = 'UTC') {
   const parts = getTimezoneParts(date, timezone);
   const localMidnight = new Date(Date.UTC(parts.year, parts.month - 1, parts.day));
@@ -332,31 +342,15 @@ export function getWeekStartKeyInTimezone(date = new Date(), timezone = 'UTC') {
   return localMidnight.toISOString().slice(0, 10);
 }
 
-export function getWeekStartKey(date = new Date()) {
-  return format(startOfWeek(date, { weekStartsOn: 1 }), 'yyyy-MM-dd');
-}
-
-export function getWeekEndLabel(date = new Date()) {
-  return format(endOfWeek(date, { weekStartsOn: 1 }), 'MMM d');
-}
-
-export function getWeekEndLabelInTimezone(date = new Date(), timezone = 'UTC') {
-  const start = getWeekStartKeyInTimezone(date, timezone);
-  const end = new Date(`${start}T00:00:00Z`);
-  end.setUTCDate(end.getUTCDate() + 6);
-  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }).format(end);
-}
-
-export function getRoutineTasksForToday(config: RoutineConfig, date = new Date(), timezone?: string) {
-  const day = timezone ? getTimezoneParts(date, timezone).weekday : date.getDay();
+export function getRoutineTasksForToday(config: RoutineConfig, _date = new Date(), _timezone?: string) {
   return config.tasks
-    .filter((task) => task.active && task.cadence === 'daily' && task.days.includes(day))
+    .filter((task) => task.active && task.cadence === 'daily')
     .sort((a, b) => a.order - b.order);
 }
 
-export function getRoutineTasksForWeek(config: RoutineConfig) {
+export function getRoutineTasksForMonth(config: RoutineConfig) {
   return config.tasks
-    .filter((task) => task.active && task.cadence === 'weekly')
+    .filter((task) => task.active && task.cadence === 'monthly')
     .sort((a, b) => a.order - b.order);
 }
 
@@ -389,15 +383,15 @@ export function buildRoutineSuggestions(profile: RoutineProfileSnapshot, config:
   }
 
   if (stage.includes('launch') || challenge.includes('audience') || challenge.includes('growth')) {
-    addSuggestion('suggested-distribution-review', `Review one distribution signal in ${niche}`, 'weekly', FRIDAY);
+    addSuggestion('suggested-distribution-review', `Review one distribution signal in ${niche}`, 'monthly', FRIDAY);
   }
 
   if (stage.includes('fund') || challenge.includes('fund')) {
-    addSuggestion('suggested-investor-proof', 'Update one investor proof point or metric', 'weekly', MONDAY);
+    addSuggestion('suggested-investor-proof', 'Update one investor proof point or metric', 'monthly', MONDAY);
   }
 
   if (suggestions.length === 0) {
-    addSuggestion('suggested-weekly-retro', 'Review what worked and choose next week\'s smallest repeatable habit', 'weekly', FRIDAY);
+    addSuggestion('suggested-monthly-retro', 'Review what worked and choose next month\'s smallest repeatable habit', 'monthly', FRIDAY);
   }
 
   return suggestions.slice(0, 3);
@@ -418,7 +412,7 @@ export function createCustomRoutineTask(title: string, cadence: RoutineCadence, 
     id: `custom-${slug || 'task'}-${suffix}`,
     title: normalizedTitle,
     cadence,
-    days: cadence === 'daily' ? WEEKDAYS : FRIDAY,
+    days: cadence === 'daily' ? EVERY_DAY : [],
     order,
     source: 'custom',
     active: true,

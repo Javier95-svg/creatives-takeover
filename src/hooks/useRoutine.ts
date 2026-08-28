@@ -10,9 +10,9 @@ import {
   FIRST_CUSTOMER_PROOF_ROUTINE_TASKS,
   getDateKeyInTimezone,
   getCompletionKey,
+  getMonthStartKeyInTimezone,
   getRoutineTasksForToday,
-  getRoutineTasksForWeek,
-  getWeekStartKeyInTimezone,
+  getRoutineTasksForMonth,
   parseReminderPreferences,
   parseRoutineConfig,
   parseRoutineGoal,
@@ -46,7 +46,7 @@ type RoutineCompletionRow = {
 function normalizeCompletion(row: RoutineCompletionRow): RoutineCompletion {
   return {
     ...row,
-    period_type: row.period_type === 'weekly' ? 'weekly' : 'daily',
+    period_type: row.period_type === 'monthly' ? 'monthly' : row.period_type === 'weekly' ? 'weekly' : 'daily',
     status: row.status === 'skipped' ? 'skipped' : 'completed',
   };
 }
@@ -99,7 +99,7 @@ export function useRoutine() {
 
   const timezone = normalizeAccountabilityPreferences(profile?.user_preferences as Record<string, unknown> | null | undefined).timezone;
   const todayKey = getDateKeyInTimezone(new Date(), timezone);
-  const weekKey = getWeekStartKeyInTimezone(new Date(), timezone);
+  const monthKey = getMonthStartKeyInTimezone(new Date(), timezone);
 
   const refresh = useCallback(async () => {
     if (!userId) {
@@ -129,7 +129,7 @@ export function useRoutine() {
           .from('routine_task_completions')
           .select('id, routine_task_id, task_title, period_type, period_date, status, completed_at, created_at')
           .eq('user_id', userId)
-          .in('period_date', [todayKey, weekKey]),
+          .in('period_date', [todayKey, monthKey]),
         supabase
           .from('routine_task_completions')
           .select('id, routine_task_id, task_title, period_type, period_date, status, completed_at, created_at')
@@ -166,7 +166,7 @@ export function useRoutine() {
       loadedUserIdRef.current = userId;
       setIsLoading(false);
     }
-  }, [timezone, todayKey, userId, weekKey]);
+  }, [timezone, todayKey, userId, monthKey]);
 
   useEffect(() => {
     void refresh();
@@ -283,7 +283,7 @@ export function useRoutine() {
   ) => {
     if (!userId) return;
 
-    const periodDate = periodType === 'daily' ? todayKey : weekKey;
+    const periodDate = periodType === 'daily' ? todayKey : monthKey;
     setIsSaving(true);
 
     try {
@@ -309,12 +309,12 @@ export function useRoutine() {
     } finally {
       setIsSaving(false);
     }
-  }, [refresh, todayKey, userId, weekKey]);
+  }, [monthKey, refresh, todayKey, userId]);
 
   const clearTaskStatus = useCallback(async (task: RoutineTask, periodType: RoutinePeriodType) => {
     if (!userId) return;
 
-    const periodDate = periodType === 'daily' ? todayKey : weekKey;
+    const periodDate = periodType === 'daily' ? todayKey : monthKey;
     setIsSaving(true);
 
     try {
@@ -334,7 +334,7 @@ export function useRoutine() {
     } finally {
       setIsSaving(false);
     }
-  }, [refresh, todayKey, userId, weekKey]);
+  }, [monthKey, refresh, todayKey, userId]);
 
   const completionByKey = useMemo(() => {
     return new Map(
@@ -346,11 +346,11 @@ export function useRoutine() {
   }, [currentCompletions]);
 
   const todayTasks = useMemo(() => config ? getRoutineTasksForToday(config, new Date(), timezone) : [], [config, timezone]);
-  const weeklyTasks = useMemo(() => config ? getRoutineTasksForWeek(config) : [], [config]);
+  const monthlyTasks = useMemo(() => config ? getRoutineTasksForMonth(config) : [], [config]);
   const allCurrentTasks = useMemo(() => [
     ...todayTasks.map((task) => ({ task, periodType: 'daily' as const, periodDate: todayKey })),
-    ...weeklyTasks.map((task) => ({ task, periodType: 'weekly' as const, periodDate: weekKey })),
-  ], [todayKey, todayTasks, weekKey, weeklyTasks]);
+    ...monthlyTasks.map((task) => ({ task, periodType: 'monthly' as const, periodDate: monthKey })),
+  ], [monthKey, monthlyTasks, todayKey, todayTasks]);
 
   const completedCurrentCount = allCurrentTasks.filter(({ task, periodType, periodDate }) => {
     return completionByKey.get(getCompletionKey(task.id, periodType, periodDate))?.status === 'completed';
@@ -385,7 +385,7 @@ export function useRoutine() {
     reminderChannels,
     timezone,
     todayTasks,
-    weeklyTasks,
+    monthlyTasks,
     currentCompletions,
     historyCompletions,
     completionByKey,
