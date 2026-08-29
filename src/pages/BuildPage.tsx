@@ -90,12 +90,12 @@ const SHOWCASE_SITES = [
 ];
 
 const BUILD_CARDS = [
-  { tag: 'Sites', Icon: Globe, title: 'Landing pages', body: 'High-converting marketing pages with a hero, sections, and a CTA. On-brand from the first draft.' },
-  { tag: 'Apps', Icon: Zap, title: 'Web & mobile apps', body: 'Auth, data, and real interactions across habit trackers, CRMs, booking flows, and note apps. Working, not wireframes.' },
-  { tag: 'Data', Icon: LayoutDashboard, title: 'Dashboards', body: 'Track your metrics, your users, or your team. Charts, tables, and filters wired to live data.' },
-  { tag: 'Commerce', Icon: ShoppingCart, title: 'Online stores', body: 'Product grids, carts, and checkout for your first 100 orders. Ship the store before you over-think the catalogue.' },
-  { tag: 'SaaS', Icon: Code2, title: 'SaaS MVPs', body: 'Pricing, onboarding, and a core feature loop. The smallest real version of the product you keep talking about.' },
-  { tag: 'Internal', Icon: Wrench, title: 'Internal tools', body: 'Admin panels, ops dashboards, and team workflows. Stop running the company out of a spreadsheet.' },
+  { tag: 'Sites', preview: 'site', Icon: Globe, title: 'Landing pages', body: 'High-converting marketing pages with a hero, sections, and a CTA. On-brand from the first draft.' },
+  { tag: 'Apps', preview: 'app', Icon: Zap, title: 'Web & mobile apps', body: 'Auth, data, and real interactions across habit trackers, CRMs, booking flows, and note apps. Working, not wireframes.' },
+  { tag: 'Data', preview: 'dashboard', Icon: LayoutDashboard, title: 'Dashboards', body: 'Track your metrics, your users, or your team. Charts, tables, and filters wired to live data.' },
+  { tag: 'E-commerce', preview: 'commerce', Icon: ShoppingCart, title: 'Online stores', body: 'Product grids, carts, and checkout for your first 100 orders. Ship the store before you over-think the catalogue.' },
+  { tag: 'SaaS', preview: 'saas', Icon: Code2, title: 'SaaS MVPs', body: 'Pricing, onboarding, and a core feature loop. The smallest real version of the product you keep talking about.' },
+  { tag: 'Internal', preview: 'internal', Icon: Wrench, title: 'Internal tools', body: 'Admin panels, ops dashboards, and team workflows. Stop running the company out of a spreadsheet.' },
 ];
 
 const STAGES = [
@@ -638,6 +638,125 @@ const BuildHowItWorks = () => {
 
 // ─── What you can build ───────────────────────────────────────────────────────
 
+const BuildCardPreview = ({ preview }: { preview: string }) => {
+  const browserDots = (
+    <span className="flex items-center gap-1">
+      <i className="h-1.5 w-1.5 rounded-full bg-destructive/70" />
+      <i className="h-1.5 w-1.5 rounded-full bg-warning/70" />
+      <i className="h-1.5 w-1.5 rounded-full bg-success/70" />
+    </span>
+  );
+
+  if (preview === 'app') {
+    return (
+      <div className="relative flex h-[132px] w-full items-center justify-center" aria-hidden="true">
+        <div className="absolute left-[18%] top-8 h-9 w-16 rounded-lg border border-primary/20 bg-primary/[0.08] transition-transform duration-500 group-hover:-translate-x-1 motion-reduce:transition-none" />
+        <div className="absolute right-[17%] top-16 h-7 w-14 rounded-lg border border-success/20 bg-success/[0.08] transition-transform duration-500 group-hover:translate-x-1 motion-reduce:transition-none" />
+        <div className="relative h-[126px] w-[66px] rounded-[17px] border-2 border-border/80 bg-background/90 p-1.5 shadow-xl transition-transform duration-500 group-hover:-translate-y-1 group-hover:rotate-1 motion-reduce:transform-none motion-reduce:transition-none">
+          <div className="mx-auto mb-2 h-1 w-5 rounded-full bg-border" />
+          <div className="rounded-lg bg-primary/15 p-2">
+            <div className="h-2 w-8 rounded-full bg-primary/70" />
+            <div className="mt-1 h-1 w-10 rounded-full bg-primary/20" />
+          </div>
+          <div className="mt-2 space-y-1.5">
+            {[0, 1, 2].map((item) => (
+              <div key={item} className="flex items-center gap-1.5 rounded-md border border-border/50 p-1">
+                <span className={cn('h-2 w-2 rounded-full', item === 0 ? 'bg-success/70' : 'bg-muted')} />
+                <span className="h-1 flex-1 rounded-full bg-muted" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (preview === 'dashboard') {
+    return (
+      <div className="w-[calc(100%_-_36px)] max-w-[238px] overflow-hidden rounded-xl border border-border/60 bg-background/90 shadow-lg" aria-hidden="true">
+        <div className="flex h-5 items-center justify-between border-b border-border/50 px-2.5">{browserDots}<span className="h-1 w-10 rounded-full bg-muted" /></div>
+        <div className="flex h-[105px]">
+          <div className="w-9 border-r border-border/50 bg-muted/20 p-2"><div className="h-3 w-3 rounded bg-primary/60" /><div className="mt-3 space-y-2">{[0, 1, 2].map((item) => <i key={item} className="block h-1 w-5 rounded bg-muted" />)}</div></div>
+          <div className="flex-1 p-2.5">
+            <div className="grid grid-cols-3 gap-1.5">{['bg-primary/20', 'bg-success/20', 'bg-warning/20'].map((color) => <div key={color} className={cn('h-7 rounded border border-border/40 p-1.5', color)}><i className="block h-1 w-4 rounded bg-foreground/30" /><i className="mt-1 block h-1.5 w-7 rounded bg-foreground/60" /></div>)}</div>
+            <div className="mt-2 flex h-12 items-end gap-1 rounded border border-border/40 px-2 pb-1.5">
+              {[45, 72, 55, 88, 66, 100, 82].map((height, index) => <i key={index} className="origin-bottom flex-1 rounded-t-sm bg-gradient-to-t from-primary/35 to-primary/80 transition-transform duration-500 group-hover:scale-y-110 motion-reduce:transform-none motion-reduce:transition-none" style={{ height: `${height}%` }} />)}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (preview === 'commerce') {
+    return (
+      <div className="w-[calc(100%_-_36px)] max-w-[238px] overflow-hidden rounded-xl border border-border/60 bg-background/90 shadow-lg" aria-hidden="true">
+        <div className="flex h-6 items-center justify-between border-b border-border/50 px-2.5"><span className="font-mono text-[6px] font-bold tracking-wider">STUDIO SHOP</span><span className="relative"><ShoppingCart className="h-3 w-3 text-primary" /><i className="absolute -right-1 -top-1 h-1.5 w-1.5 rounded-full bg-destructive" /></span></div>
+        <div className="grid grid-cols-3 gap-2 p-2.5">
+          {['from-blue-500/40 to-cyan-400/15', 'from-fuchsia-500/35 to-red-400/15', 'from-amber-400/40 to-emerald-400/15'].map((color, index) => (
+            <div key={color} className="rounded-lg border border-border/50 bg-card/60 p-1.5 transition-transform duration-500 group-hover:-translate-y-1 motion-reduce:transform-none motion-reduce:transition-none" style={{ transitionDelay: `${index * 55}ms` }}>
+              <div className={cn('aspect-square rounded-md bg-gradient-to-br', color)} />
+              <i className="mt-1.5 block h-1 w-4/5 rounded bg-foreground/35" />
+              <i className="mt-1 block h-1 w-2/5 rounded bg-primary/70" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (preview === 'saas') {
+    return (
+      <div className="w-[calc(100%_-_36px)] max-w-[238px] overflow-hidden rounded-xl border border-border/60 bg-background/90 shadow-lg" aria-hidden="true">
+        <div className="flex h-5 items-center justify-between border-b border-border/50 px-2.5">{browserDots}<span className="rounded bg-primary/15 px-1.5 py-0.5 font-mono text-[5px] text-primary">LIVE</span></div>
+        <div className="flex h-[105px]">
+          <div className="w-11 border-r border-border/50 bg-primary/[0.04] p-2"><div className="h-3 w-6 rounded bg-gradient-rgb opacity-70" />{[0, 1, 2, 3].map((item) => <i key={item} className="mt-2 block h-1 w-7 rounded bg-muted" />)}</div>
+          <div className="flex-1 p-2.5">
+            <div className="flex items-center justify-between"><i className="h-1.5 w-12 rounded bg-foreground/60" /><i className="h-4 w-9 rounded bg-primary/70" /></div>
+            <div className="mt-2.5 grid grid-cols-2 gap-2">
+              <div className="rounded-lg border border-primary/20 bg-primary/[0.06] p-2"><Code2 className="h-3 w-3 text-primary" /><i className="mt-2 block h-1 w-full rounded bg-muted" /><i className="mt-1 block h-1 w-3/4 rounded bg-muted" /></div>
+              <div className="rounded-lg border border-success/20 bg-success/[0.05] p-2"><CheckCircle2 className="h-3 w-3 text-success" /><i className="mt-2 block h-1 w-full rounded bg-muted" /><i className="mt-1 block h-1 w-2/3 rounded bg-muted" /></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (preview === 'internal') {
+    return (
+      <div className="w-[calc(100%_-_36px)] max-w-[238px] overflow-hidden rounded-xl border border-border/60 bg-background/90 shadow-lg" aria-hidden="true">
+        <div className="flex h-7 items-center justify-between border-b border-border/50 px-2.5"><span className="flex items-center gap-1.5"><Wrench className="h-3 w-3 text-primary" /><i className="h-1.5 w-12 rounded bg-foreground/50" /></span><span className="h-4 w-10 rounded border border-border/60 bg-muted/30" /></div>
+        <div className="p-2.5">
+          <div className="grid grid-cols-[1.4fr_0.8fr_0.5fr] gap-2 border-b border-border/50 pb-1.5 font-mono text-[5px] uppercase tracking-wider text-muted-foreground"><span>Request</span><span>Status</span><span>Owner</span></div>
+          {[['bg-success/70', 'Done'], ['bg-warning/70', 'Review'], ['bg-primary/70', 'Active']].map(([color, status], index) => (
+            <div key={status} className="grid grid-cols-[1.4fr_0.8fr_0.5fr] items-center gap-2 border-b border-border/30 py-2 transition-colors group-hover:bg-muted/15">
+              <span><i className="block h-1 w-full rounded bg-muted" /><i className="mt-1 block h-1 w-2/3 rounded bg-muted/60" /></span>
+              <span className="flex items-center gap-1 font-mono text-[5px]"><i className={cn('h-1.5 w-1.5 rounded-full', color)} />{status}</span>
+              <span className="h-4 w-4 rounded-full bg-gradient-rgb opacity-50" style={{ opacity: 0.45 + index * 0.15 }} />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-[calc(100%_-_36px)] max-w-[238px] overflow-hidden rounded-xl border border-border/60 bg-background/90 shadow-lg" aria-hidden="true">
+      <div className="flex h-5 items-center justify-between border-b border-border/50 px-2.5">{browserDots}<span className="h-1 w-9 rounded-full bg-muted" /></div>
+      <div className="grid h-[105px] grid-cols-[1.2fr_0.8fr] items-center gap-3 p-3">
+        <div>
+          <i className="block h-2 w-4/5 rounded-full bg-gradient-rgb opacity-80" />
+          <i className="mt-2 block h-1 w-full rounded-full bg-muted" />
+          <i className="mt-1 block h-1 w-3/4 rounded-full bg-muted" />
+          <i className="mt-3 block h-4 w-12 rounded bg-primary/70 transition-transform duration-500 group-hover:translate-x-1 motion-reduce:transition-none" />
+        </div>
+        <div className="relative aspect-square rounded-full bg-gradient-to-br from-primary/25 via-destructive/15 to-success/25"><Globe className="absolute inset-0 m-auto h-7 w-7 text-primary/70 transition-transform duration-700 group-hover:rotate-12 group-hover:scale-110 motion-reduce:transform-none motion-reduce:transition-none" /></div>
+      </div>
+    </div>
+  );
+};
+
 const BuildWhatYouCanBuild = () => (
   <section className="pb-20 pt-4 lg:pb-24">
     <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
@@ -654,22 +773,11 @@ const BuildWhatYouCanBuild = () => (
         {BUILD_CARDS.map((card) => (
           <div
             key={card.title}
-            className="overflow-hidden rounded-2xl border border-border/60 bg-card/50 transition-all duration-300 hover:-translate-y-1 hover:border-border/90 hover:shadow-xl"
+            className="group overflow-hidden rounded-2xl border border-border/60 bg-card/50 transition-all duration-300 hover:-translate-y-1 hover:border-border/90 hover:shadow-xl motion-reduce:transform-none motion-reduce:transition-none"
           >
             {/* thumbnail */}
             <div className="relative flex aspect-[16/10] items-center justify-center border-b border-border/50 bg-muted/20">
-              <div className="overflow-hidden rounded-xl border border-border/60 bg-background/80 shadow-lg" style={{ width: 'calc(100% - 36px)', maxWidth: 220 }}>
-                <div className="flex h-5 items-center gap-1.5 border-b border-border/50 px-2.5">
-                  <i className="h-1.5 w-1.5 rounded-full bg-border" />
-                  <i className="h-1.5 w-1.5 rounded-full bg-border" />
-                  <i className="h-1.5 w-1.5 rounded-full bg-border" />
-                </div>
-                <div className="flex flex-col gap-1.5 p-2.5">
-                  <div className="h-2 w-[55%] rounded-full bg-gradient-rgb opacity-60" />
-                  <div className="h-1.5 w-4/5 rounded-full bg-muted" />
-                  <div className="h-1.5 w-2/3 rounded-full bg-muted" />
-                </div>
-              </div>
+              <BuildCardPreview preview={card.preview} />
               <span className="absolute left-3 top-3 rounded-lg border border-border/60 bg-background/70 px-2 py-1 font-mono text-caption uppercase tracking-[0.14em] text-muted-foreground backdrop-blur-sm">
                 {card.tag}
               </span>
@@ -715,14 +823,16 @@ const BuildEvidenceContext = ({ onOpen }: HeroProps) => {
               </div>
             ))}
           </div>
-          <Button
-            size="lg"
-            className="mt-7 gap-2 rounded-xl bg-gradient-rgb px-5 font-bold text-white shadow-[0_14px_34px_-16px_rgba(59,130,246,0.75)]"
-            onClick={() => onOpen('Build an evidence-backed MVP from my saved ICP and PMF context')}
-          >
-            Build from my evidence
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </Button>
+          <div className="mt-7 flex justify-center">
+            <Button
+              size="lg"
+              className="gap-2 rounded-xl bg-gradient-rgb px-5 font-bold text-white shadow-[0_14px_34px_-16px_rgba(59,130,246,0.75)]"
+              onClick={() => onOpen('Build an evidence-backed MVP from my saved ICP and PMF context')}
+            >
+              Build from my evidence
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </div>
         </div>
       </ScrollReveal>
 
@@ -902,7 +1012,7 @@ const BuildStageSelector = () => {
 
 // ─── Focus, ownership, and shipping ───────────────────────────────────────────
 
-const BuildFocusSection = ({ onOpen }: HeroProps) => {
+const BuildFocusSection = () => {
   const [activeStep, setActiveStep] = useState(FOCUS_STEPS[0].title);
   const selectedStep = FOCUS_STEPS.find((step) => step.title === activeStep) ?? FOCUS_STEPS[0];
   const SelectedStepIcon = selectedStep.Icon;
@@ -977,7 +1087,7 @@ const BuildFocusSection = ({ onOpen }: HeroProps) => {
             })}
           </RevealGroup>
 
-          <div id="focus-step-detail" aria-live="polite" className="mt-7 flex flex-col items-center justify-between gap-4 rounded-2xl border border-border/60 bg-background/40 p-4 sm:flex-row sm:px-5">
+          <div id="focus-step-detail" aria-live="polite" className="mt-7 rounded-2xl border border-border/60 bg-background/40 p-4 sm:px-5">
             <div className="flex items-start gap-3">
               <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-success/10 text-success">
                 <SelectedStepIcon className="h-4 w-4" aria-hidden="true" />
@@ -987,14 +1097,6 @@ const BuildFocusSection = ({ onOpen }: HeroProps) => {
                 <p className="mt-0.5 max-w-[610px] text-xs leading-relaxed text-muted-foreground">{selectedStep.detail}</p>
               </div>
             </div>
-            <Button
-              size="lg"
-              className="w-full shrink-0 gap-2 rounded-xl bg-gradient-rgb px-5 font-bold text-white sm:w-auto"
-              onClick={() => onOpen('Build the smallest testable version of my product')}
-            >
-              Build the first testable version
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Button>
           </div>
         </div>
       </ScrollReveal>
@@ -1033,7 +1135,7 @@ const BuildPage = () => {
           <BuildHowItWorks />
           <BuildWhatYouCanBuild />
           <BuildEvidenceContext onOpen={openModal} />
-          <BuildFocusSection onOpen={openModal} />
+          <BuildFocusSection />
           <BuildStageSelector />
           <Footer />
         </div>

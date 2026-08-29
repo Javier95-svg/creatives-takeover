@@ -49,17 +49,26 @@ test('Build page presents focused scope, ownership, and shipping', () => {
     '≤3 essential features',
     'No more than 3 essential features',
     'Review changes, restore versions, use GitHub, or export the code.',
-    'Build the first testable version',
   ]) {
     assert.ok(source.includes(capability), capability);
   }
-  assert.match(source, /onOpen\('Build the smallest testable version of my product'\)/);
+  assert.doesNotMatch(source, /Build the first testable version/);
+  assert.doesNotMatch(source, /Build the smallest testable version of my product/);
 });
 
 test('Build page keeps supporting copy concise', () => {
   assert.doesNotMatch(source, /Available when saved journey evidence is ready/);
   assert.doesNotMatch(source, /MVP Builder gives the first version a stopping rule/);
   assert.match(source, /text-center font-mono text-label[^>]+>Your evidence, already here/);
+  assert.match(source, /mt-7 flex justify-center/);
+});
+
+test('each build category has a distinct product preview', () => {
+  for (const preview of ['site', 'app', 'dashboard', 'commerce', 'saas', 'internal']) {
+    assert.match(source, new RegExp(`preview: '${preview}'`));
+  }
+  assert.match(source, /<BuildCardPreview preview=\{card\.preview\}/);
+  assert.match(source, /tag: 'E-commerce'/);
 });
 
 test('Build page keeps the agreed narrative order and existing shell', () => {
