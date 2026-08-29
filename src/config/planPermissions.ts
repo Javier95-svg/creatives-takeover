@@ -208,36 +208,23 @@ export const PLAN_MONTHLY_CREDITS: Record<Plan, number> = {
 export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
   rookie: [
     '50 monthly credits',
-    'PROVE preview, first ICP, and evidence plan',
-    'One recommended market-facing action',
-    'Core build tools with transparent credit costs',
-    'Browse VC Search and Accelerator Hunt',
-    'Browse, message, and save mentors',
+    'Core founder tools with standard AI models where applicable',
+    '3 directory visits plus VC Search and Accelerator Hunt browsing',
   ],
   starter: [
     '100 monthly credits',
-    'Full PROVE workflow and customer evidence ledger',
-    'PMF Discovery and weekly validation guidance',
-    'Full Email Templates library',
-    'VC Search & Accelerator Hunt: 2 profile views/month',
-    'Core build tools with transparent credit costs',
+    'PROVE workspace and full Email Templates access',
+    '2 VC profiles, 2 accelerator profiles, and 10 directory visits',
   ],
   rising: [
-    '250 monthly credits',
-    'First Customer Proof: prospects, messages, buyer evidence, and a decision',
-    'SELL and self-serve GROW workflows',
-    'Prospect pipeline, experiments, and metrics',
-    'Full Prompt Library with export actions',
-    'VC Search & Accelerator Hunt: 10 profile views/month',
-    'Pitch Deck Analyzer with transparent credit costs',
+    '250 monthly credits with advanced MVP models',
+    'Complete First Customer Proof workflow',
+    'Full Prompt Library and exports plus 10 VC profile views',
   ],
   pro: [
-    '600 monthly credits and the Pro War Room',
-    'Substantive expert response within 48 hours',
-    'Find Your Angel investor matching',
-    'All execution loops plus optional Stage VII fundraising workflows',
-    'Priority founder support and deeper research',
-    'Unlimited VC Search & Accelerator profile views',
+    '600 monthly credits',
+    'Find Your Angel access',
+    'Unlimited VC profiles, accelerator profiles, and directory visits',
   ],
 };
 
@@ -284,9 +271,9 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
     visibleTools: ['icp_builder', 'waitlist_maker', 'pmf_lab', 'mvp_builder', 'tech_stack', 'gtm_strategist', 'directories', 'saved_mentors', 'decision_sprint', 'core_metrics', 'ai_goals', 'find_mentor', 'find_cofounder', 'vc_search', 'accelerator_hunt', 'email_templates', 'pitch_deck_analyzer', 'insighta_test', 'newspaper', 'prompt_library'],
   },
   pro: {
-    label: 'Expert Execution Mode',
-    badgeDescription: 'Accountability and RAISE',
-    subtitle: 'All operating loops with expert support and fundraising.',
+    label: 'Full Execution Mode',
+    badgeDescription: 'Maximum runway and research',
+    subtitle: 'Run every operating loop with the largest credit allowance and unrestricted research.',
     sectionIds: ['mode-support', 'mode-fundraising', 'mode-usage', 'routine', 'your-tasks'],
     activeStages: [1, 2, 3, 4, 5],
     previewStages: [],
@@ -548,7 +535,7 @@ export const PLAN_SUMMARIES: Record<Plan, PlanSummary> = {
     monthlyCredits: PLAN_MONTHLY_CREDITS.pro,
     vcViewLimit: MONTHLY_FREE_QUOTAS.vc_profiles.pro,
     acceleratorViewLimit: MONTHLY_FREE_QUOTAS.accelerator_profiles.pro,
-    description: 'Access every operating loop, expert accountability, the Pro War Room, and optional RAISE workflows with 600 monthly credits.',
+    description: 'Use 600 monthly credits, Find Your Angel, and unlimited VC, accelerator, and directory research.',
   },
 };
 

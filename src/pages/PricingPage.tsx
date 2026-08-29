@@ -19,25 +19,25 @@ const PricingPage = () => {
   const structuredData = [
     createProductSchema({
       name: "Creatives Takeover Rookie Plan",
-      description: "Clarify who to serve first with both visitor AHA previews, a customer decision workflow, and 50 monthly credits.",
+      description: "Start building and testing for free with 50 monthly credits and standard AI models.",
       price: 0,
       currency: "USD"
     }),
     createProductSchema({
       name: "Creatives Takeover Starter Plan",
-      description: "Validate demand with 100 monthly credits, Demo Studio proof workflows, PMF evidence, and structured execution.",
+      description: "Validate faster with 100 monthly credits, the PROVE workspace, Email Templates, and deeper research.",
       price: 9,
       currency: "USD"
     }),
     createProductSchema({
       name: "Creatives Takeover Rising Plan",
-      description: "Build and launch with 250 monthly credits, evidence backed MVP workflows, GTM execution, and traction measurement.",
+      description: "Turn evidence into products and customer acquisition with 250 monthly credits and advanced MVP models.",
       price: 29,
       currency: "USD"
     }),
     createProductSchema({
       name: "Creatives Takeover Pro Plan",
-      description: "Accelerate and fundraise with 600 monthly credits, expert accountability within 48 hours, deeper research, and fundraising workflows.",
+      description: "Gain maximum execution runway with 600 monthly credits, Find Your Angel, and unlimited research.",
       price: 65,
       currency: "USD"
     }),
@@ -50,8 +50,8 @@ const PricingPage = () => {
   return (
     <>
       <SEO
-        title="Founder Outcomes and Pricing | Creatives Takeover"
-        description="Compare Rookie, Starter, Rising, and Pro by the founder outcome each plan enables, from customer clarity to expert backed fundraising."
+        title="Founder Software Plans and Pricing | Creatives Takeover"
+        description="Compare Creatives Takeover plans for evidence-backed validation, MVP building, customer acquisition, and startup research."
         keywords="ai startup tools pricing, founder software pricing, startup platform pricing, fundraising tools pricing, mvp builder pricing"
         url="/pricing"
         structuredData={structuredData}

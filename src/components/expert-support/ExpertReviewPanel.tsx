@@ -140,7 +140,7 @@ export default function ExpertReviewPanel({ isAdmin = false }: { isAdmin?: boole
       artifact_type: selectedOutcome.artifact_type,
     });
     setRequest('');
-    toast.success('Expert review requested.', { description: 'Your 48 hour response window has started.' });
+    toast.success('Expert review requested.', { description: 'Your request has been added to the review queue.' });
     await loadQueue();
   };
 
@@ -192,31 +192,13 @@ export default function ExpertReviewPanel({ isAdmin = false }: { isAdmin?: boole
     await loadQueue();
   };
 
-  if (!user) {
-    return (
-      <Card className="border-primary/25 bg-primary/5">
-        <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div><p className="font-semibold">Expert accountability on Pro</p><p className="mt-1 text-sm text-muted-foreground">Submit a completed founder outcome and receive a substantive expert response within 48 hours.</p></div>
-          <Button asChild variant="outline"><a href="/pricing">See Pro</a></Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!canUseQueue) {
-    return (
-      <Card className="border-primary/25 bg-primary/5">
-        <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div><p className="font-semibold">Add expert accountability</p><p className="mt-1 text-sm text-muted-foreground">Pro members can request a substantive review of any ready or verified journey outcome within 48 hours.</p></div>
-          <Button asChild variant="outline"><a href="/pricing">Upgrade to Pro</a></Button>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Keep the existing review workflow available to accounts that already have
+  // access, but do not merchandise it as a Pro subscription promise.
+  if (!user || !canUseQueue) return null;
 
   return (
     <Card className="border-primary/25 bg-primary/5">
-      <CardHeader><div className="flex flex-wrap items-center justify-between gap-2"><div><CardTitle className="flex items-center gap-2 text-lg"><ShieldCheck className="h-5 w-5 text-primary" />{isAdmin ? 'Expert review SLA queue' : 'Pro expert outcome review'}</CardTitle><p className="mt-1 text-sm text-muted-foreground">{isAdmin ? 'Respond with attributable feedback and protect the 48 hour commitment.' : 'Ask one focused question about evidence, a decision, or the next move.'}</p></div><Badge variant="outline">48 hour SLA</Badge></div></CardHeader>
+      <CardHeader><div className="flex flex-wrap items-center justify-between gap-2"><div><CardTitle className="flex items-center gap-2 text-lg"><ShieldCheck className="h-5 w-5 text-primary" />{isAdmin ? 'Expert review operations' : 'Expert outcome review'}</CardTitle><p className="mt-1 text-sm text-muted-foreground">{isAdmin ? 'Respond with attributable feedback and monitor the internal service queue.' : 'Ask one focused question about evidence, a decision, or the next move.'}</p></div>{isAdmin ? <Badge variant="outline">Internal queue</Badge> : null}</div></CardHeader>
       <CardContent className="space-y-5">
         {!isAdmin && (
           <div className="grid gap-3 md:grid-cols-2">

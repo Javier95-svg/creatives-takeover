@@ -23,7 +23,6 @@ import { useSearchParams } from 'react-router-dom';
 import { ArrowRight, ChevronDown, Rocket } from 'lucide-react';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 import { getPublicTabConfig } from '@/config/publicTabVisibility';
-import { PLAN_LABELS } from '@/config/planPermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
 import { useCustomerDiscovery } from '@/hooks/useCustomerDiscovery';
@@ -703,7 +702,7 @@ export default function PMFLabPage() {
               // the matrix that gives rookie full access.
               <BlurredToolPreview
                 featureName="PMF Lab"
-                unlockCondition={`PMF Lab is available on the ${PLAN_LABELS[upgradeTarget] ?? 'Starter'} plan and above.`}
+                unlockCondition="PMF Lab is available on every plan. Refresh the page or contact support if this message persists."
                 requiredPlan={upgradeTarget}
                 locked
               >

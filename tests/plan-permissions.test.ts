@@ -26,39 +26,26 @@ test('normalizePlan keeps legacy creator users on rising', () => {
 test('plan highlights match the authoritative four-plan contract', () => {
   assert.deepEqual(PLAN_HIGHLIGHTS.rookie, [
     '50 monthly credits',
-    'PROVE preview, first ICP, and evidence plan',
-    'One recommended market-facing action',
-    'Core build tools with transparent credit costs',
-    'Browse VC Search and Accelerator Hunt',
-    'Browse, message, and save mentors',
+    'Core founder tools with standard AI models where applicable',
+    '3 directory visits plus VC Search and Accelerator Hunt browsing',
   ]);
 
   assert.deepEqual(PLAN_HIGHLIGHTS.starter, [
     '100 monthly credits',
-    'Full PROVE workflow and customer evidence ledger',
-    'PMF Discovery and weekly validation guidance',
-    'Full Email Templates library',
-    'VC Search & Accelerator Hunt: 2 profile views/month',
-    'Core build tools with transparent credit costs',
+    'PROVE workspace and full Email Templates access',
+    '2 VC profiles, 2 accelerator profiles, and 10 directory visits',
   ]);
 
   assert.deepEqual(PLAN_HIGHLIGHTS.rising, [
-    '250 monthly credits',
-    'First Customer Proof: prospects, messages, buyer evidence, and a decision',
-    'SELL and self-serve GROW workflows',
-    'Prospect pipeline, experiments, and metrics',
-    'Full Prompt Library with export actions',
-    'VC Search & Accelerator Hunt: 10 profile views/month',
-    'Pitch Deck Analyzer with transparent credit costs',
+    '250 monthly credits with advanced MVP models',
+    'Complete First Customer Proof workflow',
+    'Full Prompt Library and exports plus 10 VC profile views',
   ]);
 
   assert.deepEqual(PLAN_HIGHLIGHTS.pro, [
-    '600 monthly credits and the Pro War Room',
-    'Substantive expert response within 48 hours',
-    'Find Your Angel investor matching',
-    'All execution loops plus optional Stage VII fundraising workflows',
-    'Priority founder support and deeper research',
-    'Unlimited VC Search & Accelerator profile views',
+    '600 monthly credits',
+    'Find Your Angel access',
+    'Unlimited VC profiles, accelerator profiles, and directory visits',
   ]);
 });
 
@@ -86,7 +73,7 @@ test('dashboard mode config resolves from the canonical plan contract', () => {
   }
 
   const proMode = getDashboardModeConfig('pro');
-  assert.equal(proMode.label, 'Expert Execution Mode');
+  assert.equal(proMode.label, 'Full Execution Mode');
   assert.deepEqual(proMode.activeStages, [1, 2, 3, 4, 5]);
   assert.deepEqual(proMode.previewStages, []);
   assert.equal(proMode.navItems[0]?.label, 'Progress Tracker');
@@ -115,13 +102,13 @@ test('plan monthly credits stay aligned with pricing', () => {
   assert.equal(PLAN_MONTHLY_CREDITS.pro, 600);
 });
 
-test('pricing page presents plan outcome labels', () => {
+test('pricing page presents compact value statements and differentiators', () => {
   const pricingSource = readFileSync(new URL('../src/components/Pricing.tsx', import.meta.url), 'utf8');
 
-  assert.match(pricingSource, /outcomeLabel: "PROVE Preview"/);
-  assert.match(pricingSource, /outcomeLabel: "PROVE"/);
-  assert.match(pricingSource, /outcomeLabel: "SELL \+ GROW"/);
-  assert.match(pricingSource, /outcomeLabel: "Expert \+ RAISE"/);
+  assert.match(pricingSource, /PLAN_PACKAGE_PRESENTATION/);
+  assert.match(pricingSource, /plan\.valueStatement/);
+  assert.match(pricingSource, /plan\.differentiators\.map/);
+  assert.doesNotMatch(pricingSource, /Plan highlights/);
 });
 
 test('core entitlement rules reflect the pricing contract', () => {

@@ -418,6 +418,6 @@ export const TIER_DETAILS = {
     price: 65,
     credits: 600,
     vcViewLimit: -1, // unlimited
-    description: 'Fundraising and scaling tier with unlimited investor views and priority support',
+    description: 'Maximum credit runway with Find Your Angel and unlimited startup research',
   },
 } as const;

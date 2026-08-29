@@ -124,7 +124,7 @@ const UpgradePromptDialog = ({
       return `You need ${requiredCredits} credits to use ${featureLabel}. Upgrade to ${tierDetails.name} for ${tierDetails.monthlyCredits} credits/month and keep moving.`;
     }
     if (isStarterRecommendation) {
-      return `Starter is your validation step: ${tierDetails.monthlyCredits} credits/month, PMF Lab, Email Templates, and deeper research access.`;
+      return `Starter gives you ${tierDetails.monthlyCredits} credits/month, the PROVE workspace, Email Templates, and expanded investor and accelerator research.`;
     }
     return `Upgrade to ${tierDetails.name} to unlock ${featureLabel} plus ${tierDetails.monthlyCredits} credits each month.`;
   }, [featureLabel, isStarterRecommendation, limit, limitCopy, reason, tierDetails, requiredCredits]);

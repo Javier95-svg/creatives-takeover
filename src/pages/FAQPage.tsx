@@ -17,11 +17,11 @@ const FAQPage = () => {
       },
       {
         question: "How much does it cost?",
-        answer: "We offer four plans: Rookie is free with 50 credits/month, Starter is $9/month or $79/year with 100 credits, Rising is $29/month or $239/year with 250 credits, and Pro is $65/month or $589/year with 600 credits. Extra credit packs remain available on every plan."
+        answer: "We offer four plans: Rookie starts free with 50 credits and standard AI models. Starter adds 100 credits, the PROVE workspace, Email Templates, and deeper research. Rising adds 250 credits, advanced MVP models, and the complete First Customer Proof workflow. Pro adds 600 credits, Find Your Angel, and unlimited research. Extra credit packs remain available on every plan."
       },
       {
         question: "What is the credit system?",
-        answer: "Credits power metered AI actions across the platform. Plan gates decide which tools you can access, and credits meter generative actions inside unlocked tools. GTM Strategist is available on every plan and uses 6 credits per researched generation; manual edits and weekly reviews are included. ICP Builder remains free."
+        answer: "Credits power metered AI actions across the platform. Core founder tools are available across plans, while model levels and monthly research quotas vary. GTM Strategist is available on every plan and uses 6 credits per researched generation; ICP Builder remains free."
       },
       {
         question: "What makes Creatives Takeover different?",
@@ -29,7 +29,7 @@ const FAQPage = () => {
       },
       {
         question: "Can I try it for free?",
-        answer: "Yes. Rookie is free forever with 50 credits per month and no credit card required. You get free ICP Builder access, Insighta Test, Newspaper, early-stage browsing or preview access, and community browsing features."
+        answer: "Yes. Rookie is free forever with 50 credits per month and no credit card required. It includes core founder tools with standard AI models, Insighta Test, Newspaper, investor and accelerator browsing, 3 directory visits, and mentor marketplace access. Mentor services are paid separately."
       },
       {
         question: "Is my business idea safe?",

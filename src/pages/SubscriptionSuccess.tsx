@@ -230,7 +230,7 @@ export default function SubscriptionSuccess() {
                         </li>
                         <li className="flex items-center gap-2">
                           <CheckCircle className="h-4 w-4 text-success" />
-                          <span>Priority support and advanced features</span>
+                          <span>Your plan's model access and research limits</span>
                         </li>
                       </ul>
                     </div>

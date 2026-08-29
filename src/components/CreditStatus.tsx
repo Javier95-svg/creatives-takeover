@@ -102,9 +102,7 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
       return ` GTM Strategist is available on every plan and costs ${CREDIT_COSTS.GTM_ANALYSIS} credits per researched generation. Manual edits and weekly reviews are included.`;
     }
     if (featureLower.includes('tech stack')) {
-      return normalizedTier === 'rising' || normalizedTier === 'pro'
-        ? ` Tech Stack Builder is unlocked on your plan and costs ${CREDIT_COSTS.TECH_STACK_GENERATION} credits per generation.`
-        : ' Tech Stack Builder unlocks on Rising and Pro.';
+      return ` Tech Stack Builder is available on every plan. Your first build is free, then it costs ${CREDIT_COSTS.TECH_STACK_GENERATION} credits per generation.`;
     }
     if (featureLower.includes('pmf') || featureLower.includes('product-market fit')) {
       // PMF Lab is `state: 'full'` on every plan including rookie, and the first evidence
@@ -119,9 +117,7 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
       return ' Find Your Angel unlocks on Pro.';
     }
     if (featureLower.includes('pitch deck')) {
-      return normalizedTier === 'rising' || normalizedTier === 'pro'
-        ? ` Pitch Deck Analyzer is unlocked on your plan and costs ${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits per analysis.`
-        : ' Pitch Deck Analyzer unlocks on Rising and Pro.';
+      return ` Pitch Deck Analyzer is available on every plan. Your first quick score is free, then it costs ${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits per analysis.`;
     }
     if (featureLower.includes('market research')) {
       return '';

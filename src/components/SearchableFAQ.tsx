@@ -37,7 +37,7 @@ const SearchableFAQ = () => {
       id: 1,
       category: "Pricing",
       question: "What pricing plans do you offer?",
-      answer: "We offer four plans built around the founder journey. Rookie helps you clarify with 50 credits/month. Starter helps you validate with PMF Lab, Email Templates, and 100 credits/month. Rising adds a larger 250-credit runway plus more build and launch tools. Pro helps you fundraise and scale with Find Your Angel, unlimited research views, and 600 credits/month. GTM Strategist is available on every plan for 6 credits per researched generation; manual edits and weekly reviews are included.",
+      answer: "We offer four plans built around execution capacity. Rookie starts free with 50 credits and standard AI models. Starter adds 100 credits, the PROVE workspace, Email Templates, and deeper research. Rising adds 250 credits, advanced MVP models, the complete First Customer Proof workflow, and broader research. Pro adds 600 credits, Find Your Angel, and unlimited VC, accelerator, and directory research.",
       popular: true,
       tags: ["pricing", "plans", "subscription", "rookie", "starter", "rising", "pro"]
     },
@@ -45,7 +45,7 @@ const SearchableFAQ = () => {
       id: 2,
       category: "Pricing",
       question: "Is there a free plan available?",
-      answer: "Yes. Rookie is completely free forever with no credit card required. You get 50 credits per month, free ICP Builder access, Insighta Test, Newspaper, mentor and co-founder browsing, mentor messaging and saving, preview access to later-stage tools, and free co-founder posting.",
+      answer: "Yes. Rookie is completely free forever with no credit card required. You get 50 credits per month, core founder tools with standard AI models, Insighta Test, Newspaper, investor and accelerator browsing, 3 directory visits, mentor marketplace access, and free co-founder posting. Mentor services are paid separately.",
       popular: true,
       tags: ["free", "rookie", "no credit card", "credits"]
     },
@@ -61,7 +61,7 @@ const SearchableFAQ = () => {
       id: 4,
       category: "Pricing",
       question: "What's the difference between Rising and Pro plans?",
-      answer: "Rising gives you 250 credits, the full BizMap AI toolset, 10 VC profiles and 10 accelerator profiles per billing cycle, full prompt library access, full email templates, and pitch deck analyzer access. Pro gives you 600 credits, unlimited VC and accelerator profile views, Angels community access, group office hours, and priority support. MVP Builder is available on every plan and charges per AI action.",
+      answer: "Rising gives you 250 credits, advanced MVP models, the complete First Customer Proof workflow, 10 VC profiles, 10 accelerator profiles, and full Prompt Library exports. Pro gives you 600 credits, Find Your Angel, and unlimited VC profiles, accelerator profiles, and directory visits. Core founder tools remain available on every plan and charge credits where noted.",
       popular: true,
       tags: ["rising", "pro", "comparison", "features"]
     },
@@ -129,7 +129,7 @@ const SearchableFAQ = () => {
       id: 12,
       category: "Features",
       question: "What is PMF Lab?",
-      answer: "PMF Lab (Product-Market Fit Lab) helps you analyze and improve your product-market fit. It provides frameworks, assessments, and actionable insights to ensure you're building something customers actually want. Rookie users get preview access to learn the concepts, while Starter, Rising, and Pro unlock full PMF analyses that use credits per run.",
+      answer: "PMF Lab (Product-Market Fit Lab) helps you analyze customer evidence and pressure-test whether the market wants what you are making. It is available on every plan: the first score is free, then analyses use credits.",
       popular: true,
       tags: ["pmf lab", "product-market fit", "analysis", "validation"]
     },
@@ -137,7 +137,7 @@ const SearchableFAQ = () => {
       id: 13,
       category: "Features",
       question: "How does the Pitch Deck Analyzer work?",
-      answer: "The Pitch Deck Analyzer uses AI to review your pitch deck and provide detailed feedback on structure, content, clarity, and investor appeal. It identifies strengths, weaknesses, and specific improvements to help you create a more compelling deck. It unlocks on Rising and Pro and uses credits per analysis.",
+      answer: "The Pitch Deck Analyzer uses AI to review your pitch deck and provide feedback on structure, content, clarity, and investor appeal. It is available on every plan: the first quick score is free, then analyses use 10 credits.",
       popular: true,
       tags: ["pitch deck", "analyzer", "investor", "feedback"]
     },
@@ -177,7 +177,7 @@ const SearchableFAQ = () => {
       id: 18,
       category: "Features",
       question: "How does the Tech Stack Generator work?",
-      answer: "The Tech Stack Generator recommends the best technologies for your startup based on product type, budget, scale requirements, and technical context. Rookie and Starter see it in preview mode, while Rising and Pro unlock it as a credit-metered generation tool.",
+      answer: "The Tech Stack Builder recommends technologies based on product type, budget, scale requirements, and technical context. It is available on every plan: the first build is free, then generations use credits.",
       popular: false,
       tags: ["tech stack", "technology", "recommendations", "development"]
     },
@@ -187,7 +187,7 @@ const SearchableFAQ = () => {
       id: 19,
       category: "Credits",
       question: "How does the credit system work?",
-      answer: "Credits refresh with your plan every billing cycle. Plan gates decide which tools you can access, and credits meter generative actions inside those tools. Demo Studio costs 4 credits on Rookie and 3 credits on paid plans. PMF Lab uses credits on Starter and above. MVP Builder is available on every plan and charges per AI action. GTM Strategist is also available on every plan, costs 6 credits per researched generation, and includes manual edits and weekly reviews.",
+      answer: "Credits refresh with your plan every billing cycle. Demo Studio costs 4 credits on Rookie and 3 credits on paid plans. PMF Lab is available on every plan with the first score free and later analyses using credits. MVP Builder is available on every plan and charges per AI action, with advanced models on Rising and Pro. GTM Strategist is also available on every plan and costs 6 credits per researched generation.",
       popular: true,
       tags: ["credits", "costs", "ai features", "monthly"]
     },
@@ -203,7 +203,7 @@ const SearchableFAQ = () => {
       id: 21,
       category: "Credits",
       question: "Which features use the most credits?",
-      answer: "The biggest credit consumers are the metered AI actions: Demo Studio, PMF Lab, MVP Builder, Tech Stack Builder, GTM Strategist, Pitch Deck Analyzer, and premium prompt actions. Access is controlled by plan, but each generation or analysis still draws from your monthly credits.",
+      answer: "The biggest credit consumers are metered AI actions in Demo Studio, PMF Lab, MVP Builder, Tech Stack Builder, GTM Strategist, Pitch Deck Analyzer, and premium prompt actions. These core tools are available across plans, while model levels, first-use allowances, and monthly quotas differ.",
       popular: false,
       tags: ["credit costs", "features", "expensive", "affordable"]
     },

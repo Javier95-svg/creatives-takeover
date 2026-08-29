@@ -26,16 +26,16 @@ const PricingFAQ = () => {
       question: "What are credits and how do they work?",
       answer: `Credits are the usage currency for the AI-powered parts of the platform. Every plan includes a monthly credit grant: Rookie gets 50, Starter 100, Rising 250, and Pro 600.
 
-    GTM Strategist is available on every plan and uses 6 credits per researched generation; manual edits and weekly reviews are included. Other plan-gated tools follow the comparison table.
+    GTM Strategist is available on every plan and uses 6 credits per researched generation; manual edits and weekly reviews are included. The comparison table shows model levels, first-use allowances, and monthly quotas.
 
-    ICP Builder stays free across all four plans. Mentor browsing, messaging, and saving remain available from the community.`,
+    ICP Builder stays free across all four plans. Mentor marketplace access and Discovery Call requests are available on every plan; any mentor service is priced and paid separately.`,
       relatedQuestions: [0, 5],
     },
     {
       question: "How should I choose the right plan?",
       answer: `Think about your founder stage, not just the credit number.
 
-Rookie helps you clarify your ICP and first traction asset. Starter is for validating demand with PMF Lab, Email Templates, and more research/community access. Rising is for building and launching with MVP Builder, Tech Stack Builder, GTM Strategist, Directories, and Pitch Deck Analyzer. Pro is for fundraising and scaling with Find Your Angel, unlimited research views, and the largest credit runway.`,
+Rookie lets you start building and testing for free. Starter adds more validation capacity, the PROVE workspace, Email Templates, and deeper research. Rising adds advanced MVP models, the complete First Customer Proof workflow, and broader acquisition capacity. Pro provides the largest credit runway, Find Your Angel, and unlimited VC, accelerator, and directory research.`,
       relatedQuestions: [1, 6],
     },
     {
@@ -68,16 +68,16 @@ That means billing, renewals, and checkout security all run on Stripe's infrastr
     },
     {
       question: "What's included in the Rookie plan?",
-      answer: `Rookie is free forever and includes 50 credits per month. You get Dashboard Rookie Mode, ICP Builder for free, Demo Studio with credit usage, MVP Builder with per-action credit usage, Prompt Library access for free models only, Insighta Test, Newspaper, free mentor browsing, messaging and Discovery Calls, and free Find a Co-Founder posting.
+      answer: `Rookie is free forever and includes 50 credits per month. You get the core founder tools, standard AI models for MVP Builder and Prompt Library, Insighta Test, Newspaper, mentor marketplace access and Discovery Call requests, and free Find a Co-Founder posting. Mentor services are priced and paid separately.
 
-    VC Search and Accelerator Hunt are browse only on Rookie. GTM Strategist remains available using account credits, while other plan-gated tools follow the comparison table. Find Your Angel is not included.`,
+    VC Search and Accelerator Hunt are browse only on Rookie, and Directories includes 3 visits per month. AI actions use credits where noted. Find Your Angel is not included.`,
       relatedQuestions: [0, 1],
     },
     {
       question: "What happens to my data if I downgrade?",
       answer: `Downgrading changes what you can create next, not whether your existing work still exists.
 
-    You keep your prior data, but any plan-locked actions follow the limits of your new tier. GTM Strategist remains available using account credits; researched generations still use 6 credits and saved workspaces remain accessible.`,
+    You keep your prior data, but model access and quota-limited actions follow the limits of your new tier. Credit-metered core tools remain accessible, and saved workspaces stay available.`,
       relatedQuestions: [0, 3],
     },
     {

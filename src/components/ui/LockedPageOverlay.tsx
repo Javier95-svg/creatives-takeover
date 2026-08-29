@@ -4,7 +4,7 @@
  * Use this for whole-page features that are gated by plan:
  * - /investors (Pro only)
  * - Email Templates (Rising+)
- * - Pitch Deck Analyzer (Rising+)
+ * - Quota-limited and plan-specific tool surfaces
  *
  * The page shell/header renders normally above this overlay.
  * This component replaces only the main content area.

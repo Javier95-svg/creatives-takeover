@@ -2,89 +2,43 @@ import { useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Check, Crown, Sparkles, Star } from "lucide-react";
+import { Check, Crown, Star } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { useLocation } from "react-router-dom";
-import { PLAN_HIGHLIGHTS, PLAN_MONTHLY_CREDITS } from "@/config/planPermissions";
+import { PLAN_LABELS, PLAN_SEQUENCE, type Plan } from "@/config/planPermissions";
 import { PLAN_PRICING } from "@/config/pricing";
+import { PLAN_PACKAGE_PRESENTATION, SHARED_PLAN_FOUNDATION } from "@/config/planPackages";
 import { appendCheckoutIntentParam } from "@/lib/checkoutRedirect";
 import { RevealGroup } from "@/components/animations/ScrollReveal";
 
 type BillingCycle = "monthly" | "yearly";
-type PlanKey = "rookie" | "starter" | "rising" | "pro";
+type PlanKey = Plan;
 
 const PLAN_CONFIG: Array<{
   key: PlanKey;
   title: string;
-  outcomeLabel: string;
-  subtitle: string;
-  audience: string;
+  valueStatement: string;
+  differentiators: readonly [string, string, string];
   monthlyPrice: number;
   yearlyPrice: number;
   yearlyEquivalent: string;
   savings: string | null;
-  credits: number;
-  highlight?: string;
-  features: string[];
-}> = [
-  {
-    key: "rookie",
-    title: "Rookie",
-    outcomeLabel: "PROVE Preview",
-    subtitle: "Take the first evidence action",
-    audience: "Clarify who to serve, create an evidence plan, and take one action in the market.",
-    monthlyPrice: PLAN_PRICING.rookie.monthly,
-    yearlyPrice: PLAN_PRICING.rookie.yearly,
-    yearlyEquivalent: "Free forever",
-    savings: null,
-    credits: PLAN_MONTHLY_CREDITS.rookie,
-    features: PLAN_HIGHLIGHTS.rookie,
-  },
-  {
-    key: "starter",
-    title: "Starter",
-    outcomeLabel: "PROVE",
-    subtitle: "Earn a costly commitment",
-    audience: "Turn a customer hypothesis into qualified conversations, evidence, and a real commitment.",
-    monthlyPrice: PLAN_PRICING.starter.monthly,
-    yearlyPrice: PLAN_PRICING.starter.yearly,
-    yearlyEquivalent: "$6.58/mo",
-    savings: "Save 27%",
-    credits: PLAN_MONTHLY_CREDITS.starter,
-    highlight: "Most Popular",
-    features: PLAN_HIGHLIGHTS.starter,
-  },
-  {
-    key: "rising",
-    title: "Rising",
-    outcomeLabel: "SELL + GROW",
-    subtitle: "Run your first customer-proof cycle",
-    audience: "Turn one GTM play into 10 qualified prospects, founder-sent messages, buyer evidence, and the next decision.",
-    monthlyPrice: PLAN_PRICING.rising.monthly,
-    yearlyPrice: PLAN_PRICING.rising.yearly,
-    yearlyEquivalent: "$19.92/mo",
-    savings: "Save 31%",
-    credits: PLAN_MONTHLY_CREDITS.rising,
-    features: PLAN_HIGHLIGHTS.rising,
-  },
-  {
-    key: "pro",
-    title: "Pro",
-    outcomeLabel: "Expert + RAISE",
-    subtitle: "Add expert accountability",
-    audience: "Get a substantive expert response within 48 hours on a completed customer-proof, GTM, or traction outcome.",
-    monthlyPrice: PLAN_PRICING.pro.monthly,
-    yearlyPrice: PLAN_PRICING.pro.yearly,
-    yearlyEquivalent: "$49.08/mo",
-    savings: "Save 25%",
-    credits: PLAN_MONTHLY_CREDITS.pro,
-    features: PLAN_HIGHLIGHTS.pro,
-  },
-];
+  recommended: boolean;
+}> = PLAN_SEQUENCE.map((key) => ({
+  key,
+  title: PLAN_LABELS[key],
+  valueStatement: PLAN_PACKAGE_PRESENTATION[key].valueStatement,
+  differentiators: PLAN_PACKAGE_PRESENTATION[key].differentiators,
+  monthlyPrice: PLAN_PRICING[key].monthly,
+  yearlyPrice: PLAN_PRICING[key].yearly,
+  yearlyEquivalent: key === "starter" ? "$6.58/mo" : key === "rising" ? "$19.92/mo" : key === "pro" ? "$49.08/mo" : "Free forever",
+  savings: key === "starter" ? "Save 27%" : key === "rising" ? "Save 31%" : key === "pro" ? "Save 25%" : null,
+  recommended: PLAN_PACKAGE_PRESENTATION[key].recommended === true,
+}));
 
 const PLAN_CARD_STYLES: Record<PlanKey, { border: string; ring: string; button: string; buttonVariant: "default" | "outline" }> = {
   // Per-tier border colour identity (token-based, theme-aware); the recommended
@@ -191,7 +145,7 @@ export default function Pricing() {
   return (
     <section className="relative overflow-hidden pt-28 pb-section-mobile md:pt-32 lg:pt-36 lg:pb-section-desktop" id="pricing-plans">
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
-        <div className="text-center mb-16 animate-fade-in">
+        <div className="text-center mb-10 animate-fade-in">
           <h1 className="text-4xl lg:text-6xl font-semibold tracking-tight mb-6 gradient-text font-space-grotesk">
             Choose Your Plan
           </h1>
@@ -214,14 +168,30 @@ export default function Pricing() {
           </Tabs>
         </div>
 
-        <RevealGroup className="grid grid-cols-1 justify-items-center sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 xl:gap-9 max-w-[124rem] mx-auto items-start" variant="card">
+        <div className="mx-auto mb-8 max-w-[124rem] rounded-2xl border border-border/60 bg-card/55 px-4 py-4 shadow-sm backdrop-blur sm:px-5">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="shrink-0">
+              <p className="font-space-grotesk text-sm font-semibold text-foreground">Included with every plan</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">The same connected founder workspace, with capacity that grows with you.</p>
+            </div>
+            <div className="grid gap-x-5 gap-y-2 sm:grid-cols-2 xl:grid-cols-4">
+              {SHARED_PLAN_FOUNDATION.map((item) => (
+                <div key={item} className="flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
+                  <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-success" strokeWidth={3} aria-hidden="true" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <RevealGroup className="mx-auto grid max-w-[124rem] grid-cols-1 items-stretch justify-items-center gap-5 md:grid-cols-2 xl:grid-cols-4 xl:gap-6" variant="card">
           {PLAN_CONFIG.map((plan, index) => {
             // Until the subscription resolves we do not know the tier, and
             // normalizeTierName() defaults to "rookie" — so without this guard
             // a Pro user would briefly see "Your Plan" on the Rookie card.
             const isCurrentPlan = !loading && currentTier === plan.key;
-            const isPopular = plan.key === "starter";
-            const isPro = plan.key === "pro";
+            const isPopular = plan.recommended;
             const isPlanPending = pendingPlan === plan.key;
             const price = billingCycle === "yearly" ? plan.yearlyPrice : plan.monthlyPrice;
             const period = billingCycle === "yearly" ? "/year" : plan.monthlyPrice === 0 ? "" : "/month";
@@ -230,9 +200,10 @@ export default function Pricing() {
             return (
               <div
                 key={plan.key}
-                className={`group relative w-full max-w-[516px] rounded-3xl border ${cardStyle.border} p-7 sm:p-8 flex flex-col backdrop-blur transition-all duration-300 hover:-translate-y-1.5 ${
+                aria-label={`${plan.title} plan${isPopular ? ", recommended" : ""}`}
+                className={`group relative flex h-full w-full max-w-[516px] flex-col rounded-3xl border ${cardStyle.border} p-6 backdrop-blur transition-all duration-300 hover:-translate-y-1 ${
                   isPopular
-                    ? "bg-card shadow-[0_28px_64px_-28px_hsl(var(--primary)/0.45)] lg:scale-[1.035] z-10"
+                    ? "z-10 bg-gradient-to-b from-primary/[0.09] to-card shadow-[0_28px_64px_-28px_hsl(var(--primary)/0.45)] xl:-translate-y-2"
                     : "bg-card/70 shadow-[0_1px_2px_rgb(2_6_23/0.04),0_14px_32px_-20px_rgb(2_6_23/0.20)]"
                 }`}
                 style={{ animationDelay: `${index * 0.08}s` }}
@@ -240,31 +211,29 @@ export default function Pricing() {
                 {isPopular && (
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent" />
                 )}
-                {((isCurrentPlan && user) || isPopular || plan.highlight) && (
+                {isCurrentPlan && user ? (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className={`px-3 py-1 text-xs font-medium ${
-                      isCurrentPlan
-                        ? "bg-success-subtle text-success border border-success/30"
-                        : isPopular
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-foreground text-background"
-                    }`}>
-                      {isCurrentPlan ? <><Crown className="w-3 h-3 mr-1 inline" />Your Plan</> : isPopular ? <><Star className="w-3 h-3 mr-1 inline fill-current" />Most Popular</> : <><Sparkles className="w-3 h-3 mr-1 inline" />Premium</>}
+                    <Badge className="border border-success/30 bg-success-subtle px-3 py-1 text-xs font-medium text-success">
+                      <Crown className="mr-1 h-3 w-3" aria-hidden="true" />
+                      Your Plan
                     </Badge>
                   </div>
-                )}
+                ) : isPopular ? (
+                  <span
+                    className="absolute -top-4 left-1/2 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-4 ring-background"
+                    role="img"
+                    aria-label="Recommended plan"
+                    title="Recommended plan"
+                  >
+                    <Star className="h-4 w-4 fill-current" aria-hidden="true" />
+                  </span>
+                ) : null}
 
-                <div className="text-center mb-6">
-                  <h3 className="text-2xl sm:text-3xl font-semibold mb-1 tracking-tight font-space-grotesk">
+                <div className="text-center">
+                  <h3 className="font-space-grotesk text-2xl font-semibold tracking-tight">
                     {plan.title}
                   </h3>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">
-                    {plan.subtitle}
-                  </p>
-                  <Badge variant="outline" className="mb-4 rounded-full border-primary/30 bg-primary/5 px-3 py-1 text-xs">
-                    {plan.outcomeLabel}
-                  </Badge>
-                  <div className="mb-4">
+                  <div className="mt-4">
                     <div className="flex items-baseline justify-center gap-1">
                       <span className="text-5xl sm:text-6xl font-bold tracking-tight font-space-grotesk tabular-nums">
                         ${formatPrice(price)}
@@ -281,27 +250,20 @@ export default function Pricing() {
                     {plan.savings && billingCycle === "yearly" && (
                       <div className="text-xs text-muted-foreground mt-1">{plan.savings}</div>
                     )}
-                    <div className="text-sm text-muted-foreground mt-2">
-                      {plan.credits} credits/month
-                    </div>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-6">
-                    {plan.audience}
+                  <p className="mx-auto mt-5 min-h-[3.25rem] max-w-[280px] font-space-grotesk text-lg font-semibold leading-snug text-foreground">
+                    {plan.valueStatement}
                   </p>
                 </div>
 
-                <div className="mb-7 flex-1">
-                  <div className="mb-6 border-t border-border/70" />
-                  <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-muted-foreground mb-4">
-                    Plan highlights
-                  </p>
-                  <div className="space-y-3">
-                    {plan.features.map((feature) => (
+                <div className="my-5 flex-1 border-t border-border/60 pt-5">
+                  <div className="space-y-3.5">
+                    {plan.differentiators.map((feature) => (
                       <div key={feature} className="flex items-start gap-3">
                         <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                          <Check className="h-3 w-3 text-primary" strokeWidth={3} />
+                          <Check className="h-3 w-3 text-primary" strokeWidth={3} aria-hidden="true" />
                         </span>
-                        <span className="text-sm text-foreground/90 leading-relaxed">{feature}</span>
+                        <span className="text-sm leading-relaxed text-foreground/90">{feature}</span>
                       </div>
                     ))}
                   </div>
