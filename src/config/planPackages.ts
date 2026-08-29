@@ -23,7 +23,7 @@ const quotaLabel = (value: number, noun: string) =>
  */
 export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = {
   rookie: {
-    valueStatement: 'Build. Test. Learn.',
+    valueStatement: 'Start your journey.',
     usageLabel: `${PLAN_MONTHLY_CREDITS.rookie} credits / month`,
     workspaceLabel: 'Core dashboard',
     perksTitle: 'Start with the founder essentials:',
@@ -34,7 +34,7 @@ export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = 
     ],
   },
   starter: {
-    valueStatement: 'Validate with momentum.',
+    valueStatement: 'Test your assumptions.',
     usageLabel: `${PLAN_MONTHLY_CREDITS.starter} credits / month`,
     workspaceLabel: 'PROVE dashboard',
     perksTitle: 'Everything in Rookie, plus:',

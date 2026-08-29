@@ -7,8 +7,8 @@ import { PLAN_PACKAGE_PRESENTATION } from '../src/config/planPackages.ts';
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
 test('each plan has one accurate value statement and exactly three plain-language perks', () => {
-  assert.equal(PLAN_PACKAGE_PRESENTATION.rookie.valueStatement, 'Build. Test. Learn.');
-  assert.equal(PLAN_PACKAGE_PRESENTATION.starter.valueStatement, 'Validate with momentum.');
+  assert.equal(PLAN_PACKAGE_PRESENTATION.rookie.valueStatement, 'Start your journey.');
+  assert.equal(PLAN_PACKAGE_PRESENTATION.starter.valueStatement, 'Test your assumptions.');
   assert.equal(PLAN_PACKAGE_PRESENTATION.rising.valueStatement, 'Turn evidence into growth.');
   assert.equal(PLAN_PACKAGE_PRESENTATION.pro.valueStatement, 'Execute without limits.');
 
