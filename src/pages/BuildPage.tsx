@@ -116,24 +116,58 @@ const HERO_PROOF_POINTS = [
 
 const EVIDENCE_SOURCES = [
   {
-    name: 'ICP Builder', label: 'Who it is for', details: ['Primary customer', 'Core pain', 'Buying trigger'],
-    Icon: Target, accent: 'text-info', surface: 'border-info/25 bg-info/[0.06]',
+    name: 'ICP Builder',
+    label: 'Who it is for',
+    details: ['Primary customer', 'Core pain', 'Buying trigger'],
+    preview: 'Defines the customer, urgent problem, and moment they are ready to act.',
+    briefLabel: 'Customer evidence imported',
+    Icon: Target,
+    accent: 'text-info',
+    surface: 'border-info/25 bg-info/[0.06]',
   },
   {
-    name: 'Demo Studio', label: 'What was tested', details: ['Product promise', 'Positioning story', 'Proof state'],
-    Icon: Globe, accent: 'text-success', surface: 'border-success/25 bg-success/[0.06]',
+    name: 'Demo Studio',
+    label: 'What was tested',
+    details: ['Product promise', 'Positioning story', 'Proof state'],
+    preview: 'Carries the promise customers saw and the message that earned a signal.',
+    briefLabel: 'Tested promise imported',
+    Icon: Globe,
+    accent: 'text-success',
+    surface: 'border-success/25 bg-success/[0.06]',
   },
   {
-    name: 'PMF Lab', label: 'What evidence says', details: ['Must-have features', 'Objections', 'Buying signals'],
-    Icon: FlaskConical, accent: 'text-destructive', surface: 'border-destructive/25 bg-destructive/[0.06]',
+    name: 'PMF Lab',
+    label: 'What evidence says',
+    details: ['Must-have features', 'Objections', 'Buying signals'],
+    preview: 'Turns qualified conversations and demand signals into product constraints.',
+    briefLabel: 'Validation evidence imported',
+    Icon: FlaskConical,
+    accent: 'text-destructive',
+    surface: 'border-destructive/25 bg-destructive/[0.06]',
   },
 ];
 
 const FOCUS_STEPS = [
-  { num: '01', title: 'Scope', body: 'One customer, one job, and one measurable outcome.', Icon: Target },
-  { num: '02', title: 'Build', body: 'A working React product with a live, interactive preview.', Icon: Code2 },
-  { num: '03', title: 'Control', body: 'Review changes, restore versions, use GitHub, or export the code.', Icon: GitBranch },
-  { num: '04', title: 'Ship', body: 'Publish to a hosted address or connect your own domain.', Icon: Rocket },
+  {
+    num: '01', title: 'Scope', body: 'One customer, one job, and one measurable outcome.',
+    detail: 'No more than 3 essential features in the evidence-backed first scope, all tied to the customer outcome.',
+    outcome: 'A testable product boundary', Icon: Target,
+  },
+  {
+    num: '02', title: 'Build', body: 'A working React product with a live, interactive preview.',
+    detail: 'Generate the core workflow, inspect it immediately, and refine the experience while it is running.',
+    outcome: 'A working customer workflow', Icon: Code2,
+  },
+  {
+    num: '03', title: 'Control', body: 'Review changes, restore versions, use GitHub, or export the code.',
+    detail: 'Keep a visible change history and take the product with you through GitHub or a downloadable ZIP.',
+    outcome: 'Code and changes you control', Icon: GitBranch,
+  },
+  {
+    num: '04', title: 'Ship', body: 'Publish to a hosted address or connect your own domain.',
+    detail: 'Put the focused version in front of customers on a live URL so the next decision comes from evidence.',
+    outcome: 'A live customer test', Icon: Rocket,
+  },
 ];
 
 const useViewportAnimation = () => {
@@ -498,7 +532,10 @@ const BuildHero = ({ onOpen }: HeroProps) => {
           {/* honest product proof */}
           <div className="mt-10 flex flex-wrap items-center justify-center gap-2.5" aria-label="MVP Builder capabilities">
             {HERO_PROOF_POINTS.map(({ label, Icon }) => (
-              <span key={label} className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/40 px-3.5 py-2 text-xs font-semibold text-muted-foreground backdrop-blur-sm">
+              <span
+                key={label}
+                className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/40 px-3.5 py-2 text-xs font-semibold text-muted-foreground backdrop-blur-sm"
+              >
                 <Icon className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
                 {label}
               </span>
@@ -650,12 +687,16 @@ const BuildWhatYouCanBuild = () => (
 
 // ─── Evidence-backed context ──────────────────────────────────────────────────
 
-const BuildEvidenceContext = ({ onOpen }: HeroProps) => (
+const BuildEvidenceContext = ({ onOpen }: HeroProps) => {
+  const [activeEvidence, setActiveEvidence] = useState(EVIDENCE_SOURCES[0].name);
+  const activeSource = EVIDENCE_SOURCES.find((source) => source.name === activeEvidence) ?? EVIDENCE_SOURCES[0];
+
+  return (
   <section className="overflow-x-clip pb-20 pt-4 lg:pb-24" id="evidence-backed-builder">
     <div className="mx-auto grid max-w-[1200px] items-center gap-10 px-4 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:gap-14 lg:px-8">
       <ScrollReveal variant="slide-right">
         <div>
-          <p className="font-mono text-label uppercase tracking-[0.22em] text-muted-foreground">Your evidence, already here</p>
+          <p className="text-center font-mono text-label uppercase tracking-[0.22em] text-muted-foreground">Your evidence, already here</p>
           <h2 className="mt-4 font-space-grotesk text-[clamp(34px,4.2vw,54px)] font-bold leading-[1.02] tracking-[-0.04em] text-balance">
             Don&rsquo;t start from a <span className="bg-gradient-rgb bg-clip-text text-transparent">blank prompt.</span>
           </h2>
@@ -682,13 +723,13 @@ const BuildEvidenceContext = ({ onOpen }: HeroProps) => (
             Build from my evidence
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Button>
-          <p className="mt-3 text-xs text-muted-foreground/70">Available when saved journey evidence is ready.</p>
         </div>
       </ScrollReveal>
 
       <ScrollReveal variant="slide-left" delay={0.08}>
         <div className="relative overflow-hidden rounded-2.5xl border border-border/70 bg-card/40 p-4 shadow-[0_35px_100px_-55px_rgba(59,130,246,0.7)] backdrop-blur-sm sm:p-6">
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.12),transparent_42%)]" />
+          <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-primary/10 blur-3xl animate-pulse motion-reduce:animate-none" />
           <div className="relative flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-4">
             <div>
               <p className="font-mono text-caption uppercase tracking-[0.18em] text-muted-foreground/70">Journey context compiler</p>
@@ -696,27 +737,60 @@ const BuildEvidenceContext = ({ onOpen }: HeroProps) => (
             </div>
             <span className="rounded-full border border-success/25 bg-success/[0.08] px-2.5 py-1 text-caption font-semibold text-success">Editable before build</span>
           </div>
+
           <div className="relative mt-5 grid gap-3 sm:grid-cols-3">
-            {EVIDENCE_SOURCES.map(({ name, label, details, Icon, accent, surface }) => (
-              <article key={name} className={cn('rounded-xl border p-4', surface)}>
-                <Icon className={cn('h-5 w-5', accent)} aria-hidden="true" />
-                <p className="mt-3 text-sm font-bold text-foreground">{name}</p>
-                <p className="mt-0.5 text-caption uppercase tracking-[0.12em] text-muted-foreground/70">{label}</p>
-                <ul className="mt-3 space-y-1.5">
+            {EVIDENCE_SOURCES.map(({ name, label, details, Icon, accent, surface }) => {
+              const isActive = activeEvidence === name;
+              return (
+              <button
+                key={name}
+                type="button"
+                aria-pressed={isActive}
+                aria-controls="evidence-brief-preview"
+                onClick={() => setActiveEvidence(name)}
+                className={cn(
+                  'group relative rounded-xl border p-4 text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transform-none motion-reduce:transition-none',
+                  surface,
+                  isActive
+                    ? '-translate-y-1 border-primary/60 shadow-[0_16px_36px_-22px_rgba(59,130,246,0.9)]'
+                    : 'hover:-translate-y-1 hover:border-border hover:shadow-lg',
+                )}
+              >
+                <span className="flex items-center justify-between">
+                  <Icon className={cn('h-5 w-5 transition-transform duration-300 motion-reduce:transition-none', accent, isActive && 'scale-110')} aria-hidden="true" />
+                  <span
+                    className={cn(
+                      'h-2 w-2 rounded-full bg-current transition-all duration-300',
+                      accent,
+                      isActive ? 'scale-100 animate-pulse motion-reduce:animate-none' : 'scale-0 group-hover:scale-75',
+                    )}
+                    aria-hidden="true"
+                  />
+                </span>
+                <span className="mt-3 block text-sm font-bold text-foreground">{name}</span>
+                <span className="mt-0.5 block text-caption uppercase tracking-[0.12em] text-muted-foreground/70">{label}</span>
+                <span className="mt-3 block space-y-1.5">
                   {details.map((detail) => (
-                    <li key={detail} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span key={detail} className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <span className={cn('h-1.5 w-1.5 rounded-full bg-current', accent)} aria-hidden="true" />
                       {detail}
-                    </li>
+                    </span>
                   ))}
-                </ul>
-              </article>
-            ))}
+                </span>
+                <span className={cn('mt-4 inline-flex items-center gap-1 text-caption font-semibold transition-colors', isActive ? 'text-primary' : 'text-muted-foreground')}>
+                  {isActive ? 'Added to preview' : 'Preview contribution'}
+                  <ArrowRight className={cn('h-3 w-3 transition-transform duration-300 motion-reduce:transition-none', isActive && 'translate-x-1')} aria-hidden="true" />
+                </span>
+              </button>
+              );
+            })}
           </div>
+
           <div className="relative mx-auto my-3 flex h-8 w-8 rotate-90 items-center justify-center rounded-full border border-border/70 bg-background/80 text-primary sm:my-4">
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            <ArrowRight className="h-4 w-4 animate-pulse motion-reduce:animate-none" aria-hidden="true" />
           </div>
-          <div className="relative rounded-2xl border border-primary/30 bg-primary/[0.07] p-5 shadow-[0_20px_50px_-35px_rgba(59,130,246,0.8)]">
+
+          <div id="evidence-brief-preview" aria-live="polite" className="relative rounded-2xl border border-primary/30 bg-primary/[0.07] p-5 shadow-[0_20px_50px_-35px_rgba(59,130,246,0.8)]">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/25 bg-primary/10">
@@ -727,7 +801,11 @@ const BuildEvidenceContext = ({ onOpen }: HeroProps) => (
                   <p className="text-xs text-muted-foreground">Evidence-backed scope</p>
                 </div>
               </div>
-              <span className="rounded-full bg-primary px-2.5 py-1 text-caption font-bold text-primary-foreground">Ready to review</span>
+              <span className="rounded-full bg-primary px-2.5 py-1 text-caption font-bold text-primary-foreground">{activeSource.briefLabel}</span>
+            </div>
+            <div key={activeSource.name} className="mt-4 rounded-xl border border-primary/15 bg-background/40 p-3 animate-fade-in motion-reduce:animate-none">
+              <p className="text-xs font-bold text-foreground">Exploring {activeSource.name}</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{activeSource.preview}</p>
             </div>
             <div className="mt-4 grid gap-2 sm:grid-cols-3">
               {['One customer', 'One job', 'One success event'].map((item) => (
@@ -741,7 +819,8 @@ const BuildEvidenceContext = ({ onOpen }: HeroProps) => (
       </ScrollReveal>
     </div>
   </section>
-);
+  );
+};
 
 // ─── 7-stage selector ─────────────────────────────────────────────────────────
 
@@ -823,20 +902,26 @@ const BuildStageSelector = () => {
 
 // ─── Focus, ownership, and shipping ───────────────────────────────────────────
 
-const BuildFocusSection = ({ onOpen }: HeroProps) => (
+const BuildFocusSection = ({ onOpen }: HeroProps) => {
+  const [activeStep, setActiveStep] = useState(FOCUS_STEPS[0].title);
+  const selectedStep = FOCUS_STEPS.find((step) => step.title === activeStep) ?? FOCUS_STEPS[0];
+  const SelectedStepIcon = selectedStep.Icon;
+
+  return (
   <section className="overflow-x-clip pb-20 pt-4 lg:pb-28" id="focused-mvp">
     <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
       <ScrollReveal>
         <div className="mx-auto max-w-[820px] text-center">
           <p className="font-mono text-label uppercase tracking-[0.22em] text-muted-foreground">Focus is a feature</p>
           <h2 className="mt-4 font-space-grotesk text-[clamp(34px,4.4vw,56px)] font-bold leading-[1.02] tracking-[-0.04em] text-balance">
-            Build the smallest thing that can <span className="bg-gradient-rgb bg-clip-text text-transparent">prove the business.</span>
+            Build only what <span className="bg-gradient-rgb bg-clip-text text-transparent">proves demand.</span>
           </h2>
           <p className="mx-auto mt-5 max-w-[680px] text-base leading-relaxed text-muted-foreground">
-            MVP Builder gives the first version a stopping rule. Approve a focused scope, generate the working product, keep control of the code, and get it in front of customers before the backlog takes over.
+            One customer. One job. One measurable result. That is enough to learn what deserves building next.
           </p>
         </div>
       </ScrollReveal>
+
       <ScrollReveal delay={0.06}>
         <div className="mt-10 rounded-2.5xl border border-primary/25 bg-card/40 p-5 shadow-[0_35px_100px_-60px_rgba(59,130,246,0.75)] backdrop-blur-sm sm:p-7">
           <div className="flex flex-col items-center justify-between gap-5 border-b border-border/60 pb-6 sm:flex-row">
@@ -851,28 +936,55 @@ const BuildFocusSection = ({ onOpen }: HeroProps) => (
             </div>
             <div className="flex flex-wrap justify-center gap-2 sm:justify-end">
               {['1 customer', '1 job', '1 success event', '≤3 essential features'].map((item) => (
-                <span key={item} className="rounded-full border border-border/70 bg-background/60 px-3 py-1.5 text-xs font-semibold text-foreground">{item}</span>
+                <span key={item} className="rounded-full border border-border/70 bg-background/60 px-3 py-1.5 text-xs font-semibold text-foreground">
+                  {item}
+                </span>
               ))}
             </div>
           </div>
+
           <RevealGroup className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" stagger={0.07}>
-            {FOCUS_STEPS.map(({ num, title, body, Icon }) => (
-              <article key={title} className="h-full rounded-xl border border-border/60 bg-background/50 p-4 transition-colors hover:border-primary/30">
-                <div className="flex items-center justify-between">
-                  <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
+            {FOCUS_STEPS.map(({ num, title, body, Icon }) => {
+              const isActive = title === activeStep;
+              return (
+              <button
+                key={title}
+                type="button"
+                aria-pressed={isActive}
+                aria-controls="focus-step-detail"
+                onClick={() => setActiveStep(title)}
+                className={cn(
+                  'group h-full rounded-xl border bg-background/50 p-4 text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transform-none motion-reduce:transition-none',
+                  isActive
+                    ? '-translate-y-1 border-primary/50 bg-primary/[0.07] shadow-[0_16px_36px_-24px_rgba(59,130,246,0.9)]'
+                    : 'border-border/60 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg',
+                )}
+              >
+                <span className="flex items-center justify-between">
+                  <span className={cn('flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-300 motion-reduce:transition-none', isActive ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary group-hover:bg-primary/15')}>
+                    <Icon className={cn('h-5 w-5 transition-transform duration-300 motion-reduce:transition-none', isActive && 'scale-110')} aria-hidden="true" />
+                  </span>
                   <span className="font-mono text-caption tracking-[0.16em] text-muted-foreground/50">{num}</span>
-                </div>
-                <h3 className="mt-5 font-space-grotesk text-base font-bold">{title}</h3>
-                <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{body}</p>
-              </article>
-            ))}
+                </span>
+                <span className="mt-5 block font-space-grotesk text-base font-bold">{title}</span>
+                <span className="mt-1.5 block text-xs leading-relaxed text-muted-foreground">{body}</span>
+                <span className={cn('mt-4 inline-flex items-center gap-1 text-caption font-semibold', isActive ? 'text-primary' : 'text-muted-foreground')}>
+                  {isActive ? 'Selected' : 'Explore step'}
+                  <ArrowRight className={cn('h-3 w-3 transition-transform duration-300 motion-reduce:transition-none', isActive && 'translate-x-1')} aria-hidden="true" />
+                </span>
+              </button>
+              );
+            })}
           </RevealGroup>
-          <div className="mt-7 flex flex-col items-center justify-between gap-4 rounded-2xl border border-border/60 bg-background/40 p-4 sm:flex-row sm:px-5">
+
+          <div id="focus-step-detail" aria-live="polite" className="mt-7 flex flex-col items-center justify-between gap-4 rounded-2xl border border-border/60 bg-background/40 p-4 sm:flex-row sm:px-5">
             <div className="flex items-start gap-3">
-              <FileCheck2 className="mt-0.5 h-5 w-5 shrink-0 text-success" aria-hidden="true" />
-              <div>
-                <p className="text-sm font-bold">No more than 3 essential features in the evidence-backed first scope.</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">You can keep refining after the first customer-learning loop.</p>
+              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-success/10 text-success">
+                <SelectedStepIcon className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <div key={selectedStep.title} className="animate-fade-in motion-reduce:animate-none">
+                <p className="text-sm font-bold">{selectedStep.title}: {selectedStep.outcome}</p>
+                <p className="mt-0.5 max-w-[610px] text-xs leading-relaxed text-muted-foreground">{selectedStep.detail}</p>
               </div>
             </div>
             <Button
@@ -888,7 +1000,8 @@ const BuildFocusSection = ({ onOpen }: HeroProps) => (
       </ScrollReveal>
     </div>
   </section>
-);
+  );
+};
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -920,8 +1033,8 @@ const BuildPage = () => {
           <BuildHowItWorks />
           <BuildWhatYouCanBuild />
           <BuildEvidenceContext onOpen={openModal} />
-          <BuildStageSelector />
           <BuildFocusSection onOpen={openModal} />
+          <BuildStageSelector />
           <Footer />
         </div>
       </div>
