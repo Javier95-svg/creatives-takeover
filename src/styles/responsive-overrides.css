@@ -438,6 +438,33 @@
   background-clip: content-box;
 }
 
+/* Keep the navbar credit wallet within the available viewport. */
+.credit-balance-dropdown-scroll {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.55) transparent;
+}
+
+.credit-balance-dropdown-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.credit-balance-dropdown-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.credit-balance-dropdown-scroll::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.55);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background-clip: content-box;
+}
+
+.credit-balance-dropdown-scroll::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.7);
+  background-clip: content-box;
+}
+
 /* The hamburger is reserved for smartphones. */
 @media (min-width: 769px) {
   .desktop-nav-actions {

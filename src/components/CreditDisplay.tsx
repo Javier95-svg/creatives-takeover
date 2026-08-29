@@ -83,7 +83,11 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
             </Button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="center" alignOffset={12} className="w-64">
+          <DropdownMenuContent
+            align="center"
+            alignOffset={12}
+            className="credit-balance-dropdown-scroll max-h-[var(--radix-dropdown-menu-content-available-height)] w-64 overflow-y-auto overscroll-contain"
+          >
             <DropdownMenuLabel className="flex items-center gap-2">
               <Coins className="h-4 w-4" />
               Credit Balance (Monthly)
