@@ -2,13 +2,20 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
+  CheckCircle2,
   Code2,
+  Database,
   ExternalLink,
+  FileCheck2,
+  FlaskConical,
+  GitBranch,
   Github,
   Globe,
   LayoutDashboard,
   Mail,
+  Rocket,
   ShoppingCart,
+  Target,
   Wrench,
   X,
   Zap,
@@ -101,6 +108,34 @@ const STAGES = [
   { num: '07', key: 'fundraising', name: 'Fundraising', tool: 'VC Search + Angels', dot: '#EC4899', youAreHere: false, description: "With a working MVP, proven demand, and early customers, you're ready to raise. Fundraising gives you the resources to scale faster, grow your team, and keep improving the product. It also adds credibility that attracts more investment and keeps the momentum going." },
 ];
 
+const HERO_PROOF_POINTS = [
+  { label: 'ICP + PMF context', Icon: Database },
+  { label: 'Evidence-scoped MVP', Icon: Target },
+  { label: 'Real code you control', Icon: Code2 },
+];
+
+const EVIDENCE_SOURCES = [
+  {
+    name: 'ICP Builder', label: 'Who it is for', details: ['Primary customer', 'Core pain', 'Buying trigger'],
+    Icon: Target, accent: 'text-info', surface: 'border-info/25 bg-info/[0.06]',
+  },
+  {
+    name: 'Demo Studio', label: 'What was tested', details: ['Product promise', 'Positioning story', 'Proof state'],
+    Icon: Globe, accent: 'text-success', surface: 'border-success/25 bg-success/[0.06]',
+  },
+  {
+    name: 'PMF Lab', label: 'What evidence says', details: ['Must-have features', 'Objections', 'Buying signals'],
+    Icon: FlaskConical, accent: 'text-destructive', surface: 'border-destructive/25 bg-destructive/[0.06]',
+  },
+];
+
+const FOCUS_STEPS = [
+  { num: '01', title: 'Scope', body: 'One customer, one job, and one measurable outcome.', Icon: Target },
+  { num: '02', title: 'Build', body: 'A working React product with a live, interactive preview.', Icon: Code2 },
+  { num: '03', title: 'Control', body: 'Review changes, restore versions, use GitHub, or export the code.', Icon: GitBranch },
+  { num: '04', title: 'Ship', body: 'Publish to a hosted address or connect your own domain.', Icon: Rocket },
+];
+
 const useViewportAnimation = () => {
   const hostRef = useRef<HTMLDivElement>(null);
   const [isActive, setIsActive] = useState(false);
@@ -122,15 +157,6 @@ const useViewportAnimation = () => {
 
   return { hostRef, isActive };
 };
-
-const TESTIMONIALS = [
-  { quote: "I was quoted £5k for an MVP. I described it here instead and had a working version that night. Three weeks later it had paying users.", em: '£5k for an MVP', name: 'Jordan Rivera', role: 'Solo founder. ops SaaS', initials: 'JR', from: '#3B82F6', to: '#2563EB' },
-  { quote: "No application, no cohort, no rejection email. I just started building and the system kept telling me the next move.", em: 'started building', name: 'Maya Karlsson', role: 'Non-technical founder', initials: 'MK', from: '#7C5CFA', to: '#5B3FD6' },
-  { quote: "I shipped four landing pages before I found the one that converted. Doing that with an agency would've cost a quarter and £20k.", em: 'quarter and £20k', name: 'Sam Lin', role: 'Indie maker. 3 products', initials: 'SL', from: '#3B82F6', to: '#2563EB' },
-  { quote: "I'm not technical. I described a booking tool, it built the whole thing, and I'd onboarded ten clients before the weekend was over.", em: 'built the whole thing', name: 'Priya Nair', role: 'Studio owner', initials: 'PN', from: '#10B981', to: '#059669' },
-  { quote: 'Every time I finished a step, it told me the next one. That\'s the part a generic chatbot never gave me.', em: 'next one', name: 'Tomas Vega', role: 'First-time founder', initials: 'TV', from: '#EF4444', to: '#DC2626' },
-  { quote: 'I stopped paying an agency £2k a month to move slowly. Now I ship the change myself in an afternoon.', em: '£2k a month', name: 'Aisha Bello', role: 'Bootstrapped SaaS', initials: 'AB', from: '#8B5CF6', to: '#7C3AED' },
-];
 
 // ─── Floating particles (deterministic so they're stable across renders) ─────
 
@@ -469,37 +495,14 @@ const BuildHero = ({ onOpen }: HeroProps) => {
             </div>
           </div>
 
-          {/* trust row */}
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-3 text-sm">
-            <div className="flex">
-              {['JR', 'MK', 'SL', 'DA', '+1k'].map((init, i) => (
-                <span
-                  key={init}
-                  className={cn(
-                    'flex h-8 w-8 items-center justify-center rounded-full border-2 border-background text-label font-bold text-white',
-                    i > 0 && '-ml-2.5',
-                  )}
-                  style={{
-                    background: i === 0 ? 'linear-gradient(135deg,#3B82F6,#2563EB)' :
-                      i === 1 ? 'linear-gradient(135deg,#EF4444,#DC2626)' :
-                      i === 2 ? 'linear-gradient(135deg,#10B981,#059669)' :
-                      i === 3 ? 'linear-gradient(135deg,#8B5CF6,#7C3AED)' :
-                      '#1e2130',
-                    color: i === 4 ? 'hsl(var(--muted-foreground))' : '#fff',
-                  }}
-                >
-                  {init}
-                </span>
-              ))}
-            </div>
-            <span className="text-muted-foreground">
-              <strong className="text-foreground">1,000+ founders</strong> building right now
-            </span>
-            <span className="h-5 w-px bg-border" />
-            <span className="text-muted-foreground">
-              <span className="text-warning">★★★★★</span>{' '}
-              <strong className="text-foreground">4.8/5</strong>
-            </span>
+          {/* honest product proof */}
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-2.5" aria-label="MVP Builder capabilities">
+            {HERO_PROOF_POINTS.map(({ label, Icon }) => (
+              <span key={label} className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/40 px-3.5 py-2 text-xs font-semibold text-muted-foreground backdrop-blur-sm">
+                <Icon className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                {label}
+              </span>
+            ))}
           </div>
         </div>
       </section>
@@ -645,6 +648,101 @@ const BuildWhatYouCanBuild = () => (
   </section>
 );
 
+// ─── Evidence-backed context ──────────────────────────────────────────────────
+
+const BuildEvidenceContext = ({ onOpen }: HeroProps) => (
+  <section className="overflow-x-clip pb-20 pt-4 lg:pb-24" id="evidence-backed-builder">
+    <div className="mx-auto grid max-w-[1200px] items-center gap-10 px-4 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:gap-14 lg:px-8">
+      <ScrollReveal variant="slide-right">
+        <div>
+          <p className="font-mono text-label uppercase tracking-[0.22em] text-muted-foreground">Your evidence, already here</p>
+          <h2 className="mt-4 font-space-grotesk text-[clamp(34px,4.2vw,54px)] font-bold leading-[1.02] tracking-[-0.04em] text-balance">
+            Don&rsquo;t start from a <span className="bg-gradient-rgb bg-clip-text text-transparent">blank prompt.</span>
+          </h2>
+          <p className="mt-5 max-w-[560px] text-base leading-relaxed text-muted-foreground">
+            Bring your saved ICP, tested Demo Studio promise, and qualified PMF evidence into one editable build brief. The customer, pain, objections, buying signals, and must-have features can move into the build with you.
+          </p>
+          <div className="mt-6 space-y-3">
+            {[
+              'Review and edit every imported decision before code is generated.',
+              'Keep evidence from different startup ideas safely separated.',
+              'Build around what customers showed you, not what a blank canvas suggests.',
+            ].map((item) => (
+              <div key={item} className="flex items-start gap-2.5 text-sm text-foreground/90">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
+                <span>{item}</span>
+              </div>
+            ))}
+          </div>
+          <Button
+            size="lg"
+            className="mt-7 gap-2 rounded-xl bg-gradient-rgb px-5 font-bold text-white shadow-[0_14px_34px_-16px_rgba(59,130,246,0.75)]"
+            onClick={() => onOpen('Build an evidence-backed MVP from my saved ICP and PMF context')}
+          >
+            Build from my evidence
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Button>
+          <p className="mt-3 text-xs text-muted-foreground/70">Available when saved journey evidence is ready.</p>
+        </div>
+      </ScrollReveal>
+
+      <ScrollReveal variant="slide-left" delay={0.08}>
+        <div className="relative overflow-hidden rounded-2.5xl border border-border/70 bg-card/40 p-4 shadow-[0_35px_100px_-55px_rgba(59,130,246,0.7)] backdrop-blur-sm sm:p-6">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.12),transparent_42%)]" />
+          <div className="relative flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-4">
+            <div>
+              <p className="font-mono text-caption uppercase tracking-[0.18em] text-muted-foreground/70">Journey context compiler</p>
+              <p className="mt-1 font-space-grotesk text-lg font-bold">Saved learning becomes build input</p>
+            </div>
+            <span className="rounded-full border border-success/25 bg-success/[0.08] px-2.5 py-1 text-caption font-semibold text-success">Editable before build</span>
+          </div>
+          <div className="relative mt-5 grid gap-3 sm:grid-cols-3">
+            {EVIDENCE_SOURCES.map(({ name, label, details, Icon, accent, surface }) => (
+              <article key={name} className={cn('rounded-xl border p-4', surface)}>
+                <Icon className={cn('h-5 w-5', accent)} aria-hidden="true" />
+                <p className="mt-3 text-sm font-bold text-foreground">{name}</p>
+                <p className="mt-0.5 text-caption uppercase tracking-[0.12em] text-muted-foreground/70">{label}</p>
+                <ul className="mt-3 space-y-1.5">
+                  {details.map((detail) => (
+                    <li key={detail} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <span className={cn('h-1.5 w-1.5 rounded-full bg-current', accent)} aria-hidden="true" />
+                      {detail}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+          <div className="relative mx-auto my-3 flex h-8 w-8 rotate-90 items-center justify-center rounded-full border border-border/70 bg-background/80 text-primary sm:my-4">
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </div>
+          <div className="relative rounded-2xl border border-primary/30 bg-primary/[0.07] p-5 shadow-[0_20px_50px_-35px_rgba(59,130,246,0.8)]">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/25 bg-primary/10">
+                  <FileCheck2 className="h-4 w-4 text-primary" aria-hidden="true" />
+                </span>
+                <div>
+                  <p className="text-sm font-bold">MVP Builder brief</p>
+                  <p className="text-xs text-muted-foreground">Evidence-backed scope</p>
+                </div>
+              </div>
+              <span className="rounded-full bg-primary px-2.5 py-1 text-caption font-bold text-primary-foreground">Ready to review</span>
+            </div>
+            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+              {['One customer', 'One job', 'One success event'].map((item) => (
+                <div key={item} className="rounded-lg border border-border/60 bg-background/50 px-3 py-2.5 text-center text-xs font-semibold text-foreground">
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </ScrollReveal>
+    </div>
+  </section>
+);
+
 // ─── 7-stage selector ─────────────────────────────────────────────────────────
 
 const BuildStageSelector = () => {
@@ -723,92 +821,74 @@ const BuildStageSelector = () => {
   );
 };
 
-// ─── Testimonials marquee ─────────────────────────────────────────────────────
+// ─── Focus, ownership, and shipping ───────────────────────────────────────────
 
-const BuildTestimonials = () => {
-  const doubled = [...TESTIMONIALS, ...TESTIMONIALS];
-  const { hostRef, isActive } = useViewportAnimation();
-  return (
-    <section className="pb-20 pt-4 lg:pb-24" id="founders">
-      {/* keyframes for the marquee */}
-      <style>{`
-        @keyframes ct-marquee { from { transform: translateX(0) } to { transform: translateX(-50%) } }
-        .ct-marquee-track { animation: ct-marquee 60s linear infinite; }
-        .ct-marquee-wrap:hover .ct-marquee-track { animation-play-state: paused; }
-        @media (prefers-reduced-motion: reduce) {
-          .ct-marquee-track { animation: none; }
-        }
-      `}</style>
-
-      <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
-        <ScrollReveal>
-          <div className="mx-auto mb-12 max-w-[720px] text-center">
-            <p className="font-mono text-label uppercase tracking-[0.22em] text-muted-foreground">No gatekeepers</p>
-            <h2 className="mt-4 font-space-grotesk text-[clamp(32px,3.8vw,46px)] font-bold leading-[1.08] tracking-[-0.03em]">
-              <span className="bg-gradient-rgb bg-clip-text text-transparent">Who&rsquo;s Next?</span>
-            </h2>
-          </div>
-        </ScrollReveal>
-      </div>
-
-      {/* full-bleed marquee */}
-      <div
-        ref={hostRef}
-        className="ct-marquee-wrap relative mb-10 overflow-hidden"
-        style={{ maskImage: 'linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)' }}
-      >
-        <div
-          className={cn("ct-marquee-track flex gap-5", isActive && "will-change-transform")}
-          style={{ animationPlayState: isActive ? 'running' : 'paused' }}
-        >
-          {doubled.map((t, i) => (
-            <div
-              key={i}
-              className="w-[360px] shrink-0 rounded-2xl border border-border/60 bg-card/50 p-6"
-              aria-hidden={i >= TESTIMONIALS.length}
-            >
-              <span className="font-space-grotesk text-[40px] leading-[0.4] text-primary">&ldquo;</span>
-              <p className="mt-2 text-sm font-medium leading-relaxed text-foreground">
-                {t.quote.split(t.em).map((part, pi) =>
-                  pi === 0 ? part :
-                    <span key={pi}>
-                      <em className="bg-gradient-rgb bg-clip-text text-transparent not-italic font-bold">{t.em}</em>
-                      {part}
-                    </span>
-                )}
-              </p>
-              <div className="mt-4 flex items-center gap-3">
-                <span
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-                  style={{ background: `linear-gradient(135deg,${t.from},${t.to})` }}
-                >
-                  {t.initials}
-                </span>
-                <div>
-                  <p className="text-sm font-bold">{t.name}</p>
-                  <p className="text-xs text-muted-foreground">{t.role}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
+const BuildFocusSection = ({ onOpen }: HeroProps) => (
+  <section className="overflow-x-clip pb-20 pt-4 lg:pb-28" id="focused-mvp">
+    <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
       <ScrollReveal>
-        <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-center gap-x-8 gap-y-3 px-4">
-          <span className="w-full text-center font-mono text-label uppercase tracking-[0.2em] text-muted-foreground/60">
-            Featured in the founder feeds you actually read
-          </span>
-          {['Reddit r/startups', 'Product Hunt', 'Indie Hackers', 'Hacker News', 'X / Build in Public'].map((name) => (
-            <span key={name} className="font-space-grotesk text-base font-bold text-muted-foreground/60">
-              {name}
-            </span>
-          ))}
+        <div className="mx-auto max-w-[820px] text-center">
+          <p className="font-mono text-label uppercase tracking-[0.22em] text-muted-foreground">Focus is a feature</p>
+          <h2 className="mt-4 font-space-grotesk text-[clamp(34px,4.4vw,56px)] font-bold leading-[1.02] tracking-[-0.04em] text-balance">
+            Build the smallest thing that can <span className="bg-gradient-rgb bg-clip-text text-transparent">prove the business.</span>
+          </h2>
+          <p className="mx-auto mt-5 max-w-[680px] text-base leading-relaxed text-muted-foreground">
+            MVP Builder gives the first version a stopping rule. Approve a focused scope, generate the working product, keep control of the code, and get it in front of customers before the backlog takes over.
+          </p>
         </div>
       </ScrollReveal>
-    </section>
-  );
-};
+      <ScrollReveal delay={0.06}>
+        <div className="mt-10 rounded-2.5xl border border-primary/25 bg-card/40 p-5 shadow-[0_35px_100px_-60px_rgba(59,130,246,0.75)] backdrop-blur-sm sm:p-7">
+          <div className="flex flex-col items-center justify-between gap-5 border-b border-border/60 pb-6 sm:flex-row">
+            <div className="flex items-center gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/10">
+                <Target className="h-5 w-5 text-primary" aria-hidden="true" />
+              </span>
+              <div>
+                <p className="font-space-grotesk text-lg font-bold">The evidence-backed scope contract</p>
+                <p className="text-sm text-muted-foreground">Enough product to test the decision. Nothing added just to look complete.</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap justify-center gap-2 sm:justify-end">
+              {['1 customer', '1 job', '1 success event', '≤3 essential features'].map((item) => (
+                <span key={item} className="rounded-full border border-border/70 bg-background/60 px-3 py-1.5 text-xs font-semibold text-foreground">{item}</span>
+              ))}
+            </div>
+          </div>
+          <RevealGroup className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" stagger={0.07}>
+            {FOCUS_STEPS.map(({ num, title, body, Icon }) => (
+              <article key={title} className="h-full rounded-xl border border-border/60 bg-background/50 p-4 transition-colors hover:border-primary/30">
+                <div className="flex items-center justify-between">
+                  <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
+                  <span className="font-mono text-caption tracking-[0.16em] text-muted-foreground/50">{num}</span>
+                </div>
+                <h3 className="mt-5 font-space-grotesk text-base font-bold">{title}</h3>
+                <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{body}</p>
+              </article>
+            ))}
+          </RevealGroup>
+          <div className="mt-7 flex flex-col items-center justify-between gap-4 rounded-2xl border border-border/60 bg-background/40 p-4 sm:flex-row sm:px-5">
+            <div className="flex items-start gap-3">
+              <FileCheck2 className="mt-0.5 h-5 w-5 shrink-0 text-success" aria-hidden="true" />
+              <div>
+                <p className="text-sm font-bold">No more than 3 essential features in the evidence-backed first scope.</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">You can keep refining after the first customer-learning loop.</p>
+              </div>
+            </div>
+            <Button
+              size="lg"
+              className="w-full shrink-0 gap-2 rounded-xl bg-gradient-rgb px-5 font-bold text-white sm:w-auto"
+              onClick={() => onOpen('Build the smallest testable version of my product')}
+            >
+              Build the first testable version
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </div>
+        </div>
+      </ScrollReveal>
+    </div>
+  </section>
+);
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -828,9 +908,9 @@ const BuildPage = () => {
   return (
     <>
       <SEO
-        title="MVP Builder — Ship Your Idea This Week | Creatives Takeover"
-        description="Describe what you want to build. Get a real, deployable web app. The MVP Builder is the fastest line between a validated idea and a product you can ship."
-        keywords="MVP builder, vibe coding, build an app without code, no-code MVP, startup landing page generator, AI web app builder, ship MVP fast"
+        title="Evidence-Backed MVP Builder for Founders | Creatives Takeover"
+        description="Turn saved ICP and PMF evidence into a focused, deployable MVP. Build around one customer, one job, and the smallest testable feature set."
+        keywords="evidence-backed MVP builder, MVP builder for founders, validated startup idea, build from customer research, ICP product builder, PMF app builder, AI web app builder"
       />
       <div className="relative min-h-screen">
         <HomeWallpaper />
@@ -839,8 +919,9 @@ const BuildPage = () => {
           <BuildHero onOpen={openModal} />
           <BuildHowItWorks />
           <BuildWhatYouCanBuild />
+          <BuildEvidenceContext onOpen={openModal} />
           <BuildStageSelector />
-          <BuildTestimonials />
+          <BuildFocusSection onOpen={openModal} />
           <Footer />
         </div>
       </div>
