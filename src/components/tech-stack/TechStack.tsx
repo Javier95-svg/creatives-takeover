@@ -397,7 +397,11 @@ const TechStack: React.FC = () => {
     if (showBudget && generatedBudgetKey === selectedProductsKey) {
       toast({
         title: "Budget Already Generated",
-        description: "Your current tech stack budget is ready below.",
+        description: "Showing your existing result. Change a selection to generate a new plan.",
+      });
+      document.getElementById('tech-stack-budget-output')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
       });
       return;
     }
@@ -675,6 +679,7 @@ const TechStack: React.FC = () => {
 
   const canGenerateBudget = allCategoriesSelected;
   const canSaveReport = Boolean(user) && showBudget && allCategoriesSelected;
+  const currentBudgetAlreadyGenerated = showBudget && generatedBudgetKey === selectedProductsKey;
   const previewBreakdown = previewReport?.budget_breakdown || [];
   const firstUnselectedCategory = techStackData.find((category) => !selectedProducts[category.id]);
   const generateButtonLabel = !user
@@ -687,6 +692,8 @@ const TechStack: React.FC = () => {
         ? 'Loading access...'
       : firstUnselectedCategory
         ? 'Complete selections first'
+        : currentBudgetAlreadyGenerated
+          ? 'View Generated Budget'
         : currentTier === 'rookie'
           ? 'Generate (1/month)'
           : 'Generate Budget';
@@ -706,6 +713,36 @@ const TechStack: React.FC = () => {
           </CardContent>
         </Card>
       )}
+
+      <Dialog
+        open={outputState === 'confirmation_required'}
+        onOpenChange={(open) => {
+          if (!open && outputState === 'confirmation_required') {
+            setOutputState('preview');
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Generate this Tech Stack plan?</DialogTitle>
+            <DialogDescription>
+              Your one-time free build has been used. This generation will cost 4 credits.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
+            Credits are deducted only after you confirm.
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setOutputState('preview')}>
+              Cancel
+            </Button>
+            <Button onClick={() => void handleSeeBudget(true)} disabled={generatingBudget}>
+              {generatingBudget ? 'Generating...' : 'Confirm — 4 credits'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -935,25 +972,27 @@ const TechStack: React.FC = () => {
       </div>
 
       {showBudget && allCategoriesSelected && (
-        <BudgetDisplay
-          budget={budget}
-          selectedProducts={selectedProducts}
-          techStackData={techStackData}
-          publicInsights={publicStackInsights}
-          saveName={reportName}
-          onSaveNameChange={setReportName}
-          onSave={() => void handleSaveReport(false)}
-          saving={savingReport}
-          onClose={() => setShowBudget(false)}
-          isPublic={!user}
-          fullPlanUnlocked={outputState === 'unlocked'}
-          unlockState={outputState}
-          onUnlock={() => void handleSeeBudget(true)}
-          onGateCtaClick={() => {
-            persistPublicBudget();
-            captureEvent('free_tool_signup_gate_cta_clicked', { tool: 'tech_stack' });
-          }}
-        />
+        <div id="tech-stack-budget-output" className="scroll-mt-24">
+          <BudgetDisplay
+            budget={budget}
+            selectedProducts={selectedProducts}
+            techStackData={techStackData}
+            publicInsights={publicStackInsights}
+            saveName={reportName}
+            onSaveNameChange={setReportName}
+            onSave={() => void handleSaveReport(false)}
+            saving={savingReport}
+            onClose={() => setShowBudget(false)}
+            isPublic={!user}
+            fullPlanUnlocked={outputState === 'unlocked'}
+            unlockState={outputState}
+            onUnlock={() => void handleSeeBudget(true)}
+            onGateCtaClick={() => {
+              persistPublicBudget();
+              captureEvent('free_tool_signup_gate_cta_clicked', { tool: 'tech_stack' });
+            }}
+          />
+        </div>
       )}
 
     </div>

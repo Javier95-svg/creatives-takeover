@@ -94,6 +94,11 @@ test('Tech Stack charges once per completed budget generation', () => {
 
   assert.match(source, /generatedBudgetKey/);
   assert.match(source, /showBudget && generatedBudgetKey === selectedProductsKey/);
+  assert.match(source, /tech-stack-budget-output/);
+  assert.match(source, /Change a selection to generate a new plan/);
+  assert.match(source, /open=\{outputState === 'confirmation_required'\}/);
+  assert.match(source, /Confirm — 4 credits/);
+  assert.match(source, /handleSeeBudget\(true\)/);
   assert.match(source, /deductCredits\('TECH_STACK_GENERATION'/);
   assert.match(source, /setShowBudget\(true\)/);
   assert.match(source, /setGeneratedBudgetKey\(selectedProductsKey\)/);
