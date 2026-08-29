@@ -7,12 +7,13 @@ import { PLAN_PACKAGE_PRESENTATION } from '../src/config/planPackages.ts';
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
 test('each plan has one accurate value statement and exactly three plain-language perks', () => {
-  assert.equal(PLAN_PACKAGE_PRESENTATION.rookie.valueStatement, 'Start building and testing for free.');
-  assert.equal(PLAN_PACKAGE_PRESENTATION.starter.valueStatement, 'Validate faster with more runway and deeper research.');
-  assert.equal(PLAN_PACKAGE_PRESENTATION.rising.valueStatement, 'Turn evidence into products and customer acquisition.');
-  assert.equal(PLAN_PACKAGE_PRESENTATION.pro.valueStatement, 'Maximum execution runway with unlimited research.');
+  assert.equal(PLAN_PACKAGE_PRESENTATION.rookie.valueStatement, 'Build. Test. Learn.');
+  assert.equal(PLAN_PACKAGE_PRESENTATION.starter.valueStatement, 'Validate with momentum.');
+  assert.equal(PLAN_PACKAGE_PRESENTATION.rising.valueStatement, 'Turn evidence into growth.');
+  assert.equal(PLAN_PACKAGE_PRESENTATION.pro.valueStatement, 'Execute without limits.');
 
   for (const plan of Object.values(PLAN_PACKAGE_PRESENTATION)) {
+    assert.ok(plan.valueStatement.trim().split(/\s+/).length <= 4);
     assert.equal(plan.perks.length, 3);
     assert.match(plan.usageLabel, /credits \/ month/);
     assert.match(plan.workspaceLabel, /dashboard/);

@@ -23,7 +23,7 @@ const quotaLabel = (value: number, noun: string) =>
  */
 export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = {
   rookie: {
-    valueStatement: 'Start building and testing for free.',
+    valueStatement: 'Build. Test. Learn.',
     usageLabel: `${PLAN_MONTHLY_CREDITS.rookie} credits / month`,
     workspaceLabel: 'Core dashboard',
     perksTitle: 'Start with the founder essentials:',
@@ -34,7 +34,7 @@ export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = 
     ],
   },
   starter: {
-    valueStatement: 'Validate faster with more runway and deeper research.',
+    valueStatement: 'Validate with momentum.',
     usageLabel: `${PLAN_MONTHLY_CREDITS.starter} credits / month`,
     workspaceLabel: 'PROVE dashboard',
     perksTitle: 'Everything in Rookie, plus:',
@@ -46,7 +46,7 @@ export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = 
     recommended: true,
   },
   rising: {
-    valueStatement: 'Turn evidence into products and customer acquisition.',
+    valueStatement: 'Turn evidence into growth.',
     usageLabel: `${PLAN_MONTHLY_CREDITS.rising} credits / month`,
     workspaceLabel: 'SELL + GROW dashboard',
     perksTitle: 'Everything in Starter, plus:',
@@ -57,7 +57,7 @@ export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = 
     ],
   },
   pro: {
-    valueStatement: 'Maximum execution runway with unlimited research.',
+    valueStatement: 'Execute without limits.',
     usageLabel: `${PLAN_MONTHLY_CREDITS.pro} credits / month`,
     workspaceLabel: 'Full execution dashboard',
     perksTitle: 'Everything in Rising, plus:',
