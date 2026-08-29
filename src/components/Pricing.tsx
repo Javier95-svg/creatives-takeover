@@ -11,7 +11,7 @@ import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { useLocation } from "react-router-dom";
 import { PLAN_LABELS, PLAN_SEQUENCE, type Plan } from "@/config/planPermissions";
 import { PLAN_PRICING } from "@/config/pricing";
-import { PLAN_PACKAGE_PRESENTATION, SHARED_PLAN_FOUNDATION } from "@/config/planPackages";
+import { PLAN_PACKAGE_PRESENTATION } from "@/config/planPackages";
 import { appendCheckoutIntentParam } from "@/lib/checkoutRedirect";
 import { RevealGroup } from "@/components/animations/ScrollReveal";
 
@@ -166,23 +166,6 @@ export default function Pricing() {
               </TabsTrigger>
             </TabsList>
           </Tabs>
-        </div>
-
-        <div className="mx-auto mb-8 max-w-[124rem] rounded-2xl border border-border/60 bg-card/55 px-4 py-4 shadow-sm backdrop-blur sm:px-5">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="shrink-0">
-              <p className="font-space-grotesk text-sm font-semibold text-foreground">Included with every plan</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">The same connected founder workspace, with capacity that grows with you.</p>
-            </div>
-            <div className="grid gap-x-5 gap-y-2 sm:grid-cols-2 xl:grid-cols-4">
-              {SHARED_PLAN_FOUNDATION.map((item) => (
-                <div key={item} className="flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
-                  <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-success" strokeWidth={3} aria-hidden="true" />
-                  <span>{item}</span>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
 
         <RevealGroup className="mx-auto grid max-w-[124rem] grid-cols-1 items-stretch justify-items-center gap-5 md:grid-cols-2 xl:grid-cols-4 xl:gap-6" variant="card">

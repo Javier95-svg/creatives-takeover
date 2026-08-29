@@ -24,14 +24,20 @@ test('shared foundation is transparent about mentor marketplace fees', () => {
   assert.ok(SHARED_PLAN_FOUNDATION.some((item) => /paid separately/i.test(item)));
 });
 
-test('pricing keeps full details collapsed and uses the five comparison groups', () => {
+test('pricing keeps the original always-visible comparison layout and five accurate groups', () => {
   const comparison = read('../src/components/PricingComparison.tsx');
-  assert.match(comparison, /useState\(false\)/);
-  assert.match(comparison, /Compare all features/);
+  assert.match(comparison, /Feature Comparison/);
+  assert.match(comparison, /Compare Our Plans/);
+  assert.doesNotMatch(comparison, /Collapsible|Compare all features/);
   for (const category of ['Credits & AI', 'Build & validation', 'Sell & grow', 'Research & fundraising', 'Network & support']) {
     assert.ok(comparison.includes(category));
   }
   assert.match(comparison, /mentor fees separate/i);
+});
+
+test('the plan cards do not render a shared-foundation band above them', () => {
+  const pricing = read('../src/components/Pricing.tsx');
+  assert.doesNotMatch(pricing, /Included with every plan|SHARED_PLAN_FOUNDATION/);
 });
 
 test('pricing-facing copy does not advertise removed Pro promises', () => {
