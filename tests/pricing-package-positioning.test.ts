@@ -2,26 +2,23 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { PLAN_PACKAGE_PRESENTATION, SHARED_PLAN_FOUNDATION } from '../src/config/planPackages.ts';
+import { PLAN_PACKAGE_PRESENTATION } from '../src/config/planPackages.ts';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
-test('each plan has one accurate value statement and exactly three differentiators', () => {
+test('each plan has one accurate value statement and exactly three plain-language perks', () => {
   assert.equal(PLAN_PACKAGE_PRESENTATION.rookie.valueStatement, 'Start building and testing for free.');
   assert.equal(PLAN_PACKAGE_PRESENTATION.starter.valueStatement, 'Validate faster with more runway and deeper research.');
   assert.equal(PLAN_PACKAGE_PRESENTATION.rising.valueStatement, 'Turn evidence into products and customer acquisition.');
   assert.equal(PLAN_PACKAGE_PRESENTATION.pro.valueStatement, 'Maximum execution runway with unlimited research.');
 
   for (const plan of Object.values(PLAN_PACKAGE_PRESENTATION)) {
-    assert.equal(plan.differentiators.length, 3);
+    assert.equal(plan.perks.length, 3);
+    assert.match(plan.usageLabel, /credits \/ month/);
+    assert.match(plan.workspaceLabel, /dashboard/);
   }
   assert.equal(PLAN_PACKAGE_PRESENTATION.starter.recommended, true);
   assert.equal(Object.values(PLAN_PACKAGE_PRESENTATION).filter((plan) => plan.recommended).length, 1);
-});
-
-test('shared foundation is transparent about mentor marketplace fees', () => {
-  assert.ok(SHARED_PLAN_FOUNDATION.some((item) => /mentor marketplace access/i.test(item)));
-  assert.ok(SHARED_PLAN_FOUNDATION.some((item) => /paid separately/i.test(item)));
 });
 
 test('pricing keeps the original always-visible comparison layout and five accurate groups', () => {
@@ -38,6 +35,17 @@ test('pricing keeps the original always-visible comparison layout and five accur
 test('the plan cards do not render a shared-foundation band above them', () => {
   const pricing = read('../src/components/Pricing.tsx');
   assert.doesNotMatch(pricing, /Included with every plan|SHARED_PLAN_FOUNDATION/);
+});
+
+test('cards use progressive membership language and compact context chips', () => {
+  const pricing = read('../src/components/Pricing.tsx');
+  assert.match(pricing, /plan\.usageLabel/);
+  assert.match(pricing, /plan\.workspaceLabel/);
+  assert.match(pricing, /plan\.perksTitle/);
+  assert.match(pricing, /plan\.perks\.map/);
+  assert.equal(PLAN_PACKAGE_PRESENTATION.starter.perksTitle, 'Everything in Rookie, plus:');
+  assert.equal(PLAN_PACKAGE_PRESENTATION.rising.perksTitle, 'Everything in Starter, plus:');
+  assert.equal(PLAN_PACKAGE_PRESENTATION.pro.perksTitle, 'Everything in Rising, plus:');
 });
 
 test('pricing-facing copy does not advertise removed Pro promises', () => {

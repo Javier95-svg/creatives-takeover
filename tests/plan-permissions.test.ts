@@ -102,12 +102,14 @@ test('plan monthly credits stay aligned with pricing', () => {
   assert.equal(PLAN_MONTHLY_CREDITS.pro, 600);
 });
 
-test('pricing page presents compact value statements and differentiators', () => {
+test('pricing page presents compact value statements and progressive perks', () => {
   const pricingSource = readFileSync(new URL('../src/components/Pricing.tsx', import.meta.url), 'utf8');
 
   assert.match(pricingSource, /PLAN_PACKAGE_PRESENTATION/);
   assert.match(pricingSource, /plan\.valueStatement/);
-  assert.match(pricingSource, /plan\.differentiators\.map/);
+  assert.match(pricingSource, /plan\.usageLabel/);
+  assert.match(pricingSource, /plan\.workspaceLabel/);
+  assert.match(pricingSource, /plan\.perks\.map/);
   assert.doesNotMatch(pricingSource, /Plan highlights/);
 });
 

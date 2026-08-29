@@ -22,7 +22,10 @@ const PLAN_CONFIG: Array<{
   key: PlanKey;
   title: string;
   valueStatement: string;
-  differentiators: readonly [string, string, string];
+  usageLabel: string;
+  workspaceLabel: string;
+  perksTitle: string;
+  perks: readonly [string, string, string];
   monthlyPrice: number;
   yearlyPrice: number;
   yearlyEquivalent: string;
@@ -32,7 +35,10 @@ const PLAN_CONFIG: Array<{
   key,
   title: PLAN_LABELS[key],
   valueStatement: PLAN_PACKAGE_PRESENTATION[key].valueStatement,
-  differentiators: PLAN_PACKAGE_PRESENTATION[key].differentiators,
+  usageLabel: PLAN_PACKAGE_PRESENTATION[key].usageLabel,
+  workspaceLabel: PLAN_PACKAGE_PRESENTATION[key].workspaceLabel,
+  perksTitle: PLAN_PACKAGE_PRESENTATION[key].perksTitle,
+  perks: PLAN_PACKAGE_PRESENTATION[key].perks,
   monthlyPrice: PLAN_PRICING[key].monthly,
   yearlyPrice: PLAN_PRICING[key].yearly,
   yearlyEquivalent: key === "starter" ? "$6.58/mo" : key === "rising" ? "$19.92/mo" : key === "pro" ? "$49.08/mo" : "Free forever",
@@ -212,12 +218,12 @@ export default function Pricing() {
                   </span>
                 ) : null}
 
-                <div className="text-center">
-                  <h3 className="font-space-grotesk text-2xl font-semibold tracking-tight">
+                <div>
+                  <h3 className="font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
                     {plan.title}
                   </h3>
-                  <div className="mt-4">
-                    <div className="flex items-baseline justify-center gap-1">
+                  <div className="mt-3">
+                    <div className="flex items-baseline gap-1">
                       <span className="text-5xl sm:text-6xl font-bold tracking-tight font-space-grotesk tabular-nums">
                         ${formatPrice(price)}
                       </span>
@@ -234,19 +240,27 @@ export default function Pricing() {
                       <div className="text-xs text-muted-foreground mt-1">{plan.savings}</div>
                     )}
                   </div>
-                  <p className="mx-auto mt-5 min-h-[3.25rem] max-w-[280px] font-space-grotesk text-lg font-semibold leading-snug text-foreground">
+                  <p className="mt-4 min-h-[3.25rem] font-space-grotesk text-lg font-semibold leading-snug text-foreground">
                     {plan.valueStatement}
                   </p>
                 </div>
 
+                <div className="mt-5 flex flex-wrap gap-2" aria-label={`${plan.title} plan context`}>
+                  <Badge variant="secondary" className="rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-xs font-medium text-foreground">
+                    {plan.usageLabel}
+                  </Badge>
+                  <Badge variant="secondary" className="rounded-full border border-border/70 bg-background/65 px-3 py-1 text-xs font-medium text-foreground">
+                    {plan.workspaceLabel}
+                  </Badge>
+                </div>
+
                 <div className="my-5 flex-1 border-t border-border/60 pt-5">
-                  <div className="space-y-3.5">
-                    {plan.differentiators.map((feature) => (
-                      <div key={feature} className="flex items-start gap-3">
-                        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                          <Check className="h-3 w-3 text-primary" strokeWidth={3} aria-hidden="true" />
-                        </span>
-                        <span className="text-sm leading-relaxed text-foreground/90">{feature}</span>
+                  <p className="mb-4 text-sm font-medium text-foreground">{plan.perksTitle}</p>
+                  <div className="space-y-4">
+                    {plan.perks.map((perk) => (
+                      <div key={perk} className="flex items-start gap-3">
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" strokeWidth={2.5} aria-hidden="true" />
+                        <span className="text-sm leading-relaxed text-foreground/85">{perk}</span>
                       </div>
                     ))}
                   </div>

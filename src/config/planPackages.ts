@@ -6,7 +6,10 @@ import {
 
 export interface PlanPackagePresentation {
   valueStatement: string;
-  differentiators: readonly [string, string, string];
+  usageLabel: string;
+  workspaceLabel: string;
+  perksTitle: string;
+  perks: readonly [string, string, string];
   recommended?: boolean;
 }
 
@@ -21,43 +24,47 @@ const quotaLabel = (value: number, noun: string) =>
 export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = {
   rookie: {
     valueStatement: 'Start building and testing for free.',
-    differentiators: [
-      `${PLAN_MONTHLY_CREDITS.rookie} monthly credits`,
-      'Standard AI models for MVP Builder and Prompt Library',
-      `${quotaLabel(MONTHLY_FREE_QUOTAS.directory_visits.rookie, 'directory visits')} plus investor and accelerator browsing`,
+    usageLabel: `${PLAN_MONTHLY_CREDITS.rookie} credits / month`,
+    workspaceLabel: 'Core dashboard',
+    perksTitle: 'Start with the founder essentials:',
+    perks: [
+      'Build with ICP Builder, PMF Lab, MVP Builder, and the rest of the core toolset.',
+      'Use standard AI models and top up your credit balance whenever you need more runs.',
+      `Browse investors, accelerators, and mentors, with ${quotaLabel(MONTHLY_FREE_QUOTAS.directory_visits.rookie, 'directory visits')} each month.`,
     ],
   },
   starter: {
     valueStatement: 'Validate faster with more runway and deeper research.',
-    differentiators: [
-      `${PLAN_MONTHLY_CREDITS.starter} monthly credits`,
-      'PROVE workspace and full Email Templates access',
-      `${quotaLabel(MONTHLY_FREE_QUOTAS.vc_profiles.starter, 'VC profiles')}, ${quotaLabel(MONTHLY_FREE_QUOTAS.accelerator_profiles.starter, 'accelerator profiles')}, and ${quotaLabel(MONTHLY_FREE_QUOTAS.directory_visits.starter, 'directory visits')}`,
+    usageLabel: `${PLAN_MONTHLY_CREDITS.starter} credits / month`,
+    workspaceLabel: 'PROVE dashboard',
+    perksTitle: 'Everything in Rookie, plus:',
+    perks: [
+      'Run validation from the PROVE dashboard with more monthly AI capacity.',
+      'Use the full Email Templates library for customer and investor outreach.',
+      `Open ${quotaLabel(MONTHLY_FREE_QUOTAS.vc_profiles.starter, 'VC profiles')}, ${quotaLabel(MONTHLY_FREE_QUOTAS.accelerator_profiles.starter, 'accelerator profiles')}, and ${quotaLabel(MONTHLY_FREE_QUOTAS.directory_visits.starter, 'directory visits')} each month.`,
     ],
     recommended: true,
   },
   rising: {
     valueStatement: 'Turn evidence into products and customer acquisition.',
-    differentiators: [
-      `${PLAN_MONTHLY_CREDITS.rising} monthly credits with advanced MVP models`,
-      'Complete First Customer Proof workflow',
-      `Full Prompt Library and exports plus ${quotaLabel(MONTHLY_FREE_QUOTAS.vc_profiles.rising, 'VC profiles')}`,
+    usageLabel: `${PLAN_MONTHLY_CREDITS.rising} credits / month`,
+    workspaceLabel: 'SELL + GROW dashboard',
+    perksTitle: 'Everything in Starter, plus:',
+    perks: [
+      'Build with advanced MVP models and turn customer evidence into a working product.',
+      'Run the complete First Customer Proof workflow and export from the full Prompt Library.',
+      `Research ${quotaLabel(MONTHLY_FREE_QUOTAS.vc_profiles.rising, 'VC profiles')}, ${quotaLabel(MONTHLY_FREE_QUOTAS.accelerator_profiles.rising, 'accelerator profiles')}, and use ${quotaLabel(MONTHLY_FREE_QUOTAS.directory_visits.rising, 'directory visits')} each month.`,
     ],
   },
   pro: {
     valueStatement: 'Maximum execution runway with unlimited research.',
-    differentiators: [
-      `${PLAN_MONTHLY_CREDITS.pro} monthly credits`,
-      'Find Your Angel access',
-      'Unlimited VC profiles, accelerator profiles, and directory visits',
+    usageLabel: `${PLAN_MONTHLY_CREDITS.pro} credits / month`,
+    workspaceLabel: 'Full execution dashboard',
+    perksTitle: 'Everything in Rising, plus:',
+    perks: [
+      "Run more AI actions with the platform's largest monthly credit balance.",
+      'Find matched investors with Find Your Angel.',
+      'Open unlimited VC profiles, accelerator profiles, and directory listings.',
     ],
   },
 };
-
-export const SHARED_PLAN_FOUNDATION = [
-  'Core founder tools from ICP and PMF through MVP, stack, GTM, and pitch review',
-  'Credit-metered AI actions with optional top-ups',
-  'Mentor marketplace access; mentor services are priced and paid separately',
-  'Insighta Test, Newspaper, investor browsing, and free co-founder posting',
-] as const;
-
