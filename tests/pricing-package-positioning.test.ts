@@ -6,7 +6,7 @@ import { PLAN_PACKAGE_PRESENTATION } from '../src/config/planPackages.ts';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
-test('each plan has one accurate value statement and exactly three plain-language perks', () => {
+test('each plan has one accurate value statement and four plain-language perks', () => {
   assert.equal(PLAN_PACKAGE_PRESENTATION.rookie.valueStatement, 'Start your journey.');
   assert.equal(PLAN_PACKAGE_PRESENTATION.starter.valueStatement, 'Test your assumptions.');
   assert.equal(PLAN_PACKAGE_PRESENTATION.rising.valueStatement, 'Turn evidence into growth.');
@@ -14,12 +14,20 @@ test('each plan has one accurate value statement and exactly three plain-languag
 
   for (const plan of Object.values(PLAN_PACKAGE_PRESENTATION)) {
     assert.ok(plan.valueStatement.trim().split(/\s+/).length <= 4);
-    assert.equal(plan.perks.length, 3);
+    assert.ok(plan.perks.length >= 3 && plan.perks.length <= 5);
+    assert.equal(plan.perks.length, 4);
+    for (const perk of plan.perks) {
+      assert.match(perk, /[.!?]$/);
+    }
     assert.match(plan.usageLabel, /credits \/ month/);
     assert.match(plan.workspaceLabel, /dashboard/);
   }
   assert.equal(PLAN_PACKAGE_PRESENTATION.starter.recommended, true);
   assert.equal(Object.values(PLAN_PACKAGE_PRESENTATION).filter((plan) => plan.recommended).length, 1);
+  assert.doesNotMatch(
+    Object.values(PLAN_PACKAGE_PRESENTATION).flatMap((plan) => plan.perks).join(' '),
+    /Email Templates/i,
+  );
 });
 
 test('pricing keeps the original always-visible comparison layout and five accurate groups', () => {

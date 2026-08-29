@@ -9,7 +9,7 @@ export interface PlanPackagePresentation {
   usageLabel: string;
   workspaceLabel: string;
   perksTitle: string;
-  perks: readonly [string, string, string];
+  perks: readonly [string, string, string, string];
   recommended?: boolean;
 }
 
@@ -28,9 +28,10 @@ export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = 
     workspaceLabel: 'Core dashboard',
     perksTitle: 'Start with the founder essentials:',
     perks: [
-      'Build with ICP Builder, PMF Lab, MVP Builder, and the rest of the core toolset.',
-      'Use standard AI models and top up your credit balance whenever you need more runs.',
-      `Browse investors, accelerators, and mentors, with ${quotaLabel(MONTHLY_FREE_QUOTAS.directory_visits.rookie, 'directory visits')} each month.`,
+      `Turn an early idea into a clearer customer, problem, and first test with ${PLAN_MONTHLY_CREDITS.rookie} monthly credits.`,
+      'Create a simple demand test and start collecting evidence before paying for a larger plan.',
+      'Explore mentor profiles and post a co-founder opportunity for free, then choose whether to pay for outside help only when it is useful.',
+      'Browse investor and accelerator opportunities, and learn from founder stories and conversations as you prepare your next move.',
     ],
   },
   starter: {
@@ -39,9 +40,10 @@ export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = 
     workspaceLabel: 'PROVE dashboard',
     perksTitle: 'Everything in Rookie, plus:',
     perks: [
-      'Run validation from the PROVE dashboard with more monthly AI capacity.',
-      'Use the full Email Templates library for customer and investor outreach.',
-      `Open ${quotaLabel(MONTHLY_FREE_QUOTAS.vc_profiles.starter, 'VC profiles')}, ${quotaLabel(MONTHLY_FREE_QUOTAS.accelerator_profiles.starter, 'accelerator profiles')}, and ${quotaLabel(MONTHLY_FREE_QUOTAS.directory_visits.starter, 'directory visits')} each month.`,
+      `Get ${PLAN_MONTHLY_CREDITS.starter} monthly credits and a dedicated validation workspace to keep your assumptions, customer evidence, and next actions in one place.`,
+      'Run a more deliberate customer-validation loop, so each conversation can move you closer to a real commitment.',
+      `Open ${quotaLabel(MONTHLY_FREE_QUOTAS.vc_profiles.starter, 'investor profiles')} and ${quotaLabel(MONTHLY_FREE_QUOTAS.accelerator_profiles.starter, 'accelerator profiles')} each month to begin focused research for the next stage.`,
+      `Use ${quotaLabel(MONTHLY_FREE_QUOTAS.directory_visits.starter, 'directory visits')} each month to find relevant people, opportunities, and practical routes forward.`,
     ],
     recommended: true,
   },
@@ -51,9 +53,10 @@ export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = 
     workspaceLabel: 'SELL + GROW dashboard',
     perksTitle: 'Everything in Starter, plus:',
     perks: [
-      'Build with advanced MVP models and turn customer evidence into a working product.',
-      'Run the complete First Customer Proof workflow and export from the full Prompt Library.',
-      `Research ${quotaLabel(MONTHLY_FREE_QUOTAS.vc_profiles.rising, 'VC profiles')}, ${quotaLabel(MONTHLY_FREE_QUOTAS.accelerator_profiles.rising, 'accelerator profiles')}, and use ${quotaLabel(MONTHLY_FREE_QUOTAS.directory_visits.rising, 'directory visits')} each month.`,
+      `Get ${PLAN_MONTHLY_CREDITS.rising} monthly credits and advanced product-building capacity to turn validated learning into something customers can actually use.`,
+      'Unlock the full First Customer Proof workflow to run a measurable acquisition cycle and decide what to improve next.',
+      `Open ${quotaLabel(MONTHLY_FREE_QUOTAS.vc_profiles.rising, 'investor profiles')} each month to build a stronger, better-researched fundraising shortlist.`,
+      `Review ${quotaLabel(MONTHLY_FREE_QUOTAS.accelerator_profiles.rising, 'accelerator profiles')} and use ${quotaLabel(MONTHLY_FREE_QUOTAS.directory_visits.rising, 'directory visits')} each month to expand the opportunities behind your growth plan.`,
     ],
   },
   pro: {
@@ -62,9 +65,10 @@ export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = 
     workspaceLabel: 'Full execution dashboard',
     perksTitle: 'Everything in Rising, plus:',
     perks: [
-      "Run more AI actions with the platform's largest monthly credit balance.",
-      'Find matched investors with Find Your Angel.',
-      'Open unlimited VC profiles, accelerator profiles, and directory listings.',
+      `Get ${PLAN_MONTHLY_CREDITS.pro} monthly credits and the platform's broadest build capacity to keep validating, shipping, and improving without a tight monthly runway.`,
+      'Unlock Find Your Angel to focus your fundraising research on investors who better match your company.',
+      `Research ${quotaLabel(MONTHLY_FREE_QUOTAS.vc_profiles.pro, 'investor profiles')}, so promising opportunities never get cut off by a monthly viewing limit.`,
+      `Research ${quotaLabel(MONTHLY_FREE_QUOTAS.accelerator_profiles.pro, 'accelerator profiles')} and ${quotaLabel(MONTHLY_FREE_QUOTAS.directory_visits.pro, 'directory profiles')} to pursue the strongest programs, people, and opportunities as your strategy evolves.`,
     ],
   },
 };
