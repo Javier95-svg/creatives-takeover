@@ -7,7 +7,6 @@ import {
 export interface PlanPackagePresentation {
   valueStatement: string;
   usageLabel: string;
-  workspaceLabel: string;
   perksTitle: string;
   perks: readonly [string, string, string, string];
   recommended?: boolean;
@@ -25,19 +24,17 @@ export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = 
   rookie: {
     valueStatement: 'Start your journey.',
     usageLabel: `${PLAN_MONTHLY_CREDITS.rookie} credits / month`,
-    workspaceLabel: 'Core dashboard',
     perksTitle: 'Start with the founder essentials:',
     perks: [
       `Turn an early idea into a clearer customer, problem, and first test with ${PLAN_MONTHLY_CREDITS.rookie} monthly credits.`,
       'Create a simple demand test and start collecting evidence before paying for a larger plan.',
       'Explore mentor profiles and post a co-founder opportunity for free, then choose whether to pay for outside help only when it is useful.',
-      'Browse investor and accelerator opportunities, and learn from founder stories and conversations as you prepare your next move.',
+      'Full access to our Content section, with weekly podcast episodes and curated industry articles that keep you informed on the trends shaping your market.',
     ],
   },
   starter: {
     valueStatement: 'Test your assumptions.',
     usageLabel: `${PLAN_MONTHLY_CREDITS.starter} credits / month`,
-    workspaceLabel: 'PROVE dashboard',
     perksTitle: 'Everything in Rookie, plus:',
     perks: [
       `Get ${PLAN_MONTHLY_CREDITS.starter} monthly credits and a dedicated validation workspace to keep your assumptions, customer evidence, and next actions in one place.`,
@@ -50,7 +47,6 @@ export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = 
   rising: {
     valueStatement: 'Turn evidence into growth.',
     usageLabel: `${PLAN_MONTHLY_CREDITS.rising} credits / month`,
-    workspaceLabel: 'SELL + GROW dashboard',
     perksTitle: 'Everything in Starter, plus:',
     perks: [
       `Get ${PLAN_MONTHLY_CREDITS.rising} monthly credits and advanced product-building capacity to turn validated learning into something customers can actually use.`,
@@ -62,7 +58,6 @@ export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = 
   pro: {
     valueStatement: 'Execute without limits.',
     usageLabel: `${PLAN_MONTHLY_CREDITS.pro} credits / month`,
-    workspaceLabel: 'Full execution dashboard',
     perksTitle: 'Everything in Rising, plus:',
     perks: [
       `Get ${PLAN_MONTHLY_CREDITS.pro} monthly credits and the platform's broadest build capacity to keep validating, shipping, and improving without a tight monthly runway.`,
