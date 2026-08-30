@@ -20,7 +20,6 @@ test('each plan has one accurate value statement and four plain-language perks',
       assert.match(perk, /[.!?]$/);
     }
     assert.match(plan.usageLabel, /credits \/ month/);
-    assert.match(plan.workspaceLabel, /dashboard/);
   }
   assert.equal(PLAN_PACKAGE_PRESENTATION.starter.recommended, true);
   assert.equal(Object.values(PLAN_PACKAGE_PRESENTATION).filter((plan) => plan.recommended).length, 1);
@@ -46,10 +45,10 @@ test('the plan cards do not render a shared-foundation band above them', () => {
   assert.doesNotMatch(pricing, /Included with every plan|SHARED_PLAN_FOUNDATION/);
 });
 
-test('cards use progressive membership language and compact context chips', () => {
+test('cards use progressive membership language and only show the credit context chip', () => {
   const pricing = read('../src/components/Pricing.tsx');
   assert.match(pricing, /plan\.usageLabel/);
-  assert.match(pricing, /plan\.workspaceLabel/);
+  assert.doesNotMatch(pricing, /workspaceLabel/);
   assert.match(pricing, /plan\.perksTitle/);
   assert.match(pricing, /plan\.perks\.map/);
   assert.equal(PLAN_PACKAGE_PRESENTATION.starter.perksTitle, 'Everything in Rookie, plus:');

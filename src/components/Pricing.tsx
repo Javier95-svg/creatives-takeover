@@ -23,9 +23,8 @@ const PLAN_CONFIG: Array<{
   title: string;
   valueStatement: string;
   usageLabel: string;
-  workspaceLabel: string;
   perksTitle: string;
-  perks: readonly [string, string, string];
+  perks: readonly [string, string, string, string];
   monthlyPrice: number;
   yearlyPrice: number;
   yearlyEquivalent: string;
@@ -36,7 +35,6 @@ const PLAN_CONFIG: Array<{
   title: PLAN_LABELS[key],
   valueStatement: PLAN_PACKAGE_PRESENTATION[key].valueStatement,
   usageLabel: PLAN_PACKAGE_PRESENTATION[key].usageLabel,
-  workspaceLabel: PLAN_PACKAGE_PRESENTATION[key].workspaceLabel,
   perksTitle: PLAN_PACKAGE_PRESENTATION[key].perksTitle,
   perks: PLAN_PACKAGE_PRESENTATION[key].perks,
   monthlyPrice: PLAN_PRICING[key].monthly,
@@ -52,8 +50,8 @@ const PLAN_CARD_STYLES: Record<PlanKey, { border: string; ring: string; button: 
   rookie: {
     border: "border-success/55",
     ring: "ring-border",
-    button: "",
-    buttonVariant: "outline",
+    button: "bg-success text-success-foreground hover:bg-success/90",
+    buttonVariant: "default",
   },
   starter: {
     border: "border-2 border-primary/70",
@@ -64,14 +62,14 @@ const PLAN_CARD_STYLES: Record<PlanKey, { border: string; ring: string; button: 
   rising: {
     border: "border-warning/55",
     ring: "ring-border",
-    button: "",
-    buttonVariant: "outline",
+    button: "bg-warning text-warning-foreground hover:bg-warning/90",
+    buttonVariant: "default",
   },
   pro: {
     border: "border-destructive/50",
     ring: "ring-border",
-    button: "",
-    buttonVariant: "outline",
+    button: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+    buttonVariant: "default",
   },
 };
 
@@ -156,7 +154,7 @@ export default function Pricing() {
             Choose Your Plan
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-            Choose the outcome you need now. Every plan keeps your evidence and decisions connected as you progress.
+            Every plan keeps your project evidence and pivot decisions on track as you progress.
           </p>
 
           <Tabs value={billingCycle} onValueChange={(value) => setBillingCycle(value as BillingCycle)} className="inline-block">
@@ -248,9 +246,6 @@ export default function Pricing() {
                 <div className="mt-5 flex flex-wrap gap-2" aria-label={`${plan.title} plan context`}>
                   <Badge variant="secondary" className="rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-xs font-medium text-foreground">
                     {plan.usageLabel}
-                  </Badge>
-                  <Badge variant="secondary" className="rounded-full border border-border/70 bg-background/65 px-3 py-1 text-xs font-medium text-foreground">
-                    {plan.workspaceLabel}
                   </Badge>
                 </div>
 
