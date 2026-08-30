@@ -75,7 +75,12 @@ const ProfileBannerIllustration = ({ profileId }: { profileId: FounderProfileId 
       aria-hidden="true"
     >
       <div className="absolute left-[12%] right-[12%] top-[34px] h-px bg-gradient-to-r from-transparent via-white/45 to-transparent sm:top-[38px]" />
-      <div className="relative grid grid-cols-4 gap-2">
+      {/* sm:grid-cols-4 is not redundant. responsive-overrides.css:84 collapses
+          any grid-cols-4 carrying no responsive column class to a single column
+          below 768px with !important, which stood this funnel on end and left
+          the arrows floating beside it. Declaring a breakpoint variant is that
+          rule's own opt-out, and keeps the flow horizontal at every width. */}
+      <div className="relative grid grid-cols-4 gap-2 sm:grid-cols-4">
         {steps.map((step, index) => {
           const Icon = step.icon;
           return (
