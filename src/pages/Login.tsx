@@ -69,11 +69,26 @@ const Login = () => {
   );
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      setActiveLoginHeroSlide((currentSlide) => (currentSlide + 1) % loginHeroSlides.length);
-    }, 3600);
+    // Hidden below md — see the matching note in Signup.tsx.
+    const query = window.matchMedia('(min-width: 768px)');
+    let timer: number | undefined;
 
-    return () => window.clearInterval(timer);
+    const sync = () => {
+      if (timer !== undefined) window.clearInterval(timer);
+      timer = undefined;
+      if (!query.matches) return;
+      timer = window.setInterval(() => {
+        setActiveLoginHeroSlide((currentSlide) => (currentSlide + 1) % loginHeroSlides.length);
+      }, 3600);
+    };
+
+    sync();
+    query.addEventListener('change', sync);
+
+    return () => {
+      if (timer !== undefined) window.clearInterval(timer);
+      query.removeEventListener('change', sync);
+    };
   }, [loginHeroTimerReset]);
 
   useEffect(() => {
@@ -255,7 +270,8 @@ const Login = () => {
         <meta name="description" content="Sign in to your Creatives Takeover account to access AI-powered creative planning tools." />
       </Helmet>
 
-      <aside className="signup-premium-left-panel relative flex h-[44vmax] flex-col overflow-hidden bg-[#080c14] px-6 py-6 text-white md:fixed md:left-0 md:top-0 md:h-screen md:w-1/2 md:px-10 md:py-8 lg:px-14">
+      {/* Promo panel is desktop-only — see the matching note in Signup.tsx. */}
+      <aside className="signup-premium-left-panel relative hidden flex-col overflow-hidden bg-[#080c14] px-6 py-6 text-white md:fixed md:left-0 md:top-0 md:flex md:h-screen md:w-1/2 md:px-10 md:py-8 lg:px-14">
         <div
           aria-hidden
           className="signup-premium-left-ambient absolute inset-0"
@@ -325,6 +341,7 @@ const Login = () => {
                     <img
                       src={slide.src}
                       alt={slide.alt}
+                      loading="lazy"
                       className="signup-premium-carousel-image h-auto max-h-full w-full rounded-2xl object-contain"
                     />
                   </div>

@@ -92,11 +92,28 @@ const Signup = () => {
   const fieldsInteracted = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      setActiveSignupHeroSlide((currentSlide) => (currentSlide + 1) % signupHeroSlides.length);
-    }, 3600);
+    // The promo panel is hidden below md, so don't re-render the whole page
+    // every 3.6s for a carousel nobody can see. Tracks the query rather than
+    // reading it once, so rotating a phone into landscape still animates.
+    const query = window.matchMedia('(min-width: 768px)');
+    let timer: number | undefined;
 
-    return () => window.clearInterval(timer);
+    const sync = () => {
+      if (timer !== undefined) window.clearInterval(timer);
+      timer = undefined;
+      if (!query.matches) return;
+      timer = window.setInterval(() => {
+        setActiveSignupHeroSlide((currentSlide) => (currentSlide + 1) % signupHeroSlides.length);
+      }, 3600);
+    };
+
+    sync();
+    query.addEventListener('change', sync);
+
+    return () => {
+      if (timer !== undefined) window.clearInterval(timer);
+      query.removeEventListener('change', sync);
+    };
   }, [signupHeroTimerReset]);
 
   const trackFieldInteraction = (field: string) => {
@@ -526,7 +543,10 @@ const Signup = () => {
         <meta name="description" content="Create your Creatives Takeover account to start transforming creative ideas into actionable plans with AI-powered insights." />
       </Helmet>
 
-      <aside className="signup-premium-left-panel relative flex h-[44vmax] flex-col overflow-hidden bg-[#080c14] px-6 py-6 text-white md:fixed md:left-0 md:top-0 md:h-screen md:w-1/2 md:px-10 md:py-8 lg:px-14">
+      {/* Promo panel is desktop-only. On a phone it consumed the whole first
+          screen and pushed the form below the fold, so signup started with a
+          scroll. Hidden below md; the form panel then owns the viewport. */}
+      <aside className="signup-premium-left-panel relative hidden flex-col overflow-hidden bg-[#080c14] px-6 py-6 text-white md:fixed md:left-0 md:top-0 md:flex md:h-screen md:w-1/2 md:px-10 md:py-8 lg:px-14">
         <div
           aria-hidden
           className="signup-premium-left-ambient absolute inset-0"
@@ -596,6 +616,9 @@ const Signup = () => {
                     <img
                       src={slide.src}
                       alt={slide.alt}
+                      // Keeps phones from downloading desktop-only promo art:
+                      // lazy images inside a display:none subtree are never fetched.
+                      loading="lazy"
                       className="signup-premium-carousel-image h-auto max-h-full w-full rounded-2xl object-contain"
                     />
                   </div>
