@@ -188,7 +188,7 @@ export default function Pricing() {
               <div
                 key={plan.key}
                 aria-label={`${plan.title} plan${isPopular ? ", recommended" : ""}`}
-                className={`group relative flex h-full w-full max-w-[516px] flex-col rounded-3xl border ${cardStyle.border} p-6 backdrop-blur transition-all duration-300 hover:-translate-y-1 ${
+                className={`group relative flex w-full max-w-[516px] flex-col rounded-3xl border ${cardStyle.border} p-6 backdrop-blur transition-all duration-300 hover:-translate-y-1 ${plan.key === "rookie" ? "self-start" : "h-full"} ${
                   isPopular
                     ? "z-10 bg-gradient-to-b from-primary/[0.09] to-card shadow-[0_28px_64px_-28px_hsl(var(--primary)/0.45)] xl:-translate-y-2"
                     : "bg-card/70 shadow-[0_1px_2px_rgb(2_6_23/0.04),0_14px_32px_-20px_rgb(2_6_23/0.20)]"
