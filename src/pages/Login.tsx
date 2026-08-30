@@ -506,23 +506,31 @@ const Login = () => {
                 </div>
               )}
 
-              {/* Remember Me + Forgot Password */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
+              {/* Remember Me + Forgot Password. Stacked on phones: side by side
+                  the two labels together exceed a 360px card and both wrap
+                  mid-phrase, colliding with each other. */}
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                <div className="flex min-h-11 items-center gap-2.5">
+                  {/* no-touch-target opts out of the global mobile rule forcing
+                      every button to 44x44 (index.css:2639). Radix renders the
+                      checkbox as a button, so that rule stretched the painted box
+                      into a large empty square. The label is tappable and the row
+                      is 44px tall, so the touch target is unaffected. */}
                   <Checkbox
                     id="rememberMe"
                     checked={rememberMe}
                     onCheckedChange={(checked) => setRememberMe(Boolean(checked))}
                     disabled={isLoading}
+                    className="no-touch-target"
                   />
-                  <Label htmlFor="rememberMe" className="text-sm">
+                  <Label htmlFor="rememberMe" className="cursor-pointer text-sm font-normal">
                     Remember email
                     {rememberMe && <span className="text-xs text-muted-foreground ml-1">(✓ saved)</span>}
                   </Label>
                 </div>
                 <Link
                   to="/forgot-password"
-                  className="text-sm text-primary hover:text-primary/80 transition-colors font-medium"
+                  className="inline-flex items-center text-sm text-primary hover:text-primary/80 transition-colors font-medium sm:whitespace-nowrap"
                 >
                   Forgot your password?
                 </Link>

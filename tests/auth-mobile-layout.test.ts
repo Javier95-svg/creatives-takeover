@@ -38,3 +38,21 @@ for (const [name, path] of pages) {
     assert.match(source, /query\.addEventListener\('change', sync\)/);
   });
 }
+
+test('sign-in stacks the remember/forgot row on phones', () => {
+  const source = read('../src/pages/Login.tsx');
+  const start = source.indexOf('Remember Me + Forgot Password');
+  assert.ok(start > -1, 'remember/forgot row not found');
+  const row = source.slice(start, source.indexOf('Forgot your password?', start));
+
+  // Side by side the two labels overflow a 360px card and wrap mid-phrase.
+  assert.match(row, /flex flex-col[^"]*sm:flex-row/);
+  assert.doesNotMatch(row, /"flex items-center justify-between"/);
+
+  // Radix renders Checkbox as a button, which the global mobile rule at
+  // index.css:2639 stretches to 44x44 — a large empty square, not a checkbox.
+  assert.match(row, /className="no-touch-target"/);
+  // The row itself stays a comfortable target, and the label toggles it.
+  assert.match(row, /min-h-11/);
+  assert.match(row, /htmlFor="rememberMe"[^>]*cursor-pointer/);
+});
