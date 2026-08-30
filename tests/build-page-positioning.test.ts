@@ -108,3 +108,21 @@ test('Trust the Process is the final content section before the footer', () => {
   assert.ok(focusIndex < trustIndex);
   assert.ok(trustIndex < footerIndex);
 });
+
+test('the stage rail scrolls on phones and stays 7-across from lg up', () => {
+  // 7 cards x min-w-[100px] plus gaps needs ~760px, so the wrap layout cannot
+  // start before lg (1024px) — at 768px the panel's inner width is only ~656px.
+  assert.match(source, /snap-x/);
+  assert.match(source, /overflow-x-auto/);
+  assert.match(source, /scrollbar-hide/);
+  assert.match(source, /lg:flex-wrap/);
+  assert.match(source, /lg:basis-\[calc\(14\.28%-10px\)\]/);
+  assert.doesNotMatch(source, /"flex flex-wrap gap-2\.5"/);
+
+  // overflow-x:auto forces overflow-y to auto, which clips the "You are here"
+  // pill (-top-2.5) and the selected card's -translate-y-1.5 without top padding.
+  assert.match(source, /pb-3 pt-5/);
+
+  // The default stage (04, the one wearing the pill) starts off-screen otherwise.
+  assert.match(source, /scrollLeft = Math\.max\(0, card\.offsetLeft - 16\)/);
+});

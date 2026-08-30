@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
@@ -937,6 +937,20 @@ const BuildEvidenceContext = ({ onOpen }: HeroProps) => {
 const BuildStageSelector = () => {
   const [selected, setSelected] = useState('building');
   const activeStage = STAGES.find((s) => s.key === selected) ?? STAGES[3];
+  const railRef = useRef<HTMLDivElement>(null);
+  const defaultCardRef = useRef<HTMLButtonElement>(null);
+
+  // Below lg the rail scrolls horizontally and the default stage (04 Building,
+  // the one wearing the "You are here" pill) starts off-screen. Nudge it into
+  // view on mount only. scrollLeft, not scrollIntoView() — the latter also
+  // scrolls the window vertically and would yank the page past the heading.
+  useLayoutEffect(() => {
+    if (window.matchMedia('(min-width: 1024px)').matches) return;
+    const rail = railRef.current;
+    const card = defaultCardRef.current;
+    if (!rail || !card) return;
+    rail.scrollLeft = Math.max(0, card.offsetLeft - 16);
+  }, []);
 
   return (
     <section className="pb-20 pt-4 lg:pb-24" id="startup-cycle">
@@ -956,17 +970,24 @@ const BuildStageSelector = () => {
 
         <ScrollReveal>
           <div className="rounded-2.5xl border border-border/60 bg-card/40 p-6 backdrop-blur-sm sm:p-8">
-            {/* rail */}
-            <div className="flex flex-wrap gap-2.5">
+            {/* rail — scroll-snap below lg, 7-across from lg up. pt-5 is load-bearing:
+                overflow-x:auto forces overflow-y to compute to auto, which would clip
+                the "You are here" pill (-top-2.5) and the selected card's -translate-y-1.5. */}
+            <div
+              ref={railRef}
+              className="flex snap-x gap-2.5 overflow-x-auto scrollbar-hide pb-3 pt-5 lg:flex-wrap lg:overflow-visible lg:pb-0 lg:pt-0"
+            >
               {STAGES.map((stage) => {
                 const isSel = stage.key === selected;
                 return (
                   <button
                     key={stage.key}
+                    ref={stage.key === 'building' ? defaultCardRef : undefined}
                     type="button"
+                    aria-pressed={isSel}
                     onClick={() => setSelected(stage.key)}
                     className={cn(
-                      'relative flex-1 basis-[calc(14.28%-10px)] min-w-[100px] rounded-2xl border p-3.5 text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      'relative w-[160px] shrink-0 snap-start rounded-2xl border p-3.5 text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:w-auto lg:shrink lg:flex-1 lg:basis-[calc(14.28%-10px)] lg:min-w-[100px]',
                       isSel
                         ? 'border-transparent -translate-y-1.5 shadow-[var(--shadow-rgb)]'
                         : 'border-border/60 bg-background/60 hover:-translate-y-0.5 hover:border-border',
