@@ -28,7 +28,7 @@ export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = 
     perks: [
       `Turn an early idea into a clearer customer, problem, and first test with ${PLAN_MONTHLY_CREDITS.rookie} monthly credits.`,
       'Create a simple demand test and start collecting evidence before paying for a larger plan.',
-      'Full access to our mentor database and free discover call bookings + 1 free post in our Find a Co-Founder section.',
+      'Full access to our mentor database (free discovery call bookings) + marketplace.',
       'Full access to Content section, with weekly podcast episodes and curated industry articles that keep you informed on the market trends.',
     ],
   },
