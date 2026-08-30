@@ -150,7 +150,7 @@ export default function Pricing() {
     <section className="relative overflow-hidden pt-28 pb-section-mobile md:pt-32 lg:pt-36 lg:pb-section-desktop" id="pricing-plans">
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         <div className="text-center mb-10 animate-fade-in">
-          <h1 className="text-4xl lg:text-6xl font-semibold tracking-tight mb-6 gradient-text font-space-grotesk">
+          <h1 className="text-4xl lg:text-6xl font-semibold tracking-tight mb-6 pb-2 gradient-text font-space-grotesk">
             Pricing
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
