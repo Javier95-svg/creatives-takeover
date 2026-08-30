@@ -213,8 +213,8 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
   ],
   starter: [
     '100 monthly credits',
-    'PROVE workspace and full Email Templates access',
-    '2 VC profiles, 2 accelerator profiles, and 10 directory visits',
+    'PROVE workspace for customer validation and evidence',
+    '5 VC Search profiles, 5 Accelerator Hunt profiles, and 10 directory visits',
   ],
   rising: [
     '250 monthly credits with advanced MVP models',
@@ -424,7 +424,7 @@ export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitl
   },
   vc_search_profile: {
     rookie: { state: 'locked', requiredPlan: 'starter', monthlyLimit: 0 },
-    starter: { state: 'quota_limited', monthlyLimit: 2, requiredPlan: 'rising' },
+    starter: { state: 'quota_limited', monthlyLimit: 5, requiredPlan: 'rising' },
     rising: { state: 'quota_limited', monthlyLimit: 10, requiredPlan: 'pro' },
     pro: { state: 'full' },
   },
@@ -436,7 +436,7 @@ export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitl
   },
   accelerator_profile: {
     rookie: { state: 'locked', requiredPlan: 'starter', monthlyLimit: 0 },
-    starter: { state: 'quota_limited', monthlyLimit: 2, requiredPlan: 'rising' },
+    starter: { state: 'quota_limited', monthlyLimit: 5, requiredPlan: 'rising' },
     rising: { state: 'quota_limited', monthlyLimit: 10, requiredPlan: 'pro' },
     pro: { state: 'full' },
   },
@@ -499,8 +499,8 @@ export const PLAN_PERMISSIONS: Record<FeatureKey, Record<Plan, AccessRule>> = Ob
 export const MONTHLY_FREE_QUOTAS: Record<string, Record<Plan, number>> = {
   discovery_calls: { rookie: Infinity, starter: Infinity, rising: Infinity, pro: Infinity },
   cofounder_posts: { rookie: Infinity, starter: Infinity, rising: Infinity, pro: Infinity },
-  vc_profiles: { rookie: 0, starter: 2, rising: 10, pro: Infinity },
-  accelerator_profiles: { rookie: 0, starter: 2, rising: 10, pro: Infinity },
+  vc_profiles: { rookie: 0, starter: 5, rising: 10, pro: Infinity },
+  accelerator_profiles: { rookie: 0, starter: 5, rising: 10, pro: Infinity },
   directory_visits: { rookie: 3, starter: 10, rising: 15, pro: Infinity },
 };
 

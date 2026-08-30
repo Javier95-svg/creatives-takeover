@@ -32,8 +32,8 @@ test('plan highlights match the authoritative four-plan contract', () => {
 
   assert.deepEqual(PLAN_HIGHLIGHTS.starter, [
     '100 monthly credits',
-    'PROVE workspace and full Email Templates access',
-    '2 VC profiles, 2 accelerator profiles, and 10 directory visits',
+    'PROVE workspace for customer validation and evidence',
+    '5 VC Search profiles, 5 Accelerator Hunt profiles, and 10 directory visits',
   ]);
 
   assert.deepEqual(PLAN_HIGHLIGHTS.rising, [
@@ -108,7 +108,7 @@ test('pricing page presents compact value statements and progressive perks', () 
   assert.match(pricingSource, /PLAN_PACKAGE_PRESENTATION/);
   assert.match(pricingSource, /plan\.valueStatement/);
   assert.match(pricingSource, /plan\.usageLabel/);
-  assert.match(pricingSource, /plan\.workspaceLabel/);
+  assert.doesNotMatch(pricingSource, /workspaceLabel/);
   assert.match(pricingSource, /plan\.perks\.map/);
   assert.doesNotMatch(pricingSource, /Plan highlights/);
 });
@@ -161,7 +161,11 @@ test('core entitlement rules reflect the pricing contract', () => {
 
   const starterVcProfiles = resolveEntitlement('vc_search_profile', 'starter');
   assert.equal(starterVcProfiles.state, 'quota_limited');
-  assert.equal(starterVcProfiles.monthlyLimit, 2);
+  assert.equal(starterVcProfiles.monthlyLimit, 5);
+
+  const starterAcceleratorProfiles = resolveEntitlement('accelerator_profile', 'starter');
+  assert.equal(starterAcceleratorProfiles.state, 'quota_limited');
+  assert.equal(starterAcceleratorProfiles.monthlyLimit, 5);
 
   const rookieDiscoveryCalls = resolveEntitlement('discovery_calls', 'rookie');
   assert.equal(rookieDiscoveryCalls.state, 'full');
@@ -184,12 +188,12 @@ test('quota status stays aligned with the entitlement matrix', () => {
   assert.equal(rookieVcQuota.upgradeTarget, 'starter');
 
   const starterVcQuota = getQuotaStatus('vc_search_profile', 'starter', 1);
-  assert.equal(starterVcQuota.limit, 2);
-  assert.equal(starterVcQuota.remaining, 1);
+  assert.equal(starterVcQuota.limit, 5);
+  assert.equal(starterVcQuota.remaining, 4);
   assert.equal(starterVcQuota.canUse, true);
   assert.equal(starterVcQuota.upgradeTarget, 'rising');
 
-  const exhaustedStarterVcQuota = getQuotaStatus('vc_search_profile', 'starter', 2);
+  const exhaustedStarterVcQuota = getQuotaStatus('vc_search_profile', 'starter', 5);
   assert.equal(exhaustedStarterVcQuota.canUse, false);
   assert.equal(exhaustedStarterVcQuota.remaining, 0);
 

@@ -42,7 +42,6 @@ const toolName = {
   traction: getFounderTool("traction_engine").name,
   vc: getFounderTool("vc_search").name,
   accelerator: getFounderTool("accelerator_hunt").name,
-  email: getFounderTool("email_templates").name,
   deck: getFounderTool("pitch_deck_analyzer").name,
   readiness: getFounderTool("insighta_test").name,
 };
@@ -76,7 +75,6 @@ const features: FeatureCategory[] = [
       { feature: toolName.gtm, rookie: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation`, starter: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation`, rising: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation`, pro: `${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits/generation` },
       { feature: "First Customer Proof", rookie: "Preview", starter: "Preview after validation", rising: "Full workflow", pro: "Full workflow" },
       { feature: toolName.directories, rookie: quotaValue(MONTHLY_FREE_QUOTAS.directory_visits.rookie, "visits"), starter: quotaValue(MONTHLY_FREE_QUOTAS.directory_visits.starter, "visits"), rising: quotaValue(MONTHLY_FREE_QUOTAS.directory_visits.rising, "visits"), pro: quotaValue(MONTHLY_FREE_QUOTAS.directory_visits.pro, "visits") },
-      { feature: toolName.email, rookie: false, starter: "Full access", rising: "Full access", pro: "Full access" },
       { feature: "Prompt Library", rookie: "Standard models", starter: "Standard models", rising: "Full library + export", pro: "Full library + export" },
       { feature: toolName.traction, rookie: `${CREDIT_COSTS.TRACTION_ENGINE_SCORECARD} credits/scorecard`, starter: `${CREDIT_COSTS.TRACTION_ENGINE_SCORECARD} credits/scorecard`, rising: `${CREDIT_COSTS.TRACTION_ENGINE_SCORECARD} credits/scorecard`, pro: `${CREDIT_COSTS.TRACTION_ENGINE_SCORECARD} credits/scorecard` },
     ],

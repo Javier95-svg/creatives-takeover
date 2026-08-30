@@ -35,7 +35,7 @@ const PricingFAQ = () => {
       question: "How should I choose the right plan?",
       answer: `Think about your founder stage, not just the credit number.
 
-Rookie lets you start building and testing for free. Starter adds more validation capacity, the PROVE workspace, Email Templates, and deeper research. Rising adds advanced MVP models, the complete First Customer Proof workflow, and broader acquisition capacity. Pro provides the largest credit runway, Find Your Angel, and unlimited VC, accelerator, and directory research.`,
+Rookie lets you start building and testing for free. Starter adds more validation capacity, the PROVE workspace, and five VC Search and five Accelerator Hunt profiles each month. Rising adds advanced MVP models, the complete First Customer Proof workflow, and broader acquisition capacity. Pro provides the largest credit runway, Find Your Angel, and unlimited VC, accelerator, and directory research.`,
       relatedQuestions: [1, 6],
     },
     {

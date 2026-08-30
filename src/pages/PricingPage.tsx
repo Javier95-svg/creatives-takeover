@@ -25,7 +25,7 @@ const PricingPage = () => {
     }),
     createProductSchema({
       name: "Creatives Takeover Starter Plan",
-      description: "Validate faster with 100 monthly credits, the PROVE workspace, Email Templates, and deeper research.",
+      description: "Validate faster with 100 monthly credits, the PROVE workspace, and five VC Search and five Accelerator Hunt profiles each month.",
       price: 9,
       currency: "USD"
     }),
