@@ -40,7 +40,7 @@ export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = 
       `Get ${PLAN_MONTHLY_CREDITS.starter} monthly credits and a dedicated validation workspace to keep your assumptions, customer evidence, and next actions in one place.`,
       'Run a more deliberate customer-validation loop, so each conversation can move you closer to a real commitment.',
       `Access to ${quotaLabel(MONTHLY_FREE_QUOTAS.vc_profiles.starter, 'VC Search profiles')} and ${quotaLabel(MONTHLY_FREE_QUOTAS.accelerator_profiles.starter, 'Accelerator Hunt profiles')} each month to begin your fundraising research.`,
-      `Use ${quotaLabel(MONTHLY_FREE_QUOTAS.directory_visits.starter, 'directory visits')} each month to find relevant people, opportunities, and practical routes forward.`,
+      'Publish an interactive demand-capture page, so your next decision rests on real signups instead of opinions.',
     ],
     recommended: true,
   },
