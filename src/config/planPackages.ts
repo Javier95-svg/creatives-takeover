@@ -29,7 +29,7 @@ export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = 
       `Turn an early idea into a clearer customer, problem, and first test with ${PLAN_MONTHLY_CREDITS.rookie} monthly credits.`,
       'Create a simple demand test and start collecting evidence before paying for a larger plan.',
       'Explore mentor profiles and post a co-founder opportunity for free, then choose whether to pay for outside help only when it is useful.',
-      'Full access to our Content section, with weekly podcast episodes and curated industry articles that keep you informed on the trends shaping your market.',
+      'Full access to Content section, with weekly podcast episodes and curated industry articles that keep you informed on the market trends.',
     ],
   },
   starter: {
