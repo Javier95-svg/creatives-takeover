@@ -3,11 +3,14 @@
 Scope: homepage → first value → account creation, for a logged-out first-time visitor.
 Sources: codebase (commit `e6da5ce4`), PostHog (last 30 days), Supabase (`demo_studio_events`, `conversion_events`).
 
-> **Partially superseded (2026-08-30).** The mobile bottom nav and the Free Tools menu it
-> hosted have been removed by owner decision. Despite the ~30% menu-open rate recorded in §0,
-> downstream engagement did not justify keeping it (93% drop from open to input, 1 signup-gate
-> click). The activation funnel is now the hero chatbot (idea & product modes). Rows in §0 and
-> §1 referring to the bottom nav or Free Tools describe the pre-removal state.
+> **Partially superseded (2026-08-30).** The mobile bottom nav, the Free Tools menu it
+> hosted, and the scroll-triggered sticky mobile CTA have all been removed by owner decision.
+> Despite the ~30% menu-open rate recorded in §0, downstream engagement did not justify keeping
+> Free Tools (93% drop from open to input, 1 signup-gate click). The activation funnel is now
+> the hero chatbot (idea & product modes) alone. This also closes finding 5 and
+> recommendation 3 below — mobile and desktop can no longer disagree on the primary action,
+> because mobile no longer has a second one. Rows in §0 and §1 referring to the bottom nav,
+> Free Tools, or the sticky CTA describe the pre-removal state.
 
 ---
 

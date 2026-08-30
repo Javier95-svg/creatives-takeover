@@ -40,8 +40,8 @@ export const PulsePanel = ({
   }, [isOpen]);
 
   const mobilePanelSizeClass = isExpanded
-    ? "bottom-[calc(6rem+env(safe-area-inset-bottom,0px))] left-4 right-4 w-auto max-w-none h-[min(34rem,70vh)]"
-    : "bottom-[calc(6rem+env(safe-area-inset-bottom,0px))] left-4 right-4 w-auto max-w-none h-[min(28rem,60vh)]";
+    ? "bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] left-4 right-4 w-auto max-w-none h-[min(34rem,70vh)]"
+    : "bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] left-4 right-4 w-auto max-w-none h-[min(28rem,60vh)]";
 
   const desktopPanelSizeClass = isExpanded
     ? "bottom-24 right-6 w-[400px] max-w-[calc(100vw-32px)] h-[600px] max-h-[82vh]"

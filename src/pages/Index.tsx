@@ -4,7 +4,6 @@ import Hero from "@/components/Hero";
 import ValuePropositionCards from "@/components/ValuePropositionCards";
 import UserReviews from "@/components/UserReviews";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
-import StickyMobileCTA from "@/components/StickyMobileCTA";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
@@ -140,7 +139,6 @@ const Index = () => {
         )}
       </main>
       <Footer />
-      <StickyMobileCTA />
       {/* SoftGateModal intentionally omitted for this hero design */}
     </div>
   );
