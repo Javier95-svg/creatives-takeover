@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Check, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { GTM_STRATEGIST_PRICING } from "@/config/gtmStrategist";
 import { CREDIT_COSTS, getCreditCostForPlan } from "@/config/constants";
@@ -119,9 +118,6 @@ const PricingComparison = () => {
     <section className="relative overflow-hidden py-section-mobile lg:py-section-desktop">
       <div className="container relative z-10 mx-auto px-4 sm:px-6">
         <div className="mb-16 text-center animate-fade-in">
-          <div className="mb-6">
-            <Badge variant="secondary" className="rounded-full border-primary/20 bg-primary/10 font-medium text-primary">Feature Comparison</Badge>
-          </div>
           <h2 className="mb-8 pb-2 font-space-grotesk text-4xl font-semibold tracking-tight gradient-text lg:text-5xl">Compare Our Plans</h2>
           <p className="mx-auto max-w-3xl text-lg text-muted-foreground sm:text-xl">Compare credits, model access, research limits, and the workflows included with each tier.</p>
         </div>

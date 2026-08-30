@@ -31,7 +31,6 @@ test('each plan has one accurate value statement and four plain-language perks',
 
 test('pricing keeps the original always-visible comparison layout and five accurate groups', () => {
   const comparison = read('../src/components/PricingComparison.tsx');
-  assert.match(comparison, /Feature Comparison/);
   assert.match(comparison, /Compare Our Plans/);
   assert.doesNotMatch(comparison, /Collapsible|Compare all features/);
   for (const category of ['Credits & AI', 'Build & validation', 'Sell & grow', 'Research & fundraising', 'Network & support']) {

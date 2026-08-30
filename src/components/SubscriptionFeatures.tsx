@@ -144,11 +144,6 @@ const SubscriptionFeatures = () => {
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <ScrollReveal className="text-center mb-16 animate-fade-in">
-          <div className="mb-6">
-            <Badge variant="secondary" className="rounded-full bg-primary/10 text-primary border-primary/20 font-medium">
-              Credits Explained
-            </Badge>
-          </div>
           <h2 className="text-4xl lg:text-5xl font-semibold tracking-tight mb-6 pb-2 gradient-text font-space-grotesk">
             How Our Credit System Works
           </h2>

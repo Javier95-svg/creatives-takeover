@@ -151,7 +151,7 @@ export default function Pricing() {
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         <div className="text-center mb-10 animate-fade-in">
           <h1 className="text-4xl lg:text-6xl font-semibold tracking-tight mb-6 gradient-text font-space-grotesk">
-            Choose Your Plan
+            Pricing
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
             Every plan keeps your project evidence and pivot decisions on track as you progress.
@@ -172,7 +172,7 @@ export default function Pricing() {
           </Tabs>
         </div>
 
-        <RevealGroup className="mx-auto grid max-w-[124rem] grid-cols-1 items-stretch justify-items-center gap-5 md:grid-cols-2 xl:grid-cols-4 xl:gap-6" variant="card">
+        <RevealGroup className="mx-auto grid max-w-[124rem] grid-cols-1 items-start justify-items-center gap-5 md:grid-cols-2 xl:grid-cols-4 xl:gap-6" variant="card">
           {PLAN_CONFIG.map((plan, index) => {
             // Until the subscription resolves we do not know the tier, and
             // normalizeTierName() defaults to "rookie" — so without this guard
@@ -188,7 +188,7 @@ export default function Pricing() {
               <div
                 key={plan.key}
                 aria-label={`${plan.title} plan${isPopular ? ", recommended" : ""}`}
-                className={`group relative flex w-full max-w-[516px] flex-col rounded-3xl border ${cardStyle.border} p-6 backdrop-blur transition-all duration-300 hover:-translate-y-1 ${plan.key === "rookie" ? "self-start" : "h-full"} ${
+                className={`group relative flex w-full max-w-[516px] flex-col rounded-3xl border ${cardStyle.border} p-6 backdrop-blur transition-all duration-300 hover:-translate-y-1 ${
                   isPopular
                     ? "z-10 bg-gradient-to-b from-primary/[0.09] to-card shadow-[0_28px_64px_-28px_hsl(var(--primary)/0.45)] xl:-translate-y-2"
                     : "bg-card/70 shadow-[0_1px_2px_rgb(2_6_23/0.04),0_14px_32px_-20px_rgb(2_6_23/0.20)]"
