@@ -20,7 +20,7 @@ export const PulseBubble = ({
       className={cn(
         "fixed right-4 z-50 sm:right-6",
         compactMobileHomepage
-          ? "bottom-[calc(8.5rem+env(safe-area-inset-bottom,0px))]"
+          ? "bottom-[calc(6rem+env(safe-area-inset-bottom,0px))]"
           : focusedActivationSurface
             ? "bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))]"
             : "bottom-6"

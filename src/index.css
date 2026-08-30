@@ -1874,11 +1874,6 @@ All colors MUST be HSL.
       padding-right: 1rem;
     }
     
-    /* Add padding for bottom navigation on mobile */
-    main {
-      padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0));
-    }
-    
     /* Better spacing for mobile cards */
     .space-y-6 > * + * {
       margin-top: 1.5rem;

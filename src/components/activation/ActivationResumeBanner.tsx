@@ -36,7 +36,7 @@ export function ActivationResumeBanner() {
   const href = buildActivationJourneyUrl(journey.selectedIntent, journey.journeyId, journey.resumeUrl);
 
   return (
-    <aside className="fixed inset-x-3 bottom-20 z-[65] mx-auto max-w-2xl rounded-xl border border-accent-teal/30 bg-card p-3 shadow-2xl md:bottom-4" aria-label="Continue onboarding">
+    <aside className="fixed inset-x-3 bottom-4 z-[65] mx-auto max-w-2xl rounded-xl border border-accent-teal/30 bg-card p-3 shadow-2xl" aria-label="Continue onboarding">
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-accent-teal">Continue your first win</p>

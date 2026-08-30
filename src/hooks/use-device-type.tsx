@@ -1,5 +1,25 @@
 import * as React from "react"
 
+/**
+ * The project has two intentional, distinct breakpoints. Keep them separate:
+ *
+ *  - 1024px (Tailwind `lg`) is the NAVIGATION boundary. Below it you get the
+ *    hamburger (VisitorNavbar) and the horizontally scrolling stage rail on
+ *    /build. Nothing in this file drives navigation any more — the mobile bottom
+ *    bar that used to key off 768px was removed on 2026-08-30.
+ *  - 768px (Tailwind `md`) is the PHONE-LAYOUT boundary, used by the hooks below,
+ *    the `@media (max-width: 768px)` block in index.css, and PulseWidget's
+ *    compact mode.
+ *
+ * The hero has its own self-contained 720px rule in
+ * components/hero-cinematic-spotlight.css; it is documented in place and is not
+ * meant to line up with either of these.
+ *
+ * Note the off-by-one below: `width <= 768` classifies exactly 768px as mobile,
+ * while Tailwind's `md:` (min-width: 768px) calls it desktop. Anything relying on
+ * JS and CSS agreeing at exactly 768px will disagree. Left as-is deliberately —
+ * changing it shifts behaviour for every useIsMobile consumer at once.
+ */
 const MOBILE_BREAKPOINT = 768
 const TABLET_BREAKPOINT = 1024
 

@@ -8,14 +8,25 @@ import { ThemeProvider } from './contexts/ThemeContext'
 import { reportAppError } from './lib/errorReporting'
 import { bootstrapPosthog, captureUtmSuperProperties, isLikelyBot } from './lib/analytics'
 import { captureFirstTouch } from './lib/attribution'
+import { hasAnalyticsConsent, onConsentChange } from './lib/consent'
 
 function AnalyticsBootstrap() {
   useEffect(() => {
     if (isLikelyBot()) return;
 
-    captureFirstTouch();
-    captureUtmSuperProperties();
-    bootstrapPosthog();
+    const start = () => {
+      captureFirstTouch();
+      captureUtmSuperProperties();
+      bootstrapPosthog();
+    };
+
+    if (hasAnalyticsConsent()) start();
+
+    // Accepting from the banner must take effect immediately — without this the
+    // visitor's whole first session would go unrecorded until they reloaded.
+    return onConsentChange((status) => {
+      if (status === 'granted') start();
+    });
   }, []);
   return null;
 }

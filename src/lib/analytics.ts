@@ -3,6 +3,7 @@ import { getSafeSessionStorage, getSafeLocalStorage } from '@/lib/safeStorage';
 import { logWarn } from '@/lib/logger';
 import { captureFirstTouch } from '@/lib/attribution';
 import { sanitizeAnalyticsValue } from '@/lib/analyticsSanitization';
+import { hasAnalyticsConsent, onConsentChange } from '@/lib/consent';
 
 type AnalyticsProperties = Record<string, unknown>;
 type PostHogClient = (typeof import('posthog-js'))['default'];
@@ -244,7 +245,7 @@ const loadPosthog = () => {
 };
 
 export const initAmplitudeWithUser = (userId: string) => {
-  if (typeof window === 'undefined' || !AMPLITUDE_API_KEY) return;
+  if (typeof window === 'undefined' || !AMPLITUDE_API_KEY || !hasAnalyticsConsent()) return;
   const generation = ++amplitudeGeneration;
 
   void loadAmplitude().then(() => {
@@ -391,6 +392,12 @@ export const initPosthog = () => {
     return Promise.resolve();
   }
 
+  // Hard backstop. PH_KEY falls back to a hardcoded production key, so the
+  // absence of env vars is not what keeps PostHog off — this is.
+  if (!hasAnalyticsConsent()) {
+    return Promise.resolve();
+  }
+
   if (initialized) {
     return Promise.resolve();
   }
@@ -465,6 +472,9 @@ export const onPosthogReady = (listener: (client: PostHogClient) => void) => {
 };
 
 export const bootstrapPosthog = () => {
+  // Must stay the first statement: a visitor who has not consented must not
+  // rehydrate a previous session's queued events into memory below.
+  if (!hasAnalyticsConsent()) return;
   restoreDurableEventOutbox();
   if (posthogBootstrapScheduled || initialized || initPromise) return;
   posthogBootstrapScheduled = true;
@@ -501,6 +511,30 @@ export const setInternalUser = (value: boolean) => {
 export const isInternalUser = () => internalUser;
 
 /**
+ * Tear every vendor down when a visitor withdraws consent mid-session (accepted,
+ * then rejected without reloading). The early-return gates stop new work; this
+ * stops work already in flight.
+ */
+const teardownAnalyticsVendors = () => {
+  if (isPosthogReady(posthogClient)) {
+    try {
+      posthogClient.opt_out_capturing();
+    } catch (error) {
+      logWarn('PostHog opt-out failed', error);
+    }
+  }
+  // Clears both queues and the durable outbox, resets Amplitude, and stops
+  // session recording.
+  resetAnalyticsIdentity();
+};
+
+if (typeof window !== 'undefined') {
+  onConsentChange((status) => {
+    if (status !== 'granted') teardownAnalyticsVendors();
+  });
+}
+
+/**
  * Start a fresh analytics identity after sign-out or an in-browser account
  * switch. Clearing the queues prevents events captured for the old account from
  * being flushed under the next identity while PostHog is still bootstrapping.
@@ -535,6 +569,12 @@ export const captureEvent = (eventName: string, properties?: AnalyticsProperties
     return;
   }
 
+  // One gate covers every vendor: Amplitude, PostHog, the durable outbox write,
+  // and the bootstrapPosthog() fallback at the end of this function.
+  if (!hasAnalyticsConsent()) {
+    return;
+  }
+
   restoreDurableEventOutbox();
   const baseProperties = sanitizeAnalyticsProperties(properties);
   const safeProperties = isPosthogReady(posthogClient)
@@ -557,6 +597,11 @@ export const captureEvent = (eventName: string, properties?: AnalyticsProperties
 };
 
 export const identify = (id: string, properties?: AnalyticsProperties) => {
+  // Without this, queuedIdentifies grows unbounded for a rejecting visitor.
+  if (!hasAnalyticsConsent()) {
+    return;
+  }
+
   const safeProperties = sanitizeAnalyticsProperties(properties);
   // Tag internal accounts on the person record so PostHog-side internal-user
   // filtering (which also covers autocapture) can exclude them.
@@ -1321,6 +1366,7 @@ export const isLikelyBot = (): boolean => {
 };
 
 export const captureUtmSuperProperties = () => {
+  if (!hasAnalyticsConsent()) return;
   const utms = getFirstTouchUtms();
   if (!isPosthogReady(posthogClient) || Object.keys(utms).length === 0) return;
   try {

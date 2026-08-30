@@ -1,0 +1,14 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://127.0.0.1:8080",
+      "localStorage": [
+        {
+          "name": "ct_cookie_consent_v1",
+          "value": "{\"analytics\":\"denied\",\"decided_at\":\"2026-08-30T00:00:00.000Z\",\"version\":1}"
+        }
+      ]
+    }
+  ]
+}

@@ -155,7 +155,8 @@ const PrivacyPolicy = () => {
                   <li><strong>Functional cookies:</strong> used to remember preferences and improve usability.</li>
                   <li><strong>Analytics technologies:</strong> used to understand feature adoption, performance, and navigation patterns.</li>
                 </ul>
-                <p>You can manage cookies through your browser settings, but disabling some cookies may reduce or break parts of the service.</p>
+                <p>Analytics technologies are only enabled after you choose &ldquo;Accept All&rdquo; on our cookie banner. If you choose &ldquo;Reject All&rdquo;, we do not load analytics providers and we do not record how you navigate the site; essential and functional cookies continue to operate so that sign-in and your preferences keep working. Your choice is stored locally in your browser, so clearing site data will prompt you again.</p>
+                <p>You can also manage cookies through your browser settings, but disabling essential cookies may reduce or break parts of the service.</p>
               </div>
             </section>
 

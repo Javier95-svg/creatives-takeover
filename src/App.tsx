@@ -15,6 +15,7 @@ import AdminRoute from "@/components/AdminRoute";
 import { useInteractionTelemetry } from "@/hooks/useInteractionTelemetry";
 import { useEngagementSession } from "@/hooks/useEngagementSession";
 import { captureReferralFromUrl } from "@/lib/referral";
+import { useAnalyticsConsent } from "@/hooks/useAnalyticsConsent";
 
 const PulseWidget = lazy(() => import("@/components/pulse/PulseWidget"));
 const ProUpgradeBanner = lazy(() => import("@/components/ProUpgradeBanner"));
@@ -33,9 +34,9 @@ const RetentionEmailAttribution = lazy(() =>
     default: module.RetentionEmailAttribution,
   }))
 );
-const MobileBottomNav = lazy(() =>
-  import("@/components/mobile/MobileBottomNav").then((module) => ({
-    default: module.MobileBottomNav,
+const CookieConsentBanner = lazy(() =>
+  import("@/components/consent/CookieConsentBanner").then((module) => ({
+    default: module.CookieConsentBanner,
   }))
 );
 const Analytics = lazy(() =>
@@ -256,6 +257,7 @@ const ToolRouteWithCreditGate = CreditGateRoute;
 
 function App() {
   const { hasUpdate, refreshApp } = useVersionCheck();
+  const analyticsConsent = useAnalyticsConsent();
 
   return (
     <ErrorBoundary>
@@ -461,16 +463,18 @@ function App() {
                         <Route path="*" element={<NotFound />} />
                         </Routes>
                         <Suspense fallback={null}>
-                          <MobileBottomNav />
+                          <CookieConsentBanner />
                         </Suspense>
                     </UpgradePromptProvider>
                   </Suspense>
                 </BrowserRouter>
         </AuthProvider>
       </QueryClientProvider>
-      <Suspense fallback={null}>
-        <Analytics />
-      </Suspense>
+      {analyticsConsent === 'granted' && (
+        <Suspense fallback={null}>
+          <Analytics />
+        </Suspense>
+      )}
     </ErrorBoundary>
   );
 };

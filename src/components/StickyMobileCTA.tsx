@@ -42,7 +42,7 @@ const StickyMobileCTA = () => {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] left-3 right-3 z-40 lg:hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+    <div className="fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] left-3 right-3 z-40 lg:hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
       <div className="mx-auto max-w-md rounded-4xl border border-border/80 bg-background/88 backdrop-blur-xl shadow-[0_24px_42px_-24px_rgba(15,23,42,0.35)]">
         <div className="px-3 py-3 sm:px-4">
           <Button

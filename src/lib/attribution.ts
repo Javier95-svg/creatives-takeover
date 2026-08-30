@@ -5,6 +5,8 @@
  * `getSignupMetadata()` supplies metadata to Supabase email signup.
  * `persistAttributionAfterAuth()` covers OAuth and the direct-signup fallback.
  */
+import { hasAnalyticsConsent } from "./consent.ts";
+
 export const ATTRIBUTION_STORAGE_KEY = "ct_first_touch_v1";
 const LEGACY_POSTHOG_STORAGE_KEY = "ct_posthog_first_touch_utms";
 const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"] as const;
@@ -123,6 +125,12 @@ const getSafeLandingPage = (params: URLSearchParams): string => {
 
 export function captureFirstTouch(): FirstTouch | null {
   if (typeof window === "undefined" || typeof document === "undefined") return null;
+
+  // UTM and click-ID capture is marketing attribution, not an essential function.
+  // Gating here also covers getSignupMetadata() and persistAttributionAfterAuth(),
+  // which both fall back to this. Consequence: a visitor who rejects and then
+  // signs up is recorded as signup_channel "direct".
+  if (!hasAnalyticsConsent()) return null;
 
   const existing = safeGet();
   if (existing) return existing;

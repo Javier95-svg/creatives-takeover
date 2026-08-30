@@ -26,6 +26,10 @@ export default defineConfig({
   use: {
     baseURL,
     trace: 'on-first-retry',
+    // Pre-answer the cookie banner. It is fixed to the bottom at z-70, so without
+    // this it intercepts clicks on bottom-anchored elements in every spec.
+    // "denied" keeps smoke runs from firing analytics at the real PostHog project.
+    storageState: './e2e/storage-state.json',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {

@@ -19,7 +19,7 @@ export const PulseProactiveMessage = ({
       className={cn(
         "fixed z-50 max-w-xs animate-in slide-in-from-bottom-4 fade-in duration-300",
         compactMobileHomepage
-          ? "bottom-[calc(12rem+env(safe-area-inset-bottom,0px))] right-4"
+          ? "bottom-[calc(9.5rem+env(safe-area-inset-bottom,0px))] right-4"
           : "bottom-24 right-6"
       )}
     >
