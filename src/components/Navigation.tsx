@@ -108,7 +108,7 @@ const Navigation = () => {
     { type: 'label', label: "STAGE VI: TRACTION" },
     { name: tractionTool.name, href: tractionTool.route, icon: LineChart, description: "Track weekly distribution and retention signals." },
     { type: 'label', label: "STAGE VII: FUNDRAISING" },
-    { name: vcTool.name, href: vcTool.route, icon: UsersIcon, description: "Build a focused investor list." },
+    { name: vcTool.name, href: vcTool.route, icon: UsersIcon, description: "Find VCs that invest in companies like yours." },
     { name: pitchTool.name, href: pitchTool.route, icon: BarChart3, description: "Analyze your pitch deck." },
     { name: readinessTool.name, href: readinessTool.route, icon: FlaskConical, description: "Measure your fundraising readiness." },
   ];
