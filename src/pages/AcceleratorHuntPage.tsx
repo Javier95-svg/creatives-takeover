@@ -1,7 +1,6 @@
 import SEO, { createBreadcrumbSchema, createSoftwareApplicationSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import AnswerSummary from "@/components/seo/AnswerSummary";
 import RelatedPageLinks from "@/components/seo/RelatedPageLinks";
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import AcceleratorHuntTab from "@/components/insighta/AcceleratorHuntTab";
@@ -16,7 +15,7 @@ export default function AcceleratorHuntPage() {
   const { user } = useAuth();
   const publicTab = getPublicTabConfig('/accelerator-hunt');
   const { trackPageVisit } = useReadingAnalytics();
-  const { relatedLinks, answerSummary } = insightaPageContent.acceleratorHunt;
+  const { relatedLinks } = insightaPageContent.acceleratorHunt;
 
   // Track page visit when component mounts
   useEffect(() => {
@@ -92,15 +91,6 @@ export default function AcceleratorHuntPage() {
                 </PreviewModeWrapper>
               )
             )}
-
-            <div className="mt-10 space-y-8">
-              <AnswerSummary
-                title={answerSummary.title}
-                description={answerSummary.description}
-                updatedLabel={answerSummary.updatedLabel}
-                items={answerSummary.items}
-              />
-            </div>
           </div>
         </section>
       </main>
