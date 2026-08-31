@@ -22,6 +22,7 @@ import { captureEvent, persistSignupIntent, trackSignupCompletedAttributed } fro
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import {
   isUsernameAvailable,
+  suggestUsername,
   normalizeUsernameInput,
   validateUsername,
 } from "@/lib/username";
@@ -275,6 +276,19 @@ const Signup = () => {
   }, [formData.username]);
 
   // Handle input changes
+  // Fills the username field with a fresh handle built from whatever the form
+  // already knows. Passing the current value means repeated clicks keep giving
+  // something new rather than landing on the same suggestion twice in a row.
+  const handleSuggestUsername = () => {
+    const suggestion = suggestUsername(
+      { firstName: formData.firstName, lastName: formData.lastName, email: formData.email },
+      formData.username,
+    );
+    setFormData(prev => ({ ...prev, username: suggestion }));
+    setErrors(prev => ({ ...prev, username: "" }));
+    trackFieldInteraction('username');
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const nextValue = name === "username" ? normalizeUsernameInput(value) : value;
@@ -806,7 +820,7 @@ const Signup = () => {
                 {/* Username Field */}
                 <div className={showStepTwo ? "space-y-2" : "hidden"}>
                   <Label htmlFor="username" className="text-sm font-medium">
-                    Username <span className="text-muted-foreground">(optional)</span>
+                    Username
                   </Label>
                   <div className="relative">
                     <Input
@@ -816,7 +830,7 @@ const Signup = () => {
                       value={formData.username}
                       onChange={handleInputChange}
                       onBlur={() => trackFieldInteraction('username')}
-                      placeholder="We can create one for you"
+                      placeholder="e.g. javierforge"
                       className={`h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.username ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''}`}
                       disabled={isLoading}
                       autoComplete="username"
@@ -836,9 +850,14 @@ const Signup = () => {
                   {errors.username && (
                     <p className="text-sm text-destructive animate-fade-in">{errors.username}</p>
                   )}
-                  <p className="text-xs text-muted-foreground">
-                    You can customize this now or change it later in account settings.
-                  </p>
+                  <button
+                    type="button"
+                    onClick={handleSuggestUsername}
+                    disabled={isLoading}
+                    className="text-xs font-medium text-primary underline underline-offset-2 transition-colors hover:text-primary/80 disabled:opacity-50"
+                  >
+                    Create one for me.
+                  </button>
                 </div>
 
                 {/* Email Field */}
