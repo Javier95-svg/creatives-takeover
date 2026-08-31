@@ -671,6 +671,11 @@ const BuildCardPreview = ({ preview }: { preview: string }) => {
     );
   }
 
+  // The sm:grid-cols-3 on the inner grids below is NOT redundant.
+  // responsive-overrides.css:83 flattens any grid-cols-3 that declares no
+  // responsive column class to a single column under 768px, with !important.
+  // These previews are miniature UI mockups, not layouts to reflow: stacking
+  // their columns on a phone is exactly the wrong response.
   if (preview === 'dashboard') {
     return (
       <div className="w-[calc(100%_-_36px)] max-w-[238px] overflow-hidden rounded-xl border border-border/60 bg-background/90 shadow-lg" aria-hidden="true">
@@ -678,7 +683,7 @@ const BuildCardPreview = ({ preview }: { preview: string }) => {
         <div className="flex h-[105px]">
           <div className="w-9 border-r border-border/50 bg-muted/20 p-2"><div className="h-3 w-3 rounded bg-primary/60" /><div className="mt-3 space-y-2">{[0, 1, 2].map((item) => <i key={item} className="block h-1 w-5 rounded bg-muted" />)}</div></div>
           <div className="flex-1 p-2.5">
-            <div className="grid grid-cols-3 gap-1.5">{['bg-primary/20', 'bg-success/20', 'bg-warning/20'].map((color) => <div key={color} className={cn('h-7 rounded border border-border/40 p-1.5', color)}><i className="block h-1 w-4 rounded bg-foreground/30" /><i className="mt-1 block h-1.5 w-7 rounded bg-foreground/60" /></div>)}</div>
+            <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-3">{['bg-primary/20', 'bg-success/20', 'bg-warning/20'].map((color) => <div key={color} className={cn('h-7 rounded border border-border/40 p-1.5', color)}><i className="block h-1 w-4 rounded bg-foreground/30" /><i className="mt-1 block h-1.5 w-7 rounded bg-foreground/60" /></div>)}</div>
             <div className="mt-2 flex h-12 items-end gap-1 rounded border border-border/40 px-2 pb-1.5">
               {[45, 72, 55, 88, 66, 100, 82].map((height, index) => <i key={index} className="origin-bottom flex-1 rounded-t-sm bg-gradient-to-t from-primary/35 to-primary/80 transition-transform duration-500 group-hover:scale-y-110 motion-reduce:transform-none motion-reduce:transition-none" style={{ height: `${height}%` }} />)}
             </div>
@@ -688,11 +693,14 @@ const BuildCardPreview = ({ preview }: { preview: string }) => {
     );
   }
 
+  // Commerce was the visible casualty of the rule described above: its tiles
+  // hold aspect-square images, so one per row inflated each from ~53px to
+  // ~200px tall and burst out of the card's 16/10 thumbnail box.
   if (preview === 'commerce') {
     return (
       <div className="w-[calc(100%_-_36px)] max-w-[238px] overflow-hidden rounded-xl border border-border/60 bg-background/90 shadow-lg" aria-hidden="true">
         <div className="flex h-6 items-center justify-between border-b border-border/50 px-2.5"><span className="font-mono text-[6px] font-bold tracking-wider">STUDIO SHOP</span><span className="relative"><ShoppingCart className="h-3 w-3 text-primary" /><i className="absolute -right-1 -top-1 h-1.5 w-1.5 rounded-full bg-destructive" /></span></div>
-        <div className="grid grid-cols-3 gap-2 p-2.5">
+        <div className="grid grid-cols-3 gap-2 p-2.5 sm:grid-cols-3">
           {['from-blue-500/40 to-cyan-400/15', 'from-fuchsia-500/35 to-red-400/15', 'from-amber-400/40 to-emerald-400/15'].map((color, index) => (
             <div key={color} className="rounded-lg border border-border/50 bg-card/60 p-1.5 transition-transform duration-500 group-hover:-translate-y-1 motion-reduce:transform-none motion-reduce:transition-none" style={{ transitionDelay: `${index * 55}ms` }}>
               <div className={cn('aspect-square rounded-md bg-gradient-to-br', color)} />

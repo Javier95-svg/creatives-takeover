@@ -126,3 +126,12 @@ test('the stage rail scrolls on phones and stays 7-across from lg up', () => {
   // The default stage (04, the one wearing the pill) starts off-screen otherwise.
   assert.match(source, /scrollLeft = Math\.max\(0, card\.offsetLeft - 16\)/);
 });
+
+test('build card previews keep their columns on phones', () => {
+  // responsive-overrides.css flattens a bare grid-cols-3 to one column under
+  // 768px. These previews are miniature UI mockups, so stacking their columns
+  // is wrong — and for the commerce tiles, whose images are aspect-square, it
+  // inflated each one to ~200px tall and broke the card out of its 16/10 box.
+  const bare = source.match(/grid grid-cols-[3-7](?![^"]*(?:sm|md|lg|xl):grid-cols)[^"]*/g) ?? [];
+  assert.deepEqual(bare, [], `these preview grids would be flattened on mobile: ${bare.join(', ')}`);
+});
