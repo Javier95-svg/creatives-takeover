@@ -56,3 +56,37 @@ test('sign-in stacks the remember/forgot row on phones', () => {
   assert.match(row, /min-h-11/);
   assert.match(row, /htmlFor="rememberMe"[^>]*cursor-pointer/);
 });
+
+test('both auth pages use a two-step form on phones only', () => {
+  for (const [name, path] of pages) {
+    const source = read(path);
+
+    // The gate must be the mobile hook, not a CSS breakpoint: the step machine
+    // is stateful and desktop must keep rendering one complete form.
+    assert.match(source, /useIsMobile/, `${name} must branch on useIsMobile`);
+    assert.match(source, /const showStepTwo = !isMobile \|\| mobileStep === 2/, `${name} step gate`);
+
+    // Enter in the email field on step 1 would otherwise submit the whole form
+    // and fail validation on fields the user has not been shown yet.
+    const submit = source.slice(source.indexOf('handleSubmit = async'), source.indexOf('handleSubmit = async') + 400);
+    assert.match(submit, /isMobile && mobileStep === 1/, `${name} must guard submit on step 1`);
+
+    // Providers render above the form on mobile and inside it on desktop, so
+    // exactly one of the two instances is ever mounted.
+    assert.equal((source.match(/<AuthSocialButtons/g) ?? []).length, 2, `${name} provider blocks`);
+    assert.match(source, /\{!isMobile && \(/, `${name} must keep the desktop provider block`);
+  }
+});
+
+test('the password field stays mounted while hidden on step one', () => {
+  // Password managers need the password input in the DOM next to the email one
+  // to offer autofill, so step one hides it rather than unmounting it.
+  for (const [name, path] of pages) {
+    const source = read(path);
+    assert.match(
+      source,
+      /className=\{showStepTwo \? "space-y-2" : "hidden"\}/,
+      `${name} must hide rather than unmount the password field`,
+    );
+  }
+});

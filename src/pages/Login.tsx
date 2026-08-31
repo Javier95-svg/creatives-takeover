@@ -10,6 +10,7 @@ import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
 import AuthWallpaper from "@/components/wallpapers/AuthWallpaper";
 import MobileFormOptimizer from "@/components/MobileFormOptimizer";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { AuthSocialButtons } from "@/components/auth/AuthSocialButtons";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,7 +53,15 @@ const Login = () => {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [activeLoginHeroSlide, setActiveLoginHeroSlide] = useState(0);
   const [loginHeroTimerReset, setLoginHeroTimerReset] = useState(0);
-  
+
+  // Phones get a two-step form: providers + email first, password second.
+  // Desktop and tablet keep the single full form, so both steps are "open"
+  // there and every showStep* check below collapses to true.
+  const isMobile = useIsMobile();
+  const [mobileStep, setMobileStep] = useState<1 | 2>(1);
+  // The email field shows in both steps, so only step two needs a gate.
+  const showStepTwo = !isMobile || mobileStep === 2;
+
   const { signIn, user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -171,10 +180,32 @@ const Login = () => {
     return !newErrors.email && !newErrors.password;
   };
 
+  // Advance the mobile form from email to password. Also the guard for pressing
+  // Enter in the email field on step 1, which would otherwise submit the form
+  // and fail on the password the user has not been asked for yet.
+  const advanceMobileStep = () => {
+    const email = formData.email.trim();
+    if (!email) {
+      setErrors(prev => ({ ...prev, email: "Email is required" }));
+      return;
+    }
+    if (!emailRegex.test(email)) {
+      setErrors(prev => ({ ...prev, email: "Please enter a valid email address" }));
+      return;
+    }
+    setErrors(prev => ({ ...prev, email: "" }));
+    setMobileStep(2);
+  };
+
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    if (isMobile && mobileStep === 1) {
+      advanceMobileStep();
+      return;
+    }
+
     if (!validateForm()) {
       return;
     }
@@ -398,9 +429,31 @@ const Login = () => {
             <h2 className="signup-premium-card-title text-xl font-semibold text-center">Sign in to your account</h2>
           </CardHeader>
           <CardContent>
-            <form 
-              onSubmit={handleSubmit} 
-              autoComplete="on" 
+            {/* On phones the providers lead, ahead of the email field, the way
+                Lovable/Replit/Rocket do it. On desktop they stay in their
+                original position at the foot of the form. */}
+            {isMobile && mobileStep === 1 && (
+              <div className="mb-6 space-y-6">
+                <AuthSocialButtons
+                  variant="signupPremium"
+                  disabled={isLoading}
+                  onGoogleContinue={handleGoogleLogin}
+                  onLinkedInContinue={handleLinkedInLogin}
+                  onXContinue={handleXLogin}
+                />
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">Or</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            <form
+              onSubmit={handleSubmit}
+              autoComplete="on"
               className="signup-premium-form space-y-6"
               name="loginForm"
               id="loginForm"
@@ -438,8 +491,10 @@ const Login = () => {
                 )}
               </div>
 
-              {/* Password Field */}
-              <div className="space-y-2">
+              {/* Password Field. Hidden rather than unmounted on mobile step 1:
+                  password managers need the password input to stay in the DOM
+                  alongside the email one to offer autofill. */}
+              <div className={showStepTwo ? "space-y-2" : "hidden"}>
                 <Label htmlFor="password" className="text-sm font-medium">
                   Password
                 </Label>
@@ -509,7 +564,7 @@ const Login = () => {
               {/* Remember Me + Forgot Password. Stacked on phones: side by side
                   the two labels together exceed a 360px card and both wrap
                   mid-phrase, colliding with each other. */}
-              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+              <div className={`flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4 ${showStepTwo ? "flex" : "hidden"}`}>
                 <div className="flex min-h-11 items-center gap-2.5">
                   {/* no-touch-target opts out of the global mobile rule forcing
                       every button to 44x44 (index.css:2639). Radix renders the
@@ -537,7 +592,7 @@ const Login = () => {
               </div>
 
               {/* Password Manager Hint */}
-              <div className="bg-muted/30 rounded-lg p-3 border border-border/50">
+              <div className={`bg-muted/30 rounded-lg p-3 border border-border/50 ${showStepTwo ? "" : "hidden"}`}>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center">
                     💡
@@ -557,31 +612,50 @@ const Login = () => {
                     <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                     Signing in...
                   </div>
+                ) : isMobile && mobileStep === 1 ? (
+                  "Continue"
                 ) : (
                   "Sign In"
                 )}
               </Button>
 
-              {/* Divider */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">
-                    Or continue with
-                  </span>
-                </div>
-              </div>
+              {/* Back to the provider buttons. Step 1 is where Google/LinkedIn/X
+                  live, so without this a phone user who typed an email has no
+                  route back to them. */}
+              {isMobile && mobileStep === 2 && (
+                <button
+                  type="button"
+                  onClick={() => setMobileStep(1)}
+                  className="w-full text-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Use another sign-in option
+                </button>
+              )}
 
-              {/* Social Login Buttons */}
-              <AuthSocialButtons
-                variant="signupPremium"
-                disabled={isLoading}
-                onGoogleContinue={handleGoogleLogin}
-                onLinkedInContinue={handleLinkedInLogin}
-                onXContinue={handleXLogin}
-              />
+              {/* Divider + providers, desktop and tablet only. On mobile these
+                  render above the form at step 1 instead. */}
+              {!isMobile && (
+                <>
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-border" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-card px-2 text-muted-foreground">
+                        Or continue with
+                      </span>
+                    </div>
+                  </div>
+
+                  <AuthSocialButtons
+                    variant="signupPremium"
+                    disabled={isLoading}
+                    onGoogleContinue={handleGoogleLogin}
+                    onLinkedInContinue={handleLinkedInLogin}
+                    onXContinue={handleXLogin}
+                  />
+                </>
+              )}
 
               {/* Security Badge */}
               <div className="flex items-center justify-center gap-2 pt-2 pb-2 text-xs text-muted-foreground">

@@ -14,6 +14,7 @@ import { getSessionSafely } from "@/integrations/supabase/auth";
 import { trackActivity } from "@/lib/activity";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import MobileFormOptimizer from "@/components/MobileFormOptimizer";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { AuthSocialButtons } from "@/components/auth/AuthSocialButtons";
 import { mapSignUpError } from "@/lib/authErrors";
 import { getPasswordValidationError, MIN_PASSWORD_LENGTH, PASSWORD_REQUIREMENTS } from "@/lib/passwordPolicy";
@@ -81,6 +82,13 @@ const Signup = () => {
   });
   const [activeSignupHeroSlide, setActiveSignupHeroSlide] = useState(0);
   const [signupHeroTimerReset, setSignupHeroTimerReset] = useState(0);
+
+  // Phones get a two-step form: providers + email first, then the details.
+  // Desktop and tablet keep the single full form, so showStepTwo is always
+  // true there and nothing below changes for them.
+  const isMobile = useIsMobile();
+  const [mobileStep, setMobileStep] = useState<1 | 2>(1);
+  const showStepTwo = !isMobile || mobileStep === 2;
 
   const { signUp, user } = useAuth();
   const navigate = useNavigate();
@@ -334,8 +342,30 @@ const Signup = () => {
   };
 
   // Handle form submission
+  // Advance the mobile form from email to the account details. Also the guard
+  // for pressing Enter in the email field on step 1, which would otherwise run
+  // full validation and complain about fields the user has not been shown.
+  const advanceMobileStep = () => {
+    const email = formData.email.trim();
+    if (!email) {
+      setErrors(prev => ({ ...prev, email: "Email is required" }));
+      return;
+    }
+    if (!emailRegex.test(email)) {
+      setErrors(prev => ({ ...prev, email: "Please enter a valid email address" }));
+      return;
+    }
+    setErrors(prev => ({ ...prev, email: "" }));
+    setMobileStep(2);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isMobile && mobileStep === 1) {
+      advanceMobileStep();
+      return;
+    }
 
     if (!await validateForm()) {
       return;
@@ -676,9 +706,53 @@ const Signup = () => {
                   <p className="text-sm text-muted-foreground text-center">Rookie plan available for free</p>
                 </CardHeader>
                 <CardContent>
+                  {/* On phones the providers lead, ahead of the email field, the
+                      way Lovable/Replit/Rocket do it. On desktop they stay in
+                      their original position at the foot of the form. */}
+                  {isMobile && mobileStep === 1 && (
+                    <div className="mb-5 space-y-5">
+                      <AuthSocialButtons
+                        variant="signupPremium"
+                        disabled={isLoading}
+                        onGoogleContinue={handleGoogleSignup}
+                        onLinkedInContinue={handleLinkedInSignup}
+                        onXContinue={handleXSignup}
+                      />
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t border-border" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                          <span className="bg-card px-2 text-muted-foreground">Or</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <form onSubmit={handleSubmit} autoComplete="on" className="signup-premium-form space-y-5">
+                {/* Confirms which address step 2 is creating an account for,
+                    since the email input itself is hidden by then. */}
+                {isMobile && mobileStep === 2 && (
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/30 px-3 py-2">
+                      <span className="min-w-0 truncate text-sm text-muted-foreground">{formData.email}</span>
+                      <button
+                        type="button"
+                        onClick={() => setMobileStep(1)}
+                        className="shrink-0 text-sm font-medium text-primary transition-colors hover:text-primary/80"
+                      >
+                        Change
+                      </button>
+                    </div>
+                    {/* The email input is hidden at this step, so its error would
+                        render invisibly. Surface it here instead. */}
+                    {errors.email && (
+                      <p className="text-sm text-destructive animate-fade-in">{errors.email}</p>
+                    )}
+                  </div>
+                )}
+
                 {/* Name Fields */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className={`grid-cols-1 sm:grid-cols-2 gap-3 ${showStepTwo ? "grid" : "hidden"}`}>
                   <div className="space-y-2">
                     <Label htmlFor="firstName" className="text-sm font-medium">
                       First Name
@@ -728,7 +802,7 @@ const Signup = () => {
                 </div>
 
                 {/* Username Field */}
-                <div className="space-y-2">
+                <div className={showStepTwo ? "space-y-2" : "hidden"}>
                   <Label htmlFor="username" className="text-sm font-medium">
                     Username <span className="text-muted-foreground">(optional)</span>
                   </Label>
@@ -766,7 +840,7 @@ const Signup = () => {
                 </div>
 
                 {/* Email Field */}
-                <div className="space-y-2">
+                <div className={showStepTwo && isMobile ? "hidden" : "space-y-2"}>
                   <Label htmlFor="email" className="text-sm font-medium">
                     Email address
                   </Label>
@@ -796,7 +870,7 @@ const Signup = () => {
                 </div>
 
                 {/* Password Field */}
-                <div className="space-y-2">
+                <div className={showStepTwo ? "space-y-2" : "hidden"}>
                   <Label htmlFor="password" className="text-sm font-medium">
                     Password
                   </Label>
@@ -852,6 +926,8 @@ const Signup = () => {
                       <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                       Creating account...
                     </div>
+                  ) : isMobile && mobileStep === 1 ? (
+                    "Continue"
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4 mr-2" />
@@ -860,26 +936,30 @@ const Signup = () => {
                   )}
                 </Button>
 
-                {/* Divider */}
-                <div className="relative my-6">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-border" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">
-                      OR
-                    </span>
-                  </div>
-                </div>
+                {/* Divider + providers, desktop and tablet only. On mobile these
+                    render above the form at step 1 instead. */}
+                {!isMobile && (
+                  <>
+                    <div className="relative my-6">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-border" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-card px-2 text-muted-foreground">
+                          OR
+                        </span>
+                      </div>
+                    </div>
 
-                {/* Social Login Buttons - Enhanced */}
-                <AuthSocialButtons
-                  variant="signupPremium"
-                  disabled={isLoading}
-                  onGoogleContinue={handleGoogleSignup}
-                  onLinkedInContinue={handleLinkedInSignup}
-                  onXContinue={handleXSignup}
-                />
+                    <AuthSocialButtons
+                      variant="signupPremium"
+                      disabled={isLoading}
+                      onGoogleContinue={handleGoogleSignup}
+                      onLinkedInContinue={handleLinkedInSignup}
+                      onXContinue={handleXSignup}
+                    />
+                  </>
+                )}
 
                 {/* Hype Text */}
                 <div className="text-center mt-4 space-y-1">
