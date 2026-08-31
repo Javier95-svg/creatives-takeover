@@ -90,3 +90,28 @@ test('the password field stays mounted while hidden on step one', () => {
     );
   }
 });
+
+test('no hidden field carries a native required attribute', () => {
+  // A required input inside a display:none wrapper is not focusable, so the
+  // browser aborts constraint validation, the submit event never fires, and
+  // the button appears dead. This silently broke signup's Continue CTA once.
+  for (const [name, path] of pages) {
+    const source = read(path);
+    assert.doesNotMatch(
+      source,
+      /^\s*required\s*$/m,
+      `${name}: required must be conditional on visibility, not unconditional`,
+    );
+  }
+});
+
+test('signup ties every required flag to the step that shows the field', () => {
+  const source = read('../src/pages/Signup.tsx');
+
+  // The email is the inverse of the others: shown on step one, summarised on
+  // step two. Sharing one flag keeps the class and the attribute in step.
+  assert.match(source, /const emailFieldVisible = !isMobile \|\| mobileStep === 1/);
+  assert.match(source, /className=\{emailFieldVisible \? "space-y-2" : "hidden"\}/);
+  assert.match(source, /required=\{emailFieldVisible\}/);
+  assert.equal((source.match(/required=\{showStepTwo\}/g) ?? []).length, 3);
+});

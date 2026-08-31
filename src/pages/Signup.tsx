@@ -89,6 +89,8 @@ const Signup = () => {
   const isMobile = useIsMobile();
   const [mobileStep, setMobileStep] = useState<1 | 2>(1);
   const showStepTwo = !isMobile || mobileStep === 2;
+  // The email is asked for on step one and summarised on step two.
+  const emailFieldVisible = !isMobile || mobileStep === 1;
 
   const { signUp, user } = useAuth();
   const navigate = useNavigate();
@@ -770,7 +772,7 @@ const Signup = () => {
                         className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.firstName ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''}`}
                         disabled={isLoading}
                         autoComplete="given-name"
-                        required
+                        required={showStepTwo}
                       />
                     </div>
                     {errors.firstName && (
@@ -793,7 +795,7 @@ const Signup = () => {
                       className={`h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.lastName ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''}`}
                       disabled={isLoading}
                       autoComplete="family-name"
-                      required
+                      required={showStepTwo}
                     />
                     {errors.lastName && (
                       <p className="text-sm text-destructive animate-fade-in">{errors.lastName}</p>
@@ -840,7 +842,7 @@ const Signup = () => {
                 </div>
 
                 {/* Email Field */}
-                <div className={showStepTwo && isMobile ? "hidden" : "space-y-2"}>
+                <div className={emailFieldVisible ? "space-y-2" : "hidden"}>
                   <Label htmlFor="email" className="text-sm font-medium">
                     Email address
                   </Label>
@@ -861,7 +863,7 @@ const Signup = () => {
                       autoCapitalize="off"
                       autoCorrect="off"
                       inputMode="email"
-                      required
+                      required={emailFieldVisible}
                     />
                   </div>
                   {errors.email && (
@@ -889,7 +891,7 @@ const Signup = () => {
                       disabled={isLoading}
                       autoComplete="new-password"
                       minLength={MIN_PASSWORD_LENGTH}
-                      required
+                      required={showStepTwo}
                     />
                     <button
                       type="button"
