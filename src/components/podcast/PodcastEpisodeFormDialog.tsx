@@ -36,6 +36,7 @@ const PodcastEpisodeFormDialog = ({
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [description, setDescription] = useState("");
   const [hashtagsInput, setHashtagsInput] = useState("");
+  const [mentorSlug, setMentorSlug] = useState("");
   const [isPublished, setIsPublished] = useState(true);
 
   // Reset the form whenever the dialog opens for a new/different episode.
@@ -45,6 +46,7 @@ const PodcastEpisodeFormDialog = ({
     setYoutubeUrl(episode?.youtube_url ?? "");
     setDescription(episode?.description ?? "");
     setHashtagsInput(episode?.hashtags?.join(" ") ?? "");
+    setMentorSlug(episode?.mentor_slug ?? "");
     setIsPublished(episode?.is_published ?? true);
   }, [open, episode]);
 
@@ -59,6 +61,7 @@ const PodcastEpisodeFormDialog = ({
       description,
       youtube_url: youtubeUrl,
       hashtags: previewTags,
+      mentor_slug: mentorSlug,
       is_published: isPublished,
     });
     if (result) onOpenChange(false);
@@ -107,6 +110,20 @@ const PodcastEpisodeFormDialog = ({
               placeholder="What this episode is about and the key takeaways…"
               rows={4}
             />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="podcast-mentor-slug">Mentor interview (optional)</Label>
+            <Input
+              id="podcast-mentor-slug"
+              value={mentorSlug}
+              onChange={(e) => setMentorSlug(e.target.value)}
+              placeholder="charlotte-joseph"
+            />
+            <p className="text-xs text-muted-foreground">
+              The mentor slug from their profile URL. Set it to show this episode on
+              creatives-takeover.com/mentorship/&lt;slug&gt;. Leave blank for non-interview episodes.
+            </p>
           </div>
 
           <div className="space-y-1.5">

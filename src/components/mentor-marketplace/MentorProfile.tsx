@@ -14,6 +14,9 @@ import { useMentorSaves } from "@/hooks/useMentorSaves";
 import { useCallback, useEffect, useRef } from "react";
 import { clearPendingValueCapture, persistPendingValueCapture, readPendingValueCapture } from "@/lib/valueCapture";
 import { useDiscoveryCallsFeature } from "@/hooks/useDiscoveryCallsFeature";
+import { useMentorPodcastEpisode } from "@/hooks/useMentorPodcastEpisode";
+import MentorInterviewBanner from "@/components/mentor-marketplace/MentorInterviewBanner";
+import { generateMentorSlug } from "@/utils/mentorSlug";
 
 interface MentorProfileProps {
   mentor: MentorProfileType;
@@ -22,6 +25,7 @@ interface MentorProfileProps {
 export const MentorProfile = ({ mentor }: MentorProfileProps) => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
+  const { episode: interviewEpisode } = useMentorPodcastEpisode(generateMentorSlug(mentor.name));
   const { startConversation, resolveMentorUserId } = useMessaging({ autoLoad: false });
   const { saveMentor, buildSaveButtonState } = useMentorSaves();
   const currencySymbol = getCurrencySymbol(mentor.currency);
@@ -574,6 +578,11 @@ export const MentorProfile = ({ mentor }: MentorProfileProps) => {
 
         </div>
       </CardContent>
+
+      {/* Podcast interview (plays in place via the shared PodcastPlayerModal) */}
+      {interviewEpisode && (
+        <MentorInterviewBanner episode={interviewEpisode} mentorName={mentor.name} />
+      )}
 
       {/* Full Bio Section (expandable) */}
       {mentor.bio.length > bioMaxLength && (

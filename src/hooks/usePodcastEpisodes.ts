@@ -10,6 +10,8 @@ export interface PodcastEpisode {
   description: string;
   youtube_url: string;
   youtube_video_id: string;
+  /** Slug of the mentor featured in this episode; empty when it is not an interview. */
+  mentor_slug: string;
   hashtags: string[];
   sort_order: number;
   is_published: boolean;
@@ -22,6 +24,7 @@ export interface PodcastEpisodeInput {
   description: string;
   youtube_url: string;
   hashtags: string[];
+  mentor_slug?: string;
   is_published?: boolean;
   sort_order?: number;
 }
@@ -41,6 +44,7 @@ function mapRow(row: Record<string, unknown>): PodcastEpisode {
     youtube_url: typeof row.youtube_url === 'string' ? row.youtube_url : '',
     youtube_video_id: typeof row.youtube_video_id === 'string' ? row.youtube_video_id : '',
     hashtags: Array.isArray(row.hashtags) ? (row.hashtags as string[]) : [],
+    mentor_slug: typeof row.mentor_slug === 'string' ? row.mentor_slug : '',
     sort_order: typeof row.sort_order === 'number' ? row.sort_order : 0,
     is_published: Boolean(row.is_published),
     created_at: typeof row.created_at === 'string' ? row.created_at : '',
@@ -96,6 +100,7 @@ export function usePodcastEpisodes() {
           youtube_url: input.youtube_url.trim(),
           youtube_video_id: videoId,
           hashtags: input.hashtags,
+          mentor_slug: input.mentor_slug?.trim() || null,
           is_published: input.is_published ?? true,
           sort_order: input.sort_order ?? Date.now() % 2_000_000_000,
         };
@@ -135,6 +140,7 @@ export function usePodcastEpisodes() {
           youtube_url: input.youtube_url.trim(),
           youtube_video_id: videoId,
           hashtags: input.hashtags,
+          mentor_slug: input.mentor_slug?.trim() || null,
         };
         if (input.is_published !== undefined) payload.is_published = input.is_published;
         if (input.sort_order !== undefined) payload.sort_order = input.sort_order;
