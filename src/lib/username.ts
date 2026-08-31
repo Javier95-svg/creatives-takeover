@@ -186,7 +186,7 @@ export const USERNAME_PLACEHOLDER_EXAMPLES = [
   "maya_ships",
   "devonhq",
   "riverworks",
-  "noa_labs",
+  "javierforge",
 ] as const;
 
 export function randomUsernameExample(): string {
