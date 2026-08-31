@@ -174,3 +174,21 @@ const finalize = (raw: string): string => {
 
   return value.slice(0, VALIDATION.MAX_USERNAME_LENGTH).replace(/_+$/, "");
 };
+
+/**
+ * Placeholder examples for the signup field. One is picked per mount so the
+ * form does not always show the same face, and they deliberately mirror the
+ * name + HANDLE_SUFFIXES shape that suggestUsername produces, so the example
+ * and the "Create one for me." button never look like different systems.
+ */
+export const USERNAME_PLACEHOLDER_EXAMPLES = [
+  "alexbuilds",
+  "maya_ships",
+  "devonhq",
+  "riverworks",
+  "noa_labs",
+] as const;
+
+export function randomUsernameExample(): string {
+  return pick(USERNAME_PLACEHOLDER_EXAMPLES);
+}

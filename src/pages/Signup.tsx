@@ -22,6 +22,7 @@ import { captureEvent, persistSignupIntent, trackSignupCompletedAttributed } fro
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import {
   isUsernameAvailable,
+  randomUsernameExample,
   suggestUsername,
   normalizeUsernameInput,
   validateUsername,
@@ -83,6 +84,9 @@ const Signup = () => {
   });
   const [activeSignupHeroSlide, setActiveSignupHeroSlide] = useState(0);
   const [signupHeroTimerReset, setSignupHeroTimerReset] = useState(0);
+  // Picked once per mount. Computing this during render would reshuffle the
+  // example on every keystroke elsewhere in the form.
+  const [usernameExample] = useState(randomUsernameExample);
 
   // Phones get a two-step form: providers + email first, then the details.
   // Desktop and tablet keep the single full form, so showStepTwo is always
@@ -830,7 +834,7 @@ const Signup = () => {
                       value={formData.username}
                       onChange={handleInputChange}
                       onBlur={() => trackFieldInteraction('username')}
-                      placeholder="e.g. javierforge"
+                      placeholder={`e.g. ${usernameExample}`}
                       className={`h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.username ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''}`}
                       disabled={isLoading}
                       autoComplete="username"

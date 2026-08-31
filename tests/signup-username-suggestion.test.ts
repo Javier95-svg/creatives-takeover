@@ -11,7 +11,7 @@ test('the username field asks for a handle rather than offering to skip it', () 
 
   assert.doesNotMatch(field, /\(optional\)/);
   assert.doesNotMatch(field, /You can customize this now or change it later/);
-  assert.match(field, /placeholder="e\.g\. javierforge"/);
+  assert.match(field, /placeholder=\{`e\.g\. \$\{usernameExample\}`\}/);
   assert.match(field, /Create one for me\./);
   assert.match(field, /onClick=\{handleSuggestUsername\}/);
   // A <button type="button"> — a bare <a> or <p> would either submit the form
@@ -37,4 +37,24 @@ test('suggestions cannot contain a character the validator strips', () => {
   assert.match(lib, /const finalize = \(raw: string\): string => \{[\s\S]*?normalizeUsernameInput\(raw\)/);
   assert.match(lib, /VALIDATION\.MIN_USERNAME_LENGTH/);
   assert.match(lib, /VALIDATION\.MAX_USERNAME_LENGTH/);
+});
+
+test('the placeholder rotates between five examples, fixed per mount', () => {
+  const examples = lib.slice(
+    lib.indexOf('export const USERNAME_PLACEHOLDER_EXAMPLES'),
+    lib.indexOf('export function randomUsernameExample'),
+  );
+  assert.equal((examples.match(/"/g) ?? []).length / 2, 5, 'expected exactly five examples');
+
+  // Every example must survive the normalizer untouched, or the field would
+  // advertise a handle it refuses to accept.
+  for (const example of examples.match(/"([a-z0-9_]+)"/g) ?? []) {
+    const value = example.replaceAll('"', '');
+    assert.match(value, /^[a-z0-9][a-z0-9_]{1,28}[a-z0-9]$/, `${value} must be a valid username`);
+  }
+
+  // useState(fn) rather than a call during render: otherwise the example would
+  // reshuffle on every keystroke elsewhere in the form.
+  assert.match(signup, /useState\(randomUsernameExample\)/);
+  assert.doesNotMatch(signup, /randomUsernameExample\(\)/);
 });
