@@ -13,7 +13,6 @@ export interface PodcastEpisode {
   /** Slug of the mentor featured in this episode; empty when it is not an interview. */
   mentor_slug: string;
   hashtags: string[];
-  sort_order: number;
   is_published: boolean;
   created_at: string;
   updated_at: string;
@@ -26,7 +25,6 @@ export interface PodcastEpisodeInput {
   hashtags: string[];
   mentor_slug?: string;
   is_published?: boolean;
-  sort_order?: number;
 }
 
 const PODCAST_ADMIN_EMAIL = 'admin@creatives-takeover.com';
@@ -45,11 +43,19 @@ function mapRow(row: Record<string, unknown>): PodcastEpisode {
     youtube_video_id: typeof row.youtube_video_id === 'string' ? row.youtube_video_id : '',
     hashtags: Array.isArray(row.hashtags) ? (row.hashtags as string[]) : [],
     mentor_slug: typeof row.mentor_slug === 'string' ? row.mentor_slug : '',
-    sort_order: typeof row.sort_order === 'number' ? row.sort_order : 0,
     is_published: Boolean(row.is_published),
     created_at: typeof row.created_at === 'string' ? row.created_at : '',
     updated_at: typeof row.updated_at === 'string' ? row.updated_at : '',
   };
+}
+
+// The podcast is a chronological feed: an episode's upload time is its source
+// of truth, rather than a manually assigned position.
+function newestFirst(episodes: PodcastEpisode[]): PodcastEpisode[] {
+  return [...episodes].sort((a, b) => {
+    const newest = Date.parse(b.created_at) - Date.parse(a.created_at);
+    return Number.isNaN(newest) ? 0 : newest;
+  });
 }
 
 export function usePodcastEpisodes() {
@@ -65,10 +71,9 @@ export function usePodcastEpisodes() {
     try {
       const { data, error } = await table()
         .select('*')
-        .order('sort_order', { ascending: false })
         .order('created_at', { ascending: false });
       if (error) throw error;
-      setEpisodes(Array.isArray(data) ? data.map(mapRow) : []);
+      setEpisodes(Array.isArray(data) ? newestFirst(data.map(mapRow)) : []);
     } catch (error) {
       console.error('Error fetching podcast episodes:', error);
       setEpisodes([]);
@@ -102,12 +107,11 @@ export function usePodcastEpisodes() {
           hashtags: input.hashtags,
           mentor_slug: input.mentor_slug?.trim() || null,
           is_published: input.is_published ?? true,
-          sort_order: input.sort_order ?? Date.now() % 2_000_000_000,
         };
         const { data, error } = await table().insert([payload]).select().single();
         if (error) throw error;
         const created = mapRow(data);
-        setEpisodes((prev) => [created, ...prev]);
+        setEpisodes((prev) => newestFirst([created, ...prev]));
         toast.success('Episode published');
         return created;
       } catch (error) {
@@ -143,12 +147,10 @@ export function usePodcastEpisodes() {
           mentor_slug: input.mentor_slug?.trim() || null,
         };
         if (input.is_published !== undefined) payload.is_published = input.is_published;
-        if (input.sort_order !== undefined) payload.sort_order = input.sort_order;
-
         const { data, error } = await table().update(payload).eq('id', id).select().single();
         if (error) throw error;
         const updated = mapRow(data);
-        setEpisodes((prev) => prev.map((ep) => (ep.id === id ? updated : ep)));
+        setEpisodes((prev) => newestFirst(prev.map((ep) => (ep.id === id ? updated : ep))));
         toast.success('Episode updated');
         return updated;
       } catch (error) {
