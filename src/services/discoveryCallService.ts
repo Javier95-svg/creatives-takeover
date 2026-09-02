@@ -90,6 +90,12 @@ export interface DiscoveryCallBookingItem {
   meetingCreationStatus: 'not_required' | 'pending' | 'created' | 'failed' | 'cancelled';
   externalCalendarHtmlUrl: string | null;
   calendarError: string | null;
+  attendance: {
+    verification_status: 'pending' | 'checking' | 'verified_completed' | 'confirmation_required' | 'disputed' | 'manual_review' | 'unavailable';
+    confirmation_requested_at: string | null;
+    resolved_at: string | null;
+    resolution_source: string | null;
+  } | null;
   rounds: SchedulingRound[];
   reservation: {
     status: DiscoveryCallCreditState;
@@ -282,7 +288,7 @@ export const updateAdminMentorDiscoverySettings = (input: {
 }) => invoke<{ success: boolean; settings?: AdminMentorDiscoverySettings; error?: string }>('discovery-call-service', { action: 'updateAdminSettings', ...input });
 
 export const listAdminDiscoveryCalls = () =>
-  invoke<{ success: boolean; calls: Array<Record<string, unknown>>; health: Array<Record<string, unknown>>; notifications: Array<Record<string, unknown>>; notificationAlerts: Array<Record<string, unknown>>; events: Array<Record<string, unknown>>; rounds: Array<Record<string, unknown>>; reservations: Array<Record<string, unknown>>; calendarJobs: Array<Record<string, unknown>> }>('discovery-call-service', { action: 'listAdminCalls' });
+  invoke<{ success: boolean; calls: Array<Record<string, unknown>>; health: Array<Record<string, unknown>>; notifications: Array<Record<string, unknown>>; notificationAlerts: Array<Record<string, unknown>>; events: Array<Record<string, unknown>>; rounds: Array<Record<string, unknown>>; reservations: Array<Record<string, unknown>>; calendarJobs: Array<Record<string, unknown>>; attendance: Array<Record<string, unknown>>; attendanceJobs: Array<Record<string, unknown>> }>('discovery-call-service', { action: 'listAdminCalls' });
 
 export const adminOverrideDiscoveryCall = (input: Record<string, unknown>) =>
   invoke<ServiceResult>('discovery-call-service', { action: 'adminOverride', ...input });
@@ -292,6 +298,9 @@ export const resendDiscoveryCallNotification = (notificationId: string) =>
 
 export const retryDiscoveryCallCalendarOperation = (calendarJobId: string) =>
   invoke<ServiceResult>('discovery-call-service', { action: 'retryCalendarOperation', calendarJobId });
+
+export const retryDiscoveryCallAttendanceOperation = (attendanceJobId: string) =>
+  invoke<ServiceResult>('discovery-call-service', { action: 'retryAttendanceOperation', attendanceJobId });
 
 export const createMentorAvailabilityAccess = (mentorId: string) =>
   invoke<ServiceResult & { url?: string }>('discovery-call-service', { action: 'createMentorAvailabilityAccess', mentorId });

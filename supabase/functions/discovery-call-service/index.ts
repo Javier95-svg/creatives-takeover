@@ -40,6 +40,12 @@ async function invokeCalendarWorker() {
   }).catch(() => undefined);
 }
 
+async function invokeAttendanceWorker() {
+  await admin.functions.invoke("process-discovery-call-attendance", {
+    body: { limit: 25 }, headers: { Authorization: `Bearer ${env("SUPABASE_SERVICE_ROLE_KEY")}` },
+  }).catch(() => undefined);
+}
+
 function rpcResponse(data: Record<string, unknown> | null, error: { message: string } | null) {
   if (error) return json({ success: false, error: error.message }, 500);
   const result = data ?? { success: false, errorCode: "UNKNOWN_ERROR" };
@@ -164,15 +170,17 @@ serve(async (req) => {
     if (error) return json({ success: false, error: error.message }, 500);
     const callIds = (calls ?? []).map((call) => call.id);
     const mentorIds = [...new Set((calls ?? []).map((call) => call.mentor_id).filter(Boolean))];
-    const [{ data: rounds }, { data: reservations }, { data: mentors }] = await Promise.all([
+    const [{ data: rounds }, { data: reservations }, { data: mentors }, { data: attendance }] = await Promise.all([
       callIds.length ? admin.from("discovery_call_scheduling_rounds").select("id, discovery_call_id, round_type, proposer_role, responder_role, status, counter_depth, response_due_at, meeting_url, meeting_instructions, accepted_slot_id, created_at, discovery_call_scheduling_slots(id, ordinal, starts_at, duration_minutes, proposed_timezone)").in("discovery_call_id", callIds).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
       callIds.length ? admin.from("discovery_call_credit_reservations").select("discovery_call_id, status, held_amount, credit_transaction_id, refund_transaction_id, expires_at, metadata").in("discovery_call_id", callIds) : Promise.resolve({ data: [] }),
       mentorIds.length ? admin.from("mentors").select("id, picture").in("id", mentorIds) : Promise.resolve({ data: [] }),
+      callIds.length ? admin.from("discovery_call_attendance_evidence").select("discovery_call_id, verification_status, confirmation_requested_at, resolved_at, resolution_source").in("discovery_call_id", callIds) : Promise.resolve({ data: [] }),
     ]);
     const roundMap = new Map<string, unknown[]>();
     for (const round of rounds ?? []) roundMap.set(round.discovery_call_id, [...(roundMap.get(round.discovery_call_id) ?? []), round]);
     const reservationMap = new Map((reservations ?? []).map((row) => [row.discovery_call_id, row]));
     const mentorMap = new Map((mentors ?? []).map((row) => [row.id, row.picture]));
+    const attendanceMap = new Map((attendance ?? []).map((row) => [row.discovery_call_id, row]));
     return json({
       success: true,
       bookings: (calls ?? []).map((call) => ({
@@ -203,6 +211,7 @@ serve(async (req) => {
         meetingCreationStatus: call.meeting_creation_status,
         externalCalendarHtmlUrl: call.external_calendar_html_url,
         calendarError: call.calendar_error,
+        attendance: attendanceMap.get(call.id) ?? null,
         rounds: roundMap.get(call.id) ?? [],
         reservation: reservationMap.get(call.id) ?? null,
         createdAt: call.created_at,
@@ -268,7 +277,7 @@ serve(async (req) => {
     return rpcResponse(data, error);
   }
 
-  if (["getAdminSettings", "updateAdminSettings", "createMentorAvailabilityAccess", "listAdminCalls", "adminOverride", "resendNotification", "retryCalendarOperation"].includes(action) && !isAdmin) {
+  if (["getAdminSettings", "updateAdminSettings", "createMentorAvailabilityAccess", "listAdminCalls", "adminOverride", "resendNotification", "retryCalendarOperation", "retryAttendanceOperation"].includes(action) && !isAdmin) {
     return json({ success: false, errorCode: "FORBIDDEN", error: "Admin access required" }, 403);
   }
 
@@ -337,7 +346,7 @@ serve(async (req) => {
   }
 
   if (action === "listAdminCalls") {
-    const [{ data: calls, error }, { data: health, error: healthError }, { data: outbox, error: outboxError }, { data: alerts, error: alertsError }, { data: events, error: eventsError }, { data: rounds, error: roundsError }, { data: reservations, error: reservationsError }, { data: calendarJobs, error: calendarJobsError }] = await Promise.all([
+    const [{ data: calls, error }, { data: health, error: healthError }, { data: outbox, error: outboxError }, { data: alerts, error: alertsError }, { data: events, error: eventsError }, { data: rounds, error: roundsError }, { data: reservations, error: reservationsError }, { data: calendarJobs, error: calendarJobsError }, { data: attendance, error: attendanceError }, { data: attendanceJobs, error: attendanceJobsError }] = await Promise.all([
       admin.from("discovery_calls").select("*").eq("workflow_version", 2).order("created_at", { ascending: false }).limit(250),
       admin.from("admin_discovery_call_workflow_health").select("*"),
       admin.from("discovery_call_notification_outbox").select("id, discovery_call_id, template_key, recipient_role, recipient_email, status, send_generation, attempt_count, max_attempts, last_error, next_attempt_at, sent_at, provider_message_id, provider_delivery_status, provider_event_at, delivered_at, delivery_delayed_at, bounced_at, complained_at, suppressed_at, provider_last_error, created_at").order("created_at", { ascending: false }).limit(500),
@@ -346,10 +355,12 @@ serve(async (req) => {
       admin.from("discovery_call_scheduling_rounds").select("*, discovery_call_scheduling_slots(*)").order("created_at", { ascending: false }).limit(500),
       admin.from("discovery_call_credit_reservations").select("*").order("created_at", { ascending: false }).limit(500),
       admin.from("discovery_call_calendar_outbox").select("id, discovery_call_id, operation, sequence, status, attempt_count, max_attempts, next_attempt_at, external_event_id, last_error, created_at, completed_at").order("created_at", { ascending: false }).limit(500),
+      admin.from("discovery_call_attendance_evidence").select("*").order("updated_at", { ascending: false }).limit(500),
+      admin.from("discovery_call_attendance_outbox").select("*").order("created_at", { ascending: false }).limit(500),
     ]);
-    const adminReadError = error ?? healthError ?? outboxError ?? alertsError ?? eventsError ?? roundsError ?? reservationsError ?? calendarJobsError;
+    const adminReadError = error ?? healthError ?? outboxError ?? alertsError ?? eventsError ?? roundsError ?? reservationsError ?? calendarJobsError ?? attendanceError ?? attendanceJobsError;
     if (adminReadError) return json({ success: false, error: adminReadError.message }, 500);
-    return json({ success: true, calls: calls ?? [], health: health ?? [], notifications: outbox ?? [], notificationAlerts: alerts ?? [], events: events ?? [], rounds: rounds ?? [], reservations: reservations ?? [], calendarJobs: calendarJobs ?? [] });
+    return json({ success: true, calls: calls ?? [], health: health ?? [], notifications: outbox ?? [], notificationAlerts: alerts ?? [], events: events ?? [], rounds: rounds ?? [], reservations: reservations ?? [], calendarJobs: calendarJobs ?? [], attendance: attendance ?? [], attendanceJobs: attendanceJobs ?? [] });
   }
 
   if (action === "adminOverride") {
@@ -381,6 +392,16 @@ serve(async (req) => {
     if (error) return json({ success: false, error: error.message }, 500);
     if (!data?.success) return rpcResponse(data, null);
     void invokeCalendarWorker();
+    return json({ success: true });
+  }
+
+  if (action === "retryAttendanceOperation") {
+    const { data, error } = await admin.rpc("retry_discovery_call_attendance_job_v5", {
+      p_job_id: String(body.attendanceJobId ?? ""), p_admin_user_id: user.id,
+    });
+    if (error) return json({ success: false, error: error.message }, 500);
+    if (!data?.success) return rpcResponse(data, null);
+    void invokeAttendanceWorker();
     return json({ success: true });
   }
 

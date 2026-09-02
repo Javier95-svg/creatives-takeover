@@ -26,6 +26,9 @@ const admin = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY")
 
 function actionUrl(template: string, role: string, token: string | null, payload: Record<string, unknown>) {
   const appUrl = env("APP_URL").replace(/\/$/, "");
+  if (["attendance_confirmation_required", "attendance_confirmation_reminder"].includes(template) && token) {
+    return `${appUrl}/mentorship/calls/attendance?token=${encodeURIComponent(token)}`;
+  }
   if (role === "mentor") return token ? `${appUrl}/mentorship/calls/respond#token=${encodeURIComponent(token)}` : null;
   if (role === "admin") return `${appUrl}/mentorship/admin/discovery-calls?call=${encodeURIComponent(String(payload.callId ?? ""))}`;
   return `${appUrl}/mentorship/my-bookings?call=${encodeURIComponent(String(payload.callId ?? ""))}`;

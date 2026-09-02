@@ -123,6 +123,7 @@ const MyBookings = lazy(() => import("./pages/community/MyBookings"));
 const MentorBookingPage = lazy(() => import("./pages/community/MentorBookingPage"));
 const MentorDiscoveryResponsePage = lazy(() => import("./pages/community/MentorDiscoveryResponsePage"));
 const MentorDiscoveryAvailabilityPage = lazy(() => import("./pages/community/MentorDiscoveryAvailabilityPage"));
+const DiscoveryCallAttendanceResponsePage = lazy(() => import("./pages/community/DiscoveryCallAttendanceResponsePage"));
 const AdminMentorEditor = lazy(() => import("./pages/community/AdminMentorEditor"));
 const AdminDiscoveryCallsPage = lazy(() => import("./pages/community/AdminDiscoveryCallsPage"));
 const AdminServiceEditor = lazy(() => import("./pages/community/AdminServiceEditor"));
@@ -298,6 +299,7 @@ function App() {
                         <Route path="/mentorship/book/:id" element={<MentorBookingPage />} />
                         <Route path="/mentorship/calls/respond" element={<MentorDiscoveryResponsePage />} />
                         <Route path="/mentorship/calls/availability" element={<MentorDiscoveryAvailabilityPage />} />
+                        <Route path="/mentorship/calls/attendance" element={<DiscoveryCallAttendanceResponsePage />} />
                         <Route path="/first-customer-sprint" element={<LegacyFirstCustomerProofRedirect />} />
                         <Route path="/first-customer-sprint/apply" element={<LegacyFirstCustomerProofRedirect />} />
                         <Route path="/admin/first-customer-sprint" element={<AdminRoute><AdminFirstCustomerSprintPage /></AdminRoute>} />

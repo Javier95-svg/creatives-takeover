@@ -190,6 +190,12 @@ verify_jwt = false
 [functions.process-discovery-call-calendar-events]
 verify_jwt = false
 
+[functions.process-discovery-call-attendance]
+verify_jwt = false
+
+[functions.discovery-call-attendance-response]
+verify_jwt = false
+
 [functions.discovery-call-mentor-availability]
 verify_jwt = false
 

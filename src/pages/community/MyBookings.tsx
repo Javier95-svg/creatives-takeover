@@ -32,6 +32,16 @@ const statusLabels: Record<string, string> = {
   cancelled_early: 'Cancelled — refunded', cancelled_late: 'Cancelled late', founder_no_show: 'Founder no-show', mentor_no_show: 'Mentor no-show — refunded',
 };
 
+function attendanceMessage(booking: DiscoveryCallBookingItem) {
+  if (booking.status !== 'awaiting_outcome') return null;
+  switch (booking.attendance?.verification_status) {
+    case 'confirmation_required': return 'Confirmation needed — please check your email for a secure response link.';
+    case 'manual_review': case 'disputed': return 'Attendance is being reviewed by our team.';
+    case 'unavailable': return 'Attendance could not be verified automatically. Please check your email to confirm what happened.';
+    default: return 'Verifying attendance from the meeting timing data.';
+  }
+}
+
 function downloadCalendar(booking: DiscoveryCallBookingItem) {
   if (!booking.scheduledFor) return;
   const date = (value: Date) => value.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
@@ -135,6 +145,7 @@ export default function MyBookings() {
     const round = activeRound(booking);
     const pending = booking.status === 'pending_mentor_response' || booking.status === 'pending_founder_response';
     const creatingMeeting = booking.status === 'pending_meeting_creation';
+    const attendance = attendanceMessage(booking);
     const earlyRefund = booking.scheduledFor && Date.now() <= Date.parse(booking.scheduledFor) - 24 * 60 * 60 * 1000;
     const refundResult = booking.reservation?.metadata?.refundResult as Record<string, unknown> | undefined;
     return <Card key={booking.id} id={`call-${booking.id}`}><CardContent className="p-6">
@@ -149,6 +160,7 @@ export default function MyBookings() {
       {booking.desiredOutcome && <p className="mt-3 text-sm text-muted-foreground">Goal: {booking.desiredOutcome}</p>}
       {booking.responseDueAt && pending && <p className="mt-2 text-xs text-muted-foreground">Response deadline: {new Date(booking.responseDueAt).toLocaleString()}</p>}
       {creatingMeeting && <Alert className="mt-4"><Loader2 className="h-4 w-4 animate-spin" /><AlertDescription>Your time is reserved while the private Google Meet room is created. Discovery Calls are free.</AlertDescription></Alert>}
+      {attendance && <Alert className="mt-4"><AlertDescription>{attendance}</AlertDescription></Alert>}
       {round && renderRound(booking, round)}
       {booking.meetingUrl && <Button asChild size="sm" variant="outline" className="mt-4"><a href={booking.meetingUrl} target="_blank" rel="noreferrer"><Video className="mr-2 h-4 w-4" />Join meeting</a></Button>}
       {booking.meetingInstructions && <p className="mt-3 whitespace-pre-line rounded-lg bg-muted p-3 text-sm">{booking.meetingInstructions}</p>}
@@ -166,5 +178,5 @@ export default function MyBookings() {
 
   const section = (title: string, items: DiscoveryCallBookingItem[], empty: string) => <section className="mb-10"><h2 className="mb-4 text-2xl font-semibold">{title}</h2>{items.length ? <div className="grid gap-4">{items.map(renderCard)}</div> : <Card><CardContent className="p-8 text-center text-muted-foreground">{empty}</CardContent></Card>}</section>;
 
-  return <><Helmet><title>My Discovery Calls | Creatives Takeover</title><meta name="robots" content="noindex,nofollow" /></Helmet><Navigation /><main className="container mx-auto min-h-screen px-4 pb-16 pt-header-offset"><Button variant="ghost" asChild className="mb-4"><Link to="/mentorship"><ArrowLeft className="mr-2 h-4 w-4" />Back to Marketplace</Link></Button><h1 className="mb-2 text-3xl font-bold">My Discovery Calls</h1><p className="mb-8 text-muted-foreground">Requests, confirmed calls, and scheduling updates. Calls are free.</p>{loading ? <Alert><Loader2 className="h-4 w-4 animate-spin" /><AlertDescription>Loading Discovery Calls…</AlertDescription></Alert> : <>{section('Needs your response', groups.needsResponse, 'No Discovery Calls need your response.')}{section('Awaiting mentor', groups.awaitingMentor, 'No requests are waiting on a mentor.')}{section('Upcoming', groups.upcoming, 'You have no confirmed upcoming calls.')}{section('Past', groups.past, 'No past Discovery Calls.')}</>}</main><Footer /></>;
+  return <><Helmet><title>My Discovery Calls | Creatives Takeover</title><meta name="robots" content="noindex,nofollow" /></Helmet><Navigation /><main className="container mx-auto min-h-screen px-4 pb-16 pt-header-offset"><Button variant="ghost" asChild className="mb-4"><Link to="/mentorship"><ArrowLeft className="mr-2 h-4 w-4" />Back to Marketplace</Link></Button><h1 className="mb-2 text-3xl font-bold">My Discovery Calls</h1><p className="mb-2 text-muted-foreground">Requests, confirmed calls, and scheduling updates. Calls are free.</p><p className="mb-8 text-xs text-muted-foreground">For attendance verification, we retain only derived meeting timing and participant-count metadata—not participant identities, recordings, transcripts, or raw meeting data.</p>{loading ? <Alert><Loader2 className="h-4 w-4 animate-spin" /><AlertDescription>Loading Discovery Calls…</AlertDescription></Alert> : <>{section('Needs your response', groups.needsResponse, 'No Discovery Calls need your response.')}{section('Awaiting mentor', groups.awaitingMentor, 'No requests are waiting on a mentor.')}{section('Upcoming', groups.upcoming, 'You have no confirmed upcoming calls.')}{section('History', groups.past, 'No Discovery Call history.')}</>}</main><Footer /></>;
 }

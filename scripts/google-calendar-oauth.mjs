@@ -20,7 +20,9 @@ authorization.search = new URLSearchParams({
   access_type: 'offline',
   prompt: 'consent',
   include_granted_scopes: 'true',
-  scope: 'https://www.googleapis.com/auth/calendar.events.owned',
+  // Calendar creates the company-owned event. Meet's sensitive read-only scope
+  // is used only after the call to derive timing/count attendance evidence.
+  scope: 'https://www.googleapis.com/auth/calendar.events.owned https://www.googleapis.com/auth/meetings.space.readonly',
   state,
 }).toString();
 

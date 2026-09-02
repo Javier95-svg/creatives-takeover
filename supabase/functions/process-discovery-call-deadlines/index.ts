@@ -18,5 +18,8 @@ serve(async (req) => {
     body: { limit: 50 },
     headers: { Authorization: `Bearer ${env("SUPABASE_SERVICE_ROLE_KEY")}` },
   });
+  void admin.functions.invoke("process-discovery-call-attendance", {
+    body: { limit: 50 }, headers: { Authorization: `Bearer ${env("SUPABASE_SERVICE_ROLE_KEY")}` },
+  });
   return json({ ...(data ?? { success: true }), calendar: calendarData ?? { expiredMeetingCreations: 0 } });
 });

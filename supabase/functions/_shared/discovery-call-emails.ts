@@ -36,6 +36,12 @@ function titleFor(template: string) {
     booking_cancelled: "Discovery Call cancelled",
     outcome_recorded: "Discovery Call status updated",
     outcome_required: "Discovery Call outcome requires review",
+    call_reminder_24h: "Reminder: Discovery Call tomorrow",
+    call_reminder_1h: "Reminder: Discovery Call in one hour",
+    attendance_confirmation_required: "Please confirm what happened on your Discovery Call",
+    attendance_confirmation_reminder: "Reminder: confirm your Discovery Call outcome",
+    attendance_manual_review_required: "Discovery Call attendance requires admin review",
+    attendance_verified: "Discovery Call attendance verified",
   };
   return titles[template] ?? "Discovery Call update";
 }
@@ -90,8 +96,18 @@ export function buildDiscoveryCallEmail(input: {
     ? "A founder has requested a 30-minute Discovery Call. Choose one of their times, propose another, or decline securely."
     : input.template === "request_created" && input.recipientRole === "founder"
       ? "Your Discovery Call request was received. Ten credits are held and will only be finalized if the call is confirmed."
-      : input.template === "outcome_required"
-        ? "The scheduled call has ended. Record its outcome in the admin dashboard."
+    : input.template === "outcome_required"
+      ? "The scheduled call has ended. Record its outcome in the admin dashboard."
+    : input.template === "call_reminder_24h"
+      ? "Your Discovery Call is tomorrow. The meeting link and time are below."
+    : input.template === "call_reminder_1h"
+      ? "Your Discovery Call starts in about one hour."
+    : input.template === "attendance_confirmation_required" || input.template === "attendance_confirmation_reminder"
+      ? "We could not verify attendance automatically. Please use the secure form to tell us what happened. Opening the link does not change the call outcome."
+    : input.template === "attendance_manual_review_required"
+      ? "The automated attendance check and participant responses require an audited admin decision."
+    : input.template === "attendance_verified"
+      ? "Attendance was verified from derived Google Meet timing metadata. The call is marked completed."
     : input.template === "booking_confirmed"
       ? "The time and meeting details are confirmed."
       : input.template === "request_expired"
