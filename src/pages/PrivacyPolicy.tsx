@@ -22,6 +22,7 @@ const PrivacyPolicy = () => {
             <h1 className="text-4xl md:text-6xl font-bold gradient-text creatives-font leading-tight pb-2 overflow-visible mb-6">
               Privacy Policy
             </h1>
+            <p className="text-sm text-muted-foreground">Last updated: September 2, 2026</p>
           </header>
 
           <div className="max-w-4xl mx-auto space-y-8">
@@ -58,6 +59,12 @@ const PrivacyPolicy = () => {
                     <li><strong>Service providers:</strong> analytics, email delivery, infrastructure, scheduling, and similar vendors that help us operate the platform.</li>
                   </ul>
                 </div>
+
+                <div>
+                  <h3 className="text-lg font-medium text-primary mb-3">1.4 Google Calendar and Google Meet data</h3>
+                  <p>For Discovery Calls, our dedicated platform organizer account uses Google Calendar to create and update company-owned calendar events. After a call, we may use Google Meet conference records to derive attendance information. We retain only the conference start and end time, participant count, maximum concurrent participants, qualifying overlap duration, verification result, and resolution source.</p>
+                  <p className="mt-3">We do not retain Google Meet participant names, email addresses, Google user IDs, recordings, transcripts, or raw Meet API responses. Founders and mentors do not connect their personal Google accounts for this feature.</p>
+                </div>
               </div>
             </section>
 
@@ -70,6 +77,7 @@ const PrivacyPolicy = () => {
                   <li>Provide the Startup Development Cycle experience and related tools, including BizMap AI, ICP Builder, Demo Studio, PMF Lab, MVP Builder, Tech Stack, GTM Strategist, Directories, Focus Funnel, Prompt Library, and Insighta features.</li>
                   <li>Save your workspace progress, startup materials, and tool outputs.</li>
                   <li>Enable community participation, direct messaging, mentor outreach, co-founder matching, angel discovery, and booking workflows.</li>
+                  <li>Create and update company-owned Google Calendar events for confirmed Discovery Calls and derive attendance verification from Google Meet timing and participant-count metadata.</li>
                   <li>Process subscriptions, payments, credits, invoices, and refunds.</li>
                   <li>Send service communications such as security alerts, product updates, account notices, booking confirmations, and support replies.</li>
                   <li>Monitor abuse, enforce our Terms of Service, prevent fraud, and protect platform integrity.</li>
@@ -161,7 +169,22 @@ const PrivacyPolicy = () => {
             </section>
 
             <section className="glass-card hover-lift">
-              <h2 className="text-2xl font-semibold gradient-text mb-6">7. Data Security</h2>
+              <h2 className="text-2xl font-semibold gradient-text mb-6">7. Google API Services Data</h2>
+              <div className="space-y-4 text-foreground/90">
+                <p>Our use and transfer of information received from Google APIs complies with the <a className="text-primary underline underline-offset-4" href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noreferrer">Google API Services User Data Policy</a>, including its Limited Use requirements.</p>
+                <ul className="list-disc list-inside space-y-2 pl-4">
+                  <li>We use Google Calendar data only to create, update, and manage the company-owned calendar events required for Discovery Calls.</li>
+                  <li>We use Google Meet data only to derive Discovery Call attendance verification and to resolve attendance-related support or disputes.</li>
+                  <li>We do not use Google API data for advertising, sell it, or allow it to be used for advertising purposes.</li>
+                  <li>We do not transfer Google API data to third parties except where necessary to operate the service, comply with law, or protect against security incidents, and then only under appropriate safeguards.</li>
+                  <li>Access to Google API data is limited to authorized systems and personnel with a need to operate, secure, or support the Discovery Call workflow.</li>
+                </ul>
+                <p>The organizer may revoke Creatives Takeover&apos;s Google access through the Google Account security settings. Users may contact <strong className="text-primary">admin@creatives-takeover.com</strong> with questions about this processing.</p>
+              </div>
+            </section>
+
+            <section className="glass-card hover-lift">
+              <h2 className="text-2xl font-semibold gradient-text mb-6">8. Data Security</h2>
               <div className="space-y-4 text-foreground/90">
                 <p>We use reasonable technical and organizational safeguards designed to protect personal information, including:</p>
                 <ul className="list-disc list-inside space-y-2 pl-4">
@@ -176,20 +199,21 @@ const PrivacyPolicy = () => {
             </section>
 
             <section className="glass-card hover-lift">
-              <h2 className="text-2xl font-semibold gradient-text mb-6">8. Data Retention</h2>
+              <h2 className="text-2xl font-semibold gradient-text mb-6">9. Data Retention</h2>
               <div className="space-y-4 text-foreground/90">
                 <p>We retain information for as long as reasonably necessary to operate the service, comply with law, resolve disputes, and enforce our agreements.</p>
                 <ul className="list-disc list-inside space-y-2 pl-4">
                   <li><strong>Account and workspace data:</strong> generally retained while your account is active and for a reasonable period afterward unless deletion is required sooner by law.</li>
                   <li><strong>Billing and tax records:</strong> retained for the period required by applicable accounting and tax rules.</li>
                   <li><strong>Security and diagnostic logs:</strong> retained as needed for platform reliability, abuse prevention, and investigations.</li>
+                  <li><strong>Discovery Call attendance evidence:</strong> derived timing and count metadata is retained with the booking record only as long as reasonably necessary for support, disputes, financial administration, and legal obligations.</li>
                   <li><strong>Public content:</strong> may remain visible until removed by you, by us, or as part of ordinary platform moderation.</li>
                 </ul>
               </div>
             </section>
 
             <section className="glass-card hover-lift">
-              <h2 className="text-2xl font-semibold gradient-text mb-6">9. International Transfers</h2>
+              <h2 className="text-2xl font-semibold gradient-text mb-6">10. International Transfers</h2>
               <div className="space-y-4 text-foreground/90">
                 <p>We are based in the United Kingdom and may use service providers in other countries, including the United States and the European Economic Area.</p>
                 <p>Where required, we rely on appropriate safeguards for international transfers, such as contractual protections and vendor commitments designed to meet applicable data protection standards.</p>
@@ -197,7 +221,7 @@ const PrivacyPolicy = () => {
             </section>
 
             <section className="glass-card hover-lift">
-              <h2 className="text-2xl font-semibold gradient-text mb-6">10. Your Rights</h2>
+              <h2 className="text-2xl font-semibold gradient-text mb-6">11. Your Rights</h2>
               <div className="space-y-4 text-foreground/90">
                 <p>Depending on where you live, you may have rights such as the right to access, correct, delete, restrict, object to, or export certain personal information.</p>
                 <p>You may also withdraw consent where processing depends on consent. Some rights are subject to legal exceptions.</p>
@@ -206,7 +230,7 @@ const PrivacyPolicy = () => {
             </section>
 
             <section className="glass-card hover-lift">
-              <h2 className="text-2xl font-semibold gradient-text mb-6">11. Children&apos;s Privacy</h2>
+              <h2 className="text-2xl font-semibold gradient-text mb-6">12. Children&apos;s Privacy</h2>
               <div className="space-y-4 text-foreground/90">
                 <p>The platform is intended for adults and is not directed to children under 18.</p>
                 <p>If you believe a child has provided personal information to us, contact us and we will review the matter and take appropriate action.</p>
@@ -214,7 +238,7 @@ const PrivacyPolicy = () => {
             </section>
 
             <section className="glass-card hover-lift">
-              <h2 className="text-2xl font-semibold gradient-text mb-6">12. Third-Party Services</h2>
+              <h2 className="text-2xl font-semibold gradient-text mb-6">13. Third-Party Services</h2>
               <div className="space-y-4 text-foreground/90">
                 <p>Our services may integrate with or link to third-party tools and websites, including payment processors, scheduling tools, authentication providers, and external resources.</p>
                 <p>Those third parties operate under their own terms and privacy notices. We are not responsible for their independent practices.</p>
@@ -222,7 +246,7 @@ const PrivacyPolicy = () => {
             </section>
 
             <section className="glass-card hover-lift">
-              <h2 className="text-2xl font-semibold gradient-text mb-6">13. Changes to This Privacy Policy</h2>
+              <h2 className="text-2xl font-semibold gradient-text mb-6">14. Changes to This Privacy Policy</h2>
               <div className="space-y-4 text-foreground/90">
                 <p>We may update this Privacy Policy from time to time to reflect changes to the platform, law, or our practices.</p>
                 <p>When changes are material, we may notify you by email, in-product notice, or by updating the effective date above.</p>
@@ -230,7 +254,7 @@ const PrivacyPolicy = () => {
             </section>
 
             <section className="glass-card hover-lift">
-              <h2 className="text-2xl font-semibold gradient-text mb-6">14. Contact Information</h2>
+              <h2 className="text-2xl font-semibold gradient-text mb-6">15. Contact Information</h2>
               <div className="space-y-4 text-foreground/90">
                 <p>If you have questions about this Privacy Policy or would like to exercise your privacy rights, contact us:</p>
                 <div className="grid md:grid-cols-2 gap-6 mt-4">
