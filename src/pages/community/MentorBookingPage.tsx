@@ -113,12 +113,16 @@ function isValidTimezone(timezone: string) {
 }
 
 function dayKey(value: string, timezone: string) {
-  return new Intl.DateTimeFormat('en-CA', {
+  const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: timezone,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
-  }).format(new Date(value));
+  }).formatToParts(new Date(value));
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((entry) => entry.type === type)?.value ?? '';
+  // Date inputs require an ISO date. Locale formatting can otherwise produce
+  // values such as 09/04/2026, which browsers ignore for min and max.
+  return `${part('year')}-${part('month')}-${part('day')}`;
 }
 
 function formatProposedSlot(slot: ProposedSlot, sourceTimezone: string, targetTimezone: string) {
@@ -137,6 +141,7 @@ export default function MentorBookingPage() {
   const { user, loading: authLoading } = useAuth();
   const { fetchMentorById } = useMentors();
   const idempotencyKey = useRef(crypto.randomUUID());
+  const dateInputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const [mentor, setMentor] = useState<Mentor | null>(null);
   const [availability, setAvailability] = useState<DiscoveryCallAvailability | null>(null);
   const [loading, setLoading] = useState(true);
@@ -246,6 +251,26 @@ export default function MentorBookingPage() {
     return '';
   }, [slots, timezone, timezoneIsValid]);
 
+  const slotScheduleErrors = useMemo(() => {
+    if (!timezoneIsValid) return slots.map(() => 'Choose a valid timezone first.');
+    const minimum = Date.now() + 72 * 60 * 60 * 1000;
+    const maximum = Date.now() + 60 * 24 * 60 * 60 * 1000;
+    const earliest = new Intl.DateTimeFormat(undefined, {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+      timeZone: displayTimezone,
+    }).format(new Date(minimum));
+
+    return slots.map((slot) => {
+      const normalized = wallTimeToUtc(proposedWallTime(slot), timezone);
+      if (!normalized) return '';
+      const timestamp = Date.parse(normalized);
+      if (timestamp < minimum) return `This time is too soon. Choose ${earliest} or later.`;
+      if (timestamp > maximum) return 'This time is more than 60 days away.';
+      return '';
+    });
+  }, [displayTimezone, slots, timezone, timezoneIsValid]);
+
   const detailsValidationError = useMemo(() => {
     if (topic.trim().length < 3 || topic.trim().length > 120) return 'Topic must be between 3 and 120 characters.';
     if (!coachingFormat) return 'Choose the coaching format you are interested in.';
@@ -282,6 +307,17 @@ export default function MentorBookingPage() {
     }
     setError('');
     setStep('details');
+  };
+
+  const openDatePicker = (index: number) => {
+    const input = dateInputRefs.current[index];
+    if (!input) return;
+    try {
+      (input as HTMLInputElement & { showPicker?: () => void }).showPicker?.();
+    } catch {
+      // Some browsers only permit the native picker from a direct input click.
+    }
+    input.focus();
   };
 
   const submit = async (event: React.FormEvent) => {
@@ -435,16 +471,31 @@ export default function MentorBookingPage() {
                         </div>
                         <div className="space-y-3">
                           <div>
-                            <Label htmlFor={`slot-date-${index}`} className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"><CalendarDays className="h-4 w-4 text-primary" />Date</Label>
-                            <Input
-                              id={`slot-date-${index}`}
-                              className="mt-1.5 h-11 rounded-xl border-border/70"
-                              type="date"
-                              value={slot.date}
-                              min={dayKey(new Date(Date.now() + 72 * 60 * 60_000).toISOString(), displayTimezone)}
-                              max={dayKey(new Date(Date.now() + 60 * 24 * 60 * 60_000).toISOString(), displayTimezone)}
-                              onChange={(event) => setSlots((current) => current.map((value, slotIndex) => slotIndex === index ? { ...value, date: event.target.value } : value))}
-                            />
+                            <Label htmlFor={`slot-date-${index}`} className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Date</Label>
+                            <div className="relative mt-1.5">
+                              <Input
+                                id={`slot-date-${index}`}
+                                ref={(element) => { dateInputRefs.current[index] = element; }}
+                                className="h-11 rounded-xl border-border/70 pr-12"
+                                type="date"
+                                value={slot.date}
+                                min={dayKey(new Date(Date.now() + 72 * 60 * 60_000).toISOString(), displayTimezone)}
+                                max={dayKey(new Date(Date.now() + 60 * 24 * 60 * 60_000).toISOString(), displayTimezone)}
+                                aria-invalid={Boolean(slotScheduleErrors[index])}
+                                onChange={(event) => setSlots((current) => current.map((value, slotIndex) => slotIndex === index ? { ...value, date: event.target.value } : value))}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-1 top-1/2 h-9 w-9 -translate-y-1/2 text-primary hover:text-primary"
+                                aria-label={`Choose date for option ${index + 1}`}
+                                onClick={() => openDatePicker(index)}
+                              >
+                                <CalendarDays className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            {slotScheduleErrors[index] && <p className="mt-1.5 text-xs font-medium text-destructive" role="alert">{slotScheduleErrors[index]}</p>}
                           </div>
                           <div>
                             <Label htmlFor={`slot-time-${index}`} className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"><Clock3 className="h-4 w-4 text-primary" />Time</Label>

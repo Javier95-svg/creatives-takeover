@@ -128,6 +128,9 @@ test('booking proposals use the shared timezone catalog and explicit date and ti
   assert.match(booking, /SelectContent position="item-aligned" className="max-h-80"/);
   assert.match(booking, /type="date"/);
   assert.match(booking, /type="time"/);
+  assert.match(booking, /showPicker/);
+  assert.match(booking, /formatToParts\(new Date\(value\)\)/);
+  assert.match(booking, /This time is too soon/);
   assert.match(booking, /Mentor time:/);
   assert.match(booking, /mentorDisplayTimezone/);
   assert.match(timezones, /same country[\s\S]*catalog that powers TIMEZONE_OPTIONS/);
