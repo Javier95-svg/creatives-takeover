@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, LayoutDashboard } from 'lucide-react';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { DashboardNavigationProvider } from '@/contexts/DashboardNavigationContext';
+import { DashboardDataProvider } from '@/contexts/DashboardDataContext';
 import { DashboardSidebar } from './DashboardSidebar';
 import { DashboardStreakChip } from './DashboardStreakChip';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -18,10 +19,11 @@ export const DashboardLayout = ({ children, title, subtitle }: DashboardLayoutPr
 
   return (
     <ErrorBoundary>
-      <SidebarProvider>
-        <DashboardNavigationProvider>
-          <DashboardSidebar />
-          <SidebarInset>
+      <DashboardDataProvider>
+        <SidebarProvider>
+          <DashboardNavigationProvider>
+            <DashboardSidebar />
+            <SidebarInset>
             <div className="relative min-h-screen overflow-hidden bg-background">
               <div className="pointer-events-none absolute inset-x-0 top-0 z-50">
                 <div className="container mx-auto grid max-w-7xl grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-4 px-6 pt-4">
@@ -83,9 +85,10 @@ export const DashboardLayout = ({ children, title, subtitle }: DashboardLayoutPr
                 {children}
               </div>
             </div>
-          </SidebarInset>
-        </DashboardNavigationProvider>
-      </SidebarProvider>
+            </SidebarInset>
+          </DashboardNavigationProvider>
+        </SidebarProvider>
+      </DashboardDataProvider>
     </ErrorBoundary>
   );
 };
