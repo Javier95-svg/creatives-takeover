@@ -52,14 +52,19 @@ export default function SubscriptionSuccess() {
 
         for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
           try {
-            const { data: purchase, error } = await supabase
-              .from("credit_transactions")
-              .select("id")
-              .eq("tx_type", "purchase")
-              .eq("metadata->>stripeSessionId", checkoutSessionId)
-              .maybeSingle();
+            const { data, error } = await supabase.functions.invoke("credit-service", {
+              body: { action: "getHistory", limit: 50 },
+            });
 
             if (error) throw error;
+            const purchase = (data?.history ?? []).find((transaction: {
+              tx_type?: string;
+              metadata?: Record<string, unknown>;
+            }) =>
+              transaction.tx_type === "purchase" &&
+              transaction.metadata?.stripeSessionId === checkoutSessionId,
+            );
+
             if (purchase) {
               await refreshBalance();
               setVerified(true);

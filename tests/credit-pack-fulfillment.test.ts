@@ -21,9 +21,18 @@ test('credit-pack webhook reads the RPC idempotency status from the response dat
 test('credit-pack success screen waits for the matching fulfillment transaction and shows the wallet total', () => {
   const page = read('../src/pages/SubscriptionSuccess.tsx');
 
-  assert.match(page, /eq\("metadata->>stripeSessionId", checkoutSessionId\)/);
+  assert.match(page, /functions\.invoke\("credit-service"/);
+  assert.match(page, /transaction\.metadata\?\.stripeSessionId === checkoutSessionId/);
   assert.match(page, /const \{ refreshBalance, balance, totalAvailable \} = useCredits\(\);/);
   assert.match(page, /\{totalAvailable\}<\/p><p className="text-sm text-muted-foreground">Current available credits/);
+});
+
+test('settings credit activity includes a dated purchase history and lifetime purchase total', () => {
+  const card = read('../src/components/CreditActivityCard.tsx');
+
+  assert.match(card, /Purchase History/);
+  assert.match(card, /credits purchased/);
+  assert.match(card, /Purchased \{formatDate\(purchase\.created_at\)\}/);
 });
 
 test('completed but unfulfilled credit packs are repaired once with an auditable purchase record', () => {
