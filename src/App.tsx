@@ -51,6 +51,7 @@ const Index = lazy(() => import("./pages/Index"));
 const About = lazy(() => import("./pages/About"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
 const SubscriptionSuccess = lazy(() => import("./pages/SubscriptionSuccess"));
+const PurchaseHistory = lazy(() => import("./pages/PurchaseHistory"));
 const Contact = lazy(() => import("./pages/Contact"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
 const Resources = lazy(() => import("./pages/Resources"));
@@ -284,6 +285,7 @@ function App() {
                         <Route path="/about" element={<About />} />
                         <Route path="/pricing" element={<PricingPage />} />
                         <Route path="/subscription-success" element={<SubscriptionSuccess />} />
+                        <Route path="/purchase-history" element={<PurchaseHistory />} />
                         <Route path="/build" element={<BuildPage />} />
                         <Route path="/contact" element={<Contact />} />
                         <Route path="/faq" element={<FAQPage />} />

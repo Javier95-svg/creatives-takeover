@@ -185,7 +185,7 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
 
             <DropdownMenuItem
               className="flex items-center gap-2 text-sm cursor-pointer"
-              onSelect={() => navigate('/account#purchase-history')}
+              onSelect={() => navigate('/purchase-history')}
             >
               <Coins className="h-4 w-4" />
               Purchase history

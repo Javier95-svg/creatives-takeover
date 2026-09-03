@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { attributeContextualConversion } from "@/lib/contextualUpgrade";
 
 export default function SubscriptionSuccess() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const tier = searchParams.get("tier") || "starter";
   const isCreditPack = searchParams.get("purchase_type") === "credit_pack";
   const billingCycle = searchParams.get("billing_cycle") === "yearly" ? "yearly" : "monthly";
@@ -43,45 +44,12 @@ export default function SubscriptionSuccess() {
       setVerifyError(false);
 
       if (isCreditPack) {
+        await refreshBalance();
         const checkoutSessionId = searchParams.get("session_id");
-        if (!checkoutSessionId) {
-          setVerifyError(true);
-          setVerifying(false);
-          return;
-        }
-
-        for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-          try {
-            const { data, error } = await supabase.functions.invoke("credit-service", {
-              body: { action: "getHistory", limit: 50 },
-            });
-
-            if (error) throw error;
-            const purchase = (data?.history ?? []).find((transaction: {
-              tx_type?: string;
-              metadata?: Record<string, unknown>;
-            }) =>
-              transaction.tx_type === "purchase" &&
-              transaction.metadata?.stripeSessionId === checkoutSessionId,
-            );
-
-            if (purchase) {
-              await refreshBalance();
-              setVerified(true);
-              setVerifying(false);
-              return;
-            }
-          } catch (error) {
-            console.error(`Credit-pack verification attempt ${attempt} failed:`, error);
-          }
-
-          if (attempt < MAX_RETRIES) {
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-          }
-        }
-
-        setVerifyError(true);
-        setVerifying(false);
+        navigate(
+          `/purchase-history${checkoutSessionId ? `?session_id=${encodeURIComponent(checkoutSessionId)}` : ""}`,
+          { replace: true },
+        );
         return;
       }
 
@@ -124,7 +92,7 @@ export default function SubscriptionSuccess() {
     const timer = setTimeout(verifySubscription, 2000);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCreditPack, retryCount]);
+  }, [isCreditPack, navigate, retryCount, searchParams]);
 
   const getTierInfo = (tierName: string) => {
     const tiers = {
