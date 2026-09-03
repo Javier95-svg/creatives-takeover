@@ -65,3 +65,14 @@ export function summarizeMeetSessions(
     qualifyingOverlapSeconds,
   };
 }
+
+/**
+ * Builds a paged Google Meet REST URL. Only the conference-record search
+ * carries a filter, so the participant and session paths arrive without a query
+ * string and the separator has to be chosen per request rather than assumed.
+ */
+export function meetListUrl(path: string, pageToken: string): string {
+  const query = new URLSearchParams({ pageSize: "100" });
+  if (pageToken) query.set("pageToken", pageToken);
+  return `https://meet.googleapis.com/v2${path}${path.includes("?") ? "&" : "?"}${query}`;
+}

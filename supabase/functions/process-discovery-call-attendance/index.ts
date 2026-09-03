@@ -4,7 +4,7 @@ import {
   discoveryCallCorsHeaders, encryptDiscoveryCallToken, env, generateDiscoveryCallToken,
   hashDiscoveryCallToken, isAuthorizedWorker, json,
 } from "../_shared/discovery-call-v2.ts";
-import { meetingCodeFromUrl, summarizeMeetSessions, type MeetSession } from "../_shared/google-meet-attendance.ts";
+import { meetingCodeFromUrl, meetListUrl, summarizeMeetSessions, type MeetSession } from "../_shared/google-meet-attendance.ts";
 
 type AttendanceJob = { id: string; discovery_call_id: string; attempt_count: number };
 type ConferenceRecord = { name?: string; startTime?: string; endTime?: string; space?: { meetingCode?: string } };
@@ -23,8 +23,8 @@ async function refreshAccessToken() {
   return body.access_token;
 }
 
-async function meetRequest<T>(path: string, accessToken: string): Promise<T> {
-  const response = await fetch(`https://meet.googleapis.com/v2${path}`, { headers: { Authorization: `Bearer ${accessToken}` } });
+async function meetRequest<T>(url: string, accessToken: string): Promise<T> {
+  const response = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(`Google Meet API HTTP ${response.status}: ${JSON.stringify(body).slice(0, 500)}`);
   return body as T;
@@ -34,8 +34,7 @@ async function listAll<T>(path: string, itemKey: string, accessToken: string): P
   const values: T[] = [];
   let pageToken = "";
   do {
-    const separator = path.includes("?") ? "&" : "?";
-    const page = await meetRequest<Record<string, unknown>>(`${path}${pageToken ? `${separator}pageToken=${encodeURIComponent(pageToken)}` : ""}&pageSize=100`, accessToken);
+    const page = await meetRequest<Record<string, unknown>>(meetListUrl(path, pageToken), accessToken);
     values.push(...(Array.isArray(page[itemKey]) ? page[itemKey] as T[] : []));
     pageToken = typeof page.nextPageToken === "string" ? page.nextPageToken : "";
   } while (pageToken);
@@ -47,7 +46,12 @@ async function observeMeeting(meetingUrl: string, accessToken: string) {
   if (!code) throw new Error("The Discovery Call has no valid Google Meet code");
   const filter = encodeURIComponent(`space.meeting_code = "${code}"`);
   const conferences = await listAll<ConferenceRecord>(`/conferenceRecords?filter=${filter}`, "conferenceRecords", accessToken);
-  const conference = conferences.find((item) => item.endTime) ?? conferences[0] ?? null;
+  // Only an ended conference is conclusive. While a call is still running, or
+  // before Meet finalizes the record, every participant session is open-ended
+  // and would score zero overlap — which would ask both participants to confirm
+  // a call that in fact went fine. Returning null instead leaves the job to the
+  // retry window, and the final attempt still falls through to confirmation.
+  const conference = conferences.find((item) => item.endTime && item.name) ?? null;
   if (!conference?.name) return null;
   const participants = await listAll<Participant>(`/${conference.name}/participants`, "participants", accessToken);
   const sessions: MeetSession[] = [];
@@ -122,7 +126,7 @@ serve(async (req) => {
       if (callError || !call || call.status !== "awaiting_outcome") throw new Error(callError?.message || "Discovery Call is no longer awaiting an outcome");
       const observation = await observeMeeting(String(call.meeting_url ?? ""), accessToken);
       if (!observation && job.attempt_count < 3) {
-        await admin.rpc("fail_discovery_call_attendance_job_v5", { p_job_id: job.id, p_error: "No Google Meet conference record is available yet" });
+        await admin.rpc("fail_discovery_call_attendance_job_v5", { p_job_id: job.id, p_error: "No completed Google Meet conference record is available yet" });
         continue;
       }
       const overlap = observation?.qualifyingOverlapSeconds ?? 0;
