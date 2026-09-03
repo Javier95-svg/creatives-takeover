@@ -128,6 +128,11 @@ export const NotificationBell = () => {
       return;
     }
 
+    if (notification.notification_type === 'subscription_upgrade_completed') {
+      navigateTo(metadataRoute || '/purchase-history');
+      return;
+    }
+
     if (notification.notification_type === 'discovery_call_event') {
       navigateTo(metadataRoute || '/dashboard');
       return;
@@ -245,6 +250,8 @@ export const NotificationBell = () => {
         return metadata?.message || (metadata?.creditsAdded
           ? `${metadata.creditsAdded} credits were added to your balance`
           : 'Your purchased credits were added to your balance');
+      case 'subscription_upgrade_completed':
+        return metadata?.message || 'Your plan has been upgraded successfully.';
       case 'discovery_call_event':
         return metadata?.message || 'There is an update for your discovery call';
       default:

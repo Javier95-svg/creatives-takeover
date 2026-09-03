@@ -503,6 +503,56 @@ const createCreditPurchaseNotification = async (
   }
 };
 
+const createSubscriptionUpgradeNotification = async (
+  supabaseAdmin: any,
+  {
+    userId,
+    tier,
+    stripeEventId,
+  }: {
+    userId: string;
+    tier: string;
+    stripeEventId: string;
+  }
+) => {
+  const normalizedTier = normalizeSubscriptionTier(tier);
+  const planName = normalizedTier === "starter"
+    ? "Starter"
+    : normalizedTier === "rising"
+      ? "Rising"
+      : normalizedTier === "pro"
+        ? "Pro"
+        : null;
+
+  if (!planName) {
+    console.warn("[Checkout] Skipping plan-upgrade notification for unknown tier", {
+      userId,
+      tier,
+      stripeEventId,
+    });
+    return;
+  }
+
+  const { error } = await supabaseAdmin.from("community_notifications").insert({
+    user_id: userId,
+    actor_id: userId,
+    notification_type: "subscription_upgrade_completed",
+    metadata: {
+      tier: normalizedTier,
+      stripe_event_id: stripeEventId,
+      route: "/purchase-history",
+      message: `Your plan has been upgraded to ${planName} successfully.`,
+    },
+  });
+
+  // The partial unique index added with this change makes repeated Stripe
+  // deliveries safe while still allowing a retry to create a notification if a
+  // prior insert failed for a transient reason.
+  if (error && error.code !== "23505") {
+    console.error("[Checkout] Unable to create plan-upgrade notification:", error);
+  }
+};
+
 const resetSubscriptionQuotaForInvoice = async (
   supabaseAdmin: any,
   {
@@ -893,6 +943,12 @@ async function handleCheckoutCompleted(
 
   const syncedTier = normalizeSubscriptionTier(subscriptionResult?.tier);
   const billingCycle = getStripeSubscriptionBillingCycle(subscription);
+
+  await createSubscriptionUpgradeNotification(supabaseAdmin, {
+    userId: resolvedUserId,
+    tier: syncedTier,
+    stripeEventId: eventContext.stripeEventId,
+  });
 
   if (syncedTier === "pro") {
     const { data: profile } = await supabaseAdmin

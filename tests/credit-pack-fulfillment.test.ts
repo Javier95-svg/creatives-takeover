@@ -41,7 +41,8 @@ test('settings credit activity includes a dated purchase history and lifetime pu
 
   assert.match(card, /Purchase History/);
   assert.match(card, /credits purchased/);
-  assert.match(card, /Purchased \{formatDate\(purchase\.created_at\)\}/);
+  assert.match(card, /isSubscriptionPurchase \? "Plan credits applied" : "Purchased"/);
+  assert.match(card, /formatDate\(purchase\.created_at\)/);
 });
 
 test('completed but unfulfilled credit packs are repaired once with an auditable purchase record', () => {
