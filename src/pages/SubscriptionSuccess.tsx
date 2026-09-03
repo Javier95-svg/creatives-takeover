@@ -70,7 +70,7 @@ export default function SubscriptionSuccess() {
             // CTA within the last hour, log the conversion with the original
             // trigger and elapsed time (feeds prompt-to-conversion + time-to-upgrade).
             attributeContextualConversion({ currentPlan: tier });
-            setVerifying(false);
+            navigate(`/purchase-history?purchase_type=subscription&tier=${encodeURIComponent(tier)}`, { replace: true });
             return;
           }
 

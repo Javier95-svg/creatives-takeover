@@ -21,7 +21,11 @@ const formatAmount = (amount: number) => {
 
 export function CreditActivityCard() {
   const { transactions, fetchTransactionHistory } = useCredits();
-  const purchases = transactions.filter((transaction) => transaction.tx_type === "purchase");
+  const purchases = transactions.filter((transaction) =>
+    transaction.tx_type === "purchase" ||
+    ((transaction.tx_type === "grant" || transaction.tx_type === "reset") &&
+      transaction.feature?.startsWith("Subscription - ")),
+  );
   const totalPurchased = purchases.reduce((total, purchase) => total + Math.max(0, purchase.amount), 0);
 
   useEffect(() => {
@@ -60,7 +64,7 @@ export function CreditActivityCard() {
               <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
                 <div>
                   <h3 id="purchase-history-heading" className="font-semibold text-foreground">Purchase History</h3>
-                  <p className="text-sm text-muted-foreground">Every credit pack purchased on this account.</p>
+                  <p className="text-sm text-muted-foreground">Every credit pack and plan-credit allocation on this account.</p>
                 </div>
                 <Badge variant="secondary" className="px-3 py-1 text-sm">
                   {totalPurchased} credits purchased
@@ -69,19 +73,22 @@ export function CreditActivityCard() {
 
               {purchases.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-border/70 p-4 text-sm text-muted-foreground">
-                  No credit packs purchased yet.
+                  No purchases yet.
                 </div>
               ) : (
                 <div className="space-y-3">
                   {purchases.map((purchase) => {
                     const metadata = purchase.metadata ?? {};
-                    const packName = metadata.packLabel ?? metadata.packId ?? purchase.reason ?? "Credit pack";
+                    const packName = metadata.packLabel ?? metadata.packId ?? purchase.feature ?? purchase.reason ?? "Credit purchase";
+                    const isSubscriptionPurchase = purchase.feature?.startsWith("Subscription - ");
 
                     return (
                       <div key={purchase.id} className="flex flex-col gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="min-w-0">
                           <p className="font-medium text-sm text-foreground">{String(packName)}</p>
-                          <p className="mt-1 text-xs text-muted-foreground">Purchased {formatDate(purchase.created_at)}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {isSubscriptionPurchase ? "Plan credits applied" : "Purchased"} {formatDate(purchase.created_at)}
+                          </p>
                         </div>
                         <p className="font-semibold text-success">+{purchase.amount} credits</p>
                       </div>

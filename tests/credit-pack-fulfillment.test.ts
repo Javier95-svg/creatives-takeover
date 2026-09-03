@@ -27,6 +27,15 @@ test('credit-pack checkout returns customers to dedicated purchase history after
   assert.match(app, /Route path="\/purchase-history" element=\{<PurchaseHistory \/>\}/);
 });
 
+test('successful plan purchases also redirect to Purchase History and appear in its ledger', () => {
+  const page = read('../src/pages/SubscriptionSuccess.tsx');
+  const card = read('../src/components/CreditActivityCard.tsx');
+
+  assert.match(page, /navigate\(`\/purchase-history\?purchase_type=subscription&tier=\$\{encodeURIComponent\(tier\)\}`/);
+  assert.match(card, /transaction\.feature\?\.startsWith\("Subscription - "\)/);
+  assert.match(card, /Plan credits applied/);
+});
+
 test('settings credit activity includes a dated purchase history and lifetime purchase total', () => {
   const card = read('../src/components/CreditActivityCard.tsx');
 
