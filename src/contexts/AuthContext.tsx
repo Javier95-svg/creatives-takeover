@@ -62,6 +62,11 @@ const getDaysSinceSignup = (createdAt?: string | null): number => {
 // the identify() block that the PII test scans.
 const DEFAULT_SIGNUP_METHOD: SignupMethod = 'email';
 const SIGNUP_ATTRIBUTION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+// Navigation must never stay in its loading skeleton indefinitely when a
+// session refresh is delayed by a captive network, an extension, or a stalled
+// auth request. A late session response is still accepted and hydrates the
+// signed-in UI normally.
+const AUTH_BOOTSTRAP_TIMEOUT_MS = 5_000;
 
 const isRecentSignup = (createdAt?: string | null): boolean => {
   if (!createdAt) return false;
@@ -378,6 +383,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     isMountedRef.current = true;
+    let sessionBootstrapTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const resolveInitialLoading = () => {
+      if (sessionBootstrapTimer) {
+        clearTimeout(sessionBootstrapTimer);
+        sessionBootstrapTimer = null;
+      }
+      setLoading(false);
+    };
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -386,7 +400,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Supabase already verified the session before firing this callback.
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
-        setLoading(false);
+        resolveInitialLoading();
 
         // Data isolation: if the active account changed (A→B, or A→signed-out),
         // purge the previous account's client-side caches before the new account
@@ -419,6 +433,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     );
 
+    sessionBootstrapTimer = setTimeout(() => {
+      if (!isMountedRef.current) return;
+      logWarn('Auth session restore exceeded bootstrap timeout; continuing without blocking navigation', {
+        timeoutMs: AUTH_BOOTSTRAP_TIMEOUT_MS,
+      });
+      setLoading(false);
+    }, AUTH_BOOTSTRAP_TIMEOUT_MS);
+
     // Check for existing session on mount
     getSessionSafely()
       .then((existingSession) => {
@@ -426,7 +448,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         setSession(existingSession);
         setUser(existingSession?.user ?? null);
-        setLoading(false);
+        resolveInitialLoading();
 
         // If there's already a session, run sign-in logic
         // (signInProcessedRef prevents double-execution with onAuthStateChange)
@@ -441,11 +463,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         logError('Failed to restore Supabase session on mount', error);
         setSession(null);
         setUser(null);
-        setLoading(false);
+        resolveInitialLoading();
       });
 
     return () => {
       isMountedRef.current = false;
+      if (sessionBootstrapTimer) clearTimeout(sessionBootstrapTimer);
       subscription.unsubscribe();
     };
   }, [handleSignIn]);
