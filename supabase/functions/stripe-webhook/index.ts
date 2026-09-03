@@ -531,9 +531,11 @@ const resetSubscriptionQuotaForInvoice = async (
 
   const tierCredits = await getTierCredits(supabaseAdmin, normalizedTier);
   const idempotencyKey = `stripe:subscription_quota:${invoiceId}`;
-  const idempotencyStatus = await supabaseAdmin.rpc("idempotency_try_begin", {
+  const { data: idempotencyStatus, error: idempotencyError } = await supabaseAdmin.rpc("idempotency_try_begin", {
     p_id: idempotencyKey,
   });
+
+  if (idempotencyError) throw idempotencyError;
 
   if (idempotencyStatus !== "started") {
     console.log(`[Invoice] Skipping duplicate subscription credit reset (${idempotencyStatus})`, {
@@ -1000,9 +1002,11 @@ async function handleCreditPackPurchase({
 
   const purchaseReference = paymentIntentId ?? checkoutSessionId ?? `${purchase.id}:${resolvedUserId}`;
   const idempotencyKey = `stripe:platform:credit_purchase:${purchaseReference}`;
-  const idempotencyStatus = await supabaseAdmin.rpc("idempotency_try_begin", {
+  const { data: idempotencyStatus, error: idempotencyError } = await supabaseAdmin.rpc("idempotency_try_begin", {
     p_id: idempotencyKey,
   });
+
+  if (idempotencyError) throw idempotencyError;
 
   if (idempotencyStatus !== "started") {
     const existingPurchase = await getExistingCreditPurchase(supabaseAdmin, resolvedUserId, idempotencyKey);
@@ -1178,6 +1182,9 @@ async function handlePaymentIntentSucceeded(paymentIntent: any, supabaseAdmin: a
     customerMetadataUserId: customerContext.metadataUserId,
   });
 
+  const paymentIntentId = typeof paymentIntent.id === "string" ? paymentIntent.id : null;
+  const checkoutSessionId = await findCheckoutSessionId({ paymentIntentId });
+
   await handleCreditPackPurchase({
     supabaseAdmin,
     resolvedUserId,
@@ -1185,8 +1192,8 @@ async function handlePaymentIntentSucceeded(paymentIntent: any, supabaseAdmin: a
     customerId,
     metadata,
     amountCents: Number(paymentIntent.amount_received ?? paymentIntent.amount ?? 0) || null,
-    checkoutSessionId: null,
-    paymentIntentId: typeof paymentIntent.id === "string" ? paymentIntent.id : null,
+    checkoutSessionId,
+    paymentIntentId,
     paymentLinkId: null,
     sourceEventType: "payment_intent.succeeded",
   });

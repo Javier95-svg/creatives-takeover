@@ -25,7 +25,7 @@ export default function SubscriptionSuccess() {
   const MAX_RETRIES = 3;
 
   const { refreshSubscription } = useSubscription();
-  const { refreshBalance, balance } = useCredits();
+  const { refreshBalance, balance, totalAvailable } = useCredits();
 
   // Credit-pack purchases complete at Stripe (no subscription state to verify),
   // so attribute their conversion once on arrival. Subscription upgrades are
@@ -43,8 +43,39 @@ export default function SubscriptionSuccess() {
       setVerifyError(false);
 
       if (isCreditPack) {
-        await refreshBalance();
-        setVerified(true);
+        const checkoutSessionId = searchParams.get("session_id");
+        if (!checkoutSessionId) {
+          setVerifyError(true);
+          setVerifying(false);
+          return;
+        }
+
+        for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+          try {
+            const { data: purchase, error } = await supabase
+              .from("credit_transactions")
+              .select("id")
+              .eq("tx_type", "purchase")
+              .eq("metadata->>stripeSessionId", checkoutSessionId)
+              .maybeSingle();
+
+            if (error) throw error;
+            if (purchase) {
+              await refreshBalance();
+              setVerified(true);
+              setVerifying(false);
+              return;
+            }
+          } catch (error) {
+            console.error(`Credit-pack verification attempt ${attempt} failed:`, error);
+          }
+
+          if (attempt < MAX_RETRIES) {
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+          }
+        }
+
+        setVerifyError(true);
         setVerifying(false);
         return;
       }
@@ -124,9 +155,9 @@ export default function SubscriptionSuccess() {
                 <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto">
                   <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 </div>
-                <h1 className="text-3xl font-bold">Activating your plan...</h1>
+                <h1 className="text-3xl font-bold">{isCreditPack ? "Adding your credits..." : "Activating your plan..."}</h1>
                 <p className="text-muted-foreground text-lg">
-                  Please wait while we confirm your subscription with Stripe.
+                  Please wait while we confirm {isCreditPack ? "your credit purchase" : "your subscription"} with Stripe.
                 </p>
               </div>
             )}
@@ -137,11 +168,10 @@ export default function SubscriptionSuccess() {
                   <div className="w-16 h-16 bg-warning-subtle rounded-full flex items-center justify-center mx-auto">
                     <AlertCircle className="w-8 h-8 text-warning" />
                   </div>
-                  <h1 className="text-3xl font-bold">Confirming your subscription</h1>
+                  <h1 className="text-3xl font-bold">Confirming your {isCreditPack ? "credit purchase" : "subscription"}</h1>
                   <p className="text-muted-foreground text-lg">
-                    We couldn't confirm your subscription automatically. This sometimes happens when
-                    Stripe takes a moment to process. If you were charged, your plan will be active
-                    within a few minutes.
+                    We couldn't confirm this automatically. This sometimes happens when Stripe takes
+                    a moment to process. If you were charged, please check again in a moment.
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -166,9 +196,9 @@ export default function SubscriptionSuccess() {
                     <CheckCircle className="w-8 h-8 text-success" />
                   </div>
                   <h1 className="text-3xl font-bold">Credits added successfully</h1>
-                  <p className="text-muted-foreground text-lg">Your purchase is complete. Stripe confirmation may take a moment to appear in the sprint.</p>
+                  <p className="text-muted-foreground text-lg">Your purchase is complete and the credits are now available in your wallet.</p>
                 </div>
-                <Card><CardContent className="space-y-4 pt-6"><p className="text-3xl font-bold text-primary">{balance}</p><p className="text-sm text-muted-foreground">Current available credits</p><Button asChild><Link to={returnTo}>{returnTo === '/first-customer-sprint' ? 'Return to the sprint' : 'Return to dashboard'}<ArrowRight className="ml-2 h-4 w-4" /></Link></Button></CardContent></Card>
+                <Card><CardContent className="space-y-4 pt-6"><p className="text-3xl font-bold text-primary">{totalAvailable}</p><p className="text-sm text-muted-foreground">Current available credits</p><Button asChild><Link to={returnTo}>{returnTo === '/first-customer-sprint' ? 'Return to the sprint' : 'Return to dashboard'}<ArrowRight className="ml-2 h-4 w-4" /></Link></Button></CardContent></Card>
               </>
             )}
 
