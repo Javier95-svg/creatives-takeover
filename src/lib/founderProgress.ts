@@ -1,4 +1,4 @@
-import { BIZMAP_STAGE_ORDER, type BizMapStage } from './bizmapStages.ts';
+import { BIZMAP_STAGE_ORDER, type BizMapStage } from './bizmapStageOrder.ts';
 
 export const OPERATING_STAGE_ORDER = BIZMAP_STAGE_ORDER.filter(
   (stage) => stage !== 'FUNDRAISING',

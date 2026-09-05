@@ -1,4 +1,5 @@
 import type * as AmplitudeBrowser from '@amplitude/analytics-browser';
+import { recordRoadmapAnalyticsEvent } from '@/lib/roadmapRetentionTracking';
 import { getSafeSessionStorage, getSafeLocalStorage } from '@/lib/safeStorage';
 import { logWarn } from '@/lib/logger';
 import { captureFirstTouch } from '@/lib/attribution';
@@ -564,6 +565,7 @@ export const resetAnalyticsIdentity = () => {
 };
 
 export const captureEvent = (eventName: string, properties?: AnalyticsProperties) => {
+  recordRoadmapAnalyticsEvent(eventName, properties);
   // Drop all events from internal/admin accounts so they never pollute metrics.
   if (internalUser) {
     return;

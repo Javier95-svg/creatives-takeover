@@ -2,17 +2,8 @@ import { Bot, Compass, FlaskConical, Globe, Layers, Rocket, Target } from 'lucid
 import type { LucideIcon } from 'lucide-react';
 import { getCoreFounderToolsForStage, getFounderToolsForStage } from '../config/founderToolCatalog.ts';
 
-export const BIZMAP_STAGE_ORDER = [
-  'IDENTITY',
-  'PROTOTYPE',
-  'VALIDATING',
-  'BUILDING',
-  'LAUNCH',
-  'TRACTION',
-  'FUNDRAISING',
-] as const;
-
-export type BizMapStage = (typeof BIZMAP_STAGE_ORDER)[number];
+import { BIZMAP_STAGE_ORDER, type BizMapStage } from './bizmapStageOrder.ts';
+export { BIZMAP_STAGE_ORDER, type BizMapStage } from './bizmapStageOrder.ts';
 
 export interface BizMapToolDefinition {
   id: string;

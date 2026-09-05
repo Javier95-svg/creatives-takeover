@@ -3,13 +3,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
 import {
   buildAuthenticatedReturnUrl,
-  buildInactiveEmail,
   INACTIVE_CAMPAIGN_KEY,
   isInactiveSequence,
-  selectReturnAnchor,
-  type InactiveTouchIndex,
-  type InactiveUserContext,
 } from "../_shared/inactive-retention-email.ts";
+import { assignVariants, buildRoadmapEmail, CONTEXT_VERSION, resolveRetention } from "../_shared/roadmap-retention.ts";
+import { loadRoadmapContext } from "../_shared/roadmap-retention-context.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -107,88 +105,6 @@ function daysSince(value: string | null | undefined) {
   const timestamp = Date.parse(value);
   if (Number.isNaN(timestamp)) return null;
   return Math.max(0, Math.floor((Date.now() - timestamp) / 86_400_000));
-}
-
-async function loadInactiveUserContext(
-  supabase: ServiceClient,
-  userId: string,
-  sequence: string,
-  request: RetentionEmailRequest,
-): Promise<{ context: InactiveUserContext; profileName: string | null }> {
-  const [profileResult, routineResult, mentorSaveResult, discoveryResult] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("full_name, user_preferences, routine_primary_goal")
-      .eq("id", userId)
-      .maybeSingle(),
-    supabase
-      .from("routine_task_completions")
-      .select("completed_at, created_at")
-      .eq("user_id", userId)
-      .eq("period_type", "daily")
-      .eq("status", "completed")
-      .order("period_date", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from("mentor_saves")
-      .select("mentor:mentors(name)")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from("user_activity_log")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("activity_type", "discovery_call_booked")
-      .limit(1)
-      .maybeSingle(),
-  ]);
-
-  const profile = asRecord(profileResult.data);
-  const preferences = asRecord(profile.user_preferences);
-  const mentorRow = asRecord(mentorSaveResult.data);
-  const mentorRelation = Array.isArray(mentorRow.mentor)
-    ? asRecord(mentorRow.mentor[0])
-    : asRecord(mentorRow.mentor);
-
-  const conversationsResult = await supabase
-    .from("conversations")
-    .select("id")
-    .contains("participants", [userId]);
-  const conversationIds = (conversationsResult.data ?? [])
-    .map((row: { id?: string }) => row.id)
-    .filter((id: string | undefined): id is string => Boolean(id));
-
-  let unreadMessageCount = Math.max(0, request.unreadMessageCount ?? 0);
-  if (conversationIds.length > 0) {
-    const unreadResult = await supabase
-      .from("messages")
-      .select("id", { count: "exact", head: true })
-      .in("conversation_id", conversationIds)
-      .neq("sender_id", userId)
-      .eq("is_read", false);
-    if (!unreadResult.error) unreadMessageCount = unreadResult.count ?? unreadMessageCount;
-  }
-
-  const routineRow = asRecord(routineResult.data);
-  const lastRoutineCheckin = stringValue(routineRow.completed_at) || stringValue(routineRow.created_at);
-
-  return {
-    context: {
-      sequence,
-      routineGoal: stringValue(profile.routine_primary_goal),
-      routineDaysSinceCheckin: daysSince(lastRoutineCheckin),
-      unreadMessageCount,
-      artifactLabel: stringValue(preferences.firstArtifactLabel),
-      artifactPath: stringValue(preferences.firstArtifactResumeUrl),
-      savedMentorName: request.mentorName || stringValue(mentorRelation.name),
-      hasDiscoveryCall: Boolean(discoveryResult.data),
-      activationIntent: request.activationIntent || stringValue(preferences.activationIntent),
-    },
-    profileName: stringValue(profile.full_name),
-  };
 }
 
 function truncateText(value: string, maxLength: number) {
@@ -704,6 +620,14 @@ serve(async (req: Request): Promise<Response> => {
         });
       }
 
+      const { data: settings, error: settingsError } = await supabase.from("retention_roadmap_settings")
+        .select("*").eq("singleton", true).single();
+      if (settingsError || !settings?.enabled) {
+        return new Response(JSON.stringify({ ok: true, skipped: true, reason: "campaign_disabled" }), {
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+
       const { data: claimData, error: claimError } = await supabase.rpc("claim_inactive_retention_email", {
         p_user_id: userId,
         p_email: canonicalEmail,
@@ -728,35 +652,39 @@ serve(async (req: Request): Promise<Response> => {
       let providerAccepted = false;
 
       try {
-        const { context, profileName } = await loadInactiveUserContext(supabase, userId, sequence, body);
-        const anchor = selectReturnAnchor(context);
+        // Fresh database context after the claim overrides all request personalization.
+        const context = await loadRoadmapContext(supabase, userId, authResult.data.user?.last_sign_in_at ?? null, settings);
+        const decision = resolveRetention(context);
+        if (!decision) {
+          const { error } = await supabase.rpc("fail_inactive_retention_email", { p_log_id: logId, p_error: "no_eligible_context" });
+          if (error) throw error;
+          return new Response(JSON.stringify({ ok: true, skipped: true, reason: "no_eligible_context" }), {
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          });
+        }
+        const { data: experiment, error: experimentError } = await supabase.from("retention_roadmap_experiments")
+          .select("*").eq("segment", decision.segment).single();
+        if (experimentError) throw experimentError;
+        const variants = assignVariants(userId, decision.segment, {
+          phase: experiment.phase, selectedSubject: experiment.selected_subject, version: experiment.version,
+        });
         const token = await signUnsubscribeToken(userId, supabaseServiceKey);
         const unsubscribeUrl = `${appUrl}/unsubscribe?user_id=${encodeURIComponent(userId)}&token=${encodeURIComponent(token)}`;
         const oneClickUnsubscribeUrl = `${supabaseUrl}/functions/v1/email-sequences?unsubscribe=1&user_id=${encodeURIComponent(userId)}&token=${encodeURIComponent(token)}`;
         const preferencesUrl = buildPreferencesUrl(appUrl);
-        const inactiveName = firstName(profileName || fullName, canonicalEmail);
-        const preview = buildInactiveEmail({
-          firstName: inactiveName,
-          touchIndex: claim.claimed_touch_index as InactiveTouchIndex,
-          anchor,
-          ctaUrl: appUrl,
-          preferencesUrl,
-          unsubscribeUrl,
-        });
+        const preview = buildRoadmapEmail(decision, variants, { ctaUrl: appUrl, preferencesUrl, unsubscribeUrl });
         const authenticatedCtaUrl = buildAuthenticatedReturnUrl({
           appUrl,
-          targetPath: anchor.path,
+          targetPath: decision.path,
           logId,
           templateKey: preview.templateKey,
         });
-        const inactiveEmail = buildInactiveEmail({
-          firstName: inactiveName,
-          touchIndex: claim.claimed_touch_index as InactiveTouchIndex,
-          anchor,
-          ctaUrl: authenticatedCtaUrl,
-          preferencesUrl,
-          unsubscribeUrl,
-        });
+        const inactiveEmail = buildRoadmapEmail(decision, variants, { ctaUrl: authenticatedCtaUrl, preferencesUrl, unsubscribeUrl });
+        const { error: metadataError } = await supabase.from("retention_email_log").update({
+          segment: decision.segment, experiment_phase: experiment.phase, experiment_version: experiment.version,
+          subject_variant: variants.subject, body_variant: variants.body, context_version: CONTEXT_VERSION,
+        }).eq("id", logId).eq("delivery_status", "pending");
+        if (metadataError) throw metadataError;
         const replyTo = Deno.env.get("RETENTION_REPLY_TO")?.trim()
           || Deno.env.get("REPLY_TO_EMAIL")?.trim()
           || "javier@creatives-takeover.com";

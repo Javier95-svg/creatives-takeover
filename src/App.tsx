@@ -29,6 +29,7 @@ const ActivationResumeBanner = lazy(() =>
     default: module.ActivationResumeBanner,
   }))
 );
+const RoadmapRetentionTracking = lazy(() => import("@/components/RoadmapRetentionTracking").then(module => ({ default: module.RoadmapRetentionTracking })));
 const RetentionEmailAttribution = lazy(() =>
   import("@/components/RetentionEmailAttribution").then((module) => ({
     default: module.RetentionEmailAttribution,
@@ -247,6 +248,7 @@ const DeferredGlobalFeatures = () => {
       {showAuthenticatedFeatures && (
         <Suspense fallback={null}>
           <ActivationResumeBanner />
+          <RoadmapRetentionTracking />
           {hasRetentionAttribution && <RetentionEmailAttribution />}
           {location.pathname === "/" && <ProUpgradeBanner />}
         </Suspense>

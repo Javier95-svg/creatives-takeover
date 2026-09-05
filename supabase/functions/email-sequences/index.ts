@@ -444,6 +444,16 @@ function buildHtml(email: BuiltEmail, unsubscribeUrl: string) {
 }
 
 async function sendEmail(ctx: UserContext, sequence: SequenceSlug) {
+  // All inactivity nudges share the roadmap resolver and its cross-campaign cap.
+  if (["activation_day1", "value_day3", "checkin_day7", "reengagement_day14", "winback_day30"].includes(sequence)) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-retention-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${serviceRoleKey}` },
+      body: JSON.stringify({ userId: ctx.userId, email: ctx.email, sequence: "activation_nudge" }),
+    });
+    const result = await response.json();
+    return { sent: response.ok && result.ok && !result.skipped, skipped: Boolean(result.skipped), reason: result.reason ?? result.error ?? null };
+  }
   if (await isUnsubscribed(ctx.userId)) {
     return { sent: false, skipped: true, reason: "unsubscribed" };
   }

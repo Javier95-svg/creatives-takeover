@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { logError } from "@/lib/logger";
+import { recordRoadmapActivity } from '@/lib/roadmapRetentionTracking';
 
 const RETENTION_EMAIL_ID = "retention_email_id";
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -38,6 +39,7 @@ export function RetentionEmailAttribution() {
 
     let cancelled = false;
     void (async () => {
+      await recordRoadmapActivity();
       const { data, error } = await supabase.rpc(
         "record_retention_email_return" as never,
         { p_log_id: emailLogId } as never,

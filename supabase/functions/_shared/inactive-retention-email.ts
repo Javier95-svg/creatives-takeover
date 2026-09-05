@@ -4,6 +4,9 @@ export const INACTIVE_TEMPLATE_VERSION = 1;
 export const INACTIVE_SEQUENCES = [
   "routine_reminder",
   "activation_day7",
+  "activation_day2",
+  "activation_nudge",
+  "progress_nudge",
   "weekly_digest",
   "reengagement",
   "reengagement_30d",

@@ -1,4 +1,5 @@
 import { captureEvent } from "@/lib/analytics";
+import { recordRoadmapActivity } from '@/lib/roadmapRetentionTracking';
 import { getActivationSessionId, readCTAAttribution } from "@/lib/activationEntry";
 import { supabase } from "@/integrations/supabase/client";
 import type { OutcomeEvaluation, VerificationMode } from "@/lib/outcomeContracts";
@@ -213,6 +214,9 @@ export async function upsertJourneyOutcome(input: JourneyOutcomeInput) {
   });
   if (error) throw error;
   if (!data?.ok) throw new Error(data?.error || "Could not evaluate journey outcome.");
+  void recordRoadmapActivity({ tool: input.tool, projectId: input.artifactId,
+    status: ['ready', 'verified', 'reviewed'].includes(data.evaluation?.status) ? 'completed' : 'progress',
+  }).catch(() => {});
   if (data.evaluation?.status === "ready" || data.evaluation?.status === "verified") {
     try {
       await recordArtifactStageEvidence({
