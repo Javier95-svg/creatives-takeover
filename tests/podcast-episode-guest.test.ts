@@ -153,6 +153,14 @@ test('socials show as icons only, without losing the handle', () => {
   assert.match(banner, /aria-label=\{`\$\{guestLabel\} on \$\{name\}, opens in a new tab`\}/);
 });
 
+test('the banner does not render hashtags', () => {
+  // Hidden from the episode card on purpose. The column and the admin field
+  // stay, so tagging still works — it just does not show on /podcast.
+  assert.doesNotMatch(banner, /hashtags/);
+  assert.match(form, /id="podcast-hashtags"/);
+  assert.match(hook, /hashtags: Array\.isArray\(row\.hashtags\)/);
+});
+
 test('every outbound guest link opens safely in a new tab', () => {
   const targets = banner.match(/target="_blank"/g)?.length ?? 0;
   const rels = banner.match(/rel="noopener noreferrer nofollow"/g)?.length ?? 0;

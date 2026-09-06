@@ -10,7 +10,6 @@ import {
   User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
   guestWebsiteLabel,
@@ -247,19 +246,6 @@ const PodcastEpisodeBanner = ({
           </div>
         )}
 
-        {episode.hashtags.length > 0 && (
-          <div className="mt-auto flex flex-wrap gap-1.5 pt-1">
-            {episode.hashtags.map((tag) => (
-              <Badge
-                key={tag}
-                variant="secondary"
-                className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary hover:bg-primary/15"
-              >
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )}
       </div>
     </article>
   );
