@@ -1,11 +1,23 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Play, Pencil, Trash2, EyeOff, ExternalLink, User } from "lucide-react";
+import {
+  Play,
+  Pencil,
+  Trash2,
+  EyeOff,
+  ExternalLink,
+  Instagram,
+  Linkedin,
+  User,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
   guestWebsiteLabel,
   normalizeGuestWebsite,
+  normalizeInstagramUrl,
+  normalizeLinkedInUrl,
+  socialHandle,
   warmYouTubeEmbed,
   youtubeThumbnail,
 } from "@/lib/podcast";
@@ -60,7 +72,16 @@ const PodcastEpisodeBanner = ({
 
   const guestName = episode.guest_name.trim();
   const guestWebsite = normalizeGuestWebsite(episode.guest_website);
+  const guestLinkedIn = normalizeLinkedInUrl(episode.guest_linkedin);
+  const guestInstagram = normalizeInstagramUrl(episode.guest_instagram);
+  const hasGuestLinks = Boolean(guestWebsite || guestLinkedIn || guestInstagram);
   const descriptionId = `podcast-episode-description-${episode.id}`;
+  const guestLabel = guestName || "the guest";
+
+  const socialLinks = [
+    { key: "linkedin", href: guestLinkedIn, Icon: Linkedin, name: "LinkedIn" },
+    { key: "instagram", href: guestInstagram, Icon: Instagram, name: "Instagram" },
+  ].filter((link): link is typeof link & { href: string } => Boolean(link.href));
 
   return (
     <article
@@ -143,30 +164,50 @@ const PodcastEpisodeBanner = ({
           )}
         </div>
 
-        {(guestName || guestWebsite) && (
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+        {(guestName || hasGuestLinks) && (
+          <div className="flex flex-col gap-1.5 text-sm">
             {guestName && (
               <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
                 <User className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 {guestName}
               </span>
             )}
-            {guestName && guestWebsite && (
-              <span aria-hidden="true" className="text-muted-foreground/60">
-                ·
-              </span>
-            )}
-            {guestWebsite && (
-              <a
-                href={guestWebsite}
-                target="_blank"
-                rel="noopener noreferrer nofollow"
-                className="inline-flex max-w-full items-center gap-1 rounded-sm text-primary underline-offset-4 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label={`Visit ${guestName || "the guest"}'s project website (opens in a new tab)`}
-              >
-                <span className="truncate">{guestWebsiteLabel(guestWebsite)}</span>
-                <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-              </a>
+
+            {hasGuestLinks && (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                {guestWebsite && (
+                  <span className="inline-flex min-w-0 items-center gap-1.5 text-muted-foreground">
+                    Visit:
+                    <a
+                      href={guestWebsite}
+                      target="_blank"
+                      rel="noopener noreferrer nofollow"
+                      className="inline-flex min-w-0 items-center gap-1 rounded-sm text-primary underline-offset-4 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      aria-label={`Visit ${guestLabel}'s project website (opens in a new tab)`}
+                    >
+                      <span className="truncate">{guestWebsiteLabel(guestWebsite)}</span>
+                      <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                    </a>
+                  </span>
+                )}
+
+                {socialLinks.map(({ key, href, Icon, name }) => {
+                  const handle = socialHandle(href);
+                  return (
+                    <a
+                      key={key}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer nofollow"
+                      className="inline-flex min-w-0 items-center gap-1.5 rounded-sm text-muted-foreground underline-offset-4 transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      aria-label={`${guestLabel} on ${name} (opens in a new tab)`}
+                    >
+                      <Icon className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{handle || name}</span>
+                    </a>
+                  );
+                })}
+              </div>
             )}
           </div>
         )}
@@ -177,8 +218,10 @@ const PodcastEpisodeBanner = ({
               ref={descriptionRef}
               id={descriptionId}
               className={cn(
-                "whitespace-pre-line text-sm leading-6 text-muted-foreground",
-                !isExpanded && "line-clamp-3"
+                "text-sm leading-6 text-muted-foreground",
+                // Paragraph breaks only once open: while clamped they would
+                // spend a line of the three-line budget on empty space.
+                isExpanded ? "whitespace-pre-line" : "line-clamp-3"
               )}
             >
               {episode.description}

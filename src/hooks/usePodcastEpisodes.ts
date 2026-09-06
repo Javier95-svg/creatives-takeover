@@ -2,7 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { normalizeGuestWebsite, parseYouTubeId } from '@/lib/podcast';
+import {
+  normalizeGuestWebsite,
+  normalizeInstagramUrl,
+  normalizeLinkedInUrl,
+  parseYouTubeId,
+} from '@/lib/podcast';
 
 export interface PodcastEpisode {
   id: string;
@@ -16,6 +21,10 @@ export interface PodcastEpisode {
   guest_name: string;
   /** Absolute URL of the guest's project site; empty when unknown. */
   guest_website: string;
+  /** Absolute URL of the guest's LinkedIn profile; empty when unknown. */
+  guest_linkedin: string;
+  /** Absolute URL of the guest's Instagram profile; empty when unknown. */
+  guest_instagram: string;
   hashtags: string[];
   is_published: boolean;
   created_at: string;
@@ -30,6 +39,8 @@ export interface PodcastEpisodeInput {
   mentor_slug?: string;
   guest_name?: string;
   guest_website?: string;
+  guest_linkedin?: string;
+  guest_instagram?: string;
   is_published?: boolean;
 }
 
@@ -51,6 +62,8 @@ function mapRow(row: Record<string, unknown>): PodcastEpisode {
     mentor_slug: typeof row.mentor_slug === 'string' ? row.mentor_slug : '',
     guest_name: typeof row.guest_name === 'string' ? row.guest_name : '',
     guest_website: typeof row.guest_website === 'string' ? row.guest_website : '',
+    guest_linkedin: typeof row.guest_linkedin === 'string' ? row.guest_linkedin : '',
+    guest_instagram: typeof row.guest_instagram === 'string' ? row.guest_instagram : '',
     is_published: Boolean(row.is_published),
     created_at: typeof row.created_at === 'string' ? row.created_at : '',
     updated_at: typeof row.updated_at === 'string' ? row.updated_at : '',
@@ -116,6 +129,8 @@ export function usePodcastEpisodes() {
           mentor_slug: input.mentor_slug?.trim() || null,
           guest_name: input.guest_name?.trim() || null,
           guest_website: normalizeGuestWebsite(input.guest_website),
+          guest_linkedin: normalizeLinkedInUrl(input.guest_linkedin),
+          guest_instagram: normalizeInstagramUrl(input.guest_instagram),
           is_published: input.is_published ?? true,
         };
         const { data, error } = await table().insert([payload]).select().single();
@@ -157,6 +172,8 @@ export function usePodcastEpisodes() {
           mentor_slug: input.mentor_slug?.trim() || null,
           guest_name: input.guest_name?.trim() || null,
           guest_website: normalizeGuestWebsite(input.guest_website),
+          guest_linkedin: normalizeLinkedInUrl(input.guest_linkedin),
+          guest_instagram: normalizeInstagramUrl(input.guest_instagram),
         };
         if (input.is_published !== undefined) payload.is_published = input.is_published;
         const { data, error } = await table().update(payload).eq('id', id).select().single();

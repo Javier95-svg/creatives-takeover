@@ -218,3 +218,75 @@ export function guestWebsiteLabel(input: string | null | undefined): string {
   const path = url.pathname.replace(/\/$/, '');
   return `${url.hostname.replace(/^www\./, '')}${path}`;
 }
+
+/** Hosts accepted for each social field, so a mislabeled link cannot slip in. */
+const SOCIAL_HOSTS = {
+  linkedin: ['linkedin.com'],
+  instagram: ['instagram.com', 'instagr.am'],
+} as const;
+
+const INSTAGRAM_HANDLE = /^[A-Za-z0-9._]{1,30}$/;
+// LinkedIn vanity names allow letters, digits and hyphens.
+const LINKEDIN_HANDLE = /^[A-Za-z0-9-]{3,100}$/;
+
+function hostMatches(hostname: string, allowed: readonly string[]): boolean {
+  const host = hostname.replace(/^www./, '').toLowerCase();
+  return allowed.some((base) => host === base || host.endsWith(`.${base}`));
+}
+
+/**
+ * Normalize a guest's LinkedIn into an absolute profile URL.
+ *
+ * Accepts a full URL, a schemeless "linkedin.com/in/name", or a bare vanity
+ * name (assumed to be a person, so it resolves under /in/). Anything hosted
+ * somewhere other than LinkedIn is rejected rather than rendered under a
+ * LinkedIn label. Returns null when the input cannot be read as a profile.
+ */
+export function normalizeLinkedInUrl(input: string | null | undefined): string | null {
+  const raw = (input || '').trim().replace(/^@/, '');
+  if (!raw) return null;
+
+  if (LINKEDIN_HANDLE.test(raw) && !raw.includes('.')) {
+    return `https://www.linkedin.com/in/${raw}`;
+  }
+
+  const url = normalizeGuestWebsite(raw);
+  if (!url) return null;
+  return hostMatches(new URL(url).hostname, SOCIAL_HOSTS.linkedin) ? url : null;
+}
+
+/**
+ * Normalize a guest's Instagram into an absolute profile URL.
+ *
+ * Accepts "@handle", a bare handle, a schemeless "instagram.com/handle", or a
+ * full URL. Non-Instagram hosts are rejected. Returns null when unusable.
+ */
+export function normalizeInstagramUrl(input: string | null | undefined): string | null {
+  const raw = (input || '').trim().replace(/^@/, '');
+  if (!raw) return null;
+
+  if (INSTAGRAM_HANDLE.test(raw) && !raw.includes('.')) {
+    return `https://www.instagram.com/${raw}`;
+  }
+
+  const url = normalizeGuestWebsite(raw);
+  if (!url) return null;
+  return hostMatches(new URL(url).hostname, SOCIAL_HOSTS.instagram) ? url : null;
+}
+
+/**
+ * The @handle shown next to a social icon: the last meaningful path segment of
+ * the profile URL. Falls back to an empty string when there is no handle to
+ * show (a company page, say), so the caller can render the icon label alone.
+ */
+export function socialHandle(url: string | null | undefined): string {
+  if (!url) return '';
+  try {
+    const segments = new URL(url).pathname.split('/').filter(Boolean);
+    const last = segments[segments.length - 1];
+    // "/in" alone is a bare route, not a handle.
+    return last && last !== 'in' && last !== 'company' ? `@${last}` : '';
+  } catch {
+    return '';
+  }
+}

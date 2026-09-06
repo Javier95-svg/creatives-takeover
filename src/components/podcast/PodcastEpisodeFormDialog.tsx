@@ -14,7 +14,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { normalizeGuestWebsite, parseHashtagsInput, parseYouTubeId } from "@/lib/podcast";
+import {
+  normalizeGuestWebsite,
+  normalizeInstagramUrl,
+  normalizeLinkedInUrl,
+  parseHashtagsInput,
+  parseYouTubeId,
+} from "@/lib/podcast";
 import type { PodcastEpisode, PodcastEpisodeInput } from "@/hooks/usePodcastEpisodes";
 
 interface PodcastEpisodeFormDialogProps {
@@ -39,6 +45,8 @@ const PodcastEpisodeFormDialog = ({
   const [mentorSlug, setMentorSlug] = useState("");
   const [guestName, setGuestName] = useState("");
   const [guestWebsite, setGuestWebsite] = useState("");
+  const [guestLinkedIn, setGuestLinkedIn] = useState("");
+  const [guestInstagram, setGuestInstagram] = useState("");
   const [isPublished, setIsPublished] = useState(true);
 
   // Reset the form whenever the dialog opens for a new/different episode.
@@ -51,6 +59,8 @@ const PodcastEpisodeFormDialog = ({
     setMentorSlug(episode?.mentor_slug ?? "");
     setGuestName(episode?.guest_name ?? "");
     setGuestWebsite(episode?.guest_website ?? "");
+    setGuestLinkedIn(episode?.guest_linkedin ?? "");
+    setGuestInstagram(episode?.guest_instagram ?? "");
     setIsPublished(episode?.is_published ?? true);
   }, [open, episode]);
 
@@ -60,7 +70,17 @@ const PodcastEpisodeFormDialog = ({
   // it would be silently dropped on save.
   const normalizedGuestWebsite = normalizeGuestWebsite(guestWebsite);
   const validGuestWebsite = !guestWebsite.trim() || Boolean(normalizedGuestWebsite);
-  const canSubmit = title.trim().length > 0 && validVideo && validGuestWebsite && !isSaving;
+  const normalizedLinkedIn = normalizeLinkedInUrl(guestLinkedIn);
+  const validLinkedIn = !guestLinkedIn.trim() || Boolean(normalizedLinkedIn);
+  const normalizedInstagram = normalizeInstagramUrl(guestInstagram);
+  const validInstagram = !guestInstagram.trim() || Boolean(normalizedInstagram);
+  const canSubmit =
+    title.trim().length > 0 &&
+    validVideo &&
+    validGuestWebsite &&
+    validLinkedIn &&
+    validInstagram &&
+    !isSaving;
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
@@ -72,6 +92,8 @@ const PodcastEpisodeFormDialog = ({
       mentor_slug: mentorSlug,
       guest_name: guestName,
       guest_website: guestWebsite,
+      guest_linkedin: guestLinkedIn,
+      guest_instagram: guestInstagram,
       is_published: isPublished,
     });
     if (result) onOpenChange(false);
@@ -150,6 +172,52 @@ const PodcastEpisodeFormDialog = ({
                 normalizedGuestWebsite && (
                   <p className="truncate text-xs text-muted-foreground">
                     Links to {normalizedGuestWebsite}
+                  </p>
+                )
+              )}
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="podcast-guest-linkedin">Guest LinkedIn (optional)</Label>
+              <Input
+                id="podcast-guest-linkedin"
+                value={guestLinkedIn}
+                onChange={(e) => setGuestLinkedIn(e.target.value)}
+                placeholder="linkedin.com/in/darya-kablash"
+                aria-invalid={!validLinkedIn}
+              />
+              {guestLinkedIn.trim() && !validLinkedIn ? (
+                <p className="text-xs text-destructive">
+                  Enter a LinkedIn profile URL or vanity name.
+                </p>
+              ) : (
+                normalizedLinkedIn && (
+                  <p className="truncate text-xs text-muted-foreground">
+                    Links to {normalizedLinkedIn}
+                  </p>
+                )
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="podcast-guest-instagram">Guest Instagram (optional)</Label>
+              <Input
+                id="podcast-guest-instagram"
+                value={guestInstagram}
+                onChange={(e) => setGuestInstagram(e.target.value)}
+                placeholder="@daryakablash"
+                aria-invalid={!validInstagram}
+              />
+              {guestInstagram.trim() && !validInstagram ? (
+                <p className="text-xs text-destructive">
+                  Enter an Instagram handle or profile URL.
+                </p>
+              ) : (
+                normalizedInstagram && (
+                  <p className="truncate text-xs text-muted-foreground">
+                    Links to {normalizedInstagram}
                   </p>
                 )
               )}
