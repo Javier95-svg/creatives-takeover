@@ -191,22 +191,29 @@ const PodcastEpisodeBanner = ({
                   </span>
                 )}
 
-                {socialLinks.map(({ key, href, Icon, name }) => {
-                  const handle = socialHandle(href);
-                  return (
-                    <a
-                      key={key}
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer nofollow"
-                      className="inline-flex min-w-0 items-center gap-1.5 rounded-sm text-muted-foreground underline-offset-4 transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      aria-label={`${guestLabel} on ${name} (opens in a new tab)`}
-                    >
-                      <Icon className="h-4 w-4 shrink-0" />
-                      <span className="truncate">{handle || name}</span>
-                    </a>
-                  );
-                })}
+                {socialLinks.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    {socialLinks.map(({ key, href, Icon, name }) => {
+                      const handle = socialHandle(href);
+                      return (
+                        <a
+                          key={key}
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer nofollow"
+                          // Icon only. The handle still reaches a pointer via the
+                          // tooltip and a screen reader via the accessible name,
+                          // so dropping the visible text loses nothing.
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          aria-label={`${guestLabel} on ${name}, opens in a new tab`}
+                          title={handle || name}
+                        >
+                          <Icon className="h-4 w-4 shrink-0" />
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>

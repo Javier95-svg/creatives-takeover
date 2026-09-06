@@ -142,8 +142,15 @@ test('the banner renders both socials and drops the ones a guest lacks', () => {
   assert.match(banner, /const guestLinkedIn = normalizeLinkedInUrl\(episode\.guest_linkedin\)/);
   assert.match(banner, /const guestInstagram = normalizeInstagramUrl\(episode\.guest_instagram\)/);
   assert.match(banner, /Boolean\(link\.href\)/);
-  // Falls back to the network name when there is no handle to show.
-  assert.match(banner, /\{handle \|\| name\}/);
+});
+
+test('socials show as icons only, without losing the handle', () => {
+  // No visible text node beside the icon...
+  assert.doesNotMatch(banner, /<span className="truncate">\{handle \|\| name\}<\/span>/);
+  // ...but the handle still reaches a pointer, and the network still reaches
+  // assistive tech, so an icon-only link is not an unlabelled one.
+  assert.match(banner, /title=\{handle \|\| name\}/);
+  assert.match(banner, /aria-label=\{`\$\{guestLabel\} on \$\{name\}, opens in a new tab`\}/);
 });
 
 test('every outbound guest link opens safely in a new tab', () => {
