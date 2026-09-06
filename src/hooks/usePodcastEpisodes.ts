@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { parseYouTubeId } from '@/lib/podcast';
+import { normalizeGuestWebsite, parseYouTubeId } from '@/lib/podcast';
 
 export interface PodcastEpisode {
   id: string;
@@ -12,6 +12,10 @@ export interface PodcastEpisode {
   youtube_video_id: string;
   /** Slug of the mentor featured in this episode; empty when it is not an interview. */
   mentor_slug: string;
+  /** Guest featured in this episode; empty when there is no guest. */
+  guest_name: string;
+  /** Absolute URL of the guest's project site; empty when unknown. */
+  guest_website: string;
   hashtags: string[];
   is_published: boolean;
   created_at: string;
@@ -24,6 +28,8 @@ export interface PodcastEpisodeInput {
   youtube_url: string;
   hashtags: string[];
   mentor_slug?: string;
+  guest_name?: string;
+  guest_website?: string;
   is_published?: boolean;
 }
 
@@ -43,6 +49,8 @@ function mapRow(row: Record<string, unknown>): PodcastEpisode {
     youtube_video_id: typeof row.youtube_video_id === 'string' ? row.youtube_video_id : '',
     hashtags: Array.isArray(row.hashtags) ? (row.hashtags as string[]) : [],
     mentor_slug: typeof row.mentor_slug === 'string' ? row.mentor_slug : '',
+    guest_name: typeof row.guest_name === 'string' ? row.guest_name : '',
+    guest_website: typeof row.guest_website === 'string' ? row.guest_website : '',
     is_published: Boolean(row.is_published),
     created_at: typeof row.created_at === 'string' ? row.created_at : '',
     updated_at: typeof row.updated_at === 'string' ? row.updated_at : '',
@@ -106,6 +114,8 @@ export function usePodcastEpisodes() {
           youtube_video_id: videoId,
           hashtags: input.hashtags,
           mentor_slug: input.mentor_slug?.trim() || null,
+          guest_name: input.guest_name?.trim() || null,
+          guest_website: normalizeGuestWebsite(input.guest_website),
           is_published: input.is_published ?? true,
         };
         const { data, error } = await table().insert([payload]).select().single();
@@ -145,6 +155,8 @@ export function usePodcastEpisodes() {
           youtube_video_id: videoId,
           hashtags: input.hashtags,
           mentor_slug: input.mentor_slug?.trim() || null,
+          guest_name: input.guest_name?.trim() || null,
+          guest_website: normalizeGuestWebsite(input.guest_website),
         };
         if (input.is_published !== undefined) payload.is_published = input.is_published;
         const { data, error } = await table().update(payload).eq('id', id).select().single();

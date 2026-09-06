@@ -178,3 +178,43 @@ export function parseHashtagsInput(input: string): string[] {
   }
   return out;
 }
+
+/**
+ * Normalize a free-text guest website into an absolute, linkable URL.
+ *
+ * Admins type sites the way people say them ("getmarketing.com"), which is not
+ * a usable href — a schemeless value resolves relative to /podcast. Anything
+ * without a scheme is assumed https, and only http(s) is allowed through so a
+ * pasted `javascript:` or `data:` value can never reach an anchor.
+ * Returns null when the input cannot be read as a web address.
+ */
+export function normalizeGuestWebsite(input: string | null | undefined): string | null {
+  const raw = (input || '').trim();
+  if (!raw) return null;
+  // A bare "//host" is protocol-relative, not a path — give it an explicit scheme too.
+  const candidate = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(raw) ? raw : `https://${raw.replace(/^\/+/, '')}`;
+
+  try {
+    const url = new URL(candidate);
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;
+    // A host with no dot ("localhost", a stray word) is a typo, not a site.
+    if (!url.hostname.includes('.')) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The short, human label for a guest website: the hostname without `www.` and
+ * without the trailing slash `URL` adds. Falls back to the raw value so a link
+ * never renders blank.
+ */
+export function guestWebsiteLabel(input: string | null | undefined): string {
+  const normalized = normalizeGuestWebsite(input);
+  if (!normalized) return (input || '').trim();
+
+  const url = new URL(normalized);
+  const path = url.pathname.replace(/\/$/, '');
+  return `${url.hostname.replace(/^www\./, '')}${path}`;
+}

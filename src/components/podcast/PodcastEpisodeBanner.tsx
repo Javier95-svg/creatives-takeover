@@ -1,9 +1,14 @@
-import { useState } from "react";
-import { Play, Pencil, Trash2, EyeOff } from "lucide-react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Play, Pencil, Trash2, EyeOff, ExternalLink, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { warmYouTubeEmbed, youtubeThumbnail } from "@/lib/podcast";
+import {
+  guestWebsiteLabel,
+  normalizeGuestWebsite,
+  warmYouTubeEmbed,
+  youtubeThumbnail,
+} from "@/lib/podcast";
 import type { PodcastEpisode } from "@/hooks/usePodcastEpisodes";
 
 interface PodcastEpisodeBannerProps {
@@ -22,7 +27,40 @@ const PodcastEpisodeBanner = ({
   onDelete,
 }: PodcastEpisodeBannerProps) => {
   const [thumbError, setThumbError] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  // Whether the clamped description actually overflows. Measured rather than
+  // guessed from a character count: where the text cuts off depends on the
+  // rendered width, and a "View more" that expands to the same three lines is
+  // just noise.
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const descriptionRef = useRef<HTMLParagraphElement>(null);
   const warmPlayer = () => warmYouTubeEmbed(episode.youtube_video_id);
+
+  const measureOverflow = useCallback(() => {
+    const el = descriptionRef.current;
+    // Only the clamped state can overflow; keep the last measurement while
+    // expanded so the toggle stays put instead of vanishing under the reader.
+    if (!el || isExpanded) return;
+    setIsOverflowing(el.scrollHeight > el.clientHeight + 1);
+  }, [isExpanded]);
+
+  // Measure before paint so the toggle never flashes in after first render.
+  useLayoutEffect(() => {
+    measureOverflow();
+  }, [measureOverflow, episode.description]);
+
+  // Re-measure on reflow: viewport resize, font swap, sidebar collapse.
+  useEffect(() => {
+    const el = descriptionRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measureOverflow);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [measureOverflow]);
+
+  const guestName = episode.guest_name.trim();
+  const guestWebsite = normalizeGuestWebsite(episode.guest_website);
+  const descriptionId = `podcast-episode-description-${episode.id}`;
 
   return (
     <article
@@ -105,10 +143,58 @@ const PodcastEpisodeBanner = ({
           )}
         </div>
 
+        {(guestName || guestWebsite) && (
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+            {guestName && (
+              <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
+                <User className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                {guestName}
+              </span>
+            )}
+            {guestName && guestWebsite && (
+              <span aria-hidden="true" className="text-muted-foreground/60">
+                ·
+              </span>
+            )}
+            {guestWebsite && (
+              <a
+                href={guestWebsite}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                className="inline-flex max-w-full items-center gap-1 rounded-sm text-primary underline-offset-4 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label={`Visit ${guestName || "the guest"}'s project website (opens in a new tab)`}
+              >
+                <span className="truncate">{guestWebsiteLabel(guestWebsite)}</span>
+                <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+              </a>
+            )}
+          </div>
+        )}
+
         {episode.description && (
-          <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">
-            {episode.description}
-          </p>
+          <div>
+            <p
+              ref={descriptionRef}
+              id={descriptionId}
+              className={cn(
+                "whitespace-pre-line text-sm leading-6 text-muted-foreground",
+                !isExpanded && "line-clamp-3"
+              )}
+            >
+              {episode.description}
+            </p>
+            {isOverflowing && (
+              <button
+                type="button"
+                onClick={() => setIsExpanded((open) => !open)}
+                aria-expanded={isExpanded}
+                aria-controls={descriptionId}
+                className="mt-1.5 inline-flex items-center rounded-sm text-sm font-medium text-primary underline-offset-4 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {isExpanded ? "View less" : "View more"}
+              </button>
+            )}
+          </div>
         )}
 
         {episode.hashtags.length > 0 && (

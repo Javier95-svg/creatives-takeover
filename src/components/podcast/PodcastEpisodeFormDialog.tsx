@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { parseHashtagsInput, parseYouTubeId } from "@/lib/podcast";
+import { normalizeGuestWebsite, parseHashtagsInput, parseYouTubeId } from "@/lib/podcast";
 import type { PodcastEpisode, PodcastEpisodeInput } from "@/hooks/usePodcastEpisodes";
 
 interface PodcastEpisodeFormDialogProps {
@@ -37,6 +37,8 @@ const PodcastEpisodeFormDialog = ({
   const [description, setDescription] = useState("");
   const [hashtagsInput, setHashtagsInput] = useState("");
   const [mentorSlug, setMentorSlug] = useState("");
+  const [guestName, setGuestName] = useState("");
+  const [guestWebsite, setGuestWebsite] = useState("");
   const [isPublished, setIsPublished] = useState(true);
 
   // Reset the form whenever the dialog opens for a new/different episode.
@@ -47,12 +49,18 @@ const PodcastEpisodeFormDialog = ({
     setDescription(episode?.description ?? "");
     setHashtagsInput(episode?.hashtags?.join(" ") ?? "");
     setMentorSlug(episode?.mentor_slug ?? "");
+    setGuestName(episode?.guest_name ?? "");
+    setGuestWebsite(episode?.guest_website ?? "");
     setIsPublished(episode?.is_published ?? true);
   }, [open, episode]);
 
   const previewTags = parseHashtagsInput(hashtagsInput);
   const validVideo = Boolean(parseYouTubeId(youtubeUrl));
-  const canSubmit = title.trim().length > 0 && validVideo && !isSaving;
+  // Empty is fine (the field is optional); typed-but-unparseable is not, since
+  // it would be silently dropped on save.
+  const normalizedGuestWebsite = normalizeGuestWebsite(guestWebsite);
+  const validGuestWebsite = !guestWebsite.trim() || Boolean(normalizedGuestWebsite);
+  const canSubmit = title.trim().length > 0 && validVideo && validGuestWebsite && !isSaving;
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
@@ -62,6 +70,8 @@ const PodcastEpisodeFormDialog = ({
       youtube_url: youtubeUrl,
       hashtags: previewTags,
       mentor_slug: mentorSlug,
+      guest_name: guestName,
+      guest_website: guestWebsite,
       is_published: isPublished,
     });
     if (result) onOpenChange(false);
@@ -110,6 +120,40 @@ const PodcastEpisodeFormDialog = ({
               placeholder="What this episode is about and the key takeaways…"
               rows={4}
             />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="podcast-guest-name">Guest name (optional)</Label>
+              <Input
+                id="podcast-guest-name"
+                value={guestName}
+                onChange={(e) => setGuestName(e.target.value)}
+                placeholder="e.g. Darya Kablash"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="podcast-guest-website">Project website (optional)</Label>
+              <Input
+                id="podcast-guest-website"
+                value={guestWebsite}
+                onChange={(e) => setGuestWebsite(e.target.value)}
+                placeholder="getmarketing.com"
+                aria-invalid={!validGuestWebsite}
+              />
+              {guestWebsite.trim() && !validGuestWebsite ? (
+                <p className="text-xs text-destructive">
+                  That doesn’t look like a valid website address.
+                </p>
+              ) : (
+                normalizedGuestWebsite && (
+                  <p className="truncate text-xs text-muted-foreground">
+                    Links to {normalizedGuestWebsite}
+                  </p>
+                )
+              )}
+            </div>
           </div>
 
           <div className="space-y-1.5">
