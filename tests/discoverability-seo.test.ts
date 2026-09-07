@@ -93,6 +93,24 @@ test("dynamic public entities use server rendering and runtime sitemaps", () => 
   assert.match(renderer, /'Person'/);
 });
 
+test("a story that is gone answers 404, not a soft 404", () => {
+  const og = read("api/newspaper-og.ts");
+
+  // Lookup succeeded and the article is absent: the status line has to say so,
+  // or Search Console files the 200 as a soft 404.
+  assert.match(og, /if \(!article\) \{[\s\S]*?return notFound\(\);/);
+  assert.match(og, /status: 404/);
+  assert.match(og, /'x-robots-tag': 'noindex,follow'/);
+
+  // Everything else keeps answering 200. A 404 on a transient Supabase failure
+  // would deindex live articles for the length of the outage, so exactly one
+  // branch may be the 404 — the four passthroughs are reserved slugs, a bad
+  // response, a malformed body, and the network catch.
+  assert.equal(og.match(/return passthrough\(\);/g)?.length, 4);
+  assert.match(og, /if \(!res\.ok\) \{\s*return passthrough\(\);/);
+  assert.match(og, /\} catch \{[\s\S]*?return passthrough\(\);/);
+});
+
 test("founder and MVP indexing are review-gated server-side", () => {
   const migration = read("supabase/migrations/20260815170000_seo_aeo_discoverability.sql");
   const publishedSite = read("api/published-site.ts");

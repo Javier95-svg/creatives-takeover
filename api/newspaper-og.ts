@@ -203,6 +203,9 @@ export default async function handler(request: Request): Promise<Response> {
   });
   let html = await shellRes.text();
 
+  // The shell at 200, for requests that are not article lookups (real routes) and
+  // for upstream failures. A transient Supabase error must NOT answer 404: that
+  // would deindex live articles for the length of the outage.
   const passthrough = () =>
     new Response(html, {
       status: 200,
@@ -211,6 +214,21 @@ export default async function handler(request: Request): Promise<Response> {
         'cache-control': 'public, max-age=0, must-revalidate',
       },
     });
+
+  // A slug that resolved to nothing. Distinct from passthrough: the lookup
+  // succeeded and the article genuinely is not there.
+  const notFound = () => {
+    let body = setTitle(html, 'Page not found | Creatives Takeover');
+    body = setMeta(body, 'name', 'robots', 'noindex,follow');
+    return new Response(body, {
+      status: 404,
+      headers: {
+        'content-type': 'text/html; charset=utf-8',
+        'cache-control': 'public, s-maxage=60',
+        'x-robots-tag': 'noindex,follow',
+      },
+    });
+  };
 
   if (!slug || RESERVED_SLUGS.has(slug) || !SUPABASE_KEY) {
     return passthrough();
@@ -242,8 +260,12 @@ export default async function handler(request: Request): Promise<Response> {
   }
 
   if (!article) {
-    // Unknown/unpublished slug: let the SPA handle redirect/404 with generic tags.
-    return passthrough();
+    // Unknown or unpublished slug. The SPA already renders its not-found view,
+    // but the status line has to agree: answering 200 here is precisely what
+    // Search Console files as a soft 404, and unpublishing a story is how an
+    // already-indexed URL arrives in this branch. Mirrors api/public-entity.ts,
+    // which answers missing entities the same way.
+    return notFound();
   }
 
   const { optimizedMetaTitle, metaDescription, ogImageUrl } = buildMeta(article);
