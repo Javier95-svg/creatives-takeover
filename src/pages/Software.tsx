@@ -6,10 +6,16 @@ import { ScrollReveal } from "@/components/animations/ScrollReveal";
 const Software = () => {
   return (
     <>
+      {/* Placeholder page: a heading, one sentence, and a TODO where the content
+          should be. It is crawlable and not disallowed, and it shipped a bare
+          duplicate <title> plus a *relative* canonical, which resolves against
+          whatever URL is being crawled. Kept noindex until it has real content —
+          an empty page in the index is a site-quality liability, not a win. */}
       <Helmet>
-        <title>Creatives Takeover</title>
+        <title>Software | Creatives Takeover</title>
         <meta name="description" content="Explore Creatives Takeover software—templates, AI ops, and marketplace to launch and scale your projects." />
-        <link rel="canonical" href="/software" />
+        <meta name="robots" content="noindex,follow" />
+        <link rel="canonical" href="https://creatives-takeover.com/software" />
       </Helmet>
       <div className="min-h-screen bg-background">
         <Navigation />

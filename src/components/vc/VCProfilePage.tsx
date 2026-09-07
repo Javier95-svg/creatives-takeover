@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import { VCWallpaper } from "@/components/vc-search/VCWallpaper";
 import { useVCViewTracking } from "@/hooks/useVCViewTracking";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -504,6 +505,21 @@ const VCProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Without this the page inherited dist/index.html verbatim: the homepage
+          <title> and, worse, canonical="https://creatives-takeover.com/" — so
+          every VC URL told Google it was a duplicate of the homepage. The body
+          is gated for logged-out visitors, so it is marked noindex rather than
+          offered to the index as a sign-in wall. */}
+      <SEO
+        title={`${vc.firm_name} — VC Profile | Creatives Takeover`}
+        description={
+          vc.description?.slice(0, 160)
+          || `${vc.firm_name}: investment stage, sector focus, ticket size, geography, and how to approach them.`
+        }
+        url={`/insighta/vc/${slug}`}
+        canonical={`https://creatives-takeover.com/insighta/vc/${slug}`}
+        noindex={isProfileLocked}
+      />
       <Navigation />
 
       <main className="relative overflow-hidden py-20 px-4">

@@ -1,18 +1,88 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { BASE_URL, INDEXABLE_ROUTES, OG_IMAGE, SITE_NAME } from "./seo-route-config.mjs";
+import { fetchHubChildren } from "./fetch-hub-children.mjs";
 
 const DIST_DIR = path.resolve(process.cwd(), "dist");
 const TEMPLATE_PATH = path.join(DIST_DIR, "index.html");
 
+// The sitewide link budget: these appear on all 61 shells, so a slot spent here
+// is the strongest internal signal the site can give a page. Every entry must be
+// an indexable route that is actually prerendered — /build and /podcast used to
+// sit here while being neither, so the most-linked URLs on the site resolved to
+// the SPA catch-all and self-canonicalised to the homepage.
 const PRIMARY_NAV = [
   { href: "/", label: "Home" },
   { href: "/build", label: "Build" },
-  { href: "/mentorship", label: "Guidance" },
-  { href: "/podcast", label: "Podcast" },
+  { href: "/bizmap-ai", label: "Startup Cycle" },
+  { href: "/answers", label: "Founder Answers" },
+  { href: "/mentorship", label: "Mentors" },
   { href: "/newspaper", label: "Newspaper" },
+  { href: "/podcast", label: "Podcast" },
+  { href: "/resources", label: "Resources" },
   { href: "/about", label: "About" },
   { href: "/pricing", label: "Pricing" },
+];
+
+// Footer.tsx is a React component, so the prerendered HTML carried no footer at
+// all. That left the legal pages with zero inbound links, and the hubs that no
+// other page naturally links to — /marketplace, /co-founder, /investors,
+// /directories, /prompt-library, /insighta, /startup-guide, /demo — orphaned
+// with the sitemap as their only discovery path.
+//
+// A grouped footer is the conventional fix: it costs a little link equity per
+// page and buys every route at least one real inbound link.
+const FOOTER_GROUPS = [
+  {
+    heading: "Explore",
+    links: [
+      { href: "/bizmap-ai", label: "Startup Development Cycle" },
+      { href: "/build", label: "Build" },
+      { href: "/answers", label: "Founder Answer Library" },
+      { href: "/startup-guide", label: "Startup Guide" },
+      { href: "/resources", label: "Resources" },
+    ],
+  },
+  {
+    heading: "Community",
+    links: [
+      { href: "/mentorship", label: "Mentors" },
+      { href: "/marketplace", label: "Service Marketplace" },
+      { href: "/co-founder", label: "Co-Founder Matching" },
+      { href: "/investors", label: "Investors" },
+    ],
+  },
+  {
+    heading: "Tools",
+    links: [
+      { href: "/insighta", label: "Insighta" },
+      { href: "/vc-search", label: "VC Search" },
+      { href: "/accelerator-hunt", label: "Accelerator Hunt" },
+      { href: "/pitch-deck-analyzer", label: "Pitch Deck Analyzer" },
+      { href: "/email-templates", label: "Investor Email Templates" },
+      { href: "/insighta-test", label: "Insighta Test" },
+      { href: "/directories", label: "Launch Directories" },
+      { href: "/prompt-library", label: "Prompt Library" },
+    ],
+  },
+  {
+    heading: "Company",
+    links: [
+      { href: "/about", label: "About" },
+      { href: "/pricing", label: "Pricing" },
+      { href: "/careers", label: "Careers" },
+      { href: "/faq", label: "FAQ" },
+      { href: "/demo", label: "Demo" },
+    ],
+  },
+  {
+    heading: "Legal",
+    links: [
+      { href: "/privacy-policy", label: "Privacy Policy" },
+      { href: "/data-privacy", label: "Data Privacy" },
+      { href: "/terms", label: "Terms" },
+    ],
+  },
 ];
 
 const PRICING_SUMMARY = [
@@ -22,8 +92,17 @@ const PRICING_SUMMARY = [
   { name: "Pro", price: "$65/month", outcome: "Accelerate and Fundraise", credits: "600 monthly credits", description: "Add expert accountability within 48 hours, deeper research, and fundraising workflows." },
 ];
 
-function buildFallbackHtml(routeConfig) {
-  const nav = PRIMARY_NAV.map((item) => `<a href="${item.href}">${item.label}</a>`).join(" | ");
+function escapeText(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function buildFallbackHtml(routeConfig, hubChildren = {}) {
+  const nav = PRIMARY_NAV.filter((item) => item.href !== routeConfig.path)
+    .map((item) => `<a href="${item.href}">${item.label}</a>`)
+    .join(" | ");
   const heroContent = routeConfig.path === "/"
     ? `<p>Creatives Takeover &middot; Founders Compass</p>
           <p>Business Development platform for startup founders &amp; first-time business owners.</p>
@@ -102,6 +181,24 @@ ${PRICING_SUMMARY.map((plan) => `          <article>
         </section>`
     : "";
 
+  // A hub's children: static ones come from the route config, live ones
+  // (articles, mentors) are keyed in by the build-time fetch. This is the whole
+  // point of the exercise — a hub that links to nothing leaves its children
+  // discoverable only via the sitemap, which Google treats as a weak signal.
+  const childLinks = routeConfig.childLinks
+    || (routeConfig.childLinksKey ? hubChildren[routeConfig.childLinksKey] : null)
+    || [];
+  const childLinksSection = childLinks.length
+    ? `        <section>
+          <h2>${escapeText(routeConfig.childLinksHeading || "In this section")}</h2>
+          <ul>
+${childLinks
+  .map((item) => `            <li><a href="${item.href}">${escapeText(item.label)}</a></li>`)
+  .join("\n")}
+          </ul>
+        </section>`
+    : "";
+
   // Answer pages interlink within their topic cluster; other pages fall back to
   // the generic cross-links.
   const exploreLinks = (routeConfig.relatedLinks && routeConfig.relatedLinks.length
@@ -142,13 +239,28 @@ ${faqs}
           </dl>
         </section>` : ""}
 ${cta}
+${childLinksSection}
         <section>
           <h2>${routeConfig.relatedLinks ? "Keep learning" : "Explore more"}</h2>
           <ul>
             ${exploreLinks}
           </ul>
         </section>
-      </article>`;
+      </article>
+      <footer>
+        <nav aria-label="Site directory">
+${FOOTER_GROUPS.map((group) => {
+  const links = group.links
+    .filter((item) => item.href !== routeConfig.path)
+    .map((item) => `            <li><a href="${item.href}">${item.label}</a></li>`)
+    .join("\n");
+  return `          <h2>${group.heading}</h2>
+          <ul>
+${links}
+          </ul>`;
+}).join("\n")}
+        </nav>
+      </footer>`;
 }
 
 function toOutputPath(route) {
@@ -332,7 +444,7 @@ function buildOgImage(routeConfig) {
 // not render a second visual shell before React because that causes a visible
 // hydration flash when its simplified markup is replaced by the real app.
 
-function renderRoute(template, routeConfig) {
+function renderRoute(template, routeConfig, hubChildren = {}) {
   const canonical = `${BASE_URL}${routeConfig.path}`;
   const robots = "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1";
   const ogImage = buildOgImage(routeConfig);
@@ -357,13 +469,13 @@ function renderRoute(template, routeConfig) {
   html = replaceTag(
     html,
     /<main id="seo-fallback">[\s\S]*?<\/main>/i,
-    `<main id="seo-fallback">\n${buildFallbackHtml(routeConfig)}\n    </main>`
+    `<main id="seo-fallback">\n${buildFallbackHtml(routeConfig, hubChildren)}\n    </main>`
   );
   return html;
 }
 
-async function writeRoute(template, routeConfig) {
-  const html = renderRoute(template, routeConfig);
+async function writeRoute(template, routeConfig, hubChildren) {
+  const html = renderRoute(template, routeConfig, hubChildren);
   const outputFile = path.join(DIST_DIR, toOutputPath(routeConfig));
   await fs.mkdir(path.dirname(outputFile), { recursive: true });
   await fs.writeFile(outputFile, html, "utf8");
@@ -379,8 +491,26 @@ async function main() {
   }
 
   const template = await fs.readFile(TEMPLATE_PATH, "utf8");
-  await Promise.all(INDEXABLE_ROUTES.map((routeConfig) => writeRoute(template, routeConfig)));
-  console.log(`Prerendered ${INDEXABLE_ROUTES.length} public route shells with route-specific metadata.`);
+  // Never fatal: a hub without live children still builds, it just falls back to
+  // the behaviour this change replaced.
+  const hubChildren = await fetchHubChildren();
+  const hubSummary = Object.entries(hubChildren)
+    .map(([hub, links]) => `${hub} (${links.length})`)
+    .join(", ");
+  if (!hubSummary) {
+    console.warn(
+      "No live hub children fetched — set VITE_SUPABASE_KEY so /newspaper and /mentorship link to their pages.",
+    );
+  }
+
+  await fs.mkdir(DIST_DIR, { recursive: true });
+  await Promise.all(
+    INDEXABLE_ROUTES.map((routeConfig) => writeRoute(template, routeConfig, hubChildren)),
+  );
+  console.log(
+    `Prerendered ${INDEXABLE_ROUTES.length} public route shells with route-specific metadata.`
+      + (hubSummary ? ` Hub child links: ${hubSummary}.` : ""),
+  );
 }
 
 main().catch((error) => {

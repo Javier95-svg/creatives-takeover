@@ -312,6 +312,18 @@ const VisitorNavbar = () => {
               })}
             </div>
 
+            {/* Radix keeps DropdownMenuContent unmounted until it is opened, so
+                the Content menu's destinations exist in no rendered DOM a crawler
+                ever sees. These duplicates keep them discoverable. aria-hidden so
+                assistive tech uses the real menu instead of hearing both. */}
+            <nav aria-hidden="true" className="sr-only">
+              {contentMenu.items.map((item) => (
+                <Link key={`crawlable-${item.href}`} to={item.href} tabIndex={-1}>
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+
             <div className="ml-auto hidden items-center gap-2 pl-2 lg:flex xl:pl-4">
               <ThemeToggle />
               <Button asChild variant="ghost" size="sm">

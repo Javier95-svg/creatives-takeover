@@ -1,5 +1,11 @@
 import { useState, useCallback, useEffect, useRef, type ChangeEvent } from "react";
-import { Lightbulb, Users, Rocket, LayoutDashboard, Upload, Loader2, GraduationCap, TrendingUp, Handshake, BookOpen } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Lightbulb, Users, Rocket, LayoutDashboard, Upload, Loader2, GraduationCap, TrendingUp, Handshake, BookOpen, ArrowRight } from "lucide-react";
+
+// Card destinations that robots.txt disallows. Rendering a link to one wastes a
+// homepage link slot and asks Google to fetch a URL it is told to skip; the card
+// itself still shows, it just does not advertise a crawler-hostile route.
+const ROBOTS_DISALLOWED_LINKS = new Set(["/dashboard"]);
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -499,6 +505,20 @@ const ValuePropositionCards = () => {
                               <p key={idx}>{paragraph}</p>
                             ))}
                           </div>
+
+                          {/* Each card already carried a `link`, and none of them
+                              was ever rendered. This is the homepage's largest
+                              section, so it was emitting zero internal links to
+                              the destinations it describes. */}
+                          {card.link && !ROBOTS_DISALLOWED_LINKS.has(card.link) && (
+                            <Link
+                              to={card.link}
+                              className="value-prop-card__link inline-flex items-center gap-1.5 text-sm font-medium text-primary underline-offset-4 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                              {card.linkLabel || `Explore ${card.subtitle}`}
+                              <ArrowRight className="h-4 w-4 shrink-0" />
+                            </Link>
+                          )}
                         </div>
                       </div>
                     </Card>

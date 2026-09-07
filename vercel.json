@@ -19,7 +19,13 @@
     { "source": "/waitlist/templates", "destination": "/demo-studio/classic/templates", "permanent": true },
     { "source": "/waitlist", "destination": "/demo-studio/classic", "permanent": true },
     { "source": "/waitlist-maker", "destination": "/demo-studio/classic", "permanent": true },
-    { "source": "/gtm-strategist", "destination": "/go-to-market", "permanent": true }
+    { "source": "/gtm-strategist", "destination": "/go-to-market", "permanent": true },
+    { "source": "/stories", "destination": "/newspaper", "permanent": true },
+    { "source": "/insighta/vc-search", "destination": "/vc-search", "permanent": true },
+    { "source": "/insighta/email-templates", "destination": "/email-templates", "permanent": true },
+    { "source": "/insighta/accelerator-hunt", "destination": "/accelerator-hunt", "permanent": true },
+    { "source": "/insighta/pitch-deck-analyzer", "destination": "/pitch-deck-analyzer", "permanent": true },
+    { "source": "/insighta/test", "destination": "/insighta-test", "permanent": true }
   ],
   "rewrites": [
     {

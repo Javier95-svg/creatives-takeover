@@ -174,6 +174,14 @@ export const INDEXABLE_ROUTES = [
     heroHeading: "Answers founders search for before they build",
     heroCopy:
       "Browse practical startup guides for ICP clarity, validation, MVP scope, go-to-market strategy, and fundraising preparation.",
+    // The library's whole job is to point at its guides. Without these the
+    // prerendered hub linked to none of them and every guide depended on the
+    // sitemap alone for discovery.
+    childLinksHeading: "Every founder guide",
+    childLinks: founderAnswerPages.map((page) => ({
+      href: `/answers/${page.slug}`,
+      label: page.title,
+    })),
   },
   ...FOUNDER_ANSWER_ROUTES,
   {
@@ -260,8 +268,13 @@ export const INDEXABLE_ROUTES = [
     heroHeading: "Connect. Learn. Grow.",
     heroCopy:
       "Browse startup mentors, review expertise, and book practical sessions focused on execution, fundraising, product, and growth.",
+    // Filled at build time from the live mentor roster — see fetch-hub-children.mjs.
+    childLinksHeading: "Browse mentors",
+    childLinksKey: "/mentorship",
   },
   {
+    childLinksHeading: "Services on the marketplace",
+    childLinksKey: "/marketplace",
     path: "/marketplace",
     title: "Founder Service Marketplace | Creatives Takeover",
     description:
@@ -310,6 +323,42 @@ export const INDEXABLE_ROUTES = [
       "Review angel investor profiles and focus areas so you can spend less time on random outreach and more time on targeted conversations.",
   },
   {
+    // /build and /podcast carry an inbound link from every prerendered shell,
+    // making them the most-linked URLs on the site — yet neither was prerendered
+    // nor in the sitemap, so both fell through the SPA catch-all in vercel.json
+    // and shipped the homepage title and canonical. They are real pages; treat
+    // them as such.
+    path: "/build",
+    title: "Evidence-Backed MVP Builder for Founders | Creatives Takeover",
+    description:
+      "Turn saved ICP and PMF evidence into a focused, deployable MVP. Build around one customer, one job, and the smallest testable feature set.",
+    changefreq: "weekly",
+    priority: 0.9,
+    heroHeading: "Build the MVP your evidence points to",
+    heroCopy:
+      "Turn saved ICP and PMF evidence into a focused, deployable MVP built around one customer, one job, and the smallest testable feature set.",
+    relatedLinks: [
+      { href: "/mvp-scope", label: "Decide what to build first" },
+      { href: "/mvp-builder", label: "MVP Builder" },
+      { href: "/bizmap-ai", label: "The full startup development cycle" },
+    ],
+  },
+  {
+    path: "/podcast",
+    title: "Founders Unleashed — Podcast | Creatives Takeover",
+    description:
+      "Conversations with founders building real products, told as stories, not pitches. Unusual paths, contrarian bets, and the hard moments behind the company.",
+    changefreq: "weekly",
+    priority: 0.7,
+    heroHeading: "Founders Unleashed",
+    heroCopy:
+      "Conversations with founders building real products, told as stories, not pitches — the unusual paths, the contrarian bets, and the hard moments behind the company.",
+    relatedLinks: [
+      { href: "/newspaper", label: "Read founder stories" },
+      { href: "/mentorship", label: "Meet the mentors" },
+    ],
+  },
+  {
     path: "/newspaper",
     title: "Newspaper | Creatives Takeover",
     description:
@@ -319,6 +368,10 @@ export const INDEXABLE_ROUTES = [
     heroHeading: "Founder stories and startup insights",
     heroCopy:
       "Read articles, case studies, and lessons for founders building products, raising capital, and growing from zero.",
+    // Filled at build time from the newest published articles — the React hub
+    // paginates client-side, so these are the only article links a crawler sees.
+    childLinksHeading: "Latest articles",
+    childLinksKey: "/newspaper",
   },
   {
     path: "/careers",
@@ -384,6 +437,22 @@ export const INDEXABLE_ROUTES = [
     heroCopy:
       "Move from idea validation to MVP planning and launch with a structured founder workflow covering customer research, PMF, product scope, and go-to-market.",
     updatedLabel: "March 2026",
+    // The React hub links these well (BizMapJourneyHubPage.tsx), but the
+    // prerendered shell did not, leaving each tool page dependent on a
+    // UTM-tagged answer-page CTA for its only inbound link.
+    childLinksHeading: "Tools in the cycle",
+    childLinks: [
+      { href: "/icp-builder", label: "ICP Builder — define your ideal customer" },
+      { href: "/validate", label: "Validate — test demand before you build" },
+      { href: "/pmf-lab", label: "PMF Lab — find product–market fit evidence" },
+      { href: "/mvp-scope", label: "MVP Scope — decide what to build first" },
+      { href: "/mvp-builder", label: "MVP Builder — build the evidence-backed MVP" },
+      { href: "/tech-stack", label: "Tech Stack — choose your build tooling" },
+      { href: "/demo-studio", label: "Demo Studio — turn the product into a live demo" },
+      { href: "/go-to-market", label: "Go-To-Market — plan the launch" },
+      { href: "/traction-engine", label: "Traction Engine — measure and grow" },
+      { href: "/decision-sprint", label: "Decision Sprint — resolve a blocking call" },
+    ],
     sections: [
       {
         heading: "What BizMap AI is",
@@ -691,7 +760,7 @@ export const INDEXABLE_ROUTES = [
       "Use Insighta to discover investors, research accelerators, prepare outreach, and tighten fundraising execution.",
   },
   {
-    path: "/insighta/vc-search",
+    path: "/vc-search",
     title: "Venture Capital Database & VC Search | Creatives Takeover",
     description:
       "Search a venture capital database by stage, geography, sector, and check size to build a tighter startup investor list.",
@@ -731,7 +800,7 @@ export const INDEXABLE_ROUTES = [
     ],
   },
   {
-    path: "/insighta/email-templates",
+    path: "/email-templates",
     title: "Fundraising Email Templates | Creatives Takeover",
     description:
       "Use fundraising email templates for investor outreach, warm intros, follow-ups, and startup updates without starting from scratch.",
@@ -742,7 +811,7 @@ export const INDEXABLE_ROUTES = [
       "Copy, customize, and send fundraising emails for intros, outreach, follow-ups, and investor updates.",
   },
   {
-    path: "/insighta/accelerator-hunt",
+    path: "/accelerator-hunt",
     title: "Startup Accelerator Database | Creatives Takeover",
     description:
       "Search a startup accelerator database by location, focus area, and funding profile to shortlist the right programs faster.",
@@ -753,7 +822,7 @@ export const INDEXABLE_ROUTES = [
       "Search accelerator programs by location, focus area, funding, and fit to build a stronger application list.",
   },
   {
-    path: "/insighta/pitch-deck-analyzer",
+    path: "/pitch-deck-analyzer",
     title: "Pitch Deck Analyzer & Score Tool | Creatives Takeover",
     description:
       "Upload a pitch deck, get a score, and review actionable feedback on narrative, clarity, traction, business model, and fundraising readiness.",
@@ -793,7 +862,7 @@ export const INDEXABLE_ROUTES = [
     ],
   },
   {
-    path: "/insighta/test",
+    path: "/insighta-test",
     title: "Fundraising Readiness Assessment | Creatives Takeover",
     description:
       "Assess fundraising readiness, identify gaps, and see what your startup needs to improve before approaching investors.",

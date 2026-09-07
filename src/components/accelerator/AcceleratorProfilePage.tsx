@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import { PLAN_SUMMARIES, type Plan } from "@/config/planPermissions";
 import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
 import { toast } from "sonner";
@@ -507,6 +508,19 @@ const AcceleratorProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Same defect the VC profile had: with no SEO tags the page inherited the
+          homepage <title> and canonical="https://creatives-takeover.com/", so
+          every accelerator URL declared itself a homepage duplicate. */}
+      <SEO
+        title={`${accelerator.title} — Accelerator Profile | Creatives Takeover`}
+        description={
+          accelerator.description?.slice(0, 160)
+          || `${accelerator.title}: programme focus, funding, location, and how to apply.`
+        }
+        url={`/insighta/accelerator/${slug}`}
+        canonical={`https://creatives-takeover.com/insighta/accelerator/${slug}`}
+        noindex={isProfileLocked}
+      />
       <Navigation />
 
       <main className="relative overflow-hidden py-20 px-4">
