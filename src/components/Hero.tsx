@@ -84,7 +84,7 @@ const DEFAULT_LEDE = (
       Startup incubator platform.
     </span>
     <span className="ct-hero__lede-block">
-      Know what to build, who it's for, and whether they'll pay before you spend months building.
+      Define what to build, who it's for, and whether they'll pay before you spend months building.
     </span>
     <strong className="ct-hero__lede-final">No application. No cohort. No equity.</strong>
   </>
