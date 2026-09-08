@@ -14,7 +14,8 @@ const frozenFiles = {
   // input now creates a durable, claimable ICP result in place; Product mode
   // auto-starts Demo Studio; and unresolved/off rollout state safely uses the
   // established route handoff. Headline, lede, proof line, and stats are intact.
-  '../src/components/Hero.tsx': 'b5be330356a031169f65e47b0fd1e3032d6f1c007e74042f24847a184d437133',
+  // Rehashed 2026-09-08 for the approved evidence-led hero copy update.
+  '../src/components/Hero.tsx': 'b0d7f1ae79ab13fd398bc852ebf6b515c16b1ee33ba23a5735cb78b3f028b3ed',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.

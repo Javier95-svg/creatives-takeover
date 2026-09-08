@@ -84,7 +84,7 @@ const DEFAULT_LEDE = (
       Business Development platform for startup founders &amp; first-time business owners.
     </span>
     <span className="ct-hero__lede-block">
-      Define your ideal customer, prove demand, build your MVP, launch it, and find investment.
+      Know what to build, who it is for, and what evidence shows they will pay before you spend months building.
     </span>
     <strong className="ct-hero__lede-final">No application. No cohort. No equity.</strong>
   </>
