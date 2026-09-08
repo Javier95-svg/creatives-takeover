@@ -81,7 +81,7 @@ const DEFAULT_STATS: HeroStat[] = [
 const DEFAULT_LEDE = (
   <>
     <span className="ct-hero__lede-block">
-      A guided platform for validating, building, and growing your startup.
+      Startup incubator platform.
     </span>
     <span className="ct-hero__lede-block">
       Know what to build, who it's for, and whether they'll pay before you spend months building.

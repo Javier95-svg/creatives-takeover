@@ -15,7 +15,7 @@ const frozenFiles = {
   // auto-starts Demo Studio; and unresolved/off rollout state safely uses the
   // established route handoff. Headline, lede, proof line, and stats are intact.
   // Rehashed 2026-09-08 for the approved evidence-led hero copy update.
-  '../src/components/Hero.tsx': '89c273c60c2c67f83941378135f700c581753190c477b2570609713334057a01',
+  '../src/components/Hero.tsx': '1aae22a8bb47c8cfaac9f35980b65d45e8af36e515a7b78bfe77514d203796e8',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.

@@ -105,7 +105,7 @@ function buildFallbackHtml(routeConfig, hubChildren = {}) {
     .join(" | ");
   const heroContent = routeConfig.path === "/"
     ? `<p>Creatives Takeover &middot; Founders Compass</p>
-          <p>A guided platform for validating, building, and growing your startup.</p>
+          <p>Startup incubator platform.</p>
           <p>Know what to build, who it's for, and whether they'll pay before you spend months building.</p>
           <p><strong>No application. No cohort. No equity.</strong></p>
           <form action="/icp-builder" method="get">
