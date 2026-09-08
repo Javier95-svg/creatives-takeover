@@ -4,7 +4,7 @@ import { Check, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { GTM_STRATEGIST_PRICING } from "@/config/gtmStrategist";
 import { CREDIT_COSTS, getCreditCostForPlan } from "@/config/constants";
 import { getFounderTool } from "@/config/founderToolCatalog";
-import { MONTHLY_FREE_QUOTAS, PLAN_LABELS, PLAN_MONTHLY_CREDITS, PLAN_SEQUENCE, type Plan } from "@/config/planPermissions";
+import { MONTHLY_FREE_QUOTAS, PLAN_LABELS, PLAN_MONTHLY_CREDITS, PLAN_SEQUENCE } from "@/config/planPermissions";
 import { PLAN_PRICING } from "@/config/pricing";
 
 type FeatureValue = string | boolean;
@@ -91,7 +91,7 @@ const features: FeatureCategory[] = [
   {
     category: "Network & support",
     items: [
-      { feature: "Mentor marketplace & Discovery Calls", rookie: "Access; fees separate", starter: "Access; fees separate", rising: "Access; fees separate", pro: "Access; fees separate" },
+      { feature: "Mentor marketplace & Discovery Calls", rookie: "Access; mentor fees separate", starter: "Access; mentor fees separate", rising: "Access; mentor fees separate", pro: "Access; mentor fees separate" },
       { feature: "Find a Co-Founder posting", rookie: "Free", starter: "Free", rising: "Free", pro: "Free" },
       { feature: "Newspaper", rookie: "Included", starter: "Included", rising: "Included", pro: "Included" },
     ],

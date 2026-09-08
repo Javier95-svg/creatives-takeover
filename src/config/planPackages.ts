@@ -2,7 +2,7 @@ import {
   MONTHLY_FREE_QUOTAS,
   PLAN_MONTHLY_CREDITS,
   type Plan,
-} from './planPermissions';
+} from './planPermissions.ts';
 
 export interface PlanPackagePresentation {
   valueStatement: string;

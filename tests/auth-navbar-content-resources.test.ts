@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const source = readFileSync(new URL('../src/components/Navigation.tsx', import.meta.url), 'utf8');
+const tabletSource = readFileSync(new URL('../src/components/navigation/TabletNavigation.tsx', import.meta.url), 'utf8');
 
 test('authenticated navbar groups content and resources in the intended order', () => {
   const navItems = source.slice(source.indexOf('const navItems = ['), source.indexOf('// Check if a nav item is active'));
@@ -26,7 +27,7 @@ test('authenticated navbar distributes the remaining sections evenly', () => {
   const responsiveSource = readFileSync(new URL('../src/styles/responsive-overrides.css', import.meta.url), 'utf8');
 
   assert.match(source, /signed-in-desktop-nav[^"]*justify-evenly/);
-  assert.match(source, /signed-in-tablet-nav-links[^"]*w-full[^"]*justify-evenly/);
+  assert.match(tabletSource, /signed-in-tablet-nav-links[^"]*w-full[^"]*justify-evenly/);
   assert.match(responsiveSource, /\.signed-in-desktop-nav \{[\s\S]*?justify-content: space-evenly !important/);
 });
 

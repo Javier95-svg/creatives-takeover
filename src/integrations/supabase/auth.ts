@@ -1,8 +1,9 @@
 import { supabase } from './client';
+import { supabaseBrowserConfig } from './env';
 import { logWarn } from '@/lib/logger';
 import { clearSupabaseAuthStorage } from '@/integrations/supabase/sessionStorage';
 
-const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL ?? '') as string;
+const SUPABASE_URL = supabaseBrowserConfig.url;
 const INVALID_REFRESH_TOKEN_PATTERNS = [
   /invalid refresh token/i,
   /refresh token not found/i,

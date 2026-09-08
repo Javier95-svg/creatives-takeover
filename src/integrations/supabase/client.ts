@@ -5,22 +5,10 @@ import {
   createSupabaseAuthStorage,
   getSupabaseAuthStorageKey,
 } from '@/integrations/supabase/sessionStorage';
+import { supabaseBrowserConfig } from './env';
 import type { Database } from './types';
 
-
-// Prefer environment variables so keys are not committed to source.
-// In development create a `.env` with VITE_SUPABASE_URL and VITE_SUPABASE_KEY (do NOT commit it).
-const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL ?? '') as string;
-const SUPABASE_PUBLISHABLE_KEY = (import.meta.env.VITE_SUPABASE_KEY ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '') as string;
-
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  // Warn in dev/test to avoid confusing runtime errors. Do not throw to keep DX smooth.
-  // Ensure you set VITE_SUPABASE_URL and VITE_SUPABASE_KEY in your environment for dev and production.
-  // Example (local .env, do NOT commit):
-  // VITE_SUPABASE_URL=https://your-project.supabase.co
-  // VITE_SUPABASE_KEY=public-anon-key
-  console.warn('Missing Supabase env vars: VITE_SUPABASE_URL or VITE_SUPABASE_KEY. Falling back to empty strings.');
-}
+const { url: SUPABASE_URL, publishableKey: SUPABASE_PUBLISHABLE_KEY } = supabaseBrowserConfig;
 
 function isRefreshTokenRequest(input: RequestInfo | URL): boolean {
   const url =

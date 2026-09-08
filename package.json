@@ -3,8 +3,14 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "packageManager": "npm@10",
+  "engines": {
+    "node": ">=22",
+    "npm": ">=10"
+  },
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/validate-build-env.mjs",
     "build": "node scripts/generate-llms-txt.mjs && node scripts/generate-seo-assets.mjs && vite build && node scripts/generate-prerendered-pages.mjs",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
