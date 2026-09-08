@@ -113,7 +113,7 @@ export const INDEXABLE_ROUTES = [
     priority: 1.0,
     heroHeading: "The Founders' Compass",
     heroCopy:
-      "Define what to build, who it's for, and whether they'll pay before you spend months building.",
+      "Define what to build, who it's for, and whether they'll pay before you spend months guessing.",
     sections: [
       {
         heading: "Reach value before signup",
