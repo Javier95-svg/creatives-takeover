@@ -842,6 +842,7 @@ export async function getProjectReadiness(projectId: string): Promise<DemoStudio
   const missing = getLaunchPublishMissing({
     hasPublishedDemo: publishedDemoCount > 0,
     hasVsl: attachedVslCount > 0,
+    conceptTest: launchPage?.theme?.conceptTest === true,
   });
   if (!launchPage?.headline?.trim()) missing.push('Add a launch page headline.');
   if (!launchPage?.subheadline?.trim()) missing.push('Add a launch page subheadline.');

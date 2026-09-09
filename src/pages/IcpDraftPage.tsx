@@ -19,6 +19,7 @@ import type { StoredIcpArtifact } from "@/lib/icpBuilderSession";
 import { trackActivationFunnelEvent } from "@/lib/activationEntry";
 import { trackJourneyEvent } from "@/lib/journeyOutcomes";
 import { buildIcpScoreCard } from "@/lib/icpScoreCard";
+import { isCompletionChainEnabled } from '@/lib/completionChain';
 
 function slugifyFileName(value: string) {
   return value.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase() || "icp-draft";
@@ -257,7 +258,7 @@ export default function IcpDraftPage() {
                   className="shrink-0 gap-2 bg-slate-950 text-white hover:bg-slate-800"
                   onClick={handleDemoStudioClick}
                 >
-                  Create my prospect demo
+                  {isCompletionChainEnabled() ? 'Create your concept page' : 'Create my prospect demo'}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
                 <Button
@@ -297,7 +298,7 @@ export default function IcpDraftPage() {
               className="shrink-0 gap-2 bg-white text-foreground hover:bg-white/90"
               onClick={handleDemoStudioClick}
             >
-              <span>Create my prospect demo</span>
+              <span>{isCompletionChainEnabled() ? 'Create your concept page' : 'Create my prospect demo'}</span>
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
@@ -364,7 +365,7 @@ export default function IcpDraftPage() {
           scoreCard ? (
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <Button type="button" size="lg" className="gap-2" onClick={handleDemoStudioClick}>
-                Create my demo
+                {isCompletionChainEnabled() ? 'Create your concept page' : 'Create my demo'}
                 <ArrowRight className="h-4 w-4" />
               </Button>
               <IcpScoreShareModal

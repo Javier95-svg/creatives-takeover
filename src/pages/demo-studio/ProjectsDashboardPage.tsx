@@ -37,6 +37,8 @@ import WhatIsADemoPopover from '@/components/demo-studio/WhatIsADemoPopover';
 import DemoStudioWallpaper from '@/components/wallpapers/DemoStudioWallpaper';
 import { trackToolOpened } from '@/lib/analytics';
 import { resolveIcpSource } from '@/lib/icpHandoffSource';
+import { supabase } from '@/integrations/supabase/client';
+import { isCompletionChainEnabled } from '@/lib/completionChain';
 import { icpArtifactToDemoBrief } from '@/lib/icpToDemoBrief';
 import { ensurePrebuildContext } from '@/lib/prebuildContext';
 import { consumeJourneyHandoff, findJourneyHandoff, trackJourneyEvent, trackPrebuildLineageEvent } from '@/lib/journeyOutcomes';
@@ -123,6 +125,25 @@ export default function ProjectsDashboardPage() {
         ensurePrebuildContext({ userId: user.id, icpAnalysisId: icpParam, label: project.name, sourceTool: 'demo_studio' }),
         findJourneyHandoff('demo_studio', icpParam).catch(() => null),
       ]);
+      if (!active) return;
+      if (isCompletionChainEnabled()) {
+        const mapped = icpArtifactToDemoBrief(icp.artifact);
+        const { data, error } = await (supabase as any).rpc('start_completion_concept_v1', {
+          p_icp_id: icpParam, p_context_id: context.id,
+          p_name: mapped.project.name || 'My concept', p_tagline: mapped.project.tagline,
+          p_audience: mapped.patch.audience, p_problem: mapped.patch.problem,
+          p_promise: mapped.patch.product_promise,
+        });
+        if (error) throw error;
+        const saved = data as DemoStudioProject;
+        if (handoff) {
+          await consumeJourneyHandoff(handoff.id, saved.id).catch(() => {
+            toast.info('Concept saved. Journey tracking will retry when you reopen this ICP.');
+          });
+        }
+        if (active) navigate(`/demo-studio/projects/${saved.id}/launch`, { replace: true });
+        return;
+      }
       setName((prev) => prev || project.name);
       setTagline((prev) => prev || project.tagline);
       setValidationContextId(context.id);
@@ -137,11 +158,13 @@ export default function ProjectsDashboardPage() {
       });
       setIcpPrefilled(true);
       setDialogOpen(true);
-    })();
+    })().catch((error) => {
+      if (active) toast.error(error instanceof Error ? error.message : 'Could not prepare your concept. Reopen this ICP to retry.');
+    });
     return () => {
       active = false;
     };
-  }, [user, icpParam, icpPrefilled]);
+  }, [user, icpParam, icpPrefilled, navigate]);
 
   const handleCreate = async () => {
     if (!user || !name.trim()) return;

@@ -26,6 +26,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { cn } from '@/lib/utils';
 import { shouldShowWatermark } from '@/lib/demoStudio/plan';
 import { evaluateDemoArtifact } from '@/lib/demoStudio/outcome';
+import { prepareConceptValidation } from '@/lib/demoStudio/conceptHandoff';
 import { createJourneyEvidenceManifest, createJourneyHandoff, trackJourneyEvent, upsertJourneyOutcome } from '@/lib/journeyOutcomes';
 import {
   getOrCreateLaunchPage,
@@ -168,7 +169,8 @@ export default function LaunchComposerPage() {
     setLaunchPage(next);
     try {
       const saved = await updateLaunchPage(projectId, user.id, patch);
-      setLaunchPage(saved);
+      setLaunchPage(current => current ? { ...current, ...patch, updated_at: saved.updated_at } : saved);
+      setReadiness(await getProjectReadiness(projectId));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Could not save launch page.');
     }
@@ -181,7 +183,14 @@ export default function LaunchComposerPage() {
       const updated = await publishLaunchPage(project, user.id);
       setProject(updated);
       setReadiness(await getProjectReadiness(project.id));
-      if (selectedDemo && launchPage) {
+      if (launchPage?.theme?.conceptTest) {
+        try {
+          await prepareConceptValidation(updated);
+        } catch {
+          toast.info('Your concept is published. Use Start validation to retry its journey connection.');
+        }
+      }
+      if (selectedDemo && launchPage && !launchPage.theme?.conceptTest) {
         // The launch page is already published by this point. Recording the
         // journey outcome and opening the PMF handoff is a side effect, so a
         // journey-service outage must not turn a successful publish into
@@ -349,8 +358,8 @@ export default function LaunchComposerPage() {
   const launchUrl = project?.slug ? `${window.location.origin}/p/${project.slug}` : '';
   const attachedVslCount = vsls.filter((vsl) => vsl.loom_embed_url || vsl.loom_shared_url || vsl.video_url).length;
   const launchChecklist = [
-    { label: 'Published demo', done: demos.some((demo) => demo.status === 'published') },
-    { label: 'Recorded VSL', done: attachedVslCount > 0 },
+    { label: launchPage?.theme?.conceptTest ? 'Demo optional for concept testing' : 'Published demo', done: launchPage?.theme?.conceptTest || demos.some((demo) => demo.status === 'published') },
+    { label: launchPage?.theme?.conceptTest ? 'VSL optional for concept testing' : 'Recorded VSL', done: launchPage?.theme?.conceptTest || attachedVslCount > 0 },
     { label: 'Headline', done: Boolean(launchPage?.headline?.trim()) },
     { label: 'Subheadline', done: Boolean(launchPage?.subheadline?.trim()) },
     { label: 'CTA', done: Boolean(launchPage?.cta_label?.trim()) },
@@ -381,6 +390,18 @@ export default function LaunchComposerPage() {
       <SEO title={`${project?.name ?? 'Project'} Launch Page`} description="Compose the public page that shows your demo and founder VSL." noindex />
       <Navigation />
       <main className="container mx-auto max-w-6xl px-4 pt-28 pb-20 md:pt-32">
+        {launchPage?.theme?.conceptTest && (
+          <Card className="mb-6"><CardContent className="space-y-3 pt-6">
+            <h2 className="text-xl font-semibold">Test your concept before building</h2>
+            <p>Your customer and promise come from your ICP. Review the page and publish when ready. Signups express interest; they do not prove customers will pay.</p>
+            {project?.launch_published && <Button disabled={saving} onClick={async () => {
+              setSaving(true);
+              try { navigate(await prepareConceptValidation(project)); }
+              catch (error) { toast.error(error instanceof Error ? error.message : 'Could not connect validation. Your published page is safe.'); }
+              finally { setSaving(false); }
+            }}>Start validation</Button>}
+          </CardContent></Card>
+        )}
         <Link
           to={`/demo-studio/projects/${projectId}`}
           className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"

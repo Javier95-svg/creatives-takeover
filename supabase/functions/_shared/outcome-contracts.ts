@@ -115,7 +115,18 @@ const CONTRACTS: Record<JourneyTool, ContractDefinition> = {
 const passed = (value: unknown) => value === true || (typeof value === 'number' && value > 0);
 
 export function evaluateOutcomeContract(input: OutcomeContractInput): OutcomeEvaluation {
-  const definition = CONTRACTS[input.tool];
+  const definition: ContractDefinition = input.tool === 'demo_studio' && input.qualityChecks.concept_page === true
+    ? {
+      required: [
+        ['buyer_promise', 'Describe the concept and its intended benefit.'],
+        ['single_cta', 'Set an interest signup call to action.'],
+        ['lead_capture', 'Enable signup capture.'],
+        ['analytics', 'Enable page and signup measurement.'],
+        ['published', 'Publish the concept page.'],
+      ],
+      verified: [['external_activity', 'Collect independent interest. Interest alone does not validate willingness to pay.']],
+    }
+    : CONTRACTS[input.tool];
   const required = definition.required.map(([id, message]) => ({
     id,
     message,

@@ -75,7 +75,7 @@ export async function fetchJourneyEvidenceBrief(userId: string, scope: JourneyEv
     .select('id, pmf_score, analysis_data, validation_context_id, created_at')
     .eq('user_id', userId);
   if (scope.pmfAnalysisId) pmfQuery = pmfQuery.eq('id', scope.pmfAnalysisId);
-  else if (scope.validationContextId) pmfQuery = pmfQuery.eq('validation_context_id', scope.validationContextId);
+  if (scope.validationContextId) pmfQuery = pmfQuery.eq('validation_context_id', scope.validationContextId);
 
   let outcomesQuery = supabase
     .from('journey_outcomes' as never)
@@ -245,7 +245,7 @@ export async function fetchJourneyEvidenceBrief(userId: string, scope: JourneyEv
   const successEvent = buyingSignals[0] || 'Customer completes the primary workflow';
   const essentialFeatures = missingFeatures.slice(0, 3);
   const brief = [
-    'Build my MVP from my validated evidence below.',
+    sources.pmf ? 'Build my MVP from the selected customer evidence below.' : 'Draft an experimental MVP from the assumptions below. Customer demand has not been validated.',
     ...sections,
     `EVIDENCE MANIFEST:\n${manifest.sources.map((source) => `- ${source.sourceType}: ${source.label || source.sourceId} | version ${source.version} | ${source.capturedAt}`).join('\n')}`,
     'BUILD THIS:\nA focused MVP for the audience above. Treat the must-have features as the core flows, design the UX to answer the top objection directly, and use the approved positioning copy on the landing or home screen. Keep scope tight: only what the evidence justifies. Preserve analytics, rollback support, and one testable primary customer flow.',

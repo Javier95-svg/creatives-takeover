@@ -59,6 +59,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { findJourneyHandoff, trackJourneyEvent } from '@/lib/journeyOutcomes';
+import { isCompletionChainEnabled } from '@/lib/completionChain';
 
 // ── Quick-start templates ────────────────────────────────────────────────────
 
@@ -342,6 +343,9 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   const [isLoadingEvidence, setIsLoadingEvidence] = useState(false);
   const { user } = useAuth();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const evidencePrefillAttempted = useRef(false);
+  const inputRevision = useRef(input);
+  inputRevision.current = input;
   // Journey-context compiler: draft the build prompt from the founder's saved
   // ICP decision, Demo proof, PMF report, and GTM plan. Editable before sending.
   const handleBuildFromEvidence = useCallback(async () => {
@@ -361,6 +365,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
         });
         return;
       }
+      if (inputRevision.current.trim() && !window.confirm('Replace your current prompt with the saved evidence brief?')) return;
       setInput(result.brief);
       setBuilderMode('build');
       const inboundHandoff = pmfAnalysisId
@@ -370,7 +375,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
         customPrompt: result.brief,
         prefillSource: 'journey_evidence',
         evidenceManifest: result.manifest,
-        buildEvidenceMode: 'evidence_backed',
+        buildEvidenceMode: result.sources.pmf ? 'evidence_backed' : 'experimental',
         coreCustomer: result.scope.coreCustomer,
         coreJob: result.scope.coreJob,
         successEvent: result.scope.successEvent,
@@ -400,6 +405,14 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
       setIsLoadingEvidence(false);
     }
   }, [onSetupInputChange, user]);
+  useEffect(() => {
+    if (!isCompletionChainEnabled() || !user || evidencePrefillAttempted.current) return;
+    const params = new URLSearchParams(window.location.search);
+    if (!params.get('pmf') || !params.get('context') || input.trim() || setupInput.customPrompt?.trim() || messages.length > 0) return;
+    evidencePrefillAttempted.current = true;
+    void handleBuildFromEvidence();
+  }, [user, input, setupInput.customPrompt, messages.length, handleBuildFromEvidence]);
+
   const [queuedSubmissions, setQueuedSubmissions] = useState<QueuedSubmission[]>([]);
   const [changeCards, setChangeCards] = useState<MVPBuildChangeSummary[]>([]);
   const [expandedChangeCards, setExpandedChangeCards] = useState<Record<string, boolean>>({});

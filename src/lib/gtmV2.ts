@@ -1,3 +1,5 @@
+import { buildBuyerInterviewScript } from './gtmInterview.ts';
+
 export const GTM_V2_SCHEMA_VERSION = 2 as const;
 
 export type GTMBusinessModel =
@@ -592,7 +594,7 @@ export function buildGTMAssets(plan: GTMPlanV2): GTMPlayAsset[] {
       id: `${play.id}-interview`,
       type: 'interview_script',
       title: `${play.channelName} buyer interview script`,
-      content: `1. Take me back to the last time ${play.buyingTrigger.toLowerCase()}.\n2. What did you try first?\n3. What alternatives did you compare?\n4. What made the problem expensive or urgent?\n5. Who influenced the decision?\n6. What evidence would make ${play.offer.toLowerCase()} credible?\n7. Where did you look for an answer?\n\nDo not pitch until the interview is complete. Capture exact customer language.`,
+      content: buildBuyerInterviewScript(play.buyingTrigger, play.offer),
     };
     const landing: GTMPlayAsset = {
       ...common,

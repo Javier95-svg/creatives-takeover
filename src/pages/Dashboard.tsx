@@ -11,6 +11,7 @@ import DashboardFocusEditor from '@/components/dashboard/DashboardFocusEditor';
 import FounderStageIntelligenceCard from '@/components/dashboard/FounderStageIntelligenceCard';
 import DashboardTour from '@/components/dashboard/DashboardTour';
 import ContinueArtifactCard from '@/components/dashboard/ContinueArtifactCard';
+import CompletionChainResume from '@/components/dashboard/CompletionChainResume';
 import { FirstResultActivationCard } from '@/components/dashboard/FirstResultActivationCard';
 import { useExitIntent } from '@/hooks/useExitIntent';
 import { ExitIntentModal } from '@/components/ExitIntentModal';
@@ -161,6 +162,7 @@ const Dashboard = () => {
           rolloutVariant={activationState.rolloutVariant}
         />
       ) : null}
+      <CompletionChainResume />
       <DashboardTodayCockpit />
       <PlatformUpdates />
       <FounderJourneyPanel />

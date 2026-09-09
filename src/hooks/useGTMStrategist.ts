@@ -235,17 +235,17 @@ export function useGTMStrategist() {
 
   const loadExistingPlan = useCallback(async () => {
     if (!user) return;
-    if (requestedMvpProjectId) {
-      setIsRestoringPlan(false);
-      return;
-    }
     try {
-      const { data } = await supabase
+      const inbound = requestedMvpProjectId ? await findJourneyHandoff('gtm_strategist', requestedMvpProjectId) : null;
+      if (requestedMvpProjectId && !inbound?.consumed_artifact_id) return;
+      let savedQuery = supabase
         .from(GTM_TABLE)
         .select('id, plan_title, plan_content, status, schema_version')
         .eq('user_id', user.id)
         .in('status', ['saved', 'exported'])
-        .eq('schema_version', 2)
+        .eq('schema_version', 2);
+      if (inbound?.consumed_artifact_id) savedQuery = savedQuery.eq('id', inbound.consumed_artifact_id);
+      const { data } = await savedQuery
         .order('updated_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -341,7 +341,7 @@ export function useGTMStrategist() {
   }, [mvpProjects]);
 
   useEffect(() => {
-    if (!requestedMvpProjectId || mvpProjects.length === 0) return;
+    if (!requestedMvpProjectId || mvpProjects.length === 0 || isRestoringPlan || planId) return;
     const exactProject = mvpProjects.find((project) => project.id === requestedMvpProjectId);
     if (!exactProject) return;
     setSelectedMvpProjectId(exactProject.id);
@@ -349,7 +349,7 @@ export function useGTMStrategist() {
     void findJourneyHandoff('gtm_strategist', exactProject.id)
       .then((handoff) => setOriginatingHandoffId(handoff?.id ?? null))
       .catch(() => setOriginatingHandoffId(null));
-  }, [mvpProjects, requestedMvpProjectId]);
+  }, [mvpProjects, requestedMvpProjectId, isRestoringPlan, planId]);
 
   const runAnalysis = useCallback(async (answers: GTMIntakeAnswers) => {
     if (!user) {
@@ -430,7 +430,12 @@ export function useGTMStrategist() {
     setPhase('analyzing');
     trackGTMIntakeCompleted({ schema_version: 2, business_model: intake.businessModel });
     try {
-      const idempotencyKey = createIdempotencyKey('gtm-v2', `${user.id}-${regenerate ? planId ?? 'new' : 'new'}`);
+      // The operation identity includes the actual approved input. Distinct ideas
+      // must not share a user-wide "new" key; retrying identical input must reuse it.
+      const operationBytes = new TextEncoder().encode(JSON.stringify({ user: user.id, plan: regenerate ? planId : null, intake }));
+      const digest = await crypto.subtle.digest('SHA-256', operationBytes);
+      const fingerprint = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+      const idempotencyKey = createIdempotencyKey('gtm-v2', fingerprint);
       const { data, error } = await supabase.functions.invoke('gtm-analyzer', {
         headers: { 'Idempotency-Key': idempotencyKey },
         body: { schemaVersion: 2, planId: regenerate ? planId : undefined, intake },
@@ -602,7 +607,7 @@ export function useGTMStrategist() {
             sprintId,
             marketExperimentId,
             successEvent: analysis.metrics.primaryOutcome,
-            destinationRoute: `/traction-engine?sprint=${encodeURIComponent(sprintId)}${validationContextId ? `&context=${encodeURIComponent(validationContextId)}` : ''}`,
+            destinationRoute: `/traction-engine?sprint=${encodeURIComponent(sprintId)}&planId=${encodeURIComponent(planId)}&playId=${encodeURIComponent(play.id)}${validationContextId ? `&context=${encodeURIComponent(validationContextId)}` : ''}`,
             ...activationPayload,
           },
           idempotencyKey: activationKey,

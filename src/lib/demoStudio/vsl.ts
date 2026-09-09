@@ -43,8 +43,9 @@ export function normalizeLoomUrl(rawUrl: string): ParsedLoomUrl {
   return { videoId, sharedUrl, embedUrl };
 }
 
-export function getLaunchPublishMissing(readiness: { hasPublishedDemo: boolean; hasVsl: boolean }): string[] {
+export function getLaunchPublishMissing(readiness: { hasPublishedDemo: boolean; hasVsl: boolean; conceptTest?: boolean }): string[] {
   const missing: string[] = [];
+  if (readiness.conceptTest) return missing;
   if (!readiness.hasPublishedDemo) missing.push('Publish at least one interactive demo.');
   if (!readiness.hasVsl) missing.push('Attach at least one recorded VSL variation.');
   return missing;

@@ -23,6 +23,7 @@ import { useBizMapSharing } from '@/hooks/useBizMapSharing';
 import { createPMFSharedPayload } from '@/lib/bizmapSharing';
 import { PMF_SIGNAL_THRESHOLDS, formatPmfDecision, getPmfConfidence, getPmfDecision } from '@/lib/pmfConfidence';
 import { getPmfDecisionAction } from '@/lib/pmfDecisionAction';
+import { isCompletionChainEnabled } from '@/lib/completionChain';
 
 interface PMFReadinessReportProps {
   analysis: PMFReadinessAnalysis;
@@ -75,6 +76,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
   pathwayEnabled,
 }) => {
   const [interviewPreviewOpen, setInterviewPreviewOpen] = useState(false);
+  const completionChainEnabled = isCompletionChainEnabled();
   const decision = analysis.decision ?? getPmfDecision(analysis.overallScore);
   const decisionTitle = analysis.recommendedActionTitle;
   const scoreMeaning = analysis.scoreMeaning;
@@ -110,7 +112,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
     nextExperiment: analysis.nextExperiment,
     validationContextId,
     icpAnalysisId,
-    pathwayEnabled,
+    pathwayEnabled: pathwayEnabled || completionChainEnabled,
   });
 
   // Primary Finding — lowest-scoring dimension
@@ -337,6 +339,13 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
       </div>
 
       {/* Threshold banner */}
+      {completionChainEnabled && decision !== 'build' && analysisId && validationContextId && (
+        <details className="rounded-lg border p-4">
+          <summary className="cursor-pointer">Explore a build using unvalidated assumptions</summary>
+          <p className="my-3 text-sm">The recommended next action remains validation. Continuing creates an experimental brief; it does not mark your PMF evidence as validated. Building requires your approval and the existing credits.</p>
+          <Button asChild variant="outline"><Link to={`/mvp-builder?pmf=${encodeURIComponent(analysisId)}&context=${encodeURIComponent(validationContextId)}&experimental=1`}>Continue with these assumptions</Link></Button>
+        </details>
+      )}
       <div className={cn('flex items-start gap-3 rounded-lg border p-4', thresholdBanner.bg)}>
         <ThresholdIcon className={cn('w-5 h-5 shrink-0 mt-0.5', thresholdBanner.iconColor)} />
         <p className="text-sm leading-relaxed">{thresholdBanner.message}</p>

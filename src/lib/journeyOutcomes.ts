@@ -214,6 +214,12 @@ export async function upsertJourneyOutcome(input: JourneyOutcomeInput) {
   });
   if (error) throw error;
   if (!data?.ok) throw new Error(data?.error || "Could not evaluate journey outcome.");
+  captureEvent('completion_chain_output_evaluated', {
+    tool: input.tool, artifact_id: input.artifactId, artifact_type: input.artifactType,
+    validation_context_id: input.validationContextId ?? null,
+    outcome_status: data.evaluation?.status,
+    usable: ['ready', 'verified'].includes(data.evaluation?.status),
+  });
   void recordRoadmapActivity({ tool: input.tool, projectId: input.artifactId,
     status: ['ready', 'verified', 'reviewed'].includes(data.evaluation?.status) ? 'completed' : 'progress',
   }).catch(() => {});
@@ -241,8 +247,14 @@ export async function createJourneyHandoff(input: {
   const { data, error } = await supabase.functions.invoke("journey-outcome-service", {
     body: { action: "create_handoff", ...input },
   });
-  if (error) throw error;
-  if (!data?.ok) throw new Error(data?.error || "Could not create the journey handoff.");
+  if (error || !data?.ok) {
+    captureEvent('completion_chain_handoff_failed', { destination_tool: input.destinationTool, source_outcome_id: input.sourceOutcomeId, operation: 'offer' });
+    throw error ?? new Error(data?.error || "Could not create the journey handoff.");
+  }
+  captureEvent('completion_chain_handoff_offered', {
+    handoff_id: data.handoff.id, source_outcome_id: input.sourceOutcomeId,
+    destination_tool: input.destinationTool, validation_context_id: input.payload.validationContextId ?? null,
+  });
   return data.handoff as JourneyHandoff;
 }
 
@@ -250,8 +262,11 @@ export async function consumeJourneyHandoff(handoffId: string, artifactId: strin
   const { data, error } = await supabase.functions.invoke("journey-outcome-service", {
     body: { action: "consume_handoff", handoffId, artifactId },
   });
-  if (error) throw error;
-  if (!data?.ok) throw new Error(data?.error || "Could not complete the journey handoff.");
+  if (error || !data?.ok) {
+    captureEvent('completion_chain_handoff_failed', { handoff_id: handoffId, operation: 'consume' });
+    throw error ?? new Error(data?.error || "Could not complete the journey handoff.");
+  }
+  captureEvent('completion_chain_destination_saved', { handoff_id: handoffId, artifact_id: artifactId, destination_tool: data.handoff.destination_tool });
   return data.handoff as JourneyHandoff;
 }
 
@@ -261,6 +276,9 @@ export async function findJourneyHandoff(destinationTool: JourneyTool, sourceArt
   });
   if (error) throw error;
   if (!data?.ok) throw new Error(data?.error || "Could not load the journey handoff.");
+  if (data.handoff) captureEvent('completion_chain_destination_opened', {
+    handoff_id: data.handoff.id, source_artifact_id: sourceArtifactId, destination_tool: destinationTool,
+  });
   return (data.handoff ?? null) as JourneyHandoff | null;
 }
 

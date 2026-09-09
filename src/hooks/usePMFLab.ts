@@ -561,7 +561,7 @@ export function usePMFLab(scope?: PMFArtifactScope | null) {
               sourceArtifactVersion: nextAnalysis.generatedAt,
               decision: nextAnalysis.decision,
               evidenceGrade: nextAnalysis.evidenceGrade,
-              destinationRoute: '/mvp-builder',
+              destinationRoute: `/mvp-builder?pmf=${encodeURIComponent(data.analysisId)}${scope?.validationContextId ? `&context=${encodeURIComponent(scope.validationContextId)}` : ''}`,
             },
             idempotencyKey: `pmf:${data.analysisId}:mvp`,
           });

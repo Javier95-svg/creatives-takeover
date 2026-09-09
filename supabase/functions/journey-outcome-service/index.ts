@@ -65,7 +65,33 @@ async function loadAuthoritativeChecks(
   userId: string,
   tool: JourneyTool,
   artifactId: string,
+  artifactType?: string,
 ): Promise<Record<string, boolean | number | string | null>> {
+  if (tool === 'demo_studio' && artifactType === 'concept_page') {
+    const { data: page, error } = await supabase.from('demo_studio_launch_pages')
+      .select('project_id,headline,subheadline,cta_label,theme').eq('project_id', artifactId).eq('owner_id', userId).maybeSingle();
+    if (error || !page || recordValue(page.theme).conceptTest !== true) throw new Error('Concept page not found for this account');
+    const { data: project, error: projectError } = await supabase.from('demo_studio_projects')
+      .select('id,slug,launch_published').eq('id', artifactId).eq('owner_id', userId).maybeSingle();
+    if (projectError || !project) throw new Error('Concept project not found');
+    const [{ data: events }, { data: signups }] = await Promise.all([
+      supabase.from('demo_studio_events').select('id')
+        .eq('project_id', artifactId).eq('verified', true).eq('owner_view', false).limit(1),
+      supabase.from('demo_studio_signups').select('id')
+        .eq('project_id', artifactId).eq('verified', true).eq('owner_view', false).limit(1),
+    ]);
+    return {
+      concept_page: true,
+      buyer_promise: hasText(page.headline) && hasText(page.subheadline),
+      single_cta: hasText(page.cta_label),
+      lead_capture: true,
+      analytics: true,
+      published: project.launch_published === true && hasText(project.slug),
+      // Publication is a usable test. Only platform-observed, non-owner activity
+      // promotes it to verified interest, which is still not payment evidence.
+      external_activity: (events?.length ?? 0) > 0 || (signups?.length ?? 0) > 0,
+    };
+  }
   if (tool === 'icp_builder') {
     const { data, error } = await supabase.from('icp_analysis_results')
       .select('analysis_data').eq('id', artifactId).eq('user_id', userId).maybeSingle();
@@ -484,7 +510,7 @@ serve(async (req) => {
       const artifactType = textValue(input.artifactType, 100);
       const artifactId = textValue(input.artifactId, 200);
       if (!artifactType || !artifactId) return json({ error: 'Artifact type and id are required' }, 400);
-      if (artifactType !== ARTIFACT_TYPES[tool]) return json({ error: 'Artifact type does not match this tool contract' }, 400);
+      if (artifactType !== ARTIFACT_TYPES[tool] && !(tool === 'demo_studio' && artifactType === 'concept_page')) return json({ error: 'Artifact type does not match this tool contract' }, 400);
       const validationContextId = textValue(input.validationContextId, 100) || null;
       const sourceHandoffId = textValue(input.handoffId, 100) || null;
       const artifactVersion = textValue(input.artifactVersion, 100) || null;
@@ -496,8 +522,8 @@ serve(async (req) => {
       }
 
       const clientQualityChecks = recordValue(input.qualityChecks) as Record<string, boolean | number | string | null>;
-      const authoritativeChecks = await loadAuthoritativeChecks(supabase, user.id, tool, artifactId);
-      const qualityChecks = { ...clientQualityChecks, ...authoritativeChecks };
+      const authoritativeChecks = await loadAuthoritativeChecks(supabase, user.id, tool, artifactId, artifactType);
+      const qualityChecks = { ...clientQualityChecks, concept_page: false, ...authoritativeChecks };
       const verificationMode: VerificationMode = tool === 'icp_builder' && authoritativeChecks.external_target_signal === true
         ? 'corroborated'
         : tool === 'demo_studio' && authoritativeChecks.external_activity === true
@@ -641,6 +667,12 @@ serve(async (req) => {
       const { data: version, error: versionError } = await supabase.from('journey_outcome_versions')
         .select('id').eq('journey_outcome_id', outcome.id).order('version_number', { ascending: false }).limit(1).single();
       if (versionError || !version) throw versionError ?? new Error('Outcome version is unavailable');
+      const { data: existingHandoff, error: existingHandoffError } = await supabase.from('journey_handoffs')
+        .select('*').eq('user_id', user.id).eq('idempotency_key', idempotencyKey).maybeSingle();
+      if (existingHandoffError) throw existingHandoffError;
+      // A consumed destination owns an editable draft. Reopening the source must
+      // not silently replace that draft's source version or reopen its handoff.
+      if (existingHandoff?.status === 'consumed') return json({ ok: true, handoff: existingHandoff });
       const { data, error } = await supabase.from('journey_handoffs').upsert({
         user_id: user.id,
         source_outcome_id: outcome.id,
@@ -681,9 +713,27 @@ serve(async (req) => {
       const handoffId = textValue(body.handoffId, 100);
       const artifactId = textValue(body.artifactId, 200);
       if (!handoffId || !artifactId) return json({ error: 'Handoff and artifact ids are required' }, 400);
+      const { data: existing, error: existingError } = await supabase.from('journey_handoffs')
+        .select('*').eq('id', handoffId).eq('user_id', user.id).single();
+      if (existingError || !existing) return json({ error: 'Handoff not found' }, 404);
+      if (existing.status === 'consumed') {
+        if (existing.consumed_artifact_id !== artifactId) return json({ error: 'This handoff already belongs to another saved artifact' }, 409);
+        return json({ ok: true, handoff: existing });
+      }
+      const destinations: Record<string, [string, string]> = {
+        demo_studio: ['demo_studio_projects', 'owner_id'],
+        pmf_lab: ['pmf_analysis_results', 'user_id'],
+        mvp_builder: ['mvp_projects', 'user_id'],
+        gtm_strategist: ['gtm_plans', 'user_id'],
+      };
+      const destination = destinations[existing.destination_tool];
+      if (!destination) return json({ error: 'This destination must be consumed through outcome evaluation' }, 400);
+      const { data: savedArtifact, error: artifactError } = await supabase.from(destination[0])
+        .select('id').eq('id', artifactId).eq(destination[1], user.id).maybeSingle();
+      if (artifactError || !savedArtifact) return json({ error: 'Save the destination artifact in this account before continuing' }, 404);
       const { data, error } = await supabase.from('journey_handoffs').update({
         status: 'consumed', consumed_artifact_id: artifactId, consumed_at: new Date().toISOString(), failure_reason: null,
-      }).eq('id', handoffId).eq('user_id', user.id).select('*').single();
+      }).eq('id', handoffId).eq('user_id', user.id).eq('status', existing.status).select('*').single();
       if (error) throw error;
       return json({ ok: true, handoff: data });
     }

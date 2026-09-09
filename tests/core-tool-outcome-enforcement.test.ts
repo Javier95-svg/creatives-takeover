@@ -88,7 +88,7 @@ test('migration provides immutable versions, idempotent handoffs, and atomic GTM
 
 test('the outcome service reloads owned artifacts and versions attributed assumption evidence', () => {
   const service = readFileSync(new URL('../supabase/functions/journey-outcome-service/index.ts', import.meta.url), 'utf8');
-  assert.match(service, /loadAuthoritativeChecks\(supabase, user\.id, tool, artifactId\)/);
+  assert.match(service, /loadAuthoritativeChecks\(supabase, user\.id, tool, artifactId, artifactType\)/);
   assert.match(service, /record_assumption_signal/);
   assert.match(service, /participant_fingerprint/);
   assert.match(service, /five_interview_signals: independentSignals >= 5/);
@@ -101,10 +101,13 @@ test('the outcome service reloads owned artifacts and versions attributed assump
   assert.match(service, /checks\.documented_objection !== true/);
 });
 
-test('MVP Builder opens with an empty typing bar and never auto-loads evidence into it', () => {
+test('MVP Builder starts empty and imports only a scoped handoff under the completion flag', () => {
   const builder = readFileSync(new URL('../src/components/mvp-builder/MVPBuilderChat.tsx', import.meta.url), 'utf8');
 
   assert.match(builder, /const \[input, setInput\] = useState\(''\)/);
+  assert.match(builder, /isCompletionChainEnabled\(\)/);
+  assert.match(builder, /setupInput\.customPrompt\?\.trim\(\)/);
+  assert.match(builder, /messages\.length > 0/);
   assert.doesNotMatch(builder, /automatic_evidence_prefill/);
   assert.doesNotMatch(builder, /handleBuildFromEvidence\(\{\s*quiet:\s*true\s*\}\)/);
 });

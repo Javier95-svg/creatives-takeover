@@ -217,6 +217,7 @@ export interface DemoStudioVsl {
 }
 
 export interface LaunchPageTheme {
+  conceptTest?: boolean;
   primaryColor?: string;
   background?: 'dark' | 'light' | 'gradient';
   layoutStyle?: 'vsl_first' | 'demo_first' | 'split';

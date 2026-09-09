@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { isCompletionChainEnabled } from '@/lib/completionChain';
 import { toast } from "sonner";
 
 import { useNavigate } from "react-router-dom";
@@ -93,7 +94,7 @@ export function IcpGuestResultView({
                 navigate(signUpPath);
               }}
             >
-              Create my demo
+              {isCompletionChainEnabled() ? 'Save and create your concept page' : 'Create my demo'}
               <ArrowRight className="h-4 w-4" />
             </Button>
             <IcpScoreShareModal

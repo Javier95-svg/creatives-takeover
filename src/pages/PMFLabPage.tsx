@@ -15,6 +15,8 @@ import PMFSeanEllisTest from '@/components/pmf/PMFSeanEllisTest';
 import PMFScoringLoader from '@/components/pmf/PMFScoringLoader';
 import PMFReadinessReport from '@/components/pmf/PMFReadinessReport';
 import PMFCustomerDiscovery from '@/components/pmf/PMFCustomerDiscovery';
+import ConceptRecruitment from '@/components/pmf/ConceptRecruitment';
+import { isCompletionChainEnabled } from '@/lib/completionChain';
 import PMFOutcomeCapture from '@/components/pmf/PMFOutcomeCapture';
 import { PMFContextBanner } from '@/components/pmf/PMFContextBanner';
 import { normalizeStoredArtifact } from '@/lib/icpDraftArtifacts';
@@ -116,15 +118,16 @@ export default function PMFLabPage() {
   }, [demoId, demoProjectId, user]);
 
   useEffect(() => {
-    if (!validationContextId || !demoId || originatingHandoffId) return;
-    void findJourneyHandoff('pmf_lab', demoId).then((handoff) => {
+    const sourceId = searchParams.get('concept') || demoId;
+    if (!validationContextId || !sourceId || originatingHandoffId) return;
+    void findJourneyHandoff('pmf_lab', sourceId).then((handoff) => {
       if (!handoff) return;
       setOriginatingHandoffId(handoff.id);
       trackPrebuildLineageEvent('prebuild_handoff_opened', {
-        validationContextId, handoffId: handoff.id, sourceTool: 'demo_studio', destinationTool: 'pmf_lab', artifactId: demoId,
+        validationContextId, handoffId: handoff.id, sourceTool: 'demo_studio', destinationTool: 'pmf_lab', artifactId: sourceId,
       });
     }).catch(() => undefined);
-  }, [demoId, originatingHandoffId, validationContextId]);
+  }, [demoId, originatingHandoffId, validationContextId, searchParams]);
 
   const chooseStep = (step: 'gather' | 'score') => {
     stepChosenRef.current = true;
@@ -505,6 +508,9 @@ export default function PMFLabPage() {
                   waitlistProductName={waitlistProductName}
                   icpDraftId={icpDraftId}
                 />
+                {isCompletionChainEnabled() && validationContextId && mode === 'discover' && (
+                  <ConceptRecruitment key={validationContextId} contextId={validationContextId} projectId={demoProjectId} audience={icpPersonaName} problem={icpProblem} />
+                )}
 
                 {/* Outcome follow-up deep-link (from the "what happened?" email) */}
                 {outcomeAnalysisId && (

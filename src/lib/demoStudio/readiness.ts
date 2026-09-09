@@ -103,8 +103,10 @@ export function getLaunchReadiness(args: {
   hasVsl: boolean;
 }): LaunchReadiness {
   const missing: string[] = [];
-  if (!args.hasPublishedDemo) missing.push('Publish at least one interactive demo.');
-  if (!args.hasVsl) missing.push('Save at least one VSL variation.');
+  if (!args.launchPage?.theme?.conceptTest) {
+    if (!args.hasPublishedDemo) missing.push('Publish at least one interactive demo.');
+    if (!args.hasVsl) missing.push('Save at least one VSL variation.');
+  }
   if (!args.launchPage?.headline?.trim()) missing.push('Add a launch page headline.');
   if (!args.launchPage?.subheadline?.trim()) missing.push('Add a launch page subheadline.');
   if (!args.launchPage?.cta_label?.trim()) missing.push('Set the launch page CTA.');

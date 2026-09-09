@@ -119,7 +119,7 @@ export default function PublicLaunchPage() {
   const layout = data.launchPage.theme?.layoutStyle ?? 'split';
   const successMessage = data.launchPage.theme?.successMessage || 'You are on the early access list.';
   const ctaLabel = data.launchPage.cta_label || DEFAULT_DEMO_STUDIO_CTA;
-  const demoGoal = data.demo?.demo.theme?.demoGoal ?? 'collect_signups';
+  const demoGoal = data.launchPage.theme?.conceptTest ? 'collect_signups' : data.demo?.demo.theme?.demoGoal ?? 'collect_signups';
   const headerHref = demoGoal === 'collect_signups'
     ? '#signup'
     : demoGoal === 'validate_interest'
@@ -163,7 +163,7 @@ export default function PublicLaunchPage() {
 
         <section className="grid flex-1 gap-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-center">
           <div>
-            <p className="mb-3 text-sm font-medium uppercase tracking-wide text-white/50">Interactive demo + founder pitch</p>
+            <p className="mb-3 text-sm font-medium uppercase tracking-wide text-white/50">{data.launchPage.theme?.conceptTest ? 'Concept seeking interest • Not a finished product' : 'Interactive demo + founder pitch'}</p>
             <h1 className="creatives-font text-4xl font-bold leading-tight md:text-6xl">
               {data.launchPage.headline || data.project.name}
             </h1>
