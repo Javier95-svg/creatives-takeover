@@ -1,6 +1,6 @@
 export const SITE_ORIGIN = 'https://creatives-takeover.com';
 export const SITE_NAME = 'Creatives Takeover';
-export const DEFAULT_IMAGE = `${SITE_ORIGIN}/og-founders-compass-2026-07.png`;
+export const DEFAULT_IMAGE = `${SITE_ORIGIN}/og-founders-compass-2026-09.png`;
 
 export function escapeHtml(value: unknown): string {
   return String(value ?? '')

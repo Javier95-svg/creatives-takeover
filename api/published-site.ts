@@ -68,7 +68,7 @@ function injectSearchMetadata(
   imageUrl?: string | null,
 ): string {
   const canonical = `https://${slug}.${BASE_DOMAIN}/`;
-  const image = imageUrl || `https://${BASE_DOMAIN}/og-founders-compass-2026-07.png`;
+  const image = imageUrl || `https://${BASE_DOMAIN}/og-founders-compass-2026-09.png`;
   html = /<title>[\s\S]*?<\/title>/i.test(html)
     ? html.replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(title)}</title>`)
     : html.replace('</head>', `<title>${escapeHtml(title)}</title></head>`);

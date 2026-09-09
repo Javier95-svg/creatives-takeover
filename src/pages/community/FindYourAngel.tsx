@@ -360,7 +360,7 @@ const FindYourAngel = () => {
         keywords="angel investors, startup funding, venture capital, seed funding, find investors, startup investors, fundraising"
         url="/investors"
         canonical="https://creatives-takeover.com/investors"
-        image="https://creatives-takeover.com/og-founders-compass-2026-07.png"
+        image="https://creatives-takeover.com/og-founders-compass-2026-09.png"
         structuredData={structuredData}
       />
 	      <div className="min-h-screen bg-background relative">

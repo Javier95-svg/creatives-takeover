@@ -5,6 +5,8 @@ interface SEOProps {
   description: string;
   keywords?: string;
   image?: string;
+  imageWidth?: number;
+  imageHeight?: number;
   url?: string;
   type?: 'website' | 'article' | 'product';
   author?: string;
@@ -24,7 +26,9 @@ const SEO = ({
   title,
   description,
   keywords,
-  image = 'https://creatives-takeover.com/og-founders-compass-2026-07.png',
+  image = 'https://creatives-takeover.com/og-founders-compass-2026-09.png',
+  imageWidth = 1200,
+  imageHeight = 630,
   url,
   type = 'website',
   author,
@@ -72,8 +76,8 @@ const SEO = ({
       <meta property="og:url" content={fullUrl} />
       <meta property="og:image" content={fullImageUrl} />
       <meta property="og:image:secure_url" content={fullImageUrl} />
-      <meta property="og:image:width" content="1200" />
-      <meta property="og:image:height" content="630" />
+      <meta property="og:image:width" content={String(imageWidth)} />
+      <meta property="og:image:height" content={String(imageHeight)} />
       <meta property="og:image:alt" content={optimizedTitle} />
       <meta property="og:locale" content="en_US" />
       <meta property="og:site_name" content="Creatives Takeover" />
@@ -265,7 +269,7 @@ export const createArticleSchema = (article: {
     "@type": "Article",
     "headline": article.title,
     "description": article.description,
-    "image": article.image || "https://creatives-takeover.com/og-founders-compass-2026-07.png",
+    "image": article.image || "https://creatives-takeover.com/og-founders-compass-2026-09.png",
     "author": {
       "@type": "Person",
       "name": article.author
@@ -351,7 +355,7 @@ export const createProductSchema = (product: {
   "@type": "Product",
   "name": product.name,
   "description": product.description,
-  "image": product.image || "https://creatives-takeover.com/og-founders-compass-2026-07.png",
+  "image": product.image || "https://creatives-takeover.com/og-founders-compass-2026-09.png",
   "offers": {
     "@type": "Offer",
     "price": product.price,
@@ -509,7 +513,7 @@ export const createLocalBusinessSchema = () => ({
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
   "name": "Creatives Takeover",
-  "image": "https://creatives-takeover.com/og-founders-compass-2026-07.png",
+  "image": "https://creatives-takeover.com/og-founders-compass-2026-09.png",
   "url": "https://creatives-takeover.com",
   "telephone": "",
   "email": "admin@creatives-takeover.com",

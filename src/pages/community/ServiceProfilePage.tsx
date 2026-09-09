@@ -112,7 +112,7 @@ const ServiceProfilePage = () => {
         title={`${service.name} | Founder Service Marketplace`}
         description={service.description}
         url={getServiceProfilePath(service)}
-        image={service.banner_url || "/og-founders-compass-2026-07.png"}
+        image={service.banner_url || "/og-founders-compass-2026-09.png"}
         structuredData={[
           createOrganizationSchema(),
           createBreadcrumbSchema([

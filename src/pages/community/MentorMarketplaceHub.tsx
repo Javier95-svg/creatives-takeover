@@ -414,7 +414,7 @@ const MentorMarketplaceHub = () => {
         description="Browse startup mentors with hands-on experience in fundraising, MVP planning, go-to-market strategy, and customer discovery. Book focused 1-on-1 sessions with proven founders."
         keywords="find startup mentor, startup mentor marketplace, mentor for founders, fundraising mentor, go-to-market mentor, first-time founder mentor, startup advisor"
         url="/mentorship"
-        image="/og-founders-compass-2026-07.png"
+        image="/og-founders-compass-2026-09.png"
         structuredData={[
           createOrganizationSchema(),
           createBreadcrumbSchema([

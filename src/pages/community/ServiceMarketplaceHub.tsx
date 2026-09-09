@@ -118,7 +118,7 @@ const ServiceMarketplaceHub = () => {
         description="Browse founder-ready services for sales automation, marketing, operations, workflow automation, and technical support. Review service decks and contact providers directly."
         keywords="founder service marketplace, startup services, sales automation, workflow automation, marketing support, technical support for startups"
         url="/marketplace"
-        image="/og-founders-compass-2026-07.png"
+        image="/og-founders-compass-2026-09.png"
         structuredData={[
           createOrganizationSchema(),
           createBreadcrumbSchema([

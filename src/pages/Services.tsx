@@ -25,7 +25,7 @@ const Services = () => {
         keywords="creative subscription, creative subscription service, unlimited design platform, creative tools subscription, design subscription, AI-powered creative tools"
         url="/services"
         canonical="https://creatives-takeover.com/services"
-        image="/og-founders-compass-2026-07.png"
+        image="/og-founders-compass-2026-09.png"
         structuredData={structuredData}
       />
       <div className="relative min-h-screen overflow-hidden">

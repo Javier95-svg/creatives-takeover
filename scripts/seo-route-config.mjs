@@ -9,7 +9,7 @@ import {
 
 export const BASE_URL = "https://creatives-takeover.com";
 export const SITE_NAME = "Creatives Takeover";
-export const OG_IMAGE = `${BASE_URL}/og-founders-compass-2026-07.png`;
+export const OG_IMAGE = `${BASE_URL}/og-founders-compass-2026-09.png`;
 
 // Mirror the truncation rules in src/components/SEO.tsx so the prerendered
 // <title>/<meta description> match what react-helmet renders after hydration.

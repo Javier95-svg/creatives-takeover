@@ -63,7 +63,9 @@ const Index = () => {
         description="Creatives Takeover is a startup development platform that helps first-time founders validate ideas, build MVPs, launch, gain traction, and prepare to raise."
         keywords="founder operating system, startup idea validation, customer decision brief, interactive product demo, product market fit evidence, MVP builder, go-to-market execution, traction engine, first-time solo founders"
         url="/"
-        image="/og-founders-compass-2026-07.png"
+        image="/og-founders-compass-2026-09.png"
+        imageWidth={3159}
+        imageHeight={1462}
         structuredData={structuredData}
       />
       <Navigation />

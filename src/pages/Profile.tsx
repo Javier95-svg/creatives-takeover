@@ -464,7 +464,7 @@ const Profile = () => {
             : (profile.bio || `View ${profile.full_name || 'this founder'}'s public founder profile on Creatives Takeover.`)
         }
         url={`/profile/${profile.username}`}
-        image={profile.avatar_url || "/og-founders-compass-2026-07.png"}
+        image={profile.avatar_url || "/og-founders-compass-2026-09.png"}
         noindex={!profile.seo_indexable}
         structuredData={[
           createBreadcrumbSchema([
