@@ -89,6 +89,7 @@ import {
   type JourneyAssumption,
   upsertJourneyOutcome,
 } from '@/lib/journeyOutcomes';
+import { getInboundHandoff } from '@/lib/journeyHandoffInbox';
 import { useOutcomeJourney } from '@/hooks/useOutcomeJourney';
 
 const SPRINTS_TABLE = 'traction_engine_sprints' as const;
@@ -963,6 +964,13 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
           label: `${gtmSource.channel} GTM play`,
         }] : []),
       ]);
+      /**
+       * Traction Engine is the end of the chain and the only tool that never
+       * forwarded a handoffId, so GTM -> Traction handoffs stayed 'pending'
+       * permanently and the last edge could never register as completed.
+       * journey-outcome-service consumes whatever pending handoff this names.
+       */
+      const inboundTractionHandoff = await getInboundHandoff('traction_engine');
       const savedOutcome = await upsertJourneyOutcome({
         userId,
         tool: 'traction_engine',
@@ -973,6 +981,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         evidenceManifest: outcomeManifest,
         completionScore: Math.round((completedChecks / Object.keys(qualityChecks).length) * 100),
         verificationMode: 'founder_reported',
+        handoffId: inboundTractionHandoff?.id ?? null,
       });
       const authoritativeOutcomeStatus = savedOutcome.evaluation.status;
       trackJourneyEvent('journey_stage_outcome_completed', {

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getInboundHandoff, readHandoffPrefill } from '@/lib/journeyHandoffInbox';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 import { useCreditActions } from '@/hooks/useCreditActions';
@@ -221,7 +222,24 @@ export function useGTMStrategist() {
   const [weeklyReview, setWeeklyReview] = useState<GTMWeeklyReview | null>(null);
   const [isReviewing, setIsReviewing] = useState(false);
   const [isRestoringPlan, setIsRestoringPlan] = useState(true);
-  const requestedMvpProjectId = new URLSearchParams(window.location.search).get('mvp');
+  const mvpParam = new URLSearchParams(window.location.search).get('mvp');
+  const [inboundMvpProjectId, setInboundMvpProjectId] = useState<string | null>(null);
+  /**
+   * MVP Builder's publish never navigates to the destinationRoute its handoff
+   * computes, so `?mvp=` only ever arrives if someone hand-crafts the URL. Read
+   * the pending handoff instead, and the MVP -> GTM prefill becomes reachable
+   * through the front door.
+   */
+  useEffect(() => {
+    if (mvpParam || !user) return;
+    let cancelled = false;
+    void getInboundHandoff('gtm_strategist').then((row) => {
+      if (cancelled) return;
+      setInboundMvpProjectId(readHandoffPrefill(row)?.sourceMvpProjectId ?? null);
+    });
+    return () => { cancelled = true; };
+  }, [mvpParam, user]);
+  const requestedMvpProjectId = mvpParam ?? inboundMvpProjectId;
   const validationContextId = new URLSearchParams(window.location.search).get('context');
   const [originatingHandoffId, setOriginatingHandoffId] = useState<string | null>(null);
 

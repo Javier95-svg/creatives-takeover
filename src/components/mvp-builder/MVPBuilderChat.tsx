@@ -59,6 +59,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { findJourneyHandoff, trackJourneyEvent } from '@/lib/journeyOutcomes';
+import { getInboundHandoff, readHandoffPrefill } from '@/lib/journeyHandoffInbox';
 import { isCompletionChainEnabled } from '@/lib/completionChain';
 
 // ── Quick-start templates ────────────────────────────────────────────────────
@@ -356,8 +357,17 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
     setIsLoadingEvidence(true);
     try {
       const params = new URLSearchParams(window.location.search);
-      const validationContextId = params.get('context');
-      const pmfAnalysisId = params.get('pmf');
+      /**
+       * URL param first, pending handoff second. pmfDecisionAction only appends
+       * `?pmf=`/`?context=` when a PostHog flag is on, so with the flag off a
+       * founder arriving from a genuine Build decision hit "Choose a validation
+       * context first" while the handoff naming that exact analysis sat pending
+       * in the database. The payload fallback closes that.
+       */
+      const inbound = await getInboundHandoff('mvp_builder');
+      const inboundPrefill = readHandoffPrefill(inbound);
+      const validationContextId = params.get('context') ?? inboundPrefill?.validationContextId ?? null;
+      const pmfAnalysisId = params.get('pmf') ?? inboundPrefill?.sourcePmfAnalysisId ?? null;
       const result = await fetchJourneyEvidenceBrief(user.id, { validationContextId, pmfAnalysisId });
       if (!result) {
         toast.info('Choose a validation context first.', {
@@ -368,9 +378,16 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
       if (inputRevision.current.trim() && !window.confirm('Replace your current prompt with the saved evidence brief?')) return;
       setInput(result.brief);
       setBuilderMode('build');
-      const inboundHandoff = pmfAnalysisId
+      /**
+       * Falls back to the inbox row we already resolved, so originatingHandoffId
+       * is populated even when findJourneyHandoff misses. That id is what
+       * upsertJourneyOutcome forwards to consume the handoff server-side --
+       * without it, mvp_builder handoffs stay 'pending' forever and the
+       * cross-tool funnel can never show a completion past PMF Lab.
+       */
+      const inboundHandoff = (pmfAnalysisId
         ? await findJourneyHandoff('mvp_builder', pmfAnalysisId).catch(() => null)
-        : null;
+        : null) ?? inbound;
       onSetupInputChange({
         customPrompt: result.brief,
         prefillSource: 'journey_evidence',
