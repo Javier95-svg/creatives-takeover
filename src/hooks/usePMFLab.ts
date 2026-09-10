@@ -16,7 +16,7 @@ import {
 } from '@/lib/pmfResultsTable';
 import { ensureMentorDemandNotification } from '@/lib/mentorDemandNotifications';
 import { trackActivity } from '@/lib/activity';
-import { captureEvent } from '@/lib/analytics';
+import { captureEvent, trackToolOutputCreated } from '@/lib/analytics';
 import { markDiscoveryLeadsInterviewed } from '@/lib/pmfDiscoveryLeads';
 import {
   getPmfConfidence,
@@ -576,6 +576,15 @@ export function usePMFLab(scope?: PMFArtifactScope | null) {
           evidence_grade: nextAnalysis.evidenceGrade,
           decision: nextAnalysis.decision,
           score: nextAnalysis.overallScore,
+        });
+        /** Feeds `core_tool_value`, which recorded no PMF Lab outputs before. */
+        trackToolOutputCreated('pmf_lab', 'pmf_decision_report', {
+          artifact_id: data.analysisId,
+          outcome_status: outcomeStatus,
+          decision: nextAnalysis.decision,
+          evidence_grade: nextAnalysis.evidenceGrade,
+          signal_count: signalCount,
+          is_rescore: isReScore,
         });
       }
       if (isReScore) {

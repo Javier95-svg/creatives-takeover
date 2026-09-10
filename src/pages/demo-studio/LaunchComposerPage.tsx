@@ -28,6 +28,7 @@ import { shouldShowWatermark } from '@/lib/demoStudio/plan';
 import { evaluateDemoArtifact } from '@/lib/demoStudio/outcome';
 import { prepareConceptValidation } from '@/lib/demoStudio/conceptHandoff';
 import { createJourneyEvidenceManifest, createJourneyHandoff, trackJourneyEvent, upsertJourneyOutcome } from '@/lib/journeyOutcomes';
+import { trackToolOutputCreated } from '@/lib/analytics';
 import {
   getOrCreateLaunchPage,
   getBrief,
@@ -183,6 +184,19 @@ export default function LaunchComposerPage() {
       const updated = await publishLaunchPage(project, user.id);
       setProject(updated);
       setReadiness(await getProjectReadiness(project.id));
+      /**
+       * Fires for the publish itself, above both guards below: the live page is
+       * the output whether it is a concept page or a demo-backed one, and
+       * `core_tool_value` counted neither before. `concept_test` splits the two
+       * doors apart, so the zero-asset path added in "Connect startup
+       * development cycle outputs" can be measured on its own.
+       */
+      trackToolOutputCreated('demo_studio', 'launch_page', {
+        artifact_id: updated.id,
+        slug: updated.slug ?? null,
+        concept_test: Boolean(launchPage?.theme?.conceptTest),
+        surface: 'launch_composer',
+      });
       if (launchPage?.theme?.conceptTest) {
         try {
           await prepareConceptValidation(updated);
