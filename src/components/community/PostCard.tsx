@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
+import { getCommunityTopicLabel } from "@/lib/communityTopics";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -681,7 +682,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
               <div className="flex flex-wrap gap-1.5 text-sm">
                 {post.tags.map((tag, index) => (
                   <span key={index} className="text-primary hover:text-primary/80 font-medium">
-                    #{tag}
+                    {getCommunityTopicLabel(tag) ?? `#${tag}`}
                   </span>
                 ))}
               </div>
