@@ -1,6 +1,6 @@
 # Creatives Takeover
 
-> Last updated: 2026-08-24
+> Last updated: 2026-09-07
 
 > Creatives Takeover is a business development platform for first-time startup founders. It combines AI tools that draft startup artifacts (ideal customer profile, MVP scope, go-to-market plan, pitch deck review) with a marketplace of reviewed human startup mentors who can be booked directly. Founders keep 100% equity: there is no application, no cohort, and no accelerator commitment.
 
