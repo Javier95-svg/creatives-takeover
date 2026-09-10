@@ -15,6 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { normalizeWaitlistContent, type WaitlistContent } from '@/lib/waitlist';
 import { getWaitlistTemplate } from '@/lib/waitlistTemplates';
+import { trackToolOpened } from '@/lib/analytics';
 
 type Screen = 'mode_select' | 'smart_hydrate' | 'editor';
 const LAST_EDITOR_STORAGE_KEY = 'waitlist_builder_last_editor_v1';
@@ -51,6 +52,8 @@ export default function WaitlistMakerPage() {
 
   const icpParam = searchParams.get('icp');
   const templateParam = searchParams.get('template');
+  /** Set by the Demo Studio front door (Phase 1.1) so its traffic is separable. */
+  const sourceParam = searchParams.get('source');
 
   const [screen, setScreen] = useState<Screen>(templateParam ? 'editor' : 'mode_select');
   const [seed, setSeed] = useState<WaitlistEditorInitialSeed | null>(null);
@@ -100,6 +103,19 @@ export default function WaitlistMakerPage() {
       setScreen('smart_hydrate');
     }
   }, [icpParam, user]);
+
+  /**
+   * The classic route emitted neither half of `core_tool_value`, so the
+   * zero-asset launch path had no measurable open-to-output rate at all.
+   * Reported as `demo_studio` to match what publishing here records.
+   */
+  useEffect(() => {
+    trackToolOpened('demo_studio', {
+      surface: 'launch_page',
+      route: '/demo-studio/classic',
+      source: sourceParam ?? 'direct',
+    });
+  }, [sourceParam]);
 
   useEffect(() => {
     if (!templateParam) return;

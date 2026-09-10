@@ -31,6 +31,7 @@ import {
   trackICPResumeRestored,
   trackICPSeedSubmitted,
   trackToolMilestoneDashboardReturnClicked,
+  trackToolOutputCreated,
 } from "@/lib/analytics";
 import { markOnboardingPathCompleted } from "@/lib/onboardingPath";
 import { useOnboardingContext } from "@/hooks/useOnboardingContext";
@@ -1122,6 +1123,16 @@ const ICPBuilder: React.FC = () => {
         source,
         completion_score: completionScore,
         confidence: artifact.draftDocument.confidence.level,
+      });
+      /**
+       * The `core_tool_value` funnel (tool_opened -> tool_output_created) was
+       * blind to this tool: journey_stage_outcome_completed is a lineage event
+       * on a different taxonomy, so ICP Builder recorded opens and no outputs.
+       */
+      trackToolOutputCreated('icp_builder', 'customer_decision_brief', {
+        artifact_id: analysisId,
+        outcome_status: evaluation.status,
+        source,
       });
       if (source === 'unlock_gate' || source === 'guest_claim') {
         trackJourneyEvent('journey_artifact_restored', {

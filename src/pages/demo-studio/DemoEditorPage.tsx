@@ -50,7 +50,7 @@ import DemoDistributionPanel from '@/components/demo-studio/DemoDistributionPane
 import { evaluateDemoArtifact } from '@/lib/demoStudio/outcome';
 import { createJourneyEvidenceManifest, createJourneyHandoff, findJourneyHandoff, trackPrebuildLineageEvent, upsertJourneyOutcome } from '@/lib/journeyOutcomes';
 import { canRemoveWatermark, shouldShowWatermark } from '@/lib/demoStudio/plan';
-import { trackDemoStudioFunnel } from '@/lib/analytics';
+import { trackDemoStudioFunnel, trackToolOutputCreated } from '@/lib/analytics';
 import {
   applyStoryboardToDemo,
   createHotspot,
@@ -655,6 +655,16 @@ export default function DemoEditorPage() {
       } catch (outcomeError) {
         console.error('Could not update journey outcome', outcomeError);
       }
+      /**
+       * Outside the try/catch above: a publish that succeeded must register as
+       * an output even when the journey-outcome write failed, or `core_tool_value`
+       * under-counts Demo Studio exactly when the chain is broken.
+       */
+      trackToolOutputCreated('demo_studio', 'interactive_proof_page', {
+        artifact_id: updated.id,
+        project_id: updated.project_id,
+        surface: 'demo_editor',
+      });
       showDashboardReturnToast({
         message: 'Demo published!',
         description: 'It now counts toward your startup journey.',

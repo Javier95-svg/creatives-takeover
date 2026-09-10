@@ -33,7 +33,7 @@ import {
 import { getWaitlistTemplate } from '@/lib/waitlistTemplates';
 import { getToolJourneyGuide } from '@/lib/activationJourney';
 import { ActivationJourneyStrip } from '@/components/activation/ActivationJourneyStrip';
-import { captureEvent } from '@/lib/analytics';
+import { captureEvent, trackToolOutputCreated } from '@/lib/analytics';
 import { CreditCostNotice } from '@/components/CreditCostNotice';
 import { useJourneyUpgradePrompt } from '@/hooks/useJourneyUpgradePrompt';
 
@@ -821,6 +821,18 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
         waitlistId: saved.id,
         isFirstOutput,
         ...(saved.slug ? { slug: saved.slug } : {}),
+      });
+      /**
+       * Reported as `demo_studio`, not a tool of its own: this page is the
+       * zero-asset launch path that Demo Studio inherited, and splitting it
+       * into a separate tool name would hide the front door's real completion
+       * rate from `core_tool_value`.
+       */
+      trackToolOutputCreated('demo_studio', 'launch_page', {
+        artifact_id: saved.id,
+        slug: saved.slug ?? null,
+        is_first_output: isFirstOutput,
+        surface: 'waitlist_editor',
       });
     }
 

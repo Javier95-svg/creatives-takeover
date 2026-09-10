@@ -27,6 +27,7 @@ import { cn } from '@/lib/utils';
 import { shouldShowWatermark } from '@/lib/demoStudio/plan';
 import { evaluateDemoArtifact } from '@/lib/demoStudio/outcome';
 import { createJourneyEvidenceManifest, createJourneyHandoff, trackJourneyEvent, upsertJourneyOutcome } from '@/lib/journeyOutcomes';
+import { trackToolOutputCreated } from '@/lib/analytics';
 import {
   getOrCreateLaunchPage,
   getBrief,
@@ -181,6 +182,16 @@ export default function LaunchComposerPage() {
       const updated = await publishLaunchPage(project, user.id);
       setProject(updated);
       setReadiness(await getProjectReadiness(project.id));
+      /**
+       * Fires for the publish itself, above the `selectedDemo && launchPage`
+       * guard: the live page is the output whether or not a demo is attached,
+       * and `core_tool_value` counted neither before.
+       */
+      trackToolOutputCreated('demo_studio', 'launch_page', {
+        artifact_id: updated.id,
+        slug: updated.slug ?? null,
+        surface: 'launch_composer',
+      });
       if (selectedDemo && launchPage) {
         // The launch page is already published by this point. Recording the
         // journey outcome and opening the PMF handoff is a side effect, so a
