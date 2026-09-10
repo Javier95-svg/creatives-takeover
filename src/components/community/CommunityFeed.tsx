@@ -17,6 +17,7 @@ import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import type { Plan } from "@/config/planPermissions";
 import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
+import { COMMUNITY_TOPICS } from "@/lib/communityTopics";
 
 const CommunityFeed: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
@@ -207,45 +208,11 @@ const CommunityFeed: React.FC = () => {
     };
   }, [fetchPosts, debouncedFetchPosts]);
 
-  const allTags = useMemo(() => {
-    // Diverse creative field tags
-    const creativeTags = [
-      // Visual Arts & Design
-      'design', 'illustration', 'painting', 'photography', 'sculpture', 'digital-art',
-      'graphic-design', 'ui-ux', 'animation', 'concept-art', '3d-modeling', 'branding',
-      // Music & Audio
-      'music', 'songwriting', 'production', 'mixing', 'sound-design', 'composition',
-      'indie-music', 'electronic', 'acoustic', 'beats', 'vocals', 'recording',
-      // Writing & Content
-      'writing', 'poetry', 'fiction', 'non-fiction', 'screenwriting', 'blogging',
-      'copywriting', 'storytelling', 'journalism', 'publishing', 'editing',
-      // Film & Video
-      'film', 'video', 'cinematography', 'directing', 'editing', 'documentary',
-      'short-film', 'music-video', 'vfx', 'color-grading', 'storyboard',
-      // Fashion & Style
-      'fashion', 'styling', 'textile-design', 'sustainable-fashion', 'streetwear',
-      // Entrepreneurship & Business
-      'startup', 'freelance', 'portfolio', 'collaboration', 'commission', 'showcase',
-      'work-in-progress', 'feedback', 'milestone', 'learning', 'tutorial', 'process',
-      'challenge', 'inspiration', 'behind-the-scenes', 'creative-block', 'breakthrough'
-    ];
-
-    // Count which curated tags actually appear in posts
-    const counts = new Map<string, number>();
-    posts.forEach((p) => 
-      p.tags.forEach((t) => {
-        if (creativeTags.includes(t)) {
-          counts.set(t, (counts.get(t) || 0) + 1);
-        }
-      })
-    );
-
-    // Return curated tags sorted by frequency, with unused ones at the end
-    const usedTags = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).map(([t]) => t);
-    const unusedTags = creativeTags.filter(t => !counts.has(t));
-    
-    return [...usedTags, ...unusedTags].slice(0, 30); // Limit to top 30 tags
-  }, [posts]);
+  // The five founder topics, always all shown in a fixed order. Ordering by
+  // frequency would reshuffle the filter bar as posts arrive, and hiding empty
+  // topics would keep a quiet topic permanently empty because nobody can find
+  // it to post there.
+  const allTags = useMemo(() => COMMUNITY_TOPICS.map((topic) => topic.id), []);
 
   const filtered = useMemo(() => {
     const searchLower = search.trim().toLowerCase();
@@ -329,7 +296,7 @@ const CommunityFeed: React.FC = () => {
         title: payload.title,
         content: payload.content,
         user_id: user?.id,
-        tags: [],
+        tags: [payload.topic],
         media_urls: mediaUrls.length > 0 ? mediaUrls : null,
       };
       

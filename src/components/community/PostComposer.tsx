@@ -9,12 +9,15 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import SignInModal from "./SignInModal";
 import { useNavigate } from "react-router-dom";
+import { COMMUNITY_TOPICS, normalizeTopic, type CommunityTopicId } from "@/lib/communityTopics";
+import { captureEvent } from "@/lib/analytics";
 
 const DRAFT_STORAGE_KEY = 'community_post_draft';
 
 export type ComposerPayload = {
   title: string;
   content: string;
+  topic: CommunityTopicId;
   image?: string;
   video?: string;
   audio?: string;
@@ -38,6 +41,7 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
   const navigate = useNavigate();
   const [title, setTitle] = useState(reportData?.title || "");
   const [content, setContent] = useState(reportData?.content || "");
+  const [topic, setTopic] = useState<CommunityTopicId | undefined>();
   const [mediaPreview, setMediaPreview] = useState<string | undefined>();
   const [mediaType, setMediaType] = useState<'image' | 'video' | 'audio' | undefined>();
   const [showSignInModal, setShowSignInModal] = useState(false);
@@ -46,6 +50,10 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
   const audioInputRef = useRef<HTMLInputElement | null>(null);
   
   const isAIReport = !!reportData?.reportType;
+  const selectedTopic = useMemo(
+    () => COMMUNITY_TOPICS.find((option) => option.id === topic),
+    [topic],
+  );
 
   // Restore draft from localStorage on mount
   useEffect(() => {
@@ -59,6 +67,8 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
             setTitle(draft.title || "");
             setContent(draft.content || "");
           }
+          const savedTopic = normalizeTopic(draft.topic);
+          if (savedTopic) setTopic(savedTopic);
         }
       } catch (error) {
         console.error('Error restoring draft:', error);
@@ -82,6 +92,7 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
         const draft = {
           title: title.trim(),
           content: content.trim(),
+          topic,
           timestamp: Date.now()
         };
         localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
@@ -91,11 +102,12 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
     }, 500); // Debounce by 500ms
 
     return () => clearTimeout(timeoutId);
-  }, [title, content, isAIReport]);
+  }, [title, content, topic, isAIReport]);
 
   const reset = () => {
     setTitle("");
     setContent("");
+    setTopic(undefined);
     setMediaPreview(undefined);
     setMediaType(undefined);
     if (imageInputRef.current) imageInputRef.current.value = "";
@@ -166,9 +178,14 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
       toast.error("Tell a bit more about your story.");
       return;
     }
-    const payload: ComposerPayload = { 
-      title: title.trim(), 
+    if (!topic) {
+      toast.error("Pick a topic so the right founders see this.");
+      return;
+    }
+    const payload: ComposerPayload = {
+      title: title.trim(),
       content: content.trim(),
+      topic,
       mediaType
     };
 
@@ -230,6 +247,40 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
         </CardHeader>
         <CardContent>
           <form onSubmit={handlePublish} className="space-y-4" noValidate>
+            <fieldset disabled={requireAuth && !isAuthenticated} className="min-w-0">
+              <legend className="mb-2 text-sm font-medium text-foreground">
+                What is this about?
+              </legend>
+              <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Post topic">
+                {COMMUNITY_TOPICS.map((option) => {
+                  const isSelected = topic === option.id;
+                  return (
+                    <Button
+                      key={option.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={isSelected}
+                      variant={isSelected ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        setTopic(option.id);
+                        // Topic id only — post text is user content and never
+                        // becomes an event property.
+                        captureEvent('community_topic_selected', { topic: option.id });
+                      }}
+                    >
+                      {option.label}
+                    </Button>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                {selectedTopic
+                  ? selectedTopic.description
+                  : "Pick a topic so the founders who can help actually see it."}
+              </p>
+            </fieldset>
+
             <div>
               <Input
                 value={title}
@@ -257,7 +308,7 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
                     setContent(newValue.slice(0, 5000));
                   }
                 }}
-                placeholder="Describe your work, process, challenges, or learnings. What inspired you? What did you discover?"
+                placeholder={selectedTopic?.prompt ?? "Describe your work, process, challenges, or learnings. What inspired you? What did you discover?"}
                 aria-label="Post content"
                 rows={6}
                 maxLength={5000}

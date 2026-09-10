@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Filter, X, TrendingUp, Clock, Star, Users, MessageSquare, Sparkles } from "lucide-react";
+import { getCommunityTopicLabel } from "@/lib/communityTopics";
 
 interface AdvancedFiltersProps {
   selectedTag: string | null;
@@ -155,21 +156,21 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
 
         <Separator />
 
-        {/* Popular Tags */}
+        {/* Topics */}
         <div>
-          <h4 className="text-sm font-semibold mb-3">Popular Topics</h4>
+          <h4 className="text-sm font-semibold mb-3">Topics</h4>
           <div className="flex flex-wrap gap-2">
             {allTags.slice(0, 12).map((tag) => (
               <button
                 key={tag}
                 onClick={() => onTagSelect(selectedTag === tag ? null : tag)}
                 className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs transition-all hover:scale-105 ${
-                  selectedTag === tag 
-                    ? "bg-primary text-primary-foreground border-primary shadow-md" 
+                  selectedTag === tag
+                    ? "bg-primary text-primary-foreground border-primary shadow-md"
                     : "hover:bg-accent hover:text-accent-foreground border-border"
                 }`}
               >
-                #{tag}
+                {getCommunityTopicLabel(tag) ?? tag}
                 {selectedTag === tag && <X className="h-3 w-3 ml-1" />}
               </button>
             ))}

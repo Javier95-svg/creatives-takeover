@@ -234,6 +234,14 @@
       "sourceFile": "src/lib/engagementSession.ts",
       "requiredProperties": ["session_id", "section", "plan", "days_since_signup", "recommendation_key", "action_type", "credit_cost"]
     },
+    "community_topic_selected": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/components/community/PostComposer.tsx",
+      "description": "A founder chose a topic in the community composer. Topic id only — never the post title or body.",
+      "requiredProperties": ["topic"]
+    },
     "social_recommendation_shown": {
       "stage": "retention",
       "owner": "product",
