@@ -30,7 +30,7 @@ const teamMembers: TeamMember[] = [
   },
   {
     id: "daniela-hagg",
-    name: "Daniela Hagg",
+    name: "Daniela Hägg",
     role: "Growth Associate",
     linkedin: "https://www.linkedin.com/in/daniela-h-72752914b/",
     photo: danielaPhoto,
