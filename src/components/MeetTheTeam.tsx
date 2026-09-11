@@ -13,6 +13,7 @@ type TeamMember = {
   name: string;
   role: string;
   linkedin: string;
+  x?: string;
   email?: string;
   photo: string;
 };
@@ -21,8 +22,10 @@ const teamMembers: TeamMember[] = [
   {
     id: "founder",
     name: "Javier Peña",
-    role: "Founder",
+    role: "Founder (CEO & CTO)",
     linkedin: "https://www.linkedin.com/in/javier-digital-marketing/",
+    x: "https://x.com/JavierForge",
+    email: "javier@creatives-takeover.com",
     photo: javierPhoto,
   },
   {
@@ -73,7 +76,7 @@ const MeetTheTeam = () => {
             Meet the Team
           </h2>
           <p className="text-lg leading-relaxed text-foreground/85">
-            Our small team brings together tech, hustle, and a passion for helping others launch what matters. We believe in practical solutions, honest feedback, and building real community.
+            Meet the people behind Creatives Takeover.
           </p>
         </div>
 
@@ -113,6 +116,25 @@ const MeetTheTeam = () => {
                   <Linkedin className="h-4 w-4" aria-hidden="true" />
                   LinkedIn
                 </a>
+                {member.x && (
+                  <a
+                    href={member.x}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-10 items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/50 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label={`View ${member.name} on X`}
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                    </svg>
+                    X
+                  </a>
+                )}
                 {member.email && (
                   <a
                     href={`mailto:${member.email}`}
