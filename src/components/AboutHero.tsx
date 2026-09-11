@@ -21,7 +21,7 @@ const AboutHero = () => {
             </div>
               
             <div className="space-y-3 sm:space-y-4">
-              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">The advantage has shifted to judgment: understanding a real customer’s pain, knowing exactly what to sell and whom to sell it to, and validating that people care before investing more time. The winners will not simply generate more. They will turn insight into something useful, differentiated, and wanted.</p>
+              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">The advantage has shifted to judgment: understanding a real customer’s pain, knowing exactly what to sell and whom to sell it to, and validating what people care about and are willing to pay for before investing more resources.</p>
               <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">Creatives Takeover helps independent builders make that shift. Our tools, guidance, and network connect customer discovery, validation, product creation, distribution, and growth. We help you transform raw AI output into a focused business that solves a real problem for a clearly defined market.</p>
             </div>
 
