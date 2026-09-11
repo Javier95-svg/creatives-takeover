@@ -10,7 +10,6 @@ import otiliaPhoto from "@/assets/team-otilia-dogaru.jpg";
 type TeamMember = {
   name: string;
   role: string;
-  bio: string;
   linkedin?: string;
   x?: string;
   email?: string;
@@ -21,7 +20,6 @@ const teamMembers: TeamMember[] = [
   {
     name: "Javier Peña",
     role: "Founder",
-    bio: "As a founder myself, my mission is to support my peers in building and scaling successful startups by giving visibility to ideas, connecting founders with investors, and accelerating growth through community-driven execution.",
     linkedin: "https://www.linkedin.com/in/javier-digital-marketing/",
     x: "https://x.com/JavierForge",
     photo: javierPhoto,
@@ -29,27 +27,23 @@ const teamMembers: TeamMember[] = [
   {
     name: "Domagoj Markota",
     role: "Fractional CTO",
-    bio: "Domagoj is a founder and senior software engineer focused on building and scaling deep-tech products, combining AI expertise with hands-on leadership to turn complex ideas into real-world solutions.",
     email: "domagoj.markota@gmail.com",
     photo: domagojPhoto,
   },
   {
     name: "Daniela Hägg",
     role: "Growth Associate",
-    bio: "Daniela is a growth-driven operations leader who helps startups scale efficiently by building the systems, processes, and execution frameworks that enable teams to move faster and grow sustainably.",
     linkedin: "https://www.linkedin.com/in/daniela-h-72752914b/",
     photo: danielaPhoto,
   },
   {
     name: "Jelena Dabovic",
     role: "Business Development Assistant",
-    bio: "Jelena supports business development by identifying growth opportunities, strengthening partner relationships, and helping founders move from conversation to execution.",
     photo: jelenaPhoto,
   },
   {
     name: "Otilia Dogaru",
     role: "Sales Development Representative",
-    bio: "Otilia helps founders and partners connect with the right opportunities through thoughtful outreach, qualification, and relationship-building.",
     linkedin: "https://www.linkedin.com/in/otilia-dogaru/",
     photo: otiliaPhoto,
   },
@@ -94,10 +88,6 @@ const MeetTheTeam = () => {
                     {member.role}
                   </p>
                 </div>
-
-                <p className="text-sm text-foreground/85 leading-relaxed flex-1">
-                  {member.bio}
-                </p>
 
                 {(member.linkedin || member.email || member.x) && (
                   <div className="mt-6 flex flex-col gap-3">
