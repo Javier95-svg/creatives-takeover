@@ -33,6 +33,7 @@ const teamMembers: TeamMember[] = [
     name: "Daniela Hägg",
     role: "Growth Associate",
     linkedin: "https://www.linkedin.com/in/daniela-h-72752914b/",
+    email: "daniela.a.hagg@gmail.com",
     photo: danielaPhoto,
   },
   {
@@ -40,6 +41,7 @@ const teamMembers: TeamMember[] = [
     name: "Otilia Dogaru",
     role: "Growth Associate",
     linkedin: "https://www.linkedin.com/in/otilia-dogaru/",
+    email: "otiliadogaru.ldn@gmail.com",
     photo: otiliaPhoto,
   },
   {
@@ -47,6 +49,7 @@ const teamMembers: TeamMember[] = [
     name: "Jelena Dabovic",
     role: "Content Partner",
     linkedin: "https://ba.linkedin.com/in/jelena-dabovic-b6847a38b",
+    email: "jdabovic58@gmail.com",
     photo: jelenaPhoto,
   },
   {
@@ -83,7 +86,7 @@ const MeetTheTeam = () => {
             <Card
               key={member.id}
               id={member.id}
-              className="glass flex min-h-64 flex-col border-border/60 p-6"
+              className="glass flex min-h-64 flex-col border-border/60 p-6 transition-transform duration-300 ease-out hover:scale-[1.02]"
             >
               <div className="flex items-center gap-4">
                 <img
