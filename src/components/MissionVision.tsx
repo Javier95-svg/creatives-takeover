@@ -7,35 +7,20 @@ import missionImg from "@/assets/innovation-leaders-unique.jpg";
 import visionImg from "@/assets/innovation-leaders.jpg";
 const MissionVision = () => {
   const [emblaApi, setEmblaApi] = useState<CarouselApi | null>(null);
+
   useEffect(() => {
     if (!emblaApi) return;
-    let canceled = false;
-    const tick = () => {
-      if (canceled || !emblaApi) return;
-      const idx = emblaApi.selectedScrollSnap();
-      if (emblaApi.canScrollNext() && idx === 0) {
-        emblaApi.scrollNext();
-      } else if (emblaApi.canScrollPrev() && idx > 0) {
-        emblaApi.scrollPrev();
-      } else {
-        emblaApi.scrollTo(idx === 0 ? 1 : 0);
-      }
-    };
-    const interval = window.setInterval(tick, 20000);
-    const cancel = () => {
-      if (!canceled) {
-        canceled = true;
-        window.clearInterval(interval);
-      }
-    };
-    emblaApi.on("pointerDown", cancel);
-    emblaApi.on("scroll", cancel);
+
+    const interval = window.setInterval(() => {
+      const currentSlide = emblaApi.selectedScrollSnap();
+      emblaApi.scrollTo(currentSlide === 0 ? 1 : 0);
+    }, 15000);
+
     return () => {
       window.clearInterval(interval);
-      emblaApi.off("pointerDown", cancel);
-      emblaApi.off("scroll", cancel);
     };
   }, [emblaApi]);
+
   return (
     <section className="relative py-20 overflow-hidden" id="mission-vision">
       <div className="container mx-auto px-6 relative z-10">
