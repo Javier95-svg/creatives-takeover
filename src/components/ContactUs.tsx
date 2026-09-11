@@ -135,7 +135,7 @@ const ContactUs = () => {
             <Send className="w-10 h-10" />
           </h2>
           <p className="text-lg text-foreground/85 leading-relaxed">
-            We'd love to hear from you. We are open to any collaboration opportunities or suggestions. Please send us a message, and we will respond as soon as possible.
+            We'd love to hear from you. We're open to collab opportunities or suggestions. Send us a message, and we will respond as soon as possible.
           </p>
         </header>
 
