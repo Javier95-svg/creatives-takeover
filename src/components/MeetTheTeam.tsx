@@ -1,4 +1,4 @@
-import { Linkedin, Mail } from "lucide-react";
+import { Linkedin, Mail, Users } from "lucide-react";
 
 import danielaPhoto from "@/assets/team-daniela-hagg.webp";
 import javierPhoto from "@/assets/team-javier-pena-profile.jpg";
@@ -72,12 +72,10 @@ const MeetTheTeam = () => {
     <section className="relative overflow-hidden py-20" id="meet-the-team">
       <div className="container relative z-10 mx-auto px-6">
         <div className="mx-auto mb-16 max-w-3xl animate-slide-up text-center">
-          <h2 className="gradient-text animate-text-shimmer animate-fade-in mb-4 text-5xl font-bold">
-            Meet the Team
+          <h2 className="gradient-text animate-text-shimmer animate-fade-in flex items-center justify-center gap-3 text-6xl font-bold md:text-7xl">
+            <span>Meet the Team</span>
+            <Users className="h-12 w-12 md:h-14 md:w-14" aria-hidden="true" />
           </h2>
-          <p className="text-lg leading-relaxed text-foreground/85">
-            Meet the people behind Creatives Takeover.
-          </p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
