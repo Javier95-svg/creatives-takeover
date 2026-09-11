@@ -20,7 +20,7 @@ type TeamMember = {
 const teamMembers: TeamMember[] = [
   {
     name: "Javier Peña",
-    role: "Founder & CEO",
+    role: "Founder",
     bio: "As a founder myself, my mission is to support my peers in building and scaling successful startups by giving visibility to ideas, connecting founders with investors, and accelerating growth through community-driven execution.",
     linkedin: "https://www.linkedin.com/in/javier-digital-marketing/",
     x: "https://x.com/JavierForge",
@@ -72,7 +72,7 @@ const MeetTheTeam = () => {
           {teamMembers.map((member) => (
             <Card
               key={member.name}
-              id={member.role === "Founder & CEO" ? "founder" : undefined}
+              id={member.role === "Founder" ? "founder" : undefined}
               className="glass border-border/60 overflow-hidden flex flex-col"
             >
               <figure className="aspect-square overflow-hidden">
