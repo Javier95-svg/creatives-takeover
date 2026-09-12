@@ -81,10 +81,7 @@ const DEFAULT_STATS: HeroStat[] = [
 const DEFAULT_LEDE = (
   <>
     <span className="ct-hero__lede-block">
-      Startup incubator platform.
-    </span>
-    <span className="ct-hero__lede-block">
-      Define what to build, who it's for, and whether they'll pay before you spend months guessing.
+      Describe your idea. Get back who it's for, what to test first, and whether anyone will pay.
     </span>
     <strong className="ct-hero__lede-final">No application. No cohort. No equity.</strong>
   </>
