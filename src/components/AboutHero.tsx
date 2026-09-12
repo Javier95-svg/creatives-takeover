@@ -21,8 +21,8 @@ const AboutHero = () => {
             </div>
               
             <div className="space-y-3 sm:space-y-4">
-              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">The advantage has shifted to judgment: knowing who to sell to, what they actually want, and what they'll pay for, before you build more.</p>
-              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">Creatives Takeover helps independent builders make that shift. Our tools, guidance, and network connect discovery, validation, product creation, distribution, and growth, so you can test your idea against real evidence: pursue it with conviction when the signals are strong, walk away before you waste time and money when they're not.</p>
+              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">The advantage has shifted to judgment: knowing who to sell to, what they actually want, and what they'll pay for before you build more.</p>
+              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">Creatives Takeover helps independent builders make that shift. Our tools, guidance, and network connect discovery, validation, product creation, distribution, and growth, helping you make decisions based on real market evidence: pursue an idea with conviction when the signals are strong, or walk away before wasting time and money when they're not.</p>
             </div>
 
             </div>
