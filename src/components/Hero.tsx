@@ -81,7 +81,10 @@ const DEFAULT_STATS: HeroStat[] = [
 const DEFAULT_LEDE = (
   <>
     <span className="ct-hero__lede-block">
-      Describe your idea. Get back who it's for, what to test first, and whether anyone will pay.
+      Business Development platform for startup founders, product managers and indie builders.
+    </span>
+    <span className="ct-hero__lede-block">
+      Define your ideal customer, prove demand, build your MVP, launch it, and find investment.
     </span>
     <strong className="ct-hero__lede-final">No application. No cohort. No equity.</strong>
   </>
