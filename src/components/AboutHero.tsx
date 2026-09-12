@@ -17,7 +17,7 @@ const AboutHero = () => {
                 <span className="block lg:whitespace-nowrap">The Future Belongs</span>
                 <span className="block lg:whitespace-nowrap">to Creators</span>
               </h1>
-              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/90 leading-relaxed">AI and automation are eliminating most traditional jobs while unlocking unprecedented entrepreneurial opportunity. Everyone will need to think and act like a founder, and we're here to make that transition possible.</p>
+              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/90 leading-relaxed">AI and automation are eliminating most white-collar jobs while unlocking unprecedented entrepreneurial opportunities. Everyone will need to think and act like an orchestrator, and we're here to make that transition possible.</p>
             </div>
               
             <div className="space-y-3 sm:space-y-4">
