@@ -15,14 +15,14 @@ const AboutHero = () => {
             <div>
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[3.875rem] xl:text-[4.125rem] font-space-grotesk font-bold tracking-[-0.065em] mb-4 sm:mb-6 pb-1 gradient-text leading-[1.02] animate-text-shimmer text-foreground">
                 <span className="block lg:whitespace-nowrap">The Future Belongs</span>
-                <span className="block lg:whitespace-nowrap">to Founders</span>
+                <span className="block lg:whitespace-nowrap">to Creators</span>
               </h1>
               <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/90 leading-relaxed">AI and automation are eliminating most traditional jobs while unlocking unprecedented entrepreneurial opportunity. Everyone will need to think and act like a founder, and we're here to make that transition possible.</p>
             </div>
               
             <div className="space-y-3 sm:space-y-4">
-              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">The biggest challenge isn't coming up with ideas. It's moving them from scattered brainstorming into real execution. Creatives Takeover transforms raw thoughts into clear, actionable roadmaps inside an ecosystem where founders, creators, and freelancers collaborate to bring ideas to life.</p>
-              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">This isn't just a tool. It's an ecosystem for the next wave of builders, the ones who define their own future instead of waiting for one to be handed to them.</p>
+              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">Building software has never been easier. AI turns a prompt into research, designs, code, and a working product in days, so output alone is no longer a competitive advantage. The scarce skill is judgment: knowing who you're building for, what they actually want, and what they'll pay for.</p>
+              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">Creatives Takeover exists to sharpen that judgment. We turn raw thoughts into clear, actionable roadmaps inside an ecosystem where creators, founders, and freelancers build alongside each other, defining their own future instead of waiting for one to be handed to them.</p>
             </div>
 
             </div>
