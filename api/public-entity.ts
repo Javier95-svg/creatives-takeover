@@ -15,7 +15,7 @@ const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? 'https://rcjlaybjnozqbsoxz
 const SUPABASE_KEY = process.env.VITE_SUPABASE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
 const apiHeaders = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' };
 
-type EntityType = 'marketplace' | 'service' | 'mentor' | 'cofounder' | 'profile';
+type EntityType = 'marketplace' | 'service' | 'mentor' | 'cofounder' | 'profile' | 'launch' | 'launches';
 
 async function getJson(path: string): Promise<any> {
   const response = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: apiHeaders });
@@ -152,12 +152,141 @@ function cofounderDocument(listing: any): PublicSeoDocument {
   };
 }
 
+// Minimum listed launches before /launches is worth indexing. A three-card
+// gallery is thin content that also advertises that nobody uses the product.
+// Mirrored in src/pages/demo-studio/LaunchGalleryPage.tsx — the edge runtime
+// cannot import from src/, so keep the two in sync by hand.
+const MIN_GALLERY_SIZE = 12;
+
+function isoDuration(seconds: unknown): string | null {
+  const total = Number(seconds);
+  if (!Number.isFinite(total) || total <= 0) return null;
+  const minutes = Math.floor(total / 60);
+  const remainder = Math.round(total % 60);
+  return `PT${minutes > 0 ? `${minutes}M` : ''}${remainder}S`;
+}
+
+function launchDocument(project: any): PublicSeoDocument {
+  const page = project.demo_studio_launch_pages?.[0] ?? {};
+  const path = `/p/${project.slug}`;
+  const canonical = `${SITE_ORIGIN}${path}`;
+  const headline = String(page.headline || project.tagline || 'demo and founder pitch');
+  const title = `${project.name} — ${headline}`;
+  const description = String(
+    page.subheadline || project.tagline || `See the ${project.name} demo and founder pitch.`,
+  );
+  const vsls = Array.isArray(project.demo_studio_vsls) ? project.demo_studio_vsls : [];
+  const vsl = vsls.find((item: any) => item?.is_primary && item?.loom_embed_url) ?? vsls.find((item: any) => item?.loom_embed_url);
+  const duration = vsl ? isoDuration(vsl.duration_seconds) : null;
+  const cacheBuster = Date.parse(project.updated_at || '') || 0;
+
+  const schema: object[] = [
+    breadcrumb([
+      { name: 'Home', url: '/' },
+      { name: 'Launches', url: '/launches' },
+      { name: project.name, url: path },
+    ]),
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      '@id': `${canonical}#webpage`,
+      name: title,
+      description,
+      url: canonical,
+      dateModified: project.updated_at,
+      isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
+      about: { '@type': 'Organization', name: project.name, ...(project.logo_url ? { logo: project.logo_url } : {}) },
+      publisher: organizationRef(),
+    },
+  ];
+  // VideoObject only when a playable pitch exists. Emitting it without a real
+  // video is a rich-result violation.
+  if (vsl?.loom_embed_url) {
+    schema.push({
+      '@context': 'https://schema.org',
+      '@type': 'VideoObject',
+      '@id': `${canonical}#video`,
+      name: String(vsl.title || `${project.name} founder pitch`),
+      description,
+      embedUrl: vsl.loom_embed_url,
+      thumbnailUrl: vsl.thumbnail_url || `${SITE_ORIGIN}/og/p/${project.slug}`,
+      uploadDate: vsl.created_at,
+      ...(duration ? { duration } : {}),
+    });
+  }
+
+  return {
+    title,
+    description,
+    canonical,
+    image: `${SITE_ORIGIN}/og/p/${project.slug}${cacheBuster ? `?v=${cacheBuster}` : ''}`,
+    // Founder opt-in. Unlisted pages stay reachable by link but are never indexed.
+    indexable: project.launch_listed === true,
+    schema,
+    fallbackHtml: `<article><h1>${escapeHtml(headline)}</h1><p>${escapeHtml(description)}</p>${project.tagline ? `<h2>What it is</h2><p>${escapeHtml(project.tagline)}</p>` : ''}${project.category ? `<h2>Category</h2><p>${escapeHtml(project.category)}</p>` : ''}${vsl?.title ? `<h2>Founder pitch</h2><p>${escapeHtml(vsl.title)}</p>` : ''}<h2>Get early access</h2><p>${escapeHtml(page.cta_label || 'Join the waitlist')} — open the page to join the list.</p><p><a href="/launches">More founder launches on Creatives Takeover</a> · <a href="/demo-studio">Build a launch page like this one</a></p></article>`,
+  };
+}
+
+function launchesDocument(projects: any[]): PublicSeoDocument {
+  const canonical = `${SITE_ORIGIN}/launches`;
+  const description = 'Real products founders are validating right now on Creatives Takeover. Each launch page carries an interactive demo, a founder pitch, and an early access list.';
+  const items = projects.map((project, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    item: {
+      '@type': 'WebPage',
+      '@id': `${SITE_ORIGIN}/p/${project.slug}#webpage`,
+      name: project.name,
+      description: project.tagline || project.name,
+      url: `${SITE_ORIGIN}/p/${project.slug}`,
+    },
+  }));
+  return {
+    title: 'Founder Launches | Creatives Takeover',
+    description,
+    canonical,
+    // Below the threshold the page renders a "be one of the first" state, which
+    // is not worth indexing.
+    indexable: projects.length >= MIN_GALLERY_SIZE,
+    schema: [
+      breadcrumb([{ name: 'Home', url: '/' }, { name: 'Founder Launches', url: '/launches' }]),
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        '@id': `${canonical}#collection`,
+        name: 'Founder Launches',
+        description,
+        url: canonical,
+        isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
+        mainEntity: { '@type': 'ItemList', '@id': `${canonical}#items`, numberOfItems: items.length, itemListElement: items },
+      },
+    ],
+    fallbackHtml: `<header><p>${SITE_NAME}</p></header><article><h1>Founder launches</h1><p>${escapeHtml(description)}</p>${projects.length ? `<section><h2>Live launches</h2><ul>${projects.map((project) => `<li><a href="/p/${escapeHtml(project.slug)}">${escapeHtml(project.name)}</a>${project.tagline ? ` — ${escapeHtml(project.tagline)}` : ''}</li>`).join('')}</ul></section>` : ''}<p><a href="/demo-studio">Build your own launch page free</a></p></article>`,
+  };
+}
+
 async function loadDocument(type: EntityType, slug: string): Promise<PublicSeoDocument | null> {
   if (type === 'marketplace') {
     const services = await getJson('services?is_active=eq.true&select=slug,name,description,category,delivered_by_name,banner_url&order=is_featured.desc,name.asc');
     return marketplaceDocument(Array.isArray(services) ? services : []);
   }
+  if (type === 'launches') {
+    const projects = await getJson('demo_studio_projects?launch_published=eq.true&launch_listed=eq.true&select=slug,name,tagline,logo_url,category,updated_at&order=updated_at.desc&limit=60');
+    return launchesDocument(Array.isArray(projects) ? projects : []);
+  }
   if (!slug) return null;
+  if (type === 'launch') {
+    // RLS lets the anon key read the project only when launch_published = true,
+    // and the embedded rows only through that published parent, so this single
+    // request is self-securing.
+    const rows = await getJson(
+      `demo_studio_projects?slug=eq.${encodeURIComponent(slug)}&launch_published=eq.true&limit=1`
+      + '&select=id,name,tagline,logo_url,category,slug,launch_listed,updated_at,'
+      + 'demo_studio_launch_pages(headline,subheadline,cta_label,theme),'
+      + 'demo_studio_vsls(title,loom_embed_url,thumbnail_url,duration_seconds,created_at,is_primary)',
+    );
+    return Array.isArray(rows) && rows[0] ? launchDocument(rows[0]) : null;
+  }
   if (type === 'service') {
     const rows = await getJson(`services?slug=eq.${encodeURIComponent(slug)}&is_active=eq.true&select=*&limit=1`);
     return Array.isArray(rows) && rows[0] ? serviceDocument(rows[0]) : null;
@@ -182,7 +311,7 @@ export default async function handler(request: Request): Promise<Response> {
   const slug = (url.searchParams.get('slug') || '').trim().toLowerCase();
   const shellResponse = await fetch(`${url.origin}/index.html`, { headers: { 'x-public-entity': '1' } });
   const shell = await shellResponse.text();
-  if (!SUPABASE_KEY || !['marketplace', 'service', 'mentor', 'cofounder', 'profile'].includes(type)) {
+  if (!SUPABASE_KEY || !['marketplace', 'service', 'mentor', 'cofounder', 'profile', 'launch', 'launches'].includes(type)) {
     return new Response(shell, { status: 500, headers: { 'content-type': 'text/html; charset=utf-8', 'x-robots-tag': 'noindex' } });
   }
   const document = await loadDocument(type, slug);

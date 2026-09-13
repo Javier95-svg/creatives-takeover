@@ -2,7 +2,7 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { showDashboardReturnToast } from '@/components/dashboard/dashboardReturnToast';
-import { ArrowLeft, ExternalLink, Globe, Loader2, Rocket, Send, Webhook } from 'lucide-react';
+import { ArrowLeft, Copy, ExternalLink, Globe, Loader2, Rocket, Send, Share2, Webhook } from 'lucide-react';
 import SEO from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import DemoPlayer from '@/components/demo-studio/player/DemoPlayer';
@@ -28,7 +28,8 @@ import { shouldShowWatermark } from '@/lib/demoStudio/plan';
 import { evaluateDemoArtifact } from '@/lib/demoStudio/outcome';
 import { prepareConceptValidation } from '@/lib/demoStudio/conceptHandoff';
 import { createJourneyEvidenceManifest, createJourneyHandoff, trackJourneyEvent, upsertJourneyOutcome } from '@/lib/journeyOutcomes';
-import { trackToolOutputCreated } from '@/lib/analytics';
+import { captureEvent, trackToolOutputCreated } from '@/lib/analytics';
+import { buildFounderPost, buildShareTargets, buildShareText } from '@/lib/demoStudio/share';
 import {
   getOrCreateLaunchPage,
   getBrief,
@@ -85,6 +86,8 @@ export default function LaunchComposerPage() {
   const [previewSteps, setPreviewSteps] = useState<DemoStepWithHotspots[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [justPublished, setJustPublished] = useState(false);
+  const [listingSaving, setListingSaving] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -278,6 +281,9 @@ export default function LaunchComposerPage() {
           console.error('Could not update journey outcome', outcomeError);
         }
       }
+      // Surface the share card before the return toast offers to navigate away.
+      // Publishing and then being pulled to the dashboard is where sharing dies.
+      setJustPublished(true);
       showDashboardReturnToast({
         message: 'Launch page published.',
         description: 'Signups will show on your command center.',
@@ -309,6 +315,38 @@ export default function LaunchComposerPage() {
       toast.error(e instanceof Error ? e.message : 'Could not save slug.');
     } finally {
       setSlugChecking(false);
+    }
+  };
+
+  const handleListingToggle = async (checked: boolean) => {
+    if (!project) return;
+    setListingSaving(true);
+    try {
+      await updateProject(project.id, { launch_listed: checked });
+      setProject({ ...project, launch_listed: checked });
+      toast.success(checked ? 'Listed on the launch gallery.' : 'Removed from the launch gallery.');
+      captureEvent('launch_listing_toggled', { listed: checked });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not update listing.');
+    } finally {
+      setListingSaving(false);
+    }
+  };
+
+  // Owner share actions go to PostHog only. Writing them into demo_studio_events
+  // would pollute the founder's own funnel, which getProjectMetrics aggregates.
+  const trackComposerShare = (channel: string) => {
+    captureEvent('launch_share_action', { channel, surface: 'composer' });
+  };
+
+  const copyText = async (value: string, message: string, channel: string) => {
+    if (!value) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success(message);
+      trackComposerShare(channel);
+    } catch {
+      toast.error('Could not copy. Select the text and copy manually.');
     }
   };
 
@@ -370,6 +408,12 @@ export default function LaunchComposerPage() {
   }
 
   const launchUrl = project?.slug ? `${window.location.origin}/p/${project.slug}` : '';
+  const founderPost = project ? buildFounderPost(project.name, launchPage?.headline, launchUrl) : '';
+  const composerShareTargets = buildShareTargets(
+    launchUrl,
+    buildShareText(launchPage?.headline ?? '', project?.name ?? ''),
+  );
+  const showShareCard = Boolean(project?.launch_published && launchUrl);
   const attachedVslCount = vsls.filter((vsl) => vsl.loom_embed_url || vsl.loom_shared_url || vsl.video_url).length;
   const launchChecklist = [
     { label: launchPage?.theme?.conceptTest ? 'Demo optional for concept testing' : 'Published demo', done: launchPage?.theme?.conceptTest || demos.some((demo) => demo.status === 'published') },
@@ -435,11 +479,20 @@ export default function LaunchComposerPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             {project?.launch_published && launchUrl && (
-              <Button asChild variant="outline" className="gap-2">
-                <a href={launchUrl} target="_blank" rel="noopener noreferrer">
-                  View live <ExternalLink className="h-4 w-4" />
-                </a>
-              </Button>
+              <>
+                <Button asChild variant="outline" className="gap-2">
+                  <a href={launchUrl} target="_blank" rel="noopener noreferrer">
+                    View live <ExternalLink className="h-4 w-4" />
+                  </a>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => copyText(launchUrl, 'Launch page link copied.', 'copy_link_header')}
+                >
+                  <Copy className="h-4 w-4" /> Copy link
+                </Button>
+              </>
             )}
             {project?.launch_published ? (
               <Button variant="outline" onClick={handleUnpublish} disabled={saving}>Unpublish</Button>
@@ -475,6 +528,65 @@ export default function LaunchComposerPage() {
 
         <div className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
           <div className="space-y-4">
+            {showShareCard && (
+              <Card
+                id="share-launch"
+                ref={(node) => {
+                  if (node && justPublished) node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }}
+                className={cn(justPublished && 'ring-2 ring-primary')}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Share2 className="h-4 w-4" /> Share your launch
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="share-launch-url">Your page</Label>
+                    <div className="flex gap-2">
+                      <Input id="share-launch-url" readOnly value={launchUrl} className="font-mono text-xs" />
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        aria-label="Copy launch page link"
+                        onClick={() => copyText(launchUrl, 'Launch page link copied.', 'copy_link')}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="share-launch-post">Ready to post</Label>
+                    <Textarea id="share-launch-post" rows={5} readOnly value={founderPost} className="text-sm" />
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2"
+                      onClick={() => copyText(founderPost, 'Post copied. Paste it anywhere.', 'copy_post')}
+                    >
+                      <Copy className="h-4 w-4" /> Copy post
+                    </Button>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {composerShareTargets.map((target) => (
+                      <Button
+                        key={target.channel}
+                        asChild
+                        size="sm"
+                        variant="outline"
+                        onClick={() => trackComposerShare(target.channel)}
+                      >
+                        <a href={target.href} target="_blank" rel="noopener noreferrer">
+                          {target.label}
+                        </a>
+                      </Button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Page content</CardTitle>
@@ -519,6 +631,27 @@ export default function LaunchComposerPage() {
                     />
                     {slugChecking && <Loader2 className="mt-3 h-4 w-4 animate-spin text-muted-foreground" />}
                   </div>
+                </div>
+                <div className="space-y-1.5 rounded-lg border border-border/60 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <Label htmlFor="launch-listed" className="leading-snug">
+                      List on the Creatives Takeover launch gallery
+                    </Label>
+                    <Switch
+                      id="launch-listed"
+                      checked={Boolean(project?.launch_listed)}
+                      disabled={listingSaving}
+                      onCheckedChange={handleListingToggle}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {project?.launch_listed
+                      ? 'On. Your page can appear in Google and on the Creatives Takeover launch gallery. You can switch this off any time, and we will ask search engines to drop it, which usually takes a few days.'
+                      : 'Off. Anyone with the link can open your page, but we tell search engines not to index it and it stays off our public gallery.'}
+                  </p>
+                  {!project?.launch_published && (
+                    <p className="text-xs text-muted-foreground/80">Takes effect when your page is published.</p>
+                  )}
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5">

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { CheckCircle2, Loader2 } from 'lucide-react';
+import { CheckCircle2, Link2, Loader2, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import SEO from '@/components/SEO';
 import DemoPlayer from '@/components/demo-studio/player/DemoPlayer';
@@ -14,6 +14,7 @@ import { shouldShowWatermark } from '@/lib/demoStudio/plan';
 import { trackDemoEvent } from '@/lib/demoStudio/events';
 import type { PublicLaunchPage as PublicLaunchPageData } from '@/lib/demoStudio/types';
 import { buildArtifactReferralPath, trackArtifactReferralClicked } from '@/lib/artifactReferral';
+import { buildShareTargets, buildShareText, canUseNativeShare } from '@/lib/demoStudio/share';
 
 export default function PublicLaunchPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -89,6 +90,42 @@ export default function PublicLaunchPage() {
     }
   };
 
+  // Visitor share actions. These are anon requests, so the demo-studio-event
+  // function derives owner_view = false from the absent JWT; a founder testing
+  // their own page is tagged owner_view = true automatically. No dedupeKey:
+  // sharing to two channels is two genuine signals, and the function already
+  // rate limits at 30/min.
+  const trackShare = (channel: string, placement: 'page' | 'post_signup') => {
+    if (!data) return;
+    void trackDemoEvent('share_click', {
+      projectId: data.project.id,
+      demoId: data.demo?.demo.id,
+      vslId: data.vsl?.id,
+      meta: { channel, placement },
+    });
+  };
+
+  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+
+  const handleCopyLink = async (placement: 'page' | 'post_signup') => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success('Link copied.');
+      trackShare('copy', placement);
+    } catch {
+      toast.error('Could not copy the link.');
+    }
+  };
+
+  const handleNativeShare = async (title: string, text: string, placement: 'page' | 'post_signup') => {
+    try {
+      await navigator.share({ title, text, url: shareUrl });
+      trackShare('native', placement);
+    } catch {
+      // The visitor dismissed the sheet. Not an error worth surfacing.
+    }
+  };
+
   if (state === 'loading') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950">
@@ -133,18 +170,71 @@ export default function PublicLaunchPage() {
   const mutedText = background === 'light' ? 'text-muted-foreground' : 'text-white/70';
   const mediaOrder = layout === 'demo_first' ? 'lg:order-first' : '';
 
+  const shareHeadline = data.launchPage.headline || data.project.name;
+  const shareText = buildShareText(shareHeadline, data.project.name);
+  const shareTargets = buildShareTargets(shareUrl, shareText);
+  const shareButtonClass = background === 'light'
+    ? 'rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium hover:bg-slate-50'
+    : 'rounded-full border border-white/15 px-3 py-1.5 text-xs font-medium hover:bg-white/10';
+
+  const renderShareRow = (placement: 'page' | 'post_signup') => (
+    <div className="flex flex-wrap items-center gap-2">
+      {canUseNativeShare() ? (
+        <button
+          type="button"
+          className={shareButtonClass}
+          onClick={() => handleNativeShare(shareHeadline, shareText, placement)}
+        >
+          <span className="inline-flex items-center gap-1.5"><Share2 className="h-3.5 w-3.5" /> Share</span>
+        </button>
+      ) : (
+        shareTargets.map((target) => (
+          <a
+            key={target.channel}
+            href={target.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={shareButtonClass}
+            onClick={() => trackShare(target.channel, placement)}
+          >
+            {target.label}
+          </a>
+        ))
+      )}
+      <button type="button" className={shareButtonClass} onClick={() => handleCopyLink(placement)}>
+        <span className="inline-flex items-center gap-1.5"><Link2 className="h-3.5 w-3.5" /> Copy link</span>
+      </button>
+    </div>
+  );
+
   return (
     <div className={pageClass}>
       <SEO
         title={`${data.project.name} demo and founder pitch`}
         description={data.launchPage.subheadline || data.project.tagline || `See the ${data.project.name} demo.`}
+        image={`https://creatives-takeover.com/og/p/${slug}`}
         type="product"
       />
       <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-8 md:py-12">
         <header className="mb-8 flex flex-wrap items-center justify-between gap-3">
-          <Link to="/demo-studio" className="text-sm font-semibold text-white/80 hover:text-white">
-            Creatives Takeover Demo Studio
-          </Link>
+          <div className="flex items-center gap-3">
+            {data.project.logo_url && (
+              <img
+                src={data.project.logo_url}
+                alt={`${data.project.name} logo`}
+                className="h-8 w-8 rounded-lg object-cover"
+                loading="eager"
+                decoding="async"
+              />
+            )}
+            <span className="text-sm font-semibold">{data.project.name}</span>
+            <Link
+              to="/demo-studio"
+              className={`hidden text-xs sm:inline ${mutedText} hover:underline`}
+            >
+              on Creatives Takeover
+            </Link>
+          </div>
           <a
             href={headerHref}
             className="rounded-full bg-white px-4 py-2 text-sm font-medium text-foreground"
@@ -197,9 +287,15 @@ export default function PublicLaunchPage() {
               </Button>
             </form>}
             {submitted && (
-              <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-success">
-                <CheckCircle2 className="h-4 w-4" /> {successMessage}
-              </p>
+              <div className="mt-3 space-y-3">
+                <p className="inline-flex items-center gap-1.5 text-sm text-success">
+                  <CheckCircle2 className="h-4 w-4" /> {successMessage}
+                </p>
+                <div className="space-y-2">
+                  <p className={`text-sm ${mutedText}`}>Know someone who would want this?</p>
+                  {renderShareRow('post_signup')}
+                </div>
+              </div>
             )}
           </div>
 
@@ -224,17 +320,44 @@ export default function PublicLaunchPage() {
           </section>
         )}
 
-        <footer className={`mt-10 flex flex-col items-center justify-between gap-4 border-t pt-6 text-sm sm:flex-row ${
-          background === 'light' ? 'border-slate-200' : 'border-white/10'
+        <section
+          className={`mt-10 flex flex-col gap-3 border-t pt-6 sm:flex-row sm:items-center sm:justify-between ${
+            background === 'light' ? 'border-slate-200' : 'border-white/10'
+          }`}
+        >
+          <p className={`text-sm ${mutedText}`}>Share {data.project.name}</p>
+          {renderShareRow('page')}
+        </section>
+
+        <footer className={`mt-8 rounded-2xl border p-6 ${
+          background === 'light' ? 'border-slate-200 bg-slate-50' : 'border-white/10 bg-white/5'
         }`}>
-          <span className={mutedText}>Built with Creatives Takeover</span>
-          <Link
-            to={buildArtifactReferralPath('demo_launch')}
-            className="rounded-full bg-white px-5 py-2.5 font-semibold text-slate-950 transition-opacity hover:opacity-90"
-            onClick={() => trackArtifactReferralClicked('demo_launch', 'footer')}
-          >
-            Build yours free
-          </Link>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <p className={`text-xs uppercase tracking-wide ${mutedText}`}>
+                Built with Creatives Takeover Demo Studio
+              </p>
+              <p className="text-base font-semibold">Turn your product into a page like this one.</p>
+              <p className={`text-sm ${mutedText}`}>
+                Interactive demo, founder pitch, and email capture. Free to start, no code.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                to={buildArtifactReferralPath('demo_launch')}
+                className="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition-opacity hover:opacity-90"
+                onClick={() => trackArtifactReferralClicked('demo_launch', 'footer_module')}
+              >
+                Build your demo page free
+              </Link>
+              <Link
+                to="/launches"
+                className={`text-sm ${mutedText} hover:underline`}
+              >
+                See other launches →
+              </Link>
+            </div>
+          </div>
         </footer>
       </main>
     </div>

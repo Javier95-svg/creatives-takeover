@@ -169,6 +169,7 @@ const DemoStudioLaunchComposerPage = lazy(() => import("./pages/demo-studio/Laun
 const PublicDemoPage = lazy(() => import("./pages/demo-studio/PublicDemoPage"));
 const EmbedDemoPage = lazy(() => import("./pages/demo-studio/EmbedDemoPage"));
 const PublicLaunchPage = lazy(() => import("./pages/demo-studio/PublicLaunchPage"));
+const LaunchGalleryPage = lazy(() => import("./pages/demo-studio/LaunchGalleryPage"));
 const PMFSurveyPage = lazy(() => import("./pages/pmf/PMFSurveyPage"));
 const DemoStudioTryPage = lazy(() => import("./pages/demo-studio/TryPage"));
 
@@ -381,6 +382,7 @@ function App() {
                         {/* Defensive: catch the hyphenated form some external links may use */}
                         <Route path="/demo-studio-try" element={<Navigate to="/demo-studio/try" replace />} />
                         <Route path="/p/:slug" element={<PublicLaunchPage />} />
+                        <Route path="/launches" element={<LaunchGalleryPage />} />
                         <Route path="/demo/:publicId" element={<PublicDemoPage />} />
                         <Route path="/embed/demo/:publicId" element={<EmbedDemoPage />} />
                         <Route path="/waitlist" element={<Navigate to="/demo-studio/classic" replace />} />

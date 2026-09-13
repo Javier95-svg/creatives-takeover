@@ -7,7 +7,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 const countable = new Set(["demo_view", "demo_start", "demo_complete", "cta_click"]);
-const ancillary = new Set(["launch_page_view", "vsl_impression", "vsl_play", "vsl_complete", "signup_attempt", "signup", "waitlist_signup"]);
+// share_click is ancillary, not countable: countable requires a demoId and dedupes
+// on (demo_id, type, viewer_hash), but sharing is a project-level act and one
+// visitor sharing to two channels is two genuine signals.
+const ancillary = new Set(["launch_page_view", "vsl_impression", "vsl_play", "vsl_complete", "signup_attempt", "signup", "waitlist_signup", "share_click"]);
 const allowed = new Set([...countable, ...ancillary, "demo_step"]);
 const reactions = new Set(["interested", "not_for_me", "book_call", "commitment"]);
 

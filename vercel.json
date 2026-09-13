@@ -46,6 +46,10 @@
     { "source": "/mentorship/:slug", "destination": "/api/public-entity?type=mentor&slug=:slug" },
     { "source": "/co-founder/listing/:slug", "destination": "/api/public-entity?type=cofounder&slug=:slug" },
     { "source": "/profile/:slug", "destination": "/api/public-entity?type=profile&slug=:slug" },
+    { "source": "/p/:slug", "destination": "/api/public-entity?type=launch&slug=:slug" },
+    { "source": "/launches", "destination": "/api/public-entity?type=launches" },
+    { "source": "/launches/", "destination": "/api/public-entity?type=launches" },
+    { "source": "/og/p/:slug", "destination": "/api/og-launch?slug=:slug" },
     { "source": "/newspaper/:slug", "destination": "/api/newspaper-og?slug=:slug" },
     { "source": "/stories/:slug", "destination": "/api/newspaper-og?slug=:slug" },
     { "source": "/sitemap-articles.xml", "destination": "/api/sitemap-articles" },
@@ -54,6 +58,12 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
+    {
+      "source": "/og/p/:slug",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600, stale-while-revalidate=86400" }
+      ]
+    },
     {
       "source": "/api/og-icp",
       "headers": [

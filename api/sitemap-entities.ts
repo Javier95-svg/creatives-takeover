@@ -39,12 +39,20 @@ async function getCofounders(): Promise<any[]> {
   return items;
 }
 
+// Mirrors MIN_GALLERY_SIZE in api/public-entity.ts: below the threshold /launches
+// renders a "be one of the first" state and is not indexable, so it must not be
+// advertised in the sitemap either.
+const MIN_GALLERY_SIZE = 12;
+
 export default async function handler(): Promise<Response> {
-  const [services, mentors, profiles, cofounders] = await Promise.all([
+  const [services, mentors, profiles, cofounders, launches] = await Promise.all([
     getRows('services?is_active=eq.true&select=slug,updated_at'),
     getRows('mentors?is_active=eq.true&select=name,updated_at'),
     getRows('public_profiles?seo_indexable=eq.true&select=username'),
     getCofounders(),
+    // Founder opt-in only. launch_listed defaults to false, so an unlisted page
+    // is never advertised here even though /p/:slug stays reachable by link.
+    getRows('demo_studio_projects?launch_published=eq.true&launch_listed=eq.true&select=slug,updated_at'),
   ]);
 
   const entries: SitemapEntry[] = [
@@ -52,6 +60,8 @@ export default async function handler(): Promise<Response> {
     ...mentors.filter((row) => row.name).map((row) => ({ loc: `${SITE_ORIGIN}/mentorship/${generateSlug(row.name)}`, lastmod: row.updated_at })),
     ...profiles.filter((row) => row.username).map((row) => ({ loc: `${SITE_ORIGIN}/profile/${row.username}` })),
     ...cofounders.filter((row) => row.id).map((row) => ({ loc: `${SITE_ORIGIN}/co-founder/listing/${row.id}`, lastmod: row.updatedAt })),
+    ...launches.filter((row) => row.slug).map((row) => ({ loc: `${SITE_ORIGIN}/p/${row.slug}`, lastmod: row.updated_at })),
+    ...(launches.length >= MIN_GALLERY_SIZE ? [{ loc: `${SITE_ORIGIN}/launches` }] : []),
   ];
   const unique = [...new Map(entries.map((entry) => [entry.loc, entry])).values()];
   const urls = unique.map((entry) => `  <url>\n    <loc>${xmlEscape(entry.loc)}</loc>${entry.lastmod ? `\n    <lastmod>${xmlEscape(new Date(entry.lastmod).toISOString())}</lastmod>` : ''}\n  </url>`).join('\n');

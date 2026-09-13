@@ -127,7 +127,7 @@ export async function createProject(
 
 export async function updateProject(
   id: string,
-  patch: Partial<Pick<DemoStudioProject, 'name' | 'tagline' | 'logo_url' | 'category' | 'slug'>>,
+  patch: Partial<Pick<DemoStudioProject, 'name' | 'tagline' | 'logo_url' | 'category' | 'slug' | 'launch_listed'>>,
 ): Promise<void> {
   const { error } = await supabase.from(PROJECTS).update(patch as any).eq('id', id);
   if (error) throw new Error(error.message);
@@ -1269,4 +1269,40 @@ export async function getPublicDemo(publicId: string): Promise<PublicDemo | null
   }));
 
   return { demo, steps: stepsWithHotspots };
+}
+
+export interface PublicLaunchSummary {
+  slug: string;
+  name: string;
+  tagline: string | null;
+  logo_url: string | null;
+  category: string | null;
+  updated_at: string;
+  headline: string | null;
+}
+
+/**
+ * Opt-in launch gallery. launch_listed is a query predicate, not an RLS policy:
+ * unlisted pages must stay reachable by direct link at /p/:slug.
+ */
+export async function listPublicLaunches(limit = 60): Promise<PublicLaunchSummary[]> {
+  const { data, error } = await supabase
+    .from(PROJECTS)
+    .select('slug,name,tagline,logo_url,category,updated_at,demo_studio_launch_pages(headline)')
+    .eq('launch_published', true)
+    .eq('launch_listed', true)
+    .order('updated_at', { ascending: false })
+    .limit(limit);
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as any[])
+    .filter((row) => row?.slug)
+    .map((row) => ({
+      slug: row.slug,
+      name: row.name,
+      tagline: row.tagline ?? null,
+      logo_url: row.logo_url ?? null,
+      category: row.category ?? null,
+      updated_at: row.updated_at,
+      headline: row.demo_studio_launch_pages?.[0]?.headline ?? null,
+    }));
 }

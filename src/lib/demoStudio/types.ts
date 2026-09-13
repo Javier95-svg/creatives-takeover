@@ -24,7 +24,8 @@ export type DemoStudioEventType =
   | 'cta_click'
   | 'signup_attempt'
   | 'signup'
-  | 'waitlist_signup';
+  | 'waitlist_signup'
+  | 'share_click';
 
 export interface DemoTheme {
   demoGoal?: DemoStudioGoal;
@@ -52,6 +53,8 @@ export interface DemoStudioProject {
   category: string | null;
   slug: string | null;
   launch_published: boolean;
+  /** Founder opt-in to indexing and the public /launches gallery. Default false. */
+  launch_listed: boolean;
   acquisition_source?: string | null;
   validation_context_id?: string | null;
   originating_handoff_id?: string | null;

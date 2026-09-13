@@ -9,7 +9,7 @@ export const buildArtifactReferralPath = (artifactType: PublicArtifactType) => {
 
 export const trackArtifactReferralClicked = (
   artifactType: PublicArtifactType,
-  placement: 'footer' | 'missing_state',
+  placement: 'footer' | 'missing_state' | 'footer_module' | 'share_bar' | 'gallery_card',
 ) => {
   captureEvent('artifact_referral_clicked', {
     artifact_type: artifactType,
