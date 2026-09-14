@@ -17,12 +17,12 @@ const AboutHero = () => {
                 <span className="block lg:whitespace-nowrap">The Future Belongs</span>
                 <span className="block lg:whitespace-nowrap">to Creators</span>
               </h1>
-              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/90 leading-relaxed">Building software has never been easier. AI turns a prompt into research, designs, code, and a working product in days, so output alone is no longer a competitive advantage. The scarce skill is judgment: knowing who you're building for, what they actually want, and what they'll pay for.</p>
+              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/90 leading-relaxed">Building software has never been easier. AI can turn a prompt into research, design, code, and a working product in days. As the cost of building falls, output becomes less valuable as a competitive advantage. What matters more is judgment: knowing who you're building for, what they actually need, and what they'll pay for.</p>
             </div>
               
             <div className="space-y-3 sm:space-y-4">
-              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">When building took a year, most bad ideas died quietly, because they never got finished. Now anyone can finish in a week, so bad ideas get built, launched, and sometimes funded before anyone checks whether a market was waiting. The cost of being wrong did not fall with the cost of building. It rose.</p>
-              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">Anyone can ship now, and most of what ships solves nobody's problem. Creatives Takeover exists to raise what makes it out. We work with creators, founders, and freelancers so the things they launch genuinely support the people they were built for.</p>
+              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">When building took a year, bad ideas often died before they reached the market because they never got finished. Now, anyone can build and launch in a week, giving weak ideas a much longer path to survive. They can reach customers, attract attention, and even get funded before anyone has established whether there is a real demand for them. The bottleneck has shifted from making something to knowing what is worth making.</p>
+              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">Creatives Takeover exists to help people make better bets. We work with creators, founders, and freelancers to understand the people they're building for, shape ideas around real needs, and bring products to life with purpose. The goal isn't simply to help more things get made. It's to help the right things get made.</p>
             </div>
 
             </div>
