@@ -30,6 +30,7 @@ import { prepareConceptValidation } from '@/lib/demoStudio/conceptHandoff';
 import { createJourneyEvidenceManifest, createJourneyHandoff, trackJourneyEvent, upsertJourneyOutcome } from '@/lib/journeyOutcomes';
 import { captureEvent, trackToolOutputCreated } from '@/lib/analytics';
 import { buildFounderPost } from '@/lib/demoStudio/share';
+import { buildLaunchUrl } from '@/lib/demoStudio/publishedHost';
 import {
   getOrCreateLaunchPage,
   getBrief,
@@ -407,7 +408,8 @@ export default function LaunchComposerPage() {
     );
   }
 
-  const launchUrl = project?.slug ? `${window.location.origin}/p/${project.slug}` : '';
+  // The canonical published address, same shape as MVP Builder.
+  const launchUrl = project?.slug ? buildLaunchUrl(project.slug) : '';
   const founderPost = project ? buildFounderPost(project.name, launchPage?.headline, launchUrl) : '';
   const showShareCard = Boolean(project?.launch_published && launchUrl);
   const attachedVslCount = vsls.filter((vsl) => vsl.loom_embed_url || vsl.loom_shared_url || vsl.video_url).length;

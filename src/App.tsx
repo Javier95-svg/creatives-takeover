@@ -16,6 +16,7 @@ import { useInteractionTelemetry } from "@/hooks/useInteractionTelemetry";
 import { useEngagementSession } from "@/hooks/useEngagementSession";
 import { captureReferralFromUrl } from "@/lib/referral";
 import { useAnalyticsConsent } from "@/hooks/useAnalyticsConsent";
+import { isProjectSubdomain } from "@/lib/demoStudio/publishedHost";
 
 const PulseWidget = lazy(() => import("@/components/pulse/PulseWidget"));
 const ProUpgradeBanner = lazy(() => import("@/components/ProUpgradeBanner"));
@@ -284,7 +285,10 @@ function App() {
                           <PulseWidgetWrapper />
                         </Suspense>
                         <Routes>
-                        <Route path="/" element={<Index />} />
+                        {/* On a project subdomain ({slug}.creatives-takeover.com) the
+                            root is that founder's published launch page, not the CT
+                            marketing site. api/published-site.ts serves the shell. */}
+                        <Route path="/" element={isProjectSubdomain() ? <PublicLaunchPage /> : <Index />} />
                         <Route path="/about" element={<About />} />
                         <Route path="/pricing" element={<PricingPage />} />
                         <Route path="/subscription-success" element={<SubscriptionSuccess />} />

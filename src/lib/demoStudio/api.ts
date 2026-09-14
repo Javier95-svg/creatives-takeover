@@ -138,14 +138,30 @@ export async function deleteProject(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+// Labels the wildcard host handler refuses (see api/published-site.ts).
+const RESERVED_SUBDOMAIN_LABELS = new Set(['www', 'app', 'api', 'mail', 'admin', 'staging']);
+
 export async function isLaunchSlugAvailable(slug: string, currentProjectId?: string | null): Promise<boolean> {
   const normalized = normalizeProjectSlug(slug);
   if (!normalized) return false;
+  if (RESERVED_SUBDOMAIN_LABELS.has(normalized)) return false;
+
   let query = supabase.from(PROJECTS).select('id').eq('slug', normalized).limit(1);
   if (currentProjectId) query = query.neq('id', currentProjectId);
   const { data, error } = await query;
   if (error) throw new Error(error.message);
-  return (data ?? []).length === 0;
+  if ((data ?? []).length > 0) return false;
+
+  // Launch pages and MVP Builder sites publish into the same address space
+  // ({slug}.creatives-takeover.com, served by api/published-site.ts), so a slug
+  // already taken by a published MVP site is not available here either.
+  const { data: mvpRows, error: mvpError } = await supabase
+    .from('mvp_projects' as any)
+    .select('id')
+    .eq('subdomain_slug', normalized)
+    .limit(1);
+  if (mvpError) throw new Error(mvpError.message);
+  return (mvpRows ?? []).length === 0;
 }
 
 /* -------------------------------------------------------------------------- */

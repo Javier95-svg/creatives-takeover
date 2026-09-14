@@ -14,6 +14,9 @@
 
 export const config = { runtime: 'edge' };
 
+import { fetchLaunchProject, launchDocument } from './_launch';
+import { renderSeoDocument } from './_seo';
+
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? 'https://rcjlaybjnozqbsoxzboa.supabase.co';
 const SUPABASE_KEY = process.env.VITE_SUPABASE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
 const BASE_DOMAIN = 'creatives-takeover.com';
@@ -132,6 +135,48 @@ function resolveSlug(req: Request): string | null {
   return label;
 }
 
+// A slug on {slug}.creatives-takeover.com may belong to an MVP Builder project
+// (stored files) or to a Demo Studio launch page (a React route backed by live
+// data). MVP files are looked up first because that is the older, higher-traffic
+// case; a miss falls through to here.
+//
+// A launch page cannot be served from stored files, so this returns the SPA shell
+// with the launch page's meta injected. The React app boots, reads the slug off
+// the hostname, and renders it. Crawlers get correct per-page meta plus the
+// fallback body without executing JavaScript.
+async function serveLaunchPage(slug: string): Promise<Response | null> {
+  const project = await fetchLaunchProject(slug);
+  if (!project) return null;
+
+  // The shell is fetched from the apex, not from this origin: this request is
+  // already on {slug}.creatives-takeover.com, where the wildcard rewrite would
+  // send it straight back into this function.
+  let shell: string;
+  try {
+    const shellResponse = await fetch(`https://${BASE_DOMAIN}/index.html`, {
+      headers: { 'x-published-launch': '1' },
+    });
+    if (!shellResponse.ok) return null;
+    shell = await shellResponse.text();
+  } catch {
+    return null;
+  }
+
+  const doc = launchDocument(project);
+  const html = injectAnalytics(renderSeoDocument(shell, doc));
+
+  return new Response(html, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'public, max-age=60, stale-while-revalidate=300',
+      'X-Robots-Tag': doc.indexable === false
+        ? 'noindex,follow'
+        : 'index,follow,max-image-preview:large,max-snippet:-1',
+    },
+  });
+}
+
 export default async function handler(req: Request): Promise<Response> {
   const slug = resolveSlug(req);
   if (!slug) {
@@ -163,6 +208,8 @@ export default async function handler(req: Request): Promise<Response> {
     });
 
     if (!resp.ok) {
+      const launch = await serveLaunchPage(slug);
+      if (launch) return launch;
       return notFound('This site could not be loaded right now.');
     }
 
@@ -176,6 +223,9 @@ export default async function handler(req: Request): Promise<Response> {
     }>;
     const file = Array.isArray(rows) ? rows[0] : null;
     if (!file || file.content == null) {
+      // Not an MVP Builder site. The slug may belong to a Demo Studio launch page.
+      const launch = await serveLaunchPage(slug);
+      if (launch) return launch;
       return notFound('There is no published page at this address yet.');
     }
 

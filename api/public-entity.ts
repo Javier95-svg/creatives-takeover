@@ -8,6 +8,7 @@ import {
   renderSeoDocument,
   type PublicSeoDocument,
 } from './_seo';
+import { fetchLaunchProject, launchDocument, launchUrlFor } from './_launch';
 
 export const config = { runtime: 'edge' };
 
@@ -158,74 +159,6 @@ function cofounderDocument(listing: any): PublicSeoDocument {
 // cannot import from src/, so keep the two in sync by hand.
 const MIN_GALLERY_SIZE = 12;
 
-function isoDuration(seconds: unknown): string | null {
-  const total = Number(seconds);
-  if (!Number.isFinite(total) || total <= 0) return null;
-  const minutes = Math.floor(total / 60);
-  const remainder = Math.round(total % 60);
-  return `PT${minutes > 0 ? `${minutes}M` : ''}${remainder}S`;
-}
-
-function launchDocument(project: any): PublicSeoDocument {
-  const page = project.demo_studio_launch_pages?.[0] ?? {};
-  const path = `/p/${project.slug}`;
-  const canonical = `${SITE_ORIGIN}${path}`;
-  const headline = String(page.headline || project.tagline || 'demo and founder pitch');
-  const title = `${project.name} — ${headline}`;
-  const description = String(
-    page.subheadline || project.tagline || `See the ${project.name} demo and founder pitch.`,
-  );
-  const vsls = Array.isArray(project.demo_studio_vsls) ? project.demo_studio_vsls : [];
-  const vsl = vsls.find((item: any) => item?.is_primary && item?.loom_embed_url) ?? vsls.find((item: any) => item?.loom_embed_url);
-  const duration = vsl ? isoDuration(vsl.duration_seconds) : null;
-  const cacheBuster = Date.parse(project.updated_at || '') || 0;
-
-  const schema: object[] = [
-    breadcrumb([
-      { name: 'Home', url: '/' },
-      { name: 'Launches', url: '/launches' },
-      { name: project.name, url: path },
-    ]),
-    {
-      '@context': 'https://schema.org',
-      '@type': 'WebPage',
-      '@id': `${canonical}#webpage`,
-      name: title,
-      description,
-      url: canonical,
-      dateModified: project.updated_at,
-      isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
-      about: { '@type': 'Organization', name: project.name, ...(project.logo_url ? { logo: project.logo_url } : {}) },
-      publisher: organizationRef(),
-    },
-  ];
-  // VideoObject only when a playable pitch exists. Emitting it without a real
-  // video is a rich-result violation.
-  if (vsl?.loom_embed_url) {
-    schema.push({
-      '@context': 'https://schema.org',
-      '@type': 'VideoObject',
-      '@id': `${canonical}#video`,
-      name: String(vsl.title || `${project.name} founder pitch`),
-      description,
-      embedUrl: vsl.loom_embed_url,
-      thumbnailUrl: vsl.thumbnail_url || `${SITE_ORIGIN}/og/p/${project.slug}`,
-      uploadDate: vsl.created_at,
-      ...(duration ? { duration } : {}),
-    });
-  }
-
-  return {
-    title,
-    description,
-    canonical,
-    image: `${SITE_ORIGIN}/og/p/${project.slug}${cacheBuster ? `?v=${cacheBuster}` : ''}`,
-    // Founder opt-in. Unlisted pages stay reachable by link but are never indexed.
-    indexable: project.launch_listed === true,
-    schema,
-    fallbackHtml: `<article><h1>${escapeHtml(headline)}</h1><p>${escapeHtml(description)}</p>${project.tagline ? `<h2>What it is</h2><p>${escapeHtml(project.tagline)}</p>` : ''}${project.category ? `<h2>Category</h2><p>${escapeHtml(project.category)}</p>` : ''}${vsl?.title ? `<h2>Founder pitch</h2><p>${escapeHtml(vsl.title)}</p>` : ''}<h2>Get early access</h2><p>${escapeHtml(page.cta_label || 'Join the waitlist')} — open the page to join the list.</p><p><a href="/launches">More founder launches on Creatives Takeover</a> · <a href="/demo-studio">Build a launch page like this one</a></p></article>`,
-  };
-}
 
 function launchesDocument(projects: any[]): PublicSeoDocument {
   const canonical = `${SITE_ORIGIN}/launches`;
@@ -235,10 +168,10 @@ function launchesDocument(projects: any[]): PublicSeoDocument {
     position: index + 1,
     item: {
       '@type': 'WebPage',
-      '@id': `${SITE_ORIGIN}/p/${project.slug}#webpage`,
+      '@id': `${launchUrlFor(project.slug)}#webpage`,
       name: project.name,
       description: project.tagline || project.name,
-      url: `${SITE_ORIGIN}/p/${project.slug}`,
+      url: launchUrlFor(project.slug),
     },
   }));
   return {
@@ -261,7 +194,7 @@ function launchesDocument(projects: any[]): PublicSeoDocument {
         mainEntity: { '@type': 'ItemList', '@id': `${canonical}#items`, numberOfItems: items.length, itemListElement: items },
       },
     ],
-    fallbackHtml: `<header><p>${SITE_NAME}</p></header><article><h1>Founder launches</h1><p>${escapeHtml(description)}</p>${projects.length ? `<section><h2>Live launches</h2><ul>${projects.map((project) => `<li><a href="/p/${escapeHtml(project.slug)}">${escapeHtml(project.name)}</a>${project.tagline ? ` — ${escapeHtml(project.tagline)}` : ''}</li>`).join('')}</ul></section>` : ''}<p><a href="/demo-studio">Build your own launch page free</a></p></article>`,
+    fallbackHtml: `<header><p>${SITE_NAME}</p></header><article><h1>Founder launches</h1><p>${escapeHtml(description)}</p>${projects.length ? `<section><h2>Live launches</h2><ul>${projects.map((project) => `<li><a href="${launchUrlFor(project.slug)}">${escapeHtml(project.name)}</a>${project.tagline ? ` — ${escapeHtml(project.tagline)}` : ''}</li>`).join('')}</ul></section>` : ''}<p><a href="/demo-studio">Build your own launch page free</a></p></article>`,
   };
 }
 
@@ -276,16 +209,8 @@ async function loadDocument(type: EntityType, slug: string): Promise<PublicSeoDo
   }
   if (!slug) return null;
   if (type === 'launch') {
-    // RLS lets the anon key read the project only when launch_published = true,
-    // and the embedded rows only through that published parent, so this single
-    // request is self-securing.
-    const rows = await getJson(
-      `demo_studio_projects?slug=eq.${encodeURIComponent(slug)}&launch_published=eq.true&limit=1`
-      + '&select=id,name,tagline,logo_url,category,slug,launch_listed,updated_at,'
-      + 'demo_studio_launch_pages(headline,subheadline,cta_label,theme),'
-      + 'demo_studio_vsls(title,loom_embed_url,thumbnail_url,duration_seconds,created_at,is_primary)',
-    );
-    return Array.isArray(rows) && rows[0] ? launchDocument(rows[0]) : null;
+    const project = await fetchLaunchProject(slug);
+    return project ? launchDocument(project) : null;
   }
   if (type === 'service') {
     const rows = await getJson(`services?slug=eq.${encodeURIComponent(slug)}&is_active=eq.true&select=*&limit=1`);

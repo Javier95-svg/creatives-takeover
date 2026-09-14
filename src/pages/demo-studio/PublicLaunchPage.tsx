@@ -16,8 +16,24 @@ import type { PublicLaunchPage as PublicLaunchPageData } from '@/lib/demoStudio/
 import { buildArtifactReferralPath, trackArtifactReferralClicked } from '@/lib/artifactReferral';
 import { buildShareText, canUseNativeShare } from '@/lib/demoStudio/share';
 
+/**
+ * A launch page is reachable two ways: its canonical published address
+ * {slug}.creatives-takeover.com (served by api/published-site.ts, mounted at "/")
+ * and the legacy /p/:slug path. When there is no route param, the slug is the
+ * host's first label.
+ */
+function resolveSlugFromHost(): string | undefined {
+  if (typeof window === 'undefined') return undefined;
+  const host = window.location.hostname.toLowerCase();
+  if (!host.endsWith('.creatives-takeover.com')) return undefined;
+  const label = host.slice(0, -'.creatives-takeover.com'.length).split('.').pop();
+  if (!label || ['www', 'app', 'api', 'mail', 'admin', 'staging'].includes(label)) return undefined;
+  return label;
+}
+
 export default function PublicLaunchPage() {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug: slugParam } = useParams<{ slug: string }>();
+  const slug = slugParam ?? resolveSlugFromHost();
   const [data, setData] = useState<PublicLaunchPageData | null>(null);
   const [state, setState] = useState<'loading' | 'ready' | 'missing'>('loading');
   const [email, setEmail] = useState('');
