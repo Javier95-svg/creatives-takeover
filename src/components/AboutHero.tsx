@@ -17,12 +17,12 @@ const AboutHero = () => {
                 <span className="block lg:whitespace-nowrap">The Future Belongs</span>
                 <span className="block lg:whitespace-nowrap">to Creators</span>
               </h1>
-              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/90 leading-relaxed">AI and automation are eliminating most white-collar jobs while unlocking unprecedented entrepreneurial opportunities. Everyone will need to think and act like an orchestrator, and we're here to make that transition possible.</p>
+              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/90 leading-relaxed">Building software has never been easier. AI turns a prompt into research, designs, code, and a working product in days, so output alone is no longer a competitive advantage. The scarce skill is judgment: knowing who you're building for, what they actually want, and what they'll pay for.</p>
             </div>
               
             <div className="space-y-3 sm:space-y-4">
-              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">Building software has never been easier. AI turns a prompt into research, designs, code, and a working product in days, so output alone is no longer a competitive advantage. The scarce skill is judgment: knowing who you're building for, what they actually want, and what they'll pay for.</p>
-              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">Creatives Takeover exists to sharpen that judgment. We turn raw thoughts into clear, actionable roadmaps inside an ecosystem where creators, founders, and freelancers build alongside each other, defining their own future instead of waiting for one to be handed to them.</p>
+              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">When building took a year, most bad ideas died quietly, because they never got finished. Now anyone can finish in a week, so bad ideas get built, launched, and sometimes funded before anyone checks whether a market was waiting. The cost of being wrong did not fall with the cost of building. It rose.</p>
+              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">Anyone can ship now, and most of what ships solves nobody's problem. Creatives Takeover exists to raise what makes it out. We work with creators, founders, and freelancers so the things they launch genuinely support the people they were built for.</p>
             </div>
 
             </div>
