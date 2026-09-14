@@ -138,6 +138,7 @@ export type FeatureKey =
   | 'prompt_library_export'
   | 'insighta_test'
   | 'newspaper'
+  | 'custom_domain'
   | 'profile';
 
 export type QuotaFeatureKey =
@@ -315,6 +316,7 @@ export const FEATURE_LABELS: Record<FeatureKey, string> = {
   prompt_library_export: 'Prompt Library export',
   insighta_test: 'Insighta Test',
   newspaper: 'Newspaper',
+  custom_domain: 'Custom domain',
   profile: 'Profile',
 };
 
@@ -327,6 +329,16 @@ export const QUOTA_FEATURE_LABELS: Record<QuotaFeatureKey, { singular: string; p
 };
 
 export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitlementConfig>> = {
+  // Connecting your own domain is a paid capability. rookie publishes to the
+  // creatives-takeover.com address; Starter and up can point a domain they own
+  // at it, which also drops CT branding from the published page.
+  custom_domain: {
+    rookie: { state: 'locked', requiredPlan: 'starter' },
+    starter: { state: 'full' },
+    rising: { state: 'full' },
+    pro: { state: 'full' },
+  },
+
   dashboard_mode: {
     rookie: { state: 'full', dashboardMode: 'rookie' },
     starter: { state: 'full', dashboardMode: 'starter' },

@@ -18,6 +18,9 @@ import {
   type DomainVerificationCheck,
   useAppBuilderDomain,
 } from '@/hooks/useAppBuilderDomain';
+import { Link } from 'react-router-dom';
+import { PLAN_LABELS, normalizePlan, resolveEntitlement } from '@/config/planPermissions';
+import { useSubscription } from '@/hooks/useSubscription';
 import { cn } from '@/lib/utils';
 
 function CopyButton({ value }: { value: string }) {
@@ -114,6 +117,8 @@ export const MVPBuilderDomainPanel: React.FC<MVPBuilderDomainPanelProps> = ({
 }) => {
   const { record, isLoading, isSaving, isVerifying, saveDomain, verifyDomain, removeDomain } =
     useAppBuilderDomain(projectId);
+  const { subscriptionData } = useSubscription();
+  const domainEntitlement = resolveEntitlement('custom_domain', normalizePlan(subscriptionData?.subscription_tier));
   const [inputDomain, setInputDomain] = useState('');
 
   const handleSave = () => {
@@ -152,6 +157,35 @@ export const MVPBuilderDomainPanel: React.FC<MVPBuilderDomainPanelProps> = ({
     return (
       <div className="flex h-40 items-center justify-center">
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // Custom domains are a paid capability. rookie publishes to the
+  // creatives-takeover.com subdomain instead; see FEATURE_ENTITLEMENTS.custom_domain.
+  if (domainEntitlement.uiMode === 'locked') {
+    const requiredPlan = domainEntitlement.upgradeTarget ?? 'starter';
+    return (
+      <div className="flex h-full flex-col gap-4 overflow-y-auto p-4 text-sm">
+        <div className="flex items-center gap-2">
+          <Globe className="h-4 w-4 shrink-0 text-primary/70" />
+          <div>
+            <p className="font-semibold text-foreground">Custom Domain</p>
+            <p className="text-label text-muted-foreground">
+              Available on {PLAN_LABELS[requiredPlan]} and above.
+            </p>
+          </div>
+        </div>
+        <div className="space-y-3 rounded-xl border border-border/50 bg-card/70 p-4">
+          <p className="text-muted-foreground">
+            Your project is already live on its creatives-takeover.com address. Upgrade to
+            point a domain you own at it, and we will drop Creatives Takeover branding from
+            the published page.
+          </p>
+          <Button asChild size="sm">
+            <Link to="/pricing">Upgrade to {PLAN_LABELS[requiredPlan]}</Link>
+          </Button>
+        </div>
       </div>
     );
   }

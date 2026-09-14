@@ -83,6 +83,42 @@ serve(async (req: Request): Promise<Response> => {
     );
   }
 
+  // ── Plan gate ──────────────────────────────────────────────────────────────
+  // Custom domains are a paid capability (FEATURE_ENTITLEMENTS.custom_domain).
+  // This is the real enforcement point: RLS lets an owner insert a pending row,
+  // but a domain only goes live once this function marks it verified, so the gate
+  // has to live here rather than only in the UI.
+  {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
+
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const jwt = authHeader.replace(/^Bearer\s+/i, "").trim();
+    const { data: userData } = jwt
+      ? await admin.auth.getUser(jwt)
+      : { data: { user: null } };
+    const userId = userData?.user?.id ?? null;
+
+    if (!userId) {
+      return jsonResponse({ ok: false, error: "Sign in to verify a custom domain." }, 401);
+    }
+
+    const { data: tier } = await admin.rpc("get_user_normalized_subscription_tier", {
+      p_user_id: userId,
+    });
+    const plan = String(tier ?? "rookie").toLowerCase();
+
+    if (!["starter", "rising", "pro"].includes(plan)) {
+      return jsonResponse({
+        ok: false,
+        error: "Custom domains are available on Starter and above.",
+        upgradeRequired: "starter",
+      }, 402);
+    }
+  }
+
+
   // Determine if this is an apex domain or subdomain
   const registrableDomain = getRegistrableDomain(rawDomain);
   const isApex = rawDomain === registrableDomain;

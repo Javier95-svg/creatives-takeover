@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { CheckCircle2, Link2, Loader2, Share2 } from 'lucide-react';
+import { CheckCircle2, Copy, Loader2, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import SEO from '@/components/SEO';
 import DemoPlayer from '@/components/demo-studio/player/DemoPlayer';
@@ -14,7 +14,7 @@ import { shouldShowWatermark } from '@/lib/demoStudio/plan';
 import { trackDemoEvent } from '@/lib/demoStudio/events';
 import type { PublicLaunchPage as PublicLaunchPageData } from '@/lib/demoStudio/types';
 import { buildArtifactReferralPath, trackArtifactReferralClicked } from '@/lib/artifactReferral';
-import { buildShareTargets, buildShareText, canUseNativeShare } from '@/lib/demoStudio/share';
+import { buildShareText, canUseNativeShare } from '@/lib/demoStudio/share';
 
 export default function PublicLaunchPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -172,38 +172,32 @@ export default function PublicLaunchPage() {
 
   const shareHeadline = data.launchPage.headline || data.project.name;
   const shareText = buildShareText(shareHeadline, data.project.name);
-  const shareTargets = buildShareTargets(shareUrl, shareText);
-  const shareButtonClass = background === 'light'
-    ? 'rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium hover:bg-slate-50'
-    : 'rounded-full border border-white/15 px-3 py-1.5 text-xs font-medium hover:bg-white/10';
 
+  // A demand page is published, not posted. The founder drives traffic to it
+  // deliberately; a visitor who wants to pass it on just needs the URL, so this
+  // is a copy-link control rather than a row of social intents.
   const renderShareRow = (placement: 'page' | 'post_signup') => (
     <div className="flex flex-wrap items-center gap-2">
-      {canUseNativeShare() ? (
-        <button
-          type="button"
-          className={shareButtonClass}
+      {canUseNativeShare() && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="flex items-center gap-2"
           onClick={() => handleNativeShare(shareHeadline, shareText, placement)}
         >
-          <span className="inline-flex items-center gap-1.5"><Share2 className="h-3.5 w-3.5" /> Share</span>
-        </button>
-      ) : (
-        shareTargets.map((target) => (
-          <a
-            key={target.channel}
-            href={target.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={shareButtonClass}
-            onClick={() => trackShare(target.channel, placement)}
-          >
-            {target.label}
-          </a>
-        ))
+          <Share2 className="h-4 w-4" />
+          Share
+        </Button>
       )}
-      <button type="button" className={shareButtonClass} onClick={() => handleCopyLink(placement)}>
-        <span className="inline-flex items-center gap-1.5"><Link2 className="h-3.5 w-3.5" /> Copy link</span>
-      </button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="flex items-center gap-2"
+        onClick={() => handleCopyLink(placement)}
+      >
+        <Copy className="h-4 w-4" />
+        Copy link
+      </Button>
     </div>
   );
 

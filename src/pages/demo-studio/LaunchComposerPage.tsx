@@ -29,7 +29,7 @@ import { evaluateDemoArtifact } from '@/lib/demoStudio/outcome';
 import { prepareConceptValidation } from '@/lib/demoStudio/conceptHandoff';
 import { createJourneyEvidenceManifest, createJourneyHandoff, trackJourneyEvent, upsertJourneyOutcome } from '@/lib/journeyOutcomes';
 import { captureEvent, trackToolOutputCreated } from '@/lib/analytics';
-import { buildFounderPost, buildShareTargets, buildShareText } from '@/lib/demoStudio/share';
+import { buildFounderPost } from '@/lib/demoStudio/share';
 import {
   getOrCreateLaunchPage,
   getBrief,
@@ -409,10 +409,6 @@ export default function LaunchComposerPage() {
 
   const launchUrl = project?.slug ? `${window.location.origin}/p/${project.slug}` : '';
   const founderPost = project ? buildFounderPost(project.name, launchPage?.headline, launchUrl) : '';
-  const composerShareTargets = buildShareTargets(
-    launchUrl,
-    buildShareText(launchPage?.headline ?? '', project?.name ?? ''),
-  );
   const showShareCard = Boolean(project?.launch_published && launchUrl);
   const attachedVslCount = vsls.filter((vsl) => vsl.loom_embed_url || vsl.loom_shared_url || vsl.video_url).length;
   const launchChecklist = [
@@ -569,21 +565,6 @@ export default function LaunchComposerPage() {
                     </Button>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    {composerShareTargets.map((target) => (
-                      <Button
-                        key={target.channel}
-                        asChild
-                        size="sm"
-                        variant="outline"
-                        onClick={() => trackComposerShare(target.channel)}
-                      >
-                        <a href={target.href} target="_blank" rel="noopener noreferrer">
-                          {target.label}
-                        </a>
-                      </Button>
-                    ))}
-                  </div>
                 </CardContent>
               </Card>
             )}

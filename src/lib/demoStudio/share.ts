@@ -1,58 +1,38 @@
-// Share targets for public Demo Studio launch pages (/p/:slug).
+// Share helpers for public Demo Studio launch pages (/p/:slug).
 //
-// Every target is a plain URL opened as a link navigation, so none of these need
-// a Content-Security-Policy change: CSP `form-action` does not apply to link
-// navigation, and nothing here is embedded or scripted.
+// Channel set and URL shapes deliberately match the article share row at
+// /newspaper/:slug (src/pages/StoryArticle.tsx) so both public surfaces behave
+// the same way. Every target is a plain URL opened with window.open, so nothing
+// here needs a Content-Security-Policy change.
 
-export type ShareChannel = 'x' | 'linkedin' | 'whatsapp' | 'email' | 'copy' | 'native';
-
-export interface ShareTarget {
-  channel: Exclude<ShareChannel, 'copy' | 'native'>;
-  label: string;
-  href: string;
-}
+export type ShareIntentChannel = 'x' | 'linkedin' | 'facebook';
+export type ShareChannel = ShareIntentChannel | 'copy' | 'native';
 
 /**
- * The message a visitor posts. Deliberately the founder's words plus their link:
- * no "via @CreativesTakeover" suffix. Hijacking a visitor's post is what makes a
- * hosted page stop feeling like the founder's own.
+ * The text a sharer posts. Deliberately the founder's headline and their link,
+ * with no "via @CreativesTakeover" suffix: hijacking someone's post is what
+ * makes a hosted page stop feeling like the founder's own.
  */
 export function buildShareText(headline: string, projectName: string): string {
-  const line = headline?.trim() || projectName?.trim() || '';
-  return line ? `"${line}"` : '';
+  return (headline?.trim() || projectName?.trim() || '');
 }
 
-export function buildShareTargets(url: string, text: string): ShareTarget[] {
-  const encodedUrl = encodeURIComponent(url);
-  const encodedText = encodeURIComponent(text);
-  const combined = encodeURIComponent(text ? `${text} ${url}` : url);
-  return [
-    {
-      channel: 'x',
-      label: 'X',
-      href: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
-    },
-    {
-      channel: 'linkedin',
-      label: 'LinkedIn',
-      href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
-    },
-    {
-      channel: 'whatsapp',
-      label: 'WhatsApp',
-      href: `https://wa.me/?text=${combined}`,
-    },
-    {
-      channel: 'email',
-      label: 'Email',
-      href: `mailto:?subject=${encodedText}&body=${combined}`,
-    },
-  ];
+export function getShareIntentUrl(channel: ShareIntentChannel, pageUrl: string, title: string): string {
+  const url = encodeURIComponent(pageUrl);
+  const text = encodeURIComponent(title);
+  switch (channel) {
+    case 'x':
+      return `https://x.com/intent/tweet?text=${text}&url=${url}`;
+    case 'linkedin':
+      return `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
+    case 'facebook':
+      return `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+  }
 }
 
 /**
- * The post we hand the founder in the composer. Founders do not write this
- * unprompted, and an empty text box at publish time is where sharing dies.
+ * The post handed to the founder in the Launch Composer. Founders do not write
+ * this unprompted, and an empty text box at publish time is where sharing dies.
  */
 export function buildFounderPost(projectName: string, headline: string | null | undefined, url: string): string {
   const lines = [`I've been building ${projectName}.`];
