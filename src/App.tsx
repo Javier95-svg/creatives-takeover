@@ -17,6 +17,7 @@ import { useEngagementSession } from "@/hooks/useEngagementSession";
 import { captureReferralFromUrl } from "@/lib/referral";
 import { useAnalyticsConsent } from "@/hooks/useAnalyticsConsent";
 import { isProjectSubdomain } from "@/lib/demoStudio/publishedHost";
+import { isEmbedPath } from "@/lib/demoStudio/share";
 
 const PulseWidget = lazy(() => import("@/components/pulse/PulseWidget"));
 const ProUpgradeBanner = lazy(() => import("@/components/ProUpgradeBanner"));
@@ -232,13 +233,26 @@ const ReferralCaptureBridge = () => {
   return null;
 };
 
+// The consent strip is CT's, not the founder's. It must never appear inside an embed
+// pasted onto someone else's page.
+const EmbedAwareCookieConsent = () => {
+  const location = useLocation();
+  if (isEmbedPath(location.pathname)) return null;
+  return <CookieConsentBanner />;
+};
+
 const DeferredGlobalFeatures = () => {
   const location = useLocation();
   const { user, loading } = useAuth();
+  // The embed renders inside a third-party page. Authenticated CT UI in a frame that
+  // site controls is a clickjacking surface, so no global chrome runs there.
+  const embedded = isEmbedPath(location.pathname);
   const params = new URLSearchParams(location.search);
   const hasActivationJourney = params.get("activation") === "1";
   const hasRetentionAttribution = params.has("retention_email_id");
-  const showAuthenticatedFeatures = !loading && Boolean(user);
+  const showAuthenticatedFeatures = !loading && Boolean(user) && !embedded;
+
+  if (embedded) return null;
 
   return (
     <>
@@ -269,7 +283,11 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-                {hasUpdate && <VersionUpdateBanner onRefresh={refreshApp} />}
+                {/* Outside BrowserRouter, so no useLocation. Reading the address directly
+                    is safe here because the embed is never client-navigated into. */}
+                {hasUpdate && !isEmbedPath(window.location.pathname) && (
+                  <VersionUpdateBanner onRefresh={refreshApp} />
+                )}
                 <MobileOptimization />
                 <Suspense fallback={null}><AppOverlays /></Suspense>
                 <BrowserRouter>
@@ -475,7 +493,7 @@ function App() {
                         <Route path="*" element={<NotFound />} />
                         </Routes>
                         <Suspense fallback={null}>
-                          <CookieConsentBanner />
+                          <EmbedAwareCookieConsent />
                         </Suspense>
                     </UpgradePromptProvider>
                   </Suspense>

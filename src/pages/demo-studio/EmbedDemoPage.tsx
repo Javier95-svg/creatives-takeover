@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import SEO from '@/components/SEO';
 import DemoPlayer from '@/components/demo-studio/player/DemoPlayer';
 import { getPublicDemo } from '@/lib/demoStudio/api';
 import { shouldShowWatermark } from '@/lib/demoStudio/plan';
@@ -52,10 +53,15 @@ export default function EmbedDemoPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 p-3">
+      {/* Duplicate of /demo/:publicId by design, so it must never be indexed. The
+          X-Robots-Tag on /embed/ in vercel.json covers crawlers; this covers the
+          rendered page. */}
+      <SEO title={`${data.demo.title} demo`} description="Interactive product demo." noindex />
       <DemoPlayer
         steps={data.steps}
         theme={data.demo.theme}
         mode="live"
+        embedded
         projectId={data.demo.project_id}
         demoId={data.demo.id}
         showWatermark={shouldShowWatermark(data.demo.theme?.watermark, data.demo.theme?.ownerPlan)}

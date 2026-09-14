@@ -28,8 +28,8 @@ import { shouldShowWatermark } from '@/lib/demoStudio/plan';
 import { evaluateDemoArtifact } from '@/lib/demoStudio/outcome';
 import { prepareConceptValidation } from '@/lib/demoStudio/conceptHandoff';
 import { createJourneyEvidenceManifest, createJourneyHandoff, trackJourneyEvent, upsertJourneyOutcome } from '@/lib/journeyOutcomes';
-import { captureEvent, trackToolOutputCreated } from '@/lib/analytics';
-import { buildFounderPost } from '@/lib/demoStudio/share';
+import { captureEvent, trackDemoStudioFunnel, trackToolOutputCreated } from '@/lib/analytics';
+import { buildEmbedSnippet, buildFounderPost } from '@/lib/demoStudio/share';
 import { buildLaunchUrl } from '@/lib/demoStudio/publishedHost';
 import {
   getOrCreateLaunchPage,
@@ -410,6 +410,7 @@ export default function LaunchComposerPage() {
 
   // The canonical published address, same shape as MVP Builder.
   const launchUrl = project?.slug ? buildLaunchUrl(project.slug) : '';
+  const embedSnippet = selectedDemo?.public_id ? buildEmbedSnippet(selectedDemo.public_id, selectedDemo.title) : '';
   const founderPost = project ? buildFounderPost(project.name, launchPage?.headline, launchUrl) : '';
   const showShareCard = Boolean(project?.launch_published && launchUrl);
   const attachedVslCount = vsls.filter((vsl) => vsl.loom_embed_url || vsl.loom_shared_url || vsl.video_url).length;
@@ -566,6 +567,36 @@ export default function LaunchComposerPage() {
                       <Copy className="h-4 w-4" /> Copy post
                     </Button>
                   </div>
+
+                  {selectedDemo?.public_id && (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="share-launch-embed">Put the demo on your own site</Label>
+                      <Textarea
+                        id="share-launch-embed"
+                        rows={3}
+                        readOnly
+                        value={embedSnippet}
+                        className="font-mono text-xs"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Paste this anywhere. The demo runs inside your page, no redirect.
+                      </p>
+                      <Button
+                        variant="outline"
+                        className="w-full gap-2"
+                        onClick={() => {
+                          void copyText(embedSnippet, 'Embed code copied. Paste it into your site.', 'copy_embed');
+                          trackDemoStudioFunnel('demo_shared', {
+                            demoId: selectedDemo.id,
+                            surface: 'embed',
+                            location: 'composer',
+                          });
+                        }}
+                      >
+                        <Copy className="h-4 w-4" /> Copy embed code
+                      </Button>
+                    </div>
+                  )}
 
                 </CardContent>
               </Card>

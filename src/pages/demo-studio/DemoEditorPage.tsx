@@ -51,6 +51,7 @@ import { evaluateDemoArtifact } from '@/lib/demoStudio/outcome';
 import { createJourneyEvidenceManifest, createJourneyHandoff, findJourneyHandoff, trackPrebuildLineageEvent, upsertJourneyOutcome } from '@/lib/journeyOutcomes';
 import { canRemoveWatermark, shouldShowWatermark } from '@/lib/demoStudio/plan';
 import { trackDemoStudioFunnel, trackToolOutputCreated } from '@/lib/analytics';
+import { buildEmbedSnippet } from '@/lib/demoStudio/share';
 import {
   applyStoryboardToDemo,
   createHotspot,
@@ -133,7 +134,7 @@ export default function DemoEditorPage() {
   const [uploading, setUploading] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<'link' | 'embed' | null>(null);
   const [captureOpen, setCaptureOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [liveCaptureOpen, setLiveCaptureOpen] = useState(false);
@@ -697,16 +698,14 @@ export default function DemoEditorPage() {
   };
 
   const shareUrl = demo?.public_id ? `${window.location.origin}/demo/${demo.public_id}` : '';
-  const embedSnippet = demo?.public_id
-    ? `<iframe src="${window.location.origin}/embed/demo/${demo.public_id}" width="100%" height="640" style="border:0;border-radius:12px" allowfullscreen loading="lazy"></iframe>`
-    : '';
+  const embedSnippet = demo?.public_id ? buildEmbedSnippet(demo.public_id, demo.title) : '';
 
   const copyShare = async (value: string, surface: 'link' | 'embed') => {
     try {
       await navigator.clipboard.writeText(value);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-      trackDemoStudioFunnel('demo_shared', { demoId: demo?.id, surface });
+      setCopiedKey(surface);
+      setTimeout(() => setCopiedKey(null), 1500);
+      trackDemoStudioFunnel('demo_shared', { demoId: demo?.id, surface, location: 'editor' });
       toast.success('Copied to clipboard.');
     } catch {
       toast.error('Could not copy.');
@@ -980,7 +979,7 @@ export default function DemoEditorPage() {
               <div className="flex items-center gap-2">
                 <Input readOnly value={shareUrl} className="text-xs" />
                 <Button size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={() => copyShare(shareUrl, 'link')}>
-                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  {copiedKey === 'link' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 </Button>
               </div>
               <div className="space-y-1.5">
@@ -988,9 +987,12 @@ export default function DemoEditorPage() {
                 <div className="flex items-start gap-2">
                   <code className="block flex-1 overflow-x-auto rounded-md bg-muted p-2 text-label">{embedSnippet}</code>
                   <Button size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={() => copyShare(embedSnippet, 'embed')}>
-                    <Copy className="h-4 w-4" />
+                    {copiedKey === 'embed' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   </Button>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Paste this into any site: Webflow, Framer, WordPress, or plain HTML.
+                </p>
               </div>
               {/* The PMF scorer already reads published-demo behavior as verified evidence,
                   but nothing in Demo Studio ever said so — founders had no reason to think

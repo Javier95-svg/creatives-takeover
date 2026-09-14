@@ -13,6 +13,9 @@ interface DemoPlayerProps {
   showWatermark?: boolean;
   /** 'live' emits view/step analytics; 'preview' (editor) does not. */
   mode?: 'preview' | 'live';
+  /** Rendered inside a third-party iframe. Separate from `mode`, which is 'live' on
+   *  both /demo/ and /embed/. Makes the CTA break out instead of navigating the frame. */
+  embedded?: boolean;
   projectId?: string | null;
   demoId?: string | null;
   ctaHref?: string | null;
@@ -32,6 +35,7 @@ export default function DemoPlayer({
   theme,
   showWatermark = true,
   mode = 'preview',
+  embedded = false,
   projectId = null,
   demoId = null,
   ctaHref = null,
@@ -234,18 +238,27 @@ export default function DemoPlayer({
                 <Button asChild style={{ backgroundColor: primaryColor }}>
                   <a
                     href={resolvedCtaHref}
+                    {...(embedded ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                     onClick={(event) => {
                       onCtaClick?.();
                       if (mode === 'live') {
                         void trackDemoEvent('cta_click', {
                           projectId,
                           demoId,
-                          meta: { placement: 'demo_complete' },
+                          meta: { placement: 'demo_complete', embedded },
                         });
                         if (demoGoal === 'book_calls' || demoGoal === 'sell_product') {
                           event.preventDefault();
                           const response = demoGoal === 'book_calls' ? 'book_call' : 'commitment';
-                          void sendResponse(response).finally(() => window.location.assign(resolvedCtaHref));
+                          // Inside an iframe, navigating the frame loads the founder's own
+                          // site into the embed, where their framing headers blank it.
+                          void sendResponse(response).finally(() => {
+                            if (embedded) {
+                              window.open(resolvedCtaHref, '_blank', 'noopener,noreferrer');
+                            } else {
+                              window.location.assign(resolvedCtaHref);
+                            }
+                          });
                         }
                       }
                     }}

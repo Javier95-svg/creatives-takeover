@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { trackDemoStudioFunnel } from '@/lib/analytics';
 import { getDemoMetrics } from '@/lib/demoStudio/api';
 import type { DemoMetrics, DemoStudioMetricsWindow } from '@/lib/demoStudio/types';
 
@@ -98,6 +99,7 @@ export default function DemoAnalyticsPanel({ demoId, publicId, className }: Demo
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
+      trackDemoStudioFunnel('demo_shared', { demoId, surface: 'link', location: 'analytics' });
     } catch {
       toast.error('Could not copy.');
     }

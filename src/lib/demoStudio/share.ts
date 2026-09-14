@@ -44,3 +44,23 @@ export function buildFounderPost(projectName: string, headline: string | null | 
 export function canUseNativeShare(): boolean {
   return typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 }
+
+/**
+ * True when the current route is the third-party embed. Nothing that belongs to
+ * Creatives Takeover may render there: the page is inside someone else's site, and
+ * any authenticated CT UI in a frame that site controls is a clickjacking surface.
+ */
+export function isEmbedPath(pathname: string): boolean {
+  return pathname.startsWith('/embed/');
+}
+
+/**
+ * The iframe a founder pastes onto their own site. Kept in one place because the
+ * markup, and the /embed/ path inside it, is coupled to the framing headers in
+ * vercel.json. Three literal copies across three files would drift.
+ */
+export function buildEmbedSnippet(publicId: string, title?: string | null): string {
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://creatives-takeover.com';
+  const label = (title?.trim() || 'Interactive product demo').replace(/"/g, '&quot;');
+  return `<iframe src="${origin}/embed/demo/${publicId}" width="100%" height="640" style="border:0;border-radius:12px" title="${label}" allowfullscreen loading="lazy"></iframe>`;
+}

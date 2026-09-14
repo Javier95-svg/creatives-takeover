@@ -30,6 +30,8 @@ import GettingStartedChecklist, { type ChecklistStep } from '@/components/demo-s
 import WhatIsADemoPopover from '@/components/demo-studio/WhatIsADemoPopover';
 import { trackActivationFunnelEvent } from '@/lib/activationEntry';
 import { trackJourneyEvent } from '@/lib/journeyOutcomes';
+import { trackDemoStudioFunnel } from '@/lib/analytics';
+import { buildEmbedSnippet } from '@/lib/demoStudio/share';
 
 export default function ProjectOverviewPage() {
   const { id: projectId } = useParams<{ id: string }>();
@@ -148,7 +150,13 @@ export default function ProjectOverviewPage() {
 
   const copyShareLink = async () => {
     if (!shareUrl) return;
-    await navigator.clipboard.writeText(shareUrl);
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+    } catch {
+      // A denied clipboard permission must not report success or advance the funnel.
+      toast.error('Could not copy the link.');
+      return;
+    }
     toast.success('Live demo link copied.');
     trackActivationFunnelEvent('activation_step_completed', {
       entry_id: 'demo_try',
@@ -168,6 +176,23 @@ export default function ProjectOverviewPage() {
       action: 'copy_share_link',
     });
   };
+  // Deliberately does not fire activation_step_completed: copyShareLink already claims
+  // that step, and a second button claiming it would inflate the activation funnel.
+  const copyEmbedSnippet = async () => {
+    if (!publishedDemo?.public_id) return;
+    try {
+      await navigator.clipboard.writeText(buildEmbedSnippet(publishedDemo.public_id, publishedDemo.title));
+      toast.success('Embed code copied. Paste it into your site.');
+      trackDemoStudioFunnel('demo_shared', {
+        demoId: publishedDemo.id,
+        surface: 'embed',
+        location: 'overview',
+      });
+    } catch {
+      toast.error('Could not copy the embed code.');
+    }
+  };
+
   const nextProjectAction = !briefComplete
     ? {
         label: 'Complete brief',
@@ -229,9 +254,12 @@ export default function ProjectOverviewPage() {
       label: 'Publish & share',
       description: 'Publish to get a public link and an embed snippet.',
       done: hasPublishedDemo,
-      action: firstDemoId
-        ? { label: 'Add screenshots', to: `/demo-studio/projects/${projectId}/demos/${firstDemoId}/edit` }
-        : undefined,
+      // The step promises an embed snippet, so once it is done it has to hand one over.
+      action: hasPublishedDemo && publishedDemo?.public_id
+        ? { label: 'Copy embed snippet', onClick: () => void copyEmbedSnippet() }
+        : firstDemoId
+          ? { label: 'Add screenshots', to: `/demo-studio/projects/${projectId}/demos/${firstDemoId}/edit` }
+          : undefined,
     },
     {
       label: 'Record a pitch video',
