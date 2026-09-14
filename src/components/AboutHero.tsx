@@ -21,7 +21,7 @@ const AboutHero = () => {
             </div>
               
             <div className="space-y-3 sm:space-y-4">
-              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">When building took a year, bad ideas often died before they reached the market because they never got finished. Now, anyone can build and launch in a week, giving weak ideas a much longer path to survive. They can reach customers, attract attention, and even get funded before anyone has established whether there is a real demand for them. The bottleneck has shifted from making something to knowing what is worth making.</p>
+              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">When building took a year, bad ideas often died before they reached the market because they never got finished. Now, anyone can build and launch in a week, giving weak ideas a much longer path to survive. They can reach customers, attract attention, and even get funded before anyone has established whether there is a real demand for them.</p>
               <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">Creatives Takeover exists to help people make better bets. We work with creators, founders, and freelancers to understand the people they're building for, shape ideas around real needs, and bring products to life with purpose. The goal isn't simply to help more things get made. It's to help the right things get made.</p>
             </div>
 
