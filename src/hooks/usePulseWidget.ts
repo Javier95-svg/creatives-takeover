@@ -117,7 +117,7 @@ function compactText(value: string | null | undefined, maxLength = 260): string 
   return trimmed.length > maxLength ? `${trimmed.slice(0, maxLength - 3)}...` : trimmed;
 }
 
-function buildPulseProjectContext(model: StartupCommandCenterModel): PulseProjectContext | null {
+export function buildPulseProjectContext(model: StartupCommandCenterModel): PulseProjectContext | null {
   const manual = model.manual;
   const generated = model.generated;
   const context: PulseProjectContext = {};

@@ -230,6 +230,7 @@ export function useCredits() {
 
   return {
     balance: balanceData.balance ?? 0,
+    error: creditsQuery.error,
     monthlyQuota: balanceData.monthly_quota ?? 0,
     heldCredits: balanceData.held_credits ?? 0,
     totalAvailable: balanceData.total_available ?? 0,

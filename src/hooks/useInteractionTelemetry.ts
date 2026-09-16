@@ -24,6 +24,7 @@ const getTrackableElement = (target: EventTarget | null): HTMLElement | null => 
   if (!(target instanceof Element)) {
     return null;
   }
+  if (target.closest('[data-telemetry-private]')) return null;
 
   return (
     target.closest<HTMLElement>(

@@ -14,6 +14,11 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    --credit-gold: 40 64% 27%;
+    --credit-gold-light: 40 59% 34%;
+    --credit-gold-deep: 38 67% 19%;
+    --credit-gold-edge: 41 50% 52%;
+    --credit-gold-foreground: 44 100% 92%;
     /* Professional Light Theme for SaaS Platform */
     --background: 220 24% 98.5%; /* softer, less stark near-white */
     --foreground: 222 28% 12%; /* deeper ink for stronger text contrast */
@@ -1944,7 +1949,7 @@ All colors MUST be HSL.
     }
     
     /* Tablet typography - between mobile and desktop */
-    h1 {
+    h1:not(.pulse-home-headline) {
       font-size: clamp(2rem, 4vw, 3rem) !important;
     }
     

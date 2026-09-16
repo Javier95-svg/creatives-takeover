@@ -82,11 +82,11 @@ const Onboarding = () => {
           .single();
         if (profileError) throw profileError;
 
-        const requestedReturn = searchParams.get('return') ?? getOnboardingReturn('/dashboard');
-        const returnTarget = sanitizeReturnPath(requestedReturn, '/dashboard');
+        const requestedReturn = searchParams.get('return') ?? getOnboardingReturn('/app-entry');
+        const returnTarget = sanitizeReturnPath(requestedReturn, '/app-entry');
         const safeExitTarget =
           returnTarget.startsWith('/onboarding') || returnTarget.startsWith('/setup-quiz')
-            ? '/dashboard'
+            ? '/app-entry'
             : returnTarget;
 
         if (isLegacyOnboardingExempt(profile)) {
@@ -96,7 +96,7 @@ const Onboarding = () => {
         }
 
         if (profile?.onboarding_completed === true) {
-          navigate('/dashboard', { replace: true });
+          navigate(safeExitTarget, { replace: true });
           setIsChecking(false);
           return;
         }
@@ -136,7 +136,11 @@ const Onboarding = () => {
   }, [authLoading, isAuthenticated, navigate, searchParams, user]);
 
   const handleComplete = (_startRoute?: string) => {
-    navigate(_startRoute || '/dashboard');
+    const requested = searchParams.get('return') ?? getOnboardingReturn('/app-entry');
+    const target = sanitizeReturnPath(requested, '/app-entry');
+    const explicitReturn = !['/app-entry', '/onboarding', '/setup-quiz'].includes(target.split('?')[0]);
+    // Preserve explicit return links and onboarding's deliberately selected tool.
+    navigate(explicitReturn ? target : _startRoute || '/app-entry');
   };
 
   return (

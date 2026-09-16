@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { handlePulseHome } from '../_shared/pulse-home.ts';
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
@@ -333,6 +334,8 @@ serve(async (req) => {
     
     const { 
       message, 
+      surface,
+      turnId,
       sessionId, 
       conversationHistory = [], 
       businessContext = {},
@@ -372,9 +375,15 @@ serve(async (req) => {
     logInfo('🔍 DEBUG: Request parsed', { 
       messageLength: message?.length || 0, 
       hasSessionId: !!sessionId, 
-      chatMode,
-      messagePreview: message?.substring(0, 50) || 'NO MESSAGE'
+      chatMode
     });
+
+    // Home validates malformed requests itself; never enter legacy fallback
+    // persistence or billing, even when a required Home field is missing.
+    if (surface === 'pulse_home') {
+      const homeDb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+      return handlePulseHome(homeDb, resolvedUserId, { message, sessionId, turnId, businessContext });
+    }
 
     if (!message || !sessionId) {
       logError('🔍 DEBUG: Missing required fields', { hasMessage: !!message, hasSessionId: !!sessionId });
@@ -385,6 +394,18 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
     safeSupabase = supabase;
+
+    // Never let the legacy handler read a Home thread using just its session ID.
+    const { data: homeThread, error: purposeError } = await supabase
+      // Select the existing row so legacy requests remain compatible before the
+      // additive purpose migration is deployed. Home stays rollout-gated.
+      .from('chatbot_conversations').select('*').eq('session_id', sessionId).maybeSingle();
+    if (purposeError) throw purposeError;
+    if (homeThread?.purpose === 'pulse_home' || (homeThread?.user_id && homeThread.user_id !== resolvedUserId)) {
+      return new Response(JSON.stringify({ error: 'Conversation unavailable for this request' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     // 🎯 ROUTE: If bizmap-structured mode, route to structured system
     if (chatMode === 'bizmap-structured') {

@@ -1,6 +1,8 @@
-import { Suspense, lazy, useEffect } from "react";
+import { Suspense, lazy, useEffect, useLayoutEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from "react-router-dom";
+import { bindWorkspaceNavigator } from '@/lib/workspaceNavigation';
+import { WorkspaceRolloutProvider, useWorkspaceRollout } from '@/contexts/WorkspaceRolloutContext';
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { UpgradePromptProvider } from "@/contexts/UpgradePromptContext";
 import MobileOptimization from "@/components/MobileOptimization";
@@ -51,6 +53,9 @@ const CreditGateRoute = lazy(() => import('@/components/CreditGateRoute'));
 const AppOverlays = lazy(() => import('@/components/AppOverlays'));
 
 const Index = lazy(() => import("./pages/Index"));
+const AppEntry = lazy(() => import('./pages/AppEntry'));
+const ProductGuidePrototype = lazy(() => import('./pages/prototypes/ProductGuidePrototype'));
+const WorkspaceRouteFrame = lazy(() => import('./components/WorkspaceRouteFrame'));
 const About = lazy(() => import("./pages/About"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
 const SubscriptionSuccess = lazy(() => import("./pages/SubscriptionSuccess"));
@@ -209,10 +214,18 @@ const LegacyFirstCustomerProofRedirect = () => {
 
 const PulseWidgetWrapper = () => {
   const location = useLocation();
+  const { enabled, pending } = useWorkspaceRollout();
 
   if (!shouldShowPulseForPath(location.pathname)) return null;
+  if (location.pathname.startsWith('/prototypes/') || (location.pathname === '/' && (enabled || pending))) return null;
 
   return <PulseWidget />;
+};
+
+const WorkspaceNavigationBridge = () => {
+  const navigate = useNavigate();
+  useLayoutEffect(() => bindWorkspaceNavigator(navigate), [navigate]);
+  return null;
 };
 
 const InteractionTelemetryBridge = () => {
@@ -243,6 +256,7 @@ const EmbedAwareCookieConsent = () => {
 
 const DeferredGlobalFeatures = () => {
   const location = useLocation();
+  const { enabled, pending } = useWorkspaceRollout();
   const { user, loading } = useAuth();
   // The embed renders inside a third-party page. Authenticated CT UI in a frame that
   // site controls is a clickjacking surface, so no global chrome runs there.
@@ -263,10 +277,10 @@ const DeferredGlobalFeatures = () => {
       )}
       {showAuthenticatedFeatures && (
         <Suspense fallback={null}>
-          <ActivationResumeBanner />
+          {!(location.pathname === '/' && (enabled || pending)) && <ActivationResumeBanner />}
           <RoadmapRetentionTracking />
           {hasRetentionAttribution && <RetentionEmailAttribution />}
-          {location.pathname === "/" && <ProUpgradeBanner />}
+          {location.pathname === "/" && !enabled && !pending && <ProUpgradeBanner />}
         </Suspense>
       )}
     </>
@@ -283,6 +297,7 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
+          <WorkspaceRolloutProvider>
                 {/* Outside BrowserRouter, so no useLocation. Reading the address directly
                     is safe here because the embed is never client-navigated into. */}
                 {hasUpdate && !isEmbedPath(window.location.pathname) && (
@@ -293,6 +308,7 @@ function App() {
                 <BrowserRouter>
                   <Suspense fallback={<div style={{ minHeight: '100vh', background: '#1a1a2e' }} />}>
                     <ScrollToTop />
+                    <WorkspaceNavigationBridge />
                     <InteractionTelemetryBridge />
                     <EngagementSessionBridge />
                     <ReferralCaptureBridge />
@@ -302,7 +318,12 @@ function App() {
                         <Suspense fallback={null}>
                           <PulseWidgetWrapper />
                         </Suspense>
+                        <WorkspaceRouteFrame>
                         <Routes>
+                        <Route path="/app-entry" element={<AppEntry />} />
+                        <Route path="/prototypes/founder-guide" element={<ProductGuidePrototype concept="founder-guide" />} />
+                        <Route path="/prototypes/command-center" element={<ProductGuidePrototype concept="command-center" />} />
+                        <Route path="/prototypes/guided-journey" element={<ProductGuidePrototype concept="guided-journey" />} />
                         {/* On a project subdomain ({slug}.creatives-takeover.com) the
                             root is that founder's published launch page, not the CT
                             marketing site. api/published-site.ts serves the shell. */}
@@ -492,12 +513,14 @@ function App() {
                         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                         <Route path="*" element={<NotFound />} />
                         </Routes>
+                        </WorkspaceRouteFrame>
                         <Suspense fallback={null}>
                           <EmbedAwareCookieConsent />
                         </Suspense>
                     </UpgradePromptProvider>
                   </Suspense>
                 </BrowserRouter>
+          </WorkspaceRolloutProvider>
         </AuthProvider>
       </QueryClientProvider>
       {analyticsConsent === 'granted' && (

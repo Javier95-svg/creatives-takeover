@@ -1,56 +1,40 @@
-import { Calendar, Coins, Loader2, Plus, Zap } from "lucide-react";
+import { Coins, Loader2, Plus } from "lucide-react";
+import { CreditNavigationMenu } from "@/components/CreditNavigationMenu";
 import { CreditPriceList } from "@/components/CreditPriceList";
 import { useCredits } from "@/hooks/useCredits";
 import { useCreditWalletSummary } from "@/hooks/useCreditWalletSummary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { PLAN_MONTHLY_CREDITS, normalizePlan } from "@/config/planPermissions";
 import { useNavigate } from "react-router-dom";
+import { useWorkspaceFrame } from '@/contexts/WorkspaceFrameContext';
 
 interface CreditDisplayProps {
   variant?: "navigation" | "inline" | "detailed";
   showPurchaseButton?: boolean;
+  compact?: boolean;
 }
 
-const QUICK_TOP_UP_PACKS = [
-  { id: "pack_20", label: "Starter Pack", credits: 20 },
-  { id: "pack_40", label: "Boost Pack", credits: 40 },
-  { id: "pack_60", label: "Power Pack", credits: 60 },
-] as const;
-
-export function CreditDisplay({ variant = "navigation", showPurchaseButton = false }: CreditDisplayProps) {
-  const { balance, monthlyQuota, heldCredits, totalAvailable, loading, refreshBalance, CREDIT_COSTS } = useCredits();
+export function CreditDisplay({ variant = "navigation", showPurchaseButton = false, compact = false }: CreditDisplayProps) {
+  const inWorkspace = useWorkspaceFrame();
+  const { balance, monthlyQuota, heldCredits, totalAvailable, loading, refreshBalance, error: balanceError } = useCredits();
   const navigate = useNavigate();
   const { user } = useAuth();
   // We only need the credit-pack checkout action + current plan here, so skip the tiers fetch.
-  const { createCreditPackCheckout, actionLoading, subscriptionData } = useSubscription({ fetchTiers: false });
+  const { createCreditPackCheckout, actionLoading, subscriptionData, statusError, loading: planLoading, refreshSubscription } = useSubscription({ fetchTiers: false, strictStatus: inWorkspace });
   // Monthly Quota mirrors the user's current plan allocation
   // (Rookie 50 / Starter 100 / Rising 250 / Pro 600), not the mutable remaining quota.
   const planMonthlyCredits =
     PLAN_MONTHLY_CREDITS[normalizePlan(subscriptionData.subscription_tier)] ?? PLAN_MONTHLY_CREDITS.rookie;
   // Top-up credits + credits spent in the current monthly window, anchored to the
   // account creation day (both reset each month). Navbar dropdown only.
-  const { topUpCredits, creditsSpent } = useCreditWalletSummary(variant === "navigation");
+  const { topUpCredits, creditsSpent, error: summaryError, loading: summaryLoading, refresh: refreshSummary } = useCreditWalletSummary(variant === "navigation");
 
   if (!user) return null;
 
-  if (loading) {
+  if (loading || (inWorkspace && (planLoading || summaryLoading))) {
     return (
       <div className="flex items-center gap-2 text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
@@ -70,139 +54,12 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
     return `${totalAvailable} credit${totalAvailable !== 1 ? 's' : ''}`;
   };
 
+  if (inWorkspace && (balanceError || statusError || summaryError)) {
+    return <button className="rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground" title="Retry loading credit balance" onClick={() => void Promise.all([refreshBalance(), refreshSubscription(), refreshSummary()])}>Credits unavailable · Retry</button>;
+  }
+
   if (variant === "navigation") {
-    return (
-      <TooltipProvider>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="gap-2 h-8 px-3">
-              <Coins className="h-4 w-4" />
-              <Badge variant={getBalanceColor()} className="text-xs">
-                {totalAvailable}
-              </Badge>
-            </Button>
-          </DropdownMenuTrigger>
-
-          <DropdownMenuContent
-            align="center"
-            alignOffset={12}
-            className="credit-balance-dropdown-scroll max-h-[var(--radix-dropdown-menu-content-available-height)] w-64 overflow-y-auto overscroll-contain"
-          >
-            <DropdownMenuLabel className="flex items-center gap-2">
-              <Coins className="h-4 w-4" />
-              Credit Balance (Monthly)
-            </DropdownMenuLabel>
-
-            <DropdownMenuSeparator />
-
-            {/* Section 1: Credit Balance details */}
-            <div className="p-3 space-y-3">
-              {/* Plan Quota — mirrors the user's current plan allocation */}
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Plan Quota:</span>
-                <Badge variant="outline" className="text-xs">
-                  {planMonthlyCredits} credits
-                </Badge>
-              </div>
-
-              {/* Top Up Credits — bought via Quick Top Ups this monthly window */}
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Top Up Credits:</span>
-                <Badge variant="outline" className="text-xs">
-                  {topUpCredits} credits
-                </Badge>
-              </div>
-
-              {/* Credits Spent — since the current billing period start; resets each cycle */}
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Credits Spent:</span>
-                <Badge variant="outline" className="text-xs">
-                  {creditsSpent} credits
-                </Badge>
-              </div>
-
-              {/* Total Available */}
-              <div className="flex justify-between items-center pt-2 border-t">
-                <span className="text-sm font-medium">Total Available:</span>
-                <Badge variant={getBalanceColor()}>
-                  {getBalanceText()}
-                </Badge>
-              </div>
-
-              {heldCredits > 0 && (
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Temporarily Held:</span>
-                  <Badge variant="secondary" className="text-xs">
-                    {heldCredits} credits
-                  </Badge>
-                </div>
-              )}
-            </div>
-
-            {/* Section 2: Quick Top Ups */}
-            <DropdownMenuSeparator />
-
-            <DropdownMenuLabel className="flex items-center gap-2">
-              <Zap className="h-4 w-4" />
-              Quick Top Ups
-            </DropdownMenuLabel>
-
-            <div className="px-3 pb-3 pt-1 grid gap-2">
-              {QUICK_TOP_UP_PACKS.map((pack) => (
-                <Button
-                  key={pack.id}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full justify-between gap-2 h-auto py-2"
-                  disabled={actionLoading}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    void createCreditPackCheckout(pack.id, 'credit_display');
-                  }}
-                >
-                  <span className="flex items-center gap-1.5 font-medium">
-                    <Plus className="h-3 w-3" />
-                    {pack.label}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    +{pack.credits} Credits
-                  </span>
-                </Button>
-              ))}
-            </div>
-
-            {/* Section 3: Monthly Plans */}
-            <DropdownMenuSeparator />
-
-            <DropdownMenuItem
-              className="flex items-center gap-2 text-sm font-semibold cursor-pointer"
-              onSelect={() => navigate('/pricing')}
-            >
-              <Calendar className="h-4 w-4" />
-              Monthly Plans
-            </DropdownMenuItem>
-
-            <DropdownMenuItem
-              className="flex items-center gap-2 text-sm cursor-pointer"
-              onSelect={() => navigate('/purchase-history')}
-            >
-              <Coins className="h-4 w-4" />
-              Purchase history
-            </DropdownMenuItem>
-
-            {showPurchaseButton && (
-              <div className="px-3 pb-3 pt-1">
-                <Button size="sm" className="w-full gap-2" variant="outline" onClick={() => navigate('/pricing')}>
-                  <Plus className="h-3 w-3" />
-                  Upgrade Plan
-                </Button>
-              </div>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </TooltipProvider>
-    );
+    return <CreditNavigationMenu {...{ totalAvailable, planMonthlyCredits, topUpCredits, creditsSpent, heldCredits, actionLoading, showPurchaseButton, navigate, createCreditPackCheckout }} compact={compact} />;
   }
 
   if (variant === "inline") {

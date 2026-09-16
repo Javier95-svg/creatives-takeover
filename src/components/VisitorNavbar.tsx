@@ -65,7 +65,14 @@ const contentMenu: VisitorMenu = {
   ],
 };
 
+import { useWorkspaceFrame } from '@/contexts/WorkspaceFrameContext';
+
 const VisitorNavbar = () => {
+  const inWorkspace = useWorkspaceFrame();
+  return inWorkspace ? null : <LegacyVisitorNavbar />;
+};
+
+const LegacyVisitorNavbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMobileMenu, setOpenMobileMenu] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);

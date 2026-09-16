@@ -29,23 +29,25 @@ export type DirectMessageQuote = {
   requestState: string;
 };
 
-const rpc = async <T>(name: string, params: Record<string, unknown>): Promise<T> => {
-  const { data, error } = await (supabase as any).rpc(name, params);
+const rpc = async <T>(name: string, params: Record<string, unknown>, signal?: AbortSignal): Promise<T> => {
+  const request = (supabase as any).rpc(name, params);
+  const { data, error } = await (signal ? request.abortSignal(signal) : request);
   if (error) throw error;
   return data as T;
 };
 
-const rpcWithLegacyFallback = async <T>(preferred: string, fallback: string, params: Record<string, unknown>): Promise<T> => {
+const rpcWithLegacyFallback = async <T>(preferred: string, fallback: string, params: Record<string, unknown>, signal?: AbortSignal): Promise<T> => {
   try {
-    return await rpc<T>(preferred, params);
+    return await rpc<T>(preferred, params, signal);
   } catch (error) {
+    if (signal?.aborted) throw error;
     const message = error instanceof Error
       ? error.message
       : typeof error === 'object' && error
         ? [String((error as any).message || ''), String((error as any).code || ''), String((error as any).details || '')].join(' ')
         : String(error);
     if (!/function|schema cache|404|PGRST202/i.test(message)) throw error;
-    return rpc<T>(fallback, params);
+    return rpc<T>(fallback, params, signal);
   }
 };
 
@@ -60,8 +62,8 @@ export const messagingV2 = {
       p_before_id: before?.id ?? null,
       p_anchor_message_id: anchorMessageId ?? null
     }),
-  recipients: (query: string, limit = 20) =>
-    rpcWithLegacyFallback<any[]>('search_message_recipients_v2', 'search_message_recipients_v1', { p_query: query, p_limit: limit }),
+  recipients: (query: string, limit = 20, signal?: AbortSignal) =>
+    rpcWithLegacyFallback<any[]>('search_message_recipients_v2', 'search_message_recipients_v1', { p_query: query, p_limit: limit }, signal),
   quote: (conversationId: string) =>
     rpc<any>('get_direct_message_quote_v1', { p_conversation_id: conversationId }),
   send: (input: {

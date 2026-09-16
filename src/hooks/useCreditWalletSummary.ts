@@ -67,5 +67,7 @@ export function useCreditWalletSummary(enabled = true) {
     periodStart: query.data?.periodStart ?? null,
     periodEnd: query.data?.periodEnd ?? null,
     loading: query.isLoading,
+    error: query.error,
+    refresh: query.refetch,
   };
 }

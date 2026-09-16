@@ -13,7 +13,7 @@ const AUTH_PATH_PREFIXES = [
 ];
 
 function isSafeInternalPath(path: string): boolean {
-  return path.startsWith("/") && !path.startsWith("//");
+  return path.startsWith("/") && !path.startsWith("//") && !path.includes('\\');
 }
 
 export function sanitizeReturnPath(path: string | null | undefined, fallback = "/dashboard"): string {
@@ -29,7 +29,7 @@ export function sanitizeReturnPath(path: string | null | undefined, fallback = "
 
 export function buildOnboardingPath(returnPath?: string | null): string {
   const safeReturn = sanitizeReturnPath(returnPath, "/dashboard");
-  if (safeReturn === "/dashboard") return "/onboarding";
+  if (!returnPath && safeReturn === "/dashboard") return "/onboarding";
   return `/onboarding?return=${encodeURIComponent(safeReturn)}`;
 }
 
@@ -51,7 +51,7 @@ export function consumeOnboardingReturn(fallback = "/dashboard"): string {
 
 export function appendReturnParam(path: string, returnPath?: string | null): string {
   const safeReturn = sanitizeReturnPath(returnPath, "/dashboard");
-  if (safeReturn === "/dashboard") return path;
+  if (!returnPath && safeReturn === "/dashboard") return path;
   const separator = path.includes("?") ? "&" : "?";
   return `${path}${separator}return=${encodeURIComponent(safeReturn)}`;
 }

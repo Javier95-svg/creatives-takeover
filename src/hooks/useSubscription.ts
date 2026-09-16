@@ -108,7 +108,7 @@ const normalizeTierRow = (row: Record<string, unknown>): SubscriptionTier => {
   } as SubscriptionTier;
 };
 
-export function useSubscription(options?: { fetchTiers?: boolean }) {
+export function useSubscription(options?: { fetchTiers?: boolean; strictStatus?: boolean }) {
   // Tiers are only needed by surfaces that render pricing/plan data. Globally
   // mounted consumers (e.g. CreditGateProvider) that only need actions can pass
   // { fetchTiers: false } to avoid an avoidable subscription_tiers fetch on every
@@ -148,6 +148,7 @@ export function useSubscription(options?: { fetchTiers?: boolean }) {
       const accessToken = await getAccessTokenSafely();
 
       if (!accessToken) {
+        if (options?.strictStatus) throw new Error('Subscription status unavailable');
         return normalizeSubscriptionData(user.email, DEFAULT_SUBSCRIPTION);
       }
 
@@ -159,6 +160,7 @@ export function useSubscription(options?: { fetchTiers?: boolean }) {
 
       if (error) {
         console.error('Error from check-subscription function:', error);
+        if (options?.strictStatus) throw new Error('Subscription status unavailable');
         return normalizeSubscriptionData(user.email, DEFAULT_SUBSCRIPTION);
       }
 
@@ -167,8 +169,10 @@ export function useSubscription(options?: { fetchTiers?: boolean }) {
       }
     } catch (error) {
       console.error('Error checking subscription:', error);
+      if (options?.strictStatus) throw new Error('Subscription status unavailable');
     }
 
+    if (options?.strictStatus) throw new Error('Subscription status unavailable');
     return normalizeSubscriptionData(user.email, DEFAULT_SUBSCRIPTION);
   };
 
@@ -181,7 +185,7 @@ export function useSubscription(options?: { fetchTiers?: boolean }) {
   });
 
   const subscriptionQuery = useQuery({
-    queryKey: ['subscription-status', user?.id],
+    queryKey: [options?.strictStatus ? 'workspace-subscription-status' : 'subscription-status', user?.id],
     enabled: !!user?.id,
     queryFn: fetchSubscription,
     staleTime: 30_000,
@@ -483,6 +487,7 @@ export function useSubscription(options?: { fetchTiers?: boolean }) {
 
   return {
     subscriptionData,
+    statusError: subscriptionQuery.error,
     tiers,
     loading,
     actionLoading,

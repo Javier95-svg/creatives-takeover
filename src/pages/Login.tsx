@@ -67,7 +67,7 @@ const Login = () => {
   const navigate = useNavigate();
   const query = new URLSearchParams(location.search);
   const source = query.get("source") || "direct";
-  const returnUrl = sanitizeReturnPath(query.get("return") || query.get("redirect"), "/dashboard");
+  const returnUrl = sanitizeReturnPath(query.get("return") || query.get("redirect"), "/app-entry");
   const checkoutIntent = sanitizeCheckoutIntent(query.get("checkout"));
   const signupHref = appendCheckoutIntentParam(
     appendReturnParam(

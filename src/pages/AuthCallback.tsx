@@ -39,7 +39,7 @@ const AuthCallback = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        const pendingReturn = sanitizeReturnPath(localStorage.getItem('oauth_return_url'), '/dashboard');
+        const pendingReturn = sanitizeReturnPath(localStorage.getItem('oauth_return_url'), '/app-entry');
         const redirectToLogin = (delay = 3000) => {
           const loginPath = appendReturnParam('/login', pendingReturn);
           setTimeout(() => navigate(loginPath), delay);
@@ -153,8 +153,8 @@ const AuthCallback = () => {
           // Get return URL from localStorage (saved before OAuth redirect)
           const fallbackReturnUrl = getSafeSessionStorage().getItem(ICP_SEED_STORAGE_KEY)
             ? '/icp-builder'
-            : '/dashboard';
-          const returnUrl = sanitizeReturnPath(localStorage.getItem('oauth_return_url') || fallbackReturnUrl, '/dashboard');
+            : '/app-entry';
+          const returnUrl = sanitizeReturnPath(localStorage.getItem('oauth_return_url') || fallbackReturnUrl, '/app-entry');
           const oauthSource = localStorage.getItem('oauth_source');
           const oauthSignupMethod = localStorage.getItem('oauth_signup_method');
           completeAttributedOAuthSignup();
@@ -252,7 +252,7 @@ const AuthCallback = () => {
         logError('Auth callback error', err);
         setStatus('error');
         toast.error('Authentication failed');
-        const pendingReturn = sanitizeReturnPath(localStorage.getItem('oauth_return_url'), '/dashboard');
+        const pendingReturn = sanitizeReturnPath(localStorage.getItem('oauth_return_url'), '/app-entry');
         setTimeout(() => navigate(appendReturnParam('/login', pendingReturn)), 3000);
       }
     };

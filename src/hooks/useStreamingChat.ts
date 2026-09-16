@@ -65,7 +65,7 @@ export const streamChat = async (
   onSources?: (sources: any[]) => void,
   onError?: (error: Error) => void
 ): Promise<string> => {
-  const STREAM_URL = `https://rcjlaybjnozqbsoxzboa.supabase.co/functions/v1/chatbot-streaming`;
+  const STREAM_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chatbot-streaming`;
   const streamRequestId = createIdempotencyKey(
     'chatbot-streaming',
     `${sessionId}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`

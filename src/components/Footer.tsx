@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom";
 import { Mail, Linkedin, Instagram, Youtube } from "lucide-react";
+import { useWorkspaceFrame } from '@/contexts/WorkspaceFrameContext';
 
 const Footer = () => {
+  const workspace = useWorkspaceFrame();
   const year = new Date().getFullYear();
+  if (workspace) return null;
 
   return (
     <footer className="relative bg-background border-t border-border/60">

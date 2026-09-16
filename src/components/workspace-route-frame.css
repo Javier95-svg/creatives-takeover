@@ -1,0 +1,15 @@
+/* Constrain legacy full-viewport tool roots to the new workspace region. */
+.workspace-preview-persistent > main > header { overflow-x: auto; }
+.workspace-preview-persistent > main > header > :first-child { min-width: 8rem; }
+.workspace-route-content .w-screen { width: 100%; }
+.workspace-route-content > .h-screen { height: 100%; }
+.workspace-icon-button { display: inline-flex; align-items: center; justify-content: center; width: 2.5rem; height: 2.5rem; flex-shrink: 0; border-radius: .5rem; color: hsl(var(--muted-foreground)); }
+.workspace-icon-button svg { width: 1.25rem; height: 1.25rem; }
+.workspace-icon-button:hover { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+.workspace-icon-button:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+.workspace-route-content .min-h-screen { min-height: 100%; }
+.workspace-route-content .h-screen { height: 100%; }
+.workspace-route-content .min-h-dvh { min-height: 100%; }
+/* Message pages previously reserved space for the now-suppressed legacy header. */
+.workspace-route-content main:has([aria-label="Messages workspace"]) { padding-top: 0; padding-bottom: 0; }
+.workspace-route-content .responsive-messaging-shell { height: calc(100dvh - 4rem); min-height: 0; }

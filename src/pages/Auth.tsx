@@ -45,7 +45,7 @@ const Auth: React.FC = () => {
 
   // Get redirect parameter from URL
   const searchParams = new URLSearchParams(location.search);
-  const redirectUrl = sanitizeReturnPath(searchParams.get('redirect') || searchParams.get('return'), '/dashboard');
+  const redirectUrl = sanitizeReturnPath(searchParams.get('redirect') || searchParams.get('return'), '/app-entry');
   
   // Form states
   const [email, setEmail] = useState('');

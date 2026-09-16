@@ -783,6 +783,7 @@ export type Database = {
       }
       chatbot_conversations: {
         Row: {
+          purpose: string | null
           answer_quality_scores: Json | null
           business_context: Json | null
           chat_mode: string | null
@@ -796,6 +797,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          purpose?: string | null
           answer_quality_scores?: Json | null
           business_context?: Json | null
           chat_mode?: string | null
@@ -809,6 +811,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          purpose?: string | null
           answer_quality_scores?: Json | null
           business_context?: Json | null
           chat_mode?: string | null

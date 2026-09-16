@@ -12,6 +12,7 @@ import { DashboardNavigationProvider } from '@/contexts/DashboardNavigationConte
 import { DashboardDataProvider, useDashboardData } from '@/contexts/DashboardDataContext';
 import { DashboardBootstrapProvider } from '@/contexts/DashboardBootstrapContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWorkspaceFrame } from '@/contexts/WorkspaceFrameContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useFeatureGating } from '@/hooks/useFeatureGating';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -45,6 +46,7 @@ function DashboardFrameContent({
   weeklyMetrics,
   useLegacyStreak = false,
 }: DashboardFrameContentProps) {
+  const inWorkspace = useWorkspaceFrame();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { subscriptionData } = useSubscription();
@@ -63,20 +65,20 @@ function DashboardFrameContent({
       <DashboardMetricsContext.Provider value={weeklyMetrics}>
       <SidebarProvider>
         <DashboardNavigationProvider>
-          <DashboardSidebar />
+          {!inWorkspace && <DashboardSidebar />}
           <SidebarInset>
             <div className="relative min-h-screen overflow-hidden bg-background">
               <div className="pointer-events-none absolute inset-x-0 top-0 z-50">
                 <div className={cn('container mx-auto grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-4 px-6 pt-4', DASHBOARD_MAX_WIDTH)}>
                   <div className="pointer-events-auto flex items-start gap-2">
-                    <SidebarTrigger className="rounded-full border border-border/70 bg-background/88 shadow-sm backdrop-blur-md" />
+                    {!inWorkspace && <SidebarTrigger className="rounded-full border border-border/70 bg-background/88 shadow-sm backdrop-blur-md" />}
                     {useLegacyStreak ? <DashboardStreakChip /> : null}
                     {isHome ? (
                       <ModeToggle currentMode={dashboardMode} />
                     ) : null}
                   </div>
                   <div aria-hidden="true" />
-                  <button
+                  {!inWorkspace && <button
                     onClick={() => navigate('/')}
                     className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/88 px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm backdrop-blur-md transition-colors hover:border-primary/30 hover:bg-background hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                     aria-label="Exit dashboard and return to platform"
@@ -84,7 +86,7 @@ function DashboardFrameContent({
                   >
                     <span>Platform</span>
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                  </button>
+                  </button>}
                 </div>
               </div>
 

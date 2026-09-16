@@ -45,7 +45,14 @@ import {
 import { getPublicTabState } from "@/config/publicTabVisibility";
 import { getFounderTool } from "@/config/founderToolCatalog";
 
+import { useWorkspaceFrame } from '@/contexts/WorkspaceFrameContext';
+
 const Navigation = () => {
+  const inWorkspace = useWorkspaceFrame();
+  return inWorkspace ? null : <LegacyNavigation />;
+};
+
+const LegacyNavigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showFriendRequests, setShowFriendRequests] = useState(false);
