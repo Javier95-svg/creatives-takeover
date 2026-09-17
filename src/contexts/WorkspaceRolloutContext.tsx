@@ -14,13 +14,20 @@ const released = workspaceReleaseEnabled(import.meta.env.VITE_GUIDED_JOURNEY_ENA
 export function WorkspaceRolloutProvider({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const queryClient = useQueryClient();
-  const previous = useRef(user?.id);
+  const previous = useRef<string | undefined>(undefined);
   useLayoutEffect(() => {
-    if (previous.current !== user?.id) {
+    const next = user?.id;
+    // `previous` is only empty before auth has resolved, so the first real id is
+    // this load's hydration and not an account switch. Clearing there discarded
+    // everything fetched during the auth bootstrap on every page load, and the
+    // cache is memory-only, so a fresh load has nothing to leak anyway. A real
+    // switch or a sign out still purges. AuthContext guards its own per-account
+    // purge the same way.
+    if (previous.current && previous.current !== next) {
       void queryClient.cancelQueries();
       queryClient.clear();
-      previous.current = user?.id;
     }
+    previous.current = next;
   }, [user?.id, queryClient]);
   const enabled = workspaceEligible(user?.id, loading, released, hasApplicationConfig);
   return <Context.Provider value={{ enabled, pending: loading }}>{children}</Context.Provider>;

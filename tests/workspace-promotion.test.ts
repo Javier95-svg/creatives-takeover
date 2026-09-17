@@ -12,6 +12,10 @@ test('production activation is independent of analytics and supports deployment 
   const provider = readFileSync('src/contexts/WorkspaceRolloutContext.tsx', 'utf8');
   assert.doesNotMatch(provider, /onPosthogReady|reloadFeatureFlags|setTimeout/);
   assert.match(provider, /pending: loading/);
+  // The per-account purge must skip the first resolved id. Without the guard on
+  // the previous value it fired on every page load and threw away everything
+  // fetched during the auth bootstrap.
+  assert.match(provider, /previous\.current && previous\.current !== next/);
 });
 
 test('approved Guided Journey uses live home services behind authenticated eligibility', () => {
