@@ -183,12 +183,13 @@ export default function ICPBuilderPage() {
       <Navigation />
 
       {/*
-        Bottom-left from md up: the draft's "Jump to section" rail is pinned to
-        the top-left of the document, and the two were stacked close enough to
-        read as one control. Below md there is no rail, but there IS a sticky
-        save bar along the bottom edge, so it stays at the top there.
+        Sits level with the hero title rather than the bottom of the viewport,
+        so it reads as this page's back control instead of a floating action.
+        It used to be pinned bottom-left from md up to avoid the draft's "Jump
+        to section" rail, which shared the top-left corner. Inside the workspace
+        that rail is now returned to the document flow, so the corner is free.
       */}
-      <div className="fixed left-3 top-[92px] z-40 sm:left-6 sm:top-[100px] md:bottom-8 md:top-auto lg:left-8">
+      <div className="fixed left-3 top-[92px] z-40 sm:left-6 sm:top-[100px] lg:left-8">
         <Button
           type="button"
           variant="ghost"

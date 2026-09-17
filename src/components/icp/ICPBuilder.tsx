@@ -1745,7 +1745,7 @@ const ICPBuilder: React.FC = () => {
   }, []);
 
   const renderModeSelect = () => (
-    <div className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-4 pb-20 pt-32 text-foreground sm:px-6 md:pt-36">
+    <div className="nav-offset mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-4 pb-20 pt-32 text-foreground sm:px-6 md:pt-36">
       <div className="space-y-5 text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent-teal">ICP Builder</p>
         <h1 className="takeover-gradient creatives-font pb-3 text-4xl font-semibold leading-[1.12] tracking-tight sm:pb-4 sm:text-5xl">

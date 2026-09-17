@@ -1224,7 +1224,7 @@ export function IcpFolioDocument({
 
         <div className={surfaceBlurClasses}>
           <div className="relative mx-auto w-full max-w-4xl">
-            <aside className="absolute left-0 top-0 hidden w-56 -translate-x-[calc(100%+2rem)] xl:block">
+            <aside className="icp-section-rail absolute left-0 top-0 hidden w-56 -translate-x-[calc(100%+2rem)] xl:block">
             <div className="sticky top-24">
               <nav
                 aria-label="ICP draft sections"
