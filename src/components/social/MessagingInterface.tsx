@@ -1548,6 +1548,13 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
               <div className="px-3 py-2 text-xs text-muted-foreground">No messages found</div>
             )}
           </div>
+        ) : loading && displayedConversations.length === 0 ? (
+          // Without this the list renders "No conversations yet" while the inbox
+          // is still loading, which reads as an empty account rather than a slow one.
+          <div className="p-4 text-center text-muted-foreground" role="status" aria-live="polite">
+            <Loader2 className="h-6 w-6 mx-auto mb-2 animate-spin" />
+            <p className="text-sm">Loading conversations…</p>
+          </div>
         ) : displayedConversations.length === 0 ? (
           <div className="p-4 text-center text-muted-foreground">
             <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />

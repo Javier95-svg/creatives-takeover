@@ -562,23 +562,36 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
   );
 
   // Load user's conversations and keep them synced with backend as source of truth
+  // Held in a ref so the subscription effect below can depend on the account id
+  // alone. AuthContext calls setUser on every auth event, token refreshes
+  // included, and Supabase hands back a fresh user object each time. Depending on
+  // that object, or on callbacks derived from it, re-ran this effect on every
+  // refresh: a full inbox refetch plus a realtime channel torn down and rebuilt,
+  // for an account that had not changed.
+  const loadConversationsRef = useRef(loadConversationsFromServer);
   useEffect(() => {
-    if (!user || !autoLoad) return;
+    loadConversationsRef.current = loadConversationsFromServer;
+  }, [loadConversationsFromServer]);
 
-    void loadConversationsFromServer();
+  const activeUserId = user?.id ?? null;
+
+  useEffect(() => {
+    if (!activeUserId || !autoLoad) return;
+
+    void loadConversationsRef.current();
 
     const conversationSubscription = supabase
-      .channel(`user-conversations-${user.id}`)
+      .channel(`user-conversations-${activeUserId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'conversations',
-          filter: `participants.cs.{${user.id}}`
+          filter: `participants.cs.{${activeUserId}}`
         },
         () => {
-          void loadConversationsFromServer();
+          void loadConversationsRef.current();
         }
       )
       .subscribe();
@@ -586,7 +599,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     return () => {
       void supabase.removeChannel(conversationSubscription);
     };
-  }, [user, autoLoad, loadConversationsFromServer, loadUnreadCounts]);
+  }, [activeUserId, autoLoad]);
 
   useEffect(() => {
     if (user) return;
