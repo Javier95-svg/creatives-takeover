@@ -22,7 +22,14 @@ test('connection requests queue an idempotent, preference-aware email notificati
 test('connection-request email function is service-only, validates the outbox, and sends useful copy', () => {
   const edgeFunction = read('../supabase/functions/send-connection-request-email/index.ts');
 
-  assert.match(edgeFunction, /authorization"\) !== `Bearer \$\{supabaseServiceKey\}`/);
+  // Still service-only, but the token is checked against the key the outbox
+  // actually sends, held in private.service_config, rather than the injected
+  // SUPABASE_SERVICE_ROLE_KEY. Those are different representations of the same
+  // service role, so the old direct comparison rejected every genuine dispatch
+  // with a 401 and no connection request email was ever delivered.
+  assert.match(edgeFunction, /verify_outbox_secret/);
+  assert.match(edgeFunction, /outboxSecretValid !== true/);
+  assert.match(edgeFunction, /error: "Unauthorized" \}\), \{ status: 401 \}/);
   assert.match(edgeFunction, /connection_request_email_notifications/);
   assert.match(edgeFunction, /request\.status !== "pending"/);
   assert.match(edgeFunction, /connection_request_email_enabled === false/);

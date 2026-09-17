@@ -52,8 +52,17 @@ serve(async (req: Request): Promise<Response> => {
   if (req.method !== "POST") return new Response(JSON.stringify({ ok: false, error: "Method not allowed" }), { status: 405 });
   if (!supabaseUrl || !supabaseServiceKey) return new Response(JSON.stringify({ ok: false, error: "Supabase environment is not configured" }), { status: 500 });
 
-  // This endpoint is invoked only by the database outbox using the service-role key.
-  if (req.headers.get("authorization") !== `Bearer ${supabaseServiceKey}`) {
+  // This endpoint is invoked only by the database outbox, which authenticates with
+  // the service-role key held in private.service_config. The
+  // SUPABASE_SERVICE_ROLE_KEY injected into this function is a different
+  // representation of the same project service role, so comparing the two strings
+  // directly rejected every genuine dispatch with a 401 and no connection request
+  // email was ever delivered. Verify the presented token against the value the
+  // outbox actually sends. The check stays strict equality and still fails closed;
+  // the RPC returns only a boolean and is executable by service_role alone.
+  const presentedToken = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+  const { data: outboxSecretValid, error: outboxSecretError } = await supabase.rpc("verify_outbox_secret", { p_token: presentedToken });
+  if (outboxSecretError || outboxSecretValid !== true) {
     return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), { status: 401 });
   }
 
