@@ -3,6 +3,7 @@ export const WORKSPACE_FLAG = 'founder-guide-workspace-v1';
 // Keep the existing rollout key for operational rollback; select the approved UI independently.
 export const WORKSPACE_HOME_CONCEPT = 'guided-journey' as const;
 export const APP_ENTRY_PATH = '/app-entry';
+export function workspaceReleaseEnabled(value: string | undefined) { return value !== 'false'; }
 const roots = [
   '/dashboard', '/icp-builder', '/pmf-lab', '/demo-studio', '/mvp-builder',
   '/go-to-market', '/tech-stack', '/directories', '/traction-engine', '/vc-search',

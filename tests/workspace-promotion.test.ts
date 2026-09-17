@@ -1,7 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { isWorkspaceRoute, workspaceEligible, defaultWorkspaceDestination, platformUpdates, WORKSPACE_HOME_CONCEPT } from '../src/lib/workspacePolicy.ts';
+import { isWorkspaceRoute, workspaceEligible, workspaceReleaseEnabled, defaultWorkspaceDestination, platformUpdates, WORKSPACE_HOME_CONCEPT } from '../src/lib/workspacePolicy.ts';
+
+test('production activation is independent of analytics and supports deployment rollback', () => {
+  assert.equal(workspaceReleaseEnabled(undefined), true);
+  assert.equal(workspaceReleaseEnabled('true'), true);
+  assert.equal(workspaceReleaseEnabled('false'), false);
+  assert.equal(workspaceEligible('account-a', false, workspaceReleaseEnabled(undefined), true), true);
+  assert.equal(workspaceEligible(undefined, false, workspaceReleaseEnabled(undefined), true), false);
+  const provider = readFileSync('src/contexts/WorkspaceRolloutContext.tsx', 'utf8');
+  assert.doesNotMatch(provider, /onPosthogReady|reloadFeatureFlags|setTimeout/);
+  assert.match(provider, /pending: loading/);
+});
 
 test('approved Guided Journey uses live home services behind authenticated eligibility', () => {
   assert.equal(WORKSPACE_HOME_CONCEPT, 'guided-journey');
