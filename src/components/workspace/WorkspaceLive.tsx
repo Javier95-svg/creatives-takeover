@@ -12,7 +12,17 @@ import WorkspaceProfileAvatarLive from '@/components/WorkspaceProfileAvatarLive'
 import WorkspaceAccountSearchLive from '@/components/WorkspaceAccountSearchLive';
 import WorkspaceUpdatesSession from '@/components/WorkspaceUpdatesSession';
 import { platformUpdates, PLATFORM_UPDATE_TYPES } from '@/lib/workspacePolicy';
+import { useWorkspaceHeaderCounts } from '@/hooks/useWorkspaceHeaderCounts';
 import WorkspaceLayout from './WorkspaceLayout';
+
+/** Count badge for a header icon, matching the notification bell's treatment. */
+function HeaderCountBadge({ count, label }: { count: number; label: string }) {
+  if (count <= 0) return null;
+  return <span
+    aria-label={`${count} ${label}`}
+    className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-xs font-medium text-destructive-foreground"
+  >{count > 9 ? '9+' : count}</span>;
+}
 
 function LatestUpdates() {
   const { user } = useAuth();
@@ -39,6 +49,7 @@ function LatestUpdates() {
 
 export default function WorkspaceLive({ children, home }: { children: ReactNode; home: boolean }) {
   const { user, signOut } = useAuth();
+  const { unreadMessages, pendingConnectionRequests } = useWorkspaceHeaderCounts();
   const { subscriptionData, loading: planLoading, statusError } = useSubscription({ fetchTiers: false, strictStatus: true });
   const profile = useQuery({ queryKey: ['workspace-account', user!.id], queryFn: async ({ signal }) => {
     const { data, error } = await supabase.schema('public').from('profiles').select('username, full_name').eq('id', user!.id).abortSignal(signal).maybeSingle();
@@ -51,7 +62,17 @@ export default function WorkspaceLive({ children, home }: { children: ReactNode;
   return <WorkspaceLayout home={home} account={{ username, plan }} profileHref={profile.data?.username ? `/profile/${encodeURIComponent(profile.data.username)}` : '/account'}
     avatar={<WorkspaceProfileAvatarLive />} updates={<LatestUpdates />} search={<WorkspaceAccountSearchLive />} credits={<CreditDisplay compact showPurchaseButton />} theme={<ThemeToggle />}
     signOut={<button aria-label="Sign out" title="Sign out" className="workspace-icon-button" onClick={() => void signOut()}><LogOut className="h-4 w-4" /></button>}
-    utilities={<><Link to="/dashboard/referral" aria-label="Invite people" title="Invite people" className="workspace-icon-button"><UserPlus /></Link><Link to="/messages" aria-label="Messages" title="Messages" className="workspace-icon-button"><MessageCircle /></Link><NotificationBell /></>}>
+    utilities={<>
+      <Link to="/account" aria-label={pendingConnectionRequests > 0 ? `Connection requests, ${pendingConnectionRequests} pending` : 'Connection requests'}
+        title="Connection requests" className="workspace-icon-button relative">
+        <UserPlus /><HeaderCountBadge count={pendingConnectionRequests} label="pending connection requests" />
+      </Link>
+      <Link to="/messages" aria-label={unreadMessages > 0 ? `Messages, ${unreadMessages} unread` : 'Messages'}
+        title="Messages" className="workspace-icon-button relative">
+        <MessageCircle /><HeaderCountBadge count={unreadMessages} label="unread messages" />
+      </Link>
+      <NotificationBell />
+    </>}>
     {children}
   </WorkspaceLayout>;
 }
