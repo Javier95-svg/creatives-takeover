@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { hasApplicationConfig } from '@/lib/hasApplicationConfig';
 import { enterWorkspaceRoute } from '@/lib/workspaceNavigation';
 import { accountRoute } from '@/lib/accountSearchRoute';
+import { accountTag } from '@/lib/accountSearchTag';
 
 export type SearchAccount = { id: string; username: string | null; full_name: string | null; avatar_url: string | null; headline?: string | null; isMentor?: boolean; mentorName?: string | null; isMarketplace?: boolean; serviceSlug?: string | null; founderSegment?: 'founder' | 'builder' | null; isConnection?: boolean };
 const LiveAccountSearch = lazy(() => import('./WorkspaceAccountSearchLive'));
@@ -69,12 +70,14 @@ export function AccountSearchField({ search, renderActions }: {
         }} className="flex items-center gap-3 rounded-lg p-1 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <Avatar className="h-9 w-9"><AvatarImage src={account.avatar_url ?? undefined} /><AvatarFallback>{(account.full_name || account.username || 'Founder').charAt(0)}</AvatarFallback></Avatar>
           <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{account.full_name || account.username || 'Founder'}</span><span className="block truncate text-xs text-muted-foreground">{account.isConnection ? 'Connection · ' : ''}{account.headline || account.username || 'Founder'}</span></span>
-          {account.isMentor && <Badge variant="outline">Mentor</Badge>}
-          {account.isMarketplace && <Badge variant="outline">Marketplace</Badge>}
-          {/* Every account carries one of these, so it reads as a category rather
-              than a distinction. Kept last so Mentor and Marketplace, which are
-              rare, stay the first thing the eye lands on. */}
-          {account.founderSegment && <Badge variant="secondary">{account.founderSegment === 'founder' ? 'Founder' : 'Builder'}</Badge>}
+          {(() => {
+            // One tag per account. Mentors and marketplace providers are not
+            // regular users of the platform, so they are never also labelled
+            // Founder or Builder. Mentor wins over Marketplace for anyone who
+            // is both, since the mentorship profile is where they are booked.
+            const tag = accountTag(account);
+            return tag ? <Badge variant={tag.variant}>{tag.label}</Badge> : null;
+          })()}
         </a>; })()}
         {renderActions?.(account)}
       </div>)}
