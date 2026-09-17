@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { lazy, Suspense, useState, type ReactNode } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { ChevronRight, FileText, LogOut, MessageCircle, UserPlus, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,6 +14,11 @@ import WorkspaceUpdatesSession from '@/components/WorkspaceUpdatesSession';
 import { platformUpdates, PLATFORM_UPDATE_TYPES } from '@/lib/workspacePolicy';
 import { useWorkspaceHeaderCounts } from '@/hooks/useWorkspaceHeaderCounts';
 import WorkspaceLayout from './WorkspaceLayout';
+
+// Only pulled in once the header icon is used, so the modal and its social
+// queries stay out of the chunk every workspace route loads.
+const FriendRequestsModal = lazy(() => import('@/components/social/FriendRequestsModal')
+  .then((module) => ({ default: module.FriendRequestsModal })));
 
 /** Count badge for a header icon, matching the notification bell's treatment. */
 function HeaderCountBadge({ count, label }: { count: number; label: string }) {
@@ -50,6 +55,10 @@ function LatestUpdates() {
 export default function WorkspaceLive({ children, home }: { children: ReactNode; home: boolean }) {
   const { user, signOut } = useAuth();
   const { unreadMessages, pendingConnectionRequests } = useWorkspaceHeaderCounts();
+  const queryClient = useQueryClient();
+  const [requestsOpen, setRequestsOpen] = useState(false);
+  // Mount on first open and keep it mounted so the dialog can animate closed.
+  const [requestsMounted, setRequestsMounted] = useState(false);
   const { subscriptionData, loading: planLoading, statusError } = useSubscription({ fetchTiers: false, strictStatus: true });
   const profile = useQuery({ queryKey: ['workspace-account', user!.id], queryFn: async ({ signal }) => {
     const { data, error } = await supabase.schema('public').from('profiles').select('username, full_name').eq('id', user!.id).abortSignal(signal).maybeSingle();
@@ -63,10 +72,18 @@ export default function WorkspaceLive({ children, home }: { children: ReactNode;
     avatar={<WorkspaceProfileAvatarLive />} updates={<LatestUpdates />} search={<WorkspaceAccountSearchLive />} credits={<CreditDisplay compact showPurchaseButton />} theme={<ThemeToggle />}
     signOut={<button aria-label="Sign out" title="Sign out" className="workspace-icon-button" onClick={() => void signOut()}><LogOut className="h-4 w-4" /></button>}
     utilities={<>
-      <Link to="/account" aria-label={pendingConnectionRequests > 0 ? `Connection requests, ${pendingConnectionRequests} pending` : 'Connection requests'}
+      <button type="button" onClick={() => { setRequestsMounted(true); setRequestsOpen(true); }}
+        aria-label={pendingConnectionRequests > 0 ? `Connection requests, ${pendingConnectionRequests} pending` : 'Connection requests'}
         title="Connection requests" className="workspace-icon-button relative">
         <UserPlus /><HeaderCountBadge count={pendingConnectionRequests} label="pending connection requests" />
-      </Link>
+      </button>
+      {requestsMounted && <Suspense fallback={null}>
+        <FriendRequestsModal open={requestsOpen} onOpenChange={(next) => {
+          setRequestsOpen(next);
+          // Accepting or declining changes the count, so refresh the badge on close.
+          if (!next) void queryClient.invalidateQueries({ queryKey: ['workspace-header-counts', user?.id] });
+        }} />
+      </Suspense>}
       <Link to="/messages" aria-label={unreadMessages > 0 ? `Messages, ${unreadMessages} unread` : 'Messages'}
         title="Messages" className="workspace-icon-button relative">
         <MessageCircle /><HeaderCountBadge count={unreadMessages} label="unread messages" />
