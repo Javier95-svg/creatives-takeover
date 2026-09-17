@@ -54,7 +54,7 @@ function LatestUpdates() {
 
 export default function WorkspaceLive({ children, home }: { children: ReactNode; home: boolean }) {
   const { user, signOut } = useAuth();
-  const { unreadMessages, pendingConnectionRequests } = useWorkspaceHeaderCounts();
+  const { unreadMessages, connectionNotifications } = useWorkspaceHeaderCounts();
   const queryClient = useQueryClient();
   const [requestsOpen, setRequestsOpen] = useState(false);
   // Mount on first open and keep it mounted so the dialog can animate closed.
@@ -73,9 +73,9 @@ export default function WorkspaceLive({ children, home }: { children: ReactNode;
     signOut={<button aria-label="Sign out" title="Sign out" className="workspace-icon-button" onClick={() => void signOut()}><LogOut className="h-4 w-4" /></button>}
     utilities={<>
       <button type="button" onClick={() => { setRequestsMounted(true); setRequestsOpen(true); }}
-        aria-label={pendingConnectionRequests > 0 ? `Connection requests, ${pendingConnectionRequests} pending` : 'Connection requests'}
+        aria-label={connectionNotifications > 0 ? `Connection requests, ${connectionNotifications} new` : 'Connection requests'}
         title="Connection requests" className="workspace-icon-button relative">
-        <UserPlus /><HeaderCountBadge count={pendingConnectionRequests} label="pending connection requests" />
+        <UserPlus /><HeaderCountBadge count={connectionNotifications} label="new connection notifications" />
       </button>
       {requestsMounted && <Suspense fallback={null}>
         <FriendRequestsModal open={requestsOpen} onOpenChange={(next) => {

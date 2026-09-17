@@ -4,60 +4,19 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { trackSocialInteractionCompleted } from '@/lib/socialInteractionAnalytics';
 
-// Fired whenever connection-request state changes (a request is answered, or an
-// acceptance notification is acknowledged). Every `useSocial` instance listens
-// for it so the nav badge and the modal stay in sync without sharing a store.
-const CONNECTION_EVENT = 'connection-requests-updated';
-
-const SEEN_ACCEPTED_KEY_PREFIX = 'ct_seen_accepted_connections_';
-
-// Track, per user, which "your connection request was accepted" notifications
-// the sender has already seen. Kept in localStorage so the badge stays cleared
-// across reloads without needing a backend column.
-const getSeenAcceptedIds = (userId: string): string[] => {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem(`${SEEN_ACCEPTED_KEY_PREFIX}${userId}`);
-    return raw ? (JSON.parse(raw) as string[]) : [];
-  } catch {
-    return [];
-  }
-};
-
-const addSeenAcceptedIds = (userId: string, ids: string[]) => {
-  if (typeof window === 'undefined' || ids.length === 0) return;
-  try {
-    const merged = new Set([...getSeenAcceptedIds(userId), ...ids]);
-    window.localStorage.setItem(`${SEEN_ACCEPTED_KEY_PREFIX}${userId}`, JSON.stringify([...merged]));
-  } catch {
-    // Storage may be unavailable (private mode); the badge simply won't persist.
-  }
-};
-
-const SEEN_PENDING_KEY_PREFIX = 'ct_seen_pending_requests_';
-
-// Track, per user, which incoming pending connection requests have been
-// acknowledged via "Mark all read". They stop counting toward the badge but stay
-// listed and actionable in the modal. localStorage, mirroring the accepted set.
-const getSeenPendingIds = (userId: string): string[] => {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem(`${SEEN_PENDING_KEY_PREFIX}${userId}`);
-    return raw ? (JSON.parse(raw) as string[]) : [];
-  } catch {
-    return [];
-  }
-};
-
-const addSeenPendingIds = (userId: string, ids: string[]) => {
-  if (typeof window === 'undefined' || ids.length === 0) return;
-  try {
-    const merged = new Set([...getSeenPendingIds(userId), ...ids]);
-    window.localStorage.setItem(`${SEEN_PENDING_KEY_PREFIX}${userId}`, JSON.stringify([...merged]));
-  } catch {
-    // Storage may be unavailable (private mode); the badge simply won't persist.
-  }
-};
+// CONNECTION_EVENT fires whenever connection-request state changes (a request is
+// answered, or an acceptance notification is acknowledged). Every `useSocial`
+// instance listens for it so the nav badge and the modal stay in sync without
+// sharing a store. The seen-id helpers live alongside it because the workspace
+// header badge reads them too; if the two filtered differently the badge would
+// disagree with the list it opens.
+import {
+  CONNECTION_EVENT,
+  getSeenAcceptedIds,
+  addSeenAcceptedIds,
+  getSeenPendingIds,
+  addSeenPendingIds,
+} from '@/lib/connectionSeenState';
 
 const emitConnectionUpdate = () => {
   if (typeof window !== 'undefined') {

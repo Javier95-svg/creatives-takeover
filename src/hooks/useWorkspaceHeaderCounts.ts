@@ -1,43 +1,87 @@
-import { useQuery } from '@tanstack/react-query';
+import { useCallback, useEffect, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { CONNECTION_EVENT, getSeenAcceptedIds, getSeenPendingIds } from '@/lib/connectionSeenState';
 
 export type WorkspaceHeaderCounts = {
   unreadMessages: number;
-  pendingConnectionRequests: number;
+  connectionNotifications: number;
 };
 
-const EMPTY: WorkspaceHeaderCounts = { unreadMessages: 0, pendingConnectionRequests: 0 };
+type HeaderCountsRow = {
+  unreadMessages: number;
+  pendingConnectionRequestIds: string[];
+  acceptedConnectionRequestIds: string[];
+};
+
+const EMPTY: HeaderCountsRow = {
+  unreadMessages: 0,
+  pendingConnectionRequestIds: [],
+  acceptedConnectionRequestIds: [],
+};
 
 /**
  * Badge counts for the workspace header.
  *
  * The legacy navigation read its unread number from useMessaging({ autoLoad: true }),
  * which loads every conversation and opens realtime subscriptions. The header renders
- * on every workspace route, so this uses a single RPC returning both counts instead.
+ * on every workspace route, so this uses a single RPC instead, polled on an interval
+ * and refetched on window focus. A badge a minute stale is acceptable; an extra socket
+ * on every route is not.
  *
- * Polling rather than realtime is deliberate: a badge that is a minute stale is
- * acceptable, an extra socket on every route is not. Window focus refetches, so
- * returning to the tab updates it immediately.
+ * The connection number counts two things, matching useSocial's connectionNotificationCount:
+ * incoming requests still awaiting an answer, and requests this user sent that the other
+ * person accepted. Which of those have been seen is stored per browser in localStorage,
+ * so the RPC returns ids and the filtering happens here against the same helpers the
+ * modal uses. Otherwise the badge would keep counting notifications the modal has cleared.
  */
 export function useWorkspaceHeaderCounts(): WorkspaceHeaderCounts {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const userId = user?.id;
+
   const { data } = useQuery({
-    queryKey: ['workspace-header-counts', user?.id],
-    enabled: Boolean(user),
+    queryKey: ['workspace-header-counts', userId],
+    enabled: Boolean(userId),
     refetchInterval: 60_000,
     refetchOnWindowFocus: true,
     staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_workspace_header_counts');
       if (error) throw error;
-      const row = (data ?? {}) as Partial<WorkspaceHeaderCounts>;
+      const row = (data ?? {}) as Partial<HeaderCountsRow>;
       return {
         unreadMessages: Number(row.unreadMessages ?? 0),
-        pendingConnectionRequests: Number(row.pendingConnectionRequests ?? 0),
-      } satisfies WorkspaceHeaderCounts;
+        pendingConnectionRequestIds: row.pendingConnectionRequestIds ?? [],
+        acceptedConnectionRequestIds: row.acceptedConnectionRequestIds ?? [],
+      } satisfies HeaderCountsRow;
     },
   });
-  // A failed or in-flight count must never block the header from rendering.
-  return data ?? EMPTY;
+
+  // Answering a request or acknowledging an acceptance changes the badge without
+  // any refetch, so recompute when useSocial broadcasts.
+  const refresh = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: ['workspace-header-counts', userId] });
+  }, [queryClient, userId]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.addEventListener(CONNECTION_EVENT, refresh);
+    return () => window.removeEventListener(CONNECTION_EVENT, refresh);
+  }, [refresh]);
+
+  const row = data ?? EMPTY;
+
+  return useMemo(() => {
+    if (!userId) return { unreadMessages: 0, connectionNotifications: 0 };
+    const seenPending = new Set(getSeenPendingIds(userId));
+    const seenAccepted = new Set(getSeenAcceptedIds(userId));
+    const unseenPending = row.pendingConnectionRequestIds.filter((id) => !seenPending.has(id)).length;
+    const unseenAccepted = row.acceptedConnectionRequestIds.filter((id) => !seenAccepted.has(id)).length;
+    return {
+      unreadMessages: row.unreadMessages,
+      connectionNotifications: unseenPending + unseenAccepted,
+    };
+  }, [userId, row]);
 }
