@@ -356,8 +356,8 @@ function App() {
                         <Route path="/marketplace/admin/edit/:id" element={<AdminRoute><AdminServiceEditor /></AdminRoute>} />
                         <Route path="/marketplace/:slug" element={<ToolRouteWithCreditGate><ServiceProfilePage /></ToolRouteWithCreditGate>} />
                         <Route path="/co-founder" element={<CofounderMarketplaceRoute />} />
-                        <Route path="/co-founder/create" element={<CofounderListingEditorRoute />} />
-                        <Route path="/co-founder/edit/:postId" element={<CofounderListingEditorRoute />} />
+                        <Route path="/co-founder/create" element={<ToolRouteWithCreditGate><CofounderListingEditorRoute /></ToolRouteWithCreditGate>} />
+                        <Route path="/co-founder/edit/:postId" element={<ToolRouteWithCreditGate><CofounderListingEditorRoute /></ToolRouteWithCreditGate>} />
                         <Route path="/co-founder/listing/:listingId" element={<CofounderListingDetailPage />} />
                         <Route path="/admin/cofounder-marketplace" element={<AdminRoute><AdminCofounderMarketplacePage /></AdminRoute>} />
                         <Route path="/investors" element={<FindYourAngel />} />
@@ -387,7 +387,7 @@ function App() {
                         <Route path="/admin/vc-management" element={<AdminRoute><AdminVCManagement /></AdminRoute>} />
                         <Route path="/admin/accelerator-management" element={<AdminRoute><AdminAcceleratorManagement /></AdminRoute>} />
                         <Route path="/careers" element={<Careers />} />
-                        <Route path="/prompt-library" element={<PromptLibrary />} />
+                        <Route path="/prompt-library" element={<ToolRouteWithCreditGate><PromptLibrary /></ToolRouteWithCreditGate>} />
                         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                         <Route path="/data-privacy" element={<DataPrivacy />} />
                         <Route path="/terms" element={<Terms />} />
@@ -416,7 +416,7 @@ function App() {
                         <Route path="/demo-studio/templates" element={<Navigate to="/demo-studio/classic/templates" replace />} />
                         <Route path="/demo-studio/projects/:id" element={<RouteErrorBoundary routeName="Demo Studio Project"><DemoStudioProjectOverviewPage /></RouteErrorBoundary>} />
                         <Route path="/demo-studio/projects/:id/brief" element={<RouteErrorBoundary routeName="Demo Brief"><DemoStudioBriefPage /></RouteErrorBoundary>} />
-                        <Route path="/demo-studio/projects/:projectId/demos/:demoId/edit" element={<RouteErrorBoundary routeName="Demo Editor"><DemoStudioEditorPage /></RouteErrorBoundary>} />
+                        <Route path="/demo-studio/projects/:projectId/demos/:demoId/edit" element={<RouteErrorBoundary routeName="Demo Editor"><ToolRouteWithCreditGate><DemoStudioEditorPage /></ToolRouteWithCreditGate></RouteErrorBoundary>} />
                         <Route path="/demo-studio/projects/:projectId/demos/:demoId/analytics" element={<RouteErrorBoundary routeName="Demo Analytics"><DemoStudioAnalyticsPage /></RouteErrorBoundary>} />
                         <Route path="/demo-studio/projects/:id/vsl" element={<RouteErrorBoundary routeName="VSL Studio"><DemoStudioVslStudioPage /></RouteErrorBoundary>} />
                         <Route path="/demo-studio/projects/:id/launch" element={<RouteErrorBoundary routeName="Launch Composer"><DemoStudioLaunchComposerPage /></RouteErrorBoundary>} />
@@ -495,14 +495,14 @@ function App() {
                           }
                         />
                         <Route path="/insighta/traction-engine" element={<Navigate to="/traction-engine" replace />} />
-                        <Route path="/pitch-deck-analyzer" element={<PitchDeckAnalyzerPage />} />
+                        <Route path="/pitch-deck-analyzer" element={<ToolRouteWithCreditGate><PitchDeckAnalyzerPage /></ToolRouteWithCreditGate>} />
                         <Route path="/insighta-test" element={<ToolRouteWithCreditGate><InsightaTestPage /></ToolRouteWithCreditGate>} />
                         <Route path="/insighta/pitch-deck-analyzer" element={<Navigate to="/pitch-deck-analyzer" replace />} />
                         <Route path="/insighta/test" element={<Navigate to="/insighta-test" replace />} />
                         <Route path="/insighta/vc/:slug" element={<VCProfilePage />} />
                         <Route path="/insighta/accelerator/:slug" element={<AcceleratorProfilePage />} />
                         <Route path="/demo" element={<Demo />} />
-                        <Route path="/demo-calls" element={<DemoCalls />} />
+                        <Route path="/demo-calls" element={<ToolRouteWithCreditGate><DemoCalls /></ToolRouteWithCreditGate>} />
                         <Route path="/messages/:username" element={<Messages />} />
                         <Route path="/messages" element={<Messages />} />
                         <Route path="/profile/:username" element={<Profile />} />
