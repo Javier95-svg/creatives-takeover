@@ -3,6 +3,7 @@ import { ArrowRight, ArrowUp, ChevronDown, Plus, Sparkles, Target, GraduationCap
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
 import { enterWorkspaceRoute, WORKSPACE_ROUTES } from '@/lib/workspaceNavigation';
+import { BIZMAP_STAGE_ORDER } from '@/lib/bizmapStageOrder';
 import type { PulseHomeConcept, PulseHomeMessage, PulseHomePriority } from '@/lib/pulseHome';
 import './pulse-home.css';
 
@@ -10,6 +11,10 @@ export interface PulseHomeViewProps {
   concept: PulseHomeConcept;
   name?: string;
   stage?: string;
+  /** The founder's own name for what they are building. */
+  projectName?: string | null;
+  /** 1 to 7, the Startup Development Cycle stage the onboarding quiz assigned. */
+  assignedStage?: number | null;
   priorities?: PulseHomePriority[];
   messages?: PulseHomeMessage[];
   loading?: boolean;
@@ -22,7 +27,7 @@ export interface PulseHomeViewProps {
   onRetry?: () => void;
 }
 
-export function PulseHomeView({ concept, name, stage, priorities = [], messages = [], loading, streaming, unavailable, contextNotice, error, onSend, onNew, onRetry }: PulseHomeViewProps) {
+export function PulseHomeView({ concept, name, stage, projectName, assignedStage, priorities = [], messages = [], loading, streaming, unavailable, contextNotice, error, onSend, onNew, onRetry }: PulseHomeViewProps) {
   const [input, setInput] = useState('');
   const [headline, setHeadline] = useState(0);
   const [showPriorities, setShowPriorities] = useState(false);
@@ -46,6 +51,23 @@ export function PulseHomeView({ concept, name, stage, priorities = [], messages 
     FUNDRAISING: 'Prepare your next funding step',
   };
   const stageHeadline = stage && stageHeadlines[stage.toUpperCase()];
+  const trimmedProjectName = projectName?.trim() || '';
+  // The quiz assigns 1 to 7 against the Startup Development Cycle. Fall back to
+  // the journey stage when the quiz has not run, and show neither rather than a
+  // wrong one if the number is outside the cycle.
+  const stageFromQuiz = typeof assignedStage === 'number' && assignedStage >= 1 && assignedStage <= BIZMAP_STAGE_ORDER.length
+    ? { number: assignedStage, key: BIZMAP_STAGE_ORDER[assignedStage - 1] }
+    : null;
+  const stageFromJourney = !stageFromQuiz && stage
+    ? (() => {
+        const index = BIZMAP_STAGE_ORDER.indexOf(stage.toUpperCase() as (typeof BIZMAP_STAGE_ORDER)[number]);
+        return index >= 0 ? { number: index + 1, key: BIZMAP_STAGE_ORDER[index] } : null;
+      })()
+    : null;
+  const resolvedStage = stageFromQuiz ?? stageFromJourney;
+  const stageBadge = resolvedStage
+    ? `Stage ${resolvedStage.number} · ${resolvedStage.key.charAt(0)}${resolvedStage.key.slice(1).toLowerCase()}`
+    : '';
   const headings = concept === 'guided-journey'
     ? [[name ? `Back at it, ${name}.` : 'Your idea has potential.', 'Let’s find its path.'], ['One clear direction.', 'Your next chapter.'], ['Think clearly.', 'Move confidently.']]
     : concept === 'command-center'
@@ -87,7 +109,10 @@ export function PulseHomeView({ concept, name, stage, priorities = [], messages 
           <button type="button" onClick={onNew} disabled={streaming || loading} className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"><Plus className="h-3.5 w-3.5" />New conversation</button>
         </div>}
         <header className={cn('pulse-home-hero', !active && concept !== 'command-center' && 'text-center')}>
-          {concept === 'guided-journey' && !active && stage && <p className="mb-4 text-xs font-medium uppercase tracking-widest text-primary">{stageHeadline || `Your journey · ${stage.replace(/_/g, ' ')}`}</p>}
+          {concept === 'guided-journey' && !active && (trimmedProjectName || stageBadge) && <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
+            {trimmedProjectName && <span className="rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs font-medium text-foreground">{trimmedProjectName}</span>}
+            {stageBadge && <span className="rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">{stageBadge}</span>}
+          </div>}
           <h1 key={active ? 'active' : headline} className={cn('font-space-grotesk font-semibold tracking-tight text-foreground', active ? 'text-xl' : 'pulse-home-headline')}>{active ? 'Let’s work through it.' : <><span className="block">{headings[headline][0]}</span><span className="pulse-home-headline-gradient block">{headings[headline][1]}</span></>}</h1>
         </header>
 

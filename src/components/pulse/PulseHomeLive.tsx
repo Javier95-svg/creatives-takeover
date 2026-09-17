@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardDataProvider, useDashboardData } from '@/contexts/DashboardDataContext';
 import { useStartupCommandCenter } from '@/hooks/useStartupCommandCenter';
+import { useAssignedStage } from '@/hooks/useAssignedStage';
 import { buildPulseProjectContext } from '@/hooks/usePulseWidget';
 import { supabase } from '@/integrations/supabase/client';
 import { homePriorities, validateHomeActions, type PulseHomeConcept, type PulseHomeMessage } from '@/lib/pulseHome';
@@ -18,6 +19,8 @@ function LiveConversation({ concept }: { concept: PulseHomeConcept }) {
   const userId = user!.id;
   const dashboard = useDashboardData();
   const startup = useStartupCommandCenter();
+  // The stage the onboarding quiz placed them in, which is what the badge names.
+  const assignedStage = useAssignedStage();
   const priorities = useMemo(() => homePriorities(dashboard.snapshot, dashboard.primaryAction, key => getDashboardTool(key)?.route), [dashboard.snapshot, dashboard.primaryAction]);
   const [messages, setMessages] = useState<PulseHomeMessage[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -117,7 +120,8 @@ function LiveConversation({ concept }: { concept: PulseHomeConcept }) {
     finally { busy.current = false; if (alive.current) setLoading(false); }
   };
   const displayName = dashboard.snapshot?.profile?.fullName || user?.user_metadata?.full_name || '';
-  return <PulseHomeView concept={concept} name={String(displayName).trim().split(/\s+/)[0] || undefined} stage={dashboard.snapshot?.journey.currentStage} priorities={priorities} messages={messages}
+  return <PulseHomeView concept={concept} name={String(displayName).trim().split(/\s+/)[0] || undefined} stage={dashboard.snapshot?.journey.currentStage}
+    projectName={startup.loading || startup.error ? null : startup.model?.manual?.startupName} assignedStage={assignedStage} priorities={priorities} messages={messages}
     loading={loading || dashboard.isLoading || startup.loading} streaming={streaming} error={error}
     unavailable={!loading && !historyReady ? 'Conversation history is unavailable. Retry before continuing.' : undefined}
     contextNotice={startup.error || dashboard.error ? 'Some saved context is unavailable. Pulse will ask rather than guess.' : undefined}
