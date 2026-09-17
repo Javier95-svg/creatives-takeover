@@ -182,7 +182,7 @@ export default function BizMapJourneyHubPage() {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-        <main className="px-4 pt-32">
+        <main className="nav-offset px-4 pt-32">
           <div className="container mx-auto h-64 max-w-6xl animate-pulse rounded-2xl bg-muted/50" />
         </main>
       </div>
@@ -200,7 +200,7 @@ export default function BizMapJourneyHubPage() {
           structuredData={structuredData}
         />
         <Navigation />
-        <main className="px-4 pb-20 pt-28 md:pt-32 lg:pt-36">
+        <main className="nav-offset px-4 pb-20 pt-28 md:pt-32 lg:pt-36">
           <FounderExecutionCycle />
           <div className="container mx-auto mt-10 max-w-6xl">
             <PageFAQSection title="Frequent Questions" faqs={faqs} />
@@ -222,7 +222,7 @@ export default function BizMapJourneyHubPage() {
       />
       <Navigation />
 
-      <main className="px-4 pt-28 pb-20 md:pt-32 lg:pt-36">
+      <main className="nav-offset px-4 pt-28 pb-20 md:pt-32 lg:pt-36">
         <div className="container mx-auto max-w-6xl space-y-8">
           <section className="space-y-4 text-center">
             <Badge className="bg-primary/10 text-primary border-primary/20 px-4 py-1">AI Startup Builder</Badge>

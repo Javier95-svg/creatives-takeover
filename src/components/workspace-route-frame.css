@@ -24,6 +24,12 @@
    already sits above this region, so the reserved space became a 96px gap
    between the header and the page on all 40 routes that use the utility. */
 .workspace-route-content .pt-header-offset { padding-top: 0; }
+/* Some pages size their own offset to the navbar's exact height instead of
+   using pt-header-offset, so the banner sits flush beneath it. Story articles
+   do this, which left a 64px band above the banner inside the workspace. Mark
+   such an element nav-offset and it is neutralised here too, while the public
+   page keeps the spacing it needs. */
+.workspace-route-content .nav-offset { padding-top: 0; }
 /* Message pages previously reserved space for the now-suppressed legacy header. */
 .workspace-route-content main:has([aria-label="Messages workspace"]) { padding-top: 0; padding-bottom: 0; }
 .workspace-route-content .responsive-messaging-shell { height: calc(100dvh - 4rem); min-height: 0; }

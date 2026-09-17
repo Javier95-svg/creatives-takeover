@@ -274,8 +274,10 @@ const StoryArticle = () => {
         <Navigation />
 
         {/* pt clears the fixed navbar (h-16 mobile / 70px desktop) so it sits
-            above the page but never covers the banner thumbnail. */}
-        <main className="pt-16 md:pt-[70px]">
+            above the page but never covers the banner thumbnail. nav-offset
+            marks it as that compensation, which the workspace frame zeroes
+            because the fixed navbar is not rendered there. */}
+        <main className="nav-offset pt-16 md:pt-[70px]">
           {/* Banner Image - Full Width Above Title */}
           {article.banner_image_url && (
             <div className="w-full h-[340px] sm:h-[420px] md:h-[500px] overflow-hidden bg-muted relative">

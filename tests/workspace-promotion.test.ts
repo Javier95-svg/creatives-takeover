@@ -25,6 +25,16 @@ test('workspace routes do not reserve space for the suppressed legacy navigation
   assert.match(nav, /inWorkspace \? null :/);
   const css = readFileSync('src/components/workspace-route-frame.css', 'utf8');
   assert.match(css, /\.workspace-route-content \.pt-header-offset \{ padding-top: 0; \}/);
+  // Pages that size their own offset to the navbar height opt in with
+  // nav-offset instead, so both forms of the compensation are neutralised.
+  assert.match(css, /\.workspace-route-content \.nav-offset \{ padding-top: 0; \}/);
+  for (const file of [
+    'src/pages/StoryArticle.tsx',
+    'src/pages/BizMapJourneyHubPage.tsx',
+    'src/pages/AdminFirstCustomerSprintPage.tsx',
+  ]) {
+    assert.match(readFileSync(file, 'utf8'), /nav-offset/, `${file} must mark its navbar compensation`);
+  }
 });
 
 test('approved Guided Journey uses live home services behind authenticated eligibility', () => {

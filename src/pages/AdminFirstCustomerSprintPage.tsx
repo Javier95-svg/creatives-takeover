@@ -144,7 +144,7 @@ export default function AdminFirstCustomerSprintPage() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <main className="container mx-auto space-y-8 px-4 pb-16 pt-28 sm:px-6">
+      <main className="nav-offset container mx-auto space-y-8 px-4 pb-16 pt-28 sm:px-6">
         <header>
           <Badge variant="secondary"><ShieldAlert className="mr-2 h-4 w-4" />Admin only</Badge>
           <h1 className="mt-3 text-3xl font-bold">First Customer Sprint cohort</h1>
