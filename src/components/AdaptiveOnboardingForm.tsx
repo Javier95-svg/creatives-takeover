@@ -78,6 +78,14 @@ const BUSINESS_MODELS = [
   ['other', 'Another model'],
 ] as const;
 
+// Splits accounts into the two groups the platform tags people by. "Live"
+// deliberately means anything real and reachable, not revenue, so it is easy to
+// answer honestly and lands the split where we expect it.
+const FOUNDER_SEGMENT_OPTIONS = [
+  ['founder', 'I already have something live: a website, app, store, or product'],
+  ['builder', 'I am starting from zero'],
+] as const;
+
 const EVIDENCE_OPTIONS = [
   ['none', 'No external evidence yet'],
   ['prospects', 'I have named prospects to contact'],
@@ -395,6 +403,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
     if (step === 0) {
       const length = answers.startupBrief.trim().length;
       if (length < 20 || length > 280) return 'Write 20 to 280 characters about what you build and who it serves.';
+      if (!answers.founderSegment) return 'Tell us whether you already have something live or are starting from zero.';
     }
     if (step === 1 && !answers.businessModel) return 'Choose the business model that fits best.';
     if (step === 2) {
@@ -552,6 +561,9 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
         context,
         profileUpdates: {
           business_stage: context.businessStage,
+          // A stated answer, so it replaces whatever the backfill inferred from
+          // business_stage for accounts that predate this question.
+          founder_segment: answers.founderSegment || undefined,
           quiz_current_stage: context.businessStage,
           quiz_biggest_challenge: answers.blocker,
           assigned_stage: context.assignedStage,
@@ -681,6 +693,8 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
             className="mt-5 resize-none"
           />
           <div className="mt-2 text-right text-xs text-muted-foreground">{answers.startupBrief.trim().length}/280</div>
+          <p className="mt-6 text-sm font-semibold">Where are you starting from?</p>
+          <div className="mt-2"><ChoiceGrid options={FOUNDER_SEGMENT_OPTIONS} value={answers.founderSegment} onSelect={(founderSegment) => patchAnswers({ founderSegment })} /></div>
           <p className="mt-5 text-sm font-semibold">Optional sectors</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {ANGEL_SECTOR_OPTIONS.map((sector) => {

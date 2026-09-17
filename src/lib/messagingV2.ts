@@ -16,6 +16,8 @@ export type MessageRecipient = {
   isMarketplace: boolean;
   // The marketplace URL is built from services.slug, e.g. get-marketing.
   serviceSlug: string | null;
+  /** 'founder' already has something live, 'builder' is starting from zero. */
+  founderSegment: 'founder' | 'builder' | null;
 };
 
 export type MessageContext = {
@@ -153,7 +155,11 @@ export const mapRecipient = (row: any): MessageRecipient => ({
   // v1 never returns these, so a fallback response carries no badge and links
   // to the account profile rather than to a mentorship URL it cannot build.
   isMarketplace: Boolean(row.isMarketplace ?? row.is_marketplace),
-  serviceSlug: row.serviceSlug ?? row.service_slug ?? null
+  serviceSlug: row.serviceSlug ?? row.service_slug ?? null,
+  founderSegment: (() => {
+    const segment = row.founderSegment ?? row.founder_segment ?? null;
+    return segment === 'founder' || segment === 'builder' ? segment : null;
+  })()
 });
 
 export const mapQuote = (row: any): DirectMessageQuote => ({

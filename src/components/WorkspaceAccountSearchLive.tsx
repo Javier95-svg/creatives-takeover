@@ -15,6 +15,7 @@ async function searchAccounts(query: string, signal?: AbortSignal): Promise<Sear
     mentorName: recipient.mentorName,
     isMarketplace: recipient.isMarketplace,
     serviceSlug: recipient.serviceSlug,
+    founderSegment: recipient.founderSegment,
     isConnection: recipient.isConnection,
   }));
 }

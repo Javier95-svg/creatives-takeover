@@ -88,8 +88,15 @@ export type OnboardingFundraisingStatus =
   | 'talking_investors'
   | 'raising_now';
 
+/**
+ * Founders already have something live: a site, app, store, or product.
+ * Builders are starting from zero. Drives the Founder/Builder tag on accounts.
+ */
+export type OnboardingFounderSegment = 'founder' | 'builder';
+
 export interface OnboardingAnswersV1 {
   startupBrief: string;
+  founderSegment: OnboardingFounderSegment | '';
   businessModel: OnboardingBusinessModel | '';
   evidenceState: OnboardingEvidenceState | '';
   customerCountBand: OnboardingCustomerCountBand | '';
@@ -158,6 +165,7 @@ export interface OnboardingSessionV1 {
 
 export const EMPTY_ONBOARDING_ANSWERS_V1: OnboardingAnswersV1 = {
   startupBrief: '',
+  founderSegment: '',
   businessModel: '',
   evidenceState: '',
   customerCountBand: '',

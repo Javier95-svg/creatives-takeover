@@ -7,7 +7,7 @@ import { hasApplicationConfig } from '@/lib/hasApplicationConfig';
 import { enterWorkspaceRoute } from '@/lib/workspaceNavigation';
 import { accountRoute } from '@/lib/accountSearchRoute';
 
-export type SearchAccount = { id: string; username: string | null; full_name: string | null; avatar_url: string | null; headline?: string | null; isMentor?: boolean; mentorName?: string | null; isMarketplace?: boolean; serviceSlug?: string | null; isConnection?: boolean };
+export type SearchAccount = { id: string; username: string | null; full_name: string | null; avatar_url: string | null; headline?: string | null; isMentor?: boolean; mentorName?: string | null; isMarketplace?: boolean; serviceSlug?: string | null; founderSegment?: 'founder' | 'builder' | null; isConnection?: boolean };
 const LiveAccountSearch = lazy(() => import('./WorkspaceAccountSearchLive'));
 
 export default function WorkspaceAccountSearch() {
@@ -71,6 +71,10 @@ export function AccountSearchField({ search, renderActions }: {
           <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{account.full_name || account.username || 'Founder'}</span><span className="block truncate text-xs text-muted-foreground">{account.isConnection ? 'Connection · ' : ''}{account.headline || account.username || 'Founder'}</span></span>
           {account.isMentor && <Badge variant="outline">Mentor</Badge>}
           {account.isMarketplace && <Badge variant="outline">Marketplace</Badge>}
+          {/* Every account carries one of these, so it reads as a category rather
+              than a distinction. Kept last so Mentor and Marketplace, which are
+              rare, stay the first thing the eye lands on. */}
+          {account.founderSegment && <Badge variant="secondary">{account.founderSegment === 'founder' ? 'Founder' : 'Builder'}</Badge>}
         </a>; })()}
         {renderActions?.(account)}
       </div>)}
