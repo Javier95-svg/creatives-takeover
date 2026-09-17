@@ -7,7 +7,7 @@ import { hasApplicationConfig } from '@/lib/hasApplicationConfig';
 import { enterWorkspaceRoute } from '@/lib/workspaceNavigation';
 import { accountRoute } from '@/lib/accountSearchRoute';
 
-export type SearchAccount = { id: string; username: string | null; full_name: string | null; avatar_url: string | null; headline?: string | null; isMentor?: boolean; mentorName?: string | null; isMarketplace?: boolean; isConnection?: boolean };
+export type SearchAccount = { id: string; username: string | null; full_name: string | null; avatar_url: string | null; headline?: string | null; isMentor?: boolean; mentorName?: string | null; isMarketplace?: boolean; serviceSlug?: string | null; isConnection?: boolean };
 const LiveAccountSearch = lazy(() => import('./WorkspaceAccountSearchLive'));
 
 export default function WorkspaceAccountSearch() {

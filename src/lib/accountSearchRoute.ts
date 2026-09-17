@@ -6,6 +6,8 @@ export type AccountRouteTarget = {
   username?: string | null;
   isMentor?: boolean;
   mentorName?: string | null;
+  isMarketplace?: boolean;
+  serviceSlug?: string | null;
 };
 
 /**
@@ -18,14 +20,22 @@ export type AccountRouteTarget = {
  * Starkman", "Selma Fetic" against "SF"). Using the profile name would send
  * those to a page that does not resolve.
  *
- * Falls back to the account profile when the mentor name is missing, which is
- * what the v1 search response returns, so a fallback response still links
- * somewhere real instead of to a mentorship URL it cannot build.
+ * Marketplace providers go to their service listing for the same reason, using
+ * the slug stored on the service row, for example get-marketing for Darya
+ * Kablash. Mentorship is checked first so someone who is both lands on the
+ * mentor page, which carries the booking flow.
+ *
+ * Falls back to the account profile whenever the listing identifier is missing,
+ * which is what the v1 search response returns, so a fallback response still
+ * links somewhere real instead of to a URL it cannot build.
  */
 export function accountRoute(account: AccountRouteTarget): string | undefined {
   if (account.isMentor && account.mentorName) {
     const slug = generateMentorSlug(account.mentorName);
     if (slug) return `/mentorship/${slug}`;
+  }
+  if (account.isMarketplace && account.serviceSlug?.trim()) {
+    return `/marketplace/${encodeURIComponent(account.serviceSlug.trim())}`;
   }
   return account.username ? `/profile/${encodeURIComponent(account.username)}` : undefined;
 }

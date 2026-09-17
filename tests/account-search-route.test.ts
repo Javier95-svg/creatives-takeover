@@ -39,6 +39,37 @@ test('falls back to the account profile when the mentor name is unavailable', ()
   );
 });
 
+test('marketplace providers open their service listing', () => {
+  assert.equal(
+    accountRoute({ username: 'daryakablash', isMarketplace: true, serviceSlug: 'get-marketing' }),
+    '/marketplace/get-marketing',
+  );
+  assert.equal(
+    accountRoute({ username: 'harshladani', isMarketplace: true, serviceSlug: 'botpro-solutions' }),
+    '/marketplace/botpro-solutions',
+  );
+  // v1 carries no slug, so a fallback response links to the account profile.
+  assert.equal(
+    accountRoute({ username: 'daryakablash', isMarketplace: true, serviceSlug: null }),
+    '/profile/daryakablash',
+  );
+  assert.equal(
+    accountRoute({ username: 'daryakablash', isMarketplace: true, serviceSlug: '  ' }),
+    '/profile/daryakablash',
+  );
+});
+
+test('mentorship wins over marketplace when someone is both', () => {
+  // The mentor page carries the booking flow, so it is the more useful landing.
+  assert.equal(
+    accountRoute({
+      username: 'someone', isMentor: true, mentorName: 'Ramona Chihaia',
+      isMarketplace: true, serviceSlug: 'get-marketing',
+    }),
+    '/mentorship/ramona-chihaia',
+  );
+});
+
 test('an account with no handle is not linkable', () => {
   assert.equal(accountRoute({ username: null, isMentor: false, mentorName: null }), undefined);
   assert.equal(accountRoute({ username: '', isMentor: false, mentorName: null }), undefined);

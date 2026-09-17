@@ -14,6 +14,8 @@ export type MessageRecipient = {
   // profile name for 13 of the active mentors, so it is carried separately.
   mentorName: string | null;
   isMarketplace: boolean;
+  // The marketplace URL is built from services.slug, e.g. get-marketing.
+  serviceSlug: string | null;
 };
 
 export type MessageContext = {
@@ -150,7 +152,8 @@ export const mapRecipient = (row: any): MessageRecipient => ({
   mentorName: row.mentorName ?? row.mentor_name ?? null,
   // v1 never returns these, so a fallback response carries no badge and links
   // to the account profile rather than to a mentorship URL it cannot build.
-  isMarketplace: Boolean(row.isMarketplace ?? row.is_marketplace)
+  isMarketplace: Boolean(row.isMarketplace ?? row.is_marketplace),
+  serviceSlug: row.serviceSlug ?? row.service_slug ?? null
 });
 
 export const mapQuote = (row: any): DirectMessageQuote => ({
