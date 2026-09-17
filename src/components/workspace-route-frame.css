@@ -1,4 +1,13 @@
 /* Constrain legacy full-viewport tool roots to the new workspace region. */
+.workspace-route-content {
+  position: relative;
+  isolation: isolate;
+  /* Legacy fixed wallpapers/tool controls must not use the browser viewport
+     as their containing block or paint over persistent navigation. Portaled
+     dialogs remain outside this region and retain their normal modal behavior. */
+  contain: layout paint;
+}
+.workspace-shell > aside { z-index: 30; }
 .workspace-preview-persistent > main > header { overflow-x: auto; }
 .workspace-preview-persistent > main > header > :first-child { min-width: 8rem; }
 .workspace-route-content .w-screen { width: 100%; }

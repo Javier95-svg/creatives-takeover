@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { Suspense, useEffect, useState, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Menu, MoreHorizontal, Search } from 'lucide-react';
 import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from '@/components/ui/sheet';
@@ -65,7 +65,9 @@ export default function WorkspaceLayout({ children, account, avatar, profileHref
               : <><div className="ml-2 flex items-center gap-1 border-x border-border/60 px-2" role="group" aria-label="Account utilities">{utilities}</div>{theme}{signOut}</>}
           </div>
         </header>
-        {home ? children : <div role="region" aria-label="Route content" className="workspace-route-content min-h-0 flex-1 overflow-auto">{children}</div>}
+        <Suspense fallback={<div role="status" aria-live="polite" className="min-h-0 flex-1 p-8 text-muted-foreground">Loading page…</div>}>
+          {home ? children : <div role="region" aria-label="Route content" className="workspace-route-content min-h-0 flex-1 overflow-auto">{children}</div>}
+        </Suspense>
       </main>
     </div>
   </WorkspaceFrameContext.Provider>;
