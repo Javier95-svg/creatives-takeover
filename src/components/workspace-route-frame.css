@@ -19,6 +19,11 @@
 .workspace-route-content .min-h-screen { min-height: 100%; }
 .workspace-route-content .h-screen { height: 100%; }
 .workspace-route-content .min-h-dvh { min-height: 100%; }
+/* pt-header-offset reserves 6rem for the fixed legacy navigation, which
+   Navigation renders as null inside the workspace frame. The workspace header
+   already sits above this region, so the reserved space became a 96px gap
+   between the header and the page on all 40 routes that use the utility. */
+.workspace-route-content .pt-header-offset { padding-top: 0; }
 /* Message pages previously reserved space for the now-suppressed legacy header. */
 .workspace-route-content main:has([aria-label="Messages workspace"]) { padding-top: 0; padding-bottom: 0; }
 .workspace-route-content .responsive-messaging-shell { height: calc(100dvh - 4rem); min-height: 0; }
