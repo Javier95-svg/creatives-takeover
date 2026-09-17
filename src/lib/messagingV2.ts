@@ -10,6 +10,7 @@ export type MessageRecipient = {
   headline: string | null;
   isConnection: boolean;
   isMentor: boolean;
+  isMarketplace: boolean;
 };
 
 export type MessageContext = {
@@ -142,7 +143,9 @@ export const mapRecipient = (row: any): MessageRecipient => ({
   avatarUrl: row.avatarUrl || row.avatar_url || null,
   headline: row.headline ?? null,
   isConnection: Boolean(row.isConnection ?? row.is_connection ?? row.connected),
-  isMentor: Boolean(row.isMentor ?? row.is_mentor)
+  isMentor: Boolean(row.isMentor ?? row.is_mentor),
+  // v1 never returns this, so a fallback response simply carries no badge.
+  isMarketplace: Boolean(row.isMarketplace ?? row.is_marketplace)
 });
 
 export const mapQuote = (row: any): DirectMessageQuote => ({

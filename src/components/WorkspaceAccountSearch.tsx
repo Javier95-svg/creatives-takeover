@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { hasApplicationConfig } from '@/lib/hasApplicationConfig';
 import { enterWorkspaceRoute } from '@/lib/workspaceNavigation';
 
-export type SearchAccount = { id: string; username: string | null; full_name: string | null; avatar_url: string | null; headline?: string | null; isMentor?: boolean; isConnection?: boolean };
+export type SearchAccount = { id: string; username: string | null; full_name: string | null; avatar_url: string | null; headline?: string | null; isMentor?: boolean; isMarketplace?: boolean; isConnection?: boolean };
 const LiveAccountSearch = lazy(() => import('./WorkspaceAccountSearchLive'));
 
 export default function WorkspaceAccountSearch() {
@@ -69,6 +69,7 @@ export function AccountSearchField({ search, renderActions }: {
           <Avatar className="h-9 w-9"><AvatarImage src={account.avatar_url ?? undefined} /><AvatarFallback>{(account.full_name || account.username || 'Founder').charAt(0)}</AvatarFallback></Avatar>
           <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{account.full_name || account.username || 'Founder'}</span><span className="block truncate text-xs text-muted-foreground">{account.isConnection ? 'Connection · ' : ''}{account.headline || account.username || 'Founder'}</span></span>
           {account.isMentor && <Badge variant="outline">Mentor</Badge>}
+          {account.isMarketplace && <Badge variant="outline">Marketplace</Badge>}
         </a>
         {renderActions?.(account)}
       </div>)}
