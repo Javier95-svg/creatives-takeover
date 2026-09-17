@@ -12,6 +12,7 @@ async function searchAccounts(query: string, signal?: AbortSignal): Promise<Sear
     avatar_url: recipient.avatarUrl,
     headline: recipient.headline,
     isMentor: recipient.isMentor,
+    mentorName: recipient.mentorName,
     isMarketplace: recipient.isMarketplace,
     isConnection: recipient.isConnection,
   }));

@@ -10,6 +10,9 @@ export type MessageRecipient = {
   headline: string | null;
   isConnection: boolean;
   isMentor: boolean;
+  // The mentorship URL is built from mentors.name, which differs from the
+  // profile name for 13 of the active mentors, so it is carried separately.
+  mentorName: string | null;
   isMarketplace: boolean;
 };
 
@@ -144,7 +147,9 @@ export const mapRecipient = (row: any): MessageRecipient => ({
   headline: row.headline ?? null,
   isConnection: Boolean(row.isConnection ?? row.is_connection ?? row.connected),
   isMentor: Boolean(row.isMentor ?? row.is_mentor),
-  // v1 never returns this, so a fallback response simply carries no badge.
+  mentorName: row.mentorName ?? row.mentor_name ?? null,
+  // v1 never returns these, so a fallback response carries no badge and links
+  // to the account profile rather than to a mentorship URL it cannot build.
   isMarketplace: Boolean(row.isMarketplace ?? row.is_marketplace)
 });
 
