@@ -20,6 +20,7 @@ import { PicturesGallery } from "@/components/profile/PicturesGallery";
 import { toast } from "sonner";
 import { logError } from "@/lib/logger";
 import { getPublicStageLabel, shouldShowPublicStage } from "@/lib/accountabilityPreferences";
+import { founderStageLabel } from "@/lib/bizmapStageOrder";
 
 const PUBLIC_PROFILE_SELECT = [
   'id',
@@ -45,6 +46,7 @@ const PUBLIC_PROFILE_SELECT = [
   'github_url',
   'tiktok_url',
   'seo_indexable',
+  'assigned_stage',
 ].join(', ');
 
 interface PublicProfileRow {
@@ -71,6 +73,7 @@ interface PublicProfileRow {
   github_url: string | null;
   tiktok_url: string | null;
   seo_indexable: boolean | null;
+  assigned_stage: number | null;
 }
 
 interface Profile {
@@ -95,6 +98,8 @@ interface Profile {
   friends_count: number;
   creative_niche: string | null;
   business_stage: string | null;
+  /** Quiz placement on the Startup Development Cycle, 1..7. */
+  assigned_stage: number | null;
   role: string | null;
   updated_at?: string | null;
   user_preferences?: Record<string, unknown> | null;
@@ -159,6 +164,7 @@ const mapPublicProfile = (profile: PublicProfileRow): Profile => ({
   friends_count: 0,
   creative_niche: profile.creative_niche,
   business_stage: null,
+  assigned_stage: profile.assigned_stage ?? null,
   role: null,
   updated_at: null,
   user_preferences: null,
@@ -206,7 +212,26 @@ const Profile = () => {
   const profileId = profile?.id;
 
   const showPublicStage = profile ? shouldShowPublicStage(profile.user_preferences, isOwnProfile) : false;
-  const publicStageLabel = profile ? getPublicStageLabel(profile.business_stage, profile.startup_stage) : null;
+  // The quiz placement first. business_stage and startup_stage are free text and
+  // hold ten unvalidated values in production, so they are only a fallback for
+  // profiles that predate the quiz, and only where the text names a real stage.
+  const publicStageLabel = profile
+    ? founderStageLabel(profile.assigned_stage) ?? getPublicStageLabel(profile.business_stage, profile.startup_stage)
+    : null;
+
+  // Connections are accepted requests in either direction, counted by a definer
+  // function because friend_requests RLS only exposes rows the viewer is part of.
+  const [connectionCount, setConnectionCount] = useState<number | null>(null);
+  useEffect(() => {
+    if (!profileId) { setConnectionCount(null); return; }
+    let cancelled = false;
+    void supabase.rpc('connection_count' as never, { target_id: profileId } as never)
+      .then(({ data, error }) => {
+        if (cancelled || error) return;
+        setConnectionCount(typeof data === 'number' ? data : 0);
+      });
+    return () => { cancelled = true; };
+  }, [profileId]);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -492,7 +517,11 @@ const Profile = () => {
         <ProfileWallpaper />
         <div className="relative z-10">
           <Navigation />
-          <main className="container mx-auto px-4 pt-header-offset pb-8">
+          {/* nav-offset-roomy so the card is not flush against the workspace
+              header. pt-header-offset alone is zeroed inside the workspace,
+              because it reserves space for the legacy nav that renders as null
+              there, which left the profile touching the search bar. */}
+          <main className="container mx-auto px-4 pt-header-offset nav-offset-roomy pb-8">
             <div className="max-w-4xl mx-auto">
               {/* Founder-First Profile Hero */}
               <Card className="p-6 mb-6">
@@ -619,8 +648,8 @@ const Profile = () => {
                     <div className="text-xs text-muted-foreground">Posts</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-xl font-bold text-primary">{profile.followers_count}</div>
-                    <div className="text-xs text-muted-foreground">Followers</div>
+                    <div className="text-xl font-bold text-primary">{connectionCount ?? '—'}</div>
+                    <div className="text-xs text-muted-foreground">Connections</div>
                   </div>
                 </div>
 
