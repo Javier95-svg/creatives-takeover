@@ -4,7 +4,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   ChevronDown,
   Clapperboard,
-  Compass,
   DollarSign,
   Info,
   type LucideIcon,
@@ -13,7 +12,7 @@ import {
   Newspaper,
   PlayCircle,
   Rocket,
-  Store,
+  Users,
   Wrench,
   X,
 } from "lucide-react";
@@ -38,13 +37,16 @@ type VisitorMenuItem = { label: string; href: string; icon: LucideIcon; descript
 type VisitorMenu = { label: string; icon: LucideIcon; tagline: string; taglineIcon?: LucideIcon; items: VisitorMenuItem[] };
 
 // Simple links, in display order. Home is covered by the brand lockup.
+// The first three render before the Content menu and the rest after it, so this
+// order is also the layout: Tour, Build, Connect | Content | About, Pricing.
 const visitorLinks: VisitorLink[] = [
-  { label: "Build", href: "/build", icon: Wrench },
   // exact, because /demo-studio and /demo-calls both start with /demo and would
   // otherwise light this entry up while the visitor is somewhere else entirely.
   { label: "Tour", href: "/demo", icon: PlayCircle, exact: true },
-  { label: "Guidance", href: "/mentorship", icon: Compass },
-  { label: "Marketplace", href: "/marketplace", icon: Store },
+  { label: "Build", href: "/build", icon: Wrench },
+  // Users rather than a compass: this is the same community surface the signed-in
+  // sidebar calls Network, and it points at the people there, not at guidance.
+  { label: "Connect", href: "/mentorship", icon: Users },
   { label: "About", href: "/about", icon: Info },
   { label: "Pricing", href: "/pricing", icon: DollarSign },
 ];
