@@ -136,7 +136,7 @@ export default function PlatformTour() {
       </div>
       {/* Outside the shell: the route region sets contain: layout paint, which
           would trap a fixed child inside the scrolling panel. */}
-      <PlatformTourFrameBar panel={panel} onSelect={selectPanel} budget={budget} />
+      <PlatformTourFrameBar panel={panel} onSelect={selectPanel} />
       <PlatformTourSignupGate reason={gate.reason} open={gate.open}
         onOpenChange={(open) => setGate((current) => ({ ...current, open }))} />
     </PlatformTourGateContext.Provider>
