@@ -13,6 +13,7 @@ import WorkspaceAccountSearchLive from '@/components/WorkspaceAccountSearchLive'
 import WorkspaceUpdatesSession from '@/components/WorkspaceUpdatesSession';
 import { platformUpdates, PLATFORM_UPDATE_TYPES } from '@/lib/workspacePolicy';
 import { useWorkspaceHeaderCounts } from '@/hooks/useWorkspaceHeaderCounts';
+import ProjectSwitcher from '@/components/workspace/ProjectSwitcher';
 import WorkspaceLayout from './WorkspaceLayout';
 
 // Only pulled in once the header icon is used, so the modal and its social
@@ -72,6 +73,9 @@ export default function WorkspaceLive({ children, home }: { children: ReactNode;
     avatar={<WorkspaceProfileAvatarLive />} updates={<LatestUpdates />} search={<WorkspaceAccountSearchLive />} credits={<CreditDisplay compact showPurchaseButton />} theme={<ThemeToggle />}
     signOut={<button aria-label="Sign out" title="Sign out" className="workspace-icon-button" onClick={() => void signOut()}><LogOut className="h-4 w-4" /></button>}
     utilities={<>
+      {/* Which project the founder is in decides what every tool writes to, so
+          it belongs in the shell rather than on one page. */}
+      <div className="hidden lg:block"><ProjectSwitcher /></div>
       <button type="button" onClick={() => { setRequestsMounted(true); setRequestsOpen(true); }}
         aria-label={connectionNotifications > 0 ? `Connection requests, ${connectionNotifications} new` : 'Connection requests'}
         title="Connection requests" className="workspace-icon-button relative">

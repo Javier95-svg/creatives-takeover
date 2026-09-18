@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { DashboardDataProvider, useDashboardData } from '@/contexts/DashboardDataContext';
 import { useStartupCommandCenter } from '@/hooks/useStartupCommandCenter';
 import { useAssignedStage } from '@/hooks/useAssignedStage';
+import { useProjects, useProjectOutcomes } from '@/hooks/useProjects';
 import { buildPulseProjectContext } from '@/hooks/usePulseWidget';
 import { supabase } from '@/integrations/supabase/client';
 import { homePriorities, validateHomeActions, type PulseHomeConcept, type PulseHomeMessage } from '@/lib/pulseHome';
@@ -21,6 +22,11 @@ function LiveConversation({ concept }: { concept: PulseHomeConcept }) {
   const startup = useStartupCommandCenter();
   // The stage the onboarding quiz placed them in, which is what the badge names.
   const assignedStage = useAssignedStage();
+  // Pulse reasons about one project at a time. Sending the active project and
+  // its six current outcomes is what makes that true rather than assumed: with
+  // several projects open, results from one must not inform advice on another.
+  const { activeProject, activeProjectId } = useProjects();
+  const projectOutcomes = useProjectOutcomes(activeProjectId);
   const priorities = useMemo(() => homePriorities(dashboard.snapshot, dashboard.primaryAction, key => getDashboardTool(key)?.route), [dashboard.snapshot, dashboard.primaryAction]);
   const [messages, setMessages] = useState<PulseHomeMessage[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -100,7 +106,9 @@ function LiveConversation({ concept }: { concept: PulseHomeConcept }) {
       setMessages(previous => [...previous.filter(message => message.id !== assistantId), ...(!previous.some(message => message.id === `${turn.turnId}:user`) ? [{ id: `${turn.turnId}:user`, role: 'user' as const, content: turn.text }] : []), { id: assistantId, role: 'assistant', content: '' }]);
       controller.current = new AbortController();
       await streamPulseHome({ sessionId: id, turnId: turn.turnId, message: turn.text, signal: controller.current.signal,
-        context: { projectContext: startup.loading || startup.error ? null : buildPulseProjectContext(startup.model), stage: dashboard.snapshot?.journey.currentStage ?? null, priorities, contextUnavailable: Boolean(startup.error || dashboard.error), currentPage: '/', currentTool: { name: 'Pulse Home', purpose: 'Personalized founder guidance and platform navigation' } },
+        context: { projectContext: startup.loading || startup.error ? null : buildPulseProjectContext(startup.model), stage: dashboard.snapshot?.journey.currentStage ?? null, priorities, contextUnavailable: Boolean(startup.error || dashboard.error), currentPage: '/', currentTool: { name: 'Pulse Home', purpose: 'Personalized founder guidance and platform navigation' },
+          activeProject: activeProject ? { id: activeProject.id, title: activeProject.title, ideaSummary: activeProject.ideaSummary } : null,
+          projectOutcomes: projectOutcomes.data ?? null },
         onText: chunk => { if (alive.current) setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, content: message.content + chunk } : message)); },
         onActions: actions => { if (alive.current) setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, actions } : message)); },
       });
