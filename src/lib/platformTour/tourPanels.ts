@@ -32,8 +32,11 @@ const FLAGSHIP_KINDS: Record<string, TourPanelKind> = { icp_builder: 'icp', pmf_
  * tool: its route is /go-to-market?workspace=first-customer-proof and it shares
  * that tool's entitlement. Giving it a panel told a visitor Stage 5 has three
  * tools when it has two, GTM Strategist and Directories.
+ *
+ * tech_stack is a resource rather than a stage tool. MVP Builder is the only
+ * tool at Stage 4, and listing a second one misread the cycle.
  */
-export const TOUR_EXCLUDED_TOOLS = new Set(['first_customer_sprint']);
+export const TOUR_EXCLUDED_TOOLS = new Set(['first_customer_sprint', 'tech_stack']);
 
 const TOUR_TOOLS = FOUNDER_TOOL_CATALOG.filter((tool) => !TOUR_EXCLUDED_TOOLS.has(tool.key));
 

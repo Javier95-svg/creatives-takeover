@@ -175,6 +175,10 @@ test('every catalog tool has a status and a panel, so the tour cannot gain a hol
   assert.ok(TOUR_EXCLUDED_TOOLS.has('first_customer_sprint'));
   const launch = TOUR_PANELS.filter(panel => panel.tool?.stageNumber === 5).map(panel => panel.label);
   assert.deepEqual(launch, ['GTM Strategist', 'Directories']);
+  // Tech Stack Builder is a resource, not a stage tool, so Stage 4 is MVP Builder alone.
+  assert.ok(TOUR_EXCLUDED_TOOLS.has('tech_stack'));
+  const building = TOUR_PANELS.filter(panel => panel.tool?.stageNumber === 4).map(panel => panel.label);
+  assert.deepEqual(building, ['MVP Builder']);
   assert.equal(resolveTourNavigation('/go-to-market?workspace=first-customer-proof').kind, 'panel');
   const totals = tourArtifactTotals();
   assert.equal(totals.complete + totals.in_progress + totals.locked, FOUNDER_TOOL_CATALOG.length);
