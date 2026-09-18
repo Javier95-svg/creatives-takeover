@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { CONNECTION_EVENT, getSeenAcceptedIds, getSeenPendingIds } from '@/lib/connectionSeenState';
+import { MESSAGES_READ_EVENT, readCountFromEvent } from '@/lib/messagesReadState';
 
 export type WorkspaceHeaderCounts = {
   unreadMessages: number;
@@ -65,11 +66,28 @@ export function useWorkspaceHeaderCounts(): WorkspaceHeaderCounts {
     void queryClient.invalidateQueries({ queryKey: ['workspace-header-counts', userId] });
   }, [queryClient, userId]);
 
+  // Reading a conversation subtracts from the badge on the spot, then the
+  // refetch confirms it. Invalidating alone would still leave the old number on
+  // screen for the length of the round trip, which is what made clearing a DM
+  // feel slow next to the bell.
+  const applyRead = useCallback((event: Event) => {
+    const count = readCountFromEvent(event);
+    if (count > 0) {
+      queryClient.setQueryData<HeaderCountsRow>(['workspace-header-counts', userId], (current) =>
+        current ? { ...current, unreadMessages: Math.max(0, current.unreadMessages - count) } : current);
+    }
+    refresh();
+  }, [queryClient, userId, refresh]);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     window.addEventListener(CONNECTION_EVENT, refresh);
-    return () => window.removeEventListener(CONNECTION_EVENT, refresh);
-  }, [refresh]);
+    window.addEventListener(MESSAGES_READ_EVENT, applyRead);
+    return () => {
+      window.removeEventListener(CONNECTION_EVENT, refresh);
+      window.removeEventListener(MESSAGES_READ_EVENT, applyRead);
+    };
+  }, [refresh, applyRead]);
 
   const row = data ?? EMPTY;
 

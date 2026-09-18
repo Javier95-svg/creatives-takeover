@@ -7,6 +7,7 @@ import { logError, logWarn, logInfo } from '@/lib/logger';
 import { handleError, getUserMessage } from '@/lib/errors';
 import { completeActivationJourney, trackRetentionEvent } from '@/lib/retentionSystem';
 import { messagingV2 } from '@/lib/messagingV2';
+import { broadcastMessagesRead } from '@/lib/messagesReadState';
 import { useQueryClient } from '@tanstack/react-query';
 import { recordMeaningfulAction } from '@/lib/engagementSession';
 import { trackSocialInteractionCompleted, trackSocialReplyReceived } from '@/lib/socialInteractionAnalytics';
@@ -269,6 +270,10 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  // markAsRead needs the count it is about to clear, without taking unreadCounts
+  // as a dependency and being rebuilt on every incoming message.
+  const unreadCountsRef = useRef(unreadCounts);
+  unreadCountsRef.current = unreadCounts;
   const [messagePageState, setMessagePageState] = useState<Record<string, MessagePageState>>({});
   const [conversationSettings, setConversationSettings] = useState<Record<string, ConversationUserSettings>>({});
   const [searchResults, setSearchResults] = useState<MessageSearchResult[]>([]);
@@ -1381,6 +1386,10 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
 
   const markAsRead = useCallback(async (conversationId: string) => {
     if (!user) return;
+    // Told to the header before the write lands. The badge polls on a 60s
+    // interval, so without this the number stayed up for up to a minute after
+    // the messages had visibly been read.
+    broadcastMessagesRead(unreadCountsRef.current[conversationId] || 0);
     setMessages((state) => ({
       ...state,
       [conversationId]: (state[conversationId] || []).map((message) =>
