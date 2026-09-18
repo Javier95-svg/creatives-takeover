@@ -106,10 +106,14 @@ test('the signup modal is the only way out and it loads lazily', () => {
   const build = readFileSync('src/pages/BuildPage.tsx', 'utf8');
   assert.match(build, /<AccountSignupDialog/);
   assert.doesNotMatch(build, /Continue with GitHub/, 'the dialog markup should live in one place now');
-  // Every reason reaches the same dialog, so none can quietly become a dead end
+  // The prompt is a heading and the three buttons, nothing else. It used to
+  // carry a paragraph and an echo of the panel the visitor came from, which
+  // turned a prompt into a page.
+  assert.doesNotMatch(gate, /subtitle=|contextLabel=|contextValue=/);
+  // Every reason still reaches the dialog, so none can quietly become a dead end
   // with no way to sign up.
-  const reasons = [...gate.matchAll(/^ {2}([a-z]+): \{$/gm)].map(match => match[1]);
-  assert.ok(reasons.length >= 9, `expected copy for every gate reason, found ${reasons.join(', ')}`);
+  const reasons = [...gate.matchAll(/^ {2}([a-z]+): [`']/gm)].map(match => match[1]);
+  assert.ok(reasons.length >= 9, `expected a heading for every gate reason, found ${reasons.join(', ')}`);
 });
 
 test('the tour owns no data access of its own', () => {
@@ -300,7 +304,7 @@ test('the header carries the same controls a signed-in founder has', () => {
   assert.doesNotMatch(utilities, /<Link|href=|navigate\(/);
   const gate = readFileSync('src/components/platform-tour/PlatformTourSignupGate.tsx', 'utf8');
   for (const reason of ['inbox', 'project', 'questions', 'depth']) {
-    assert.match(gate, new RegExp(`^\\s{2}${reason}: \\{`, 'm'), `the gate needs copy for ${reason}`);
+    assert.match(gate, new RegExp(`^\\s{2}${reason}: [\`']`, 'm'), `the gate needs a heading for ${reason}`);
   }
 });
 

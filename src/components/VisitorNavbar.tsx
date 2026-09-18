@@ -12,7 +12,7 @@ import {
   Newspaper,
   PlayCircle,
   Rocket,
-  Users,
+  Target,
   Wrench,
   X,
 } from "lucide-react";
@@ -37,22 +37,20 @@ type VisitorMenuItem = { label: string; href: string; icon: LucideIcon; descript
 type VisitorMenu = { label: string; icon: LucideIcon; tagline: string; taglineIcon?: LucideIcon; items: VisitorMenuItem[] };
 
 // Simple links, in display order. Home is covered by the brand lockup.
-// The first three render before the Media menu and the rest after it, so this
-// order is also the layout: Tour, Build, Connect | Media | About, Pricing.
+// The first three render before the Content menu and the rest after it, so this
+// order is also the layout: Tour, Build, Collab | Content | About, Pricing.
 const visitorLinks: VisitorLink[] = [
   // exact, because /demo-studio and /demo-calls both start with /demo and would
   // otherwise light this entry up while the visitor is somewhere else entirely.
   { label: "Tour", href: "/demo", icon: PlayCircle, exact: true },
   { label: "Build", href: "/build", icon: Wrench },
-  // Users rather than a compass: this is the same community surface the signed-in
-  // sidebar calls Network, and it points at the people there, not at guidance.
-  { label: "Connect", href: "/mentorship", icon: Users },
+  { label: "Collab", href: "/mentorship", icon: Target },
   { label: "About", href: "/about", icon: Info },
   { label: "Pricing", href: "/pricing", icon: DollarSign },
 ];
 
-const mediaMenu: VisitorMenu = {
-  label: "Media",
+const contentMenu: VisitorMenu = {
+  label: "Content",
   icon: Clapperboard,
   tagline: "Leisure Time🍿",
   items: [
@@ -308,7 +306,7 @@ const LegacyVisitorNavbar = () => {
                   </Link>
                 );
               })}
-              {renderDesktopMenu(mediaMenu)}
+              {renderDesktopMenu(contentMenu)}
               {visitorLinks.slice(3).map((item) => {
                 const Icon = item.icon;
                 return (
@@ -330,7 +328,7 @@ const LegacyVisitorNavbar = () => {
                 ever sees. These duplicates keep them discoverable. aria-hidden so
                 assistive tech uses the real menu instead of hearing both. */}
             <nav aria-hidden="true" className="sr-only">
-              {mediaMenu.items.map((item) => (
+              {contentMenu.items.map((item) => (
                 <Link key={`crawlable-${item.href}`} to={item.href} tabIndex={-1}>
                   {item.label}
                 </Link>
@@ -395,7 +393,7 @@ const LegacyVisitorNavbar = () => {
                     </Link>
                   );
                 })}
-                {renderMobileMenu(mediaMenu)}
+                {renderMobileMenu(contentMenu)}
                 {visitorLinks.slice(3).map((item) => {
                   const Icon = item.icon;
                   return (
