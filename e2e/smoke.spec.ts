@@ -21,6 +21,7 @@ const PUBLIC_ROUTES = [
   '/login',
   '/signup',
   '/icp-builder',
+  '/demo',
   '/demo-studio/try',
   '/pmf-lab',
   '/mvp-builder',

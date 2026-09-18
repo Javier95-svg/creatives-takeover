@@ -1,19 +1,13 @@
-import { lazy, Suspense, useState } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { lazy, Suspense } from 'react';
 import { hasApplicationConfig } from '@/lib/hasApplicationConfig';
+import { ProfilePhoto } from '@/components/workspace/ProfilePhoto';
 
 const LiveAvatar = lazy(() => import('./WorkspaceProfileAvatarLive'));
 
-export function ProfilePhoto({ sources = [], initials = '?' }: { sources?: string[]; initials?: string }) {
-  const [failed, setFailed] = useState<string[]>([]);
-  const src = sources.find(source => source && !failed.includes(source));
-  return <Avatar className="h-9 w-9">
-    <AvatarImage key={src} src={src} alt="Your profile photo" onLoadingStatusChange={status => {
-      if (status === 'error' && src) setFailed(previous => [...previous, src]);
-    }} />
-    <AvatarFallback className="bg-primary text-xs font-medium text-primary-foreground">{initials}</AvatarFallback>
-  </Avatar>;
-}
+// Re-exported so the existing callers keep working. New callers that only need
+// the picture should import it from components/workspace/ProfilePhoto instead,
+// which carries no reference to the Live variant.
+export { ProfilePhoto };
 
 export default function WorkspaceProfileAvatar() {
   return hasApplicationConfig

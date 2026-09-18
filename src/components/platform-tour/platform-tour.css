@@ -1,0 +1,13 @@
+/*
+ * The workspace shell is h-dvh, and the tour adds a fixed bar beneath it. Left
+ * alone the bar covers the bottom of the shell, which on the Pulse panel is the
+ * message composer. Shortening the shell by the measured bar height keeps every
+ * panel fully reachable without touching the shell's own styles.
+ *
+ * The height is measured rather than hardcoded because the bar wraps to two or
+ * three rows on narrow screens, and a guessed value would be wrong on exactly
+ * the widths where the composer is hardest to reach.
+ */
+.platform-tour .workspace-shell {
+  height: calc(100dvh - var(--platform-tour-bar, 4.75rem));
+}

@@ -22,9 +22,16 @@ export interface WorkspaceLayoutProps {
   signOut?: ReactNode;
   home?: boolean;
   persistentPreviewNavigation?: boolean;
+  /** Intercepts sidebar navigation. Production passes nothing and keeps the
+      router navigate; the anonymous tour at /demo swaps panels in place rather
+      than letting a sidebar click leave the route. */
+  onNavigate?: (path: string) => void;
+  /** Overrides the path the sidebar highlights. The tour lives on one URL, so
+      location.pathname cannot express which tool the visitor has open. */
+  currentPath?: string;
 }
 
-export default function WorkspaceLayout({ children, account, avatar, profileHref, updates, search, credits, utilities, theme, signOut, home = false, persistentPreviewNavigation = false }: WorkspaceLayoutProps) {
+export default function WorkspaceLayout({ children, account, avatar, profileHref, updates, search, credits, utilities, theme, signOut, home = false, persistentPreviewNavigation = false, onNavigate, currentPath }: WorkspaceLayoutProps) {
   const location = useLocation();
   const [drawer, setDrawer] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -42,8 +49,8 @@ export default function WorkspaceLayout({ children, account, avatar, profileHref
     document.querySelector('.workspace-route-content')?.scrollTo(0, 0);
   }, [location.pathname, location.search]);
   const sidebar = <WorkspaceSidebar account={account} avatar={avatar} profileHref={profileHref} updates={updates}
-    currentPath={home ? '/' : location.pathname} initialCollapsed={persistentPreviewNavigation || !home} mobile={mobile}
-    navigateTo={path => { setDrawer(false); enterWorkspaceRoute(path); }} />;
+    currentPath={currentPath ?? (home ? '/' : location.pathname)} initialCollapsed={persistentPreviewNavigation || !home} mobile={mobile}
+    navigateTo={path => { setDrawer(false); (onNavigate ?? enterWorkspaceRoute)(path); }} />;
   return <WorkspaceFrameContext.Provider value={true}>
     <div data-telemetry-private className={`ph-no-capture ph-mask workspace-shell flex h-dvh overflow-hidden bg-background text-foreground ${persistentPreviewNavigation ? 'workspace-preview-persistent' : ''}`}>
       {!mobile && sidebar}

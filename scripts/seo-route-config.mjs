@@ -902,14 +902,66 @@ export const INDEXABLE_ROUTES = [
     ],
   },
   {
+    // The guided tour of the workspace. The route keeps the /demo path it has
+    // always had, but the page is the Platform Tour and is named that way
+    // everywhere in code so it is never read as Demo Studio, the separate
+    // founder tool for building product demos.
     path: "/demo",
-    title: "Interactive Demo | Creatives Takeover",
+    title: "Platform Tour | Creatives Takeover",
     description:
-      "Try Creatives Takeover features in an interactive demo covering startup planning, prompt workflows, fundraising tools, and community.",
+      "Walk through the founder workspace with a sample project. See the seven stage cycle, the tools and the artifact each one produces. No signup, nothing saved.",
     changefreq: "monthly",
-    priority: 0.5,
-    heroHeading: "Try the platform",
+    priority: 0.7,
+    heroHeading: "Walk the founder workspace",
     heroCopy:
-      "Explore an interactive walkthrough of key founder tools including BizMap AI, Prompt Library, Insighta, and Community.",
+      "A guided tour of Creatives Takeover using a sample founder and a sample project. You can open every stage, read the artifacts the tools produce and see what the platform holds a founder to. Nothing is saved, and no account is created.",
+    sections: [
+      {
+        heading: "What the tour shows",
+        copy:
+          "The tour opens on Pulse, the assistant that reasons about one project at a time, then steps through the Startup Development Cycle stage by stage. Each tool states what it produces and what has to be true before that output counts as finished. The ICP panel renders a complete worked example rather than a screenshot.",
+      },
+      {
+        heading: "For universities and business schools",
+        copy:
+          "Every student has a stage, an artifact and a decision that can be read without collecting slide decks. The seven stage cycle maps onto a semester, and each tool produces a gradeable output with a written definition of done rather than a status update.",
+      },
+      {
+        heading: "For accelerators and incubators",
+        copy:
+          "One stage model across a whole batch. You screen on artifacts instead of on pitch polish, and you can see which teams are stuck at which stage before demo day rather than after it.",
+      },
+      {
+        heading: "For investors",
+        copy:
+          "What already exists before the first meeting: a committed buyer with an urgent pain and a named disqualifier, a published demand capture page with a measured response, and a build, narrow, pivot or stop decision backed by independent buyer signals and a documented objection.",
+      },
+    ],
+    faqs: [
+      {
+        question: "Do I need an account to use the tour?",
+        answer:
+          "No. The tour is open to anyone with the link. It runs on a sample founder and a sample project, so there is nothing to sign in to and nothing you do there is saved.",
+      },
+      {
+        question: "Can I build something during the tour?",
+        answer:
+          "No, and that is deliberate. You can see what every tool produces and what finishing it requires, but running a tool writes a saved result against a real project, so that needs a free account.",
+      },
+      {
+        question: "How is this different from Demo Studio?",
+        answer:
+          "Demo Studio is a tool inside the platform that founders use to build and publish interactive demos of their own product. The Platform Tour is a walkthrough of Creatives Takeover itself for people evaluating it.",
+      },
+    ],
+    breadcrumb: [
+      { name: "Home", url: "/" },
+      { name: "Platform Tour", url: "/demo" },
+    ],
+    relatedLinks: [
+      { href: "/pricing", label: "Pricing" },
+      { href: "/bizmap-ai", label: "Startup Development Cycle" },
+      { href: "/about", label: "About Creatives Takeover" },
+    ],
   },
 ];

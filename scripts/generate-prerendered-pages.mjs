@@ -72,7 +72,7 @@ const FOOTER_GROUPS = [
       { href: "/pricing", label: "Pricing" },
       { href: "/careers", label: "Careers" },
       { href: "/faq", label: "FAQ" },
-      { href: "/demo", label: "Demo" },
+      { href: "/demo", label: "Product Tour" },
     ],
   },
   {

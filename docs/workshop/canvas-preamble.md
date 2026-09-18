@@ -27,7 +27,7 @@ This briefing packages existing references so every discipline walks into the wo
 
 - **Funding + insights data** (`PHASE1_FUNDING_BOARD_SETUP.md`, `supabase/migrations/*funding*`, `src/types/funding.ts`, `src/hooks/useFundingOpportunities.ts`):
   - Supabase schema delivers public funding opportunities with filters (type, location, keywords) and optional user bookmarks.
-  - Hooks expose simple client-side search; Insighta demo components highlight curated articles, trending content, and funding cards (`src/components/demo/InsightaDemo.tsx`).
+  - Hooks expose simple client-side search; the Insighta surfaces highlight curated articles, trending content, and funding cards.
 - **Usage in BizMap AI** (`supabase/functions/chatbot-ai-engine/index.ts`, quick actions): agent references Insighta for market intelligence and funding recommendations but relies on manual navigation.
 - **Integration gaps**:
   - No shared data structure ties Insighta insights back to a user’s plan or sprint board.

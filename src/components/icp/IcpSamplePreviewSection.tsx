@@ -11,12 +11,17 @@ import {
 const DEFAULT_SAMPLE_KEY: IcpSampleProfileKey = "ai_powered_personal_finance_coach";
 const TRANSITION_MS = 180;
 
-export function IcpSamplePreviewSection() {
+export function IcpSamplePreviewSection({ initialSampleKey = DEFAULT_SAMPLE_KEY }: {
+  /** Which sample opens first. The guided tour at /demo picks the one that
+      matches its seeded project, so the ICP draft and the rest of the tour
+      describe the same business. */
+  initialSampleKey?: IcpSampleProfileKey;
+} = {}) {
   const timeoutRef = useRef<number | null>(null);
   const [activeSampleKey, setActiveSampleKey] =
-    useState<IcpSampleProfileKey>(DEFAULT_SAMPLE_KEY);
+    useState<IcpSampleProfileKey>(initialSampleKey);
   const [renderedSampleKey, setRenderedSampleKey] =
-    useState<IcpSampleProfileKey>(DEFAULT_SAMPLE_KEY);
+    useState<IcpSampleProfileKey>(initialSampleKey);
   const [isDocumentVisible, setIsDocumentVisible] = useState(true);
 
   useEffect(() => {

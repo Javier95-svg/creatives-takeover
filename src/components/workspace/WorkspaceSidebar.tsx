@@ -45,12 +45,15 @@ const NAV_TOOLS: Record<string, string[]> = {
   Resources: ["Accelerator Hunt", "Tech Stack Builder"],
 };
 
-function Brand({ collapsed }: { collapsed: boolean }) {
+// The lockup goes through navigateTo like every other link. It used to call
+// enterWorkspaceRoute directly, which meant a caller that intercepts navigation
+// could still be navigated away from by a click on the logo.
+function Brand({ collapsed, navigateTo }: { collapsed: boolean; navigateTo: (path: string) => void }) {
   return (
     <a href="/" aria-label="Creatives Takeover home" onClick={(event) => {
       if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) {
         event.preventDefault();
-        enterWorkspaceRoute('/');
+        navigateTo('/');
       }
     }} className="flex min-w-0 items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
       <img className="animate-logo-breathing nav-logo-hover h-10 w-10 shrink-0 object-contain motion-reduce:animate-none" src={ctLogo} alt="Creatives Takeover" />
@@ -100,7 +103,7 @@ export function WorkspaceSidebar({ navigateTo = enterWorkspaceRoute, currentPath
       mobile ? "h-full w-full px-4" : collapsed ? "w-20 px-3" : "w-72 px-4",
     )}>
       <div className={cn("flex items-center", collapsed ? "justify-center" : "justify-between px-2")}>
-        <Brand collapsed={collapsed} />
+        <Brand collapsed={collapsed} navigateTo={navigateTo} />
         {!mobile && <button
           type="button"
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}

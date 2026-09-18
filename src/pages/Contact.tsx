@@ -35,6 +35,20 @@ const Contact = () => {
               <h2 className="text-xl font-semibold">Email</h2>
               <a href="mailto:javier@admin-creatives-takeover.com" className="mt-2 text-muted-foreground hover:text-primary transition-colors duration-200 block">javier@admin-creatives-takeover.com</a>
             </article>
+            {/* Universities, accelerators and funds arrive here from the
+                Platform Tour at /demo, which had nowhere to send them before. */}
+            <article className="p-6 rounded-lg border bg-card">
+              <h2 className="text-xl font-semibold">Programs and partnerships</h2>
+              <p className="mt-2 text-muted-foreground">
+                For universities, business schools, accelerators and funds: cohort licences, a pilot with one class, or portfolio access. Take the{" "}
+                <a href="/demo" className="underline underline-offset-4 hover:text-foreground transition-colors">platform tour</a>{" "}
+                first if you have not yet.
+              </p>
+              <a href="mailto:javier@admin-creatives-takeover.com?subject=Program%20partnership"
+                 className="mt-2 text-muted-foreground hover:text-primary transition-colors duration-200 block">
+                javier@admin-creatives-takeover.com
+              </a>
+            </article>
             <article className="p-6 rounded-lg border bg-card">
               <h2 className="text-xl font-semibold">Community</h2>
               <p className="mt-2 text-muted-foreground">

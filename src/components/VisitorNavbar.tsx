@@ -11,6 +11,7 @@ import {
   Menu,
   Mic,
   Newspaper,
+  PlayCircle,
   Rocket,
   Store,
   Wrench,
@@ -32,13 +33,16 @@ import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { captureEvent } from "@/lib/analytics";
 
-type VisitorLink = { label: string; href: string; icon: LucideIcon; sectionId?: string };
+type VisitorLink = { label: string; href: string; icon: LucideIcon; sectionId?: string; exact?: boolean };
 type VisitorMenuItem = { label: string; href: string; icon: LucideIcon; description: string };
 type VisitorMenu = { label: string; icon: LucideIcon; tagline: string; taglineIcon?: LucideIcon; items: VisitorMenuItem[] };
 
 // Simple links, in display order. Home is covered by the brand lockup.
 const visitorLinks: VisitorLink[] = [
   { label: "Build", href: "/build", icon: Wrench },
+  // exact, because /demo-studio and /demo-calls both start with /demo and would
+  // otherwise light this entry up while the visitor is somewhere else entirely.
+  { label: "Tour", href: "/demo", icon: PlayCircle, exact: true },
   { label: "Guidance", href: "/mentorship", icon: Compass },
   { label: "Marketplace", href: "/marketplace", icon: Store },
   { label: "About", href: "/about", icon: Info },
@@ -93,13 +97,13 @@ const LegacyVisitorNavbar = () => {
     setOpenMobileMenu(null);
   }, [location.pathname, location.hash]);
 
-  const isActive = (href: string, sectionId?: string) => {
+  const isActive = (href: string, sectionId?: string, exact?: boolean) => {
     if (sectionId) {
       return false;
     }
 
-    if (href === "/") {
-      return location.pathname === "/" && !location.hash;
+    if (href === "/" || exact) {
+      return location.pathname === href && !location.hash;
     }
 
     return location.pathname.startsWith(href);
@@ -131,7 +135,7 @@ const LegacyVisitorNavbar = () => {
         : "text-muted-foreground hover:bg-background/80 hover:text-foreground"
     );
 
-  const linkClassName = (href: string, sectionId?: string) => navItemClass(isActive(href, sectionId));
+  const linkClassName = (href: string, sectionId?: string, exact?: boolean) => navItemClass(isActive(href, sectionId, exact));
 
   const menuActive = (menu: VisitorMenu) =>
     menu.items.some((item) => location.pathname.startsWith(item.href));
@@ -294,7 +298,7 @@ const LegacyVisitorNavbar = () => {
                   <Link
                     key={item.label}
                     to={item.href}
-                    className={cn(linkClassName(item.href, item.sectionId), "inline-flex items-center gap-2")}
+                    className={cn(linkClassName(item.href, item.sectionId, item.exact), "inline-flex items-center gap-2")}
                     onClick={(event) => handleNavClick(event, item)}
                   >
                     <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -309,7 +313,7 @@ const LegacyVisitorNavbar = () => {
                   <Link
                     key={item.label}
                     to={item.href}
-                    className={cn(linkClassName(item.href, item.sectionId), "inline-flex items-center gap-2")}
+                    className={cn(linkClassName(item.href, item.sectionId, item.exact), "inline-flex items-center gap-2")}
                     onClick={(event) => handleNavClick(event, item)}
                   >
                     <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -378,7 +382,7 @@ const LegacyVisitorNavbar = () => {
                       to={item.href}
                       className={cn(
                         "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors",
-                        isActive(item.href, item.sectionId)
+                        isActive(item.href, item.sectionId, item.exact)
                           ? "bg-background text-foreground"
                           : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                       )}
@@ -398,7 +402,7 @@ const LegacyVisitorNavbar = () => {
                       to={item.href}
                       className={cn(
                         "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors",
-                        isActive(item.href, item.sectionId)
+                        isActive(item.href, item.sectionId, item.exact)
                           ? "bg-background text-foreground"
                           : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                       )}

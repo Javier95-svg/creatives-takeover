@@ -107,7 +107,10 @@ const WaitlistPublicPage = lazy(() => import("./pages/WaitlistPublicPage"));
 const AdminVCManagement = lazy(() => import("./pages/AdminVCManagement"));
 const AdminAcceleratorManagement = lazy(() => import("./pages/AdminAcceleratorManagement"));
 
-const Demo = lazy(() => import("./pages/Demo"));
+// The guided tour of the workspace for visitors without an account. Named
+// PlatformTour everywhere in code so it is never read as Demo Studio, which is
+// the founder tool for building product demos.
+const PlatformTour = lazy(() => import("./pages/PlatformTour"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Account = lazy(() => import("./pages/Account"));
 const SecuritySettings = lazy(() => import("./pages/SecuritySettings"));
@@ -501,7 +504,7 @@ function App() {
                         <Route path="/insighta/test" element={<Navigate to="/insighta-test" replace />} />
                         <Route path="/insighta/vc/:slug" element={<VCProfilePage />} />
                         <Route path="/insighta/accelerator/:slug" element={<AcceleratorProfilePage />} />
-                        <Route path="/demo" element={<Demo />} />
+                        <Route path="/demo" element={<RouteErrorBoundary routeName="Platform Tour"><PlatformTour /></RouteErrorBoundary>} />
                         <Route path="/demo-calls" element={<ToolRouteWithCreditGate><DemoCalls /></ToolRouteWithCreditGate>} />
                         <Route path="/messages/:username" element={<Messages />} />
                         <Route path="/messages" element={<Messages />} />
