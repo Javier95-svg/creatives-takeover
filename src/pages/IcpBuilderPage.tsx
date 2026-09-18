@@ -183,13 +183,11 @@ export default function ICPBuilderPage() {
       <Navigation />
 
       {/*
-        Sits level with the hero title rather than the bottom of the viewport,
-        so it reads as this page's back control instead of a floating action.
-        It used to be pinned bottom-left from md up to avoid the draft's "Jump
-        to section" rail, which shared the top-left corner. Inside the workspace
-        that rail is now returned to the document flow, so the corner is free.
+        Below md this stays a fixed control in the corner. From md up the same
+        button is handed to ICPBuilder and rendered level with the hero title,
+        because the hero is vertically centred and no fixed offset can track it.
       */}
-      <div className="fixed left-3 top-[92px] z-40 sm:left-6 sm:top-[100px] lg:left-8">
+      <div className="fixed left-3 top-[92px] z-40 sm:left-6 sm:top-[100px] md:hidden">
         <Button
           type="button"
           variant="ghost"
@@ -211,7 +209,18 @@ export default function ICPBuilderPage() {
             </div>
           }
         >
-          <ICPBuilder />
+          <ICPBuilder
+            backControl={
+              <Button
+                type="button"
+                variant="ghost"
+                className="h-11 rounded-full border border-border/70 bg-background/90 px-4 text-sm font-medium text-foreground shadow-[0_12px_32px_-24px_rgba(15,23,42,0.35)] backdrop-blur-xl hover:bg-background"
+                onClick={handleReturnToPlatform}
+              >
+                ← Platform
+              </Button>
+            }
+          />
         </Suspense>
       </main>
 

@@ -30,19 +30,19 @@
    such an element nav-offset and it is neutralised here too, while the public
    page keeps the spacing it needs. */
 .workspace-route-content .nav-offset { padding-top: 0; }
-/* The ICP draft's "Jump to section" rail is pulled fully outside its container
-   to sit in the page margin. The workspace is narrower than the public page by
-   the width of the sidebar, so the rail landed under it and was clipped by this
-   region's paint containment. Scrolling cannot reach it, because translating an
-   element left of the content box creates no scrollable area. Returning it to
-   the flow above the draft keeps it usable at every width. */
-.workspace-route-content .icp-section-rail {
-  position: static;
-  transform: none;
-  width: 100%;
-  margin-bottom: 1rem;
+/* Where the page wants breathing room under the workspace header rather than
+   sitting flush against it, as a full-bleed banner does. */
+.workspace-route-content .nav-offset-roomy { padding-top: 2.5rem; }
+/* The ICP draft's "Jump to section" rail is pulled outside its container to sit
+   in the page margin. The workspace is narrower than the public page by the
+   width of the sidebar, so that margin is not there and the rail was clipped.
+   Reserving its width as padding puts it back inside the scrollable area, so
+   when the window is too narrow the region gets a real horizontal scrollbar and
+   the rail can be scrolled to, instead of being cut off with nothing to reach.
+   Only from xl, which is the only width the rail renders at. */
+@media (min-width: 1280px) {
+  .workspace-route-content .icp-folio-shell { padding-left: 16rem; }
 }
-.workspace-route-content .icp-section-rail > div { position: static; }
 /* Message pages previously reserved space for the now-suppressed legacy header. */
 .workspace-route-content main:has([aria-label="Messages workspace"]) { padding-top: 0; padding-bottom: 0; }
 .workspace-route-content .responsive-messaging-shell { height: calc(100dvh - 4rem); min-height: 0; }

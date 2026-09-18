@@ -425,7 +425,17 @@ function resolveInitialEntry(requestedMode: string | null): {
   };
 }
 
-const ICPBuilder: React.FC = () => {
+interface ICPBuilderProps {
+  /**
+   * Rendered level with the hero title. The hero is vertically centred inside
+   * min-h-screen, so its title has no fixed offset from the top of the page and
+   * a fixed-position control cannot track it. Placing the control in the hero's
+   * own row is the only way it stays aligned at every viewport height.
+   */
+  backControl?: React.ReactNode;
+}
+
+const ICPBuilder: React.FC<ICPBuilderProps> = ({ backControl }) => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
@@ -1745,8 +1755,9 @@ const ICPBuilder: React.FC = () => {
   }, []);
 
   const renderModeSelect = () => (
-    <div className="nav-offset mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-4 pb-20 pt-32 text-foreground sm:px-6 md:pt-36">
-      <div className="space-y-5 text-center">
+    <div className="nav-offset-roomy mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-4 pb-20 pt-32 text-foreground sm:px-6 md:pt-36">
+      <div className="relative space-y-5 text-center">
+        {backControl ? <div className="absolute left-0 top-0 hidden md:block">{backControl}</div> : null}
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent-teal">ICP Builder</p>
         <h1 className="takeover-gradient creatives-font pb-3 text-4xl font-semibold leading-[1.12] tracking-tight sm:pb-4 sm:text-5xl">
           Get your ICP Draft
