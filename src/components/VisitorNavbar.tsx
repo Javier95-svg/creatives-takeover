@@ -37,8 +37,8 @@ type VisitorMenuItem = { label: string; href: string; icon: LucideIcon; descript
 type VisitorMenu = { label: string; icon: LucideIcon; tagline: string; taglineIcon?: LucideIcon; items: VisitorMenuItem[] };
 
 // Simple links, in display order. Home is covered by the brand lockup.
-// The first three render before the Content menu and the rest after it, so this
-// order is also the layout: Tour, Build, Connect | Content | About, Pricing.
+// The first three render before the Media menu and the rest after it, so this
+// order is also the layout: Tour, Build, Connect | Media | About, Pricing.
 const visitorLinks: VisitorLink[] = [
   // exact, because /demo-studio and /demo-calls both start with /demo and would
   // otherwise light this entry up while the visitor is somewhere else entirely.
@@ -51,8 +51,8 @@ const visitorLinks: VisitorLink[] = [
   { label: "Pricing", href: "/pricing", icon: DollarSign },
 ];
 
-const contentMenu: VisitorMenu = {
-  label: "Content",
+const mediaMenu: VisitorMenu = {
+  label: "Media",
   icon: Clapperboard,
   tagline: "Leisure Time🍿",
   items: [
@@ -308,7 +308,7 @@ const LegacyVisitorNavbar = () => {
                   </Link>
                 );
               })}
-              {renderDesktopMenu(contentMenu)}
+              {renderDesktopMenu(mediaMenu)}
               {visitorLinks.slice(3).map((item) => {
                 const Icon = item.icon;
                 return (
@@ -330,7 +330,7 @@ const LegacyVisitorNavbar = () => {
                 ever sees. These duplicates keep them discoverable. aria-hidden so
                 assistive tech uses the real menu instead of hearing both. */}
             <nav aria-hidden="true" className="sr-only">
-              {contentMenu.items.map((item) => (
+              {mediaMenu.items.map((item) => (
                 <Link key={`crawlable-${item.href}`} to={item.href} tabIndex={-1}>
                   {item.label}
                 </Link>
@@ -395,7 +395,7 @@ const LegacyVisitorNavbar = () => {
                     </Link>
                   );
                 })}
-                {renderMobileMenu(contentMenu)}
+                {renderMobileMenu(mediaMenu)}
                 {visitorLinks.slice(3).map((item) => {
                   const Icon = item.icon;
                   return (

@@ -18,15 +18,15 @@ test('visitor navbar replaces Free Tools with the desktop brand lockup', () => {
 });
 
 test('visitor navigation keeps the intended public destinations', () => {
-  for (const label of ['Tour', 'Build', 'Connect', 'Content', 'About', 'Pricing']) {
+  for (const label of ['Tour', 'Build', 'Connect', 'Media', 'About', 'Pricing']) {
     assert.match(source, new RegExp(`label: "${label}"`));
   }
 });
 
 test('visitor links run Tour, Build, Connect, then About and Pricing', () => {
-  // The render splits this array around the Content menu, taking the first three
+  // The render splits this array around the Media menu, taking the first three
   // before it and the rest after, so the array order is the navbar layout.
-  const table = source.slice(source.indexOf('const visitorLinks'), source.indexOf('const contentMenu'));
+  const table = source.slice(source.indexOf('const visitorLinks'), source.indexOf('const mediaMenu'));
   const labels = [...table.matchAll(/label: "([^"]+)"/g)].map((match) => match[1]);
   assert.deepEqual(labels, ['Tour', 'Build', 'Connect', 'About', 'Pricing']);
   // Connect replaced Guidance and keeps the same destination.
@@ -34,6 +34,6 @@ test('visitor links run Tour, Build, Connect, then About and Pricing', () => {
   assert.doesNotMatch(table, /Guidance|Compass/);
 });
 
-test('visitor Content menu lists Newspaper before Podcast', () => {
-  assert.match(source, /const contentMenu:[\s\S]*?label: "Newspaper"[\s\S]*?label: "Podcast"/);
+test('visitor Media menu lists Newspaper before Podcast', () => {
+  assert.match(source, /const mediaMenu:[\s\S]*?label: "Newspaper"[\s\S]*?label: "Podcast"/);
 });
