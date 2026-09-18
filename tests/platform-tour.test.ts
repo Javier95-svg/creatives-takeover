@@ -8,7 +8,7 @@ import { isWorkspaceRoute } from '../src/lib/workspacePolicy.ts';
 import { PLATFORM_TOUR_FIXTURE } from '../src/lib/platformTour/tourFixture.ts';
 import { tourArtifactStatus, tourArtifactTotals } from '../src/lib/platformTour/tourArtifacts.ts';
 import {
-  DEFAULT_TOUR_PANEL, TOUR_EXTERNAL_ROUTES, TOUR_PANELS,
+  DEFAULT_TOUR_PANEL, TOUR_EXCLUDED_TOOLS, TOUR_EXTERNAL_ROUTES, TOUR_PANELS,
   resolveTourNavigation, resolveTourPanel, toolPanelKey, tourHighlightPath,
 } from '../src/lib/platformTour/tourPanels.ts';
 import {
@@ -40,6 +40,16 @@ function resolveLocal(specifier: string, from: string) {
  */
 const TELEMETRY_BOUNDARY = resolve('src/lib/analytics.ts');
 
+/**
+ * The signup modal, which is the tour's only exit into the product. It reaches
+ * the auth context and the database client because creating an account is
+ * exactly its job, and it is lazy so none of that is in the tour's eager graph.
+ * The walk records the edge and stops, rather than treating the whole signup
+ * path as tour code.
+ */
+const SIGNUP_BOUNDARY = resolve('src/components/auth/AccountSignupDialog.tsx');
+const BOUNDARIES = new Set([TELEMETRY_BOUNDARY, SIGNUP_BOUNDARY]);
+
 /** Every module the tour route statically reaches, with the chain that got there. */
 function tourClosure() {
   const chains = new Map<string, string[]>([[resolve(TOUR_ENTRY), [TOUR_ENTRY]]]);
@@ -51,7 +61,7 @@ function tourClosure() {
       const target = resolveLocal(match[1], file);
       if (!target || chains.has(target)) continue;
       chains.set(target, [...chains.get(file)!, match[1]]);
-      if (target !== TELEMETRY_BOUNDARY) queue.push(target);
+      if (!BOUNDARIES.has(target)) queue.push(target);
     }
   }
   return chains;
@@ -66,7 +76,7 @@ test('the tour route never reaches product data', () => {
   const banned = /integrations\/supabase|@supabase\/|contexts\/AuthContext|\/services\/|Live['"]|@tanstack\/react-query/;
   const closure = tourClosure();
   // captureEvent is the one permitted edge and it is proven safe below.
-  const allowed = new Set(['src/lib/analytics.ts']);
+  const allowed = new Set(['src/lib/analytics.ts', 'src/components/auth/AccountSignupDialog.tsx']);
   for (const [file, chain] of closure) {
     const relative = file.replace(resolve('.') + '\\', '').replace(resolve('.') + '/', '').replace(/\\/g, '/');
     if (allowed.has(relative)) continue;
@@ -75,10 +85,31 @@ test('the tour route never reaches product data', () => {
     assert.equal(offending.length, 0, `${relative} reaches product data via ${chain.join(' -> ')}\n${offending.join('\n')}`);
   }
   for (const name of ['WorkspaceLive.tsx', 'PulseHomeLive.tsx', 'PulseHome.tsx', 'WorkspaceAccountSearch.tsx',
-    'WorkspaceProfileAvatar.tsx', 'PreviewCreditMenu.tsx', 'SoftGateModal.tsx', 'DashboardShell.tsx', 'pulseHomeStream.ts']) {
+    'WorkspaceProfileAvatar.tsx', 'PreviewCreditMenu.tsx', 'DashboardShell.tsx', 'pulseHomeStream.ts']) {
     const hit = [...closure.keys()].find(file => file.endsWith(name));
     assert.equal(hit, undefined, `${name} must not be reachable from ${TOUR_ENTRY}`);
   }
+});
+
+test('the signup modal is the only way out and it loads lazily', () => {
+  // Signing up is the tour's single exit into the product, so it uses the real
+  // modal rather than a lookalike that would drift from it. That modal reaches
+  // auth and the database to do its job, so it must be lazy: a static import
+  // would put both in the bundle every anonymous visitor downloads.
+  const gate = readFileSync('src/components/platform-tour/PlatformTourSignupGate.tsx', 'utf8');
+  assert.match(gate, /lazy\(\(\) => import\('@\/components\/auth\/AccountSignupDialog'\)\)/);
+  assert.doesNotMatch(gate, /^import \{?\s*AccountSignupDialog/m, 'a static import would defeat the point');
+  // Converting mid-tour must come back to the tour rather than dropping the
+  // visitor somewhere they were not.
+  assert.match(gate, /returnPath="\/demo"/);
+  // /build owns the other caller. One dialog, so the two cannot drift apart.
+  const build = readFileSync('src/pages/BuildPage.tsx', 'utf8');
+  assert.match(build, /<AccountSignupDialog/);
+  assert.doesNotMatch(build, /Continue with GitHub/, 'the dialog markup should live in one place now');
+  // Every reason reaches the same dialog, so none can quietly become a dead end
+  // with no way to sign up.
+  const reasons = [...gate.matchAll(/^ {2}([a-z]+): \{$/gm)].map(match => match[1]);
+  assert.ok(reasons.length >= 9, `expected copy for every gate reason, found ${reasons.join(', ')}`);
 });
 
 test('the tour owns no data access of its own', () => {
@@ -130,8 +161,17 @@ test('every catalog tool has a status and a panel, so the tour cannot gain a hol
   const keys = new Set(TOUR_PANELS.map(panel => panel.key));
   for (const tool of FOUNDER_TOOL_CATALOG) {
     assert.ok(['complete', 'in_progress', 'locked'].includes(tourArtifactStatus(tool)), tool.key);
-    assert.ok(keys.has(toolPanelKey(tool.key)), `${tool.key} needs a panel`);
+    // A tool is either shown or deliberately excluded. A new catalog entry that
+    // is neither still fails here, so the tour cannot silently gain a hole.
+    const shown = keys.has(toolPanelKey(tool.key));
+    assert.notEqual(shown, TOUR_EXCLUDED_TOOLS.has(tool.key), `${tool.key} needs a panel or an explicit exclusion`);
   }
+  // First Customer Proof is a workspace inside GTM Strategist, sharing its route
+  // and entitlement. A panel of its own told visitors Stage 5 has three tools.
+  assert.ok(TOUR_EXCLUDED_TOOLS.has('first_customer_sprint'));
+  const launch = TOUR_PANELS.filter(panel => panel.tool?.stageNumber === 5).map(panel => panel.label);
+  assert.deepEqual(launch, ['GTM Strategist', 'Directories']);
+  assert.equal(resolveTourNavigation('/go-to-market?workspace=first-customer-proof').kind, 'panel');
   const totals = tourArtifactTotals();
   assert.equal(totals.complete + totals.in_progress + totals.locked, FOUNDER_TOOL_CATALOG.length);
   assert.ok(totals.complete > 0 && totals.locked > 0, 'the tour should show finished and unreached work');

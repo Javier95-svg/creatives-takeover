@@ -1,19 +1,27 @@
-import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { appendReturnParam } from '@/lib/authRedirect';
+import { Suspense, lazy } from 'react';
 import { TOUR_PANEL_LIMIT, TOUR_QUESTION_LIMIT } from '@/lib/platformTour/tourLimits';
 import type { TourGateReason } from './PlatformTourGateContext';
+
+/**
+ * Signing up is the tour's only exit into the product, so it uses the same
+ * dialog /build uses: email, Google and GitHub, one implementation. That dialog
+ * was inline in BuildPage until this route needed it, and a second copy here
+ * would have drifted from it.
+ *
+ * Lazy, because that modal reaches the auth context and the database client to
+ * do its job. Loading it only when a visitor asks to sign up keeps the tour's
+ * eager module graph free of both, which is what tests/platform-tour enforces.
+ */
+const AccountSignupDialog = lazy(() => import('@/components/auth/AccountSignupDialog'));
 
 const REASONS: Record<TourGateReason, { title: string; body: string }> = {
   pulse: {
     title: 'Pulse answers with your own project',
-    body: 'Pulse is not answering live in the tour, because there is no project of yours for it to reason about. With a free account it reads your stage, your saved tool outputs and your open tasks, and answers against those. The PMF Lab panel has a worked example.',
+    body: 'Pulse is not answering live in the tour, because there is no project of yours for it to reason about. With a free account it reads your stage, your saved tool outputs and your open tasks, and answers against those.',
   },
   credits: {
     title: 'Credits belong to an account',
-    body: 'The meter in the header shows what the sample founder has left. Every plan including the free one comes with a monthly allowance, and you can see exactly what each tool costs on the pricing page.',
+    body: 'The meter in the header shows what the sample founder has left. Every plan including the free one comes with a monthly allowance.',
   },
   account: {
     title: 'This part needs an account',
@@ -21,54 +29,50 @@ const REASONS: Record<TourGateReason, { title: string; body: string }> = {
   },
   tool: {
     title: 'Running a tool needs an account',
-    body: 'The tour shows you what each tool produces and what it takes to finish it. Running one writes a saved artifact against a project, which is why it needs an account.',
+    body: 'The tour shows what each tool produces and what finishing it takes. Running one writes a saved artifact against a project, which is why it needs an account.',
   },
   network: {
     title: 'The directories are real, the tour is not',
-    body: 'Mentors, co-founders, investors and service providers are real people who have opted in. Reaching them needs an account so they know who is contacting them.',
+    body: 'Mentors, co-founders, investors and service providers are real people who opted in. Reaching them needs an account so they know who is contacting them.',
   },
   inbox: {
     title: 'Messages and notifications need an account',
-    body: 'Connection requests, direct messages and notifications belong to a real person. The sample founder has none to show you, and the badge counts you would normally see here are somebody’s actual inbox.',
+    body: 'Connection requests, direct messages and notifications belong to a real person, and the counts you would normally see here are somebody’s actual inbox.',
   },
   project: {
     title: 'Projects belong to an account',
-    body: 'This is where a founder switches between projects and creates a new one. The platform holds one result per stage per project on purpose, so starting a second project is a real commitment rather than a fresh blank page.',
+    body: 'This is where a founder switches project and creates a new one. The platform holds one result per stage per project, so a second project is a real commitment rather than a blank page.',
   },
   questions: {
     title: `That is the ${TOUR_QUESTION_LIMIT} questions the tour answers`,
-    body: 'The assistant is the part that has to work against your own project to mean anything. Create a free account and it answers against your stage, your saved outputs and your open tasks, with no cap.',
+    body: 'The assistant only means anything against your own project. Create a free account and it answers from your stage, your saved outputs and your open tasks, with no cap.',
   },
   depth: {
     title: 'You have seen most of the platform',
-    body: `The tour opens ${TOUR_PANEL_LIMIT} panels, and you have now used them. Everything past this point is the same product working on a real project instead of a sample one.`,
+    body: `The tour opens ${TOUR_PANEL_LIMIT} panels and you have now used them. Everything past this point is the same product working on a real project instead of a sample one.`,
   },
 };
 
-export function PlatformTourSignupGate({ reason, open, onOpenChange }: {
+export function PlatformTourSignupGate({ reason, open, onOpenChange, context }: {
   reason: TourGateReason;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** The panel the visitor was on, echoed back so the dialog is not abrupt. */
+  context: string;
 }) {
+  if (!open) return null;
   const copy = REASONS[reason];
-  return <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent className="max-w-md">
-      <DialogHeader>
-        <DialogTitle>{copy.title}</DialogTitle>
-        <DialogDescription>{copy.body}</DialogDescription>
-      </DialogHeader>
-      <p className="text-sm text-muted-foreground">
-        Nothing you do in this tour is saved, and no account has been created for you.
-      </p>
-      <DialogFooter className="gap-2 sm:gap-2">
-        <Button variant="ghost" onClick={() => onOpenChange(false)}>Keep looking around</Button>
-        <Button asChild>
-          <Link to={appendReturnParam('/signup', '/demo')}>
-            Create a free account
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>;
+  return <Suspense fallback={null}>
+    <AccountSignupDialog
+      open={open}
+      onClose={() => onOpenChange(false)}
+      title={copy.title}
+      subtitle={copy.body}
+      contextLabel="Where you were"
+      contextValue={context}
+      // Back to the tour after signing up, so a visitor who converts mid-tour
+      // does not lose the panel they were reading.
+      returnPath="/demo"
+    />
+  </Suspense>;
 }

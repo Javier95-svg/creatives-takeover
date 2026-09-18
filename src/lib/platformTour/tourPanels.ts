@@ -25,6 +25,18 @@ export function toolPanelKey(toolKey: string) {
 
 const FLAGSHIP_KINDS: Record<string, TourPanelKind> = { icp_builder: 'icp', pmf_lab: 'pmf' };
 
+/**
+ * Catalog tools that must not get a panel of their own.
+ *
+ * first_customer_sprint is a workspace inside GTM Strategist, not a separate
+ * tool: its route is /go-to-market?workspace=first-customer-proof and it shares
+ * that tool's entitlement. Giving it a panel told a visitor Stage 5 has three
+ * tools when it has two, GTM Strategist and Directories.
+ */
+export const TOUR_EXCLUDED_TOOLS = new Set(['first_customer_sprint']);
+
+const TOUR_TOOLS = FOUNDER_TOOL_CATALOG.filter((tool) => !TOUR_EXCLUDED_TOOLS.has(tool.key));
+
 const FIXED_PANELS: TourPanel[] = [
   { key: 'home', kind: 'home', label: 'Pulse' },
   { key: 'dashboard', kind: 'dashboard', label: 'Dashboard' },
@@ -36,7 +48,7 @@ const FIXED_PANELS: TourPanel[] = [
 export const TOUR_PANELS: TourPanel[] = [
   FIXED_PANELS[0],
   FIXED_PANELS[1],
-  ...FOUNDER_TOOL_CATALOG.map((tool) => ({
+  ...TOUR_TOOLS.map((tool) => ({
     key: toolPanelKey(tool.key),
     kind: FLAGSHIP_KINDS[tool.key] ?? 'tool',
     label: tool.name,
@@ -76,7 +88,10 @@ const ROUTE_PANELS: Record<string, string> = {
   '/co-founder': 'network',
   '/investors': 'network',
   '/marketplace': 'network',
-  ...Object.fromEntries(FOUNDER_TOOL_CATALOG.map((tool) => [tool.route, toolPanelKey(tool.key)])),
+  // Excluded tools are left out on purpose. First Customer Proof's route is
+  // /go-to-market with a workspace query, so stripping the query already lands
+  // it on the GTM Strategist panel, which is where it belongs.
+  ...Object.fromEntries(TOUR_TOOLS.map((tool) => [tool.route, toolPanelKey(tool.key)])),
 };
 
 /**
