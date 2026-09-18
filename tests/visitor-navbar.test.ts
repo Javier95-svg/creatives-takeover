@@ -30,7 +30,7 @@ test('visitor links run Tour, Build, Collab, then About and Pricing', () => {
   const labels = [...table.matchAll(/label: "([^"]+)"/g)].map((match) => match[1]);
   assert.deepEqual(labels, ['Tour', 'Build', 'Collab', 'About', 'Pricing']);
   // Collab replaced Guidance and keeps the same destination.
-  assert.match(table, /label: "Collab", href: "\/mentorship", icon: Target/);
+  assert.match(table, /label: "Collab", href: "\/mentorship", icon: Handshake/);
   assert.doesNotMatch(table, /Guidance|Compass|Connect/);
 });
 

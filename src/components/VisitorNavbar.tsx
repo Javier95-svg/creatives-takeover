@@ -5,6 +5,7 @@ import {
   ChevronDown,
   Clapperboard,
   DollarSign,
+  Handshake,
   Info,
   type LucideIcon,
   Menu,
@@ -12,7 +13,6 @@ import {
   Newspaper,
   PlayCircle,
   Rocket,
-  Target,
   Wrench,
   X,
 } from "lucide-react";
@@ -44,7 +44,7 @@ const visitorLinks: VisitorLink[] = [
   // otherwise light this entry up while the visitor is somewhere else entirely.
   { label: "Tour", href: "/demo", icon: PlayCircle, exact: true },
   { label: "Build", href: "/build", icon: Wrench },
-  { label: "Collab", href: "/mentorship", icon: Target },
+  { label: "Collab", href: "/mentorship", icon: Handshake },
   { label: "About", href: "/about", icon: Info },
   { label: "Pricing", href: "/pricing", icon: DollarSign },
 ];
