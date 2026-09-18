@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { appendReturnParam } from '@/lib/authRedirect';
 import { TOUR_PANELS, type TourPanel } from '@/lib/platformTour/tourPanels';
+import { panelsLeft, questionsLeft, type TourBudget } from '@/lib/platformTour/tourLimits';
 
 /**
  * Rendered as a sibling of WorkspaceLayout, never inside it. The route region
@@ -11,9 +12,10 @@ import { TOUR_PANELS, type TourPanel } from '@/lib/platformTour/tourPanels';
  * child and would trap this bar inside the scrolling panel. z-40 clears the
  * sidebar at 30 and the header at 20 while staying under Radix overlays at 50.
  */
-export function PlatformTourFrameBar({ panel, onSelect }: {
+export function PlatformTourFrameBar({ panel, onSelect, budget }: {
   panel: TourPanel;
   onSelect: (key: string) => void;
+  budget: TourBudget;
 }) {
   const index = TOUR_PANELS.findIndex((item) => item.key === panel.key);
   const previous = TOUR_PANELS[index - 1];
@@ -37,8 +39,11 @@ export function PlatformTourFrameBar({ panel, onSelect }: {
         <p className="truncate text-sm font-medium text-foreground">
           You are touring Creatives Takeover with a sample founder account.
         </p>
+        {/* The remaining allowance is stated before it runs out, so the signup
+            prompt reads as a known boundary rather than an ambush. */}
         <p className="truncate text-xs text-muted-foreground">
           Nothing here is saved. {panel.label} is {index + 1} of {TOUR_PANELS.length}.{' '}
+          {panelsLeft(budget)} panels and {questionsLeft(budget)} questions left.{' '}
           <Link to="/contact" className="underline underline-offset-4 hover:text-foreground">
             Evaluating this for a program or a fund?
           </Link>

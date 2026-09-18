@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { PLATFORM_TOUR_FIXTURE } from '@/lib/platformTour/tourFixture';
 import { tourHighlightPath, type TourPanel } from '@/lib/platformTour/tourPanels';
 import type { TourGateReason } from './PlatformTourGateContext';
-import { PlatformTourHeaderBadge } from './PlatformTourHeaderBadge';
+import { PlatformTourUtilities } from './PlatformTourUtilities';
 
 /**
  * The real workspace shell, filled with fixtures instead of an account.
@@ -50,7 +50,7 @@ export function PlatformTourShell({ panel, onNavigate, openGate, children }: {
       navigate={onNavigate}
       createCreditPackCheckout={() => openGate('credits')}
     />}
-    utilities={<PlatformTourHeaderBadge />}
+    utilities={<PlatformTourUtilities />}
     theme={<ThemeToggle />}
     signOut={<Button asChild variant="ghost" size="icon-sm" aria-label="Exit tour" title="Exit tour">
       <Link to="/"><LogOut className="h-4 w-4" /></Link>

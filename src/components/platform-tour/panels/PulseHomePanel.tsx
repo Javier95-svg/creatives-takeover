@@ -2,14 +2,18 @@ import { useState } from 'react';
 import { PulseHomeView } from '@/components/pulse/PulseHomeView';
 import { PLATFORM_TOUR_FIXTURE } from '@/lib/platformTour/tourFixture';
 import type { PulseHomeMessage } from '@/lib/pulseHome';
-import { useTourGate } from '../PlatformTourGateContext';
 
 // Deliberately the named view, not the default PulseHome export. That default is
 // a hasApplicationConfig switch which lazy-loads PulseHomeLive as soon as the
 // app is configured, which in production is always, and Live opens a Supabase
 // conversation keyed to a signed-in user.
-export function PulseHomePanel({ onNavigate }: { onNavigate: (path: string) => void }) {
-  const openGate = useTourGate();
+export function PulseHomePanel({ onNavigate, onAsk, exhausted }: {
+  onNavigate: (path: string) => void;
+  /** Spends one of the tour's answers and opens the matching prompt. */
+  onAsk: () => void;
+  /** True once the tour has answered as often as it allows. */
+  exhausted: boolean;
+}) {
   // Opens empty on purpose. PulseHomeView switches to chat layout as soon as it
   // has a message, which hides the project chips, the stage badge and the quick
   // starts, and those are what show a visitor the assistant is working from a
@@ -27,9 +31,12 @@ export function PulseHomePanel({ onNavigate }: { onNavigate: (path: string) => v
       { id: `${turn}:assistant`, role: 'assistant', content:
         'This is a guided tour, so Pulse is not answering live here. With a free account it answers against your own stage, your saved tool outputs and your open tasks, and it only ever reasons about the project you have open. There is a worked answer on the PMF Lab panel, where Pulse argues the evidence is not yet good enough to call it.' },
     ]);
-    openGate('pulse');
+    onAsk();
   };
   return <PulseHomeView
+    // unavailable both closes the composer and switches its status line to say
+    // so, which is exactly the state the tour wants once the answers run out.
+    unavailable={exhausted ? 'You have used the questions this tour answers. Create a free account to keep going.' : undefined}
     concept="guided-journey"
     name={account.firstName}
     stage={project.stage}

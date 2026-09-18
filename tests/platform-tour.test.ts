@@ -11,6 +11,10 @@ import {
   DEFAULT_TOUR_PANEL, TOUR_EXTERNAL_ROUTES, TOUR_PANELS,
   resolveTourNavigation, resolveTourPanel, toolPanelKey, tourHighlightPath,
 } from '../src/lib/platformTour/tourPanels.ts';
+import {
+  EMPTY_TOUR_BUDGET, TOUR_PANEL_LIMIT, TOUR_QUESTION_LIMIT,
+  panelBlocked, panelsLeft, questionsExhausted, questionsLeft, recordPanel, recordQuestion,
+} from '../src/lib/platformTour/tourLimits.ts';
 
 const TOUR_ENTRY = 'src/pages/PlatformTour.tsx';
 
@@ -219,6 +223,45 @@ test('the tour is registered everywhere a public route has to be', () => {
   // startsWith matching would light the navbar entry up on /demo-studio and
   // /demo-calls, which are unrelated surfaces.
   assert.match(readFileSync('src/components/VisitorNavbar.tsx', 'utf8'), /href: "\/demo", icon: PlayCircle, exact: true/);
+});
+
+test('the tour lets a visitor look around but caps doing', () => {
+  // Looking is the point of the route, so revisiting a panel is always free and
+  // only new ground counts. Doing is what an account is for, so the assistant
+  // closes once its allowance is spent.
+  let budget = EMPTY_TOUR_BUDGET;
+  assert.equal(questionsExhausted(budget), false);
+  for (let i = 0; i < TOUR_QUESTION_LIMIT; i += 1) budget = recordQuestion(budget);
+  assert.equal(questionsExhausted(budget), true);
+  assert.equal(questionsLeft(budget), 0);
+
+  let browsing = EMPTY_TOUR_BUDGET;
+  for (let i = 0; i < TOUR_PANEL_LIMIT; i += 1) browsing = recordPanel(browsing, `panel-${i}`);
+  assert.equal(panelsLeft(browsing), 0);
+  assert.equal(panelBlocked(browsing, 'panel-0'), false, 'a panel already seen must stay reachable');
+  assert.equal(panelBlocked(browsing, 'panel-new'), true);
+  // Recording the same panel twice must not consume a second slot.
+  assert.equal(recordPanel(browsing, 'panel-0').panelsSeen.length, TOUR_PANEL_LIMIT);
+
+  // The limits are worth less than the product they protect: a visitor should
+  // reach most of the tour before being asked for anything.
+  assert.ok(TOUR_PANEL_LIMIT >= Math.ceil(TOUR_PANELS.length * 0.6), 'the browse cap should leave most of the tour open');
+  assert.ok(TOUR_QUESTION_LIMIT >= 1);
+});
+
+test('the header carries the same controls a signed-in founder has', () => {
+  // An earlier version showed only the sample badge, which left the header
+  // visibly emptier than the real product and undercut the whole point.
+  const utilities = readFileSync('src/components/platform-tour/PlatformTourUtilities.tsx', 'utf8');
+  for (const label of ['Connection requests', 'Messages', 'Notifications', 'Switch project']) {
+    assert.ok(utilities.includes(label), `the tour header must show ${label}`);
+  }
+  // Every one of them is a prompt, never an action.
+  assert.doesNotMatch(utilities, /<Link|href=|navigate\(/);
+  const gate = readFileSync('src/components/platform-tour/PlatformTourSignupGate.tsx', 'utf8');
+  for (const reason of ['inbox', 'project', 'questions', 'depth']) {
+    assert.match(gate, new RegExp(`^\\s{2}${reason}: \\{`, 'm'), `the gate needs copy for ${reason}`);
+  }
 });
 
 test('the tour keeps the legacy layout and never inherits the workspace shell', () => {

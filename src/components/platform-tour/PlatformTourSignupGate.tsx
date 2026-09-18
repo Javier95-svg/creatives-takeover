@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { appendReturnParam } from '@/lib/authRedirect';
+import { TOUR_PANEL_LIMIT, TOUR_QUESTION_LIMIT } from '@/lib/platformTour/tourLimits';
 import type { TourGateReason } from './PlatformTourGateContext';
 
 const REASONS: Record<TourGateReason, { title: string; body: string }> = {
@@ -25,6 +26,22 @@ const REASONS: Record<TourGateReason, { title: string; body: string }> = {
   network: {
     title: 'The directories are real, the tour is not',
     body: 'Mentors, co-founders, investors and service providers are real people who have opted in. Reaching them needs an account so they know who is contacting them.',
+  },
+  inbox: {
+    title: 'Messages and notifications need an account',
+    body: 'Connection requests, direct messages and notifications belong to a real person. The sample founder has none to show you, and the badge counts you would normally see here are somebody’s actual inbox.',
+  },
+  project: {
+    title: 'Projects belong to an account',
+    body: 'This is where a founder switches between projects and creates a new one. The platform holds one result per stage per project on purpose, so starting a second project is a real commitment rather than a fresh blank page.',
+  },
+  questions: {
+    title: `That is the ${TOUR_QUESTION_LIMIT} questions the tour answers`,
+    body: 'The assistant is the part that has to work against your own project to mean anything. Create a free account and it answers against your stage, your saved outputs and your open tasks, with no cap.',
+  },
+  depth: {
+    title: 'You have seen most of the platform',
+    body: `The tour opens ${TOUR_PANEL_LIMIT} panels, and you have now used them. Everything past this point is the same product working on a real project instead of a sample one.`,
   },
 };
 

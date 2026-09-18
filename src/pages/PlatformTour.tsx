@@ -14,6 +14,10 @@ import { InstitutionsPanel } from '@/components/platform-tour/panels/Institution
 import { ToolCatalogPanel } from '@/components/platform-tour/panels/ToolCatalogPanel';
 import { DEFAULT_TOUR_PANEL, resolveTourNavigation, resolveTourPanel } from '@/lib/platformTour/tourPanels';
 import { referrerKind, trackPlatformTourOpened, trackPlatformTourGateShown, trackPlatformTourPanelViewed } from '@/lib/platformTour/tourAnalytics';
+import {
+  EMPTY_TOUR_BUDGET, panelBlocked, questionsExhausted, questionsLeft,
+  recordPanel, recordQuestion, type TourBudget,
+} from '@/lib/platformTour/tourLimits';
 import '@/components/platform-tour/platform-tour.css';
 
 /**
@@ -44,15 +48,24 @@ export default function PlatformTour() {
   const requested = params.get('panel');
   const panel = resolveTourPanel(requested);
   const [gate, setGate] = useState<{ reason: TourGateReason; open: boolean }>({ reason: 'account', open: false });
+  const [budget, setBudget] = useState<TourBudget>(EMPTY_TOUR_BUDGET);
 
   const openGate = useCallback((reason: TourGateReason) => {
     trackPlatformTourGateShown({ panel: panel.key, reason });
     setGate({ reason, open: true });
   }, [panel.key]);
 
+  // Panels already opened stay free, so comparing two of them costs nothing and
+  // only genuinely new ground counts against the limit.
   const selectPanel = useCallback((key: string) => {
+    if (panelBlocked(budget, key)) { openGate('depth'); return; }
     setParams(key === DEFAULT_TOUR_PANEL ? {} : { panel: key });
-  }, [setParams]);
+  }, [budget, openGate, setParams]);
+
+  const askQuestion = useCallback(() => {
+    setBudget(recordQuestion);
+    openGate(questionsLeft(budget) <= 1 ? 'questions' : 'pulse');
+  }, [budget, openGate]);
 
   // An unknown or hostile ?panel= silently becomes the home panel and is
   // rewritten with replace, so it never lands in the visitor's history.
@@ -66,7 +79,10 @@ export default function PlatformTour() {
     opened.current = true;
     trackPlatformTourOpened({ panel: panel.key, referrer_kind: referrerKind(document.referrer, window.location.hostname) });
   }, [panel.key]);
-  useEffect(() => { trackPlatformTourPanelViewed({ panel: panel.key }); }, [panel.key]);
+  useEffect(() => {
+    trackPlatformTourPanelViewed({ panel: panel.key });
+    setBudget((current) => recordPanel(current, panel.key));
+  }, [panel.key]);
 
   /**
    * The only navigation a panel or the sidebar can cause. A destination is
@@ -109,7 +125,7 @@ export default function PlatformTour() {
     <PlatformTourGateContext.Provider value={openGate}>
       <div className="platform-tour">
       <PlatformTourShell panel={panel} onNavigate={onNavigate} openGate={openGate}>
-        {panel.kind === 'home' ? <PulseHomePanel onNavigate={onNavigate} />
+        {panel.kind === 'home' ? <PulseHomePanel onNavigate={onNavigate} onAsk={askQuestion} exhausted={questionsExhausted(budget)} />
           : panel.kind === 'dashboard' ? <DashboardPanel />
           : panel.kind === 'icp' ? <IcpBuilderPanel />
           : panel.kind === 'pmf' ? <PmfLabPanel />
@@ -120,7 +136,7 @@ export default function PlatformTour() {
       </div>
       {/* Outside the shell: the route region sets contain: layout paint, which
           would trap a fixed child inside the scrolling panel. */}
-      <PlatformTourFrameBar panel={panel} onSelect={selectPanel} />
+      <PlatformTourFrameBar panel={panel} onSelect={selectPanel} budget={budget} />
       <PlatformTourSignupGate reason={gate.reason} open={gate.open}
         onOpenChange={(open) => setGate((current) => ({ ...current, open }))} />
     </PlatformTourGateContext.Provider>

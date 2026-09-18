@@ -1,7 +1,11 @@
 import { createContext, useContext } from 'react';
 
 /** Why a visitor hit the wall, so the dialog can say something specific. */
-export type TourGateReason = 'pulse' | 'credits' | 'account' | 'tool' | 'network';
+export type TourGateReason =
+  | 'pulse' | 'credits' | 'account' | 'tool' | 'network'
+  | 'inbox' | 'project'
+  // The two counted limits in tourLimits.ts, rather than a refused action.
+  | 'questions' | 'depth';
 
 /**
  * Deliberately the only capability a panel receives.

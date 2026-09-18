@@ -68,3 +68,29 @@ including using the composer.
   (was heroCopy only), canonical `https://creatives-takeover.com/demo`, no noindex
 - Playwright smoke `/demo` passes. On a cold dev server the first compile of this route can exceed
   the spec's 25s budget, the same as the existing `/demo-studio/try` entry.
+
+## Follow-up, same day: header parity and interaction limits
+
+The first cut replaced the whole header utilities cluster with a single sample
+badge, which left the tour visibly emptier than the real product. That undercut
+the one job this route has, so `PlatformTourUtilities.tsx` now renders the real
+controls in their real positions: project chip, connection requests, messages,
+notifications, plus the badge. Each opens the signup prompt instead of acting.
+The chip mirrors `ProjectSwitcher`'s trigger markup exactly, including its
+`max-w-[12rem]`, which is why it carries the same design-token warning that
+component does.
+
+`src/lib/platformTour/tourLimits.ts` holds both counted limits:
+
+- `TOUR_QUESTION_LIMIT = 2` — the assistant answers twice, then the composer
+  closes via `PulseHomeView`'s `unavailable` prop.
+- `TOUR_PANEL_LIMIT = 12` of 18 panels. Revisiting a panel already seen is
+  always free, so comparing two of them costs nothing.
+
+Anything that would write, send or spend is refused outright rather than
+counted. Both numbers are single constants, tune them there.
+
+Verified in a browser: header shows all four controls, project chip gates,
+question 1 gates softly, question 2 gates on the limit, question 3 is refused
+(4 turns total), browse cap fires at 12 with the back button still free, and
+0 requests to the Supabase host throughout.
