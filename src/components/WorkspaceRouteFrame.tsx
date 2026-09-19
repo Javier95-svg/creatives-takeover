@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspaceRollout } from '@/contexts/WorkspaceRolloutContext';
 import { isWorkspaceRoute, WORKSPACE_HOME_CONCEPT } from '@/lib/workspacePolicy';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
+import { WorkspaceSkeleton } from '@/components/workspace/WorkspaceSkeleton';
 import { isProjectSubdomain } from '@/lib/demoStudio/publishedHost';
 
 // Named factories so the shell can be warmed before authentication resolves.
@@ -34,9 +35,9 @@ export default function WorkspaceRouteFrame({ children }: { children: ReactNode 
       void importOnboardingGate();
     }
   }, [warm, warmHome]);
-  if (applicable && (loading || (user && pending))) return <div role="status" className="min-h-screen bg-background p-8 text-foreground">Loading your workspace…</div>;
+  if (applicable && (loading || (user && pending))) return <WorkspaceSkeleton />;
   if (!user || !enabled || !applicable) return <>{children}</>;
-  return <RouteErrorBoundary routeName="Guided Journey"><Suspense fallback={<div role="status" className="min-h-screen bg-background p-8 text-foreground">Loading your workspace…</div>}>
+  return <RouteErrorBoundary routeName="Guided Journey"><Suspense fallback={<WorkspaceSkeleton />}>
     <WorkspaceLive key={user.id} home={pathname === '/'}>{pathname === '/' ? <WorkspaceOnboardingGate><PulseHomeLive concept={WORKSPACE_HOME_CONCEPT} /></WorkspaceOnboardingGate> : children}</WorkspaceLive>
   </Suspense></RouteErrorBoundary>;
 }
