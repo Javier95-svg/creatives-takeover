@@ -37,5 +37,14 @@ test('crawler shells expose canonical primary links and reserve WebSite identity
   }
   assert.doesNotMatch(generator, /href: "\/stories"/);
   assert.doesNotMatch(generator, /const WEBSITE_SCHEMA/);
-  assert.match(generator, /const data = \[ORGANIZATION_SCHEMA\]/);
+  // Inner shells start from Organization and must never claim WebSite identity,
+  // which belongs to the homepage alone. The list now also spreads
+  // SiteNavigationElement entries, which are a navigation hint rather than an
+  // identity claim, so this asserts the rule instead of the exact array.
+  assert.match(generator, /const data = \[ORGANIZATION_SCHEMA(, \.\.\.[A-Z_]+)*\];/);
+  const inner = generator.slice(
+    generator.indexOf('const data = [ORGANIZATION_SCHEMA'),
+    generator.indexOf('function replaceJsonLd'),
+  );
+  assert.doesNotMatch(inner, /"@type": "WebSite"/);
 });

@@ -6,22 +6,35 @@ import { fetchHubChildren } from "./fetch-hub-children.mjs";
 const DIST_DIR = path.resolve(process.cwd(), "dist");
 const TEMPLATE_PATH = path.join(DIST_DIR, "index.html");
 
+// The five routes we want Google to consider first for sitelinks, in order.
+// Sitelinks are chosen algorithmically, so this is a signal rather than a
+// setting: prominence in the sitewide nav plus SiteNavigationElement markup is
+// the lever a site actually has. /demo was in the footer only, which is why the
+// result showed /demo-studio/try in its place.
+const SITELINK_NAV = [
+  { href: "/demo", label: "Tour" },
+  { href: "/build", label: "Build" },
+  { href: "/mentorship", label: "Collab" },
+  { href: "/about", label: "About" },
+  { href: "/pricing", label: "Pricing" },
+];
+
 // The sitewide link budget: these appear on all 61 shells, so a slot spent here
 // is the strongest internal signal the site can give a page. Every entry must be
-// an indexable route that is actually prerendered — /build and /podcast used to
+// an indexable route that is actually prerendered - /build and /podcast used to
 // sit here while being neither, so the most-linked URLs on the site resolved to
 // the SPA catch-all and self-canonicalised to the homepage.
+//
+// SITELINK_NAV leads, because order here is the clearest statement of which
+// pages matter most.
 const PRIMARY_NAV = [
   { href: "/", label: "Home" },
-  { href: "/build", label: "Build" },
+  ...SITELINK_NAV,
   { href: "/bizmap-ai", label: "Startup Cycle" },
   { href: "/answers", label: "Founder Answers" },
-  { href: "/mentorship", label: "Mentors" },
   { href: "/newspaper", label: "Newspaper" },
   { href: "/podcast", label: "Podcast" },
   { href: "/resources", label: "Resources" },
-  { href: "/about", label: "About" },
-  { href: "/pricing", label: "Pricing" },
 ];
 
 // Footer.tsx is a React component, so the prerendered HTML carried no footer at
@@ -319,14 +332,28 @@ const ORGANIZATION_SCHEMA = {
   ],
 };
 
+// Names the pages we want treated as the site's main sections, in order.
+// Google picks sitelinks itself, so this is a hint, not a control; it is the
+// documented way to express the intent and it costs one small block per shell.
+const SITE_NAVIGATION_SCHEMA = SITELINK_NAV.map((item, index) => ({
+  "@context": "https://schema.org",
+  "@type": "SiteNavigationElement",
+  position: index + 1,
+  name: item.label,
+  url: BASE_URL + item.href,
+}));
+
 // The dist/index.html template ships the homepage's JSON-LD (WebSite, Organization,
 // SoftwareApplication, homepage FAQ). On inner pages that block is wrong — replace
 // it with route-specific schema mirroring what react-helmet renders after hydration.
 function buildStructuredData(routeConfig) {
-  if (routeConfig.path === "/") return null; // homepage keeps the template block
+  // The homepage keeps its own template block, but it is the result that shows
+  // sitelinks, so it is the one page that most needs this markup. Signalled by
+  // a sentinel the replacer understands rather than by discarding the template.
+  if (routeConfig.path === "/") return "append-site-navigation";
 
   const canonical = `${BASE_URL}${routeConfig.path}`;
-  const data = [ORGANIZATION_SCHEMA];
+  const data = [ORGANIZATION_SCHEMA, ...SITE_NAVIGATION_SCHEMA];
 
   if (routeConfig.breadcrumb && routeConfig.breadcrumb.length) {
     data.push({
@@ -423,10 +450,23 @@ function buildStructuredData(routeConfig) {
 function replaceJsonLd(html, routeConfig) {
   const data = buildStructuredData(routeConfig);
   if (!data) return html;
+
+  // The homepage template already carries WebSite, Organization and the rest,
+  // and that block is correct. Append the navigation entries after it rather
+  // than replacing it, because the homepage result is the one that shows
+  // sitelinks and it must not lose its site-name markup to gain them.
+  if (data === "append-site-navigation") {
+    const navJson = JSON.stringify(SITE_NAVIGATION_SCHEMA, null, 2).replace(/</g, "\\u003c");
+    return html.replace(
+      /(<script type="application\/ld\+json">[\s\S]*?<\/script>)/i,
+      (block) => block + "\n    <script type=\"application/ld+json\">\n" + navJson + "\n    </script>"
+    );
+  }
+
   const json = JSON.stringify(data, null, 2).replace(/</g, "\\u003c");
   return html.replace(
     /<script type="application\/ld\+json">[\s\S]*?<\/script>/i,
-    `<script type="application/ld+json">\n${json}\n    </script>`
+    () => "<script type=\"application/ld+json\">\n" + json + "\n    </script>"
   );
 }
 
