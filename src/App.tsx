@@ -9,6 +9,7 @@ import MobileOptimization from "@/components/MobileOptimization";
 import VersionUpdateBanner from "@/components/VersionUpdateBanner";
 import { useVersionCheck } from "@/hooks/useVersionCheck";
 import { shouldShowPulseForPath } from "@/config/pulseRoutes";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import { RoutePerformanceTelemetry } from '@/components/performance/RoutePerformanceTelemetry';
@@ -300,6 +301,12 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
+          {/* Radix Tooltip needs a provider above every Tooltip. Pages were
+              mounting their own, and the ones that forgot crashed the route:
+              /investors took down the whole Guided Journey shell this way.
+              One provider here is context only, renders no DOM, and nests
+              harmlessly under the local providers that already exist. */}
+          <TooltipProvider>
           <WorkspaceRolloutProvider>
                 {/* Outside BrowserRouter, so no useLocation. Reading the address directly
                     is safe here because the embed is never client-navigated into. */}
@@ -524,6 +531,7 @@ function App() {
                   </Suspense>
                 </BrowserRouter>
           </WorkspaceRolloutProvider>
+          </TooltipProvider>
         </AuthProvider>
       </QueryClientProvider>
       {analyticsConsent === 'granted' && (
