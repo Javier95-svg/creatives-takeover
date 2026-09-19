@@ -95,6 +95,9 @@ export type OnboardingFundraisingStatus =
 export type OnboardingFounderSegment = 'founder' | 'builder';
 
 export interface OnboardingAnswersV1 {
+  /** What the founder calls the thing they are building. Becomes their project,
+      which every stage outcome then attaches to. */
+  projectName: string;
   startupBrief: string;
   founderSegment: OnboardingFounderSegment | '';
   businessModel: OnboardingBusinessModel | '';
@@ -164,6 +167,7 @@ export interface OnboardingSessionV1 {
 }
 
 export const EMPTY_ONBOARDING_ANSWERS_V1: OnboardingAnswersV1 = {
+  projectName: '',
   startupBrief: '',
   founderSegment: '',
   businessModel: '',

@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/hooks/useCredits';
@@ -404,6 +405,9 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
       const length = answers.startupBrief.trim().length;
       if (length < 20 || length > 280) return 'Write 20 to 280 characters about what you build and who it serves.';
       if (!answers.founderSegment) return 'Tell us whether you already have something live or are starting from zero.';
+      // A project is mandatory for founders and builders, so it is asked for
+      // here rather than chased afterwards. Providers never take this quiz.
+      if (!answers.projectName.trim()) return 'Give your project a name. Everything you build attaches to it.';
     }
     if (step === 1 && !answers.businessModel) return 'Choose the business model that fits best.';
     if (step === 2) {
@@ -567,6 +571,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
           quiz_current_stage: context.businessStage,
           quiz_biggest_challenge: answers.blocker,
           assigned_stage: context.assignedStage,
+          startup_name: answers.projectName.trim() || undefined,
           startup_industry: answers.sectors,
           country: answers.country || undefined,
           quiz_completed: true,
@@ -693,6 +698,14 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
             className="mt-5 resize-none"
           />
           <div className="mt-2 text-right text-xs text-muted-foreground">{answers.startupBrief.trim().length}/280</div>
+          <p className="mt-6 text-sm font-semibold">What is your project called?</p>
+          <Input
+            value={answers.projectName}
+            onChange={(event) => patchAnswers({ projectName: event.target.value.slice(0, 120) })}
+            placeholder="Throughline"
+            maxLength={120}
+            className="mt-2"
+          />
           <p className="mt-6 text-sm font-semibold">Where are you starting from?</p>
           <div className="mt-2"><ChoiceGrid options={FOUNDER_SEGMENT_OPTIONS} value={answers.founderSegment} onSelect={(founderSegment) => patchAnswers({ founderSegment })} /></div>
           <p className="mt-5 text-sm font-semibold">Optional sectors</p>
