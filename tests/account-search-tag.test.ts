@@ -29,3 +29,34 @@ test('an account with no segment carries no tag', () => {
   assert.equal(accountTag({}), null);
   assert.equal(accountTag({ founderSegment: null }), null);
 });
+
+test('an approved investor is tagged, an unapproved one is not', () => {
+  // The claim is theirs until an admin agrees with it. Showing it before then
+  // would present a request to the network as a fact.
+  assert.deepEqual(accountTag({ userType: 'investor', approvalStatus: 'approved' }), { label: 'Investor', variant: 'outline' });
+  assert.equal(accountTag({ userType: 'investor', approvalStatus: 'pending' }), null);
+  assert.equal(accountTag({ userType: 'investor', approvalStatus: 'rejected' }), null);
+  for (const type of ['mentor', 'marketplace'] as const) {
+    assert.equal(accountTag({ userType: type, approvalStatus: 'pending' }), null, type);
+  }
+});
+
+test('a live directory listing outranks the account type', () => {
+  // Someone can hold a published mentor profile whatever they answered in the
+  // quiz, and the listing is the thing the network can actually see.
+  assert.deepEqual(
+    accountTag({ isMentor: true, userType: 'investor', approvalStatus: 'approved' }),
+    { label: 'Mentor', variant: 'outline' },
+  );
+  assert.deepEqual(
+    accountTag({ isMarketplace: true, userType: 'founder' }),
+    { label: 'Marketplace', variant: 'outline' },
+  );
+});
+
+test('user_type supersedes the older founder segment', () => {
+  assert.deepEqual(accountTag({ userType: 'builder', founderSegment: 'founder' }), { label: 'Builder', variant: 'secondary' });
+  // Accounts that predate user_type still tag from the segment alone.
+  assert.deepEqual(accountTag({ founderSegment: 'founder' }), { label: 'Founder', variant: 'secondary' });
+  assert.equal(accountTag({}), null);
+});
