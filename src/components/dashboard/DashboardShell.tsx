@@ -179,7 +179,7 @@ export function DashboardShell() {
 
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('dashboard_bootstrap_source, onboarding_completed, onboarding_steps_completed, quiz_completed, quiz_current_stage, quiz_biggest_challenge, user_preferences, sidebar_preferences')
+        .select('dashboard_bootstrap_source, onboarding_completed, onboarding_steps_completed, quiz_completed, quiz_current_stage, quiz_biggest_challenge, user_preferences, sidebar_preferences, user_type')
         .eq('id', userId)
         .single();
 

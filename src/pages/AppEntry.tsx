@@ -14,7 +14,7 @@ export function WorkspaceOnboardingGate({ children }: { children?: ReactNode }) 
   const { enabled, pending } = useWorkspaceRollout();
   const profile = useQuery({ queryKey: ['workspace-entry', user?.id], enabled: Boolean(user) && enabled && !pending,
     queryFn: async ({ signal }) => {
-      const { data, error } = await supabase.schema('public').from('profiles').select('onboarding_completed, dashboard_bootstrap_source, user_preferences').eq('id', user!.id).abortSignal(signal).maybeSingle();
+      const { data, error } = await supabase.schema('public').from('profiles').select('onboarding_completed, dashboard_bootstrap_source, user_preferences, user_type').eq('id', user!.id).abortSignal(signal).maybeSingle();
       if (error) throw error;
       if (!data) throw new Error('Account profile unavailable');
       return data;

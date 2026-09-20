@@ -1,3 +1,5 @@
+import { isReviewedUserType } from './accountTypes.ts';
+
 export const REQUIRES_GUIDED_ONBOARDING_KEY = 'requires_guided_onboarding';
 
 export interface GuidedOnboardingProfile {
@@ -5,6 +7,8 @@ export interface GuidedOnboardingProfile {
   quiz_completed?: boolean | null;
   dashboard_bootstrap_source?: string | null;
   user_preferences?: unknown;
+  /** founder | builder | mentor | marketplace | investor. */
+  user_type?: string | null;
 }
 
 export function getUserPreferencesRecord(value: unknown): Record<string, unknown> {
@@ -45,6 +49,16 @@ export function shouldRedirectToGuidedOnboarding(
   profile: GuidedOnboardingProfile | null | undefined,
 ): boolean {
   if (!profile || !requiresGuidedOnboarding(profile.user_preferences)) {
+    return false;
+  }
+
+  // Mentors, marketplace members and investors finish onboarding at the first
+  // question: the rest of the quiz asks a founder about their venture. Their
+  // submission marks the account complete, and this is the second guard, so an
+  // account left in the old broken state recovers on its next load rather than
+  // needing a data fix. Without it the entry gate returned them to the founder
+  // quiz on every visit, forever.
+  if (isReviewedUserType(profile.user_type ?? '')) {
     return false;
   }
 

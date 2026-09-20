@@ -31,27 +31,18 @@ export async function submitAccountApplication(input: {
   email?: string | null;
 }): Promise<void> {
   const { data: auth } = await supabase.auth.getUser();
-  const userId = auth.user?.id;
-  if (!userId) throw new Error('Sign in to send this request.');
+  if (!auth.user?.id) throw new Error('Sign in to send this request.');
 
-  const { error: profileError } = await supabase
-    .from('profiles')
-    .update({ user_type: input.userType, approval_status: 'pending' })
-    .eq('id', userId);
-  if (profileError) throw new Error(profileError.message);
-
-  const { error } = await supabase.from('account_applications').insert({
-    user_id: userId,
-    user_type: input.userType,
-    full_name: input.fullName ?? null,
-    email: input.email ?? auth.user?.email ?? null,
-  });
-
-  // A second submission hits the one-pending-per-account index. That is the
-  // intended outcome, not a failure the applicant needs to see.
-  if (error && !/duplicate key|account_applications_one_pending/i.test(error.message)) {
-    throw new Error(error.message);
-  }
+  // One statement in the database rather than an update and an insert from
+  // here. It also marks onboarding complete, which is what stops the entry gate
+  // looping these accounts back into the founder quiz forever, and it patches
+  // user_preferences server side instead of racing a read modify write.
+  const { error } = await supabase.rpc('submit_account_application' as never, {
+    p_user_type: input.userType,
+    p_full_name: input.fullName ?? null,
+    p_email: input.email ?? auth.user.email ?? null,
+  } as never);
+  if (error) throw new Error(error.message);
 }
 
 /** Admin only; the RPC refuses anyone else whatever the client sends. */

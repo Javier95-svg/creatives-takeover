@@ -26,8 +26,13 @@ test('the rule reads the caller only, and archived projects do not count', () =>
 
 test('the prompt defaults to asking nobody while the answer is loading', () => {
   // The opposite default would flash the dialog at every mentor on every load.
-  assert.match(hook, /requiresProject: false,\s*\n\s*hasProject: true,/);
-  assert.match(hook, /needsSetup: status\.requiresProject && !status\.hasProject/);
+  // The defaults moved to useAccountContext, which is now the single call the
+  // workspace makes for who is signed in; useProjectSetup is a read over it.
+  const context = readFileSync('src/hooks/useAccountContext.ts', 'utf8');
+  assert.match(context, /requiresProject: false,\s*\n\s*hasProject: true,/);
+  assert.match(context, /query\.data \?\? DEFAULT_ACCOUNT_CONTEXT/);
+  assert.match(hook, /useAccountContext\(\)/);
+  assert.match(hook, /needsSetup: requiresProject && !hasProject/);
   assert.match(gate, /if \(!needsSetup\) return null;/);
 });
 
