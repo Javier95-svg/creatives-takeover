@@ -92,7 +92,10 @@ export type OnboardingFundraisingStatus =
  * Founders already have something live: a site, app, store, or product.
  * Builders are starting from zero. Drives the Founder/Builder tag on accounts.
  */
-export type OnboardingFounderSegment = 'founder' | 'builder';
+// The five account types the quiz can produce. founder and builder continue
+// through the quiz; the other three stop at the first step and wait for an
+// admin to review the request.
+export type OnboardingFounderSegment = 'founder' | 'builder' | 'mentor' | 'marketplace' | 'investor';
 
 export interface OnboardingAnswersV1 {
   /** What the founder calls the thing they are building. Becomes their project,

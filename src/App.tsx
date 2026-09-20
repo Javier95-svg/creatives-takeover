@@ -103,6 +103,7 @@ const StoryArticle = lazy(() => import("./pages/StoryArticle"));
 const StoryTagPage = lazy(() => import("./pages/StoryTagPage"));
 const AdminStoryEditor = lazy(() => import("./pages/AdminStoryEditor"));
 const AdminHeroImages = lazy(() => import("./pages/AdminHeroImages"));
+const AdminAccountRequests = lazy(() => import("./pages/AdminAccountRequests"));
 const StoriesRSS = lazy(() => import("./pages/StoriesRSS"));
 const WaitlistPublicPage = lazy(() => import("./pages/WaitlistPublicPage"));
 const AdminVCManagement = lazy(() => import("./pages/AdminVCManagement"));
@@ -394,6 +395,7 @@ function App() {
                         <Route path="/stories/admin/edit/:id" element={<AdminRoute><AdminStoryEditor /></AdminRoute>} />
                         <Route path="/stories/:slug" element={<StoryArticle />} />
                         <Route path="/admin/hero-images" element={<AdminRoute><AdminHeroImages /></AdminRoute>} />
+                        <Route path="/admin/account-requests" element={<AdminRoute><AdminAccountRequests /></AdminRoute>} />
                         <Route path="/admin/vc-management" element={<AdminRoute><AdminVCManagement /></AdminRoute>} />
                         <Route path="/admin/accelerator-management" element={<AdminRoute><AdminAcceleratorManagement /></AdminRoute>} />
                         <Route path="/careers" element={<Careers />} />

@@ -44,6 +44,8 @@ import {
   saveOnboardingProgress,
 } from '@/lib/onboardingSession';
 import { buildOnboardingFailureMessage } from '@/lib/onboardingFailureMessage';
+import { submitAccountApplication } from '@/lib/accountApplications';
+import { REVIEWED_USER_TYPES, type ReviewedUserType } from '@/lib/accountTypes';
 import { mapFounderStageToBusinessStage } from '@/lib/stageDiagnostic';
 import {
   ensureActivationGateVariant,
@@ -82,10 +84,20 @@ const BUSINESS_MODELS = [
 // Splits accounts into the two groups the platform tags people by. "Live"
 // deliberately means anything real and reachable, not revenue, so it is easy to
 // answer honestly and lands the split where we expect it.
-const FOUNDER_SEGMENT_OPTIONS = [
-  ['founder', 'I already have something live: a website, app, store, or product'],
-  ['builder', 'I am starting from zero'],
+// The five account types. Founder and builder are self serve; the other three
+// are offering something to the network, so they are reviewed before the
+// account is activated and the quiz stops as soon as one is chosen.
+const ACCOUNT_TYPE_OPTIONS = [
+  ['founder', 'Founder', 'You already have a project'],
+  ['builder', 'Builder', 'You are starting a project from scratch'],
+  ['mentor', 'Mentor', 'You offer your coaching to our network'],
+  ['marketplace', 'Marketplace', 'You offer your services to our network'],
+  ['investor', 'Investor', "You are interested in investing in our users' projects"],
 ] as const;
+
+function isReviewedType(value: string): value is ReviewedUserType {
+  return (REVIEWED_USER_TYPES as readonly string[]).includes(value);
+}
 
 const EVIDENCE_OPTIONS = [
   ['none', 'No external evidence yet'],
@@ -195,14 +207,15 @@ function ChoiceGrid<T extends string | number>({
   onSelect,
   columns = 1,
 }: {
-  options: readonly (readonly [T, string])[];
+  /** [value, title] or [value, title, description]. */
+  options: readonly (readonly [T, string] | readonly [T, string, string])[];
   value: T | '' | null;
   onSelect: (value: T) => void;
   columns?: 1 | 2;
 }) {
   return (
     <div className={cn('grid gap-2', columns === 2 && 'sm:grid-cols-2')} role="group">
-      {options.map(([optionValue, label], index) => {
+      {options.map(([optionValue, label, description], index) => {
         const selected = value === optionValue;
         return (
           <button
@@ -223,7 +236,10 @@ function ChoiceGrid<T extends string | number>({
             )}>
               {selected ? <Check className="h-3.5 w-3.5" /> : index + 1}
             </span>
-            <span className="text-sm font-medium leading-6">{label}</span>
+            <span className="min-w-0">
+              <span className="block text-sm font-medium leading-6">{label}</span>
+              {description && <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">{description}</span>}
+            </span>
           </button>
         );
       })}
@@ -238,6 +254,10 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
   const { totalAvailable, loading: creditsLoading } = useCredits();
   const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
   const localFallback = useMemo(() => readAdaptiveDraft(session), [session]);
+  // Set once a mentor, marketplace or investor request has been filed. The
+  // quiz stops there: nothing after the first step applies to them, and the
+  // account stays unapproved until an admin reviews it.
+  const [submittedReview, setSubmittedReview] = useState<ReviewedUserType | null>(null);
   const [answers, setAnswers] = useState<OnboardingAnswersV1>({
     ...EMPTY_ONBOARDING_ANSWERS_V1,
     ...session.answers,
@@ -404,7 +424,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
     if (step === 0) {
       const length = answers.startupBrief.trim().length;
       if (length < 20 || length > 280) return 'Write 20 to 280 characters about what you build and who it serves.';
-      if (!answers.founderSegment) return 'Tell us whether you already have something live or are starting from zero.';
+      if (!answers.founderSegment) return 'Choose the option that describes you.';
       // A project is mandatory for founders and builders, so it is asked for
       // here rather than chased afterwards. Providers never take this quiz.
       if (!answers.projectName.trim()) return 'Give your project a name. Everything you build attaches to it.';
@@ -463,6 +483,25 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
       setError(validationError);
       return;
     }
+    // Mentors, marketplace providers and investors never see the rest of the
+    // quiz. Their request is filed here and the flow ends.
+    if (currentStep === 0 && isReviewedType(answers.founderSegment)) {
+      setIsSaving(true);
+      try {
+        await submitAccountApplication({
+          userType: answers.founderSegment,
+          fullName: user?.user_metadata?.full_name ?? null,
+          email: user?.email ?? null,
+        });
+        setSubmittedReview(answers.founderSegment);
+      } catch (submitError) {
+        setError(submitError instanceof Error ? submitError.message : 'Could not send your request. Please try again.');
+      } finally {
+        setIsSaving(false);
+      }
+      return;
+    }
+
     if (currentStep === CORE_STEPS - 1) {
       await handleComplete();
       return;
@@ -687,7 +726,22 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
 
   const renderStep = () => {
     if (currentStep === 0) {
-      return (
+      if (submittedReview) {
+    return (
+      <Card className="mx-auto max-w-xl">
+        <CardContent className="p-8 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-accent-teal/15">
+            <Check className="h-6 w-6 text-accent-teal" />
+          </div>
+          <h2 className="mt-5 text-xl font-semibold">Thanks, your request has been sent.</h2>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            We will email you once it is reviewed.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+  return (
         <>
           <StepHeading title="What are you building, and who is it for?" description="One concise brief gives your dashboard enough context to make specific recommendations." ref={headingRef} />
           <Textarea
@@ -706,8 +760,8 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
             maxLength={120}
             className="mt-2"
           />
-          <p className="mt-6 text-sm font-semibold">Where are you starting from?</p>
-          <div className="mt-2"><ChoiceGrid options={FOUNDER_SEGMENT_OPTIONS} value={answers.founderSegment} onSelect={(founderSegment) => patchAnswers({ founderSegment })} /></div>
+          <p className="mt-6 text-sm font-semibold">Which of these describes you?</p>
+          <div className="mt-2"><ChoiceGrid options={ACCOUNT_TYPE_OPTIONS} value={answers.founderSegment} onSelect={(founderSegment) => patchAnswers({ founderSegment })} /></div>
           <p className="mt-5 text-sm font-semibold">Optional sectors</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {ANGEL_SECTOR_OPTIONS.map((sector) => {
