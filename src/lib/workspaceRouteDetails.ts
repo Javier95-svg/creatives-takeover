@@ -63,3 +63,65 @@ export const WORKSPACE_ROUTE_DESCRIPTIONS: Record<string, string> = {
 export const WORKSPACE_TOOL_STAGES: Record<string, string> = Object.fromEntries(
   BIZMAP_STAGES.flatMap(stage => stage.tools.map(tool => [tool.name, `Stage ${stage.numeral}: ${stage.title}`])),
 );
+
+/**
+ * Per type overrides for the founder-voiced copy above.
+ *
+ * "Accountability Partner" and "Validate, Build, Launch" describe a founder's
+ * journey. A mentor keeps the same Dashboard section but is doing something
+ * else entirely in it, and reading a founder's slogan there tells them the
+ * product was not built for them.
+ *
+ * Founders and builders are absent on purpose: they get the copy above,
+ * unchanged. A type with no entry falls back to it too.
+ */
+export const SECTION_SLOGANS_BY_TYPE: Record<string, Record<string, string>> = {
+  mentor: {
+    Dashboard: 'Your Founders ⏱️',
+    Network: 'Connect & Collab 🌐',
+    Content: 'Leisure Time🍿',
+    Resources: 'Some Gifts 🎁',
+  },
+  marketplace: {
+    Dashboard: 'Your Clients 📥',
+    Network: 'Connect & Collab 🌐',
+    Content: 'Leisure Time🍿',
+    Resources: 'Some Gifts 🎁',
+  },
+  investor: {
+    Dashboard: 'Your Dealflow 🔎',
+    Network: 'Connect & Collab 🌐',
+    Content: 'Leisure Time🍿',
+  },
+};
+
+export const ROUTE_DESCRIPTIONS_BY_TYPE: Record<string, Record<string, string>> = {
+  mentor: {
+    Overview: 'See who is waiting on you and what changed.',
+    'Find a Mentor': 'See how other mentors present themselves.',
+    'Find a Co-Founder': 'Browse founders looking for a partner.',
+    Marketplace: 'Find services for the founders you advise.',
+  },
+  marketplace: {
+    Overview: 'See new enquiries and how your listing is doing.',
+    'Find a Mentor': 'Get advice on growing your practice.',
+    'Find a Co-Founder': 'Meet people building something with you.',
+    Marketplace: 'See your listing the way buyers see it.',
+  },
+  investor: {
+    Overview: 'See new matches and what your founders are shipping.',
+    'Find a Co-Founder': 'Browse founders looking for a partner.',
+    'Find your Angel': 'See the rest of the investor network.',
+    Marketplace: 'Find services for your portfolio.',
+  },
+};
+
+/** The section slogan for this type, falling back to the founder wording. */
+export function sectionSloganFor(userType: string, section: string) {
+  return SECTION_SLOGANS_BY_TYPE[userType]?.[section] ?? WORKSPACE_SECTION_SLOGANS[section];
+}
+
+/** The tool description for this type, falling back to the founder wording. */
+export function routeDescriptionFor(userType: string, route: string) {
+  return ROUTE_DESCRIPTIONS_BY_TYPE[userType]?.[route] ?? WORKSPACE_ROUTE_DESCRIPTIONS[route];
+}

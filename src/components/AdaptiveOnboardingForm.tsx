@@ -3,7 +3,8 @@ import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
-import { RoleProfileCard } from '@/components/workspace/RoleProfileCard';
+import { RoleProfileFields } from '@/components/workspace/RoleProfileFields';
+import { missingRoleFields, sanitizeRoleProfile, type RoleProfile } from '@/lib/roleProfileSchema';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -46,7 +47,7 @@ import {
 } from '@/lib/onboardingSession';
 import { buildOnboardingFailureMessage } from '@/lib/onboardingFailureMessage';
 import { submitAccountApplication } from '@/lib/accountApplications';
-import { REVIEWED_USER_TYPES, type ReviewedUserType } from '@/lib/accountTypes';
+import { REVIEWED_USER_TYPES, USER_TYPE_LABEL, type ReviewedUserType } from '@/lib/accountTypes';
 import { mapFounderStageToBusinessStage } from '@/lib/stageDiagnostic';
 import {
   ensureActivationGateVariant,
@@ -259,6 +260,11 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
   // quiz stops there: nothing after the first step applies to them, and the
   // account stays unapproved until an admin reviews it.
   const [submittedReview, setSubmittedReview] = useState<ReviewedUserType | null>(null);
+  // A reviewed type answers two questions, not seven: which category, then
+  // the fields that category is defined by. This is that second question,
+  // kept out of currentStep so the founder step machine is untouched.
+  const [reviewStage, setReviewStage] = useState<'choosing' | 'details'>('choosing');
+  const [roleDraft, setRoleDraft] = useState<RoleProfile>({});
   const [answers, setAnswers] = useState<OnboardingAnswersV1>({
     ...EMPTY_ONBOARDING_ANSWERS_V1,
     ...session.answers,
@@ -423,6 +429,13 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
 
   const validateStepAt = (step: number) => {
     if (step === 0) {
+      // Mentors, marketplace members and investors are asked for their
+      // category and nothing else here. Demanding a startup brief and a
+      // project name from them contradicts the rule that a project is not
+      // mandatory for them, and there is nothing truthful they could type.
+      if (isReviewedType(answers.founderSegment)) {
+        return answers.founderSegment ? null : 'Choose the option that describes you.';
+      }
       const length = answers.startupBrief.trim().length;
       if (length < 20 || length > 280) return 'Write 20 to 280 characters about what you build and who it serves.';
       if (!answers.founderSegment) return 'Choose the option that describes you.';
@@ -487,12 +500,26 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
     // Mentors, marketplace providers and investors never see the rest of the
     // quiz. Their request is filed here and the flow ends.
     if (currentStep === 0 && isReviewedType(answers.founderSegment)) {
+      // First pass: move to the fields for the category they picked. The
+      // application is not sent until those are answered, so nothing is
+      // filed that a reviewer cannot act on.
+      if (reviewStage === 'choosing') {
+        setReviewStage('details');
+        setError('');
+        return;
+      }
+      const missing = missingRoleFields(answers.founderSegment, roleDraft);
+      if (missing.length > 0) {
+        setError(`Fill in ${missing.map((field) => field.label.toLowerCase()).join(' and ')}.`);
+        return;
+      }
       setIsSaving(true);
       try {
         await submitAccountApplication({
           userType: answers.founderSegment,
           fullName: user?.user_metadata?.full_name ?? null,
           email: user?.email ?? null,
+          roleProfile: sanitizeRoleProfile(answers.founderSegment, roleDraft),
         });
         setSubmittedReview(answers.founderSegment);
       } catch (submitError) {
@@ -725,29 +752,48 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
     }
   };
 
+  // A reviewed type is answering a two step flow, and a progress bar claiming
+  // seven would be a lie about how much is left.
+  const reviewing = currentStep === 0 && isReviewedType(answers.founderSegment) && !submittedReview;
+  const totalSteps = reviewing ? 2 : CORE_STEPS;
+  const displayStep = reviewing ? (reviewStage === 'details' ? 2 : 1) : currentStep + 1;
+
   const renderStep = () => {
     if (currentStep === 0) {
+      // The request is filed and the category fields came with it, so this
+      // is a confirmation and nothing more.
       if (submittedReview) {
-    return (
-      <div className="mx-auto max-w-xl space-y-6">
-        <Card>
-          <CardContent className="p-8 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-accent-teal/15">
-              <Check className="h-6 w-6 text-accent-teal" />
+        return (
+          <Card className="mx-auto max-w-xl">
+            <CardContent className="p-8 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-accent-teal/15">
+                <Check className="h-6 w-6 text-accent-teal" />
+              </div>
+              <h2 className="mt-5 text-xl font-semibold">Thanks, your request has been sent.</h2>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                We will email you once it is reviewed. Your profile is ready to go live the moment it is approved.
+              </p>
+            </CardContent>
+          </Card>
+        );
+      }
+
+      // The second and last question a reviewed type is asked.
+      if (reviewStage === 'details' && isReviewedType(answers.founderSegment)) {
+        return (
+          <>
+            <StepHeading
+              title={`Tell us about your ${USER_TYPE_LABEL[answers.founderSegment].toLowerCase()} work`}
+              description="This is what people see when they find you, and what we match you on. It goes to the reviewer with your request."
+              ref={headingRef}
+            />
+            <div className="mt-6">
+              <RoleProfileFields userType={answers.founderSegment} value={roleDraft} onChange={setRoleDraft} />
             </div>
-            <h2 className="mt-5 text-xl font-semibold">Thanks, your request has been sent.</h2>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              We will email you once it is reviewed. Filling these in now means your
-              profile is ready the moment it is approved.
-            </p>
-          </CardContent>
-        </Card>
-        {/* The type they just chose, not the cached one: the account context
-            query answered before this application existed. */}
-        <RoleProfileCard userTypeOverride={submittedReview} />
-      </div>
-    );
-  }
+          </>
+        );
+      }
+
   return (
         <>
           <StepHeading title="What are you building, and who is it for?" description="One concise brief gives your dashboard enough context to make specific recommendations." ref={headingRef} />
@@ -992,22 +1038,28 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
               <span className="text-sm font-medium text-muted-foreground">{Math.round(((currentStep + 1) / CORE_STEPS) * 100)}%</span>
             </div>
             <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted">
-              <div className="h-full rounded-full bg-accent-teal transition-[width] motion-reduce:transition-none" style={{ width: `${((currentStep + 1) / CORE_STEPS) * 100}%` }} />
+              <div className="h-full rounded-full bg-accent-teal transition-[width] motion-reduce:transition-none" style={{ width: `${(displayStep / totalSteps) * 100}%` }} />
             </div>
-            <p className="sr-only" aria-live="polite">Step {currentStep + 1} of {CORE_STEPS}</p>
+            <p className="sr-only" aria-live="polite">Step {displayStep} of {totalSteps}</p>
           </div>
           <section className="min-h-96 p-5 sm:p-8">
             <div className="mx-auto max-w-2xl">{renderStep()}</div>
           </section>
           <div className="flex items-center justify-between gap-3 border-t border-border/60 bg-background/50 p-4 sm:px-8">
-            <Button type="button" variant="secondary" onClick={() => setCurrentStep((step) => Math.max(0, step - 1))} disabled={currentStep === 0 || isSaving}>
+            <Button type="button" variant="secondary"
+              onClick={() => {
+                setError('');
+                if (reviewStage === 'details') { setReviewStage('choosing'); return; }
+                setCurrentStep((step) => Math.max(0, step - 1));
+              }}
+              disabled={(currentStep === 0 && reviewStage !== 'details') || isSaving || Boolean(submittedReview)}>
               <ArrowLeft className="mr-2 h-4 w-4" />Back
             </Button>
             <div className="text-right">
               {error ? <p className="mb-2 max-w-md text-sm text-destructive" role="alert">{error}</p> : null}
               <Button type="button" onClick={() => void handleNext()} disabled={isSaving}>
                 {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                {currentStep === CORE_STEPS - 1 ? `Open ${ACTIVATION_CATALOG[answers.selectedIntent || recommendation.intent].label}` : 'Continue'}
+                {reviewing && reviewStage === 'details' ? 'Send my request' : currentStep === CORE_STEPS - 1 ? `Open ${ACTIVATION_CATALOG[answers.selectedIntent || recommendation.intent].label}` : 'Continue'}
                 {!isSaving ? <ArrowRight className="ml-2 h-4 w-4" /> : null}
               </Button>
             </div>

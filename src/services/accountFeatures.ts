@@ -10,6 +10,13 @@ import { supabase } from '@/integrations/supabase/client';
  * far more than the one person's own inbox.
  */
 
+export interface MentorBookingSlot {
+  id: string;
+  startsAt: string;
+  durationMinutes: number;
+  timezone: string | null;
+}
+
 export interface MentorBooking {
   id: string;
   status: string;
@@ -19,6 +26,11 @@ export interface MentorBooking {
   founderUsername: string | null;
   founderAvatar: string | null;
   serviceId: string | null;
+  /** The open round addressed to this mentor, if there is one. */
+  roundId: string | null;
+  responseDueAt: string | null;
+  /** The times the founder proposed. Empty once the round is answered. */
+  slots: MentorBookingSlot[];
 }
 
 export interface MentorInterestPerson {
@@ -53,6 +65,24 @@ async function call<T>(name: string, args?: Record<string, unknown>): Promise<T>
   const { data, error } = await supabase.rpc(name as never, (args ?? {}) as never);
   if (error) throw error;
   return data as T;
+}
+
+/**
+ * Accept one of the proposed times, or decline.
+ *
+ * Goes through the discovery call service, which proves this mentor owns the
+ * call and then hands the unchanged state machine the call's own secure token.
+ * Credits, calendar creation and the founder's emails all behave exactly as
+ * they do when a mentor answers from their inbox.
+ */
+export async function respondToBooking(input: { callId: string; decision: 'accept' | 'decline'; slotId?: string; reason?: string }) {
+  const { data, error } = await supabase.functions.invoke('discovery-call-service', {
+    body: { action: 'mentorRespond', ...input },
+  });
+  if (error) throw new Error(error.message);
+  const result = data as { success?: boolean; error?: string } | null;
+  if (!result?.success) throw new Error(result?.error ?? 'Could not record your answer.');
+  return result;
 }
 
 export function listMentorBookings() {

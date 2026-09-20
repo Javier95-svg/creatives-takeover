@@ -22,7 +22,7 @@ import type { UserType } from "@/lib/accountTypes";
 
 
 
-import { WORKSPACE_ROUTE_DESCRIPTIONS, WORKSPACE_ROUTE_ICONS, WORKSPACE_SECTION_SLOGANS, WORKSPACE_TOOL_STAGES } from '@/lib/workspaceRouteDetails';
+import { WORKSPACE_ROUTE_ICONS, WORKSPACE_TOOL_STAGES, routeDescriptionFor, sectionSloganFor } from '@/lib/workspaceRouteDetails';
 
 export type ProductGuideConcept = "founder-guide" | "command-center" | "guided-journey";
 
@@ -157,7 +157,7 @@ export function WorkspaceSidebar({ navigateTo = enterWorkspaceRoute, currentPath
 
             {!collapsed && openSection === label && toolsFor(label) && (
               <div id={`workspace-tools-${label}`} role="group" aria-label={`${label} tools`} className="mb-2 ml-5 mt-1 space-y-0.5 border-l border-border/70 pl-4">
-                <p className="mb-2 border-b border-border/60 px-2 py-3 text-xs font-semibold leading-5 text-foreground">{WORKSPACE_SECTION_SLOGANS[label]}</p>
+                <p className="mb-2 border-b border-border/60 px-2 py-3 text-xs font-semibold leading-5 text-foreground">{sectionSloganFor(userType, label)}</p>
                 {toolsFor(label)!.map((tool, index) => {
                   const ToolIcon = WORKSPACE_ROUTE_ICONS[tool];
                   return (
@@ -178,7 +178,7 @@ export function WorkspaceSidebar({ navigateTo = enterWorkspaceRoute, currentPath
                     <ToolIcon aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
                     <span className="min-w-0">
                       <span className="block font-medium leading-5">{tool}</span>
-                      <span className="mt-0.5 block text-xs font-normal leading-4 text-foreground group-hover:text-accent-foreground group-focus-visible:text-accent-foreground">{WORKSPACE_ROUTE_DESCRIPTIONS[tool]}</span>
+                      <span className="mt-0.5 block text-xs font-normal leading-4 text-foreground group-hover:text-accent-foreground group-focus-visible:text-accent-foreground">{routeDescriptionFor(userType, tool)}</span>
                     </span>
                   </a>
                   </div>

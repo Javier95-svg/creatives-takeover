@@ -29,6 +29,9 @@ export async function submitAccountApplication(input: {
   userType: ReviewedUserType;
   fullName?: string | null;
   email?: string | null;
+  /** The category fields, collected before the request is filed so a reviewer
+      has something to review. An empty object never blanks saved answers. */
+  roleProfile?: Record<string, unknown> | null;
 }): Promise<void> {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user?.id) throw new Error('Sign in to send this request.');
@@ -41,6 +44,7 @@ export async function submitAccountApplication(input: {
     p_user_type: input.userType,
     p_full_name: input.fullName ?? null,
     p_email: input.email ?? auth.user.email ?? null,
+    p_role_profile: input.roleProfile ?? {},
   } as never);
   if (error) throw new Error(error.message);
 }

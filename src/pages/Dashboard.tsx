@@ -17,6 +17,8 @@ import { useExitIntent } from '@/hooks/useExitIntent';
 import { ExitIntentModal } from '@/components/ExitIntentModal';
 import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAccountContext } from '@/hooks/useAccountContext';
+import AccountOverview from '@/components/dashboard/AccountOverview';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useDashboardBootstrapProfile } from '@/contexts/DashboardBootstrapContext';
 import { trackDashboardFounderSignalsExpanded } from '@/lib/analytics';
@@ -41,7 +43,9 @@ interface DashboardActivationState {
   rolloutVariant: string | null;
 }
 
-const Dashboard = () => {
+// The founder Overview. Split out so the per type branch below can choose
+// between two components rather than calling hooks conditionally.
+const FounderDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { showExitIntent, closeExitIntent } = useExitIntent();
   const { user } = useAuth();
@@ -181,6 +185,19 @@ const Dashboard = () => {
       <ExitIntentModal isOpen={showExitIntent} onClose={closeExitIntent} />
     </>
   );
+};
+
+/**
+ * Which Overview this account gets.
+ *
+ * Founders and builders get exactly what they had. The other three get a page
+ * about the work they actually do here, rather than a journey cockpit that
+ * assumes they are building a startup.
+ */
+const Dashboard = () => {
+  const { userType } = useAccountContext();
+  if (userType === 'mentor' || userType === 'marketplace' || userType === 'investor') return <AccountOverview />;
+  return <FounderDashboard />;
 };
 
 export default Dashboard;

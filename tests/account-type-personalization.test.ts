@@ -220,3 +220,112 @@ test('investor matches never returns an email address', () => {
   assert.ok(body.includes("f.user_type IN ('founder', 'builder')"), 'investor_matches is not limited to founders and builders');
   assert.ok(body.includes("f.approval_status = 'approved'"), 'investor_matches includes unapproved accounts');
 });
+
+// ------------------------------------------------- the four closed gaps
+// Each of these pins a gap that was open after the first pass, so a later
+// change cannot quietly reopen one.
+
+test('the quiz asks a reviewed type for its fields before filing the request', () => {
+  const quiz = fs.readFileSync('src/components/AdaptiveOnboardingForm.tsx', 'utf8');
+  // Two stages, and the application is only submitted from the second.
+  assert.match(quiz, /reviewStage/);
+  assert.match(quiz, /setReviewStage\('details'\)/);
+  assert.match(quiz, /missingRoleFields\(answers\.founderSegment, roleDraft\)/);
+  assert.match(quiz, /roleProfile: sanitizeRoleProfile\(answers\.founderSegment, roleDraft\)/);
+  // The submit is downstream of the missing-field guard, not before it.
+  assert.ok(
+    quiz.indexOf('missingRoleFields(answers.founderSegment, roleDraft)') < quiz.indexOf('await submitAccountApplication'),
+    'the request is filed before the required fields are checked',
+  );
+});
+
+test('a reviewed type is never asked for a startup brief or a project name', () => {
+  const quiz = fs.readFileSync('src/components/AdaptiveOnboardingForm.tsx', 'utf8');
+  const stepZero = quiz.slice(quiz.indexOf('const validateStepAt'), quiz.indexOf("if (step === 1"));
+  // The reviewed early return has to come before the brief and project checks,
+  // or a mentor cannot get past step 0 without inventing a startup.
+  const reviewedGuard = stepZero.indexOf('isReviewedType(answers.founderSegment)');
+  const briefCheck = stepZero.indexOf('answers.startupBrief.trim().length');
+  const projectCheck = stepZero.indexOf('answers.projectName.trim()');
+  assert.ok(reviewedGuard >= 0, 'step 0 does not branch on the reviewed types');
+  assert.ok(reviewedGuard < briefCheck, 'the startup brief is demanded before the reviewed branch');
+  assert.ok(reviewedGuard < projectCheck, 'a project name is demanded before the reviewed branch');
+});
+
+test('the sidebar reads copy through the per type resolvers', () => {
+  const sidebar = fs.readFileSync('src/components/workspace/WorkspaceSidebar.tsx', 'utf8');
+  assert.match(sidebar, /sectionSloganFor\(userType, label\)/);
+  assert.match(sidebar, /routeDescriptionFor\(userType, tool\)/);
+  // The founder-voiced constants must not be read directly any more, or the
+  // override would be silently bypassed.
+  assert.ok(!sidebar.includes('WORKSPACE_SECTION_SLOGANS['), 'the sidebar still reads founder slogans directly');
+  assert.ok(!sidebar.includes('WORKSPACE_ROUTE_DESCRIPTIONS['), 'the sidebar still reads founder descriptions directly');
+});
+
+test('the dashboard Overview branches by account type', () => {
+  const dashboard = fs.readFileSync('src/pages/Dashboard.tsx', 'utf8');
+  assert.match(dashboard, /AccountOverview/);
+  assert.match(dashboard, /FounderDashboard/);
+  // Founders and builders must still reach the page they had.
+  assert.match(dashboard, /return <FounderDashboard \/>;/);
+});
+
+test('every new email channel has a sender that consults it', () => {
+  const gaps = fs.readFileSync('supabase/migrations/20260920180000_close_per_type_gaps.sql', 'utf8');
+  // The discovery call request email is gated at the enqueue.
+  assert.match(gaps, /notif_pref_enabled\(v_mentor_user, 'discovery_call_request_email_enabled'\)/);
+  // The other two are queued through the shared dispatcher with their channel.
+  assert.match(gaps, /'listing_enquiry_email_enabled'/);
+  assert.match(gaps, /'investor_match_email_enabled'/);
+  // And their in-app halves are gated too.
+  assert.match(gaps, /notif_pref_enabled\(NEW\.counterparty_user_id, 'listing_enquiry_in_app_enabled'\)/);
+  assert.match(gaps, /notif_pref_enabled\(v_investor\.id, 'investor_match_in_app_enabled'\)/);
+
+  const sender = fs.readFileSync('supabase/functions/send-account-activity-email/index.ts', 'utf8');
+  assert.match(sender, /verify_outbox_secret/);
+  assert.match(sender, /listing_enquiry/);
+  assert.match(sender, /investor_match/);
+  // The recipient address is read from auth, never from the queued row.
+  assert.match(sender, /auth\.admin\.getUserById\(delivery\.recipient_id\)/);
+});
+
+test('only the request email is suppressible, never a transactional one', () => {
+  const gaps = fs.readFileSync('supabase/migrations/20260920180000_close_per_type_gaps.sql', 'utf8');
+  const enqueue = gaps.slice(gaps.indexOf('FUNCTION public.enqueue_discovery_call_notification_v2'));
+  // A confirmation, reschedule or cancellation must not be gated by a toggle.
+  assert.match(enqueue, /p_recipient_role = 'mentor' AND p_template_key = 'request_created'/);
+  assert.ok(!/p_template_key = 'booking_confirmed'/.test(enqueue), 'a transactional email is being gated');
+});
+
+test('a mentor answers from their own inbox without a mailed token', () => {
+  const service = fs.readFileSync('supabase/functions/discovery-call-service/index.ts', 'utf8');
+  const block = service.slice(service.indexOf('if (action === "mentorRespond")'), service.indexOf('if (action === "acceptMentorCounter"'));
+  // Ownership is proved from the session, not from anything the client sent.
+  assert.match(block, /\.eq\("mentors\.user_id", user\.id\)/);
+  assert.match(block, /errorCode: "FORBIDDEN"/);
+  // The unchanged state machine still does the work.
+  assert.match(block, /respond_to_discovery_call_request_v4/);
+  // Accepting mints the founder's management token, as the email path does.
+  assert.match(block, /decision === "accept" \? await actionToken\(\) : null/);
+
+  const page = fs.readFileSync('src/pages/account/MentorBookings.tsx', 'utf8');
+  assert.match(page, /respondToBooking/);
+  assert.match(page, /Accept/);
+  assert.match(page, /Decline/);
+});
+
+test('mentor_bookings returns the slots an answer needs', () => {
+  const gaps = fs.readFileSync('supabase/migrations/20260920180000_close_per_type_gaps.sql', 'utf8');
+  const fn = gaps.slice(gaps.indexOf('FUNCTION public.mentor_bookings'), gaps.indexOf('FUNCTION public.enqueue_discovery_call_notification_v2'));
+  assert.match(fn, /discovery_call_scheduling_slots/);
+  assert.match(fn, /'roundId'/);
+  // Still scoped to the caller's own mentor rows.
+  assert.match(fn, /m\.user_id = auth\.uid\(\)/);
+});
+
+test('submitting an application cannot blank saved role answers', () => {
+  const gaps = fs.readFileSync('supabase/migrations/20260920180000_close_per_type_gaps.sql', 'utf8');
+  const fn = gaps.slice(gaps.indexOf('FUNCTION public.submit_account_application'), gaps.indexOf('FUNCTION public.mentor_bookings'));
+  assert.match(fn, /p_role_profile = '\{\}'::jsonb/);
+  assert.match(fn, /THEN COALESCE\(role_profile, '\{\}'::jsonb\)/);
+});

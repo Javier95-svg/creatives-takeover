@@ -220,6 +220,60 @@ serve(async (req) => {
     });
   }
 
+  // A signed in mentor answering from their own inbox. The state machine
+  // authenticates a mentor by the secure token that was emailed to them,
+  // because a mentor need not have an account. Here they do, so ownership is
+  // proved through mentors.user_id and the call's own live token is then
+  // presented to the unchanged transition function. Nothing about the state
+  // machine, the credit handling or the notifications is duplicated.
+  if (action === "mentorRespond") {
+    const callId = String(body.callId ?? "");
+    const decision = body.decision === "accept" ? "accept" : body.decision === "decline" ? "decline" : "";
+    if (!callId || !decision) return json({ success: false, errorCode: "INVALID_REQUEST", error: "A call and a decision are required." }, 400);
+
+    const { data: owned, error: ownedError } = await admin
+      .from("discovery_calls")
+      .select("id, mentor_id, mentors!inner(user_id)")
+      .eq("id", callId)
+      .eq("mentors.user_id", user.id)
+      .maybeSingle();
+    if (ownedError) return json({ success: false, error: ownedError.message }, 500);
+    if (!owned) return json({ success: false, errorCode: "FORBIDDEN", error: "This request is not addressed to you." }, 403);
+
+    const { data: actionTokenRow } = await admin
+      .from("discovery_call_action_tokens")
+      .select("token_hash")
+      .eq("discovery_call_id", callId)
+      .eq("purpose", "mentor_request_response")
+      .is("used_at", null)
+      .is("revoked_at", null)
+      .gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!actionTokenRow?.token_hash) {
+      return json({ success: false, errorCode: "TOKEN_EXPIRED", error: "This request can no longer be answered here. Use the link in your email." }, 409);
+    }
+
+    // Accepting schedules a meeting, so the founder needs a management link
+    // in their confirmation exactly as they would from the email path.
+    const management = decision === "accept" ? await actionToken() : null;
+    const { data, error } = await admin.rpc("respond_to_discovery_call_request_v4", {
+      p_call_id: callId,
+      p_token_hash: actionTokenRow.token_hash,
+      p_action: decision,
+      p_slot_id: decision === "accept" ? String(body.slotId ?? "") || null : null,
+      p_counter_starts_at: null,
+      p_reason: typeof body.reason === "string" && body.reason.trim() ? body.reason.trim().slice(0, 300) : null,
+      p_management_token_hash: management?.hash ?? null,
+      p_management_token_ciphertext: management?.ciphertext ?? null,
+    });
+    if (data?.success) {
+      if (decision === "accept") void invokeCalendarWorker();
+      void invokeNotificationWorker();
+    }
+    return rpcResponse(data, error);
+  }
   if (action === "acceptMentorCounter" || action === "declineMentorCounter") {
     const token = action === "acceptMentorCounter" ? await actionToken() : null;
     const { data, error } = await admin.rpc("respond_to_discovery_call_counter_v4", {

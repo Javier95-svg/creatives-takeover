@@ -133,6 +133,16 @@ export const NotificationBell = () => {
       return;
     }
 
+    if (notification.notification_type === 'listing_enquiry') {
+      navigateTo(metadataRoute || '/marketplace/enquiries');
+      return;
+    }
+
+    if (notification.notification_type === 'investor_match') {
+      navigateTo(metadataRoute || '/investors/matches');
+      return;
+    }
+
     if (notification.notification_type === 'discovery_call_request') {
       navigateTo(metadataRoute || '/mentor/bookings');
       return;
@@ -242,6 +252,10 @@ export const NotificationBell = () => {
         return `${actor.name} shared a reel`;
       case 'follower_startup_update':
         return `${actor.name} posted a startup update`;
+      case 'listing_enquiry':
+        return typeof metadata?.message === 'string' ? metadata.message : `${actor.name} asked about your services`;
+      case 'investor_match':
+        return typeof metadata?.message === 'string' ? metadata.message : `${actor.name} matches your investment focus`;
       case 'discovery_call_request':
         return `${actor.name} requested a discovery call with you`;
       case 'task_deadline_expired':
