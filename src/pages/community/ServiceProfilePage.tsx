@@ -14,6 +14,7 @@ import { useServices } from "@/hooks/useServices";
 import type { MarketplaceService } from "@/types/serviceMarketplace";
 import { SERVICE_CATEGORY_LABELS } from "@/types/serviceMarketplace";
 import { getServiceProfilePath } from "@/utils/serviceMarketplace";
+import { useEntityViewTracking } from "@/hooks/useEntityViewTracking";
 
 const getImagePosition = (x?: number | null, y?: number | null) => `${x ?? 50}% ${y ?? 50}%`;
 
@@ -27,6 +28,10 @@ const ServiceProfilePage = () => {
   const { isAdmin } = useAdminRole();
   const { fetchServiceBySlug, fetchServiceById, loading } = useServices();
   const [service, setService] = useState<MarketplaceService | null>(null);
+
+  // Feeds the provider's analytics page: one view per visitor per day, never
+  // their own.
+  useEntityViewTracking('service', service?.id);
   const {
     chargingAction,
     handleEmail,

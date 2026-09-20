@@ -15,6 +15,8 @@ import {
 import ctLogo from "@/assets/ct-logo-polished-borders.webp";
 import { cn } from "@/lib/utils";
 import { enterWorkspaceRoute, WORKSPACE_ROUTES } from "@/lib/workspaceNavigation";
+import { navSectionsForType, navToolsForType } from "@/lib/workspaceNavForType";
+import type { UserType } from "@/lib/accountTypes";
 
 
 
@@ -35,6 +37,8 @@ const NAV_ITEMS: Array<{ label: string; icon: Icon }> = [
   { label: "Resources", icon: BookOpen },
   { label: "Pricing", icon: CircleDollarSign },
 ];
+
+const NAV_ITEM_LABELS = NAV_ITEMS.map(item => item.label);
 
 const NAV_TOOLS: Record<string, string[]> = {
   Dashboard: ["Overview", "Tasks", "Routine", "Files", "Referrals"],
@@ -65,7 +69,7 @@ function Brand({ collapsed, navigateTo }: { collapsed: boolean; navigateTo: (pat
   );
 }
 
-export function WorkspaceSidebar({ navigateTo = enterWorkspaceRoute, currentPath, initialCollapsed = false, profileHref = '/account', account, avatar, updates, mobile = false }: {
+export function WorkspaceSidebar({ navigateTo = enterWorkspaceRoute, currentPath, initialCollapsed = false, profileHref = '/account', account, avatar, updates, mobile = false, userType = 'founder' }: {
   navigateTo?: (path: string) => void;
   currentPath?: string;
   initialCollapsed?: boolean;
@@ -74,10 +78,14 @@ export function WorkspaceSidebar({ navigateTo = enterWorkspaceRoute, currentPath
   avatar: ReactNode;
   updates?: ReactNode;
   mobile?: boolean;
+  /** Founder is the default, which renders the nav exactly as authored. */
+  userType?: UserType;
 }) {
   const [collapsed, setCollapsed] = useState(mobile ? false : initialCollapsed);
   useEffect(() => { if (currentPath && currentPath !== '/' && !mobile) setCollapsed(true); }, [currentPath, mobile]);
   const [openSection, setOpenSection] = useState<string | null>(null);
+  const sections = navSectionsForType(userType, NAV_ITEM_LABELS);
+  const toolsFor = (label: string) => navToolsForType(userType, label, NAV_TOOLS);
   const path = currentPath ?? window.location.pathname;
   const selected = path === '/' ? '' : Object.keys(WORKSPACE_ROUTES).sort((a, b) => WORKSPACE_ROUTES[b].length - WORKSPACE_ROUTES[a].length).find(name => path === WORKSPACE_ROUTES[name] || path.startsWith(WORKSPACE_ROUTES[name] + '/')) ?? '';
   const openRoute = (label: string) => {
@@ -88,7 +96,7 @@ export function WorkspaceSidebar({ navigateTo = enterWorkspaceRoute, currentPath
   };
 
   const handleSectionClick = (label: string) => {
-    if (!NAV_TOOLS[label]) { openRoute(label); return; }
+    if (!toolsFor(label)) { openRoute(label); return; }
     if (collapsed) {
       setCollapsed(false);
       setOpenSection(label);
@@ -118,7 +126,7 @@ export function WorkspaceSidebar({ navigateTo = enterWorkspaceRoute, currentPath
       </div>
 
       <nav id="workspace-navigation" aria-label="Product navigation" className="mt-9 min-h-0 flex-1 space-y-1.5 overflow-y-auto">
-        {NAV_ITEMS.map(({ label, icon: NavIcon }) => (
+        {NAV_ITEMS.filter(({ label }) => sections.includes(label)).map(({ label, icon: NavIcon }) => (
           <div key={label}>
             {label === 'Pricing' ? <a href={WORKSPACE_ROUTES.Pricing} aria-label="Pricing" aria-current={selected === 'Pricing' ? 'page' : undefined}
               title={collapsed ? 'Pricing' : undefined}
@@ -128,34 +136,34 @@ export function WorkspaceSidebar({ navigateTo = enterWorkspaceRoute, currentPath
             </a> : <button
               type="button"
               aria-label={label}
-              aria-expanded={NAV_TOOLS[label] ? !collapsed && openSection === label : undefined}
-              aria-controls={NAV_TOOLS[label] ? `workspace-tools-${label}` : undefined}
+              aria-expanded={toolsFor(label) ? !collapsed && openSection === label : undefined}
+              aria-controls={toolsFor(label) ? `workspace-tools-${label}` : undefined}
               title={collapsed ? label : undefined}
               onClick={() => handleSectionClick(label)}
               className={cn(
                 "flex w-full items-center gap-3 rounded-button px-3 py-2.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:outline-none",
                 collapsed ? "justify-center" : "justify-start",
-                (selected === label || NAV_TOOLS[label]?.includes(selected))
+                (selected === label || toolsFor(label)?.includes(selected))
                   ? "bg-primary/15 text-foreground"
                   : "text-foreground",
               )}
             >
               <NavIcon className="h-5 w-5 shrink-0" />
               {!collapsed && <span>{label}</span>}
-              {!collapsed && NAV_TOOLS[label] && (
+              {!collapsed && toolsFor(label) && (
                 <ChevronDown className={cn("ml-auto h-3.5 w-3.5 transition-transform", openSection === label && "rotate-180")} />
               )}
             </button>}
 
-            {!collapsed && openSection === label && NAV_TOOLS[label] && (
+            {!collapsed && openSection === label && toolsFor(label) && (
               <div id={`workspace-tools-${label}`} role="group" aria-label={`${label} tools`} className="mb-2 ml-5 mt-1 space-y-0.5 border-l border-border/70 pl-4">
                 <p className="mb-2 border-b border-border/60 px-2 py-3 text-xs font-semibold leading-5 text-foreground">{WORKSPACE_SECTION_SLOGANS[label]}</p>
-                {NAV_TOOLS[label].map((tool, index) => {
+                {toolsFor(label)!.map((tool, index) => {
                   const ToolIcon = WORKSPACE_ROUTE_ICONS[tool];
                   return (
                   <div key={tool}>
                   {(label === 'BizMap' || label === 'Insighta') && WORKSPACE_TOOL_STAGES[tool] &&
-                    (index === 0 || WORKSPACE_TOOL_STAGES[tool] !== WORKSPACE_TOOL_STAGES[NAV_TOOLS[label][index - 1]]) &&
+                    (index === 0 || WORKSPACE_TOOL_STAGES[tool] !== WORKSPACE_TOOL_STAGES[toolsFor(label)![index - 1]]) &&
                     <p className="px-2 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-primary">{WORKSPACE_TOOL_STAGES[tool]}</p>}
                   <a
                     href={WORKSPACE_ROUTES[tool]}

@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger } 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { WorkspaceFrameContext } from '@/contexts/WorkspaceFrameContext';
 import { WorkspaceSidebar } from './WorkspaceSidebar';
+import type { UserType } from '@/lib/accountTypes';
 import { enterWorkspaceRoute } from '@/lib/workspaceNavigation';
 import '@/components/workspace-route-frame.css';
 
@@ -29,9 +30,11 @@ export interface WorkspaceLayoutProps {
   /** Overrides the path the sidebar highlights. The tour lives on one URL, so
       location.pathname cannot express which tool the visitor has open. */
   currentPath?: string;
+  /** Selects the sidebar's nav slice. Founder is the default and unchanged. */
+  userType?: UserType;
 }
 
-export default function WorkspaceLayout({ children, account, avatar, profileHref, updates, search, credits, utilities, theme, signOut, home = false, persistentPreviewNavigation = false, onNavigate, currentPath }: WorkspaceLayoutProps) {
+export default function WorkspaceLayout({ children, account, avatar, profileHref, updates, search, credits, utilities, theme, signOut, home = false, persistentPreviewNavigation = false, onNavigate, currentPath, userType = 'founder' }: WorkspaceLayoutProps) {
   const location = useLocation();
   const [drawer, setDrawer] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -48,7 +51,7 @@ export default function WorkspaceLayout({ children, account, avatar, profileHref
     setDrawer(false); setSearchOpen(false); setMore(false);
     document.querySelector('.workspace-route-content')?.scrollTo(0, 0);
   }, [location.pathname, location.search]);
-  const sidebar = <WorkspaceSidebar account={account} avatar={avatar} profileHref={profileHref} updates={updates}
+  const sidebar = <WorkspaceSidebar account={account} avatar={avatar} profileHref={profileHref} updates={updates} userType={userType}
     currentPath={currentPath ?? (home ? '/' : location.pathname)} initialCollapsed={persistentPreviewNavigation || !home} mobile={mobile}
     navigateTo={path => { setDrawer(false); (onNavigate ?? enterWorkspaceRoute)(path); }} />;
   return <WorkspaceFrameContext.Provider value={true}>

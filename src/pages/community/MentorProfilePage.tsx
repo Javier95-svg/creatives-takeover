@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { generateMentorSlug } from "@/utils/mentorSlug";
+import { useEntityViewTracking } from "@/hooks/useEntityViewTracking";
 
 const MentorProfilePage = () => {
   const { id, slug: paramSlug } = useParams<{ id?: string; slug?: string }>();
@@ -22,6 +23,10 @@ const MentorProfilePage = () => {
   const { fetchMentorById, fetchMentorBySlug } = useMentors();
   const [mentor, setMentor] = useState<MentorProfileType | null>(null);
   const [loadingMentor, setLoadingMentor] = useState(true);
+
+  // One view per visitor per day, and never the mentor's own. This is what
+  // feeds their analytics page.
+  useEntityViewTracking('mentor', mentor?.id);
 
   // CRITICAL: Extract slug directly from URL pathname to avoid useParams timing issues
   // This ensures we always get the current route slug, even if useParams hasn't updated yet

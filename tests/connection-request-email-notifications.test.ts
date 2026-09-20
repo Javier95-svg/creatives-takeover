@@ -38,7 +38,15 @@ test('connection-request email function is service-only, validates the outbox, a
 });
 
 test('founders can control connection-request emails from notification preferences', () => {
+  // The channel list moved into a pure module when preferences became per
+  // account type. What matters is that it is still a shared channel, offered to
+  // every type rather than only to the categories, and that the card renders
+  // the list it produces.
+  const channels = read('../src/lib/notificationChannels.ts');
+  const shared = channels.slice(channels.indexOf('SHARED_CHANNELS'), channels.indexOf('MENTOR_CHANNELS'));
+  assert.match(shared, /connection_request_email_enabled/);
+  assert.match(shared, /Connection request emails/);
+
   const card = read('../src/components/NotificationPreferencesCard.tsx');
-  assert.match(card, /connection_request_email_enabled/);
-  assert.match(card, /Connection request emails/);
+  assert.match(card, /notificationChannelsForType/);
 });

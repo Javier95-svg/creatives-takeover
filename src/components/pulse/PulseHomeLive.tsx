@@ -5,6 +5,9 @@ import { useStartupCommandCenter } from '@/hooks/useStartupCommandCenter';
 import { useAssignedStage } from '@/hooks/useAssignedStage';
 import { useProjects, useProjectOutcomes } from '@/hooks/useProjects';
 import { buildPulseProjectContext } from '@/hooks/usePulseWidget';
+import { useAccountContext } from '@/hooks/useAccountContext';
+import { useAccountHomeDigest } from '@/hooks/useAccountHomeDigest';
+import { personaChips, personaFocus, personaHome } from '@/lib/personaHome';
 import { supabase } from '@/integrations/supabase/client';
 import { homePriorities, validateHomeActions, type PulseHomeConcept, type PulseHomeMessage } from '@/lib/pulseHome';
 import { streamPulseHome } from '@/services/pulseHomeStream';
@@ -27,7 +30,17 @@ function LiveConversation({ concept }: { concept: PulseHomeConcept }) {
   // several projects open, results from one must not inform advice on another.
   const { activeProject, activeProjectId } = useProjects();
   const projectOutcomes = useProjectOutcomes(activeProjectId);
-  const priorities = useMemo(() => homePriorities(dashboard.snapshot, dashboard.primaryAction, key => getDashboardTool(key)?.route), [dashboard.snapshot, dashboard.primaryAction]);
+  const founderPriorities = useMemo(() => homePriorities(dashboard.snapshot, dashboard.primaryAction, key => getDashboardTool(key)?.route), [dashboard.snapshot, dashboard.primaryAction]);
+  // A mentor, marketplace member or investor gets their own home. Founders and
+  // builders resolve to null here, which is the signal to change nothing.
+  const { userType, awaitingReview } = useAccountContext();
+  const persona = personaHome(userType);
+  const { digest } = useAccountHomeDigest();
+  const chips = useMemo(() => (persona ? personaChips(persona, digest) : []), [persona, digest]);
+  const priorities = useMemo(
+    () => (persona ? personaFocus(persona, digest, awaitingReview) : founderPriorities),
+    [persona, digest, awaitingReview, founderPriorities],
+  );
   const [messages, setMessages] = useState<PulseHomeMessage[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -106,9 +119,11 @@ function LiveConversation({ concept }: { concept: PulseHomeConcept }) {
       setMessages(previous => [...previous.filter(message => message.id !== assistantId), ...(!previous.some(message => message.id === `${turn.turnId}:user`) ? [{ id: `${turn.turnId}:user`, role: 'user' as const, content: turn.text }] : []), { id: assistantId, role: 'assistant', content: '' }]);
       controller.current = new AbortController();
       await streamPulseHome({ sessionId: id, turnId: turn.turnId, message: turn.text, signal: controller.current.signal,
-        context: { projectContext: startup.loading || startup.error ? null : buildPulseProjectContext(startup.model), stage: dashboard.snapshot?.journey.currentStage ?? null, priorities, contextUnavailable: Boolean(startup.error || dashboard.error), currentPage: '/', currentTool: { name: 'Pulse Home', purpose: 'Personalized founder guidance and platform navigation' },
-          activeProject: activeProject ? { id: activeProject.id, title: activeProject.title, ideaSummary: activeProject.ideaSummary } : null,
-          projectOutcomes: projectOutcomes.data ?? null },
+        // A non founder has no project, and the snapshot fabricates a stage for
+        // them, so both are withheld rather than sent as facts about them.
+        context: { projectContext: persona || startup.loading || startup.error ? null : buildPulseProjectContext(startup.model), stage: persona ? null : dashboard.snapshot?.journey.currentStage ?? null, priorities, contextUnavailable: Boolean(startup.error || dashboard.error), currentPage: '/', currentTool: { name: 'Pulse Home', purpose: persona ? `${persona.composerPurpose} and platform navigation` : 'Personalized founder guidance and platform navigation' },
+          activeProject: !persona && activeProject ? { id: activeProject.id, title: activeProject.title, ideaSummary: activeProject.ideaSummary } : null,
+          projectOutcomes: persona ? null : projectOutcomes.data ?? null },
         onText: chunk => { if (alive.current) setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, content: message.content + chunk } : message)); },
         onActions: actions => { if (alive.current) setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, actions } : message)); },
       });
@@ -128,8 +143,9 @@ function LiveConversation({ concept }: { concept: PulseHomeConcept }) {
     finally { busy.current = false; if (alive.current) setLoading(false); }
   };
   const displayName = dashboard.snapshot?.profile?.fullName || user?.user_metadata?.full_name || '';
-  return <PulseHomeView concept={concept} name={String(displayName).trim().split(/\s+/)[0] || undefined} stage={dashboard.snapshot?.journey.currentStage}
-    projectName={startup.loading || startup.error ? null : startup.model?.manual?.startupName} assignedStage={assignedStage} priorities={priorities} messages={messages}
+  return <PulseHomeView concept={concept} name={String(displayName).trim().split(/\s+/)[0] || undefined} stage={persona ? undefined : dashboard.snapshot?.journey.currentStage}
+    persona={persona} personaChips={chips}
+    projectName={persona || startup.loading || startup.error ? null : startup.model?.manual?.startupName} assignedStage={persona ? null : assignedStage} priorities={priorities} messages={messages}
     loading={loading || dashboard.isLoading || startup.loading} streaming={streaming} error={error}
     unavailable={!loading && !historyReady ? 'Conversation history is unavailable. Retry before continuing.' : undefined}
     contextNotice={startup.error || dashboard.error ? 'Some saved context is unavailable. Pulse will ask rather than guess.' : undefined}

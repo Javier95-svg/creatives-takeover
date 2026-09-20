@@ -21,6 +21,7 @@ import { ProfilePictureCropModal } from "@/components/ProfilePictureCropModal";
 import { AccountWallpaper } from "@/components/AccountWallpaper";
 import { CreditActivityCard } from "@/components/CreditActivityCard";
 import { NotificationPreferencesCard } from "@/components/NotificationPreferencesCard";
+import { RoleProfileCard } from "@/components/workspace/RoleProfileCard";
 import { ValidationNetworkCard } from "@/components/ValidationNetworkCard";
 import { ProfileCompletionTracker } from "@/components/ProfileCompletionTracker";
 import { OnboardingChecklist } from "@/components/OnboardingChecklist";
@@ -628,6 +629,12 @@ const Account = () => {
 
             <div id="credit-activity">
               <CreditActivityCard />
+            </div>
+
+            {/* Renders only for the types that have role fields. A founder is
+                asked for a project instead, which the shell collects. */}
+            <div id="role-profile">
+              <RoleProfileCard />
             </div>
 
             <div id="notification-preferences">

@@ -19,6 +19,8 @@ import { PinnedPosts } from "@/components/profile/PinnedPosts";
 import { PicturesGallery } from "@/components/profile/PicturesGallery";
 import { toast } from "sonner";
 import { logError } from "@/lib/logger";
+import { describeRoleProfile } from '@/lib/roleProfileSchema';
+import { isUserType } from '@/lib/accountTypes';
 import { getPublicStageLabel, shouldShowPublicStage } from "@/lib/accountabilityPreferences";
 import { founderStageLabel } from "@/lib/bizmapStageOrder";
 
@@ -47,6 +49,8 @@ const PUBLIC_PROFILE_SELECT = [
   'tiktok_url',
   'seo_indexable',
   'assigned_stage',
+  'user_type',
+  'role_profile',
 ].join(', ');
 
 interface PublicProfileRow {
@@ -100,6 +104,10 @@ interface Profile {
   business_stage: string | null;
   /** Quiz placement on the Startup Development Cycle, 1..7. */
   assigned_stage: number | null;
+  /** Which of the five account types this person is. */
+  user_type?: string | null;
+  /** The answers to whatever that type was asked for. */
+  role_profile?: Record<string, unknown> | null;
   role: string | null;
   updated_at?: string | null;
   user_preferences?: Record<string, unknown> | null;
@@ -218,6 +226,12 @@ const Profile = () => {
   const publicStageLabel = profile
     ? founderStageLabel(profile.assigned_stage) ?? getPublicStageLabel(profile.business_stage, profile.startup_stage)
     : null;
+
+  // What this account type was asked for, and only what it was asked for. A
+  // founder has no entries here, so nothing renders for them.
+  const roleDetails = profile && isUserType(profile.user_type)
+    ? describeRoleProfile(profile.user_type, profile.role_profile)
+    : [];
 
   // Connections are accepted requests in either direction, counted by a definer
   // function because friend_requests RLS only exposes rows the viewer is part of.
@@ -652,6 +666,16 @@ const Profile = () => {
                     <div className="text-xs text-muted-foreground">Connections</div>
                   </div>
                 </div>
+
+                {roleDetails.length > 0 && (
+                  <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
+                    {roleDetails.map((detail) => (
+                      <span key={detail.key} className="rounded-full border border-border/60 bg-muted/40 px-3 py-1 text-xs">
+                        <span className="font-medium">{detail.label}:</span> {detail.display}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
                 {/* Action Buttons — centered under the stats banner, Platform first */}
                 <div className="flex flex-wrap items-center justify-center gap-2">

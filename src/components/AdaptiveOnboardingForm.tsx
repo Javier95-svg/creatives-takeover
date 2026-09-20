@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
+import { RoleProfileCard } from '@/components/workspace/RoleProfileCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -728,17 +729,23 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
     if (currentStep === 0) {
       if (submittedReview) {
     return (
-      <Card className="mx-auto max-w-xl">
-        <CardContent className="p-8 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-accent-teal/15">
-            <Check className="h-6 w-6 text-accent-teal" />
-          </div>
-          <h2 className="mt-5 text-xl font-semibold">Thanks, your request has been sent.</h2>
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            We will email you once it is reviewed.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="mx-auto max-w-xl space-y-6">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-accent-teal/15">
+              <Check className="h-6 w-6 text-accent-teal" />
+            </div>
+            <h2 className="mt-5 text-xl font-semibold">Thanks, your request has been sent.</h2>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
+              We will email you once it is reviewed. Filling these in now means your
+              profile is ready the moment it is approved.
+            </p>
+          </CardContent>
+        </Card>
+        {/* The type they just chose, not the cached one: the account context
+            query answered before this application existed. */}
+        <RoleProfileCard userTypeOverride={submittedReview} />
+      </div>
     );
   }
   return (

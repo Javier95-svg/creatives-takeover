@@ -134,6 +134,10 @@ const VCProfilePage = lazy(() => import("./components/vc/VCProfilePage"));
 const AcceleratorProfilePage = lazy(() => import("./components/accelerator/AcceleratorProfilePage"));
 const PitchDeckAnalyzerPage = lazy(() => import("./pages/PitchDeckAnalyzerPage"));
 const MyBookings = lazy(() => import("./pages/community/MyBookings"));
+const MentorBookings = lazy(() => import("./pages/account/MentorBookings"));
+const MarketplaceEnquiries = lazy(() => import("./pages/account/MarketplaceEnquiries"));
+const InvestorMatches = lazy(() => import("./pages/account/InvestorMatches"));
+const AccountAnalytics = lazy(() => import("./pages/account/AccountAnalytics"));
 const MentorBookingPage = lazy(() => import("./pages/community/MentorBookingPage"));
 const MentorDiscoveryResponsePage = lazy(() => import("./pages/community/MentorDiscoveryResponsePage"));
 const MentorDiscoveryAvailabilityPage = lazy(() => import("./pages/community/MentorDiscoveryAvailabilityPage"));
@@ -374,6 +378,13 @@ function App() {
                         <Route path="/investors" element={<FindYourAngel />} />
                         <Route path="/investors/admin/new" element={<AdminRoute><AdminAngelEditor /></AdminRoute>} />
                         <Route path="/investors/admin/edit/:id" element={<AdminRoute><AdminAngelEditor /></AdminRoute>} />
+                        {/* Category surfaces. Each page checks the caller's own
+                            account type; the nav simply never offers them to
+                            somebody they do not belong to. */}
+                        <Route path="/mentor/bookings" element={<MentorBookings />} />
+                        <Route path="/marketplace/enquiries" element={<MarketplaceEnquiries />} />
+                        <Route path="/investors/matches" element={<InvestorMatches />} />
+                        <Route path="/account/analytics" element={<AccountAnalytics />} />
                         <Route path="/mentorship/my-bookings" element={<MyBookings />} />
                         <Route path="/mentorship/admin/new" element={<AdminRoute><AdminMentorEditor /></AdminRoute>} />
                         <Route path="/mentorship/admin/edit/:id" element={<AdminRoute><AdminMentorEditor /></AdminRoute>} />

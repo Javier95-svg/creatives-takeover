@@ -17,6 +17,12 @@ export const WORKSPACE_ROUTES: Record<string, string> = {
   Podcast: '/podcast',
   Settings: '/dashboard/settings',
   Messages: '/messages',
+  // Category surfaces. Only ever reached from a per type nav slice, so a
+  // founder never sees them even though the map is shared.
+  'My Bookings': '/mentor/bookings',
+  Enquiries: '/marketplace/enquiries',
+  Matches: '/investors/matches',
+  Analytics: '/account/analytics',
   'Invite people': '/dashboard/referral',
 };
 

@@ -8,7 +8,7 @@ const roots = [
   '/dashboard', '/icp-builder', '/pmf-lab', '/demo-studio', '/mvp-builder',
   '/go-to-market', '/tech-stack', '/directories', '/traction-engine', '/vc-search',
   '/pitch-deck-analyzer', '/insighta-test', '/email-templates', '/accelerator-hunt',
-  '/mentorship', '/co-founder', '/investors', '/marketplace', '/messages', '/profile',
+  '/mentorship', '/mentor', '/co-founder', '/investors', '/marketplace', '/messages', '/profile',
   '/account', '/settings/security', '/settings/delete-account', '/newspaper', '/podcast',
   '/saved-mentors', '/my-bookings', '/purchase-history', '/accountability',
   '/projects-dashboard', '/ai-goals', '/core-metrics', '/decision-sprint', '/validate',

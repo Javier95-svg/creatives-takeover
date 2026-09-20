@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { enterWorkspaceRoute, WORKSPACE_ROUTES } from '@/lib/workspaceNavigation';
 import { BIZMAP_STAGE_ORDER } from '@/lib/bizmapStageOrder';
 import type { PulseHomeConcept, PulseHomeMessage, PulseHomePriority } from '@/lib/pulseHome';
+import type { PersonaChip, PersonaHome } from '@/lib/personaHome';
 import './pulse-home.css';
 
 export interface PulseHomeViewProps {
@@ -25,12 +26,17 @@ export interface PulseHomeViewProps {
   onSend?: (text: string) => void;
   onNew?: () => void;
   onRetry?: () => void;
+  /** Set for mentors, marketplace members and investors. Absent means the
+      founder home, rendered exactly as it always has been. */
+  persona?: PersonaHome | null;
+  /** Counts already resolved, shown beside the type chip. */
+  personaChips?: readonly PersonaChip[];
   /** Where priority links, action cards and shortcut chips lead. Defaults to a
       real navigation; the anonymous tour at /demo swaps panels instead. */
   navigate?: (path: string) => void;
 }
 
-export function PulseHomeView({ concept, name, stage, projectName, assignedStage, priorities = [], messages = [], loading, streaming, unavailable, contextNotice, error, onSend, onNew, onRetry, navigate = enterWorkspaceRoute }: PulseHomeViewProps) {
+export function PulseHomeView({ concept, name, stage, projectName, assignedStage, priorities = [], messages = [], loading, streaming, unavailable, contextNotice, error, onSend, onNew, onRetry, navigate = enterWorkspaceRoute, persona = null, personaChips = [] }: PulseHomeViewProps) {
   const [input, setInput] = useState('');
   const [headline, setHeadline] = useState(0);
   const [showPriorities, setShowPriorities] = useState(false);
@@ -71,7 +77,9 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
   const stageBadge = resolvedStage
     ? `Stage ${resolvedStage.number} · ${resolvedStage.key.charAt(0)}${resolvedStage.key.slice(1).toLowerCase()}`
     : '';
-  const headings = concept === 'guided-journey'
+  const headings = persona
+    ? [persona.headline, persona.headline, persona.headline]
+    : concept === 'guided-journey'
     ? [[name ? `Back at it, ${name}.` : 'Your idea has potential.', 'Let’s find its path.'], ['One clear direction.', 'Your next chapter.'], ['Think clearly.', 'Move confidently.']]
     : concept === 'command-center'
       ? [['Your next move.', 'Starts here.'], ['Less busywork.', 'More breakthroughs.'], [name ? `Make it happen, ${name}.` : 'Make it happen.', 'One step at a time.']]
@@ -92,7 +100,9 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
     if (!text.trim() || streaming || loading || unavailable || !onSend) return;
     onSend(text.trim()); setInput(''); setShowPriorities(false);
   };
-  const shortcuts = [
+  const shortcuts = persona
+    ? persona.shortcuts.map(shortcut => ({ label: shortcut.label, route: shortcut.route, icon: ArrowRight }))
+    : [
     { label: 'What should I focus on next?', route: '/dashboard', icon: LayoutDashboard },
     { label: 'Find me a mentor', route: '/mentorship', icon: GraduationCap },
     { label: 'Find me a co-founder', route: '/co-founder/create', icon: Users },
@@ -112,7 +122,11 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
           <button type="button" onClick={onNew} disabled={streaming || loading} className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"><Plus className="h-3.5 w-3.5" />New conversation</button>
         </div>}
         <header className={cn('pulse-home-hero', !active && concept !== 'command-center' && 'text-center')}>
-          {concept === 'guided-journey' && !active && (trimmedProjectName || stageBadge) && <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
+          {persona && !active && <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
+            <span className="rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs font-medium text-foreground">{persona.label}</span>
+            {personaChips.map(chip => <span key={chip.key} className="rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">{chip.count} {chip.label}</span>)}
+          </div>}
+          {!persona && concept === 'guided-journey' && !active && (trimmedProjectName || stageBadge) && <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
             {trimmedProjectName && <span className="rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs font-medium text-foreground">{trimmedProjectName}</span>}
             {stageBadge && <span className="rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">{stageBadge}</span>}
           </div>}
@@ -121,7 +135,7 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
 
         <div className={cn('pulse-home-priorities', active ? 'my-4' : 'mx-auto my-8 max-w-xl')}>
           {active ? <button type="button" aria-expanded={showPriorities} onClick={() => setShowPriorities(value => !value)} className="inline-flex items-center gap-2 rounded-lg py-1 text-xs text-muted-foreground hover:text-foreground">Today’s priorities <ChevronDown className={cn('h-3 w-3 transition-transform', showPriorities && 'rotate-180')} /></button> : priorities.length > 0 && <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Today’s focus</h2>}
-          {(!active || showPriorities) && (loading ? <p role="status" className="text-sm text-muted-foreground">Loading your workspace…</p> : priorities.length ? <ul className="space-y-2">{priorities.map(item => <li key={item.id} className="flex items-start gap-3 text-sm"><span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary" /><a href={item.route} onClick={event => { if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && event.button === 0) { event.preventDefault(); navigate(item.route); } }} className="group flex flex-1 items-center justify-between gap-2 rounded-md text-foreground hover:text-primary"><span>{item.title}</span><ArrowRight className="h-3.5 w-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" /></a></li>)}</ul> : <div className="text-sm text-muted-foreground"><p>{unavailable ? 'Your dashboard priorities will appear here after sign-in.' : contextNotice ? 'Your priorities are temporarily unavailable.' : 'Nothing on your list yet. Let’s find a useful first step.'}</p><button type="button" disabled={Boolean(unavailable) || loading} onClick={() => send('Help me plan my next step')} className="mt-2 text-primary hover:underline disabled:opacity-50">Plan my next step <span aria-hidden="true">↗</span></button></div>)}
+          {(!active || showPriorities) && (loading ? <p role="status" className="text-sm text-muted-foreground">Loading your workspace…</p> : priorities.length ? <ul className="space-y-2">{priorities.map(item => <li key={item.id} className="flex items-start gap-3 text-sm"><span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary" /><a href={item.route} onClick={event => { if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && event.button === 0) { event.preventDefault(); navigate(item.route); } }} className="group flex flex-1 items-center justify-between gap-2 rounded-md text-foreground hover:text-primary"><span>{item.title}</span><ArrowRight className="h-3.5 w-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" /></a></li>)}</ul> : <div className="text-sm text-muted-foreground"><p>{unavailable ? 'Your dashboard priorities will appear here after sign-in.' : contextNotice ? 'Your priorities are temporarily unavailable.' : persona ? persona.emptyFocus : 'Nothing on your list yet. Let’s find a useful first step.'}</p><button type="button" disabled={Boolean(unavailable) || loading} onClick={() => send('Help me plan my next step')} className="mt-2 text-primary hover:underline disabled:opacity-50">Plan my next step <span aria-hidden="true">↗</span></button></div>)}
         </div>
 
         {active && <div role="log" aria-label="Conversation with Pulse" aria-live="polite" aria-busy={streaming} className="space-y-6 pb-6">{messages.map(message => <article key={message.id} className={cn('text-sm leading-7', message.role === 'user' ? 'ml-auto max-w-xl rounded-2xl bg-muted/70 px-5 py-3' : 'pr-2')}>

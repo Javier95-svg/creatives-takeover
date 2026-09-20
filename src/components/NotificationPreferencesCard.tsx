@@ -7,36 +7,26 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWebPush } from "@/hooks/useWebPush";
+import { useAccountContext } from "@/hooks/useAccountContext";
+import { allNotificationChannelKeys, notificationChannelsForType } from "@/lib/notificationChannels";
 import { logError } from "@/lib/logger";
 import { toast } from "sonner";
 
-interface Prefs {
-  push_enabled: boolean;
-  routine_reminders: boolean;
-  routine_in_app_enabled: boolean;
-  routine_email_enabled: boolean;
-  task_reminders: boolean;
-  retention_emails: boolean;
-  product_updates: boolean;
-  investor_updates: boolean;
-  dm_email_enabled: boolean;
-  connection_request_email_enabled: boolean;
-  dm_push_enabled: boolean;
-}
+// The columns are whatever notificationChannelsForType offers, plus the two
+// the card handles itself. Keeping this open means a new channel is one entry
+// in that module rather than an edit in three places here.
+type Prefs = Record<string, boolean>;
 
+// Everything on, except the investor alert nobody asked for. A channel that
+// defaults off would go unnoticed until someone wondered why it never fired.
 const DEFAULTS: Prefs = {
+  ...Object.fromEntries(allNotificationChannelKeys().map((key) => [key, true])),
   push_enabled: true,
   routine_reminders: true,
-  routine_in_app_enabled: true,
-  routine_email_enabled: true,
-  task_reminders: true,
-  retention_emails: true,
-  product_updates: true,
   investor_updates: false,
-  dm_email_enabled: true,
-  connection_request_email_enabled: true,
-  dm_push_enabled: true,
 };
+
+const SELECT_COLUMNS = ['push_enabled', 'routine_reminders', ...allNotificationChannelKeys()].join(', ');
 
 // db typing escape: these tables aren't in the generated types yet.
 const db = supabase as unknown as {
@@ -46,6 +36,7 @@ const db = supabase as unknown as {
 export function NotificationPreferencesCard() {
   const { user } = useAuth();
   const { supported, isSubscribed, subscribe, unsubscribe } = useWebPush();
+  const { userType } = useAccountContext();
   const [prefs, setPrefs] = useState<Prefs>(DEFAULTS);
   const [loading, setLoading] = useState(true);
 
@@ -56,7 +47,7 @@ export function NotificationPreferencesCard() {
       try {
         const { data } = await db
           .from("notification_preferences")
-          .select("push_enabled, routine_reminders, routine_in_app_enabled, routine_email_enabled, task_reminders, retention_emails, product_updates, investor_updates, dm_email_enabled, connection_request_email_enabled, dm_push_enabled")
+          .select(SELECT_COLUMNS)
           .eq("user_id", user.id)
           .maybeSingle();
         if (!cancelled && data) setPrefs({ ...DEFAULTS, ...data });
@@ -71,9 +62,11 @@ export function NotificationPreferencesCard() {
     };
   }, [user]);
 
-  const save = async (patch: Partial<Prefs>) => {
+  // Prefs is already an open record, so Partial<Prefs> would only widen the
+  // values to boolean | undefined and make the spread below untypeable.
+  const save = async (patch: Prefs) => {
     if (!user) return;
-    const next = { ...prefs, ...patch };
+    const next: Prefs = { ...prefs, ...patch };
     if (Object.prototype.hasOwnProperty.call(patch, 'routine_in_app_enabled') || Object.prototype.hasOwnProperty.call(patch, 'routine_email_enabled')) {
       next.routine_reminders = next.routine_in_app_enabled || next.routine_email_enabled;
     }
@@ -103,17 +96,8 @@ export function NotificationPreferencesCard() {
     await save({ push_enabled: value });
   };
 
-  const rows: Array<{ key: keyof Prefs; label: string; desc: string }> = [
-    { key: "dm_email_enabled", label: "Message emails", desc: "Email me when someone sends a direct message." },
-    { key: "connection_request_email_enabled", label: "Connection request emails", desc: "Email me when a founder sends me a connection request." },
-    { key: "dm_push_enabled", label: "Message push notifications", desc: "Send direct-message alerts to subscribed devices." },
-    { key: "routine_in_app_enabled", label: "Routine in-app reminders", desc: "Show routine nudges in the platform at your selected routine time." },
-    { key: "routine_email_enabled", label: "Routine email fallback", desc: "Email a recovery nudge after three inactive days, if your routine is enabled." },
-    { key: "task_reminders", label: "Task & deadline reminders", desc: "Heads-up when a task is due or overdue." },
-    { key: "retention_emails", label: "Progress & re-engagement emails", desc: "Weekly progress and occasional come-back nudges by email." },
-    { key: "product_updates", label: "Product updates", desc: "Major new features and announcements." },
-    { key: "investor_updates", label: "New investor alerts", desc: "Get pinged when a new angel investor joins the network." },
-  ];
+  // Filtered by account type, so a founder is never offered a mentor channel.
+  const rows = notificationChannelsForType(userType);
 
   return (
     <Card className="backdrop-blur-sm bg-card/80 border-border/50">
@@ -145,10 +129,10 @@ export function NotificationPreferencesCard() {
           <div key={row.key} className="flex items-center justify-between gap-4">
             <div className="space-y-0.5">
               <Label className="text-sm font-medium">{row.label}</Label>
-              <p className="text-xs text-muted-foreground">{row.desc}</p>
+              <p className="text-xs text-muted-foreground">{row.description}</p>
             </div>
             <Switch
-              checked={prefs[row.key]}
+              checked={prefs[row.key] ?? true}
               onCheckedChange={(v) => save({ [row.key]: v })}
               disabled={loading}
             />

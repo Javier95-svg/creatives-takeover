@@ -1,5 +1,5 @@
 import { BIZMAP_STAGES, BIZMAP_TOOLS } from './bizmapStages';
-import { BarChart3, BriefcaseBusiness, CheckSquare, FolderOpen, Gift, GraduationCap, Handshake, LayoutDashboard, LineChart, Mic, Newspaper, Repeat, Rocket, Settings, Sparkles, Users, type LucideIcon } from 'lucide-react';
+import { BarChart3, BriefcaseBusiness, CalendarClock, CheckSquare, FolderOpen, Gift, GraduationCap, Handshake, Inbox, LayoutDashboard, LineChart, MessageSquare, Mic, Newspaper, Repeat, Rocket, Settings, Sparkles, Users, type LucideIcon } from 'lucide-react';
 
 export const WORKSPACE_ROUTE_ICONS: Record<string, LucideIcon> = {
   ...Object.fromEntries(BIZMAP_TOOLS.map(tool => [tool.name, tool.icon])),
@@ -19,6 +19,11 @@ export const WORKSPACE_ROUTE_ICONS: Record<string, LucideIcon> = {
   Routine: Repeat,
   Files: FolderOpen,
   Referrals: Gift,
+  Messages: MessageSquare,
+  'My Bookings': CalendarClock,
+  Enquiries: Inbox,
+  Matches: Sparkles,
+  Analytics: BarChart3,
 };
 
 // Reuse the canonical journey copy and stage labels used by the existing navbar.
@@ -48,6 +53,11 @@ export const WORKSPACE_ROUTE_DESCRIPTIONS: Record<string, string> = {
   Routine: 'Build consistent habits and manage recurring work.',
   Files: 'Keep your startup documents and files together.',
   Referrals: 'Invite founders and track your referral rewards.',
+  Messages: 'Read and reply to your conversations.',
+  'My Bookings': 'Accept or decline discovery call requests.',
+  Enquiries: 'Answer people asking about your services.',
+  Matches: 'Founders matching the sectors and stages you back.',
+  Analytics: 'See how many people viewed your profile.',
 };
 
 export const WORKSPACE_TOOL_STAGES: Record<string, string> = Object.fromEntries(

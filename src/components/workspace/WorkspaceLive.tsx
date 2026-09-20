@@ -16,6 +16,7 @@ import { useWorkspaceHeaderCounts } from '@/hooks/useWorkspaceHeaderCounts';
 import ProjectSwitcher from '@/components/workspace/ProjectSwitcher';
 import { ProjectSetupGate } from '@/components/workspace/ProjectSetupGate';
 import { AccountReviewBanner } from '@/components/workspace/AccountReviewBanner';
+import { useAccountContext } from '@/hooks/useAccountContext';
 import WorkspaceLayout from './WorkspaceLayout';
 
 // Only pulled in once the header icon is used, so the modal and its social
@@ -68,16 +69,19 @@ export default function WorkspaceLive({ children, home }: { children: ReactNode;
     if (error) throw error;
     return data;
   } });
+  // Founder until the answer arrives, so no type specific nav flashes at anyone.
+  const { userType } = useAccountContext();
+  const usesProject = userType === 'founder' || userType === 'builder';
   const username = profile.data?.username || profile.data?.full_name || (profile.isPending ? 'Loading account…' : 'My account');
   const tier = statusError ? null : subscriptionData?.subscription_tier;
   const plan = planLoading ? 'Loading plan…' : tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : 'Plan unavailable';
-  return <WorkspaceLayout home={home} account={{ username, plan }} profileHref={profile.data?.username ? `/profile/${encodeURIComponent(profile.data.username)}` : '/account'}
+  return <WorkspaceLayout home={home} userType={userType} account={{ username, plan }} profileHref={profile.data?.username ? `/profile/${encodeURIComponent(profile.data.username)}` : '/account'}
     avatar={<WorkspaceProfileAvatarLive />} updates={<LatestUpdates />} search={<WorkspaceAccountSearchLive />} credits={<CreditDisplay compact showPurchaseButton />} theme={<ThemeToggle />}
     signOut={<button aria-label="Sign out" title="Sign out" className="workspace-icon-button" onClick={() => void signOut()}><LogOut className="h-4 w-4" /></button>}
     utilities={<>
       {/* Which project the founder is in decides what every tool writes to, so
           it belongs in the shell rather than on one page. */}
-      <div className="hidden lg:block"><ProjectSwitcher /></div>
+      {usesProject && <div className="hidden lg:block"><ProjectSwitcher /></div>}
       <button type="button" onClick={() => { setRequestsMounted(true); setRequestsOpen(true); }}
         aria-label={connectionNotifications > 0 ? `Connection requests, ${connectionNotifications} new` : 'Connection requests'}
         title="Connection requests" className="workspace-icon-button relative">

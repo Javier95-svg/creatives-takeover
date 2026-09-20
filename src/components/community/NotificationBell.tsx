@@ -133,6 +133,11 @@ export const NotificationBell = () => {
       return;
     }
 
+    if (notification.notification_type === 'discovery_call_request') {
+      navigateTo(metadataRoute || '/mentor/bookings');
+      return;
+    }
+
     if (notification.notification_type === 'discovery_call_event') {
       navigateTo(metadataRoute || '/dashboard');
       return;
@@ -237,6 +242,8 @@ export const NotificationBell = () => {
         return `${actor.name} shared a reel`;
       case 'follower_startup_update':
         return `${actor.name} posted a startup update`;
+      case 'discovery_call_request':
+        return `${actor.name} requested a discovery call with you`;
       case 'task_deadline_expired':
         if (typeof metadata?.message === 'string') {
           return metadata.message;
