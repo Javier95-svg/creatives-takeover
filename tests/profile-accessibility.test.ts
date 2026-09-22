@@ -16,6 +16,12 @@ test('account-type fields selected by the profile page exist in the public proje
   assert.match(migration, /GRANT SELECT ON TABLE public\.public_profiles TO anon, authenticated/);
 });
 
+test('the public view rebuild preserves the derived SEO field as an expression', () => {
+  assert.match(migration, /profile_is_search_indexable\(p\) AS seo_indexable/);
+  assert.doesNotMatch(migration, /p\.seo_indexable/);
+  assert.match(migration, /ORDER BY ordinal_position/);
+});
+
 test('an optional projection mismatch cannot make an existing profile look missing', () => {
   assert.match(profile, /CORE_PUBLIC_PROFILE_SELECT/);
   assert.match(profile, /retrying core fields/);

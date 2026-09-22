@@ -11,7 +11,17 @@ DO $$
 DECLARE
   v_public_columns text;
 BEGIN
-  SELECT string_agg(format('p.%I', column_name), ', ' ORDER BY ordinal_position)
+  SELECT string_agg(
+    CASE
+      -- seo_indexable is a derived public-view field, not a physical column
+      -- on profiles. Preserve it in its existing ordinal position so CREATE
+      -- OR REPLACE VIEW does not interpret later columns as renames.
+      WHEN column_name = 'seo_indexable'
+        THEN 'public.profile_is_search_indexable(p) AS seo_indexable'
+      ELSE format('p.%I', column_name)
+    END,
+    ', ' ORDER BY ordinal_position
+  )
   INTO v_public_columns
   FROM information_schema.columns
   WHERE table_schema = 'public'
