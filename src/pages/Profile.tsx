@@ -9,14 +9,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Calendar, Linkedin, Instagram, Globe, Settings, MapPin, Briefcase, Rocket, Users2, ExternalLink, FileText, Zap, TrendingUp, Image, Video, Lightbulb } from "lucide-react";
+import { ArrowLeft, Calendar, Linkedin, Instagram, Globe, Settings, MapPin, Briefcase, Rocket, Users2, ExternalLink, FileText, Zap, Lightbulb } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
 import { PinnedPosts } from "@/components/profile/PinnedPosts";
-import { PicturesGallery } from "@/components/profile/PicturesGallery";
+import { ProfilePosts } from "@/components/profile/ProfilePosts";
 import { ConnectionsDialog } from "@/components/profile/ConnectionsDialog";
 import { toast } from "sonner";
 import { logError } from "@/lib/logger";
@@ -224,7 +223,6 @@ const Profile = () => {
   const { username } = useParams<{ username: string }>();
   const { user: currentUser } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [, setPosts] = useState<Post[]>([]);
   const [pinnedPosts, setPinnedPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -387,31 +385,17 @@ const Profile = () => {
         
         setProfile(finalProfileData);
 
-        // The hero (avatar, identity, stats) is ready now, so stop blocking the
-        // render on the below-the-fold data. Posts and pinned posts are
-        // independent, so fetch them together in the background instead of as a
-        // serial waterfall. This keeps the profile hero fast.
-        void Promise.all([
-          supabase
-            .from('community_posts')
-            .select('*')
-            .eq('user_id', finalProfileData.id)
-            .order('created_at', { ascending: false })
-            .limit(10),
-          supabase
+        // Load pinned highlights without blocking the profile hero.
+        void supabase
             .from('community_posts')
             .select('*')
             .eq('user_id', finalProfileData.id)
             .eq('is_pinned', true)
             .order('created_at', { ascending: false })
-            .limit(4),
-        ])
-          .then(([postsRes, pinnedRes]) => {
-            setPosts(Array.isArray(postsRes.data) ? (postsRes.data as Post[]) : []);
+            .limit(4)
+          .then((pinnedRes) => {
+            if (pinnedRes.error) logError('Error loading pinned posts', pinnedRes.error);
             setPinnedPosts(Array.isArray(pinnedRes.data) ? (pinnedRes.data as Post[]) : []);
-          })
-          .catch((secondaryError) => {
-            logError('Error loading profile secondary data', secondaryError);
           });
 
       } catch (error) {
@@ -837,6 +821,14 @@ const Profile = () => {
                             </Badge>
                           </a>
                         )}
+                        {profile.startup_links.loom && (
+                          <a href={profile.startup_links.loom} target="_blank" rel="noopener noreferrer">
+                            <Badge variant="outline" className="text-xs cursor-pointer hover:bg-primary/10">
+                              <ExternalLink className="h-3 w-3 mr-1" />
+                              Loom Presentation
+                            </Badge>
+                          </a>
+                        )}
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground/50 italic">No links added</p>
@@ -893,94 +885,13 @@ const Profile = () => {
               {/* Pinned Posts */}
               <PinnedPosts posts={pinnedPosts} isOwnProfile={isOwnProfile} />
 
-              {/* Profile Tabs */}
-              <Tabs defaultValue="posts" className="space-y-6">
-                <TabsList className="adaptive-tabs grid w-full grid-cols-3">
-                  <TabsTrigger value="posts" className="flex items-center gap-2">
-                    <Image className="h-4 w-4" />
-                    Posts
-                  </TabsTrigger>
-                  <TabsTrigger value="reels" className="flex items-center gap-2">
-                    <Video className="h-4 w-4" />
-                    Reels
-                  </TabsTrigger>
-                  <TabsTrigger value="startup" className="flex items-center gap-2">
-                    <Rocket className="h-4 w-4" />
-                    Startup
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="posts" className="space-y-4">
-                  <PicturesGallery userId={profile.id} isOwnProfile={isOwnProfile} />
-                </TabsContent>
-
-                <TabsContent value="reels" className="space-y-4">
-                  <Card className="p-6">
-                    <div className="text-center py-12 text-muted-foreground">
-                      <Video className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <h3 className="text-lg font-semibold mb-2">Reels Coming Soon</h3>
-                      <p>{isOwnProfile ? 'Share short videos about your startup journey' : 'No reels available yet'}</p>
-                    </div>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="startup" className="space-y-4">
-                  <Card className="p-6">
-                    {profile.startup_description ? (
-                      <div className="space-y-4">
-                        <div>
-                          <h3 className="text-lg font-semibold mb-2">About {profile.startup_name || 'the Startup'}</h3>
-                          <p className="text-muted-foreground whitespace-pre-line">{profile.startup_description}</p>
-                        </div>
-                        {profile.startup_links && (
-                          <div>
-                            <h4 className="text-sm font-semibold mb-2">Links</h4>
-                            <div className="flex flex-wrap gap-2">
-                              {profile.startup_links.pitchDeck && (
-                                <Button variant="outline" size="sm" asChild>
-                                  <a href={profile.startup_links.pitchDeck} target="_blank" rel="noopener noreferrer">
-                                    <FileText className="h-4 w-4 mr-2" />
-                                    Pitch Deck
-                                  </a>
-                                </Button>
-                              )}
-                              {profile.startup_links.waitlist && (
-                                <Button variant="outline" size="sm" asChild>
-                                  <a href={profile.startup_links.waitlist} target="_blank" rel="noopener noreferrer">
-                                    <TrendingUp className="h-4 w-4 mr-2" />
-                                    Crunchbase
-                                  </a>
-                                </Button>
-                              )}
-                              {profile.startup_links.demo && (
-                                <Button variant="outline" size="sm" asChild>
-                                  <a href={profile.startup_links.demo} target="_blank" rel="noopener noreferrer">
-                                    <Globe className="h-4 w-4 mr-2" />
-                                    Website
-                                  </a>
-                                </Button>
-                              )}
-                              {profile.startup_links.loom && (
-                                <Button variant="outline" size="sm" asChild>
-                                  <a href={profile.startup_links.loom} target="_blank" rel="noopener noreferrer">
-                                    <Video className="h-4 w-4 mr-2" />
-                                    Loom Presentation
-                                  </a>
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="text-center py-12 text-muted-foreground">
-                        <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>{isOwnProfile ? 'Add your startup details to showcase your product' : 'No startup information available yet'}</p>
-                      </div>
-                    )}
-                  </Card>
-                </TabsContent>
-              </Tabs>
+              <ProfilePosts
+                key={`${profile.id}-${isOwnProfile}`}
+                userId={profile.id}
+                name={profile.full_name || profile.username || 'Founder'}
+                avatarUrl={profile.avatar_url}
+                isOwnProfile={isOwnProfile}
+              />
 
               {/* Edit Profile Modal */}
               {isOwnProfile && profile && (

@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      profile_posts: {
+        Row: {
+          id: string
+          user_id: string
+          content: string
+          image_path: string | null
+          publish_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          content?: string
+          image_path?: string | null
+          publish_at?: string
+          created_at?: string
+        }
+        Update: {
+          content?: string
+          image_path?: string | null
+          publish_at?: string
+        }
+        Relationships: []
+      }
       accountability_nudges: {
         Row: {
           acknowledged_at: string | null
