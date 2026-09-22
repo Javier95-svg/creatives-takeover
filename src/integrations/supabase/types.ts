@@ -8859,6 +8859,7 @@ export type Database = {
       }
       public_profiles: {
         Row: {
+          assigned_stage: number | null
           avatar_url: string | null
           bio: string | null
           country: string | null
@@ -8873,12 +8874,14 @@ export type Database = {
           linkedin_url: string | null
           location: string | null
           positioning_line: string | null
+          role_profile: Json | null
           startup_industry: string[] | null
           startup_name: string | null
           startup_stage: string | null
           startup_tagline: string | null
           tiktok_url: string | null
           twitter_url: string | null
+          user_type: string | null
           username: string | null
           website_url: string | null
           youtube_url: string | null

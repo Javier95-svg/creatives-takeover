@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import SEO, { createBreadcrumbSchema, createPersonSchema, createWebPageSchema } from "@/components/SEO";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -24,7 +24,10 @@ import { isUserType } from '@/lib/accountTypes';
 import { getPublicStageLabel, shouldShowPublicStage } from "@/lib/accountabilityPreferences";
 import { founderStageLabel } from "@/lib/bizmapStageOrder";
 
-const PUBLIC_PROFILE_SELECT = [
+// Keep a stable projection that can still resolve an account while a newly
+// deployed optional profile field is waiting for its database migration. A
+// missing optional column must never turn an existing account into a 404.
+const CORE_PUBLIC_PROFILE_FIELDS = [
   'id',
   'username',
   'full_name',
@@ -47,6 +50,12 @@ const PUBLIC_PROFILE_SELECT = [
   'youtube_url',
   'github_url',
   'tiktok_url',
+];
+
+const CORE_PUBLIC_PROFILE_SELECT = CORE_PUBLIC_PROFILE_FIELDS.join(', ');
+
+const PUBLIC_PROFILE_SELECT = [
+  ...CORE_PUBLIC_PROFILE_FIELDS,
   'seo_indexable',
   'assigned_stage',
   'user_type',
@@ -76,8 +85,10 @@ interface PublicProfileRow {
   youtube_url: string | null;
   github_url: string | null;
   tiktok_url: string | null;
-  seo_indexable: boolean | null;
-  assigned_stage: number | null;
+  seo_indexable?: boolean | null;
+  assigned_stage?: number | null;
+  user_type?: string | null;
+  role_profile?: Record<string, unknown> | null;
 }
 
 interface Profile {
@@ -173,6 +184,8 @@ const mapPublicProfile = (profile: PublicProfileRow): Profile => ({
   creative_niche: profile.creative_niche,
   business_stage: null,
   assigned_stage: profile.assigned_stage ?? null,
+  user_type: profile.user_type ?? null,
+  role_profile: profile.role_profile ?? null,
   role: null,
   updated_at: null,
   user_preferences: null,
@@ -208,12 +221,12 @@ interface Post {
 
 const Profile = () => {
   const { username } = useParams<{ username: string }>();
-  const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [, setPosts] = useState<Post[]>([]);
   const [pinnedPosts, setPinnedPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [pictureCount, setPictureCount] = useState(0);
   const isOwnProfile = currentUser?.id === profile?.id;
@@ -253,31 +266,51 @@ const Profile = () => {
 
       try {
         setLoading(true);
+        setLoadError(null);
+        setProfile(null);
+
+        const queryPublicProfile = async (
+          column: 'username' | 'full_name',
+          value: string,
+          caseInsensitive = false,
+        ) => {
+          const run = (select: string) => {
+            const query = supabase.from('public_profiles').select(select);
+            return caseInsensitive
+              ? query.ilike(column, value).maybeSingle()
+              : query.eq(column, value).maybeSingle();
+          };
+
+          const result = await run(PUBLIC_PROFILE_SELECT);
+          if (!result.error) return result;
+
+          // Account-type fields were added after the public view was created.
+          // During a staggered frontend/database deploy, PostgREST rejects the
+          // whole select when even one optional column is absent. Retry the
+          // long-lived safe projection so the account itself remains reachable.
+          console.warn('Extended public profile projection unavailable; retrying core fields', result.error);
+          return run(CORE_PUBLIC_PROFILE_SELECT);
+        };
 
         // Public profile pages read from a safe projection. Full profile rows
         // are only loaded when the viewed profile belongs to the signed-in user.
-        const { data: profileData, error: profileError } = await supabase
-          .from('public_profiles')
-          .select(PUBLIC_PROFILE_SELECT)
-          .eq('username', username)
-          .maybeSingle();
+        const { data: profileData, error: profileError } = await queryPublicProfile('username', username);
+
+        if (profileError) {
+          throw profileError;
+        }
 
         let publicProfileData = profileData as PublicProfileRow | null;
         
-        if (profileError || !publicProfileData) {
-          if (profileError) {
-            console.error('Profile lookup error:', profileError);
-          }
+        if (!publicProfileData) {
           console.error('Looking for username:', username);
-          console.error('Error code:', profileError?.code);
-          console.error('Error message:', profileError?.message);
           
           // Try to find if there's a similar username (case-insensitive fallback)
-          const { data: fallbackData, error: fallbackError } = await supabase
-            .from('public_profiles')
-            .select(PUBLIC_PROFILE_SELECT)
-            .ilike('username', username)
-            .maybeSingle();
+          const { data: fallbackData, error: fallbackError } = await queryPublicProfile('username', username, true);
+
+          if (fallbackError) {
+            throw fallbackError;
+          }
           
           if (fallbackData) {
             console.warn('Found profile with case-insensitive match:', fallbackData.id);
@@ -292,11 +325,15 @@ const Profile = () => {
             if (baseUsername && baseUsername.length > 2) {
               // Try to find profiles where full_name contains parts of the username
               // This is a best-effort fallback for edge cases
-              const { data: nameFallbackData } = await supabase
-                .from('public_profiles')
-                .select(PUBLIC_PROFILE_SELECT)
-                .ilike('full_name', `%${baseUsername}%`)
-                .maybeSingle();
+              const { data: nameFallbackData, error: nameFallbackError } = await queryPublicProfile(
+                'full_name',
+                `%${baseUsername}%`,
+                true,
+              );
+
+              if (nameFallbackError) {
+                throw nameFallbackError;
+              }
               
               if (nameFallbackData) {
                 console.warn('Found profile by name pattern match:', nameFallbackData.id);
@@ -383,6 +420,7 @@ const Profile = () => {
 
       } catch (error) {
         logError('Error loading profile', error);
+        setLoadError("We couldn't load this profile right now. Please try again.");
         toast.error('Failed to load profile');
       } finally {
         setLoading(false);
@@ -456,6 +494,31 @@ const Profile = () => {
                   <div className="h-64 bg-muted rounded-lg" />
                 </div>
               </div>
+            </main>
+            <Footer />
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <>
+        <Helmet>
+          <title>Creatives Takeover</title>
+        </Helmet>
+        <div className="relative min-h-screen overflow-hidden">
+          <ProfileWallpaper />
+          <div className="relative z-10">
+            <Navigation />
+            <main className="container mx-auto px-4 py-20">
+              {platformBackCta}
+              <Card className="max-w-md mx-auto p-8 text-center">
+                <h2 className="text-2xl font-bold mb-4">Profile Temporarily Unavailable</h2>
+                <p className="text-muted-foreground mb-6">{loadError}</p>
+                <Button onClick={() => window.location.reload()}>Try Again</Button>
+              </Card>
             </main>
             <Footer />
           </div>
