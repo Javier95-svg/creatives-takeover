@@ -17,6 +17,7 @@ import { SocialButtons } from "@/components/social/SocialButtons";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
 import { PinnedPosts } from "@/components/profile/PinnedPosts";
 import { PicturesGallery } from "@/components/profile/PicturesGallery";
+import { ConnectionsDialog } from "@/components/profile/ConnectionsDialog";
 import { toast } from "sonner";
 import { logError } from "@/lib/logger";
 import { describeRoleProfile } from '@/lib/roleProfileSchema';
@@ -228,6 +229,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showConnectionsDialog, setShowConnectionsDialog] = useState(false);
   const [pictureCount, setPictureCount] = useState(0);
   const isOwnProfile = currentUser?.id === profile?.id;
   const profileId = profile?.id;
@@ -724,10 +726,22 @@ const Profile = () => {
                     <div className="text-xl font-bold text-primary">{pictureCount}</div>
                     <div className="text-xs text-muted-foreground">Posts</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-primary">{connectionCount ?? '—'}</div>
-                    <div className="text-xs text-muted-foreground">Connections</div>
-                  </div>
+                  {isOwnProfile ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowConnectionsDialog(true)}
+                      className="min-h-14 rounded-lg text-center transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      aria-label={`View your ${connectionCount ?? 0} connections`}
+                    >
+                      <span className="block text-xl font-bold text-primary">{connectionCount ?? '—'}</span>
+                      <span className="block text-xs text-muted-foreground">Connections</span>
+                    </button>
+                  ) : (
+                    <div className="text-center">
+                      <div className="text-xl font-bold text-primary">{connectionCount ?? '—'}</div>
+                      <div className="text-xs text-muted-foreground">Connections</div>
+                    </div>
+                  )}
                 </div>
 
                 {roleDetails.length > 0 && (
@@ -971,15 +985,21 @@ const Profile = () => {
 
               {/* Edit Profile Modal */}
               {isOwnProfile && profile && (
-                <EditProfileModal
-                  open={showEditModal}
-                  onClose={() => setShowEditModal(false)}
-                  profile={profile}
-                  onSuccess={() => {
-                    setShowEditModal(false);
-                    window.location.reload();
-                  }}
-                />
+                <>
+                  <ConnectionsDialog
+                    open={showConnectionsDialog}
+                    onOpenChange={setShowConnectionsDialog}
+                  />
+                  <EditProfileModal
+                    open={showEditModal}
+                    onClose={() => setShowEditModal(false)}
+                    profile={profile}
+                    onSuccess={() => {
+                      setShowEditModal(false);
+                      window.location.reload();
+                    }}
+                  />
+                </>
               )}
             </div>
           </main>

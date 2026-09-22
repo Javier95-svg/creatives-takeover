@@ -5,6 +5,8 @@ import { BIZMAP_STAGE_ORDER, FOUNDER_STAGE_LABELS, founderStageLabel } from '../
 
 const profile = readFileSync('src/pages/Profile.tsx', 'utf8');
 const migration = readFileSync('supabase/migrations/20260918120000_profile_stage_and_connections.sql', 'utf8');
+const connectionListMigration = readFileSync('supabase/migrations/20260922213000_list_profile_connections.sql', 'utf8');
+const connectionsDialog = readFileSync('src/components/profile/ConnectionsDialog.tsx', 'utf8');
 
 test('a profile stage is one of the seven cycle stages', () => {
   // The old label title-cased the free-text business_stage column, which holds
@@ -52,6 +54,34 @@ test('connections are counted in both directions and readable for any profile', 
   assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.connection_count\(uuid\) TO anon, authenticated;/);
   // The view can only gain columns at the end, so assigned_stage sits last.
   assert.match(migration, /seo_indexable,[\s\S]*assigned_stage\s*\nFROM profiles p;/);
+});
+
+test('only the account owner can open the connection list from their profile', () => {
+  assert.match(profile, /isOwnProfile \? \([\s\S]*setShowConnectionsDialog\(true\)/);
+  assert.match(profile, /View your \$\{connectionCount \?\? 0\} connections/);
+  assert.match(profile, /<ConnectionsDialog/);
+});
+
+test('the connection dialog lists accepted accounts and links to their profiles', () => {
+  assert.match(connectionsDialog, /rpc\('my_connections'/);
+  assert.match(connectionsDialog, /connections\.map/);
+  assert.match(connectionsDialog, /encodeURIComponent\(connection\.username\)/);
+  assert.match(connectionsDialog, /No connections yet/);
+  assert.match(connectionsDialog, /Try again/);
+});
+
+test('the connection list is owner-scoped and includes both request directions', () => {
+  assert.match(connectionListMigration, /FUNCTION public\.my_connections\(\)/);
+  assert.match(connectionListMigration, /fr\.status = 'accepted'/);
+  assert.match(connectionListMigration, /fr\.sender_id = auth\.uid\(\) OR fr\.receiver_id = auth\.uid\(\)/);
+  assert.match(connectionListMigration, /WHEN fr\.sender_id = auth\.uid\(\) THEN fr\.receiver_id/);
+  assert.match(connectionListMigration, /REVOKE ALL ON FUNCTION public\.my_connections\(\) FROM PUBLIC, anon/);
+  assert.match(connectionListMigration, /GRANT EXECUTE ON FUNCTION public\.my_connections\(\) TO authenticated/);
+});
+
+test('connections are deduplicated consistently in the list and count', () => {
+  assert.match(connectionListMigration, /GROUP BY 1/);
+  assert.match(connectionListMigration, /COUNT\(DISTINCT CASE/);
 });
 
 test('the profile clears the workspace header instead of sitting flush against it', () => {
