@@ -676,46 +676,46 @@ const Profile = () => {
                 </div>
 
                 {/* Quick Stats Bar */}
-                <div className="relative mb-4 grid grid-cols-4 gap-2 rounded-lg bg-muted/30 px-2 py-4 after:pointer-events-none after:absolute after:inset-x-4 after:top-1/2 after:border-t after:border-border/70 sm:gap-4">
-                  <div className="grid min-w-0 grid-rows-2 text-center text-sm">
-                    <div className="flex min-h-8 items-end justify-center truncate px-1 pb-2 font-semibold text-primary">
+                <div className="mb-4 grid grid-cols-4 gap-2 rounded-lg bg-muted/30 px-2 py-4 sm:gap-4">
+                  <div className="grid min-w-0 grid-rows-2 text-center">
+                    <div className="flex min-h-8 items-end justify-center truncate px-1 pb-2 text-base font-semibold text-primary">
                       {profile.founder_role === 'founder' ? 'Founder' :
                        profile.founder_role === 'co-founder' ? 'Co-Founder' :
                        profile.founder_role === 'cto' ? 'CTO' :
                        profile.founder_role === 'cmo' ? 'CMO' :
                        profile.founder_role === 'investor' ? 'Investor' : 'N/A'}
                     </div>
-                    <div className="flex min-h-8 items-start justify-center pt-2 text-muted-foreground">Role</div>
+                    <div className="flex min-h-8 items-start justify-center pt-2 text-sm text-muted-foreground">Role</div>
                   </div>
-                  <div className="grid min-w-0 grid-rows-2 text-center text-sm">
-                    <div className="flex min-h-8 items-end justify-center truncate px-1 pb-2 font-semibold text-primary">
+                  <div className="grid min-w-0 grid-rows-2 text-center">
+                    <div className="flex min-h-8 items-end justify-center truncate px-1 pb-2 text-base font-semibold text-primary">
                       {showPublicStage ? (publicStageLabel || 'N/A') : isOwnProfile ? (publicStageLabel || 'Not set') : 'Private'}
                     </div>
-                    <div className="flex min-h-8 items-start justify-center pt-2 text-muted-foreground">Stage</div>
+                    <div className="flex min-h-8 items-start justify-center pt-2 text-sm text-muted-foreground">Stage</div>
                   </div>
-                  <div className="grid min-w-0 grid-rows-2 text-center text-sm">
+                  <div className="grid min-w-0 grid-rows-2 text-center">
                     <div
-                      className="flex min-h-8 items-end justify-center truncate px-1 pb-2 font-semibold text-primary"
+                      className="flex min-h-8 items-end justify-center truncate px-1 pb-2 text-base font-semibold text-primary"
                       title={profile.startup_industry?.join(', ') || undefined}
                     >
                       {primaryIndustry || (isOwnProfile ? 'Not set' : 'N/A')}
                     </div>
-                    <div className="flex min-h-8 items-start justify-center pt-2 text-muted-foreground">Industry</div>
+                    <div className="flex min-h-8 items-start justify-center pt-2 text-sm text-muted-foreground">Industry</div>
                   </div>
                   {isOwnProfile ? (
                     <button
                       type="button"
                       onClick={() => setShowConnectionsDialog(true)}
-                      className="z-10 grid min-w-0 grid-rows-2 rounded-lg text-center text-sm transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="grid min-w-0 grid-rows-2 rounded-lg text-center transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       aria-label={`View your ${connectionCount ?? 0} connections`}
                     >
-                      <span className="flex min-h-8 items-end justify-center pb-2 font-semibold text-primary">{connectionCount ?? '—'}</span>
-                      <span className="flex min-h-8 items-start justify-center pt-2 text-muted-foreground">Connections</span>
+                      <span className="flex min-h-8 items-end justify-center pb-2 text-base font-semibold text-primary">{connectionCount ?? '—'}</span>
+                      <span className="flex min-h-8 items-start justify-center pt-2 text-sm text-muted-foreground">Connections</span>
                     </button>
                   ) : (
-                    <div className="grid min-w-0 grid-rows-2 text-center text-sm">
-                      <div className="flex min-h-8 items-end justify-center pb-2 font-semibold text-primary">{connectionCount ?? '—'}</div>
-                      <div className="flex min-h-8 items-start justify-center pt-2 text-muted-foreground">Connections</div>
+                    <div className="grid min-w-0 grid-rows-2 text-center">
+                      <div className="flex min-h-8 items-end justify-center pb-2 text-base font-semibold text-primary">{connectionCount ?? '—'}</div>
+                      <div className="flex min-h-8 items-start justify-center pt-2 text-sm text-muted-foreground">Connections</div>
                     </div>
                   )}
                 </div>
