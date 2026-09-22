@@ -16,6 +16,7 @@ import {
   mergeAccountabilityPreferences,
   normalizeAccountabilityPreferences,
 } from "@/lib/accountabilityPreferences";
+import { ANGEL_SECTOR_OPTIONS } from "@/data/angelSectors";
 
 interface EditProfileModalProps {
   open: boolean;
@@ -103,6 +104,16 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
   const [showCropModal, setShowCropModal] = useState(false);
   const [bioMode, setBioMode] = useState<'plain' | 'rich'>('plain');
   const bioTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const industryOptions = Array.from(new Set([...ANGEL_SECTOR_OPTIONS, ...formData.startup_industry]));
+
+  const toggleIndustry = (industry: string) => {
+    setFormData((current) => ({
+      ...current,
+      startup_industry: current.startup_industry.includes(industry)
+        ? current.startup_industry.filter((item) => item !== industry)
+        : [...current.startup_industry, industry],
+    }));
+  };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -481,6 +492,33 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
                   placeholder="One sentence about your startup"
                   maxLength={120}
                 />
+              </div>
+
+              <div>
+                <Label>Industry</Label>
+                <p className="mb-2 text-xs text-muted-foreground">
+                  Choose every category that applies. Your first selection appears in the profile banner.
+                </p>
+                <div className="grid max-h-48 grid-cols-1 gap-2 overflow-y-auto rounded-lg border border-border/60 p-2 sm:grid-cols-2">
+                  {industryOptions.map((industry) => {
+                    const selected = formData.startup_industry.includes(industry);
+                    return (
+                      <button
+                        key={industry}
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() => toggleIndustry(industry)}
+                        className={`min-h-10 rounded-md border px-3 py-2 text-left text-sm transition-colors ${
+                          selected
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-border/60 bg-background hover:bg-muted'
+                        }`}
+                      >
+                        {industry}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div>

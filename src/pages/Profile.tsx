@@ -230,7 +230,6 @@ const Profile = () => {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showConnectionsDialog, setShowConnectionsDialog] = useState(false);
-  const [pictureCount, setPictureCount] = useState(0);
   const isOwnProfile = currentUser?.id === profile?.id;
   const profileId = profile?.id;
 
@@ -241,6 +240,7 @@ const Profile = () => {
   const publicStageLabel = profile
     ? founderStageLabel(profile.assigned_stage) ?? getPublicStageLabel(profile.business_stage, profile.startup_stage)
     : null;
+  const primaryIndustry = profile?.startup_industry?.find((industry) => industry.trim().length > 0) ?? null;
 
   // What this account type was asked for, and only what it was asked for. A
   // founder has no entries here, so nothing renders for them.
@@ -388,10 +388,9 @@ const Profile = () => {
         setProfile(finalProfileData);
 
         // The hero (avatar, identity, stats) is ready now, so stop blocking the
-        // render on the below-the-fold data. Posts, pinned posts, and the photo
-        // count are independent of each other, so fetch them together in the
-        // background (parallel) instead of as a serial waterfall, and fill them in
-        // as they arrive. This is the main lever for how fast the profile appears.
+        // render on the below-the-fold data. Posts and pinned posts are
+        // independent, so fetch them together in the background instead of as a
+        // serial waterfall. This keeps the profile hero fast.
         void Promise.all([
           supabase
             .from('community_posts')
@@ -406,15 +405,10 @@ const Profile = () => {
             .eq('is_pinned', true)
             .order('created_at', { ascending: false })
             .limit(4),
-          supabase
-            .from('user_photos')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', finalProfileData.id),
         ])
-          .then(([postsRes, pinnedRes, photoRes]) => {
+          .then(([postsRes, pinnedRes]) => {
             setPosts(Array.isArray(postsRes.data) ? (postsRes.data as Post[]) : []);
             setPinnedPosts(Array.isArray(pinnedRes.data) ? (pinnedRes.data as Post[]) : []);
-            setPictureCount(photoRes.count || 0);
           })
           .catch((secondaryError) => {
             logError('Error loading profile secondary data', secondaryError);
@@ -722,9 +716,14 @@ const Profile = () => {
                     </div>
                     <div className="text-xs text-muted-foreground">Stage</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-primary">{pictureCount}</div>
-                    <div className="text-xs text-muted-foreground">Posts</div>
+                  <div className="min-w-0 text-center">
+                    <div
+                      className="line-clamp-2 text-sm font-semibold leading-tight text-primary sm:text-base"
+                      title={profile.startup_industry?.join(', ') || undefined}
+                    >
+                      {primaryIndustry || (isOwnProfile ? 'Not set' : 'N/A')}
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">Industry</div>
                   </div>
                   {isOwnProfile ? (
                     <button
