@@ -4,7 +4,7 @@ const PHOTO = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQ
 type Post = { id: string; content: string; publish_at: string; image_path: string | null };
 
 async function setup(page: Page) {
-  const state = { posts: [] as Post[], failSave: false, saves: 0, uploads: 0 };
+  const state = { posts: [] as Post[], communityPost: true, failSave: false, saves: 0, uploads: 0 };
   await page.route('**/src/main.tsx', (route) => route.fulfill({ contentType: 'application/javascript', body: 'import "/e2e/fixtures/profile-posts-harness.tsx";' }));
   await page.route('**/rest/v1/**', async (route) => {
     const url = new URL(route.request().url());
@@ -27,7 +27,13 @@ async function setup(page: Page) {
     } else if (url.pathname.endsWith('/user_photos')) {
       body = [{ id: 'legacy-photo', caption: 'Our very first prototype', image_url: '/test-photo.png', created_at: '2026-01-01T12:00:00Z' }];
     } else if (url.pathname.endsWith('/community_posts')) {
-      body = [{ id: 'community-post', title: 'Lessons from customer interviews', content: 'We spoke to ten founders.', created_at: '2026-01-02T12:00:00Z' }];
+      if (method === 'DELETE') {
+        state.communityPost = false;
+        return route.fulfill({ status: 204, body: '' });
+      }
+      body = state.communityPost
+        ? [{ id: 'community-post', title: 'Lessons from customer interviews', content: 'We spoke to ten founders.', created_at: '2026-01-02T12:00:00Z' }]
+        : [];
     }
     await route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) });
   });
@@ -97,6 +103,16 @@ test('failed saves preserve the draft and visitors have no publishing controls',
   await expect(page.getByText('Our very first prototype')).toBeVisible();
   await expect(page.getByRole('textbox', { name: 'Your journey update' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Delete post' })).toHaveCount(0);
+});
+
+test('owner can delete older community posts from the same profile feed', async ({ page }) => {
+  const state = await setup(page);
+  await page.goto('/');
+  const communityPost = page.getByText('Lessons from customer interviews').locator('..').locator('..');
+  await communityPost.getByRole('button', { name: 'Delete post' }).click();
+  await page.getByRole('button', { name: 'Remove post', exact: true }).click();
+  await expect(page.getByText('Lessons from customer interviews')).toHaveCount(0);
+  expect(state.communityPost).toBe(false);
 });
 
 test('mobile composer fits without horizontal overflow', async ({ page }) => {

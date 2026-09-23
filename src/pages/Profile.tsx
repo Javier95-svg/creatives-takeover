@@ -884,6 +884,9 @@ const Profile = () => {
                 name={profile.full_name || profile.username || 'Founder'}
                 avatarUrl={profile.avatar_url}
                 isOwnProfile={isOwnProfile}
+                onCommunityPostDeleted={(postId) => {
+                  setPinnedPosts((posts) => posts.filter((post) => post.id !== postId));
+                }}
               />
 
               {/* Edit Profile Modal */}

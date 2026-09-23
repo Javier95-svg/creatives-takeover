@@ -15,6 +15,7 @@ interface Props {
   name: string;
   avatarUrl: string | null;
   isOwnProfile: boolean;
+  onCommunityPostDeleted?: (postId: string) => void;
 }
 
 interface FeedPost {
@@ -29,7 +30,7 @@ interface FeedPost {
 
 const formatDate = (date: string) => new Date(date).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 
-export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
+export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile, onCommunityPostDeleted }: Props) {
   const [limit, setLimit] = useState(20);
   const [deleting, setDeleting] = useState<FeedPost | null>(null);
   const [busy, setBusy] = useState(false);
@@ -75,13 +76,17 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
     if (!deleting || busy) return;
     setBusy(true);
     try {
-      const table = deleting.source === 'photo' ? 'user_photos' : 'profile_posts';
-      const { error } = await supabase.from(table).delete().eq('id', deleting.id).eq('user_id', userId);
+      const { error } = deleting.source === 'photo'
+        ? await supabase.from('user_photos').delete().eq('id', deleting.id).eq('user_id', userId)
+        : deleting.source === 'community'
+          ? await supabase.from('community_posts').delete().eq('id', deleting.id).eq('user_id', userId)
+          : await supabase.from('profile_posts').delete().eq('id', deleting.id).eq('user_id', userId);
       if (error) throw error;
       if (deleting.imagePath) {
         const { error: storageError } = await supabase.storage.from('profile-posts').remove([deleting.imagePath]);
         if (storageError) console.warn('Post removed; attached photo cleanup failed', storageError);
       }
+      if (deleting.source === 'community') onCommunityPostDeleted?.(deleting.id);
       setDeleting(null);
       toast.success('Post removed.');
       void refetch();
@@ -102,7 +107,7 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
             <p className="truncate text-sm font-semibold">{name}</p>
             <p className="text-xs text-muted-foreground">{scheduled ? 'Scheduled for ' : ''}<time dateTime={post.date}>{formatDate(post.date)}</time></p>
           </div>
-          {isOwnProfile && post.source !== 'community' && <Button variant="ghost" size="icon" aria-label={scheduled ? 'Cancel scheduled post' : 'Delete post'} onClick={() => setDeleting(post)}><Trash2 className="h-4 w-4 text-muted-foreground" /></Button>}
+          {isOwnProfile && <Button variant="ghost" size="icon" aria-label={scheduled ? 'Cancel scheduled post' : 'Delete post'} onClick={() => setDeleting(post)}><Trash2 className="h-4 w-4 text-muted-foreground" /></Button>}
         </div>
         <div className="space-y-3 px-4 pb-5 sm:px-6">
           {post.title && <h3 className="font-semibold">{post.title}</h3>}
