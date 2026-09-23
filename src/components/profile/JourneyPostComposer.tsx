@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { CalendarClock, ImagePlus, Loader2, Send, Smile, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -17,6 +17,20 @@ const EMOJIS = [
   ['😊', 'Smile'], ['🔥', 'Fire'], ['✅', 'Done'], ['🙏', 'Thanks'],
 ];
 
+const WRITING_PROMPTS = [
+  { label: 'A small win', opening: 'This week, I finally ' },
+  { label: 'A lesson learned', opening: 'One thing I learned recently: ' },
+  { label: 'What I’m building', opening: 'Right now, I’m building ' },
+];
+
+// Keep unfinished text in this browser tab, isolated by account. Never send
+// drafts to analytics or the public post table. Photos and schedules are not restored.
+const draftKey = (userId: string) => `ct:journey-draft:v1:${userId}`;
+function readDraft(userId: string) {
+  try { return sessionStorage.getItem(draftKey(userId))?.slice(0, POST_MAX_LENGTH) ?? ''; }
+  catch { return ''; }
+}
+
 interface Props {
   userId: string;
   name: string;
@@ -33,8 +47,14 @@ export interface PublishedJourneyPost {
   scheduled: boolean;
 }
 
-export function JourneyPostComposer({ userId, name, avatarUrl, onPublished }: Props) {
-  const [content, setContent] = useState('');
+export function JourneyPostComposer(props: Props) {
+  // Reset all editor state on account changes, including photos and schedules.
+  return <JourneyPostEditor key={props.userId} {...props} />;
+}
+
+function JourneyPostEditor({ userId, name, avatarUrl, onPublished }: Props) {
+  const [content, setContent] = useState(() => readDraft(userId));
+  const [draftSaved, setDraftSaved] = useState(false);
   const [photo, setPhoto] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [showSchedule, setShowSchedule] = useState(false);
@@ -46,6 +66,31 @@ export function JourneyPostComposer({ userId, name, avatarUrl, onPublished }: Pr
   const textarea = useRef<HTMLTextAreaElement>(null);
   const selection = useRef({ start: 0, end: 0 });
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  useEffect(() => {
+    try {
+      if (content) sessionStorage.setItem(draftKey(userId), content);
+      else sessionStorage.removeItem(draftKey(userId));
+      setDraftSaved(Boolean(content));
+    } catch { setDraftSaved(false); }
+  }, [content, userId]);
+
+  useLayoutEffect(() => {
+    const field = textarea.current;
+    if (!field) return;
+    field.style.height = 'auto';
+    field.style.height = `${Math.min(field.scrollHeight, 320)}px`;
+  }, [content]);
+
+  function startWithPrompt(opening: string) {
+    if (content.trim()) return;
+    setContent(opening);
+    selection.current = { start: opening.length, end: opening.length };
+    requestAnimationFrame(() => {
+      textarea.current?.focus();
+      textarea.current?.setSelectionRange(opening.length, opening.length);
+    });
+  }
 
   useEffect(() => {
     if (!photo) { setPreview(null); return; }
@@ -127,7 +172,7 @@ export function JourneyPostComposer({ userId, name, avatarUrl, onPublished }: Pr
   }
 
   return (
-    <Card className="overflow-hidden border-border/80 bg-card/95">
+    <Card className="overflow-hidden border-border/80 bg-card/95 transition-colors focus-within:border-primary/60 focus-within:ring-1 focus-within:ring-primary/15 motion-reduce:transition-none">
       <form onSubmit={publish}>
         <fieldset disabled={busy} className="min-w-0">
           <div className="flex gap-3 p-4 sm:p-6 pb-2 sm:pb-2">
@@ -137,7 +182,7 @@ export function JourneyPostComposer({ userId, name, avatarUrl, onPublished }: Pr
             </Avatar>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold">Share your journey</p>
-              <p className="mt-1 text-xs text-muted-foreground">A small win, a hard lesson, or what you’re building next.</p>
+              <p className="mt-1 text-xs text-muted-foreground">One small update is enough. What moved forward today?</p>
               <Textarea
                 ref={textarea}
                 value={content}
@@ -148,8 +193,19 @@ export function JourneyPostComposer({ userId, name, avatarUrl, onPublished }: Pr
                 aria-label="Your journey update"
                 placeholder="What did you learn or build today?"
                 maxLength={POST_MAX_LENGTH}
-                className="mt-3 min-h-32 resize-y border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 text-base"
+                rows={2}
+                className="mt-3 min-h-16 max-h-80 resize-none overflow-y-auto border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 text-base"
               />
+              {!content.trim() && (
+                <div className="mb-2 flex flex-wrap gap-2" aria-label="Ideas for your update">
+                  {WRITING_PROMPTS.map(({ label, opening }) => (
+                    <Button key={label} type="button" variant="outline" size="sm"
+                      className="h-auto rounded-full border-border/70 bg-transparent px-3 py-1.5 text-xs font-normal text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-foreground"
+                      onClick={() => startWithPrompt(opening)}>{label}</Button>
+                  ))}
+                </div>
+              )}
+              {draftSaved && <p className="mb-2 text-xs text-muted-foreground">Text draft saved in this tab · Only you</p>}
             </div>
           </div>
           {preview && (
@@ -193,10 +249,10 @@ export function JourneyPostComposer({ userId, name, avatarUrl, onPublished }: Pr
               <Button type="button" variant="ghost" size="sm" aria-label="Schedule post" aria-pressed={showSchedule} title="Schedule post" onClick={() => setShowSchedule(true)}><CalendarClock className={`h-4 w-4 ${showSchedule ? 'text-primary' : 'text-muted-foreground'}`} /></Button>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-xs tabular-nums text-muted-foreground" aria-live="polite">{content.length.toLocaleString()}/5,000</span>
+              {content.length >= POST_MAX_LENGTH - 500 && <span className="text-xs tabular-nums text-muted-foreground" aria-live="polite">{content.length.toLocaleString()}/5,000</span>}
               <Button type="submit" size="sm" disabled={busy || (!content.trim() && !photo)}>
                 {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : schedule ? <CalendarClock className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />}
-                {busy ? 'Saving…' : schedule ? 'Schedule' : 'Post'}
+                {busy ? 'Saving…' : schedule ? 'Schedule' : 'Share update'}
               </Button>
             </div>
           </div>
