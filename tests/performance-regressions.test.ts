@@ -38,6 +38,24 @@ test('optional analytics cannot load replay or Amplitude during anonymous LCP', 
   assert.doesNotMatch(featureFlags, /posthog-js\/react/);
 });
 
+test('quick top ups warm checkout and reuse the authenticated Stripe customer', () => {
+  const display = read('../src/components/CreditDisplay.tsx');
+  const menu = read('../src/components/CreditNavigationMenu.tsx');
+  const client = read('../src/services/checkoutService.ts');
+  const edge = read('../supabase/functions/create-checkout/index.ts');
+
+  assert.match(display, /warmCheckout=\{warmCheckoutPath\}/);
+  assert.match(menu, /onOpenChange=\{\(open\)/);
+  assert.match(menu, /Loader2[\s\S]*animate-spin/);
+  assert.match(client, /method: 'OPTIONS'/);
+  assert.match(client, /checkout\.stripe\.com/);
+  assert.match(edge, /select\("stripe_customer_id"\)/);
+  assert.match(edge, /stripe:customer_cache_hit/);
+  assert.match(edge, /isMissingStripeCustomerError/);
+  assert.match(edge, /findOrCreateCustomer\([\s\S]*purchaseType === "credit_pack"/);
+  assert.match(edge, /stripe_checkout_sessions/);
+});
+
 test('legacy GTM links redirect to the canonical live route', () => {
   const app = read('../src/App.tsx');
   const vercel = read('../vercel.json');

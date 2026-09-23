@@ -1,4 +1,5 @@
-import { Calendar, Coins, Plus, Zap } from "lucide-react";
+import { useState } from "react";
+import { Calendar, Coins, Loader2, Plus, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,17 +21,21 @@ const QUICK_TOP_UP_PACKS = [
 ] as const;
 
 
-export function CreditNavigationMenu({totalAvailable, planMonthlyCredits, topUpCredits, creditsSpent, heldCredits = 0, actionLoading = false, showPurchaseButton = false, compact = false, navigate, createCreditPackCheckout, checkoutMessage}: {
+export function CreditNavigationMenu({totalAvailable, planMonthlyCredits, topUpCredits, creditsSpent, heldCredits = 0, actionLoading = false, showPurchaseButton = false, compact = false, navigate, createCreditPackCheckout, warmCheckout, checkoutMessage}: {
  totalAvailable: number; planMonthlyCredits: number; topUpCredits: number; creditsSpent: number; heldCredits?: number;
  actionLoading?: boolean; showPurchaseButton?: boolean; compact?: boolean;
  checkoutMessage?: string;
- navigate: (path: string) => void; createCreditPackCheckout: (id: string, source: string) => unknown;
+ warmCheckout?: () => unknown;
+ navigate: (path: string) => void; createCreditPackCheckout: (id: string, source: string) => Promise<string | null>;
 }) {
+ const [selectedPackId, setSelectedPackId] = useState<string | null>(null);
  const getBalanceColor = () => totalAvailable <= 0 ? "destructive" as const : totalAvailable <= 2 ? "secondary" as const : "default" as const;
  const getBalanceText = () => totalAvailable <= 0 ? "No credits" : `${totalAvailable} credit${totalAvailable !== 1 ? 's' : ''}`;
     return (
       <TooltipProvider>
-        <DropdownMenu>
+        <DropdownMenu onOpenChange={(open) => {
+          if (open) void warmCheckout?.();
+        }}>
           <DropdownMenuTrigger asChild>
             <Button aria-label={`${totalAvailable} credits`} variant="ghost" size="sm" className={compact ? "h-6 gap-1 rounded-full border border-[hsl(var(--credit-gold-edge)/0.5)] bg-gradient-to-br from-[hsl(var(--credit-gold-light))] via-[hsl(var(--credit-gold))] to-[hsl(var(--credit-gold-deep))] px-2 text-xs text-[hsl(var(--credit-gold-foreground))] shadow-sm transition-[filter,box-shadow] hover:text-[hsl(var(--credit-gold-foreground))] hover:brightness-110 hover:shadow-md focus-visible:ring-[hsl(var(--credit-gold-edge))]" : "gap-2 h-8 px-3"}>
               <Coins className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} />
@@ -116,13 +121,19 @@ export function CreditNavigationMenu({totalAvailable, planMonthlyCredits, topUpC
                   size="sm"
                   className="w-full justify-between gap-2 h-auto py-2"
                   disabled={actionLoading}
+                  onPointerEnter={() => void warmCheckout?.()}
+                  onFocus={() => void warmCheckout?.()}
                   onClick={(event) => {
                     event.preventDefault();
-                    void createCreditPackCheckout(pack.id, 'credit_display');
+                    setSelectedPackId(pack.id);
+                    void createCreditPackCheckout(pack.id, 'credit_display')
+                      .finally(() => setSelectedPackId(null));
                   }}
                 >
                   <span className="flex items-center gap-1.5 font-medium">
-                    <Plus className="h-3 w-3" />
+                    {actionLoading && selectedPackId === pack.id
+                      ? <Loader2 className="h-3 w-3 animate-spin" />
+                      : <Plus className="h-3 w-3" />}
                     {pack.label}
                   </span>
                   <span className="text-xs text-muted-foreground">

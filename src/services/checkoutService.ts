@@ -1,6 +1,7 @@
 import { captureEvent } from '@/lib/analytics';
 import { getAccessTokenSafely } from '@/integrations/supabase/auth';
 import { supabase } from '@/integrations/supabase/client';
+import { supabaseBrowserConfig } from '@/integrations/supabase/env';
 
 export type CheckoutBillingCycle = 'monthly' | 'yearly';
 export type CheckoutPlan = 'starter' | 'rising' | 'pro';
@@ -29,6 +30,44 @@ export interface StartCheckoutInput {
 
 export interface StartCheckoutResult {
   url: string;
+}
+
+let checkoutWarmupPromise: Promise<void> | null = null;
+
+/**
+ * Starts the cold, anonymous part of checkout before the user selects a pack.
+ * The request cannot create a session or charge anything: create-checkout
+ * returns immediately for OPTIONS requests. It warms the Edge Function and
+ * lets the browser reuse its Supabase connection for the authenticated POST.
+ */
+export function warmCheckoutPath(): Promise<void> {
+  if (typeof window === 'undefined') return Promise.resolve();
+  if (checkoutWarmupPromise) return checkoutWarmupPromise;
+
+  const stripeOrigin = 'https://checkout.stripe.com';
+  if (!document.head.querySelector(`link[rel="preconnect"][href="${stripeOrigin}"]`)) {
+    const preconnect = document.createElement('link');
+    preconnect.rel = 'preconnect';
+    preconnect.href = stripeOrigin;
+    document.head.appendChild(preconnect);
+  }
+
+  checkoutWarmupPromise = fetch(
+    `${supabaseBrowserConfig.url.replace(/\/$/, '')}/functions/v1/create-checkout`,
+    {
+      method: 'OPTIONS',
+      headers: { apikey: supabaseBrowserConfig.publishableKey },
+      mode: 'cors',
+      credentials: 'omit',
+    },
+  )
+    .then(() => undefined)
+    .catch(() => {
+      // Warm-up is opportunistic. The real checkout request remains the source
+      // of truth and keeps its existing error handling.
+    });
+
+  return checkoutWarmupPromise;
 }
 
 export async function startCheckout(input: StartCheckoutInput): Promise<StartCheckoutResult> {

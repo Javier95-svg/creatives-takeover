@@ -1,5 +1,6 @@
 import { Coins, Loader2, Plus } from "lucide-react";
 import { CreditNavigationMenu } from "@/components/CreditNavigationMenu";
+import { warmCheckoutPath } from "@/services/checkoutService";
 import { CreditPriceList } from "@/components/CreditPriceList";
 import { useCredits } from "@/hooks/useCredits";
 import { useCreditWalletSummary } from "@/hooks/useCreditWalletSummary";
@@ -59,7 +60,7 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
   }
 
   if (variant === "navigation") {
-    return <CreditNavigationMenu {...{ totalAvailable, planMonthlyCredits, topUpCredits, creditsSpent, heldCredits, actionLoading, showPurchaseButton, navigate, createCreditPackCheckout }} compact={compact} />;
+    return <CreditNavigationMenu {...{ totalAvailable, planMonthlyCredits, topUpCredits, creditsSpent, heldCredits, actionLoading, showPurchaseButton, navigate, createCreditPackCheckout }} warmCheckout={warmCheckoutPath} compact={compact} />;
   }
 
   if (variant === "inline") {

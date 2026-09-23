@@ -179,11 +179,84 @@ const buildMetadata = (base: Record<string, string | undefined>): Record<string,
     Object.entries(base).filter((entry): entry is [string, string] => typeof entry[1] === "string" && entry[1].length > 0)
   );
 
+type CustomerResolution = {
+  id: string;
+  fromCache: boolean;
+};
+
+const cacheStripeCustomerId = async (
+  supabaseAdmin: ReturnType<typeof createClient>,
+  user: { id: string; email: string },
+  customerId: string,
+) => {
+  const { error } = await supabaseAdmin.from("subscribers").upsert({
+    user_id: user.id,
+    email: user.email,
+    stripe_customer_id: customerId,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: "user_id" });
+
+  if (error) {
+    logError("checkout:customer_cache_failed", { userId: user.id, error: error.message });
+  }
+};
+
+const scheduleCustomerCache = (
+  supabaseAdmin: ReturnType<typeof createClient>,
+  user: { id: string; email: string },
+  customerId: string,
+) => {
+  const work = cacheStripeCustomerId(supabaseAdmin, user, customerId);
+  const edgeRuntime = (globalThis as typeof globalThis & {
+    EdgeRuntime?: { waitUntil: (promise: Promise<unknown>) => void };
+  }).EdgeRuntime;
+
+  if (edgeRuntime?.waitUntil) {
+    edgeRuntime.waitUntil(work);
+    return;
+  }
+  void work;
+};
+
+const isMissingStripeCustomerError = (error: unknown): boolean => {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as {
+    code?: unknown;
+    param?: unknown;
+    message?: unknown;
+    raw?: { code?: unknown; param?: unknown };
+  };
+  const code = candidate.code ?? candidate.raw?.code;
+  const param = candidate.param ?? candidate.raw?.param;
+  return (code === "resource_missing" && param === "customer")
+    || (typeof candidate.message === "string" && candidate.message.includes("No such customer"));
+};
+
 const findOrCreateCustomer = async (
   stripe: Stripe,
+  supabaseAdmin: ReturnType<typeof createClient>,
   user: { id: string; email: string; user_metadata?: Record<string, unknown> | null },
-  prefillData: PrefillInput
-) => {
+  prefillData: PrefillInput,
+  preferCachedCustomer = false,
+): Promise<CustomerResolution> => {
+  if (preferCachedCustomer) {
+    const { data, error } = await supabaseAdmin
+      .from("subscribers")
+      .select("stripe_customer_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (error) {
+      logError("checkout:customer_cache_read_failed", { userId: user.id, error: error.message });
+    } else {
+      const cachedCustomerId = sanitizeString(data?.stripe_customer_id);
+      if (cachedCustomerId?.startsWith("cus_")) {
+        logInfo("stripe:customer_cache_hit", { customerId: cachedCustomerId });
+        return { id: cachedCustomerId, fromCache: true };
+      }
+    }
+  }
+
   const customers = await stripe.customers.list({ email: user.email, limit: 1 });
   const updatedAddress = buildStripeAddress(prefillData.address);
 
@@ -204,8 +277,9 @@ const findOrCreateCustomer = async (
     }
 
     await stripe.customers.update(customer.id, updatePayload);
+    scheduleCustomerCache(supabaseAdmin, user, customer.id);
     logInfo("stripe:customer_found", { customerId: customer.id });
-    return customer.id;
+    return { id: customer.id, fromCache: false };
   }
 
   const newCustomer = await stripe.customers.create({
@@ -216,8 +290,9 @@ const findOrCreateCustomer = async (
       supabase_user_id: user.id,
     },
   });
+  scheduleCustomerCache(supabaseAdmin, user, newCustomer.id);
   logInfo("stripe:customer_created", { customerId: newCustomer.id });
-  return newCustomer.id;
+  return { id: newCustomer.id, fromCache: false };
 };
 
 const getCanonicalSubscriptionPrice = async (
@@ -307,6 +382,7 @@ serve(withErrorBoundary(async (req: Request) => {
   }
 
   return withIdempotency(req, "create-checkout", async () => {
+    const requestStartedAt = performance.now();
     logInfo("create-checkout:start");
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
@@ -360,11 +436,11 @@ serve(withErrorBoundary(async (req: Request) => {
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-    const customerId = await findOrCreateCustomer(stripe, {
+    let customer = await findOrCreateCustomer(stripe, supabaseAdmin, {
       id: user.id,
       email: user.email,
       user_metadata: user.user_metadata as Record<string, unknown> | null,
-    }, prefillData);
+    }, prefillData, purchaseType === "credit_pack");
 
     const origin =
       req.headers.get("origin") ??
@@ -407,7 +483,7 @@ serve(withErrorBoundary(async (req: Request) => {
         purchase_context_id: purchaseContextId,
       });
 
-      const session = await stripe.checkout.sessions.create({
+      const createCreditPackSession = (customerId: string) => stripe.checkout.sessions.create({
         customer: customerId,
         client_reference_id: user.id,
         mode: "payment",
@@ -437,6 +513,21 @@ serve(withErrorBoundary(async (req: Request) => {
         cancel_url: returnPath ? `${origin}${returnPath}` : `${origin}/pricing#credit-packs`,
       });
 
+      let session: Stripe.Checkout.Session;
+      try {
+        session = await createCreditPackSession(customer.id);
+      } catch (error) {
+        if (!customer.fromCache || !isMissingStripeCustomerError(error)) throw error;
+
+        logInfo("stripe:stale_customer_cache", { customerId: customer.id, userId: user.id });
+        customer = await findOrCreateCustomer(stripe, supabaseAdmin, {
+          id: user.id,
+          email: user.email,
+          user_metadata: user.user_metadata as Record<string, unknown> | null,
+        }, prefillData, false);
+        session = await createCreditPackSession(customer.id);
+      }
+
       await recordCheckoutSession(supabaseAdmin, stripe, session, {
         user_id: user.id,
         purchase_type: "credit_pack",
@@ -462,6 +553,8 @@ serve(withErrorBoundary(async (req: Request) => {
         packId: requestedPackId,
         wallet: "platform",
         userId: user.id,
+        customerCacheHit: customer.fromCache,
+        durationMs: Math.round(performance.now() - requestStartedAt),
       });
 
       return new Response(JSON.stringify({ url: session.url }), {
@@ -493,7 +586,7 @@ serve(withErrorBoundary(async (req: Request) => {
     });
 
     const session = await stripe.checkout.sessions.create({
-      customer: customerId,
+      customer: customer.id,
       client_reference_id: user.id,
       billing_address_collection: "auto",
       customer_update: {
