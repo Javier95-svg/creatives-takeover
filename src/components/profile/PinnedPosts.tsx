@@ -1,7 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Pin, Heart, MessageCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Pin } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { ProfilePostActions, type PostMetrics } from './ProfilePostActions';
+import { Button } from '@/components/ui/button';
 
 interface PinnedPost {
   id: string;
@@ -18,7 +23,21 @@ interface PinnedPostsProps {
   isOwnProfile: boolean;
 }
 
-export const PinnedPosts = ({ posts, isOwnProfile }: PinnedPostsProps) => {
+export const PinnedPosts = ({ posts }: PinnedPostsProps) => {
+  const { user } = useAuth();
+  const location = useLocation();
+  const client = useQueryClient();
+  const metrics = useQuery({
+    queryKey: ['profile-post-metrics', user?.id, posts.map((post) => `community:${post.id}`).sort()],
+    enabled: posts.length > 0,
+    staleTime: 15_000,
+    refetchInterval: 30_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('profile_post_metrics', { p_posts: posts.map((post) => ({ source: 'community', id: post.id })) });
+      if (error) throw error;
+      return data as unknown as PostMetrics[];
+    },
+  });
   if (posts.length === 0) return null;
 
   return (
@@ -30,14 +49,11 @@ export const PinnedPosts = ({ posts, isOwnProfile }: PinnedPostsProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {metrics.isError && <p className="mb-3 text-sm text-muted-foreground">Post interactions could not load. <Button variant="link" onClick={() => void metrics.refetch()}>Retry</Button></p>}
         <div className="grid gap-4 md:grid-cols-2">
           {posts.map((post) => (
-            <Link 
-              key={post.id} 
-              to={`/mentorship/post/${post.id}`}
-              className="block group"
-            >
-              <Card className="h-full transition-all hover:shadow-md hover:border-primary/50">
+              <Card key={post.id} className="h-full transition-all hover:shadow-md hover:border-primary/50">
+                <Link to={`/mentorship/post/${post.id}`} className="block group">
                 <CardContent className="p-4">
                   <div className="flex items-start gap-2 mb-2">
                     <Pin className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
@@ -55,19 +71,13 @@ export const PinnedPosts = ({ posts, isOwnProfile }: PinnedPostsProps) => {
                       </Badge>
                     ))}
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Heart className="h-3 w-3" />
-                      {post.upvotes}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <MessageCircle className="h-3 w-3" />
-                      {post.comment_count}
-                    </div>
-                  </div>
                 </CardContent>
+                </Link>
+                <ProfilePostActions key={user?.id || 'guest'} source="community" postId={post.id}
+                  shareUrl={`${window.location.origin}${location.pathname}?post=community:${post.id}`}
+                  metrics={metrics.data?.find((item) => item.id === post.id)}
+                  refresh={() => client.invalidateQueries({ queryKey: ['profile-post-metrics'] })} />
               </Card>
-            </Link>
           ))}
         </div>
       </CardContent>

@@ -14,7 +14,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
-import { PinnedPosts } from "@/components/profile/PinnedPosts";
 import { ProfilePosts } from "@/components/profile/ProfilePosts";
 import { ConnectionsDialog } from "@/components/profile/ConnectionsDialog";
 import { toast } from "sonner";
@@ -209,21 +208,10 @@ const mapPublicProfile = (profile: PublicProfileRow): Profile => ({
   search_indexing_review_status: null,
 });
 
-interface Post {
-  id: string;
-  title: string;
-  content: string;
-  created_at: string;
-  tags: string[];
-  upvotes: number;
-  comment_count: number;
-}
-
 const Profile = () => {
   const { username } = useParams<{ username: string }>();
   const { user: currentUser } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [pinnedPosts, setPinnedPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -385,18 +373,6 @@ const Profile = () => {
         
         setProfile(finalProfileData);
 
-        // Load pinned highlights without blocking the profile hero.
-        void supabase
-            .from('community_posts')
-            .select('*')
-            .eq('user_id', finalProfileData.id)
-            .eq('is_pinned', true)
-            .order('created_at', { ascending: false })
-            .limit(4)
-          .then((pinnedRes) => {
-            if (pinnedRes.error) logError('Error loading pinned posts', pinnedRes.error);
-            setPinnedPosts(Array.isArray(pinnedRes.data) ? (pinnedRes.data as Post[]) : []);
-          });
 
       } catch (error) {
         logError('Error loading profile', error);
@@ -875,18 +851,12 @@ const Profile = () => {
                 )}
               </div>
 
-              {/* Pinned Posts */}
-              <PinnedPosts posts={pinnedPosts} isOwnProfile={isOwnProfile} />
-
               <ProfilePosts
                 key={`${profile.id}-${isOwnProfile}`}
                 userId={profile.id}
                 name={profile.full_name || profile.username || 'Founder'}
                 avatarUrl={profile.avatar_url}
                 isOwnProfile={isOwnProfile}
-                onCommunityPostDeleted={(postId) => {
-                  setPinnedPosts((posts) => posts.filter((post) => post.id !== postId));
-                }}
               />
 
               {/* Edit Profile Modal */}

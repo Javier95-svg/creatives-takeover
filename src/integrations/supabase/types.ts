@@ -8925,6 +8925,15 @@ export type Database = {
       }
     }
     Functions: {
+      set_profile_pinned_post: { Args: { p_source: string; p_id: string; p_pinned: boolean }; Returns: undefined }
+      get_profile_pinned_post: { Args: { p_user_id: string }; Returns: Json }
+      profile_post_metrics: { Args: { p_posts: Json }; Returns: Json }
+      set_profile_post_reaction: { Args: { p_source: string; p_id: string; p_kind: string; p_active: boolean }; Returns: undefined }
+      list_profile_post_comments: { Args: { p_source: string; p_id: string; p_offset?: number }; Returns: Json }
+      add_profile_post_comment: { Args: { p_source: string; p_id: string; p_content: string; p_comment_id: string }; Returns: undefined }
+      delete_profile_post_comment: { Args: { p_source: string; p_id: string }; Returns: undefined }
+      get_profile_shared_post: { Args: { p_source: string; p_id: string }; Returns: Json }
+      list_profile_reposts: { Args: { p_user_id: string; p_limit?: number }; Returns: Json }
       list_profile_journey_posts: {
         Args: { p_limit?: number; p_user_id: string }
         Returns: {

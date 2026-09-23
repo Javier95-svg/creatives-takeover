@@ -1,4 +1,15 @@
 export const POST_MAX_LENGTH = 5000;
+
+// Keep one copy of a pin, including when it lies outside the loaded feed page.
+export function orderProfilePosts<T extends { source: string; id: string; date: string }>(posts: T[], pinned?: T | null): T[] {
+  const key = (post: T) => `${post.source}:${post.id}`;
+  const unique = new Map(posts.map((post) => [key(post), post]));
+  if (pinned && !unique.has(key(pinned))) unique.set(key(pinned), pinned);
+  return [...unique.values()].sort((a, b) => {
+    const pinOrder = Number(!!pinned && key(b) === key(pinned)) - Number(!!pinned && key(a) === key(pinned));
+    return pinOrder || new Date(b.date).getTime() - new Date(a.date).getTime() || key(a).localeCompare(key(b));
+  });
+}
 export const POST_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 export const POST_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
