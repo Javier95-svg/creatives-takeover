@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { CONNECTION_EVENT, getSeenAcceptedIds, getSeenPendingIds } from '@/lib/connectionSeenState';
 import { MESSAGES_READ_EVENT, readCountFromEvent } from '@/lib/messagesReadState';
+import { refreshHeaderCounts, subscribeWorkspaceHeader } from '@/lib/workspaceHeaderRealtime';
 
 export type WorkspaceHeaderCounts = {
   unreadMessages: number;
@@ -27,9 +28,8 @@ const EMPTY: HeaderCountsRow = {
  *
  * The legacy navigation read its unread number from useMessaging({ autoLoad: true }),
  * which loads every conversation and opens realtime subscriptions. The header renders
- * on every workspace route, so this uses a single RPC instead, polled on an interval
- * and refetched on window focus. A badge a minute stale is acceptable; an extra socket
- * on every route is not.
+ * on every workspace route, so this uses a single RPC plus a shared lightweight
+ * realtime channel, without loading inboxes. Polling/focus remain recovery paths.
  *
  * The connection number counts two things, matching useSocial's connectionNotificationCount:
  * incoming requests still awaiting an answer, and requests this user sent that the other
@@ -48,8 +48,8 @@ export function useWorkspaceHeaderCounts(): WorkspaceHeaderCounts {
     refetchInterval: 60_000,
     refetchOnWindowFocus: true,
     staleTime: 30_000,
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_workspace_header_counts');
+    queryFn: async ({ signal }) => {
+      const { data, error } = await supabase.rpc('get_workspace_header_counts').abortSignal(signal);
       if (error) throw error;
       const row = (data ?? {}) as Partial<HeaderCountsRow>;
       return {
@@ -63,8 +63,13 @@ export function useWorkspaceHeaderCounts(): WorkspaceHeaderCounts {
   // Answering a request or acknowledging an acceptance changes the badge without
   // any refetch, so recompute when useSocial broadcasts.
   const refresh = useCallback(() => {
-    void queryClient.invalidateQueries({ queryKey: ['workspace-header-counts', userId] });
+    return refreshHeaderCounts(queryClient, userId);
   }, [queryClient, userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+    return subscribeWorkspaceHeader(supabase, userId, refresh);
+  }, [userId, refresh]);
 
   // Reading a conversation subtracts from the badge on the spot, then the
   // refetch confirms it. Invalidating alone would still leave the old number on

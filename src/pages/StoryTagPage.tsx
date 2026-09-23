@@ -4,7 +4,7 @@ import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { StoryCard } from "@/components/stories/StoryCard";
-import { useStories, StoryArticle } from "@/hooks/useStories";
+import { useStories, StorySummary } from "@/hooks/useStories";
 import { Badge } from "@/components/ui/badge";
 import { Hash, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ const StoryTagPage = () => {
   const { tagSlug } = useParams<{ tagSlug: string }>();
   const navigate = useNavigate();
   const { fetchStories, fetchUniqueHashtags, loading } = useStories();
-  const [stories, setStories] = useState<StoryArticle[]>([]);
+  const [stories, setStories] = useState<StorySummary[]>([]);
   const [tagDisplay, setTagDisplay] = useState<string>("");
   const abortControllerRef = useRef<AbortController | null>(null);
 

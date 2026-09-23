@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AngelInvestor, CreateAngelInput } from '@/types/angel';
 import { useAdminRole } from '@/hooks/useAdminRole';
+import { useQueryClient } from '@tanstack/react-query';
+import { PUBLIC_LIST_CACHE } from '@/lib/publicListCache';
 
 // Helper function to format error messages
 const formatErrorMessage = (error: any, defaultMessage: string): string => {
@@ -40,6 +42,7 @@ const formatErrorMessage = (error: any, defaultMessage: string): string => {
 };
 
 export const useAngels = () => {
+  const queryClient = useQueryClient();
   const { isAdmin } = useAdminRole();
   const [loading, setLoading] = useState(false);
 
@@ -48,15 +51,17 @@ export const useAngels = () => {
     try {
       setLoading(true);
 
-      const { data, error } = await (supabase as any)
-        .from('angel_investors')
-        .select('*')
-        .eq('is_active', true)
-        .order('name', { ascending: true });
-
-      if (error) throw error;
-
-      return (data || []) as AngelInvestor[];
+      return await queryClient.fetchQuery({
+        queryKey: ['public-angels', 'list'],
+        ...PUBLIC_LIST_CACHE,
+        queryFn: async ({ signal }) => {
+          const { data, error } = await (supabase as any)
+            .from('angel_investors').select('*').eq('is_active', true)
+            .order('name', { ascending: true }).abortSignal(signal);
+          if (error) throw error;
+          return (data || []) as AngelInvestor[];
+        },
+      });
     } catch (error: any) {
       console.error('Error fetching angel investors:', {
         message: error?.message,
@@ -71,7 +76,7 @@ export const useAngels = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [queryClient]);
 
   // Fetch single angel investor by ID
   const fetchAngelById = useCallback(async (id: string): Promise<AngelInvestor | null> => {
@@ -159,6 +164,7 @@ export const useAngels = () => {
         name: data?.name,
       });
 
+      await queryClient.invalidateQueries({ queryKey: ['public-angels'] });
       toast.success('Angel investor created successfully');
       return data as AngelInvestor;
     } catch (error: any) {
@@ -177,7 +183,7 @@ export const useAngels = () => {
     } finally {
       setLoading(false);
     }
-  }, [isAdmin]);
+  }, [isAdmin, queryClient]);
 
   // Update angel investor (admin only)
   const updateAngel = useCallback(async (id: string, input: Partial<CreateAngelInput>): Promise<AngelInvestor | null> => {
@@ -228,6 +234,7 @@ export const useAngels = () => {
         name: data?.name,
       });
 
+      await queryClient.invalidateQueries({ queryKey: ['public-angels'] });
       toast.success('Angel investor updated successfully');
       return data as AngelInvestor;
     } catch (error: any) {
@@ -246,7 +253,7 @@ export const useAngels = () => {
     } finally {
       setLoading(false);
     }
-  }, [isAdmin]);
+  }, [isAdmin, queryClient]);
 
   // Delete angel investor (admin only)
   const deleteAngel = useCallback(async (id: string): Promise<boolean> => {
@@ -265,6 +272,7 @@ export const useAngels = () => {
 
       if (error) throw error;
 
+      await queryClient.invalidateQueries({ queryKey: ['public-angels'] });
       toast.success('Angel investor deleted successfully');
       return true;
     } catch (error: any) {
@@ -280,7 +288,7 @@ export const useAngels = () => {
     } finally {
       setLoading(false);
     }
-  }, [isAdmin]);
+  }, [isAdmin, queryClient]);
 
   return {
     fetchAngels,

@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { StoryCard } from "@/components/stories/StoryCard";
-import { useStories, StoryArticle } from "@/hooks/useStories";
+import { useStories, StoryArticle, StorySummary } from "@/hooks/useStories";
 import { normalizeHashtag } from "@/utils/hashtagUtils";
 
 interface RelatedStoriesProps {
@@ -10,7 +10,7 @@ interface RelatedStoriesProps {
 
 export const RelatedStories = ({ currentStory, limit = 4 }: RelatedStoriesProps) => {
   const { fetchStories, loading } = useStories();
-  const [allStories, setAllStories] = useState<StoryArticle[]>([]);
+  const [allStories, setAllStories] = useState<StorySummary[]>([]);
 
   useEffect(() => {
     const loadStories = async () => {

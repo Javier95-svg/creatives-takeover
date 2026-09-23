@@ -3,7 +3,7 @@
  * Generates RSS 2.0 feed for story articles
  */
 
-import { StoryArticle } from "@/hooks/useStories";
+import { StorySummary } from "@/hooks/useStories";
 
 export interface RSSStory {
   title: string;
@@ -48,7 +48,7 @@ function escapeXML(str: string): string {
  * Generate RSS feed XML from stories
  */
 export function generateRSSFeed(
-  stories: StoryArticle[],
+  stories: StorySummary[],
   baseUrl: string = 'https://creatives-takeover.com'
 ): string {
   const now = new Date();
@@ -109,7 +109,7 @@ ${items}
  * This should be called server-side or during build time
  */
 export async function generateRSSFeedFromStories(
-  stories: StoryArticle[],
+  stories: StorySummary[],
   baseUrl: string = 'https://creatives-takeover.com'
 ): Promise<string> {
   // Sort stories by published date (newest first)

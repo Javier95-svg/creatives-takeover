@@ -1,9 +1,9 @@
 /**
  * Tells the workspace header that a conversation was just read.
  *
- * The header badge comes from a 60s poll of get_workspace_header_counts, which
- * is fine for a number going up and wrong for one going down: opening a DM left
- * the badge showing unread messages for up to a minute after they had been read.
+ * Realtime events reconcile the header with get_workspace_header_counts; a
+ * 60s poll is only a recovery path. Reads still decrement locally so opening
+ * a conversation clears its badge without waiting for a server round trip.
  *
  * Connections already solve this with CONNECTION_EVENT; messages had no
  * equivalent, so this is the same pattern. The count travels with the event so

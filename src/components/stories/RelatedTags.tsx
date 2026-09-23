@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Hash } from "lucide-react";
-import { useStories, StoryArticle } from "@/hooks/useStories";
+import { useStories, StorySummary } from "@/hooks/useStories";
 import { normalizeHashtag, slugifyTag } from "@/utils/hashtagUtils";
 
 interface RelatedTagsProps {
@@ -32,7 +32,7 @@ export const RelatedTags = ({ currentTag, limit = 5 }: RelatedTagsProps) => {
         // Count co-occurring hashtags
         const tagCounts = new Map<string, number>();
         
-        stories.forEach((story: StoryArticle) => {
+        stories.forEach((story: StorySummary) => {
           if (story.hashtags && Array.isArray(story.hashtags)) {
             story.hashtags.forEach((tag) => {
               const normalized = normalizeHashtag(tag).toLowerCase();

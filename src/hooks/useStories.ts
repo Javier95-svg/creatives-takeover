@@ -3,6 +3,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { normalizeHashtag } from '@/utils/hashtagUtils';
+import { useQueryClient } from '@tanstack/react-query';
+import { PUBLIC_LIST_CACHE } from '@/lib/publicListCache';
+
+// Public listing/search caches never contain article bodies or drafts.
+export const STORY_LIST_FIELDS = 'id,slug,title,banner_image_url,linkedin_post_url,excerpt,hashtags,author_id,status,published_at,meta_title,meta_description,created_at,updated_at';
+export type StorySummary = Omit<StoryArticle, 'body_content'>;
 
 export interface StoryArticle {
   id: string;
@@ -39,11 +45,12 @@ const getStoryReleaseTimestamp = (story: Pick<StoryArticle, 'published_at' | 'cr
   return new Date(story.published_at ?? story.created_at).getTime();
 };
 
-const sortStoriesByReleaseDate = (stories: StoryArticle[]) => {
+const sortStoriesByReleaseDate = <T extends Pick<StoryArticle, 'published_at' | 'created_at'>>(stories: T[]) => {
   return [...stories].sort((a, b) => getStoryReleaseTimestamp(b) - getStoryReleaseTimestamp(a));
 };
 
 export const useStories = () => {
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
@@ -51,21 +58,21 @@ export const useStories = () => {
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
 
   // Fetch all published stories (prioritize LinkedIn posts)
-  const fetchStories = useCallback(async (hashtag?: string): Promise<StoryArticle[]> => {
+  const fetchStories = useCallback(async (hashtag?: string): Promise<StorySummary[]> => {
     try {
       setLoading(true);
       
-      const query = supabase
-        .from('stories_articles')
-        .select('*')
-        .eq('status', 'published')
-        .order('published_at', { ascending: false });
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      
-      let stories = (data || []) as StoryArticle[];
+      let stories = await queryClient.fetchQuery({
+        queryKey: ['public-stories', 'list'],
+        ...PUBLIC_LIST_CACHE,
+        queryFn: async ({ signal }) => {
+          const { data, error } = await supabase.from('stories_articles')
+            .select(STORY_LIST_FIELDS).eq('status', 'published')
+            .order('published_at', { ascending: false }).abortSignal(signal);
+          if (error) throw error;
+          return sortStoriesByReleaseDate((data || []) as StorySummary[]);
+        },
+      });
 
       // Case-insensitive tag filtering (client-side for better compatibility)
       if (hashtag) {
@@ -86,10 +93,10 @@ export const useStories = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [queryClient]);
 
   // Search published stories by title, excerpt, slug, and hashtags
-  const searchStories = useCallback(async (query: string): Promise<StoryArticle[]> => {
+  const searchStories = useCallback(async (query: string): Promise<StorySummary[]> => {
     const trimmedQuery = query.trim();
     if (!trimmedQuery) {
       return fetchStories();
@@ -103,63 +110,69 @@ export const useStories = () => {
       const normalizedHashtag = normalizeHashtag(trimmedQuery);
       const queryWithoutHash = trimmedQuery.replace(/^#+/, '').toLowerCase();
 
-      const baseSelect = () =>
-        supabase
-          .from('stories_articles')
-          .select('*')
-          .eq('status', 'published');
+      return await queryClient.fetchQuery({
+        queryKey: ['public-stories', 'search', trimmedQuery],
+        ...PUBLIC_LIST_CACHE,
+        queryFn: async ({ signal }) => {
+          const baseSelect = () =>
+            supabase
+              .from('stories_articles')
+              .select(STORY_LIST_FIELDS)
+              .eq('status', 'published').abortSignal(signal);
 
-      const [titleRes, excerptRes, slugRes, hashtagRes] = await Promise.all([
-        baseSelect().ilike('title', likePattern).order('published_at', { ascending: false }),
-        baseSelect().ilike('excerpt', likePattern).order('published_at', { ascending: false }),
-        baseSelect().ilike('slug', likePattern).order('published_at', { ascending: false }),
-        baseSelect().contains('hashtags', [normalizedHashtag]).order('published_at', { ascending: false }),
-      ]);
+          const [titleRes, excerptRes, slugRes, hashtagRes] = await Promise.all([
+            baseSelect().ilike('title', likePattern).order('published_at', { ascending: false }),
+            baseSelect().ilike('excerpt', likePattern).order('published_at', { ascending: false }),
+            baseSelect().ilike('slug', likePattern).order('published_at', { ascending: false }),
+            baseSelect().contains('hashtags', [normalizedHashtag]).order('published_at', { ascending: false }),
+          ]);
 
-      const errors = [titleRes.error, excerptRes.error, slugRes.error, hashtagRes.error].filter(Boolean);
-      if (errors.length > 0) {
-        throw errors[0];
-      }
+          const errors = [titleRes.error, excerptRes.error, slugRes.error, hashtagRes.error].filter(Boolean);
+          if (errors.length > 0) {
+            throw errors[0];
+          }
 
-      const merged = new Map<string, StoryArticle>();
-      [titleRes.data, excerptRes.data, slugRes.data, hashtagRes.data].forEach((collection) => {
-        (collection || []).forEach((story) => {
-          merged.set(story.id, story as StoryArticle);
-        });
+          const merged = new Map<string, StorySummary>();
+          [titleRes.data, excerptRes.data, slugRes.data, hashtagRes.data].forEach((collection) => {
+            ((collection || []) as StorySummary[]).forEach((story) => {
+              merged.set(story.id, story);
+            });
+          });
+
+          const stories = Array.from(merged.values());
+
+          const ranked = stories.sort((a, b) => {
+            const score = (story: StorySummary) => {
+              const title = (story.title || '').toLowerCase();
+              const excerpt = (story.excerpt || '').toLowerCase();
+              const slug = (story.slug || '').toLowerCase();
+              const tags = (story.hashtags || []).map((tag) => normalizeHashtag(tag).toLowerCase());
+              const normalizedQueryLower = normalizedHashtag.toLowerCase();
+
+              let relevance = 0;
+
+              if (title.includes(queryWithoutHash)) relevance += 8;
+              if (excerpt.includes(queryWithoutHash)) relevance += 5;
+              if (slug.includes(queryWithoutHash)) relevance += 4;
+              if (tags.some((tag) => tag === normalizedQueryLower)) relevance += 9;
+              if (tags.some((tag) => tag.includes(queryWithoutHash))) relevance += 4;
+
+              const published = new Date(getStoryReleaseTimestamp(story));
+              const ageInDays = Math.max(0, (Date.now() - published.getTime()) / (1000 * 60 * 60 * 24));
+              const recencyBoost = Math.max(0, 2 - ageInDays / 180);
+
+              return relevance + recencyBoost;
+            };
+
+            const scoreDiff = score(b) - score(a);
+            if (scoreDiff !== 0) return scoreDiff;
+
+            return getStoryReleaseTimestamp(b) - getStoryReleaseTimestamp(a);
+          });
+
+          return ranked;
+        },
       });
-
-      const stories = Array.from(merged.values());
-
-      const ranked = stories.sort((a, b) => {
-        const score = (story: StoryArticle) => {
-          const title = (story.title || '').toLowerCase();
-          const excerpt = (story.excerpt || '').toLowerCase();
-          const slug = (story.slug || '').toLowerCase();
-          const tags = (story.hashtags || []).map((tag) => normalizeHashtag(tag).toLowerCase());
-          const normalizedQueryLower = normalizedHashtag.toLowerCase();
-
-          let relevance = 0;
-
-          if (title.includes(queryWithoutHash)) relevance += 8;
-          if (excerpt.includes(queryWithoutHash)) relevance += 5;
-          if (slug.includes(queryWithoutHash)) relevance += 4;
-          if (tags.some((tag) => tag === normalizedQueryLower)) relevance += 9;
-          if (tags.some((tag) => tag.includes(queryWithoutHash))) relevance += 4;
-
-          const published = new Date(getStoryReleaseTimestamp(story));
-          const ageInDays = Math.max(0, (Date.now() - published.getTime()) / (1000 * 60 * 60 * 24));
-          const recencyBoost = Math.max(0, 2 - ageInDays / 180);
-
-          return relevance + recencyBoost;
-        };
-
-        const scoreDiff = score(b) - score(a);
-        if (scoreDiff !== 0) return scoreDiff;
-
-        return getStoryReleaseTimestamp(b) - getStoryReleaseTimestamp(a);
-      });
-
-      return ranked;
     } catch (error: any) {
       console.error('Error searching stories:', error);
       toast.error('Failed to search stories');
@@ -167,7 +180,7 @@ export const useStories = () => {
     } finally {
       setLoading(false);
     }
-  }, [fetchStories]);
+  }, [fetchStories, queryClient]);
 
   // Fetch single story by slug
   const fetchStoryBySlug = useCallback(async (slug: string): Promise<StoryArticle | null> => {
@@ -338,6 +351,7 @@ export const useStories = () => {
 
       if (error) throw error;
 
+      await queryClient.invalidateQueries({ queryKey: ['public-stories'] });
       toast.success('Story created successfully');
       return data as StoryArticle;
     } catch (error: any) {
@@ -347,7 +361,7 @@ export const useStories = () => {
     } finally {
       setLoading(false);
     }
-  }, [isAdmin, user]);
+  }, [isAdmin, user, queryClient]);
 
   // Update story (admin only)
   const updateStory = useCallback(async (
@@ -371,6 +385,7 @@ export const useStories = () => {
 
       if (error) throw error;
 
+      await queryClient.invalidateQueries({ queryKey: ['public-stories'] });
       toast.success('Story updated successfully');
       return data as StoryArticle;
     } catch (error: any) {
@@ -380,7 +395,7 @@ export const useStories = () => {
     } finally {
       setLoading(false);
     }
-  }, [isAdmin]);
+  }, [isAdmin, queryClient]);
 
   // Delete story (admin only)
   const deleteStory = useCallback(async (id: string): Promise<boolean> => {
@@ -399,6 +414,7 @@ export const useStories = () => {
 
       if (error) throw error;
 
+      await queryClient.invalidateQueries({ queryKey: ['public-stories'] });
       toast.success('Story deleted successfully');
       return true;
     } catch (error: any) {
@@ -408,7 +424,7 @@ export const useStories = () => {
     } finally {
       setLoading(false);
     }
-  }, [isAdmin]);
+  }, [isAdmin, queryClient]);
 
   // Fetch all unique hashtags with counts
   const fetchUniqueHashtags = useCallback(async (): Promise<Array<{ tag: string; count: number }>> => {

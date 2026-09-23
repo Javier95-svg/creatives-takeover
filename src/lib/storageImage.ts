@@ -21,8 +21,8 @@ const RENDER_PUBLIC = "/storage/v1/render/image/public/";
 export interface StorageImageOptions {
   /** Target CSS width in px. Snapped up to the next bucket and doubled for retina. */
   width: number;
-  /** Defaults to `width` for square avatars; pass explicitly for banners. */
-  height?: number;
+  /** Defaults to square avatars; null preserves the original aspect ratio. */
+  height?: number | null;
   quality?: number;
   resize?: "cover" | "contain" | "fill";
 }
@@ -56,11 +56,12 @@ export function storageImageUrl(
   }
 
   const width = snapWidth(options.width);
-  const height = options.height === undefined ? width : snapWidth(options.height);
+  const height = options.height === null ? null : options.height === undefined ? width : snapWidth(options.height);
 
   parsed.pathname = parsed.pathname.replace(OBJECT_PUBLIC, RENDER_PUBLIC);
   parsed.searchParams.set("width", String(width));
-  parsed.searchParams.set("height", String(height));
+  if (height === null) parsed.searchParams.delete("height");
+  else parsed.searchParams.set("height", String(height));
   parsed.searchParams.set("resize", options.resize ?? "cover");
   parsed.searchParams.set("quality", String(options.quality ?? 70));
 

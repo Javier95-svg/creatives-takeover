@@ -2,12 +2,13 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Hash } from "lucide-react";
-import { StoryArticle } from "@/hooks/useStories";
+import { StorySummary } from "@/hooks/useStories";
+import { storageImageUrl, storageImageSrcSet } from "@/lib/storageImage";
 import { Link, useNavigate } from "react-router-dom";
 import { slugifyTag } from "@/utils/hashtagUtils";
 
 interface StoryCardProps {
-  article: StoryArticle;
+  article: StorySummary;
   featured?: boolean;
   showHashtags?: boolean;
 }
@@ -16,6 +17,10 @@ const StoryCardComponent = ({ article, featured = false, showHashtags = true }: 
   const navigate = useNavigate();
   // Always open the article in-platform (same tab) so reading and SEO stay on CT.
   const linkUrl = `/newspaper/${article.slug}`;
+  // Resize without pre-cropping: the existing object-cover layout stays identical.
+  // Leave animated/vector assets untouched rather than flattening their content.
+  const resizeBanner = !!article.banner_image_url && !/\.(gif|svg)(?:[?#]|$)/i.test(article.banner_image_url);
+  const imageOptions = { height: null, quality: 80 } as const;
 
   return (
     <Link
@@ -27,14 +32,24 @@ const StoryCardComponent = ({ article, featured = false, showHashtags = true }: 
         <div className="relative w-full h-48 overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
           {article.banner_image_url ? (
             <img
-              src={article.banner_image_url}
+              key={article.banner_image_url}
+              src={resizeBanner ? storageImageUrl(article.banner_image_url, { width: 480, ...imageOptions }) : article.banner_image_url}
+              srcSet={resizeBanner ? storageImageSrcSet(article.banner_image_url, [160, 320, 480, 640], imageOptions) : undefined}
+              sizes={featured ? '(min-width: 1024px) 66vw, (min-width: 768px) 90vw, 100vw' : '(min-width: 1280px) 400px, (min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw'}
               alt={article.title}
               className="w-full h-full object-cover"
               loading="lazy"
               decoding="async"
               onError={(e) => {
-                // Fallback if image fails to load
                 const target = e.target as HTMLImageElement;
+                // A transformation outage must not turn existing photos into broken cards.
+                if (target.currentSrc.includes('/render/image/') && !target.dataset.originalFallback) {
+                  target.dataset.originalFallback = 'true';
+                  target.removeAttribute('srcset');
+                  target.removeAttribute('sizes');
+                  target.src = article.banner_image_url!;
+                  return;
+                }
                 target.style.display = 'none';
               }}
             />

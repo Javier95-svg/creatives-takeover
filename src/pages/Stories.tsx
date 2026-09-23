@@ -7,7 +7,7 @@ import { StoryCard } from "@/components/stories/StoryCard";
 import StoriesHero from "@/components/stories/StoriesHero";
 import NewspaperWallpaper from "@/components/wallpapers/NewspaperWallpaper";
 import { useStories } from "@/hooks/useStories";
-import { StoryArticle } from "@/hooks/useStories";
+import { StoryArticle, StorySummary } from "@/hooks/useStories";
 import { Badge } from "@/components/ui/badge";
 import { Hash, X, FileText, Edit, Calendar, Search, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -51,7 +51,7 @@ const Stories = () => {
   const currentPage = parseInt(searchParams.get("page") || "1", 10);
   const { fetchStories, searchStories, fetchDrafts, loading, isAdmin } = useStories();
   const { user } = useAuth();
-  const [stories, setStories] = useState<StoryArticle[]>([]);
+  const [stories, setStories] = useState<StorySummary[]>([]);
   const [drafts, setDrafts] = useState<StoryArticle[]>([]);
   const [searchInput, setSearchInput] = useState(searchQuery);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
