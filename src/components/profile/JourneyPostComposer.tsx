@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { CalendarClock, ImagePlus, Loader2, Send, Smile, X } from 'lucide-react';
+import { CalendarClock, ImagePlus, Loader2, Smile, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -15,12 +15,6 @@ const EMOJIS = [
   ['🌱', 'Growth'], ['🎯', 'Target'], ['📈', 'Progress'], ['🤝', 'Collaboration'],
   ['🙌', 'Raised hands'], ['💪', 'Strength'], ['✨', 'Sparkles'], ['❤️', 'Heart'],
   ['😊', 'Smile'], ['🔥', 'Fire'], ['✅', 'Done'], ['🙏', 'Thanks'],
-];
-
-const WRITING_PROMPTS = [
-  { label: 'A small win', opening: 'This week, I finally ' },
-  { label: 'A lesson learned', opening: 'One thing I learned recently: ' },
-  { label: 'What I’m building', opening: 'Right now, I’m building ' },
 ];
 
 // Keep unfinished text in this browser tab, isolated by account. Never send
@@ -81,16 +75,6 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished }: Props) {
     field.style.height = 'auto';
     field.style.height = `${Math.min(field.scrollHeight, 320)}px`;
   }, [content]);
-
-  function startWithPrompt(opening: string) {
-    if (content.trim()) return;
-    setContent(opening);
-    selection.current = { start: opening.length, end: opening.length };
-    requestAnimationFrame(() => {
-      textarea.current?.focus();
-      textarea.current?.setSelectionRange(opening.length, opening.length);
-    });
-  }
 
   useEffect(() => {
     if (!photo) { setPreview(null); return; }
@@ -181,8 +165,6 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished }: Props) {
               <AvatarFallback>{name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold">Share your journey</p>
-              <p className="mt-1 text-xs text-muted-foreground">One small update is enough. What moved forward today?</p>
               <Textarea
                 ref={textarea}
                 value={content}
@@ -191,21 +173,12 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished }: Props) {
                   selection.current = { start: event.currentTarget.selectionStart, end: event.currentTarget.selectionEnd };
                 }}
                 aria-label="Your journey update"
-                placeholder="What did you learn or build today?"
+                placeholder="What’s moving forward today?"
                 maxLength={POST_MAX_LENGTH}
                 rows={2}
-                className="mt-3 min-h-16 max-h-80 resize-none overflow-y-auto border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 text-base"
+                className="min-h-20 max-h-80 resize-none overflow-y-auto border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 text-base md:text-base"
               />
-              {!content.trim() && (
-                <div className="mb-2 flex flex-wrap gap-2" aria-label="Ideas for your update">
-                  {WRITING_PROMPTS.map(({ label, opening }) => (
-                    <Button key={label} type="button" variant="outline" size="sm"
-                      className="h-auto rounded-full border-border/70 bg-transparent px-3 py-1.5 text-xs font-normal text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-foreground"
-                      onClick={() => startWithPrompt(opening)}>{label}</Button>
-                  ))}
-                </div>
-              )}
-              {draftSaved && <p className="mb-2 text-xs text-muted-foreground">Text draft saved in this tab · Only you</p>}
+              {draftSaved && <p className="mb-2 text-xs text-muted-foreground" title="Text saved privately for your account in this browser tab">Draft saved</p>}
             </div>
           </div>
           {preview && (
@@ -236,9 +209,9 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished }: Props) {
                 if (error) { toast.error(error); return; }
                 setPhoto(file);
               }} />
-              <Button type="button" variant="ghost" size="sm" onClick={() => fileInput.current?.click()} aria-label="Add photo" title="Add photo (up to 5 MB)"><ImagePlus className="mr-1.5 h-4 w-4 text-primary" /><span className="hidden sm:inline">Photo</span></Button>
+              <Button type="button" variant="ghost" size="icon" onClick={() => fileInput.current?.click()} aria-label="Add photo" title="Add photo (up to 5 MB)"><ImagePlus className="h-4 w-4 text-primary" /></Button>
               <Popover open={emojiOpen} onOpenChange={setEmojiOpen}>
-                <PopoverTrigger asChild><Button type="button" variant="ghost" size="sm" aria-label="Add emoji" title="Add emoji"><Smile className="h-4 w-4 text-primary" /></Button></PopoverTrigger>
+                <PopoverTrigger asChild><Button type="button" variant="ghost" size="icon" aria-label="Add emoji" title="Add emoji"><Smile className="h-4 w-4 text-primary" /></Button></PopoverTrigger>
                 <PopoverContent align="start" className="w-64" onCloseAutoFocus={(event) => event.preventDefault()}>
                   <p className="mb-2 text-sm font-medium">A little expression</p>
                   <div className="grid grid-cols-4 gap-1">
@@ -246,13 +219,13 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished }: Props) {
                   </div>
                 </PopoverContent>
               </Popover>
-              <Button type="button" variant="ghost" size="sm" aria-label="Schedule post" aria-pressed={showSchedule} title="Schedule post" onClick={() => setShowSchedule(true)}><CalendarClock className={`h-4 w-4 ${showSchedule ? 'text-primary' : 'text-muted-foreground'}`} /></Button>
+              <Button type="button" variant="ghost" size="icon" aria-label="Schedule post" aria-pressed={showSchedule} title="Schedule post" onClick={() => setShowSchedule(true)}><CalendarClock className={`h-4 w-4 ${showSchedule ? 'text-primary' : 'text-muted-foreground'}`} /></Button>
             </div>
             <div className="flex items-center gap-3">
               {content.length >= POST_MAX_LENGTH - 500 && <span className="text-xs tabular-nums text-muted-foreground" aria-live="polite">{content.length.toLocaleString()}/5,000</span>}
-              <Button type="submit" size="sm" disabled={busy || (!content.trim() && !photo)}>
-                {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : schedule ? <CalendarClock className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />}
-                {busy ? 'Saving…' : schedule ? 'Schedule' : 'Share update'}
+              <Button type="submit" size="sm" className="min-w-20 rounded-full" disabled={busy || (!content.trim() && !photo)}>
+                {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {busy ? 'Saving…' : schedule ? 'Schedule' : 'Post'}
               </Button>
             </div>
           </div>
