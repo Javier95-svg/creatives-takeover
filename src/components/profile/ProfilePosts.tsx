@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { CalendarClock, Loader2, MessageSquare, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { JourneyPostComposer } from './JourneyPostComposer';
+import { JourneyPostComposer, type PublishedJourneyPost } from './JourneyPostComposer';
 
 interface Props {
   userId: string;
@@ -28,9 +28,17 @@ interface FeedPost {
   title?: string;
 }
 
+interface ProfilePostsData {
+  feed: FeedPost[];
+  postingAvailable: boolean;
+  scheduled: FeedPost[];
+  hasMore: boolean;
+}
+
 const formatDate = (date: string) => new Date(date).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 
 export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile, onCommunityPostDeleted }: Props) {
+  const queryClient = useQueryClient();
   const [limit, setLimit] = useState(20);
   const [deleting, setDeleting] = useState<FeedPost | null>(null);
   const [busy, setBusy] = useState(false);
@@ -39,21 +47,18 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile, onCommunit
     // Open profiles pick up scheduled posts shortly after their release time.
     refetchInterval: 30_000,
     queryFn: async () => {
-      const now = new Date().toISOString();
-      const [posts, scheduled, photos, community] = await Promise.all([
-        supabase.from('profile_posts').select('*').eq('user_id', userId).lte('publish_at', now).order('publish_at', { ascending: false }).limit(limit),
-        isOwnProfile ? supabase.from('profile_posts').select('*').eq('user_id', userId).gt('publish_at', now).order('publish_at').limit(limit) : Promise.resolve({ data: [], error: null }),
+      const [journey, photos, community] = await Promise.all([
+        supabase.rpc('list_profile_journey_posts', { p_user_id: userId, p_limit: limit }),
         supabase.from('user_photos').select('id, caption, image_url, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(limit),
         supabase.from('community_posts').select('id, content, title, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(limit),
       ]);
       // Keep existing content accessible during a frontend/database rollout.
-      const postingAvailable = ![posts, scheduled].some((result) =>
-        result.error && ['42P01', 'PGRST205'].includes(result.error.code));
+      const postingAvailable = !(journey.error && ['42P01', '42883', 'PGRST202', 'PGRST205'].includes(journey.error.code));
       for (const result of [photos, community]) if (result.error) throw result.error;
-      if (postingAvailable) {
-        for (const result of [posts, scheduled]) if (result.error) throw result.error;
-      }
-      const rows = [...(posts.data || []), ...(scheduled.data || [])];
+      if (postingAvailable && journey.error) throw journey.error;
+      const rows = journey.data || [];
+      const posts = rows.filter((post) => !post.is_scheduled);
+      const scheduled = isOwnProfile ? rows.filter((post) => post.is_scheduled) : [];
       const paths = rows.flatMap((post) => post.image_path ? [post.image_path] : []);
       const images = new Map<string, string>();
       if (paths.length) {
@@ -63,14 +68,34 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile, onCommunit
       }
       const toPost = (post: typeof rows[number]): FeedPost => ({ id: post.id, source: 'journey', content: post.content, date: post.publish_at, imagePath: post.image_path, image: post.image_path ? images.get(post.image_path) : null });
       const feed: FeedPost[] = [
-        ...(posts.data || []).map(toPost),
+        ...posts.map(toPost),
         ...(photos.data || []).map((photo): FeedPost => ({ id: photo.id, source: 'photo', content: photo.caption || '', image: photo.image_url, date: photo.created_at })),
         ...(community.data || []).map((post): FeedPost => ({ id: post.id, source: 'community', content: post.content, title: post.title, date: post.created_at })),
       ];
       feed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      return { feed, postingAvailable, scheduled: (scheduled.data || []).map(toPost), hasMore: [posts, scheduled, photos, community].some((result) => result.data?.length === limit) };
+      return { feed, postingAvailable, scheduled: scheduled.map(toPost), hasMore: rows.length >= limit || [photos, community].some((result) => result.data?.length === limit) };
     },
   });
+
+  function showPublishedPost(post: PublishedJourneyPost) {
+    const queryKey = ['profile-journey-posts', userId, isOwnProfile, limit];
+    queryClient.setQueryData<ProfilePostsData>(queryKey, (current) => {
+      if (!current) return current;
+      const optimistic: FeedPost = {
+        id: post.id,
+        source: 'journey',
+        content: post.content,
+        date: post.publishAt,
+        imagePath: post.imagePath,
+        image: post.imageUrl,
+      };
+      if (post.scheduled) {
+        return { ...current, scheduled: [optimistic, ...current.scheduled.filter((item) => item.id !== post.id)] };
+      }
+      return { ...current, feed: [optimistic, ...current.feed.filter((item) => !(item.source === 'journey' && item.id === post.id))] };
+    });
+    void refetch();
+  }
 
   async function deletePost() {
     if (!deleting || busy) return;
@@ -126,7 +151,7 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile, onCommunit
         <MessageSquare className="h-5 w-5 text-primary" /><h2 id="profile-posts-heading" className="text-lg font-semibold">Posts</h2>
       </div>
       <div className="mx-auto max-w-3xl space-y-5">
-        {isOwnProfile && !isLoading && data?.postingAvailable !== false && <JourneyPostComposer userId={userId} name={name} avatarUrl={avatarUrl} onPublished={() => { void refetch(); }} />}
+        {isOwnProfile && !isLoading && data?.postingAvailable !== false && <JourneyPostComposer userId={userId} name={name} avatarUrl={avatarUrl} onPublished={showPublishedPost} />}
         {isOwnProfile && data?.postingAvailable === false && <Card className="p-5 text-sm text-muted-foreground">Posting is temporarily unavailable. Please try again shortly.</Card>}
         {isLoading && <div role="status" className="flex items-center justify-center gap-2 py-10 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" />Loading posts…</div>}
         {isError && <Card className="p-6 text-center"><p className="mb-3 text-sm text-muted-foreground">We couldn’t load these posts. Please try again.</p><Button variant="outline" onClick={() => { void refetch(); }}>Try again</Button></Card>}

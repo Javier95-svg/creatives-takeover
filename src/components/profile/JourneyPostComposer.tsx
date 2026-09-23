@@ -21,7 +21,16 @@ interface Props {
   userId: string;
   name: string;
   avatarUrl: string | null;
-  onPublished: () => void;
+  onPublished: (post: PublishedJourneyPost) => void;
+}
+
+export interface PublishedJourneyPost {
+  id: string;
+  content: string;
+  publishAt: string;
+  imagePath: string | null;
+  imageUrl: string | null;
+  scheduled: boolean;
 }
 
 export function JourneyPostComposer({ userId, name, avatarUrl, onPublished }: Props) {
@@ -76,13 +85,30 @@ export function JourneyPostComposer({ userId, name, avatarUrl, onPublished }: Pr
       // Validate again after upload, in case the chosen time passed meanwhile.
       const afterUpload = validatePost(content, !!photo, schedule);
       if (afterUpload) throw new Error(afterUpload);
-      const { error } = await supabase.from('profile_posts').insert({
+      const { data: insertedPost, error } = await supabase.from('profile_posts').insert({
         user_id: userId,
         content: content.trim(),
         image_path: uploadedPath,
         ...(schedule ? { publish_at: new Date(schedule).toISOString() } : {}),
-      });
+      }).select('id,content,image_path,publish_at').single();
       if (error) throw error;
+
+      let imageUrl: string | null = null;
+      if (insertedPost.image_path) {
+        const { data: signedImage } = await supabase.storage
+          .from('profile-posts')
+          .createSignedUrl(insertedPost.image_path, 3600);
+        imageUrl = signedImage?.signedUrl ?? null;
+      }
+
+      onPublished({
+        id: insertedPost.id,
+        content: insertedPost.content,
+        publishAt: insertedPost.publish_at,
+        imagePath: insertedPost.image_path,
+        imageUrl,
+        scheduled: Boolean(schedule),
+      });
       uploadedPath = null;
       toast.success(schedule ? 'Post scheduled. Your journey update is on its way.' : 'Your journey update is live!');
       setContent('');
@@ -90,7 +116,6 @@ export function JourneyPostComposer({ userId, name, avatarUrl, onPublished }: Pr
       setSchedule('');
       setShowSchedule(false);
       selection.current = { start: 0, end: 0 };
-      onPublished();
     } catch (error) {
       if (uploadedPath) await supabase.storage.from('profile-posts').remove([uploadedPath]);
       console.error('Unable to publish journey post', error);
