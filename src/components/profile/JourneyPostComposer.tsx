@@ -173,7 +173,7 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished }: Props) {
                   selection.current = { start: event.currentTarget.selectionStart, end: event.currentTarget.selectionEnd };
                 }}
                 aria-label="Your journey update"
-                placeholder="What’s moving forward today?"
+                placeholder="One small update is enough. What happened today?"
                 maxLength={POST_MAX_LENGTH}
                 rows={2}
                 className="min-h-20 max-h-80 resize-none overflow-y-auto border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 text-base md:text-base"

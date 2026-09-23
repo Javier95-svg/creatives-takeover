@@ -148,7 +148,8 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile, onCommunit
   return (
     <section aria-labelledby="profile-posts-heading" className="space-y-5">
       <div className="flex items-center gap-2 border-b border-border pb-3">
-        <MessageSquare className="h-5 w-5 text-primary" /><h2 id="profile-posts-heading" className="text-lg font-semibold">Posts</h2>
+        <h2 id="profile-posts-heading" className="text-lg font-semibold">Share your journey</h2>
+        <MessageSquare className="h-5 w-5 text-primary" />
       </div>
       <div className="mx-auto max-w-3xl space-y-5">
         {isOwnProfile && !isLoading && data?.postingAvailable !== false && <JourneyPostComposer userId={userId} name={name} avatarUrl={avatarUrl} onPublished={showPublishedPost} />}
