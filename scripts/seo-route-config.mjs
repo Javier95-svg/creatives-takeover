@@ -910,6 +910,9 @@ export const INDEXABLE_ROUTES = [
     title: "Platform Tour | Creatives Takeover",
     description:
       "Walk through the founder workspace with a sample project. See the seven stage cycle, the tools and the artifact each one produces. No signup, nothing saved.",
+    ogImage: `${BASE_URL}/demo-page-metadata.png`,
+    ogImageWidth: 3051,
+    ogImageHeight: 1265,
     changefreq: "monthly",
     priority: 0.7,
     heroHeading: "Walk the founder workspace",

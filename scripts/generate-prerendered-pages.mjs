@@ -472,6 +472,7 @@ function replaceJsonLd(html, routeConfig) {
 
 // Per-route dynamic OG image so each page gets a distinct, on-brand social card.
 function buildOgImage(routeConfig) {
+  if (routeConfig.ogImage) return routeConfig.ogImage;
   if (routeConfig.path === "/") return OG_IMAGE; // homepage keeps the brand hero image
   const title = (routeConfig.heroHeading || routeConfig.title || "").replace(/\s*\|\s*Creatives Takeover.*$/i, "").trim();
   const subtitle = (routeConfig.heroCopy || routeConfig.description || "").trim();
@@ -497,9 +498,14 @@ function renderRoute(template, routeConfig, hubChildren = {}) {
   html = replaceMetaByProperty(html, "og:description", routeConfig.description);
   html = replaceMetaByProperty(html, "og:url", canonical);
   html = replaceMetaByProperty(html, "og:image", ogImage);
+  html = replaceMetaByProperty(html, "og:image:secure_url", ogImage);
+  if (routeConfig.ogImageWidth) html = replaceMetaByProperty(html, "og:image:width", String(routeConfig.ogImageWidth));
+  if (routeConfig.ogImageHeight) html = replaceMetaByProperty(html, "og:image:height", String(routeConfig.ogImageHeight));
+  html = replaceMetaByProperty(html, "og:image:alt", routeConfig.title);
   html = replaceMetaByName(html, "twitter:title", routeConfig.title);
   html = replaceMetaByName(html, "twitter:description", routeConfig.description);
   html = replaceMetaByName(html, "twitter:image", ogImage);
+  html = replaceMetaByName(html, "twitter:image:alt", routeConfig.title);
   html = replaceTag(
     html,
     /<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/i,

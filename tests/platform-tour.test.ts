@@ -260,6 +260,16 @@ test('the tour is registered everywhere a public route has to be', () => {
   const seo = readFileSync('scripts/seo-route-config.mjs', 'utf8');
   assert.match(seo, /path: "\/demo"/);
   assert.match(seo, /Platform Tour \| Creatives Takeover/);
+  assert.match(seo, /ogImage: `\$\{BASE_URL\}\/demo-page-metadata\.png`/);
+  assert.match(seo, /ogImageWidth: 3051/);
+  assert.match(seo, /ogImageHeight: 1265/);
+  const page = readFileSync('src/pages/PlatformTour.tsx', 'utf8');
+  assert.match(page, /image="\/demo-page-metadata\.png"/);
+  assert.match(page, /imageWidth=\{3051\}/);
+  assert.match(page, /imageHeight=\{1265\}/);
+  const prerender = readFileSync('scripts/generate-prerendered-pages.mjs', 'utf8');
+  assert.match(prerender, /routeConfig\.ogImage/);
+  assert.match(prerender, /"og:image:secure_url", ogImage/);
   assert.doesNotMatch(seo, /Prompt Library, Insighta, and Community/, 'the stale taxonomy copy must be gone');
   for (const [file, needle] of [
     ['public/sitemap-pages.xml', 'creatives-takeover.com/demo<'],

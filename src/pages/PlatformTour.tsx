@@ -102,6 +102,9 @@ export default function PlatformTour() {
       description="Walk through the founder workspace with a sample project. See the seven stage cycle, the tools and the artifacts each one produces. No signup, nothing saved."
       url="/demo"
       canonical="https://creatives-takeover.com/demo"
+      image="/demo-page-metadata.png"
+      imageWidth={3051}
+      imageHeight={1265}
       structuredData={[
         createSoftwareApplicationSchema({
           name: 'Creatives Takeover',
