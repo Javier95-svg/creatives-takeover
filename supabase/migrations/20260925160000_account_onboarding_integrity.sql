@@ -17,6 +17,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END $$;
+DROP TRIGGER IF EXISTS guard_account_classification ON public.profiles;
 CREATE TRIGGER guard_account_classification BEFORE INSERT OR UPDATE ON public.profiles
 FOR EACH ROW EXECUTE FUNCTION public.guard_account_classification();
 
@@ -104,11 +105,12 @@ BEGIN
   END IF;
   RETURN NEW;
 END $$;
+DROP TRIGGER IF EXISTS guard_account_role_profile ON public.profiles;
 CREATE TRIGGER guard_account_role_profile BEFORE INSERT OR UPDATE ON public.profiles
 FOR EACH ROW EXECUTE FUNCTION public.guard_account_role_profile();
 
-DROP FUNCTION public.submit_account_application(text,text,text,jsonb);
-CREATE FUNCTION public.submit_account_application(
+DROP FUNCTION IF EXISTS public.submit_account_application(text,text,text,jsonb);
+CREATE OR REPLACE FUNCTION public.submit_account_application(
   p_situation text, p_full_name text DEFAULT NULL, p_email text DEFAULT NULL,
   p_role_profile jsonb DEFAULT '{}'::jsonb, p_session_id uuid DEFAULT NULL
 ) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$

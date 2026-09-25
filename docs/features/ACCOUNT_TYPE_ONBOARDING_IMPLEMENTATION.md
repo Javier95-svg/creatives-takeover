@@ -13,7 +13,7 @@ Implemented September 25, 2026, following the account-personalization audit.
 
 ## Deployment
 
-For the Supabase SQL Editor, copy the entire [combined SQL file](../sql/account-type-onboarding-2026-09-25.sql) and run it once as `postgres`. It includes all five migrations below in a single transaction. Do not also run the individual files after that succeeds. The SQL Editor does not record these versions in the Supabase CLI migration history; reconcile that history before a subsequent CLI migration push.
+For the Supabase SQL Editor, copy the entire [combined SQL file](../sql/account-type-onboarding-2026-09-25.sql) and run it as `postgres`. It includes all five migrations below in a single transaction and supports retries: existing invitation tables/columns are retained, functions are replaced, and triggers are recreated. A database regression test runs the bundle twice with an existing invitation and pending application, then verifies approval still works. The SQL Editor does not record these versions in the Supabase CLI migration history; reconcile that history before a subsequent CLI migration push. Paste only the SQL file contents, with no chat introduction or Markdown fences.
 
 Apply these migrations in order, then release the frontend from the same change set:
 

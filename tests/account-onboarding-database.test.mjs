@@ -11,7 +11,7 @@ const mentor={expertise:['Pricing','Go to market'],stages:['Validation'],experie
 const provider={services:['Landing pages'],category:'marketing',idealCustomer:'Early founders',portfolio:'Example portfolio',capacity:'available'};
 const investor={sectors:['FinTech'],stages:['Seed'],geography:'Global',activity:'actively_investing'};
 
-async function fixture() {
+async function fixture({ bundle = false } = {}) {
   const db=new PGlite();
   await db.exec(`
     CREATE ROLE authenticated; CREATE ROLE anon; CREATE ROLE service_role; CREATE ROLE supabase_admin;
@@ -53,13 +53,29 @@ async function fixture() {
   `);
   const ensure=sql('20260917180000_outcomes_claim_project_slot');
   await db.exec(ensure.slice(ensure.indexOf('CREATE OR REPLACE FUNCTION public.ensure_active_project'),ensure.indexOf('COMMENT ON FUNCTION')));
-  for(const name of ['20260925155000_onboarding_invitations','20260925160000_account_onboarding_integrity','20260925161000_onboarding_classification_and_project','20260925162000_investor_matching_preferences','20260925163000_onboarding_drafts_and_reconciliation']) await db.exec(sql(name));
+  if (bundle) await db.exec(readFileSync(new URL('../docs/sql/account-type-onboarding-2026-09-25.sql',import.meta.url),'utf8'));
+  else for(const name of ['20260925155000_onboarding_invitations','20260925160000_account_onboarding_integrity','20260925161000_onboarding_classification_and_project','20260925162000_investor_matching_preferences','20260925163000_onboarding_drafts_and_reconciliation']) await db.exec(sql(name));
   await db.exec(`INSERT INTO auth.users(id,email) VALUES('${user}','test@example.invalid'),('${admin}','admin@example.invalid');
     INSERT INTO profiles(id) VALUES('${user}'),('${admin}'); INSERT INTO onboarding_sessions(id,user_id) VALUES('${session}','${user}');`);
   return db;
 }
 async function asUser(db,id=user) { await db.exec(`RESET ROLE; SELECT set_config('request.jwt.claim.sub','${id}',false); SET ROLE authenticated;`); }
 async function owner(db) {await db.exec('RESET ROLE');}
+
+test('copy-paste bundle installs and reruns without losing invitations or applications',async()=>{
+  const db=await fixture({bundle:true});try{
+    await invite(db);
+    const application=(await submit(db,'mentor',mentor)).rows[0].result;
+    await owner(db);
+    await db.exec(readFileSync(new URL('../docs/sql/account-type-onboarding-2026-09-25.sql',import.meta.url),'utf8'));
+    assert.equal((await db.query('SELECT count(*)::int n FROM account_invitations')).rows[0].n,1);
+    assert.equal((await db.query('SELECT count(*)::int n FROM account_applications')).rows[0].n,1);
+    await asUser(db,admin);
+    await db.query('SELECT review_account_application($1,$2)',[application.applicationId,'approved']);
+    await owner(db);
+    assert.equal((await db.query('SELECT approval_status FROM profiles WHERE id=$1',[user])).rows[0].approval_status,'approved');
+  }finally{await db.close();}
+});
 
 test('invitation is admin-issued, verified-email bound, expiring and revocable before approval',async()=>{
   const db=await fixture();try{

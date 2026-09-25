@@ -1,6 +1,6 @@
 -- Invitation eligibility is bound to a verified sign-in email. Issuing one
 -- does not approve the account or send an email.
-CREATE TABLE public.account_invitations (
+CREATE TABLE IF NOT EXISTS public.account_invitations (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   email text NOT NULL CHECK (email = lower(btrim(email)) AND email LIKE '%_@_%._%'),
   user_type text NOT NULL CHECK (user_type IN ('mentor','marketplace')),
@@ -13,9 +13,9 @@ CREATE TABLE public.account_invitations (
 );
 ALTER TABLE public.account_invitations ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.account_invitations FROM anon, authenticated;
-ALTER TABLE public.account_applications ADD COLUMN invitation_id uuid REFERENCES public.account_invitations(id);
+ALTER TABLE public.account_applications ADD COLUMN IF NOT EXISTS invitation_id uuid REFERENCES public.account_invitations(id);
 
-CREATE FUNCTION public.classify_onboarding_situation(p_situation text)
+CREATE OR REPLACE FUNCTION public.classify_onboarding_situation(p_situation text)
 RETURNS text LANGUAGE sql IMMUTABLE SET search_path=public AS $$
   SELECT CASE p_situation
     WHEN 'existing_project' THEN 'founder' WHEN 'starting_project' THEN 'builder'
@@ -23,7 +23,7 @@ RETURNS text LANGUAGE sql IMMUTABLE SET search_path=public AS $$
     WHEN 'explore_investments' THEN 'investor' ELSE NULL END;
 $$;
 
-CREATE FUNCTION public.manage_account_invitation(p_email text, p_user_type text, p_revoke boolean DEFAULT false)
+CREATE OR REPLACE FUNCTION public.manage_account_invitation(p_email text, p_user_type text, p_revoke boolean DEFAULT false)
 RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
 DECLARE v_id uuid; v_email text := lower(btrim(p_email));
 BEGIN
@@ -42,14 +42,14 @@ BEGIN
   RETURN v_id;
 END $$;
 
-CREATE FUNCTION public.list_account_invitations()
+CREATE OR REPLACE FUNCTION public.list_account_invitations()
 RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=public AS $$
 BEGIN
   IF NOT COALESCE(public.is_admin_user(),false) THEN RAISE EXCEPTION 'Only an administrator can list invitations'; END IF;
   RETURN (SELECT COALESCE(jsonb_agg(to_jsonb(i) ORDER BY i.created_at DESC),'[]') FROM public.account_invitations i);
 END $$;
 
-CREATE FUNCTION public.my_account_invitation_types()
+CREATE OR REPLACE FUNCTION public.my_account_invitation_types()
 RETURNS jsonb LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public AS $$
   SELECT COALESCE(jsonb_agg(i.user_type),'[]') FROM public.account_invitations i
   JOIN auth.users u ON u.id=auth.uid() AND lower(btrim(u.email))=i.email
@@ -57,7 +57,7 @@ RETURNS jsonb LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public AS $$
     AND (i.claimed_by IS NULL OR i.claimed_by=u.id);
 $$;
 
-CREATE FUNCTION public.guard_application_invitation()
+CREATE OR REPLACE FUNCTION public.guard_application_invitation()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
 DECLARE v_inv public.account_invitations;
 BEGIN
@@ -79,6 +79,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END $$;
+DROP TRIGGER IF EXISTS guard_application_invitation ON public.account_applications;
 CREATE TRIGGER guard_application_invitation BEFORE INSERT OR UPDATE ON public.account_applications
 FOR EACH ROW EXECUTE FUNCTION public.guard_application_invitation();
 
