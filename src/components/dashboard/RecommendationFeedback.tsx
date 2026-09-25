@@ -41,6 +41,8 @@ export function RecommendationFeedback({
   const queryClient = useQueryClient();
   const [showReasons, setShowReasons] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   const recordedExposureKey = useRef<string | null>(null);
   const selectedToolKey = useMemo(() => {
     const activationIntent = metadata.activation_intent;
@@ -52,6 +54,7 @@ export function RecommendationFeedback({
   useEffect(() => {
     setSubmitted(false);
     setShowReasons(false);
+    setSaveError(false);
   }, [recommendationKey]);
 
   useEffect(() => {
@@ -74,34 +77,26 @@ export function RecommendationFeedback({
     });
   }, [recordExposure, recommendationKey, selectedToolKey, surface, user?.id]);
 
-  const submit = (relevance: 'helpful' | 'not_relevant', reason?: RecommendationFeedbackReason) => {
-    if (!user?.id || submitted) return;
-    setSubmitted(true);
-    setShowReasons(false);
-    void recordRecommendationFeedback({
-      recommendationKey,
-      surface,
-      relevance,
-      reason,
-    })
-      .then(() => {
-        if (surface === 'command_center' && relevance === 'not_relevant') {
-          return queryClient.invalidateQueries({ queryKey: ['dashboard-action-ranking'] });
-        }
-        return undefined;
-      })
-      .catch(() => {
-        // Retention analytics below remains the backwards-compatible fallback.
+  const submit = async (relevance: 'helpful' | 'not_relevant', reason?: RecommendationFeedbackReason) => {
+    if (!user?.id || submitted || saving) return;
+    setSaving(true);
+    setSaveError(false);
+    try {
+      await recordRecommendationFeedback({ recommendationKey, surface, relevance, reason });
+      setSubmitted(true);
+      setShowReasons(false);
+      if (surface === 'command_center' && relevance === 'not_relevant') {
+        void queryClient.invalidateQueries({ queryKey: ['dashboard-action-ranking'] });
+      }
+      void trackRetentionEvent('dashboard_recommendation_feedback', {
+        user_id: user.id, surface, recommendation_key: recommendationKey,
+        relevance, reason: reason ?? null, context_version: 1, ...metadata,
       });
-    void trackRetentionEvent('dashboard_recommendation_feedback', {
-      user_id: user.id,
-      surface,
-      recommendation_key: recommendationKey,
-      relevance,
-      reason: reason ?? null,
-      context_version: 1,
-      ...metadata,
-    });
+    } catch {
+      setSaveError(true);
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (submitted) {
@@ -110,11 +105,12 @@ export function RecommendationFeedback({
 
   return (
     <div className="mt-3 flex flex-wrap items-center gap-1.5">
+      {saveError && <p className="basis-full text-xs text-destructive" role="alert">Feedback was not saved. Please try again.</p>}
       <span className="mr-1 text-xs text-muted-foreground">Was this relevant?</span>
-      <Button type="button" size="sm" variant="ghost" className="h-7 gap-1 px-2 text-xs" onClick={() => submit('helpful')}>
+      <Button type="button" size="sm" variant="ghost" disabled={saving} className="h-7 gap-1 px-2 text-xs" onClick={() => void submit('helpful')}>
         <ThumbsUp className="h-3 w-3" />Helpful
       </Button>
-      <Button type="button" size="sm" variant="ghost" className="h-7 gap-1 px-2 text-xs" onClick={() => setShowReasons(true)}>
+      <Button type="button" size="sm" variant="ghost" disabled={saving} className="h-7 gap-1 px-2 text-xs" onClick={() => setShowReasons(true)}>
         <ThumbsDown className="h-3 w-3" />Not relevant
       </Button>
       {showReasons ? (
@@ -122,7 +118,7 @@ export function RecommendationFeedback({
           <p className="mb-1.5 text-xs text-muted-foreground">What was off?</p>
           <div className="flex flex-wrap gap-1.5">
             {reasons.map(([reason, label]) => (
-              <Button key={reason} type="button" size="sm" variant="outline" className="h-7 text-xs" onClick={() => submit('not_relevant', reason)}>
+              <Button key={reason} type="button" size="sm" variant="outline" disabled={saving} className="h-7 text-xs" onClick={() => void submit('not_relevant', reason)}>
                 {label}
               </Button>
             ))}

@@ -117,6 +117,17 @@ export function personaHome(userType: UserType): PersonaHome | null {
   return BY_TYPE[userType] ?? null;
 }
 
+/** A concise, user-supplied focus, separate from the account classification. */
+export function personaInterestSummary(userType: UserType, roleProfile: Record<string, unknown>): string | null {
+  const key = userType === 'mentor' ? 'expertise' : userType === 'marketplace' ? 'services' : userType === 'investor' ? 'sectors' : null;
+  if (!key) return null;
+  const raw = roleProfile[key];
+  if (!Array.isArray(raw)) return null;
+  const labels = raw.filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+    .map(value => value.trim().slice(0, 40)).slice(0, 2);
+  return labels.length ? labels.join(', ') : null;
+}
+
 export type PersonaDigest = Record<string, number>;
 
 /** The chips actually shown: a count is only worth the space when it is not zero. */

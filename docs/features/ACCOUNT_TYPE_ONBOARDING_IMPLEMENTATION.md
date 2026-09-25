@@ -23,7 +23,7 @@ Apply these migrations in order, then release the frontend from the same change 
 4. `20260925162000_investor_matching_preferences.sql`
 5. `20260925163000_onboarding_drafts_and_reconciliation.sql`
 
-No Edge Function implementation changes are part of this release. The existing notification delivery functions remain in use. Coordinate the frontend release with the migrations: applications now require the new role-specific answers; old open onboarding tabs should reload to obtain those fields.
+The September 25 personalization follow-up adds `20260925170000_account_invitation_delivery.sql` and the `send-account-invitation` Edge Function. Apply the additive migration and deploy the function before releasing the updated admin invitation screen. The existing notification delivery functions remain in use. Old open onboarding tabs should reload to obtain the role-specific fields.
 
 The migrations contain data changes: listing prefill, conservative recent-account repair, and removal of irrelevant uncompleted startup-profile tasks for reviewed roles. Existing investor visibility defaults to off. Directory listings continue to require their existing publishing workflow.
 
@@ -38,6 +38,8 @@ Validation result: **89 focused tests passed** (72 domain/source checks, 12 isol
 
 ## Observability
 
+The personalization follow-up derives mentor support areas from the founder or builder's stated goal and blocker, saves those areas in profile preferences, and uses them to refresh mentor suggestions at completion. Users can refine support areas in Startup Profile and their goal or blocker in the dashboard focus editor. Mentor, provider, and investor homes show their stated focus from role details, and Pulse receives that focus as context. Recommendation feedback only displays a saved confirmation after its database write succeeds. No historical onboarding answers are rewritten.
+
 The admin-only `account_onboarding_funnel()` RPC reports a rolling 30-day cohort by derived type and flow: starts, completions, abandonment, workspace entry, first actions, classification mismatches, application decisions and average review hours. Completion includes application submission, not automatic approval. First action currently means completed activation, saved role details or opening a matched founder conversation; it does not claim a deal or a meeting occurred.
 
 New client analytics use quiz version 2. Existing historical records will not have newly introduced workspace/action events; do not treat absent historical events as measured drop-off. Classification mismatch is a diagnostic flag that may also reflect a deliberate later role change.
@@ -48,12 +50,12 @@ Database role transitions are protected independently of UI gates. Ordinary prof
 
 ## Invitation operation and automatic classification
 
-The admin account-requests page can create, renew (30 days), list and revoke email-bound invitations for mentorship or marketplace services. No invitation email is sent automatically. Share the existing onboarding URL with the invited person. Matching uses the verified authentication email, never a form-supplied email. An invitation is bound to the submitting user and cannot be reused by another account. Investors remain reviewed but do not require invitations.
+The admin account-requests page can create, renew (30 days), list and revoke email-bound invitations for mentorship or marketplace services. After the delivery follow-up is deployed, creating or renewing an invitation sends the onboarding link through the authenticated `send-account-invitation` Edge Function. The admin screen reports the last send or failure and offers a resend action. Matching uses the verified authentication email, never a form-supplied email. An invitation is bound to the submitting user and cannot be reused by another account. Investors remain reviewed but do not require invitations.
 
 The database classifies existing_project → founder, starting_project → builder, share_expertise → mentor, deliver_services → marketplace, and explore_investments → investor. A client-supplied founderSegment is overwritten with the derived value. Invalid/missing situational answers fail. Existing drafts without the first answer return to question one while preserving their other answers.
 
 Invitation expiry is checked when submitting a new request. Revocation also blocks approval of a pending request; expiry after a valid submission does not invalidate that request. Rejection permits resubmission of the same derived category, with a valid invitation required again. Renew an expired invitation before resubmitting. Revocation does not suspend previously approved users. Existing pending requests without an invitation must be rejected and resubmitted after an invitation is issued; existing approved mentors/providers keep their access.
 
-The new migration precedes the four previously prepared migrations. These migrations have not been deployed; two existing prepared migrations were updated to accept situation answers. Deploy all five together with the frontend. No Edge Function redeployment is needed for these changes.
+The five original onboarding migrations have been applied in production and recorded in Supabase migration history. The invitation-delivery follow-up is a sixth, additive migration. Its Edge Function must be deployed before the updated admin invitation screen is released.
 
 All active onboarding sessions now render the situation-first form, including historical `control_v6` sessions. Their historical experiment labels remain available for analytics; they no longer select a different quiz UI. Saved server answers are retained, and incomplete drafts without a situation answer restart at question one.

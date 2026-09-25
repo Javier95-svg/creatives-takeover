@@ -59,6 +59,7 @@ import {
   type ActivationIntent,
 } from '@/lib/retentionSystem';
 import { refreshOnboardingMentorRecommendations } from '@/lib/onboardingMentorRecommendations';
+import { onboardingSupportNeeds } from '@/lib/onboardingSupportNeeds';
 import { cn } from '@/lib/utils';
 import { trackOnboardingStepCompleted } from '@/lib/analytics';
 
@@ -651,7 +652,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
         firstArtifactLabel: null,
         firstArtifactResumeUrl: null,
         activationJourney: journey,
-        supportAreasNeeded: [],
+        supportAreasNeeded: onboardingSupportNeeds(answers.primaryGoal, answers.blocker),
         // Captured once here so cron-driven senders can resolve the founder's
         // local day without a browser. Without it they default to UTC.
         timezone: getBrowserTimezone(),
@@ -768,7 +769,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
       void refreshOnboardingMentorRecommendations({
         userId: user.id,
         sectors: answers.sectors,
-        supportAreas: [],
+        supportAreas: onboardingSupportNeeds(answers.primaryGoal, answers.blocker),
         assignedStage: context.assignedStage,
         stageAnswers,
       }).catch((mentorError) => {

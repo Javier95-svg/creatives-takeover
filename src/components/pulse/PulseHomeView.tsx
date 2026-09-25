@@ -31,12 +31,13 @@ export interface PulseHomeViewProps {
   persona?: PersonaHome | null;
   /** Counts already resolved, shown beside the type chip. */
   personaChips?: readonly PersonaChip[];
+  personaInterest?: string | null;
   /** Where priority links, action cards and shortcut chips lead. Defaults to a
       real navigation; the anonymous tour at /demo swaps panels instead. */
   navigate?: (path: string) => void;
 }
 
-export function PulseHomeView({ concept, name, stage, projectName, assignedStage, priorities = [], messages = [], loading, streaming, unavailable, contextNotice, error, onSend, onNew, onRetry, navigate = enterWorkspaceRoute, persona = null, personaChips = [] }: PulseHomeViewProps) {
+export function PulseHomeView({ concept, name, stage, projectName, assignedStage, priorities = [], messages = [], loading, streaming, unavailable, contextNotice, error, onSend, onNew, onRetry, navigate = enterWorkspaceRoute, persona = null, personaChips = [], personaInterest = null }: PulseHomeViewProps) {
   const [input, setInput] = useState('');
   const [headline, setHeadline] = useState(0);
   const [showPriorities, setShowPriorities] = useState(false);
@@ -103,6 +104,7 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
   const shortcuts = persona
     ? persona.shortcuts.map(shortcut => ({ label: shortcut.label, route: shortcut.route, icon: ArrowRight }))
     : [
+    ...(priorities[0]?.route ? [{ label: `Your next step: ${priorities[0].title}`, route: priorities[0].route, icon: Target }] : []),
     { label: 'What should I focus on next?', route: '/dashboard', icon: LayoutDashboard },
     { label: 'Find me a mentor', route: '/mentorship', icon: GraduationCap },
     { label: 'Find me a co-founder', route: '/co-founder/create', icon: Users },
@@ -124,6 +126,7 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
         <header className={cn('pulse-home-hero', !active && concept !== 'command-center' && 'text-center')}>
           {persona && !active && <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
             <span className="rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs font-medium text-foreground">{persona.label}</span>
+            {personaInterest && <a href="/account" onClick={event => { event.preventDefault(); navigate('/account'); }} className="rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs text-foreground hover:border-primary/50" title="Edit your profile focus">Focus: {personaInterest}</a>}
             {personaChips.map(chip => <span key={chip.key} className="rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">{chip.count} {chip.label}</span>)}
           </div>}
           {!persona && concept === 'guided-journey' && !active && (trimmedProjectName || stageBadge) && <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
