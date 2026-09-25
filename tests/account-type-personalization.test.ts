@@ -68,12 +68,12 @@ test('the project name is never stored in role_profile', () => {
 test('sanitize keeps only the keys this type was asked for', () => {
   // A mentor's answers must not survive on an investor, whatever is posted.
   const clean = sanitizeRoleProfile('investor', {
-    sectors: ['Fintech', '  Health  ', ''],
+    sectors: ['FinTech', 'HealthTech', 'made up'],
     stages: ['Seed', 'Series Z'],
     expertise: ['Pricing'],
     projectName: 'Should not be here',
   });
-  assert.deepEqual(clean, { sectors: ['Fintech', 'Health'], stages: ['Seed'] });
+  assert.deepEqual(clean, { sectors: ['FinTech', 'HealthTech'], stages: ['Seed'] });
 });
 
 test('sanitize rejects wrong shapes and caps sizes', () => {
@@ -86,13 +86,13 @@ test('sanitize rejects wrong shapes and caps sizes', () => {
   assert.equal((many.expertise as string[]).length, 20);
 });
 
-test('missing fields is empty once the required answers are there', () => {
+test('missing fields validates complete, actionable role applications', () => {
   assert.equal(missingRoleFields('founder', {}).length, 0);
-  assert.equal(missingRoleFields('mentor', {}).length, 1);
-  assert.equal(missingRoleFields('mentor', { expertise: [] }).length, 1);
-  assert.equal(missingRoleFields('mentor', { expertise: ['Pricing'] }).length, 0);
-  assert.equal(missingRoleFields('investor', { sectors: ['Fintech'] }).length, 1);
-  assert.equal(missingRoleFields('investor', { sectors: ['Fintech'], stages: ['Seed'] }).length, 0);
+  assert.equal(missingRoleFields('mentor', {}).length, 4);
+  assert.equal(missingRoleFields('mentor', { expertise: ['Pricing'] }).length, 3);
+  assert.equal(missingRoleFields('mentor', { expertise: ['Pricing'], stages: ['Validation'], experience: 'Relevant results', engagement: 'both' }).length, 0);
+  assert.equal(missingRoleFields('investor', { sectors: ['FinTech'], stages: ['Seed'], geography: 'Global', activity: 'actively_investing' }).length, 0);
+  assert.equal(missingRoleFields('marketplace', { services: ['Design'], category: 'invalid', idealCustomer: 'Founders', portfolio: 'Example', capacity: 'available' }).length, 1);
 });
 
 test('describe renders only filled fields', () => {

@@ -52,13 +52,13 @@ test('submitting settles the account in one statement', () => {
   assert.match(migration, /SET search_path = public/);
 });
 
-test('account context defaults to founder and approved while it loads', () => {
-  // The opposite default would flash a review banner at every founder on every
-  // load, and would hide founder UI for a frame.
-  assert.match(hook, /userType: 'founder',\s*\n\s*approvalStatus: 'approved',\s*\n\s*hasCategoryAccess: true,/);
-  assert.match(hook, /query\.data \?\? DEFAULT_ACCOUNT_CONTEXT/);
-  // An unrecognised value from the wire falls back rather than being trusted.
-  assert.match(hook, /USER_TYPES\.includes\(row\.userType as UserType\) \? \(row\.userType as UserType\) : 'founder'/);
+test('account context exposes no category access before a validated response', () => {
+  assert.match(hook, /hasCategoryAccess: false/);
+  assert.match(hook, /row.hasCategoryAccess === true/);
+  assert.ok(hook.includes("throw new Error('Account details are unavailable"));
+  const shell = readFileSync('src/components/workspace/WorkspaceLive.tsx', 'utf8');
+  assert.ok(shell.includes('if (accountLoading) return'));
+  assert.ok(shell.includes('if (accountError) return'));
 });
 
 test('the context is one call that the whole workspace shares', () => {

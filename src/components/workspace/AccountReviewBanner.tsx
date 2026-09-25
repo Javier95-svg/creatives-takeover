@@ -11,8 +11,7 @@ import { USER_TYPE_LABEL } from '@/lib/accountTypes';
  * their category. Saying so plainly is better than letting them wonder why
  * their bookings inbox is empty.
  *
- * It renders nothing while the context is loading, because that defaults to
- * founder and approved, so no founder can ever see this flash.
+ * It renders nothing while the context is loading, until a validated account context is available.
  */
 export function AccountReviewBanner() {
   const { awaitingReview, userType, approvalStatus } = useAccountContext();

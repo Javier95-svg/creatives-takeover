@@ -101,6 +101,12 @@ export interface OnboardingAnswersV1 {
   /** What the founder calls the thing they are building. Becomes their project,
       which every stage outcome then attaches to. */
   projectName: string;
+  roleProfile?: Record<string, unknown>;
+  entryStage?: 'choosing' | 'details';
+  builderStartingPoint?: 'exploring' | 'idea_chosen';
+  investorVisible?: boolean;
+  investmentStage?: string;
+  _draftVersion?: number;
   startupBrief: string;
   founderSegment: OnboardingFounderSegment | '';
   businessModel: OnboardingBusinessModel | '';

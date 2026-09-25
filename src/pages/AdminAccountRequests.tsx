@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { describeRoleProfile } from '@/lib/roleProfileSchema';
 import {
   listAccountApplications, reviewAccountApplication,
   USER_TYPE_LABEL, type AccountApplication, type ApprovalStatus,
@@ -38,10 +40,19 @@ export default function AdminAccountRequests() {
     queryFn: () => listAccountApplications(tab),
   });
 
+  const funnel = useQuery({
+    queryKey: ['account-onboarding-funnel'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('account_onboarding_funnel' as never);
+      if (error) throw error;
+      return (Array.isArray(data) ? data : []) as Array<{ userType: string; sessions: number; completed: number; workspaceEntered: number; firstUsefulAction: number; classificationMismatch: number; averageReviewHours: number | null }>;
+    },
+  });
+
   const review = useMutation({
     mutationFn: reviewAccountApplication,
     onSuccess: (_result, variables) => {
-      toast.success(variables.decision === 'approved' ? 'Approved. The applicant has been emailed.' : 'Rejected. The applicant has been emailed.');
+      toast.success(variables.decision === 'approved' ? 'Approved. The notification has been queued.' : 'Rejected. The notification has been queued.');
       void queryClient.invalidateQueries({ queryKey: ['account-applications'] });
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : 'Could not record the decision.'),
@@ -61,6 +72,14 @@ export default function AdminAccountRequests() {
           </p>
         </header>
 
+        <section className="mb-8 overflow-x-auto" aria-label="Onboarding health">
+          <h2 className="mb-2 font-semibold">Onboarding — last 30 days</h2>
+          <p className="mb-3 text-xs text-muted-foreground">Completion includes submitted applications. First action means a completed activation, saved role details, or opening a matched founder conversation. These are observed counts, not conversion estimates.</p>
+          {funnel.isError && <p role="alert">Could not load onboarding metrics. <button className="underline" onClick={() => void funnel.refetch()}>Retry</button></p>}
+          <table className="w-full text-left text-sm"><thead><tr>{['Type','Started','Completed','Entered workspace','First action','Type mismatch','Review hours'].map(label => <th key={label} className="p-2">{label}</th>)}</tr></thead><tbody>
+            {(funnel.data ?? []).map((row,index) => <tr key={row.userType+index} className="border-t"><td className="p-2">{row.userType}</td><td>{row.sessions}</td><td>{row.completed}</td><td>{row.workspaceEntered}</td><td>{row.firstUsefulAction}</td><td>{row.classificationMismatch}</td><td>{row.averageReviewHours ?? '—'}</td></tr>)}
+          </tbody></table>
+        </section>
         <div className="mb-6 flex flex-wrap gap-2">
           {TABS.map((entry) => (
             <Button key={entry.value} size="sm" variant={tab === entry.value ? 'default' : 'outline'} onClick={() => setTab(entry.value)}>
@@ -98,6 +117,13 @@ export default function AdminAccountRequests() {
                 </div>
               </CardHeader>
               <CardContent>
+                <dl className="mb-5 space-y-3">
+                  {describeRoleProfile(application.userType, application.roleProfile).map((detail) => <div key={detail.key}>
+                    <dt className="text-sm font-semibold">{detail.label}</dt>
+                    <dd className="break-words whitespace-pre-wrap text-sm text-muted-foreground">{detail.display}</dd>
+                  </div>)}
+                </dl>
+                <p className="mb-4 text-xs text-muted-foreground">Approval enables category features. Confirm the mentor or service listing is complete before publishing it in the directory.</p>
                 {application.status === 'pending' ? (
                   <div className="flex flex-wrap items-center gap-2">
                     <Input

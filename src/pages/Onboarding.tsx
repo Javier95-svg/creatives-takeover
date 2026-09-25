@@ -115,7 +115,7 @@ const Onboarding = () => {
             source,
             userId: user.id,
             page_path: '/onboarding',
-            quiz_version: session.flow_version === 'adaptive_v1' ? 1 : 6,
+            quiz_version: session.flow_version === 'adaptive_v1' ? 2 : 6,
             onboarding_session_id: session.id,
             flow_version: session.flow_version,
             rollout_variant: session.rollout_variant,

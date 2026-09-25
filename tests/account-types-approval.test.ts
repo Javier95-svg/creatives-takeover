@@ -36,7 +36,7 @@ test('the reviewed types end the quiz and file a request', () => {
   assert.match(quiz, /if \(currentStep === 0 && isReviewedType\(answers\.founderSegment\)\) \{/);
   assert.match(quiz, /await submitAccountApplication\(\{/);
   assert.match(quiz, /Thanks, your request has been sent\./);
-  assert.match(quiz, /We will email you once it is reviewed\./);
+  assert.match(quiz, /We will email you after review\./);
   // The branch returns, so nothing after the first step runs for them.
   const branch = quiz.slice(
     quiz.indexOf('if (currentStep === 0 && isReviewedType'),

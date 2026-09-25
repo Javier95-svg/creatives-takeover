@@ -59,7 +59,7 @@ export async function saveOnboardingProgress(params: {
   const { data, error } = await supabase.rpc('save_onboarding_progress_v1' as never, {
     p_session_id: params.sessionId,
     p_current_step: params.currentStep,
-    p_answer_patch: params.answers as Json,
+    p_answer_patch: { ...params.answers, _draftVersion: Date.now() } as Json,
   } as never);
   if (error) throw error;
   return normalizeSession(data);

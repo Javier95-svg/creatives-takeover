@@ -50,6 +50,7 @@ export interface EntityAnalytics {
 }
 
 export interface InvestorMatch {
+  investmentStage: string | null;
   userId: string;
   name: string | null;
   username: string | null;

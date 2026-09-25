@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { ChevronRight, FileText, LogOut, MessageCircle, UserPlus, X } from 'lucide-react';
@@ -17,6 +17,7 @@ import ProjectSwitcher from '@/components/workspace/ProjectSwitcher';
 import { ProjectSetupGate } from '@/components/workspace/ProjectSetupGate';
 import { AccountReviewBanner } from '@/components/workspace/AccountReviewBanner';
 import { useAccountContext } from '@/hooks/useAccountContext';
+import { trackRetentionEvent } from '@/lib/retentionSystem';
 import WorkspaceLayout from './WorkspaceLayout';
 
 // Only pulled in once the header icon is used, so the modal and its social
@@ -70,8 +71,16 @@ export default function WorkspaceLive({ children, home }: { children: ReactNode;
     return data;
   } });
   // Founder until the answer arrives, so no type specific nav flashes at anyone.
-  const { userType } = useAccountContext();
+  const { userType, isLoading: accountLoading, isError: accountError, refresh: refreshAccount } = useAccountContext();
   const usesProject = userType === 'founder' || userType === 'builder';
+  useEffect(() => {
+    if (accountLoading || accountError || !user?.id) return;
+    const key = `workspace-entered:${user.id}:${userType}`;
+    try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, '1'); } catch { /* storage unavailable */ }
+    void trackRetentionEvent('workspace_entered', { user_id: user.id, user_type: userType, quiz_version: 2 });
+  }, [accountLoading, accountError, user?.id, userType]);
+  if (accountLoading) return <div role="status" className="p-8">Loading your workspace…</div>;
+  if (accountError) return <div role="alert" className="p-8">Could not load your account details. <button className="underline" onClick={() => void refreshAccount()}>Retry</button></div>;
   const username = profile.data?.username || profile.data?.full_name || (profile.isPending ? 'Loading account…' : 'My account');
   const tier = statusError ? null : subscriptionData?.subscription_tier;
   const plan = planLoading ? 'Loading plan…' : tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : 'Plan unavailable';

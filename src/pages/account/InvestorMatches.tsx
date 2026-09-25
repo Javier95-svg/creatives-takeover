@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccountContext } from '@/hooks/useAccountContext';
 import { BIZMAP_STAGE_ORDER } from '@/lib/bizmapStageOrder';
+import { trackRetentionEvent } from '@/lib/retentionSystem';
 import { listInvestorMatches } from '@/services/accountFeatures';
 
 function stageLabel(stage: number | null) {
@@ -38,7 +39,7 @@ export default function InvestorMatches() {
       <main className="container mx-auto px-4 pt-header-offset nav-offset-roomy pb-16">
         <header className="mb-8">
           <h1 className="flex items-center gap-2 text-headline-lg font-semibold"><Sparkles className="h-6 w-6 text-primary" />My matches</h1>
-          <p className="mt-2 text-body text-muted-foreground">Founders and builders whose sectors overlap your investment focus. Set your focus on your profile to narrow this.</p>
+          <p className="mt-2 text-body text-muted-foreground">Projects shared by founders and builders that match your sectors and declared funding stages. Geography and check range are profile preferences for evaluating a match.</p>
         </header>
 
         {!eligible && <p className="text-sm text-muted-foreground">
@@ -52,7 +53,7 @@ export default function InvestorMatches() {
         <div className="grid gap-4 md:grid-cols-2">
           {rows.map((row) => {
             const name = row.name || row.username || 'A founder';
-            const stage = stageLabel(row.stage);
+            const stage = row.investmentStage || stageLabel(row.stage);
             return <Card key={row.userId}>
               <CardContent className="py-5">
                 <div className="flex flex-wrap items-start justify-between gap-2">
@@ -69,7 +70,7 @@ export default function InvestorMatches() {
                   {row.sectors.slice(0, 4).map((sector) => <Badge key={sector} variant="secondary" className="text-xs">{sector}</Badge>)}
                 </div>}
                 {row.username && <p className="mt-3 text-sm">
-                  <Link className="text-primary underline-offset-4 hover:underline" to={`/messages/${encodeURIComponent(row.username)}`}>Send a message</Link>
+                  <Link className="text-primary underline-offset-4 hover:underline" onClick={() => void trackRetentionEvent('investor_match_opened', { user_id: user?.id, user_type: 'investor' })} to={`/messages/${encodeURIComponent(row.username)}`}>Send a message</Link>
                 </p>}
               </CardContent>
             </Card>;

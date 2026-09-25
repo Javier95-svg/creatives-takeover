@@ -12,24 +12,21 @@ export interface AccountContext {
   requiresProject: boolean;
   hasProject: boolean;
   startupName: string | null;
+  investorMatchVisible: boolean;
+  investmentStage: string | null;
 }
 
-/**
- * What the workspace assumes until the answer arrives.
- *
- * Founder and approved, deliberately. That is today's behaviour and what the
- * overwhelming majority of accounts are, so no type specific UI can flash at
- * somebody it does not belong to. The opposite default would show every founder
- * a review banner for a moment on every load.
- */
+/** No category privileges until a validated account context has loaded. */
 export const DEFAULT_ACCOUNT_CONTEXT: AccountContext = {
   userType: 'founder',
-  approvalStatus: 'approved',
-  hasCategoryAccess: true,
+  approvalStatus: 'pending',
+  hasCategoryAccess: false,
   roleProfile: {},
   requiresProject: false,
-  hasProject: true,
+  hasProject: false,
   startupName: null,
+  investorMatchVisible: false,
+  investmentStage: null,
 };
 
 const USER_TYPES: UserType[] = ['founder', 'builder', 'mentor', 'marketplace', 'investor'];
@@ -54,18 +51,23 @@ export function useAccountContext() {
       const row = (data ?? {}) as Partial<AccountContext>;
       // Anything unrecognised falls back to the safe default rather than being
       // trusted into a branch it does not belong in.
-      const userType = USER_TYPES.includes(row.userType as UserType) ? (row.userType as UserType) : 'founder';
+      if (!USER_TYPES.includes(row.userType as UserType) || !APPROVALS.includes(row.approvalStatus as ApprovalStatus)) {
+        throw new Error('Account details are unavailable. Please retry.');
+      }
+      const userType = row.userType as UserType;
       const approvalStatus = APPROVALS.includes(row.approvalStatus as ApprovalStatus)
         ? (row.approvalStatus as ApprovalStatus)
-        : 'approved';
+        : 'pending';
       return {
         userType,
         approvalStatus,
-        hasCategoryAccess: row.hasCategoryAccess !== false,
+        hasCategoryAccess: row.hasCategoryAccess === true,
         roleProfile: row.roleProfile && typeof row.roleProfile === 'object' ? row.roleProfile : {},
         requiresProject: row.requiresProject === true,
         hasProject: row.hasProject === true,
         startupName: typeof row.startupName === 'string' ? row.startupName : null,
+        investorMatchVisible: row.investorMatchVisible === true,
+        investmentStage: typeof row.investmentStage === 'string' ? row.investmentStage : null,
       };
     },
   });
@@ -74,8 +76,9 @@ export function useAccountContext() {
   return {
     ...context,
     isLoading: query.isPending,
+    isError: query.isError,
     /** True while a reviewed account waits for a decision. */
-    awaitingReview: context.approvalStatus === 'pending' && !context.hasCategoryAccess,
+    awaitingReview: Boolean(query.data) && context.approvalStatus !== 'approved' && !context.hasCategoryAccess,
     refresh: query.refetch,
   };
 }

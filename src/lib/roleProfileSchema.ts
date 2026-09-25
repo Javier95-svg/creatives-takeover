@@ -1,3 +1,4 @@
+import { ANGEL_SECTOR_OPTIONS } from '../data/angelSectors.ts';
 import { REVIEWED_USER_TYPES, type UserType } from './accountTypes.ts';
 
 /**
@@ -6,8 +7,8 @@ import { REVIEWED_USER_TYPES, type UserType } from './accountTypes.ts';
  * One definition drives the onboarding step and the profile editor, so the two
  * cannot drift apart. Stored in profiles.role_profile as jsonb rather than a
  * column per field, which means a sixth account type is an entry here and no
- * migration at all. The trade off is that the database enforces nothing about
- * the contents, so validation lives in this module and is unit tested.
+ * migration for storage. The server validates submissions and profile writes
+ * against the same fields; adding a role also requires server validation.
  */
 
 export type RoleFieldType = 'text' | 'number' | 'tags' | 'select' | 'multi';
@@ -37,18 +38,27 @@ export const ROLE_PROFILE_SCHEMA: Record<UserType, readonly RoleField[]> = {
     { key: 'projectName', label: 'Project name', type: 'text', required: true, placeholder: 'Throughline', maxLength: 120 },
   ],
   builder: [
-    { key: 'projectName', label: 'Project name', type: 'text', required: true, placeholder: 'Throughline', maxLength: 120 },
+    { key: 'projectName', label: 'Working title (optional)', type: 'text', placeholder: 'Throughline', maxLength: 120 },
   ],
   mentor: [
     { key: 'expertise', label: 'Areas of expertise', type: 'tags', required: true, placeholder: 'Go to market, pricing, hiring' },
+    { key: 'stages', label: 'Stages you help with', type: 'multi', required: true, options: ['Exploring','Validation','Building','Launch','Growth'] },
+    { key: 'experience', label: 'Relevant experience or proof', type: 'text', required: true, maxLength: 500, placeholder: 'A result, previous role, or relevant portfolio link' },
+    { key: 'engagement', label: 'Preferred engagement', type: 'select', required: true, options: ['one_off','ongoing','both'] },
     { key: 'yearsActive', label: 'Years operating', type: 'number' },
   ],
   marketplace: [
     { key: 'services', label: 'Services you offer', type: 'tags', required: true, placeholder: 'Landing pages, paid ads, bookkeeping' },
+    { key: 'idealCustomer', label: 'Who do you help?', type: 'text', required: true, maxLength: 500 },
+    { key: 'portfolio', label: 'Portfolio or relevant example', type: 'text', required: true, maxLength: 500 },
+    { key: 'capacity', label: 'Current capacity', type: 'select', required: true, options: ['available','limited','waitlist'] },
     { key: 'category', label: 'Category', type: 'select', required: true, options: SERVICE_CATEGORIES },
   ],
   investor: [
-    { key: 'sectors', label: 'Investment focus', type: 'tags', required: true, placeholder: 'Fintech, developer tools, health' },
+    { key: 'sectors', label: 'Investment focus', type: 'multi', required: true, options: ANGEL_SECTOR_OPTIONS },
+    { key: 'geography', label: 'Investment geography', type: 'text', required: true, placeholder: 'Global, or the countries/regions you invest in', maxLength: 200 },
+    { key: 'activity', label: 'Investing activity', type: 'select', required: true, options: ['actively_investing','exploring'] },
+    { key: 'checkRange', label: 'Typical check range and currency (optional)', type: 'text', maxLength: 200 },
     { key: 'stages', label: 'Stages you back', type: 'multi', required: true, options: INVESTMENT_STAGES },
   ],
 };
@@ -75,7 +85,7 @@ function isFilled(field: RoleField, value: unknown): boolean {
  * for that type, which is what the prompt and the editor both key off.
  */
 export function missingRoleFields(userType: UserType, profile: RoleProfile | null | undefined): RoleField[] {
-  const values = profile ?? {};
+  const values = sanitizeRoleProfile(userType, profile);
   return storedRoleFields(userType).filter((field) => field.required && !isFilled(field, values[field.key]));
 }
 
