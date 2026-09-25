@@ -13,6 +13,8 @@ Implemented September 25, 2026, following the account-personalization audit.
 
 ## Deployment
 
+For the Supabase SQL Editor, copy the entire [combined SQL file](../sql/account-type-onboarding-2026-09-25.sql) and run it once as `postgres`. It includes all five migrations below in a single transaction. Do not also run the individual files after that succeeds. The SQL Editor does not record these versions in the Supabase CLI migration history; reconcile that history before a subsequent CLI migration push.
+
 Apply these migrations in order, then release the frontend from the same change set:
 
 1. `20260925155000_onboarding_invitations.sql`
