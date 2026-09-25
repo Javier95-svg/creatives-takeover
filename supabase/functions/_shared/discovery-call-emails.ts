@@ -98,6 +98,8 @@ export function buildDiscoveryCallEmail(input: {
       ? "Your Discovery Call request was received. Ten credits are held and will only be finalized if the call is confirmed."
     : input.template === "outcome_required"
       ? "The scheduled call has ended. Record its outcome in the admin dashboard."
+    : (input.template === "mentor_countered" || input.template === "founder_reminder_24h") && input.recipientRole === "founder"
+      ? "Your mentor proposed a different time. Accept or decline it before the response deadline shown below. The call is not confirmed until you accept and receive meeting details."
     : input.template === "call_reminder_24h"
       ? "Your Discovery Call is tomorrow. The meeting link and time are below."
     : input.template === "call_reminder_1h"
@@ -113,9 +115,12 @@ export function buildDiscoveryCallEmail(input: {
       : input.template === "request_expired"
         ? "The response window closed and the founder's held credits were released."
         : "There is an update to this Discovery Call.";
+  const actionLabel = (input.template === "mentor_countered" || input.template === "founder_reminder_24h") && input.recipientRole === "founder"
+    ? "Review proposed time"
+    : "Open Discovery Call";
   return {
     subject: title,
-    html: `<!doctype html><html><body style="font-family:Inter,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;color:#0f172a;background:#f8fafc;padding:24px"><main style="max-width:620px;margin:auto;background:white;border:1px solid #dbe4ea;border-radius:12px;overflow:hidden"><header style="background:#022b3a;color:white;padding:24px"><h1 style="font-size:22px;margin:0">${escapeHtml(title)}</h1></header><section style="padding:24px"><p>${escapeHtml(message)}</p>${detailRows}${input.actionUrl ? `<a href="${escapeHtml(input.actionUrl)}" style="display:inline-block;margin-top:22px;background:#1f7a8c;color:white;padding:11px 18px;border-radius:8px;text-decoration:none">Open Discovery Call</a>` : ""}<p style="color:#64748b;font-size:12px;margin-top:24px">Automated message from Creatives Takeover.</p></section></main></body></html>`,
+    html: `<!doctype html><html><body style="font-family:Inter,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;color:#0f172a;background:#f8fafc;padding:24px"><main style="max-width:620px;margin:auto;background:white;border:1px solid #dbe4ea;border-radius:12px;overflow:hidden"><header style="background:#022b3a;color:white;padding:24px"><h1 style="font-size:22px;margin:0">${escapeHtml(title)}</h1></header><section style="padding:24px"><p>${escapeHtml(message)}</p>${detailRows}${input.actionUrl ? `<a href="${escapeHtml(input.actionUrl)}" style="display:inline-block;margin-top:22px;background:#1f7a8c;color:white;padding:11px 18px;border-radius:8px;text-decoration:none">${escapeHtml(actionLabel)}</a>` : ""}<p style="color:#64748b;font-size:12px;margin-top:24px">Automated message from Creatives Takeover.</p></section></main></body></html>`,
   };
 }
 

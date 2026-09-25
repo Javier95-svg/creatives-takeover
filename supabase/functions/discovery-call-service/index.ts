@@ -400,7 +400,7 @@ serve(async (req) => {
   }
 
   if (action === "listAdminCalls") {
-    const [{ data: calls, error }, { data: health, error: healthError }, { data: outbox, error: outboxError }, { data: alerts, error: alertsError }, { data: events, error: eventsError }, { data: rounds, error: roundsError }, { data: reservations, error: reservationsError }, { data: calendarJobs, error: calendarJobsError }, { data: attendance, error: attendanceError }, { data: attendanceJobs, error: attendanceJobsError }] = await Promise.all([
+    const [{ data: calls, error }, { data: health, error: healthError }, { data: outbox, error: outboxError }, { data: alerts, error: alertsError }, { data: events, error: eventsError }, { data: rounds, error: roundsError }, { data: reservations, error: reservationsError }, { data: calendarJobs, error: calendarJobsError }, { data: attendance, error: attendanceError }, { data: attendanceJobs, error: attendanceJobsError }, { data: outcomes, error: outcomesError }] = await Promise.all([
       admin.from("discovery_calls").select("*").eq("workflow_version", 2).order("created_at", { ascending: false }).limit(250),
       admin.from("admin_discovery_call_workflow_health").select("*"),
       admin.from("discovery_call_notification_outbox").select("id, discovery_call_id, template_key, recipient_role, recipient_email, status, send_generation, attempt_count, max_attempts, last_error, next_attempt_at, sent_at, provider_message_id, provider_delivery_status, provider_event_at, delivered_at, delivery_delayed_at, bounced_at, complained_at, suppressed_at, provider_last_error, created_at").order("created_at", { ascending: false }).limit(500),
@@ -411,18 +411,22 @@ serve(async (req) => {
       admin.from("discovery_call_calendar_outbox").select("id, discovery_call_id, operation, sequence, status, attempt_count, max_attempts, next_attempt_at, external_event_id, last_error, created_at, completed_at").order("created_at", { ascending: false }).limit(500),
       admin.from("discovery_call_attendance_evidence").select("*").order("updated_at", { ascending: false }).limit(500),
       admin.from("discovery_call_attendance_outbox").select("*").order("created_at", { ascending: false }).limit(500),
+      admin.from("discovery_call_outcomes").select("discovery_call_id, agreement, summary, next_step, evidence_source, recorded_by, recorded_at").order("recorded_at", { ascending: false }).limit(500),
     ]);
-    const adminReadError = error ?? healthError ?? outboxError ?? alertsError ?? eventsError ?? roundsError ?? reservationsError ?? calendarJobsError ?? attendanceError ?? attendanceJobsError;
+    const adminReadError = error ?? healthError ?? outboxError ?? alertsError ?? eventsError ?? roundsError ?? reservationsError ?? calendarJobsError ?? attendanceError ?? attendanceJobsError ?? outcomesError;
     if (adminReadError) return json({ success: false, error: adminReadError.message }, 500);
-    return json({ success: true, calls: calls ?? [], health: health ?? [], notifications: outbox ?? [], notificationAlerts: alerts ?? [], events: events ?? [], rounds: rounds ?? [], reservations: reservations ?? [], calendarJobs: calendarJobs ?? [], attendance: attendance ?? [], attendanceJobs: attendanceJobs ?? [] });
+    return json({ success: true, calls: calls ?? [], health: health ?? [], notifications: outbox ?? [], notificationAlerts: alerts ?? [], events: events ?? [], rounds: rounds ?? [], reservations: reservations ?? [], calendarJobs: calendarJobs ?? [], attendance: attendance ?? [], attendanceJobs: attendanceJobs ?? [], outcomes: outcomes ?? [] });
   }
 
   if (action === "adminOverride") {
-    const { data, error } = await admin.rpc("admin_update_discovery_call_outcome_v4", {
+    const { data, error } = await admin.rpc("admin_update_discovery_call_outcome_v5", {
       p_call_id: String(body.callId ?? ""), p_admin_user_id: user.id,
       p_action: String(body.overrideAction ?? ""), p_reason: String(body.reason ?? ""),
       p_scheduled_for: body.scheduledFor ?? null, p_meeting_url: body.meetingUrl ?? null,
       p_meeting_instructions: body.meetingInstructions ?? null,
+      p_agreement: body.agreement ?? null,
+      p_next_step: body.nextStep ?? null,
+      p_evidence_source: body.evidenceSource ?? null,
     });
     if (data?.success) { void invokeNotificationWorker(); void invokeCalendarWorker(); }
     return rpcResponse(data, error);
