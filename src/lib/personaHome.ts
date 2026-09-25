@@ -128,6 +128,20 @@ export function personaInterestSummary(userType: UserType, roleProfile: Record<s
   return labels.length ? labels.join(', ') : null;
 }
 
+export function personaGuidanceContext(userType: UserType, roleProfile: Record<string, unknown>): string | null {
+  const focus = personaInterestSummary(userType, roleProfile);
+  const stages = Array.isArray(roleProfile.stages)
+    ? roleProfile.stages.filter((value): value is string => typeof value === 'string').slice(0, 3).join(', ')
+    : '';
+  const extra = userType === 'mentor' ? roleProfile.engagement
+    : userType === 'marketplace' ? roleProfile.capacity
+    : userType === 'investor' ? roleProfile.activity : null;
+  const extraLabel = userType === 'mentor' ? 'engagement' : userType === 'marketplace' ? 'capacity' : 'activity';
+  const parts = [focus && `focus ${focus}`, stages && `stages ${stages}`,
+    typeof extra === 'string' && extra && `${extraLabel} ${extra}`].filter(Boolean);
+  return parts.length ? parts.join('; ').slice(0, 240) : null;
+}
+
 export type PersonaDigest = Record<string, number>;
 
 /** The chips actually shown: a count is only worth the space when it is not zero. */

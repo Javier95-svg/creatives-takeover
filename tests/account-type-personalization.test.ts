@@ -7,7 +7,7 @@ import {
   ROLE_PROFILE_SCHEMA, PROJECT_NAME_FIELD, describeRoleProfile,
   missingRoleFields, sanitizeRoleProfile, storedRoleFields, usesProjectName,
 } from '../src/lib/roleProfileSchema.ts';
-import { personaChips, personaFocus, personaHome, personaInterestSummary } from '../src/lib/personaHome.ts';
+import { personaChips, personaFocus, personaGuidanceContext, personaHome, personaInterestSummary } from '../src/lib/personaHome.ts';
 import { navSectionsForType, navSliceForType, navToolsForType } from '../src/lib/workspaceNavForType.ts';
 import { notificationChannelsForType, allNotificationChannelKeys } from '../src/lib/notificationChannels.ts';
 
@@ -137,6 +137,7 @@ test('reviewed home shows the stated interest without changing account type', ()
   assert.equal(personaInterestSummary('mentor', { expertise: ['Pricing', 'Hiring'] }), 'Pricing, Hiring');
   assert.equal(personaInterestSummary('investor', { sectors: ['FinTech'] }), 'FinTech');
   assert.equal(personaInterestSummary('founder', { sectors: ['FinTech'] }), null);
+  assert.equal(personaGuidanceContext('mentor', { expertise: ['Pricing'], stages: ['Validation'], engagement: 'ongoing' }), 'focus Pricing; stages Validation; engagement ongoing');
 });
 
 test('a zero count is dropped rather than shown as nothing to do', () => {

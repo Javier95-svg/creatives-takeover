@@ -7,7 +7,7 @@ import { useProjects, useProjectOutcomes } from '@/hooks/useProjects';
 import { buildPulseProjectContext } from '@/hooks/usePulseWidget';
 import { useAccountContext } from '@/hooks/useAccountContext';
 import { useAccountHomeDigest } from '@/hooks/useAccountHomeDigest';
-import { personaChips, personaFocus, personaHome, personaInterestSummary } from '@/lib/personaHome';
+import { personaChips, personaFocus, personaGuidanceContext, personaHome, personaInterestSummary } from '@/lib/personaHome';
 import { supabase } from '@/integrations/supabase/client';
 import { homePriorities, validateHomeActions, type PulseHomeConcept, type PulseHomeMessage } from '@/lib/pulseHome';
 import { streamPulseHome } from '@/services/pulseHomeStream';
@@ -36,6 +36,7 @@ function LiveConversation({ concept }: { concept: PulseHomeConcept }) {
   const { userType, awaitingReview, roleProfile } = useAccountContext();
   const persona = personaHome(userType);
   const personaInterest = personaInterestSummary(userType, roleProfile);
+  const guidanceContext = personaGuidanceContext(userType, roleProfile);
   const { digest } = useAccountHomeDigest();
   const chips = useMemo(() => (persona ? personaChips(persona, digest) : []), [persona, digest]);
   const priorities = useMemo(
@@ -122,7 +123,7 @@ function LiveConversation({ concept }: { concept: PulseHomeConcept }) {
       await streamPulseHome({ sessionId: id, turnId: turn.turnId, message: turn.text, signal: controller.current.signal,
         // A non founder has no project, and the snapshot fabricates a stage for
         // them, so both are withheld rather than sent as facts about them.
-        context: { projectContext: persona || startup.loading || startup.error ? null : buildPulseProjectContext(startup.model), stage: persona ? null : dashboard.snapshot?.journey.currentStage ?? null, priorities, contextUnavailable: Boolean(startup.error || dashboard.error), currentPage: '/', currentTool: { name: 'Pulse Home', purpose: persona ? `${persona.composerPurpose}${personaInterest ? `. Stated focus: ${personaInterest}` : ''} and platform navigation` : 'Personalized founder guidance and platform navigation' },
+        context: { projectContext: persona || startup.loading || startup.error ? null : buildPulseProjectContext(startup.model), stage: persona ? null : dashboard.snapshot?.journey.currentStage ?? null, priorities, contextUnavailable: Boolean(startup.error || dashboard.error), currentPage: '/', currentTool: { name: 'Pulse Home', purpose: persona ? `${persona.composerPurpose}${guidanceContext ? `. Stated preferences: ${guidanceContext}` : ''} and platform navigation` : 'Personalized founder guidance and platform navigation' },
           activeProject: !persona && activeProject ? { id: activeProject.id, title: activeProject.title, ideaSummary: activeProject.ideaSummary } : null,
           projectOutcomes: persona ? null : projectOutcomes.data ?? null },
         onText: chunk => { if (alive.current) setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, content: message.content + chunk } : message)); },
