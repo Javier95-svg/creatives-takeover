@@ -35,14 +35,22 @@ serve(async (request) => {
   const role = invitation.user_type === 'mentor' ? 'mentor' : 'marketplace provider';
   const from = Deno.env.get('FROM_EMAIL') || 'onboarding@resend.dev';
   const resend = new Resend(apiKey);
-  const result = await resend.emails.send({
-    from: `${Deno.env.get('FROM_NAME') || 'Creatives Takeover'} <${from}>`,
-    to: invitation.email,
-    subject: `Your ${role} invitation to Creatives Takeover`,
-    html: `<p>You have been invited to apply as a ${role} on Creatives Takeover.</p><p>Sign in with this email address, verify it, and complete the onboarding questions. An administrator will review your request before category access opens.</p><p><a href="${appUrl}/onboarding">Open onboarding</a></p><p>This invitation expires in 30 days.</p>`,
-  });
-  if (result.error || !result.data?.id) {
-    await admin.from('account_invitations').update({ last_email_error: (result.error?.message ?? 'Provider did not return a message ID').slice(0, 300) }).eq('id', id);
+  let providerError = '';
+  let messageId: string | undefined;
+  try {
+    const result = await resend.emails.send({
+      from: `${Deno.env.get('FROM_NAME') || 'Creatives Takeover'} <${from}>`,
+      to: invitation.email,
+      subject: `Your ${role} invitation to Creatives Takeover`,
+      html: `<p>You have been invited to apply as a ${role} on Creatives Takeover.</p><p>Sign in with this email address, verify it, and complete the onboarding questions. An administrator will review your request before category access opens.</p><p><a href="${appUrl}/onboarding">Open onboarding</a></p><p>This invitation expires in 30 days.</p>`,
+    });
+    providerError = result.error?.message ?? '';
+    messageId = result.data?.id;
+  } catch (error) {
+    providerError = error instanceof Error ? error.message : 'Provider request failed';
+  }
+  if (providerError || !messageId) {
+    await admin.from('account_invitations').update({ last_email_error: (providerError || 'Provider did not return a message ID').slice(0, 300) }).eq('id', id);
     return json({ error: 'Invitation saved, but email delivery failed' }, 502);
   }
   const { error: statusError } = await admin.from('account_invitations').update({ last_emailed_at: new Date().toISOString(), last_email_error: null }).eq('id', id);
