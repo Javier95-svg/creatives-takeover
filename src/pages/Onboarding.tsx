@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { OnboardingForm } from '@/components/OnboardingForm';
 import { AdaptiveOnboardingForm } from '@/components/AdaptiveOnboardingForm';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -115,7 +114,7 @@ const Onboarding = () => {
             source,
             userId: user.id,
             page_path: '/onboarding',
-            quiz_version: session.flow_version === 'adaptive_v1' ? 2 : 6,
+            quiz_version: 2,
             onboarding_session_id: session.id,
             flow_version: session.flow_version,
             rollout_variant: session.rollout_variant,
@@ -173,10 +172,10 @@ const Onboarding = () => {
         <div className="relative min-h-screen flex items-center justify-center py-8 px-4 sm:py-12">
           <div className="w-full max-w-4xl mx-auto">
             <div className="animate-fade-in-up">
-              {onboardingSession?.flow_version === 'adaptive_v1' ? (
+              {/* Every active account must answer the classification question,
+                  including people resuming an older experiment session. */}
+              {onboardingSession ? (
                 <AdaptiveOnboardingForm session={onboardingSession} onComplete={handleComplete} />
-              ) : onboardingSession ? (
-                <OnboardingForm session={onboardingSession} onComplete={handleComplete} />
               ) : null}
             </div>
           </div>

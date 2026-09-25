@@ -1,3 +1,4 @@
+import { ONBOARDING_SITUATIONS, classifyOnboardingSituation } from '@/lib/onboardingClassification';
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
@@ -47,7 +48,7 @@ import {
   saveOnboardingProgress,
 } from '@/lib/onboardingSession';
 import { buildOnboardingFailureMessage } from '@/lib/onboardingFailureMessage';
-import { submitAccountApplication } from '@/lib/accountApplications';
+import { submitAccountApplication, getMyAccountInvitationTypes } from '@/lib/accountApplications';
 import { REVIEWED_USER_TYPES, USER_TYPE_LABEL, type ReviewedUserType } from '@/lib/accountTypes';
 import { mapFounderStageToBusinessStage } from '@/lib/stageDiagnostic';
 import {
@@ -84,19 +85,8 @@ const BUSINESS_MODELS = [
   ['other', 'Another model'],
 ] as const;
 
-// Splits accounts into the two groups the platform tags people by. "Live"
-// deliberately means anything real and reachable, not revenue, so it is easy to
-// answer honestly and lands the split where we expect it.
-// The five account types. Founder and builder are self serve; the other three
-// are offering something to the network, so they are reviewed before the
-// account is activated and the quiz stops as soon as one is chosen.
-const ACCOUNT_TYPE_OPTIONS = [
-  ['founder', 'Founder', 'You already have a project'],
-  ['builder', 'Builder', 'You are starting a project from scratch'],
-  ['mentor', 'Mentor', 'You offer your coaching to our network'],
-  ['marketplace', 'Service provider', 'You offer your services to our network'],
-  ['investor', 'Investor', "You are interested in investing in our users' projects"],
-] as const;
+// Account classification is derived from the first situational answer.
+
 
 function isReviewedType(value: string): value is ReviewedUserType {
   return (REVIEWED_USER_TYPES as readonly string[]).includes(value);
@@ -264,15 +254,16 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
   // quiz stops there: nothing after the first step applies to them, and the
   // account stays unapproved until an admin reviews it.
   const [submittedReview, setSubmittedReview] = useState<ReviewedUserType | null>(null);
-  // A reviewed type answers two questions, not seven: which category, then
+  // A reviewed account answers two questions: current situation, then
   // the fields that category is defined by. This is that second question,
   // kept out of currentStep so the founder step machine is untouched.
-  const [reviewStage, setReviewStage] = useState<'choosing' | 'details'>(localFallback?.answers.entryStage ?? session.answers.entryStage ?? (session.current_step > 0 ? 'details' : 'choosing'));
+  const [reviewStage, setReviewStage] = useState<'choosing' | 'details'>(!(localFallback?.answers.situation ?? session.answers.situation) ? 'choosing' : localFallback?.answers.entryStage ?? session.answers.entryStage ?? (session.current_step > 0 ? 'details' : 'choosing'));
   const [roleDraft, setRoleDraft] = useState<RoleProfile>(localFallback?.answers.roleProfile ?? session.answers.roleProfile ?? {});
   const [answers, setAnswers] = useState<OnboardingAnswersV1>({
     ...EMPTY_ONBOARDING_ANSWERS_V1,
     ...session.answers,
     ...localFallback?.answers,
+    founderSegment: classifyOnboardingSituation(localFallback?.answers.situation ?? session.answers.situation),
     sectors: Array.isArray(localFallback?.answers.sectors)
       ? localFallback.answers.sectors
       : Array.isArray(session.answers.sectors)
@@ -284,7 +275,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
       || '',
   });
   const [currentStep, setCurrentStep] = useState(
-    localFallback?.currentStep ?? Math.min(session.current_step, CORE_STEPS - 1),
+    (localFallback?.answers.situation ?? session.answers.situation) ? localFallback?.currentStep ?? Math.min(session.current_step, CORE_STEPS - 1) : 0,
   );
   const [existingPreferences, setExistingPreferences] = useState<Record<string, unknown>>({});
   const [isSaving, setIsSaving] = useState(false);
@@ -296,6 +287,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
   const startedAtRef = useRef(new Date(session.started_at).getTime());
   const recommendationShownRef = useRef(false);
   const visibleStep = currentStep === 0 ? (reviewStage === 'details' ? 2 : 1) : currentStep + 2;
+
   const visibleTotal = isReviewedType(answers.founderSegment) ? 2 : CORE_STEPS + 1;
 
   useEffect(() => {
@@ -515,9 +507,17 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
     if (submittingRef.current) return;
     if (submittedReview) { onComplete?.('/'); return; }
     if (currentStep === 0 && reviewStage === 'choosing') {
-      if (!answers.founderSegment) { setError('Choose the option that describes you.'); return; }
+      if (!answers.situation || !answers.founderSegment) { setError('Choose the option that describes your situation.'); return; }
+      if (answers.founderSegment === 'mentor' || answers.founderSegment === 'marketplace') {
+        setIsSaving(true); submittingRef.current = true;
+        try {
+          const invitations = await getMyAccountInvitationTypes();
+          if (!invitations.includes(answers.founderSegment)) { setError('This participation requires an invitation for your verified sign-in email. Contact an administrator to confirm your invitation.'); return; }
+        } catch { setError('Could not check your invitation. Please try again.'); return; }
+        finally { setIsSaving(false); submittingRef.current = false; }
+      }
       setReviewStage('details');
-      void trackRetentionEvent('onboarding_role_selected', { user_id: user?.id, user_type: answers.founderSegment, quiz_version: 2, onboarding_session_id: session.id });
+      void trackRetentionEvent('onboarding_classified', { user_id: user?.id, user_type: answers.founderSegment, quiz_version: 2, onboarding_session_id: session.id });
       return;
     }
     const validationError = validateStep();
@@ -545,7 +545,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
       submittingRef.current = true;
       try {
         await submitAccountApplication({
-          userType: answers.founderSegment,
+          situation: answers.situation,
           sessionId: session.id,
           fullName: user?.user_metadata?.full_name ?? null,
           email: user?.email ?? null,
@@ -822,8 +822,8 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
       }
 
       if (reviewStage === 'choosing') return <>
-        <StepHeading title="What brings you here today?" description="Choose your primary workspace. You can have other interests without changing your account category." headingRef={headingRef} />
-        <div className="mt-6"><ChoiceGrid options={ACCOUNT_TYPE_OPTIONS} value={answers.founderSegment} onSelect={(founderSegment) => { if (founderSegment !== answers.founderSegment) setRoleDraft({}); patchAnswers({ founderSegment }); }} /></div>
+        <StepHeading title="What brings you here today?" description="Which statement best describes your situation today? We use your answers to personalize your workspace." headingRef={headingRef} />
+        <div className="mt-6"><ChoiceGrid options={ONBOARDING_SITUATIONS} value={answers.situation ?? ''} onSelect={(situation) => { const founderSegment = classifyOnboardingSituation(situation); if (founderSegment !== answers.founderSegment) setRoleDraft({}); setError(''); patchAnswers({ situation, founderSegment }); }} /></div>
       </>;
 
       // The second and last question a reviewed type is asked.
@@ -1020,7 +1020,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
     return (
       <>
         <StepHeading title="Your Progress Tracker focus is ready" description="Review how your answers will shape the dashboard, then open your first useful action." headingRef={headingRef} />
-        <p className="mt-4 text-sm">You are joining as <strong>{USER_TYPE_LABEL[answers.founderSegment || 'founder']}</strong>. Your next goal: <strong>{GOAL_OPTIONS.find(([key]) => key === answers.primaryGoal)?.[1]}</strong>. Use Back to edit your answers.</p>
+        <p className="mt-4 text-sm">Based on your answers, your workspace is <strong>{USER_TYPE_LABEL[answers.founderSegment || 'founder']}</strong>. Your next goal: <strong>{GOAL_OPTIONS.find(([key]) => key === answers.primaryGoal)?.[1]}</strong>. Use Back to edit your answers.</p>
         <div className="mt-5 rounded-xl border border-accent-teal/30 bg-accent-teal/10 p-5">
           <div className="flex flex-wrap items-center gap-2">
             <Badge>{draftContext.founderLoop} loop</Badge>

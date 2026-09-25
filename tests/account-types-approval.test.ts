@@ -1,3 +1,4 @@
+import { ONBOARDING_SITUATIONS, classifyOnboardingSituation } from '../src/lib/onboardingClassification.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -11,21 +12,10 @@ const quiz = readFileSync('src/components/AdaptiveOnboardingForm.tsx', 'utf8');
 const fn = readFileSync('supabase/functions/send-account-application-email/index.ts', 'utf8');
 const app = readFileSync('src/App.tsx', 'utf8');
 
-const optionsTable = quiz.slice(
-  quiz.indexOf('const ACCOUNT_TYPE_OPTIONS'),
-  quiz.indexOf('] as const;', quiz.indexOf('const ACCOUNT_TYPE_OPTIONS')),
-);
-
-test('five categories, each with the line that explains it', () => {
-  const lines = optionsTable.split('\n').filter((line) => line.trim().startsWith("['"));
-  const values = lines.map((line) => line.trim().slice(2).split("'")[0]);
-  assert.deepEqual(values, ['founder', 'builder', 'mentor', 'marketplace', 'investor']);
-  // Each option carries a title and a description, which the grid renders as
-  // two lines inside one button.
-  for (const line of lines) {
-    assert.ok(line.split(',').length >= 3, 'needs a description: ' + line.trim());
-  }
-  assert.match(quiz, /\{description && <span className="mt-0\.5 block text-xs leading-5 text-muted-foreground">\{description\}<\/span>\}/);
+test('situational answers automatically classify all five categories', () => {
+  assert.deepEqual(ONBOARDING_SITUATIONS.map(([answer]) => classifyOnboardingSituation(answer)), ['founder','builder','mentor','marketplace','investor']);
+  for (const value of ['founder','mentor','marketplace','invalid',null,undefined]) assert.equal(classifyOnboardingSituation(value),'');
+  assert.ok(ONBOARDING_SITUATIONS.every(([,title,description]) => title.length>15 && description.length>15));
 });
 
 test('the reviewed types end the quiz and file a request', () => {

@@ -102,6 +102,7 @@ export interface OnboardingAnswersV1 {
       which every stage outcome then attaches to. */
   projectName: string;
   roleProfile?: Record<string, unknown>;
+  situation?: import('./onboardingClassification.ts').OnboardingSituation;
   entryStage?: 'choosing' | 'details';
   builderStartingPoint?: 'exploring' | 'idea_chosen';
   investorVisible?: boolean;

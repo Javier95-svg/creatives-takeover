@@ -21,7 +21,7 @@ const mocks = {
   '@/lib/analytics': `export const trackOnboardingStepCompleted=()=>{};`,
   '@/lib/retentionSystem': `export const trackRetentionEvent=async(name,data)=>window.events.push({name,data}); export const trackActivationJourneyEvent=async()=>{}; export const ensureActivationGateVariant=async()=> 'control'; export const startActivationJourney=async()=>{};`,
   '@/lib/onboardingMentorRecommendations': `export const refreshOnboardingMentorRecommendations=async()=>{};`,
-  '@/lib/accountApplications': `export const submitAccountApplication=async(value)=>{window.applications.push(value);};`,
+  '@/lib/accountApplications': `export const getMyAccountInvitationTypes=async()=>window.invitationTypes; export const submitAccountApplication=async(value)=>{window.applications.push(value);};`,
   '@/lib/onboardingSession': `export const saveOnboardingProgress=async(value)=>{window.saved=value;}; export const abandonOnboardingSession=async()=>{window.abandoned=true;}; export const completeOnboardingSession=async()=>{};`,
   '@/lib/activationJourneyV2': `export const ACTIVATION_CATALOG={find_mentor:{label:'Find a mentor',steps:['Find support'],output:'A useful introduction'}};export const getStageAvailableIntents=()=>['find_mentor'];export const recommendActivation=()=>({intent:'find_mentor',reason:'Relevant support'});export const createActivationJourney=()=>({});export const buildActivationJourneyUrl=()=>'/';`,
   'sonner': `export const toast={info:()=>{},success:()=>{},error:()=>{}};`,
@@ -39,7 +39,7 @@ async function mount(storage={}) {
     }]});bundle=result.outputFiles[0].text;
   }
   const dom=new JSDOM('<div id="root"></div>',{url:'http://localhost/',runScripts:'dangerously',pretendToBeVisual:true});
-  dom.window.events=[];dom.window.applications=[];
+  dom.window.events=[];dom.window.applications=[];dom.window.invitationTypes=['mentor','marketplace'];
   for(const [key,value] of Object.entries(storage))dom.window.localStorage.setItem(key,value);
   dom.window.eval(bundle);await tick();return dom;
 }
@@ -49,10 +49,25 @@ const text=dom=>dom.window.document.body.textContent;
 async function click(dom,label){const button=[...dom.window.document.querySelectorAll('button')].find(b=>b.textContent.trim()===label || b.textContent.includes(label));assert.ok(button,`Missing button ${label}`);button.click();await tick();}
 async function type(dom,input,value){assert.ok(input);const setter=Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype,'value').set;input.focus();for(const char of value){setter.call(input,input.value+char);input.dispatchEvent(new dom.window.Event('input',{bubbles:true}));await tick();}}
 function field(dom,label){const el=[...dom.window.document.querySelectorAll('label')].find(x=>x.textContent.startsWith(label));return el&&dom.window.document.getElementById(el.htmlFor);}
-async function choose(dom,role){const button=[...dom.window.document.querySelectorAll('button')].find(b=>b.textContent.includes(role));assert.ok(button);button.click();await tick();await click(dom,'Continue');}
+const statements={Founder:'I already have a project',Builder:'I am starting from scratch',Mentor:'I want to advise', 'Service provider':'I want to deliver services',Investor:'I want to explore projects to invest'};
+async function choose(dom,role){role=statements[role]??role;const button=[...dom.window.document.querySelectorAll('button')].find(b=>b.textContent.includes(role));assert.ok(button);button.click();await tick();await click(dom,'Continue');}
 function close(dom){dom.window.root.unmount();dom.window.close();}
 
-test('role selection precedes project questions for all five account types',async()=>{
+test('uninvited advice and services answers cannot reach application details',async()=>{
+  for(const role of ['Mentor','Service provider']) {
+    const dom=await mount();try{
+      dom.window.invitationTypes=[];
+      await choose(dom,role);
+      assert.ok(text(dom).includes('requires an invitation for your verified sign-in email'));
+      assert.equal(dom.window.applications.length,0);
+      assert.ok(text(dom).includes('What brings you here today?'));
+      await choose(dom,'Builder');
+      assert.ok(text(dom).includes('Where are you starting?'));
+    }finally{close(dom);}
+  }
+});
+
+test('situation question precedes project questions for all five account types',async()=>{
   for(const role of ['Founder','Builder','Mentor','Service provider','Investor']){
     const dom=await mount();try{
       assert.ok(text(dom).includes('What brings you here today?'));
@@ -62,6 +77,16 @@ test('role selection precedes project questions for all five account types',asyn
       else {assert.equal(dom.window.document.querySelectorAll('textarea').length,0);assert.ok(text(dom).includes('2 of 2'));assert.ok(!text(dom).includes('Founder launchpad'));}
     }finally{close(dom);}
   }
+});
+
+test('old drafts must answer the first situation question before continuing',async()=>{
+  const draft=JSON.stringify({sessionId:'test-session',currentStep:4,updatedAt:Date.now(),answers:{founderSegment:'mentor',entryStage:'details',projectName:'Existing draft'}});
+  const dom=await mount({'adaptive_onboarding_test-session':draft});try{
+    assert.ok(text(dom).includes('What brings you here today?'));
+    await click(dom,'Continue');
+    assert.ok(text(dom).includes('Choose the option that describes your situation'));
+    assert.equal(dom.window.applications.length,0);
+  }finally{close(dom);}
 });
 
 test('mentor typing, draft reload, submission and workspace continuation',async()=>{

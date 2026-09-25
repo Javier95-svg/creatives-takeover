@@ -43,7 +43,7 @@ export function RoleProfileCard({ userTypeOverride }: { userTypeOverride?: UserT
   const resubmit = useMutation({
     mutationFn: async () => {
       if (userType !== 'mentor' && userType !== 'marketplace' && userType !== 'investor') return;
-      await submitAccountApplication({ userType, roleProfile: sanitizeRoleProfile(userType,draft), fullName: user?.user_metadata?.full_name });
+      await submitAccountApplication({ roleProfile: sanitizeRoleProfile(userType,draft), fullName: user?.user_metadata?.full_name });
     },
     onSuccess: () => { toast.success('Request sent for review.'); void refresh(); },
     onError: (error) => toast.error(error instanceof Error ? error.message : 'Could not submit request.'),

@@ -49,7 +49,9 @@ BEGIN
 
   SELECT user_type INTO v_type FROM public.profiles WHERE id=v_user FOR UPDATE;
   IF v_type IN ('mentor','marketplace','investor') THEN RAISE EXCEPTION 'Use the reviewed account onboarding flow'; END IF;
-  v_type := COALESCE(NULLIF(p_answers->>'founderSegment',''),v_type,'founder');
+  v_type := public.classify_onboarding_situation(p_answers->>'situation');
+  IF v_type IS NULL THEN RAISE EXCEPTION 'Answer the first onboarding question'; END IF;
+  p_answers := p_answers || jsonb_build_object('founderSegment',v_type);
   IF v_type NOT IN ('founder','builder') THEN RAISE EXCEPTION 'Invalid self-serve account type'; END IF;
   v_name := NULLIF(btrim(p_answers->>'projectName'),'');
   IF length(v_name)>120 THEN RAISE EXCEPTION 'Project name is too long'; END IF;

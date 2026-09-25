@@ -1,3 +1,4 @@
+import type { OnboardingSituation } from './onboardingClassification';
 import { supabase } from '@/integrations/supabase/client';
 import type { ApprovalStatus, ReviewedUserType } from '@/lib/accountTypes';
 
@@ -28,7 +29,7 @@ export interface AccountApplication {
  * nothing here has to remember to.
  */
 export async function submitAccountApplication(input: {
-  userType: ReviewedUserType;
+  situation?: OnboardingSituation;
   sessionId?: string;
   fullName?: string | null;
   email?: string | null;
@@ -44,7 +45,7 @@ export async function submitAccountApplication(input: {
   // looping these accounts back into the founder quiz forever, and it patches
   // user_preferences server side instead of racing a read modify write.
   const { error } = await supabase.rpc('submit_account_application' as never, {
-    p_user_type: input.userType,
+    p_situation: input.situation ?? null,
     p_session_id: input.sessionId ?? null,
     p_full_name: input.fullName ?? null,
     p_email: input.email ?? auth.user.email ?? null,
@@ -71,4 +72,10 @@ export async function reviewAccountApplication(input: {
     p_note: input.note ?? null,
   } as never);
   if (error) throw new Error(error.message);
+}
+
+export async function getMyAccountInvitationTypes(): Promise<string[]> {
+  const { data, error } = await supabase.rpc('my_account_invitation_types' as never);
+  if (error) throw new Error(error.message);
+  return Array.isArray(data) ? data as string[] : [];
 }

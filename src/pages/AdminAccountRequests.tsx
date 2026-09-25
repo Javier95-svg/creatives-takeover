@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AccountInvitations } from '@/components/admin/AccountInvitations';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import Navigation from '@/components/Navigation';
@@ -72,6 +73,7 @@ export default function AdminAccountRequests() {
           </p>
         </header>
 
+        <AccountInvitations />
         <section className="mb-8 overflow-x-auto" aria-label="Onboarding health">
           <h2 className="mb-2 font-semibold">Onboarding — last 30 days</h2>
           <p className="mb-3 text-xs text-muted-foreground">Completion includes submitted applications. First action means a completed activation, saved role details, or opening a matched founder conversation. These are observed counts, not conversion estimates.</p>

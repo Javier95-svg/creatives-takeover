@@ -15,7 +15,7 @@ async function fixture() {
   const db=new PGlite();
   await db.exec(`
     CREATE ROLE authenticated; CREATE ROLE anon; CREATE ROLE service_role; CREATE ROLE supabase_admin;
-    CREATE SCHEMA auth; CREATE TABLE auth.users(id uuid PRIMARY KEY,email text);
+    CREATE SCHEMA auth; CREATE TABLE auth.users(id uuid PRIMARY KEY,email text,email_confirmed_at timestamptz DEFAULT now());
     CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
     CREATE FUNCTION public.is_admin_user() RETURNS boolean LANGUAGE sql STABLE AS $$ SELECT auth.uid()='${admin}'::uuid $$;
     GRANT USAGE ON SCHEMA auth TO authenticated; GRANT EXECUTE ON FUNCTION auth.uid() TO authenticated;
@@ -53,14 +53,64 @@ async function fixture() {
   `);
   const ensure=sql('20260917180000_outcomes_claim_project_slot');
   await db.exec(ensure.slice(ensure.indexOf('CREATE OR REPLACE FUNCTION public.ensure_active_project'),ensure.indexOf('COMMENT ON FUNCTION')));
-  for(const name of ['20260925160000_account_onboarding_integrity','20260925161000_onboarding_classification_and_project','20260925162000_investor_matching_preferences','20260925163000_onboarding_drafts_and_reconciliation']) await db.exec(sql(name));
-  await db.exec(`INSERT INTO auth.users VALUES('${user}','test@example.invalid'),('${admin}','admin@example.invalid');
+  for(const name of ['20260925155000_onboarding_invitations','20260925160000_account_onboarding_integrity','20260925161000_onboarding_classification_and_project','20260925162000_investor_matching_preferences','20260925163000_onboarding_drafts_and_reconciliation']) await db.exec(sql(name));
+  await db.exec(`INSERT INTO auth.users(id,email) VALUES('${user}','test@example.invalid'),('${admin}','admin@example.invalid');
     INSERT INTO profiles(id) VALUES('${user}'),('${admin}'); INSERT INTO onboarding_sessions(id,user_id) VALUES('${session}','${user}');`);
   return db;
 }
 async function asUser(db,id=user) { await db.exec(`RESET ROLE; SELECT set_config('request.jwt.claim.sub','${id}',false); SET ROLE authenticated;`); }
 async function owner(db) {await db.exec('RESET ROLE');}
-async function submit(db,type,details) {return db.query('SELECT submit_account_application($1,$2,$3,$4::jsonb,$5::uuid) result',[type,'Test','untrusted@example.invalid',JSON.stringify(details),session]);}
+
+test('invitation is admin-issued, verified-email bound, expiring and revocable before approval',async()=>{
+  const db=await fixture();try{
+    await asUser(db);
+    await assert.rejects(submit(db,'mentor',mentor),/invitation/);
+    await assert.rejects(db.query('SELECT manage_account_invitation($1,$2)',['test@example.invalid','mentor']),/administrator/);
+    await assert.rejects(db.query('SELECT list_account_invitations()'),/administrator/);
+    await assert.rejects(db.query("SELECT submit_account_application('mentor',null,null,$1::jsonb,$2::uuid)",[JSON.stringify(mentor),session]),/reviewed account/);
+    await asUser(db,admin);
+    await db.query('SELECT manage_account_invitation($1,$2)',['someoneelse@example.invalid','mentor']);
+    await asUser(db);await assert.rejects(submit(db,'mentor',mentor),/invitation/);
+    await invite(db);
+    await assert.rejects(submit(db,'marketplace',provider),/invitation/);
+    await owner(db);await db.query('UPDATE auth.users SET email_confirmed_at=NULL WHERE id=$1',[user]);
+    await asUser(db);await assert.rejects(submit(db,'mentor',mentor),/invitation/);
+    assert.deepEqual((await db.query('SELECT my_account_invitation_types() result')).rows[0].result,[]);
+    await owner(db);await db.query('UPDATE auth.users SET email_confirmed_at=now() WHERE id=$1',[user]);
+    await db.exec("UPDATE account_invitations SET expires_at=now()-interval '1 day'");
+    await asUser(db);await assert.rejects(submit(db,'mentor',mentor),/invitation/);
+    await invite(db);
+    const id=(await submit(db,'mentor',mentor)).rows[0].result.applicationId;
+    await owner(db);assert.equal((await db.query('SELECT approval_status FROM profiles WHERE id=$1',[user])).rows[0].approval_status,'pending');
+    await asUser(db,admin);await db.query('SELECT manage_account_invitation($1,$2,true)',['test@example.invalid','mentor']);
+    await assert.rejects(db.query('SELECT review_account_application($1,$2)',[id,'approved']),/active invitation/);
+    await db.query('SELECT manage_account_invitation($1,$2)',['test@example.invalid','mentor']);
+    await db.query('SELECT review_account_application($1,$2)',[id,'approved']);
+  }finally{await db.close();}
+});
+
+test('classification is derived from valid situations and ignores submitted role labels',async()=>{
+  const db=await fixture();try{
+    await asUser(db);
+    for(const [situation,type] of Object.entries({existing_project:'founder',starting_project:'builder',share_expertise:'mentor',deliver_services:'marketplace',explore_investments:'investor'})){
+      assert.equal((await db.query('SELECT classify_onboarding_situation($1) result',[situation])).rows[0].result,type);
+    }
+    await assert.rejects(db.query('SELECT complete_onboarding_v1($1,$2::jsonb,$3::jsonb)',[session,JSON.stringify({founderSegment:'founder'}),'{}']),/first onboarding question/);
+    await assert.rejects(db.query('SELECT submit_account_application(null,null,null,$1::jsonb,null)',[JSON.stringify(mentor)]),/reviewed account/);
+    await invite(db);
+    const first=(await submit(db,'mentor',mentor)).rows[0].result;
+    await asUser(db,admin);await db.query('SELECT review_account_application($1,$2)',[first.applicationId,'rejected']);
+    await asUser(db);
+    const resubmitted=(await db.query('SELECT submit_account_application(null,null,null,$1::jsonb,null) result',[JSON.stringify(mentor)])).rows[0].result;
+    assert.equal(resubmitted.userType,'mentor');
+    assert.notEqual(resubmitted.applicationId,first.applicationId);
+    const retry=(await db.query('SELECT submit_account_application(null,null,null,$1::jsonb,null) result',[JSON.stringify(mentor)])).rows[0].result;
+    assert.equal(retry.applicationId,resubmitted.applicationId);
+  }finally{await db.close();}
+});
+const situations={mentor:'share_expertise',marketplace:'deliver_services',investor:'explore_investments'};
+async function invite(db,type='mentor'){await asUser(db,admin);await db.query('SELECT manage_account_invitation($1,$2)', ['test@example.invalid',type]);await asUser(db);}
+async function submit(db,type,details) {return db.query('SELECT submit_account_application($1,$2,$3,$4::jsonb,$5::uuid) result',[situations[type],'Test','untrusted@example.invalid',JSON.stringify(details),session]);}
 
 test('database blocks direct approval/type changes and forged application insertion',async()=>{
   const db=await fixture(); try {
@@ -78,6 +128,7 @@ test('database blocks direct approval/type changes and forged application insert
 
 for(const [type,details] of Object.entries({mentor,marketplace:provider,investor})) test(`${type}: complete, retry, review snapshot and approval`,async()=>{
   const db=await fixture();try{
+    if(type!=='investor') await invite(db,type);
     await asUser(db); const first=(await submit(db,type,details)).rows[0].result;
     const retry=(await submit(db,type,details)).rows[0].result;
     assert.equal(first.applicationId,retry.applicationId);
@@ -99,7 +150,7 @@ for(const [type,details] of Object.entries({mentor,marketplace:provider,investor
 
 test('rejection can be corrected and resubmitted; stale role decisions fail',async()=>{
   const db=await fixture();try{
-    await asUser(db);const id=(await submit(db,'mentor',mentor)).rows[0].result.applicationId;
+    await invite(db);await asUser(db);const id=(await submit(db,'mentor',mentor)).rows[0].result.applicationId;
     await asUser(db,admin);await db.query('SELECT review_account_application($1,$2)',[id,'rejected']);
     await asUser(db);const next=(await submit(db,'mentor',{...mentor,experience:'Updated relevant experience'})).rows[0].result.applicationId;
     assert.notEqual(next,id);
@@ -111,7 +162,7 @@ test('rejection can be corrected and resubmitted; stale role decisions fail',asy
 for(const type of ['founder','builder']) test(`${type}: canonical type, project, consent and retry persistence`,async()=>{
   const db=await fixture();try{
     await asUser(db);
-    const answers={founderSegment:type,projectName:type==='builder'?'':'Test venture',startupBrief:'We help small businesses understand their customers.',businessModel:'service',evidenceState:'none',primaryGoal:'validate_problem',blocker:'customer_clarity',weeklyCapacityHours:5,selectedIntent:'find_mentor',investorVisible:true,investmentStage:'Seed'};
+    const answers={situation:type==='founder'?'existing_project':'starting_project',founderSegment:type==='founder'?'builder':'founder',projectName:type==='builder'?'':'Test venture',startupBrief:'We help small businesses understand their customers.',businessModel:'service',evidenceState:'none',primaryGoal:'validate_problem',blocker:'customer_clarity',weeklyCapacityHours:5,selectedIntent:'find_mentor',investorVisible:true,investmentStage:'Seed'};
     const call=()=>db.query('SELECT complete_onboarding_v1($1,$2::jsonb,$3::jsonb)',[session,JSON.stringify(answers),JSON.stringify({assignedStage:1})]);
     await call();await call();await owner(db);
     const profile=(await db.query('SELECT user_type,founder_segment,startup_name,investor_match_visible FROM profiles WHERE id=$1',[user])).rows[0];
@@ -144,7 +195,7 @@ test('late drafts cannot overwrite newer answers or reopen a completed applicati
     const save=(rev,label)=>db.query('SELECT save_onboarding_progress_v1($1,0,$2::jsonb)',[session,JSON.stringify({_draftVersion:rev,roleProfile:{expertise:[label]},entryStage:'details'})]);
     await save(200,'New');await save(100,'Old');
     await owner(db);assert.equal((await db.query('SELECT answers FROM onboarding_sessions')).rows[0].answers.roleProfile.expertise[0],'New');
-    await asUser(db);await submit(db,'mentor',mentor);await save(300,'Late');
+    await invite(db);await asUser(db);await submit(db,'mentor',mentor);await save(300,'Late');
     await owner(db);const row=(await db.query('SELECT status,answers FROM onboarding_sessions')).rows[0];
     assert.equal(row.status,'completed');assert.deepEqual(row.answers.roleProfile,mentor);
   }finally{await db.close();}
