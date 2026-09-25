@@ -76,7 +76,7 @@ export function isAuthorizedWorker(req: Request): boolean {
   const bearer = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "") ?? "";
   const cronSecret = req.headers.get("x-cron-secret") ?? "";
   const serviceKey = env("SUPABASE_SERVICE_ROLE_KEY");
-  const configuredCronSecret = env("CRON_SECRET");
+  const configuredCronSecret = env("DISCOVERY_CALL_CRON_SECRET");
   return Boolean(
     (serviceKey && bearer === serviceKey)
     || (configuredCronSecret && cronSecret === configuredCronSecret)
