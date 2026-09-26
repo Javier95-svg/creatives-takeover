@@ -35,7 +35,6 @@
 @keyframes pulse-home-wave-idle { 0%, 100% { transform: scaleY(.8); } 50% { transform: scaleY(1); } }
 @media (prefers-reduced-motion: reduce) { .pulse-home-wave span, .pulse-home-wave--active span { animation: none; } }
 .pulse-home-shortcuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .625rem; margin-top: 1.75rem; }
-.pulse-home-shortcut--focus { grid-column: 1 / -1; }
 .pulse-home-shortcut { display: flex; align-items: center; gap: .75rem; min-height: 3.5rem; padding: .625rem .875rem; border: 1px solid hsl(var(--primary) / .2); border-radius: 1rem; background: hsl(var(--card) / .7); color: hsl(var(--foreground)); font-size: .8125rem; line-height: 1.4; font-weight: 500; transition: background .2s, border-color .2s, box-shadow .2s; }
 .pulse-home-shortcut-icon { display: grid; place-items: center; flex-shrink: 0; width: 2rem; height: 2rem; border-radius: .625rem; color: hsl(var(--primary)); background: hsl(var(--primary) / .12); }
 .pulse-home-shortcut-arrow { color: hsl(var(--muted-foreground)); }
