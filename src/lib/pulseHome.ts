@@ -1,14 +1,16 @@
 import { FOUNDER_TOOL_CATALOG } from '../config/founderToolCatalog.ts';
 import type { DashboardAction, DashboardSnapshot } from '../types/dashboardSnapshot.ts';
+import { PULSE_UUID } from './pulseScope.ts';
 
 export type PulseHomeConcept = 'founder-guide' | 'command-center' | 'guided-journey';
 export interface PulseHomeAction {
-  kind: 'tool' | 'mentor' | 'browse';
+  kind: 'tool' | 'mentor' | 'browse' | 'article' | 'podcast' | 'service';
   id: string;
   title: string;
   reason: string;
   route: string;
   image?: string;
+  slug?: string;
 }
 export interface PulseHomeMessage {
   id: string;
@@ -30,7 +32,15 @@ export function validateHomeActions(value: unknown): PulseHomeAction[] {
       const tool = FOUNDER_TOOL_CATALOG.find(tool => tool.key === action.id);
       return tool ? [{ ...action, title: tool.name, route: tool.route }] : [];
     }
-    if (action.kind === 'browse' && action.id === 'mentorship') return [{ ...action, route: '/mentorship' }];
+    if (action.kind === 'browse') {
+      const routes: Record<string, string> = { mentorship: '/mentorship', newspaper: '/newspaper', podcast: '/podcast', marketplace: '/marketplace' };
+      return Object.prototype.hasOwnProperty.call(routes, action.id) ? [{ ...action, route: routes[action.id], image: undefined }] : [];
+    }
+    if (['article', 'podcast', 'service'].includes(action.kind) && PULSE_UUID.test(action.id)) {
+      if (action.kind === 'podcast') return [{ ...action, route: `/podcast?episode=${encodeURIComponent(action.id)}`, image: undefined }];
+      if (typeof action.slug !== 'string' || !/^[a-z0-9][a-z0-9_-]{0,199}$/i.test(action.slug)) return [];
+      return [{ ...action, route: `${action.kind === 'article' ? '/newspaper' : '/marketplace'}/${encodeURIComponent(action.slug)}`, image: undefined }];
+    }
     if (action.kind === 'mentor' && /^[a-z0-9-]+$/i.test(action.id) && /^\/mentorship\/[a-z0-9-]+$/.test(action.route)) {
       return [{ ...action, image: typeof action.image === 'string' && /^https:\/\//.test(action.image) ? action.image : undefined }];
     }

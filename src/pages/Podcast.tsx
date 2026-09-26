@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Plus, Mic } from "lucide-react";
 import Navigation from "@/components/Navigation";
@@ -36,7 +37,16 @@ const Podcast = () => {
     deleteEpisode,
   } = usePodcastEpisodes();
 
-  const [playing, setPlaying] = useState<PodcastEpisode | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedEpisode, setPlaying] = useState<PodcastEpisode | null>(null);
+  const linkedEpisodeId = searchParams.get('episode');
+  const playing = linkedEpisodeId
+    ? episodes.find(episode => episode.id === linkedEpisodeId && episode.is_published) ?? null
+    : selectedEpisode;
+  const closePlayer = () => {
+    setPlaying(null);
+    if (linkedEpisodeId) setSearchParams(params => { params.delete('episode'); return params; }, { replace: true });
+  };
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<PodcastEpisode | null>(null);
   const [pendingDelete, setPendingDelete] = useState<PodcastEpisode | null>(null);
@@ -154,7 +164,10 @@ const Podcast = () => {
                       key={episode.id}
                       episode={episode}
                       isAdmin={isAdmin}
-                      onPlay={setPlaying}
+                      onPlay={episode => {
+                        if (linkedEpisodeId) setSearchParams(params => { params.delete('episode'); return params; }, { replace: true });
+                        setPlaying(episode);
+                      }}
                       onEdit={openEdit}
                       onDelete={setPendingDelete}
                     />
@@ -173,7 +186,7 @@ const Podcast = () => {
         <PodcastPlayerModal
           videoId={playing.youtube_video_id}
           title={playing.title}
-          onClose={() => setPlaying(null)}
+          onClose={closePlayer}
         />
       )}
 

@@ -336,6 +336,7 @@ serve(async (req) => {
       message, 
       surface,
       turnId,
+      projectId,
       sessionId, 
       conversationHistory = [], 
       businessContext = {},
@@ -382,7 +383,7 @@ serve(async (req) => {
     // persistence or billing, even when a required Home field is missing.
     if (surface === 'pulse_home') {
       const homeDb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-      return handlePulseHome(homeDb, resolvedUserId, { message, sessionId, turnId, businessContext });
+      return handlePulseHome(homeDb, resolvedUserId, { message, sessionId, turnId, projectId });
     }
 
     if (!message || !sessionId) {

@@ -1,3 +1,4 @@
+import { PulseDatabase as Database } from './helpers/pulseDatabase.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
@@ -38,37 +39,6 @@ test('fundraising cards require active, explicit expertise evidence, not popular
   assert.deepEqual(homeMentorActions([mentor('a', ['Strategy'])], { track: 'fundraising' }), []);
 });
 
-// In-memory service stub: no live accounts, network, messages or billing touched.
-class Database {
-  tables: Record<string, Record<string, any>[]> = {
-    chatbot_conversations: [{ id: 'conv', session_id: '11111111-1111-4111-8111-111111111111', user_id: 'owner', purpose: 'pulse_home' }],
-    chatbot_messages: [], mentors: [],
-  };
-  from(table: string) {
-    assert.ok(table in this.tables, `Unexpected table/action: ${table}`);
-    const filters: ((row: Record<string, any>) => boolean)[] = [];
-    let insert: Record<string, any> | undefined, update: Record<string, any> | undefined, descending = false, limit = Infinity;
-    const execute = () => {
-      if (insert) this.tables[table].push({ ...insert, id: `row-${this.tables[table].length}`, created_at: this.tables[table].length });
-      let rows = this.tables[table].filter(row => filters.every(filter => filter(row)));
-      if (update) rows.forEach(row => Object.assign(row, update));
-      if (descending) rows = [...rows].reverse();
-      return { data: rows.slice(0, limit), error: null };
-    };
-    const query = {
-      select: (_fields: string) => query,
-      eq: (key: string, value: unknown) => { filters.push(row => row[key] === value); return query; },
-      contains: (key: string, value: Record<string, unknown>) => { filters.push(row => Object.entries(value).every(([k, v]) => row[key]?.[k] === v)); return query; },
-      order: (_key: string, opts: { ascending: boolean }) => { descending = !opts.ascending; return query; },
-      limit: (value: number) => { limit = value; return query; },
-      insert: (value: Record<string, any>) => { insert = value; return query; },
-      update: (value: Record<string, any>) => { update = value; return query; },
-      maybeSingle: async () => { const result = execute(); return { ...result, data: result.data[0] ?? null }; },
-      then: (resolve: (value: ReturnType<typeof execute>) => unknown) => Promise.resolve(execute()).then(resolve),
-    };
-    return query;
-  }
-}
 const input = { sessionId: '11111111-1111-4111-8111-111111111111', turnId: '22222222-2222-4222-8222-222222222222', message: 'How do I define my customer persona?', businessContext: {} };
 const invoke = (db: Database, owner: string | null = 'owner', turn = input) => handlePulseHome(db as never, owner, turn);
 test('server enforces authentication, ownership and home purpose before reading history or calling AI', async () => {
