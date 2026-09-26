@@ -3,6 +3,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import type { PulseMessage } from '@/hooks/usePulseWidget';
+import { PulseSources } from './PulseSources';
+import { validateHomeActions } from '@/lib/pulseHome';
 
 interface PulseMessageBubbleProps {
   message: PulseMessage;
@@ -56,6 +58,10 @@ export const PulseMessageBubble = ({ message, isStreaming }: PulseMessageBubbleP
             <div className="w-1.5 h-1.5 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: '400ms', animationDuration: '1.4s' }} />
           </div>
         )}
+        {!isUser && <>
+          {validateHomeActions(message.actions).map(action => <a key={action.id} href={action.route} className="mt-2 block rounded-lg border border-border p-2 hover:bg-background"><span className="block font-medium">{action.title}</span><span className="block text-xs text-muted-foreground">{action.reason}</span></a>)}
+          <PulseSources sources={message.sources} />
+        </>}
       </div>
     </div>
   );

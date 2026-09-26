@@ -1,6 +1,7 @@
 import { FOUNDER_TOOL_CATALOG } from '../config/founderToolCatalog.ts';
 import type { DashboardAction, DashboardSnapshot } from '../types/dashboardSnapshot.ts';
 import { PULSE_UUID } from './pulseScope.ts';
+import type { PulseSourceReference } from './pulseSources.ts';
 
 export type PulseHomeConcept = 'founder-guide' | 'command-center' | 'guided-journey';
 export interface PulseHomeAction {
@@ -17,6 +18,7 @@ export interface PulseHomeMessage {
   role: 'user' | 'assistant';
   content: string;
   actions?: PulseHomeAction[];
+  sources?: PulseSourceReference[];
 }
 export interface PulseHomePriority { id: string; title: string; route: string }
 

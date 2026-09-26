@@ -2,6 +2,7 @@ import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { hasCategoryAccess, isUserType, type UserType, type ApprovalStatus } from '../../../src/lib/accountTypes.ts';
 import { sanitizeRoleProfile } from '../../../src/lib/roleProfileSchema.ts';
 import { pulseScope, type PulseScope } from '../../../src/lib/pulseScope.ts';
+import { stageEvidence } from './pulse-evidence.ts';
 
 export class PulseContextError extends Error {
   status: number;
@@ -15,6 +16,7 @@ export type PulseSource = {
   id?: string;
   updatedAt?: string | null;
   data?: unknown;
+  basis?: string;
 };
 export interface PulseContext {
   version: 1;
@@ -116,7 +118,11 @@ export async function resolvePulseContext(db: SupabaseClient, userId: string, pr
         facts.metadata = { framework: metadata?.framework,
           intendedSetup: Object.fromEntries(keys.filter(key => setup?.[key] !== undefined).map(key => [key, setup![key]])) };
       }
-      return [source.key, { table: source.table, state: 'available', id: String(id), updatedAt: typeof updated_at === 'string' ? updated_at : null, data: compactPulseData(facts) }] as const;
+      const evidence = stageEvidence(source.key, facts);
+      const fields = Object.entries(evidence.fields).filter(([, value]) => value !== undefined);
+      const fieldBudget = Math.floor(4000 / Math.max(fields.length, 1));
+      return [source.key, { table: source.table, state: 'available', id: String(id), updatedAt: typeof updated_at === 'string' ? updated_at : null,
+        basis: evidence.basis, data: Object.fromEntries(fields.map(([key, value]) => [key, compactPulseData(value, ['plays', 'sectionProvenance', 'intendedSetup'].includes(key) ? 1400 : fieldBudget)])) }] as const;
     } catch {
       return [source.key, { table: source.table, state: 'unavailable' }] as const;
     }

@@ -12,9 +12,10 @@ interface PulseChatViewProps {
   isStreaming: boolean;
   quickReplies: string[];
   onSendMessage: (text: string) => void;
+  loading?: boolean; error?: string; onRetry?: () => void; contextLabel?: string; contextNotice?: string;
 }
 
-export const PulseChatView = ({ messages, isStreaming, quickReplies, onSendMessage }: PulseChatViewProps) => {
+export const PulseChatView = ({ messages, isStreaming, quickReplies, onSendMessage, loading, error, onRetry, contextLabel, contextNotice }: PulseChatViewProps) => {
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -39,7 +40,7 @@ export const PulseChatView = ({ messages, isStreaming, quickReplies, onSendMessa
   }, [input]);
 
   const handleSend = () => {
-    if (!input.trim() || isStreaming) return;
+    if (!input.trim() || isStreaming || loading || error) return;
     onSendMessage(input);
     setInput('');
   };
@@ -51,12 +52,16 @@ export const PulseChatView = ({ messages, isStreaming, quickReplies, onSendMessa
     }
   };
 
-  const showQuickReplies = quickReplies.length > 0 && !isStreaming;
+  const showQuickReplies = quickReplies.length > 0 && !isStreaming && !loading && !error;
 
   return (
     <div className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)_auto] overflow-hidden">
       {/* Messages */}
       <ScrollArea ref={scrollRef} className="h-full min-h-0 px-3 py-3">
+        {contextLabel && <p className="mb-2 text-xs text-muted-foreground">{contextLabel}</p>}
+        {loading && <p role="status" className="mb-2 text-xs text-muted-foreground">Loading saved context...</p>}
+        {contextNotice && <p role="status" className="mb-2 text-xs text-muted-foreground">{contextNotice}</p>}
+        {error && <p role="alert" className="mb-2 text-xs text-destructive">{error} {onRetry && <button type="button" onClick={onRetry} disabled={isStreaming} className="underline">Retry</button>}</p>}
         <div className="space-y-3 pb-2">
           {messages.map((msg, i) => (
             <PulseMessageBubble
@@ -85,11 +90,12 @@ export const PulseChatView = ({ messages, isStreaming, quickReplies, onSendMessa
           placeholder="Ask me anything..."
           className="min-h-[38px] max-h-[76px] resize-none text-sm flex-1 py-2"
           rows={1}
-          disabled={isStreaming}
+          disabled={isStreaming || loading}
+          maxLength={4000}
         />
         <Button
           onClick={handleSend}
-          disabled={!input.trim() || isStreaming}
+          disabled={!input.trim() || isStreaming || loading || Boolean(error)}
           size="icon"
           className="min-h-[38px] min-w-[38px] rounded-full flex-shrink-0"
         >

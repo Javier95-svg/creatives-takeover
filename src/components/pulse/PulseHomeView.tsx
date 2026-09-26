@@ -7,6 +7,7 @@ import { BIZMAP_STAGE_ORDER } from '@/lib/bizmapStageOrder';
 import type { PulseHomeConcept, PulseHomeMessage, PulseHomePriority } from '@/lib/pulseHome';
 import type { PersonaChip, PersonaHome } from '@/lib/personaHome';
 import './pulse-home.css';
+import { PulseSources } from './PulseSources';
 
 export interface PulseHomeViewProps {
   concept: PulseHomeConcept;
@@ -134,6 +135,7 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
           </div>}
           <h1 key={active ? 'active' : headline} className={cn('font-space-grotesk font-semibold tracking-tight text-foreground', active ? 'text-xl' : 'pulse-home-headline')}>{active ? 'Let’s work through it.' : <><span className="block">{headings[headline][0]}</span><span className="pulse-home-headline-gradient block">{headings[headline][1]}</span></>}</h1>
         </header>
+        {active && <p className="mt-2 text-xs text-muted-foreground">{persona ? persona.label : trimmedProjectName ? `Project: ${trimmedProjectName}` : 'No project selected'}</p>}
 
         <div className={cn('pulse-home-priorities', active ? 'my-4' : 'mx-auto my-8 max-w-xl')}>
           {active ? <button type="button" aria-expanded={showPriorities} onClick={() => setShowPriorities(value => !value)} className="inline-flex items-center gap-2 rounded-lg py-1 text-xs text-muted-foreground hover:text-foreground">Today’s priorities <ChevronDown className={cn('h-3 w-3 transition-transform', showPriorities && 'rotate-180')} /></button> : priorities.length > 0 && <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Today’s focus</h2>}
@@ -147,6 +149,7 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
             {action.image && <img src={action.image} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />}
             <span className="min-w-0 flex-1"><span className="block font-medium text-foreground">{action.title}</span><span className="block text-xs leading-5 text-muted-foreground">{action.reason}</span><span className="text-xs font-medium text-primary">{action.kind === 'mentor' ? 'View mentor' : action.kind === 'browse' ? action.title : action.kind === 'article' ? 'Read article' : action.kind === 'podcast' ? 'Watch episode' : action.kind === 'service' ? 'View service' : `Open ${action.title}`}</span></span><ArrowRight className="h-4 w-4 text-primary" />
           </a>)}</div> : null}
+          {message.role === 'assistant' && <PulseSources sources={message.sources} />}
         </article>)}<div ref={end} /></div>}
       </div>
     </div>

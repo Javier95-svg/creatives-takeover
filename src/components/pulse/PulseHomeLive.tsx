@@ -14,6 +14,7 @@ import { streamPulseHome } from '@/services/pulseHomeStream';
 import { getDashboardTool } from '@/config/dashboardToolRegistry';
 import { PulseHomeView } from './PulseHomeView';
 import { captureEvent } from '@/lib/analytics';
+import { pulseSourceNotice, validatePulseSources } from '@/lib/pulseSources';
 
 // Explicit schema keeps these queries typed against the generated public tables.
 const homeDb = supabase.schema('public');
@@ -23,6 +24,7 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
   const userId = user!.id;
   const dashboard = useDashboardData();
   const startup = useStartupCommandCenter();
+  const projects = useProjects();
   // The stage the onboarding quiz placed them in, which is what the badge names.
   const assignedStage = useAssignedStage();
   const founderPriorities = useMemo(() => homePriorities(dashboard.snapshot, dashboard.primaryAction, key => getDashboardTool(key)?.route), [dashboard.snapshot, dashboard.primaryAction]);
@@ -75,7 +77,7 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
     retryAction.current = 'restore';
     setLoading(true); setError(''); setHistoryReady(false); pending.current = null;
     try {
-      const { data: conversation, error } = await homeDb.from('chatbot_conversations').select('id, session_id').eq('user_id', userId).eq('purpose', 'pulse_home').contains('business_context', { pulseScope: { ...scope } }).order('created_at', { ascending: false }).limit(1).abortSignal(storageRequests.current.signal).maybeSingle();
+      const { data: conversation, error } = await homeDb.from('chatbot_conversations').select('id, session_id').eq('user_id', userId).eq('purpose', 'pulse_home').contains('business_context', { pulseScope: { ...scope } }).or('business_context->pulseScope->>channel.is.null,business_context->pulseScope->>channel.eq.home').order('created_at', { ascending: false }).limit(1).abortSignal(storageRequests.current.signal).maybeSingle();
       if (error) throw error;
       if (!conversation) { if (alive.current) { setSessionId(null); setMessages([]); setHistoryReady(true); } return; }
       const { data, error: messageError } = await homeDb.from('chatbot_messages').select('id, role, content, metadata').eq('conversation_id', conversation.id).order('created_at', { ascending: false }).limit(100).abortSignal(storageRequests.current.signal);
@@ -85,7 +87,7 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
       setHistoryReady(true);
       const history = [...(data ?? [])].reverse().filter(row => row.role === 'user' || row.role === 'assistant').map(row => {
         const metadata = row.metadata as Record<string, unknown> | null;
-        return { id: metadata?.homeTurnId ? `${metadata.homeTurnId}:${row.role}` : row.id, role: row.role as 'user' | 'assistant', content: row.content, actions: validateHomeActions(metadata?.homeActions) };
+        return { id: metadata?.homeTurnId ? `${metadata.homeTurnId}:${row.role}` : row.id, role: row.role as 'user' | 'assistant', content: row.content, actions: validateHomeActions(metadata?.homeActions), sources: validatePulseSources(metadata?.contextSources) };
       });
       setMessages(history);
       const last = data?.[0];
@@ -117,6 +119,7 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
       controller.current = new AbortController();
       await streamPulseHome({ sessionId: id, turnId: turn.turnId, message: turn.text, signal: controller.current.signal, projectId: scope.projectId,
         onContext: unavailable => { if (alive.current) setContextNotice(unavailable.length ? 'Some saved context is unavailable. Pulse will identify gaps rather than guess.' : ''); },
+        onSources: sources => { if (alive.current) { setContextNotice(pulseSourceNotice(sources)); setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, sources } : message)); } },
         onText: chunk => { if (alive.current) setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, content: message.content + chunk } : message)); },
         onActions: actions => { if (alive.current) setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, actions } : message)); },
       });
@@ -138,7 +141,7 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
   const displayName = dashboard.snapshot?.profile?.fullName || user?.user_metadata?.full_name || '';
   return <PulseHomeView concept={concept} name={String(displayName).trim().split(/\s+/)[0] || undefined} stage={persona ? undefined : dashboard.snapshot?.journey.currentStage}
     persona={persona} personaChips={chips} personaInterest={personaInterest}
-    projectName={persona || startup.loading || startup.error ? null : startup.model?.manual?.startupName} assignedStage={persona ? null : assignedStage} priorities={priorities} messages={messages}
+    projectName={persona ? null : projects.activeProject?.title} assignedStage={persona ? null : assignedStage} priorities={priorities} messages={messages}
     loading={loading || dashboard.isLoading || startup.loading} streaming={streaming} error={error}
     unavailable={!loading && !historyReady ? 'Conversation history is unavailable. Retry before continuing.' : undefined}
     contextNotice={contextNotice || (startup.error || dashboard.error ? 'Some saved context is unavailable. Pulse will ask rather than guess.' : undefined)}

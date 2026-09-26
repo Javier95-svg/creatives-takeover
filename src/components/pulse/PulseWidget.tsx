@@ -26,6 +26,7 @@ const PulseWidget = () => {
     sendMessage,
     getQuickReplies,
     userName,
+    loading, error, onRetry, contextLabel, contextNotice,
   } = usePulseWidget();
 
   // Close panel on Escape
@@ -61,6 +62,7 @@ const PulseWidget = () => {
         quickReplies={getQuickReplies()}
         onSendMessage={sendMessage}
         userName={userName}
+        loading={loading} error={error} onRetry={onRetry} contextLabel={contextLabel} contextNotice={contextNotice}
         compactMobileHomepage={compactMobileHomepage}
       />
 

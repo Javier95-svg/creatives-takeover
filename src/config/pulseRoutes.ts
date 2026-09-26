@@ -24,6 +24,7 @@ export const PULSE_ROUTE_CONTEXTS: PulseRouteContext[] = [
   founderToolContext('icp_builder'),
   founderToolContext('icp_builder', '/bizmap-ai/icp-builder'),
   founderToolContext('pmf_lab'),
+  founderToolContext('mvp_builder'),
   founderToolContext('pmf_lab', '/bizmap-ai/pmf-lab'),
   founderToolContext('demo_studio'),
   founderToolContext('tech_stack'),

@@ -337,6 +337,7 @@ serve(async (req) => {
       surface,
       turnId,
       projectId,
+      pagePath,
       sessionId, 
       conversationHistory = [], 
       businessContext = {},
@@ -381,9 +382,9 @@ serve(async (req) => {
 
     // Home validates malformed requests itself; never enter legacy fallback
     // persistence or billing, even when a required Home field is missing.
-    if (surface === 'pulse_home') {
+    if (surface === 'pulse_home' || surface === 'pulse_widget') {
       const homeDb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-      return handlePulseHome(homeDb, resolvedUserId, { message, sessionId, turnId, projectId });
+      return handlePulseHome(homeDb, resolvedUserId, { message, sessionId, turnId, projectId, surface, pagePath });
     }
 
     if (!message || !sessionId) {

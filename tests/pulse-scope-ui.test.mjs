@@ -23,7 +23,7 @@ const mocks = {
   './PulseHomeView': `export const PulseHomeView=props=>{window.props=props;return null;};`,
   '@/integrations/supabase/client': `export const supabase={schema:()=>({from(table){
     let scope,conversation;
-    const q={select:()=>q,eq:(key,value)=>{if(key==='conversation_id')conversation=value;return q;},contains:(_key,value)=>{scope=value.pulseScope;window.scopes.push(scope);return q;},order:()=>q,limit:()=>q,abortSignal:()=>q,
+    const q={select:()=>q,eq:(key,value)=>{if(key==='conversation_id')conversation=value;return q;},contains:(_key,value)=>{scope=value.pulseScope;window.scopes.push(scope);return q;},or:(value)=>{window.historyFilter=value;return q;},order:()=>q,limit:()=>q,abortSignal:()=>q,
       maybeSingle:async()=>({data:{id:scope.userType+':'+scope.projectId,session_id:'11111111-1111-4111-8111-111111111111'}}),
       then:resolve=>Promise.resolve({data:[{id:'message',role:'assistant',content:'History '+conversation,metadata:{}}]}).then(resolve)};return q;
   }})};`,

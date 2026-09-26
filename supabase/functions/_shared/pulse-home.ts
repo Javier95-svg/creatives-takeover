@@ -20,6 +20,8 @@ const PROJECT_SCOPE_RULE =
   'Onboarding is account-level stated preference, not evidence of progress in this project. Distinguish quiz placement from current evidence. ' +
   'Use concrete relevant findings from earlier stages for later-stage advice and name the source stage. Never invent results or metrics. ' +
   'For founder/builder accounts without an active project, ask them to select one before claiming project-specific knowledge. Non-founder roles do not need a project. ' +
+  'Respect source basis: distinguish hypotheses, planned targets, reported evidence and recorded system status. Flag apparent contradictions as questions, not proven errors. ' +
+  'Navigation is client-reported location, never proof of completion or access. ' +
   'Never carry findings from another project. To discuss a different venture, ask the user to switch projects first.';
 
 const gateway = 'https://ai.gateway.lovable.dev/v1/chat/completions';
@@ -33,7 +35,7 @@ function failure(status: number, error: string) {
 // This branch shares Pulse's streaming gateway and free-credit policy, but
 // owns its durable history. Nothing from client/model data grants authority.
 export async function handlePulseHome(db: SupabaseClient, userId: string | null, input: {
-  message: unknown; sessionId: unknown; turnId: unknown; projectId?: unknown; businessContext?: unknown;
+  message: unknown; sessionId: unknown; turnId: unknown; projectId?: unknown; businessContext?: unknown; surface?: string; pagePath?: unknown;
 }): Promise<Response> {
   const started = Date.now();
   if (!userId) return failure(401, 'Sign in to use Pulse Home.');
@@ -50,6 +52,8 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
   if (!conversation) return failure(404, 'Conversation not found.');
 
   const savedScope = readPulseScope(conversation.business_context?.pulseScope);
+  const channel = input.surface === 'pulse_widget' ? 'widget' : 'home';
+  if ((conversation.business_context?.pulseScope?.channel ?? 'home') !== channel) return failure(409, 'This conversation belongs to a different Pulse surface.');
   if (!savedScope || savedScope.projectId !== projectId) return failure(409, 'This conversation belongs to a different context. Refresh Pulse to continue.');
   let contextData;
   try {
@@ -60,6 +64,7 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
       error instanceof PulseContextError ? error.message : 'Saved context is unavailable. Please retry.');
   }
   if (!samePulseScope(savedScope, contextData.scope)) return failure(409, 'Your account context changed. Refresh Pulse to start the correct conversation.');
+  const sources = Object.entries(contextData.outcomes).map(([stage, source]) => ({ stage, table: source.table, state: source.state, id: source.id, updatedAt: source.updatedAt, basis: source.basis }));
 
   const { data: savedTurn, error: turnError } = await db.from('chatbot_messages').select('role, content, metadata')
     .eq('conversation_id', conversation.id).contains('metadata', { homeTurnId: turnId });
@@ -72,6 +77,7 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
     stream.enqueue(encode({ type: 'context', unavailableSources: contextData.unavailableSources }));
     stream.enqueue(encode({ type: 'delta', content: savedAnswer.content }));
     stream.enqueue(encode({ type: 'recommendations', actions: savedAnswer.metadata?.homeActions ?? [] }));
+    stream.enqueue(encode({ type: 'sources', sources: savedAnswer.metadata?.contextSources ?? [] }));
     stream.enqueue(encode({ type: 'complete' })); stream.close();
   } }), { headers });
 
@@ -87,7 +93,11 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
     .eq('conversation_id', conversation.id).order('created_at', { ascending: false }).limit(16);
   if (historyError) return failure(503, 'Could not load conversation history.');
   const chat: ChatMessage[] = (history ?? []).reverse().filter(row => row.role === 'user' || row.role === 'assistant');
-  const context = JSON.stringify(contextData);
+  const pageTool = typeof input.pagePath === 'string' ? FOUNDER_TOOL_CATALOG.find(tool => {
+    const path = tool.route.split('?')[0];
+    return input.pagePath === path || (input.pagePath as string).startsWith(`${path}/`);
+  }) : undefined;
+  const context = JSON.stringify({ ...contextData, navigation: pageTool ? { name: pageTool.name, purpose: pageTool.purpose } : null });
   const roleGuidance = pulseRoleGuidance(contextData);
   const founderToolsAllowed = contextData.account.userType === 'founder' || contextData.account.userType === 'builder';
   const allowedTools = founderToolsAllowed ? FOUNDER_TOOL_CATALOG : [];
@@ -105,6 +115,7 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
       const emit = (event: unknown) => { if (!cancelled) stream.enqueue(encode(event)); };
       try {
         emit({ type: 'context', unavailableSources: contextData.unavailableSources });
+        emit({ type: 'sources', sources });
         const planResponse = await call([{ role: 'system', content:
           `Classify the user's latest request in conversation. Return JSON only: {"toolKeys":[],"mentorTrack":null,"clarify":null,"catalogKinds":[],"catalogQuery":""}. ` +
           `Pulse can recommend CT Newspaper articles, podcasts and Marketplace services. catalogKinds accepts article, podcast, service. Use these when requested or relevant to a requested resource recommendation. catalogQuery is a few topical keywords drawn from the request and relevant saved context; empty means recent items. Never reject platform content requests as out of scope. ` +
@@ -178,7 +189,7 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
         const { error: saveError } = await db.from('chatbot_messages').insert({ conversation_id: conversation.id,
           role: 'assistant', content: answer, metadata: { homeTurnId: turnId, homeActions: actions, model,
             pulseScope: contextData.scope,
-            contextSources: Object.entries(contextData.outcomes).map(([stage, source]) => ({ stage, table: source.table, state: source.state, id: source.id, updatedAt: source.updatedAt })) } });
+            contextSources: sources } });
         if (saveError) throw new Error('Could not save response');
         await db.from('chatbot_conversations').update({ updated_at: new Date().toISOString() })
           .eq('id', conversation.id).eq('user_id', userId).eq('purpose', 'pulse_home');

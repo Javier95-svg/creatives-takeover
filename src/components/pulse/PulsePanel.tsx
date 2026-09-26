@@ -17,6 +17,7 @@ interface PulsePanelProps {
   onSendMessage: (text: string) => void;
   userName: string | null;
   compactMobileHomepage?: boolean;
+  loading?: boolean; error?: string; onRetry?: () => void; contextLabel?: string; contextNotice?: string;
 }
 
 export const PulsePanel = ({
@@ -30,6 +31,7 @@ export const PulsePanel = ({
   onSendMessage,
   userName,
   compactMobileHomepage = false,
+  loading, error, onRetry, contextLabel, contextNotice,
 }: PulsePanelProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -103,6 +105,7 @@ export const PulsePanel = ({
             isStreaming={isStreaming}
             quickReplies={quickReplies}
             onSendMessage={onSendMessage}
+            loading={loading} error={error} onRetry={onRetry} contextLabel={contextLabel} contextNotice={contextNotice}
           />
         ) : (
           <PulseFeedbackView />

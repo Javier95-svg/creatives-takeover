@@ -1,5 +1,6 @@
 import { getSessionSafely } from '@/integrations/supabase/auth';
 import { validateHomeActions, type PulseHomeAction } from '@/lib/pulseHome';
+import { validatePulseSources, type PulseSourceReference } from '@/lib/pulseSources';
 
 // Pulse Home uses the existing Pulse endpoint, with a durable turn identifier
 // and explicit errors instead of silently treating partial streams as success.
@@ -7,13 +8,15 @@ export async function streamPulseHome(input: {
   sessionId: string; turnId: string; message: string; projectId: string | null;
   signal: AbortSignal; onText: (text: string) => void; onActions: (actions: PulseHomeAction[]) => void;
   onContext?: (unavailableSources: string[]) => void;
+  onSources?: (sources: PulseSourceReference[]) => void;
+  surface?: 'pulse_home' | 'pulse_widget'; pagePath?: string;
 }) {
   const session = await getSessionSafely();
   if (!session) throw new Error('Please sign in again to continue.');
   const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chatbot-streaming`, {
     method: 'POST', signal: input.signal,
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}`, 'Idempotency-Key': input.turnId },
-    body: JSON.stringify({ surface: 'pulse_home', chatMode: 'pulse', sessionId: input.sessionId, turnId: input.turnId, message: input.message, projectId: input.projectId }),
+    body: JSON.stringify({ surface: input.surface ?? 'pulse_home', chatMode: 'pulse', sessionId: input.sessionId, turnId: input.turnId, message: input.message, projectId: input.projectId, pagePath: input.pagePath }),
   });
   if (!response.ok || !response.body) throw new Error(response.status === 401 ? 'Please sign in again to continue.' : response.status === 409 ? 'Your Pulse context changed. Refresh the page to continue in the correct conversation.' : 'Pulse could not load this conversation and its context. Your message is ready to retry.');
   const reader = response.body.getReader();
@@ -34,6 +37,7 @@ export async function streamPulseHome(input: {
         if (event.type === 'error') throw new Error(event.error || 'Pulse was interrupted. Please retry.');
         if (event.type === 'delta' && typeof event.content === 'string') input.onText(event.content);
         if (event.type === 'recommendations') input.onActions(validateHomeActions(event.actions));
+        if (event.type === 'sources') input.onSources?.(validatePulseSources(event.sources));
         if (event.type === 'context' && Array.isArray(event.unavailableSources)) input.onContext?.(event.unavailableSources.filter((value: unknown): value is string => typeof value === 'string'));
         if (event.type === 'complete') complete = true;
       }
