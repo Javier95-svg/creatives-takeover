@@ -50,7 +50,7 @@ export interface AccountabilityNudge {
   nudger_profile?: AccountabilityProfile;
 }
 
-export const useAccountabilityPartners = () => {
+export const useAccountabilityPartners = ({ autoLoad = true }: { autoLoad?: boolean } = {}) => {
   const { user } = useAuth();
   const [partnerships, setPartnerships] = useState<AccountabilityPartnership[]>([]);
   const [pendingRequests, setPendingRequests] = useState<AccountabilityPartnership[]>([]);
@@ -339,11 +339,11 @@ export const useAccountabilityPartners = () => {
   }, [fetchPartnerships]);
 
   useEffect(() => {
-    if (user) {
+    if (user && autoLoad) {
       void fetchPartnerships();
       void fetchRecentNudges();
     }
-  }, [user, fetchPartnerships, fetchRecentNudges]);
+  }, [user, autoLoad, fetchPartnerships, fetchRecentNudges]);
 
   return {
     partnerships,

@@ -70,10 +70,16 @@ export interface AcceptedConnectionNotification {
   } | null;
 }
 
-export const useSocial = (targetUserId?: string) => {
+interface SocialOptions {
+  initialConnection?: boolean;
+  loadNotifications?: boolean;
+  loadFollow?: boolean;
+}
+
+export const useSocial = (targetUserId?: string, { initialConnection, loadNotifications = true, loadFollow = true }: SocialOptions = {}) => {
   const { user } = useAuth();
   const [followStatus, setFollowStatus] = useState<'none' | 'following' | 'pending' | 'blocked'>('none');
-  const [friendStatus, setFriendStatus] = useState<'none' | 'pending_sent' | 'pending_received' | 'friends'>('none');
+  const [friendStatus, setFriendStatus] = useState<'none' | 'pending_sent' | 'pending_received' | 'friends'>(initialConnection ? 'friends' : 'none');
   const [loading, setLoading] = useState(false);
   const [pendingFriendRequests, setPendingFriendRequests] = useState<FriendRequest[]>([]);
   const [pendingFollowRequests, setPendingFollowRequests] = useState<PendingFollowRequest[]>([]);
@@ -105,28 +111,45 @@ export const useSocial = (targetUserId?: string) => {
   useEffect(() => {
     if (!user || !targetUserId || user.id === targetUserId) return;
 
+    let cancelled = false;
     const checkRelationship = async () => {
       try {
-        // Check follow status
-        const { data: followData } = await supabase
-          .from('user_follows')
-          .select('*')
-          .eq('follower_id', user.id)
-          .eq('following_id', targetUserId)
-          .maybeSingle();
+        // Follow state is unnecessary for search/profile actions.
+        if (loadFollow) {
+          const { data: followData } = await supabase
+            .from('user_follows')
+            .select('*')
+            .eq('follower_id', user.id)
+            .eq('following_id', targetUserId)
+            .maybeSingle();
 
-        if (followData) {
-          setFollowStatus(followData.status as 'none' | 'following' | 'pending' | 'blocked');
-        } else {
-          setFollowStatus('none');
+          if (cancelled) return;
+          if (followData) {
+            setFollowStatus(followData.status as 'none' | 'following' | 'pending' | 'blocked');
+          } else {
+            setFollowStatus('none');
+          }
+        }
+
+        // Search already resolved accepted connections in its single RPC.
+        // Only recheck these when a connection request changes locally.
+        if (initialConnection && refreshTick === 0) {
+          setFriendStatus('friends');
+          return;
         }
 
         // Check friend request status
-        const { data: friendData } = await supabase
+        const { data: friendRows, error } = await supabase
           .from('friend_requests')
-          .select('*')
+          .select('status, sender_id')
           .or(`and(sender_id.eq.${user.id},receiver_id.eq.${targetUserId}),and(sender_id.eq.${targetUserId},receiver_id.eq.${user.id})`)
-          .maybeSingle();
+          .in('status', ['accepted', 'pending']);
+
+        if (cancelled) return;
+        if (error) throw error;
+        // Historical or reciprocal requests must not hide an accepted connection.
+        const friendData = friendRows?.find(row => row.status === 'accepted')
+          || friendRows?.find(row => row.status === 'pending');
 
         if (friendData) {
           if (friendData.status === 'accepted') {
@@ -147,11 +170,12 @@ export const useSocial = (targetUserId?: string) => {
     };
 
     void checkRelationship();
-  }, [user, targetUserId]);
+    return () => { cancelled = true; };
+  }, [user, targetUserId, initialConnection, loadFollow, refreshTick]);
 
   // Load pending friend requests
   useEffect(() => {
-    if (!user) return;
+    if (!user || !loadNotifications) return;
 
     const loadFriendRequests = async () => {
       try {
@@ -187,12 +211,12 @@ export const useSocial = (targetUserId?: string) => {
     };
 
     void loadFriendRequests();
-  }, [user, refreshTick]);
+  }, [user, refreshTick, loadNotifications]);
 
   // Load accepted connection requests that *this* user sent, so the sender is
   // notified when the other person accepts. Already-seen ones are filtered out.
   useEffect(() => {
-    if (!user) {
+    if (!user || !loadNotifications) {
       setAcceptedConnectionNotifications([]);
       return;
     }
@@ -234,11 +258,11 @@ export const useSocial = (targetUserId?: string) => {
     };
 
     void loadAcceptedConnections();
-  }, [user, refreshTick]);
+  }, [user, refreshTick, loadNotifications]);
 
   // Load pending follow requests
   useEffect(() => {
-    if (!user) return;
+    if (!user || !loadNotifications) return;
 
     const loadFollowRequests = async () => {
       try {
@@ -274,7 +298,7 @@ export const useSocial = (targetUserId?: string) => {
     };
 
     void loadFollowRequests();
-  }, [user, refreshTick]);
+  }, [user, refreshTick, loadNotifications]);
 
   const followUser = async () => {
     if (!user || !targetUserId || loading) return;
@@ -341,6 +365,7 @@ export const useSocial = (targetUserId?: string) => {
       if (error) throw error;
 
       setFriendStatus('pending_sent');
+      emitConnectionUpdate();
       toast.success('Connection request sent');
       trackSocialInteractionCompleted({
         interactionType: 'connection_request_sent',
@@ -413,6 +438,7 @@ export const useSocial = (targetUserId?: string) => {
 
       setFriendStatus('none');
       toast.success('Connection request cancelled');
+      emitConnectionUpdate();
     } catch (error) {
       console.error('Error cancelling friend request:', error);
       toast.error('Failed to cancel connection request');

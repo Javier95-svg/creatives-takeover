@@ -1,4 +1,5 @@
 import { messagingV2, mapRecipient } from '@/lib/messagingV2';
+import { useAuth } from '@/contexts/AuthContext';
 import { SocialButtons } from '@/components/social/SocialButtons';
 import { AccountSearchField, type SearchAccount } from './WorkspaceAccountSearch';
 
@@ -21,7 +22,8 @@ async function searchAccounts(query: string, signal?: AbortSignal): Promise<Sear
 }
 
 export default function WorkspaceAccountSearchLive() {
-  return <AccountSearchField search={searchAccounts} renderActions={account =>
-    <SocialButtons userId={account.id} userName={account.full_name || account.username || 'Founder'} profileActionsOnly showAccountabilityPartner={false} />
+  const { user } = useAuth();
+  return <AccountSearchField key={user?.id} search={searchAccounts} renderActions={account =>
+    <SocialButtons userId={account.id} userName={account.full_name || account.username || 'Founder'} username={account.username} initialConnection={account.isConnection} profileActionsOnly showAccountabilityPartner={false} />
   } />;
 }

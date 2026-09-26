@@ -104,8 +104,7 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
   const shortcuts = persona
     ? persona.shortcuts.map(shortcut => ({ label: shortcut.label, route: shortcut.route, icon: ArrowRight }))
     : [
-    ...(priorities[0]?.route ? [{ label: `Your next step: ${priorities[0].title}`, route: priorities[0].route, icon: Target }] : []),
-    { label: 'What should I focus on next?', route: '/dashboard', icon: LayoutDashboard },
+    { label: 'What should I focus next?', route: '/dashboard', icon: LayoutDashboard },
     { label: 'Find me a mentor', route: '/mentorship', icon: GraduationCap },
     { label: 'Find me a co-founder', route: '/co-founder/create', icon: Users },
     { label: 'Help me define my customer', route: WORKSPACE_ROUTES['ICP Builder'], icon: Target },
@@ -165,7 +164,7 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
           </div>
           <div className="pulse-home-composer-footer"><span role="status" className="inline-flex items-center gap-2 text-xs text-muted-foreground"><span aria-hidden="true" className={cn('h-1.5 w-1.5 shrink-0 rounded-full', unavailable || contextNotice || error ? 'bg-muted-foreground' : 'bg-primary')} />{composerStatus}</span><button type="submit" aria-label="Send message" disabled={!input.trim() || streaming || loading || Boolean(unavailable)}><span>Ask Pulse</span><ArrowUp aria-hidden="true" className="h-4 w-4" /></button></div>
         </form>
-        {!active && <nav aria-label="Quick starts" className="pulse-home-shortcuts">{shortcuts.map(({ label, route, icon: Icon }) => <a key={route} href={route} onClick={event => { if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && event.button === 0) { event.preventDefault(); navigate(route); } }} className="pulse-home-shortcut">
+        {!active && <nav aria-label="Quick starts" className="pulse-home-shortcuts">{shortcuts.map(({ label, route, icon: Icon }) => <a key={route} href={route} onClick={event => { if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && event.button === 0) { event.preventDefault(); navigate(route); } }} className={cn('pulse-home-shortcut', !persona && route === '/dashboard' && 'pulse-home-shortcut--focus')}>
           <span className="pulse-home-shortcut-icon"><Icon aria-hidden="true" className="h-4 w-4" /></span><span className="flex-1">{label}</span><ArrowRight aria-hidden="true" className="pulse-home-shortcut-arrow h-3.5 w-3.5 shrink-0" />
         </a>)}</nav>}
         <p className="mt-3 text-center text-xs leading-5 text-muted-foreground">{unavailable || contextNotice || 'Pulse guides. You decide. Review suggestions before taking action.'}</p>

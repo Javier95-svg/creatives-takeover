@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { MessageCircle, UserPlus, UserCheck, UserX, Users, Handshake } from "lucide-react";
+import { MessageCircle, UserPlus, UserCheck, UserX, Users, Handshake, UserRound } from "lucide-react";
 import { useSocial } from "@/hooks/useSocial";
 import { useMessaging } from "@/hooks/useMessaging";
 import { useAccountabilityPartners } from "@/hooks/useAccountabilityPartners";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { 
   Dialog, 
@@ -21,6 +21,8 @@ import { Label } from "@/components/ui/label";
 interface SocialButtonsProps {
   userId: string;
   userName?: string;
+  username?: string | null;
+  initialConnection?: boolean;
   compact?: boolean;
   profileActionsOnly?: boolean;
   showAccountabilityPartner?: boolean;
@@ -29,6 +31,8 @@ interface SocialButtonsProps {
 export const SocialButtons = ({ 
   userId, 
   userName, 
+  username,
+  initialConnection,
   compact = false, 
   profileActionsOnly = false,
   showAccountabilityPartner = true 
@@ -43,10 +47,10 @@ export const SocialButtons = ({
     unfollowUser,
     sendFriendRequest,
     cancelFriendRequest
-  } = useSocial(userId);
+  } = useSocial(userId, { initialConnection, loadNotifications: !profileActionsOnly, loadFollow: !profileActionsOnly });
   
   const { startConversation } = useMessaging({ autoLoad: false });
-  const { sendPartnershipRequest } = useAccountabilityPartners();
+  const { sendPartnershipRequest } = useAccountabilityPartners({ autoLoad: showAccountabilityPartner && !profileActionsOnly });
   const [showPartnerDialog, setShowPartnerDialog] = useState(false);
   const [partnershipType, setPartnershipType] = useState<'sprint_buddy' | 'daily_accountability' | 'goal_tracker'>('sprint_buddy');
   const [partnerMessage, setPartnerMessage] = useState('');
@@ -193,8 +197,11 @@ export const SocialButtons = ({
   if (profileActionsOnly) {
     return (
       <div className={containerClass}>
+        {friendStatus === 'friends' && username && <Button asChild variant="outline" size={buttonSize} className="bg-card/50 border-border/50 hover:bg-accent">
+          <Link to={`/profile/${encodeURIComponent(username)}`}><UserRound className="h-4 w-4" /><span className={compact ? 'sr-only' : 'ml-2'}>Profile</span></Link>
+        </Button>}
         {messageButton}
-        {connectButton}
+        {(friendStatus !== 'friends' || username === undefined) && connectButton}
       </div>
     );
   }
