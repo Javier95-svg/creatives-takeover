@@ -66,7 +66,7 @@ const STAGES = [
   { key: 'traction', table: 'traction_engine_sprints', owner: 'user_id', fields: 'channel,status,summary_recommendation' },
 ] as const;
 
-export async function resolvePulseContext(db: SupabaseClient, userId: string, projectId: string | null): Promise<PulseContext> {
+export async function resolvePulseContext(db: SupabaseClient, userId: string, projectId: string | null, includeTasks = false): Promise<PulseContext> {
   const { data: profile, error } = await db.from('profiles')
     .select('user_type,approval_status,role_profile,assigned_stage,business_stage,quiz_answers_v2,quiz_biggest_challenge,quiz_launch_timeline')
     .eq('id', userId).maybeSingle();
@@ -93,7 +93,29 @@ export async function resolvePulseContext(db: SupabaseClient, userId: string, pr
     },
     activeProject: null, outcomes: {}, unavailableSources: [],
   };
-  if (!projectId) return context;
+  // Tasks are account-scoped in CT today. Include them only on task/priority
+  // requests and never attribute them to the selected project.
+  const loadTasks = async () => {
+    if (!includeTasks) return;
+    try {
+      const batches = await Promise.all([false, true].map(completed => db.from('daily_tasks')
+        .select('id,task_text,task_date,priority,is_completed,completed_at,recommendation_status,feedback_status,updated_at')
+        .eq('user_id', userId).eq('is_completed', completed).is('dismissed_at', null)
+        .order(completed ? 'completed_at' : 'task_date', { ascending: !completed }).limit(10)));
+      if (batches.some(batch => batch.error)) throw new Error('Task lookup failed');
+      const rows = batches.flatMap(batch => batch.data ?? []).filter(row => row.recommendation_status !== 'dismissed' && !['not_relevant', 'already_done', 'stop_showing'].includes(row.feedback_status));
+      context.outcomes.tasks = { table: 'daily_tasks', state: rows.length ? 'available' : 'missing',
+        id: rows[0]?.id, updatedAt: rows[0]?.updated_at,
+        basis: 'Up to 10 earliest open and 10 recently completed account tasks, not project-linked. Completion is a task status, not proof of business results.',
+        data: rows.map(row => ({ id: row.id, title: String(row.task_text ?? '').slice(0, 250), date: row.task_date,
+          priority: row.priority, completed: row.is_completed, completedAt: row.completed_at,
+          recommendationStatus: row.recommendation_status })) };
+    } catch {
+      context.outcomes.tasks = { table: 'daily_tasks', state: 'unavailable' };
+      context.unavailableSources.push('tasks');
+    }
+  };
+  if (!projectId) { await loadTasks(); return context; }
   const { data: project, error: projectError } = await db.from('projects')
     .select('id,title,idea_summary').eq('id', projectId).eq('user_id', userId).is('archived_at', null).maybeSingle();
   if (projectError) throw new PulseContextError(503, 'The selected project could not be loaded.');
@@ -129,6 +151,25 @@ export async function resolvePulseContext(db: SupabaseClient, userId: string, pr
   }));
   context.outcomes = Object.fromEntries(results);
   context.unavailableSources = results.filter(([, source]) => source.state === 'unavailable').map(([key]) => key);
+  await Promise.all([loadTasks(), (async () => {
+    const traction = context.outcomes.traction;
+    if (traction.state !== 'available' || !traction.id) return;
+    try {
+      // The verified current sprint is project-owned; account-wide weekly logs
+      // are deliberately excluded because they can combine different ventures.
+      const { data, error } = await db.from('traction_engine_experiments')
+        .select('id,channel,hypothesis,action_taken,target_metric,target_value,result_value,decision,pass,created_at')
+        .eq('user_id', userId).eq('sprint_id', traction.id)
+        .order('created_at', { ascending: false }).limit(5);
+      if (error) throw error;
+      traction.data = { ...(traction.data as Data), experiments: compactPulseData(data ?? [], 3000),
+        experimentState: data?.length ? 'available' : 'missing' };
+      traction.basis = 'Sprint plan/status plus up to five user-recorded experiment outcomes from this project sprint. Targets are intentions; results are reported, not independently verified.';
+    } catch {
+      traction.data = { ...(traction.data as Data), experimentState: 'unavailable' };
+      traction.basis = 'Sprint plan/status only. Experiment results could not be loaded; do not infer performance.';
+    }
+  })()]);
   return context;
 }
 

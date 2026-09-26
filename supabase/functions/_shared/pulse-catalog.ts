@@ -1,5 +1,6 @@
 import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { validateHomeActions, type PulseHomeAction } from '../../../src/lib/pulseHome.ts';
+import { pulsePassages } from './pulse-passages.ts';
 
 export const CATALOG_KINDS = ['article', 'podcast', 'service'] as const;
 export type CatalogKind = typeof CATALOG_KINDS[number];
@@ -7,7 +8,7 @@ export interface CatalogResult {
   kind: CatalogKind;
   state: 'available' | 'no_match' | 'unavailable';
   actions: PulseHomeAction[];
-  evidence: Array<{ id: string; title: string; summary: string; updatedAt: string | null; basis: 'metadata' }>;
+  evidence: Array<{ id: string; title: string; summary: string; updatedAt: string | null; basis: 'metadata' | 'article_passages'; passages?: string[] }>;
 }
 
 export function catalogKinds(value: unknown): CatalogKind[] {
@@ -28,6 +29,7 @@ export function catalogQuery(value: unknown): string {
   // Return plain search terms, not a model-authored PostgREST expression or URL.
   if (typeof value !== 'string') return '';
   const stop = new Set(['recommend', 'recommendation', 'suggest', 'find', 'show', 'please', 'me', 'an', 'a', 'the', 'of', 'for', 'to', 'my', 'some', 'newspaper', 'article', 'articles', 'podcast', 'podcasts', 'episode', 'episodes', 'marketplace', 'service', 'services', 'provider', 'providers', 'section', 'creatives', 'takeover']);
+  ['about', 'on', 'can', 'could', 'would', 'you', 'with', 'related', 'want', 'need', 'read', 'listen', 'looking', 'give'].forEach(word => stop.add(word));
   return value.toLowerCase().match(/[\p{L}\p{N}]+/gu)?.filter(word => word.length > 1 && !stop.has(word)).slice(0, 12).join(' ').slice(0, 180) ?? '';
 }
 
@@ -54,6 +56,17 @@ export async function searchPulseCatalog(db: SupabaseClient, kinds: CatalogKind[
         if (action.length) evidence.push({ id: row.id, title: row.title.slice(0, 180), summary: typeof row.summary === 'string' ? row.summary.slice(0, 1200) : '', updatedAt: typeof row.updated_at === 'string' ? row.updated_at : null, basis: 'metadata' });
         return action;
       });
+      // Retrieve bodies only for verified published matches. A failed enrichment
+      // must not discard valid metadata or masquerade as a transcript/full read.
+      if (kind === 'article') await Promise.all(evidence.map(async item => {
+        try {
+          const { data: article, error: bodyError } = await db.from('stories_articles')
+            .select('id,body_content,updated_at').eq('id', item.id).eq('status', 'published').maybeSingle();
+          if (bodyError || !article) return;
+          const passages = pulsePassages(article.body_content, query);
+          if (passages.length) { item.passages = passages; item.basis = 'article_passages'; item.updatedAt = article.updated_at ?? item.updatedAt; }
+        } catch { /* The metadata remains usable and accurately labelled. */ }
+      }));
       return actions.length ? { kind, state: 'available' as const, actions, evidence } : browse('no_match');
     } catch { return browse('unavailable'); }
   }));

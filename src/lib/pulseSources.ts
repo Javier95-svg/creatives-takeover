@@ -7,6 +7,7 @@ export const PULSE_STAGES = {
   gtm: { title: 'GTM Strategy', route: '/go-to-market' },
   demo: { title: 'Demo Studio', route: '/demo-studio' },
   traction: { title: 'Traction Engine', route: '/traction-engine' },
+  tasks: { title: 'Account tasks', route: '/dashboard/tasks' },
 } as const;
 export type PulseStage = keyof typeof PULSE_STAGES;
 export interface PulseSourceReference {
@@ -19,7 +20,7 @@ export interface PulseSourceReference {
 export function validatePulseSources(value: unknown): PulseSourceReference[] {
   if (!Array.isArray(value)) return [];
   const seen = new Set<string>();
-  return value.slice(0, 6).flatMap(item => {
+  return value.slice(0, 7).flatMap(item => {
     if (!item || !Object.prototype.hasOwnProperty.call(PULSE_STAGES, item.stage) || seen.has(item.stage) || !['available', 'missing', 'unavailable'].includes(item.state)) return [];
     if (item.state === 'available' && (typeof item.id !== 'string' || !PULSE_UUID.test(item.id))) return [];
     seen.add(item.stage);

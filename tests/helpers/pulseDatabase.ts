@@ -7,7 +7,7 @@ export class PulseDatabase {
   reads: string[] = [];
   tables: Record<string, Record<string, any>[]> = {
     chatbot_conversations: [{ id: 'conv', session_id: '11111111-1111-4111-8111-111111111111', user_id: 'owner', purpose: 'pulse_home', business_context: { pulseScope: pulseScope('founder', null) } }],
-    chatbot_messages: [], mentors: [], projects: [],
+    chatbot_messages: [], mentors: [], projects: [], daily_tasks: [], traction_engine_experiments: [], stories_articles: [],
     profiles: [{ id: 'owner', user_type: 'founder', approval_status: 'approved', quiz_answers_v2: { answers: { goal: 'Validate demand' } } }],
     icp_analysis_results: [], pmf_analysis_results: [], mvp_projects: [], gtm_plans: [], demo_studio_projects: [], traction_engine_sprints: [],
   };
