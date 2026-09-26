@@ -59,7 +59,7 @@ export function AccountSearchField({ search, renderActions }: {
         className="h-10 rounded-full bg-background/60 pl-9 pr-9" />
       {query && <button type="button" aria-label="Clear account search" onClick={() => { setQuery(''); input.current?.focus(); }} className="absolute right-2 top-2 rounded-full p-1 text-muted-foreground hover:bg-muted"><X className="h-4 w-4" /></button>}
     </div>
-    {open && <div aria-label="Account search results" className="absolute left-0 top-full z-50 mt-2 max-h-[min(24rem,60dvh)] w-full md:w-96 max-w-full md:max-w-[calc(100vw-2rem)] overflow-y-auto rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-xl">
+    {open && <div aria-label="Account search results" className="absolute left-0 top-full z-50 mt-2 max-h-[min(24rem,60dvh)] w-full max-w-full overflow-y-auto rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-xl">
       <p className="mb-2 text-xs text-muted-foreground">Search by first name, last name, or @username</p>
       <div role="status" className="text-sm text-muted-foreground">
         {!search ? 'Live account search requires local application configuration.' : term.length < 2 ? 'Type at least 2 characters to find accounts.' : searching ? 'Searching accounts…' : result?.error || (result?.accounts.length === 0 ? 'No matching accounts found.' : '')}
