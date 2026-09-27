@@ -35,7 +35,7 @@ export function validateHomeActions(value: unknown): PulseHomeAction[] {
       return tool ? [{ ...action, title: tool.name, route: tool.route }] : [];
     }
     if (action.kind === 'browse') {
-      const routes: Record<string, string> = { mentorship: '/mentorship', newspaper: '/newspaper', podcast: '/podcast', marketplace: '/marketplace', tasks: '/dashboard/tasks' };
+      const routes: Record<string, string> = { mentorship: '/mentorship', newspaper: '/newspaper', podcast: '/podcast', marketplace: '/marketplace', tasks: '/dashboard/tasks', bookings: '/mentor/bookings', enquiries: '/marketplace/enquiries', matches: '/investors/matches' };
       return Object.prototype.hasOwnProperty.call(routes, action.id) ? [{ ...action, route: routes[action.id], image: undefined }] : [];
     }
     if (['article', 'podcast', 'service'].includes(action.kind) && PULSE_UUID.test(action.id)) {

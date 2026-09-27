@@ -71,11 +71,16 @@ export const usePulseWidget = () => {
   }, [isAuthenticated, sendVerified, loaded, guestMessages, location.pathname, identity]);
   const getQuickReplies = useCallback(() => {
     if (!isAuthenticated) return ['What is this platform?', 'Show me pricing', 'How does the AI work?'];
+    if (account.hasCategoryAccess) {
+      if (account.userType === 'mentor') return ['Which bookings need my attention?', 'Help me prepare for a session', 'Recommend an article'];
+      if (account.userType === 'marketplace') return ['Who has reached out recently?', 'Help me qualify an enquiry', 'Improve my service offering'];
+      if (account.userType === 'investor') return ['Explain my current matches', 'What information is missing?', 'Review my investment focus'];
+    }
     if (account.userType === 'mentor') return ['Help me clarify my expertise', 'Improve my mentoring offer', 'Recommend an article'];
     if (account.userType === 'marketplace') return ['Sharpen my service offering', 'Clarify my ideal customer', 'Recommend an article'];
     if (account.userType === 'investor') return ['Review my investment focus', 'Recommend relevant content', 'Help me define screening criteria'];
     return ['What should I focus on?', 'Use my project context', 'Suggest next step'];
-  }, [isAuthenticated, account.userType]);
+  }, [isAuthenticated, account.userType, account.hasCategoryAccess]);
   const messages = isAuthenticated ? conversation.messages : guestMessages;
   return {
     isOpen, activeTab, setActiveTab, openPanel, closePanel, proactiveMessage, proactiveVisible, dismissProactive,

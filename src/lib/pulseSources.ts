@@ -8,6 +8,9 @@ export const PULSE_STAGES = {
   demo: { title: 'Demo Studio', route: '/demo-studio' },
   traction: { title: 'Traction Engine', route: '/traction-engine' },
   tasks: { title: 'Account tasks', route: '/dashboard/tasks' },
+  bookings: { title: 'Your bookings', route: '/mentor/bookings' },
+  enquiries: { title: 'Your contact activity', route: '/marketplace/enquiries' },
+  matches: { title: 'Your investor matches', route: '/investors/matches' },
 } as const;
 export type PulseStage = keyof typeof PULSE_STAGES;
 export interface PulseSourceReference {
@@ -20,7 +23,7 @@ export interface PulseSourceReference {
 export function validatePulseSources(value: unknown): PulseSourceReference[] {
   if (!Array.isArray(value)) return [];
   const seen = new Set<string>();
-  return value.slice(0, 7).flatMap(item => {
+  return value.slice(0, Object.keys(PULSE_STAGES).length).flatMap(item => {
     if (!item || !Object.prototype.hasOwnProperty.call(PULSE_STAGES, item.stage) || seen.has(item.stage) || !['available', 'missing', 'unavailable'].includes(item.state)) return [];
     if (item.state === 'available' && (typeof item.id !== 'string' || !PULSE_UUID.test(item.id))) return [];
     seen.add(item.stage);

@@ -9,6 +9,7 @@ import { PulseContextError, resolvePulseContext, pulseRoleGuidance } from './pul
 import { PULSE_UUID, readPulseScope, samePulseScope } from '../../../src/lib/pulseScope.ts';
 import { catalogKinds, requestedCatalogKinds, catalogQuery, searchPulseCatalog, catalogActions } from './pulse-catalog.ts';
 import { asksAboutTasks, pulseFastPlan, readPulseChunk } from './pulse-routing.ts';
+import { loadPulseActivity, pulseActivityAction } from './pulse-activity.ts';
 
 const headers = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -37,7 +38,7 @@ function failure(status: number, error: string) {
 // owns its durable history. Nothing from client/model data grants authority.
 export async function handlePulseHome(db: SupabaseClient, userId: string | null, input: {
   message: unknown; sessionId: unknown; turnId: unknown; projectId?: unknown; businessContext?: unknown; surface?: string; pagePath?: unknown;
-}): Promise<Response> {
+}, callerDb?: SupabaseClient): Promise<Response> {
   const started = Date.now();
   if (!userId) return failure(401, 'Sign in to use Pulse Home.');
   const { message, sessionId, turnId } = input;
@@ -59,12 +60,15 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
   let contextData;
   try {
     // Never use businessContext from the request as profile, quiz or project evidence.
-    contextData = await resolvePulseContext(db, userId, projectId, asksAboutTasks(message));
+    // Refresh bounded tasks on every turn: synonyms and pronoun follow-ups
+    // receive the same evidence, without relying on English keyword detection.
+    contextData = await resolvePulseContext(db, userId, projectId, true);
   } catch (error) {
     return failure(error instanceof PulseContextError ? error.status : 503,
       error instanceof PulseContextError ? error.message : 'Saved context is unavailable. Please retry.');
   }
   if (!samePulseScope(savedScope, contextData.scope)) return failure(409, 'Your account context changed. Refresh Pulse to start the correct conversation.');
+  await loadPulseActivity(contextData, userId, callerDb);
   const sources = Object.entries(contextData.outcomes).map(([stage, source]) => ({ stage, table: source.table, state: source.state, id: source.id, updatedAt: source.updatedAt, basis: source.basis }));
 
   const { data: savedTurn, error: turnError } = await db.from('chatbot_messages').select('role, content, metadata')
@@ -98,7 +102,7 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
     const path = tool.route.split('?')[0];
     return input.pagePath === path || (input.pagePath as string).startsWith(`${path}/`);
   }) : undefined;
-  const context = JSON.stringify({ ...contextData, navigation: pageTool ? { name: pageTool.name, purpose: pageTool.purpose } : null });
+  const context = JSON.stringify({ ...contextData, asOf: new Date().toISOString(), navigation: pageTool ? { name: pageTool.name, purpose: pageTool.purpose } : null });
   const contextReady = Date.now();
   let firstTokenMs: number | null = null;
   let plannerMode = 'model';
@@ -164,7 +168,11 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
         }
         const catalog = await searchPulseCatalog(db, kinds, catalogQuery(typeof plan.catalogQuery === 'string' ? plan.catalogQuery : message));
         if (catalog.length) actions = [...catalogActions(catalog), ...actions].slice(0, 3);
-        if (!actions.length && asksAboutTasks(message)) actions = [{ kind: 'browse', id: 'tasks', title: 'Open your tasks', reason: 'Review your account task list and update progress.', route: '/dashboard/tasks' }];
+        const activityAction = pulseActivityAction(contextData);
+        if (!actions.length && !clarify) {
+          if (activityAction && !/\b(tasks?|to[ -]?do)\b/i.test(message)) actions = [activityAction];
+          else if (asksAboutTasks(message)) actions = [{ kind: 'browse', id: 'tasks', title: 'Open your tasks', reason: 'Review your account task list and update progress.', route: '/dashboard/tasks' }];
+        }
         const catalogEvidence = catalog.map(result => ({ kind: result.kind, state: result.state,
           evidence: result.evidence.filter(item => actions.some(action => action.id === item.id)) }));
         const response = await call([{ role: 'system', content:
@@ -176,6 +184,9 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
           `Only offer tools in the validated cards. Never navigate, send, book, or connect automatically. ` +
           `Catalog evidence labelled article_passages includes selected passages, not the full article; cite the matching card title when using those facts. Other catalog evidence is metadata only. No podcast transcripts are supplied: never invent quotations, timestamps or episode details. An unavailable search is a failure, not an empty catalog. A no_match result means no match for this query. ` +
           `For next-step advice, identify the strongest relevant evidence, one practical next action and a measurable success check. Prefer an unfinished relevant task over duplicating it; completed tasks are not proof of validated demand. Tasks are account-wide, never assume they belong to this project. If no task has a clear project link, say so. ` +
+          `Use fresh context over earlier chat claims when records changed, and explain the change. Account activity is authorized inbox/match information, not access to another person's private project. ` +
+          `For mentors, distinguish proposed times from scheduled bookings and use response deadlines; never invent a founder's goals or session notes. For providers, contact events show who reached out and when, not what they wrote: ask for the message before drafting a specific scope. For investors, explain supplied sector and declared funding-stage fit; score is overlap, not diligence or investment merit. Do not claim geography, check-size fit, revenue or private traction from a match. ` +
+          `You may draft text for the user to review, but never claim you sent it, accepted a booking or contacted a match. Use asOf for date comparisons and ask for timezone when a precise local deadline is needed. ` +
           `Compare recorded experiment result_value with target_value and name target_metric; distinguish user-reported results from verified measurements. Do not infer overall traction from a limited sample. When dates are old, state the date rather than assuming facts remain current. ` +
           `Never claim you edited tasks or used a tool. ${mentorStatus} ${clarify ? `Ask this clarification: ${clarify}` : ''}`
         }, { role: 'system', content: PROJECT_SCOPE_RULE },

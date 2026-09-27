@@ -14,7 +14,7 @@ export function pulseFastPlan(message: string) {
 }
 
 export function asksAboutTasks(message: string) {
-  return /\b(tasks?|to[ -]?do|priorities|focus (?:on\b|next\b|today\b))\b/i.test(message);
+  return /\b(tasks?|to[ -]?do|priorit(?:y|ies|ize)|overdue|deadlines?|what should I do|focus (?:on\b|next\b|today\b))\b/i.test(message);
 }
 
 // Reading a stream is not covered by fetch's response-header timeout.

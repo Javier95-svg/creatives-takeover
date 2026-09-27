@@ -11,7 +11,7 @@ const { JSDOM } = await import('jsdom');
 const mocks = {
   '@/contexts/AuthContext': `export const useAuth=()=>({user:window.signedIn?{id:window.userId,user_metadata:{}}:null,isAuthenticated:window.signedIn,loading:false});`,
   '@/hooks/useProjects': `export const useProjects=()=>({activeProjectId:window.project,activeProject:{title:window.projectName}});`,
-  '@/hooks/useAccountContext': `export const useAccountContext=()=>({userType:window.role});`,
+  '@/hooks/useAccountContext': `export const useAccountContext=()=>({userType:window.role,hasCategoryAccess:window.categoryAccess});`,
   'react-router-dom': `export const useLocation=()=>({pathname:window.page});`,
   '@/hooks/useStreamingChat': `export const streamChat=async(...args)=>{window.guestCalls++;window.guestChunk=args[9];};`,
   '@/services/pulseHomeStream': `export const streamPulseHome=args=>{window.streams.push(args);if(window.failStream)return Promise.reject(new Error('Synthetic interruption'));return new Promise((resolve,reject)=>{window.finish=resolve;args.signal.addEventListener('abort',()=>reject(new Error('aborted')));});};`,
@@ -87,5 +87,19 @@ test('visible source details distinguish failed/missing results and use canonica
     w.sources=[{stage:'pmf',state:'available',id:w.project,updatedAt:'2026-09-26T12:00:00Z',basis:'Provisional evidence',route:'javascript:alert(1)'},{stage:'gtm',state:'missing'},{stage:'icp',state:'unavailable'}];w.render();await tick();
     assert.match(w.document.body.textContent,/Context provided to Pulse/);assert.match(w.document.body.textContent,/No current saved result/);assert.match(w.document.body.textContent,/Could not load this result/);
     assert.equal(w.document.querySelector('a').getAttribute('href'),'/pmf-lab?outcome='+w.project);
+  } finally {close(dom);}
+});
+
+test('approved role shortcuts and activity source links use the matching workspace; pending roles keep general guidance',async()=>{
+  const dom=await mount(),w=dom.window;
+  try {
+    for (const [role,stage,route,reply] of [['mentor','bookings','/mentor/bookings',/bookings/],['marketplace','enquiries','/marketplace/enquiries',/reached out/],['investor','matches','/investors/matches',/matches/]]) {
+      w.role=role;w.categoryAccess=true;
+      w.sources=[{stage,state:'available',id:w.project,basis:'Authorized account activity',route:'https://evil.invalid'}];
+      w.render();await waitFor(()=>reply.test(w.widget.getQuickReplies()[0]),'approved role shortcut');
+      assert.equal(w.document.querySelector('a').getAttribute('href'),route);
+    }
+    w.role='mentor';w.categoryAccess=false;w.render();await waitFor(()=>/expertise/.test(w.widget.getQuickReplies()[0]),'pending mentor guidance');
+    assert.doesNotMatch(w.widget.getQuickReplies().join(' '),/bookings/);
   } finally {close(dom);}
 });

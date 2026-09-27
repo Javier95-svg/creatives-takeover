@@ -384,7 +384,13 @@ serve(async (req) => {
     // persistence or billing, even when a required Home field is missing.
     if (surface === 'pulse_home' || surface === 'pulse_widget') {
       const homeDb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-      return handlePulseHome(homeDb, resolvedUserId, { message, sessionId, turnId, projectId, surface, pagePath });
+      // These RPCs scope their reads with auth.uid(); service-role calls would
+      // lose the caller identity. Forward only the already-verified JWT.
+      const callerDb = resolvedUserId ? createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
+        global: { headers: { Authorization: req.headers.get('Authorization')! } },
+        auth: { persistSession: false, autoRefreshToken: false },
+      }) : undefined;
+      return handlePulseHome(homeDb, resolvedUserId, { message, sessionId, turnId, projectId, surface, pagePath }, callerDb);
     }
 
     if (!message || !sessionId) {
