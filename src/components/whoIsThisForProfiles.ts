@@ -1,14 +1,14 @@
 import type { UserType } from "@/lib/accountTypes";
 
-export const WHO_IS_THIS_FOR_AUTOPLAY_MS = 12_000;
-
 export const WHO_IS_THIS_FOR_ACCOUNT_TYPES = [
-  { id: "founder", label: "Founder", promise: "Move an existing project forward.", next: "Find the next decision, test demand, and track progress in one workspace.", access: "open", featured: true },
-  { id: "builder", label: "Builder", promise: "Turn a new idea into a real venture.", next: "Define a customer, test the promise, and build with evidence.", access: "open", featured: true },
-  { id: "mentor", label: "Mentor", promise: "Guide founders through key decisions.", next: "Invitation only.", access: "invitation", featured: false },
-  { id: "marketplace", label: "Marketplace provider", promise: "Help ventures with specialist services.", next: "Invitation only.", access: "invitation", featured: false },
-  { id: "investor", label: "Investor", promise: "Discover ventures that fit your focus.", next: "Create an account; matching opens after review.", access: "open", featured: false },
-] as const satisfies readonly { id: UserType; label: string; promise: string; next: string; access: "open" | "invitation"; featured: boolean }[];
+  { id: "founder", label: "Founder", promise: "I have a project.", next: "Keep your work in one place and see what to do next.", access: "open" },
+  { id: "builder", label: "Builder", promise: "I have an idea.", next: "Find who needs it, test it, and start building.", access: "open" },
+  { id: "mentor", label: "Mentor", promise: "I help people learn.", next: "Share advice with people building a business.", access: "invitation" },
+  { id: "marketplace", label: "Marketplace provider", promise: "I offer a service.", next: "Help with work like design, marketing, or technology.", access: "invitation" },
+  { id: "investor", label: "Investor", promise: "I back new businesses.", next: "Find projects that fit what you want to support. Matching opens after review.", access: "open" },
+] as const satisfies readonly { id: UserType; label: string; promise: string; next: string; access: "open" | "invitation" }[];
+
+export type AudienceAccountType = (typeof WHO_IS_THIS_FOR_ACCOUNT_TYPES)[number];
 
 export type FounderProfileId = "pre_build" | "post_launch";
 
@@ -41,13 +41,13 @@ export const WHO_IS_THIS_FOR_PROFILES: FounderProfileDefinition[] = [
     id: "pre_build",
     label: "Profile 1 · Pre-build",
     headline: "You need evidence before you need code.",
-    status: "Deciding whether to build within the next 30 days",
+    status: "You have an idea and are deciding what to build",
     description:
-      "You have an idea, but little proof that the right customers need it. Before spending months building, define a first customer, test the promise with real people, and use what you learn to build, narrow, pivot, or stop. Your saved project keeps that evidence and your next step together.",
+      "You have an idea. Before you spend months building it, find out who needs it and what problem it solves. Show people a simple version and listen to what they say. Then decide what to build next.",
     indicators: [
-      "You have an idea but limited customer evidence.",
-      "You are unsure which customer or problem to focus on.",
-      "You want a clear build decision before committing time or money.",
+      "You have an idea but have not tested it with many people.",
+      "You are unsure who needs it most.",
+      "You want to learn before spending a lot of time or money.",
     ],
     tools: [
       {
@@ -55,21 +55,21 @@ export const WHO_IS_THIS_FOR_PROFILES: FounderProfileDefinition[] = [
         name: "ICP Builder",
         href: "/icp-builder",
         description:
-          "Choose a first customer, urgent problem, and interview direction.",
+          "Find the people you want to help and the problem they have.",
       },
       {
         key: "demo_studio",
         name: "Demo Studio",
         href: "/demo-studio/try",
         description:
-          "Put a testable promise in front of prospects before a full build.",
+          "Show people what your idea could do and see how they respond.",
       },
       {
         key: "pmf_lab",
         name: "PMF Lab",
         href: "/pmf-lab",
         description:
-          "Use customer signals to decide whether to build, narrow, pivot, or stop.",
+          "Use what you learn to decide what to build next.",
       },
     ],
   },
@@ -77,13 +77,13 @@ export const WHO_IS_THIS_FOR_PROFILES: FounderProfileDefinition[] = [
     id: "post_launch",
     label: "Profile 2 · Post-launch",
     headline: "You shipped. Now growth still depends on you.",
-    status: "Live MVP · Fewer than roughly 100 active users · No repeatable acquisition channel",
+    status: "Your product is live and you are looking for a way to grow",
     description:
-      "Your MVP is live, but each new user still takes a fresh push. Focus on one audience, message, and acquisition channel; then review activation and retention each week. Your workspace helps turn those results into a decision to repeat, change, or stop a tactic.",
+      "Your product is live, but finding new users still takes a lot of effort. Pick one group of people to reach and try one way to reach them. See who tries your product and who comes back, then use what you learn to grow.",
     indicators: [
-      "Growth comes in spikes rather than through a repeatable channel.",
-      "You change messages or channels before you can learn what works.",
-      "You need a weekly view of qualified users and retention.",
+      "New users show up sometimes, but you are not sure why.",
+      "You try many ways to reach people and do not know which works.",
+      "You want to know why people stay or leave.",
     ],
     tools: [
       {
@@ -91,18 +91,15 @@ export const WHO_IS_THIS_FOR_PROFILES: FounderProfileDefinition[] = [
         name: "GTM Strategist",
         href: "/go-to-market",
         description:
-          "Choose one audience, offer, channel, and measurable acquisition test.",
+          "Choose who to reach, what to say, and one way to try it.",
       },
       {
         key: "traction_engine",
         name: "Traction Engine",
         href: "/traction-engine",
         description:
-          "Review growth and retention weekly, then repeat, change, or stop.",
+          "See who joins and comes back, then keep or change your plan.",
       },
     ],
   },
 ];
-
-export const getNextFounderProfileIndex = (currentIndex: number) =>
-  (currentIndex + 1) % WHO_IS_THIS_FOR_PROFILES.length;

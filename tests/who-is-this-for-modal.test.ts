@@ -3,21 +3,16 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
-  getNextFounderProfileIndex,
   WHO_IS_THIS_FOR_ACCOUNT_TYPES,
-  WHO_IS_THIS_FOR_AUTOPLAY_MS,
   WHO_IS_THIS_FOR_PROFILES,
 } from "../src/components/whoIsThisForProfiles.ts";
 
-test("the audience modal explains five account types and keeps two venture stages", () => {
-  assert.equal(WHO_IS_THIS_FOR_AUTOPLAY_MS, 12_000);
+test("the audience modal has five plain-language account types and two venture stages", () => {
   assert.deepEqual(WHO_IS_THIS_FOR_ACCOUNT_TYPES.map(({ id }) => id), ["founder", "builder", "mentor", "marketplace", "investor"]);
   assert.match(WHO_IS_THIS_FOR_ACCOUNT_TYPES[3].label, /Marketplace provider/);
   assert.deepEqual(WHO_IS_THIS_FOR_ACCOUNT_TYPES.map(({ access }) => access), ["open", "open", "invitation", "invitation", "open"]);
-  assert.deepEqual(WHO_IS_THIS_FOR_ACCOUNT_TYPES.map(({ featured }) => featured), [true, true, false, false, false]);
-  assert.match(WHO_IS_THIS_FOR_ACCOUNT_TYPES[2].next, /Invitation only/);
-  assert.match(WHO_IS_THIS_FOR_ACCOUNT_TYPES[3].next, /Invitation only/);
-  assert.match(WHO_IS_THIS_FOR_ACCOUNT_TYPES[4].next, /Create an account/);
+  assert.match(WHO_IS_THIS_FOR_ACCOUNT_TYPES[0].promise, /I have a project/);
+  assert.match(WHO_IS_THIS_FOR_ACCOUNT_TYPES[1].promise, /I have an idea/);
   assert.equal(WHO_IS_THIS_FOR_PROFILES.length, 2);
 
   const [preBuild, postLaunch] = WHO_IS_THIS_FOR_PROFILES;
@@ -44,14 +39,16 @@ test("the audience modal explains five account types and keeps two venture stage
     ],
   );
 
-  assert.equal(getNextFounderProfileIndex(0), 1);
-  assert.equal(getNextFounderProfileIndex(1), 0);
 });
 
-test("the hero opens the audience dialog and the dialog preserves its accessibility controls", () => {
+test("the hero opens three separate audience tabs with a visual account guide", () => {
   const hero = readFileSync(new URL("../src/components/Hero.tsx", import.meta.url), "utf8");
   const dialog = readFileSync(
     new URL("../src/components/WhoIsThisForDialog.tsx", import.meta.url),
+    "utf8",
+  );
+  const accountPanel = readFileSync(
+    new URL("../src/components/WhoIsThisForAccountTypes.tsx", import.meta.url),
     "utf8",
   );
   const heroStyles = readFileSync(
@@ -67,27 +64,26 @@ test("the hero opens the audience dialog and the dialog preserves its accessibil
   assert.doesNotMatch(hero, /handleStartupCycleClick|hero-startup-cycle-link/);
 
   assert.match(dialog, /Who is Creatives Takeover for\?/);
-  assert.match(dialog, /Have an idea or a project\? Start here\./);
-  assert.match(dialog, /Join as a Founder or Builder/);
-  assert.match(dialog, /Investors can also create accounts\. Mentor and Marketplace provider accounts are invitation only\./);
-  assert.match(dialog, /account\.featured/);
-  assert.match(dialog, /Other ways to participate/);
-  assert.match(dialog, /!account\.featured/);
-  assert.match(dialog, /Founder &amp; Builder stages/);
-  assert.match(dialog, /to="\/signup" onClick=\{handleJoinClick\}/);
-  assert.match(dialog, /setIsPlaying\(false\)/);
-  assert.doesNotMatch(dialog, /Choose the profile that most closely matches what you need to prove next\./);
+  assert.match(dialog, /\["Account types", "Pre-build", "Post-launch"\]/);
+  assert.match(dialog, /role="tablist"/);
+  assert.match(dialog, /role="tab"/);
+  assert.match(dialog, /aria-selected=\{activeIndex === index\}/);
+  assert.match(dialog, /activeIndex === 0 \? \(/);
+  assert.match(dialog, /<WhoIsThisForAccountTypes/);
+  assert.match(dialog, /\{profile \? <div id=\{`audience-panel-/);
+  assert.doesNotMatch(dialog, /Have an idea or a project\? Start here\./);
   assert.match(dialog, /border-border\/70 bg-background p-0/);
-  assert.doesNotMatch(dialog, /bg-background\/98/);
-  assert.match(dialog, /usePrefersReducedMotion/);
-  assert.match(dialog, /visibilitychange/);
-  assert.match(dialog, /window\.setInterval/);
-  assert.match(dialog, /Stop automatic profile rotation/);
-  assert.match(dialog, /Resume automatic profile rotation/);
-  assert.match(dialog, /Show previous founder profile/);
-  assert.match(dialog, /Show next founder profile/);
-  assert.match(dialog, /aria-live=\{isPlaying \? "off" : "polite"\}/);
+  assert.doesNotMatch(dialog, /sticky bottom-0/);
   assert.match(dialog, /cta_name: "who_is_this_for_tool"/);
+
+  assert.match(accountPanel, /Bring your idea\. Find out what to do next\./);
+  assert.match(accountPanel, /From idea to growth/);
+  assert.match(accountPanel, /grid-cols-4 gap-1[\s\S]*sm:grid-cols-4/);
+  assert.match(accountPanel, /ROLE_ICONS/);
+  assert.match(accountPanel, /aria-pressed=\{selectedCard\}/);
+  assert.match(accountPanel, /Invitation only/);
+  assert.match(accountPanel, /selected\.access === "open"/);
+  assert.match(accountPanel, /to="\/signup"/);
 
   assert.match(heroStyles, /\.ct-hero__audience-link\s*\{[\s\S]*?font-weight:\s*700;/);
   assert.doesNotMatch(heroStyles, /\.ct-hero__audience-link svg/);

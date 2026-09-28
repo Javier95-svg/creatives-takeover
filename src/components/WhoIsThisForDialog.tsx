@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type LucideIcon } from "react";
 import { Link } from "react-router-dom";
 import {
-  ArrowLeft,
   ArrowRight,
   BadgeCheck,
   BarChart3,
@@ -12,8 +11,6 @@ import {
   Lightbulb,
   Megaphone,
   MessageSquareText,
-  Pause,
-  Play,
   Presentation,
   Repeat2,
   Route,
@@ -21,7 +18,6 @@ import {
   Users,
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -29,13 +25,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
-import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { captureEvent } from "@/lib/analytics";
+import { WhoIsThisForAccountTypes } from "@/components/WhoIsThisForAccountTypes";
 import {
-  getNextFounderProfileIndex,
-  WHO_IS_THIS_FOR_ACCOUNT_TYPES,
-  WHO_IS_THIS_FOR_AUTOPLAY_MS,
   WHO_IS_THIS_FOR_PROFILES,
+  type AudienceAccountType,
   type FounderProfileId,
   type FounderProfileToolKey,
 } from "@/components/whoIsThisForProfiles";
@@ -53,17 +47,19 @@ const TOOL_ICONS: Record<FounderProfileToolKey, LucideIcon> = {
   traction_engine: Gauge,
 };
 
+const AUDIENCE_TABS = ["Account types", "Pre-build", "Post-launch"] as const;
+
 const PRE_BUILD_PATH = [
   { label: "Idea", icon: Lightbulb },
-  { label: "Conversation", icon: MessageSquareText },
-  { label: "Evidence", icon: BadgeCheck },
-  { label: "Build decision", icon: GitBranch },
+  { label: "Ask people", icon: MessageSquareText },
+  { label: "Learn", icon: BadgeCheck },
+  { label: "Decide", icon: GitBranch },
 ];
 
 const POST_LAUNCH_PATH = [
   { label: "Reach", icon: Megaphone },
-  { label: "Activate", icon: Users },
-  { label: "Retain", icon: Repeat2 },
+  { label: "Try", icon: Users },
+  { label: "Return", icon: Repeat2 },
   { label: "Learn", icon: BarChart3 },
 ];
 
@@ -104,59 +100,17 @@ const ProfileBannerIllustration = ({ profileId }: { profileId: FounderProfileId 
 };
 
 const WhoIsThisForDialog = ({ open, onOpenChange }: WhoIsThisForDialogProps) => {
-  const prefersReducedMotion = usePrefersReducedMotion();
   const { set: setAttribution } = useCTAAttribution();
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isDocumentVisible, setIsDocumentVisible] = useState(true);
-  const wasOpen = useRef(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (typeof document === "undefined") return;
+    if (open) setActiveIndex(0);
+  }, [open]);
 
-    const updateVisibility = () => setIsDocumentVisible(!document.hidden);
-    updateVisibility();
-    document.addEventListener("visibilitychange", updateVisibility);
-    return () => document.removeEventListener("visibilitychange", updateVisibility);
-  }, []);
-
-  useEffect(() => {
-    if (open && !wasOpen.current) {
-      setActiveIndex(0);
-      setIsPlaying(false);
-    }
-    wasOpen.current = open;
-  }, [open, prefersReducedMotion]);
-
-  useEffect(() => {
-    if (prefersReducedMotion) {
-      setIsPlaying(false);
-    }
-  }, [prefersReducedMotion]);
-
-  useEffect(() => {
-    if (!open || !isPlaying || !isDocumentVisible) return;
-
-    const timer = window.setInterval(() => {
-      setActiveIndex((currentIndex) => getNextFounderProfileIndex(currentIndex));
-    }, WHO_IS_THIS_FOR_AUTOPLAY_MS);
-
-    return () => window.clearInterval(timer);
-  }, [isDocumentVisible, isPlaying, open]);
-
-  const showProfile = (index: number) => {
+  const showTab = (index: number) => {
     setActiveIndex(index);
-    setIsPlaying(false);
-  };
-
-  const showPreviousProfile = () => {
-    const previousIndex =
-      (activeIndex - 1 + WHO_IS_THIS_FOR_PROFILES.length) % WHO_IS_THIS_FOR_PROFILES.length;
-    showProfile(previousIndex);
-  };
-
-  const showNextProfile = () => {
-    showProfile(getNextFounderProfileIndex(activeIndex));
+    contentRef.current?.scrollTo({ top: 0, behavior: "auto" });
   };
 
   const handleToolClick = (profileId: FounderProfileId, tool: FounderProfileToolKey) => {
@@ -169,76 +123,50 @@ const WhoIsThisForDialog = ({ open, onOpenChange }: WhoIsThisForDialogProps) => 
     setAttribution(`who_is_this_for_${profileId}_${tool}`, "/");
   };
 
-  const handleJoinClick = () => {
-    captureEvent("cta_clicked", { cta_name: "who_is_this_for_join", page: "/" });
-    setAttribution("who_is_this_for_join", "/");
+  const handleJoinClick = (accountType: AudienceAccountType["id"]) => {
+    captureEvent("cta_clicked", { cta_name: "who_is_this_for_join", account_type: accountType, page: "/" });
+    setAttribution(`who_is_this_for_${accountType}_join`, "/");
   };
 
-  const profile = WHO_IS_THIS_FOR_PROFILES[activeIndex];
-  const isPreBuild = profile.id === "pre_build";
+  const profile = activeIndex > 0 ? WHO_IS_THIS_FOR_PROFILES[activeIndex - 1] : null;
+  const isPreBuild = profile?.id === "pre_build";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        ref={contentRef}
         aria-describedby={undefined}
         className="max-h-[90dvh] w-[calc(100%-1rem)] max-w-5xl gap-0 overflow-y-auto rounded-3xl border-border/70 bg-background p-0 shadow-[0_36px_120px_-48px_rgba(15,23,42,0.8)] [&>button]:z-40 sm:w-[calc(100%-2rem)]"
       >
         <div className="sticky top-0 z-30 border-b border-border/60 bg-background/95 px-5 py-4 pr-14 backdrop-blur-xl sm:px-7 sm:py-5 sm:pr-16">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <DialogHeader className="space-y-1 text-left">
-              <DialogTitle className="font-space-grotesk text-xl sm:text-2xl">
-                Who is Creatives Takeover for?
-              </DialogTitle>
-            </DialogHeader>
-            <div className="flex shrink-0 items-center gap-3">
-              <Button
+          <DialogHeader className="space-y-1 text-left">
+            <DialogTitle className="font-space-grotesk text-xl sm:text-2xl">Who is Creatives Takeover for?</DialogTitle>
+          </DialogHeader>
+          <div role="tablist" aria-label="Who is this for pages" className="mt-4 grid grid-cols-3 gap-1 rounded-xl bg-muted/60 p-1">
+            {AUDIENCE_TABS.map((label, index) => (
+              <button
+                key={label}
+                id={`audience-tab-${index}`}
                 type="button"
-                variant="outline"
-                size="sm"
-                className="min-w-[92px] rounded-full"
-                onClick={() => setIsPlaying((current) => !current)}
-                aria-label={isPlaying ? "Stop automatic profile rotation" : "Resume automatic profile rotation"}
+                role="tab"
+                aria-selected={activeIndex === index}
+                aria-controls={`audience-panel-${index}`}
+                onClick={() => showTab(index)}
+                className={`rounded-lg px-2 py-2 text-center text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-sm ${activeIndex === index ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
-                {isPlaying ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
-                {isPlaying ? "Stop" : "Resume"}
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        <section aria-labelledby="who-is-this-for-roles" className="border-b border-border/60 px-5 py-5 sm:px-8">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h3 id="who-is-this-for-roles" className="font-space-grotesk text-lg font-semibold text-foreground">Have an idea or a project? Start here.</h3>
-              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Get a clear next step, test demand, and keep your progress in one workspace.</p>
-            </div>
-            <Link to="/signup" onClick={handleJoinClick} className="inline-flex items-center text-sm font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-              Join as a Founder or Builder <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
-            </Link>
-          </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {WHO_IS_THIS_FOR_ACCOUNT_TYPES.filter((account) => account.featured).map((account) => (
-              <div key={account.id} className="rounded-xl border border-primary/25 bg-primary/5 p-4">
-                <h4 className="font-space-grotesk text-base font-semibold text-foreground">{account.label}: {account.promise}</h4>
-                <p className="mt-1 text-sm leading-5 text-muted-foreground">{account.next}</p>
-              </div>
-            ))}
-          </div>
-          <p className="mt-3 text-xs leading-5 text-muted-foreground">Investors can also create accounts. Mentor and Marketplace provider accounts are invitation only.</p>
-        </section>
-
-        <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 sm:px-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Founder &amp; Builder stages</p>
-          <div className="flex gap-2" role="group" aria-label="Choose a founder or builder stage">
-            {WHO_IS_THIS_FOR_PROFILES.map((candidate, index) => (
-              <Button key={candidate.id} type="button" size="sm" variant={activeIndex === index ? "default" : "outline"} onClick={() => showProfile(index)} aria-pressed={activeIndex === index}>
-                {candidate.id === "pre_build" ? "Pre-build" : "Post-launch"}
-              </Button>
+                {label}
+              </button>
             ))}
           </div>
         </div>
 
-        <div aria-live={isPlaying ? "off" : "polite"} aria-atomic="true">
+        {activeIndex === 0 ? (
+          <div id="audience-panel-0" role="tabpanel" aria-labelledby="audience-tab-0">
+            <WhoIsThisForAccountTypes onJoin={handleJoinClick} onShowPreBuild={() => showTab(1)} />
+          </div>
+        ) : null}
+
+        {profile ? <div id={`audience-panel-${activeIndex}`} role="tabpanel" aria-labelledby={`audience-tab-${activeIndex}`}>
           <article
             key={profile.id}
             role="group"
@@ -288,7 +216,7 @@ const WhoIsThisForDialog = ({ open, onOpenChange }: WhoIsThisForDialogProps) => 
                   id={`${profile.id}-signals-heading`}
                   className="font-space-grotesk text-lg font-semibold text-foreground"
                 >
-                  This fits if…
+                  This fits if...
                 </h4>
                 <ul className="mt-3 grid gap-2 md:grid-cols-3">
                   {profile.indicators.map((indicator) => (
@@ -323,7 +251,6 @@ const WhoIsThisForDialog = ({ open, onOpenChange }: WhoIsThisForDialogProps) => 
                         key={tool.key}
                         to={tool.href}
                         onClick={() => handleToolClick(profile.id, tool.key)}
-                        onFocus={() => setIsPlaying(false)}
                         className="group flex flex-col rounded-xl border border-border/70 bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/45 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         aria-label={`Open ${tool.name}: ${tool.description}`}
                       >
@@ -352,57 +279,8 @@ const WhoIsThisForDialog = ({ open, onOpenChange }: WhoIsThisForDialogProps) => 
               </section>
             </div>
           </article>
-        </div>
+        </div> : null}
 
-        <section aria-labelledby="other-ways-to-join" className="border-t border-border/60 px-5 py-4 sm:px-8">
-          <h3 id="other-ways-to-join" className="text-sm font-semibold text-foreground">Other ways to participate</h3>
-          <div className="mt-2 grid gap-2 sm:grid-cols-3">
-            {WHO_IS_THIS_FOR_ACCOUNT_TYPES.filter((account) => !account.featured).map((account) => (
-              <p key={account.id} className="text-xs leading-5 text-muted-foreground">
-                <span className="font-semibold text-foreground">{account.label}:</span> {account.promise} {account.next}
-              </p>
-            ))}
-          </div>
-        </section>
-
-        <div className="sticky bottom-0 z-30 flex items-center justify-between gap-3 border-t border-border/60 bg-background/95 px-5 py-4 backdrop-blur-xl sm:px-8">
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="rounded-full"
-            onClick={showPreviousProfile}
-            aria-label="Show previous founder profile"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-
-          <div className="flex items-center gap-3" role="group" aria-label="Choose a founder profile">
-            {WHO_IS_THIS_FOR_PROFILES.map((candidate, index) => (
-              <button
-                key={candidate.id}
-                type="button"
-                onClick={() => showProfile(index)}
-                className={`h-2.5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-                  activeIndex === index ? "w-8 bg-primary" : "w-2.5 bg-muted-foreground/30 hover:bg-muted-foreground/50"
-                }`}
-                aria-label={`Show ${candidate.label.toLowerCase()} founder profile`}
-                aria-pressed={activeIndex === index}
-              />
-            ))}
-          </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="rounded-full"
-            onClick={showNextProfile}
-            aria-label="Show next founder profile"
-          >
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
       </DialogContent>
     </Dialog>
   );
