@@ -1,4 +1,14 @@
-export const WHO_IS_THIS_FOR_AUTOPLAY_MS = 5_000;
+import type { UserType } from "@/lib/accountTypes";
+
+export const WHO_IS_THIS_FOR_AUTOPLAY_MS = 12_000;
+
+export const WHO_IS_THIS_FOR_ACCOUNT_TYPES = [
+  { id: "founder", label: "Founder", promise: "Move an existing project forward.", next: "Find the next decision, test demand, and track progress in one workspace.", access: "open", featured: true },
+  { id: "builder", label: "Builder", promise: "Turn a new idea into a real venture.", next: "Define a customer, test the promise, and build with evidence.", access: "open", featured: true },
+  { id: "mentor", label: "Mentor", promise: "Guide founders through key decisions.", next: "Invitation only.", access: "invitation", featured: false },
+  { id: "marketplace", label: "Marketplace provider", promise: "Help ventures with specialist services.", next: "Invitation only.", access: "invitation", featured: false },
+  { id: "investor", label: "Investor", promise: "Discover ventures that fit your focus.", next: "Create an account; matching opens after review.", access: "open", featured: false },
+] as const satisfies readonly { id: UserType; label: string; promise: string; next: string; access: "open" | "invitation"; featured: boolean }[];
 
 export type FounderProfileId = "pre_build" | "post_launch";
 
@@ -33,13 +43,11 @@ export const WHO_IS_THIS_FOR_PROFILES: FounderProfileDefinition[] = [
     headline: "You need evidence before you need code.",
     status: "Deciding whether to build within the next 30 days",
     description:
-      "You have an idea that keeps pulling you back, but you still do not know whether the problem is urgent enough for someone else to act on. You may be building alone, learning technical language as you go, or deciding between no-code, a freelancer, or finding a technical partner. Your real concern is not a lack of ideas. It is spending the next three months—and your limited budget—building for the wrong customer or solving a problem people will not prioritize. You want a grounded build, narrow, pivot, or stop decision within 30 days, evidence you can explain, and a next step that does not require pretending you already have certainty.",
+      "You have an idea, but little proof that the right customers need it. Before spending months building, define a first customer, test the promise with real people, and use what you learn to build, narrow, pivot, or stop. Your saved project keeps that evidence and your next step together.",
     indicators: [
-      "You repeatedly refine the concept internally but have limited customer evidence.",
-      "You research tools, competitors, and technology because building feels more controllable than approaching customers.",
-      "You want confidence before committing meaningful time or money.",
-      "You worry that being nontechnical will cause you to choose the wrong product scope or partner.",
-      "Your immediate job is deciding whether this idea deserves to be built.",
+      "You have an idea but limited customer evidence.",
+      "You are unsure which customer or problem to focus on.",
+      "You want a clear build decision before committing time or money.",
     ],
     tools: [
       {
@@ -47,21 +55,21 @@ export const WHO_IS_THIS_FOR_PROFILES: FounderProfileDefinition[] = [
         name: "ICP Builder",
         href: "/icp-builder",
         description:
-          "Turn a broad audience into a specific first customer segment, pain hypothesis, and interview direction.",
+          "Choose a first customer, urgent problem, and interview direction.",
       },
       {
         key: "demo_studio",
         name: "Demo Studio",
         href: "/demo-studio/try",
         description:
-          "Make the idea tangible enough for prospects to react, commit, or reject before you build the full product.",
+          "Put a testable promise in front of prospects before a full build.",
       },
       {
         key: "pmf_lab",
         name: "PMF Lab",
         href: "/pmf-lab",
         description:
-          "Combine conversations and behavioural signals into an evidence-based Build, Narrow, Pivot, or Stop decision.",
+          "Use customer signals to decide whether to build, narrow, pivot, or stop.",
       },
     ],
   },
@@ -71,13 +79,11 @@ export const WHO_IS_THIS_FOR_PROFILES: FounderProfileDefinition[] = [
     headline: "You shipped. Now growth still depends on you.",
     status: "Live MVP · Fewer than roughly 100 active users · No repeatable acquisition channel",
     description:
-      "Your MVP is live, so the question is no longer whether you can ship. The problem is that every new user still seems to require a fresh burst of founder energy. You post across several channels, rewrite the message, watch analytics, and react to individual feedback, but you cannot tell which activity consistently creates qualified users or brings them back. Underneath all that motion is the fear that weak traction means the product is wrong, when the real constraint may be the ICP, positioning, channel, onboarding, or retention. You want a focused acquisition thesis, a weekly testing rhythm, and clear permission to stop tactics that do not compound.",
+      "Your MVP is live, but each new user still takes a fresh push. Focus on one audience, message, and acquisition channel; then review activation and retention each week. Your workspace helps turn those results into a decision to repeat, change, or stop a tactic.",
     indicators: [
-      "User growth arrives in isolated spikes rather than through a repeatable channel.",
-      "You frequently switch channels or messaging before collecting enough evidence.",
-      "Customer, acquisition, and retention data is fragmented across tools or spreadsheets.",
-      "You respond to weak traction by adding features because product work feels more concrete than distribution.",
-      "Your immediate job is finding which audience, message, channel, and retention behaviour can become repeatable.",
+      "Growth comes in spikes rather than through a repeatable channel.",
+      "You change messages or channels before you can learn what works.",
+      "You need a weekly view of qualified users and retention.",
     ],
     tools: [
       {
@@ -85,14 +91,14 @@ export const WHO_IS_THIS_FOR_PROFILES: FounderProfileDefinition[] = [
         name: "GTM Strategist",
         href: "/go-to-market",
         description:
-          "Turn customer language into focused positioning, one channel bet, and a measurable acquisition play.",
+          "Choose one audience, offer, channel, and measurable acquisition test.",
       },
       {
         key: "traction_engine",
         name: "Traction Engine",
         href: "/traction-engine",
         description:
-          "Review acquisition and retention evidence weekly, then double down, iterate, or stop based on results.",
+          "Review growth and retention weekly, then repeat, change, or stop.",
       },
     ],
   },

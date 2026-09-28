@@ -4,18 +4,26 @@ import test from "node:test";
 
 import {
   getNextFounderProfileIndex,
+  WHO_IS_THIS_FOR_ACCOUNT_TYPES,
   WHO_IS_THIS_FOR_AUTOPLAY_MS,
   WHO_IS_THIS_FOR_PROFILES,
 } from "../src/components/whoIsThisForProfiles.ts";
 
-test("the audience modal defines the two approved founder profiles and tool paths", () => {
-  assert.equal(WHO_IS_THIS_FOR_AUTOPLAY_MS, 5_000);
+test("the audience modal explains five account types and keeps two venture stages", () => {
+  assert.equal(WHO_IS_THIS_FOR_AUTOPLAY_MS, 12_000);
+  assert.deepEqual(WHO_IS_THIS_FOR_ACCOUNT_TYPES.map(({ id }) => id), ["founder", "builder", "mentor", "marketplace", "investor"]);
+  assert.match(WHO_IS_THIS_FOR_ACCOUNT_TYPES[3].label, /Marketplace provider/);
+  assert.deepEqual(WHO_IS_THIS_FOR_ACCOUNT_TYPES.map(({ access }) => access), ["open", "open", "invitation", "invitation", "open"]);
+  assert.deepEqual(WHO_IS_THIS_FOR_ACCOUNT_TYPES.map(({ featured }) => featured), [true, true, false, false, false]);
+  assert.match(WHO_IS_THIS_FOR_ACCOUNT_TYPES[2].next, /Invitation only/);
+  assert.match(WHO_IS_THIS_FOR_ACCOUNT_TYPES[3].next, /Invitation only/);
+  assert.match(WHO_IS_THIS_FOR_ACCOUNT_TYPES[4].next, /Create an account/);
   assert.equal(WHO_IS_THIS_FOR_PROFILES.length, 2);
 
   const [preBuild, postLaunch] = WHO_IS_THIS_FOR_PROFILES;
   assert.equal(preBuild.id, "pre_build");
   assert.equal(preBuild.headline, "You need evidence before you need code.");
-  assert.equal(preBuild.indicators.length, 5);
+  assert.equal(preBuild.indicators.length, 3);
   assert.deepEqual(
     preBuild.tools.map((tool) => [tool.key, tool.href]),
     [
@@ -27,7 +35,7 @@ test("the audience modal defines the two approved founder profiles and tool path
 
   assert.equal(postLaunch.id, "post_launch");
   assert.equal(postLaunch.headline, "You shipped. Now growth still depends on you.");
-  assert.equal(postLaunch.indicators.length, 5);
+  assert.equal(postLaunch.indicators.length, 3);
   assert.deepEqual(
     postLaunch.tools.map((tool) => [tool.key, tool.href]),
     [
@@ -59,6 +67,15 @@ test("the hero opens the audience dialog and the dialog preserves its accessibil
   assert.doesNotMatch(hero, /handleStartupCycleClick|hero-startup-cycle-link/);
 
   assert.match(dialog, /Who is Creatives Takeover for\?/);
+  assert.match(dialog, /Have an idea or a project\? Start here\./);
+  assert.match(dialog, /Join as a Founder or Builder/);
+  assert.match(dialog, /Investors can also create accounts\. Mentor and Marketplace provider accounts are invitation only\./);
+  assert.match(dialog, /account\.featured/);
+  assert.match(dialog, /Other ways to participate/);
+  assert.match(dialog, /!account\.featured/);
+  assert.match(dialog, /Founder &amp; Builder stages/);
+  assert.match(dialog, /to="\/signup" onClick=\{handleJoinClick\}/);
+  assert.match(dialog, /setIsPlaying\(false\)/);
   assert.doesNotMatch(dialog, /Choose the profile that most closely matches what you need to prove next\./);
   assert.match(dialog, /border-border\/70 bg-background p-0/);
   assert.doesNotMatch(dialog, /bg-background\/98/);

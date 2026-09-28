@@ -33,6 +33,7 @@ import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { captureEvent } from "@/lib/analytics";
 import {
   getNextFounderProfileIndex,
+  WHO_IS_THIS_FOR_ACCOUNT_TYPES,
   WHO_IS_THIS_FOR_AUTOPLAY_MS,
   WHO_IS_THIS_FOR_PROFILES,
   type FounderProfileId,
@@ -106,7 +107,7 @@ const WhoIsThisForDialog = ({ open, onOpenChange }: WhoIsThisForDialogProps) => 
   const prefersReducedMotion = usePrefersReducedMotion();
   const { set: setAttribution } = useCTAAttribution();
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [isDocumentVisible, setIsDocumentVisible] = useState(true);
   const wasOpen = useRef(false);
 
@@ -122,7 +123,7 @@ const WhoIsThisForDialog = ({ open, onOpenChange }: WhoIsThisForDialogProps) => 
   useEffect(() => {
     if (open && !wasOpen.current) {
       setActiveIndex(0);
-      setIsPlaying(!prefersReducedMotion);
+      setIsPlaying(false);
     }
     wasOpen.current = open;
   }, [open, prefersReducedMotion]);
@@ -168,6 +169,11 @@ const WhoIsThisForDialog = ({ open, onOpenChange }: WhoIsThisForDialogProps) => 
     setAttribution(`who_is_this_for_${profileId}_${tool}`, "/");
   };
 
+  const handleJoinClick = () => {
+    captureEvent("cta_clicked", { cta_name: "who_is_this_for_join", page: "/" });
+    setAttribution("who_is_this_for_join", "/");
+  };
+
   const profile = WHO_IS_THIS_FOR_PROFILES[activeIndex];
   const isPreBuild = profile.id === "pre_build";
 
@@ -185,9 +191,6 @@ const WhoIsThisForDialog = ({ open, onOpenChange }: WhoIsThisForDialogProps) => 
               </DialogTitle>
             </DialogHeader>
             <div className="flex shrink-0 items-center gap-3">
-              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                Profile {activeIndex + 1} of {WHO_IS_THIS_FOR_PROFILES.length}
-              </span>
               <Button
                 type="button"
                 variant="outline"
@@ -200,6 +203,38 @@ const WhoIsThisForDialog = ({ open, onOpenChange }: WhoIsThisForDialogProps) => 
                 {isPlaying ? "Stop" : "Resume"}
               </Button>
             </div>
+          </div>
+        </div>
+
+        <section aria-labelledby="who-is-this-for-roles" className="border-b border-border/60 px-5 py-5 sm:px-8">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h3 id="who-is-this-for-roles" className="font-space-grotesk text-lg font-semibold text-foreground">Have an idea or a project? Start here.</h3>
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Get a clear next step, test demand, and keep your progress in one workspace.</p>
+            </div>
+            <Link to="/signup" onClick={handleJoinClick} className="inline-flex items-center text-sm font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              Join as a Founder or Builder <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
+            </Link>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {WHO_IS_THIS_FOR_ACCOUNT_TYPES.filter((account) => account.featured).map((account) => (
+              <div key={account.id} className="rounded-xl border border-primary/25 bg-primary/5 p-4">
+                <h4 className="font-space-grotesk text-base font-semibold text-foreground">{account.label}: {account.promise}</h4>
+                <p className="mt-1 text-sm leading-5 text-muted-foreground">{account.next}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-xs leading-5 text-muted-foreground">Investors can also create accounts. Mentor and Marketplace provider accounts are invitation only.</p>
+        </section>
+
+        <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 sm:px-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Founder &amp; Builder stages</p>
+          <div className="flex gap-2" role="group" aria-label="Choose a founder or builder stage">
+            {WHO_IS_THIS_FOR_PROFILES.map((candidate, index) => (
+              <Button key={candidate.id} type="button" size="sm" variant={activeIndex === index ? "default" : "outline"} onClick={() => showProfile(index)} aria-pressed={activeIndex === index}>
+                {candidate.id === "pre_build" ? "Pre-build" : "Post-launch"}
+              </Button>
+            ))}
           </div>
         </div>
 
@@ -235,13 +270,13 @@ const WhoIsThisForDialog = ({ open, onOpenChange }: WhoIsThisForDialogProps) => 
               </div>
             </div>
 
-            <div className="space-y-8 px-5 py-7 sm:px-8 sm:py-9">
+            <div className="space-y-5 px-5 py-5 sm:px-8 sm:py-6">
               <section aria-labelledby={`${profile.id}-mindset-heading`}>
                 <h4
                   id={`${profile.id}-mindset-heading`}
                   className="font-space-grotesk text-lg font-semibold text-foreground"
                 >
-                  The situation behind the stage
+                  Your next move
                 </h4>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base sm:leading-8">
                   {profile.description}
@@ -253,13 +288,13 @@ const WhoIsThisForDialog = ({ open, onOpenChange }: WhoIsThisForDialogProps) => 
                   id={`${profile.id}-signals-heading`}
                   className="font-space-grotesk text-lg font-semibold text-foreground"
                 >
-                  This probably sounds like you if…
+                  This fits if…
                 </h4>
-                <ul className="mt-4 grid gap-3 md:grid-cols-2">
+                <ul className="mt-3 grid gap-2 md:grid-cols-3">
                   {profile.indicators.map((indicator) => (
                     <li
                       key={indicator}
-                      className="flex gap-3 rounded-2xl border border-border/60 bg-muted/25 p-4 text-sm leading-6 text-muted-foreground"
+                      className="flex gap-2 rounded-xl border border-border/60 bg-muted/25 p-3 text-sm leading-5 text-muted-foreground"
                     >
                       <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
                       <span>{indicator}</span>
@@ -271,16 +306,16 @@ const WhoIsThisForDialog = ({ open, onOpenChange }: WhoIsThisForDialogProps) => 
               <section aria-labelledby={`${profile.id}-tools-heading`}>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                    Recommended tool path
+                    Explore the path
                   </p>
                   <h4
                     id={`${profile.id}-tools-heading`}
                     className="mt-1 font-space-grotesk text-xl font-semibold text-foreground"
                   >
-                    Turn this stage into evidence
+                    Tools for this stage
                   </h4>
                 </div>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {profile.tools.map((tool, toolIndex) => {
                     const ToolIcon = TOOL_ICONS[tool.key];
                     return (
@@ -289,7 +324,7 @@ const WhoIsThisForDialog = ({ open, onOpenChange }: WhoIsThisForDialogProps) => 
                         to={tool.href}
                         onClick={() => handleToolClick(profile.id, tool.key)}
                         onFocus={() => setIsPlaying(false)}
-                        className="group flex min-h-[160px] flex-col rounded-2xl border border-border/70 bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/45 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        className="group flex flex-col rounded-xl border border-border/70 bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/45 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         aria-label={`Open ${tool.name}: ${tool.description}`}
                       >
                         <div className="flex items-center justify-between">
@@ -318,6 +353,17 @@ const WhoIsThisForDialog = ({ open, onOpenChange }: WhoIsThisForDialogProps) => 
             </div>
           </article>
         </div>
+
+        <section aria-labelledby="other-ways-to-join" className="border-t border-border/60 px-5 py-4 sm:px-8">
+          <h3 id="other-ways-to-join" className="text-sm font-semibold text-foreground">Other ways to participate</h3>
+          <div className="mt-2 grid gap-2 sm:grid-cols-3">
+            {WHO_IS_THIS_FOR_ACCOUNT_TYPES.filter((account) => !account.featured).map((account) => (
+              <p key={account.id} className="text-xs leading-5 text-muted-foreground">
+                <span className="font-semibold text-foreground">{account.label}:</span> {account.promise} {account.next}
+              </p>
+            ))}
+          </div>
+        </section>
 
         <div className="sticky bottom-0 z-30 flex items-center justify-between gap-3 border-t border-border/60 bg-background/95 px-5 py-4 backdrop-blur-xl sm:px-8">
           <Button
