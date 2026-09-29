@@ -59,15 +59,19 @@ export function useStartupCommandCenter() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const refreshTimerRef = useRef<number | null>(null);
+  // Loading means "nothing to show yet". Background refreshes (tab focus,
+  // realtime changes) keep the current data on screen instead of blanking it.
+  const loadedUserRef = useRef<string | null>(null);
 
   const load = useCallback(async () => {
     if (!user?.id) {
       setModel(emptyModel);
       setLoading(false);
+      loadedUserRef.current = null;
       return;
     }
 
-    setLoading(true);
+    if (loadedUserRef.current !== user.id) setLoading(true);
     setError(null);
 
     try {
@@ -176,6 +180,7 @@ export function useStartupCommandCenter() {
       console.error("Failed to load startup command center:", err);
       setError("Unable to load the startup command centre right now.");
     } finally {
+      loadedUserRef.current = user.id;
       setLoading(false);
     }
   }, [user?.id]);

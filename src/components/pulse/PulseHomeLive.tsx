@@ -58,7 +58,14 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
   useEffect(() => {
     alive.current = true;
     storageRequests.current = new AbortController();
-    const refresh = () => { if (document.visibilityState === 'visible') refreshContext.current(); };
+    // Returning to the tab fires both focus and visibilitychange; refresh at most
+    // once a minute, quietly in the background, so the page does not keep reloading.
+    let lastRefresh = Date.now();
+    const refresh = () => {
+      if (document.visibilityState !== 'visible' || Date.now() - lastRefresh < 60_000) return;
+      lastRefresh = Date.now();
+      refreshContext.current();
+    };
     window.addEventListener('focus', refresh);
     document.addEventListener('visibilitychange', refresh);
     return () => { alive.current = false; controller.current?.abort(); storageRequests.current.abort(); window.removeEventListener('focus', refresh); document.removeEventListener('visibilitychange', refresh); };

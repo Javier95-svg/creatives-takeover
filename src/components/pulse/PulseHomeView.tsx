@@ -139,7 +139,7 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
 
         <div className={cn('pulse-home-priorities', active ? 'my-4' : 'mx-auto my-8 max-w-xl')}>
           {active ? <button type="button" aria-expanded={showPriorities} onClick={() => setShowPriorities(value => !value)} className="inline-flex items-center gap-2 rounded-lg py-1 text-xs text-muted-foreground hover:text-foreground">Today’s priorities <ChevronDown className={cn('h-3 w-3 transition-transform', showPriorities && 'rotate-180')} /></button> : priorities.length > 0 && <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Today’s focus</h2>}
-          {(!active || showPriorities) && (loading ? <p role="status" className="text-sm text-muted-foreground">Loading your workspace…</p> : priorities.length ? <ul className="pulse-home-focus-list">{priorities.map((item, index) => {
+          {(!active || showPriorities) && (loading && !priorities.length ? <p role="status" className="text-sm text-muted-foreground">Loading your workspace…</p> : priorities.length ? <ul className="pulse-home-focus-list">{priorities.map((item, index) => {
             const tool = toolNameForRoute(item.route);
             return <li key={item.id}><a href={item.route} onClick={event => openRoute(event, item.route)} className="pulse-home-focus-row group">
               <span aria-hidden="true" className="pulse-home-focus-dot" style={{ animationDelay: `${index * 0.4}s` }} />
