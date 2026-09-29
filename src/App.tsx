@@ -81,6 +81,7 @@ const IPPolicy = lazy(() => import("./pages/IPPolicy"));
 const Signup = lazy(() => import("./pages/Signup"));
 const BizMapJourneyHubPage = lazy(() => import("./pages/BizMapJourneyHubPage"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
+const StartOnboarding = lazy(() => import("./pages/StartOnboarding"));
 const AdminFirstCustomerSprintPage = lazy(() => import("./pages/AdminFirstCustomerSprintPage"));
 
 const Login = lazy(() => import("./pages/Login"));
@@ -470,6 +471,8 @@ function App() {
                         <Route path="/forgot-password" element={<ForgotPassword />} />
                         <Route path="/reset-password" element={<ResetPassword />} />
                         <Route path="/onboarding" element={<Onboarding />} />
+                        {/* The homepage box's quiz for signed-out visitors: answers first, account last. */}
+                        <Route path="/start" element={<StartOnboarding />} />
                         <Route
                           path="/dashboard"
                           element={

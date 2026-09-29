@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { AdaptiveOnboardingForm } from '@/components/AdaptiveOnboardingForm';
+import { AdaptiveOnboardingForm, ONBOARDING_LAST_STEP } from '@/components/AdaptiveOnboardingForm';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Helmet } from 'react-helmet-async';
 import HomeWallpaper from '@/components/wallpapers/HomeWallpaper';
 import { Loader2 } from 'lucide-react';
 import {
+  trackOnboardingGuestResumed,
   trackOnboardingStarted,
   type OnboardingStartedSource,
 } from '@/lib/analytics';
@@ -14,14 +15,18 @@ import { getOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
 import {
   isLegacyOnboardingExempt,
 } from '@/lib/guidedOnboarding';
-import { beginOnboardingSession } from '@/lib/onboardingSession';
+import { beginOnboardingSession, saveOnboardingProgress } from '@/lib/onboardingSession';
 import type { OnboardingSessionV1 } from '@/lib/onboardingContext';
+import { classifyOnboardingSituation } from '@/lib/onboardingClassification';
+import { isReviewedUserType } from '@/lib/accountTypes';
+import { clearGuestOnboarding, guestSnapshotAnswers, readGuestSnapshot } from '@/lib/guestOnboarding';
 
 const ONBOARDING_STARTED_SOURCES: OnboardingStartedSource[] = [
   'signup_redirect',
   'dashboard_prompt',
   'direct',
   'tool_claim',
+  'hero_guest',
 ];
 
 function getOnboardingStartedSource(
@@ -61,6 +66,7 @@ const Onboarding = () => {
   const [isChecking, setIsChecking] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [onboardingSession, setOnboardingSession] = useState<OnboardingSessionV1 | null>(null);
+  const [autoFinish, setAutoFinish] = useState(false);
 
   useEffect(() => {
     const checkOnboardingStatus = async () => {
@@ -96,17 +102,42 @@ const Onboarding = () => {
         }
 
         if (profile?.onboarding_completed === true) {
+          // An existing account signed in from the guest quiz: its answers
+          // already exist, so the guest copy is not needed.
+          clearGuestOnboarding();
           navigate(safeExitTarget, { replace: true });
           setIsChecking(false);
           return;
         }
 
         const source = getOnboardingStartedSource(searchParams, user.id, safeExitTarget, profile?.created_at);
-        const session = await beginOnboardingSession({
+        let session = await beginOnboardingSession({
           source,
           plan: profile?.subscription_tier,
           device: window.innerWidth < 768 ? 'mobile' : 'desktop',
         });
+
+        // Answers from the quiz they took before signing up: move them onto the
+        // real session so nothing is asked twice. Founders and builders land on
+        // the final screen and are finished automatically; reviewed types
+        // re-confirm their choice, which runs the invitation check.
+        const guestSnapshot = searchParams.get('resume') === 'guest' ? readGuestSnapshot() : null;
+        if (guestSnapshot && session.status !== 'completed' && !session.answers.situation) {
+          const segment = classifyOnboardingSituation(guestSnapshot.answers.situation);
+          const reviewed = isReviewedUserType(segment);
+          try {
+            session = await saveOnboardingProgress({
+              sessionId: session.id,
+              currentStep: reviewed ? 0 : ONBOARDING_LAST_STEP,
+              answers: { ...guestSnapshotAnswers(guestSnapshot), entryStage: reviewed ? 'choosing' : 'details' },
+            });
+            setAutoFinish(!reviewed);
+            trackOnboardingGuestResumed({ segment: segment || 'unknown', auto_finished: !reviewed });
+          } catch (resumeError) {
+            // The quiz still opens; they answer again rather than being stuck.
+            console.warn('Could not carry over guest onboarding answers', resumeError);
+          }
+        }
         setOnboardingSession(session);
 
         if (!hasTrackedStart.current) {
@@ -176,7 +207,7 @@ const Onboarding = () => {
               {/* Every active account must answer the classification question,
                   including people resuming an older experiment session. */}
               {onboardingSession ? (
-                <AdaptiveOnboardingForm session={onboardingSession} onComplete={handleComplete} />
+                <AdaptiveOnboardingForm session={onboardingSession} onComplete={handleComplete} autoFinish={autoFinish} />
               ) : null}
             </div>
           </div>

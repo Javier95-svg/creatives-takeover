@@ -31,7 +31,9 @@ export type UpgradePromptTrigger = 'soft_gate_banner' | 'hard_gate_modal' | 'pos
 export type IcpBuilderOpenedSource = 'dashboard' | 'onboarding' | 'direct' | 'seed_redirect';
 // tool_claim: opened from the "Finish setting up" prompt after a free-tool
 // result was saved; those accounts are not redirected into onboarding.
-export type OnboardingStartedSource = 'signup_redirect' | 'dashboard_prompt' | 'direct' | 'tool_claim';
+// hero_guest: the quiz a signed-out visitor takes from the homepage box, before
+// signup, and its continuation on /onboarding after signup.
+export type OnboardingStartedSource = 'signup_redirect' | 'dashboard_prompt' | 'direct' | 'tool_claim' | 'hero_guest';
 export type ActivationFunnelEvent =
   | 'dashboard_viewed'
   | 'first_action_opened'
@@ -812,6 +814,21 @@ export const trackOnboardingAccountTypeChanged = (properties: {
   from_type: string;
   to_type: string;
 } & AnalyticsProperties) => captureEvent('onboarding_account_type_changed', properties);
+
+/**
+ * A guest reached the signup step of the homepage quiz: either the finished
+ * plan, or a reviewed account type that needs an account before its details.
+ */
+export const trackOnboardingGuestGateShown = (properties: {
+  segment: string;
+  reason: 'plan_ready' | 'reviewed_type';
+} & AnalyticsProperties) => captureEvent('onboarding_guest_gate_shown', properties);
+
+/** After signup, the guest's answers were carried onto their new account. */
+export const trackOnboardingGuestResumed = (properties: {
+  segment: string;
+  auto_finished: boolean;
+} & AnalyticsProperties) => captureEvent('onboarding_guest_resumed', properties);
 
 export type FinishSetupSurface = 'icp_result' | 'demo_project' | 'dashboard';
 

@@ -64,6 +64,7 @@ import { refreshOnboardingMentorRecommendations } from '@/lib/onboardingMentorRe
 import { onboardingSupportNeeds } from '@/lib/onboardingSupportNeeds';
 import { clearIntendedAccountType, readIntendedAccountType } from '@/lib/intendedAccountType';
 import { clearToolHandoff, readToolHandoff } from '@/lib/toolHandoff';
+import { clearGuestOnboarding } from '@/lib/guestOnboarding';
 import { MAX_SECTORS } from '@/lib/onboardingAnswerRules';
 import { cn } from '@/lib/utils';
 import { trackOnboardingAccountTypeChanged, trackOnboardingPrefilled, trackOnboardingStepCompleted } from '@/lib/analytics';
@@ -71,6 +72,8 @@ import { trackOnboardingAccountTypeChanged, trackOnboardingPrefilled, trackOnboa
 // Brief, business and evidence, goal and blocker, time and runway, review. The
 // situation question is shown before these, so founders see six screens.
 const CORE_STEPS = 5;
+/** Index of the final review screen, for pages that seed a session onto it. */
+export const ONBOARDING_LAST_STEP = CORE_STEPS - 1;
 const AVAILABLE_INTENTS: ActivationIntent[] = [
   'find_mentor',
   'build_demo',
@@ -224,6 +227,18 @@ function joinList(items: string[]) {
 interface AdaptiveOnboardingFormProps {
   session: OnboardingSessionV1;
   onComplete?: (startRoute?: string) => void;
+  /**
+   * Quiz for a visitor without an account. Nothing is sent to the server:
+   * the final screen hands the answers to onPlanReady (which asks them to sign
+   * up), and choosing a reviewed account type goes to onReviewedChoice, since
+   * those need a sign-in for the invitation check and request.
+   */
+  guest?: {
+    onPlanReady: (snapshot: { answers: OnboardingAnswersV1; selectedIntent?: string }) => void;
+    onReviewedChoice: (segment: ReviewedUserType) => void;
+  };
+  /** Finish automatically when the session arrives complete (answers carried over from the guest quiz). */
+  autoFinish?: boolean;
 }
 
 function readAdaptiveDraft(session: OnboardingSessionV1): {
@@ -300,7 +315,7 @@ function ChoiceGrid<T extends string | number>({
   );
 }
 
-export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardingFormProps) {
+export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish = false }: AdaptiveOnboardingFormProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const submittingRef = useRef(false);
@@ -423,14 +438,15 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
 
   // Debounce draft writes; the local copy remains available during network errors.
   useEffect(() => {
-    if (completedRef.current || isSaving) return;
+    // Guests have no server session; their progress stays in the local draft above.
+    if (guest || completedRef.current || isSaving) return;
     const timer = window.setTimeout(() => {
       void saveOnboardingProgress({ sessionId: session.id, currentStep,
         answers: { ...answers, roleProfile: roleDraft, entryStage: reviewStage },
       }).catch(() => undefined);
     }, 900);
     return () => window.clearTimeout(timer);
-  }, [answers, roleDraft, reviewStage, currentStep, session.id, isSaving]);
+  }, [answers, roleDraft, reviewStage, currentStep, session.id, isSaving, guest]);
 
   // Snapshot the live step in a ref so the teardown below can read the latest
   // value without listing it as a dependency. Depending on currentStep here
@@ -610,6 +626,12 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
     if (submittedReview) { onComplete?.('/'); return; }
     if (currentStep === 0 && reviewStage === 'choosing') {
       if (!answers.situation || !answers.founderSegment) { setError('Choose the option that describes your situation.'); return; }
+      // Reviewed accounts need a sign-in for the invitation check and request,
+      // so a guest signs up here and continues signed in.
+      if (guest && isReviewedType(answers.founderSegment)) {
+        guest.onReviewedChoice(answers.founderSegment);
+        return;
+      }
       if (answers.founderSegment === 'mentor' || answers.founderSegment === 'marketplace') {
         setIsSaving(true); submittingRef.current = true;
         try {
@@ -657,6 +679,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
         try { localStorage.removeItem(`adaptive_onboarding_${session.id}`); } catch { /* storage unavailable */ }
         clearIntendedAccountType();
         clearToolHandoff();
+        clearGuestOnboarding();
         setSubmittedReview(answers.founderSegment);
         void queryClient.invalidateQueries({ queryKey: ['account-context', user?.id] });
         void trackRetentionEvent('onboarding_completed', { user_id: user?.id, user_type: answers.founderSegment, quiz_version: 2, onboarding_session_id: session.id, completion_kind: 'application_submitted' });
@@ -670,6 +693,17 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
     }
 
     if (currentStep === CORE_STEPS - 1) {
+      if (guest) {
+        // Same completeness check as a real completion, then hand over for signup.
+        const incomplete = isAdaptiveOnboardingComplete(answers) ? null : findIncompleteStep();
+        if (incomplete) {
+          setCurrentStep(incomplete.step);
+          setError(incomplete.message);
+          return;
+        }
+        guest.onPlanReady({ answers, selectedIntent: explicitIntent ? answers.selectedIntent || undefined : undefined });
+        return;
+      }
       await handleComplete();
       return;
     }
@@ -684,6 +718,10 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
       flow_version: session.flow_version,
       rollout_variant: session.rollout_variant,
     });
+    if (guest) {
+      setCurrentStep((step) => step + 1);
+      return;
+    }
     setIsSaving(true);
     try {
       await saveOnboardingProgress({
@@ -796,6 +834,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
       try { localStorage.removeItem(`adaptive_onboarding_${session.id}`); } catch { /* storage unavailable */ }
       clearIntendedAccountType();
       clearToolHandoff();
+      clearGuestOnboarding();
       void queryClient.invalidateQueries({ queryKey: ['account-context', user?.id] });
       await startActivationJourney({
         userId: user.id,
@@ -900,6 +939,22 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
       setIsSaving(false);
     }
   };
+
+  // Answers carried over from the guest quiz: save them without asking again.
+  // Waits for the first action to be chosen with this account's real credits,
+  // so the recommendation is not the reduced guest one. Runs once; a failure
+  // leaves the final screen and its button in place.
+  const autoFinishStartedRef = useRef(false);
+  const [autoFinishing, setAutoFinishing] = useState(false);
+  useEffect(() => {
+    if (!autoFinish || guest || autoFinishStartedRef.current || !user || creditsLoading) return;
+    if (currentStep !== CORE_STEPS - 1 || !answers.selectedIntent || !isAdaptiveOnboardingComplete(answers)) return;
+    autoFinishStartedRef.current = true;
+    setAutoFinishing(true);
+    void handleComplete().finally(() => setAutoFinishing(false));
+    // handleComplete reads the latest answers when it runs; it is not a trigger.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoFinish, guest, user, creditsLoading, currentStep, answers]);
 
   // A reviewed type is answering a two step flow, and a progress bar claiming
   // seven would be a lie about how much is left.
@@ -1348,11 +1403,23 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
             </Button>
             <div className="text-right">
               {error ? <p className="mb-2 max-w-md text-sm text-destructive" role="alert">{error}</p> : null}
-              <Button type="button" onClick={() => void handleNext()} disabled={isSaving}>
+              {autoFinishing ? <p className="mb-2 text-sm text-muted-foreground" role="status">Saving your plan…</p> : null}
+              <Button type="button" onClick={() => void handleNext()} disabled={isSaving || autoFinishing}>
                 {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                {submittedReview ? 'Open my workspace' : reviewing && reviewStage === 'details' ? 'Send my request' : currentStep === CORE_STEPS - 1 ? `Start: ${ACTIVATION_CATALOG[answers.selectedIntent || recommendation.intent].label}` : 'Continue'}
+                {submittedReview
+                  ? 'Open my workspace'
+                  : reviewing && reviewStage === 'details'
+                    ? 'Send my request'
+                    : currentStep === CORE_STEPS - 1
+                      ? guest ? 'Create my free account' : `Start: ${ACTIVATION_CATALOG[answers.selectedIntent || recommendation.intent].label}`
+                      : 'Continue'}
                 {!isSaving ? <ArrowRight className="ml-2 h-4 w-4" /> : null}
               </Button>
+              {guest && currentStep === CORE_STEPS - 1 ? (
+                <p className="mt-2 max-w-xs text-xs text-muted-foreground">
+                  Free, about 30 seconds. Your answers stay on this device until you create your account.
+                </p>
+              ) : null}
             </div>
           </div>
         </CardContent>

@@ -15,11 +15,11 @@ const frozenFiles = {
   // auto-starts Demo Studio; and unresolved/off rollout state safely uses the
   // established route handoff. Headline, lede, proof line, and stats are intact.
   // Rehashed 2026-09-08 for the approved evidence-led hero copy update.
-  // Rehashed 2026-09-29 for the approved homepage-to-onboarding funnel: signed-
-  // out submissions go to signup and the matching onboarding quiz (Idea ->
-  // Builder, Product -> Founder), then on to the tool they asked for. Copy,
-  // layout and the signed-in route are unchanged.
-  '../src/components/Hero.tsx': 'ceaced0ee3200e77d6290e27e3dea52b685c34e5cd4fd88a19c95726ff57292c',
+  // Rehashed 2026-09-29 for the approved quiz-first funnel: signed-out
+  // submissions open the guest onboarding quiz at /start (Idea -> Builder,
+  // Product -> Founder); account creation is the last step, then the tool they
+  // asked for. Copy, layout and the signed-in route are unchanged.
+  '../src/components/Hero.tsx': '0fc0d927c9ff89f7b4a5fdc7674c157db0e958ac33a89c6f6b06d398610acf47',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.

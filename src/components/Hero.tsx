@@ -13,7 +13,7 @@ import { trackActivationEntry, trackActivationFunnelEvent } from "@/lib/activati
 import { classifyHeroInput, trackHeroInputFocused, trackHeroInputSubmitted } from "@/lib/heroFunnel";
 import {
   buildHeroProductPath,
-  buildHeroSignupPath,
+  buildHeroStartPath,
   DEFAULT_HERO_MODE,
   HERO_MODE_ACCOUNT_TYPE,
   type HeroMode,
@@ -240,13 +240,13 @@ const Hero = ({
       return;
     }
 
-    // Signed-out visitors go through account creation and the matching
-    // onboarding quiz first: Idea -> Builder, Product -> Founder. What they
-    // typed is carried into the quiz as their brief, and the quiz returns them
-    // to the tool they asked for, so the promised result still arrives.
+    // Signed-out visitors take the matching onboarding quiz first (Idea ->
+    // Builder, Product -> Founder), pre-filled with what they typed, and create
+    // their account at the end to save their plan. They then land on the tool
+    // they asked for, so the promised result still arrives.
     rememberToolHandoff({ mode: heroMode, tool: isDemo ? "demo_studio" : "icp_builder", seed: trimmed });
     rememberIntendedAccountType(HERO_MODE_ACCOUNT_TYPE[heroMode]);
-    navigate(buildHeroSignupPath(heroMode, toolPath));
+    navigate(buildHeroStartPath(toolPath));
   };
 
   return (

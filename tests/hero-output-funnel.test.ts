@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 import {
   buildHeroProductPath,
-  buildHeroSignupPath,
+  buildHeroStartPath,
   HERO_MODE_ACCOUNT_TYPE,
   HERO_MODES,
   resolveHeroArtifactState,
@@ -37,18 +37,13 @@ test('hero generation resolves every success and failure order without a stuck b
   assert.equal(resolveHeroArtifactState({ hasCompact: false, hasDeep: false, timedOut: true }), 'failed');
 });
 
-test('a signed-out submission goes signup -> matching onboarding -> the tool it asked for', () => {
+test('a signed-out submission opens the guest quiz, carrying the tool it asked for', () => {
   const toolPath = buildHeroProductPath('a CRM for mobile car detailers');
-  const signup = new URL(buildHeroSignupPath('product', toolPath), 'https://creatives-takeover.com');
-  assert.equal(signup.pathname, '/signup');
-  assert.equal(signup.searchParams.get('source'), 'hero-product');
+  const start = new URL(buildHeroStartPath(toolPath), 'https://creatives-takeover.com');
+  assert.equal(start.pathname, '/start');
+  assert.equal(start.searchParams.get('return'), toolPath);
 
-  const onboarding = new URL(signup.searchParams.get('return') ?? '', 'https://creatives-takeover.com');
-  assert.equal(onboarding.pathname, '/onboarding');
-  assert.equal(onboarding.searchParams.get('source'), 'signup_redirect');
-  assert.equal(onboarding.searchParams.get('return'), toolPath);
-
-  const tool = new URL(onboarding.searchParams.get('return') ?? '', 'https://creatives-takeover.com');
+  const tool = new URL(start.searchParams.get('return') ?? '', 'https://creatives-takeover.com');
   assert.equal(tool.searchParams.get('seed'), 'a CRM for mobile car detailers');
 
   assert.equal(HERO_MODE_ACCOUNT_TYPE.idea, 'builder');

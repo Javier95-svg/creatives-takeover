@@ -153,14 +153,12 @@ export function buildHeroProductPath(seed: string): string {
 }
 
 /**
- * Where a signed-out homepage submission goes: signup, then the onboarding
- * quiz for the matching account type, then the tool the visitor asked for.
- * Signup forwards to its `return`, and onboarding forwards to its own `return`
- * once the quiz is finished.
+ * Where a signed-out homepage submission goes: the guest onboarding quiz at
+ * /start (answers first, account last). The tool the visitor asked for rides
+ * along as `return`, and is where they land once onboarding is saved.
  */
-export function buildHeroSignupPath(mode: HeroMode, toolPath: string): string {
-  const onboardingPath = `/onboarding?source=signup_redirect&return=${encodeURIComponent(toolPath)}`;
-  return `/signup?source=hero-${mode}&return=${encodeURIComponent(onboardingPath)}`;
+export function buildHeroStartPath(toolPath: string): string {
+  return `/start?return=${encodeURIComponent(toolPath)}`;
 }
 
 /** The account type each homepage mode leads into. */

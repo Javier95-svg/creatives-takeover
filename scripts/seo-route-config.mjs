@@ -39,6 +39,7 @@ export const ROBOTS_DISALLOW = [
   "/forgot-password",
   "/reset-password",
   "/onboarding",
+  "/start",
   "/dashboard",
   "/account",
   "/messages",

@@ -164,6 +164,20 @@
       "sourceFile": "src/lib/analytics.ts",
       "requiredProperties": ["from_type", "to_type"]
     },
+    "onboarding_guest_gate_shown": {
+      "stage": "onboarding",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["segment", "reason"]
+    },
+    "onboarding_guest_resumed": {
+      "stage": "onboarding",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["segment", "auto_finished"]
+    },
     "finish_setup_prompt_shown": {
       "stage": "onboarding",
       "owner": "product",
@@ -683,6 +697,18 @@
     }
   },
   "funnels": [
+    {
+      "key": "guest_quiz_to_account",
+      "name": "Homepage guest quiz to saved onboarding",
+      "windowDays": 7,
+      "steps": [
+        "onboarding_started",
+        "onboarding_guest_gate_shown",
+        "onboarding_guest_resumed",
+        "onboarding_completed"
+      ],
+      "breakdowns": ["segment", "reason"]
+    },
     {
       "key": "tool_first_setup",
       "name": "Free-tool account to finished onboarding",

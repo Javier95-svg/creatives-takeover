@@ -7,6 +7,7 @@ const EXACT_NOINDEX_ROUTES = new Set([
   "/forgot-password",
   "/reset-password",
   "/onboarding",
+  "/start",
   "/dashboard",
   "/account",
   "/setup-quiz",

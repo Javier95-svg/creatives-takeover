@@ -21,16 +21,17 @@ const mocks = {
   '@/lib/analytics': `export const trackOnboardingStepCompleted=()=>{};export const trackOnboardingPrefilled=(value)=>window.events.push({name:'onboarding_prefilled',data:value});export const trackOnboardingAccountTypeChanged=(value)=>window.events.push({name:'onboarding_account_type_changed',data:value});`,
   '@/lib/retentionSystem': `export const trackRetentionEvent=async(name,data)=>window.events.push({name,data}); export const trackActivationJourneyEvent=async()=>{}; export const ensureActivationGateVariant=async()=> 'control'; export const startActivationJourney=async()=>{};`,
   '@/lib/onboardingMentorRecommendations': `export const refreshOnboardingMentorRecommendations=async()=>{};`,
-  '@/lib/accountApplications': `export const getMyAccountInvitationTypes=async()=>window.invitationTypes; export const submitAccountApplication=async(value)=>{window.applications.push(value);};`,
-  '@/lib/onboardingSession': `export const saveOnboardingProgress=async(value)=>{window.saved=value;}; export const abandonOnboardingSession=async()=>{window.abandoned=true;}; export const completeOnboardingSession=async()=>{};`,
+  '@/lib/accountApplications': `export const getMyAccountInvitationTypes=async()=>{window.invitationChecked=true;return window.invitationTypes;}; export const submitAccountApplication=async(value)=>{window.applications.push(value);};`,
+  '@/lib/onboardingSession': `export const saveOnboardingProgress=async(value)=>{window.saved=value;}; export const abandonOnboardingSession=async()=>{window.abandoned=true;}; export const completeOnboardingSession=async(value)=>{window.completions=(window.completions||0)+1;window.completedAnswers=value.answers;};`,
   '@/lib/activationJourneyV2': `export const ACTIVATION_CATALOG={find_mentor:{label:'Find a mentor',steps:['Find support'],output:'A useful introduction'}};export const getStageAvailableIntents=()=>['find_mentor'];export const recommendActivation=()=>({intent:'find_mentor',reason:'Relevant support'});export const createActivationJourney=()=>({});export const buildActivationJourneyUrl=()=>'/';`,
   'sonner': `export const toast={info:()=>{},success:()=>{},error:()=>{}};`,
 };
 let bundle;
-async function mount(storage={}) {
+async function mount(storage={},{session,formProps}={}) {
   if (!bundle) {
     const result=await build({stdin:{contents:`import React from 'react'; import {createRoot} from 'react-dom/client'; import {AdaptiveOnboardingForm} from './src/components/AdaptiveOnboardingForm';
-      window.root=createRoot(document.getElementById('root'));window.root.render(<AdaptiveOnboardingForm session={{id:'test-session',user_id:'test-user',status:'in_progress',flow_version:'adaptive_v1',rollout_variant:'adaptive_v1',current_step:0,answers:{},started_at:'2026-09-25T00:00:00Z',updated_at:'2026-09-25T00:00:00Z'}} onComplete={(route)=>window.completedRoute=route}/>);`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,write:false,format:'iife',platform:'browser',jsx:'automatic',define:{'process.env.NODE_ENV':'"test"'},plugins:[{
+      const session=window.sessionOverride??{id:'test-session',user_id:'test-user',status:'in_progress',flow_version:'adaptive_v1',rollout_variant:'adaptive_v1',current_step:0,answers:{},started_at:'2026-09-25T00:00:00Z',updated_at:'2026-09-25T00:00:00Z'};
+      window.root=createRoot(document.getElementById('root'));window.root.render(<AdaptiveOnboardingForm session={session} onComplete={(route)=>window.completedRoute=route} {...(window.formProps||{})}/>);`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,write:false,format:'iife',platform:'browser',jsx:'automatic',define:{'process.env.NODE_ENV':'"test"'},plugins:[{
       name:'onboarding-test-boundaries',setup(b){
         b.onResolve({filter:/.*/},args=>mocks[args.path] ? {path:args.path,namespace:'mock'} : undefined);
         b.onLoad({filter:/.*/,namespace:'mock'},args=>({contents:mocks[args.path],loader:'js'}));
@@ -41,6 +42,8 @@ async function mount(storage={}) {
   const dom=new JSDOM('<div id="root"></div>',{url:'http://localhost/',runScripts:'dangerously',pretendToBeVisual:true});
   dom.window.events=[];dom.window.applications=[];dom.window.invitationTypes=['mentor','marketplace'];
   for(const [key,value] of Object.entries(storage))dom.window.localStorage.setItem(key,value);
+  if(session)dom.window.sessionOverride=session;
+  if(formProps)dom.window.formProps=formProps;
   dom.window.eval(bundle);await tick();return dom;
 }
 import { existsSync as exists } from 'node:fs';
@@ -166,6 +169,55 @@ test('changing a pre-selected account type is recorded',async()=>{
     builder.click();await tick();
     const changed=dom.window.events.find(e=>e.name==='onboarding_account_type_changed');
     assert.equal(JSON.stringify(changed?.data),JSON.stringify({from_type:'founder',to_type:'builder'}));
+  }finally{close(dom);}
+});
+
+const guestSession={id:'guest-test',user_id:'',status:'in_progress',flow_version:'adaptive_v1',rollout_variant:'adaptive_v1',current_step:0,answers:{},started_at:'2026-09-29T00:00:00Z',updated_at:new Date(0).toISOString()};
+
+test('a guest answers every screen without touching the server, then is asked to create an account',async()=>{
+  const ready=[];
+  const dom=await mount({},{session:guestSession,formProps:{guest:{onPlanReady:(snapshot)=>ready.push(snapshot),onReviewedChoice:()=>{}}}});try{
+    await choose(dom,'Founder');
+    const area=dom.window.document.querySelector('textarea');
+    const setter=Object.getOwnPropertyDescriptor(dom.window.HTMLTextAreaElement.prototype,'value').set;
+    setter.call(area,'We help agencies turn client calls into clear project briefs.');area.dispatchEvent(new dom.window.Event('input',{bubbles:true}));await tick();
+    await type(dom,field(dom,'What is your project called?'),'Acme');
+    await click(dom,'Continue');
+    await click(dom,'B2B SaaS');await click(dom,'No external evidence yet');await click(dom,'Continue');
+    await click(dom,'Validate an urgent customer problem');await click(dom,'The customer or problem is still too broad');await click(dom,'Continue');
+    await click(dom,'About 5 hours');await click(dom,'Not spending money on this yet');await click(dom,'Continue');
+    assert.ok(text(dom).includes('Your plan is ready'));
+    assert.ok(text(dom).includes('Your answers stay on this device until you create your account'));
+    await new Promise(resolve=>setTimeout(resolve,1100)); // past the debounced draft save
+    assert.equal(dom.window.saved,undefined);
+    await click(dom,'Create my free account');
+    assert.equal(ready.length,1);
+    assert.equal(ready[0].answers.projectName,'Acme');
+    assert.equal(ready[0].answers.businessModel,'b2b_saas');
+    assert.equal(ready[0].selectedIntent,undefined);
+    assert.equal(dom.window.completions,undefined);
+  }finally{close(dom);}
+});
+
+test('a guest choosing Mentor is sent to sign up without an invitation lookup',async()=>{
+  const reviewed=[];
+  const dom=await mount({},{session:guestSession,formProps:{guest:{onPlanReady:()=>{},onReviewedChoice:(segment)=>reviewed.push(segment)}}});try{
+    await choose(dom,'Mentor');
+    assert.equal(JSON.stringify(reviewed),JSON.stringify(['mentor']));
+    assert.equal(dom.window.invitationChecked,undefined);
+    assert.ok(text(dom).includes('What brings you here today?'));
+  }finally{close(dom);}
+});
+
+test('after signup, answers carried from the guest quiz are saved without asking again',async()=>{
+  const answers={situation:'existing_project',entryStage:'details',projectName:'Acme',startupBrief:'We help agencies turn client calls into clear project briefs.',
+    businessModel:'b2b_saas',evidenceState:'none',primaryGoal:'validate_problem',blocker:'customer_clarity',weeklyCapacityHours:5,runwayMonths:'not_applicable'};
+  const session={id:'real-session',user_id:'test-user',status:'in_progress',flow_version:'adaptive_v1',rollout_variant:'adaptive_v1',current_step:4,answers,started_at:'2026-09-29T00:00:00Z',updated_at:'2026-09-29T00:00:00Z'};
+  const dom=await mount({},{session,formProps:{autoFinish:true}});try{
+    await tick();await tick();
+    assert.equal(dom.window.completions,1);
+    assert.equal(dom.window.completedAnswers.projectName,'Acme');
+    assert.equal(dom.window.completedRoute,'/');
   }finally{close(dom);}
 });
 
