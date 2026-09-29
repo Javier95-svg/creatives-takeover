@@ -4,7 +4,7 @@ import { AdaptiveOnboardingForm, ONBOARDING_LAST_STEP } from '@/components/Adapt
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Helmet } from 'react-helmet-async';
-import HomeWallpaper from '@/components/wallpapers/HomeWallpaper';
+import OnboardingWallpaper from '@/components/wallpapers/OnboardingWallpaper';
 import { Loader2 } from 'lucide-react';
 import {
   trackOnboardingGuestResumed,
@@ -181,8 +181,7 @@ const Onboarding = () => {
         <meta name="description" content="Complete your onboarding to get started with Creatives Takeover" />
       </Helmet>
       
-      {/* Home Wallpaper Background */}
-      <HomeWallpaper />
+      <OnboardingWallpaper />
 
       {isChecking ? (
         <div className="relative min-h-screen flex items-center justify-center">

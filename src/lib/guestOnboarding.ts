@@ -44,8 +44,11 @@ function newGuestId() {
  * A local stand-in for a server session, so the quiz can run unchanged. The id
  * is kept so a refresh resumes the same local draft; the epoch updated_at makes
  * that draft always win over this empty session.
+ *
+ * `startedAfter`: a newer homepage submission (its time) starts a fresh quiz,
+ * so a returning visitor with a new idea never sees the previous idea's draft.
  */
-export function getGuestSession(): OnboardingSessionV1 {
+export function getGuestSession(options: { startedAfter?: number } = {}): OnboardingSessionV1 {
   const store = storage();
   let id: string | null = null;
   try {
@@ -54,6 +57,10 @@ export function getGuestSession(): OnboardingSessionV1 {
     if (parsed && typeof parsed.id === 'string' && parsed.id.startsWith('guest-')
       && typeof parsed.createdAt === 'number' && Date.now() - parsed.createdAt <= MAX_AGE_MS) {
       id = parsed.id;
+      if (options.startedAfter && parsed.createdAt < options.startedAfter) {
+        clearGuestOnboarding();
+        id = null;
+      }
     }
   } catch {
     id = null;

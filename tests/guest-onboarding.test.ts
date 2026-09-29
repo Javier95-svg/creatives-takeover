@@ -28,6 +28,18 @@ test('the guest session id is stable, so a refresh resumes the same draft', () =
   assert.equal(Date.parse(first.updated_at), 0);
 });
 
+test('a newer homepage submission starts a fresh quiz, a refresh does not', () => {
+  store.clear();
+  const first = getGuestSession();
+  store.set(`adaptive_onboarding_${first.id}`, '{"answers":{"startupBrief":"old idea"}}');
+  // Refresh: the submission happened before this quiz was created.
+  assert.equal(getGuestSession({ startedAfter: Date.now() - 60_000 }).id, first.id);
+  // New submission after the quiz was created: fresh session, old draft gone.
+  const fresh = getGuestSession({ startedAfter: Date.now() + 1 });
+  assert.notEqual(fresh.id, first.id);
+  assert.equal(store.has(`adaptive_onboarding_${first.id}`), false);
+});
+
 test('a snapshot round-trips and keeps only a first action the guest chose', () => {
   store.clear();
   saveGuestSnapshot({ answers: { situation: 'existing_project', selectedIntent: 'run_icp' }, returnPath: '/icp-builder?seed=x' });

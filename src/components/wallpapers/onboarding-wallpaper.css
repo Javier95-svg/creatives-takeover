@@ -1,0 +1,75 @@
+/*
+ * Onboarding quiz backdrop: quiet, focused, on-brand.
+ * Soft drifting glows in the brand colours, a fine dot texture that fades out
+ * toward the centre so the quiz card stays clean, and a vignette that pulls
+ * attention inward. Theme tokens only, so light and dark both work.
+ */
+.onboarding-wallpaper {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  overflow: hidden;
+  pointer-events: none;
+  background: hsl(var(--background));
+}
+
+.onboarding-wallpaper__glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.85;
+  will-change: transform;
+  animation: onboarding-wallpaper-drift 38s ease-in-out infinite alternate;
+}
+
+.onboarding-wallpaper__glow--teal {
+  top: -24vmax;
+  left: calc(50% - 28vmax);
+  width: 56vmax;
+  height: 44vmax;
+  background: radial-gradient(closest-side, hsl(var(--accent-teal) / 0.42), transparent);
+}
+
+.onboarding-wallpaper__glow--primary {
+  bottom: -22vmax;
+  left: -14vmax;
+  width: 48vmax;
+  height: 48vmax;
+  background: radial-gradient(closest-side, hsl(var(--primary) / 0.34), transparent);
+  animation-duration: 44s;
+  animation-delay: -12s;
+}
+
+.onboarding-wallpaper__glow--violet {
+  right: -16vmax;
+  bottom: -18vmax;
+  width: 44vmax;
+  height: 44vmax;
+  background: radial-gradient(closest-side, hsl(var(--accent-violet) / 0.28), transparent);
+  animation-duration: 50s;
+  animation-delay: -24s;
+}
+
+.onboarding-wallpaper__dots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(hsl(var(--foreground) / 0.12) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(ellipse 72% 64% at 50% 44%, transparent 38%, #000 100%);
+  mask-image: radial-gradient(ellipse 72% 64% at 50% 44%, transparent 38%, #000 100%);
+}
+
+.onboarding-wallpaper__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 85% 75% at 50% 42%, transparent 55%, hsl(var(--background) / 0.8) 100%);
+}
+
+@keyframes onboarding-wallpaper-drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(3vmax, 2vmax, 0) scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-wallpaper__glow { animation: none; }
+}

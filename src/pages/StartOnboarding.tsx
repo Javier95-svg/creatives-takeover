@@ -5,12 +5,13 @@ import { Loader2 } from 'lucide-react';
 
 import { AdaptiveOnboardingForm } from '@/components/AdaptiveOnboardingForm';
 import SoftGateModal from '@/components/auth/SoftGateModal';
-import HomeWallpaper from '@/components/wallpapers/HomeWallpaper';
+import OnboardingWallpaper from '@/components/wallpapers/OnboardingWallpaper';
 import { useAuth } from '@/contexts/AuthContext';
 import { USER_TYPE_LABEL, type ReviewedUserType } from '@/lib/accountTypes';
 import { trackOnboardingGuestGateShown, trackOnboardingStarted } from '@/lib/analytics';
 import { sanitizeReturnPath } from '@/lib/authRedirect';
 import { getGuestSession, saveGuestSnapshot } from '@/lib/guestOnboarding';
+import { readToolHandoff } from '@/lib/toolHandoff';
 import type { OnboardingAnswersV1 } from '@/lib/onboardingContext';
 
 type Gate = { title: string; description: string; returnPath: string };
@@ -25,7 +26,9 @@ type Gate = { title: string; description: string; returnPath: string };
 export default function StartOnboarding() {
   const { isAuthenticated, loading } = useAuth();
   const [searchParams] = useSearchParams();
-  const [session] = useState(getGuestSession);
+  // A homepage submission newer than the stored guest quiz starts a fresh one;
+  // a plain refresh keeps the draft.
+  const [session] = useState(() => getGuestSession({ startedAfter: readToolHandoff()?.savedAt }));
   const [gate, setGate] = useState<Gate | null>(null);
   const trackedRef = useRef(false);
 
@@ -90,7 +93,7 @@ export default function StartOnboarding() {
         <title>Get started | Creatives Takeover</title>
         <meta name="description" content="Answer a few questions and get a plan for your idea or product." />
       </Helmet>
-      <HomeWallpaper />
+      <OnboardingWallpaper />
       <div className="relative flex min-h-screen items-center justify-center px-4 py-8 sm:py-12">
         <div className="mx-auto w-full max-w-4xl animate-fade-in-up">
           <AdaptiveOnboardingForm
