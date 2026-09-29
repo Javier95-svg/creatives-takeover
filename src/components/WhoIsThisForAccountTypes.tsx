@@ -1,15 +1,13 @@
-import { useState, type LucideIcon } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
-  BarChart3,
   BriefcaseBusiness,
   GraduationCap,
   Hammer,
   Handshake,
-  Lightbulb,
-  MessageCircle,
   Rocket,
+  type LucideIcon,
 } from "lucide-react";
 
 import {
@@ -27,11 +25,9 @@ const ROLE_ICONS: Record<AccountTypeId, LucideIcon> = {
   investor: Handshake,
 };
 
-const JOURNEY = [
-  { label: "Idea", icon: Lightbulb },
-  { label: "Ask people", icon: MessageCircle },
-  { label: "Build", icon: Hammer },
-  { label: "Grow", icon: BarChart3 },
+const ACCESS_GROUPS = [
+  { access: "open", title: "Open to join" },
+  { access: "invitation", title: "Invitation only" },
 ] as const;
 
 type Props = {
@@ -45,39 +41,42 @@ export function WhoIsThisForAccountTypes({ onJoin, onShowPreBuild }: Props) {
 
   return (
     <section aria-labelledby="account-types-heading" className="px-5 py-4 sm:px-8 sm:py-5">
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-800 via-indigo-800 to-violet-800 p-4 text-white sm:p-6">
-        <div className="pointer-events-none absolute -right-12 -top-20 h-52 w-52 rounded-full bg-cyan-300/20 blur-3xl" />
-        <div className="relative grid items-center gap-4 lg:grid-cols-[1fr_0.9fr]">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-100">A place to turn ideas into progress</p>
-            <h3 id="account-types-heading" className="mt-2 max-w-xl font-space-grotesk text-xl font-semibold leading-tight sm:text-3xl">
-              Bring your idea. Find out what to do next.
-            </h3>
-            <p className="mt-2 max-w-xl text-sm leading-5 text-blue-50 sm:text-base sm:leading-6">
-              Creatives Takeover gives you tools to test an idea, a place to save your work, and people who can help.
-            </p>
-          </div>
-          <div aria-label="From idea to growth" className="grid grid-cols-4 gap-1 rounded-2xl border border-white/20 bg-white/10 p-2 backdrop-blur-sm sm:grid-cols-4 sm:gap-2 sm:p-4">
-            {JOURNEY.map((step, index) => {
-              const Icon = step.icon;
-              return (
-                <div key={step.label} className="relative flex flex-col items-center text-center">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-slate-950/50 sm:h-12 sm:w-12">
-                    <Icon className="h-5 w-5" aria-hidden="true" />
-                  </div>
-                  <span className="mt-2 text-[10px] font-semibold sm:text-xs">{step.label}</span>
-                  {index < JOURNEY.length - 1 && <ArrowRight className="absolute -right-2 top-3 h-4 w-4 text-white/70" aria-hidden="true" />}
-                </div>
-              );
-            })}
-          </div>
+      <div className="grid overflow-hidden rounded-3xl border border-border/70 bg-card lg:grid-cols-[1fr_0.9fr]">
+        <div className="border-l-4 border-primary p-4 sm:p-6">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">A place to turn ideas into progress</p>
+          <h3 id="account-types-heading" className="mt-2 max-w-xl font-space-grotesk text-xl font-semibold leading-tight text-foreground sm:text-3xl">
+            Bring your idea. Find out what to do next.
+          </h3>
+          <p className="mt-2 max-w-xl text-sm leading-5 text-muted-foreground sm:text-base sm:leading-6">
+            Creatives Takeover gives you tools to test an idea, a place to save your work, and people who can help.
+          </p>
+        </div>
+        <div aria-label="How accounts open" className="grid grid-cols-2 border-t border-border/70 bg-muted/40 lg:border-l lg:border-t-0">
+          {ACCESS_GROUPS.map((group) => (
+            <div key={group.access} className="p-4 [&:not(:first-child)]:border-l [&:not(:first-child)]:border-border/70 sm:p-5">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">{group.title}</p>
+              <ul className="mt-3 space-y-2">
+                {WHO_IS_THIS_FOR_ACCOUNT_TYPES.filter((account) => account.access === group.access).map((account) => {
+                  const Icon = ROLE_ICONS[account.id];
+                  return (
+                    <li key={account.id} className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <Icon className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                      {account.label}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
         </div>
       </div>
 
       <div className="mt-4 flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h4 className="font-space-grotesk text-lg font-semibold text-foreground">Pick the part that sounds like you</h4>
-          <p className="mt-1 text-sm text-muted-foreground">Tap a card to see what happens when you join.</p>
+        <div className="max-w-2xl">
+          <h4 className="font-space-grotesk text-lg font-semibold text-foreground">Account types at Creatives Takeover</h4>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Everyone uses the same platform, and your account type decides what you see. Founders and builders work on their own projects. Mentors and marketplace providers help them. Investors find projects to back.
+          </p>
         </div>
         <button type="button" onClick={onShowPreBuild} className="inline-flex items-center text-sm font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           See the pre-build path <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
