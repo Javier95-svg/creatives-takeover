@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildPublicPlatformBrief } from '../src/lib/publicPlatformFacts.ts';
+import { buildPublicPlatformBrief, extractPublicPulseLinks, PUBLIC_PULSE_LINKS } from '../src/lib/publicPlatformFacts.ts';
 import { WHO_IS_THIS_FOR_ACCOUNT_TYPES, WHO_IS_THIS_FOR_PROFILES } from '../src/components/whoIsThisForProfiles.ts';
 import { PLAN_PRICING } from '../src/config/pricing.ts';
 
@@ -33,6 +33,18 @@ test('the public brief quotes the prices from the pricing config', () => {
 
 test('the public brief does not sell the platform as an AI product', () => {
   assert.match(brief, /Do not describe the platform as an AI product/);
-  const withoutRules = brief.slice(0, brief.indexOf('How to answer:'));
+  const withoutRules = brief.slice(0, brief.indexOf('How to answer'));
   assert.doesNotMatch(withoutRules, /\bAI\b/);
+});
+
+test('reply links become at most two cards, only for allowed pages', () => {
+  const reply = 'Start with the [ICP Builder](/icp-builder), then [Demo Studio](/demo-studio/try?x=1). See [Pricing](/pricing) or [this](https://evil.example) and [again](/icp-builder).';
+  assert.deepEqual(extractPublicPulseLinks(reply).map((link) => link.route), ['/icp-builder', '/demo-studio/try']);
+  assert.deepEqual(extractPublicPulseLinks('Try [admin](/admin) or [x](https://x.example)'), []);
+  for (const link of PUBLIC_PULSE_LINKS) assert.ok(brief.includes(`[${link.title}](${link.route})`), link.route);
+});
+
+test('the public brief asks for short replies with links', () => {
+  assert.match(brief, /at most 60 words/);
+  assert.match(brief, /1 or 2 markdown links/);
 });

@@ -8,8 +8,10 @@ import { streamChat } from '@/hooks/useStreamingChat';
 import { getPulseRouteContext } from '@/config/pulseRoutes';
 import { pulseScope } from '@/lib/pulseScope';
 import type { PulseHomeMessage } from '@/lib/pulseHome';
+import { extractPublicPulseLinks, type PublicPulseLink } from '@/lib/publicPlatformFacts';
 
-export interface PulseMessage extends PulseHomeMessage { timestamp?: Date }
+// links: page cards under a signed-out reply, taken from the pages it links to.
+export interface PulseMessage extends PulseHomeMessage { timestamp?: Date; links?: PublicPulseLink[] }
 
 export const usePulseWidget = () => {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
@@ -67,7 +69,12 @@ export const usePulseWidget = () => {
         chunk => { if (alive()) setGuestMessages(previous => previous.map(message => message.id === assistantId ? { ...message, content: message.content + chunk } : message)); },
         () => {}, undefined, fail);
     } catch { fail(); }
-    finally { if (alive()) { guestBusy.current = false; setGuestStreaming(false); } }
+    finally {
+      if (alive()) {
+        guestBusy.current = false; setGuestStreaming(false);
+        setGuestMessages(previous => previous.map(message => message.id === assistantId ? { ...message, links: extractPublicPulseLinks(message.content) } : message));
+      }
+    }
   }, [isAuthenticated, sendVerified, loaded, guestMessages, location.pathname, identity]);
   const getQuickReplies = useCallback(() => {
     // First-visit questions, answered from the public fact sheet (src/lib/publicPlatformFacts.ts).

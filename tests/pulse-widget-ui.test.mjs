@@ -12,7 +12,7 @@ const mocks = {
   '@/contexts/AuthContext': `export const useAuth=()=>({user:window.signedIn?{id:window.userId,user_metadata:{}}:null,isAuthenticated:window.signedIn,loading:false});`,
   '@/hooks/useProjects': `export const useProjects=()=>({activeProjectId:window.project,activeProject:{title:window.projectName}});`,
   '@/hooks/useAccountContext': `export const useAccountContext=()=>({userType:window.role,hasCategoryAccess:window.categoryAccess});`,
-  'react-router-dom': `export const useLocation=()=>({pathname:window.page});`,
+  'react-router-dom': `export const useLocation=()=>({pathname:window.page});export const useNavigate=()=>()=>{};`,
   '@/hooks/useStreamingChat': `export const streamChat=async(...args)=>{window.guestCalls++;window.guestChunk=args[9];};`,
   '@/services/pulseHomeStream': `export const streamPulseHome=args=>{window.streams.push(args);if(window.failStream)return Promise.reject(new Error('Synthetic interruption'));return new Promise((resolve,reject)=>{window.finish=resolve;args.signal.addEventListener('abort',()=>reject(new Error('aborted')));});};`,
   '@/integrations/supabase/client': `export const supabase={schema:()=>({from(table){

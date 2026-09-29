@@ -18,6 +18,31 @@ const PLAN_COPY = [
   { id: 'pro', name: 'Pro', outcome: 'Accelerate and Fundraise' },
 ] as const;
 
+export type PublicPulseLink = { route: string; title: string; reason: string };
+
+// The only pages signed-out Pulse may link to. Each one becomes a card under the reply,
+// like the action cards in signed-in Pulse.
+export const PUBLIC_PULSE_LINKS: readonly PublicPulseLink[] = [
+  { route: '/start', title: 'Take the quick quiz', reason: 'A few questions, then your stage and first step.' },
+  ...WHO_IS_THIS_FOR_PROFILES.flatMap((profile) => profile.tools.map((tool) => ({ route: tool.href, title: tool.name, reason: tool.description }))),
+  { route: '/pricing', title: 'Pricing', reason: 'Compare the free plan and paid plans.' },
+  { route: '/mentorship', title: 'Mentorship', reason: 'Meet mentors who help people building a business.' },
+  { route: '/marketplace', title: 'Marketplace', reason: 'Find help with design, marketing or technology.' },
+  { route: '/signup', title: 'Create a free account', reason: 'Save your work and pick up where you left off.' },
+  { route: '/about', title: 'About Creatives Takeover', reason: 'Who we are and why we built it.' },
+];
+
+/** Cards for the allowed pages a reply links to, in order, at most two. */
+export function extractPublicPulseLinks(content: string): PublicPulseLink[] {
+  const found: PublicPulseLink[] = [];
+  for (const [, route] of content.matchAll(/\]\((\/[^)\s]*)\)/g)) {
+    const link = PUBLIC_PULSE_LINKS.find((candidate) => candidate.route === route.replace(/[?#].*$/, ''));
+    if (link && !found.includes(link)) found.push(link);
+    if (found.length === 2) break;
+  }
+  return found;
+}
+
 function planLine({ id, name, outcome }: (typeof PLAN_COPY)[number]) {
   const price = PLAN_PRICING[id];
   const cost = price.monthly === 0 ? 'free' : `$${price.monthly}/month or $${price.yearly}/year`;
@@ -52,9 +77,14 @@ How to start:
 - Type your idea (Idea mode) or what you are building (Product mode) in the box on the homepage. You answer a few quick questions, get a plan with your stage and a first step, then create a free account to save it.
 - Mentors and marketplace providers need an invitation. Investors can join; matching opens after review.
 
-How to answer:
+Pages you can link to (use these exact paths, nothing else):
+${PUBLIC_PULSE_LINKS.map((link) => `- [${link.title}](${link.route}): ${link.reason}`).join('\n')}
+
+How to answer (these rules replace the length and style rules above):
+- Very short: 1-3 sentences, at most 60 words. A list only when naming account types or plans, 5 bullets max, one line each. No headings.
+- Always include 1 or 2 markdown links to the pages above, written inline, e.g. "Start with the [ICP Builder](/icp-builder)." They become buttons under your reply. Never write bare URLs.
+- To get started, link to [Take the quick quiz](/start) rather than sign-up; link [Create a free account](/signup) only when asked about accounts.
 - Lead with outcomes for the person (test an idea, find customers, launch, grow), not with technology. Do not describe the platform as an AI product or lead with AI.
 - Match the visitor: someone with an idea gets the pre-build path, someone with a live product gets the post-launch path.
-- Keep it short: 50-120 words, plain language, and end with one concrete next step (usually the homepage box, a tool link, or /pricing).
-- If something is not in these facts, say you are not sure and point to /pricing or /about. Never invent features, numbers, customers or testimonials.`;
+- If something is not in these facts, say you are not sure and link to [Pricing](/pricing) or [About Creatives Takeover](/about). Never invent features, numbers, customers or testimonials.`;
 }
