@@ -32,6 +32,10 @@
 .pulse-home .pulse-home-composer { position: relative; padding: 1.375rem 1.5rem; border: 1px solid transparent; border-radius: 1.5rem; background: linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box, linear-gradient(120deg, hsl(var(--primary) / .65), hsl(var(--accent-teal) / .45) 55%, hsl(var(--border)) 100%) border-box; box-shadow: 0 0 0 1px hsl(var(--primary) / .06), 0 20px 60px -28px hsl(var(--primary) / .45), 0 10px 40px -30px hsl(var(--accent-teal) / .35); transition: box-shadow .2s; }
 .pulse-home .pulse-home-composer:focus-within { box-shadow: 0 0 0 4px hsl(var(--accent-teal) / .14), 0 24px 70px -26px hsl(var(--primary) / .55), 0 10px 40px -24px hsl(var(--accent-teal) / .4); }
 .pulse-home:not(.pulse-home--chat) .pulse-home-composer textarea { font-size: 1.25rem; }
+/* A faint glow around the edge that breathes slowly, brighter while typing. */
+.pulse-home .pulse-home-composer::before { content: ''; position: absolute; inset: -2px; z-index: -1; border-radius: inherit; background: linear-gradient(120deg, hsl(var(--primary)), hsl(var(--accent-teal)) 60%, hsl(var(--primary) / .4)); filter: blur(10px); opacity: .22; pointer-events: none; animation: pulse-home-edge-glow 4s ease-in-out infinite; transition: opacity .3s; }
+.pulse-home .pulse-home-composer:focus-within::before { opacity: .42; animation: none; }
+@keyframes pulse-home-edge-glow { 50% { opacity: .38; } }
 .pulse-home-status-live { background: hsl(var(--accent-teal)); box-shadow: 0 0 0 3px hsl(var(--accent-teal) / .2); }
 .pulse-home-input-row { display: flex; align-items: flex-start; gap: .875rem; }
 .pulse-home .pulse-home-composer textarea { min-height: 1.75rem; max-height: 180px; overflow-y: auto; font-size: 1.125rem; line-height: 1.5; }
@@ -85,4 +89,4 @@
 @keyframes pulse-home-reveal { from { opacity: 0; transform: translateY(.5rem); } to { opacity: 1; transform: translateY(0); } }
 @media (max-height: 800px) { .pulse-home:not(.pulse-home--chat) .pulse-home-column { padding-top: 2rem; } }
 @container (max-width: 640px) { .pulse-home .pulse-home-headline { font-size: clamp(2.5rem, 11cqw, 3.5rem); } .pulse-home:not(.pulse-home--chat) .pulse-home-column { padding-top: 2.5rem; } }
-@media (prefers-reduced-motion: reduce) { .pulse-home-glow, .pulse-home .pulse-home-headline, .pulse-home-focus-dot { animation: none; will-change: auto; } }
+@media (prefers-reduced-motion: reduce) { .pulse-home-glow, .pulse-home .pulse-home-headline, .pulse-home-focus-dot, .pulse-home .pulse-home-composer::before { animation: none; will-change: auto; } }
