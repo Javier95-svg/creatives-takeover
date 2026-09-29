@@ -178,6 +178,27 @@
       "sourceFile": "src/lib/analytics.ts",
       "requiredProperties": ["segment", "auto_finished"]
     },
+    "pulse_guest_opened": {
+      "stage": "acquisition",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["page_path"]
+    },
+    "pulse_guest_question_asked": {
+      "stage": "acquisition",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["question_id", "answer_source"]
+    },
+    "pulse_guest_link_clicked": {
+      "stage": "acquisition",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["route", "destination"]
+    },
     "finish_setup_prompt_shown": {
       "stage": "onboarding",
       "owner": "product",
@@ -708,6 +729,19 @@
         "onboarding_completed"
       ],
       "breakdowns": ["segment", "reason"]
+    },
+    {
+      "key": "guest_pulse_to_quiz",
+      "name": "Signed-out Pulse to the guest quiz",
+      "windowDays": 7,
+      "steps": [
+        "pulse_guest_opened",
+        "pulse_guest_question_asked",
+        "pulse_guest_link_clicked",
+        "onboarding_started",
+        "onboarding_guest_gate_shown"
+      ],
+      "breakdowns": ["question_id", "route"]
     },
     {
       "key": "tool_first_setup",

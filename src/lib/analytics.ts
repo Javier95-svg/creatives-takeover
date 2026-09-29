@@ -830,7 +830,26 @@ export const trackOnboardingGuestResumed = (properties: {
   auto_finished: boolean;
 } & AnalyticsProperties) => captureEvent('onboarding_guest_resumed', properties);
 
-export type FinishSetupSurface = 'icp_result' | 'demo_project' | 'dashboard';
+/** A signed-out visitor opened Pulse. */
+export const trackPulseGuestOpened = (properties: { page_path: string } & AnalyticsProperties) =>
+  captureEvent('pulse_guest_opened', properties);
+
+/**
+ * A signed-out visitor asked Pulse something. `question_id` names the starter
+ * or follow-up button; typed questions are 'typed' and their text is never sent.
+ */
+export const trackPulseGuestQuestionAsked = (properties: {
+  question_id: string;
+  answer_source: 'prewritten' | 'model';
+} & AnalyticsProperties) => captureEvent('pulse_guest_question_asked', properties);
+
+/** A signed-out visitor clicked a page card or link in a Pulse reply. */
+export const trackPulseGuestLinkClicked = (properties: {
+  route: string;
+  destination: string;
+} & AnalyticsProperties) => captureEvent('pulse_guest_link_clicked', properties);
+
+export type FinishSetupSurface ='icp_result' | 'demo_project' | 'dashboard';
 
 /** The "Finish setting up your workspace" card for tool-first accounts. */
 export const trackFinishSetupPrompt = (

@@ -8,10 +8,40 @@ import { streamChat } from '@/hooks/useStreamingChat';
 import { getPulseRouteContext } from '@/config/pulseRoutes';
 import { pulseScope } from '@/lib/pulseScope';
 import type { PulseHomeMessage } from '@/lib/pulseHome';
-import { extractPublicPulseLinks, type PublicPulseLink } from '@/lib/publicPlatformFacts';
+import { trackPulseGuestOpened, trackPulseGuestQuestionAsked } from '@/lib/analytics';
+import {
+  extractPublicPulseLinks, findPublicPulseQuestion, publicPulseFollowUps, PUBLIC_PULSE_STARTERS, type PublicPulseLink,
+} from '@/lib/publicPlatformFacts';
 
-// links: page cards under a signed-out reply, taken from the pages it links to.
-export interface PulseMessage extends PulseHomeMessage { timestamp?: Date; links?: PublicPulseLink[] }
+// guest: a signed-out reply, whose links go through followPublicPulseLink.
+// links: page cards under that reply, taken from the pages it links to.
+export interface PulseMessage extends PulseHomeMessage { timestamp?: Date; guest?: boolean; links?: PublicPulseLink[] }
+
+const GUEST_CHAT_KEY = 'ct_pulse_guest_chat';
+
+function readGuestChat(): PulseMessage[] {
+  try {
+    const parsed: unknown = JSON.parse(sessionStorage.getItem(GUEST_CHAT_KEY) ?? '[]');
+    if (!Array.isArray(parsed)) return [];
+    // Only text is kept; cards are rebuilt from it, so stored data cannot add links.
+    return parsed.flatMap((item): PulseMessage[] => {
+      if (!item || typeof item !== 'object') return [];
+      const { id, role, content } = item as Record<string, unknown>;
+      if (typeof id !== 'string' || (role !== 'user' && role !== 'assistant') || typeof content !== 'string' || !content) return [];
+      return [role === 'assistant' ? { id, role, content, guest: true, links: extractPublicPulseLinks(content) } : { id, role, content }];
+    }).slice(-30);
+  } catch { return []; }
+}
+
+function saveGuestChat(messages: PulseMessage[]) {
+  try {
+    sessionStorage.setItem(GUEST_CHAT_KEY, JSON.stringify(messages.slice(-30).map(({ id, role, content }) => ({ id, role, content }))));
+  } catch { /* storage unavailable: the chat just is not kept */ }
+}
+
+function clearGuestChat() {
+  try { sessionStorage.removeItem(GUEST_CHAT_KEY); } catch { /* nothing to clear */ }
+}
 
 export const usePulseWidget = () => {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
@@ -37,11 +67,16 @@ export const usePulseWidget = () => {
   const guestBusy = useRef(false);
   const identity = `${user?.id ?? 'guest'}:${scope.userType}:${scope.projectId}`;
   const identityRef = useRef(identity); identityRef.current = identity;
+  const isGuestIdentity = !user;
   useEffect(() => {
     const generation = ++guestEpoch.current; guestBusy.current = false;
-    setGuestMessages([]); setGuestStreaming(false); setGuestError(''); guestSession.current = crypto.randomUUID();
+    // A signed-out chat survives pages where Pulse is hidden (such as the quiz);
+    // signing in drops it.
+    setGuestMessages(isGuestIdentity ? readGuestChat() : []); setGuestStreaming(false); setGuestError(''); guestSession.current = crypto.randomUUID();
+    if (!isGuestIdentity) clearGuestChat();
     return () => { guestEpoch.current = generation + 1; };
-  }, [identity]);
+  }, [identity, isGuestIdentity]);
+  useEffect(() => { if (isGuestIdentity && !guestStreaming) saveGuestChat(guestMessages); }, [isGuestIdentity, guestStreaming, guestMessages]);
   const proactiveMessage = !isAuthenticated
     ? "Hi, I'm Pulse. Ask me anything about Creatives Takeover: who it's for, where to start, or what it costs."
     : founder && route ? `I can help with ${route.toolName}. What are you working through?` : 'Welcome back. What would you like help with today?';
@@ -51,16 +86,28 @@ export const usePulseWidget = () => {
     return () => clearTimeout(timer);
   }, [loaded, identity]);
   const dismissProactive = useCallback(() => { setProactiveVisible(false); sessionStorage.setItem('pulse_proactive_dismissed', 'true'); }, []);
-  const openPanel = useCallback(() => { setIsOpen(true); setActiveTab('chat'); dismissProactive(); }, [dismissProactive]);
+  const openPanel = useCallback(() => {
+    setIsOpen(true); setActiveTab('chat'); dismissProactive();
+    if (!isAuthenticated) trackPulseGuestOpened({ page_path: location.pathname });
+  }, [dismissProactive, isAuthenticated, location.pathname]);
   const closePanel = useCallback(() => setIsOpen(false), []);
   const sendMessage = useCallback(async (text: string) => {
     if (isAuthenticated) { await sendVerified(text); return; }
     if (!loaded || !text.trim() || guestBusy.current) return;
+    const question = findPublicPulseQuestion(text);
+    trackPulseGuestQuestionAsked({ question_id: question?.id ?? 'typed', answer_source: question ? 'prewritten' : 'model' });
+    if (question) {
+      // Fixed questions get their written answer at once, with no model call.
+      setGuestError('');
+      setGuestMessages(previous => [...previous, { id: crypto.randomUUID(), role: 'user', content: question.text },
+        { id: crypto.randomUUID(), role: 'assistant', content: question.answer, links: extractPublicPulseLinks(question.answer), guest: true }]);
+      return;
+    }
     guestBusy.current = true; setGuestStreaming(true); setGuestError('');
     const generation = guestEpoch.current;
     const alive = () => generation === guestEpoch.current && identityRef.current === identity;
     const assistantId = crypto.randomUUID();
-    setGuestMessages(previous => [...previous, { id: crypto.randomUUID(), role: 'user', content: text.trim() }, { id: assistantId, role: 'assistant', content: '' }]);
+    setGuestMessages(previous => [...previous, { id: crypto.randomUUID(), role: 'user', content: text.trim() }, { id: assistantId, role: 'assistant', content: '', guest: true }]);
     const fail = () => { if (alive()) setGuestError('Pulse was interrupted. Please send your question again.'); };
     try {
       // Public product guidance has no saved user context and retains its existing flow.
@@ -77,8 +124,13 @@ export const usePulseWidget = () => {
     }
   }, [isAuthenticated, sendVerified, loaded, guestMessages, location.pathname, identity]);
   const getQuickReplies = useCallback(() => {
-    // First-visit questions, answered from the public fact sheet (src/lib/publicPlatformFacts.ts).
-    if (!isAuthenticated) return ['Who is Creatives Takeover for?', 'I have an idea. Where do I start?', 'I already have a product. How can it help?', 'Is it free? What does it cost?'];
+    // Signed out: the starter questions, then up to two not asked yet after each reply
+    // (src/lib/publicPlatformFacts.ts).
+    if (!isAuthenticated) {
+      return guestMessages.length
+        ? publicPulseFollowUps(guestMessages.filter(message => message.role === 'user').map(message => message.content))
+        : PUBLIC_PULSE_STARTERS;
+    }
     if (account.hasCategoryAccess) {
       if (account.userType === 'mentor') return ['Which bookings need my attention?', 'Help me prepare for a session', 'Recommend an article'];
       if (account.userType === 'marketplace') return ['Who has reached out recently?', 'Help me qualify an enquiry', 'Improve my service offering'];
@@ -88,7 +140,7 @@ export const usePulseWidget = () => {
     if (account.userType === 'marketplace') return ['Sharpen my service offering', 'Clarify my ideal customer', 'Recommend an article'];
     if (account.userType === 'investor') return ['Review my investment focus', 'Recommend relevant content', 'Help me define screening criteria'];
     return ['What should I focus on?', 'Use my project context', 'Suggest next step'];
-  }, [isAuthenticated, account.userType, account.hasCategoryAccess]);
+  }, [isAuthenticated, account.userType, account.hasCategoryAccess, guestMessages]);
   const messages = isAuthenticated ? conversation.messages : guestMessages;
   return {
     isOpen, activeTab, setActiveTab, openPanel, closePanel, proactiveMessage, proactiveVisible, dismissProactive,

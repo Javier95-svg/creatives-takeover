@@ -13,6 +13,7 @@ const mocks = {
   '@/hooks/useProjects': `export const useProjects=()=>({activeProjectId:window.project,activeProject:{title:window.projectName}});`,
   '@/hooks/useAccountContext': `export const useAccountContext=()=>({userType:window.role,hasCategoryAccess:window.categoryAccess});`,
   'react-router-dom': `export const useLocation=()=>({pathname:window.page});export const useNavigate=()=>()=>{};`,
+  '@/lib/analytics': `const log=(event)=>(properties)=>(window.events=window.events||[]).push({event,...properties});export const trackPulseGuestOpened=log('pulse_guest_opened');export const trackPulseGuestQuestionAsked=log('pulse_guest_question_asked');export const trackPulseGuestLinkClicked=log('pulse_guest_link_clicked');`,
   '@/hooks/useStreamingChat': `export const streamChat=async(...args)=>{window.guestCalls++;window.guestChunk=args[9];};`,
   '@/services/pulseHomeStream': `export const streamPulseHome=args=>{window.streams.push(args);if(window.failStream)return Promise.reject(new Error('Synthetic interruption'));return new Promise((resolve,reject)=>{window.finish=resolve;args.signal.addEventListener('abort',()=>reject(new Error('aborted')));});};`,
   '@/integrations/supabase/client': `export const supabase={schema:()=>({from(table){
@@ -102,4 +103,34 @@ test('approved role shortcuts and activity source links use the matching workspa
     w.role='mentor';w.categoryAccess=false;w.render();await waitFor(()=>/expertise/.test(w.widget.getQuickReplies()[0]),'pending mentor guidance');
     assert.doesNotMatch(w.widget.getQuickReplies().join(' '),/bookings/);
   } finally {close(dom);}
+});
+
+test('signed-out Pulse answers starter questions at once, offers follow-ups, and keeps the chat across pages', async () => {
+  const dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost', runScripts: 'dangerously', pretendToBeVisual: true });
+  const w = dom.window; w.crypto.randomUUID = randomUUID;
+  Object.assign(w, { signedIn: false, page: '/', scopes: [], streams: [], guestCalls: 0, events: [] });
+  if (!bundle) { const first = await mount(); close(first); }
+  w.eval(bundle); await waitFor(() => w.widget && !w.widget.loading, 'guest widget mounted');
+  w.widget.openPanel();
+  await waitFor(() => w.widget.isOpen, 'panel open');
+  assert.equal(JSON.stringify(w.widget.getQuickReplies()), JSON.stringify(['Who is Creatives Takeover for?', 'I have an idea. Where do I start?', 'I already have a product. How can it help?', 'Is it free? What does it cost?']));
+  await w.widget.sendMessage('I have an idea. Where do I start?');
+  await waitFor(() => w.widget.messages.length === 2, 'written answer shown');
+  assert.equal(w.guestCalls, 0, 'a starter question makes no model call');
+  const reply = w.widget.messages[1];
+  assert.equal(reply.guest, true);
+  assert.equal(JSON.stringify(reply.links.map(link => link.destination)), JSON.stringify(['/start?return=%2Ficp-builder', '/start?return=%2Fdemo-studio%2Ftry']));
+  assert.equal(JSON.stringify(w.widget.getQuickReplies()), JSON.stringify(['How do I get started?', 'Is it free? What does it cost?']));
+  assert.equal(JSON.stringify(w.events.map(event => event.event)), JSON.stringify(['pulse_guest_opened', 'pulse_guest_question_asked']));
+  assert.equal(w.events[1].question_id, 'idea');
+  await w.widget.sendMessage('Do you work with agencies?');
+  assert.equal(w.guestCalls, 1, 'a typed question goes to the model');
+  assert.equal(w.events[2].question_id, 'typed');
+  w.root.unmount();
+  // Pulse is hidden on some pages (the quiz); coming back restores the chat.
+  const again = w.document.createElement('div'); again.id = 'root'; w.document.body.replaceChildren(again);
+  w.widget = null; w.eval(bundle);
+  await waitFor(() => w.widget && w.widget.messages.length >= 2 && w.widget.messages[1].links?.length === 2, 'guest chat restored');
+  assert.equal(w.widget.messages[0].content, 'I have an idea. Where do I start?');
+  w.root.unmount(); w.close();
 });

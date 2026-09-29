@@ -1,4 +1,4 @@
-import type { MouseEvent } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +7,8 @@ import remarkGfm from 'remark-gfm';
 import type { PulseMessage } from '@/hooks/usePulseWidget';
 import { PulseSources } from './PulseSources';
 import { validateHomeActions } from '@/lib/pulseHome';
+import { findPublicPulseLink, type PublicPulseLink } from '@/lib/publicPlatformFacts';
+import { followPublicPulseLink } from '@/lib/publicPulseNavigation';
 
 interface PulseMessageBubbleProps {
   message: PulseMessage;
@@ -19,6 +21,15 @@ export const PulseMessageBubble = ({ message, isStreaming }: PulseMessageBubbleP
   const openInApp = (event: MouseEvent<HTMLAnchorElement>, route: string) => {
     if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0) return;
     event.preventDefault(); navigate(route);
+  };
+  // Tracks the click and prepares the quiz hand-off, then opens the page in the same tab.
+  const openGuestLink = (event: MouseEvent<HTMLAnchorElement>, link: PublicPulseLink) => {
+    openInApp(event, followPublicPulseLink(link));
+  };
+  const renderGuestLink = (href: string | undefined, children: ReactNode) => {
+    const link = findPublicPulseLink(href);
+    if (!link) return <span>{children}</span>;
+    return <a className="font-medium underline underline-offset-2" href={link.destination} onClick={event => openGuestLink(event, link)}>{children}</a>;
   };
 
   return (
@@ -48,7 +59,10 @@ export const PulseMessageBubble = ({ message, isStreaming }: PulseMessageBubbleP
               ol: ({ children }) => <ol className="mb-2 ml-4 list-decimal space-y-1 last:mb-0">{children}</ol>,
               li: ({ children }) => <li>{children}</li>,
               strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-              a: ({ children, href }) => href?.startsWith('/') ? (
+              a: ({ children, href }) => message.guest ? (
+                // Signed-out replies only link to the public pages list; anything else stays plain text.
+                renderGuestLink(href, children)
+              ) : href?.startsWith('/') ? (
                 // Site pages open in the same tab, like the cards below the reply.
                 <a className="font-medium underline underline-offset-2" href={href} onClick={event => openInApp(event, href)}>
                   {children}
@@ -72,7 +86,7 @@ export const PulseMessageBubble = ({ message, isStreaming }: PulseMessageBubbleP
         )}
         {!isUser && <>
           {validateHomeActions(message.actions).map(action => <a key={action.id} href={action.route} className="mt-2 block rounded-lg border border-border p-2 hover:bg-background"><span className="block font-medium">{action.title}</span><span className="block text-xs text-muted-foreground">{action.reason}</span></a>)}
-          {message.links?.map(link => <a key={link.route} href={link.route} onClick={event => openInApp(event, link.route)} className="mt-2 flex items-center gap-2 rounded-lg border border-border p-2 transition-colors hover:border-primary/60 hover:bg-background"><span className="min-w-0 flex-1"><span className="block font-medium">{link.title}</span><span className="block text-xs text-muted-foreground">{link.reason}</span></span><ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" /></a>)}
+          {message.links?.map(link => <a key={link.route} href={link.destination} onClick={event => openGuestLink(event, link)} className="mt-2 flex items-center gap-2 rounded-lg border border-border p-2 transition-colors hover:border-primary/60 hover:bg-background"><span className="min-w-0 flex-1"><span className="block font-medium">{link.title}</span><span className="block text-xs text-muted-foreground">{link.reason}</span></span><ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" /></a>)}
           <PulseSources sources={message.sources} />
         </>}
       </div>
