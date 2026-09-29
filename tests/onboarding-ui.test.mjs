@@ -107,6 +107,38 @@ test('mentor typing, draft reload, submission and workspace continuation',async(
   }finally{dom.window.close();}
 });
 
+test('founder finishes in six screens and the fundraising follow-up stays visible',async()=>{
+  const dom=await mount();try{
+    await choose(dom,'Founder');
+    assert.ok(text(dom).includes('2 of 6'));
+    const area=dom.window.document.querySelector('textarea');
+    const setter=Object.getOwnPropertyDescriptor(dom.window.HTMLTextAreaElement.prototype,'value').set;
+    setter.call(area,'We help agencies turn client calls into clear project briefs.');area.dispatchEvent(new dom.window.Event('input',{bubbles:true}));await tick();
+    await type(dom,field(dom,'What is your project called?'),'Acme');
+    await click(dom,'Continue');
+    assert.ok(text(dom).includes('3 of 6'));
+    assert.ok(text(dom).includes('How does this business make money?'));
+    assert.ok(text(dom).includes('What is the strongest customer evidence you have?'));
+    await click(dom,'B2B SaaS');await click(dom,'No external evidence yet');await click(dom,'Continue');
+    assert.ok(text(dom).includes('4 of 6'));
+    await click(dom,'Win the first paying customer');await click(dom,'Fundraising preparation');
+    assert.ok(text(dom).includes('Where is fundraising today?'));
+    await click(dom,'Talking to investors');
+    // Answering must not hide the question it answered.
+    assert.ok(text(dom).includes('Where is fundraising today?'));
+    await click(dom,'Continue');
+    assert.ok(text(dom).includes('5 of 6'));
+    await click(dom,'About 5 hours');await click(dom,'Not spending money on this yet');await click(dom,'Continue');
+    assert.ok(text(dom).includes('6 of 6'));
+    assert.ok(text(dom).includes('Your plan is ready'));
+    // Labels, never stored codes.
+    assert.ok(text(dom).includes('Win the first paying customer'));
+    assert.ok(!text(dom).includes('win first customer'));
+    await click(dom,'Start:');
+    assert.equal(dom.window.completedRoute,'/');
+  }finally{close(dom);}
+});
+
 test('builder accepts no working title and offers uncertainty in business model',async()=>{
   const dom=await mount();try{
     await choose(dom,'Builder');await click(dom,'Exploring problems');

@@ -1,5 +1,5 @@
 import { ONBOARDING_SITUATIONS, classifyOnboardingSituation, situationForUserType } from '@/lib/onboardingClassification';
-import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { ArrowLeft, ArrowRight, Check, ChevronDown, Info, Loader2, Lock, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
@@ -66,7 +66,9 @@ import { clearIntendedAccountType, readIntendedAccountType } from '@/lib/intende
 import { cn } from '@/lib/utils';
 import { trackOnboardingStepCompleted } from '@/lib/analytics';
 
-const CORE_STEPS = 7;
+// Brief, business and evidence, goal and blocker, time and runway, review. The
+// situation question is shown before these, so founders see six screens.
+const CORE_STEPS = 5;
 const AVAILABLE_INTENTS: ActivationIntent[] = [
   'find_mentor',
   'build_demo',
@@ -200,10 +202,8 @@ function stepNameFor(visibleStep: number, segment: string) {
   return [
     'About you',
     segment === 'builder' ? 'Your idea' : 'Your project',
-    'Business model',
-    'Customer evidence',
-    '30-day goal',
-    'Main blocker',
+    'Business and customers',
+    'Goal and blocker',
     'Time and runway',
     'Final review',
   ][visibleStep - 1] ?? '';
@@ -532,22 +532,18 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
       if (answers.founderSegment === 'builder' && !answers.builderStartingPoint) return 'Choose whether you are exploring or have an idea.';
       if (answers.founderSegment === 'founder' && !answers.projectName.trim()) return 'Give your project a name. Everything you build attaches to it.';
     }
-    if (step === 1 && !answers.businessModel) return 'Choose the business model that fits best.';
-    if (step === 2) {
+    // Six screens: situation, brief, business and evidence, goal and blocker,
+    // time and runway, review. Related questions share a screen so the quiz
+    // does not feel longer than the answers it needs.
+    if (step === 1) {
+      if (!answers.businessModel) return 'Choose the business model that fits best.';
       if (!answers.evidenceState) return 'Choose the strongest evidence you have today.';
       if (requiresCustomerCount(answers.evidenceState) && !answers.customerCountBand) {
         return 'Choose your current paying-customer range.';
       }
     }
-    if (step === 3) {
+    if (step === 2) {
       if (!answers.primaryGoal) return 'Choose the most important 30-day outcome.';
-      // Only a raise goal asks the fundraising question on this screen; a
-      // fundraising blocker asks it on the next one.
-      if (answers.primaryGoal === 'raise' && !answers.fundraisingStatus) {
-        return 'Choose your current fundraising status.';
-      }
-    }
-    if (step === 4) {
       if (!answers.blocker) return 'Choose the blocker most likely to stop that outcome.';
       if (requiresCofounderSituation(answers.blocker) && !answers.cofounderSituation) {
         return 'Tell us whether you are actively looking for a co-founder.';
@@ -556,11 +552,11 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
         return 'Choose your current fundraising status.';
       }
     }
-    if (step === 5) {
+    if (step === 3) {
       if (!answers.weeklyCapacityHours) return 'Choose the time you can protect each week.';
       if (!answers.runwayMonths) return 'Choose how long you can keep going, or “Not spending money on this yet”.';
     }
-    if (step === 6 && !answers.selectedIntent) return 'Choose a first action.';
+    if (step === 4 && !answers.selectedIntent) return 'Choose a first action.';
     return null;
   };
 
@@ -652,7 +648,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
 
     trackOnboardingStepCompleted({
       step: visibleStep,
-      step_name: ['startup_brief', 'business_model', 'evidence', 'primary_goal', 'blocker', 'capacity'][currentStep],
+      step_name: ['startup_brief', 'business_and_evidence', 'goal_and_blocker', 'capacity'][currentStep],
       total_steps: visibleTotal,
       elapsed_ms: Date.now() - startedAtRef.current,
       quiz_version: 2,
@@ -1064,34 +1060,38 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
       );
     }
     if (currentStep === 1) {
+      const isBuilder = answers.founderSegment === 'builder';
       return (
         <>
-          {answers.founderSegment === 'builder' ? (
-            <>
-              {/* Someone starting from scratch has no business yet, so ask for
-                  a best guess and lead with the honest answer. */}
-              <StepHeading title="How might this make money?" description="A best guess is fine. Pick “Not sure yet” if you have not decided." headingRef={headingRef} />
-              <div className="mt-5"><ChoiceGrid columns={2} options={[['other', 'Not sure yet / another model'] as const, ...BUSINESS_MODELS.filter((option) => option[0] !== 'other')]} value={answers.businessModel} onSelect={(businessModel) => patchAnswers({ businessModel })} /></div>
-            </>
-          ) : (
-            <>
-              <StepHeading title="How does this business make money?" description="This shapes the examples and playbooks used across your dashboard." headingRef={headingRef} />
-              <div className="mt-5"><ChoiceGrid columns={2} options={BUSINESS_MODELS} value={answers.businessModel} onSelect={(businessModel) => patchAnswers({ businessModel })} /></div>
-            </>
-          )}
-        </>
-      );
-    }
-    if (currentStep === 2) {
-      return (
-        <>
-          <StepHeading title="What is the strongest customer evidence you have?" description="Pick the furthest point real customers have reached. Work you did on your own does not count yet." headingRef={headingRef} />
-          <div className="mt-5"><ChoiceGrid options={EVIDENCE_OPTIONS} value={answers.evidenceState} onSelect={(evidenceState) => {
+          <StepHeading
+            title={isBuilder ? 'Your idea and its customers' : 'Your business and its customers'}
+            description="Two quick questions. They shape the examples, playbooks and stage used across your dashboard."
+            headingRef={headingRef}
+          />
+          {/* Someone starting from scratch has no business yet, so builders are
+              asked for a best guess and see the honest answer first. */}
+          <SubQuestion
+            title={isBuilder ? 'How might this make money?' : 'How does this business make money?'}
+            hint={isBuilder ? 'A best guess is fine. Pick “Not sure yet” if you have not decided.' : undefined}
+          >
+            <ChoiceGrid
+              columns={2}
+              options={isBuilder ? [['other', 'Not sure yet / another model'] as const, ...BUSINESS_MODELS.filter((option) => option[0] !== 'other')] : BUSINESS_MODELS}
+              value={answers.businessModel}
+              onSelect={(businessModel) => patchAnswers({ businessModel })}
+            />
+          </SubQuestion>
+          <SubQuestion
+            title="What is the strongest customer evidence you have?"
+            hint="Pick the furthest point real customers have reached. Work you did on your own does not count yet."
+          >
+          <ChoiceGrid options={EVIDENCE_OPTIONS} value={answers.evidenceState} onSelect={(evidenceState) => {
             // Customer count and revenue only apply to paying evidence; drop
             // them when the answer moves below that so they are not saved stale.
             const keep = requiresCustomerCount(evidenceState);
             patchAnswers({ evidenceState, customerCountBand: keep ? answers.customerCountBand : '', revenueBand: keep ? answers.revenueBand : '' });
-          }} /></div>
+          }} />
+          </SubQuestion>
           {requiresCustomerCount(answers.evidenceState) ? (
             <>
               <div className="mt-6">
@@ -1108,34 +1108,23 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
         </>
       );
     }
-    if (currentStep === 3) {
+    if (currentStep === 2) {
       return (
         <>
-          <StepHeading title="What outcome matters most in the next 30 days?" description="Your Progress Tracker will prioritize this outcome over a generic startup checklist." headingRef={headingRef} />
-          <div className="mt-5"><ChoiceGrid options={GOAL_OPTIONS} value={answers.primaryGoal} onSelect={(primaryGoal) => patchAnswers({
-            primaryGoal,
-            fundraisingStatus: requiresFundraisingStatus(primaryGoal, answers.blocker) ? answers.fundraisingStatus : '',
-          })} /></div>
-          {/* Each follow-up is asked on exactly one screen: here for a raise
-              goal, on the blocker screen for a fundraising blocker. */}
-          {answers.primaryGoal === 'raise' ? (
-            <div className="mt-6">
-              <p className="mb-3 text-sm font-semibold">Where is fundraising today?</p>
-              <ChoiceGrid options={FUNDRAISING_OPTIONS} value={answers.fundraisingStatus} onSelect={(fundraisingStatus) => patchAnswers({ fundraisingStatus })} />
-            </div>
-          ) : null}
-        </>
-      );
-    }
-    if (currentStep === 4) {
-      return (
-        <>
-          <StepHeading title="What is most likely to stop that outcome?" description="This determines the action and support your dashboard recommends first." headingRef={headingRef} />
-          <div className="mt-5"><ChoiceGrid options={BLOCKER_OPTIONS} value={answers.blocker} onSelect={(blocker) => patchAnswers({
-            blocker,
-            cofounderSituation: requiresCofounderSituation(blocker) ? answers.cofounderSituation : '',
-            fundraisingStatus: requiresFundraisingStatus(answers.primaryGoal, blocker) ? answers.fundraisingStatus : '',
-          })} /></div>
+          <StepHeading title="Your next 30 days" description="What you want to achieve, and what is most likely to get in the way. Your Progress Tracker and first action are built from these." headingRef={headingRef} />
+          <SubQuestion title="What outcome matters most in the next 30 days?">
+            <ChoiceGrid columns={2} options={GOAL_OPTIONS} value={answers.primaryGoal} onSelect={(primaryGoal) => patchAnswers({
+              primaryGoal,
+              fundraisingStatus: requiresFundraisingStatus(primaryGoal, answers.blocker) ? answers.fundraisingStatus : '',
+            })} />
+          </SubQuestion>
+          <SubQuestion title="What is most likely to stop that outcome?">
+            <ChoiceGrid columns={2} options={BLOCKER_OPTIONS} value={answers.blocker} onSelect={(blocker) => patchAnswers({
+              blocker,
+              cofounderSituation: requiresCofounderSituation(blocker) ? answers.cofounderSituation : '',
+              fundraisingStatus: requiresFundraisingStatus(answers.primaryGoal, blocker) ? answers.fundraisingStatus : '',
+            })} />
+          </SubQuestion>
           {requiresCofounderSituation(answers.blocker) ? (
             <div className="mt-6">
               <p className="mb-3 text-sm font-semibold">Are you actively looking for a co-founder?</p>
@@ -1149,9 +1138,9 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
               />
             </div>
           ) : null}
-          {/* Stays visible once answered; the old "&& !fundraisingStatus"
-              condition made the question vanish on the first click. */}
-          {answers.blocker === 'fundraising' && answers.primaryGoal !== 'raise' ? (
+          {/* Goal and blocker share this screen, so the follow-up is asked
+              once for either reason and stays visible once answered. */}
+          {requiresFundraisingStatus(answers.primaryGoal, answers.blocker) ? (
             <div className="mt-6">
               <p className="mb-3 text-sm font-semibold">Where is fundraising today?</p>
               <ChoiceGrid options={FUNDRAISING_OPTIONS} value={answers.fundraisingStatus} onSelect={(fundraisingStatus) => patchAnswers({ fundraisingStatus })} />
@@ -1160,7 +1149,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
         </>
       );
     }
-    if (currentStep === 5) {
+    if (currentStep === 3) {
       return (
         <>
           <StepHeading title="What are you working with?" description="Your routine and daily missions are sized to the time and money you have." headingRef={headingRef} />
@@ -1325,6 +1314,15 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
     </div>
   );
 }
+
+/** One question within a screen that asks more than one. */
+const SubQuestion = ({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) => (
+  <fieldset className="mt-8">
+    <legend className="text-base font-semibold">{title}</legend>
+    {hint ? <p className="mt-1 text-xs leading-5 text-muted-foreground">{hint}</p> : null}
+    <div className="mt-3">{children}</div>
+  </fieldset>
+);
 
 const StepHeading = ({
   eyebrow = 'Personalize your Progress Tracker',
