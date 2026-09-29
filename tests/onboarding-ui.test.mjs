@@ -199,6 +199,28 @@ test('a guest answers every screen without touching the server, then is asked to
   }finally{close(dom);}
 });
 
+test('a guest from the homepage box starts on screen 2 and can go back to change the type',async()=>{
+  const now=Date.now();
+  const dom=await mount({
+    ct_tool_handoff:JSON.stringify({mode:'idea',tool:'icp_builder',seed:'Freelance designers lose hours chasing unpaid invoices.',savedAt:now}),
+    ct_intended_account_type:JSON.stringify({type:'builder',savedAt:now}),
+  },{session:guestSession,formProps:{skipSituation:true,guest:{onPlanReady:()=>{},onReviewedChoice:()=>{}}}});try{
+    assert.ok(text(dom).includes('2 of 6'));
+    assert.ok(text(dom).includes('What problem or area would you like to explore?'));
+    assert.ok(text(dom).includes('Not a builder? Use Back to change it.'));
+    assert.equal(dom.window.document.querySelector('textarea').value,'Freelance designers lose hours chasing unpaid invoices.');
+    await click(dom,'Back');
+    assert.ok(text(dom).includes('What brings you here today?'));
+    assert.ok(text(dom).includes('1 of 6'));
+  }finally{close(dom);}
+});
+
+test('without a homepage choice, screen 1 is still asked',async()=>{
+  const dom=await mount({},{session:guestSession,formProps:{skipSituation:true,guest:{onPlanReady:()=>{},onReviewedChoice:()=>{}}}});try{
+    assert.ok(text(dom).includes('What brings you here today?'));
+  }finally{close(dom);}
+});
+
 test('a guest choosing Mentor is sent to sign up without an invitation lookup',async()=>{
   const reviewed=[];
   const dom=await mount({},{session:guestSession,formProps:{guest:{onPlanReady:()=>{},onReviewedChoice:(segment)=>reviewed.push(segment)}}});try{

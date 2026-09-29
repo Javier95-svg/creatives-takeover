@@ -96,6 +96,9 @@ export default function StartOnboarding() {
           <AdaptiveOnboardingForm
             session={session}
             guest={{ onPlanReady: handlePlanReady, onReviewedChoice: handleReviewedChoice }}
+            // Arriving from the homepage box: Idea/Product already answers
+            // screen 1, so start on screen 2.
+            skipSituation={Boolean(toolPath)}
           />
         </div>
       </div>

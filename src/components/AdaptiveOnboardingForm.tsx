@@ -239,6 +239,11 @@ interface AdaptiveOnboardingFormProps {
   };
   /** Finish automatically when the session arrives complete (answers carried over from the guest quiz). */
   autoFinish?: boolean;
+  /**
+   * Start on screen 2 when the account type is already known from the
+   * homepage mode (founder or builder only). Ignored for resumed sessions.
+   */
+  skipSituation?: boolean;
 }
 
 function readAdaptiveDraft(session: OnboardingSessionV1): {
@@ -315,7 +320,7 @@ function ChoiceGrid<T extends string | number>({
   );
 }
 
-export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish = false }: AdaptiveOnboardingFormProps) {
+export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish = false, skipSituation = false }: AdaptiveOnboardingFormProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const submittingRef = useRef(false);
@@ -328,10 +333,6 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
   // quiz stops there: nothing after the first step applies to them, and the
   // account stays unapproved until an admin reviews it.
   const [submittedReview, setSubmittedReview] = useState<ReviewedUserType | null>(null);
-  // A reviewed account answers two questions: current situation, then
-  // the fields that category is defined by. This is that second question,
-  // kept out of currentStep so the founder step machine is untouched.
-  const [reviewStage, setReviewStage] = useState<'choosing' | 'details'>(!(localFallback?.answers.situation ?? session.answers.situation) ? 'choosing' : localFallback?.answers.entryStage ?? session.answers.entryStage ?? (session.current_step > 0 ? 'details' : 'choosing'));
   const [roleDraft, setRoleDraft] = useState<RoleProfile>(localFallback?.answers.roleProfile ?? session.answers.roleProfile ?? {});
   // A fresh session starts from the account type picked on the homepage, if
   // any. A resumed session keeps its own answer.
@@ -345,6 +346,21 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
     return resumedSituation || existingBrief?.trim() ? null : readToolHandoff();
   });
   const initialSegment = classifyOnboardingSituation(initialSituation);
+  // The homepage mode already answers "What brings you here today?" (Idea ->
+  // starting from scratch, Product -> have a project), so those visitors start
+  // on screen 2. Back still returns to screen 1 to change it.
+  const [skippedSituation] = useState(() => skipSituation && !resumedSituation
+    && (initialSegment === 'founder' || initialSegment === 'builder'));
+  // A reviewed account answers two questions: current situation, then
+  // the fields that category is defined by. This is that second question,
+  // kept out of currentStep so the founder step machine is untouched.
+  const [reviewStage, setReviewStage] = useState<'choosing' | 'details'>(
+    skippedSituation
+      ? 'details'
+      : !resumedSituation
+        ? 'choosing'
+        : localFallback?.answers.entryStage ?? session.answers.entryStage ?? (session.current_step > 0 ? 'details' : 'choosing'),
+  );
   const [answers, setAnswers] = useState<OnboardingAnswersV1>({
     ...EMPTY_ONBOARDING_ANSWERS_V1,
     ...session.answers,
@@ -1049,10 +1065,15 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
               : 'One or two sentences. Your dashboard uses this to make specific recommendations.'}
             headingRef={headingRef}
           />
-          {toolHandoff ? (
+          {toolHandoff || skippedSituation ? (
             <p className="mt-4 flex items-start gap-2 rounded-lg border border-accent-teal/30 bg-accent-teal/10 px-3 py-2 text-sm">
               <Info className="mt-0.5 h-4 w-4 shrink-0 text-accent-teal" aria-hidden="true" />
-              We filled this in from what you wrote earlier. Edit anything.
+              <span>
+                {toolHandoff ? 'We filled this in from what you wrote earlier. Edit anything.' : null}
+                {skippedSituation
+                  ? ` ${toolHandoff ? '' : 'We set this up from your choice on the homepage. '}Not a ${isBuilder ? 'builder' : 'founder'}? Use Back to change it.`
+                  : null}
+              </span>
             </p>
           ) : null}
           {isBuilder && (
