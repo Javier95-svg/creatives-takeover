@@ -7,6 +7,8 @@ import remarkGfm from 'remark-gfm';
 import type { PulseMessage } from '@/hooks/usePulseWidget';
 import { PulseSources } from './PulseSources';
 import { PulseAnswerFeedback } from './PulseAnswerFeedback';
+import { PulseCommitmentCheck } from './PulseCommitmentCheck';
+import { PulseMemoryChips } from './PulseMemoryChips';
 import { validateHomeActions } from '@/lib/pulseHome';
 import { findPublicPulseLink, type PublicPulseLink } from '@/lib/publicPlatformFacts';
 import { followPublicPulseLink } from '@/lib/publicPulseNavigation';
@@ -90,6 +92,9 @@ export const PulseMessageBubble = ({ message, isStreaming }: PulseMessageBubbleP
           {validateHomeActions(message.actions).map((action, index) => <a key={action.id} href={action.route} onClick={() => { if (action.kind === 'investor') trackPulseInvestorProfileClicked({ surface: 'widget', investor_id: action.id, rank: index + 1, is_pro: !action.locked }); }} className="mt-2 block rounded-lg border border-border p-2 hover:bg-background"><span className="block font-medium">{action.title}</span><span className="block text-xs text-muted-foreground">{action.reason}</span>{action.kind === 'investor' && <span className="mt-1 block text-xs font-medium text-primary">{action.locked ? 'Visit profile · Pro' : 'Visit profile'}</span>}</a>)}
           {message.links?.map(link => <a key={link.route} href={link.destination} onClick={event => openGuestLink(event, link)} className="mt-2 flex items-center gap-2 rounded-lg border border-border p-2 transition-colors hover:border-primary/60 hover:bg-background"><span className="min-w-0 flex-1"><span className="block font-medium">{link.title}</span><span className="block text-xs text-muted-foreground">{link.reason}</span></span><ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" /></a>)}
           <PulseSources sources={message.sources} />
+          {message.memoryScope && message.commitmentCheck && !isStreaming && <PulseCommitmentCheck commitment={message.commitmentCheck} surface="widget" />}
+          {message.memoryScope && message.memorySuggestions?.length && message.id.endsWith(':assistant') && !isStreaming
+            ? <PulseMemoryChips suggestions={message.memorySuggestions} projectId={message.memoryScope.projectId} turnId={message.id.slice(0, -':assistant'.length)} surface="widget" /> : null}
           {message.feedbackSessionId && message.id.endsWith(':assistant') && message.content && !isStreaming &&
             <PulseAnswerFeedback sessionId={message.feedbackSessionId} turnId={message.id.slice(0, -':assistant'.length)} surface="widget" />}
         </>}

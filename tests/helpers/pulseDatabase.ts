@@ -10,6 +10,7 @@ export class PulseDatabase {
     chatbot_messages: [], mentors: [], projects: [], daily_tasks: [], traction_engine_experiments: [], stories_articles: [],
     profiles: [{ id: 'owner', user_type: 'founder', approval_status: 'approved', quiz_answers_v2: { answers: { goal: 'Validate demand' } } }],
     icp_analysis_results: [], pmf_analysis_results: [], mvp_projects: [], gtm_plans: [], demo_studio_projects: [], traction_engine_sprints: [],
+    pulse_memories: [], journey_assumptions: [], pulse_insights: [],
   };
   from(table: string) {
     assert.ok(table in this.tables, `Unexpected table/action: ${table}`);

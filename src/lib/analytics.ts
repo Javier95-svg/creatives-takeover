@@ -830,6 +830,22 @@ export const trackOnboardingGuestResumed = (properties: {
   auto_finished: boolean;
 } & AnalyticsProperties) => captureEvent('onboarding_guest_resumed', properties);
 
+/** A founder saved something Pulse offered to remember (text is never sent). */
+export const trackPulseMemorySaved = (properties: { surface: 'home' | 'widget'; kind: string; edited: boolean } & AnalyticsProperties) =>
+  captureEvent('pulse_memory_saved', properties);
+
+/** A founder answered Pulse's follow-up on a due commitment. */
+export const trackPulseCommitmentUpdated = (properties: { surface: 'home' | 'widget'; outcome: 'done' | 'not_yet' | 'dropped' } & AnalyticsProperties) =>
+  captureEvent('pulse_commitment_updated', properties);
+
+/** "Pulse noticed" insights were shown on the home page. */
+export const trackPulseInsightShown = (properties: { count: number; types: string[] } & AnalyticsProperties) =>
+  captureEvent('pulse_insight_shown', properties);
+
+/** A founder acted on a "Pulse noticed" insight: asked Pulse, opened the tool, or dismissed it. */
+export const trackPulseInsightClicked = (properties: { type: string; action: 'ask' | 'tool' | 'dismiss' } & AnalyticsProperties) =>
+  captureEvent('pulse_insight_clicked', properties);
+
 /** A founder rated a Pulse answer. reason is 'none' for thumbs up. */
 export const trackPulseAnswerRated = (properties: {
   surface: 'home' | 'widget';

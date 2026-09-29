@@ -1,6 +1,7 @@
 import { getSessionSafely } from '@/integrations/supabase/auth';
 import { validateHomeActions, type PulseHomeAction } from '@/lib/pulseHome';
 import { validatePulseSources, type PulseSourceReference } from '@/lib/pulseSources';
+import { parseCommitmentCheck, parseMemorySuggestions, type CommitmentCheck, type MemorySuggestion } from '@/lib/pulseMemory';
 
 // Pulse Home uses the existing Pulse endpoint, with a durable turn identifier
 // and explicit errors instead of silently treating partial streams as success.
@@ -9,6 +10,8 @@ export async function streamPulseHome(input: {
   signal: AbortSignal; onText: (text: string) => void; onActions: (actions: PulseHomeAction[]) => void;
   onContext?: (unavailableSources: string[]) => void;
   onSources?: (sources: PulseSourceReference[]) => void;
+  onMemorySuggestions?: (suggestions: MemorySuggestion[]) => void;
+  onCommitmentCheck?: (commitment: CommitmentCheck) => void;
   surface?: 'pulse_home' | 'pulse_widget'; pagePath?: string;
 }) {
   const session = await getSessionSafely();
@@ -39,6 +42,8 @@ export async function streamPulseHome(input: {
         if (event.type === 'recommendations') input.onActions(validateHomeActions(event.actions));
         if (event.type === 'sources') input.onSources?.(validatePulseSources(event.sources));
         if (event.type === 'context' && Array.isArray(event.unavailableSources)) input.onContext?.(event.unavailableSources.filter((value: unknown): value is string => typeof value === 'string'));
+        if (event.type === 'memory_suggestions') { const suggestions = parseMemorySuggestions(event.suggestions); if (suggestions.length) input.onMemorySuggestions?.(suggestions); }
+        if (event.type === 'commitment_check') { const commitment = parseCommitmentCheck(event.commitment); if (commitment) input.onCommitmentCheck?.(commitment); }
         if (event.type === 'complete') complete = true;
       }
       if (done) break;

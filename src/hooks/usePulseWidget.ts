@@ -16,7 +16,11 @@ import {
 // guest: a signed-out reply, whose links go through followPublicPulseLink.
 // links: page cards under that reply, taken from the pages it links to.
 // feedbackSessionId: set on signed-in answers so they can be rated.
-export interface PulseMessage extends PulseHomeMessage { timestamp?: Date; guest?: boolean; links?: PublicPulseLink[]; feedbackSessionId?: string }
+export interface PulseMessage extends PulseHomeMessage {
+  timestamp?: Date; guest?: boolean; links?: PublicPulseLink[]; feedbackSessionId?: string;
+  /** Founder answers: where "Remember this" saves (the conversation's project, or the account). */
+  memoryScope?: { projectId: string | null };
+}
 
 const GUEST_CHAT_KEY = 'ct_pulse_guest_chat';
 
@@ -144,7 +148,9 @@ export const usePulseWidget = () => {
   }, [isAuthenticated, account.userType, account.hasCategoryAccess, guestMessages]);
   // Signed-in answers carry the conversation's session id so they can be rated.
   const messages: PulseMessage[] = isAuthenticated
-    ? conversation.messages.map(message => ({ ...message, feedbackSessionId: conversation.sessionId ?? undefined }))
+    ? conversation.messages.map(message => ({ ...message, feedbackSessionId: conversation.sessionId ?? undefined,
+      // Memory and follow-ups belong to founders and builders, scoped like the conversation.
+      memoryScope: founder ? { projectId: scope.projectId } : undefined }))
     : guestMessages;
   return {
     isOpen, activeTab, setActiveTab, openPanel, closePanel, proactiveMessage, proactiveVisible, dismissProactive,

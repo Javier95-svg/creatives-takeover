@@ -14,6 +14,12 @@ import { streamPulseHome } from '@/services/pulseHomeStream';
 import { getDashboardTool } from '@/config/dashboardToolRegistry';
 import { PulseHomeView } from './PulseHomeView';
 import { PulseAnswerFeedback } from './PulseAnswerFeedback';
+import { PulseCommitmentCheck } from './PulseCommitmentCheck';
+import { PulseInsights } from './PulseInsights';
+import { PulseMemoryChips } from './PulseMemoryChips';
+import { PulseMemoryPanel } from './PulseMemoryPanel';
+import { parseCommitmentCheck, parseMemorySuggestions } from '@/lib/pulseMemory';
+import { enterWorkspaceRoute } from '@/lib/workspaceNavigation';
 import { captureEvent, trackPulseInvestorProfileClicked } from '@/lib/analytics';
 import { trackInvestorCards } from '@/lib/pulseInvestorTracking';
 import { pulseSourceNotice, validatePulseSources } from '@/lib/pulseSources';
@@ -96,7 +102,8 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
       setHistoryReady(true);
       const history = [...(data ?? [])].reverse().filter(row => row.role === 'user' || row.role === 'assistant').map(row => {
         const metadata = row.metadata as Record<string, unknown> | null;
-        return { id: metadata?.homeTurnId ? `${metadata.homeTurnId}:${row.role}` : row.id, role: row.role as 'user' | 'assistant', content: row.content, actions: validateHomeActions(metadata?.homeActions), sources: validatePulseSources(metadata?.contextSources) };
+        return { id: metadata?.homeTurnId ? `${metadata.homeTurnId}:${row.role}` : row.id, role: row.role as 'user' | 'assistant', content: row.content, actions: validateHomeActions(metadata?.homeActions), sources: validatePulseSources(metadata?.contextSources),
+          memorySuggestions: parseMemorySuggestions(metadata?.memorySuggestions), commitmentCheck: parseCommitmentCheck(metadata?.commitmentCheck) };
       });
       setMessages(history);
       const last = data?.[0];
@@ -135,6 +142,8 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
           setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, actions } : message));
           trackInvestorCards(actions, 'home');
         },
+        onMemorySuggestions: memorySuggestions => { if (alive.current) setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, memorySuggestions } : message)); },
+        onCommitmentCheck: commitmentCheck => { if (alive.current) setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, commitmentCheck } : message)); },
       });
       pending.current = null;
     } catch (error) {
@@ -151,6 +160,8 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
     catch (error) { if (alive.current) setError(error instanceof Error ? error.message : 'Could not start a conversation.'); }
     finally { busy.current = false; if (alive.current) setLoading(false); }
   };
+  // Memory, follow-ups and "Pulse noticed" are for founders and builders.
+  const founderHome = !persona;
   const displayName = dashboard.snapshot?.profile?.fullName || user?.user_metadata?.full_name || '';
   return <PulseHomeView concept={concept} name={String(displayName).trim().split(/\s+/)[0] || undefined} stage={persona ? undefined : dashboard.snapshot?.journey.currentStage}
     persona={persona} personaChips={chips} personaInterest={personaInterest}
@@ -158,7 +169,13 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
     loading={loading || dashboard.isLoading || startup.loading} streaming={streaming} error={error}
     unavailable={!loading && !historyReady ? 'Conversation history is unavailable. Retry before continuing.' : undefined}
     contextNotice={contextNotice || (startup.error || dashboard.error ? 'Some saved context is unavailable. Pulse will ask rather than guess.' : undefined)}
-    renderAnswerFooter={turnId => sessionId ? <PulseAnswerFeedback sessionId={sessionId} turnId={turnId} surface="home" /> : null}
+    renderAnswerFooter={(message, turnId) => <>
+      {message.commitmentCheck && founderHome && <PulseCommitmentCheck commitment={message.commitmentCheck} surface="home" />}
+      {message.memorySuggestions?.length && founderHome ? <PulseMemoryChips suggestions={message.memorySuggestions} projectId={scope.projectId} turnId={turnId} surface="home" /> : null}
+      {sessionId && <PulseAnswerFeedback sessionId={sessionId} turnId={turnId} surface="home" />}
+    </>}
+    headerExtras={founderHome ? <PulseMemoryPanel projectId={scope.projectId} /> : undefined}
+    homeExtras={founderHome && historyReady ? <PulseInsights projectId={scope.projectId} onAsk={text => { void send(text); }} navigate={enterWorkspaceRoute} /> : undefined}
     onInvestorClick={(action, rank) => trackPulseInvestorProfileClicked({ surface: 'home', investor_id: action.id, rank, is_pro: !action.locked })}
     onSend={text => { void send(text); }} onNew={() => { void newConversation(); }} onRetry={() => {
       if (retryAction.current === 'new') void newConversation();

@@ -178,6 +178,34 @@
       "sourceFile": "src/lib/analytics.ts",
       "requiredProperties": ["segment", "auto_finished"]
     },
+    "pulse_memory_saved": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["surface", "kind", "edited"]
+    },
+    "pulse_commitment_updated": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["surface", "outcome"]
+    },
+    "pulse_insight_shown": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["count", "types"]
+    },
+    "pulse_insight_clicked": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["type", "action"]
+    },
     "pulse_answer_rated": {
       "stage": "activation",
       "owner": "product",

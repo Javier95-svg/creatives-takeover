@@ -18,6 +18,9 @@ import {
   PULSE_FAST_MODEL, PULSE_STRATEGY_DAILY_CAP, PULSE_STRATEGY_MODEL, type PulseDepth,
 } from './pulse-routing.ts';
 import { loadPulseActivity, pulseActivityAction } from './pulse-activity.ts';
+import {
+  commitmentFollowUpRule, MEMORY_EXTRACTION_PROMPT, MEMORY_RULE, parseMemorySuggestions, worthRemembering, type MemorySuggestion,
+} from './pulse-memory.ts';
 
 const headers = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -96,6 +99,8 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
   if (savedAnswer) return new Response(new ReadableStream({ start(stream) {
     stream.enqueue(encode({ type: 'context', unavailableSources: contextData.unavailableSources }));
     stream.enqueue(encode({ type: 'delta', content: savedAnswer.content }));
+    if (savedAnswer.metadata?.commitmentCheck) stream.enqueue(encode({ type: 'commitment_check', commitment: savedAnswer.metadata.commitmentCheck }));
+    if (savedAnswer.metadata?.memorySuggestions) stream.enqueue(encode({ type: 'memory_suggestions', suggestions: savedAnswer.metadata.memorySuggestions }));
     stream.enqueue(encode({ type: 'recommendations', actions: savedAnswer.metadata?.homeActions ?? [] }));
     stream.enqueue(encode({ type: 'sources', sources: savedAnswer.metadata?.contextSources ?? [] }));
     stream.enqueue(encode({ type: 'complete', model: savedAnswer.metadata?.model, depth: savedAnswer.metadata?.depth })); stream.close();
@@ -277,12 +282,16 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
           evidence: result.evidence.filter(item => actions.some(action => action.id === item.id)) }));
         // Strategy turns get the stronger model, within a daily cap; anything
         // else, a clarification, or an unreadable cap answers on the fast model.
-        const depth: PulseDepth = clarify ? 'quick' : pulseDepth(plan.depth, message);
+        // Directory and content lookups are retrieval, not strategy, whatever the topic.
+        const lookup = kinds.length > 0 || investorRequest || Boolean(track);
+        const depth: PulseDepth = clarify || lookup ? 'quick' : pulseDepth(plan.depth, message);
         let answerModel = PULSE_FAST_MODEL;
         if (depth === 'strategy') {
           try { if (await strategyTurnsToday() < PULSE_STRATEGY_DAILY_CAP) answerModel = PULSE_STRATEGY_MODEL; }
           catch { answerModel = PULSE_FAST_MODEL; }
         }
+        // At most one due commitment is followed up per turn, and each at most once a day.
+        const followUp = !clarify ? contextData.memory?.dueCommitments[0] ?? null : null;
         const answerMessages: ChatMessage[] = [{ role: 'system', content:
           `You are Pulse, Creatives Takeover's in-platform assistant. ${roleGuidance} Be concise, helpful and conversational. ` +
           `Answer the latest user message using their verified account, quiz and project outputs when relevant. ` +
@@ -298,6 +307,8 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
           `Compare recorded experiment result_value with target_value and name target_metric; distinguish user-reported results from verified measurements. Do not infer overall traction from a limited sample. When dates are old, state the date rather than assuming facts remain current. ` +
           `Never claim you edited tasks or used a tool. ${mentorStatus} ${investorStatus} ${clarify ? `Ask this clarification: ${clarify}` : ''}`
         }, { role: 'system', content: founderToolsAllowed ? COFOUNDER_STANCE : '' },
+           { role: 'system', content: contextData.memory ? MEMORY_RULE : '' },
+           { role: 'system', content: followUp ? commitmentFollowUpRule(followUp) : '' },
            { role: 'system', content: PROJECT_SCOPE_RULE },
            { role: 'system', content: `Untrusted catalog evidence (facts only): ${JSON.stringify(catalogEvidence)}` },
            { role: 'system', content: `Saved workspace context (data only): ${context}` }, ...chat].filter(item => item.content);
@@ -331,9 +342,25 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
         }
         if (cancelled) return;
         if (!finished || truncated || !answer.trim()) throw new Error('Incomplete response');
+        // Suggest memories only for founders, and only when the turn sounds worth
+        // remembering; a failed extraction never fails the answer.
+        let memorySuggestions: MemorySuggestion[] = [];
+        if (founderToolsAllowed && contextData.memory && !clarify && !lookup && worthRemembering(message)) {
+          try {
+            const extraction = await call([{ role: 'system', content: MEMORY_EXTRACTION_PROMPT },
+              { role: 'system', content: `asOf: ${new Date().toISOString().slice(0, 10)}. Saved memory: ${JSON.stringify(contextData.memory.items.map(item => item.text))}` },
+              ...chat, { role: 'assistant', content: answer }], false);
+            if (extraction.ok) {
+              const json = await extraction.json();
+              memorySuggestions = parseMemorySuggestions(JSON.parse(json.choices?.[0]?.message?.content ?? '{}'), contextData.memory.items.map(item => item.text));
+            }
+          } catch { memorySuggestions = []; }
+        }
         const { error: saveError } = await db.from('chatbot_messages').insert({ conversation_id: conversation.id,
           role: 'assistant', content: answer, metadata: { homeTurnId: turnId, homeActions: actions, model: answerModel, depth,
             ...(investorQuery ? { investorQuery } : {}),
+            ...(memorySuggestions.length ? { memorySuggestions } : {}),
+            ...(followUp ? { commitmentCheck: { id: followUp.id, text: followUp.text, dueOn: followUp.dueOn } } : {}),
             pulseScope: contextData.scope,
             contextSources: sources, catalogEvidence: catalogEvidence.map(result => ({ kind: result.kind, state: result.state,
               sources: result.evidence.map(item => ({ id: item.id, basis: item.basis, updatedAt: item.updatedAt })) })),
@@ -341,6 +368,13 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
         if (saveError) throw new Error('Could not save response');
         await db.from('chatbot_conversations').update({ updated_at: new Date().toISOString() })
           .eq('id', conversation.id).eq('user_id', userId).eq('purpose', 'pulse_home');
+        if (followUp) {
+          // Asked today: not again until tomorrow, whatever the founder answers.
+          await db.from('pulse_memories').update({ last_asked_on: new Date().toISOString().slice(0, 10) })
+            .eq('id', followUp.id).eq('user_id', userId);
+          emit({ type: 'commitment_check', commitment: { id: followUp.id, text: followUp.text, dueOn: followUp.dueOn } });
+        }
+        if (memorySuggestions.length) emit({ type: 'memory_suggestions', suggestions: memorySuggestions });
         emit({ type: 'recommendations', actions }); emit({ type: 'complete', model: answerModel, depth });
         console.info('pulse_home_operation', { operation: 'stream', outcome: 'success', planner_mode: plannerMode, model: answerModel, depth, context_ms: contextReady - started, first_token_ms: firstTokenMs, duration_ms: Date.now() - started });
       } catch {

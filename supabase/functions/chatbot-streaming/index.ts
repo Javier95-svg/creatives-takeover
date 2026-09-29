@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handlePulseHome } from '../_shared/pulse-home.ts';
+import { handlePulseInsights } from '../_shared/pulse-insights.ts';
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
@@ -386,6 +387,11 @@ serve(async (req) => {
       chatMode
     });
 
+    // "Pulse noticed": a JSON read, cached per user/project/day. No billing.
+    if (surface === 'pulse_insights') {
+      const homeDb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+      return handlePulseInsights(homeDb, resolvedUserId, { projectId });
+    }
     // Home validates malformed requests itself; never enter legacy fallback
     // persistence or billing, even when a required Home field is missing.
     if (surface === 'pulse_home' || surface === 'pulse_widget') {

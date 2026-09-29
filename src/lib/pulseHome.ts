@@ -2,6 +2,7 @@ import { FOUNDER_TOOL_CATALOG } from '../config/founderToolCatalog.ts';
 import type { DashboardAction, DashboardSnapshot } from '../types/dashboardSnapshot.ts';
 import { PULSE_UUID } from './pulseScope.ts';
 import type { PulseSourceReference } from './pulseSources.ts';
+import type { CommitmentCheck, MemorySuggestion } from './pulseMemory.ts';
 
 export type PulseHomeConcept = 'founder-guide' | 'command-center' | 'guided-journey';
 export interface PulseHomeAction {
@@ -21,6 +22,10 @@ export interface PulseHomeMessage {
   content: string;
   actions?: PulseHomeAction[];
   sources?: PulseSourceReference[];
+  /** Things Pulse offers to remember from this turn; the founder decides. */
+  memorySuggestions?: MemorySuggestion[];
+  /** A saved commitment this answer asked about. */
+  commitmentCheck?: CommitmentCheck | null;
 }
 export interface PulseHomePriority { id: string; title: string; route: string }
 

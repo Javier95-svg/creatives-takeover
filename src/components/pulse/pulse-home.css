@@ -22,6 +22,15 @@
 .pulse-home-focus-arrow { margin-top: .3em; color: hsl(var(--accent-teal)); opacity: 0; transform: translateX(-4px); transition: opacity .15s, transform .15s; }
 .pulse-home-focus-row:hover .pulse-home-focus-arrow, .pulse-home-focus-row:focus-visible .pulse-home-focus-arrow { opacity: 1; transform: translateX(0); }
 @keyframes pulse-home-dot { 50% { box-shadow: 0 0 0 5px hsl(var(--accent-teal) / .06); } }
+/* "Pulse noticed": quiet cards with a coloured edge by type, below Today's focus. */
+.pulse-home-insight { display: flex; align-items: flex-start; gap: .75rem; padding: .75rem .875rem; border: 1px solid hsl(var(--border) / .8); border-left-width: 3px; border-radius: .875rem; background: hsl(var(--card) / .6); }
+.pulse-home-insight-icon { margin-top: .125rem; }
+.pulse-home-insight--risk { border-left-color: hsl(var(--warning, 38 92% 50%)); }
+.pulse-home-insight--risk .pulse-home-insight-icon { color: hsl(var(--warning, 38 92% 50%)); }
+.pulse-home-insight--opportunity, .pulse-home-insight--follow_up { border-left-color: hsl(var(--accent-teal)); }
+.pulse-home-insight--opportunity .pulse-home-insight-icon, .pulse-home-insight--follow_up .pulse-home-insight-icon { color: hsl(var(--accent-teal)); }
+.pulse-home-insight--contradiction { border-left-color: hsl(var(--primary)); }
+.pulse-home-insight--contradiction .pulse-home-insight-icon { color: hsl(var(--primary)); }
 .pulse-home--chat .pulse-home-focus-row { font-size: .875rem; }
 @container (max-width: 480px) { .pulse-home-focus-tool { display: none; } }
 .pulse-home:not(.pulse-home--chat) .pulse-home-priorities > div { display: flex; justify-content: center; align-items: baseline; flex-wrap: wrap; column-gap: .75rem; font-size: .8125rem; }

@@ -32,6 +32,58 @@ export interface PulseContext {
   } | null;
   outcomes: Record<string, PulseSource>;
   unavailableSources: string[];
+  /** Founder-confirmed memory and tool-recorded assumptions (founders/builders only). */
+  memory?: PulseMemoryContext | null;
+}
+
+export interface PulseMemoryItem { id: string; kind: string; text: string; scope: 'project' | 'account'; dueOn: string | null; savedOn: string | null }
+export interface PulseMemoryContext {
+  provenance: string;
+  items: PulseMemoryItem[];
+  /** Commitments due today or earlier, not yet asked about today, most overdue first. */
+  dueCommitments: PulseMemoryItem[];
+  assumptions: { provenance: string; items: { statement: string; status: string; sourceTool: string | null; updatedAt: string | null }[] } | null;
+}
+
+const MEMORY_PROVENANCE = 'Saved by the founder from earlier Pulse conversations: their own decisions, hypotheses, commitments and facts. Confirmed by them, not verified evidence.';
+const ASSUMPTION_PROVENANCE = 'Assumptions recorded by CT tools for this account (untested or confirmed), not project-specific proof.';
+
+type MemoryRow = { id: string; kind: string; text: string; due_on: string | null; last_asked_on: string | null; created_at: string | null };
+const toItem = (row: MemoryRow, scope: 'project' | 'account'): PulseMemoryItem => ({
+  id: row.id, kind: row.kind, text: String(row.text ?? '').slice(0, 280), scope,
+  dueOn: row.due_on ?? null, savedOn: typeof row.created_at === 'string' ? row.created_at.slice(0, 10) : null,
+});
+
+/** Loads memory for founders; failures are reported as unavailable, never as "no memory". */
+export async function loadPulseMemory(db: SupabaseClient, userId: string, projectId: string | null, today = new Date().toISOString().slice(0, 10)): Promise<PulseMemoryContext | null> {
+  const fields = 'id,kind,text,due_on,last_asked_on,created_at';
+  const [projectRows, accountRows, assumptions] = await Promise.all([
+    projectId
+      ? db.from('pulse_memories').select(fields).eq('user_id', userId).eq('project_id', projectId).eq('status', 'active').order('updated_at', { ascending: false }).limit(25)
+      : Promise.resolve({ data: [], error: null }),
+    db.from('pulse_memories').select(fields).eq('user_id', userId).is('project_id', null).eq('status', 'active').order('updated_at', { ascending: false }).limit(10),
+    db.from('journey_assumptions').select('statement,status,latest_source_tool,updated_at').eq('user_id', userId).in('status', ['untested', 'confirmed']).order('updated_at', { ascending: false }).limit(8),
+  ]);
+  if (projectRows.error || accountRows.error) throw new Error('Memory unavailable');
+  const rows = [
+    ...((projectRows.data ?? []) as MemoryRow[]).map(row => ({ row, scope: 'project' as const })),
+    ...((accountRows.data ?? []) as MemoryRow[]).map(row => ({ row, scope: 'account' as const })),
+  ];
+  const dueCommitments = rows
+    .filter(({ row }) => row.kind === 'commitment' && row.due_on && row.due_on <= today && (!row.last_asked_on || row.last_asked_on < today))
+    .sort((a, b) => String(a.row.due_on).localeCompare(String(b.row.due_on)))
+    .map(({ row, scope }) => toItem(row, scope));
+  return {
+    provenance: MEMORY_PROVENANCE,
+    items: rows.map(({ row, scope }) => toItem(row, scope)),
+    dueCommitments,
+    // Assumptions are an enhancement: if that table is unavailable, memory still loads.
+    assumptions: assumptions.error ? null : {
+      provenance: ASSUMPTION_PROVENANCE,
+      items: ((assumptions.data ?? []) as Data[]).map(row => ({ statement: String(row.statement ?? '').slice(0, 240), status: String(row.status),
+        sourceTool: typeof row.latest_source_tool === 'string' ? row.latest_source_tool : null, updatedAt: typeof row.updated_at === 'string' ? row.updated_at : null })),
+    },
+  };
 }
 
 // Budget each source independently. Never slice serialized JSON or let a large
@@ -121,7 +173,12 @@ export async function resolvePulseContext(db: SupabaseClient, userId: string, pr
       context.unavailableSources.push('tasks');
     }
   };
-  if (!projectId) { await loadTasks(); return context; }
+  const loadMemory = async () => {
+    if (!founder) return;
+    try { context.memory = await loadPulseMemory(db, userId, projectId); }
+    catch { context.memory = null; context.unavailableSources.push('memory'); }
+  };
+  if (!projectId) { await Promise.all([loadTasks(), loadMemory()]); return context; }
   const { data: project, error: projectError } = await db.from('projects')
     .select('id,title,idea_summary,context').eq('id', projectId).eq('user_id', userId).is('archived_at', null).maybeSingle();
   if (projectError) throw new PulseContextError(503, 'The selected project could not be loaded.');
@@ -171,7 +228,7 @@ export async function resolvePulseContext(db: SupabaseClient, userId: string, pr
   }));
   context.outcomes = Object.fromEntries(results);
   context.unavailableSources = results.filter(([, source]) => source.state === 'unavailable').map(([key]) => key);
-  await Promise.all([loadTasks(), (async () => {
+  await Promise.all([loadTasks(), loadMemory(), (async () => {
     const traction = context.outcomes.traction;
     if (traction.state !== 'available' || !traction.id) return;
     try {

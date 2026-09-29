@@ -79,7 +79,10 @@ test('each account type gets explicit verified context; non-founders never load 
     db.tables.profiles[0] = { id: 'owner', user_type: userType, approval_status: userType === 'mentor' ? 'pending' : 'approved', role_profile: { expertise: ['Pricing'], stages: ['Building'], experience: 'Delivered products', engagement: 'both' } };
     const context = await resolvePulseContext(db as never, 'owner', null);
     assert.equal(context.account.userType, userType);
-    assert.deepEqual(db.reads, ['profiles']);
+    // Founders and builders also read their own Pulse memory; nobody reads a project without one.
+    const founderLike = userType === 'founder' || userType === 'builder';
+    assert.deepEqual(db.reads, founderLike ? ['profiles', 'pulse_memories', 'journey_assumptions'] : ['profiles']);
+    assert.equal(context.memory === undefined, !founderLike);
     assert.match(pulseRoleGuidance(context), new RegExp(userType === 'marketplace' ? 'service provider' : userType));
     if (userType === 'mentor') {
       assert.equal(context.account.hasCategoryAccess, false);

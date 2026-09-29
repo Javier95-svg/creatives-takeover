@@ -44,14 +44,19 @@ export interface PulseHomeViewProps {
   /** Where priority links, action cards and shortcut chips lead. Defaults to a
       real navigation; the anonymous tour at /demo swaps panels instead. */
   navigate?: (path: string) => void;
-  /** Extra controls under a finished answer (rating), by turn id. Supplied by the
-      live page only, so the public tour never loads account code. */
-  renderAnswerFooter?: (turnId: string) => ReactNode;
+  /** Extra controls under a finished answer (memory chips, follow-up, rating).
+      These three slots are supplied by the live page only, so the public tour
+      never loads account code. */
+  renderAnswerFooter?: (message: PulseHomeMessage, turnId: string) => ReactNode;
+  /** Next to the project and stage chips (the "Pulse remembers" button). */
+  headerExtras?: ReactNode;
+  /** After Today's Focus on the home view ("Pulse noticed"). */
+  homeExtras?: ReactNode;
   /** Called before following an investor card; rank is its 1-based position. */
   onInvestorClick?: (action: PulseHomeAction, rank: number) => void;
 }
 
-export function PulseHomeView({ concept, name, stage, projectName, assignedStage, priorities = [], messages = [], loading, streaming, unavailable, contextNotice, error, onSend, onNew, onRetry, navigate = enterWorkspaceRoute, persona = null, personaChips = [], personaInterest = null, onInvestorClick, renderAnswerFooter }: PulseHomeViewProps) {
+export function PulseHomeView({ concept, name, stage, projectName, assignedStage, priorities = [], messages = [], loading, streaming, unavailable, contextNotice, error, onSend, onNew, onRetry, navigate = enterWorkspaceRoute, persona = null, personaChips = [], personaInterest = null, onInvestorClick, renderAnswerFooter, headerExtras, homeExtras }: PulseHomeViewProps) {
   const [input, setInput] = useState('');
   const [showPriorities, setShowPriorities] = useState(false);
   const [headline, setHeadline] = useState(0);
@@ -135,6 +140,7 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
           {!persona && concept === 'guided-journey' && !active && (trimmedProjectName || stageBadge) && <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
             {trimmedProjectName && <span className="rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs font-medium text-foreground">{trimmedProjectName}</span>}
             {stageBadge && <span className="pulse-home-stage-chip rounded-full px-3 py-1 text-xs font-medium">{stageBadge}</span>}
+            {headerExtras}
           </div>}
           <h1 key={active ? 'active' : headline} className={cn('font-space-grotesk font-semibold tracking-tight text-foreground', active ? 'text-xl' : 'pulse-home-headline')}>
             {active ? 'Let’s work through it.'
@@ -155,6 +161,7 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
           })}</ul> : <div className="text-sm text-muted-foreground"><p>{unavailable ? 'Your dashboard priorities will appear here after sign-in.' : contextNotice ? 'Your priorities are temporarily unavailable.' : persona ? persona.emptyFocus : 'Nothing on your list yet. Let’s find a useful first step.'}</p><button type="button" disabled={Boolean(unavailable) || loading} onClick={() => send('Help me plan my next step')} className="mt-2 text-primary hover:underline disabled:opacity-50">Plan my next step <span aria-hidden="true">↗</span></button></div>)}
         </div>
 
+        {!active && homeExtras}
         {active && <div role="log" aria-label="Conversation with Pulse" aria-live="polite" aria-busy={streaming} className="space-y-6 pb-6">{messages.map((message, index) => <article key={message.id} className={cn('text-sm leading-7', message.role === 'user' ? 'ml-auto max-w-xl rounded-2xl bg-muted/70 px-5 py-3' : 'pr-2')}>
           {message.role === 'assistant' && <p className="mb-2 flex items-center gap-2 text-xs font-semibold text-primary"><Sparkles className="h-3.5 w-3.5" />Pulse</p>}
           <ReactMarkdown components={{ a: ({ children }) => <span>{children}</span>, img: () => null, p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p> }}>{message.content || (streaming ? 'Thinking through your next step…' : '')}</ReactMarkdown>
@@ -164,7 +171,7 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
           </a>)}</div> : null}
           {message.role === 'assistant' && <PulseSources sources={message.sources} />}
           {message.role === 'assistant' && renderAnswerFooter && message.id.endsWith(':assistant') && message.content && !(streaming && index === messages.length - 1) &&
-            renderAnswerFooter(message.id.slice(0, -':assistant'.length))}
+            renderAnswerFooter(message, message.id.slice(0, -':assistant'.length))}
         </article>)}<div ref={end} /></div>}
       </div>
     </div>
