@@ -113,6 +113,6 @@ test('builder accepts no working title and offers uncertainty in business model'
     const area=dom.window.document.querySelector('textarea');
     const setter=Object.getOwnPropertyDescriptor(dom.window.HTMLTextAreaElement.prototype,'value').set;
     setter.call(area,'I want to explore tools for local small business owners.');area.dispatchEvent(new dom.window.Event('input',{bubbles:true}));await tick();
-    await click(dom,'Continue');assert.ok(text(dom).includes('How does this business make money?'));assert.ok(text(dom).includes('Not sure yet'));
+    await click(dom,'Continue');assert.ok(text(dom).includes('How might this make money?'));assert.ok(text(dom).includes('Not sure yet'));
   }finally{close(dom);}
 });

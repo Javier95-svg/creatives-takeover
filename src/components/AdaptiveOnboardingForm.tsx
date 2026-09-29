@@ -1,6 +1,6 @@
-import { ONBOARDING_SITUATIONS, classifyOnboardingSituation } from '@/lib/onboardingClassification';
+import { ONBOARDING_SITUATIONS, classifyOnboardingSituation, situationForUserType } from '@/lib/onboardingClassification';
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
-import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, ChevronDown, Info, Loader2, Lock, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -9,7 +9,9 @@ import { RoleProfileFields } from '@/components/workspace/RoleProfileFields';
 import { INVESTMENT_STAGES, missingRoleFields, sanitizeRoleProfile, type RoleProfile } from '@/lib/roleProfileSchema';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/hooks/useCredits';
@@ -60,6 +62,7 @@ import {
 } from '@/lib/retentionSystem';
 import { refreshOnboardingMentorRecommendations } from '@/lib/onboardingMentorRecommendations';
 import { onboardingSupportNeeds } from '@/lib/onboardingSupportNeeds';
+import { clearIntendedAccountType, readIntendedAccountType } from '@/lib/intendedAccountType';
 import { cn } from '@/lib/utils';
 import { trackOnboardingStepCompleted } from '@/lib/analytics';
 
@@ -140,12 +143,14 @@ const CAPACITY_OPTIONS = [
   [20, '20 or more hours'],
 ] as const;
 
+// "Not spending" comes first: most people starting out are not burning money,
+// and they should not have to read four runway bands to find their answer.
 const RUNWAY_OPTIONS = [
+  ['not_applicable', 'Not spending money on this yet'],
   ['under_3', 'Less than 3 months'],
   ['3_6', '3 to 6 months'],
   ['6_12', '6 to 12 months'],
   ['over_12', 'More than 12 months'],
-  ['not_applicable', 'Not burning money yet'],
 ] as const;
 
 const REVENUE_OPTIONS = [
@@ -162,6 +167,57 @@ const FUNDRAISING_OPTIONS = [
   ['talking_investors', 'Talking to investors'],
   ['raising_now', 'Actively raising a round'],
 ] as const;
+
+// Plain-language names for values the summary screen shows. The stored codes
+// never reach the page.
+const LOOP_LABEL: Record<string, string> = {
+  PROVE: 'Proving demand',
+  SELL: 'Winning customers',
+  GROW: 'Growing',
+};
+
+const ROUTINE_LABEL: Record<string, string> = {
+  validate_idea: 'Validate the idea',
+  find_cofounders: 'Find a co-founder',
+  grow_audience: 'Win customers',
+  launch_product: 'Ship and launch',
+  raise_funding: 'Prepare to raise',
+};
+
+const CAPITAL_MOTION_LABEL: Record<string, string> = {
+  preparing: 'Preparing to raise',
+  active: 'Raising now',
+};
+
+// Kept in the sector list for existing investor records only; new projects
+// choose between its two replacements.
+const LEGACY_SECTORS = new Set(['Mobility & Logistics']);
+
+const REVIEWED_STEP_NAMES = ['About you', 'Your details'] as const;
+
+function stepNameFor(visibleStep: number, segment: string) {
+  if (isReviewedType(segment)) return REVIEWED_STEP_NAMES[visibleStep - 1] ?? '';
+  return [
+    'About you',
+    segment === 'builder' ? 'Your idea' : 'Your project',
+    'Business model',
+    'Customer evidence',
+    '30-day goal',
+    'Main blocker',
+    'Time and runway',
+    'Final review',
+  ][visibleStep - 1] ?? '';
+}
+
+function labelOf(options: readonly (readonly [string | number, string])[], value: string | number) {
+  return options.find(([key]) => key === value)?.[1] ?? '';
+}
+
+/** "a", "a and b", "a, b and c". */
+function joinList(items: string[]) {
+  if (items.length <= 1) return items.join('');
+  return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+}
 
 interface AdaptiveOnboardingFormProps {
   session: OnboardingSessionV1;
@@ -260,11 +316,17 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
   // kept out of currentStep so the founder step machine is untouched.
   const [reviewStage, setReviewStage] = useState<'choosing' | 'details'>(!(localFallback?.answers.situation ?? session.answers.situation) ? 'choosing' : localFallback?.answers.entryStage ?? session.answers.entryStage ?? (session.current_step > 0 ? 'details' : 'choosing'));
   const [roleDraft, setRoleDraft] = useState<RoleProfile>(localFallback?.answers.roleProfile ?? session.answers.roleProfile ?? {});
+  // A fresh session starts from the account type picked on the homepage, if
+  // any. A resumed session keeps its own answer.
+  const resumedSituation = localFallback?.answers.situation ?? session.answers.situation;
+  const [intendedType] = useState(() => (resumedSituation ? null : readIntendedAccountType()));
+  const initialSituation = resumedSituation ?? (intendedType ? situationForUserType(intendedType) : undefined);
   const [answers, setAnswers] = useState<OnboardingAnswersV1>({
     ...EMPTY_ONBOARDING_ANSWERS_V1,
     ...session.answers,
     ...localFallback?.answers,
-    founderSegment: classifyOnboardingSituation(localFallback?.answers.situation ?? session.answers.situation),
+    situation: initialSituation,
+    founderSegment: classifyOnboardingSituation(initialSituation),
     sectors: Array.isArray(localFallback?.answers.sectors)
       ? localFallback.answers.sectors
       : Array.isArray(session.answers.sectors)
@@ -283,7 +345,13 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
   const [error, setError] = useState<string | null>(null);
   const [completionAttempts, setCompletionAttempts] = useState(0);
   const [explicitIntent, setExplicitIntent] = useState(Boolean(session.answers.selectedIntent));
+  // Set when a mentor or marketplace answer has no invitation on file. Shown
+  // as a callout with a way forward rather than a bare error.
+  const [invitationBlocked, setInvitationBlocked] = useState(false);
+  // A resumed draft with optional answers opens the section so they stay visible.
+  const [showOptionalDetails, setShowOptionalDetails] = useState(() => Boolean(answers.country || answers.investorVisible || answers.sectors.length));
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const completedRef = useRef(session.status === 'completed');
   const startedAtRef = useRef(new Date(session.started_at).getTime());
   const recommendationShownRef = useRef(false);
@@ -292,8 +360,12 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
   const visibleTotal = isReviewedType(answers.founderSegment) ? 2 : CORE_STEPS + 1;
 
   useEffect(() => {
-    headingRef.current?.focus();
-  }, [currentStep, reviewStage]);
+    // Bring the top of the card back into view on every step, which matters on
+    // phones where the Continue button sits far below the question.
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    cardRef.current?.scrollIntoView?.({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
+    headingRef.current?.focus({ preventScroll: true });
+  }, [currentStep, reviewStage, submittedReview]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -449,7 +521,11 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
       if (!answers.founderSegment) return 'Choose the option that describes you.';
       if (reviewStage === 'choosing') return null;
       const length = answers.startupBrief.trim().length;
-      if (length < 20 || length > 280) return 'Write 20 to 280 characters about what you build and who it serves.';
+      if (length < 20 || length > 280) {
+        return answers.founderSegment === 'builder'
+          ? 'Write 20 to 280 characters about the problem or area you want to explore.'
+          : 'Write 20 to 280 characters about what you build and who it serves.';
+      }
       // A project is mandatory for founders and builders, so it is asked for
       // here rather than chased afterwards. Providers never take this quiz.
       if (answers.investorVisible && !answers.investmentStage) return 'Choose the funding stage investors should match.';
@@ -465,7 +541,9 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
     }
     if (step === 3) {
       if (!answers.primaryGoal) return 'Choose the most important 30-day outcome.';
-      if (requiresFundraisingStatus(answers.primaryGoal, answers.blocker) && !answers.fundraisingStatus) {
+      // Only a raise goal asks the fundraising question on this screen; a
+      // fundraising blocker asks it on the next one.
+      if (answers.primaryGoal === 'raise' && !answers.fundraisingStatus) {
         return 'Choose your current fundraising status.';
       }
     }
@@ -480,7 +558,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
     }
     if (step === 5) {
       if (!answers.weeklyCapacityHours) return 'Choose the time you can protect each week.';
-      if (!answers.runwayMonths) return 'Choose how long you can keep going at your current burn.';
+      if (!answers.runwayMonths) return 'Choose how long you can keep going, or “Not spending money on this yet”.';
     }
     if (step === 6 && !answers.selectedIntent) return 'Choose a first action.';
     return null;
@@ -513,7 +591,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
         setIsSaving(true); submittingRef.current = true;
         try {
           const invitations = await getMyAccountInvitationTypes();
-          if (!invitations.includes(answers.founderSegment)) { setError('This participation requires an invitation for your verified sign-in email. Contact an administrator to confirm your invitation.'); return; }
+          if (!invitations.includes(answers.founderSegment)) { setInvitationBlocked(true); return; }
         } catch { setError('Could not check your invitation. Please try again.'); return; }
         finally { setIsSaving(false); submittingRef.current = false; }
       }
@@ -539,7 +617,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
       }
       const missing = missingRoleFields(answers.founderSegment, roleDraft);
       if (missing.length > 0) {
-        setError(`Fill in ${missing.map((field) => field.label.toLowerCase()).join(' and ')}.`);
+        setError(`Fill in ${joinList(missing.map((field) => field.label.replace(/\?$/, '').toLowerCase()))}.`);
         return;
       }
       setIsSaving(true);
@@ -554,6 +632,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
         });
         completedRef.current = true;
         try { localStorage.removeItem(`adaptive_onboarding_${session.id}`); } catch { /* storage unavailable */ }
+        clearIntendedAccountType();
         setSubmittedReview(answers.founderSegment);
         void queryClient.invalidateQueries({ queryKey: ['account-context', user?.id] });
         void trackRetentionEvent('onboarding_completed', { user_id: user?.id, user_type: answers.founderSegment, quiz_version: 2, onboarding_session_id: session.id, completion_kind: 'application_submitted' });
@@ -691,6 +770,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
 
       completedRef.current = true;
       try { localStorage.removeItem(`adaptive_onboarding_${session.id}`); } catch { /* storage unavailable */ }
+      clearIntendedAccountType();
       void queryClient.invalidateQueries({ queryKey: ['account-context', user?.id] });
       await startActivationJourney({
         userId: user.id,
@@ -801,6 +881,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
   const reviewing = currentStep === 0 && isReviewedType(answers.founderSegment) && !submittedReview;
   const totalSteps = visibleTotal;
   const displayStep = submittedReview ? 2 : visibleStep;
+  const stepName = submittedReview ? 'Request sent' : stepNameFor(displayStep, answers.founderSegment);
 
   const renderStep = () => {
     if (currentStep === 0) {
@@ -808,23 +889,44 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
       // is a confirmation and nothing more.
       if (submittedReview) {
         return (
-          <Card className="mx-auto max-w-xl">
-            <CardContent className="p-8 text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-accent-teal/15">
-                <Check className="h-6 w-6 text-accent-teal" />
-              </div>
-              <h2 className="mt-5 text-xl font-semibold">Thanks, your request has been sent.</h2>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                You can use your workspace now. We will email you after review. Approval enables category features; your public listing still needs its own setup.
-              </p>
-            </CardContent>
-          </Card>
+          <div className="mx-auto max-w-xl py-4 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent-teal/15">
+              <Check className="h-7 w-7 text-accent-teal" />
+            </div>
+            <h2 ref={headingRef} tabIndex={-1} className="mt-5 font-space-grotesk text-2xl font-semibold outline-none">Thanks, your request has been sent.</h2>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
+              You can use your workspace now. We will email you after review.
+            </p>
+            <ol className="mx-auto mt-6 grid max-w-sm gap-3 text-left text-sm">
+              <li className="flex gap-3"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-teal/15 text-xs font-semibold text-accent-teal">1</span>An admin reviews the details you sent.</li>
+              <li className="flex gap-3"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-teal/15 text-xs font-semibold text-accent-teal">2</span>You get an email with the decision.</li>
+              <li className="flex gap-3"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-teal/15 text-xs font-semibold text-accent-teal">3</span>Once approved, you set up your public profile from your workspace.</li>
+            </ol>
+          </div>
         );
       }
 
       if (reviewStage === 'choosing') return <>
-        <StepHeading title="What brings you here today?" description="Which statement best describes your situation today? We use your answers to personalize your workspace." headingRef={headingRef} />
-        <div className="mt-6"><ChoiceGrid options={ONBOARDING_SITUATIONS} value={answers.situation ?? ''} onSelect={(situation) => { const founderSegment = classifyOnboardingSituation(situation); if (founderSegment !== answers.founderSegment) setRoleDraft({}); setError(''); patchAnswers({ situation, founderSegment }); }} /></div>
+        <StepHeading eyebrow="Set up your account" title="What brings you here today?" description="Choose the statement that fits you best. It decides which workspace you get." headingRef={headingRef} />
+        {intendedType && answers.founderSegment === intendedType ? (
+          <p className="mt-4 flex items-start gap-2 rounded-lg border border-accent-teal/30 bg-accent-teal/10 px-3 py-2 text-sm">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-accent-teal" aria-hidden="true" />
+            We selected this from your choice on the homepage. You can pick a different one.
+          </p>
+        ) : null}
+        <div className="mt-6"><ChoiceGrid options={ONBOARDING_SITUATIONS} value={answers.situation ?? ''} onSelect={(situation) => { const founderSegment = classifyOnboardingSituation(situation); if (founderSegment !== answers.founderSegment) setRoleDraft({}); setError(''); setInvitationBlocked(false); patchAnswers({ situation, founderSegment }); }} /></div>
+        {invitationBlocked ? (
+          <div role="alert" className="mt-5 rounded-xl border border-warning/40 bg-warning-subtle p-4">
+            <p className="flex items-center gap-2 text-sm font-semibold"><Lock className="h-4 w-4 text-warning" aria-hidden="true" />This option needs an invitation</p>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              This participation requires an invitation for your verified sign-in email{user?.email ? <> (<span className="font-medium text-foreground">{user.email}</span>)</> : null}. If you were invited with another address, sign in with that one.
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+              <a href="/contact" className="inline-flex items-center font-semibold text-primary hover:underline">Request an invitation <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" /></a>
+              <span className="text-muted-foreground">or pick another option above.</span>
+            </div>
+          </div>
+        ) : null}
       </>;
 
       // The second and last question a reviewed type is asked.
@@ -832,6 +934,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
         return (
           <>
             <StepHeading
+              eyebrow="Request access"
               title={`Tell us about your ${USER_TYPE_LABEL[answers.founderSegment].toLowerCase()} work`}
               description="These answers help us review your request. You can refine your public profile and preferences from your workspace."
               headingRef={headingRef}
@@ -843,35 +946,96 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
         );
       }
 
-  return (
+      const isBuilder = answers.founderSegment === 'builder';
+      const briefLength = answers.startupBrief.trim().length;
+      const optionalCount = [answers.country.trim(), answers.investorVisible, answers.sectors.length > 0].filter(Boolean).length;
+      // Investor matching needs its funding stage, so that section cannot be
+      // folded away while the box is ticked.
+      const optionalOpen = showOptionalDetails || answers.investorVisible === true;
+      return (
         <>
-          {answers.founderSegment === 'builder' && <div className="mb-5"><p className="mb-2 font-semibold">Where are you starting?</p><ChoiceGrid options={[[ 'exploring', 'Exploring problems and ideas' ], [ 'idea_chosen', 'I have an idea to validate' ]] as const} value={answers.builderStartingPoint ?? ''} onSelect={(builderStartingPoint) => patchAnswers({ builderStartingPoint })} /></div>}
-          <StepHeading title={answers.founderSegment === 'builder' ? 'What problem or area would you like to explore?' : 'What are you building, and who is it for?'} description="One concise brief gives your dashboard enough context to make specific recommendations." headingRef={headingRef} />
+          <StepHeading
+            title={isBuilder ? 'What problem or area would you like to explore?' : 'What are you building, and who is it for?'}
+            description={isBuilder
+              ? 'A sentence or two is enough. It does not need to be a finished idea.'
+              : 'One or two sentences. Your dashboard uses this to make specific recommendations.'}
+            headingRef={headingRef}
+          />
+          {isBuilder && (
+            <div className="mt-6">
+              <p className="mb-3 text-sm font-semibold">Where are you starting?</p>
+              <ChoiceGrid columns={2} options={[[ 'exploring', 'Exploring problems and ideas' ], [ 'idea_chosen', 'I have an idea to validate' ]] as const} value={answers.builderStartingPoint ?? ''} onSelect={(builderStartingPoint) => patchAnswers({ builderStartingPoint })} />
+            </div>
+          )}
+          <label htmlFor="onboarding-brief" className="mt-6 block text-sm font-semibold">{isBuilder ? 'The problem or area' : 'Your brief'}</label>
           <Textarea
+            id="onboarding-brief"
             value={answers.startupBrief}
             onChange={(event) => patchAnswers({ startupBrief: event.target.value.slice(0, 280) })}
-            rows={5}
-            placeholder="Example: We help independent agencies turn client calls into clear project briefs and proposals."
-            className="mt-5 resize-none"
+            rows={4}
+            placeholder={isBuilder
+              ? 'Example: Freelance designers lose hours chasing unpaid invoices. I want to find out how common that is.'
+              : 'Example: We help independent agencies turn client calls into clear project briefs and proposals.'}
+            className="mt-2 resize-none"
+            aria-describedby="onboarding-brief-count"
           />
-          <div className="mt-2 text-right text-xs text-muted-foreground">{answers.startupBrief.trim().length}/280</div>
-          <p className="mt-6 text-sm font-semibold">{answers.founderSegment === 'builder' ? 'Working title (optional)' : 'What is your project called?'}</p>
+          <p id="onboarding-brief-count" className="mt-2 flex justify-between gap-3 text-xs text-muted-foreground tabular-nums">
+            <span className={cn(briefLength > 0 && briefLength < 20 && 'text-warning')}>
+              {briefLength < 20 ? `${20 - briefLength} more ${20 - briefLength === 1 ? 'character' : 'characters'} needed` : <span className="inline-flex items-center gap-1 text-success"><Check className="h-3.5 w-3.5" aria-hidden="true" />Looks good</span>}
+            </span>
+            <span>{briefLength}/280</span>
+          </p>
+          <label htmlFor="onboarding-project-name" className="mt-6 block text-sm font-semibold">{isBuilder ? 'Working title (optional)' : 'What is your project called?'}</label>
           <Input
+            id="onboarding-project-name"
             value={answers.projectName}
             onChange={(event) => patchAnswers({ projectName: event.target.value.slice(0, 120) })}
             placeholder="Throughline"
             maxLength={120}
             className="mt-2"
           />
-          {answers.founderSegment === 'builder' && <p className="mt-2 text-xs text-muted-foreground">No name yet? We will save an editable “Untitled idea” project.</p>}
-          <label htmlFor="onboarding-country" className="mt-5 block text-sm font-semibold">Country (optional)</label>
-          <Input id="onboarding-country" value={answers.country} placeholder={detectCountryFromLocale() || 'Your country'} maxLength={100} onChange={(event) => patchAnswers({ country: event.target.value })} />
-          <p className="mt-1 text-xs text-muted-foreground">Confirm your country if you want it used for recommendations. The placeholder is only a browser suggestion.</p>
-          <label className="mt-5 flex items-start gap-2 text-sm"><input type="checkbox" checked={answers.investorVisible === true} onChange={(event) => patchAnswers({ investorVisible: event.target.checked })} /> Include my project summary in matches for approved investors. I can change this later in my account details.</label>
-          {answers.investorVisible && <div className="mt-3"><label htmlFor="investment-stage" className="block text-sm font-semibold">Funding stage to match</label><select id="investment-stage" className="mt-2 w-full rounded border bg-background p-2" value={answers.investmentStage ?? ''} onChange={(event) => patchAnswers({ investmentStage: event.target.value })}><option value="">Choose a funding stage</option>{INVESTMENT_STAGES.map((stage) => <option key={stage}>{stage}</option>)}</select></div>}
-          <p className="mt-5 text-sm font-semibold">Optional sectors</p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {isBuilder ? 'No name yet? We will save an editable “Untitled idea” project.' : 'Everything you build on Creatives Takeover is saved to this project.'}
+          </p>
+
+          <div className="mt-8 rounded-xl border border-border/60">
+            <button
+              type="button"
+              aria-expanded={optionalOpen}
+              aria-controls="onboarding-optional-details"
+              onClick={() => setShowOptionalDetails(!optionalOpen)}
+              disabled={answers.investorVisible === true}
+              className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left disabled:cursor-default"
+            >
+              <span>
+                <span className="block text-sm font-semibold">Optional details</span>
+                <span className="block text-xs text-muted-foreground">
+                  {optionalCount > 0 ? `${optionalCount} added` : 'Country, sectors and investor matching. You can skip this.'}
+                </span>
+              </span>
+              <ChevronDown className={cn('h-4 w-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none', optionalOpen && 'rotate-180')} aria-hidden="true" />
+            </button>
+            {optionalOpen && (
+          <div id="onboarding-optional-details" className="border-t border-border/60 px-4 pb-5">
+          <label htmlFor="onboarding-country" className="mt-5 block text-sm font-semibold">Country</label>
+          <Input id="onboarding-country" value={answers.country} placeholder={detectCountryFromLocale() || 'Your country'} maxLength={100} onChange={(event) => patchAnswers({ country: event.target.value })} className="mt-2" />
+          <p className="mt-1 text-xs text-muted-foreground">Used for local recommendations. The placeholder is only a browser suggestion.</p>
+          <div className="mt-5 flex items-start gap-3">
+            <Checkbox id="onboarding-investor-visible" className="mt-0.5" checked={answers.investorVisible === true} onCheckedChange={(checked) => patchAnswers({ investorVisible: checked === true, investmentStage: checked === true ? answers.investmentStage : '' })} />
+            <label htmlFor="onboarding-investor-visible" className="text-sm leading-5">Include my project summary in matches for approved investors. I can change this later in my account details.</label>
+          </div>
+          {answers.investorVisible && (
+            <div className="mt-4 pl-7">
+              <label htmlFor="investment-stage" className="block text-sm font-semibold">Funding stage to match</label>
+              <Select value={answers.investmentStage || undefined} onValueChange={(investmentStage) => patchAnswers({ investmentStage })}>
+                <SelectTrigger id="investment-stage" className="mt-2"><SelectValue placeholder="Choose a funding stage" /></SelectTrigger>
+                <SelectContent>{INVESTMENT_STAGES.map((stage) => <SelectItem key={stage} value={stage}>{stage}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+          )}
+          <p className="mt-5 text-sm font-semibold">Sectors</p>
           <div className="mt-2 flex flex-wrap gap-2">
-            {ANGEL_SECTOR_OPTIONS.map((sector) => {
+            {ANGEL_SECTOR_OPTIONS.filter((sector) => !LEGACY_SECTORS.has(sector) || answers.sectors.includes(sector)).map((sector) => {
               const selected = answers.sectors.includes(sector);
               return (
                 <button
@@ -893,22 +1057,41 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
               );
             })}
           </div>
+          </div>
+            )}
+          </div>
         </>
       );
     }
     if (currentStep === 1) {
       return (
         <>
-          <StepHeading title="How does this business make money?" description="This shapes the operating loop and examples used across your dashboard." headingRef={headingRef} />
-          <div className="mt-5"><ChoiceGrid options={answers.founderSegment === 'builder' ? BUSINESS_MODELS.map((option) => option[0] === 'other' ? ['other', 'Not sure yet / another model'] as const : option) : BUSINESS_MODELS} value={answers.businessModel} onSelect={(businessModel) => patchAnswers({ businessModel })} /></div>
+          {answers.founderSegment === 'builder' ? (
+            <>
+              {/* Someone starting from scratch has no business yet, so ask for
+                  a best guess and lead with the honest answer. */}
+              <StepHeading title="How might this make money?" description="A best guess is fine. Pick “Not sure yet” if you have not decided." headingRef={headingRef} />
+              <div className="mt-5"><ChoiceGrid columns={2} options={[['other', 'Not sure yet / another model'] as const, ...BUSINESS_MODELS.filter((option) => option[0] !== 'other')]} value={answers.businessModel} onSelect={(businessModel) => patchAnswers({ businessModel })} /></div>
+            </>
+          ) : (
+            <>
+              <StepHeading title="How does this business make money?" description="This shapes the examples and playbooks used across your dashboard." headingRef={headingRef} />
+              <div className="mt-5"><ChoiceGrid columns={2} options={BUSINESS_MODELS} value={answers.businessModel} onSelect={(businessModel) => patchAnswers({ businessModel })} /></div>
+            </>
+          )}
         </>
       );
     }
     if (currentStep === 2) {
       return (
         <>
-          <StepHeading title="What is the strongest customer evidence you have?" description="Choose an external signal, not a completed internal task." headingRef={headingRef} />
-          <div className="mt-5"><ChoiceGrid options={EVIDENCE_OPTIONS} value={answers.evidenceState} onSelect={(evidenceState) => patchAnswers({ evidenceState, customerCountBand: requiresCustomerCount(evidenceState) ? answers.customerCountBand : '' })} /></div>
+          <StepHeading title="What is the strongest customer evidence you have?" description="Pick the furthest point real customers have reached. Work you did on your own does not count yet." headingRef={headingRef} />
+          <div className="mt-5"><ChoiceGrid options={EVIDENCE_OPTIONS} value={answers.evidenceState} onSelect={(evidenceState) => {
+            // Customer count and revenue only apply to paying evidence; drop
+            // them when the answer moves below that so they are not saved stale.
+            const keep = requiresCustomerCount(evidenceState);
+            patchAnswers({ evidenceState, customerCountBand: keep ? answers.customerCountBand : '', revenueBand: keep ? answers.revenueBand : '' });
+          }} /></div>
           {requiresCustomerCount(answers.evidenceState) ? (
             <>
               <div className="mt-6">
@@ -929,8 +1112,13 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
       return (
         <>
           <StepHeading title="What outcome matters most in the next 30 days?" description="Your Progress Tracker will prioritize this outcome over a generic startup checklist." headingRef={headingRef} />
-          <div className="mt-5"><ChoiceGrid options={GOAL_OPTIONS} value={answers.primaryGoal} onSelect={(primaryGoal) => patchAnswers({ primaryGoal })} /></div>
-          {requiresFundraisingStatus(answers.primaryGoal, answers.blocker) ? (
+          <div className="mt-5"><ChoiceGrid options={GOAL_OPTIONS} value={answers.primaryGoal} onSelect={(primaryGoal) => patchAnswers({
+            primaryGoal,
+            fundraisingStatus: requiresFundraisingStatus(primaryGoal, answers.blocker) ? answers.fundraisingStatus : '',
+          })} /></div>
+          {/* Each follow-up is asked on exactly one screen: here for a raise
+              goal, on the blocker screen for a fundraising blocker. */}
+          {answers.primaryGoal === 'raise' ? (
             <div className="mt-6">
               <p className="mb-3 text-sm font-semibold">Where is fundraising today?</p>
               <ChoiceGrid options={FUNDRAISING_OPTIONS} value={answers.fundraisingStatus} onSelect={(fundraisingStatus) => patchAnswers({ fundraisingStatus })} />
@@ -943,7 +1131,11 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
       return (
         <>
           <StepHeading title="What is most likely to stop that outcome?" description="This determines the action and support your dashboard recommends first." headingRef={headingRef} />
-          <div className="mt-5"><ChoiceGrid options={BLOCKER_OPTIONS} value={answers.blocker} onSelect={(blocker) => patchAnswers({ blocker })} /></div>
+          <div className="mt-5"><ChoiceGrid options={BLOCKER_OPTIONS} value={answers.blocker} onSelect={(blocker) => patchAnswers({
+            blocker,
+            cofounderSituation: requiresCofounderSituation(blocker) ? answers.cofounderSituation : '',
+            fundraisingStatus: requiresFundraisingStatus(answers.primaryGoal, blocker) ? answers.fundraisingStatus : '',
+          })} /></div>
           {requiresCofounderSituation(answers.blocker) ? (
             <div className="mt-6">
               <p className="mb-3 text-sm font-semibold">Are you actively looking for a co-founder?</p>
@@ -957,7 +1149,9 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
               />
             </div>
           ) : null}
-          {requiresFundraisingStatus(answers.primaryGoal, answers.blocker) && !answers.fundraisingStatus ? (
+          {/* Stays visible once answered; the old "&& !fundraisingStatus"
+              condition made the question vanish on the first click. */}
+          {answers.blocker === 'fundraising' && answers.primaryGoal !== 'raise' ? (
             <div className="mt-6">
               <p className="mb-3 text-sm font-semibold">Where is fundraising today?</p>
               <ChoiceGrid options={FUNDRAISING_OPTIONS} value={answers.fundraisingStatus} onSelect={(fundraisingStatus) => patchAnswers({ fundraisingStatus })} />
@@ -969,12 +1163,12 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
     if (currentStep === 5) {
       return (
         <>
-          <StepHeading title="What are you working with?" description="Your routine, missions, and how urgently they push you are all sized from these constraints." headingRef={headingRef} />
-          <p className="mt-5 text-sm font-semibold">How much focused execution time can you protect each week?</p>
-          <div className="mt-3"><ChoiceGrid options={CAPACITY_OPTIONS} value={answers.weeklyCapacityHours} onSelect={(weeklyCapacityHours) => patchAnswers({ weeklyCapacityHours })} /></div>
+          <StepHeading title="What are you working with?" description="Your routine and daily missions are sized to the time and money you have." headingRef={headingRef} />
+          <p className="mt-5 text-sm font-semibold">How much focused time can you give this each week?</p>
+          <div className="mt-3"><ChoiceGrid columns={2} options={CAPACITY_OPTIONS} value={answers.weeklyCapacityHours} onSelect={(weeklyCapacityHours) => patchAnswers({ weeklyCapacityHours })} /></div>
           <div className="mt-6">
-            <p className="mb-1 text-sm font-semibold">How long can you keep going at your current burn?</p>
-            <p className="mb-3 text-xs text-muted-foreground">A short runway changes which action is worth doing first. Pick &ldquo;Not burning money yet&rdquo; if that is closer.</p>
+            <p className="mb-1 text-sm font-semibold">If you are spending money on this, how long can you keep going?</p>
+            <p className="mb-3 text-xs text-muted-foreground">Only money you are spending on this project counts. A short runway changes which action is worth doing first.</p>
             <ChoiceGrid options={RUNWAY_OPTIONS} value={answers.runwayMonths} onSelect={(runwayMonths) => patchAnswers({ runwayMonths })} columns={2} />
           </div>
           <fieldset className="mt-6">
@@ -1020,12 +1214,12 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
     const selected = ACTIVATION_CATALOG[selectedIntent];
     return (
       <>
-        <StepHeading title="Your Progress Tracker focus is ready" description="Review how your answers will shape the dashboard, then open your first useful action." headingRef={headingRef} />
-        <p className="mt-4 text-sm">Based on your answers, your workspace is <strong>{USER_TYPE_LABEL[answers.founderSegment || 'founder']}</strong>. Your next goal: <strong>{GOAL_OPTIONS.find(([key]) => key === answers.primaryGoal)?.[1]}</strong>. Use Back to edit your answers.</p>
-        <div className="mt-5 rounded-xl border border-accent-teal/30 bg-accent-teal/10 p-5">
+        <StepHeading title="Your plan is ready" description="This is how your answers shape your workspace. Use Back to change anything before you start." headingRef={headingRef} />
+        <div className="mt-6 rounded-xl border border-accent-teal/30 bg-accent-teal/10 p-5">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge>{draftContext.founderLoop} loop</Badge>
+            <Badge>{USER_TYPE_LABEL[answers.founderSegment || 'founder']} workspace</Badge>
             <Badge variant="outline">Stage {draftContext.assignedStage}: {draftContext.assignedStageLabel}</Badge>
+            <Badge variant="outline">{LOOP_LABEL[draftContext.founderLoop] ?? draftContext.founderLoop}</Badge>
             <Badge variant="outline">
               {draftContext.stageConfidenceBand === 'high'
                 ? 'Strong stage evidence'
@@ -1034,20 +1228,20 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
                   : 'Stage will refine with evidence'}
             </Badge>
             {draftContext.capitalMotion !== 'inactive' ? (
-              <Badge variant="outline">Fundraising {draftContext.capitalMotion}</Badge>
+              <Badge variant="outline">{CAPITAL_MOTION_LABEL[draftContext.capitalMotion] ?? 'Fundraising'}</Badge>
             ) : null}
-            <Badge variant="outline">{answers.weeklyCapacityHours} hours/week</Badge>
+            <Badge variant="outline">{labelOf(CAPACITY_OPTIONS, answers.weeklyCapacityHours) || `${answers.weeklyCapacityHours} hours`} a week</Badge>
           </div>
-          <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
-            <div><dt className="text-muted-foreground">Daily mission</dt><dd className="mt-1 font-medium">Advance {answers.primaryGoal.replaceAll('_', ' ')}</dd></div>
-            <div><dt className="text-muted-foreground">Routine</dt><dd className="mt-1 font-medium">{draftContext.routineGoal.replaceAll('_', ' ')}</dd></div>
-            <div><dt className="text-muted-foreground">Primary blocker</dt><dd className="mt-1 font-medium">{answers.blocker.replaceAll('_', ' ')}</dd></div>
+          <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-3">
+            <div><dt className="text-muted-foreground">30-day goal</dt><dd className="mt-1 font-medium">{labelOf(GOAL_OPTIONS, answers.primaryGoal)}</dd></div>
+            <div><dt className="text-muted-foreground">Daily routine</dt><dd className="mt-1 font-medium">{ROUTINE_LABEL[draftContext.routineGoal] ?? 'Your weekly routine'}</dd></div>
+            <div><dt className="text-muted-foreground">Main blocker</dt><dd className="mt-1 font-medium">{labelOf(BLOCKER_OPTIONS, answers.blocker)}</dd></div>
           </dl>
         </div>
         <div className="mt-5 rounded-xl border-2 border-accent-teal bg-background/80 p-5">
           <Badge className="bg-accent-teal text-white">Recommended first win</Badge>
-          <h3 className="mt-3 text-xl font-semibold">{selected.label}</h3>
-          <p className="mt-1 text-sm text-muted-foreground">{selected.output} in about {selected.estimatedMinutes} minutes.</p>
+          <h3 className="mt-3 font-space-grotesk text-xl font-semibold">{selected.label}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">{selected.output}{selected.estimatedMinutes ? ` in about ${selected.estimatedMinutes} minutes` : ''}.</p>
           <ol className="mt-4 grid gap-2 sm:grid-cols-3">
             {selected.steps.map((item, index) => (
               <li key={item} className="flex items-center gap-2 text-sm">
@@ -1082,25 +1276,32 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
 
   return (
     <div className="mx-auto w-full max-w-4xl px-3 py-4 sm:px-6">
-      <Card className="overflow-hidden border-border/60 bg-card/95 shadow-2xl">
+      {/* overflow-clip rather than overflow-hidden so the footer can stick. */}
+      <Card ref={cardRef} className="scroll-mt-4 overflow-clip border-border/60 bg-card/95 shadow-2xl">
         <CardContent className="p-0">
           <div className="border-b border-border/60 bg-background/60 p-5">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-teal/15 text-accent-teal"><Sparkles className="h-5 w-5" /></span>
-                <div><p className="font-semibold">{answers.founderSegment ? USER_TYPE_LABEL[answers.founderSegment] + ' setup' : 'Your workspace'}</p><p className="text-xs text-muted-foreground">{displayStep} of {totalSteps}</p></div>
+                <div>
+                  <p className="font-semibold">{answers.founderSegment ? USER_TYPE_LABEL[answers.founderSegment] + ' setup' : 'Your workspace'}</p>
+                  <p className="text-xs text-muted-foreground tabular-nums">
+                    {displayStep} of {totalSteps}
+                    {stepName ? <> · {stepName}</> : null}
+                  </p>
+                </div>
               </div>
-              <span className="text-sm font-medium text-muted-foreground">{Math.round((displayStep / totalSteps) * 100)}%</span>
+              <span className="text-sm font-medium text-muted-foreground tabular-nums">{Math.round((displayStep / totalSteps) * 100)}%</span>
             </div>
             <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted">
-              <div className="h-full rounded-full bg-accent-teal transition-[width] motion-reduce:transition-none" style={{ width: `${(displayStep / totalSteps) * 100}%` }} />
+              <div className="h-full rounded-full bg-accent-teal transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${(displayStep / totalSteps) * 100}%` }} />
             </div>
-            <p className="sr-only" aria-live="polite">Step {displayStep} of {totalSteps}</p>
+            <p className="sr-only" aria-live="polite">Step {displayStep} of {totalSteps}: {stepName}</p>
           </div>
           <section className="min-h-96 p-5 sm:p-8">
-            <div className="mx-auto max-w-2xl">{renderStep()}</div>
+            <div key={`${currentStep}-${reviewStage}-${submittedReview ?? ''}`} className="mx-auto max-w-2xl animate-fade-in-up motion-reduce:animate-none">{renderStep()}</div>
           </section>
-          <div className="flex items-center justify-between gap-3 border-t border-border/60 bg-background/50 p-4 sm:px-8">
+          <div className="sticky bottom-0 z-10 flex items-center justify-between gap-3 border-t border-border/60 bg-card/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-card/80 sm:px-8">
             <Button type="button" variant="secondary"
               onClick={() => {
                 setError('');
@@ -1114,7 +1315,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
               {error ? <p className="mb-2 max-w-md text-sm text-destructive" role="alert">{error}</p> : null}
               <Button type="button" onClick={() => void handleNext()} disabled={isSaving}>
                 {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                {submittedReview ? 'Open my workspace' : reviewing && reviewStage === 'details' ? 'Send my request' : currentStep === CORE_STEPS - 1 ? `Open ${ACTIVATION_CATALOG[answers.selectedIntent || recommendation.intent].label}` : 'Continue'}
+                {submittedReview ? 'Open my workspace' : reviewing && reviewStage === 'details' ? 'Send my request' : currentStep === CORE_STEPS - 1 ? `Start: ${ACTIVATION_CATALOG[answers.selectedIntent || recommendation.intent].label}` : 'Continue'}
                 {!isSaving ? <ArrowRight className="ml-2 h-4 w-4" /> : null}
               </Button>
             </div>
@@ -1126,16 +1327,19 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
 }
 
 const StepHeading = ({
+  eyebrow = 'Personalize your Progress Tracker',
   title,
   description,
   headingRef,
 }: {
+  /** Founder and builder screens keep the default; other flows say what they are. */
+  eyebrow?: string;
   title: string;
   description: string;
   headingRef: RefObject<HTMLHeadingElement | null>;
 }) => (
   <div>
-    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-accent-teal">Personalize your Progress Tracker</p>
+    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-accent-teal">{eyebrow}</p>
     <h2 ref={headingRef} tabIndex={-1} className="font-space-grotesk text-2xl font-semibold tracking-tight outline-none sm:text-3xl">{title}</h2>
     <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
   </div>

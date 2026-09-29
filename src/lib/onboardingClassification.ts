@@ -10,6 +10,19 @@ export const ONBOARDING_SITUATIONS = [
 ] as const;
 
 export type OnboardingSituation = typeof ONBOARDING_SITUATIONS[number][0];
+
+const SITUATION_FOR_USER_TYPE: Record<UserType, OnboardingSituation> = {
+  founder: 'existing_project',
+  builder: 'starting_project',
+  mentor: 'share_expertise',
+  marketplace: 'deliver_services',
+  investor: 'explore_investments',
+};
+
+/** The first-question answer that produces this account type. */
+export function situationForUserType(type: UserType): OnboardingSituation {
+  return SITUATION_FOR_USER_TYPE[type];
+}
 export function classifyOnboardingSituation(situation: unknown): UserType | '' {
   switch (situation) {
     case 'existing_project': return 'founder';

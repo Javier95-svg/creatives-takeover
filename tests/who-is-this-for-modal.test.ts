@@ -9,7 +9,7 @@ import {
 
 test("the audience modal has five plain-language account types and two venture stages", () => {
   assert.deepEqual(WHO_IS_THIS_FOR_ACCOUNT_TYPES.map(({ id }) => id), ["founder", "builder", "mentor", "marketplace", "investor"]);
-  assert.match(WHO_IS_THIS_FOR_ACCOUNT_TYPES[3].label, /Marketplace provider/);
+  assert.equal(WHO_IS_THIS_FOR_ACCOUNT_TYPES[3].label, "Marketplace");
   assert.deepEqual(WHO_IS_THIS_FOR_ACCOUNT_TYPES.map(({ access }) => access), ["open", "open", "invitation", "invitation", "open"]);
   assert.match(WHO_IS_THIS_FOR_ACCOUNT_TYPES[0].promise, /I have a project/);
   assert.match(WHO_IS_THIS_FOR_ACCOUNT_TYPES[1].promise, /I have an idea/);
@@ -77,9 +77,13 @@ test("the hero opens three separate audience tabs with a visual account guide", 
   assert.match(dialog, /cta_name: "who_is_this_for_tool"/);
 
   assert.match(accountPanel, /Bring your idea\. Find out what to do next\./);
-  assert.match(accountPanel, /From idea to growth/);
-  assert.match(accountPanel, /grid-cols-4 gap-1[\s\S]*sm:grid-cols-4/);
+  // The banner shows how accounts open, not the idea-to-growth steps that
+  // made it look like the pre-build banner.
+  assert.match(accountPanel, /How accounts open/);
+  assert.match(accountPanel, /ACCESS_GROUPS/);
+  assert.match(accountPanel, /Account types at Creatives Takeover/);
   assert.match(accountPanel, /ROLE_ICONS/);
+  assert.match(accountPanel, /ROLE_STYLES/);
   assert.match(accountPanel, /aria-pressed=\{selectedCard\}/);
   assert.match(accountPanel, /Invitation only/);
   assert.match(accountPanel, /selected\.access === "open"/);

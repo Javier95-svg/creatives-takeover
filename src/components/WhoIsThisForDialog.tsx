@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { captureEvent } from "@/lib/analytics";
+import { rememberIntendedAccountType } from "@/lib/intendedAccountType";
 import { WhoIsThisForAccountTypes } from "@/components/WhoIsThisForAccountTypes";
 import {
   WHO_IS_THIS_FOR_PROFILES,
@@ -126,6 +127,8 @@ const WhoIsThisForDialog = ({ open, onOpenChange }: WhoIsThisForDialogProps) => 
   const handleJoinClick = (accountType: AudienceAccountType["id"]) => {
     captureEvent("cta_clicked", { cta_name: "who_is_this_for_join", account_type: accountType, page: "/" });
     setAttribution(`who_is_this_for_${accountType}_join`, "/");
+    // The onboarding quiz pre-selects this so the person is not asked twice.
+    rememberIntendedAccountType(accountType);
   };
 
   const profile = activeIndex > 0 ? WHO_IS_THIS_FOR_PROFILES[activeIndex - 1] : null;

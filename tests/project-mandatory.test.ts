@@ -46,7 +46,8 @@ test('the prompt can be closed, so a misfiring exemption cannot lock anyone out'
 test('the quiz collects a project name so new accounts never reach the prompt', () => {
   assert.ok('projectName' in EMPTY_ONBOARDING_ANSWERS_V1);
   assert.equal(EMPTY_ONBOARDING_ANSWERS_V1.projectName, '');
-  assert.match(quiz, /if \(!answers\.projectName\.trim\(\)\) return 'Give your project a name/);
+  // Required for founders; a builder's working title is optional.
+  assert.match(quiz, /if \(answers\.founderSegment === 'founder' && !answers\.projectName\.trim\(\)\) return 'Give your project a name/);
   assert.match(quiz, /startup_name: answers\.projectName\.trim\(\) \|\| undefined,/);
   // The field renders, and the component it uses is imported. tsc does not
   // cover this file, so nothing else would have caught a missing import.
