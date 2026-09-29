@@ -71,7 +71,7 @@ export const PulsePanel = ({
           <div>
             <h3 className="text-sm font-semibold">Pulse</h3>
             <p className="text-xs text-muted-foreground">
-              {userName ? `Hi, ${userName.split(' ')[0]}` : 'AI Assistant'}
+              {userName ? `Hi, ${userName.split(' ')[0]}` : 'Platform Guide'}
             </p>
           </div>
         </div>

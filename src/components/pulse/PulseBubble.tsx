@@ -37,7 +37,7 @@ export const PulseBubble = ({
           compactMobileHomepage ? "h-12 w-12" : "h-14 w-14"
         )}
         size="icon"
-        aria-label="Open Pulse AI assistant"
+        aria-label="Open Pulse platform guide"
       >
         <MessageSquare className={cn(compactMobileHomepage ? "h-5 w-5" : "h-6 w-6")} />
         {hasUnread && (
