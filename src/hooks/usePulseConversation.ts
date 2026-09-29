@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { streamPulseHome } from '@/services/pulseHomeStream';
 import { validateHomeActions, type PulseHomeMessage } from '@/lib/pulseHome';
 import { pulseSourceNotice, validatePulseSources } from '@/lib/pulseSources';
+import { trackInvestorCards } from '@/lib/pulseInvestorTracking';
 import type { PulseScope } from '@/lib/pulseScope';
 
 const db = supabase.schema('public');
@@ -77,7 +78,7 @@ export function usePulseConversation(userId: string | undefined, scope: PulseSco
       };
       await streamPulseHome({ sessionId: session.current, turnId: turn.turnId, message: turn.text, projectId: scope.projectId, surface: 'pulse_widget', pagePath, signal: abort.signal,
         onText: chunk => update(message => ({ ...message, content: message.content + chunk })),
-        onActions: actions => update(message => ({ ...message, actions })),
+        onActions: actions => { update(message => ({ ...message, actions })); trackInvestorCards(actions, 'widget'); },
         onSources: sources => { update(message => ({ ...message, sources })); if (alive()) setState(previous => ({ ...previous, notice: pulseSourceNotice(sources) })); },
       });
       if (alive()) pending.current = null;

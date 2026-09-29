@@ -12,6 +12,8 @@ export interface PulseHomeAction {
   route: string;
   image?: string;
   slug?: string;
+  /** Investor cards: opening the profile needs the Pro plan for this account. */
+  locked?: boolean;
 }
 export interface PulseHomeMessage {
   id: string;
@@ -46,7 +48,7 @@ export function validateHomeActions(value: unknown): PulseHomeAction[] {
     // Angels have no profile page of their own: the route is always rebuilt as
     // Find your Angel filtered to that name, never taken from the payload.
     if (action.kind === 'investor' && PULSE_UUID.test(action.id) && action.title.trim()) {
-      return [{ ...action, route: `/investors?q=${encodeURIComponent(action.title.trim())}&source=pulse`,
+      return [{ ...action, route: `/investors?q=${encodeURIComponent(action.title.trim())}&source=pulse`, locked: action.locked === true,
         image: typeof action.image === 'string' && /^https:\/\//.test(action.image) ? action.image : undefined }];
     }
     if (action.kind === 'mentor' && /^[a-z0-9-]+$/i.test(action.id) && /^\/mentorship\/[a-z0-9-]+$/.test(action.route)) {

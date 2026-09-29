@@ -830,6 +830,25 @@ export const trackOnboardingGuestResumed = (properties: {
   auto_finished: boolean;
 } & AnalyticsProperties) => captureEvent('onboarding_guest_resumed', properties);
 
+/**
+ * Pulse answered with angel investor cards. investor_ids are directory records
+ * (public profiles), in the order shown.
+ */
+export const trackPulseInvestorsRecommended = (properties: {
+  surface: 'home' | 'widget';
+  count: number;
+  investor_ids: string[];
+  is_pro: boolean;
+} & AnalyticsProperties) => captureEvent('pulse_investors_recommended', properties);
+
+/** A founder clicked Visit profile on a Pulse investor card. rank is 1-based. */
+export const trackPulseInvestorProfileClicked = (properties: {
+  surface: 'home' | 'widget';
+  investor_id: string;
+  rank: number;
+  is_pro: boolean;
+} & AnalyticsProperties) => captureEvent('pulse_investor_profile_clicked', properties);
+
 /** A signed-out visitor opened Pulse. */
 export const trackPulseGuestOpened = (properties: { page_path: string } & AnalyticsProperties) =>
   captureEvent('pulse_guest_opened', properties);

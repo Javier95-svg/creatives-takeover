@@ -66,12 +66,25 @@ const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$
 const mentions = (text: string, phrase: string) => new RegExp(`(^|[^a-z0-9])${escapeRegex(phrase)}($|[^a-z0-9])`, 'i').test(text);
 
 /** Directory sectors named in free text, e.g. "cyber security startups" -> ["Cybersecurity"]. */
-export function resolveInvestorSectors(text: string, plannerSectors: unknown = []): AngelSector[] {
-  const fromPlanner = Array.isArray(plannerSectors)
-    ? ANGEL_SECTOR_OPTIONS.filter(sector => plannerSectors.some(value => typeof value === 'string' && value.toLowerCase() === sector.toLowerCase()))
-    : [];
-  const fromText = ANGEL_SECTOR_OPTIONS.filter(sector => mentions(text, sector) || (SECTOR_ALIASES[sector] ?? []).some(alias => mentions(text, alias)));
-  return [...new Set([...fromPlanner, ...fromText])];
+export function sectorsInText(text: string): AngelSector[] {
+  return ANGEL_SECTOR_OPTIONS.filter(sector => mentions(text, sector) || (SECTOR_ALIASES[sector] ?? []).some(alias => mentions(text, alias)));
+}
+
+/** Only real directory sectors survive from the planner's (model-written) list. */
+export function validSectors(value: unknown): AngelSector[] {
+  if (!Array.isArray(value)) return [];
+  return ANGEL_SECTOR_OPTIONS.filter(sector => value.some(item => typeof item === 'string' && item.toLowerCase() === sector.toLowerCase()));
+}
+
+/**
+ * The sectors to match, split by where they came from. What the user typed is
+ * the request; sectors the planner adds (usually the project's own) are shown
+ * as such on the card rather than silently changing the results.
+ */
+export function resolveInvestorSectors(text: string, plannerSectors: unknown = []): { requested: AngelSector[]; fromProject: AngelSector[] } {
+  const typed = sectorsInText(text);
+  // With nothing typed, rankInvestors treats the planner's sectors as the request.
+  return { requested: typed, fromProject: validSectors(plannerSectors).filter(sector => !typed.includes(sector)) };
 }
 
 const STAGE_PATTERNS: [string, RegExp][] = [
@@ -87,38 +100,105 @@ export function asksForInvestor(text: string): boolean {
   return /\b(angels?|investors?|vcs?|venture capitalists?|backers?)\b/i.test(text);
 }
 
+/** "show me more", "any others?", "different ones": a follow-up to an earlier investor answer. */
+export function asksForMore(text: string): boolean {
+  return /\b(more|others?|another|different|else|next)\b/i.test(text) && text.trim().length <= 120;
+}
+
+/**
+ * The funding rounds that fit a Startup Development Cycle stage (1 to 7), so a
+ * pre-seed founder is not shown Series A-only angels without asking.
+ */
+const FUNDING_STAGES_BY_CYCLE: Record<number, readonly string[]> = {
+  1: ['Pre-Seed'], 2: ['Pre-Seed'], 3: ['Pre-Seed'], 4: ['Pre-Seed', 'Seed'],
+  5: ['Seed'], 6: ['Seed', 'Series A'], 7: ['Seed', 'Series A'],
+};
+export function fundingStagesForCycleStage(stage: unknown): string[] {
+  const number = typeof stage === 'number' ? stage : typeof stage === 'string' ? Number(stage) : NaN;
+  return [...(FUNDING_STAGES_BY_CYCLE[number] ?? [])];
+}
+
 /** Where "Visit profile" leads: Find your Angel filtered to that investor. Non-Pro accounts meet the upgrade gate there. */
 export function investorProfileRoute(name: string): string {
   return `/investors?q=${encodeURIComponent(name)}&source=pulse`;
 }
 
+// FNV-1a: a small, stable hash so a rotation seed orders ties the same way all day.
+function rotationKey(seed: string, id: string): number {
+  let hash = 0x811c9dc5;
+  for (const char of `${seed}:${id}`) { hash ^= char.charCodeAt(0); hash = Math.imul(hash, 0x01000193); }
+  return hash >>> 0;
+}
+
+export interface InvestorQuery {
+  /** Sectors the user asked for. When empty, fromProject is the request. */
+  requested: readonly string[];
+  /** Sectors added from saved context (the project), labelled as such on the card. */
+  fromProject?: readonly string[];
+  /** Rounds the user named ("seed", "Series A"). */
+  stages?: readonly string[];
+  /** Rounds implied by the project's stage, used when the user named none. */
+  projectStages?: readonly string[];
+  /** Angels already shown in this conversation. */
+  excludeIds?: readonly string[];
+  /** Orders equal scores; user id + UTC date keeps answers stable for a day. */
+  seed?: string;
+}
+
+export interface InvestorRanking {
+  actions: PulseHomeAction[];
+  /** Every angel that matches the sectors, including ones already shown. */
+  totalMatches: number;
+  /** Matches not yet shown in this conversation, after this answer. */
+  remaining: number;
+}
+
 /**
- * Up to three active angels whose declared sectors match, stage fit as a
- * tie-breaker. Without a sector there is no evidence of fit, so no cards.
+ * Up to three angels, scored on evidence: +2 per requested sector they declare,
+ * +1 per project sector, +1.5 for a round the user named or +1 for a round that
+ * fits the project's stage, +0.5 for specialists (two sectors or fewer). Equal
+ * scores rotate daily per user instead of falling back to A to Z.
+ * Without a sector there is no evidence of fit, so no cards.
  */
-export function homeInvestorActions(angels: PulseAngel[], sectors: readonly string[], stages: readonly string[] = []): PulseHomeAction[] {
-  if (!sectors.length) return [];
-  const wanted = sectors.map(sector => sector.toLowerCase());
-  return angels
+export function rankInvestors(angels: PulseAngel[], query: InvestorQuery): InvestorRanking {
+  const requested = (query.requested.length ? query.requested : query.fromProject ?? []).map(sector => sector.toLowerCase());
+  const extra = (query.requested.length ? query.fromProject ?? [] : []).map(sector => sector.toLowerCase());
+  const projectLabelled = !query.requested.length;
+  if (!requested.length) return { actions: [], totalMatches: 0, remaining: 0 };
+  const namedStages = query.stages ?? [];
+  const impliedStages = namedStages.length ? [] : query.projectStages ?? [];
+  const excluded = new Set(query.excludeIds ?? []);
+  const seed = query.seed ?? '';
+
+  const scored = angels
     .filter(angel => angel.is_active === true && typeof angel.name === 'string' && angel.name.trim())
     .map(angel => {
-      const matchedSectors = (angel.sectors ?? []).filter(sector => wanted.includes(sector.toLowerCase()));
-      const matchedStages = (angel.investment_stages ?? []).filter(stage => stages.includes(stage));
-      return { angel, matchedSectors, matchedStages, score: matchedSectors.length * 2 + (matchedStages.length ? 1 : 0) };
+      const sectors = angel.sectors ?? [];
+      const matched = sectors.filter(sector => requested.includes(sector.toLowerCase()));
+      const matchedExtra = sectors.filter(sector => extra.includes(sector.toLowerCase()));
+      const angelStages = angel.investment_stages ?? [];
+      const namedFit = angelStages.filter(stage => namedStages.includes(stage));
+      const impliedFit = angelStages.filter(stage => impliedStages.includes(stage));
+      const score = matched.length * 2 + matchedExtra.length + (namedFit.length ? 1.5 : impliedFit.length ? 1 : 0) + (sectors.length <= 2 ? 0.5 : 0);
+      return { angel, matched, matchedExtra, stageFit: namedFit.length ? namedFit : impliedFit, impliedFit: !namedFit.length && impliedFit.length > 0, score };
     })
-    .filter(item => item.matchedSectors.length > 0)
-    // Specialists first: an angel with fewer sectors overall is a stronger signal.
-    .sort((a, b) => b.score - a.score || (a.angel.sectors?.length ?? 0) - (b.angel.sectors?.length ?? 0) || a.angel.name.localeCompare(b.angel.name))
-    .slice(0, 3)
-    .map(({ angel, matchedSectors, matchedStages }) => {
-      const stageText = (matchedStages.length ? matchedStages : angel.investment_stages ?? []).slice(0, 3).join(', ');
-      const reason = [angel.firm_name?.trim(), `Invests in ${matchedSectors.join(', ')}`, stageText].filter(Boolean).join(' · ');
-      return {
-        kind: 'investor' as const, id: angel.id, title: angel.name.trim(), reason,
-        route: investorProfileRoute(angel.name.trim()),
-        image: typeof angel.picture === 'string' && /^https:\/\//.test(angel.picture) ? angel.picture : undefined,
-      };
-    });
+    .filter(item => item.matched.length > 0)
+    .sort((a, b) => b.score - a.score || rotationKey(seed, a.angel.id) - rotationKey(seed, b.angel.id));
+
+  const fresh = scored.filter(item => !excluded.has(item.angel.id));
+  const picked = fresh.slice(0, 3);
+  const actions = picked.map(({ angel, matched, matchedExtra, stageFit, impliedFit }) => {
+    const sectorText = `Invests in ${matched.join(', ')}${projectLabelled ? ' (your project’s sector)' : ''}${matchedExtra.length ? ` + ${matchedExtra.join(', ')} (your project)` : ''}`;
+    const stages = (stageFit.length ? stageFit : angel.investment_stages ?? []).slice(0, 3).join(', ');
+    const stageText = stages ? `${stages}${stageFit.length ? (impliedFit ? ' (fits your stage)' : ' (your round)') : ''}` : '';
+    return {
+      kind: 'investor' as const, id: angel.id, title: angel.name.trim(),
+      reason: [angel.firm_name?.trim(), sectorText, stageText].filter(Boolean).join(' · '),
+      route: investorProfileRoute(angel.name.trim()),
+      image: typeof angel.picture === 'string' && /^https:\/\//.test(angel.picture) ? angel.picture : undefined,
+    };
+  });
+  return { actions, totalMatches: scored.length, remaining: Math.max(0, fresh.length - picked.length) };
 }
 
 export function homeMentorActions(mentors: Mentor[], context: MentorRecommendationContext): PulseHomeAction[] {

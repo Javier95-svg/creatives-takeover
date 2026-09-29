@@ -13,7 +13,8 @@ import { homePriorities, validateHomeActions, type PulseHomeConcept, type PulseH
 import { streamPulseHome } from '@/services/pulseHomeStream';
 import { getDashboardTool } from '@/config/dashboardToolRegistry';
 import { PulseHomeView } from './PulseHomeView';
-import { captureEvent } from '@/lib/analytics';
+import { captureEvent, trackPulseInvestorProfileClicked } from '@/lib/analytics';
+import { trackInvestorCards } from '@/lib/pulseInvestorTracking';
 import { pulseSourceNotice, validatePulseSources } from '@/lib/pulseSources';
 
 // Explicit schema keeps these queries typed against the generated public tables.
@@ -128,7 +129,11 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
         onContext: unavailable => { if (alive.current) setContextNotice(unavailable.length ? 'Some saved context is unavailable. Pulse will identify gaps rather than guess.' : ''); },
         onSources: sources => { if (alive.current) { setContextNotice(pulseSourceNotice(sources)); setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, sources } : message)); } },
         onText: chunk => { if (alive.current) setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, content: message.content + chunk } : message)); },
-        onActions: actions => { if (alive.current) setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, actions } : message)); },
+        onActions: actions => {
+          if (!alive.current) return;
+          setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, actions } : message));
+          trackInvestorCards(actions, 'home');
+        },
       });
       pending.current = null;
     } catch (error) {
@@ -152,6 +157,7 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
     loading={loading || dashboard.isLoading || startup.loading} streaming={streaming} error={error}
     unavailable={!loading && !historyReady ? 'Conversation history is unavailable. Retry before continuing.' : undefined}
     contextNotice={contextNotice || (startup.error || dashboard.error ? 'Some saved context is unavailable. Pulse will ask rather than guess.' : undefined)}
+    onInvestorClick={(action, rank) => trackPulseInvestorProfileClicked({ surface: 'home', investor_id: action.id, rank, is_pro: !action.locked })}
     onSend={text => { void send(text); }} onNew={() => { void newConversation(); }} onRetry={() => {
       if (retryAction.current === 'new') void newConversation();
       else if (retryAction.current === 'send' && pending.current) void send(pending.current.text, true);

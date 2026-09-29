@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { enterWorkspaceRoute } from '@/lib/workspaceNavigation';
 import { PULSE_HOME_SHORTCUTS, STAGE_EXAMPLE_QUESTION, toolNameForRoute, type PulseShortcutIcon } from '@/lib/pulseHomeShortcuts';
 import { BIZMAP_STAGE_ORDER } from '@/lib/bizmapStageOrder';
-import type { PulseHomeConcept, PulseHomeMessage, PulseHomePriority } from '@/lib/pulseHome';
+import type { PulseHomeAction, PulseHomeConcept, PulseHomeMessage, PulseHomePriority } from '@/lib/pulseHome';
 import type { PersonaChip, PersonaHome } from '@/lib/personaHome';
 import './pulse-home.css';
 import { PulseSources } from './PulseSources';
@@ -43,9 +43,11 @@ export interface PulseHomeViewProps {
   /** Where priority links, action cards and shortcut chips lead. Defaults to a
       real navigation; the anonymous tour at /demo swaps panels instead. */
   navigate?: (path: string) => void;
+  /** Called before following an investor card; rank is its 1-based position. */
+  onInvestorClick?: (action: PulseHomeAction, rank: number) => void;
 }
 
-export function PulseHomeView({ concept, name, stage, projectName, assignedStage, priorities = [], messages = [], loading, streaming, unavailable, contextNotice, error, onSend, onNew, onRetry, navigate = enterWorkspaceRoute, persona = null, personaChips = [], personaInterest = null }: PulseHomeViewProps) {
+export function PulseHomeView({ concept, name, stage, projectName, assignedStage, priorities = [], messages = [], loading, streaming, unavailable, contextNotice, error, onSend, onNew, onRetry, navigate = enterWorkspaceRoute, persona = null, personaChips = [], personaInterest = null, onInvestorClick }: PulseHomeViewProps) {
   const [input, setInput] = useState('');
   const [showPriorities, setShowPriorities] = useState(false);
   const [headline, setHeadline] = useState(0);
@@ -152,9 +154,9 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
         {active && <div role="log" aria-label="Conversation with Pulse" aria-live="polite" aria-busy={streaming} className="space-y-6 pb-6">{messages.map(message => <article key={message.id} className={cn('text-sm leading-7', message.role === 'user' ? 'ml-auto max-w-xl rounded-2xl bg-muted/70 px-5 py-3' : 'pr-2')}>
           {message.role === 'assistant' && <p className="mb-2 flex items-center gap-2 text-xs font-semibold text-primary"><Sparkles className="h-3.5 w-3.5" />Pulse</p>}
           <ReactMarkdown components={{ a: ({ children }) => <span>{children}</span>, img: () => null, p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p> }}>{message.content || (streaming ? 'Thinking through your next step…' : '')}</ReactMarkdown>
-          {message.actions?.length ? <div className="mt-4 space-y-2">{message.actions.map(action => <a key={action.id} href={action.route} onClick={event => { if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && event.button === 0) { event.preventDefault(); navigate(action.route); } }} className="flex items-center gap-3 rounded-xl border border-border bg-card/80 px-4 py-3 transition-colors hover:border-primary/60 hover:bg-primary/5">
+          {message.actions?.length ? <div className="mt-4 space-y-2">{message.actions.map((action, index) => <a key={action.id} href={action.route} onClick={event => { if (action.kind === 'investor') onInvestorClick?.(action, index + 1); openRoute(event, action.route); }} className="flex items-center gap-3 rounded-xl border border-border bg-card/80 px-4 py-3 transition-colors hover:border-primary/60 hover:bg-primary/5">
             {action.image && <img src={action.image} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />}
-            <span className="min-w-0 flex-1"><span className="block font-medium text-foreground">{action.title}</span><span className="block text-xs leading-5 text-muted-foreground">{action.reason}</span><span className="text-xs font-medium text-primary">{action.kind === 'mentor' ? 'View mentor' : action.kind === 'investor' ? 'Visit profile' : action.kind === 'browse' ? action.title : action.kind === 'article' ? 'Read article' : action.kind === 'podcast' ? 'Watch episode' : action.kind === 'service' ? 'View service' : `Open ${action.title}`}</span></span><ArrowRight className="h-4 w-4 text-primary" />
+            <span className="min-w-0 flex-1"><span className="block font-medium text-foreground">{action.title}</span><span className="block text-xs leading-5 text-muted-foreground">{action.reason}</span><span className="text-xs font-medium text-primary">{action.kind === 'mentor' ? 'View mentor' : action.kind === 'investor' ? (action.locked ? 'Visit profile · Pro' : 'Visit profile') : action.kind === 'browse' ? action.title : action.kind === 'article' ? 'Read article' : action.kind === 'podcast' ? 'Watch episode' : action.kind === 'service' ? 'View service' : `Open ${action.title}`}</span></span><ArrowRight className="h-4 w-4 text-primary" />
           </a>)}</div> : null}
           {message.role === 'assistant' && <PulseSources sources={message.sources} />}
         </article>)}<div ref={end} /></div>}

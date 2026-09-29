@@ -178,6 +178,20 @@
       "sourceFile": "src/lib/analytics.ts",
       "requiredProperties": ["segment", "auto_finished"]
     },
+    "pulse_investors_recommended": {
+      "stage": "activation",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["surface", "count", "investor_ids", "is_pro"]
+    },
+    "pulse_investor_profile_clicked": {
+      "stage": "monetization",
+      "owner": "growth",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["surface", "investor_id", "rank", "is_pro"]
+    },
     "pulse_guest_opened": {
       "stage": "acquisition",
       "owner": "product",
@@ -729,6 +743,17 @@
         "onboarding_completed"
       ],
       "breakdowns": ["segment", "reason"]
+    },
+    {
+      "key": "pulse_investor_to_upgrade",
+      "name": "Pulse investor match to Pro upgrade",
+      "windowDays": 14,
+      "steps": [
+        "pulse_investors_recommended",
+        "pulse_investor_profile_clicked",
+        "upgrade_clicked"
+      ],
+      "breakdowns": ["is_pro", "rank", "surface"]
     },
     {
       "key": "guest_pulse_to_quiz",

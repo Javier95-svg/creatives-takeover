@@ -1,7 +1,8 @@
 import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { FOUNDER_TOOL_CATALOG } from '../../../src/config/founderToolCatalog.ts';
 import {
-  asksForInvestor, homeInvestorActions, homeMentorActions, homeToolActions, resolveInvestorSectors, resolveInvestorStages, type PulseAngel,
+  asksForInvestor, asksForMore, fundingStagesForCycleStage, homeMentorActions, homeToolActions, rankInvestors,
+  resolveInvestorSectors, resolveInvestorStages, sectorsInText, validSectors, type PulseAngel,
 } from '../../../src/lib/pulseHomeRecommendations.ts';
 import { ANGEL_SECTOR_OPTIONS } from '../../../src/data/angelSectors.ts';
 import { normalizePlan } from './plan-enforcement.ts';
@@ -99,10 +100,21 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
     // A concurrent identical turn can be safely retried once the first ends.
     if (error) return failure(error.code === '23505' ? 409 : 503, 'Could not save this turn. Please retry.');
   }
-  const { data: history, error: historyError } = await db.from('chatbot_messages').select('role, content')
+  const { data: history, error: historyError } = await db.from('chatbot_messages').select('role, content, metadata')
     .eq('conversation_id', conversation.id).order('created_at', { ascending: false }).limit(16);
   if (historyError) return failure(503, 'Could not load conversation history.');
-  const chat: ChatMessage[] = (history ?? []).reverse().filter(row => row.role === 'user' || row.role === 'assistant');
+  const recent = (history ?? []).reverse().filter(row => row.role === 'user' || row.role === 'assistant');
+  const chat: ChatMessage[] = recent.map(row => ({ role: row.role, content: row.content }));
+  // Earlier investor answers in this conversation: which angels were shown, and
+  // the last query, so "show me more" continues it instead of repeating it.
+  const earlierInvestorAnswers = recent.filter(row => row.role === 'assistant' && row.metadata && typeof row.metadata === 'object');
+  const shownInvestorIds = earlierInvestorAnswers.flatMap(row => {
+    const shown = (row.metadata as Record<string, unknown>).homeActions;
+    return Array.isArray(shown) ? shown.filter(item => item && typeof item === 'object' && (item as PulseHomeAction).kind === 'investor').map(item => String((item as PulseHomeAction).id)) : [];
+  });
+  const lastInvestorQuery = [...earlierInvestorAnswers].reverse()
+    .map(row => (row.metadata as Record<string, unknown>).investorQuery)
+    .find(query => query && typeof query === 'object') as { requested?: unknown; fromProject?: unknown; stages?: unknown } | undefined;
   const pageTool = typeof input.pagePath === 'string' ? FOUNDER_TOOL_CATALOG.find(tool => {
     const path = tool.route.split('?')[0];
     return input.pagePath === path || (input.pagePath as string).startsWith(`${path}/`);
@@ -155,7 +167,8 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
         const track = parseMentorTrack(plan.mentorTrack);
         const explicitKinds = requestedCatalogKinds(message);
         const kinds = explicitKinds.length ? explicitKinds : catalogKinds(plan.catalogKinds);
-        const investorRequest = founderToolsAllowed && (plan.investorSearch === true || asksForInvestor(message));
+        const investorFollowUp = Boolean(lastInvestorQuery) && asksForMore(message) && !sectorsInText(message).length;
+        const investorRequest = founderToolsAllowed && (plan.investorSearch === true || asksForInvestor(message) || investorFollowUp);
         // An investor request is answered with directory matches (or a sector
         // question below), never with the planner's generic clarification.
         const clarify = kinds.length || investorRequest ? null : typeof plan.clarify === 'string' ? plan.clarify.slice(0, 250) : null;
@@ -176,9 +189,19 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
           if (!actions.length) actions = [{ kind: 'browse', id: 'mentorship', title: 'Browse mentors', reason: 'Explore the mentor directory.', route: '/mentorship' }];
         }
         let investorStatus = 'No investor lookup requested.';
+        let investorQuery: { requested: string[]; fromProject: string[]; stages: string[] } | null = null;
         if (investorRequest) {
-          const sectors = resolveInvestorSectors(message, plan.investorSectors);
-          const stages = resolveInvestorStages(message);
+          // A follow-up ("show me more") reuses the last query; a new one reads the message.
+          const resolved = investorFollowUp
+            ? { requested: validSectors(lastInvestorQuery?.requested), fromProject: validSectors(lastInvestorQuery?.fromProject) }
+            : resolveInvestorSectors(message, plan.investorSectors);
+          const namedStages = resolveInvestorStages(message);
+          const stages = namedStages.length || !investorFollowUp ? namedStages
+            : (Array.isArray(lastInvestorQuery?.stages) ? lastInvestorQuery.stages.filter((stage): stage is string => typeof stage === 'string') : []);
+          // The project's own stage when it has one, else the account's quiz placement.
+          const projectStage = (contextData.activeProject?.statedFocus?.stage as { assignedStage?: unknown } | null)?.assignedStage ?? contextData.onboarding.assignedStage;
+          const projectStages = fundingStagesForCycleStage(projectStage);
+          const sectors = resolved.requested.length ? resolved.requested : resolved.fromProject;
           const browseAngels: PulseHomeAction = { kind: 'browse', id: 'investors', title: 'Browse Find your Angel', reason: 'Filter angel investors by sector and stage.', route: '/investors' };
           // Plan is read, never changed: the same sources credit-deduction falls back to, no billing calls.
           const [{ data: angels, error: angelsError }, { data: subscriber }, { data: credits }, { data: profile }] = await Promise.all([
@@ -198,11 +221,23 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
             investorStatus = `No sector is known yet. Ask which sector or industry they are raising for, then you can suggest matching angels.${proNote}`;
             actions = [browseAngels, ...actions].slice(0, 3);
           } else {
-            const matches = homeInvestorActions((angels ?? []) as PulseAngel[], sectors, stages);
+            investorQuery = { requested: resolved.requested, fromProject: resolved.fromProject, stages };
+            const ranking = rankInvestors((angels ?? []) as PulseAngel[], {
+              requested: resolved.requested, fromProject: resolved.fromProject, stages, projectStages,
+              excludeIds: shownInvestorIds, seed: `${userId}:${new Date().toISOString().slice(0, 10)}`,
+            });
+            // locked: a non-Pro account meets the upgrade gate on Visit profile.
+            const matches = ranking.actions.map(action => ({ ...action, locked: knownNonPro }));
             actions = [...matches, ...(matches.length ? [] : [browseAngels]), ...actions].slice(0, 3);
+            const stageBasis = stages.length ? `the ${stages.join('/')} round they named` : projectStages.length ? `their project's stage (${projectStages.join('/')})` : 'no known round';
+            const projectBasis = resolved.requested.length ? (resolved.fromProject.length ? ` Cards labelled "(your project)" also match the project's ${resolved.fromProject.join(', ')} sector.` : '')
+              : ` The user named no sector, so these match the project's sector (${sectors.join(', ')}); say that.`;
             investorStatus = matches.length
-              ? `These angel investors from Find your Angel declare ${sectors.join(', ')} as a focus. Recommend them by name with that declared sector and stage fit; it is not a commitment to invest, and never claim check size, geography or interest. Each card has a Visit profile button.${proNote}`
-              : `No active angel in Find your Angel declares ${sectors.join(', ')}. Say so clearly and suggest browsing or VC Search.`;
+              ? `These ${matches.length} angel investors from Find your Angel declare ${sectors.join(', ')} as a focus, ranked by declared sector fit and fit with ${stageBasis}. ${ranking.totalMatches} angels match in total and ${ranking.remaining} more have not been shown; if more remain, say they can ask for more.${projectBasis} ` +
+                `Recommend them by name with that declared fit; it is not a commitment to invest, and never claim check size, geography or interest. Each card has a Visit profile button.${proNote}`
+              : ranking.totalMatches
+                ? `All ${ranking.totalMatches} angels who declare ${sectors.join(', ')} have already been shown in this conversation. Say so and suggest browsing Find your Angel or VC Search.`
+                : `No active angel in Find your Angel declares ${sectors.join(', ')}. Say so clearly and suggest browsing or VC Search.`;
           }
         }
         const catalog = await searchPulseCatalog(db, kinds, catalogQuery(typeof plan.catalogQuery === 'string' ? plan.catalogQuery : message));
@@ -257,6 +292,7 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
         if (!finished || truncated || !answer.trim()) throw new Error('Incomplete response');
         const { error: saveError } = await db.from('chatbot_messages').insert({ conversation_id: conversation.id,
           role: 'assistant', content: answer, metadata: { homeTurnId: turnId, homeActions: actions, model,
+            ...(investorQuery ? { investorQuery } : {}),
             pulseScope: contextData.scope,
             contextSources: sources, catalogEvidence: catalogEvidence.map(result => ({ kind: result.kind, state: result.state,
               sources: result.evidence.map(item => ({ id: item.id, basis: item.basis, updatedAt: item.updatedAt })) })),
