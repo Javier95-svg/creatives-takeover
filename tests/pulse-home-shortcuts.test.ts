@@ -1,21 +1,17 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { BIZMAP_STAGE_ORDER } from '../src/lib/bizmapStageOrder.ts';
-import { pulseHomeShortcuts, STAGE_EXAMPLE_QUESTION, toolNameForRoute } from '../src/lib/pulseHomeShortcuts.ts';
+import { PULSE_HOME_SHORTCUTS, STAGE_EXAMPLE_QUESTION, toolNameForRoute } from '../src/lib/pulseHomeShortcuts.ts';
 
-test('every stage gets four suggestions, and "All tools" never repeats a suggested destination', () => {
-  for (const stage of [...BIZMAP_STAGE_ORDER, null]) {
-    const { suggested, more } = pulseHomeShortcuts(stage);
-    assert.equal(suggested.length, 4, String(stage));
-    const suggestedRoutes = new Set(suggested.map((shortcut) => shortcut.route));
-    for (const shortcut of more) assert.equal(suggestedRoutes.has(shortcut.route), false, `${stage}: ${shortcut.id}`);
-    for (const shortcut of [...suggested, ...more]) {
-      assert.ok(shortcut.route.startsWith('/'), shortcut.id);
-      assert.doesNotMatch(shortcut.label, /^Help me/, shortcut.id);
-    }
+test('the founder home keeps its eight quick starts, each with a destination', () => {
+  assert.deepEqual(PULSE_HOME_SHORTCUTS.map((shortcut) => shortcut.label), [
+    'What should I focus next?', 'Find me a mentor', 'Find me a co-founder', 'Help me define my customer',
+    'Help me create a demo', 'Help me validate my idea', 'Help me build my MVP', 'Help me plan my launch',
+  ]);
+  for (const shortcut of PULSE_HOME_SHORTCUTS) {
+    assert.ok(shortcut.route.startsWith('/'), shortcut.id);
+    assert.ok(shortcut.tool, shortcut.id);
   }
-  assert.deepEqual(pulseHomeShortcuts('TRACTION').suggested.map((shortcut) => shortcut.label),
-    ['See who comes back', 'Find your next 10 customers', 'Test your one-line pitch', 'Talk to a mentor']);
 });
 
 test('focus items show the tool they open', () => {

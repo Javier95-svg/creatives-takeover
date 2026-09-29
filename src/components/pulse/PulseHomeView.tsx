@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type React from 'react';
-import { ArrowRight, ArrowUp, ChevronDown, Plus, Sparkles, Target, GraduationCap, Users, LayoutDashboard, Layers, FlaskConical, Rocket, Megaphone, Repeat, Presentation, Landmark, type LucideIcon } from 'lucide-react';
+import { ArrowRight, ArrowUp, ChevronDown, Plus, Sparkles, Target, GraduationCap, Users, LayoutDashboard, Layers, FlaskConical, Rocket, Megaphone, type LucideIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
 import { enterWorkspaceRoute } from '@/lib/workspaceNavigation';
-import { pulseHomeShortcuts, STAGE_EXAMPLE_QUESTION, toolNameForRoute, type PulseShortcutIcon } from '@/lib/pulseHomeShortcuts';
+import { PULSE_HOME_SHORTCUTS, STAGE_EXAMPLE_QUESTION, toolNameForRoute, type PulseShortcutIcon } from '@/lib/pulseHomeShortcuts';
 import { BIZMAP_STAGE_ORDER } from '@/lib/bizmapStageOrder';
 import type { PulseHomeConcept, PulseHomeMessage, PulseHomePriority } from '@/lib/pulseHome';
 import type { PersonaChip, PersonaHome } from '@/lib/personaHome';
@@ -13,7 +13,7 @@ import { PulseSources } from './PulseSources';
 
 const SHORTCUT_ICONS: Record<PulseShortcutIcon, LucideIcon> = {
   focus: LayoutDashboard, mentor: GraduationCap, cofounder: Users, customer: Target, demo: Layers, validate: FlaskConical,
-  mvp: Rocket, launch: Megaphone, retention: Repeat, deck: Presentation, investors: Landmark,
+  mvp: Rocket, launch: Megaphone,
 };
 
 export interface PulseHomeViewProps {
@@ -48,7 +48,9 @@ export interface PulseHomeViewProps {
 export function PulseHomeView({ concept, name, stage, projectName, assignedStage, priorities = [], messages = [], loading, streaming, unavailable, contextNotice, error, onSend, onNew, onRetry, navigate = enterWorkspaceRoute, persona = null, personaChips = [], personaInterest = null }: PulseHomeViewProps) {
   const [input, setInput] = useState('');
   const [showPriorities, setShowPriorities] = useState(false);
-  const [showAllTools, setShowAllTools] = useState(false);
+  const [headline, setHeadline] = useState(0);
+  const [focused, setFocused] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const end = useRef<HTMLDivElement>(null);
   const textarea = useRef<HTMLTextAreaElement>(null);
   const active = messages.length > 0;
@@ -60,12 +62,6 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
     field.style.height = 'auto';
     field.style.height = `${Math.min(field.scrollHeight, 180)}px`;
   }, [input]);
-  const stageHeadlines: Record<string, string> = {
-    IDENTITY: 'Let’s find your customer', PROTOTYPE: 'Bring your idea into focus',
-    VALIDATING: 'Turn assumptions into evidence', BUILDING: 'Build what matters next',
-    LAUNCH: 'Find your first customers', TRACTION: 'Build on what is working',
-    FUNDRAISING: 'Prepare your next funding step',
-  };
   const trimmedProjectName = projectName?.trim() || '';
   // The quiz assigns 1 to 7 against the Startup Development Cycle. Fall back to
   // the journey stage when the quiz has not run, and show neither rather than a
@@ -83,12 +79,28 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
   const stageBadge = resolvedStage
     ? `Stage ${resolvedStage.number} · ${resolvedStage.key.charAt(0)}${resolvedStage.key.slice(1).toLowerCase()}`
     : '';
-  // One steady line that says where the founder is, instead of rotating slogans.
-  // The journey stage is the fallback when the quiz has not assigned one.
-  const headlineStage = resolvedStage?.key ?? stage?.toUpperCase();
-  const founderHeadline = (headlineStage && stageHeadlines[headlineStage]) || (name ? `Back at it, ${name}` : 'Your next step starts here');
-  const { suggested: stageShortcuts, more: moreShortcuts } = pulseHomeShortcuts(resolvedStage?.key);
-  const stageName = resolvedStage ? `${resolvedStage.key.charAt(0)}${resolvedStage.key.slice(1).toLowerCase()}` : '';
+  // Four headlines that rotate for founders; the other account types keep their own.
+  const headings: readonly (readonly [string, string])[] = persona
+    ? [persona.headline]
+    : [
+      [name ? `Back at it, ${name}.` : 'Your idea has potential.', 'Let’s find its path.'],
+      ['One clear direction.', 'Your next chapter.'],
+      ['Think clearly.', 'Move confidently.'],
+      ['Less guesswork.', 'More momentum.'],
+    ];
+  const currentHeading = headings[headline % headings.length];
+  useEffect(() => {
+    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setReducedMotion(query.matches);
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
+  // Rotates every 7 seconds, and holds still while the founder is typing or chatting.
+  useEffect(() => {
+    if (active || input || focused || reducedMotion || headings.length < 2) return;
+    const timer = window.setInterval(() => setHeadline(value => (value + 1) % headings.length), 7000);
+    return () => window.clearInterval(timer);
+  }, [active, input, focused, reducedMotion, headings.length]);
   const exampleQuestion = resolvedStage ? STAGE_EXAMPLE_QUESTION[resolvedStage.key] : null;
   useEffect(() => { end.current?.scrollIntoView({ block: 'nearest', behavior: 'instant' }); }, [messages]);
   const send = (text: string) => {
@@ -118,10 +130,9 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
             {trimmedProjectName && <span className="rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs font-medium text-foreground">{trimmedProjectName}</span>}
             {stageBadge && <span className="pulse-home-stage-chip rounded-full px-3 py-1 text-xs font-medium">{stageBadge}</span>}
           </div>}
-          <h1 key={active ? 'active' : 'home'} className={cn('font-space-grotesk font-semibold tracking-tight text-foreground', active ? 'text-xl' : 'pulse-home-headline')}>
+          <h1 key={active ? 'active' : headline} className={cn('font-space-grotesk font-semibold tracking-tight text-foreground', active ? 'text-xl' : 'pulse-home-headline')}>
             {active ? 'Let’s work through it.'
-              : persona ? <><span className="block">{persona.headline[0]}</span><span className="pulse-home-headline-second block">{persona.headline[1]}</span></>
-              : <>{founderHeadline}<span className="pulse-home-headline-accent">.</span></>}
+              : <><span className="block">{currentHeading[0]}</span><span className="pulse-home-headline-second block">{currentHeading[1]}</span></>}
           </h1>
           {!persona && !active && !loading && priorities.length > 0 && <p className="pulse-home-subline">
             <span className="pulse-home-count">{priorities.length}</span> {priorities.length === 1 ? 'focus item' : 'focus items'} for today{trimmedProjectName ? <> on <span className="text-foreground">{trimmedProjectName}</span></> : null}
@@ -161,7 +172,7 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
           <div className="pulse-home-input-row">
             <span aria-hidden="true" className={cn('pulse-home-wave', streaming && !unavailable && 'pulse-home-wave--active')}>{[0, 1, 2, 3, 4].map(bar => <span key={bar} />)}</span>
             <div className="min-w-0 flex-1">
-              <textarea ref={textarea} aria-label="Message Pulse" aria-describedby="pulse-composer-hint" placeholder="What's on your mind?" rows={1} maxLength={4000} value={input} onChange={event => setInput(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); send(input); } }} className="block w-full resize-none bg-transparent text-foreground outline-none placeholder:text-muted-foreground" />
+              <textarea ref={textarea} aria-label="Message Pulse" aria-describedby="pulse-composer-hint" placeholder="What's on your mind?" rows={1} maxLength={4000} value={input} onChange={event => setInput(event.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); send(input); } }} className="block w-full resize-none bg-transparent text-foreground outline-none placeholder:text-muted-foreground" />
               <p id="pulse-composer-hint" className="pulse-home-input-hint">{exampleQuestion && !persona ? <>Try: “{exampleQuestion}”</> : 'Ask a question, explore an idea, or find your next step.'}</p>
             </div>
           </div>
@@ -170,14 +181,8 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
         {!active && persona && <nav aria-label="Quick starts" className="pulse-home-shortcuts">{personaShortcuts.map(({ label, route }) => <a key={route} href={route} onClick={event => openRoute(event, route)} className="pulse-home-shortcut">
           <span className="pulse-home-shortcut-icon"><ArrowRight aria-hidden="true" className="h-4 w-4" /></span><span className="flex-1">{label}</span><ArrowRight aria-hidden="true" className="pulse-home-shortcut-arrow h-3.5 w-3.5 shrink-0" />
         </a>)}</nav>}
-        {!active && !persona && <nav aria-label="Quick starts" className="pulse-home-quickstarts">
-          <div className="pulse-home-quickstarts-head">
-            <h2>{stageName ? <>Suggested for <span className="pulse-home-stage-text">{stageName}</span></> : 'Quick starts'}</h2>
-            <button type="button" aria-expanded={showAllTools} aria-controls="pulse-home-all-tools" onClick={() => setShowAllTools(value => !value)}>
-              {showAllTools ? 'Fewer tools' : 'All tools'}<ChevronDown aria-hidden="true" className={cn('h-3.5 w-3.5 transition-transform', showAllTools && 'rotate-180')} />
-            </button>
-          </div>
-          <div className="pulse-home-shortcuts">{stageShortcuts.map(({ id, label, tool, route, icon }) => {
+        {!active && !persona && <nav aria-label="Quick starts">
+          <div className="pulse-home-shortcuts">{PULSE_HOME_SHORTCUTS.map(({ id, label, tool, route, icon }) => {
             const Icon = SHORTCUT_ICONS[icon];
             return <a key={id} href={route} onClick={event => openRoute(event, route)} className="pulse-home-shortcut">
               <span className="pulse-home-shortcut-icon"><Icon aria-hidden="true" className="h-4 w-4" /></span>
@@ -185,7 +190,6 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
               <ArrowRight aria-hidden="true" className="pulse-home-shortcut-arrow h-3.5 w-3.5 shrink-0" />
             </a>;
           })}</div>
-          {showAllTools && <div id="pulse-home-all-tools" className="pulse-home-all-tools">{moreShortcuts.map(({ id, label, route }) => <a key={id} href={route} onClick={event => openRoute(event, route)}>{label}</a>)}</div>}
         </nav>}
         <p className="mt-3 text-center text-xs leading-5 text-muted-foreground">{unavailable || contextNotice || 'Pulse guides. You decide. Review suggestions before taking action.'}</p>
       </div>
