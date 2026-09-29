@@ -6,12 +6,10 @@
 .pulse-home:not(.pulse-home--chat) .pulse-home-scroll { flex: 0 0 auto; overflow: visible; }
 .pulse-home:not(.pulse-home--chat) .pulse-home-column { max-width: 64rem; padding-top: clamp(3rem, 8vh, 7rem); }
 /* Two-line headline: the second line carries the brand blue-to-teal, not a rainbow. */
-.pulse-home .pulse-home-headline { font-size: clamp(2.5rem, 6cqw, 4.25rem); font-weight: 700; line-height: 1.04; letter-spacing: -.045em; text-wrap: balance; animation: pulse-home-reveal .6s ease-out both; }
+.pulse-home .pulse-home-headline { font-size: clamp(2.75rem, 6.75cqw, 4.75rem); font-weight: 700; line-height: 1.04; letter-spacing: -.045em; text-wrap: balance; animation: pulse-home-reveal .6s ease-out both; }
 .pulse-home-headline-second { width: fit-content; max-width: 100%; margin-inline: auto; padding-bottom: .08em; background: linear-gradient(95deg, hsl(var(--primary)) 0%, hsl(var(--accent-teal)) 100%); background-clip: text; -webkit-background-clip: text; color: transparent; }
 .pulse-home--command-center .pulse-home-headline-second { margin-left: 0; }
 .pulse-home-stage-chip { color: hsl(var(--accent-teal)); background: hsl(var(--accent-teal) / .1); box-shadow: inset 0 0 0 1px hsl(var(--accent-teal) / .4); }
-.pulse-home-subline { margin-top: .875rem; font-size: 1rem; color: hsl(var(--muted-foreground)); }
-.pulse-home-count { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace; font-weight: 500; color: hsl(var(--foreground)); }
 /* Today's focus: a light bulleted list, so the Pulse box below stays the main event. */
 .pulse-home:not(.pulse-home--chat) .pulse-home-priorities { margin-top: 1.5rem; margin-bottom: 1.75rem; max-width: 38rem; }
 .pulse-home:not(.pulse-home--chat) .pulse-home-priorities > h2 { margin-bottom: .5rem; text-align: left; font-size: .6875rem; }
@@ -86,5 +84,5 @@
 @keyframes pulse-home-tide { from { transform: translate3d(10%, 10%, 0) scale(1); } to { transform: translate3d(-25%, -18%, 0) scale(1.2); } }
 @keyframes pulse-home-reveal { from { opacity: 0; transform: translateY(.5rem); } to { opacity: 1; transform: translateY(0); } }
 @media (max-height: 800px) { .pulse-home:not(.pulse-home--chat) .pulse-home-column { padding-top: 2rem; } }
-@container (max-width: 640px) { .pulse-home .pulse-home-headline { font-size: clamp(2.25rem, 10cqw, 3.25rem); } .pulse-home:not(.pulse-home--chat) .pulse-home-column { padding-top: 2.5rem; } }
+@container (max-width: 640px) { .pulse-home .pulse-home-headline { font-size: clamp(2.5rem, 11cqw, 3.5rem); } .pulse-home:not(.pulse-home--chat) .pulse-home-column { padding-top: 2.5rem; } }
 @media (prefers-reduced-motion: reduce) { .pulse-home-glow, .pulse-home .pulse-home-headline, .pulse-home-focus-dot { animation: none; will-change: auto; } }

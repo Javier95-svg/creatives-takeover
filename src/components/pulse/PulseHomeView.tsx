@@ -134,9 +134,6 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
             {active ? 'Let’s work through it.'
               : <><span className="block">{currentHeading[0]}</span><span className="pulse-home-headline-second block">{currentHeading[1]}</span></>}
           </h1>
-          {!persona && !active && !loading && priorities.length > 0 && <p className="pulse-home-subline">
-            <span className="pulse-home-count">{priorities.length}</span> {priorities.length === 1 ? 'focus item' : 'focus items'} for today{trimmedProjectName ? <> on <span className="text-foreground">{trimmedProjectName}</span></> : null}
-          </p>}
         </header>
         {active && <p className="mt-2 text-xs text-muted-foreground">{persona ? persona.label : trimmedProjectName ? `Project: ${trimmedProjectName}` : 'No project selected'}</p>}
 
