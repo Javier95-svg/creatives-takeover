@@ -17,7 +17,7 @@ export const USER_TYPE_LABEL: Record<UserType, string> = {
   founder: 'Founder',
   builder: 'Builder',
   mentor: 'Mentor',
-  marketplace: 'Marketplace provider',
+  marketplace: 'Marketplace',
   investor: 'Investor',
 };
 

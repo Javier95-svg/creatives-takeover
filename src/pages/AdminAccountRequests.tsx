@@ -69,7 +69,7 @@ export default function AdminAccountRequests() {
         <header className="mb-8">
           <h1 className="text-headline-lg font-semibold">Account requests</h1>
           <p className="mt-2 text-body text-muted-foreground">
-            Mentors, marketplace providers and investors wait here until a decision is made. Founders and builders never appear: they are approved on arrival.
+            Mentor, Marketplace and investor requests wait here until a decision is made. Founders and builders never appear: they are approved on arrival.
           </p>
         </header>
 
