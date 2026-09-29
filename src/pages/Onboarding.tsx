@@ -21,6 +21,7 @@ const ONBOARDING_STARTED_SOURCES: OnboardingStartedSource[] = [
   'signup_redirect',
   'dashboard_prompt',
   'direct',
+  'tool_claim',
 ];
 
 function getOnboardingStartedSource(

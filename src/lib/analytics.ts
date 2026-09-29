@@ -29,7 +29,9 @@ export type UpgradeLocation =
   | 'dashboard_nudge';
 export type UpgradePromptTrigger = 'soft_gate_banner' | 'hard_gate_modal' | 'post_icp_nudge' | 'dashboard_nudge';
 export type IcpBuilderOpenedSource = 'dashboard' | 'onboarding' | 'direct' | 'seed_redirect';
-export type OnboardingStartedSource = 'signup_redirect' | 'dashboard_prompt' | 'direct';
+// tool_claim: opened from the "Finish setting up" prompt after a free-tool
+// result was saved; those accounts are not redirected into onboarding.
+export type OnboardingStartedSource = 'signup_redirect' | 'dashboard_prompt' | 'direct' | 'tool_claim';
 export type ActivationFunnelEvent =
   | 'dashboard_viewed'
   | 'first_action_opened'
@@ -792,6 +794,35 @@ export const trackOnboardingStepCompleted = (properties: {
   step_time_ms?: number;
   quiz_version?: number;
 } & AnalyticsProperties) => captureEvent('onboarding_step_completed', properties);
+
+/**
+ * The quiz opened with answers carried over from a free tool (the idea or
+ * product the visitor typed before signing up). `fields` lists what was filled.
+ */
+export const trackOnboardingPrefilled = (properties: {
+  mode: 'idea' | 'product';
+  fields: string[];
+} & AnalyticsProperties) => captureEvent('onboarding_prefilled', properties);
+
+/**
+ * The visitor changed an account type that was pre-selected for them. Read
+ * against onboarding_prefilled, this is the wrong-mode rate for the homepage.
+ */
+export const trackOnboardingAccountTypeChanged = (properties: {
+  from_type: string;
+  to_type: string;
+} & AnalyticsProperties) => captureEvent('onboarding_account_type_changed', properties);
+
+export type FinishSetupSurface = 'icp_result' | 'demo_project' | 'dashboard';
+
+/** The "Finish setting up your workspace" card for tool-first accounts. */
+export const trackFinishSetupPrompt = (
+  action: 'shown' | 'clicked' | 'dismissed',
+  properties: { surface: FinishSetupSurface } & AnalyticsProperties,
+) => captureEvent(
+  action === 'shown' ? 'finish_setup_prompt_shown' : action === 'clicked' ? 'finish_setup_prompt_clicked' : 'finish_setup_prompt_dismissed',
+  properties,
+);
 
 /** Fired when an authenticated user leaves /onboarding without completing it. */
 export const trackOnboardingAbandoned = (properties: {

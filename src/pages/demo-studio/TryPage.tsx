@@ -10,6 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import DemoPlayer from '@/components/demo-studio/player/DemoPlayer';
 import SoftGateModal from '@/components/auth/SoftGateModal';
+import { rememberIntendedAccountType } from '@/lib/intendedAccountType';
+import { rememberToolHandoff, updateToolHandoff } from '@/lib/toolHandoff';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   createDemo,
@@ -221,6 +223,15 @@ export default function TryPage() {
     // Functional update, so `description` is a guard rather than a dependency.
     setDescription((prev) => (prev.trim() ? prev : seed.slice(0, 5000)));
   }, [heroSeed, isReturning, resumeToken]);
+
+  // A signed-out visitor described a product: keep it for the onboarding quiz
+  // so their brief is pre-filled after signup. Waits for auth so a signed-in
+  // founder reopening the tool does not overwrite anything.
+  useEffect(() => {
+    if (!heroSeed || authLoading || user || isReturning || resumeToken) return;
+    rememberToolHandoff({ mode: 'product', tool: 'demo_studio', seed: heroSeed });
+    rememberIntendedAccountType('founder');
+  }, [authLoading, heroSeed, isReturning, resumeToken, user]);
 
   // Seed the description from the founder's ICP Draft so the handoff from ICP Builder
   // does not restart from a blank textarea. Never overwrites typed input, and stays out
@@ -833,6 +844,11 @@ export default function TryPage() {
       const name = productName || 'My product';
       const assetMode = assetModeRef.current;
       const project = await createProject(user.id, { name, acquisitionSource: 'demo-try' });
+      // The demo's product name becomes the suggested project name in onboarding,
+      // unless it is one of the generic fallbacks.
+      if (productName && !/^(my product|product concept)$/i.test(productName.trim())) {
+        updateToolHandoff({ projectName: productName });
+      }
       try {
         const demo = await createDemo(project.id, user.id, `${name} demo`, { assetMode });
         let position = 0;

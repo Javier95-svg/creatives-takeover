@@ -71,6 +71,8 @@ import {
   type IcpPostSaveStep,
 } from "@/lib/icpUnlockFlow";
 import { consumeStoredIcpSeed, normalizeIcpSeed } from "@/lib/icpSeed";
+import { rememberIntendedAccountType } from "@/lib/intendedAccountType";
+import { rememberToolHandoff } from "@/lib/toolHandoff";
 import { markFirstArtifactCreated, sendRetentionEmail, trackCurrentActivationJourneyEvent } from "@/lib/retentionSystem";
 import { useActivationAbandonment } from "@/hooks/useActivationAbandonment";
 import {
@@ -665,13 +667,19 @@ const ICPBuilder: React.FC<ICPBuilderProps> = ({ backControl }) => {
       },
     }));
     consumeStoredIcpSeed();
+    // A signed-out visitor brought an idea: keep it for the onboarding quiz,
+    // which otherwise would ask for the same brief again after signup.
+    if (!user) {
+      rememberToolHandoff({ mode: 'idea', tool: 'icp_builder', seed: effectiveSeed });
+      rememberIntendedAccountType('builder');
+    }
 
     if (restoredSeed) {
       const nextParams = new URLSearchParams(searchParams);
       nextParams.delete("seed");
       setSearchParams(nextParams, { replace: true });
     }
-  }, [searchParams, session.fastDescription, session.guided.seed, setSearchParams]);
+  }, [searchParams, session.fastDescription, session.guided.seed, setSearchParams, user]);
 
   useEffect(() => {
     if (!editDraftId || !user) return;

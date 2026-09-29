@@ -150,6 +150,34 @@
       "sourceFile": "src/lib/analytics.ts",
       "requiredProperties": ["source", "onboarding_session_id", "flow_version", "rollout_variant"]
     },
+    "onboarding_prefilled": {
+      "stage": "onboarding",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["mode", "fields"]
+    },
+    "onboarding_account_type_changed": {
+      "stage": "onboarding",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["from_type", "to_type"]
+    },
+    "finish_setup_prompt_shown": {
+      "stage": "onboarding",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["surface"]
+    },
+    "finish_setup_prompt_clicked": {
+      "stage": "onboarding",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["surface"]
+    },
     "onboarding_step_completed": {
       "stage": "onboarding",
       "owner": "product",
@@ -655,6 +683,18 @@
     }
   },
   "funnels": [
+    {
+      "key": "tool_first_setup",
+      "name": "Free-tool account to finished onboarding",
+      "windowDays": 14,
+      "steps": [
+        "finish_setup_prompt_shown",
+        "finish_setup_prompt_clicked",
+        "onboarding_started",
+        "onboarding_completed"
+      ],
+      "breakdowns": ["surface"]
+    },
     {
       "key": "outcome_integrated_pilot",
       "name": "Invited founder to repeatable-demand evidence",

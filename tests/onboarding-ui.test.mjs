@@ -18,7 +18,7 @@ const mocks = {
   '@/lib/publishProofRollout': `export const PUBLISH_PROOF_FIRST_FLAG='test';export const isPublishProofFirstEnabled=()=>false;`,
   '@tanstack/react-query': `export const useQueryClient=()=>({invalidateQueries:async()=>{}});`,
   '@/integrations/supabase/client': `export const supabase={from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:{user_preferences:{}}})})})})};`,
-  '@/lib/analytics': `export const trackOnboardingStepCompleted=()=>{};`,
+  '@/lib/analytics': `export const trackOnboardingStepCompleted=()=>{};export const trackOnboardingPrefilled=(value)=>window.events.push({name:'onboarding_prefilled',data:value});export const trackOnboardingAccountTypeChanged=(value)=>window.events.push({name:'onboarding_account_type_changed',data:value});`,
   '@/lib/retentionSystem': `export const trackRetentionEvent=async(name,data)=>window.events.push({name,data}); export const trackActivationJourneyEvent=async()=>{}; export const ensureActivationGateVariant=async()=> 'control'; export const startActivationJourney=async()=>{};`,
   '@/lib/onboardingMentorRecommendations': `export const refreshOnboardingMentorRecommendations=async()=>{};`,
   '@/lib/accountApplications': `export const getMyAccountInvitationTypes=async()=>window.invitationTypes; export const submitAccountApplication=async(value)=>{window.applications.push(value);};`,
@@ -136,6 +136,36 @@ test('founder finishes in six screens and the fundraising follow-up stays visibl
     assert.ok(!text(dom).includes('win first customer'));
     await click(dom,'Start:');
     assert.equal(dom.window.completedRoute,'/');
+  }finally{close(dom);}
+});
+
+test('an idea typed into a free tool pre-fills the builder quiz',async()=>{
+  const now=Date.now();
+  const dom=await mount({
+    ct_tool_handoff:JSON.stringify({mode:'idea',tool:'icp_builder',seed:'Freelance designers lose hours chasing unpaid invoices.',savedAt:now}),
+    ct_intended_account_type:JSON.stringify({type:'builder',savedAt:now}),
+  });try{
+    assert.ok(text(dom).includes('We selected this from your choice on the homepage'));
+    const prefilled=dom.window.events.find(e=>e.name==='onboarding_prefilled');
+    assert.ok(prefilled);assert.equal(prefilled.data.mode,'idea');
+    // Values created inside the jsdom window: compare as JSON, not by prototype.
+    assert.equal(JSON.stringify(prefilled.data.fields),JSON.stringify(['situation','startupBrief','builderStartingPoint']));
+    await click(dom,'Continue');
+    assert.ok(text(dom).includes('We filled this in from what you wrote earlier'));
+    assert.equal(dom.window.document.querySelector('textarea').value,'Freelance designers lose hours chasing unpaid invoices.');
+    const start=[...dom.window.document.querySelectorAll('button')].find(b=>b.textContent.includes('I have an idea to validate'));
+    assert.equal(start.getAttribute('aria-pressed'),'true');
+    await click(dom,'Continue');
+    assert.ok(text(dom).includes('How might this make money?'));
+  }finally{close(dom);}
+});
+
+test('changing a pre-selected account type is recorded',async()=>{
+  const dom=await mount({ct_intended_account_type:JSON.stringify({type:'founder',savedAt:Date.now()})});try{
+    const builder=[...dom.window.document.querySelectorAll('button')].find(b=>b.textContent.includes('I am starting from scratch'));
+    builder.click();await tick();
+    const changed=dom.window.events.find(e=>e.name==='onboarding_account_type_changed');
+    assert.equal(JSON.stringify(changed?.data),JSON.stringify({from_type:'founder',to_type:'builder'}));
   }finally{close(dom);}
 });
 

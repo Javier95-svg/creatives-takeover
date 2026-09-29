@@ -74,6 +74,23 @@ export function shouldRedirectToGuidedOnboarding(
   return profile.onboarding_completed !== true;
 }
 
+/**
+ * Accounts that started from a free tool are not redirected into onboarding
+ * (see shouldRedirectToGuidedOnboarding): their saved ICP or demo counts as
+ * the first result. They are offered it instead, so they still end up with a
+ * brief, a stage and a chosen account type. This is exactly that group.
+ */
+export function shouldOfferOnboardingTopUp(
+  profile: GuidedOnboardingProfile | null | undefined,
+): boolean {
+  if (!profile || !requiresGuidedOnboarding(profile.user_preferences)) return false;
+  if (profile.onboarding_completed === true) return false;
+  if (isReviewedUserType(profile.user_type ?? '')) return false;
+  const preferences = getUserPreferencesRecord(profile.user_preferences);
+  return typeof preferences.firstArtifactType === 'string'
+    || profile.dashboard_bootstrap_source === 'icp_unlock';
+}
+
 export function shouldRedirectToSetupQuiz(_profile: GuidedOnboardingProfile | null | undefined): boolean {
   return false;
 }

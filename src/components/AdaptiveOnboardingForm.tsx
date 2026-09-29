@@ -63,9 +63,10 @@ import {
 import { refreshOnboardingMentorRecommendations } from '@/lib/onboardingMentorRecommendations';
 import { onboardingSupportNeeds } from '@/lib/onboardingSupportNeeds';
 import { clearIntendedAccountType, readIntendedAccountType } from '@/lib/intendedAccountType';
+import { clearToolHandoff, readToolHandoff } from '@/lib/toolHandoff';
 import { MAX_SECTORS } from '@/lib/onboardingAnswerRules';
 import { cn } from '@/lib/utils';
-import { trackOnboardingStepCompleted } from '@/lib/analytics';
+import { trackOnboardingAccountTypeChanged, trackOnboardingPrefilled, trackOnboardingStepCompleted } from '@/lib/analytics';
 
 // Brief, business and evidence, goal and blocker, time and runway, review. The
 // situation question is shown before these, so founders see six screens.
@@ -322,12 +323,25 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
   const resumedSituation = localFallback?.answers.situation ?? session.answers.situation;
   const [intendedType] = useState(() => (resumedSituation ? null : readIntendedAccountType()));
   const initialSituation = resumedSituation ?? (intendedType ? situationForUserType(intendedType) : undefined);
+  // What the visitor typed into a free tool before signing up. Only used for a
+  // fresh session with no brief yet, so it never overwrites a real answer.
+  const [toolHandoff] = useState(() => {
+    const existingBrief = localFallback?.answers.startupBrief ?? session.answers.startupBrief;
+    return resumedSituation || existingBrief?.trim() ? null : readToolHandoff();
+  });
+  const initialSegment = classifyOnboardingSituation(initialSituation);
   const [answers, setAnswers] = useState<OnboardingAnswersV1>({
     ...EMPTY_ONBOARDING_ANSWERS_V1,
     ...session.answers,
     ...localFallback?.answers,
+    ...(toolHandoff ? {
+      startupBrief: toolHandoff.seed,
+      projectName: toolHandoff.projectName ?? '',
+      // They typed an idea, so they are past "just exploring".
+      ...(toolHandoff.mode === 'idea' && initialSegment === 'builder' ? { builderStartingPoint: 'idea_chosen' as const } : {}),
+    } : {}),
     situation: initialSituation,
-    founderSegment: classifyOnboardingSituation(initialSituation),
+    founderSegment: initialSegment,
     sectors: Array.isArray(localFallback?.answers.sectors)
       ? localFallback.answers.sectors
       : Array.isArray(session.answers.sectors)
@@ -338,6 +352,18 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
       || session.answers.country
       || '',
   });
+  const prefillTrackedRef = useRef(false);
+  useEffect(() => {
+    if (prefillTrackedRef.current || (!toolHandoff && !intendedType)) return;
+    prefillTrackedRef.current = true;
+    const fields = [
+      intendedType ? 'situation' : null,
+      toolHandoff ? 'startupBrief' : null,
+      toolHandoff?.mode === 'idea' && initialSegment === 'builder' ? 'builderStartingPoint' : null,
+      toolHandoff?.projectName ? 'projectName' : null,
+    ].filter((field): field is string => Boolean(field));
+    trackOnboardingPrefilled({ mode: toolHandoff?.mode ?? (intendedType === 'builder' ? 'idea' : 'product'), fields });
+  }, [initialSegment, intendedType, toolHandoff]);
   const [currentStep, setCurrentStep] = useState(
     (localFallback?.answers.situation ?? session.answers.situation) ? localFallback?.currentStep ?? Math.min(session.current_step, CORE_STEPS - 1) : 0,
   );
@@ -630,6 +656,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
         completedRef.current = true;
         try { localStorage.removeItem(`adaptive_onboarding_${session.id}`); } catch { /* storage unavailable */ }
         clearIntendedAccountType();
+        clearToolHandoff();
         setSubmittedReview(answers.founderSegment);
         void queryClient.invalidateQueries({ queryKey: ['account-context', user?.id] });
         void trackRetentionEvent('onboarding_completed', { user_id: user?.id, user_type: answers.founderSegment, quiz_version: 2, onboarding_session_id: session.id, completion_kind: 'application_submitted' });
@@ -768,6 +795,7 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
       completedRef.current = true;
       try { localStorage.removeItem(`adaptive_onboarding_${session.id}`); } catch { /* storage unavailable */ }
       clearIntendedAccountType();
+      clearToolHandoff();
       void queryClient.invalidateQueries({ queryKey: ['account-context', user?.id] });
       await startActivationJourney({
         userId: user.id,
@@ -911,7 +939,15 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
             We selected this from your choice on the homepage. You can pick a different one.
           </p>
         ) : null}
-        <div className="mt-6"><ChoiceGrid options={ONBOARDING_SITUATIONS} value={answers.situation ?? ''} onSelect={(situation) => { const founderSegment = classifyOnboardingSituation(situation); if (founderSegment !== answers.founderSegment) setRoleDraft({}); setError(''); setInvitationBlocked(false); patchAnswers({ situation, founderSegment }); }} /></div>
+        <div className="mt-6"><ChoiceGrid options={ONBOARDING_SITUATIONS} value={answers.situation ?? ''} onSelect={(situation) => {
+          const founderSegment = classifyOnboardingSituation(situation);
+          if (founderSegment !== answers.founderSegment) setRoleDraft({});
+          // Moving off a type we pre-selected is the wrong-mode signal.
+          if (intendedType && answers.founderSegment === intendedType && founderSegment && founderSegment !== intendedType) {
+            trackOnboardingAccountTypeChanged({ from_type: intendedType, to_type: founderSegment });
+          }
+          setError(''); setInvitationBlocked(false); patchAnswers({ situation, founderSegment });
+        }} /></div>
         {invitationBlocked ? (
           <div role="alert" className="mt-5 rounded-xl border border-warning/40 bg-warning-subtle p-4">
             <p className="flex items-center gap-2 text-sm font-semibold"><Lock className="h-4 w-4 text-warning" aria-hidden="true" />This option needs an invitation</p>
@@ -958,6 +994,12 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
               : 'One or two sentences. Your dashboard uses this to make specific recommendations.'}
             headingRef={headingRef}
           />
+          {toolHandoff ? (
+            <p className="mt-4 flex items-start gap-2 rounded-lg border border-accent-teal/30 bg-accent-teal/10 px-3 py-2 text-sm">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-accent-teal" aria-hidden="true" />
+              We filled this in from what you wrote earlier. Edit anything.
+            </p>
+          ) : null}
           {isBuilder && (
             <div className="mt-6">
               <p className="mb-3 text-sm font-semibold">Where are you starting?</p>

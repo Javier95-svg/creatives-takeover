@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { FinishSetupPrompt } from '@/components/onboarding/FinishSetupPrompt';
 import {
   ArrowLeft,
   ArrowRight,
@@ -304,6 +305,7 @@ export default function ProjectOverviewPage() {
           {project?.tagline && <p className="mt-1 text-muted-foreground">{project.tagline}</p>}
         </div>
 
+        {arrivedFromTry ? <FinishSetupPrompt surface="demo_project" className="mb-6" /> : null}
         {arrivedFromTry && publishedDemo ? (
           <section className="mb-6 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-5" aria-labelledby="demo-live-heading">
             <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">

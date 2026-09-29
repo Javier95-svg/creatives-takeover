@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2, Download, FileText, Loader2, PencilLine, Sparkles } from "lucide-react";
+import { FinishSetupPrompt } from "@/components/onboarding/FinishSetupPrompt";
 import { toast } from "sonner";
 
 import { IcpFolioDocument } from "@/components/icp/IcpFolioDocument";
@@ -232,6 +233,7 @@ export default function IcpDraftPage() {
       <IcpProgressBar progress={100} />
 
       <div className="mx-auto max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
+        <FinishSetupPrompt surface="icp_result" className="mb-5" />
         {isUnlockSource ? (
           <div className="mb-5 overflow-hidden rounded-4xl border border-success bg-gradient-to-br from-success via-white to-info p-6 shadow-[0_24px_60px_-44px_rgba(15,23,42,0.35)] sm:p-7">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

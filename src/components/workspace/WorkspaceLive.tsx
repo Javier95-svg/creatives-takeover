@@ -16,6 +16,7 @@ import { useWorkspaceHeaderCounts } from '@/hooks/useWorkspaceHeaderCounts';
 import ProjectSwitcher from '@/components/workspace/ProjectSwitcher';
 import { ProjectSetupGate } from '@/components/workspace/ProjectSetupGate';
 import { AccountReviewBanner } from '@/components/workspace/AccountReviewBanner';
+import { FinishSetupPrompt } from '@/components/onboarding/FinishSetupPrompt';
 import { useAccountContext } from '@/hooks/useAccountContext';
 import { trackRetentionEvent } from '@/lib/retentionSystem';
 import WorkspaceLayout from './WorkspaceLayout';
@@ -115,6 +116,9 @@ export default function WorkspaceLive({ children, home }: { children: ReactNode;
     {/* A reviewed account waiting on a decision is told so once, here, rather
         than left to wonder why its category features are empty. */}
     <AccountReviewBanner />
+    {/* Accounts that started from a free tool skip the onboarding redirect;
+        they are offered the short, pre-filled quiz here instead. */}
+    <FinishSetupPrompt surface="dashboard" className="mx-auto mb-4 max-w-3xl" />
     {children}
   </WorkspaceLayout>;
 }
