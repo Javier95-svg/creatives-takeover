@@ -7,8 +7,8 @@
 CREATE TABLE IF NOT EXISTS public.pulse_message_feedback (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  -- The conversation's session_id, which is what the client holds.
-  session_id uuid NOT NULL,
+  -- The conversation's session_id (text, like chatbot_conversations.session_id), which is what the client holds.
+  session_id text NOT NULL CHECK (char_length(session_id) BETWEEN 1 AND 64),
   turn_id text NOT NULL CHECK (char_length(turn_id) BETWEEN 1 AND 64),
   rating smallint NOT NULL CHECK (rating IN (-1, 1)),
   -- Model and depth are on the answer's metadata (chatbot_messages, same turn_id).
