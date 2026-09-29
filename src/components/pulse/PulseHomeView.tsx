@@ -142,15 +142,14 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
 
         <div className={cn('pulse-home-priorities', active ? 'my-4' : 'mx-auto my-8 max-w-xl')}>
           {active ? <button type="button" aria-expanded={showPriorities} onClick={() => setShowPriorities(value => !value)} className="inline-flex items-center gap-2 rounded-lg py-1 text-xs text-muted-foreground hover:text-foreground">Today’s priorities <ChevronDown className={cn('h-3 w-3 transition-transform', showPriorities && 'rotate-180')} /></button> : priorities.length > 0 && <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Today’s focus</h2>}
-          {(!active || showPriorities) && (loading ? <p role="status" className="text-sm text-muted-foreground">Loading your workspace…</p> : priorities.length ? <ol className="pulse-home-focus-list">{priorities.map((item, index) => {
+          {(!active || showPriorities) && (loading ? <p role="status" className="text-sm text-muted-foreground">Loading your workspace…</p> : priorities.length ? <ul className="pulse-home-focus-list">{priorities.map((item, index) => {
             const tool = toolNameForRoute(item.route);
             return <li key={item.id}><a href={item.route} onClick={event => openRoute(event, item.route)} className="pulse-home-focus-row group">
-              <span aria-hidden="true" className="pulse-home-focus-index">{String(index + 1).padStart(2, '0')}</span>
-              <span className="min-w-0 flex-1 text-foreground">{item.title}</span>
-              {tool && <span className="pulse-home-focus-tool">{tool}</span>}
+              <span aria-hidden="true" className="pulse-home-focus-dot" style={{ animationDelay: `${index * 0.4}s` }} />
+              <span className="min-w-0">{item.title}{tool && <span className="pulse-home-focus-tool"> · {tool}</span>}</span>
               <ArrowRight aria-hidden="true" className="pulse-home-focus-arrow h-3.5 w-3.5 shrink-0" />
             </a></li>;
-          })}</ol> : <div className="text-sm text-muted-foreground"><p>{unavailable ? 'Your dashboard priorities will appear here after sign-in.' : contextNotice ? 'Your priorities are temporarily unavailable.' : persona ? persona.emptyFocus : 'Nothing on your list yet. Let’s find a useful first step.'}</p><button type="button" disabled={Boolean(unavailable) || loading} onClick={() => send('Help me plan my next step')} className="mt-2 text-primary hover:underline disabled:opacity-50">Plan my next step <span aria-hidden="true">↗</span></button></div>)}
+          })}</ul> : <div className="text-sm text-muted-foreground"><p>{unavailable ? 'Your dashboard priorities will appear here after sign-in.' : contextNotice ? 'Your priorities are temporarily unavailable.' : persona ? persona.emptyFocus : 'Nothing on your list yet. Let’s find a useful first step.'}</p><button type="button" disabled={Boolean(unavailable) || loading} onClick={() => send('Help me plan my next step')} className="mt-2 text-primary hover:underline disabled:opacity-50">Plan my next step <span aria-hidden="true">↗</span></button></div>)}
         </div>
 
         {active && <div role="log" aria-label="Conversation with Pulse" aria-live="polite" aria-busy={streaming} className="space-y-6 pb-6">{messages.map(message => <article key={message.id} className={cn('text-sm leading-7', message.role === 'user' ? 'ml-auto max-w-xl rounded-2xl bg-muted/70 px-5 py-3' : 'pr-2')}>

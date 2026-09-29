@@ -5,32 +5,35 @@
 .pulse-home:not(.pulse-home--chat) .pulse-home-content { overflow-y: auto; }
 .pulse-home:not(.pulse-home--chat) .pulse-home-scroll { flex: 0 0 auto; overflow: visible; }
 .pulse-home:not(.pulse-home--chat) .pulse-home-column { max-width: 64rem; padding-top: clamp(3rem, 8vh, 7rem); }
-/* Solid two-line headline: the second line steps back in grey instead of a rainbow gradient. */
-.pulse-home .pulse-home-headline { font-size: clamp(2.75rem, 6.5cqw, 4.75rem); font-weight: 700; line-height: 1.04; letter-spacing: -.045em; text-wrap: balance; animation: pulse-home-reveal .6s ease-out both; }
-.pulse-home-headline-second { color: hsl(var(--muted-foreground)); }
+/* Two-line headline: the second line carries the brand blue-to-teal, not a rainbow. */
+.pulse-home .pulse-home-headline { font-size: clamp(2.5rem, 6cqw, 4.25rem); font-weight: 700; line-height: 1.04; letter-spacing: -.045em; text-wrap: balance; animation: pulse-home-reveal .6s ease-out both; }
+.pulse-home-headline-second { width: fit-content; max-width: 100%; margin-inline: auto; padding-bottom: .08em; background: linear-gradient(95deg, hsl(var(--primary)) 0%, hsl(var(--accent-teal)) 100%); background-clip: text; -webkit-background-clip: text; color: transparent; }
+.pulse-home--command-center .pulse-home-headline-second { margin-left: 0; }
 .pulse-home-stage-chip { color: hsl(var(--accent-teal)); background: hsl(var(--accent-teal) / .1); box-shadow: inset 0 0 0 1px hsl(var(--accent-teal) / .4); }
 .pulse-home-subline { margin-top: .875rem; font-size: 1rem; color: hsl(var(--muted-foreground)); }
 .pulse-home-count { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace; font-weight: 500; color: hsl(var(--foreground)); }
-.pulse-home:not(.pulse-home--chat) .pulse-home-priorities { margin-top: 1.75rem; margin-bottom: 1.5rem; max-width: 40rem; padding: .5rem 1.25rem .75rem; border: 1px solid hsl(var(--border) / .8); border-radius: 1rem; background: hsl(var(--card) / .55); backdrop-filter: blur(8px); }
-.pulse-home:not(.pulse-home--chat) .pulse-home-priorities > h2 { margin: .5rem 0 .25rem; text-align: left; }
-.pulse-home-focus-list { display: grid; }
-.pulse-home-focus-list li + li { border-top: 1px solid hsl(var(--border) / .6); }
-.pulse-home-focus-row { display: flex; align-items: center; gap: .875rem; padding: .75rem .25rem; font-size: .9375rem; font-weight: 500; text-align: left; border-radius: .5rem; transition: background .15s; }
-.pulse-home-focus-row:hover { background: hsl(var(--foreground) / .03); }
-.pulse-home-focus-row:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 2px; }
-.pulse-home-focus-index { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .75rem; color: hsl(var(--muted-foreground)); }
-.pulse-home-focus-tool { flex-shrink: 0; padding: .1875rem .625rem; border: 1px solid hsl(var(--border)); border-radius: 999px; font-size: .75rem; font-weight: 500; color: hsl(var(--muted-foreground)); transition: color .15s, border-color .15s; }
-.pulse-home-focus-arrow { color: hsl(var(--muted-foreground)); transition: transform .15s, color .15s; }
-.pulse-home-focus-row:hover .pulse-home-focus-tool { color: hsl(var(--foreground)); border-color: hsl(var(--accent-teal) / .5); }
-.pulse-home-focus-row:hover .pulse-home-focus-arrow { color: hsl(var(--foreground)); transform: translateX(2px); }
-.pulse-home--chat .pulse-home-focus-row { font-size: .875rem; padding: .5rem 0; }
+/* Today's focus: a light bulleted list, so the Pulse box below stays the main event. */
+.pulse-home:not(.pulse-home--chat) .pulse-home-priorities { margin-top: 1.5rem; margin-bottom: 1.75rem; max-width: 38rem; }
+.pulse-home:not(.pulse-home--chat) .pulse-home-priorities > h2 { margin-bottom: .5rem; text-align: left; font-size: .6875rem; }
+.pulse-home-focus-list { display: grid; gap: .125rem; }
+.pulse-home-focus-row { display: flex; align-items: flex-start; gap: .75rem; line-height: 1.5; width: fit-content; max-width: 100%; padding: .3125rem 0; font-size: .9375rem; font-weight: 500; text-align: left; color: hsl(var(--foreground) / .88); transition: color .15s; }
+.pulse-home-focus-row:hover { color: hsl(var(--foreground)); }
+.pulse-home-focus-row:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 3px; border-radius: .375rem; }
+.pulse-home-focus-dot { width: .5rem; height: .5rem; margin-top: .5em; flex-shrink: 0; border-radius: 50%; background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent-teal))); box-shadow: 0 0 0 3px hsl(var(--accent-teal) / .12); animation: pulse-home-dot 3.2s ease-in-out infinite; }
+.pulse-home-focus-tool { font-weight: 400; color: hsl(var(--muted-foreground)); }
+.pulse-home-focus-arrow { margin-top: .3em; color: hsl(var(--accent-teal)); opacity: 0; transform: translateX(-4px); transition: opacity .15s, transform .15s; }
+.pulse-home-focus-row:hover .pulse-home-focus-arrow, .pulse-home-focus-row:focus-visible .pulse-home-focus-arrow { opacity: 1; transform: translateX(0); }
+@keyframes pulse-home-dot { 50% { box-shadow: 0 0 0 5px hsl(var(--accent-teal) / .06); } }
+.pulse-home--chat .pulse-home-focus-row { font-size: .875rem; }
 @container (max-width: 480px) { .pulse-home-focus-tool { display: none; } }
 .pulse-home:not(.pulse-home--chat) .pulse-home-priorities > div { display: flex; justify-content: center; align-items: baseline; flex-wrap: wrap; column-gap: .75rem; font-size: .8125rem; }
 .pulse-home:not(.pulse-home--chat) .pulse-home-priorities button:disabled { display: none; }
 .pulse-home:not(.pulse-home--chat) .pulse-home-compose { padding-top: .5rem; padding-bottom: 2rem; }
 .pulse-home:not(.pulse-home--chat) .pulse-home-compose > div { max-width: 50rem; }
-.pulse-home .pulse-home-composer { position: relative; padding: 1.25rem; border: 1px solid hsl(var(--border)); border-radius: 1.25rem; background: hsl(var(--card)); box-shadow: 0 1px 0 hsl(var(--foreground) / .04) inset, 0 18px 50px -30px rgb(0 0 0 / .6); transition: border-color .2s, box-shadow .2s; }
-.pulse-home .pulse-home-composer:focus-within { border-color: hsl(var(--accent-teal) / .55); box-shadow: 0 0 0 4px hsl(var(--accent-teal) / .12), 0 18px 50px -30px rgb(0 0 0 / .6); }
+/* The Pulse box is the heart of the page: brand-gradient edge and a soft glow. */
+.pulse-home .pulse-home-composer { position: relative; padding: 1.375rem 1.5rem; border: 1px solid transparent; border-radius: 1.5rem; background: linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box, linear-gradient(120deg, hsl(var(--primary) / .65), hsl(var(--accent-teal) / .45) 55%, hsl(var(--border)) 100%) border-box; box-shadow: 0 0 0 1px hsl(var(--primary) / .06), 0 20px 60px -28px hsl(var(--primary) / .45), 0 10px 40px -30px hsl(var(--accent-teal) / .35); transition: box-shadow .2s; }
+.pulse-home .pulse-home-composer:focus-within { box-shadow: 0 0 0 4px hsl(var(--accent-teal) / .14), 0 24px 70px -26px hsl(var(--primary) / .55), 0 10px 40px -24px hsl(var(--accent-teal) / .4); }
+.pulse-home:not(.pulse-home--chat) .pulse-home-composer textarea { font-size: 1.25rem; }
 .pulse-home-status-live { background: hsl(var(--accent-teal)); box-shadow: 0 0 0 3px hsl(var(--accent-teal) / .2); }
 .pulse-home-input-row { display: flex; align-items: flex-start; gap: .875rem; }
 .pulse-home .pulse-home-composer textarea { min-height: 1.75rem; max-height: 180px; overflow-y: auto; font-size: 1.125rem; line-height: 1.5; }
@@ -84,4 +87,4 @@
 @keyframes pulse-home-reveal { from { opacity: 0; transform: translateY(.5rem); } to { opacity: 1; transform: translateY(0); } }
 @media (max-height: 800px) { .pulse-home:not(.pulse-home--chat) .pulse-home-column { padding-top: 2rem; } }
 @container (max-width: 640px) { .pulse-home .pulse-home-headline { font-size: clamp(2.25rem, 10cqw, 3.25rem); } .pulse-home:not(.pulse-home--chat) .pulse-home-column { padding-top: 2.5rem; } }
-@media (prefers-reduced-motion: reduce) { .pulse-home-glow, .pulse-home .pulse-home-headline { animation: none; will-change: auto; } }
+@media (prefers-reduced-motion: reduce) { .pulse-home-glow, .pulse-home .pulse-home-headline, .pulse-home-focus-dot { animation: none; will-change: auto; } }
