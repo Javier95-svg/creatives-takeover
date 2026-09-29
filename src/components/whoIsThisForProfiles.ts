@@ -1,4 +1,6 @@
-import type { UserType } from "@/lib/accountTypes";
+// Relative import so the Pulse edge function can read this file too (it builds
+// the public fact sheet from it), where the @/ alias does not resolve.
+import type { UserType } from "../lib/accountTypes.ts";
 
 export const WHO_IS_THIS_FOR_ACCOUNT_TYPES = [
   { id: "founder", label: "Founder", promise: "I have a project.", next: "Keep your work in one place and see what to do next.", access: "open" },

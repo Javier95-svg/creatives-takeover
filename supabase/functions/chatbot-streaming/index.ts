@@ -7,6 +7,7 @@ import { logInfo, logWarn, logError } from '../_shared/logger.ts';
 import { fetchWithRetry } from '../_shared/api-retry.ts';
 import { getCachedResponse, saveResponseCache as saveSharedResponseCache, getCacheTTL } from '../_shared/cache.ts';
 import { validateResponseStructure, scoreResponseQuality, postProcessResponse, extractStructuredResponse } from '../_shared/response-validator.ts';
+import { buildPublicPlatformBrief } from '../../../src/lib/publicPlatformFacts.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -36,7 +37,7 @@ const templates: Template[] = [
     response: "Creatives Takeover is the founder support platform. It helps you move from idea to ICP, validation, MVP, launch, traction, and fundraising with AI tools, mentors, community, and investor resources.\n\nBizMap AI is one workflow inside that ecosystem. It helps with early planning, while tools like ICP Builder, PMF Lab, Tech Stack Builder, GTM Strategist, Pitch Deck Analyzer, VC Search, and the mentor/co-founder spaces help with the rest of the journey.",
     quickActions: [
       { text: "Start with ICP Builder", id: "navigate_icp_builder" },
-      { text: "How does the AI work?", id: "ask_ai_work" },
+      { text: "Who is it for?", id: "ask_who_for" },
       { text: "Show pricing", id: "navigate_pricing" }
     ]
   },
@@ -302,6 +303,8 @@ interface BusinessContext {
     purpose?: string;
   } | null;
   projectContext?: Record<string, any> | null;
+  // Set by the server, never trusted from the client: true when a Pulse request has no signed-in user.
+  publicVisitor?: boolean;
 }
 
 function inferChatMode(requestedChatMode: string | null | undefined, businessContext: BusinessContext): string {
@@ -353,6 +356,9 @@ serve(async (req) => {
     const persistedChatMode = chatMode === 'pulse' ? 'freeform' : chatMode;
     const authUser = await getUserFromAuth(req);
     const resolvedUserId = authUser?.id ?? null;
+    if (chatMode === 'pulse' && businessContext && typeof businessContext === 'object') {
+      businessContext.publicVisitor = !resolvedUserId;
+    }
 
     if (userId && !resolvedUserId) {
       return new Response(
@@ -1051,7 +1057,8 @@ function getCachedSystemPrompt(businessContext: BusinessContext, wizardMode: any
     projectContext: businessContext.projectContext,
     wizardMode: wizardMode?.enabled,
     currentStep,
-    chatMode
+    chatMode,
+    publicVisitor: businessContext.publicVisitor === true
   });
   
   const cached = SYSTEM_PROMPT_CACHE.get(promptKey);
@@ -1315,6 +1322,8 @@ Answer questions about features, pricing, getting started. Be friendly but BRIEF
     const toolName = businessContext.currentTool?.name || 'this tool';
     const toolPurpose = businessContext.currentTool?.purpose || 'helping the founder make progress';
     const projectContext = formatPulseProjectContext(businessContext.projectContext);
+    // Signed-out visitors get the public fact sheet, so answers match the site instead of being improvised.
+    const publicBrief = businessContext.publicVisitor ? `\n\n${buildPublicPlatformBrief()}` : '';
 
     return `You are Pulse, the compact in-app assistant for Creatives Takeover.
 
@@ -1356,7 +1365,7 @@ STYLE:
 BOUNDARIES:
 - Do not pretend to know project details that are not in the saved context.
 - Do not give long essays unless the user explicitly asks for depth.
-- Keep advice practical and immediately usable inside ${toolName}.`;
+- Keep advice practical and immediately usable inside ${toolName}.${publicBrief}`;
   }
 
   const { industry, businessType, stage, location, budget, goals = [] } = businessContext;
@@ -1849,8 +1858,8 @@ function generateQuickActions(stage: string, chatMode: string, userMessage: stri
 
     if (lowerMessage.includes('platform') || lowerMessage.includes('creatives takeover') || lowerMessage.includes('what is this')) {
       return [
+        { text: "Who is it for?", id: "ask_who_for" },
         { text: "Start with ICP Builder", id: "navigate_icp_builder" },
-        { text: "How does the AI work?", id: "ask_ai_work" },
         { text: "Show pricing", id: "navigate_pricing" }
       ];
     }
@@ -1890,7 +1899,7 @@ function generateQuickActions(stage: string, chatMode: string, userMessage: stri
       }
       return [
         { text: "What is Creatives Takeover?", id: "ask_platform" },
-        { text: "How does the AI work?", id: "ask_ai_work" },
+        { text: "Who is it for?", id: "ask_who_for" },
         { text: "View pricing", id: "navigate_pricing" }
       ];
     }

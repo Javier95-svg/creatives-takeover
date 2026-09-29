@@ -41,7 +41,7 @@ export const usePulseWidget = () => {
     return () => { guestEpoch.current = generation + 1; };
   }, [identity]);
   const proactiveMessage = !isAuthenticated
-    ? 'Welcome to Creatives Takeover. Ask me about the platform. Sign in to use your saved workspace context.'
+    ? "Hi, I'm Pulse. Ask me anything about Creatives Takeover: who it's for, where to start, or what it costs."
     : founder && route ? `I can help with ${route.toolName}. What are you working through?` : 'Welcome back. What would you like help with today?';
   useEffect(() => {
     if (!loaded || sessionStorage.getItem('pulse_proactive_dismissed') === 'true') return;
@@ -70,7 +70,8 @@ export const usePulseWidget = () => {
     finally { if (alive()) { guestBusy.current = false; setGuestStreaming(false); } }
   }, [isAuthenticated, sendVerified, loaded, guestMessages, location.pathname, identity]);
   const getQuickReplies = useCallback(() => {
-    if (!isAuthenticated) return ['What is this platform?', 'Show me pricing', 'How does the AI work?'];
+    // First-visit questions, answered from the public fact sheet (src/lib/publicPlatformFacts.ts).
+    if (!isAuthenticated) return ['Who is Creatives Takeover for?', 'I have an idea. Where do I start?', 'I already have a product. How can it help?', 'Is it free? What does it cost?'];
     if (account.hasCategoryAccess) {
       if (account.userType === 'mentor') return ['Which bookings need my attention?', 'Help me prepare for a session', 'Recommend an article'];
       if (account.userType === 'marketplace') return ['Who has reached out recently?', 'Help me qualify an enquiry', 'Improve my service offering'];
