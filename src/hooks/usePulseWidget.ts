@@ -15,7 +15,8 @@ import {
 
 // guest: a signed-out reply, whose links go through followPublicPulseLink.
 // links: page cards under that reply, taken from the pages it links to.
-export interface PulseMessage extends PulseHomeMessage { timestamp?: Date; guest?: boolean; links?: PublicPulseLink[] }
+// feedbackSessionId: set on signed-in answers so they can be rated.
+export interface PulseMessage extends PulseHomeMessage { timestamp?: Date; guest?: boolean; links?: PublicPulseLink[]; feedbackSessionId?: string }
 
 const GUEST_CHAT_KEY = 'ct_pulse_guest_chat';
 
@@ -141,7 +142,10 @@ export const usePulseWidget = () => {
     if (account.userType === 'investor') return ['Review my investment focus', 'Recommend relevant content', 'Help me define screening criteria'];
     return ['What should I focus on?', 'Use my project context', 'Suggest next step'];
   }, [isAuthenticated, account.userType, account.hasCategoryAccess, guestMessages]);
-  const messages = isAuthenticated ? conversation.messages : guestMessages;
+  // Signed-in answers carry the conversation's session id so they can be rated.
+  const messages: PulseMessage[] = isAuthenticated
+    ? conversation.messages.map(message => ({ ...message, feedbackSessionId: conversation.sessionId ?? undefined }))
+    : guestMessages;
   return {
     isOpen, activeTab, setActiveTab, openPanel, closePanel, proactiveMessage, proactiveVisible, dismissProactive,
     messages: messages.length ? messages : [{ id: 'welcome', role: 'assistant' as const, content: proactiveMessage }],

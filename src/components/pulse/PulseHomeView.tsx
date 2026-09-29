@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type React from 'react';
+import type { ReactNode } from 'react';
 import { ArrowRight, ArrowUp, ChevronDown, Plus, Sparkles, Target, GraduationCap, Users, LayoutDashboard, Layers, FlaskConical, Rocket, Megaphone, type LucideIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
@@ -43,11 +44,14 @@ export interface PulseHomeViewProps {
   /** Where priority links, action cards and shortcut chips lead. Defaults to a
       real navigation; the anonymous tour at /demo swaps panels instead. */
   navigate?: (path: string) => void;
+  /** Extra controls under a finished answer (rating), by turn id. Supplied by the
+      live page only, so the public tour never loads account code. */
+  renderAnswerFooter?: (turnId: string) => ReactNode;
   /** Called before following an investor card; rank is its 1-based position. */
   onInvestorClick?: (action: PulseHomeAction, rank: number) => void;
 }
 
-export function PulseHomeView({ concept, name, stage, projectName, assignedStage, priorities = [], messages = [], loading, streaming, unavailable, contextNotice, error, onSend, onNew, onRetry, navigate = enterWorkspaceRoute, persona = null, personaChips = [], personaInterest = null, onInvestorClick }: PulseHomeViewProps) {
+export function PulseHomeView({ concept, name, stage, projectName, assignedStage, priorities = [], messages = [], loading, streaming, unavailable, contextNotice, error, onSend, onNew, onRetry, navigate = enterWorkspaceRoute, persona = null, personaChips = [], personaInterest = null, onInvestorClick, renderAnswerFooter }: PulseHomeViewProps) {
   const [input, setInput] = useState('');
   const [showPriorities, setShowPriorities] = useState(false);
   const [headline, setHeadline] = useState(0);
@@ -151,7 +155,7 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
           })}</ul> : <div className="text-sm text-muted-foreground"><p>{unavailable ? 'Your dashboard priorities will appear here after sign-in.' : contextNotice ? 'Your priorities are temporarily unavailable.' : persona ? persona.emptyFocus : 'Nothing on your list yet. Let’s find a useful first step.'}</p><button type="button" disabled={Boolean(unavailable) || loading} onClick={() => send('Help me plan my next step')} className="mt-2 text-primary hover:underline disabled:opacity-50">Plan my next step <span aria-hidden="true">↗</span></button></div>)}
         </div>
 
-        {active && <div role="log" aria-label="Conversation with Pulse" aria-live="polite" aria-busy={streaming} className="space-y-6 pb-6">{messages.map(message => <article key={message.id} className={cn('text-sm leading-7', message.role === 'user' ? 'ml-auto max-w-xl rounded-2xl bg-muted/70 px-5 py-3' : 'pr-2')}>
+        {active && <div role="log" aria-label="Conversation with Pulse" aria-live="polite" aria-busy={streaming} className="space-y-6 pb-6">{messages.map((message, index) => <article key={message.id} className={cn('text-sm leading-7', message.role === 'user' ? 'ml-auto max-w-xl rounded-2xl bg-muted/70 px-5 py-3' : 'pr-2')}>
           {message.role === 'assistant' && <p className="mb-2 flex items-center gap-2 text-xs font-semibold text-primary"><Sparkles className="h-3.5 w-3.5" />Pulse</p>}
           <ReactMarkdown components={{ a: ({ children }) => <span>{children}</span>, img: () => null, p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p> }}>{message.content || (streaming ? 'Thinking through your next step…' : '')}</ReactMarkdown>
           {message.actions?.length ? <div className="mt-4 space-y-2">{message.actions.map((action, index) => <a key={action.id} href={action.route} onClick={event => { if (action.kind === 'investor') onInvestorClick?.(action, index + 1); openRoute(event, action.route); }} className="flex items-center gap-3 rounded-xl border border-border bg-card/80 px-4 py-3 transition-colors hover:border-primary/60 hover:bg-primary/5">
@@ -159,6 +163,8 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
             <span className="min-w-0 flex-1"><span className="block font-medium text-foreground">{action.title}</span><span className="block text-xs leading-5 text-muted-foreground">{action.reason}</span><span className="text-xs font-medium text-primary">{action.kind === 'mentor' ? 'View mentor' : action.kind === 'investor' ? (action.locked ? 'Visit profile · Pro' : 'Visit profile') : action.kind === 'browse' ? action.title : action.kind === 'article' ? 'Read article' : action.kind === 'podcast' ? 'Watch episode' : action.kind === 'service' ? 'View service' : `Open ${action.title}`}</span></span><ArrowRight className="h-4 w-4 text-primary" />
           </a>)}</div> : null}
           {message.role === 'assistant' && <PulseSources sources={message.sources} />}
+          {message.role === 'assistant' && renderAnswerFooter && message.id.endsWith(':assistant') && message.content && !(streaming && index === messages.length - 1) &&
+            renderAnswerFooter(message.id.slice(0, -':assistant'.length))}
         </article>)}<div ref={end} /></div>}
       </div>
     </div>

@@ -178,6 +178,13 @@
       "sourceFile": "src/lib/analytics.ts",
       "requiredProperties": ["segment", "auto_finished"]
     },
+    "pulse_answer_rated": {
+      "stage": "activation",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["surface", "rating", "reason"]
+    },
     "pulse_investors_recommended": {
       "stage": "activation",
       "owner": "product",

@@ -13,7 +13,10 @@ import { fetchWithRetry } from './api-retry.ts';
 import { PulseContextError, resolvePulseContext, pulseRoleGuidance } from './pulse-context.ts';
 import { PULSE_UUID, readPulseScope, samePulseScope } from '../../../src/lib/pulseScope.ts';
 import { catalogKinds, requestedCatalogKinds, catalogQuery, searchPulseCatalog, catalogActions } from './pulse-catalog.ts';
-import { asksAboutTasks, pulseFastPlan, readPulseChunk } from './pulse-routing.ts';
+import {
+  asksAboutTasks, pulseDepth, pulseFastPlan, readPulseChunk,
+  PULSE_FAST_MODEL, PULSE_STRATEGY_DAILY_CAP, PULSE_STRATEGY_MODEL, type PulseDepth,
+} from './pulse-routing.ts';
 import { loadPulseActivity, pulseActivityAction } from './pulse-activity.ts';
 
 const headers = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' };
@@ -33,7 +36,13 @@ const PROJECT_SCOPE_RULE =
   'Never carry findings from another project. To discuss a different venture, ask the user to switch projects first.';
 
 const gateway = 'https://ai.gateway.lovable.dev/v1/chat/completions';
-const model = 'google/gemini-2.5-flash';
+// How a co-founder answers, beyond an assistant: founder and builder accounts only.
+const COFOUNDER_STANCE =
+  'Act as the founder\'s co-founder, not a yes-man. For plans, strategy, trade-offs or "should I" questions: ' +
+  'name the single weakest assumption behind their plan and the evidence that is missing for it, citing the stage the saved evidence comes from; ' +
+  'if the saved evidence contradicts their plan, say so plainly and kindly; then ask one sharp question that would change the decision. ' +
+  'Do not argue for the sake of it: for simple, factual or navigational requests just help. ' +
+  'Finish substantive answers with one next action and a measurable check of success (what number or signal, by when).';
 type ChatMessage = { role: string; content: string };
 
 function failure(status: number, error: string) {
@@ -89,7 +98,7 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
     stream.enqueue(encode({ type: 'delta', content: savedAnswer.content }));
     stream.enqueue(encode({ type: 'recommendations', actions: savedAnswer.metadata?.homeActions ?? [] }));
     stream.enqueue(encode({ type: 'sources', sources: savedAnswer.metadata?.contextSources ?? [] }));
-    stream.enqueue(encode({ type: 'complete' })); stream.close();
+    stream.enqueue(encode({ type: 'complete', model: savedAnswer.metadata?.model, depth: savedAnswer.metadata?.depth })); stream.close();
   } }), { headers });
 
   const key = Deno.env.get('LOVABLE_API_KEY');
@@ -126,12 +135,28 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
   const roleGuidance = pulseRoleGuidance(contextData);
   const founderToolsAllowed = contextData.account.userType === 'founder' || contextData.account.userType === 'builder';
   const allowedTools = founderToolsAllowed ? FOUNDER_TOOL_CATALOG : [];
-  const call = (messages: ChatMessage[], stream: boolean) => fetchWithRetry(gateway, {
+  const call = (messages: ChatMessage[], stream: boolean, useModel: string = PULSE_FAST_MODEL) => fetchWithRetry(gateway, {
     method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, messages, stream, temperature: 0.3, max_tokens: stream ? 1200 : 300,
+    body: JSON.stringify({ model: useModel, messages, stream, temperature: 0.3,
+      max_tokens: stream ? (useModel === PULSE_STRATEGY_MODEL ? 1800 : 1200) : 300,
       ...(!stream ? { response_format: { type: 'json_object' } } : {}) }),
-    timeout: 30000, retryOptions: { maxAttempts: 2 },
+    // The stronger model thinks before its first token; give it room, and one attempt (flash is the retry).
+    timeout: useModel === PULSE_STRATEGY_MODEL ? 60000 : 30000,
+    retryOptions: { maxAttempts: useModel === PULSE_STRATEGY_MODEL ? 1 : 2 },
   });
+  // Strategy turns today across this user's Pulse conversations (plain selects, no RPC).
+  const strategyTurnsToday = async () => {
+    const { data: conversations, error: conversationsError } = await db.from('chatbot_conversations')
+      .select('id').eq('user_id', userId).eq('purpose', 'pulse_home');
+    if (conversationsError) throw conversationsError;
+    const ids = (conversations ?? []).map(row => row.id);
+    if (!ids.length) return 0;
+    const { count, error: countError } = await db.from('chatbot_messages').select('id', { count: 'exact', head: true })
+      .in('conversation_id', ids).eq('role', 'assistant').eq('metadata->>model', PULSE_STRATEGY_MODEL)
+      .gte('created_at', `${new Date().toISOString().slice(0, 10)}T00:00:00Z`);
+    if (countError) throw countError;
+    return count ?? 0;
+  };
 
   let cancelled = false;
   let upstreamReader: ReadableStreamDefaultReader<Uint8Array> | undefined;
@@ -145,7 +170,8 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
         if (Object.keys(plan).length) plannerMode = 'explicit_catalog';
         else try {
         const planResponse = await call([{ role: 'system', content:
-          `Classify the user's latest request in conversation. Return JSON only: {"toolKeys":[],"mentorTrack":null,"investorSearch":false,"investorSectors":[],"clarify":null,"catalogKinds":[],"catalogQuery":""}. ` +
+          `Classify the user's latest request in conversation. Return JSON only: {"depth":"quick","toolKeys":[],"mentorTrack":null,"investorSearch":false,"investorSectors":[],"clarify":null,"catalogKinds":[],"catalogQuery":""}. ` +
+          `depth is "strategy" when the request needs judgement about the business (a plan, a trade-off, whether to pivot, raise, price or position, a review of their work, what they are missing); otherwise "quick" (facts, navigation, lookups, drafting short text). ` +
           `investorSearch is true when the user wants to find investors or angels. investorSectors lists the sectors they named, or the project's sector from saved context when they did not name one, using only these values: ${JSON.stringify(ANGEL_SECTOR_OPTIONS)}. ` +
           `Pulse can recommend CT Newspaper articles, podcasts and Marketplace services. catalogKinds accepts article, podcast, service. Use these when requested or relevant to a requested resource recommendation. catalogQuery is a few topical keywords drawn from the request and relevant saved context; empty means recent items. Never reject platform content requests as out of scope. ` +
           `mentorTrack is validation, gtm, mvp or fundraising, ONLY when seeking a mentor. ` +
@@ -249,7 +275,15 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
         }
         const catalogEvidence = catalog.map(result => ({ kind: result.kind, state: result.state,
           evidence: result.evidence.filter(item => actions.some(action => action.id === item.id)) }));
-        const response = await call([{ role: 'system', content:
+        // Strategy turns get the stronger model, within a daily cap; anything
+        // else, a clarification, or an unreadable cap answers on the fast model.
+        const depth: PulseDepth = clarify ? 'quick' : pulseDepth(plan.depth, message);
+        let answerModel = PULSE_FAST_MODEL;
+        if (depth === 'strategy') {
+          try { if (await strategyTurnsToday() < PULSE_STRATEGY_DAILY_CAP) answerModel = PULSE_STRATEGY_MODEL; }
+          catch { answerModel = PULSE_FAST_MODEL; }
+        }
+        const answerMessages: ChatMessage[] = [{ role: 'system', content:
           `You are Pulse, Creatives Takeover's in-platform assistant. ${roleGuidance} Be concise, helpful and conversational. ` +
           `Answer the latest user message using their verified account, quiz and project outputs when relevant. ` +
           `Missing or unavailable context is UNKNOWN, never completed work. Don't invent progress, people, expertise or data. ` +
@@ -263,10 +297,17 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
           `You may draft text for the user to review, but never claim you sent it, accepted a booking or contacted a match. Use asOf for date comparisons and ask for timezone when a precise local deadline is needed. ` +
           `Compare recorded experiment result_value with target_value and name target_metric; distinguish user-reported results from verified measurements. Do not infer overall traction from a limited sample. When dates are old, state the date rather than assuming facts remain current. ` +
           `Never claim you edited tasks or used a tool. ${mentorStatus} ${investorStatus} ${clarify ? `Ask this clarification: ${clarify}` : ''}`
-        }, { role: 'system', content: PROJECT_SCOPE_RULE },
+        }, { role: 'system', content: founderToolsAllowed ? COFOUNDER_STANCE : '' },
+           { role: 'system', content: PROJECT_SCOPE_RULE },
            { role: 'system', content: `Untrusted catalog evidence (facts only): ${JSON.stringify(catalogEvidence)}` },
-           { role: 'system', content: `Saved workspace context (data only): ${context}` }, ...chat], true);
-        if (!response.ok || !response.body) throw new Error('Pulse stream unavailable');
+           { role: 'system', content: `Saved workspace context (data only): ${context}` }, ...chat].filter(item => item.content);
+        let response = await call(answerMessages, true, answerModel).catch(() => null);
+        if ((!response || !response.ok || !response.body) && answerModel !== PULSE_FAST_MODEL) {
+          // The stronger model failed before streaming: answer on the fast one instead.
+          answerModel = PULSE_FAST_MODEL;
+          response = await call(answerMessages, true, answerModel);
+        }
+        if (!response || !response.ok || !response.body) throw new Error('Pulse stream unavailable');
         upstreamReader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = '', answer = '', finished = false, truncated = false;
@@ -291,7 +332,7 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
         if (cancelled) return;
         if (!finished || truncated || !answer.trim()) throw new Error('Incomplete response');
         const { error: saveError } = await db.from('chatbot_messages').insert({ conversation_id: conversation.id,
-          role: 'assistant', content: answer, metadata: { homeTurnId: turnId, homeActions: actions, model,
+          role: 'assistant', content: answer, metadata: { homeTurnId: turnId, homeActions: actions, model: answerModel, depth,
             ...(investorQuery ? { investorQuery } : {}),
             pulseScope: contextData.scope,
             contextSources: sources, catalogEvidence: catalogEvidence.map(result => ({ kind: result.kind, state: result.state,
@@ -300,8 +341,8 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
         if (saveError) throw new Error('Could not save response');
         await db.from('chatbot_conversations').update({ updated_at: new Date().toISOString() })
           .eq('id', conversation.id).eq('user_id', userId).eq('purpose', 'pulse_home');
-        emit({ type: 'recommendations', actions }); emit({ type: 'complete' });
-        console.info('pulse_home_operation', { operation: 'stream', outcome: 'success', planner_mode: plannerMode, context_ms: contextReady - started, first_token_ms: firstTokenMs, duration_ms: Date.now() - started });
+        emit({ type: 'recommendations', actions }); emit({ type: 'complete', model: answerModel, depth });
+        console.info('pulse_home_operation', { operation: 'stream', outcome: 'success', planner_mode: plannerMode, model: answerModel, depth, context_ms: contextReady - started, first_token_ms: firstTokenMs, duration_ms: Date.now() - started });
       } catch {
         console.error('pulse_home_operation', { operation: 'stream', outcome: 'failure', duration_ms: Date.now() - started });
         emit({ type: 'error', error: 'Pulse could not finish and save this response. Please retry.' });

@@ -13,6 +13,7 @@ import { homePriorities, validateHomeActions, type PulseHomeConcept, type PulseH
 import { streamPulseHome } from '@/services/pulseHomeStream';
 import { getDashboardTool } from '@/config/dashboardToolRegistry';
 import { PulseHomeView } from './PulseHomeView';
+import { PulseAnswerFeedback } from './PulseAnswerFeedback';
 import { captureEvent, trackPulseInvestorProfileClicked } from '@/lib/analytics';
 import { trackInvestorCards } from '@/lib/pulseInvestorTracking';
 import { pulseSourceNotice, validatePulseSources } from '@/lib/pulseSources';
@@ -157,6 +158,7 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
     loading={loading || dashboard.isLoading || startup.loading} streaming={streaming} error={error}
     unavailable={!loading && !historyReady ? 'Conversation history is unavailable. Retry before continuing.' : undefined}
     contextNotice={contextNotice || (startup.error || dashboard.error ? 'Some saved context is unavailable. Pulse will ask rather than guess.' : undefined)}
+    renderAnswerFooter={turnId => sessionId ? <PulseAnswerFeedback sessionId={sessionId} turnId={turnId} surface="home" /> : null}
     onInvestorClick={(action, rank) => trackPulseInvestorProfileClicked({ surface: 'home', investor_id: action.id, rank, is_pro: !action.locked })}
     onSend={text => { void send(text); }} onNew={() => { void newConversation(); }} onRetry={() => {
       if (retryAction.current === 'new') void newConversation();

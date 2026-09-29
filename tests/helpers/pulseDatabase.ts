@@ -15,18 +15,25 @@ export class PulseDatabase {
     assert.ok(table in this.tables, `Unexpected table/action: ${table}`);
     this.reads.push(table);
     const filters: ((row: Record<string, any>) => boolean)[] = [];
-    let insert: Record<string, any> | undefined, update: Record<string, any> | undefined, descending = false, limit = Infinity;
+    let insert: Record<string, any> | undefined, update: Record<string, any> | undefined, descending = false, limit = Infinity, countOnly = false;
+    // Supports 'column' and one-level JSON paths like 'metadata->>model'.
+    const read = (row: Record<string, any>, key: string) => {
+      const [column, field] = key.split('->>');
+      return field === undefined ? row[column] : row[column]?.[field];
+    };
     const execute = () => {
-      if (this.failures.has(table)) return { data: [], error: { message: 'Synthetic unavailable source' } };
-      if (insert) this.tables[table].push({ ...insert, id: `row-${this.tables[table].length}`, created_at: this.tables[table].length });
+      if (this.failures.has(table)) return { data: [], error: { message: 'Synthetic unavailable source' }, count: null };
+      if (insert) this.tables[table].push({ ...insert, id: `row-${this.tables[table].length}`, created_at: insert.created_at ?? this.tables[table].length });
       let rows = this.tables[table].filter(row => filters.every(filter => filter(row)));
       if (update) rows.forEach(row => Object.assign(row, update));
       if (descending) rows = [...rows].reverse();
-      return { data: rows.slice(0, limit), error: null };
+      return { data: countOnly ? null : rows.slice(0, limit), error: null, count: rows.length };
     };
     const query = {
-      select: (_fields: string) => query,
-      eq: (key: string, value: unknown) => { filters.push(row => row[key] === value); return query; },
+      select: (_fields: string, options?: { count?: string; head?: boolean }) => { countOnly = Boolean(options?.head); return query; },
+      eq: (key: string, value: unknown) => { filters.push(row => read(row, key) === value); return query; },
+      in: (key: string, values: unknown[]) => { filters.push(row => values.includes(read(row, key))); return query; },
+      gte: (key: string, value: string | number) => { filters.push(row => String(read(row, key) ?? '') >= String(value)); return query; },
       is: (key: string, value: unknown) => { filters.push(row => (row[key] ?? null) === value); return query; },
       contains: (key: string, value: Record<string, unknown>) => { filters.push(row => Object.entries(value).every(([k, v]) => JSON.stringify(row[key]?.[k]) === JSON.stringify(v))); return query; },
       order: (_key: string, opts: { ascending: boolean }) => { descending = !opts.ascending; return query; },
@@ -35,8 +42,9 @@ export class PulseDatabase {
       update: (value: Record<string, any>) => { update = value; return query; },
       maybeSingle: async () => {
         const result = execute();
-        if (result.data.length > 1) return { data: null, error: { message: 'More than one current result' } };
-        return { ...result, data: result.data[0] ?? null };
+        const rows = result.data ?? [];
+        if (rows.length > 1) return { data: null, error: { message: 'More than one current result' } };
+        return { ...result, data: rows[0] ?? null };
       },
       then: (resolve: (value: ReturnType<typeof execute>) => unknown) => Promise.resolve(execute()).then(resolve),
     };

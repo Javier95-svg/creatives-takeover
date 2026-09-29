@@ -92,6 +92,8 @@ export function usePulseConversation(userId: string | undefined, scope: PulseSco
     messages: state.key === key ? state.messages : [], ready,
     streaming: state.key === key && state.streaming,
     error: state.key === key ? state.error : '', notice: state.key === key ? state.notice : '', send,
+    // Read on each render: set once the conversation exists, before any answer arrives.
+    sessionId: state.key === key ? session.current : null,
     retry: () => pending.current && ready ? void send(pending.current.text, true) : setReload(value => value + 1),
   };
 }

@@ -830,6 +830,13 @@ export const trackOnboardingGuestResumed = (properties: {
   auto_finished: boolean;
 } & AnalyticsProperties) => captureEvent('onboarding_guest_resumed', properties);
 
+/** A founder rated a Pulse answer. reason is 'none' for thumbs up. */
+export const trackPulseAnswerRated = (properties: {
+  surface: 'home' | 'widget';
+  rating: 1 | -1;
+  reason: string;
+} & AnalyticsProperties) => captureEvent('pulse_answer_rated', properties);
+
 /**
  * Pulse answered with angel investor cards. investor_ids are directory records
  * (public profiles), in the order shown.

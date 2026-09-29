@@ -18,7 +18,7 @@ const mocks = {
   '@/hooks/useAccountHomeDigest': `export const useAccountHomeDigest=()=>({});`,
   '@/lib/personaHome': `export const personaHome=()=>null; export const personaChips=()=>[];export const personaFocus=()=>[];export const personaInterestSummary=()=>'';`,
   '@/config/dashboardToolRegistry': `export const getDashboardTool=()=>null;`,
-  '@/lib/analytics': `export const captureEvent=()=>{};export const trackPulseInvestorsRecommended=()=>{};export const trackPulseInvestorProfileClicked=()=>{};`,
+  '@/lib/analytics': `export const captureEvent=()=>{};export const trackPulseInvestorsRecommended=()=>{};export const trackPulseInvestorProfileClicked=()=>{};export const trackPulseAnswerRated=()=>{};`,
   '@/services/pulseHomeStream': `export const streamPulseHome=args=>{window.stream=args;return new Promise((_resolve,reject)=>args.signal.addEventListener('abort',()=>reject(new Error('aborted'))));};`,
   './PulseHomeView': `export const PulseHomeView=props=>{window.props=props;return null;};`,
   '@/integrations/supabase/client': `export const supabase={schema:()=>({from(table){
