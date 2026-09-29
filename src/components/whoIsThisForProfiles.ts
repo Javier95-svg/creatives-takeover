@@ -4,7 +4,7 @@ export const WHO_IS_THIS_FOR_ACCOUNT_TYPES = [
   { id: "founder", label: "Founder", promise: "I have a project.", next: "Keep your work in one place and see what to do next.", access: "open" },
   { id: "builder", label: "Builder", promise: "I have an idea.", next: "Find who needs it, test it, and start building.", access: "open" },
   { id: "mentor", label: "Mentor", promise: "I help people learn.", next: "Share advice with people building a business.", access: "invitation" },
-  { id: "marketplace", label: "Marketplace provider", promise: "I offer a service.", next: "Help with work like design, marketing, or technology.", access: "invitation" },
+  { id: "marketplace", label: "Marketplace", promise: "I offer a service.", next: "Help with work like design, marketing, or technology.", access: "invitation" },
   { id: "investor", label: "Investor", promise: "I back new businesses.", next: "Find projects that fit what you want to support. Matching opens after review.", access: "open" },
 ] as const satisfies readonly { id: UserType; label: string; promise: string; next: string; access: "open" | "invitation" }[];
 

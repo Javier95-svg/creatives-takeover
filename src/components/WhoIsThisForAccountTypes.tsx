@@ -111,8 +111,8 @@ export function WhoIsThisForAccountTypes({ onJoin, onShowPreBuild }: Props) {
         </div>
         <p className="mt-1 text-sm leading-6 text-muted-foreground">
           Everyone uses the same platform, and your account type decides what you see. <Role id="founder">Founders</Role> and{" "}
-          <Role id="builder">builders</Role> work on their own projects. <Role id="mentor">Mentors</Role> and{" "}
-          <Role id="marketplace">marketplace providers</Role> help them. <Role id="investor">Investors</Role> find projects to back.
+          <Role id="builder">builders</Role> work on their own projects. <Role id="mentor">Mentors</Role> and the{" "}
+          <Role id="marketplace">Marketplace</Role> help them. <Role id="investor">Investors</Role> find projects to back.
         </p>
       </div>
 
