@@ -15,7 +15,11 @@ const frozenFiles = {
   // auto-starts Demo Studio; and unresolved/off rollout state safely uses the
   // established route handoff. Headline, lede, proof line, and stats are intact.
   // Rehashed 2026-09-08 for the approved evidence-led hero copy update.
-  '../src/components/Hero.tsx': 'c2b21441bbfc1602ae583f70685efd74daa2d440ec17afc061cbf583afde360d',
+  // Rehashed 2026-09-29 for the approved homepage-to-onboarding funnel: signed-
+  // out submissions go to signup and the matching onboarding quiz (Idea ->
+  // Builder, Product -> Founder), then on to the tool they asked for. Copy,
+  // layout and the signed-in route are unchanged.
+  '../src/components/Hero.tsx': 'ceaced0ee3200e77d6290e27e3dea52b685c34e5cd4fd88a19c95726ff57292c',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.
@@ -37,7 +41,7 @@ const frozenFiles = {
   // section using Recharts, and as a static import it pulled ~77KB gz of
   // charting into the fold-blocking bundle for a section far below the fold.
   //
-  // Load timing only — no section added, removed, reordered, restyled or
+  // Load timing only â€” no section added, removed, reordered, restyled or
   // re-copied. The Suspense fallback reserves the section's measured rendered
   // height (969px at 390px wide, 753px at lg) so the swap shifts nothing.
   // Hero/EntrepreneurProblems/Navigation hashes were unchanged at that

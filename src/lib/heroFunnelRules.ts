@@ -152,6 +152,20 @@ export function buildHeroProductPath(seed: string): string {
   return `/demo-studio/try?seed=${encodeURIComponent(seed.trim())}&source=hero-product`;
 }
 
+/**
+ * Where a signed-out homepage submission goes: signup, then the onboarding
+ * quiz for the matching account type, then the tool the visitor asked for.
+ * Signup forwards to its `return`, and onboarding forwards to its own `return`
+ * once the quiz is finished.
+ */
+export function buildHeroSignupPath(mode: HeroMode, toolPath: string): string {
+  const onboardingPath = `/onboarding?source=signup_redirect&return=${encodeURIComponent(toolPath)}`;
+  return `/signup?source=hero-${mode}&return=${encodeURIComponent(onboardingPath)}`;
+}
+
+/** The account type each homepage mode leads into. */
+export const HERO_MODE_ACCOUNT_TYPE = { idea: "builder", product: "founder" } as const satisfies Record<HeroMode, string>;
+
 /** Idea is the default: it is the only path that delivers an output in the hero. */
 export const DEFAULT_HERO_MODE: HeroMode = "idea";
 

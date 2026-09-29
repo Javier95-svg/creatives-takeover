@@ -11,8 +11,16 @@ import HeroIdeaInput from "@/components/hero/HeroIdeaInput";
 import "./hero-cinematic-spotlight.css";
 import { trackActivationEntry, trackActivationFunnelEvent } from "@/lib/activationEntry";
 import { classifyHeroInput, trackHeroInputFocused, trackHeroInputSubmitted } from "@/lib/heroFunnel";
-import { buildHeroProductPath, DEFAULT_HERO_MODE, type HeroMode } from "@/lib/heroFunnelRules";
+import {
+  buildHeroProductPath,
+  buildHeroSignupPath,
+  DEFAULT_HERO_MODE,
+  HERO_MODE_ACCOUNT_TYPE,
+  type HeroMode,
+} from "@/lib/heroFunnelRules";
 import { buildIcpSeedReturnPath, persistIcpSeed } from "@/lib/icpSeed";
+import { rememberIntendedAccountType } from "@/lib/intendedAccountType";
+import { rememberToolHandoff } from "@/lib/toolHandoff";
 
 /*
  * The hero no longer generates anything in place.
@@ -222,16 +230,23 @@ const Hero = ({
       is_authenticated: isAuthenticated,
     });
 
-    // Both modes hand off immediately to the tool that owns the work, carrying
-    // the description so neither restarts from an empty field. Product mode
-    // always did this; idea mode used to generate on the homepage instead.
-    if (isDemo) {
-      navigate(buildHeroProductPath(trimmed));
+    // The tool that owns the work, with the description carried so it never
+    // restarts from an empty field.
+    const toolPath = isDemo ? buildHeroProductPath(trimmed) : buildIcpSeedReturnPath(trimmed);
+    if (!isDemo) persistIcpSeed(trimmed);
+
+    if (isAuthenticated) {
+      navigate(toolPath);
       return;
     }
 
-    persistIcpSeed(trimmed);
-    navigate(buildIcpSeedReturnPath(trimmed));
+    // Signed-out visitors go through account creation and the matching
+    // onboarding quiz first: Idea -> Builder, Product -> Founder. What they
+    // typed is carried into the quiz as their brief, and the quiz returns them
+    // to the tool they asked for, so the promised result still arrives.
+    rememberToolHandoff({ mode: heroMode, tool: isDemo ? "demo_studio" : "icp_builder", seed: trimmed });
+    rememberIntendedAccountType(HERO_MODE_ACCOUNT_TYPE[heroMode]);
+    navigate(buildHeroSignupPath(heroMode, toolPath));
   };
 
   return (

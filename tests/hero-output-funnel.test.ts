@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 
 import {
   buildHeroProductPath,
+  buildHeroSignupPath,
+  HERO_MODE_ACCOUNT_TYPE,
   HERO_MODES,
   resolveHeroArtifactState,
 } from '../src/lib/heroFunnelRules.ts';
@@ -33,6 +35,24 @@ test('hero generation resolves every success and failure order without a stuck b
   }), 'failed');
   assert.equal(resolveHeroArtifactState({ hasCompact: true, hasDeep: false, timedOut: true }), 'partial_failure');
   assert.equal(resolveHeroArtifactState({ hasCompact: false, hasDeep: false, timedOut: true }), 'failed');
+});
+
+test('a signed-out submission goes signup -> matching onboarding -> the tool it asked for', () => {
+  const toolPath = buildHeroProductPath('a CRM for mobile car detailers');
+  const signup = new URL(buildHeroSignupPath('product', toolPath), 'https://creatives-takeover.com');
+  assert.equal(signup.pathname, '/signup');
+  assert.equal(signup.searchParams.get('source'), 'hero-product');
+
+  const onboarding = new URL(signup.searchParams.get('return') ?? '', 'https://creatives-takeover.com');
+  assert.equal(onboarding.pathname, '/onboarding');
+  assert.equal(onboarding.searchParams.get('source'), 'signup_redirect');
+  assert.equal(onboarding.searchParams.get('return'), toolPath);
+
+  const tool = new URL(onboarding.searchParams.get('return') ?? '', 'https://creatives-takeover.com');
+  assert.equal(tool.searchParams.get('seed'), 'a CRM for mobile car detailers');
+
+  assert.equal(HERO_MODE_ACCOUNT_TYPE.idea, 'builder');
+  assert.equal(HERO_MODE_ACCOUNT_TYPE.product, 'founder');
 });
 
 test('Product mode carries the seed to Demo Studio without starting a run', () => {
