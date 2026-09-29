@@ -5,7 +5,7 @@ import type { PulseSourceReference } from './pulseSources.ts';
 
 export type PulseHomeConcept = 'founder-guide' | 'command-center' | 'guided-journey';
 export interface PulseHomeAction {
-  kind: 'tool' | 'mentor' | 'browse' | 'article' | 'podcast' | 'service';
+  kind: 'tool' | 'mentor' | 'investor' | 'browse' | 'article' | 'podcast' | 'service';
   id: string;
   title: string;
   reason: string;
@@ -35,13 +35,19 @@ export function validateHomeActions(value: unknown): PulseHomeAction[] {
       return tool ? [{ ...action, title: tool.name, route: tool.route }] : [];
     }
     if (action.kind === 'browse') {
-      const routes: Record<string, string> = { mentorship: '/mentorship', newspaper: '/newspaper', podcast: '/podcast', marketplace: '/marketplace', tasks: '/dashboard/tasks', bookings: '/mentor/bookings', enquiries: '/marketplace/enquiries', matches: '/investors/matches' };
+      const routes: Record<string, string> = { mentorship: '/mentorship', investors: '/investors', newspaper: '/newspaper', podcast: '/podcast', marketplace: '/marketplace', tasks: '/dashboard/tasks', bookings: '/mentor/bookings', enquiries: '/marketplace/enquiries', matches: '/investors/matches' };
       return Object.prototype.hasOwnProperty.call(routes, action.id) ? [{ ...action, route: routes[action.id], image: undefined }] : [];
     }
     if (['article', 'podcast', 'service'].includes(action.kind) && PULSE_UUID.test(action.id)) {
       if (action.kind === 'podcast') return [{ ...action, route: `/podcast?episode=${encodeURIComponent(action.id)}`, image: undefined }];
       if (typeof action.slug !== 'string' || !/^[a-z0-9][a-z0-9_-]{0,199}$/i.test(action.slug)) return [];
       return [{ ...action, route: `${action.kind === 'article' ? '/newspaper' : '/marketplace'}/${encodeURIComponent(action.slug)}`, image: undefined }];
+    }
+    // Angels have no profile page of their own: the route is always rebuilt as
+    // Find your Angel filtered to that name, never taken from the payload.
+    if (action.kind === 'investor' && PULSE_UUID.test(action.id) && action.title.trim()) {
+      return [{ ...action, route: `/investors?q=${encodeURIComponent(action.title.trim())}&source=pulse`,
+        image: typeof action.image === 'string' && /^https:\/\//.test(action.image) ? action.image : undefined }];
     }
     if (action.kind === 'mentor' && /^[a-z0-9-]+$/i.test(action.id) && /^\/mentorship\/[a-z0-9-]+$/.test(action.route)) {
       return [{ ...action, image: typeof action.image === 'string' && /^https:\/\//.test(action.image) ? action.image : undefined }];

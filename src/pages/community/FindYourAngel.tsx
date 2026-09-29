@@ -84,6 +84,8 @@ const FindYourAngel = () => {
   const { fetchAngels, loading } = useAngels();
   const publicTab = getPublicTabConfig('/investors');
   const isPro = isAdmin || currentTier === 'pro';
+  // Arriving from a Pulse "Visit profile" card: the gate names the investor they chose.
+  const pulseInvestor = searchParams.get("source") === "pulse" ? (searchParams.get("q") || "").trim().slice(0, 80) : "";
   const [angels, setAngels] = useState<AngelInvestor[]>([]);
   const openProfessionalUpgradePrompt = (featureName = 'Angel Investor Profiles') => {
     trackUpgradeClicked({
@@ -855,10 +857,12 @@ const FindYourAngel = () => {
                           <Lock className="w-6 h-6 text-primary" />
                         </div>
                         <h3 className="text-xl font-bold mb-2">
-                          Unlock Angel Investor Profiles
+                          {pulseInvestor ? `Unlock ${pulseInvestor}'s profile` : 'Unlock Angel Investor Profiles'}
                         </h3>
                         <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
-                          Upgrade to Professional to access full angel investor and VC profiles, explore their focus areas, investment stages, and connect with investors who can fund your vision.
+                          {pulseInvestor
+                            ? `Pulse matched ${pulseInvestor} to your sector. Upgrade to Professional to see their full profile, focus areas and investment stages, and every other investor in the directory.`
+                            : 'Upgrade to Professional to access full angel investor and VC profiles, explore their focus areas, investment stages, and connect with investors who can fund your vision.'}
                         </p>
                         <Button
                           size="lg"

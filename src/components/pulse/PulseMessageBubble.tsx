@@ -85,7 +85,7 @@ export const PulseMessageBubble = ({ message, isStreaming }: PulseMessageBubbleP
           </div>
         )}
         {!isUser && <>
-          {validateHomeActions(message.actions).map(action => <a key={action.id} href={action.route} className="mt-2 block rounded-lg border border-border p-2 hover:bg-background"><span className="block font-medium">{action.title}</span><span className="block text-xs text-muted-foreground">{action.reason}</span></a>)}
+          {validateHomeActions(message.actions).map(action => <a key={action.id} href={action.route} className="mt-2 block rounded-lg border border-border p-2 hover:bg-background"><span className="block font-medium">{action.title}</span><span className="block text-xs text-muted-foreground">{action.reason}</span>{action.kind === 'investor' && <span className="mt-1 block text-xs font-medium text-primary">Visit profile</span>}</a>)}
           {message.links?.map(link => <a key={link.route} href={link.destination} onClick={event => openGuestLink(event, link)} className="mt-2 flex items-center gap-2 rounded-lg border border-border p-2 transition-colors hover:border-primary/60 hover:bg-background"><span className="min-w-0 flex-1"><span className="block font-medium">{link.title}</span><span className="block text-xs text-muted-foreground">{link.reason}</span></span><ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" /></a>)}
           <PulseSources sources={message.sources} />
         </>}
