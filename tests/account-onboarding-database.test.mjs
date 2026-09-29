@@ -54,7 +54,7 @@ async function fixture({ bundle = false } = {}) {
   const ensure=sql('20260917180000_outcomes_claim_project_slot');
   await db.exec(ensure.slice(ensure.indexOf('CREATE OR REPLACE FUNCTION public.ensure_active_project'),ensure.indexOf('COMMENT ON FUNCTION')));
   if (bundle) await db.exec(readFileSync(new URL('../docs/sql/account-type-onboarding-2026-09-25.sql',import.meta.url),'utf8'));
-  else for(const name of ['20260925155000_onboarding_invitations','20260925160000_account_onboarding_integrity','20260925161000_onboarding_classification_and_project','20260925162000_investor_matching_preferences','20260925163000_onboarding_drafts_and_reconciliation']) await db.exec(sql(name));
+  else for(const name of ['20260925155000_onboarding_invitations','20260925160000_account_onboarding_integrity','20260925161000_onboarding_classification_and_project','20260925162000_investor_matching_preferences','20260925163000_onboarding_drafts_and_reconciliation','20260928120000_onboarding_context_sync']) await db.exec(sql(name));
   await db.exec(`INSERT INTO auth.users(id,email) VALUES('${user}','test@example.invalid'),('${admin}','admin@example.invalid');
     INSERT INTO profiles(id) VALUES('${user}'),('${admin}'); INSERT INTO onboarding_sessions(id,user_id) VALUES('${session}','${user}');`);
   return db;
@@ -214,6 +214,88 @@ test('late drafts cannot overwrite newer answers or reopen a completed applicati
     await invite(db);await asUser(db);await submit(db,'mentor',mentor);await save(300,'Late');
     await owner(db);const row=(await db.query('SELECT status,answers FROM onboarding_sessions')).rows[0];
     assert.equal(row.status,'completed');assert.deepEqual(row.answers.roleProfile,mentor);
+  }finally{await db.close();}
+});
+
+const founderAnswers={situation:'existing_project',projectName:'Throughline',startupBrief:'We help agencies turn client calls into project briefs.',businessModel:'service',evidenceState:'none',primaryGoal:'validate_problem',blocker:'customer_clarity',weeklyCapacityHours:5,selectedIntent:'run_icp'};
+const complete=(db,answers=founderAnswers,context={assignedStage:1,businessStage:'idea'})=>db.query('SELECT complete_onboarding_v1($1,$2::jsonb,$3::jsonb)',[session,JSON.stringify(answers),JSON.stringify(context)]);
+const cycleTable=`CREATE TABLE founder_cycle_state(user_id uuid UNIQUE,business_model text,customer_count int,recommended_loop text,selected_loop text,
+  primary_goal text,raise_active boolean,weekly_capacity_hours numeric,assignment_reason text,updated_at timestamptz);`;
+
+test('quiz name and brief replace a placeholder project created before the quiz',async()=>{
+  const db=await fixture();try{
+    await owner(db);await db.query("INSERT INTO projects(user_id,title,status) VALUES($1,'My project','active')",[user]);
+    await asUser(db);await complete(db);await owner(db);
+    const rows=(await db.query('SELECT title,idea_summary FROM projects')).rows;
+    assert.equal(rows.length,1);
+    assert.equal(rows[0].title,'Throughline');
+    assert.equal(rows[0].idea_summary,founderAnswers.startupBrief);
+  }finally{await db.close();}
+});
+
+test('a project title the founder chose is kept while an empty summary is filled',async()=>{
+  const db=await fixture();try{
+    await owner(db);await db.query("INSERT INTO projects(user_id,title,status) VALUES($1,'Chosen name','active')",[user]);
+    await asUser(db);await complete(db);await owner(db);
+    const row=(await db.query('SELECT title,idea_summary FROM projects')).rows[0];
+    assert.equal(row.title,'Chosen name');
+    assert.equal(row.idea_summary,founderAnswers.startupBrief);
+  }finally{await db.close();}
+});
+
+test('a fundraising blocker marks the founder as raising',async()=>{
+  const db=await fixture();try{
+    await owner(db);await db.exec(cycleTable);
+    await asUser(db);await complete(db,{...founderAnswers,blocker:'fundraising',fundraisingStatus:'preparing'});await owner(db);
+    assert.equal((await db.query('SELECT raise_active FROM founder_cycle_state')).rows[0].raise_active,true);
+  }finally{await db.close();}
+});
+
+test('editing the focus updates stored answers, stage and the project summary',async()=>{
+  const db=await fixture();try{
+    await owner(db);await db.exec(cycleTable);
+    await asUser(db);await complete(db);
+    const brief='We help agencies price projects from their client call notes.';
+    await db.query('SELECT update_onboarding_focus_v1($1::jsonb,$2::jsonb,$3,$4::jsonb)',[
+      JSON.stringify({startupBrief:brief,primaryGoal:'raise',blocker:'fundraising',weeklyCapacityHours:10,country:''}),
+      JSON.stringify({assignedStage:3,businessStage:'validation',founderLoop:'SELL',selectedIntent:'analyze_pitch_deck'}),'raise_funding',null]);
+    await owner(db);
+    const profile=(await db.query('SELECT assigned_stage,business_stage,quiz_answers_v2 FROM profiles WHERE id=$1',[user])).rows[0];
+    assert.equal(profile.assigned_stage,3);
+    assert.equal(profile.business_stage,'validation');
+    assert.equal(profile.quiz_answers_v2.answers.primaryGoal,'raise');
+    assert.equal(profile.quiz_answers_v2.answers.blocker,'fundraising');
+    assert.equal(profile.quiz_answers_v2.answers.startupBrief,undefined);
+    assert.equal(profile.quiz_answers_v2.context.assignedStage,3);
+    assert.equal((await db.query('SELECT idea_summary FROM projects')).rows[0].idea_summary,brief);
+    assert.equal((await db.query('SELECT raise_active FROM founder_cycle_state')).rows[0].raise_active,true);
+  }finally{await db.close();}
+});
+
+test('editing the brief never overwrites a project summary written elsewhere',async()=>{
+  const db=await fixture();try{
+    await asUser(db);await complete(db);
+    await owner(db);await db.exec("UPDATE projects SET idea_summary='Summary edited on the project page'");
+    await asUser(db);
+    await db.query('SELECT update_onboarding_focus_v1($1::jsonb,$2::jsonb,$3,$4::jsonb)',[
+      JSON.stringify({startupBrief:'A completely different brief about something else.'}),JSON.stringify({assignedStage:1}),'validate_idea',null]);
+    await owner(db);
+    assert.equal((await db.query('SELECT idea_summary FROM projects')).rows[0].idea_summary,'Summary edited on the project page');
+  }finally{await db.close();}
+});
+
+test('the one-time repair fills placeholder projects only for single-project founders',async()=>{
+  const db=await fixture();try{
+    await owner(db);
+    const second='10000000-0000-0000-0000-000000000002';
+    await db.query("INSERT INTO profiles(id,startup_name,startup_description,onboarding_completed) VALUES($1,'Two ventures','A brief for the first of two ventures.',true)",[second]);
+    await db.query("UPDATE profiles SET startup_name='Solo venture',startup_description='A brief for a founder with one project.',onboarding_completed=true WHERE id=$1",[user]);
+    await db.query("INSERT INTO projects(user_id,title,status) VALUES($1,'My project','active'),($2,'My project','active'),($2,'Another','active')",[user,second]);
+    await db.exec(sql('20260928120000_onboarding_context_sync'));
+    const solo=(await db.query('SELECT title,idea_summary FROM projects WHERE user_id=$1',[user])).rows[0];
+    assert.equal(solo.title,'Solo venture');assert.equal(solo.idea_summary,'A brief for a founder with one project.');
+    const untouched=(await db.query("SELECT count(*)::int n FROM projects WHERE user_id=$1 AND title='My project' AND idea_summary IS NULL",[second])).rows[0].n;
+    assert.equal(untouched,1);
   }finally{await db.close();}
 });
 

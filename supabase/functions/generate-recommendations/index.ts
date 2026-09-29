@@ -53,7 +53,8 @@ serve(async (req) => {
         quiz_launch_timeline,
         quiz_looking_for_cofounder,
         assigned_stage,
-        quiz_answers_v2
+        quiz_answers_v2,
+        user_preferences
       `)
       .eq("id", user_id)
       .single();
@@ -214,7 +215,11 @@ function generateRecommendations(context: any): any[] {
   const currentStage = context.profile?.quiz_current_stage;
   const biggestChallenge = context.profile?.quiz_biggest_challenge;
   const launchTimeline = context.profile?.quiz_launch_timeline;
-  const lookingForCofounder = context.profile?.quiz_looking_for_cofounder;
+  // The current quiz stores the co-founder answer in user_preferences, not in
+  // the legacy quiz_looking_for_cofounder column, so read both.
+  const cofounderSituation = context.profile?.user_preferences?.cofounderSituation;
+  const lookingForCofounder = context.profile?.quiz_looking_for_cofounder
+    ?? (cofounderSituation === 'actively_looking' ? 'yes' : cofounderSituation === 'solo_ok' ? 'no' : undefined);
   const icpArtifact = readIcpArtifact(context.icp?.analysis_data);
   const isIcpUnlockBootstrap = context.profile?.dashboard_bootstrap_source === "icp_unlock";
 
