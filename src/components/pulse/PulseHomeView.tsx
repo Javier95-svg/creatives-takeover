@@ -1,13 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowRight, ArrowUp, ChevronDown, Plus, Sparkles, Target, GraduationCap, Users, LayoutDashboard, Layers, FlaskConical, Rocket, Megaphone } from 'lucide-react';
+import type React from 'react';
+import { ArrowRight, ArrowUp, ChevronDown, Plus, Sparkles, Target, GraduationCap, Users, LayoutDashboard, Layers, FlaskConical, Rocket, Megaphone, Repeat, Presentation, Landmark, type LucideIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
-import { enterWorkspaceRoute, WORKSPACE_ROUTES } from '@/lib/workspaceNavigation';
+import { enterWorkspaceRoute } from '@/lib/workspaceNavigation';
+import { pulseHomeShortcuts, STAGE_EXAMPLE_QUESTION, toolNameForRoute, type PulseShortcutIcon } from '@/lib/pulseHomeShortcuts';
 import { BIZMAP_STAGE_ORDER } from '@/lib/bizmapStageOrder';
 import type { PulseHomeConcept, PulseHomeMessage, PulseHomePriority } from '@/lib/pulseHome';
 import type { PersonaChip, PersonaHome } from '@/lib/personaHome';
 import './pulse-home.css';
 import { PulseSources } from './PulseSources';
+
+const SHORTCUT_ICONS: Record<PulseShortcutIcon, LucideIcon> = {
+  focus: LayoutDashboard, mentor: GraduationCap, cofounder: Users, customer: Target, demo: Layers, validate: FlaskConical,
+  mvp: Rocket, launch: Megaphone, retention: Repeat, deck: Presentation, investors: Landmark,
+};
 
 export interface PulseHomeViewProps {
   concept: PulseHomeConcept;
@@ -40,10 +47,8 @@ export interface PulseHomeViewProps {
 
 export function PulseHomeView({ concept, name, stage, projectName, assignedStage, priorities = [], messages = [], loading, streaming, unavailable, contextNotice, error, onSend, onNew, onRetry, navigate = enterWorkspaceRoute, persona = null, personaChips = [], personaInterest = null }: PulseHomeViewProps) {
   const [input, setInput] = useState('');
-  const [headline, setHeadline] = useState(0);
   const [showPriorities, setShowPriorities] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const [showAllTools, setShowAllTools] = useState(false);
   const end = useRef<HTMLDivElement>(null);
   const textarea = useRef<HTMLTextAreaElement>(null);
   const active = messages.length > 0;
@@ -61,7 +66,6 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
     LAUNCH: 'Find your first customers', TRACTION: 'Build on what is working',
     FUNDRAISING: 'Prepare your next funding step',
   };
-  const stageHeadline = stage && stageHeadlines[stage.toUpperCase()];
   const trimmedProjectName = projectName?.trim() || '';
   // The quiz assigns 1 to 7 against the Startup Development Cycle. Fall back to
   // the journey stage when the quiz has not run, and show neither rather than a
@@ -79,41 +83,22 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
   const stageBadge = resolvedStage
     ? `Stage ${resolvedStage.number} · ${resolvedStage.key.charAt(0)}${resolvedStage.key.slice(1).toLowerCase()}`
     : '';
-  const headings = persona
-    ? [persona.headline, persona.headline, persona.headline]
-    : concept === 'guided-journey'
-    ? [[name ? `Back at it, ${name}.` : 'Your idea has potential.', 'Let’s find its path.'], ['One clear direction.', 'Your next chapter.'], ['Think clearly.', 'Move confidently.']]
-    : concept === 'command-center'
-      ? [['Your next move.', 'Starts here.'], ['Less busywork.', 'More breakthroughs.'], [name ? `Make it happen, ${name}.` : 'Make it happen.', 'One step at a time.']]
-      : [['Less guesswork.', 'More momentum.'], ['Big ambitions.', 'Clear next steps.'], ['Think it through.', 'Make it real.']];
-  useEffect(() => {
-    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const update = () => setReducedMotion(query.matches);
-    query.addEventListener('change', update);
-    return () => query.removeEventListener('change', update);
-  }, []);
-  useEffect(() => {
-    if (active || input || focused || reducedMotion) return;
-    const timer = window.setInterval(() => setHeadline(value => (value + 1) % 3), 7000);
-    return () => window.clearInterval(timer);
-  }, [active, input, focused, reducedMotion]);
+  // One steady line that says where the founder is, instead of rotating slogans.
+  // The journey stage is the fallback when the quiz has not assigned one.
+  const headlineStage = resolvedStage?.key ?? stage?.toUpperCase();
+  const founderHeadline = (headlineStage && stageHeadlines[headlineStage]) || (name ? `Back at it, ${name}` : 'Your next step starts here');
+  const { suggested: stageShortcuts, more: moreShortcuts } = pulseHomeShortcuts(resolvedStage?.key);
+  const stageName = resolvedStage ? `${resolvedStage.key.charAt(0)}${resolvedStage.key.slice(1).toLowerCase()}` : '';
+  const exampleQuestion = resolvedStage ? STAGE_EXAMPLE_QUESTION[resolvedStage.key] : null;
   useEffect(() => { end.current?.scrollIntoView({ block: 'nearest', behavior: 'instant' }); }, [messages]);
   const send = (text: string) => {
     if (!text.trim() || streaming || loading || unavailable || !onSend) return;
     onSend(text.trim()); setInput(''); setShowPriorities(false);
   };
-  const shortcuts = persona
-    ? persona.shortcuts.map(shortcut => ({ label: shortcut.label, route: shortcut.route, icon: ArrowRight }))
-    : [
-    { label: 'What should I focus next?', route: '/dashboard', icon: LayoutDashboard },
-    { label: 'Find me a mentor', route: '/mentorship', icon: GraduationCap },
-    { label: 'Find me a co-founder', route: '/co-founder/create', icon: Users },
-    { label: 'Help me define my customer', route: WORKSPACE_ROUTES['ICP Builder'], icon: Target },
-    { label: 'Help me create a demo', route: WORKSPACE_ROUTES['Demo Studio'], icon: Layers },
-    { label: 'Help me validate my idea', route: WORKSPACE_ROUTES['PMF Lab'], icon: FlaskConical },
-    { label: 'Help me build my MVP', route: WORKSPACE_ROUTES['MVP Builder'], icon: Rocket },
-    { label: 'Help me plan my launch', route: WORKSPACE_ROUTES['GTM Strategist'], icon: Megaphone },
-  ];
+  const openRoute = (event: React.MouseEvent<HTMLAnchorElement>, route: string) => {
+    if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && event.button === 0) { event.preventDefault(); navigate(route); }
+  };
+  const personaShortcuts = persona ? persona.shortcuts.map(shortcut => ({ label: shortcut.label, route: shortcut.route })) : [];
 
   return <section aria-label="Pulse home" data-telemetry-private className={cn('ph-no-capture ph-mask pulse-home relative isolate flex min-h-0 flex-1 flex-col overflow-hidden', `pulse-home--${concept}`, active && 'pulse-home--chat')}>
     <div className="pulse-home-wallpaper pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true"><div className="pulse-home-glow pulse-home-glow--blue" /><div className="pulse-home-glow pulse-home-glow--teal" /><div className="pulse-home-glow pulse-home-glow--accent" /><div className="pulse-home-grid" /></div>
@@ -131,15 +116,30 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
           </div>}
           {!persona && concept === 'guided-journey' && !active && (trimmedProjectName || stageBadge) && <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
             {trimmedProjectName && <span className="rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs font-medium text-foreground">{trimmedProjectName}</span>}
-            {stageBadge && <span className="rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">{stageBadge}</span>}
+            {stageBadge && <span className="pulse-home-stage-chip rounded-full px-3 py-1 text-xs font-medium">{stageBadge}</span>}
           </div>}
-          <h1 key={active ? 'active' : headline} className={cn('font-space-grotesk font-semibold tracking-tight text-foreground', active ? 'text-xl' : 'pulse-home-headline')}>{active ? 'Let’s work through it.' : <><span className="block">{headings[headline][0]}</span><span className="pulse-home-headline-gradient block">{headings[headline][1]}</span></>}</h1>
+          <h1 key={active ? 'active' : 'home'} className={cn('font-space-grotesk font-semibold tracking-tight text-foreground', active ? 'text-xl' : 'pulse-home-headline')}>
+            {active ? 'Let’s work through it.'
+              : persona ? <><span className="block">{persona.headline[0]}</span><span className="pulse-home-headline-second block">{persona.headline[1]}</span></>
+              : <>{founderHeadline}<span className="pulse-home-headline-accent">.</span></>}
+          </h1>
+          {!persona && !active && !loading && priorities.length > 0 && <p className="pulse-home-subline">
+            <span className="pulse-home-count">{priorities.length}</span> {priorities.length === 1 ? 'focus item' : 'focus items'} for today{trimmedProjectName ? <> on <span className="text-foreground">{trimmedProjectName}</span></> : null}
+          </p>}
         </header>
         {active && <p className="mt-2 text-xs text-muted-foreground">{persona ? persona.label : trimmedProjectName ? `Project: ${trimmedProjectName}` : 'No project selected'}</p>}
 
         <div className={cn('pulse-home-priorities', active ? 'my-4' : 'mx-auto my-8 max-w-xl')}>
           {active ? <button type="button" aria-expanded={showPriorities} onClick={() => setShowPriorities(value => !value)} className="inline-flex items-center gap-2 rounded-lg py-1 text-xs text-muted-foreground hover:text-foreground">Today’s priorities <ChevronDown className={cn('h-3 w-3 transition-transform', showPriorities && 'rotate-180')} /></button> : priorities.length > 0 && <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Today’s focus</h2>}
-          {(!active || showPriorities) && (loading ? <p role="status" className="text-sm text-muted-foreground">Loading your workspace…</p> : priorities.length ? <ul className="space-y-2">{priorities.map(item => <li key={item.id} className="flex items-start gap-3 text-sm"><span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary" /><a href={item.route} onClick={event => { if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && event.button === 0) { event.preventDefault(); navigate(item.route); } }} className="group flex flex-1 items-center justify-between gap-2 rounded-md text-foreground hover:text-primary"><span>{item.title}</span><ArrowRight className="h-3.5 w-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" /></a></li>)}</ul> : <div className="text-sm text-muted-foreground"><p>{unavailable ? 'Your dashboard priorities will appear here after sign-in.' : contextNotice ? 'Your priorities are temporarily unavailable.' : persona ? persona.emptyFocus : 'Nothing on your list yet. Let’s find a useful first step.'}</p><button type="button" disabled={Boolean(unavailable) || loading} onClick={() => send('Help me plan my next step')} className="mt-2 text-primary hover:underline disabled:opacity-50">Plan my next step <span aria-hidden="true">↗</span></button></div>)}
+          {(!active || showPriorities) && (loading ? <p role="status" className="text-sm text-muted-foreground">Loading your workspace…</p> : priorities.length ? <ol className="pulse-home-focus-list">{priorities.map((item, index) => {
+            const tool = toolNameForRoute(item.route);
+            return <li key={item.id}><a href={item.route} onClick={event => openRoute(event, item.route)} className="pulse-home-focus-row group">
+              <span aria-hidden="true" className="pulse-home-focus-index">{String(index + 1).padStart(2, '0')}</span>
+              <span className="min-w-0 flex-1 text-foreground">{item.title}</span>
+              {tool && <span className="pulse-home-focus-tool">{tool}</span>}
+              <ArrowRight aria-hidden="true" className="pulse-home-focus-arrow h-3.5 w-3.5 shrink-0" />
+            </a></li>;
+          })}</ol> : <div className="text-sm text-muted-foreground"><p>{unavailable ? 'Your dashboard priorities will appear here after sign-in.' : contextNotice ? 'Your priorities are temporarily unavailable.' : persona ? persona.emptyFocus : 'Nothing on your list yet. Let’s find a useful first step.'}</p><button type="button" disabled={Boolean(unavailable) || loading} onClick={() => send('Help me plan my next step')} className="mt-2 text-primary hover:underline disabled:opacity-50">Plan my next step <span aria-hidden="true">↗</span></button></div>)}
         </div>
 
         {active && <div role="log" aria-label="Conversation with Pulse" aria-live="polite" aria-busy={streaming} className="space-y-6 pb-6">{messages.map(message => <article key={message.id} className={cn('text-sm leading-7', message.role === 'user' ? 'ml-auto max-w-xl rounded-2xl bg-muted/70 px-5 py-3' : 'pr-2')}>
@@ -161,15 +161,32 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
           <div className="pulse-home-input-row">
             <span aria-hidden="true" className={cn('pulse-home-wave', streaming && !unavailable && 'pulse-home-wave--active')}>{[0, 1, 2, 3, 4].map(bar => <span key={bar} />)}</span>
             <div className="min-w-0 flex-1">
-              <textarea ref={textarea} aria-label="Message Pulse" aria-describedby="pulse-composer-hint" placeholder="What's in Your Mind Today?" rows={1} maxLength={4000} value={input} onChange={event => setInput(event.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); send(input); } }} className="block w-full resize-none bg-transparent text-foreground outline-none placeholder:font-semibold placeholder:text-muted-foreground" />
-              <p id="pulse-composer-hint" className="pulse-home-input-hint">Ask a question, explore an idea, or find your next step.</p>
+              <textarea ref={textarea} aria-label="Message Pulse" aria-describedby="pulse-composer-hint" placeholder="What's on your mind?" rows={1} maxLength={4000} value={input} onChange={event => setInput(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); send(input); } }} className="block w-full resize-none bg-transparent text-foreground outline-none placeholder:text-muted-foreground" />
+              <p id="pulse-composer-hint" className="pulse-home-input-hint">{exampleQuestion && !persona ? <>Try: “{exampleQuestion}”</> : 'Ask a question, explore an idea, or find your next step.'}</p>
             </div>
           </div>
-          <div className="pulse-home-composer-footer"><span role="status" className="inline-flex items-center gap-2 text-xs text-muted-foreground"><span aria-hidden="true" className={cn('h-1.5 w-1.5 shrink-0 rounded-full', unavailable || contextNotice || error ? 'bg-muted-foreground' : 'bg-primary')} />{composerStatus}</span><button type="submit" aria-label="Send message" disabled={!input.trim() || streaming || loading || Boolean(unavailable)}><span>Ask Pulse</span><ArrowUp aria-hidden="true" className="h-4 w-4" /></button></div>
+          <div className="pulse-home-composer-footer"><span role="status" className="inline-flex items-center gap-2 text-xs text-muted-foreground"><span aria-hidden="true" className={cn('h-1.5 w-1.5 shrink-0 rounded-full', unavailable || contextNotice || error ? 'bg-muted-foreground' : 'pulse-home-status-live')} />{composerStatus}</span><button type="submit" aria-label="Send message" disabled={!input.trim() || streaming || loading || Boolean(unavailable)}><span>Ask Pulse</span><ArrowUp aria-hidden="true" className="h-4 w-4" /></button></div>
         </form>
-        {!active && <nav aria-label="Quick starts" className="pulse-home-shortcuts">{shortcuts.map(({ label, route, icon: Icon }) => <a key={route} href={route} onClick={event => { if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && event.button === 0) { event.preventDefault(); navigate(route); } }} className="pulse-home-shortcut">
-          <span className="pulse-home-shortcut-icon"><Icon aria-hidden="true" className="h-4 w-4" /></span><span className="flex-1">{label}</span><ArrowRight aria-hidden="true" className="pulse-home-shortcut-arrow h-3.5 w-3.5 shrink-0" />
+        {!active && persona && <nav aria-label="Quick starts" className="pulse-home-shortcuts">{personaShortcuts.map(({ label, route }) => <a key={route} href={route} onClick={event => openRoute(event, route)} className="pulse-home-shortcut">
+          <span className="pulse-home-shortcut-icon"><ArrowRight aria-hidden="true" className="h-4 w-4" /></span><span className="flex-1">{label}</span><ArrowRight aria-hidden="true" className="pulse-home-shortcut-arrow h-3.5 w-3.5 shrink-0" />
         </a>)}</nav>}
+        {!active && !persona && <nav aria-label="Quick starts" className="pulse-home-quickstarts">
+          <div className="pulse-home-quickstarts-head">
+            <h2>{stageName ? <>Suggested for <span className="pulse-home-stage-text">{stageName}</span></> : 'Quick starts'}</h2>
+            <button type="button" aria-expanded={showAllTools} aria-controls="pulse-home-all-tools" onClick={() => setShowAllTools(value => !value)}>
+              {showAllTools ? 'Fewer tools' : 'All tools'}<ChevronDown aria-hidden="true" className={cn('h-3.5 w-3.5 transition-transform', showAllTools && 'rotate-180')} />
+            </button>
+          </div>
+          <div className="pulse-home-shortcuts">{stageShortcuts.map(({ id, label, tool, route, icon }) => {
+            const Icon = SHORTCUT_ICONS[icon];
+            return <a key={id} href={route} onClick={event => openRoute(event, route)} className="pulse-home-shortcut">
+              <span className="pulse-home-shortcut-icon"><Icon aria-hidden="true" className="h-4 w-4" /></span>
+              <span className="min-w-0 flex-1"><span className="block">{label}</span><span className="pulse-home-shortcut-tool">{tool}</span></span>
+              <ArrowRight aria-hidden="true" className="pulse-home-shortcut-arrow h-3.5 w-3.5 shrink-0" />
+            </a>;
+          })}</div>
+          {showAllTools && <div id="pulse-home-all-tools" className="pulse-home-all-tools">{moreShortcuts.map(({ id, label, route }) => <a key={id} href={route} onClick={event => openRoute(event, route)}>{label}</a>)}</div>}
+        </nav>}
         <p className="mt-3 text-center text-xs leading-5 text-muted-foreground">{unavailable || contextNotice || 'Pulse guides. You decide. Review suggestions before taking action.'}</p>
       </div>
     </div>

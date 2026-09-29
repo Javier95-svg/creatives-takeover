@@ -5,22 +5,43 @@
 .pulse-home:not(.pulse-home--chat) .pulse-home-content { overflow-y: auto; }
 .pulse-home:not(.pulse-home--chat) .pulse-home-scroll { flex: 0 0 auto; overflow: visible; }
 .pulse-home:not(.pulse-home--chat) .pulse-home-column { max-width: 64rem; padding-top: clamp(3rem, 8vh, 7rem); }
-.pulse-home .pulse-home-headline { font-size: clamp(3.5rem, 8.5cqw, 7rem); font-weight: 700; line-height: 1.02; letter-spacing: -.055em; text-wrap: balance; animation: pulse-home-reveal .6s ease-out both; }
-.pulse-home-headline-gradient { width: fit-content; max-width: 100%; margin-inline: auto; padding-bottom: .12em; background: var(--gradient-rgb-horizontal); background-clip: text; -webkit-background-clip: text; color: transparent; }
-.pulse-home:not(.pulse-home--chat) .pulse-home-priorities { margin-top: 1.75rem; margin-bottom: 1.5rem; max-width: 46rem; }
+/* One solid headline that states where the founder is; the stage colour is the only accent. */
+.pulse-home .pulse-home-headline { font-size: clamp(2.75rem, 6.5cqw, 4.75rem); font-weight: 700; line-height: 1.04; letter-spacing: -.045em; text-wrap: balance; animation: pulse-home-reveal .6s ease-out both; }
+.pulse-home-headline-second { color: hsl(var(--muted-foreground)); }
+.pulse-home-headline-accent { color: hsl(var(--accent-teal)); }
+.pulse-home-stage-chip { color: hsl(var(--accent-teal)); background: hsl(var(--accent-teal) / .1); box-shadow: inset 0 0 0 1px hsl(var(--accent-teal) / .4); }
+.pulse-home-stage-text { color: hsl(var(--accent-teal)); }
+.pulse-home-subline { margin-top: .875rem; font-size: 1rem; color: hsl(var(--muted-foreground)); }
+.pulse-home-count { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace; font-weight: 500; color: hsl(var(--foreground)); }
+.pulse-home:not(.pulse-home--chat) .pulse-home-priorities { margin-top: 1.75rem; margin-bottom: 1.5rem; max-width: 40rem; padding: .5rem 1.25rem .75rem; border: 1px solid hsl(var(--border) / .8); border-radius: 1rem; background: hsl(var(--card) / .55); backdrop-filter: blur(8px); }
+.pulse-home:not(.pulse-home--chat) .pulse-home-priorities > h2 { margin: .5rem 0 .25rem; text-align: left; }
+.pulse-home-focus-list { display: grid; }
+.pulse-home-focus-list li + li { border-top: 1px solid hsl(var(--border) / .6); }
+.pulse-home-focus-row { display: flex; align-items: center; gap: .875rem; padding: .75rem .25rem; font-size: .9375rem; font-weight: 500; text-align: left; border-radius: .5rem; transition: background .15s; }
+.pulse-home-focus-row:hover { background: hsl(var(--foreground) / .03); }
+.pulse-home-focus-row:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 2px; }
+.pulse-home-focus-index { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .75rem; color: hsl(var(--muted-foreground)); }
+.pulse-home-focus-tool { flex-shrink: 0; padding: .1875rem .625rem; border: 1px solid hsl(var(--border)); border-radius: 999px; font-size: .75rem; font-weight: 500; color: hsl(var(--muted-foreground)); transition: color .15s, border-color .15s; }
+.pulse-home-focus-arrow { color: hsl(var(--muted-foreground)); transition: transform .15s, color .15s; }
+.pulse-home-focus-row:hover .pulse-home-focus-tool { color: hsl(var(--foreground)); border-color: hsl(var(--accent-teal) / .5); }
+.pulse-home-focus-row:hover .pulse-home-focus-arrow { color: hsl(var(--foreground)); transform: translateX(2px); }
+.pulse-home--chat .pulse-home-focus-row { font-size: .875rem; padding: .5rem 0; }
+@container (max-width: 480px) { .pulse-home-focus-tool { display: none; } }
 .pulse-home:not(.pulse-home--chat) .pulse-home-priorities > div { display: flex; justify-content: center; align-items: baseline; flex-wrap: wrap; column-gap: .75rem; font-size: .8125rem; }
 .pulse-home:not(.pulse-home--chat) .pulse-home-priorities button:disabled { display: none; }
 .pulse-home:not(.pulse-home--chat) .pulse-home-compose { padding-top: .5rem; padding-bottom: 2rem; }
 .pulse-home:not(.pulse-home--chat) .pulse-home-compose > div { max-width: 50rem; }
-.pulse-home .pulse-home-composer { position: relative; padding: 1.25rem; border: 1px solid transparent; border-radius: 1.5rem; background: linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box, linear-gradient(120deg, hsl(var(--primary) / .5), hsl(var(--accent-teal) / .25)) border-box; box-shadow: 0 12px 40px -24px hsl(var(--primary) / .3); transition: box-shadow .2s; }
-.pulse-home .pulse-home-composer:focus-within { box-shadow: 0 0 0 2px hsl(var(--primary) / .2), 0 12px 42px -16px hsl(var(--accent-teal) / .25); }
+.pulse-home .pulse-home-composer { position: relative; padding: 1.25rem; border: 1px solid hsl(var(--border)); border-radius: 1.25rem; background: hsl(var(--card)); box-shadow: 0 1px 0 hsl(var(--foreground) / .04) inset, 0 18px 50px -30px rgb(0 0 0 / .6); transition: border-color .2s, box-shadow .2s; }
+.pulse-home .pulse-home-composer:focus-within { border-color: hsl(var(--accent-teal) / .55); box-shadow: 0 0 0 4px hsl(var(--accent-teal) / .12), 0 18px 50px -30px rgb(0 0 0 / .6); }
+.pulse-home-status-live { background: hsl(var(--accent-teal)); box-shadow: 0 0 0 3px hsl(var(--accent-teal) / .2); }
 .pulse-home-input-row { display: flex; align-items: flex-start; gap: .875rem; }
 .pulse-home .pulse-home-composer textarea { min-height: 1.75rem; max-height: 180px; overflow-y: auto; font-size: 1.125rem; line-height: 1.5; }
 .pulse-home-input-hint { margin-top: .375rem; font-size: .75rem; line-height: 1.5; color: hsl(var(--muted-foreground)); }
 .pulse-home-composer-footer { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-top: 1.25rem; }
-.pulse-home .pulse-home-composer button[type=submit] { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; flex-shrink: 0; min-height: 2.5rem; padding: .5rem .875rem; border: 1px solid rgb(255 255 255 / .18); border-radius: .75rem; background: linear-gradient(115deg, #4f60d5 0%, #365ac5 45%, #087c89 100%); color: #fff; box-shadow: 0 4px 16px hsl(var(--primary) / .25), inset 0 1px 0 rgb(255 255 255 / .12); font-size: .8125rem; font-weight: 600; transition: box-shadow .2s, filter .2s; }
-.pulse-home .pulse-home-composer button[type=submit]:hover:not(:disabled) { filter: brightness(1.1); box-shadow: 0 6px 22px hsl(var(--primary) / .4), 0 2px 12px hsl(var(--accent-teal) / .2), inset 0 1px 0 rgb(255 255 255 / .18); }
-.pulse-home .pulse-home-composer button[type=submit]:disabled { background: linear-gradient(115deg, hsl(var(--primary) / .24), hsl(var(--accent-teal) / .16)); border-color: hsl(var(--primary) / .2); color: hsl(var(--muted-foreground)); box-shadow: none; cursor: not-allowed; }
+/* Solid, high-contrast send button rather than a gradient pill. */
+.pulse-home .pulse-home-composer button[type=submit] { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; flex-shrink: 0; min-height: 2.5rem; padding: .5rem .875rem; border: 0; border-radius: .75rem; background: hsl(var(--foreground)); color: hsl(var(--background)); font-size: .8125rem; font-weight: 600; transition: opacity .2s, transform .2s; }
+.pulse-home .pulse-home-composer button[type=submit]:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
+.pulse-home .pulse-home-composer button[type=submit]:disabled { background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); cursor: not-allowed; }
 .pulse-home .pulse-home-composer button[type=submit]:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 3px; }
 .pulse-home-wave { display: flex; align-items: center; justify-content: center; gap: 3px; width: 2rem; height: 1.75rem; flex-shrink: 0; color: hsl(var(--primary)); }
 .pulse-home-wave span { width: 3px; height: 8px; border-radius: 3px; background: currentColor; animation: pulse-home-wave-idle 2.8s ease-in-out infinite; }
@@ -34,24 +55,37 @@
 @keyframes pulse-home-wave { from { transform: scaleY(.45); } to { transform: scaleY(1); } }
 @keyframes pulse-home-wave-idle { 0%, 100% { transform: scaleY(.8); } 50% { transform: scaleY(1); } }
 @media (prefers-reduced-motion: reduce) { .pulse-home-wave span, .pulse-home-wave--active span { animation: none; } }
-.pulse-home-shortcuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .625rem; margin-top: 1.75rem; }
-.pulse-home-shortcut { display: flex; align-items: center; gap: .75rem; min-height: 3.5rem; padding: .625rem .875rem; border: 1px solid hsl(var(--primary) / .2); border-radius: 1rem; background: hsl(var(--card) / .7); color: hsl(var(--foreground)); font-size: .8125rem; line-height: 1.4; font-weight: 500; transition: background .2s, border-color .2s, box-shadow .2s; }
-.pulse-home-shortcut-icon { display: grid; place-items: center; flex-shrink: 0; width: 2rem; height: 2rem; border-radius: .625rem; color: hsl(var(--primary)); background: hsl(var(--primary) / .12); }
-.pulse-home-shortcut-arrow { color: hsl(var(--muted-foreground)); }
-.pulse-home-shortcut:hover { background: hsl(var(--primary) / .16); border-color: hsl(var(--primary) / .65); box-shadow: 0 4px 20px hsl(var(--primary) / .1); }
-.pulse-home-shortcut:hover .pulse-home-shortcut-arrow { color: hsl(var(--primary)); }
+.pulse-home-quickstarts { margin-top: 1.75rem; display: grid; gap: .75rem; }
+.pulse-home-quickstarts-head { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; flex-wrap: wrap; }
+.pulse-home-quickstarts-head h2 { font-size: .8125rem; font-weight: 600; color: hsl(var(--muted-foreground)); }
+.pulse-home-quickstarts-head button { display: inline-flex; align-items: center; gap: .25rem; font-size: .8125rem; color: hsl(var(--muted-foreground)); border-radius: .375rem; }
+.pulse-home-quickstarts-head button:hover { color: hsl(var(--foreground)); }
+.pulse-home-quickstarts-head button:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 3px; }
+.pulse-home-shortcuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin-top: 1.75rem; }
+.pulse-home-quickstarts .pulse-home-shortcuts { margin-top: 0; }
+.pulse-home-shortcut { display: flex; align-items: center; gap: .875rem; min-height: 4rem; padding: .75rem 1rem; border: 1px solid hsl(var(--border)); border-radius: 1rem; background: hsl(var(--card) / .75); color: hsl(var(--foreground)); font-size: .875rem; line-height: 1.35; font-weight: 600; transition: background .2s, border-color .2s, transform .2s; }
+.pulse-home-shortcut-tool { display: block; margin-top: .125rem; font-size: .75rem; font-weight: 400; color: hsl(var(--muted-foreground)); }
+.pulse-home-shortcut-icon { display: grid; place-items: center; flex-shrink: 0; width: 2.25rem; height: 2.25rem; border-radius: .75rem; color: hsl(var(--accent-teal)); background: hsl(var(--accent-teal) / .1); }
+.pulse-home-shortcut-arrow { color: hsl(var(--muted-foreground)); transition: transform .2s, color .2s; }
+.pulse-home-shortcut:hover { background: hsl(var(--card)); border-color: hsl(var(--accent-teal) / .45); transform: translateY(-1px); }
+.pulse-home-shortcut:hover .pulse-home-shortcut-arrow { color: hsl(var(--foreground)); transform: translateX(2px); }
+.pulse-home-all-tools { display: flex; flex-wrap: wrap; gap: .5rem; }
+.pulse-home-all-tools a { padding: .375rem .75rem; border: 1px solid hsl(var(--border)); border-radius: 999px; font-size: .8125rem; color: hsl(var(--muted-foreground)); transition: color .15s, border-color .15s; }
+.pulse-home-all-tools a:hover { color: hsl(var(--foreground)); border-color: hsl(var(--accent-teal) / .45); }
+.pulse-home-all-tools a:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 2px; }
 .pulse-home-shortcut:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 3px; }
 @container (max-width: 480px) { .pulse-home-shortcuts { grid-template-columns: 1fr; } }
 /* Broad moving light fields, not a particle canvas or video. */
 .pulse-home-wallpaper { position: absolute; inset: 0; }
 .pulse-home-glow { position: absolute; width: 85%; height: 95%; border-radius: 50%; filter: blur(42px); will-change: transform; animation: pulse-home-drift 14s ease-in-out infinite alternate; }
-.pulse-home-glow--blue { top: -25%; left: -15%; background: radial-gradient(ellipse, hsl(var(--primary) / .36), transparent 65%); }
-.pulse-home-glow--teal { bottom: -22%; right: -20%; background: radial-gradient(ellipse, hsl(var(--accent-teal) / .28), transparent 65%); animation-name: pulse-home-tide; animation-duration: 18s; animation-delay: -6s; }
-.pulse-home-glow--accent { top: 5%; left: 20%; width: 65%; height: 70%; background: radial-gradient(ellipse, hsl(var(--primary) / .16), transparent 65%); animation-duration: 11s; animation-delay: -5s; }
-.pulse-home-grid { position: absolute; inset: 0; background-image: linear-gradient(hsl(var(--foreground) / .045) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground) / .045) 1px, transparent 1px); background-size: 64px 64px; mask-image: radial-gradient(ellipse at 50% 35%, black, transparent 76%); }
+/* Quieter than before: the glow sets the mood, the content carries the colour. */
+.pulse-home-glow--blue { top: -25%; left: -15%; background: radial-gradient(ellipse, hsl(var(--primary) / .2), transparent 65%); }
+.pulse-home-glow--teal { bottom: -22%; right: -20%; background: radial-gradient(ellipse, hsl(var(--accent-teal) / .14), transparent 65%); animation-name: pulse-home-tide; animation-duration: 18s; animation-delay: -6s; }
+.pulse-home-glow--accent { top: 5%; left: 20%; width: 65%; height: 70%; background: radial-gradient(ellipse, hsl(var(--primary) / .1), transparent 65%); animation-duration: 11s; animation-delay: -5s; }
+.pulse-home-grid { position: absolute; inset: 0; background-image: linear-gradient(hsl(var(--foreground) / .03) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground) / .03) 1px, transparent 1px); background-size: 64px 64px; mask-image: radial-gradient(ellipse at 50% 30%, black, transparent 70%); }
 .pulse-home--command-center:not(.pulse-home--chat) .pulse-home-column, .pulse-home--command-center:not(.pulse-home--chat) .pulse-home-compose > div { max-width: 54rem; }
 .pulse-home--command-center .pulse-home-priorities, .pulse-home--command-center .pulse-home-hero > p { margin-left: 0; }
-.pulse-home--command-center .pulse-home-headline-gradient { margin-left: 0; }
+.pulse-home--command-center:not(.pulse-home--chat) .pulse-home-priorities { margin-left: 0; }
 .pulse-home--command-center:not(.pulse-home--chat) .pulse-home-priorities > div { justify-content: flex-start; }
 .pulse-home--command-center .pulse-home-glow--blue { left: 25%; top: -30%; }
 .pulse-home--guided-journey .pulse-home-glow--teal { bottom: 0; right: -5%; }
@@ -62,5 +96,5 @@
 @keyframes pulse-home-tide { from { transform: translate3d(10%, 10%, 0) scale(1); } to { transform: translate3d(-25%, -18%, 0) scale(1.2); } }
 @keyframes pulse-home-reveal { from { opacity: 0; transform: translateY(.5rem); } to { opacity: 1; transform: translateY(0); } }
 @media (max-height: 800px) { .pulse-home:not(.pulse-home--chat) .pulse-home-column { padding-top: 2rem; } }
-@container (max-width: 640px) { .pulse-home .pulse-home-headline { font-size: clamp(2.5rem, 10cqw, 4rem); } .pulse-home:not(.pulse-home--chat) .pulse-home-column { padding-top: 2.5rem; } }
+@container (max-width: 640px) { .pulse-home .pulse-home-headline { font-size: clamp(2.25rem, 10cqw, 3.25rem); } .pulse-home:not(.pulse-home--chat) .pulse-home-column { padding-top: 2.5rem; } }
 @media (prefers-reduced-motion: reduce) { .pulse-home-glow, .pulse-home .pulse-home-headline { animation: none; will-change: auto; } }
