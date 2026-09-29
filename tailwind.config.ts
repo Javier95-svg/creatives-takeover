@@ -141,6 +141,8 @@ export default {
 					hover: 'hsl(var(--accent-teal-hover) / <alpha-value>)',
 					deep: 'hsl(var(--accent-teal-deep) / <alpha-value>)',
 				},
+				// Violet accent (marketplace provider surfaces)
+				'accent-violet': 'hsl(var(--accent-violet) / <alpha-value>)',
 				// Deep chrome surface for the MVP builder dark sub-theme
 				'surface-deep': 'hsl(var(--surface-deep) / <alpha-value>)'
 			},

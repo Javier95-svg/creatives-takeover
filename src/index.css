@@ -88,6 +88,8 @@ All colors MUST be HSL.
     --accent-teal: 185.7 59.7% 48.6%; /* #32b8c6 */
     --accent-teal-hover: 185.3 63% 42.4%; /* #28a4b0 */
     --accent-teal-deep: 185.9 70.8% 28.2%; /* #15717b */
+    /* Violet accent (marketplace provider surfaces) */
+    --accent-violet: 262 70% 55%;
     
     /* Blue variants */
     --blue-primary: 217 91% 60%; /* #3B82F6 */
@@ -325,6 +327,8 @@ All colors MUST be HSL.
     --accent-teal: 185.7 59.7% 48.6%; /* #32b8c6 */
     --accent-teal-hover: 185.3 63% 42.4%; /* #28a4b0 */
     --accent-teal-deep: 185.9 70.8% 28.2%; /* #15717b */
+    /* Violet accent — brighter for dark surfaces */
+    --accent-violet: 262 83% 72%;
     
     /* RGB Color Variants for Dark Mode (brighter for visibility) */
     --blue-primary: 217 92% 65%;
