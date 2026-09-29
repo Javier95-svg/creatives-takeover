@@ -3,6 +3,7 @@ import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { reportAppError, createErrorId } from '@/lib/errorReporting';
+import { reloadForStaleChunk } from '@/lib/staleChunkReload';
 
 interface Props {
   children: ReactNode;
@@ -30,6 +31,8 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // A page file from an older build: reload into the current one instead of showing the error.
+    if (reloadForStaleChunk(error)) return;
     const errorId = this.state.errorId ?? createErrorId();
     reportAppError(
       error,

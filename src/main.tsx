@@ -6,6 +6,7 @@ import './index.css'
 import './styles/responsive-overrides.css'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { reportAppError } from './lib/errorReporting'
+import { reloadForStaleChunk } from './lib/staleChunkReload'
 import { bootstrapPosthog, captureUtmSuperProperties, isLikelyBot } from './lib/analytics'
 import { captureFirstTouch } from './lib/attribution'
 import { hasAnalyticsConsent, onConsentChange } from './lib/consent'
@@ -53,6 +54,13 @@ if (initialTheme === 'dark') {
 } else {
   document.documentElement.classList.remove('dark');
 }
+
+// Vite fires this when a page file fails to load, usually a tab running an older
+// build after a deploy. Reload once into the current build instead of crashing.
+window.addEventListener('vite:preloadError', (event) => {
+  const reloading = reloadForStaleChunk((event as Event & { payload?: unknown }).payload ?? new Error('Failed to fetch dynamically imported module'));
+  if (reloading) event.preventDefault();
+});
 
 // Global error handlers for unhandled promise rejections
 window.addEventListener('unhandledrejection', (event) => {

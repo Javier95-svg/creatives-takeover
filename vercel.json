@@ -55,7 +55,7 @@
     { "source": "/sitemap-articles.xml", "destination": "/api/sitemap-articles" },
     { "source": "/sitemap-entities.xml", "destination": "/api/sitemap-entities" },
     { "source": "/sitemap-published.xml", "destination": "/api/sitemap-published" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!assets/).*)", "destination": "/index.html" }
   ],
   "headers": [
     {

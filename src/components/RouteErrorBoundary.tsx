@@ -1,4 +1,5 @@
 import { Component, ReactNode } from 'react';
+import { reloadForStaleChunk } from '@/lib/staleChunkReload';
 
 interface Props {
   children: ReactNode;
@@ -21,6 +22,8 @@ export class RouteErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
+    // A page file from an older build: reload into the current one instead of showing the error.
+    if (reloadForStaleChunk(error)) return;
     console.error(
       `[RouteErrorBoundary] Crash in ${this.props.routeName ?? 'unknown route'}:`,
       error,
