@@ -11,8 +11,9 @@ import {
   type StageConfidenceBand,
 } from './stageDiagnostic.ts';
 import type { FounderLoop } from './founderCycle.ts';
-import type { RoutineGoal } from './routineTemplates.ts';
-import type { ActivationIntent } from './retentionSystem.ts';
+// Import-free type modules, so edge functions can derive the same context.
+import type { RoutineGoal } from './routineGoal.ts';
+import type { ActivationIntent } from './activationIntent.ts';
 
 export const ADAPTIVE_ONBOARDING_SCHEMA_VERSION = 1;
 export const ADAPTIVE_ONBOARDING_FLOW_VERSION = 'adaptive_v1' as const;

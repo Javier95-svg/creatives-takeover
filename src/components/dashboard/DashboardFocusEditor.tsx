@@ -23,9 +23,14 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useOnboardingContext } from '@/hooks/useOnboardingContext';
+import { ANGEL_SECTOR_OPTIONS } from '@/data/angelSectors';
+import { MAX_SECTORS } from '@/lib/onboardingAnswerRules';
 import {
   deriveOnboardingContextV1,
   normalizeWorkingDays,
+  requiresCofounderSituation,
+  requiresCustomerCount,
+  requiresFundraisingStatus,
   WORKING_DAY_OPTIONS,
   type OnboardingAnswersV1,
 } from '@/lib/onboardingContext';
@@ -54,13 +59,52 @@ const BLOCKERS: Array<[OnboardingAnswersV1['blocker'], string]> = [
   ['team', 'Team or co-founder'],
 ];
 
+// Same order and wording as the onboarding quiz.
 const RUNWAY: Array<[Exclude<OnboardingAnswersV1['runwayMonths'], ''>, string]> = [
+  ['not_applicable', 'Not spending money on this yet'],
   ['under_3', 'Less than 3 months'],
   ['3_6', '3 to 6 months'],
   ['6_12', '6 to 12 months'],
   ['over_12', 'More than 12 months'],
-  ['not_applicable', 'Not burning money yet'],
 ];
+
+const BUSINESS_MODELS: Array<[Exclude<OnboardingAnswersV1['businessModel'], ''>, string]> = [
+  ['b2b_saas', 'B2B SaaS or business software'],
+  ['service', 'Agency, consultancy, or online service'],
+  ['b2c_product', 'Consumer app or digital product'],
+  ['marketplace', 'Marketplace'],
+  ['ecommerce', 'E-commerce'],
+  ['media', 'Creator, media, or audience business'],
+  ['other', 'Not sure yet / another model'],
+];
+
+const EVIDENCE: Array<[Exclude<OnboardingAnswersV1['evidenceState'], ''>, string]> = [
+  ['none', 'No external evidence yet'],
+  ['prospects', 'Named prospects to contact'],
+  ['replies', 'Target customers have replied'],
+  ['conversations', 'Completed customer conversations'],
+  ['commitment', 'A costly commitment or signed pilot'],
+  ['payment', 'A customer paid'],
+  ['repeatable_growth', 'Repeatable acquisition or retention'],
+];
+
+const CUSTOMER_BANDS: Array<[Exclude<OnboardingAnswersV1['customerCountBand'], ''>, string]> = [
+  ['0', 'None yet'],
+  ['1', '1 paying customer'],
+  ['2', '2 paying customers'],
+  ['3', '3 paying customers'],
+  ['4_plus', 'More than 3'],
+];
+
+const FUNDRAISING: Array<[Exclude<OnboardingAnswersV1['fundraisingStatus'], ''>, string]> = [
+  ['not_now', 'Not yet - just planning ahead'],
+  ['preparing', 'Preparing deck and materials'],
+  ['talking_investors', 'Talking to investors'],
+  ['raising_now', 'Actively raising a round'],
+];
+
+// Kept only for records that already hold it; see LEGACY_SECTORS in the quiz.
+const LEGACY_SECTOR = 'Mobility & Logistics';
 
 const REVENUE: Array<[Exclude<OnboardingAnswersV1['revenueBand'], ''>, string]> = [
   ['none', 'No revenue yet'],
@@ -88,26 +132,43 @@ export default function DashboardFocusEditor() {
       toast.error('Your startup brief must be at least 20 characters, or left blank.');
       return;
     }
+    if (requiresCustomerCount(draft.evidenceState) && !draft.customerCountBand) {
+      toast.error('Choose how many paying customers you have.');
+      return;
+    }
+    if (requiresFundraisingStatus(draft.primaryGoal, draft.blocker) && !draft.fundraisingStatus) {
+      toast.error('Choose where fundraising is today.');
+      return;
+    }
+    if (requiresCofounderSituation(draft.blocker) && !draft.cofounderSituation) {
+      toast.error('Tell us whether you are looking for a co-founder.');
+      return;
+    }
     setSaving(true);
     try {
-      const context = deriveOnboardingContextV1(draft, {
+      const answers = {
+        startupBrief: draft.startupBrief.trim(),
+        primaryGoal: draft.primaryGoal,
+        blocker: draft.blocker,
+        weeklyCapacityHours: draft.weeklyCapacityHours,
+        country: draft.country.trim(),
+        runwayMonths: draft.runwayMonths,
+        revenueBand: draft.revenueBand,
+        workingDays: normalizeWorkingDays(draft.workingDays),
+        businessModel: draft.businessModel,
+        evidenceState: draft.evidenceState,
+        customerCountBand: draft.customerCountBand,
+        sectors: draft.sectors,
+        cofounderSituation: draft.cofounderSituation,
+        fundraisingStatus: draft.fundraisingStatus,
+      };
+      const fullAnswers = { ...draft, ...answers };
+      const context = deriveOnboardingContextV1(fullAnswers, {
         flowVersion: value.context.flowVersion,
         selectedIntent: value.context.selectedIntent,
         dataCompleteness: briefLength >= 20 ? 'complete' : 'legacy_partial',
       });
-      await updateOnboardingFocus({
-        answers: {
-          startupBrief: draft.startupBrief.trim(),
-          primaryGoal: draft.primaryGoal,
-          blocker: draft.blocker,
-          weeklyCapacityHours: draft.weeklyCapacityHours,
-          country: draft.country.trim(),
-          runwayMonths: draft.runwayMonths,
-          revenueBand: draft.revenueBand,
-          workingDays: normalizeWorkingDays(draft.workingDays),
-        },
-        context,
-      });
+      await updateOnboardingFocus({ answers, fullAnswers, context });
       await refetch();
       setOpen(false);
       toast.success('Progress Tracker focus updated.');
@@ -178,10 +239,14 @@ export default function DashboardFocusEditor() {
                 <Label>30-day outcome</Label>
                 <Select
                   value={draft.primaryGoal}
-                  onValueChange={(primaryGoal) => setDraft({
-                    ...draft,
-                    primaryGoal: primaryGoal as OnboardingAnswersV1['primaryGoal'],
-                  })}
+                  onValueChange={(goal) => {
+                    const primaryGoal = goal as OnboardingAnswersV1['primaryGoal'];
+                    setDraft({
+                      ...draft,
+                      primaryGoal,
+                      fundraisingStatus: requiresFundraisingStatus(primaryGoal, draft.blocker) ? draft.fundraisingStatus : '',
+                    });
+                  }}
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -193,10 +258,14 @@ export default function DashboardFocusEditor() {
                 <Label>Primary blocker</Label>
                 <Select
                   value={draft.blocker}
-                  onValueChange={(blocker) => setDraft({
-                    ...draft,
-                    blocker: blocker as OnboardingAnswersV1['blocker'],
-                  })}
+                  onValueChange={(value) => {
+                    const blocker = value as OnboardingAnswersV1['blocker'];
+                    setDraft({
+                      ...draft,
+                      blocker,
+                      fundraisingStatus: requiresFundraisingStatus(draft.primaryGoal, blocker) ? draft.fundraisingStatus : '',
+                    });
+                  }}
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -205,6 +274,89 @@ export default function DashboardFocusEditor() {
                 </Select>
               </div>
             </div>
+            {requiresFundraisingStatus(draft.primaryGoal, draft.blocker) ? (
+              <div className="grid gap-2">
+                <Label>Where is fundraising today?</Label>
+                <Select
+                  value={draft.fundraisingStatus || undefined}
+                  onValueChange={(status) => setDraft({ ...draft, fundraisingStatus: status as OnboardingAnswersV1['fundraisingStatus'] })}
+                >
+                  <SelectTrigger><SelectValue placeholder="Choose a status" /></SelectTrigger>
+                  <SelectContent>
+                    {FUNDRAISING.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
+            <div className="grid gap-2">
+              <Label>Are you looking for a co-founder?{requiresCofounderSituation(draft.blocker) ? '' : ' (optional)'}</Label>
+              <Select
+                value={draft.cofounderSituation || 'unset'}
+                onValueChange={(situation) => setDraft({
+                  ...draft,
+                  cofounderSituation: situation === 'unset' ? '' : situation as OnboardingAnswersV1['cofounderSituation'],
+                })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unset">Prefer not to say</SelectItem>
+                  <SelectItem value="actively_looking">Yes, I am actively looking</SelectItem>
+                  <SelectItem value="solo_ok">No, I am comfortable building solo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label>Business model</Label>
+                <Select
+                  value={draft.businessModel || undefined}
+                  onValueChange={(model) => setDraft({ ...draft, businessModel: model as OnboardingAnswersV1['businessModel'] })}
+                >
+                  <SelectTrigger><SelectValue placeholder="Choose a model" /></SelectTrigger>
+                  <SelectContent>
+                    {BUSINESS_MODELS.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label>Strongest customer evidence</Label>
+                <Select
+                  value={draft.evidenceState || undefined}
+                  onValueChange={(value) => {
+                    const evidenceState = value as OnboardingAnswersV1['evidenceState'];
+                    const keep = requiresCustomerCount(evidenceState);
+                    setDraft({
+                      ...draft,
+                      evidenceState,
+                      customerCountBand: keep ? draft.customerCountBand : '',
+                      revenueBand: keep ? draft.revenueBand : '',
+                    });
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Choose evidence" /></SelectTrigger>
+                  <SelectContent>
+                    {EVIDENCE.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <p className="-mt-3 text-xs text-muted-foreground">
+              Your stage is worked out from your evidence, so updating it moves your missions to match where you are now.
+            </p>
+            {requiresCustomerCount(draft.evidenceState) ? (
+              <div className="grid gap-2">
+                <Label>Paying customers</Label>
+                <Select
+                  value={draft.customerCountBand || undefined}
+                  onValueChange={(band) => setDraft({ ...draft, customerCountBand: band as OnboardingAnswersV1['customerCountBand'] })}
+                >
+                  <SelectTrigger><SelectValue placeholder="Choose a range" /></SelectTrigger>
+                  <SelectContent>
+                    {CUSTOMER_BANDS.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
             <div className="grid gap-2">
               <Label>Weekly execution capacity</Label>
               <Select
@@ -309,6 +461,38 @@ export default function DashboardFocusEditor() {
                 onChange={(event) => setDraft({ ...draft, country: event.target.value })}
               />
             </div>
+            <fieldset className="grid gap-2">
+              <legend className="text-sm font-medium leading-none">Sectors (optional)</legend>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {ANGEL_SECTOR_OPTIONS.filter((sector) => sector !== LEGACY_SECTOR || draft.sectors.includes(sector)).map((sector) => {
+                  const selected = draft.sectors.includes(sector);
+                  const full = !selected && draft.sectors.length >= MAX_SECTORS;
+                  return (
+                    <button
+                      key={sector}
+                      type="button"
+                      aria-pressed={selected}
+                      disabled={full}
+                      onClick={() => setDraft({
+                        ...draft,
+                        sectors: selected ? draft.sectors.filter((item) => item !== sector) : [...draft.sectors, sector],
+                      })}
+                      className={cn(
+                        'rounded-full border px-3 py-1.5 text-xs transition-colors disabled:opacity-40',
+                        selected
+                          ? 'border-accent-teal bg-accent-teal/15 font-medium text-foreground'
+                          : 'border-border text-muted-foreground hover:border-accent-teal/50',
+                      )}
+                    >
+                      {sector}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Used for mentor and investor matching. Up to {MAX_SECTORS}.
+              </p>
+            </fieldset>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={saving}>Cancel</Button>

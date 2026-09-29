@@ -20,6 +20,7 @@ const PROJECT_SCOPE_RULE =
   'Reason only about activeProject and its server-resolved outcomes. Available outcomes contain bounded excerpts, not the full history. ' +
   'Missing means no current result; unavailable means a lookup failed. Neither means completed, skipped or disproven. ' +
   'Onboarding is account-level stated preference, not evidence of progress in this project. Distinguish quiz placement from current evidence. ' +
+  'When activeProject.statedFocus is present it is the founder\'s stated goal, blocker and stage for this project; prefer it over account-level onboarding. ' +
   'Use concrete relevant findings from earlier stages for later-stage advice and name the source stage. Never invent results or metrics. ' +
   'For founder/builder accounts without an active project, ask them to select one before claiming project-specific knowledge. Non-founder roles do not need a project. ' +
   'Respect source basis: distinguish hypotheses, planned targets, reported evidence and recorded system status. Flag apparent contradictions as questions, not proven errors. ' +

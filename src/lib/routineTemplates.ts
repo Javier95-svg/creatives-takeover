@@ -1,13 +1,9 @@
 import { format } from 'date-fns';
 
 import type { Json } from '@/integrations/supabase/types';
+import type { RoutineGoal } from '@/lib/routineGoal';
 
-export type RoutineGoal =
-  | 'validate_idea'
-  | 'find_cofounders'
-  | 'grow_audience'
-  | 'launch_product'
-  | 'raise_funding';
+export type { RoutineGoal } from '@/lib/routineGoal';
 
 export type RoutineCadence = 'daily' | 'monthly';
 export type RoutineTaskSource = 'template' | 'custom' | 'suggested';

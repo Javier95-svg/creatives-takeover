@@ -63,6 +63,7 @@ import {
 import { refreshOnboardingMentorRecommendations } from '@/lib/onboardingMentorRecommendations';
 import { onboardingSupportNeeds } from '@/lib/onboardingSupportNeeds';
 import { clearIntendedAccountType, readIntendedAccountType } from '@/lib/intendedAccountType';
+import { MAX_SECTORS } from '@/lib/onboardingAnswerRules';
 import { cn } from '@/lib/utils';
 import { trackOnboardingStepCompleted } from '@/lib/analytics';
 
@@ -1033,18 +1034,21 @@ export function AdaptiveOnboardingForm({ session, onComplete }: AdaptiveOnboardi
           <div className="mt-2 flex flex-wrap gap-2">
             {ANGEL_SECTOR_OPTIONS.filter((sector) => !LEGACY_SECTORS.has(sector) || answers.sectors.includes(sector)).map((sector) => {
               const selected = answers.sectors.includes(sector);
+              // The server accepts at most MAX_SECTORS, so stop at the same limit.
+              const full = !selected && answers.sectors.length >= MAX_SECTORS;
               return (
                 <button
                   key={sector}
                   type="button"
                   aria-pressed={selected}
+                  disabled={full}
                   onClick={() => patchAnswers({
                     sectors: selected
                       ? answers.sectors.filter((item) => item !== sector)
                       : [...answers.sectors, sector],
                   })}
                   className={cn(
-                    'rounded-full border px-3 py-1.5 text-xs transition-colors',
+                    'rounded-full border px-3 py-1.5 text-xs transition-colors disabled:opacity-40',
                     selected ? 'border-accent-teal bg-accent-teal/10 text-foreground' : 'border-border/60 text-muted-foreground',
                   )}
                 >

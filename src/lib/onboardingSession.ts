@@ -87,6 +87,44 @@ export async function abandonOnboardingSession(params: {
   }
 }
 
+/**
+ * True when the onboarding-context edge function could not be reached at all:
+ * not deployed (404), or a fetch/relay failure, which is also how a missing
+ * function looks when the not-found reply carries no CORS headers. Only then
+ * do we fall back to the database function directly. A reply from the
+ * function itself (400, 401, 500) is a real answer and is never bypassed.
+ * Once docs/sql/onboarding-context-lockdown.sql has run, the fallback is
+ * refused by the database, so it cannot be used to skip server validation.
+ */
+function edgeFunctionUnreachable(error: unknown) {
+  const candidate = error as { name?: string; context?: { status?: number } } | null;
+  if (candidate?.name === 'FunctionsFetchError' || candidate?.name === 'FunctionsRelayError') return true;
+  return candidate?.context?.status === 404;
+}
+
+async function edgeErrorMessage(error: unknown) {
+  try {
+    const response = (error as { context?: Response } | null)?.context;
+    const body = response && typeof response.json === 'function' ? await response.clone().json() : null;
+    if (body && typeof body.error === 'string') return body.error;
+  } catch {
+    // Fall through to the generic message.
+  }
+  return error instanceof Error ? error.message : 'Could not save your onboarding answers.';
+}
+
+/**
+ * Writes go through the onboarding-context edge function, which validates the
+ * answers and derives the stage on the server. The browser's own context is
+ * sent only for the first-action choice it made.
+ */
+async function writeThroughServer(body: Record<string, unknown>) {
+  const { data, error } = await supabase.functions.invoke('onboarding-context', { body });
+  if (!error) return { handled: true as const, session: normalizeSession((data as { session?: unknown })?.session) };
+  if (edgeFunctionUnreachable(error)) return { handled: false as const };
+  throw new Error(await edgeErrorMessage(error));
+}
+
 export async function completeOnboardingSession(params: {
   sessionId: string;
   answers: OnboardingAnswersV1;
@@ -100,6 +138,17 @@ export async function completeOnboardingSession(params: {
     params.answers.weeklyCapacityHours,
     normalizeWorkingDays(params.answers.workingDays),
   );
+  const server = await writeThroughServer({
+    action: 'complete',
+    sessionId: params.sessionId,
+    answers: params.answers,
+    clientContext: params.context,
+    profileUpdates: params.profileUpdates,
+    preferencePatch: params.preferencePatch,
+    routineConfig,
+  });
+  if (server.handled) return server.session;
+
   const { data, error } = await supabase.rpc('complete_onboarding_v1' as never, {
     p_session_id: params.sessionId,
     p_answers: params.answers as unknown as Json,
@@ -117,7 +166,13 @@ export async function updateOnboardingFocus(params: {
   answers: Pick<
     OnboardingAnswersV1,
     'startupBrief' | 'primaryGoal' | 'blocker' | 'weeklyCapacityHours' | 'country'
-  > & Partial<Pick<OnboardingAnswersV1, 'workingDays' | 'runwayMonths' | 'revenueBand'>>;
+  > & Partial<Pick<
+    OnboardingAnswersV1,
+    | 'workingDays' | 'runwayMonths' | 'revenueBand' | 'businessModel' | 'evidenceState'
+    | 'customerCountBand' | 'sectors' | 'cofounderSituation' | 'fundraisingStatus'
+  >>;
+  /** Every answer after the edit, so the server derives the stage from all of them. */
+  fullAnswers: OnboardingAnswersV1;
   context: OnboardingContextV1;
 }) {
   const routineConfig = createRoutineConfig(
@@ -126,6 +181,15 @@ export async function updateOnboardingFocus(params: {
     params.answers.weeklyCapacityHours,
     normalizeWorkingDays(params.answers.workingDays),
   );
+  const server = await writeThroughServer({
+    action: 'focus',
+    answers: params.answers,
+    fullAnswers: params.fullAnswers,
+    clientContext: params.context,
+    routineConfig,
+  });
+  if (server.handled) return server.session;
+
   const { data, error } = await supabase.rpc('update_onboarding_focus_v1' as never, {
     p_answer_patch: params.answers as Json,
     p_context: params.context as unknown as Json,

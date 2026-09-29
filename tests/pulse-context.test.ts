@@ -33,6 +33,18 @@ test('context resolves actual current output content for the owned active projec
   assert.match(JSON.stringify(context.onboarding.answers), /Validate demand/);
 });
 
+test('the selected project carries its own stated focus, and projects without one say so', async () => {
+  const db = fixture();
+  db.tables.projects[0].context = { version: 1, source: 'onboarding',
+    answers: { primaryGoal: 'win_first_customer', blocker: 'messaging' },
+    context: { assignedStage: 3, assignedStageLabel: 'Validation', founderLoop: 'SELL', urgencyBand: 'stable', capitalMotion: 'inactive' } };
+  const withFocus = await resolvePulseContext(db as never, 'owner', a);
+  assert.match(JSON.stringify(withFocus.activeProject?.statedFocus), /win_first_customer/);
+  assert.equal((withFocus.activeProject?.statedFocus?.stage as { assignedStage?: number }).assignedStage, 3);
+  const without = await resolvePulseContext(db as never, 'owner', b);
+  assert.equal(without.activeProject?.statedFocus, null);
+});
+
 test('unauthorized and archived projects fail before stage records are queried', async () => {
   for (const change of ['owner', 'archive']) {
     const db = fixture();

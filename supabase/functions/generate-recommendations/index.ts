@@ -211,10 +211,29 @@ function generateRecommendations(context: any): any[] {
 
   // Get quiz answers for personalized recommendations
   const quizCompleted = context.profile?.quiz_completed;
+  // Only legacy accounts answered this; nothing in the current quiz implies it,
+  // so the first-time-founder rules stay limited to them rather than guessing.
   const isFirstStartup = context.profile?.quiz_is_first_startup;
   const currentStage = context.profile?.quiz_current_stage;
-  const biggestChallenge = context.profile?.quiz_biggest_challenge;
-  const launchTimeline = context.profile?.quiz_launch_timeline;
+  // The current quiz stores its own blocker codes; translate them to the
+  // challenge rules below so they fire for new accounts too.
+  const BLOCKER_TO_CHALLENGE: Record<string, string> = {
+    customer_clarity: 'finding_customers',
+    prospect_access: 'finding_customers',
+    messaging: 'finding_customers',
+    sales_conversion: 'finding_customers',
+    product_delivery: 'building_product',
+    fundraising: 'raising_money',
+    accountability: 'staying_motivated',
+  };
+  const rawChallenge = context.profile?.quiz_biggest_challenge;
+  const biggestChallenge = BLOCKER_TO_CHALLENGE[rawChallenge] ?? rawChallenge;
+  // Launch timeline is no longer asked; runway is the closest current signal
+  // for how fast the founder has to move. Unknown or comfortable runway adds no
+  // timeline rule rather than guessing one.
+  const RUNWAY_TO_TIMELINE: Record<string, string> = { under_3: 'asap', '3_6': '3_6_months', '6_12': '6_12_months' };
+  const quizAnswers = context.profile?.quiz_answers_v2?.answers ?? {};
+  const launchTimeline = context.profile?.quiz_launch_timeline ?? RUNWAY_TO_TIMELINE[quizAnswers.runwayMonths];
   // The current quiz stores the co-founder answer in user_preferences, not in
   // the legacy quiz_looking_for_cofounder column, so read both.
   const cofounderSituation = context.profile?.user_preferences?.cofounderSituation;

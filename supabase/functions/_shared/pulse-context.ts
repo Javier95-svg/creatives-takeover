@@ -23,7 +23,13 @@ export interface PulseContext {
   scope: PulseScope;
   account: { userType: UserType; approvalStatus: ApprovalStatus; hasCategoryAccess: boolean; roleProfile: unknown };
   onboarding: { provenance: string; assignedStage: unknown; reportedStage: unknown; answers: unknown; challenge: unknown; timeline: unknown };
-  activeProject: { id: string; title: string; ideaSummary: string | null } | null;
+  activeProject: {
+    id: string;
+    title: string;
+    ideaSummary: string | null;
+    /** The founder's stated focus for this project, from onboarding or a focus edit. */
+    statedFocus: { provenance: string; answers: unknown; stage: unknown } | null;
+  } | null;
   outcomes: Record<string, PulseSource>;
   unavailableSources: string[];
 }
@@ -117,10 +123,24 @@ export async function resolvePulseContext(db: SupabaseClient, userId: string, pr
   };
   if (!projectId) { await loadTasks(); return context; }
   const { data: project, error: projectError } = await db.from('projects')
-    .select('id,title,idea_summary').eq('id', projectId).eq('user_id', userId).is('archived_at', null).maybeSingle();
+    .select('id,title,idea_summary,context').eq('id', projectId).eq('user_id', userId).is('archived_at', null).maybeSingle();
   if (projectError) throw new PulseContextError(503, 'The selected project could not be loaded.');
   if (!project) throw new PulseContextError(404, 'The selected project is unavailable. Choose an active project.');
-  context.activeProject = { id: project.id, title: String(project.title ?? '').slice(0, 160), ideaSummary: typeof project.idea_summary === 'string' ? project.idea_summary.slice(0, 1000) : null };
+  const projectContext = project.context && typeof project.context === 'object' ? project.context as Data : null;
+  const derived = projectContext?.context && typeof projectContext.context === 'object' ? projectContext.context as Data : null;
+  context.activeProject = {
+    id: project.id,
+    title: String(project.title ?? '').slice(0, 160),
+    ideaSummary: typeof project.idea_summary === 'string' ? project.idea_summary.slice(0, 1000) : null,
+    statedFocus: projectContext ? {
+      provenance: 'Stated by the founder for this project (onboarding or a focus edit). Planning input, not proof of progress.',
+      answers: compactPulseData(projectContext.answers, 1800),
+      stage: derived ? compactPulseData({
+        assignedStage: derived.assignedStage, assignedStageLabel: derived.assignedStageLabel,
+        founderLoop: derived.founderLoop, urgencyBand: derived.urgencyBand, capitalMotion: derived.capitalMotion,
+      }, 400) : null,
+    } : null,
+  };
 
   // These are the same owner/project/current-outcome predicates used by
   // project_outcomes, but read the actual records instead of only their IDs.

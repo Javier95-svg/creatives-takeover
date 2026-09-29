@@ -8,28 +8,9 @@ import { parseActivationJourney, type ActivationJourneyV2 } from '@/lib/activati
 import { stageForLegacyActivationIntent } from '@/lib/outcomeJourney';
 import { recordArtifactStageEvidence } from '@/lib/stageIntelligence';
 
-export type ActivationIntent =
-  /**
-   * The only intent whose output leaves the platform and can be answered by
-   * someone other than the founder. Every other entry terminates in a saved
-   * document that nobody but its author ever sees.
-   */
-  | 'publish_proof'
-  | 'first_customer_sprint'
-  | 'build_demo'
-  | 'find_mentor'
-  | 'run_icp'
-  | 'start_validation'
-  | 'build_mvp'
-  | 'plan_gtm'
-  | 'log_traction'
-  | 'analyze_pitch_deck'
-  | 'unlock_pitch_deck'
-  | 'unlock_tech_stack'
-  | 'unlock_insighta'
-  | 'save_mentor'
-  | 'send_message'
-  | 'book_call';
+import type { ActivationIntent } from '@/lib/activationIntent';
+
+export type { ActivationIntent } from '@/lib/activationIntent';
 export type ActivationArtifactIntent = 'save_mentor' | 'send_message' | 'book_call';
 export type ActivationGateVariant = 'control' | 'forced_gate';
 export type RetentionArtifactType =
