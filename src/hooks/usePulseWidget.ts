@@ -83,7 +83,7 @@ export const usePulseWidget = () => {
   }, [identity, isGuestIdentity]);
   useEffect(() => { if (isGuestIdentity && !guestStreaming) saveGuestChat(guestMessages); }, [isGuestIdentity, guestStreaming, guestMessages]);
   const proactiveMessage = !isAuthenticated
-    ? "Hi, I'm Pulse. Ask me anything about Creatives Takeover: who it's for, where to start, or what it costs."
+    ? "Hi, I'm Pulse. Ask me anything about Creatives Takeover."
     : founder && route ? `I can help with ${route.toolName}. What are you working through?` : 'Welcome back. What would you like help with today?';
   useEffect(() => {
     if (!loaded || sessionStorage.getItem('pulse_proactive_dismissed') === 'true') return;
