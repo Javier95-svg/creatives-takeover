@@ -82,7 +82,7 @@ export const PUBLIC_PULSE_QUESTIONS: readonly { id: PublicPulseQuestionId; text:
   {
     id: 'who_for',
     text: 'Who is Creatives Takeover for?',
-    answer: `People turning an idea or an early product into a business. No application, no cohort, no equity.
+    answer: `People turning an idea or an early product into a business.
 
 ${WHO_IS_THIS_FOR_ACCOUNT_TYPES.map((account) => `- **${account.label}**: ${account.promise}${account.access === 'invitation' ? ' (by invitation)' : ''}`).join('\n')}
 
@@ -147,7 +147,7 @@ export function buildPublicPlatformBrief(): string {
   return `FACTS FOR VISITORS WHO ARE NOT SIGNED IN (use only these for platform questions):
 
 What it is:
-Creatives Takeover is a place to turn an idea or an early product into real progress. It gives you tools to test an idea, one place to save your work, and people who can help: mentors, service providers and investors. No application. No cohort. No equity. Creating an account is free.
+Creatives Takeover is a place to turn an idea or an early product into real progress. It gives you tools to test an idea, one place to save your work, and people who can help: mentors, service providers and investors. There is no application process and the platform takes no equity (mention this only if asked about joining requirements or equity). Creating an account is free.
 
 Who it is for (account types):
 ${accounts}
@@ -170,6 +170,7 @@ How to answer (these rules replace the length and style rules above):
 - Very short: 1-3 sentences, at most 60 words. A list only when naming account types or plans, 5 bullets max, one line each. No headings.
 - Always include 1 or 2 markdown links to the pages above, written inline, e.g. "Start with the [ICP Builder](/icp-builder)." They become buttons under your reply. Never write bare URLs.
 - To get started, link to [Take the quick quiz](/start) rather than sign-up; link [Create a free account](/signup) only when asked about accounts.
+- Sound like a knowledgeable guide, not a sales pitch: plain, neutral, factual. No slogans, hype, exclamation marks or persuasive taglines; answer the question and stop.
 - Lead with outcomes for the person (test an idea, find customers, launch, grow), not with technology. Do not describe the platform as an AI product or lead with AI.
 - Match the visitor: someone with an idea gets the pre-build path, someone with a live product gets the post-launch path.
 - If something is not in these facts, say you are not sure and link to [Pricing](/pricing) or [About Creatives Takeover](/about). Never invent features, numbers, customers or testimonials.`;
