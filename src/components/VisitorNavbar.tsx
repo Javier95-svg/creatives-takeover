@@ -2,8 +2,6 @@ import type { MouseEvent } from "react";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  ChevronDown,
-  Clapperboard,
   DollarSign,
   Handshake,
   Info,
@@ -17,57 +15,26 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import ThemeToggle from "@/components/ThemeToggle";
 import ctLogoPolished from "@/assets/ct-logo-polished-borders.webp";
 import { cn } from "@/lib/utils";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
-import { captureEvent } from "@/lib/analytics";
 
 type VisitorLink = { label: string; href: string; icon: LucideIcon; sectionId?: string; exact?: boolean };
-type VisitorMenuItem = { label: string; href: string; icon: LucideIcon; description: string };
-type VisitorMenu = { label: string; icon: LucideIcon; tagline: string; taglineIcon?: LucideIcon; items: VisitorMenuItem[] };
 
-// Simple links, in display order. Home is covered by the brand lockup.
-// The first three render before the Content menu and the rest after it, so this
-// order is also the layout: Tour, Build, Collab | Content | About, Pricing.
+// Links in display order. Home is covered by the brand lockup.
 const visitorLinks: VisitorLink[] = [
   // exact, because /demo-studio and /demo-calls both start with /demo and would
   // otherwise light this entry up while the visitor is somewhere else entirely.
   { label: "Tour", href: "/demo", icon: PlayCircle, exact: true },
   { label: "Build", href: "/build", icon: Wrench },
   { label: "Collab", href: "/mentorship", icon: Handshake },
+  { label: "Newspaper", href: "/newspaper", icon: Newspaper },
+  { label: "Podcast", href: "/podcast", icon: Mic },
   { label: "About", href: "/about", icon: Info },
   { label: "Pricing", href: "/pricing", icon: DollarSign },
 ];
-
-const contentMenu: VisitorMenu = {
-  label: "Content",
-  icon: Clapperboard,
-  tagline: "Leisure Time🍿",
-  items: [
-    {
-      label: "Newspaper",
-      href: "/newspaper",
-      icon: Newspaper,
-      description: "Read business cases and founder stories.",
-    },
-    {
-      label: "Podcast",
-      href: "/podcast",
-      icon: Mic,
-      description: "Hear candid conversations with founders.",
-    },
-  ],
-};
 
 import { useWorkspaceFrame } from '@/contexts/WorkspaceFrameContext';
 
@@ -78,7 +45,6 @@ const VisitorNavbar = () => {
 
 const LegacyVisitorNavbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [openMobileMenu, setOpenMobileMenu] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -94,7 +60,6 @@ const LegacyVisitorNavbar = () => {
 
   useEffect(() => {
     setMobileOpen(false);
-    setOpenMobileMenu(null);
   }, [location.pathname, location.hash]);
 
   const isActive = (href: string, sectionId?: string, exact?: boolean) => {
@@ -137,122 +102,6 @@ const LegacyVisitorNavbar = () => {
 
   const linkClassName = (href: string, sectionId?: string, exact?: boolean) => navItemClass(isActive(href, sectionId, exact));
 
-  const menuActive = (menu: VisitorMenu) =>
-    menu.items.some((item) => location.pathname.startsWith(item.href));
-
-  const handleMenuOpen = (menu: VisitorMenu, source: "desktop" | "mobile") => {
-    trackNavClick(menu.label);
-    captureEvent("visitor_menu_opened", {
-      menu: menu.label,
-      source: `visitor_navbar_${source}`,
-    });
-  };
-
-  const menuItemAnalytics = (menu: VisitorMenu, item: VisitorMenuItem, source: string) =>
-    ({ item: item.label, menu: menu.label, source });
-
-  const renderDesktopMenu = (menu: VisitorMenu) => {
-    const MenuIcon = menu.icon;
-    const TaglineIcon = menu.taglineIcon;
-    return (
-      <DropdownMenu
-        onOpenChange={(open) => {
-          if (open) handleMenuOpen(menu, "desktop");
-        }}
-      >
-        <DropdownMenuTrigger className={cn(navItemClass(menuActive(menu)), "inline-flex items-center gap-2")}>
-          <MenuIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
-          {menu.label}
-          <ChevronDown className="h-3 w-3 opacity-60" aria-hidden="true" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-max">
-          <DropdownMenuLabel className="flex items-center justify-between gap-6">
-            <span>{menu.tagline}</span>
-            {TaglineIcon && <TaglineIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />}
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {menu.items.map((item) => {
-            const ItemIcon = item.icon;
-            return (
-              <DropdownMenuItem key={item.href} asChild>
-                <Link
-                  to={item.href}
-                  onClick={() => {
-                    trackNavClick(`${menu.label} - ${item.label}`);
-                    captureEvent("visitor_menu_item_click", menuItemAnalytics(menu, item, "visitor_navbar_desktop"));
-                  }}
-                  className="cursor-pointer"
-                >
-                  <ItemIcon className="mr-2 h-4 w-4 shrink-0" aria-hidden="true" />
-                  <div className="flex flex-col">
-                    <span className="font-medium">{item.label}</span>
-                    <span className="text-xs text-muted-foreground">{item.description}</span>
-                  </div>
-                </Link>
-              </DropdownMenuItem>
-            );
-          })}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
-  };
-
-  const renderMobileMenu = (menu: VisitorMenu) => {
-    const MenuIcon = menu.icon;
-    const open = openMobileMenu === menu.label;
-    return (
-      <div>
-        <button
-          type="button"
-          className={cn(
-            "flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors",
-            menuActive(menu)
-              ? "bg-background text-foreground"
-              : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-          )}
-          aria-expanded={open}
-          onClick={() =>
-            setOpenMobileMenu((current) => {
-              const next = current === menu.label ? null : menu.label;
-              if (next) handleMenuOpen(menu, "mobile");
-              return next;
-            })
-          }
-        >
-          <span className="flex items-center gap-3">
-            <MenuIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
-            {menu.label}
-          </span>
-          <ChevronDown
-            className={cn("h-4 w-4 transition-transform", open && "rotate-180")}
-            aria-hidden="true"
-          />
-        </button>
-        {open && (
-          <div className="ml-7 mt-1 space-y-1">
-            {menu.items.map((item) => {
-              const ItemIcon = item.icon;
-              return (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
-                  onClick={() => {
-                    trackNavClick(`Mobile ${menu.label} - ${item.label}`);
-                    captureEvent("visitor_menu_item_click", menuItemAnalytics(menu, item, "visitor_navbar_mobile"));
-                  }}
-                >
-                  <ItemIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
     <nav
       style={{ top: "var(--banner-height, 0)" } as React.CSSProperties}
@@ -292,48 +141,22 @@ const LegacyVisitorNavbar = () => {
             </Link>
 
             <div className="hidden min-w-0 flex-1 items-center justify-center gap-1 lg:flex">
-              {visitorLinks.slice(0, 3).map((item) => {
+              {visitorLinks.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Link
                     key={item.label}
                     to={item.href}
-                    className={cn(linkClassName(item.href, item.sectionId, item.exact), "inline-flex items-center gap-2")}
+                    className={cn(linkClassName(item.href, item.sectionId, item.exact), "inline-flex items-center gap-2 whitespace-nowrap")}
                     onClick={(event) => handleNavClick(event, item)}
                   >
-                    <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    {item.label}
-                  </Link>
-                );
-              })}
-              {renderDesktopMenu(contentMenu)}
-              {visitorLinks.slice(3).map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.label}
-                    to={item.href}
-                    className={cn(linkClassName(item.href, item.sectionId, item.exact), "inline-flex items-center gap-2")}
-                    onClick={(event) => handleNavClick(event, item)}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {/* Seven links only fit with icons from 2xl; below that the labels carry it. */}
+                    <Icon className="hidden h-4 w-4 shrink-0 2xl:block" aria-hidden="true" />
                     {item.label}
                   </Link>
                 );
               })}
             </div>
-
-            {/* Radix keeps DropdownMenuContent unmounted until it is opened, so
-                the Content menu's destinations exist in no rendered DOM a crawler
-                ever sees. These duplicates keep them discoverable. aria-hidden so
-                assistive tech uses the real menu instead of hearing both. */}
-            <nav aria-hidden="true" className="sr-only">
-              {contentMenu.items.map((item) => (
-                <Link key={`crawlable-${item.href}`} to={item.href} tabIndex={-1}>
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
 
             <div className="ml-auto hidden items-center gap-2 pl-2 lg:flex xl:pl-4">
               <ThemeToggle />
@@ -374,27 +197,7 @@ const LegacyVisitorNavbar = () => {
           >
             <div className="min-h-0">
               <div className="space-y-2 border-t border-border/70 px-3 py-4 sm:px-4">
-                {visitorLinks.slice(0, 3).map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.label}
-                      to={item.href}
-                      className={cn(
-                        "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors",
-                        isActive(item.href, item.sectionId, item.exact)
-                          ? "bg-background text-foreground"
-                          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-                      )}
-                      onClick={(event) => handleNavClick(event, item, `Mobile ${item.label}`)}
-                    >
-                      <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                      {item.label}
-                    </Link>
-                  );
-                })}
-                {renderMobileMenu(contentMenu)}
-                {visitorLinks.slice(3).map((item) => {
+                {visitorLinks.map((item) => {
                   const Icon = item.icon;
                   return (
                     <Link
