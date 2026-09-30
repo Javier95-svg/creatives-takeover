@@ -8,6 +8,7 @@ import {
   normalizeLinkedInUrl,
   parseYouTubeId,
 } from '@/lib/podcast';
+import { generateMentorSlug } from '@/utils/mentorSlug';
 
 export interface PodcastEpisode {
   id: string;
@@ -70,6 +71,14 @@ function mapRow(row: Record<string, unknown>): PodcastEpisode {
   };
 }
 
+// The mentor profile matches on the exact slug, so accept whatever the admin
+// pastes — the slug, the mentor's name, or the full /mentorship/<slug> URL — and
+// store the slug form.
+function normalizeMentorSlug(value: string | undefined): string | null {
+  const lastSegment = (value ?? '').trim().split(/[?#]/)[0].replace(/\/+$/, '').split('/').pop() ?? '';
+  return generateMentorSlug(lastSegment) || null;
+}
+
 // The podcast is a chronological feed: an episode's upload time is its source
 // of truth, rather than a manually assigned position.
 function newestFirst(episodes: PodcastEpisode[]): PodcastEpisode[] {
@@ -126,7 +135,7 @@ export function usePodcastEpisodes() {
           youtube_url: input.youtube_url.trim(),
           youtube_video_id: videoId,
           hashtags: input.hashtags,
-          mentor_slug: input.mentor_slug?.trim() || null,
+          mentor_slug: normalizeMentorSlug(input.mentor_slug),
           guest_name: input.guest_name?.trim() || null,
           guest_website: normalizeGuestWebsite(input.guest_website),
           guest_linkedin: normalizeLinkedInUrl(input.guest_linkedin),
@@ -169,7 +178,7 @@ export function usePodcastEpisodes() {
           youtube_url: input.youtube_url.trim(),
           youtube_video_id: videoId,
           hashtags: input.hashtags,
-          mentor_slug: input.mentor_slug?.trim() || null,
+          mentor_slug: normalizeMentorSlug(input.mentor_slug),
           guest_name: input.guest_name?.trim() || null,
           guest_website: normalizeGuestWebsite(input.guest_website),
           guest_linkedin: normalizeLinkedInUrl(input.guest_linkedin),
