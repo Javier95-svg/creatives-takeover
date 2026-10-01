@@ -24,7 +24,7 @@ const TABS: { value: ApprovalStatus; label: string }[] = [
 ];
 
 /**
- * Review screen for mentor, marketplace and investor requests.
+ * Review screen for mentor and marketplace requests.
  *
  * Every decision goes through review_account_application, which checks the
  * admin role itself. This page is behind AdminRoute as well, but the guard that
@@ -62,14 +62,14 @@ export default function AdminAccountRequests() {
   const rows = applications.data ?? [];
 
   return <>
-    <SEO title="Account requests" description="Review mentor, marketplace and investor requests." url="/admin/account-requests" noindex />
+    <SEO title="Account requests" description="Review mentor and marketplace requests." url="/admin/account-requests" noindex />
     <div className="min-h-screen bg-background">
       <Navigation />
       <main className="container mx-auto px-4 pt-header-offset nav-offset-roomy pb-16">
         <header className="mb-8">
           <h1 className="text-headline-lg font-semibold">Account requests</h1>
           <p className="mt-2 text-body text-muted-foreground">
-            Mentor, Marketplace and investor requests wait here until a decision is made. Founders and builders never appear: they are approved on arrival.
+            Mentor and marketplace requests wait here until a decision is made. Founders, builders and investors never appear: they are approved on arrival.
           </p>
         </header>
 

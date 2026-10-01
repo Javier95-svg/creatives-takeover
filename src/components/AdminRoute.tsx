@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 const ADMIN_EMAIL = "admin@creatives-takeover.com";
@@ -19,6 +19,7 @@ const ADMIN_EMAIL = "admin@creatives-takeover.com";
  */
 const AdminRoute = ({ children }: { children: ReactNode }) => {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -28,7 +29,14 @@ const AdminRoute = ({ children }: { children: ReactNode }) => {
     );
   }
 
-  if (user?.email?.toLowerCase() !== ADMIN_EMAIL) {
+  // A signed out admin following an email link signs in and lands back here,
+  // rather than being dropped on the homepage with no idea why.
+  if (!user) {
+    const returnPath = `${location.pathname}${location.search}`;
+    return <Navigate to={`/login?return=${encodeURIComponent(returnPath)}`} replace />;
+  }
+
+  if (user.email?.toLowerCase() !== ADMIN_EMAIL) {
     return <Navigate to="/" replace />;
   }
 

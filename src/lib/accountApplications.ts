@@ -21,12 +21,13 @@ export interface AccountApplication {
 
 
 /**
- * Files a mentor, marketplace or investor request.
+ * Files a mentor or marketplace request, or completes an investor account.
  *
- * The profile is marked pending in the same call, so the account is unapproved
- * from the moment the request exists rather than from whenever the admin gets
- * to it. The database trigger on the application row sends the admin alert;
- * nothing here has to remember to.
+ * Mentor and marketplace profiles are marked pending in the same call, so the
+ * account is unapproved from the moment the request exists rather than from
+ * whenever the admin gets to it. The database trigger on the application row
+ * sends the admin alert; nothing here has to remember to. Investors are
+ * self-serve: the server approves them on submission and files no request.
  */
 export async function submitAccountApplication(input: {
   situation?: OnboardingSituation;
@@ -36,7 +37,7 @@ export async function submitAccountApplication(input: {
   /** The category fields, collected before the request is filed so a reviewer
       has something to review. The server validates these and snapshots them for review. */
   roleProfile?: Record<string, unknown> | null;
-}): Promise<void> {
+}): Promise<{ approvalStatus: ApprovalStatus }> {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user?.id) throw new Error('Sign in to send this request.');
 
@@ -44,7 +45,7 @@ export async function submitAccountApplication(input: {
   // here. It also marks onboarding complete, which is what stops the entry gate
   // looping these accounts back into the founder quiz forever, and it patches
   // user_preferences server side instead of racing a read modify write.
-  const { error } = await supabase.rpc('submit_account_application' as never, {
+  const { data, error } = await supabase.rpc('submit_account_application' as never, {
     p_situation: input.situation ?? null,
     p_session_id: input.sessionId ?? null,
     p_full_name: input.fullName ?? null,
@@ -52,6 +53,8 @@ export async function submitAccountApplication(input: {
     p_role_profile: input.roleProfile ?? {},
   } as never);
   if (error) throw new Error(error.message);
+  const result = data as { approvalStatus?: ApprovalStatus } | null;
+  return { approvalStatus: result?.approvalStatus === 'approved' ? 'approved' : 'pending' };
 }
 
 /** Admin only; the RPC refuses anyone else whatever the client sends. */

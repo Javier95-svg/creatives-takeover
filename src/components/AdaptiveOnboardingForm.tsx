@@ -333,6 +333,8 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
   // quiz stops there: nothing after the first step applies to them, and the
   // account stays unapproved until an admin reviews it.
   const [submittedReview, setSubmittedReview] = useState<ReviewedUserType | null>(null);
+  // Investors are approved on submission, so their confirmation skips the review steps.
+  const [submittedApproved, setSubmittedApproved] = useState(false);
   const [roleDraft, setRoleDraft] = useState<RoleProfile>(localFallback?.answers.roleProfile ?? session.answers.roleProfile ?? {});
   // A fresh session starts from the account type picked on the homepage, if
   // any. A resumed session keeps its own answer.
@@ -684,7 +686,7 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
       setIsSaving(true);
       submittingRef.current = true;
       try {
-        await submitAccountApplication({
+        const { approvalStatus } = await submitAccountApplication({
           situation: answers.situation,
           sessionId: session.id,
           fullName: user?.user_metadata?.full_name ?? null,
@@ -696,9 +698,10 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
         clearIntendedAccountType();
         clearToolHandoff();
         clearGuestOnboarding();
+        setSubmittedApproved(approvalStatus === 'approved');
         setSubmittedReview(answers.founderSegment);
         void queryClient.invalidateQueries({ queryKey: ['account-context', user?.id] });
-        void trackRetentionEvent('onboarding_completed', { user_id: user?.id, user_type: answers.founderSegment, quiz_version: 2, onboarding_session_id: session.id, completion_kind: 'application_submitted' });
+        void trackRetentionEvent('onboarding_completed', { user_id: user?.id, user_type: answers.founderSegment, quiz_version: 2, onboarding_session_id: session.id, completion_kind: approvalStatus === 'approved' ? 'self_serve_approved' : 'application_submitted' });
       } catch (submitError) {
         setError(submitError instanceof Error ? submitError.message : 'Could not send your request. Please try again.');
       } finally {
@@ -977,12 +980,26 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
   const reviewing = currentStep === 0 && isReviewedType(answers.founderSegment) && !submittedReview;
   const totalSteps = visibleTotal;
   const displayStep = submittedReview ? 2 : visibleStep;
-  const stepName = submittedReview ? 'Request sent' : stepNameFor(displayStep, answers.founderSegment);
+  const stepName = submittedReview ? (submittedApproved ? 'Account ready' : 'Request sent') : stepNameFor(displayStep, answers.founderSegment);
 
   const renderStep = () => {
     if (currentStep === 0) {
       // The request is filed and the category fields came with it, so this
       // is a confirmation and nothing more.
+      if (submittedReview && submittedApproved) {
+        return (
+          <div className="mx-auto max-w-xl py-4 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent-teal/15">
+              <Check className="h-7 w-7 text-accent-teal" />
+            </div>
+            <h2 ref={headingRef} tabIndex={-1} className="mt-5 font-space-grotesk text-2xl font-semibold outline-none">Your {USER_TYPE_LABEL[submittedReview].toLowerCase()} account is ready.</h2>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
+              Your workspace and founder matches are open now. You can refine your investment focus from your account details at any time.
+            </p>
+          </div>
+        );
+      }
+
       if (submittedReview) {
         return (
           <div className="mx-auto max-w-xl py-4 text-center">
@@ -1038,9 +1055,9 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
         return (
           <>
             <StepHeading
-              eyebrow="Request access"
+              eyebrow={answers.founderSegment === 'investor' ? 'Set up your account' : 'Request access'}
               title={`Tell us about your ${USER_TYPE_LABEL[answers.founderSegment].toLowerCase()} work`}
-              description="These answers help us review your request. You can refine your public profile and preferences from your workspace."
+              description={answers.founderSegment === 'investor' ? 'These answers decide which founders you are matched with. You can refine them from your workspace.' : 'These answers help us review your request. You can refine your public profile and preferences from your workspace.'}
               headingRef={headingRef}
             />
             <div className="mt-6">
@@ -1430,7 +1447,7 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
                 {submittedReview
                   ? 'Open my workspace'
                   : reviewing && reviewStage === 'details'
-                    ? 'Send my request'
+                    ? (answers.founderSegment === 'investor' ? 'Create my account' : 'Send my request')
                     : currentStep === CORE_STEPS - 1
                       ? guest ? 'Create my free account' : `Start: ${ACTIVATION_CATALOG[answers.selectedIntent || recommendation.intent].label}`
                       : 'Continue'}

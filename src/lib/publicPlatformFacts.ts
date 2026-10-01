@@ -161,7 +161,7 @@ Full details: /pricing
 
 How to start:
 - Type your idea (Idea mode) or what you are building (Product mode) in the box on the homepage. You answer a few quick questions, get a plan with your stage and a first step, then create a free account to save it.
-- Mentors and marketplace providers need an invitation. Investors can join; matching opens after review.
+- Mentors and marketplace providers need an invitation and an admin review. Investors join on their own and can see founder matches right away.
 
 Pages you can link to (use these exact paths, nothing else):
 ${PUBLIC_PULSE_LINKS.map((link) => `- [${link.title}](${link.route}): ${link.reason}`).join('\n')}

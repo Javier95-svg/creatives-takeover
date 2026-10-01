@@ -7,7 +7,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Shield, AlertTriangle, Image, CalendarClock } from "lucide-react";
+import { Loader2, Shield, AlertTriangle, Image, CalendarClock, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { PMFDiscoveryHealthCard } from '@/components/admin/PMFDiscoveryHealthCard';
@@ -129,6 +129,14 @@ const AdminTools = () => {
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-primary/10 rounded-lg"><CalendarClock className="h-6 w-6 text-primary" /></div>
                   <div className="flex-1"><h3 className="font-semibold mb-1">Discovery Calls</h3><p className="text-sm text-muted-foreground mb-3">Review requests, scheduling, outcomes, and email delivery.</p><Button asChild variant="outline" size="sm"><Link to="/mentorship/admin/discovery-calls">Manage Discovery Calls</Link></Button></div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-primary/10 rounded-lg"><UserCheck className="h-6 w-6 text-primary" /></div>
+                  <div className="flex-1"><h3 className="font-semibold mb-1">Account Requests</h3><p className="text-sm text-muted-foreground mb-3">Approve or reject mentor and marketplace requests, and manage invitations.</p><Button asChild variant="outline" size="sm"><Link to="/admin/account-requests">Review Requests</Link></Button></div>
                 </div>
               </CardContent>
             </Card>

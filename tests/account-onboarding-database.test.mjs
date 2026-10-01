@@ -54,7 +54,7 @@ async function fixture({ bundle = false } = {}) {
   const ensure=sql('20260917180000_outcomes_claim_project_slot');
   await db.exec(ensure.slice(ensure.indexOf('CREATE OR REPLACE FUNCTION public.ensure_active_project'),ensure.indexOf('COMMENT ON FUNCTION')));
   if (bundle) await db.exec(readFileSync(new URL('../docs/sql/account-type-onboarding-2026-09-25.sql',import.meta.url),'utf8'));
-  else for(const name of ['20260925155000_onboarding_invitations','20260925160000_account_onboarding_integrity','20260925161000_onboarding_classification_and_project','20260925162000_investor_matching_preferences','20260925163000_onboarding_drafts_and_reconciliation','20260928120000_onboarding_context_sync','20260929120000_onboarding_context_v2']) await db.exec(sql(name));
+  else for(const name of ['20260925155000_onboarding_invitations','20260925160000_account_onboarding_integrity','20260925161000_onboarding_classification_and_project','20260925162000_investor_matching_preferences','20260925163000_onboarding_drafts_and_reconciliation','20260928120000_onboarding_context_sync','20260929120000_onboarding_context_v2','20261001170000_investor_self_serve']) await db.exec(sql(name));
   await db.exec(`INSERT INTO auth.users(id,email) VALUES('${user}','test@example.invalid'),('${admin}','admin@example.invalid');
     INSERT INTO profiles(id) VALUES('${user}'),('${admin}'); INSERT INTO onboarding_sessions(id,user_id) VALUES('${session}','${user}');`);
   return db;
@@ -142,9 +142,9 @@ test('database blocks direct approval/type changes and forged application insert
   } finally {await db.close();}
 });
 
-for(const [type,details] of Object.entries({mentor,marketplace:provider,investor})) test(`${type}: complete, retry, review snapshot and approval`,async()=>{
+for(const [type,details] of Object.entries({mentor,marketplace:provider})) test(`${type}: complete, retry, review snapshot and approval`,async()=>{
   const db=await fixture();try{
-    if(type!=='investor') await invite(db,type);
+    await invite(db,type);
     await asUser(db); const first=(await submit(db,type,details)).rows[0].result;
     const retry=(await submit(db,type,details)).rows[0].result;
     assert.equal(first.applicationId,retry.applicationId);
@@ -161,6 +161,35 @@ for(const [type,details] of Object.entries({mentor,marketplace:provider,investor
     await owner(db);
     assert.equal((await db.query('SELECT approval_status FROM profiles WHERE id=$1',[user])).rows[0].approval_status,'approved');
     assert.equal((await db.query('SELECT count(*)::int n FROM email_queue')).rows[0].n,1);
+  }finally{await db.close();}
+});
+
+test('investor: approved on submission with no request in the review queue',async()=>{
+  const db=await fixture();try{
+    await asUser(db); const first=(await submit(db,'investor',investor)).rows[0].result;
+    assert.equal(first.approvalStatus,'approved'); assert.equal(first.applicationId,null);
+    const retry=(await submit(db,'investor',{...investor,sectors:['FinTech','SaaS']})).rows[0].result;
+    assert.equal(retry.approvalStatus,'approved');
+    await owner(db);
+    const profile=(await db.query('SELECT user_type,approval_status,role_profile FROM profiles WHERE id=$1',[user])).rows[0];
+    assert.equal(profile.user_type,'investor'); assert.equal(profile.approval_status,'approved');
+    assert.deepEqual(profile.role_profile.sectors,['FinTech','SaaS']);
+    assert.equal((await db.query('SELECT count(*)::int n FROM account_applications')).rows[0].n,0);
+    assert.equal((await db.query('SELECT count(*)::int n FROM email_queue')).rows[0].n,0);
+    assert.equal((await db.query('SELECT status FROM onboarding_sessions')).rows[0].status,'completed');
+  }finally{await db.close();}
+});
+
+test('investor requests pending before self-serve are approved and notified',async()=>{
+  const db=await fixture();try{
+    await db.exec(`UPDATE profiles SET user_type='investor',approval_status='pending',role_profile='${JSON.stringify(investor)}'::jsonb WHERE id='${user}';
+      INSERT INTO account_applications(user_id,user_type,role_profile) VALUES('${user}','investor','${JSON.stringify(investor)}'::jsonb);`);
+    await db.exec(sql('20261001170000_investor_self_serve'));
+    assert.equal((await db.query('SELECT status FROM account_applications')).rows[0].status,'approved');
+    assert.equal((await db.query('SELECT approval_status FROM profiles WHERE id=$1',[user])).rows[0].approval_status,'approved');
+    assert.deepEqual((await db.query('SELECT kind FROM email_queue')).rows,[{kind:'approved'}]);
+    await asUser(db,admin);
+    assert.deepEqual((await db.query('SELECT list_account_applications() result')).rows[0].result,[]);
   }finally{await db.close();}
 });
 

@@ -6,7 +6,7 @@ import type { ApprovalStatus, UserType } from '@/lib/accountTypes';
 export interface AccountContext {
   userType: UserType;
   approvalStatus: ApprovalStatus;
-  /** False only for a mentor, marketplace member or investor still awaiting review. */
+  /** False only for a mentor or marketplace member still awaiting review. */
   hasCategoryAccess: boolean;
   roleProfile: Record<string, unknown>;
   requiresProject: boolean;

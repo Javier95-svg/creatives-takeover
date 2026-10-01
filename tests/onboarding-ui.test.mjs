@@ -21,7 +21,7 @@ const mocks = {
   '@/lib/analytics': `export const trackOnboardingStepCompleted=()=>{};export const trackOnboardingPrefilled=(value)=>window.events.push({name:'onboarding_prefilled',data:value});export const trackOnboardingAccountTypeChanged=(value)=>window.events.push({name:'onboarding_account_type_changed',data:value});`,
   '@/lib/retentionSystem': `export const trackRetentionEvent=async(name,data)=>window.events.push({name,data}); export const trackActivationJourneyEvent=async()=>{}; export const ensureActivationGateVariant=async()=> 'control'; export const startActivationJourney=async()=>{};`,
   '@/lib/onboardingMentorRecommendations': `export const refreshOnboardingMentorRecommendations=async()=>{};`,
-  '@/lib/accountApplications': `export const getMyAccountInvitationTypes=async()=>{window.invitationChecked=true;return window.invitationTypes;}; export const submitAccountApplication=async(value)=>{window.applications.push(value);};`,
+  '@/lib/accountApplications': `export const getMyAccountInvitationTypes=async()=>{window.invitationChecked=true;return window.invitationTypes;}; export const submitAccountApplication=async(value)=>{window.applications.push(value);return {approvalStatus:value.situation==='explore_investments'?'approved':'pending'};};`,
   '@/lib/onboardingSession': `export const saveOnboardingProgress=async(value)=>{window.saved=value;}; export const abandonOnboardingSession=async()=>{window.abandoned=true;}; export const completeOnboardingSession=async(value)=>{window.completions=(window.completions||0)+1;window.completedAnswers=value.answers;};`,
   '@/lib/activationJourneyV2': `export const ACTIVATION_CATALOG={find_mentor:{label:'Find a mentor',steps:['Find support'],output:'A useful introduction'}};export const getStageAvailableIntents=()=>['find_mentor'];export const recommendActivation=()=>({intent:'find_mentor',reason:'Relevant support'});export const createActivationJourney=()=>({});export const buildActivationJourneyUrl=()=>'/';`,
   'sonner': `export const toast={info:()=>{},success:()=>{},error:()=>{}};`,
@@ -250,5 +250,18 @@ test('builder accepts no working title and offers uncertainty in business model'
     const setter=Object.getOwnPropertyDescriptor(dom.window.HTMLTextAreaElement.prototype,'value').set;
     setter.call(area,'I want to explore tools for local small business owners.');area.dispatchEvent(new dom.window.Event('input',{bubbles:true}));await tick();
     await click(dom,'Continue');assert.ok(text(dom).includes('How might this make money?'));assert.ok(text(dom).includes('Not sure yet'));
+  }finally{close(dom);}
+});
+
+test('investor creates an approved account without a review step',async()=>{
+  const dom=await mount();try{
+    await choose(dom,'Investor');
+    assert.ok(text(dom).includes('Create my account'));assert.ok(!text(dom).includes('Send my request'));
+    await click(dom,'AI & Machine Learning');await click(dom,'Seed');
+    await type(dom,field(dom,'Investment geography'),'Global');await click(dom,'Actively investing');
+    await click(dom,'Create my account');assert.equal(dom.window.applications.length,1);
+    assert.ok(text(dom).includes('Your investor account is ready.'));
+    assert.ok(!text(dom).includes('An admin reviews'));
+    await click(dom,'Open my workspace');assert.equal(dom.window.completedRoute,'/');
   }finally{close(dom);}
 });
