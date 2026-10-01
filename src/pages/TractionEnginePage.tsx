@@ -1,3 +1,5 @@
+import WorkflowSummary from '@/components/core-tools/WorkflowSummary';
+import WeeklyTrend from '@/components/core-tools/WeeklyTrend';
 import AssignHistoricalWeek from '@/components/core-tools/AssignHistoricalWeek';
 import { useEffect, useMemo, useState } from 'react';
 import ConnectedResults from '@/components/core-tools/ConnectedResults';
@@ -184,13 +186,13 @@ const scoreProgressColor = (value: number) =>
 type TractionTab = 'sprint' | 'retention' | 'recent' | 'signal';
 
 const TRACTION_TABS: Array<{ id: TractionTab; step: number; label: string; subtitle: string; description: string }> = [
-  { id: 'sprint',    step: 1, label: 'Distribution Sprint Log', subtitle: 'Set your sprint goals',
+  { id: 'sprint',    step: 1, label: 'Your experiment', subtitle: 'Set your sprint goals',
     description: 'Log one channel, one hypothesis, and one measurable outcome. Record your target metric and result at week\'s end.' },
-  { id: 'retention', step: 2, label: 'Retention Snapshot',      subtitle: 'Track who\'s staying',
-    description: 'Enter new users, 7-day actives, and 30-day actives. Distribution only counts when users come back.' },
-  { id: 'recent',    step: 3, label: 'Recent Weeks',            subtitle: 'Log what happened',
+  { id: 'retention', step: 2, label: 'Returning customers',      subtitle: 'Track who\'s staying',
+    description: 'Define a starting group and check whether the same customers returned. Leave missing measurements unknown.' },
+  { id: 'recent',    step: 3, label: 'Previous weeks',            subtitle: 'Log what happened',
     description: 'Review your last five saved scorecards. Spot trends and check your streak before committing to this week.' },
-  { id: 'signal',    step: 4, label: 'Weekly Signal',           subtitle: 'Review your results',
+  { id: 'signal',    step: 4, label: 'Review and save',           subtitle: 'Review your results',
     description: 'Review sample size, threshold, evidence trust, and the next decision. The score remains supporting context.' },
 ];
 
@@ -204,7 +206,7 @@ function StepNav({ active, onSelect }: { active: TractionTab; onSelect: (t: Trac
           type="button"
           onClick={() => onSelect(tab.id)}
           className={cn(
-            'relative z-10 flex flex-1 flex-col items-center gap-1.5 px-2 pb-2 text-center transition-colors focus-visible:outline-none',
+            'relative z-10 flex flex-1 flex-col items-center gap-1.5 px-2 pb-2 text-center transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary',
             active === tab.id ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/70',
           )}
         >
@@ -281,6 +283,10 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
     setRetention(draft?.retention || defaultRetention);
     setLoadedDraftKey(draftKey);
   }, [draftKey]);
+  const [pendingMetric, setPendingMetric] = useState<{metric:string;value:number;sourceId:string;period?:{start:string;end:string}} | null>(null);
+  const [metricDestination, setMetricDestination] = useState(0);
+  const [metricConfirmed, setMetricConfirmed] = useState(false);
+  useEffect(() => { setPendingMetric(null); setMetricConfirmed(false); }, [productId]);
   const [cohort, setCohort] = useState<CohortMeasurement | null>(null);
   const [cohortObservationId, setCohortObservationId] = useState<string | null>(null);
   const [activeSprints, setActiveSprints] = useState<SprintRow[]>([]);
@@ -870,10 +876,17 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
 
   return (
     <div className="space-y-8">
-      <ProductDataPanel onProductChange={setProductId} />
-        <ConnectedResults productId={productId} onUseMetric={(metric, value) => { setExperiments(items => items.map((item, i) => i === 0 ? { ...item, targetMetric: metric, resultValue: value } : item)); toast.success('Result copied to the first experiment. Confirm its metric and observation period before saving.'); }} />
-        {!!previousAttempts.length && <details className="rounded-xl border p-4"><summary className="cursor-pointer font-medium">Review earlier experiments before repeating a test</summary>{previousAttempts.slice(0,8).map(attempt=><article key={attempt.id} className="mt-3 border-t pt-3 text-sm"><p><strong>{attempt.channel}</strong> ? {attempt.traction_engine_weekly_logs?.week_start_date} ? {attempt.result_value}/{attempt.target_value} {attempt.target_metric} ? {attempt.decision}</p><p>{attempt.hypothesis}</p><p className="text-muted-foreground">{attempt.override_rationale||attempt.action_taken}</p><Button variant="outline" size="sm" onClick={()=>{setExperiments([{...createExperimentDraft(),channel:attempt.channel,hypothesis:attempt.hypothesis,targetMetric:attempt.target_metric,targetValue:Number(attempt.target_value)}]);toast.success('Previous hypothesis and target carried forward. Record the new action and result.');}}>Start another round with this target</Button></article>)}</details>}
-      <section className="grid gap-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(380px,0.75fr)] lg:items-start">
+      <WorkflowSummary title="Your weekly traction check-in" objective={experiments[0]?.hypothesis || 'Test one acquisition channel and record what happens.'}
+        evidence={`${recentLogs.length} saved weeks for this product. ${cohort ? 'Review your returning-customer measurement below.' : 'Returning-customer behavior has not been measured yet.'}`}
+        next={activeTab === 'signal' ? 'Check the results, record your decision and save the week for free.' : 'Complete your experiment, add any returning-customer evidence, then review and save.'}
+        action={activeTab === 'signal' ? 'Edit this week’s experiment' : 'Review this week before saving'} onAction={() => setActiveTab(activeTab === 'signal' ? 'sprint' : 'signal')}
+        example="Contact 20 potential customers. Aim for five qualified conversations, record the actual result, and explain whether you will repeat the test or change the message." />
+      <details className="rounded-xl border p-4"><summary className="cursor-pointer py-2 text-sm font-medium">Product, connections and imported results</summary><div className="mt-3 space-y-4"><ProductDataPanel onProductChange={setProductId} />
+        <ConnectedResults productId={productId} onUseMetric={(metric, value, sourceId, period) => { setPendingMetric({metric,value,sourceId,period});setMetricConfirmed(false);const match=experiments.findIndex(item=>item.targetMetric.toLowerCase().replace(/[^a-z0-9]/g,'')===metric.toLowerCase().replace(/[^a-z0-9]/g,''));setMetricDestination(Math.max(0,match)); }} />
+        {pendingMetric && <section className="space-y-3 rounded-xl border border-primary p-4" aria-label="Confirm imported experiment result"><h3 className="font-semibold">Confirm where this result belongs</h3><p className="text-sm">{pendingMetric.value} {pendingMetric.metric.replace(/_/g,' ')}{pendingMetric.period ? ` - ${pendingMetric.period.start.slice(0,10)} to ${pendingMetric.period.end.slice(0,10)}` : ''}</p><label className="block text-sm">Destination experiment<select className="mt-1 min-h-11 w-full rounded border bg-background p-2" value={metricDestination} onChange={event=>{setMetricDestination(Number(event.target.value));setMetricConfirmed(false);}}>{experiments.map((item,index)=><option key={index} value={index}>{item.channel || `Experiment ${index+1}`} - {item.targetMetric || 'Metric not set'}</option>)}</select></label><p className="text-xs text-muted-foreground">This replaces the selected experiment's metric and result. Its target stays unchanged. The saved result remains founder-confirmed.</p><label className="flex items-start gap-2 text-sm"><input type="checkbox" checked={metricConfirmed} onChange={event=>setMetricConfirmed(event.target.checked)}/>I checked that the metric, target and observation period match this experiment.</label><div className="flex gap-2"><Button disabled={!metricConfirmed || !experiments[metricDestination]} onClick={()=>{setExperiments(items=>items.map((item,index)=>index===metricDestination?{...item,targetMetric:pendingMetric.metric,resultValue:pendingMetric.value}:item));setPendingMetric(null);toast.success('Result added to the selected experiment. Save your week to keep it.');}}>Use this result</Button><Button variant="outline" onClick={()=>setPendingMetric(null)}>Cancel</Button></div></section>}
+      </div></details>
+        {!!previousAttempts.length && <details className="rounded-xl border p-4"><summary className="cursor-pointer font-medium">Review earlier experiments before repeating a test</summary>{previousAttempts.slice(0,8).map(attempt=><article key={attempt.id} className="mt-3 border-t pt-3 text-sm"><p><strong>{attempt.channel}</strong> - {attempt.traction_engine_weekly_logs?.week_start_date} - {attempt.result_value}/{attempt.target_value} {attempt.target_metric} - {attempt.decision}</p><p>{attempt.hypothesis}</p><p className="text-muted-foreground">{attempt.override_rationale||attempt.action_taken}</p><Button variant="outline" size="sm" onClick={()=>{setExperiments([{...createExperimentDraft(),channel:attempt.channel,hypothesis:attempt.hypothesis,targetMetric:attempt.target_metric,targetValue:Number(attempt.target_value)}]);toast.success('Previous hypothesis and target carried forward. Record the new action and result.');}}>Start another round with this target</Button></article>)}</details>}
+      <details className="rounded-xl border p-4"><summary className="cursor-pointer py-2 text-sm font-medium">Execution discipline and measurement details</summary><section className="mt-3 grid gap-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(380px,0.75fr)] lg:items-start">
         <div className="space-y-5 py-2 lg:py-4">
           <h1 className="text-4xl font-bold leading-tight sm:text-5xl md:text-6xl">
             <span className="takeover-gradient creatives-font">Traction Engine</span>
@@ -931,6 +944,8 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         </div>
       </section>
 
+      </details>
+
       {firstCustomerHandoff ? (
         <section className="rounded-xl border border-primary/25 bg-primary/5 p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -969,7 +984,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    'flex flex-col items-center gap-1.5 rounded-lg border-2 px-3 py-3 text-center transition-colors focus-visible:outline-none',
+                    'flex flex-col items-center gap-1.5 rounded-lg border-2 px-3 py-3 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
                     activeTab === tab.id
                       ? 'border-success bg-success/10 text-foreground'
                       : 'border-success/20 bg-background/40 text-muted-foreground hover:border-success/40 hover:text-foreground/80',
@@ -1284,7 +1299,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
               </Button>
             </CardContent>
           </Card>
-          <div className="mt-4 flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 px-4 py-3">
+          <div className="mt-4 flex flex-wrap gap-3 items-center justify-between rounded-lg border border-border/50 bg-muted/20 px-4 py-3">
             <p className="text-xs text-muted-foreground">Once you've logged your sprint, add your retention numbers.</p>
             <Button type="button" variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={() => setActiveTab('retention')}>
               Retention Snapshot <ChevronRight className="h-3.5 w-3.5" />
@@ -1378,6 +1393,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
 
         {/* Step 3: Recent Weeks */}
         <TabsContent value="recent" className="mt-0">
+          <WeeklyTrend logs={recentLogs.map(log => ({...log,calculation_version:(log as any).calculation_version}))} />
           {!productId && <AssignHistoricalWeek logs={recentLogs} onAssigned={loadTractionData} />}
           <Card>
             <CardHeader>
@@ -1417,7 +1433,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
               {recentLogs.length === 0 ? (
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">No saved weeks yet.</p>
-                  <p className="text-xs text-muted-foreground/70">Fill in an experiment and a retention snapshot, then hit "Save This Week" on the Weekly Signal tab to lock in your first score.</p>
+                  <p className="text-xs text-muted-foreground/70">Record an experiment, then choose "Save this week - free" on Review and save. Add returning-customer data when you have it.</p>
                 </div>
               ) : (
                 recentLogs.slice(0, 5).map((log) => (
@@ -1515,7 +1531,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                 onClick={() => void saveWeeklyLog()}
               >
                 {saving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
-                Save This Week
+                Save this week - free
               </Button>
               {!userId && (
                 <p className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -1526,11 +1542,12 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
             </CardContent>
           </Card>
           <div className="mt-4 flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 px-4 py-3">
-            <p className="text-xs text-muted-foreground">Saved? Next week, return to Distribution Sprint Log and start the cycle again.</p>
+            <p className="text-xs text-muted-foreground">Next week, return to Your experiment to record what happened.</p>
             <Button type="button" variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={() => setActiveTab('sprint')}>
-              <ChevronLeft className="h-3.5 w-3.5" /> Sprint Log
+              <ChevronLeft className="h-3.5 w-3.5" /> Your experiment
             </Button>
           </div>
+          {gtmPlanId && <Button variant="outline" onClick={() => navigate("/gtm-strategist?workspace=review")}>Open GTM weekly review</Button>}
         </TabsContent>
 
       </Tabs>

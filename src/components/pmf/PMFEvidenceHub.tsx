@@ -1,3 +1,4 @@
+import WorkflowSummary from '@/components/core-tools/WorkflowSummary';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ClipboardCheck, Gauge, MessageSquareText, Search, Sparkles, Target, UsersRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -153,12 +154,15 @@ const PMFEvidenceHub = ({
 
   return (
     <section className="rounded-3xl border border-border/60 bg-background/90 p-5 shadow-sm sm:p-6">
-      <div className="mb-5 grid gap-3 rounded-2xl bg-primary/5 p-4 sm:grid-cols-2">
-        <div><p className="text-xs font-semibold text-muted-foreground">Current assumption</p><p className="mt-1 text-sm">{currentAssumption || 'Choose the customer problem you want to test.'}</p></div>
-        <div><p className="text-xs font-semibold text-muted-foreground">Evidence collected</p><p className="mt-1 text-sm">{savedInterviews} interviews · {surveyResponses} product-user survey responses</p></div>
-        <div><p className="text-xs font-semibold text-muted-foreground">Strongest objection</p><p className="mt-1 text-sm">{strongestObjection || 'Ask what would prevent your target customer from using or buying the product.'}</p></div>
-        <div><p className="text-xs font-semibold text-muted-foreground">Next test</p><p className="mt-1 text-sm">{nextTest || RECOMMENDATION_COPY[recommended]}</p></div>
-      </div>
+      <WorkflowSummary title="Your next validation decision"
+        objective={currentAssumption || 'Find out whether your target customer needs this offer.'}
+        evidence={`${savedInterviews} customer interviews ? ${surveyResponses} product-user survey responses. ${strongestObjection ? 'Strongest objection: ' + strongestObjection : 'No recurring objection identified yet.'}`}
+        next={nextTest || RECOMMENDATION_COPY[recommended]}
+        action={recommended === 'score' ? 'Review evidence and assess' : recommended === 'interviews' ? 'Add a customer conversation' : recommended === 'discovery' ? 'Find a relevant customer' : 'Collect customer feedback'}
+        onAction={recommended === 'score' ? onRunScore : recommended === 'interviews' ? onLogInterviews : recommended === 'discovery' ? onFindCustomers : onCreateOrReviewSurvey}
+        example="Test whether independent consultants need faster proposals. Ask potential buyers about their last proposal, their current workaround, and what would make them pay. Record what they actually did."
+      />
+      <details className="mt-4"><summary className="cursor-pointer rounded py-3 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">Evidence breakdown and other ways to collect feedback</summary>
       <p className="mb-4 text-xs text-muted-foreground">The 5, 10, and 25 signal thresholds are CT guidance for planning the next test. They are not statistical confidence levels or a guarantee of product-market fit.</p>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-2xl space-y-3">
@@ -304,6 +308,7 @@ const PMFEvidenceHub = ({
           Find customers to talk to
         </Button>
       </div>
+      </details>
     </section>
   );
 };

@@ -117,7 +117,20 @@ Before expanding a wave, reconcile one product's imported figures against each p
 
 Existing GitHub/Supabase MVP connections are not repurposed as evidence of demand. Release-to-outcome correlation remains the explicitly later extension from the roadmap. Stripe, Tally, Typeform and Shopify can send signed events that deduplicate by provider event ID and queue a source refresh; daily polling remains the fallback. Configure webhooks and the signing secret under each connection. Event-driven refresh still respects the selected source, saved mapping and 1,000-record limit. High-volume incremental imports and fully automated multi-touch attribution require additional work beyond this bounded pilot.
 
-### Provider references checked
+### Core tool usability pass (October 1, 2026)
+
+This frontend pass implements the six agreed priorities within the existing data model:
+
+1. **Journey review:** reviewed the existing evidence, experiment, and weekly-save paths locally. This is a heuristic review, not observed research with founders. Live founder sessions remain outstanding; ask participants to add feedback, complete a GTM task, and record a Traction week without coaching. Record completion, hesitation, errors, and time.
+2. **Main screens:** shared objective / evidence / next-action summaries; secondary scoring and research sit behind expandable sections. GTM shows three actionable tasks with related materials and completion controls.
+3. **Onboarding and language:** PMF has a three-question validation brief saved on the current device and validation context. Traction explains returning customers with business-specific definition examples, guided dates/counts, and explicit unknown/pending states. Examples never add fabricated results.
+4. **Weekly continuity:** GTM's review displays saved v2 experiment results for its selected linked sprint, with a correction link to Traction. Traction provides a return link to GTM's weekly workspace. Existing evidence-based proposal approval remains in place.
+5. **Evidence and imports:** PMF combines saved conversations, recent survey feedback, and unreviewed imports in a searchable inbox. Connections suggests unambiguous column matches, shows samples, separates optional fields, and requires preview and confirmation. Applying a connected metric requires choosing its destination experiment and confirming compatibility with its target and period.
+6. **Presentation and accessibility:** responsive summary/task cards, visible keyboard focus, labelled inputs, and a six-week execution-discipline chart with a semantic table. Missing weeks are labelled and incompatible historical calculations are excluded.
+
+Verification: frontend Vite build; 28 focused data/domain tests; three UI tests including Chromium at 390px and 1280px, keyboard activation, unknown cohort counts, task preservation, and failed saves. Browser coverage exercises representative components with test data, not authenticated production journeys or live integrations. No new SQL migration or Edge Function deployment is required; publish the frontend to expose these changes. Existing connector feature flags still apply.
+
+### Provider references
 
 - [Google Meet participant identities and sessions](https://developers.google.com/workspace/meet/api/guides/participants)
 - [Google Calendar event creation and conference data](https://developers.google.com/workspace/calendar/api/v3/reference/events/insert)
