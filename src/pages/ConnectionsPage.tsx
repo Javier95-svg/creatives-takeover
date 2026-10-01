@@ -12,16 +12,16 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
 const MAPPING_FIELDS = ['id','date','respondent','email','feedback','objections','segment','incentivized','product_usage','metric','value','unit','period_start','period_end'];
+const enabledProviders = String(import.meta.env.VITE_CORE_TOOLS_PROVIDERS || 'sheets,tally').split(',').map(value => value.trim()).filter(value => CONNECTORS.some(item => item.id === value));
 export default function ConnectionsPage() {
   const { user } = useAuth();
-  const [productId, setProductId] = useState(''); const [provider, setProvider] = useState<ConnectorProvider>('sheets');
+  const [productId, setProductId] = useState(''); const [provider, setProvider] = useState<ConnectorProvider>((enabledProviders[0] || 'sheets') as ConnectorProvider);
   const [config, setConfig] = useState<Record<string, string>>({}); const [token, setToken] = useState('');
   const [eventSecrets,setEventSecrets] = useState<Record<string,string>>({});
   const [eventUrls,setEventUrls] = useState<Record<string,string>>({});
   const [connections, setConnections] = useState<any[]>([]); const [busy, setBusy] = useState(false);
   const [batch, setBatch] = useState<{ batchId: string; rows: Record<string, unknown>[] } | null>(null);
   const [mapping, setMapping] = useState<Record<string, string>>({}); const [preview, setPreview] = useState<any>(null);
-  const enabledProviders = String(import.meta.env.VITE_CORE_TOOLS_PROVIDERS || 'sheets,tally').split(',');
   const definition = CONNECTORS.find(item => item.id === provider)!;
   const call = async (body: Record<string, unknown>) => { const { data, error } = await supabase.functions.invoke('core-connections', { body }); if (error || !data?.success) throw new Error(data?.error || error?.message || 'Connection action failed.'); return data; };
   const reload = async () => { if (!user || !productId) return; const { data, error } = await (supabase as any).from('ct_connections').select('id,label,provider,status,last_synced_at,last_error').eq('product_id', productId).eq('user_id', user.id).order('created_at'); if (error) throw error; setConnections(data ?? []); };

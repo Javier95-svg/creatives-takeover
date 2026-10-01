@@ -130,7 +130,61 @@ This frontend pass implements the six agreed priorities within the existing data
 
 Verification: frontend Vite build; 28 focused data/domain tests; three UI tests including Chromium at 390px and 1280px, keyboard activation, unknown cohort counts, task preservation, and failed saves. Browser coverage exercises representative components with test data, not authenticated production journeys or live integrations. No new SQL migration or Edge Function deployment is required; publish the frontend to expose these changes. Existing connector feature flags still apply.
 
+### Production verification follow-up (October 1, 2026)
+
+**Status: live acceptance is incomplete. Do not interpret the local tests as a production sign-off.**
+
+Read-only Chromium checks against `https://creatives-takeover.com` returned HTTP 200, rendered content, and no captured browser exceptions on `/pmf-lab`, `/gtm-strategist`, `/traction-engine`, `/connections`, and `/validation-sessions`. These checks were signed out. The session page explicitly displays **"This pilot is not enabled yet."** Public response codes do not prove database writes or provider connectivity.
+
+The workspace had no configured authenticated test account or provider test credentials. Its existing browser storage fixture contains no authentication cookies and is for local smoke tests. No production records, meetings, messages, flags, or credits were changed.
+
+| Acceptance item | Observed result | Remaining live evidence |
+|---|---|---|
+| Authenticated PMF, GTM, and Traction journeys | Blocked on a dedicated authenticated test session | Save/reopen/edit PMF evidence; generate and persist a GTM plan; activate its linked sprint; save/reopen/correct Traction results; review and accept a supported GTM adjustment. Record IDs and before/after values under an identifiable QA product. |
+| Advertised connectors | No real provider import performed | Confirm the release allowlist, connect authorized provider accounts, preview/accept known source records, compare counts/values/periods with each provider, and repeat the import to check deduplication. A CSV-only test does not certify a provider connector. |
+| Validation session and reward | Production pilot disabled | After permissions and release configuration are verified, book two consenting participants, capture pre/post feedback and at least 15 minutes of matched attendance, check attributed PMF evidence, and verify one 20-credit ledger grant after the 24-hour hold. Retry processing and confirm the balance does not increase again. The CT reviewer must meet the account-age and quota rules. |
+
+Additional local verification passed **25 tests** across `core-tools-data.test.ts`, `core-tools-database.test.mjs`, and `validation-and-review.test.ts`. Coverage includes transactional saves, product ownership, idempotent imports, review proposals, identity overlap, reward holds, single ledger grants, and reward limits. Database tests use isolated PGlite fixtures and provider tests use fixtures; neither establishes live Supabase/provider behavior.
+
+The signed-out browser results are stored locally in ignored `test-results/core-tools-production-public.json`. Live acceptance remains pending the requested account/provider access, participant availability, pilot configuration, and the normal reward hold. No hold, identity, or reward eligibility checks should be bypassed to mark this release complete.
+
 ### Provider references
+
+### Deployed setup audit (October 1, 2026)
+
+Read-only requests to the linked production Supabase project confirmed these concrete results:
+
+- `core-connections` responds **503**, `Connected data is not enabled for this release.` The deployed handler requires `CORE_TOOLS_CONNECTED_ENABLED=true`; this gate is currently not satisfied. Imports and sync are unavailable through this service.
+- `validation-sessions` responds **503**, `Validation sessions are not enabled for this release.` The deployed handler requires `VALIDATION_SESSIONS_ENABLED=true`; this gate is currently not satisfied. The frontend also says the pilot is not enabled.
+- With the public anonymous client configuration, `pmf-survey-respond` reaches its input validation and rejects missing product usage. No survey response was submitted. `gtm-plan-review`, `pmf-evidence-scorer`, and `credit-quote` reach their authentication checks and reject anonymous requests as expected. This verifies routing/authentication responses, not their authenticated execution or exact deployed revision.
+- Zero-row REST reads confirm `pmf_survey_responses.product_usage`; interview source, participant, incentive and target-customer columns; `ct_connections.refresh_requested_at`; Traction product identifiers, calculation version and sample size; `ct_gtm_review_proposals`; and `ct_evidence_revisions`.
+- Anonymous access to validation sessions and rewards is denied as intended. A diagnostic initially selected `ct_connection_events.id`, but this table intentionally uses the composite key `connection_id,event_id`; that diagnostic error is not a migration defect.
+- These observations do not reconcile the full migration ledger, prove all policies or constraints, verify atomic saves in production, inspect private worker schedules/secrets, or establish provider authorization.
+
+**Verdict:** the inspected schema additions and public frontend are deployed; the complete advertised connected-data and validation-session capabilities are not currently available. PMF's manual evidence/scoring, GTM's planning/review, and Traction's manual tracking require authenticated acceptance before receiving a production-ready verdict. After provider/worker configuration is verified, connected-data activation needs matching frontend/server flags; validation activation additionally requires Calendar/Meet identity and reward verification. No production configuration was changed during this audit.
+
+Probe artifacts (local, ignored): `test-results/core-tools-deployed-functions.json`, `test-results/core-tools-schema-probes.json`, and `test-results/core-tools-upgrade-columns.json`.
+
+### External provider references
+
+### Configuration repair
+
+The authenticated Supabase CLI was subsequently available. It confirmed **all 11 installer steps**, both active cron jobs, a valid existing encryption secret, no existing connections, and no Calendar/Meet accounts. Earlier statements that production administration was unavailable were incomplete.
+
+Repair scope: provision the previously missing shared worker secret in Edge secrets and `private.service_config`, preserve the encryption secret, enable connected data with a **Tally + CSV** initial rollout, and set matching Vercel production flags. Correct the provider selector so the first enabled provider is selected rather than always starting on Sheets. Both connection functions now reuse the existing complete Calendar OAuth credential pair when dedicated core credentials are absent; partial dedicated credentials fail rather than mixing applications.
+
+Google currently rejects both new callbacks with **Error 400: redirect_uri_mismatch**. Add these exact authorized redirect URIs to the existing Google OAuth web client before enabling Sheets or validation sessions:
+
+```text
+https://rcjlaybjnozqbsoxzboa.supabase.co/functions/v1/core-connections
+https://rcjlaybjnozqbsoxzboa.supabase.co/functions/v1/validation-sessions
+```
+
+Keep the application's existing redirect URIs. After Google accepts these callbacks and the required APIs/scopes are configured, add `sheets` to both provider allowlists. Enable validation sessions only after the Calendar/Meet permissions and identity flow are verified. A successful callback check does not establish actual account consent, provider data access, or verified meeting attendance.
+
+The production setup repair uses a temporary token-authenticated helper restricted to the existing Vercel project and fixed feature-flag keys; it must be deleted and its one-hour token unset after deployment verification. Fourteen targeted tests passed and the frontend build passed before release. The existing shared Vercel token and encryption key were not exposed or rotated.
+
+### Provider documentation
 
 - [Google Meet participant identities and sessions](https://developers.google.com/workspace/meet/api/guides/participants)
 - [Google Calendar event creation and conference data](https://developers.google.com/workspace/calendar/api/v3/reference/events/insert)

@@ -1,3 +1,4 @@
+import { coreGoogleConfig } from '../_shared/core-google-config.ts';
 import { verifyConnectionEvent } from '../_shared/connection-events.ts';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
@@ -17,7 +18,7 @@ async function connectionToken(db: any, connection: DataRow) {
   const secret = await openSecret(row.encrypted_secret);
   if (!secret.refresh_token) return secret.token;
   const response = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', body: new URLSearchParams({
-    client_id: Deno.env.get('CORE_GOOGLE_CLIENT_ID')!, client_secret: Deno.env.get('CORE_GOOGLE_CLIENT_SECRET')!, refresh_token: secret.refresh_token, grant_type: 'refresh_token',
+    client_id: coreGoogleConfig(Deno.env.get).clientId, client_secret: coreGoogleConfig(Deno.env.get).clientSecret, refresh_token: secret.refresh_token, grant_type: 'refresh_token',
   }), signal: AbortSignal.timeout(15000) });
   const data = await response.json(); if (!response.ok || !data.access_token) throw new Error('Authorization expired. Reconnect Google.');
   return data.access_token;
@@ -65,7 +66,7 @@ serve(async req => {
       if (!state || !code) return json({ error: 'Google authorization was cancelled or is incomplete.' }, 400);
       const stateRow = checked(await db.from('ct_connection_oauth_states').delete().eq('state', state).gt('expires_at', new Date().toISOString()).select('*').single());
       if(!enabledProviders().includes(stateRow.provider)) throw new Error('This provider is not enabled for the current rollout.');
-      const response = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', body: new URLSearchParams({ code, client_id: Deno.env.get('CORE_GOOGLE_CLIENT_ID')!, client_secret: Deno.env.get('CORE_GOOGLE_CLIENT_SECRET')!, redirect_uri: callbackUrl(), grant_type: 'authorization_code' }), signal: AbortSignal.timeout(15000) });
+      const response = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', body: new URLSearchParams({ code, client_id: coreGoogleConfig(Deno.env.get).clientId, client_secret: coreGoogleConfig(Deno.env.get).clientSecret, redirect_uri: callbackUrl(), grant_type: 'authorization_code' }), signal: AbortSignal.timeout(15000) });
       const tokens = await response.json(); if (!response.ok || !tokens.refresh_token) throw new Error('Google did not grant ongoing access. Reconnect and approve read access.');
       const connection = checked(await db.from('ct_connections').insert({ user_id: stateRow.user_id, product_id: stateRow.product_id, provider: stateRow.provider, label: stateRow.provider === 'sheets' ? 'Google Sheets' : 'Google Analytics', config: stateRow.config }).select('id').single());
       try { checked(await db.from('ct_connection_secrets').insert({ connection_id: connection.id, encrypted_secret: await sealSecret({ refresh_token: tokens.refresh_token }) })); }
@@ -93,10 +94,10 @@ serve(async req => {
       if(config.productScopeConfirmed !== 'true') throw new Error('Confirm that the selected source belongs to this product.');
       if (Object.values(config).some(value => typeof value !== 'string' || String(value).length > 250)) return json({ error: 'Invalid source settings.' }, 400);
       if (body.action === 'oauth_start') {
-        if (!['sheets','ga4'].includes(body.provider) || !Deno.env.get('CORE_GOOGLE_CLIENT_ID')) throw new Error('Google connection setup is not available yet.');
+        if (!['sheets','ga4'].includes(body.provider) || !coreGoogleConfig(Deno.env.get).clientId) throw new Error('Google connection setup is not available yet.');
         const state = crypto.randomUUID(); checked(await db.from('ct_connection_oauth_states').insert({ state, user_id: userId, product_id: product.id, provider: body.provider, config }));
         const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-        authUrl.search = new URLSearchParams({ client_id: Deno.env.get('CORE_GOOGLE_CLIENT_ID')!, redirect_uri: callbackUrl(), response_type: 'code', access_type: 'offline', prompt: 'consent', state, scope: body.provider === 'sheets' ? 'https://www.googleapis.com/auth/spreadsheets.readonly' : 'https://www.googleapis.com/auth/analytics.readonly' }).toString();
+        authUrl.search = new URLSearchParams({ client_id: coreGoogleConfig(Deno.env.get).clientId, redirect_uri: callbackUrl(), response_type: 'code', access_type: 'offline', prompt: 'consent', state, scope: body.provider === 'sheets' ? 'https://www.googleapis.com/auth/spreadsheets.readonly' : 'https://www.googleapis.com/auth/analytics.readonly' }).toString();
         return json({ success: true, url: authUrl.toString() });
       }
       if (typeof body.token !== 'string' || body.token.length < 10 || body.token.length > 10000) return json({ error: 'Enter a valid read-only API credential.' }, 400);
