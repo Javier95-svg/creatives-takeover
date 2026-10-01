@@ -80,7 +80,7 @@ export default function PMFCommunityMatches({ industry, audience, problem, refre
       await setValidationOptIn(user.id, true);
       setOptedIn(true);
       captureEvent('pmf_validation_network_opt_in', { source: 'pmf_discovery' });
-      toast.success('You joined the validation network. Founders in your space can now find you.');
+      toast.success('Reviewer matching is enabled. Relevant founders can now find you.');
     } catch (error) {
       console.warn('Failed to join validation network:', error);
       toast.error('Could not update your preference. Please try again.');
@@ -139,11 +139,10 @@ export default function PMFCommunityMatches({ industry, audience, problem, refre
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <Users className="h-4 w-4 text-primary shrink-0" />
-        <h3 className="text-sm font-semibold">Founders on the platform</h3>
+        <h3 className="text-sm font-semibold">Find reviewers</h3>
       </div>
       <p className="text-caption text-muted-foreground">
-        Members of the validation network building in your space. Interviews here convert far better than cold
-        outreach — you can message them directly.
+        Opted-in founders whose profiles relate to your business. Check whether each person fits your target customer before interpreting their feedback as demand evidence.
       </p>
 
       {optedIn === false && (
@@ -151,13 +150,12 @@ export default function PMFCommunityMatches({ industry, audience, problem, refre
           <div className="flex items-start gap-2 min-w-0">
             <HeartHandshake className="h-4 w-4 text-primary shrink-0 mt-0.5" />
             <p className="text-xs leading-relaxed text-muted-foreground">
-              Join the validation network to appear in other founders' matches — and help each other get real
-              interviews. You can leave anytime from Account settings.
+              Enable reviewer matching to appear in relevant founders' searches. You can change this preference anytime from Account settings.
             </p>
           </div>
           <Button size="sm" variant="outline" onClick={() => void joinNetwork()} disabled={joining}>
             {joining ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus className="mr-2 h-4 w-4" />}
-            Join the network
+            Enable matching
           </Button>
         </div>
       )}
@@ -165,8 +163,7 @@ export default function PMFCommunityMatches({ industry, audience, problem, refre
       {loading && <Loader2 className="mx-auto h-5 w-5 animate-spin text-primary" />}
       {!loading && matches.length === 0 && (
         <p className="text-xs text-muted-foreground">
-          No community matches yet — the network grows as more founders opt in. Reddit and other sources below still
-          give you people to talk to today.
+          No suitable reviewers are available yet. Use external discovery below or invite a target customer to review your offer.
         </p>
       )}
 

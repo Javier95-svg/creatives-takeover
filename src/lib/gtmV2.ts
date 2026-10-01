@@ -310,6 +310,8 @@ export interface GTMPlanV2 {
 }
 
 export interface GTMWeeklyReview {
+  proposalId?: string;
+  applied?: boolean;
   id?: string;
   planId: string;
   weekStart: string;
@@ -334,6 +336,8 @@ export interface GTMWeeklyReview {
 }
 
 export interface GTMWeeklyReviewInput {
+  playId?: string;
+  applyProposalId?: string;
   wins: string;
   misses: string;
   objections: string;

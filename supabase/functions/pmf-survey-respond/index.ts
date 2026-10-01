@@ -18,6 +18,7 @@ const VALID_ANSWERS = ["very", "somewhat", "not"];
 interface RespondRequest {
   slug?: string;
   seanEllisAnswer?: string;
+  productUsage?: 'used' | 'concept_only';
   mainBenefit?: string;
   wouldUseInstead?: string;
   role?: string;
@@ -71,7 +72,10 @@ serve(async (req) => {
     const slug = (body.slug || "").trim();
     const answer = (body.seanEllisAnswer || "").trim();
     if (!slug) return json({ success: false, error: "Missing survey." }, 400);
-    if (!VALID_ANSWERS.includes(answer)) {
+    if (!['used', 'concept_only'].includes(body.productUsage || '')) {
+      return json({ success: false, error: "Please tell us whether you have used the product." }, 400);
+    }
+    if (body.productUsage === 'used' && !VALID_ANSWERS.includes(answer)) {
       return json({ success: false, error: "Please choose how you would feel." }, 400);
     }
 
@@ -114,7 +118,8 @@ serve(async (req) => {
       .from("pmf_survey_responses")
       .insert({
         survey_id: survey.id,
-        sean_ellis_answer: answer,
+        sean_ellis_answer: body.productUsage === 'used' ? answer : null,
+        product_usage: body.productUsage,
         main_benefit: clean(body.mainBenefit, 2000),
         would_use_instead: clean(body.wouldUseInstead, 2000),
         role: clean(body.role, 200),
@@ -148,6 +153,7 @@ serve(async (req) => {
       .from("pmf_survey_responses")
       .select("sean_ellis_answer")
       .eq("survey_id", survey.id)
+      .eq("product_usage", "used")
       .eq("verified", true);
 
     if (responseCountError) {

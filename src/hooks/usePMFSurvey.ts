@@ -29,6 +29,7 @@ export interface PMFSurveyAggregate {
   not: number;
   veryPct: number;
   verbatims: PMFSurveyVerbatim[];
+  conceptFeedback?: PMFSurveyVerbatim[];
 }
 
 const SURVEYS = 'pmf_surveys' as never;
@@ -54,36 +55,34 @@ export function usePMFSurvey(validationContextId?: string | null, originatingHan
   activeContextRef.current = validationContextId;
 
   const loadResponses = useCallback(async (surveyId: string) => {
-    const { data, error } = await supabase
-      .from(RESPONSES)
-      .select('sean_ellis_answer, main_benefit, would_use_instead, role, feedback, created_at')
-      .eq('survey_id', surveyId)
-      .order('created_at', { ascending: false })
-      .limit(300);
-    if (error || !data) {
+    const eligible = () => supabase.from(RESPONSES).select('*', { count: 'exact', head: true })
+      .eq('survey_id', surveyId).eq('verified', true).eq('product_usage', 'used');
+    const fields = 'sean_ellis_answer, main_benefit, would_use_instead, role, feedback, created_at, product_usage';
+    const [veryResult, somewhatResult, notResult, usedResult, conceptResult] = await Promise.all([
+      eligible().eq('sean_ellis_answer', 'very'),
+      eligible().eq('sean_ellis_answer', 'somewhat'),
+      eligible().eq('sean_ellis_answer', 'not'),
+      supabase.from(RESPONSES).select(fields).eq('survey_id', surveyId).eq('verified', true)
+        .eq('product_usage', 'used').order('created_at', { ascending: false }).limit(8),
+      supabase.from(RESPONSES).select(fields).eq('survey_id', surveyId).eq('verified', true)
+        .neq('product_usage', 'used').order('created_at', { ascending: false }).limit(8),
+    ]);
+    if (activeContextRef.current !== validationContextId) return;
+    if ([veryResult, somewhatResult, notResult, usedResult, conceptResult].some(result => result.error)) {
       setAggregate(EMPTY_AGGREGATE);
       return;
     }
-    let very = 0, somewhat = 0, not = 0;
-    const verbatims: PMFSurveyVerbatim[] = [];
-    for (const r of data as unknown as Array<Record<string, string | null>>) {
-      if (r.sean_ellis_answer === 'very') very++;
-      else if (r.sean_ellis_answer === 'somewhat') somewhat++;
-      else if (r.sean_ellis_answer === 'not') not++;
-      if ((r.main_benefit || r.feedback) && verbatims.length < 8) {
-        verbatims.push({
-          mainBenefit: r.main_benefit,
-          wouldUseInstead: r.would_use_instead,
-          feedback: r.feedback,
-          role: r.role,
-          seanEllis: r.sean_ellis_answer ?? '',
-          createdAt: r.created_at ?? '',
-        });
-      }
-    }
+    const very = veryResult.count ?? 0, somewhat = somewhatResult.count ?? 0, not = notResult.count ?? 0;
+    const toVerbatim = (r: Record<string, string | null>): PMFSurveyVerbatim => ({
+      mainBenefit: r.main_benefit, wouldUseInstead: r.would_use_instead, feedback: r.feedback,
+      role: r.role, seanEllis: r.product_usage === 'used' ? r.sean_ellis_answer ?? '' : 'ineligible',
+      createdAt: r.created_at ?? '',
+    });
+    const verbatims = (usedResult.data ?? []).map(toVerbatim);
+    const conceptFeedback = (conceptResult.data ?? []).map(toVerbatim);
     const total = very + somewhat + not;
     if (activeContextRef.current === validationContextId) {
-      setAggregate({ total, very, somewhat, not, veryPct: total > 0 ? Math.round((very / total) * 100) : 0, verbatims });
+      setAggregate({ total, very, somewhat, not, veryPct: total > 0 ? Math.round((very / total) * 100) : 0, verbatims, conceptFeedback });
     }
   }, [validationContextId]);
 
@@ -104,7 +103,9 @@ export function usePMFSurvey(validationContextId?: string | null, originatingHan
   }, [user, validationContextId, loadResponses]);
 
   useEffect(() => {
-    if (!user) return;
+    setSurvey(null);
+    setAggregate(EMPTY_AGGREGATE);
+    if (!user || !validationContextId) return;
     void loadSurvey();
   }, [user, loadSurvey]);
 

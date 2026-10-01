@@ -8,6 +8,9 @@ const TABLE = 'pmf_interviews' as any;
 function fromRow(row: any): PMFInterviewLog {
   return {
     id: row.id,
+    targetCustomer: row.target_customer !== false,
+    incentivized: row.incentivized,
+    sourceEvidenceId: row.source_evidence_id,
     sourceLeadId: row.source_lead_id ?? undefined,
     intervieweeName: row.interviewee_name,
     basicProfile: row.basic_profile,
@@ -32,6 +35,7 @@ function fromRow(row: any): PMFInterviewLog {
 function toRow(userId: string, contextId: string, handoffId: string | null, interview: PMFInterviewLog) {
   return {
     id: interview.id,
+    target_customer: interview.targetCustomer !== false,
     user_id: userId,
     validation_context_id: contextId,
     originating_handoff_id: handoffId,

@@ -1,201 +1,43 @@
-// Verified traction report — exports the founder's weekly traction ledger as an
-// investor-shareable PDF. Weeks whose retention numbers came from platform-
-// tracked visits (score_breakdown.retentionSource === 'platform') carry a
-// "platform-verified" badge; everything else is marked self-reported. The
-// ledger's value is that it is weekly, timestamped, and deterministically
-// scored — this export gives the streak an external audience.
 import { supabase } from '@/integrations/supabase/client';
 
-interface ReportLogRow {
-  id: string;
-  week_start_date: string;
-  combined_score: number;
-  consistency_score: number;
-  channel_efficiency_score: number;
-  experiment_quality_score: number;
-  retention_health_score: number;
-  consistency_streak_weeks: number;
-  phase_seven_ready: boolean;
-  new_users: number;
-  seven_day_active_users: number;
-  thirty_day_active_users: number;
-  primary_acquisition_channel: string | null;
-  score_breakdown: { retentionSource?: string } | null;
-  revenue: number | null;
-}
-
-interface ReportDecisionRow {
-  weekly_log_id: string;
-  channel: string;
-  decision: string;
-  recommended_decision: string | null;
-  override_rationale: string | null;
-  efficiency_score: number;
-  pass: boolean;
-}
-
-export async function exportTractionReportPdf(userId: string): Promise<void> {
-  const { data, error } = await supabase
-    .from('traction_engine_weekly_logs' as never)
-    .select(
-      'id, week_start_date, combined_score, consistency_score, channel_efficiency_score, experiment_quality_score, retention_health_score, consistency_streak_weeks, phase_seven_ready, new_users, seven_day_active_users, thirty_day_active_users, primary_acquisition_channel, score_breakdown, revenue',
-    )
-    .eq('user_id', userId)
-    .order('week_start_date', { ascending: false })
-    .limit(12);
+/** Export one product's historical records, with calculation methods and sources intact. */
+export async function exportTractionReportPdf(userId: string, productId: string | null = null): Promise<void> {
+  const db = supabase as any;
+  const { data, error } = await db.from('traction_engine_weekly_logs').select('*').eq('user_id', userId)
+    .filter('product_id', productId ? 'eq' : 'is', productId).order('week_start_date', { ascending: false }).limit(12);
   if (error) throw new Error('Could not load your traction history.');
-  const logs = ((data ?? []) as ReportLogRow[]).reverse();
-  if (logs.length === 0) throw new Error('No saved weeks yet — save your first weekly scorecard first.');
-
-  const { data: decisionData, error: decisionError } = await supabase
-    .from('traction_engine_experiments' as never)
-    .select('weekly_log_id,channel,decision,recommended_decision,override_rationale,efficiency_score,pass')
-    .eq('user_id', userId)
-    .in('weekly_log_id', logs.map((log) => log.id));
-  if (decisionError) throw new Error('Could not load the measured traction decisions.');
-  const decisions = (decisionData ?? []) as ReportDecisionRow[];
-
-  const { jsPDF } = await import('jspdf');
-  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-  const pageW = doc.internal.pageSize.getWidth();
-  const margin = 48;
-  let y = margin;
-
-  const latest = logs[logs.length - 1];
-  const verifiedWeeks = logs.filter((log) => ['platform', 'corroborated'].includes(log.score_breakdown?.retentionSource ?? '')).length;
-  const phaseSevenReady = logs.some((log) => log.phase_seven_ready);
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(20);
-  doc.text('Traction Ledger', margin, y);
-  y += 22;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  doc.setTextColor(100);
-  doc.text(
-    `Weekly distribution + retention scorecards · generated ${new Date().toISOString().slice(0, 10)} · Creatives Takeover Traction Engine`,
-    margin,
-    y,
-  );
-  y += 28;
-
-  // Summary strip
-  doc.setTextColor(20);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
-  const summaryBits = [
-    `${logs.length} logged week${logs.length === 1 ? '' : 's'}`,
-    `Latest score: ${latest.combined_score}/100`,
-    `Streak: ${latest.consistency_streak_weeks} week${latest.consistency_streak_weeks === 1 ? '' : 's'}`,
-    phaseSevenReady ? 'Phase 7 (fundraise-ready) threshold reached' : 'Phase 7 threshold not yet reached',
-  ];
-  doc.text(summaryBits.join('   ·   '), margin, y);
-  y += 16;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(100);
-  doc.text(
-    verifiedWeeks > 0
-      ? `${verifiedWeeks} of ${logs.length} weeks use retention data auto-collected from the founder's live published product (platform-verified).`
-      : 'Retention figures are founder-reported. Platform-verified weeks appear automatically once the published MVP is live.',
-    margin,
-    y,
-  );
-  y += 24;
-
-  // Table header
-  const cols = [
-    { label: 'Week', w: 64 },
-    { label: 'Score', w: 40 },
-    { label: 'Consist.', w: 46 },
-    { label: 'Channel', w: 46 },
-    { label: 'Quality', w: 46 },
-    { label: 'Retention', w: 52 },
-    { label: 'New', w: 36 },
-    { label: '7d', w: 32 },
-    { label: '30d', w: 36 },
-    { label: 'Source', w: 88 },
-  ];
-  const startX = margin;
-  doc.setFillColor(240, 240, 244);
-  doc.rect(startX, y - 10, pageW - margin * 2, 18, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.setTextColor(60);
-  let x = startX + 4;
-  cols.forEach((col) => {
-    doc.text(col.label, x, y + 2);
-    x += col.w;
-  });
-  y += 18;
-
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(20);
-  logs.forEach((log) => {
-    if (y > doc.internal.pageSize.getHeight() - margin) {
-      doc.addPage();
-      y = margin;
-    }
-    const sourceMode = log.score_breakdown?.retentionSource;
-    const verified = sourceMode === 'platform' || sourceMode === 'corroborated';
-    const sourceLabel = sourceMode === 'platform'
-      ? 'Platform-verified'
-      : sourceMode === 'corroborated'
-        ? 'Corroborated'
-        : 'Founder-reported';
-    const cells = [
-      log.week_start_date,
-      String(log.combined_score),
-      String(log.consistency_score),
-      String(log.channel_efficiency_score),
-      String(log.experiment_quality_score),
-      String(log.retention_health_score),
-      String(log.new_users),
-      String(log.seven_day_active_users),
-      String(log.thirty_day_active_users),
-      sourceLabel,
-    ];
-    x = startX + 4;
-    cells.forEach((cell, i) => {
-      if (i === 9) doc.setTextColor(verified ? 22 : 120, verified ? 130 : 120, verified ? 93 : 120);
-      doc.text(cell, x, y);
-      if (i === 9) doc.setTextColor(20);
-      x += cols[i].w;
-    });
-    if (log.phase_seven_ready) {
-      doc.setTextColor(22, 130, 93);
-      doc.setFontSize(7.5);
-      doc.text('P7', startX + cols.reduce((sum, c) => sum + c.w, 0) + 2, y);
-      doc.setFontSize(8.5);
-      doc.setTextColor(20);
-    }
-    y += 15;
-    const weekDecisions = decisions.filter((decision) => decision.weekly_log_id === log.id);
-    const detail = [
-      `Revenue: ${log.revenue == null ? 'not reported' : `$${Number(log.revenue).toLocaleString()}`}`,
-      ...weekDecisions.map((decision) => {
-        const override = decision.recommended_decision && decision.decision !== decision.recommended_decision
-          ? `; override of ${decision.recommended_decision}${decision.override_rationale ? `: ${decision.override_rationale}` : ''}`
-          : '';
-        return `${decision.channel}: ${decision.decision} (${decision.pass ? 'target met' : 'target missed'}, efficiency ${decision.efficiency_score})${override}`;
-      }),
-    ].join(' | ');
-    const detailLines = doc.splitTextToSize(detail, pageW - margin * 2 - 8);
-    doc.setFontSize(7.5);
-    doc.setTextColor(100);
-    doc.text(detailLines, startX + 4, y);
-    y += Math.max(12, detailLines.length * 9);
-    doc.setFontSize(8.5);
-    doc.setTextColor(20);
-  });
-
-  y += 18;
-  doc.setFontSize(8);
-  doc.setTextColor(120);
-  const footer =
-    'Scores are computed deterministically (equal-weighted consistency, channel efficiency, experiment quality, retention health) at the time each week was saved. ' +
-    'Source badges distinguish founder-reported, corroborated, and platform-verified evidence. Platform-verified weeks draw retention from visit tracking on the founder\'s published product.';
-  doc.text(doc.splitTextToSize(footer, pageW - margin * 2), margin, y);
-
-  doc.save(`traction-ledger-${new Date().toISOString().slice(0, 10)}.pdf`);
+  const logs = (data ?? []).reverse();
+  if (!logs.length) throw new Error('Save your first week before exporting.');
+  const ids = logs.map((l: any) => l.id);
+  const [experiments, revisions, observations] = await Promise.all([
+    db.from('traction_engine_experiments').select('*').eq('user_id',userId).in('weekly_log_id',ids),
+    db.from('ct_traction_revisions').select('weekly_log_id,revision,created_at').eq('user_id',userId).in('weekly_log_id',ids).order('revision'),
+    productId ? db.from('ct_metric_observations').select('*').eq('user_id',userId).eq('product_id',productId).order('period_end',{ascending:false}).limit(100) : Promise.resolve({data:[],error:null}),
+  ]);
+  if (experiments.error || revisions.error || observations.error) throw new Error('Could not load the source or revision history.');
+  const { jsPDF } = await import('jspdf'); const doc = new jsPDF({unit:'pt',format:'a4'});
+  const margin=48,width=doc.internal.pageSize.getWidth()-96; let y=48;
+  const line=(text:string,size=9,bold=false)=>{doc.setFont('helvetica',bold?'bold':'normal');doc.setFontSize(size);const lines=doc.splitTextToSize(text,width);for(const value of lines){if(y>740){doc.addPage();y=48;}doc.text(value,margin,y);y+=size+5;}};
+  line('Traction decision ledger',20,true);
+  line('Creatives Takeover | Generated '+new Date().toISOString()+' | Reporting time zone: UTC');
+  line('Product: '+(productId||'Unassigned historical work'));
+  line('Version 2 separates execution discipline from customer outcomes. A score does not establish fundraising readiness. Historical version 1 scores use the legacy calculation and cannot be compared with version 2.'); y+=10;
+  for(const log of logs){
+    const v2=log.calculation_version===2,breakdown=log.score_breakdown||{};
+    line('Week '+log.week_start_date+' | '+(v2?'Version 2':'Legacy version 1'),12,true);
+    line((v2?'Execution discipline':'Legacy combined score')+': '+log.combined_score+'/100 | Consistency: '+log.consistency_score+' | Experiment documentation: '+log.experiment_quality_score);
+    line('Activity counts (not retention): new users '+log.new_users+', 7-day active '+log.seven_day_active_users+', 30-day active '+log.thirty_day_active_users+'.');
+    line('Founder-entered revenue: '+(log.revenue==null?'unknown':log.revenue+' (currency and revenue definition not specified)'));
+    if(v2){const c=breakdown.cohort;line('Cohort retention: '+(breakdown.retentionStatus==='complete'?log.retention_health_score+'%':breakdown.retentionStatus||'unknown')+' | Source: '+(breakdown.retentionSource||'manual'));
+      if(c){line('Starting event: '+c.startEvent+' | Returning event: '+c.returnEvent+' | Window: '+c.windowDays+' days');line('Observation period: '+c.periodStart+' to '+c.periodEnd+' | Returned: '+(c.returned??'unknown')+' / starting cohort: '+(c.cohortSize??'unknown'));
+        if(breakdown.retentionStatus==='complete'&&Number(c.cohortSize)>0){if(y>720){doc.addPage();y=48;}doc.setFillColor(230,230,235);doc.rect(margin,y,width,8,'F');doc.setFillColor(45,110,150);doc.rect(margin,y,width*Math.min(1,Number(c.returned)/Number(c.cohortSize)),8,'F');y+=20;}}
+      if(breakdown.observationId)line('Source observation: '+breakdown.observationId);
+    }else line('Legacy retention used active/new user counts. It is not a measured retained-customer cohort.');
+    for(const e of experiments.data.filter((e:any)=>e.weekly_log_id===log.id)){line(e.channel+': '+e.result_value+' / target '+e.target_value+' '+e.target_metric+' | Sample '+(e.sample_size??'unknown')+' | '+e.time_invested_hours+' founder hours');line('Decision: '+e.decision+(e.override_rationale?' | Rationale: '+e.override_rationale:''));}
+    line('Revisions: '+(revisions.data.filter((r:any)=>r.weekly_log_id===log.id).map((r:any)=>r.revision+' at '+r.created_at).join('; ')||'Original historical record'));y+=12;
+  }
+  line('Recent connected source observations',12,true);
+  for(const o of observations.data){line(o.metric+': '+(o.value??'unknown')+(o.denominator!=null?' / '+o.denominator:'')+' '+(o.currency||'')+' '+(o.definition?.unit||'')+' | '+o.status);line('Period '+o.period_start+' to '+o.period_end+' | Retrieved '+o.captured_at+' | '+o.provenance+' | Source ID '+o.source_key);}
+  line('Net payments subtract recorded refunds from successful charges and group them by the original charge date. They are not recognized revenue or MRR. Order values use the original order date. Missing attribution is not inferred. Source provenance does not verify unrelated founder-entered results.');
+  doc.save('traction-ledger-'+(productId||'unassigned')+'-'+new Date().toISOString().slice(0,10)+'.pdf');
 }

@@ -183,7 +183,7 @@ async function fetchSurveyEvidence(supabase: any, userId: string, validationCont
   if (!survey) return null;
   const { data } = await supabase.from('pmf_survey_responses')
     .select('sean_ellis_answer,main_benefit,feedback,participant_hash').eq('survey_id', survey.id)
-    .eq('verified', true).not('participant_hash', 'is', null).limit(500);
+    .eq('verified', true).eq('product_usage', 'used').not('participant_hash', 'is', null).limit(500);
   const seen = new Set<string>();
   const rows = (data ?? []).filter((row: any) => {
     const participant = String(row.participant_hash || '').trim();
@@ -205,6 +205,7 @@ async function fetchStoredInterviews(supabase: any, userId: string, validationCo
     .eq('user_id', userId).eq('validation_context_id', validationContextId).order('created_at');
   if (error) throw error;
   return (data ?? []).map((row: any) => ({
+    targetCustomer: row.target_customer !== false, incentivized: row.incentivized === true,
     id: row.id, sourceLeadId: row.source_lead_id, intervieweeName: row.interviewee_name,
     basicProfile: row.basic_profile, segment: row.segment, mainFeedback: row.main_feedback,
     objections: row.objections, missingFeatures: row.missing_features, interestLevel: row.interest_level,
@@ -217,6 +218,8 @@ async function fetchStoredInterviews(supabase: any, userId: string, validationCo
 }
 
 interface PMFInterviewLog {
+  targetCustomer?: boolean;
+  incentivized?: boolean;
   id: string;
   intervieweeName: string;
   basicProfile: string;
@@ -270,7 +273,7 @@ serve(async (req) => {
     // Interviews are hydrated from the owner-scoped store. Client totals and
     // client-supplied "verified" rows are never accepted as decision evidence.
     const rawInterviews = await fetchStoredInterviews(supabase, user.id, validationContext.id);
-    const preliminaryEvidence = assessPmfEvidence({ interviews: rawInterviews, surveyResponses: 0, verifiedDemoBehaviors: 0, researchSources: 0 });
+    const preliminaryEvidence = assessPmfEvidence({ interviews: rawInterviews.filter(row => row.targetCustomer !== false), surveyResponses: 0, verifiedDemoBehaviors: 0, researchSources: 0 });
     const interviews = preliminaryEvidence.uniqueInterviews;
     const loggedInterviewCount = interviews.length;
 
@@ -388,9 +391,10 @@ serve(async (req) => {
       ? body.willingnessToPayDetail
       : body.willingnessToPaySignal === 'no' ? 'No WTP signal observed'
       : 'Not tested yet';
-    const interviewLogSummary = interviews.length > 0
+    let interviewLogSummary = interviews.length > 0
       ? interviews.map((interview, index) => (
           `${index + 1}. ${interview.intervieweeName} | Segment: ${interview.segment} | Profile: ${interview.basicProfile}\n` +
+          `   Incentivized: ${interview.incentivized ? 'yes' : 'no'} (evaluate separately from unincentivized demand)\n` +
           `   Main feedback: ${interview.mainFeedback}\n` +
           `   Objections: ${interview.objections}\n` +
           `   Missing features: ${interview.missingFeatures}\n` +
@@ -399,6 +403,7 @@ serve(async (req) => {
           `   Demand behaviors: pricing=${interview.askedAboutPricing ? 'yes' : 'no'}, waitlist=${interview.joinedWaitlist ? 'yes' : 'no'}, referral=${interview.referredSomeone ? 'yes' : 'no'}, pay=${interview.offeredToPay ? 'yes' : 'no'}`
         )).join('\n\n')
       : 'No structured interview records provided.';
+    interviewLogSummary += '\n\nGeneral reviewer feedback (clarity/usability only; excluded from demand counts and Sean Ellis):\n' + rawInterviews.filter(row=>row.targetCustomer===false).map(row=>row.intervieweeName+': '+row.mainFeedback+' | Objections: '+row.objections).join('\n');
 
     // ─── Evidence-backed scoring: on-demand external demand signal (best-effort) ───
     // Reuses the existing `web-search` function (Perplexity). Never blocks scoring —

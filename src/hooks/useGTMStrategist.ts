@@ -707,6 +707,8 @@ export function useGTMStrategist() {
       if (error || !data?.success || !data.review) throw error || new Error(data?.error || 'Review failed');
       const row = data.review as any;
       const review: GTMWeeklyReview = {
+        proposalId: data.proposalId,
+        applied: data.applied === true,
         id: row.id,
         planId: row.plan_id,
         weekStart: row.week_start,
@@ -732,7 +734,7 @@ export function useGTMStrategist() {
       setWeeklyReview(review);
       if (isGTMPlanV2(data.analysis)) setAnalysis(data.analysis);
       captureEvent('gtm_weekly_review_completed', { plan_id: planId, decision: review.decision });
-      toast.success('Weekly GTM review saved.');
+      toast.success(data.applied ? 'Weekly GTM changes applied.' : 'Review preview ready. Check the changes before applying them.');
     } catch (error) {
       console.error('Weekly GTM review failed:', error);
       toast.error('Could not complete the weekly review.');

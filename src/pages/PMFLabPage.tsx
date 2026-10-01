@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import PMFConnectedEvidence from '@/components/pmf/PMFConnectedEvidence';
+import ProductDataPanel from '@/components/core-tools/ProductDataPanel';
 import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
@@ -284,8 +286,10 @@ export default function PMFLabPage() {
 
   // The single next action to spotlight, in the canonical evidence order:
   // get the 40% survey signal → log interviews → save the checklist → score.
-  const savedInterviews = interviewStore.interviews.length;
-  const surveyResponsesCount = surveyAggregate.total || evidence?.survey_results_count || 0;
+  const [connectedProductId, setConnectedProductId] = useState('');
+  const demandInterviews = useMemo(() => interviewStore.interviews.filter(i => i.targetCustomer !== false), [interviewStore.interviews]);
+  const savedInterviews = demandInterviews.length;
+  const surveyResponsesCount = surveyAggregate.total;
   const checklistCount = evidence?.validation_checklist?.length ?? 0;
   const hubRecommendation: PMFHubRecommendation = (() => {
     if (surveyResponsesCount === 0 && !survey) return 'survey';
@@ -564,6 +568,10 @@ export default function PMFLabPage() {
                     {phase === 'intake' && (
                       <div className="space-y-6">
                         <PMFEvidenceHub
+                          screenedInterviewCount={savedInterviews}
+                          currentAssumption={icpProblem || undefined}
+                          strongestObjection={analysis?.commonObjections?.[0]}
+                          nextTest={analysis?.nextExperiment}
                           evidence={evidence}
                           requiredSignals={PMF_REQUIRED_SIGNALS}
                           survey={survey}
@@ -585,6 +593,8 @@ export default function PMFLabPage() {
                           onFindCustomers={() => setMode('discover')}
                           onRunScore={() => chooseStep('score')}
                         />
+                        <ProductDataPanel tool="pmf_lab" artifactId={validationContextId} onProductChange={setConnectedProductId} />
+                        <PMFConnectedEvidence productId={connectedProductId} contextId={validationContextId} onAdded={interviewStore.reload} onReview={() => chooseStep('score')} />
 
                         {/* Step 1 — Gather evidence */}
                         <div ref={surveyRef} className="scroll-mt-28 overflow-hidden rounded-3xl border border-border/60 bg-background/70">
@@ -649,7 +659,7 @@ export default function PMFLabPage() {
                               initialStep={wantsInterviewStep ? 1 : undefined}
                               icpInterviewPlan={icpInterviewPlan}
                               icpDraftId={icpDraftId}
-                              initialInterviews={interviewStore.interviews}
+                              initialInterviews={demandInterviews}
                               onSaveInterview={interviewStore.saveInterview}
                               onDeleteInterview={interviewStore.deleteInterview}
                               onImportInterviews={interviewStore.saveMany}

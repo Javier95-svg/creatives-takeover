@@ -1,3 +1,4 @@
+import { reviewEvidence } from '../_shared/gtm-review-evidence.ts';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 import { getUserFromAuth } from '../_shared/credit-deduction.ts';
@@ -140,6 +141,13 @@ serve(async (req) => {
     if (!user) return json({ error: 'Authentication required' }, 401);
     const body = await req.json() as { planId?: string; weekStart?: string; reviewInput?: unknown };
     if (!body.planId) return json({ error: 'planId is required' }, 400);
+    const rawInput = (body.reviewInput ?? {}) as Record<string, any>;
+    if (rawInput.applyProposalId) {
+      const client = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: req.headers.get('Authorization')! } } });
+      const { data, error } = await client.rpc('apply_gtm_review_proposal', { p_proposal_id: rawInput.applyProposalId });
+      if (error) return json({ error: error.message }, 409);
+      return json(data);
+    }
     const reviewInput = cleanReviewInput(body.reviewInput);
     const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
@@ -153,7 +161,10 @@ serve(async (req) => {
       .select('id,channel_name,play_content,status,rank').eq('plan_id', body.planId).eq('user_id', user.id)
       .order('rank', { ascending: true });
     const allPlays = (playRows as Array<Record<string, any>> | null) ?? [];
-    const activePlays = allPlays.filter((item) => item.status === 'active');
+    const eligiblePlays = allPlays.filter((item) => item.status === 'active');
+    const selectedPlay = rawInput.playId ? eligiblePlays.find(item => item.id === rawInput.playId) : eligiblePlays[0];
+    if (!selectedPlay) return json({ error: 'Choose an active play to review.' }, 400);
+    const activePlays = [selectedPlay];
     let play = activePlays[0] ?? null;
     let sprint: Record<string, any> | null = null;
     let experiment: Record<string, any> | null = null;
@@ -167,9 +178,9 @@ serve(async (req) => {
       linkedSprints = (sprintRows as Array<Record<string, any>> | null) ?? [];
       if (linkedSprints.length > 0) {
         const { data: experiments } = await admin.from('traction_engine_experiments' as never)
-          .select('id,sprint_id,decision,pass,result_value,target_value,created_at').eq('user_id', user.id)
-          .in('sprint_id', linkedSprints.map((item) => item.id)).order('created_at', { ascending: false }).limit(6);
-        experimentHistory = (experiments as Array<Record<string, any>> | null) ?? [];
+          .select('id,sprint_id,decision,pass,result_value,target_value,target_metric,sample_size,created_at,traction_engine_weekly_logs!inner(week_start_date,calculation_version)').eq('user_id', user.id)
+          .eq('traction_engine_weekly_logs.calculation_version',2).in('sprint_id', linkedSprints.map((item) => item.id)).order('created_at', { ascending: false }).limit(100);
+        experimentHistory = reviewEvidence((experiments as any[]) ?? [], String(selectedPlay.play_content?.metric || ''), selectedPlay.play_content?.structuredKillRule, currentWeekStart()).history;
         experiment = experimentHistory[0] ?? null;
         sprint = experiment ? linkedSprints.find((item) => item.id === experiment?.sprint_id) ?? null : linkedSprints[0];
         play = activePlays.find((item) => item.id === sprint?.source_gtm_play_id) ?? play;
@@ -181,16 +192,24 @@ serve(async (req) => {
     const metric = String(playContent.metric ?? 'Validated outcomes');
     const target = Number(experiment?.target_value ?? playContent.target ?? 1) || 1;
     let decision: 'collect_evidence' | 'double_down' | 'iterate' | 'kill' = 'collect_evidence';
-    if (experiment) decision = experiment.decision === 'double_down' || experiment.decision === 'iterate' || experiment.decision === 'kill'
-      ? experiment.decision : experiment.pass ? 'double_down' : 'iterate';
+    const rule = playContent.structuredKillRule;
+    const reviewed = reviewEvidence(experimentHistory, metric, rule, currentWeekStart());
+    const sufficientEvidence = reviewed.sufficient;
+    decision = reviewed.decision as typeof decision;
 
     const nextBestAction = decision === 'double_down' ? `Repeat the winning ${channel} play with a higher target.`
       : decision === 'kill' ? `Pause ${channel} and activate the next ranked channel.`
         : decision === 'iterate' ? `Change one message or audience variable before the next ${channel} run.`
           : play ? `Run and log the first ${channel} experiment.` : 'Activate one focused GTM play.';
-    const evidenceSummary = experiment
-      ? `${experiment.pass ? 'Met' : 'Missed'} the latest target (${experiment.result_value}/${experiment.target_value}). Traction Engine decision: ${decision.replace('_', ' ')}.`
-      : play ? 'No Traction Engine result has been logged. The review will collect evidence instead of inventing a conclusion.' : 'No active play is linked to this plan.';
+    const evidenceSummary = 'Observation window: ' + reviewed.windowStart + ' to ' + reviewed.windowEnd + ' (UTC, completed weeks). Sample: ' + reviewed.sample + '. ' + (sufficientEvidence ? 'Decision considers every compatible result in the window: ' + decision.replace('_',' ') + '.' : 'Collect more evidence; the required sample or complete periods are missing.');
+    const { data: productLink } = await admin.from('ct_product_artifacts').select('product_id').eq('user_id', user.id).eq('tool','gtm_strategist').eq('artifact_id',body.planId).maybeSingle();
+    if (productLink) {
+      const { data: contexts } = await admin.from('ct_product_artifacts').select('artifact_id').eq('user_id',user.id).eq('product_id',productLink.product_id).eq('tool','pmf_lab');
+      if (contexts?.length) {
+        const { data: objections } = await admin.from('pmf_interviews').select('id,validation_context_id,objections,segment,incentivized').eq('user_id',user.id).eq('target_customer',true).in('validation_context_id',contexts.map((c:any)=>c.artifact_id)).order('created_at',{ascending:false}).limit(5);
+        reviewInput.objections += '\nLinked PMF evidence: ' + (objections||[]).map((e:any)=>e.objections + ' [segment: '+e.segment+'; incentivized: '+e.incentivized+'; source: /pmf-lab?context='+e.validation_context_id+'#interview-'+e.id+']').join('\n');
+      }
+    }
 
     const thisWeek = planWeek(analysis.generatedAt);
     const nextWeek = Math.min(6, thisWeek + 1);
@@ -214,10 +233,10 @@ serve(async (req) => {
     if (decision === 'kill' && play) {
       const replacement = allPlays.find((item) => item.id !== play.id && item.status === 'active')
         ?? allPlays.find((item) => item.status === 'backlog');
-      await admin.from('gtm_plays' as never).update({ status: 'paused' } as never).eq('id', play.id).eq('user_id', user.id);
+
       if (replacement) {
         nextActiveId = replacement.id;
-        await admin.from('gtm_plays' as never).update({ status: 'active' } as never).eq('id', replacement.id).eq('user_id', user.id);
+
       }
     }
 
@@ -239,7 +258,7 @@ serve(async (req) => {
     analysis.assumptions = Array.from(new Set([...(analysis.assumptions ?? []), ...adaptation.assumptionsToAdd])).slice(0, 20);
     if (adaptation.assetUpdates.length > 0) {
       analysis.assets = (analysis.assets ?? []).map((asset: any) => {
-        if (asset.playId !== play?.id) return asset;
+        if (asset.playId !== play?.id || asset.status === 'approved') return asset;
         const update = adaptation.assetUpdates.find((item: any) => item.type === asset.type);
         return update ? { ...asset, content: String(update.content).slice(0, 6000), status: 'draft', updatedAt: new Date().toISOString() } : asset;
       });
@@ -253,7 +272,7 @@ serve(async (req) => {
       output: index === adaptation.actions.length - 1 ? 'A logged Traction decision' : adaptation.objective,
       metric: primaryForTasks?.metric ?? metric, status: 'todo',
     }));
-    analysis.tasks = [...(analysis.tasks ?? []).filter((task: any) => Number(task.week) !== nextWeek), ...newTasks];
+    analysis.tasks = [...(analysis.tasks ?? []).filter((task: any) => Number(task.week) !== nextWeek || task.playId !== primaryForTasks?.id || task.status === 'done'), ...newTasks.filter((task: any) => !(analysis.tasks ?? []).some((old: any) => old.id === task.id && old.status === 'done'))];
 
     const currentPlayIds = (analysis.plays ?? []).map((item: any) => item.id).filter(Boolean);
     let pipelineQuery = admin.from('gtm_pipeline_entries' as never)
@@ -289,28 +308,6 @@ serve(async (req) => {
     };
     analysis.health = healthSnapshot;
 
-    const taskRows = newTasks.map((task: any) => ({
-      id: task.id, user_id: user.id, plan_id: body.planId, play_id: task.playId || null, week_number: task.week,
-      title: task.title, detail: task.detail, owner_label: task.owner, time_estimate_minutes: task.timeEstimateMinutes,
-      expected_output: task.output, metric: task.metric, status: task.status,
-    }));
-    await admin.from('gtm_tasks' as never).delete().eq('plan_id', body.planId).eq('user_id', user.id).eq('week_number', nextWeek);
-    const { error: taskError } = await admin.from('gtm_tasks' as never).insert(taskRows as never);
-    if (taskError) throw taskError;
-    const playWrites = await Promise.all((analysis.plays ?? []).map((item: any) => admin.from('gtm_plays' as never)
-      .update({ status: item.status, play_content: item } as never).eq('id', item.id).eq('plan_id', body.planId).eq('user_id', user.id)));
-    const playWriteError = playWrites.find((result) => result.error)?.error;
-    if (playWriteError) throw playWriteError;
-    if ((analysis.assets ?? []).length > 0) {
-      const { error: assetError } = await admin.from('gtm_play_assets' as never).upsert((analysis.assets ?? []).map((asset: any) => ({
-        id: asset.id, user_id: user.id, plan_id: body.planId, play_id: asset.playId, asset_type: asset.type,
-        title: asset.title, content: asset.content, status: asset.status,
-      })) as never);
-      if (assetError) throw assetError;
-    }
-    const { error: planError } = await admin.from('gtm_plans' as never).update({ plan_content: analysis } as never).eq('id', body.planId).eq('user_id', user.id);
-    if (planError) throw planError;
-
     const weekStart = /^\d{4}-\d{2}-\d{2}$/.test(body.weekStart ?? '') ? body.weekStart! : currentWeekStart();
     const reviewPayload = {
       plan_id: body.planId, play_id: play?.id ?? null, traction_experiment_id: experiment?.id ?? null,
@@ -322,10 +319,12 @@ serve(async (req) => {
       signals: adaptation.signals,
       change_log: adaptation.changeLog,
     };
-    const { data: review, error: reviewError } = await admin.from('gtm_weekly_reviews' as never)
-      .upsert(reviewPayload as never, { onConflict: 'plan_id,week_start' }).select('*').single();
-    if (reviewError) throw reviewError;
-    return json({ success: true, review, analysis });
+    analysis.version = Number(analysis.version ?? 1) + 1;
+    const { data: proposal, error: proposalError } = await admin.from('ct_gtm_review_proposals')
+      .insert({ user_id: user.id, plan_id: body.planId, play_id: play!.id, base_plan: (planRow as any).plan_content, proposed_plan: analysis, review: reviewPayload })
+      .select('id').single();
+    if (proposalError) throw proposalError;
+    return json({ success: true, review: reviewPayload, proposalId: proposal.id, applied: false });
   } catch (error) {
     console.error('GTM weekly review failed:', error);
     return json({ error: error instanceof Error ? error.message : 'Weekly review failed' }, 500);
