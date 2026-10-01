@@ -1,6 +1,7 @@
 import { chromium } from 'playwright';
 import { checkCustomerWorkflow } from './outcomes.mjs';
 import { buildArtifact } from './build.mjs';
+import { checkStaticLanding } from './static-outcome.mjs';
 if(process.argv.includes('--health')){
   const browser=await chromium.launch({headless:true,chromiumSandbox:true});
   await browser.close();process.stdout.write('ready');process.exit(0);
@@ -12,6 +13,19 @@ let browser,files,failure;
 const deadline=setTimeout(()=>{process.stdout.write(JSON.stringify({assertions,failure:'Workflow exceeded its five-minute limit'}));process.exit(1);},300_000);
 try{
   files=await buildArtifact(snapshot);
+  if(snapshot.manifest?.profile==='static_landing'){
+    browser=await chromium.launch({headless:true,chromiumSandbox:true});
+    const context=await browser.newContext({serviceWorkers:'block',acceptDownloads:false});
+    await context.routeWebSocket(/.*/,ws=>ws.close());
+    await context.route('**/*',route=>{
+      const url=new URL(route.request().url());
+      if(url.origin!=='http://ct-app.test')return route.abort();
+      const name=url.pathname==='/'?'index.html':url.pathname.slice(1),file=files.find(f=>f.filename===name);
+      return file?route.fulfill({status:200,contentType:name.endsWith('.js')?'application/javascript':name.endsWith('.css')?'text/css':'text/html',body:file.content}):route.fulfill({status:404,body:'Not found'});
+    });
+    const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await checkStaticLanding({page,ctaUrl:snapshot.buildBrief.ctaUrl,assertions,errors});
+  }else{
   const production=new URL(snapshot.backend?.projectUrl || '');
   const sandbox=new URL(fixture.url);
   if(production.protocol!=='https:' || !production.hostname.endsWith('.supabase.co') || sandbox.protocol!=='https:' || !sandbox.hostname.endsWith('.supabase.co') || production.origin===sandbox.origin)throw new Error('A separate Supabase test project is required');
@@ -66,6 +80,7 @@ try{
     if(!r.ok)throw new Error('Database read failed');return r.json();
   };
   await checkCustomerWorkflow({page,starter:snapshot.workflow.starter,accounts:fixture,readRows,writeConfirmed:()=>writeConfirmed,assertions,errors});
+  }
 }catch(e){failure=e.message || 'Workflow failed';}
 finally{await browser?.close();clearTimeout(deadline);}
 process.stdout.write(JSON.stringify({assertions,files:failure?null:files,failure:failure || null}));

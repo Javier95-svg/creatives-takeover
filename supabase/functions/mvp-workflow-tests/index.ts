@@ -3,6 +3,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { getUserFromAuth } from '../_shared/credit-deduction.ts';
 import { publicKeyError } from '../_shared/mvp-workflow.ts';
 import { workflowWorkerAvailable } from '../_shared/mvp-worker-health.ts';
+import { deriveCapabilities } from '../_shared/mvp-capabilities.ts';
+import { buildBriefErrors } from '../_shared/mvp-build-brief.ts';
 const cors={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'authorization,apikey,content-type,x-client-info,x-worker-key'};
 const response=(value:unknown,status=200)=>new Response(JSON.stringify(value),{status,headers:{...cors,'Content-Type':'application/json'}});
 async function equalSecret(a:string,b:string){
@@ -18,10 +20,12 @@ serve(async req=>{
     const body=await req.json();
     if(await equalSecret(req.headers.get('x-worker-key')||'',Deno.env.get('MVP_WORKFLOW_WORKER_SECRET')||'')){
       if(body.action==='claim' || body.action==='heartbeat'){
-        const {error:healthError}=await db.from('mvp_workflow_worker_health').upsert({id:true,last_seen:new Date().toISOString()});
+        const allowed=['lead_capture','request_management','customer_portal','static_landing'];
+        const profiles=Array.isArray(body.profiles)?body.profiles.filter((p:unknown)=>typeof p==='string'&&allowed.includes(p)):allowed.slice(0,3);
+        const {error:healthError}=await db.from('mvp_workflow_worker_health').upsert({id:true,last_seen:new Date().toISOString(),profiles});
         if(healthError)throw healthError;
         if(body.action==='heartbeat')return response({ok:true});
-        const {data,error}=await db.rpc('claim_mvp_workflow_test');if(error)throw error;
+        const {data,error}=await db.rpc('claim_mvp_workflow_test',{p_profiles:profiles});if(error)throw error;
         return response({job:data?.[0] || null});
       }
       if(body.action==='finish'){
@@ -31,13 +35,17 @@ serve(async req=>{
       return response({error:'Unknown worker action'},400);
     }
     const user=await getUserFromAuth(req);if(!user)return response({error:'Sign in first'},401);
-    const {data:health}=await db.from('mvp_workflow_worker_health').select('last_seen').eq('id',true).maybeSingle();
+    const {data:health}=await db.from('mvp_workflow_worker_health').select('last_seen,profiles').eq('id',true).maybeSingle();
     const available=workflowWorkerAvailable(Deno.env.get('MVP_WORKFLOW_WORKER_SECRET')||'',health?.last_seen);
-    if(body.action==='status')return response({available});
+    if(body.action==='status')return response({available,profiles:available?health?.profiles||[]:[]});
     if(body.action!=='request')return response({error:'Unknown action'},400);
     if(!available)return response({error:'Workflow testing and new publishing are temporarily unavailable. Existing apps remain editable and exportable. No credits were charged.'},503);
     const {data:project}=await db.from('mvp_projects').select('metadata,supabase_connection_id').eq('id',body.projectId).eq('user_id',user.id).maybeSingle();
     if(!project)return response({error:'Project not found'},404);
+    const brief=project.metadata?.setupInput?.buildBrief;
+    const staticLanding=!project.metadata?.setupInput?.workflow && !buildBriefErrors(brief).length && deriveCapabilities(brief).profile==='static_landing';
+    if(staticLanding&&!health?.profiles?.includes('static_landing'))return response({error:'Landing-page checks need the updated worker. Your saved draft is safe; no credits were charged.'},503);
+    if(!staticLanding){
     const keyError=publicKeyError(project.metadata?.setupInput?.workflowPublicKey);
     if(keyError)return response({error:keyError},400);
     const {data:connection}=await db.from('mvp_builder_supabase_connections').select('status,supabase_account_id').eq('id',project.supabase_connection_id).eq('user_id',user.id).maybeSingle();
@@ -45,6 +53,7 @@ serve(async req=>{
     if(!/^https:\/\/[a-z0-9]+\.supabase\.co$/.test(connection.supabase_account_id))return response({error:'Unsupported database address.'},400);
     const readiness=await fetch(connection.supabase_account_id+'/rest/v1/rpc/ct_mvp_workflow_health',{method:'POST',headers:{apikey:project.metadata.setupInput.workflowPublicKey,'Content-Type':'application/json'},body:JSON.stringify({p_project_key:body.projectId}),signal:AbortSignal.timeout(10000),redirect:'error'});
     if(!readiness.ok || await readiness.json()!==true)return response({error:'Install the workflow schema and register the owner account in your connected database. Open Review scope → Database setup.'},409);
+    }
     // Run the owner-scoped RPC under the caller's JWT, never service_role.
     const caller=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_ANON_KEY')!,{global:{headers:{Authorization:req.headers.get('authorization')!}},auth:{persistSession:false}});
     const {data,error}=await caller.rpc('request_mvp_workflow_test',{p_project_id:body.projectId});if(error)throw error;

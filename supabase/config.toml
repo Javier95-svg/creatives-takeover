@@ -340,3 +340,7 @@ verify_jwt = false
 
 [functions.mvp-builder-deploy]
 verify_jwt = false
+
+# Every action verifies the CT owner before accessing managed app credentials.
+[functions.mvp-managed-app]
+verify_jwt = false

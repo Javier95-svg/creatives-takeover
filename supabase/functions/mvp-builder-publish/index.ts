@@ -56,7 +56,7 @@ type VercelDomainResult = { registered: boolean; skipped?: boolean; status?: num
 
 // Attach {slug}.creatives-takeover.com to the Vercel project so it routes + gets
 // HTTPS automatically. Idempotent (a slug already on the project counts as success).
-// Best-effort with a small retry; the caller never fails the publish over this.
+// Verify attachment to this project before activating or charging for a release.
 async function ensureVercelDomain(domain: string): Promise<VercelDomainResult> {
   const token = Deno.env.get("VERCEL_TOKEN");
   if (!token) return { registered: false, skipped: true, error: "VERCEL_TOKEN not configured" };
@@ -71,15 +71,19 @@ async function ensureVercelDomain(domain: string): Promise<VercelDomainResult> {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ name: domain }),
+        signal: AbortSignal.timeout(15000),
+        redirect: 'error',
       });
-      if (resp.ok) return { registered: true, status: resp.status };
-
       // deno-lint-ignore no-explicit-any
       const data: any = await resp.json().catch(() => ({}));
       const code = data?.error?.code;
-      // Already attached to this project => idempotent success.
-      if (resp.status === 409 || code === "domain_already_in_use" || code === "domain_already_exists") {
-        return { registered: true, status: resp.status };
+      if (resp.ok || resp.status === 409 || code === "domain_already_in_use" || code === "domain_already_exists") {
+        const check = await fetch(`https://api.vercel.com/v9/projects/${VERCEL_PROJECT_ID}/domains/${encodeURIComponent(domain)}${query}`, {
+          headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(15000), redirect:'error',
+        });
+        const actual=await check.json().catch(()=>({}));
+        if(check.ok && actual.name===domain && actual.verified===true)return {registered:true,status:check.status};
+        return {registered:false,error:'The public address is not verified on the publishing project yet.'};
       }
       lastError = data?.error?.message || `Vercel API ${resp.status}`;
       // 4xx (other than 409) won't fix on retry; bail out.
@@ -176,6 +180,8 @@ serve(async (req) => {
 
     if (slug) {
       const url = `https://${slug}.${BASE_DOMAIN}`;
+      const domain = await ensureVercelDomain(`${slug}.${BASE_DOMAIN}`);
+      if(!domain.registered)throw new Error('Public address setup is incomplete. The previous release remains active.');
       const { error: reuseError } = await supabase.rpc('publish_tested_mvp',{p_project_id:projectId,p_user_id:user.id,p_test_id:testRunId,p_slug:slug,p_url:url,p_reservation_id:reservationId});
       if (reuseError) throw new Error("Unable to update project");
     } else {
@@ -210,6 +216,8 @@ serve(async (req) => {
         const candidate = nextCandidate(attempted);
         attempted.add(candidate);
         const url = `https://${candidate}.${BASE_DOMAIN}`;
+        const domain = await ensureVercelDomain(`${candidate}.${BASE_DOMAIN}`);
+        if(!domain.registered)throw new Error('Public address setup is incomplete. Retry publication after it is verified.');
 
         const { error: updateError } = await supabase.rpc('publish_tested_mvp',{p_project_id:projectId,p_user_id:user.id,p_test_id:testRunId,p_slug:candidate,p_url:url,p_reservation_id:reservationId});
 
@@ -232,10 +240,10 @@ serve(async (req) => {
 
     const url = `https://${slug}.${BASE_DOMAIN}`;
 
-    // Auto-register the subdomain on Vercel (idempotent, best-effort). The slug is
-    // already reserved in the DB; we never fail the publish if this hiccups.
-    const domain = await ensureVercelDomain(`${slug}.${BASE_DOMAIN}`);
+    const domain: VercelDomainResult = {registered:true};
 
+    // The publication RPC already committed both the artifact and the charge.
+    // Follow-up metadata/telemetry must not turn a committed release into an error.
     const finalized = await finalizeMVPBuilderCredits(reservationId, {
       mvpBuilderActionType: "publish",
       projectId,
@@ -243,10 +251,7 @@ serve(async (req) => {
       slug,
       domainRegistered: domain.registered,
       completionBoundary: "publish_saved",
-    });
-    if (!finalized.success) {
-      throw new Error("Unable to finalize MVP Builder publish credits");
-    }
+    }).catch(()=>null);
 
     return jsonResponse({
       ok: true,
@@ -257,11 +262,11 @@ serve(async (req) => {
       domainPending: !domain.registered,
       domainError: domain.error ?? null,
       reservationId,
-      reservationStatus: finalized.reservationStatus,
+      reservationStatus: "finalized",
       listedCreditCost: creditCost,
       heldCredits,
-      creditsUsed: finalized.creditsUsed,
-      balanceAfter: finalized.balanceAfter,
+      creditsUsed: finalized?.success ? finalized.creditsUsed : heldCredits,
+      balanceAfter: finalized?.success ? finalized.balanceAfter : undefined,
     });
   } catch (error) {
     await releaseMVPBuilderCredits(reservationId, "MVP Builder publish failed", {
@@ -270,7 +275,7 @@ serve(async (req) => {
     }).catch(() => {});
     return jsonResponse({
       ok: false,
-      error: "Publishing failed. Held credits have been released.",
+      error: "Publication could not be confirmed. Check your current release, then retry. Any unspent credit hold has been released.",
       errorCode: "PUBLISH_FAILED",
     }, 500);
   }

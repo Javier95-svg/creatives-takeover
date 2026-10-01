@@ -29,6 +29,38 @@ test('workflow SQL enforces ownership, revisions, leases, immutable publishing a
   assert.notEqual((await call('SELECT mvp_workflow_revision(p) revision FROM mvp_projects p WHERE id=$1',[project]))[0].revision,revision);
   await call("UPDATE mvp_projects SET metadata=metadata #- '{setupInput,buildBrief}' WHERE id=$1",[project]);
  });
+ await db.exec(readFileSync('supabase/migrations/20261001140000_mvp_managed_control.sql','utf8'));
+ await db.exec(readFileSync('supabase/migrations/20261001141000_mvp_static_acceptance.sql','utf8'));
+ await t.test('managed admission is owner-scoped, idempotent, budget-limited and private',async()=>{
+  const managedId='20000000-0000-0000-0000-000000000088';
+  await call('INSERT INTO mvp_projects(id,user_id) VALUES($1,$2)',[managedId,owner]);
+  const manifest={version:1,persistence:true,profile:'private_records',schemaVersion:'1.0.0'};
+  await assert.rejects(call('SELECT admit_mvp_managed_app($1,$2,$3,$4)',[managedId,other,'managed-org',manifest]),/not found/);
+  await assert.rejects(call('SELECT admit_mvp_managed_app($1,$2,$3,$4)',[managedId,owner,'managed-org',manifest]),/invited/);
+  await call('INSERT INTO mvp_managed_invites VALUES($1)',[owner]);
+  await db.exec("UPDATE mvp_managed_pilot SET enabled=true,cost_observed_at=now()-interval '2 days'");
+  await assert.rejects(call('SELECT admit_mvp_managed_app($1,$2,$3,$4)',[managedId,owner,'managed-org',manifest]),/forecast/);
+  await db.exec('UPDATE mvp_managed_pilot SET cost_observed_at=now(),base_monthly_cents=19000');
+  await assert.rejects(call('SELECT admit_mvp_managed_app($1,$2,$3,$4)',[managedId,owner,'managed-org',manifest]),/paused/);
+  await db.exec('UPDATE mvp_managed_pilot SET base_monthly_cents=9000');
+  for(let i=0;i<2;i++)await call('SELECT admit_mvp_managed_app($1,$2,$3,$4)',[managedId,owner,'managed-org',manifest]);
+  assert.equal((await call('SELECT count(*)::int n FROM mvp_managed_apps'))[0].n,1);
+  await db.exec('SET ROLE authenticated');
+  await assert.rejects(call('SELECT * FROM mvp_managed_secrets'),/permission denied/);
+  await assert.rejects(call('SELECT admit_mvp_managed_app($1,$2,$3,$4)',[managedId,owner,'managed-org',manifest]),/permission denied/);
+  await db.exec('RESET ROLE');
+ });
+ await t.test('static CTA pages queue and pass without a database; missing outcome still fails',async()=>{
+  const staticId='20000000-0000-0000-0000-000000000099';
+  await call('INSERT INTO mvp_projects(id,user_id,project_files,metadata) VALUES($1,$2,$3,$4)',[staticId,owner,[{filename:'index.html',content:'<a href="https://example.com" data-testid="ct-cta">Buy</a>'}],{setupInput:{buildBrief:{version:1,kind:'landing',idea:'A portfolio website',task:'View my work',features:['Gallery','Call to action'],ctaUrl:'https://example.com',delivery:'preview'}}}]);
+  const testId=(await call('SELECT request_mvp_workflow_test($1) id',[staticId]))[0].id;
+  assert.equal((await call('SELECT * FROM claim_mvp_workflow_test()')).length,0);
+  const claimed=(await call("SELECT * FROM claim_mvp_workflow_test(ARRAY['static_landing'])"))[0];
+  await call('SELECT finish_mvp_workflow_test($1,$2,$3,$4,null)',[testId,claimed.lease,{customer_task:true,cta_navigation:true,no_runtime_errors:true,responsive_ui:true,cleanup:true},[{filename:'index.html',content:'Built portfolio'}]]);
+  assert.equal((await call('SELECT status FROM mvp_build_tests WHERE id=$1',[testId]))[0].status,'passed');
+  await call("UPDATE mvp_projects SET metadata=jsonb_set(metadata,'{setupInput,buildBrief,idea}','\"An email waitlist\"') WHERE id=$1",[staticId]);
+  await assert.rejects(call('SELECT request_mvp_workflow_test($1)',[staticId]),/workflow/);
+ });
  let id,lease;
  await t.test('backfill freezes existing URLs while drafts change',async()=>{
   await db.exec(`UPDATE mvp_projects SET project_files='[{"filename":"index.html","content":"draft"}]' WHERE id='${project}';`);
