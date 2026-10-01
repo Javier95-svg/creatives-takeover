@@ -993,6 +993,12 @@ export function useMVPBuilder() {
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSavingProject, setIsSavingProject] = useState(false);
+  const [saveError,setSaveError]=useState<string|null>(null);
+  const savingRef=useRef(false);
+  const editRevisionRef=useRef(0);
+  const currentProjectRef=useRef(projectId);currentProjectRef.current=projectId;
+  useEffect(()=>{setSaveError(null);},[projectId]);
+  useEffect(()=>{if(!hasUnsavedChanges)return;const warn=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue='';};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn);},[hasUnsavedChanges]);
   const [savedProjects, setSavedProjects] = useState<MVPProjectRecord[]>([]);
   const [isProjectsLoading, setIsProjectsLoading] = useState(false);
   const [promptHistory, setPromptHistory] = useState<MVPPromptHistoryItem[]>([]);
@@ -1093,6 +1099,7 @@ export function useMVPBuilder() {
   const abortRef = useRef<AbortController | null>(null);
   const lastStablePreviewHtmlRef = useRef<string | null>(null);
   const markProjectDirty = useCallback(() => {
+    editRevisionRef.current++;
     setHasUnsavedChanges(true);
   }, []);
 
@@ -1478,6 +1485,7 @@ export function useMVPBuilder() {
       setProjectId(record.id);
       setProjectNameState(record.title || DEFAULT_PROJECT_NAME);
       setLastSavedAt(record.updated_at ?? record.created_at);
+      setSaveError(null);
       setHasUnsavedChanges(false);
       setGeneratedCode(record.generated_code ?? '');
       setProjectVersions(Array.isArray(record.versions) ? record.versions : []);
@@ -1756,6 +1764,9 @@ export function useMVPBuilder() {
   const saveProject = useCallback(
     async (options?: { silent?: boolean }) => {
       if (!user) return false;
+      if(savingRef.current)return false;
+      const savingRevision=editRevisionRef.current;
+      savingRef.current=true;setSaveError(null);
 
       const codeToSave =
         generatedCode ||
@@ -1843,9 +1854,9 @@ export function useMVPBuilder() {
           updated_at: typeof data.updated_at === 'string' ? data.updated_at : timestamp,
         };
 
-        setProjectId(savedRecord.id);
-        setLastSavedAt(savedRecord.updated_at);
-        setHasUnsavedChanges(false);
+        const stillCurrent=currentProjectRef.current===projectId;
+        const fullySaved=stillCurrent&&editRevisionRef.current===savingRevision;
+        if(stillCurrent){setLastSavedAt(savedRecord.updated_at);setHasUnsavedChanges(!fullySaved);}
         setSavedProjects((prev) =>
           [savedRecord, ...prev.filter((project) => project.id !== savedRecord.id)].sort(
             (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
@@ -1855,14 +1866,16 @@ export function useMVPBuilder() {
         if (!options?.silent) {
           toast.success('Project saved.');
         }
-        return true;
+        return fullySaved;
       } catch (error) {
+        if(currentProjectRef.current===projectId)setSaveError('Save failed. Your draft is still open. Retry saving before leaving.');
         console.error('Failed to save MVP project:', error);
         if (!options?.silent) {
           toast.error('Unable to save this project right now.');
         }
         return false;
       } finally {
+        savingRef.current=false;
         setIsSavingProject(false);
       }
     },
@@ -3810,6 +3823,7 @@ export function useMVPBuilder() {
     isGenerating,
     isSavingProject,
     saveStatus,
+    saveError,
     hasUnsavedChanges,
     projectName,
     projectId,

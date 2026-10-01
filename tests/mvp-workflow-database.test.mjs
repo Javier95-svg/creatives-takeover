@@ -13,7 +13,7 @@ test('workflow SQL enforces ownership, revisions, leases, immutable publishing a
  CREATE FUNCTION auth.role() RETURNS text LANGUAGE sql AS $$ SELECT current_setting('request.jwt.claim.role',true) $$;
  GRANT USAGE ON SCHEMA auth TO authenticated;GRANT EXECUTE ON FUNCTION auth.uid(),auth.role() TO authenticated;
  CREATE TABLE mvp_projects(id uuid PRIMARY KEY,user_id uuid,title text,project_files jsonb,generated_code text,versions jsonb DEFAULT '[]',metadata jsonb,project_type text DEFAULT 'html_single',supabase_connection_id uuid,subdomain_slug text UNIQUE,deployment_url text,deployment_status text,updated_at timestamptz,search_indexing_requested boolean DEFAULT false,search_indexing_review_status text,seo_title text,seo_description text,seo_image_url text);
- CREATE TABLE mvp_builder_credit_reservations(id uuid PRIMARY KEY,user_id uuid,action_feature text,idempotency_key text,status text DEFAULT 'pending');
+ CREATE TABLE mvp_builder_credit_reservations(id uuid PRIMARY KEY,user_id uuid,action_feature text,idempotency_key text,status text DEFAULT 'pending',metadata jsonb DEFAULT '{}');
  CREATE TABLE charges(id uuid PRIMARY KEY);
  CREATE FUNCTION finalize_mvp_builder_credit_reservation(p_reservation_id uuid,p_metadata jsonb) RETURNS jsonb LANGUAGE plpgsql AS $$ BEGIN INSERT INTO charges VALUES(p_reservation_id) ON CONFLICT DO NOTHING; RETURN '{"success":true}'::jsonb; END $$;
  INSERT INTO mvp_projects(id,user_id,title,project_files,metadata,supabase_connection_id,subdomain_slug,deployment_status) VALUES('${project}','${owner}','Example','[{"filename":"index.html","content":"legacy"}]','{"setupInput":{"workflow":{"version":1,"starter":"lead_capture","customer":"Buyers","task":"Subscribe","outcome":"Saved","features":["Form"]}}}','30000000-0000-0000-0000-000000000001','example','deployed');
@@ -32,6 +32,33 @@ test('workflow SQL enforces ownership, revisions, leases, immutable publishing a
  await db.exec(readFileSync('supabase/migrations/20261001140000_mvp_managed_control.sql','utf8'));
  await db.exec(readFileSync('supabase/migrations/20261001141000_mvp_static_acceptance.sql','utf8'));
  await db.exec(readFileSync('supabase/migrations/20261001150000_mvp_saved_test_review.sql','utf8'));
+ await db.exec(readFileSync('supabase/migrations/20261001160000_mvp_recovery_jobs.sql','utf8'));
+ await t.test('included repairs bind paid source, cap attempts, checkpoint atomically and reject stale writes',async()=>{
+  const pid='20000000-0000-0000-0000-000000000077',rid='40000000-0000-0000-0000-000000000077';
+  const files=[{filename:'index.html',content:'broken'}];
+  await call('INSERT INTO mvp_projects(id,user_id,project_files,metadata) VALUES($1,$2,$3,$4)',[pid,owner,files,{}]);
+  await call("INSERT INTO mvp_builder_credit_reservations(id,user_id,action_feature,status,metadata) VALUES($1,$2,'APP_BUILDER_GENERATE','finalized',$3)",[rid,owner,{projectId:pid}]);
+  await call('SELECT register_mvp_repair_budget($1,$2)',[rid,files]);
+  const fail=async()=> (await call("INSERT INTO mvp_build_tests(project_id,user_id,revision,snapshot,status,assertions) SELECT id,user_id,mvp_workflow_revision(p),mvp_workflow_snapshot(p),'failed','{\"cleanup\":true,\"customer_task\":false}' FROM mvp_projects p WHERE id=$1 RETURNING id",[pid]))[0].id;
+  let tid=await fail();
+  await assert.rejects(call('SELECT claim_mvp_outcome_repair($1,$2)',[tid,other]),/test service/);
+  let job=(await call('SELECT claim_mvp_outcome_repair($1,$2) job',[tid,owner]))[0].job;
+  await assert.rejects(call('SELECT claim_mvp_outcome_repair($1,$2)',[tid,owner]),/already attempted/);
+  const fixed=[{filename:'index.html',content:'fixed once'}];
+  await call('SELECT apply_mvp_outcome_repair($1,$2)',[job.id,fixed]);
+  assert.equal((await call('SELECT snapshot FROM mvp_edit_checkpoints WHERE project_id=$1',[pid]))[0].snapshot.project_files[0].content,'broken');
+  assert.equal((await call('SELECT count(*)::int n FROM charges'))[0].n,0);
+  tid=await fail();job=(await call('SELECT claim_mvp_outcome_repair($1,$2) job',[tid,owner]))[0].job;
+  await call('UPDATE mvp_projects SET project_files=$2 WHERE id=$1',[pid,[{filename:'index.html',content:'concurrent user edit'}]]);
+  await assert.rejects(call('SELECT apply_mvp_outcome_repair($1,$2)',[job.id,fixed]),/changed during repair/);
+  await call("UPDATE mvp_outcome_repairs SET status='failed' WHERE id=$1",[job.id]);
+  await call('UPDATE mvp_projects SET project_files=$2 WHERE id=$1',[pid,fixed]);
+  tid=await fail();await assert.rejects(call('SELECT claim_mvp_outcome_repair($1,$2)',[tid,owner]),/No included repairs/);
+  await db.exec('SET ROLE authenticated');
+  await assert.rejects(call('SELECT register_mvp_repair_budget($1,$2)',[rid,files]),/permission denied/);
+  await assert.rejects(call('SELECT apply_mvp_outcome_repair($1,$2)',[job.id,fixed]),/permission denied/);
+  await db.exec('RESET ROLE');
+ });
  await t.test('managed admission is owner-scoped, idempotent, budget-limited and private',async()=>{
   const managedId='20000000-0000-0000-0000-000000000088';
   await call('INSERT INTO mvp_projects(id,user_id) VALUES($1,$2)',[managedId,owner]);
@@ -55,6 +82,13 @@ test('workflow SQL enforces ownership, revisions, leases, immutable publishing a
   await call("UPDATE mvp_build_tests SET status='failed' WHERE id=$1",[managedTest]);
   await call("UPDATE mvp_managed_apps SET status='schema' WHERE project_id=$1",[managedId]);
   await assert.rejects(call('SELECT request_mvp_workflow_test($1)',[managedId]),/Finish managed/);
+  assert.equal((await call('SELECT * FROM claim_mvp_managed_app($1)',[managedId])).length,1);
+  assert.equal((await call('SELECT * FROM claim_mvp_managed_app($1)',[managedId])).length,0);
+  await call('UPDATE mvp_managed_apps SET lease=NULL,lease_until=NULL WHERE project_id=$1',[managedId]);
+  assert.equal((await call('SELECT * FROM claim_mvp_managed_app($1)',[managedId])).length,0);
+  await call("UPDATE mvp_managed_apps SET next_attempt_at=now()-interval '1 minute',attempts=40 WHERE project_id=$1",[managedId]);
+  assert.equal((await call('SELECT * FROM claim_mvp_managed_app($1)',[managedId])).length,0);
+  assert.equal((await call('SELECT status FROM mvp_managed_apps WHERE project_id=$1',[managedId]))[0].status,'review');
   await call("UPDATE mvp_managed_apps SET status='ready' WHERE project_id=$1",[managedId]);
   await db.exec('SET ROLE authenticated');
   await assert.rejects(call('SELECT * FROM mvp_managed_secrets'),/permission denied/);

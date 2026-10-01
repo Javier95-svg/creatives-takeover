@@ -1811,6 +1811,8 @@ serve(async (req: Request) => {
           completionBoundary: "deterministic_edit_accepted",
         });
         if (!finalized.success) throw new Error("Unable to finalize MVP Builder credits");
+        // Register the accepted source against its paid operation; clients cannot mint repair credits.
+        { const admin=getAdminClient(); if(admin){const {error}=await admin.rpc('register_mvp_repair_budget',{p_reservation:reservationId,p_files:validated.files});if(error)console.error('Could not register included repairs',error.code);} }
         await writer.write(enc({ type: "credit-finalized", ...finalized }));
         emitMVPBuilderTelemetry("mvp_builder_deterministic_edit_used", userId, {
           action_type: classifiedAction,
@@ -2238,6 +2240,8 @@ ${fullText}`,
         completionBoundary: "valid_artifact_accepted",
       });
       if (!finalized.success) throw new Error("Unable to finalize MVP Builder credits");
+        // Register the accepted source against its paid operation; clients cannot mint repair credits.
+        { const admin=getAdminClient(); if(admin){const {error}=await admin.rpc('register_mvp_repair_budget',{p_reservation:reservationId,p_files:validated.files});if(error)console.error('Could not register included repairs',error.code);} }
       await writer.write(enc({ type: "credit-finalized", ...finalized }));
       void emitCostTelemetry(Number(finalized.creditsUsed ?? heldCredits));
       await writer.write(enc({

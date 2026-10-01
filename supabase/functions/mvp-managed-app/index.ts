@@ -15,8 +15,12 @@ serve(async req=>{
  if(req.method!=='POST')return json({error:'POST required'},405);
  const db=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,{auth:{persistSession:false}});
  try{
-  const user=await getUserFromAuth(req);if(!user)return json({error:'Sign in first'},401);
   const {action,projectId}=await req.json();
+  const cronSecret=Deno.env.get('CORE_TOOLS_CRON_SECRET')||'';
+  const internal=action==='advance'&&cronSecret.length>=32&&req.headers.get('x-core-cron-secret')===cronSecret;
+  let user=internal?null:await getUserFromAuth(req);
+  if(internal){const {data:owner}=await db.from('mvp_managed_apps').select('user_id').eq('project_id',projectId).maybeSingle();if(owner){const {data}=await db.auth.admin.getUserById(owner.user_id);user=data.user;}}
+  if(!user)return json({error:'Sign in first'},401);
   const configured=required.every(k=>!!Deno.env.get(k));
   const released=(Deno.env.get('MVP_MANAGED_RELEASE_PROFILES')||'').split(',').filter(p=>['private_records','lead_capture_v2'].includes(p));
   const {data:invite}=await db.from('mvp_managed_invites').select('user_id').eq('user_id',user.id).maybeSingle();

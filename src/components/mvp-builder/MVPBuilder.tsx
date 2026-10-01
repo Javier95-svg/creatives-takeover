@@ -105,6 +105,7 @@ export const MVPBuilder: React.FC = () => {
     saveProject,
     hasUnsavedChanges,
     isSavingProject,
+    saveError,
     lastSavedAt,
   } = useMVPBuilder();
 
@@ -118,7 +119,7 @@ export const MVPBuilder: React.FC = () => {
   };
 
   const draftIdentity=JSON.stringify([projectId,projectFiles,setupInput.buildBrief,setupInput.workflow,setupInput.workflowPublicKey,supabaseConnection.connectionId,setupInput.managedApp,setupInput.managedRuntime]);
-  const tests=useMvpWorkflowTest(projectId,draftIdentity,()=>saveProject({silent:true}),isShowingPreviewFallback,hasUnsavedChanges);
+  const tests=useMvpWorkflowTest(projectId,draftIdentity,()=>saveProject({silent:true}),isShowingPreviewFallback,hasUnsavedChanges,()=>loadProject(projectId,true));
   const [consent,setConsent]=useState<{prompt:string;cost:number;repairKey?:string;identity:string}|null>(null);
   const [quoting,setQuoting]=useState(false);
   const quotedSend=async(prompt:string,options?:{responseMode?:'chat'|'build'},repairKey?:string)=>{
@@ -282,7 +283,13 @@ export const MVPBuilder: React.FC = () => {
         hasActiveProject={projectFiles.length > 0 || messages.length > 0}
         onBuyCredits={() => setTopUpsOpen(true)}
       />
-      {projectFiles.length>0 && <details className="px-4 py-1 text-xs"><summary className="cursor-pointer">Recovery</summary><Button variant="ghost" size="sm" disabled={isGenerating || isDeploying} onClick={async()=>{const {error}=await (supabase as any).rpc('mvp_edit_checkpoint',{p_project_id:projectId,p_restore:true});if(error)toast.error(error.message);else await loadProject(projectId,true);}}>Restore the checkpoint before the last paid change</Button></details>}
+      <div role={saveError?'alert':'status'} className="shrink-0 px-4 py-1 text-xs flex items-center gap-2">
+        <span className={saveError?'text-destructive':'text-muted-foreground'}>{isSavingProject?'Saving...':saveError|| (hasUnsavedChanges?'Unsaved changes':lastSavedAt?'Saved':'Describe your app to begin')}</span>
+        {saveError&&<Button size="sm" variant="outline" disabled={isSavingProject} onClick={()=>void saveProject({silent:false})}>Retry save</Button>}
+      </div>
+      {projectFiles.length>0 && <details className="px-4 py-1 text-xs"><summary className="cursor-pointer">Changes and recovery</summary>{lastBuildChangeSummary&&<p className="pt-2">Last build: {lastBuildChangeSummary.updatedSections} sections updated, {lastBuildChangeSummary.addedComponents} components added. Run a fresh check after any edit.</p>}<p className="py-2">{tests.repairChanges.length?`Automatic repair changed ${tests.repairChanges.join(', ')}. The updated app needs a passing check.`:'Edits and repairs keep a checkpoint. Restoring changes the draft; your published app and customer data stay available.'}</p><Button variant="ghost" size="sm" disabled={isGenerating || isDeploying || tests.testing} onClick={async()=>{const {error}=await (supabase as any).rpc('mvp_edit_checkpoint',{p_project_id:projectId,p_restore:true});if(error)toast.error(error.message);else await loadProject(projectId,true);}}>Restore before the last change</Button></details>}
+      <Dialog open={tests.testing}><DialogContent onEscapeKeyDown={e=>e.preventDefault()} onInteractOutside={e=>e.preventDefault()} className="[&>button]:hidden"><DialogHeader><DialogTitle>Checking your app</DialogTitle></DialogHeader><p role="status">{tests.progress}</p><p className="text-sm text-muted-foreground">Eligible builds include up to two automatic repairs and fresh checks. Your previous files are checkpointed before changes. Editing resumes when this check finishes.</p></DialogContent></Dialog>
+      {!tests.testing&&tests.progress&&tests.result?.status==='failed'&&<p role="status" className="px-4 py-2 text-sm">{tests.progress}</p>}
       {incomingIdea && <div role="status" className="flex flex-wrap items-center gap-3 border-b bg-primary/10 p-3 text-sm"><p className="min-w-0 flex-1 break-words">Your idea from /build: {incomingIdea}</p><Button size="sm" disabled={isGenerating} onClick={()=>void acceptIdea()}>Start this project</Button></div>}
       <MVPBuildPlanner setup={setupInput} onChange={setSetupInput} hasFiles={!!projectFiles.length} busy={quoting || isGenerating} workerAvailable={tests.available} connected={!!supabaseConnection.connected || !!setupInput.managedApp} onBuild={()=>void quotedSend(setupInput.buildBrief?.idea || setupInput.customPrompt || '')}/>
       <MVPManagedSetup projectId={projectId} brief={setupInput.buildBrief} save={()=>saveProject({silent:true})} onReady={runtime=>{if(!setupInput.buildBrief)return;const brief={...setupInput.buildBrief,delivery:'connected' as const};setSetupInput({managedApp:true,managedRuntime:runtime,workflowPublicKey:runtime.publicKey,buildBrief:brief,workflow:automaticWorkflow(brief)});}}/>
@@ -292,7 +299,7 @@ export const MVPBuilder: React.FC = () => {
       <p className="p-2 text-muted-foreground">Existing user-owned databases remain supported here. Launch checks are selected from your app plan; no technical test selection is needed.</p>
       <MVPWorkflowPanel available={tests.available} projectId={projectId} setup={setupInput} onChange={next=>setSetupInput({...next,...(next.workflow && next.buildBrief ? {buildBrief:{...next.buildBrief,delivery:"connected" as const}} : {})})} hasFiles={!!projectFiles.length} connected={!!supabaseConnection.connected} onBuild={()=>void quotedSend('Build the agreed '+setupInput.workflow?.starter+' workflow for '+setupInput.workflow?.customer+'. Task: '+setupInput.workflow?.task+'. Success: '+setupInput.workflow?.outcome)} onTest={()=>void tests.run()} testing={tests.testing} result={tests.result} dirty={tests.dirty} fallback={isShowingPreviewFallback}/>
       </details>
-      <Dialog open={!!consent} onOpenChange={open=>{if(!open)setConsent(null);}}><DialogContent><DialogHeader><DialogTitle>Confirm this build</DialogTitle></DialogHeader><p className="text-sm">{consent?.prompt}</p><p className="text-sm text-muted-foreground">{(setupInput.buildBrief?.features || setupInput.workflow?.features)?.join(' / ')}</p><p className="font-semibold">{consent?.cost} credits</p>{setupInput.buildBrief?.delivery==='preview' && <p className="rounded-md bg-amber-500/10 p-3 text-sm">This purchase creates a preview and exportable code. Cloud data, sign-in and checkout require connections. Publishing requires a supported passing outcome test{tests.available!==true?' and the currently offline testing service':''}.</p>}<p className="text-xs text-muted-foreground">Existing files are checkpointed before this change. Test-result review is free. Each repair requires a new quote.</p><Button onClick={()=>void confirmBuild()}>Confirm and build</Button></DialogContent></Dialog>
+      <Dialog open={!!consent} onOpenChange={open=>{if(!open)setConsent(null);}}><DialogContent><DialogHeader><DialogTitle>Confirm this build</DialogTitle></DialogHeader><p className="text-sm">{consent?.prompt}</p><p className="text-sm text-muted-foreground">{(setupInput.buildBrief?.features || setupInput.workflow?.features)?.join(' / ')}</p><p className="font-semibold">{consent?.cost} credits</p>{setupInput.buildBrief?.delivery==='preview' && <p className="rounded-md bg-amber-500/10 p-3 text-sm">This purchase creates a preview and exportable code. Cloud data, sign-in and checkout require connections. Publishing requires a supported passing outcome test{tests.available!==true?' and the currently offline testing service':''}.</p>}<p className="text-xs text-muted-foreground">Existing files are checkpointed before this change. Test-result review is free. New builds include up to two automatic outcome repairs. Further requested edits require a new quote.</p><Button onClick={()=>void confirmBuild()}>Confirm and build</Button></DialogContent></Dialog>
       <MVPBuilderTopUpDialog open={topUpsOpen} onOpenChange={setTopUpsOpen} />
       <MVPBuilderCreditExhaustedDialog
         open={isCreditExhaustedModalOpen}

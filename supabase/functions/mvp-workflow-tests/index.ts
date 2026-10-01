@@ -5,6 +5,7 @@ import { publicKeyError } from '../_shared/mvp-workflow.ts';
 import { workflowWorkerAvailable } from '../_shared/mvp-worker-health.ts';
 import { deriveCapabilities } from '../_shared/mvp-capabilities.ts';
 import { buildBriefErrors } from '../_shared/mvp-build-brief.ts';
+import { repairOutcome } from '../_shared/mvp-outcome-repair.ts';
 const cors={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'authorization,apikey,content-type,x-client-info,x-worker-key'};
 const response=(value:unknown,status=200)=>new Response(JSON.stringify(value),{status,headers:{...cors,'Content-Type':'application/json'}});
 async function equalSecret(a:string,b:string){
@@ -38,6 +39,10 @@ serve(async req=>{
     const {data:health}=await db.from('mvp_workflow_worker_health').select('last_seen,profiles').eq('id',true).maybeSingle();
     const available=workflowWorkerAvailable(Deno.env.get('MVP_WORKFLOW_WORKER_SECRET')||'',health?.last_seen);
     if(body.action==='status')return response({available,profiles:available?health?.profiles||[]:[]});
+    if(body.action==='repair'){
+      if(!available)return response({error:'Restore the testing service before repairing. Original files are preserved.'},503);
+      return response(await repairOutcome(db,user.id,body.testId));
+    }
     if(body.action!=='request')return response({error:'Unknown action'},400);
     if(!available)return response({error:'Workflow testing and new publishing are temporarily unavailable. Existing apps remain editable and exportable. No credits were charged.'},503);
     const {data:project}=await db.from('mvp_projects').select('metadata,supabase_connection_id').eq('id',body.projectId).eq('user_id',user.id).maybeSingle();

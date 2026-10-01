@@ -4,6 +4,15 @@ This worker builds a saved revision, runs its customer workflow in Chromium, che
 
 ## Deployment prerequisites
 
+### Recovery update (2026-10-01)
+
+- Applied `20261001160000_mvp_recovery_jobs.sql` and `20261001161000_mvp_setup_scheduler.sql` to CT; do not rerun them. Redeployed `mvp-builder-generate`, `mvp-workflow-tests`, and `mvp-managed-app`.
+- Newly accepted paid source receives at most two included outcome repair attempts. Budgets are registered server-side against a finalized reservation and source fingerprint. Older builds/manual changes do not automatically receive that allowance. A failed check must have completed cleanup; service outages do not trigger code repairs.
+- Check my app repairs eligible failures, reloads the saved source, and checks again. Repairs may only replace existing non-dependency files. Applying a repair atomically verifies the source revision and creates a checkpoint. Changed files and recovery are visible in the workspace. Failed model requests consume an attempt, never another credit charge; further requested edits need a quote.
+- The setup scheduler uses the existing `CORE_TOOLS_CRON_SECRET` / `private.service_config.core_tools_cron_secret` pairing, processes at most five jobs per minute, and respects leases and retry delays. After forty claims, an unfinished setup moves to operator review. Keep managed admission disabled until infrastructure and email pass live checks.
+- Save failures now have a persistent retry action, navigation warns about unsaved work, and an older completed save cannot clear newer edits. Finished setup collapses to leave more room for chat and preview.
+- Verification: 35 targeted tests passed, including a browser repair/retest sequence with a simulated test service and database tests for limits, stale writes, checkpoint preservation, retry delays, and charges. These are not live worker or founder-pilot results.
+
 ### Managed-app implementation checkpoint (2026-10-01)
 
 The release is **in progress**. The founder workspace now starts with an app description, with categories and test selection kept internal. Current additions:
@@ -48,7 +57,7 @@ For the operator, not the founder:
 - Implement isolated hosted previews and all category-specific browser checks; the new worker currently adds only the static profile to the original three workflows. Test live auth, owner recovery, email delivery and configuration before releasing any managed profile.
 - Complete team invitation delivery/revocation, scheduled reminders, dashboard mapping UI, app-specific Stripe Connect onboarding/direct charges, checkout handlers, verified webhooks, subscription portal and scheduled reconciliation. Commerce SQL alone is not an operational payment integration.
 - Complete consistent export snapshots. The workspace export is bounded and may observe concurrent edits; it excludes authentication passwords.
-- Finish current-revision interactive hosted previews, the included outcome repair loop, queue/operator alerts, end-to-end outage tests and the DigitalOcean production deployment. Format repair attempts are capped at two; that is not an automatic repair of a failed browser outcome test.
+- Finish current-revision interactive hosted previews, operator alerts, end-to-end outage tests and the DigitalOcean production deployment. The included outcome repair loop is now implemented for eligible new paid source, but still needs a live worker check. Managed provisioning now retries through the scheduler without an open browser.
 - Run all thirty generated briefs and the twelve-founder pilot. No results or 8/10 rating are claimed. The evidence checker rejects missing build, regression, usability, cost and return-use observations.
 
 Provider contracts: [Supabase project creation](https://supabase.com/docs/reference/api/v1-create-a-project), [auth configuration](https://supabase.com/docs/reference/api/v1-update-auth-service-config), [Vercel project-domain verification](https://vercel.com/docs/rest-api/projects/get-a-project-domain).

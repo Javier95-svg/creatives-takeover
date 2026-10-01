@@ -8,6 +8,7 @@ export function MVPManagedSetup({projectId,brief,save,onReady}:{projectId:string
  const applied=useRef('');
  const [available,setAvailable]=useState(false),[state,setState]=useState<SetupStatus|null>(null),[busy,setBusy]=useState(false),[advancing,setAdvancing]=useState(false);
  const [exporting,setExporting]=useState(false),[exportError,setExportError]=useState('');
+ const [expanded,setExpanded]=useState(false);
  const exportData=async()=>{
   setExporting(true);setExportError('');
   try{
@@ -53,10 +54,13 @@ export function MVPManagedSetup({projectId,brief,save,onReady}:{projectId:string
   }catch(e){setState(current=>({...current,status:current?.status||'not_started',failure:e instanceof Error?e.message:'Setup failed. Retry.'}));}
   finally{setBusy(false);}
  };
- return <section aria-label="App setup" className="border-b px-4 py-3 text-sm">
+ return <section aria-label="App setup" className="border-b px-4 py-2 text-sm">
+  {state?.status==='ready'&&!expanded?<div className="flex items-center justify-between"><p role="status">Sign-in and app data ready</p><Button variant="ghost" size="sm" onClick={()=>setExpanded(true)}>Manage app data</Button></div>:<>
   <p className="font-medium">{state?.stage||'Set up sign-in and saved data'}</p>
   <p className="text-xs text-muted-foreground">CT manages your app database. Your existing drafts and code export remain available.</p>
+  {state&&!['not_started','ready','review','failed'].includes(state.status)&&<p className="mt-1 text-xs text-muted-foreground">Setup retries in the background. You can leave this page and return later.</p>}
   {state?.failure&&<p role="alert" className="mt-2 text-destructive">{state.failure}</p>}
   {state?.status==='ready'?<><p role="status" className="mt-2">App data and sign-in are ready. Check the current build before publishing. Use password recovery in your published app to set your owner password.</p><Button variant="outline" className="mt-2" size="sm" disabled={exporting} onClick={()=>void exportData()}>{exporting?'Exporting...':'Export app data and schema'}</Button>{exportError&&<p role="alert" className="mt-2 text-destructive">{exportError}</p>}</>:<Button className="mt-2" size="sm" disabled={busy||advancing||state?.status==='review'} onClick={()=>void run(!state||state.status==='not_started'?'setup':'advance')}>{busy||advancing?'Setting up...':!state||state.status==='not_started'?'Set up my app':'Continue setup'}</Button>}
- </section>;
+ {state?.status==='ready'&&<Button variant="ghost" size="sm" onClick={()=>setExpanded(false)}>Hide details</Button>}
+ </>}</section>;
 }

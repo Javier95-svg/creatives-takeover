@@ -162,36 +162,6 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
     );
   };
 
-  const saveIndicator = () => {
-    if (isSavingProject) {
-      return (
-        <span className="hidden sm:flex items-center gap-1 text-label text-muted-foreground">
-          <Loader2 className="h-3 w-3 animate-spin" />
-          Saving…
-        </span>
-      );
-    }
-    if (hasUnsavedChanges) {
-      return (
-        <button
-          onClick={onSaveProject}
-          className="hidden sm:flex items-center gap-1 text-label text-warning hover:text-warning transition-colors"
-        >
-          <AlertCircle className="h-3 w-3" />
-          Unsaved
-        </button>
-      );
-    }
-    if (lastSavedAt) {
-      return (
-        <span className="hidden sm:flex items-center gap-1 text-label text-muted-foreground">
-          <Check className="h-3 w-3 text-success" />
-          Saved {formatRelativeTime(lastSavedAt)}
-        </span>
-      );
-    }
-    return null;
-  };
 
   return (
     <>
@@ -260,7 +230,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
               <Pencil className="h-3 w-3 text-white opacity-0 transition-opacity group-hover:opacity-40" />
             </button>
           )}
-          {saveIndicator()}
+
         </div>
 
         {/* Right — status chips + actions */}
