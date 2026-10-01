@@ -46,12 +46,22 @@ serve(async req=>{
     const staticLanding=!project.metadata?.setupInput?.workflow && !buildBriefErrors(brief).length && deriveCapabilities(brief).profile==='static_landing';
     if(staticLanding&&!health?.profiles?.includes('static_landing'))return response({error:'Landing-page checks need the updated worker. Your saved draft is safe; no credits were charged.'},503);
     if(!staticLanding){
-    const keyError=publicKeyError(project.metadata?.setupInput?.workflowPublicKey);
+    let publicKey=project.metadata?.setupInput?.workflowPublicKey;
+    let connection;
+    if(project.metadata?.setupInput?.managedApp){
+      const {data:managed}=await db.from('mvp_managed_apps').select('status,manifest,public_runtime').eq('project_id',body.projectId).eq('user_id',user.id).maybeSingle();
+      if(!managed||managed.status!=='ready'||!brief||deriveCapabilities(brief).profile!==managed.manifest?.profile)return response({error:'Finish app setup for this plan before checking it.'},409);
+      publicKey=managed.public_runtime?.publicKey;
+      connection={status:'connected',supabase_account_id:managed.public_runtime?.url};
+    }else{
+      const {data}=await db.from('mvp_builder_supabase_connections').select('status,supabase_account_id').eq('id',project.supabase_connection_id).eq('user_id',user.id).maybeSingle();connection=data;
+      if(connection?.supabase_account_id!==project.metadata?.integrations?.supabase?.project?.projectUrl)return response({error:'Reconnect the database selected for this product.'},409);
+    }
+    const keyError=publicKeyError(publicKey);
     if(keyError)return response({error:keyError},400);
-    const {data:connection}=await db.from('mvp_builder_supabase_connections').select('status,supabase_account_id').eq('id',project.supabase_connection_id).eq('user_id',user.id).maybeSingle();
-    if(connection?.status!=='connected' || connection.supabase_account_id!==project.metadata?.integrations?.supabase?.project?.projectUrl)return response({error:'Reconnect the database selected for this product.'},409);
+    if(connection?.status!=='connected')return response({error:'Reconnect the database selected for this product.'},409);
     if(!/^https:\/\/[a-z0-9]+\.supabase\.co$/.test(connection.supabase_account_id))return response({error:'Unsupported database address.'},400);
-    const readiness=await fetch(connection.supabase_account_id+'/rest/v1/rpc/ct_mvp_workflow_health',{method:'POST',headers:{apikey:project.metadata.setupInput.workflowPublicKey,'Content-Type':'application/json'},body:JSON.stringify({p_project_key:body.projectId}),signal:AbortSignal.timeout(10000),redirect:'error'});
+    const readiness=await fetch(connection.supabase_account_id+'/rest/v1/rpc/ct_mvp_workflow_health',{method:'POST',headers:{apikey:publicKey,'Content-Type':'application/json'},body:JSON.stringify({p_project_key:body.projectId}),signal:AbortSignal.timeout(10000),redirect:'error'});
     if(!readiness.ok || await readiness.json()!==true)return response({error:'Install the workflow schema and register the owner account in your connected database. Open Review scope → Database setup.'},409);
     }
     // Run the owner-scoped RPC under the caller's JWT, never service_role.

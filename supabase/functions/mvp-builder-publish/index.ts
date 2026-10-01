@@ -185,7 +185,9 @@ serve(async (req) => {
       const { error: reuseError } = await supabase.rpc('publish_tested_mvp',{p_project_id:projectId,p_user_id:user.id,p_test_id:testRunId,p_slug:slug,p_url:url,p_reservation_id:reservationId});
       if (reuseError) throw new Error("Unable to update project");
     } else {
-      const base = slugifyProjectName(typeof project.title === "string" ? project.title : "");
+      const {data:managed}=await supabase.from('mvp_managed_apps').select('status').eq('project_id',projectId).eq('user_id',user.id).maybeSingle();
+      const managedSlug=managed?.status==='ready' && project.metadata?.setupInput?.managedApp ? 'app-'+projectId : null;
+      const base = managedSlug || slugifyProjectName(typeof project.title === "string" ? project.title : "");
 
       // Pull every slug that could collide with `base` or `base-N` so we can pick
       // the lowest free suffix. Service role => spans all users (global uniqueness).
@@ -202,6 +204,7 @@ serve(async (req) => {
       );
 
       const nextCandidate = (skip: Set<string>): string => {
+        if(managedSlug){if(taken.has(base)||skip.has(base))throw new Error('Managed app address requires operator reconciliation');return base;}
         if (!taken.has(base) && !skip.has(base)) return base;
         let suffix = 2;
         while (taken.has(`${base}-${suffix}`) || skip.has(`${base}-${suffix}`)) suffix += 1;

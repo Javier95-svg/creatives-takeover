@@ -25,6 +25,11 @@ export function MVPWorkflowPanel({setup, onChange, hasFiles, connected, onBuild,
   const w=setup.workflow;
   const change=(patch:Partial<NonNullable<typeof w>>)=>w && onChange({...setup,workflow:{...w,...patch}});
   const errors=workflowErrors(w);
+  if(setup.managedApp)return <p className="p-3 text-sm text-muted-foreground">CT manages this app's database and sign-in. No keys or SQL are needed.</p>;
+  if(setup.buildBrief)return <section className="space-y-3 p-3 text-sm" aria-label="Existing database settings">
+    <Label>Database public key<Input value={setup.workflowPublicKey||''} onChange={e=>onChange({...setup,workflowPublicKey:e.target.value})} placeholder="Publishable or anon key"/></Label>
+    <details className="text-xs"><summary className="cursor-pointer">Set up an existing user-owned database</summary><p className="my-2">For an existing Supabase project, create your app owner account first, then run this schema in that app database. This advanced path preserves existing connections.</p><Input aria-label="App owner email" value={ownerEmail} onChange={e=>setOwnerEmail(e.target.value)} placeholder="owner@example.com"/><Button className="mt-2" size="sm" variant="outline" onClick={()=>void copySetup()}>Copy database setup SQL</Button></details>
+  </section>;
   const stage=!hasFiles?'Describe':fallback?'Build':!result || result.status!=='passed' || dirty?'Test':'Publish';
   return <section className="shrink-0 max-h-[45vh] overflow-auto border-b bg-card p-3 text-sm" aria-label="Customer workflow">
     <div className="flex flex-wrap items-center justify-between gap-2">

@@ -39,6 +39,8 @@ export type MVPBuilderActionType =
 export type MVPBuilderOutputProjectType = 'html_single' | 'react_vite';
 
 export interface MVPBuilderSetupInput {
+  managedApp?: boolean;
+  managedRuntime?: {url:string;publicKey:string;projectId:string};
   buildBrief?: MVPBuildBrief;
   workflow?: WorkflowDefinition;
   workflowPublicKey?: string;

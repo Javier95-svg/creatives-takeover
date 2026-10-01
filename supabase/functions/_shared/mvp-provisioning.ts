@@ -1,4 +1,5 @@
 import { APP_SCHEMA_V1 } from './mvp-app-schema.ts';
+import { MANAGED_WORKFLOW_SCHEMA } from './mvp-managed-workflow-schema.ts';
 import type { CapabilityManifest } from './mvp-capabilities.ts';
 export type ManagedJob = {project_id:string;organization_id:string;provider_ref?:string|null;status:string;manifest:CapabilityManifest;owner_auth_id?:string|null};
 type Project = {id:string;name:string;organization_id?:string;organization_slug?:string;status:string};
@@ -47,11 +48,12 @@ export async function advanceManagedApp(job:ManagedJob,ports:Ports) {
  if(job.status==='schema'){
   if(job.manifest.schemaVersion!=='1.0.0')throw Error('Unsupported module version');
   await ports.management(path+'/database/query','POST',{query:APP_SCHEMA_V1});
+  await ports.management(path+'/database/query','POST',{query:MANAGED_WORKFLOW_SCHEMA});
   await ports.management(path+'/database/query','POST',{query:'INSERT INTO public.ct_app_config(app_id,schema_version,modules) VALUES ('+sqlText(job.project_id)+",'1.0.0',ARRAY["+job.manifest.modules.map(sqlText).join(',')+']::text[]) ON CONFLICT(app_id) DO NOTHING;'});
   await ports.save({status:'auth',stage:'Configuring sign-in and recovery'});return;
  }
  if(job.status==='auth'){
-  await ports.management(path+'/config/auth','PATCH',ports.authConfig);
+  await ports.management(path+'/config/auth','PATCH',{...ports.authConfig,disable_signup:true});
   const keys=await ports.management(path+'/api-keys');
   const publicKey=keys.find((k:any)=>k.name==='anon')?.api_key;
   const serviceKey=keys.find((k:any)=>k.name==='service_role')?.api_key;
@@ -62,10 +64,13 @@ export async function advanceManagedApp(job:ManagedJob,ports:Ports) {
  // Owner account uses a random password; the founder uses standard app recovery.
  // No password or service key is returned by this workflow.
  if(job.status==='owner'){
-  const rows=await ports.management(path+'/database/query','POST',{query:'SELECT id FROM auth.users WHERE lower(email)=lower('+sqlText(ports.ownerEmail)+') LIMIT 1;'});
+  const rows=await ports.management(path+'/database/query','POST',{query:'SELECT id,raw_app_meta_data->>\'ct_provision_project\' AS provision_project FROM auth.users WHERE lower(email)=lower('+sqlText(ports.ownerEmail)+') LIMIT 1;'});
   if(!rows[0]?.id)return {createOwner:true};
   if(!uuid.test(rows[0].id))throw Error('Invalid owner identity');
+  if(rows[0].provision_project!==job.project_id)throw Error('An existing app account needs owner verification. No owner permissions were granted.');
   await ports.management(path+'/database/query','POST',{query:'INSERT INTO public.ct_app_members(app_id,user_id,role) VALUES('+sqlText(job.project_id)+','+sqlText(rows[0].id)+",'owner') ON CONFLICT(app_id,user_id) DO NOTHING;"});
+  await ports.management(path+'/database/query','POST',{query:'INSERT INTO public.ct_mvp_workflow_owners(project_key,user_id) VALUES('+sqlText(job.project_id)+','+sqlText(rows[0].id)+') ON CONFLICT(project_key) DO NOTHING;'});
+  await ports.management(path+'/config/auth','PATCH',{disable_signup:false});
   await ports.save({status:'ready',stage:'Your app data and sign-in are ready',owner_auth_id:rows[0].id,failure:null});
  }
 }

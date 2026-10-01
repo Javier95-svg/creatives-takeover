@@ -6,7 +6,7 @@ This worker builds a saved revision, runs its customer workflow in Chromium, che
 
 ### Managed-app implementation checkpoint (2026-10-01)
 
-The next release is **in progress, not a completed six-category launch**. Current additions:
+The release is **in progress**. The founder workspace now starts with an app description, with categories and test selection kept internal. Current additions:
 
 - Two worker consumers, capped at two; durable host cleanup journal; restart cleanup; bounded server lease retries; systemd service and environment template.
 - CTA-only landing-page browser checks, with database-free server acceptance. The test follows the configured link and rejects no-op links and broken section navigation.
@@ -15,14 +15,18 @@ The next release is **in progress, not a completed six-category launch**. Curren
 - Disabled-by-default invited pilot admission, ten-app cap, fresh cost forecast requirement, $175 alert event and $200 admission stop. Reserved costs include incomplete jobs. No automatic shutdown of live apps.
 - Reviewed application SQL for private records, leads/referrals, habits, booking capacity and dashboard data. Separate commerce SQL covers stock reservations, deduplicated payment reconciliation and server-enforced subscription access.
 - Browser runtime source and category capability definitions, plus CSV validation and streak calculations. **The runtime is not yet injected into generated projects.**
+- Managed saved-record and lead-capture apps now use the established workflow REST contract: provisioning installs that schema and owner mapping; generation and testing obtain the connection from server-owned records. Other modules still require runtime integration and outcome checks.
+- One Describe → Build → Check → Publish workspace, automatic supported workflow selection, restored saved check results, and a read-only view of the exact checked artifact without WebContainers. That view blocks live requests; it is not a hosted interactive staging environment.
+- Managed schema/data export is available in the founder workspace. Provisioning disables public signup while establishing the owner, and refuses to promote an unverified pre-existing account. Generated authentication instructions include sign-up and password recovery; live email delivery is still unverified.
 - Thirty representative briefs in `tests/fixtures/mvp-release-briefs.json` and a release evidence checker in `scripts/check-mvp-release-gates.mjs`. These fixtures are not thirty successful builds.
 
 New **CT platform migrations**, after the previous migrations, in this order:
 
 1. `supabase/migrations/20261001140000_mvp_managed_control.sql`
 2. `supabase/migrations/20261001141000_mvp_static_acceptance.sql`
+3. `supabase/migrations/20261001150000_mvp_saved_test_review.sql` — managed connection binding, saved checks, and owner-only checked artifact review.
 
-Deployment update: the user reports that both new CT migrations succeeded and all four required Edge Functions were deployed. That production state has not been independently verified. The Docker worker and managed infrastructure remain outstanding. App schemas in `_shared/mvp-app-schema.ts` and `_shared/mvp-commerce-schema.ts` are for separate customer/test projects; do not paste them into CT's platform database. Existing installed SQL files should not be rerun.
+Deployment update (2026-10-01): the saved-test-review migration was applied through the linked Management API, then its two RPCs and managed-runtime column were verified. All four changed Edge Functions are active: generate v183, publish v41, workflow-tests v6, managed-app v3. The production worker heartbeat is still absent. App schemas in `_shared/mvp-app-schema.ts` and `_shared/mvp-commerce-schema.ts` are for separate customer/test projects; do not paste them into CT's platform database. Existing installed SQL files should not be rerun.
 
 After these migrations, the changed/new Edge Functions are `mvp-workflow-tests`, `mvp-builder-publish`, `mvp-builder-generate` (shared prompt dependency), and `mvp-managed-app`. Deploy together with the rebuilt worker and frontend after the isolated checks pass. Keep managed admission disabled.
 
@@ -40,11 +44,11 @@ For the operator, not the founder:
 
 #### Remaining implementation before the proposed 8/10 release
 
-- Integrate the managed runtime and immutable capability manifest into generation, preview, repairs and all six publication profiles. Preserve user-owned database connections and add explicit data migration. Current managed setup does not convert an existing project.
+- Extend the managed runtime integration beyond the saved-record and lead-capture contract, including isolated previews and their acceptance checks. Existing user-owned connections remain supported; conversion to managed hosting still needs an explicit data migration.
 - Implement isolated hosted previews and all category-specific browser checks; the new worker currently adds only the static profile to the original three workflows. Test live auth, owner recovery, email delivery and configuration before releasing any managed profile.
 - Complete team invitation delivery/revocation, scheduled reminders, dashboard mapping UI, app-specific Stripe Connect onboarding/direct charges, checkout handlers, verified webhooks, subscription portal and scheduled reconciliation. Commerce SQL alone is not an operational payment integration.
-- Connect managed schema/data export to the founder workspace and complete consistent export snapshots. The current owner-only export endpoint is bounded and may observe concurrent edits; it excludes authentication passwords.
-- Finish the unified workspace and current-revision hosted preview, included outcome repair loop, queue/operator alerts, end-to-end outage tests and the DigitalOcean production deployment.
+- Complete consistent export snapshots. The workspace export is bounded and may observe concurrent edits; it excludes authentication passwords.
+- Finish current-revision interactive hosted previews, the included outcome repair loop, queue/operator alerts, end-to-end outage tests and the DigitalOcean production deployment. Format repair attempts are capped at two; that is not an automatic repair of a failed browser outcome test.
 - Run all thirty generated briefs and the twelve-founder pilot. No results or 8/10 rating are claimed. The evidence checker rejects missing build, regression, usability, cost and return-use observations.
 
 Provider contracts: [Supabase project creation](https://supabase.com/docs/reference/api/v1-create-a-project), [auth configuration](https://supabase.com/docs/reference/api/v1-update-auth-service-config), [Vercel project-domain verification](https://vercel.com/docs/rest-api/projects/get-a-project-domain).
@@ -53,7 +57,7 @@ Release verification (2026-10-01): both CT migrations are installed and the five
 
 The UI checks worker availability every minute. While unavailable, it pauses new connected workflow builds and tests. Founders may explicitly choose a paid preview/export build, with the limitation shown in the price confirmation; that mode does not promise cloud persistence or publication. The generation endpoint rejects new connected builds before reserving credits. The server publication gate remains enforced.
 
-The six-category product planner expands briefing and generation, not the three server-tested outcome profiles. Store checkout, dashboards, and other category-specific outcomes have not received production certification. Do not equate a successful preview with delivery of every promise on `/build`. Native binaries, production payment fulfillment, notifications and worker activation remain separate delivery requirements.
+The prompt-first planner expands briefing and generation, not the server-tested outcome profiles. Store checkout, dashboards, and other specialized outcomes have not received production certification. Do not equate a successful preview with delivery of every promise on `/build`. Native binaries, production payment fulfillment, notifications and worker activation remain separate delivery requirements.
 
 The planner also adds `20261001130000_mvp_build_brief_revision.sql` after the two migrations below. It includes the approved product brief in revision checks while preserving hashes for projects without a brief. Deploy the updated `mvp-builder-generate` function with the planner frontend. These latest planner changes require a separate release from the earlier two-tool upgrade.
 

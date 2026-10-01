@@ -31,6 +31,7 @@ test('workflow SQL enforces ownership, revisions, leases, immutable publishing a
  });
  await db.exec(readFileSync('supabase/migrations/20261001140000_mvp_managed_control.sql','utf8'));
  await db.exec(readFileSync('supabase/migrations/20261001141000_mvp_static_acceptance.sql','utf8'));
+ await db.exec(readFileSync('supabase/migrations/20261001150000_mvp_saved_test_review.sql','utf8'));
  await t.test('managed admission is owner-scoped, idempotent, budget-limited and private',async()=>{
   const managedId='20000000-0000-0000-0000-000000000088';
   await call('INSERT INTO mvp_projects(id,user_id) VALUES($1,$2)',[managedId,owner]);
@@ -45,6 +46,16 @@ test('workflow SQL enforces ownership, revisions, leases, immutable publishing a
   await db.exec('UPDATE mvp_managed_pilot SET base_monthly_cents=9000');
   for(let i=0;i<2;i++)await call('SELECT admit_mvp_managed_app($1,$2,$3,$4)',[managedId,owner,'managed-org',manifest]);
   assert.equal((await call('SELECT count(*)::int n FROM mvp_managed_apps'))[0].n,1);
+  await call("UPDATE mvp_managed_apps SET status='ready',public_runtime=$2 WHERE project_id=$1",[managedId,{url:'https://managedexample.supabase.co',publicKey:'server-owned-public-key'}]);
+  await call('UPDATE mvp_projects SET project_files=$2,metadata=$3 WHERE id=$1',[managedId,[{filename:'index.html',content:'Managed notes'}],{setupInput:{managedApp:true,workflowPublicKey:'forged-browser-key',workflow:{version:1,starter:'customer_portal',customer:'Writers',task:'Save a note',outcome:'Reload it',features:['Notes']},buildBrief:{version:1,kind:'app',delivery:'connected',idea:'Private notes'}}}]);
+  const managedTest=(await call('SELECT request_mvp_workflow_test($1) id',[managedId]))[0].id;
+  const snapshot=(await call('SELECT snapshot FROM mvp_build_tests WHERE id=$1',[managedTest]))[0].snapshot;
+  assert.equal(snapshot.publicKey,'server-owned-public-key');
+  assert.equal(snapshot.backend.projectUrl,'https://managedexample.supabase.co');
+  await call("UPDATE mvp_build_tests SET status='failed' WHERE id=$1",[managedTest]);
+  await call("UPDATE mvp_managed_apps SET status='schema' WHERE project_id=$1",[managedId]);
+  await assert.rejects(call('SELECT request_mvp_workflow_test($1)',[managedId]),/Finish managed/);
+  await call("UPDATE mvp_managed_apps SET status='ready' WHERE project_id=$1",[managedId]);
   await db.exec('SET ROLE authenticated');
   await assert.rejects(call('SELECT * FROM mvp_managed_secrets'),/permission denied/);
   await assert.rejects(call('SELECT admit_mvp_managed_app($1,$2,$3,$4)',[managedId,owner,'managed-org',manifest]),/permission denied/);
@@ -58,8 +69,16 @@ test('workflow SQL enforces ownership, revisions, leases, immutable publishing a
   const claimed=(await call("SELECT * FROM claim_mvp_workflow_test(ARRAY['static_landing'])"))[0];
   await call('SELECT finish_mvp_workflow_test($1,$2,$3,$4,null)',[testId,claimed.lease,{customer_task:true,cta_navigation:true,no_runtime_errors:true,responsive_ui:true,cleanup:true},[{filename:'index.html',content:'Built portfolio'}]]);
   assert.equal((await call('SELECT status FROM mvp_build_tests WHERE id=$1',[testId]))[0].status,'passed');
+  assert.equal((await call('SELECT * FROM current_mvp_workflow_test($1)',[staticId]))[0].id,testId);
+  assert.equal((await call('SELECT review_mvp_test_artifact($1) artifact',[testId]))[0].artifact[0].content,'Built portfolio');
+  await db.exec(`SELECT set_config('request.jwt.claim.sub','${other}',false);`);
+  await assert.rejects(call('SELECT * FROM current_mvp_workflow_test($1)',[staticId]),/not found/);
+  await assert.rejects(call('SELECT review_mvp_test_artifact($1)',[testId]),/current saved app/);
+  await db.exec(`SELECT set_config('request.jwt.claim.sub','${owner}',false);`);
   await call("UPDATE mvp_projects SET metadata=jsonb_set(metadata,'{setupInput,buildBrief,idea}','\"An email waitlist\"') WHERE id=$1",[staticId]);
   await assert.rejects(call('SELECT request_mvp_workflow_test($1)',[staticId]),/workflow/);
+  assert.equal((await call('SELECT * FROM current_mvp_workflow_test($1)',[staticId])).length,0);
+  await assert.rejects(call('SELECT review_mvp_test_artifact($1)',[testId]),/current saved app/);
  });
  let id,lease;
  await t.test('backfill freezes existing URLs while drafts change',async()=>{

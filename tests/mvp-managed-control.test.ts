@@ -36,6 +36,35 @@ test('missing or duplicated provider identity stops provisioning for operator re
  await advanceManagedApp(job,{management:async()=>[],save:async(p:any)=>Object.assign(job,p)} as any);
  assert.equal(job.status,'review');
 });
+
+test('owner provisioning refuses an unverified pre-existing identity, then enables signup after ownership',async()=>{
+ const job:any={project_id:'10000000-0000-0000-0000-000000000001',organization_id:'managed-org',provider_ref:'dedicatedref',status:'owner'};
+ const calls:{path:string;body:any}[]=[];
+ let verified=false;
+ const ports:any={ownerEmail:'owner@example.invalid',save:async(p:any)=>Object.assign(job,p),management:async(path:string,method:string,body:any)=>{
+  calls.push({path,body});
+  if(!method)return {name:'ct-app-'+job.project_id,organization_id:'managed-org'};
+  if(body?.query?.startsWith('SELECT'))return [{id:'20000000-0000-0000-0000-000000000001',provision_project:verified?job.project_id:null}];
+  return {};
+ }};
+ await assert.rejects(()=>advanceManagedApp(job,ports),/owner verification/);
+ assert.equal(calls.some(c=>c.body?.query?.startsWith('INSERT')),false);
+ verified=true;await advanceManagedApp(job,ports);
+ assert.equal(job.status,'ready');
+ assert.equal(calls.filter(c=>c.body?.query?.startsWith('INSERT')).length,2);
+ assert.equal(calls.at(-1)?.body.disable_signup,false);
+});
+
+test('managed authentication disables public signup until the owner is installed',async()=>{
+ const job:any={project_id:'10000000-0000-0000-0000-000000000001',organization_id:'managed-org',provider_ref:'dedicatedref',status:'auth'};
+ let configured:any;
+ await advanceManagedApp(job,{ownerEmail:'owner@example.invalid',authConfig:{site_url:'https://example.invalid'},storeCredentials:async()=>{},save:async(p:any)=>Object.assign(job,p),management:async(path:string,method:string,body:any)=>{
+  if(path.endsWith('/api-keys'))return [{name:'anon',api_key:'public'},{name:'service_role',api_key:'secret'}];
+  if(method==='PATCH'){configured=body;return {};}
+  return {name:'ct-app-'+job.project_id,organization_id:'managed-org'};
+ }} as any);
+ assert.equal(configured.disable_signup,true);assert.equal(job.status,'owner');
+});
 test('CSV mapping rejects invalid dates, duplicate IDs and malformed quoting',()=>{
  const rows=parseCsv('id,date,category,value\r\na,2026-10-01,"Sales, retail",12.50\r\nb,2026-10-02,Sales,7.5');
  const mapped=mapMetricRows(rows,{id:0,day:1,category:2,amount:3});assert.equal(mapped.reduce((n,r)=>n+r.amount,0),20);

@@ -2,8 +2,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { MVPWorkflowPanel } from './MVPWorkflowPanel';
 import { MVPBuildPlanner } from './MVPBuildPlanner';
 import { MVPManagedSetup } from './MVPManagedSetup';
-import { deriveCapabilities } from '../../../supabase/functions/_shared/mvp-capabilities';
-import { buildBriefErrors, createBuildBrief } from '../../../supabase/functions/_shared/mvp-build-brief';
+import { MVPLaunchPanel } from './MVPLaunchPanel';
+import { MVPCheckedPreview } from './MVPCheckedPreview';
+import { automaticWorkflow, launchRequirement, planFromPrompt } from '../../../supabase/functions/_shared/mvp-builder-journey';
+import { buildBriefErrors } from '../../../supabase/functions/_shared/mvp-build-brief';
 import { useMvpWorkflowTest } from '@/hooks/useMvpWorkflowTest';
 import { workflowErrors, publicKeyError } from '../../../supabase/functions/_shared/mvp-workflow';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -110,24 +112,24 @@ export const MVPBuilder: React.FC = () => {
   const acceptIdea=async()=>{
     if(projectFiles.length && !await saveProject({silent:true})){toast.error('Save your current project before starting another.');return;}
     resetProject();
-    setSetupInput({buildBrief:createBuildBrief(incomingIdea),customPrompt:incomingIdea});
+    setSetupInput({buildBrief:planFromPrompt(incomingIdea),customPrompt:incomingIdea});
     setIncomingIdea('');
     const url=new URL(window.location.href);url.searchParams.delete('idea');window.history.replaceState({},'',url.pathname+url.search+url.hash);
   };
 
-  const draftIdentity=JSON.stringify([projectId,projectFiles,setupInput.buildBrief,setupInput.workflow,setupInput.workflowPublicKey,supabaseConnection.connectionId]);
-  const tests=useMvpWorkflowTest(projectId,draftIdentity,()=>saveProject({silent:true}),isShowingPreviewFallback);
+  const draftIdentity=JSON.stringify([projectId,projectFiles,setupInput.buildBrief,setupInput.workflow,setupInput.workflowPublicKey,supabaseConnection.connectionId,setupInput.managedApp,setupInput.managedRuntime]);
+  const tests=useMvpWorkflowTest(projectId,draftIdentity,()=>saveProject({silent:true}),isShowingPreviewFallback,hasUnsavedChanges);
   const [consent,setConsent]=useState<{prompt:string;cost:number;repairKey?:string;identity:string}|null>(null);
   const [quoting,setQuoting]=useState(false);
   const quotedSend=async(prompt:string,options?:{responseMode?:'chat'|'build'},repairKey?:string)=>{
     if(options?.responseMode==='chat') return sendMessage(prompt,options);
     if(quoting || isGenerating)return;
     const brief=setupInput.buildBrief;
-    if(!projectFiles.length && !brief && !setupInput.workflow){setSetupInput({buildBrief:createBuildBrief(prompt)});toast.info('Your idea is ready. Add who it is for, then review the plan and price.');return;}
+    if(!projectFiles.length && !brief && !setupInput.workflow){setSetupInput({buildBrief:planFromPrompt(prompt)});toast.info('Your app plan is ready. Review the price to start building.');return;}
     if(brief && buildBriefErrors(brief).length){toast.error(buildBriefErrors(brief)[0]);return;}
     if(!projectFiles.length && brief?.delivery!=='preview' && tests.available!==true){toast.error('Launch testing is offline. You can choose a preview/export build in your plan.');return;}
     if(!brief && !projectFiles.length && workflowErrors(setupInput.workflow).length){toast.error('Choose a starter and define the customer task first.');return;}
-    if((setupInput.workflow || brief?.delivery==='connected') && !supabaseConnection.connected){toast.error('Connect the database for this workflow first.');return;}
+    if((setupInput.workflow || brief?.delivery==='connected') && !supabaseConnection.connected && !setupInput.managedApp){toast.error('Set up your app or connect an existing database first.');return;}
     if((setupInput.workflow || brief?.delivery==='connected') && publicKeyError(setupInput.workflowPublicKey)){toast.error(publicKeyError(setupInput.workflowPublicKey)!);return;}
     setQuoting(true);
     try {const quote=await classifyActionQuote(prompt);if(quote && quote.actionType!=='unsupported' && quote.actionType!=='unclear')setConsent({prompt,cost:quote.creditCost,repairKey,identity:JSON.stringify([draftIdentity,selectedModels])});else toast.error('This request is outside the supported workflow scope.');}
@@ -282,11 +284,12 @@ export const MVPBuilder: React.FC = () => {
       />
       {projectFiles.length>0 && <details className="px-4 py-1 text-xs"><summary className="cursor-pointer">Recovery</summary><Button variant="ghost" size="sm" disabled={isGenerating || isDeploying} onClick={async()=>{const {error}=await (supabase as any).rpc('mvp_edit_checkpoint',{p_project_id:projectId,p_restore:true});if(error)toast.error(error.message);else await loadProject(projectId,true);}}>Restore the checkpoint before the last paid change</Button></details>}
       {incomingIdea && <div role="status" className="flex flex-wrap items-center gap-3 border-b bg-primary/10 p-3 text-sm"><p className="min-w-0 flex-1 break-words">Your idea from /build: {incomingIdea}</p><Button size="sm" disabled={isGenerating} onClick={()=>void acceptIdea()}>Start this project</Button></div>}
-      <MVPBuildPlanner setup={setupInput} onChange={setSetupInput} hasFiles={!!projectFiles.length} busy={quoting || isGenerating} workerAvailable={tests.available} connected={!!supabaseConnection.connected} onBuild={()=>void quotedSend(setupInput.buildBrief?.idea || setupInput.customPrompt || '')}/>
-      <MVPManagedSetup projectId={projectId} brief={setupInput.buildBrief} save={()=>saveProject({silent:true})}/>
-      {setupInput.buildBrief && !buildBriefErrors(setupInput.buildBrief).length && !setupInput.workflow && deriveCapabilities(setupInput.buildBrief).profile==='static_landing' && <section aria-label="Check and publish" className="flex flex-wrap items-center gap-3 border-b p-3 text-sm"><p className="flex-1">{tests.dirty?'Your app changed. Check this revision again.':tests.result?.status==='passed'?'Your landing page passed its navigation and mobile checks.':tests.result?.failure_details||'Check your call to action and mobile layout before publishing. No database is needed.'}</p><Button size="sm" disabled={!projectFiles.length||tests.testing||tests.available!==true||isShowingPreviewFallback||!setupInput.buildBrief.ctaUrl} onClick={()=>void tests.run()}>{tests.testing?'Checking your page...':'Check my page'}</Button>{tests.testRunId&&<Button size="sm" disabled={isDeploying} onClick={publishTested}>Publish checked page</Button>}</section>}
-      <details className="shrink-0 max-h-[35vh] overflow-auto border-b px-3 text-xs"><summary className="cursor-pointer py-2">Database setup and launch verification</summary>
-      <p className="p-2 text-muted-foreground">Automated outcome checks currently cover lead capture, request management and private saved records. Choose a check only when it matches your product. Other workflows still need matching checks before publication.</p>
+      <MVPBuildPlanner setup={setupInput} onChange={setSetupInput} hasFiles={!!projectFiles.length} busy={quoting || isGenerating} workerAvailable={tests.available} connected={!!supabaseConnection.connected || !!setupInput.managedApp} onBuild={()=>void quotedSend(setupInput.buildBrief?.idea || setupInput.customPrompt || '')}/>
+      <MVPManagedSetup projectId={projectId} brief={setupInput.buildBrief} save={()=>saveProject({silent:true})} onReady={runtime=>{if(!setupInput.buildBrief)return;const brief={...setupInput.buildBrief,delivery:'connected' as const};setSetupInput({managedApp:true,managedRuntime:runtime,workflowPublicKey:runtime.publicKey,buildBrief:brief,workflow:automaticWorkflow(brief)});}}/>
+      <MVPCheckedPreview testRunId={tests.testRunId}/>
+      <MVPLaunchPanel hasFiles={!!projectFiles.length} generating={isGenerating} testing={tests.testing} publishing={isDeploying} available={tests.available} fallback={isShowingPreviewFallback} dirty={tests.dirty} result={tests.result} canPublish={!!tests.testRunId} requirement={launchRequirement(setupInput.buildBrief,!!setupInput.workflow)} onTest={()=>void tests.run()} onPublish={publishTested}/>
+      <details className="shrink-0 max-h-[35vh] overflow-auto border-b px-3 text-xs"><summary className="cursor-pointer py-2">Advanced: existing database connection</summary>
+      <p className="p-2 text-muted-foreground">Existing user-owned databases remain supported here. Launch checks are selected from your app plan; no technical test selection is needed.</p>
       <MVPWorkflowPanel available={tests.available} projectId={projectId} setup={setupInput} onChange={next=>setSetupInput({...next,...(next.workflow && next.buildBrief ? {buildBrief:{...next.buildBrief,delivery:"connected" as const}} : {})})} hasFiles={!!projectFiles.length} connected={!!supabaseConnection.connected} onBuild={()=>void quotedSend('Build the agreed '+setupInput.workflow?.starter+' workflow for '+setupInput.workflow?.customer+'. Task: '+setupInput.workflow?.task+'. Success: '+setupInput.workflow?.outcome)} onTest={()=>void tests.run()} testing={tests.testing} result={tests.result} dirty={tests.dirty} fallback={isShowingPreviewFallback}/>
       </details>
       <Dialog open={!!consent} onOpenChange={open=>{if(!open)setConsent(null);}}><DialogContent><DialogHeader><DialogTitle>Confirm this build</DialogTitle></DialogHeader><p className="text-sm">{consent?.prompt}</p><p className="text-sm text-muted-foreground">{(setupInput.buildBrief?.features || setupInput.workflow?.features)?.join(' / ')}</p><p className="font-semibold">{consent?.cost} credits</p>{setupInput.buildBrief?.delivery==='preview' && <p className="rounded-md bg-amber-500/10 p-3 text-sm">This purchase creates a preview and exportable code. Cloud data, sign-in and checkout require connections. Publishing requires a supported passing outcome test{tests.available!==true?' and the currently offline testing service':''}.</p>}<p className="text-xs text-muted-foreground">Existing files are checkpointed before this change. Test-result review is free. Each repair requires a new quote.</p><Button onClick={()=>void confirmBuild()}>Confirm and build</Button></DialogContent></Dialog>

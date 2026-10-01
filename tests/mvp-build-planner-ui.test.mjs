@@ -5,7 +5,7 @@ import {chromium} from '@playwright/test';
 import {existsSync,readFileSync,readdirSync} from 'node:fs';
 import path from 'node:path';
 
-test('mobile planner supports six categories, preview without connections, and clear launch restrictions',async()=>{
+test('prompt-first planner keeps categories internal and shows connection and price requirements',async()=>{
   const bundle=await build({stdin:{loader:'tsx',resolveDir:process.cwd(),contents:`
   import React,{useState} from 'react';import {createRoot} from 'react-dom/client';
   import {MVPBuildPlanner} from './src/components/mvp-builder/MVPBuildPlanner';
@@ -18,21 +18,23 @@ test('mobile planner supports six categories, preview without connections, and c
     await page.goto('http://ct-planner.test');
     for(const f of readdirSync('dist/assets').filter(f=>f.endsWith('.css')))await page.addStyleTag({content:readFileSync('dist/assets/'+f,'utf8')});
     await page.addScriptTag({content:bundle.outputFiles[0].text});
-    for(const label of ['Landing page','Web & mobile app','Dashboard','Online store','SaaS MVP','Internal tool']){
-      await page.getByRole('button',{name:label,exact:true}).click();
-      await page.getByLabel('Who is it for?').fill('Independent founders');
-      assert.equal(await page.getByRole('button',{name:'Review plan and price'}).isEnabled(),true);
-    }
-    await page.getByRole('button',{name:'Online store',exact:true}).click();
-    await page.getByLabel('Hosted checkout URL').fill('javascript:alert(1)');
-    assert.equal(await page.getByRole('button',{name:'Review plan and price'}).isDisabled(),true);
-    await page.getByLabel('Hosted checkout URL').fill('https://buy.stripe.com/example');
-    await page.getByRole('button',{name:'Review plan and price'}).click();
+    assert.equal(await page.getByRole('button',{name:'Online store',exact:true}).count(),0);
+    await page.getByLabel('Describe your app').fill('A simple store for handmade ceramics');
+    assert.equal(await page.getByRole('button',{name:'Review price and build'}).isEnabled(),true);
+    await page.getByText('App details and connections',{exact:true}).click();
+    await page.getByLabel('Hosted checkout link').fill('javascript:alert(1)');
+    assert.equal(await page.getByRole('button',{name:'Review price and build'}).isDisabled(),true);
+    await page.getByLabel('Hosted checkout link').fill('https://buy.stripe.com/example');
+    await page.getByRole('button',{name:'Review price and build'}).click();
     assert.equal(await page.evaluate(()=>window.quoted.buildBrief.kind),'store');
     assert.equal(await page.evaluate(()=>window.quoted.buildBrief.delivery),'preview');
-    await page.getByRole('radio',{name:/Build with my connected database/}).check();
-    assert.equal(await page.getByRole('button',{name:'Review plan and price'}).isDisabled(),true);
-    assert.equal(await page.getByText(/Open Database to connect/).isVisible(),true);
+    await page.getByLabel('Use my connected app database').check();
+    assert.equal(await page.getByRole('button',{name:'Review price and build'}).isDisabled(),true);
+    assert.equal(await page.getByText(/Connect your app database under Advanced/).isVisible(),true);
+    await page.getByLabel('Use my connected app database').uncheck();
+    await page.getByLabel('Describe your app').fill('A multi-vendor marketplace');
+    assert.equal(await page.getByRole('button',{name:'Review price and build'}).isDisabled(),true);
+    assert.equal(await page.getByRole('alert').isVisible(),true);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
     assert.deepEqual(errors,[]);
   }finally{await browser.close();}

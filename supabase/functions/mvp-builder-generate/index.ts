@@ -1,6 +1,9 @@
 import { workflowPrompt, workflowErrors, publicKeyError } from '../_shared/mvp-workflow.ts';
 import { workflowWorkerAvailable } from '../_shared/mvp-worker-health.ts';
 import { buildBriefErrors, buildBriefPrompt, type MVPBuildBrief } from '../_shared/mvp-build-brief.ts';
+import { automaticWorkflow } from '../_shared/mvp-builder-journey.ts';
+import { openSecret } from '../_shared/connection-secrets.ts';
+import { deriveCapabilities } from '../_shared/mvp-capabilities.ts';
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { getUserFromAuth } from "../_shared/credit-deduction.ts";
@@ -1516,7 +1519,7 @@ async function repairModelOutputWithFallback(
   onRepairAccepted?: (model: string, usedLocalRepair: boolean) => void | Promise<void>
 ): Promise<ReturnType<typeof validateOutput>> {
   let lastError: unknown = null;
-  for (const candidate of modelCandidates) {
+  for (const candidate of modelCandidates.slice(0,2)) {
     try {
       const repaired = await requestModelJson(candidate, systemPrompt, messages, config);
       const usedLocalRepair = modelOutputNeedsLocalRepair(repaired);
@@ -1623,6 +1626,20 @@ serve(async (req: Request) => {
   const setupInput = body.setupInput && typeof body.setupInput === "object" ? body.setupInput as Record<string, unknown> : {};
   const buildBrief=setupInput.buildBrief as MVPBuildBrief | undefined;
   if(buildBrief && buildBriefErrors(buildBrief).length)return new Response(JSON.stringify({error:buildBriefErrors(buildBrief).join(' ')}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(setupInput.managedApp && buildBrief?.delivery==='connected'){
+    const admin=getAdminClient();
+    if(!admin)return errorStream('App setup is unavailable. No credits were charged.','CONFIGURATION_ERROR');
+    const {data:managed}=await admin.from('mvp_managed_apps').select('status,manifest,public_runtime').eq('project_id',body.projectId).eq('user_id',userId).maybeSingle();
+    const profile=deriveCapabilities(buildBrief).profile;
+    if(!managed||managed.status!=='ready'||!['private_records','lead_capture_v2'].includes(profile)||managed.manifest?.profile!==profile)return errorStream('Finish app setup for this saved-data workflow before building. No credits were charged.','MANAGED_SETUP_REQUIRED');
+    const {data:sealed}=await admin.from('mvp_managed_secrets').select('sealed').eq('project_id',body.projectId).single();
+    if(!sealed)return errorStream('App connection is unavailable. Retry setup.','MANAGED_SETUP_REQUIRED');
+    const credentials=await openSecret(sealed.sealed);
+    setupInput.workflowPublicKey=credentials.publicKey;
+    setupInput.workflowRuntime={url:credentials.url,publicKey:credentials.publicKey,projectId:body.projectId};
+    setupInput.workflow=automaticWorkflow(buildBrief);
+  }
+  if(buildBrief && !setupInput.workflow)setupInput.workflow=automaticWorkflow(buildBrief);
   if(buildBrief?.delivery==='preview' && setupInput.workflow)return new Response(JSON.stringify({error:'Choose connected mode before adding a database workflow.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if ((setupInput.workflow || buildBrief?.delivery==='connected') && classifiedAction !== 'chat' && !body.currentProject?.files?.length) {
     const admin=getAdminClient();

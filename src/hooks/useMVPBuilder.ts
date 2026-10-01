@@ -2926,7 +2926,7 @@ export function useMVPBuilder() {
             actionType: localActionType,
             template: activeSetupInput.template,
             palettePreference: activeSetupInput.palettePreference,
-            setupInput: {...activeSetupInput, workflowRuntime: { projectId, url: supabaseConnection.project?.projectUrl, publicKey: setupInput.workflowPublicKey }},
+            setupInput: {...activeSetupInput, workflowRuntime: setupInput.managedApp ? setupInput.managedRuntime : { projectId, url: supabaseConnection.project?.projectUrl, publicKey: setupInput.workflowPublicKey }},
             projectContext: {
               ...(startupContext ?? {}),
               source: activeSetupInput.prefillSource,
