@@ -21,6 +21,14 @@ test('workflow SQL enforces ownership, revisions, leases, immutable publishing a
  `);
  await db.exec(readFileSync('supabase/migrations/20261001120000_mvp_workflow_tests.sql','utf8'));
  const call=async(sql,params=[])=> (await db.query(sql,params)).rows;
+ await t.test('product briefs invalidate revisions without changing legacy project hashes',async()=>{
+  const revision=(await call('SELECT mvp_workflow_revision(p) revision FROM mvp_projects p WHERE id=$1',[project]))[0].revision;
+  await db.exec(readFileSync('supabase/migrations/20261001130000_mvp_build_brief_revision.sql','utf8'));
+  assert.equal((await call('SELECT mvp_workflow_revision(p) revision FROM mvp_projects p WHERE id=$1',[project]))[0].revision,revision);
+  await call("UPDATE mvp_projects SET metadata=jsonb_set(metadata,'{setupInput,buildBrief}',$2) WHERE id=$1",[project,{version:1,kind:'landing',delivery:'preview'}]);
+  assert.notEqual((await call('SELECT mvp_workflow_revision(p) revision FROM mvp_projects p WHERE id=$1',[project]))[0].revision,revision);
+  await call("UPDATE mvp_projects SET metadata=metadata #- '{setupInput,buildBrief}' WHERE id=$1",[project]);
+ });
  let id,lease;
  await t.test('backfill freezes existing URLs while drafts change',async()=>{
   await db.exec(`UPDATE mvp_projects SET project_files='[{"filename":"index.html","content":"draft"}]' WHERE id='${project}';`);

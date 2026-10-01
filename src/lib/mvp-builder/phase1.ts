@@ -1,4 +1,5 @@
 import type { WorkflowDefinition } from '../../../supabase/functions/_shared/mvp-workflow';
+import type { MVPBuildBrief } from '../../../supabase/functions/_shared/mvp-build-brief';
 import type {
   MVPProjectArtifact,
   MVPProjectFile,
@@ -38,6 +39,7 @@ export type MVPBuilderActionType =
 export type MVPBuilderOutputProjectType = 'html_single' | 'react_vite';
 
 export interface MVPBuilderSetupInput {
+  buildBrief?: MVPBuildBrief;
   workflow?: WorkflowDefinition;
   workflowPublicKey?: string;
   productName: string;
@@ -243,12 +245,10 @@ export function sanitizeMVPBuilderPalette(value: unknown): MVPBuilderPaletteId {
 export function classifyMVPBuilderAction(input: string, hasProject: boolean): MVPBuilderActionType | 'unclear' | 'unsupported' {
   const normalized = input.trim().toLowerCase();
   if (!normalized) return 'unclear';
+  if (/\b(marketplace|arbitrary backend|server action|react native|native (?:ios|android|mobile)|(?:swift|kotlin) (?:app|code))\b/.test(normalized)) return 'unsupported';
   if (!hasProject) return 'generation';
   if (/\b(error|bug|broken|fix|doesn'?t work|not working|console|crash)\b/.test(normalized)) {
     return 'debug';
-  }
-  if (/\b(stripe|payment|marketplace|arbitrary backend|server action)\b/.test(normalized)) {
-    return 'unsupported';
   }
   if (/\b(add|create|build)\b.{0,40}\b(page|route|screen)\b|\b(new page|new route|another screen)\b/.test(normalized)) {
     return 'add_page';

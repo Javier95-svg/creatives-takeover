@@ -6,7 +6,11 @@ This worker builds a saved revision, runs its customer workflow in Chromium, che
 
 Release verification (2026-10-01): both CT migrations are installed and the five Edge Functions are active. No worker heartbeat or worker secret was present; only the CT production project was accessible. The app schema was also found in CT, which does not replace installing it in a separate disposable test project. Those tables have been left untouched. Worker hosting, isolated database setup and the production workflow pilot remain outstanding.
 
-The UI checks worker availability every minute. While unavailable, it pauses new workflow builds and tests and explains that existing apps remain editable/exportable. The generation endpoint also rejects new guided builds before reserving credits. The server publication gate remains enforced.
+The UI checks worker availability every minute. While unavailable, it pauses new connected workflow builds and tests. Founders may explicitly choose a paid preview/export build, with the limitation shown in the price confirmation; that mode does not promise cloud persistence or publication. The generation endpoint rejects new connected builds before reserving credits. The server publication gate remains enforced.
+
+The six-category product planner expands briefing and generation, not the three server-tested outcome profiles. Store checkout, dashboards, and other category-specific outcomes have not received production certification. Do not equate a successful preview with delivery of every promise on `/build`. Native binaries, production payment fulfillment, notifications and worker activation remain separate delivery requirements.
+
+The planner also adds `20261001130000_mvp_build_brief_revision.sql` after the two migrations below. It includes the approved product brief in revision checks while preserving hashes for projects without a brief. Deploy the updated `mvp-builder-generate` function with the planner frontend. These latest planner changes require a separate release from the earlier two-tool upgrade.
 
 - A Linux Docker host with Chromium sandbox/user-namespace support. The controller runs on this host; each job gets a separate container with resource limits and no mounted project directory or Docker socket.
 - A **separate, disposable Supabase project** for testing. Never configure the CT platform database or a founder's app database as the worker's test database.

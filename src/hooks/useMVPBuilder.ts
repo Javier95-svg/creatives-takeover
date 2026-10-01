@@ -2824,7 +2824,7 @@ export function useMVPBuilder() {
         return;
       }
       if (localActionType === 'unsupported') {
-        toast.info('Connected Supabase workflows are supported. Payments, marketplaces and arbitrary backend stacks are outside this release.');
+        toast.info('Browser apps, Supabase workflows and hosted checkout are supported. Native binaries, multi-vendor marketplaces and arbitrary backend stacks need a separate implementation.');
         return;
       }
 

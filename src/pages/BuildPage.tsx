@@ -1,5 +1,6 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   ArrowRight,
   CheckCircle2,
@@ -268,7 +269,7 @@ const SignupModal = ({ open, intent, onClose }: SignupModalProps) => (
     subtitle="Create your free account. It takes about ten seconds."
     contextLabel="You’re about to build"
     contextValue={intent || 'A brand-new product'}
-    returnPath={POST_AUTH_DEST}
+    returnPath={POST_AUTH_DEST + '?idea=' + encodeURIComponent(intent.slice(0,4000))}
   />
 );
 
@@ -284,7 +285,7 @@ const BuildHero = ({ onOpen }: HeroProps) => {
 
   const getCurrentIntent = () => {
     const typed = editRef.current?.textContent?.trim();
-    return typed || animatedText || TYPING_PROMPTS[0];
+    return typed || TYPING_PROMPTS[0];
   };
 
   return (
@@ -650,7 +651,7 @@ const BuildCardPreview = ({ preview }: { preview: string }) => {
   );
 };
 
-const BuildWhatYouCanBuild = () => (
+const BuildWhatYouCanBuild = ({ onOpen }: HeroProps) => (
   <section className="pb-20 pt-4 lg:pb-24">
     <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
       <ScrollReveal>
@@ -678,6 +679,7 @@ const BuildWhatYouCanBuild = () => (
             <div className="p-4">
               <h4 className="font-space-grotesk text-base font-bold tracking-[-0.01em]">{card.title}</h4>
               <p className="mt-1.5 text-xs leading-[1.5] text-muted-foreground">{card.body}</p>
+              <Button variant="outline" size="sm" className="mt-3" onClick={()=>onOpen('Build '+card.title.toLowerCase())}>Start this type <ArrowRight className="ml-2 h-3 w-3"/></Button>
             </div>
           </div>
         ))}
@@ -1022,15 +1024,18 @@ const BuildFocusSection = () => {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 const BuildPage = () => {
+  const {user}=useAuth();
+  const navigate=useNavigate();
   usePageAnalytics('/build', 'MVP Builder — Creatives Takeover');
 
   const [modalOpen, setModalOpen] = useState(false);
   const [intentText, setIntentText] = useState('A brand-new product');
 
   const openModal = useCallback((intent?: string) => {
+    if(user){navigate('/mvp-builder?idea='+encodeURIComponent((intent?.trim() || 'A brand-new product').slice(0,4000)));return;}
     setIntentText(intent?.trim() || 'A brand-new product');
     setModalOpen(true);
-  }, []);
+  }, [user,navigate]);
 
   const closeModal = useCallback(() => setModalOpen(false), []);
 
@@ -1047,7 +1052,7 @@ const BuildPage = () => {
           <Navigation />
           <BuildHero onOpen={openModal} />
           <BuildHowItWorks />
-          <BuildWhatYouCanBuild />
+          <BuildWhatYouCanBuild onOpen={openModal} />
           <BuildEvidenceContext onOpen={openModal} />
           <BuildFocusSection />
           <BuildStageSelector />

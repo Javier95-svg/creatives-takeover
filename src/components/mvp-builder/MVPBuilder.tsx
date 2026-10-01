@@ -1,5 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { MVPWorkflowPanel } from './MVPWorkflowPanel';
+import { MVPBuildPlanner } from './MVPBuildPlanner';
+import { buildBriefErrors, createBuildBrief } from '../../../supabase/functions/_shared/mvp-build-brief';
 import { useMvpWorkflowTest } from '@/hooks/useMvpWorkflowTest';
 import { workflowErrors, publicKeyError } from '../../../supabase/functions/_shared/mvp-workflow';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -102,24 +104,36 @@ export const MVPBuilder: React.FC = () => {
     lastSavedAt,
   } = useMVPBuilder();
 
-  const draftIdentity=JSON.stringify([projectId,projectFiles,setupInput.workflow,setupInput.workflowPublicKey,supabaseConnection.connectionId]);
+  const [incomingIdea,setIncomingIdea]=useState(()=>new URLSearchParams(window.location.search).get('idea')?.slice(0,4000) || '');
+  const acceptIdea=async()=>{
+    if(projectFiles.length && !await saveProject({silent:true})){toast.error('Save your current project before starting another.');return;}
+    resetProject();
+    setSetupInput({buildBrief:createBuildBrief(incomingIdea),customPrompt:incomingIdea});
+    setIncomingIdea('');
+    const url=new URL(window.location.href);url.searchParams.delete('idea');window.history.replaceState({},'',url.pathname+url.search+url.hash);
+  };
+
+  const draftIdentity=JSON.stringify([projectId,projectFiles,setupInput.buildBrief,setupInput.workflow,setupInput.workflowPublicKey,supabaseConnection.connectionId]);
   const tests=useMvpWorkflowTest(projectId,draftIdentity,()=>saveProject({silent:true}),isShowingPreviewFallback);
   const [consent,setConsent]=useState<{prompt:string;cost:number;repairKey?:string;identity:string}|null>(null);
   const [quoting,setQuoting]=useState(false);
   const quotedSend=async(prompt:string,options?:{responseMode?:'chat'|'build'},repairKey?:string)=>{
     if(options?.responseMode==='chat') return sendMessage(prompt,options);
     if(quoting || isGenerating)return;
-    if(!projectFiles.length && tests.available!==true){toast.error('New workflow builds are temporarily unavailable while testing is offline. No credits were charged.');return;}
-    if(!projectFiles.length && workflowErrors(setupInput.workflow).length){toast.error('Choose a starter and define the customer task first.');return;}
-    if(setupInput.workflow && !supabaseConnection.connected){toast.error('Connect the database for this workflow first.');return;}
-    if(setupInput.workflow && publicKeyError(setupInput.workflowPublicKey)){toast.error(publicKeyError(setupInput.workflowPublicKey)!);return;}
+    const brief=setupInput.buildBrief;
+    if(!projectFiles.length && !brief && !setupInput.workflow){setSetupInput({buildBrief:createBuildBrief(prompt)});toast.info('Your idea is ready. Add who it is for, then review the plan and price.');return;}
+    if(brief && buildBriefErrors(brief).length){toast.error(buildBriefErrors(brief)[0]);return;}
+    if(!projectFiles.length && brief?.delivery!=='preview' && tests.available!==true){toast.error('Launch testing is offline. You can choose a preview/export build in your plan.');return;}
+    if(!brief && !projectFiles.length && workflowErrors(setupInput.workflow).length){toast.error('Choose a starter and define the customer task first.');return;}
+    if((setupInput.workflow || brief?.delivery==='connected') && !supabaseConnection.connected){toast.error('Connect the database for this workflow first.');return;}
+    if((setupInput.workflow || brief?.delivery==='connected') && publicKeyError(setupInput.workflowPublicKey)){toast.error(publicKeyError(setupInput.workflowPublicKey)!);return;}
     setQuoting(true);
     try {const quote=await classifyActionQuote(prompt);if(quote && quote.actionType!=='unsupported' && quote.actionType!=='unclear')setConsent({prompt,cost:quote.creditCost,repairKey,identity:JSON.stringify([draftIdentity,selectedModels])});else toast.error('This request is outside the supported workflow scope.');}
     finally{setQuoting(false);}
   };
   const confirmBuild=async()=>{
     const next=consent;if(!next)return;setConsent(null);
-    if(!projectFiles.length && tests.available!==true){toast.error('Workflow testing is offline. No credits were charged.');return;}
+    if(!projectFiles.length && setupInput.buildBrief?.delivery!=='preview' && tests.available!==true){toast.error('Workflow testing is offline. No credits were charged.');return;}
     if(next.identity!==JSON.stringify([draftIdentity,selectedModels])){toast.error("Scope or model changed. Review a new quote before building.");return;}
     if(projectFiles.length){createManualSnapshot(); if(!await saveProject({silent:true})){toast.error('Could not save the checkpoint. Retry before changing this app.');return;}}
     if(projectFiles.length){const {error}=await (supabase as any).rpc('mvp_edit_checkpoint',{p_project_id:projectId,p_restore:false});if(error){toast.error('Could not create the recovery checkpoint. Nothing was changed.');return;}}
@@ -265,8 +279,13 @@ export const MVPBuilder: React.FC = () => {
         onBuyCredits={() => setTopUpsOpen(true)}
       />
       {projectFiles.length>0 && <details className="px-4 py-1 text-xs"><summary className="cursor-pointer">Recovery</summary><Button variant="ghost" size="sm" disabled={isGenerating || isDeploying} onClick={async()=>{const {error}=await (supabase as any).rpc('mvp_edit_checkpoint',{p_project_id:projectId,p_restore:true});if(error)toast.error(error.message);else await loadProject(projectId,true);}}>Restore the checkpoint before the last paid change</Button></details>}
-      <MVPWorkflowPanel available={tests.available} projectId={projectId} setup={setupInput} onChange={setSetupInput} hasFiles={!!projectFiles.length} connected={!!supabaseConnection.connected} onBuild={()=>void quotedSend('Build the agreed '+setupInput.workflow?.starter+' workflow for '+setupInput.workflow?.customer+'. Task: '+setupInput.workflow?.task+'. Success: '+setupInput.workflow?.outcome)} onTest={()=>void tests.run()} testing={tests.testing} result={tests.result} dirty={tests.dirty} fallback={isShowingPreviewFallback}/>
-      <Dialog open={!!consent} onOpenChange={open=>{if(!open)setConsent(null);}}><DialogContent><DialogHeader><DialogTitle>Confirm this build</DialogTitle></DialogHeader><p className="text-sm">{consent?.prompt}</p><p className="text-sm text-muted-foreground">{setupInput.workflow?.features.join(' / ')}</p><p className="font-semibold">{consent?.cost} credits</p><p className="text-xs text-muted-foreground">Existing files are checkpointed before this change. Test-result review is free. Each repair requires a new quote.</p><Button onClick={()=>void confirmBuild()}>Confirm and build</Button></DialogContent></Dialog>
+      {incomingIdea && <div role="status" className="flex flex-wrap items-center gap-3 border-b bg-primary/10 p-3 text-sm"><p className="min-w-0 flex-1 break-words">Your idea from /build: {incomingIdea}</p><Button size="sm" disabled={isGenerating} onClick={()=>void acceptIdea()}>Start this project</Button></div>}
+      <MVPBuildPlanner setup={setupInput} onChange={setSetupInput} hasFiles={!!projectFiles.length} busy={quoting || isGenerating} workerAvailable={tests.available} connected={!!supabaseConnection.connected} onBuild={()=>void quotedSend(setupInput.buildBrief?.idea || setupInput.customPrompt || '')}/>
+      <details className="shrink-0 max-h-[35vh] overflow-auto border-b px-3 text-xs"><summary className="cursor-pointer py-2">Database setup and launch verification</summary>
+      <p className="p-2 text-muted-foreground">Automated outcome checks currently cover lead capture, request management and private saved records. Choose a check only when it matches your product. Other workflows still need matching checks before publication.</p>
+      <MVPWorkflowPanel available={tests.available} projectId={projectId} setup={setupInput} onChange={next=>setSetupInput({...next,...(next.workflow && next.buildBrief ? {buildBrief:{...next.buildBrief,delivery:"connected" as const}} : {})})} hasFiles={!!projectFiles.length} connected={!!supabaseConnection.connected} onBuild={()=>void quotedSend('Build the agreed '+setupInput.workflow?.starter+' workflow for '+setupInput.workflow?.customer+'. Task: '+setupInput.workflow?.task+'. Success: '+setupInput.workflow?.outcome)} onTest={()=>void tests.run()} testing={tests.testing} result={tests.result} dirty={tests.dirty} fallback={isShowingPreviewFallback}/>
+      </details>
+      <Dialog open={!!consent} onOpenChange={open=>{if(!open)setConsent(null);}}><DialogContent><DialogHeader><DialogTitle>Confirm this build</DialogTitle></DialogHeader><p className="text-sm">{consent?.prompt}</p><p className="text-sm text-muted-foreground">{(setupInput.buildBrief?.features || setupInput.workflow?.features)?.join(' / ')}</p><p className="font-semibold">{consent?.cost} credits</p>{setupInput.buildBrief?.delivery==='preview' && <p className="rounded-md bg-amber-500/10 p-3 text-sm">This purchase creates a preview and exportable code. Cloud data, sign-in and checkout require connections. Publishing requires a supported passing outcome test{tests.available!==true?' and the currently offline testing service':''}.</p>}<p className="text-xs text-muted-foreground">Existing files are checkpointed before this change. Test-result review is free. Each repair requires a new quote.</p><Button onClick={()=>void confirmBuild()}>Confirm and build</Button></DialogContent></Dialog>
       <MVPBuilderTopUpDialog open={topUpsOpen} onOpenChange={setTopUpsOpen} />
       <MVPBuilderCreditExhaustedDialog
         open={isCreditExhaustedModalOpen}

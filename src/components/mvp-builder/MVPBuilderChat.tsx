@@ -706,7 +706,9 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
     <div className="flex h-full min-h-0 flex-col bg-background text-muted-foreground">
       <ScrollArea className="flex-1 min-h-0">
         <div className="p-4">
-          {isEmpty ? (
+          {isEmpty && setupInput.buildBrief ? (
+            <div className="space-y-2 py-4 text-sm"><h3 className="font-medium text-foreground">Your starting plan is above</h3><p>Review the plan and price to create your first version. After the preview appears, describe changes here in plain language.</p><p className="text-xs">You can also ask a question in Chat mode before building.</p></div>
+          ) : isEmpty ? (
             <div className="flex flex-col gap-4 py-6">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-info/20 bg-white/[0.04] shadow-[0_0_24px_rgba(56,189,248,0.18)]">
                 <img
