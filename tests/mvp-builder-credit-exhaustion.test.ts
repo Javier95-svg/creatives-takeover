@@ -42,9 +42,14 @@ test('server-side MVP charging is authenticated and reservation-owned', () => {
   assert.match(generation, /reserveMVPBuilderCredits/);
   assert.match(generation, /finalizeMVPBuilderCredits/);
   assert.match(generation, /releaseMVPBuilderCredits/);
-  assert.match(deployment, /reserveMVPBuilderCredits/);
-  assert.match(deployment, /finalizeMVPBuilderCredits/);
-  assert.match(deployment, /releaseMVPBuilderCredits/);
+  // The legacy endpoint must delegate to the same authenticated publication gate.
+  assert.match(deployment, /\/functions\/v1\/mvp-builder-publish/);
+  assert.match(deployment, /headers:req.headers/);
+  assert.doesNotMatch(deployment, /reserveMVPBuilderCredits/);
+  const publisher = readFileSync(new URL('../supabase/functions/mvp-builder-publish/index.ts', import.meta.url), 'utf8');
+  assert.match(publisher, /reserveMVPBuilderCredits/);
+  assert.match(publisher, /finalizeMVPBuilderCredits/);
+  assert.match(publisher, /releaseMVPBuilderCredits/);
 });
 
 test('reservation migration holds the shared wallet quota-first and releases exact pools', () => {

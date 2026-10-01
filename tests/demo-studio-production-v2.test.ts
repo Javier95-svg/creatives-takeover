@@ -75,8 +75,8 @@ test('demo readiness scores screenshot, caption, hotspot, notes, and CTA gaps', 
   ], {});
 
   assert.equal(readiness.ready, false);
-  assert.match(readiness.missing.join(' '), /at least 3/);
-  assert.match(readiness.missing.join(' '), /CTA/);
+  assert.match(readiness.missing.join(' '), /hotspot/);
+  assert.match(readiness.missing.join(' '), /call to action/);
 });
 
 test('VSL readiness requires script, hook, recording, and primary state', () => {

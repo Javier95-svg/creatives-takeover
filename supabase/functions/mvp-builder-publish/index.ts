@@ -130,49 +130,17 @@ serve(async (req) => {
     return jsonResponse({ ok: false, error: "Project not found", errorCode: "NOT_FOUND" }, 404);
   }
 
-  const validation = body.validation && typeof body.validation === "object" && !Array.isArray(body.validation)
-    ? body.validation as Record<string, unknown>
-    : {};
-  const smokeTest = validation.smokeTest && typeof validation.smokeTest === "object" && !Array.isArray(validation.smokeTest)
-    ? validation.smokeTest as Record<string, unknown>
-    : {};
-  const projectFiles = Array.isArray(project.project_files) ? project.project_files : [];
-  const source = projectFiles
-    .map((file) => file && typeof file === "object" && "content" in file ? String(file.content ?? "") : "")
-    .join("\n");
-  const hasPrimaryAction = /<(button|form)\b|<a\b[^>]*href=|onClick\s*=|type\s*=\s*["']submit["']/i.test(source);
-  const hasResponsiveLayout = /name\s*=\s*["']viewport["']|@media\b|\b(sm|md|lg|xl):/i.test(source);
-  const hasRollback = Array.isArray(project.versions) && project.versions.length > 0;
-  const smokePassed = smokeTest.passed === true
-    && smokeTest.primaryActionFound === true
-    && smokeTest.primaryActionTriggered === true
-    && Array.isArray(smokeTest.runtimeErrors)
-    && smokeTest.runtimeErrors.length === 0;
-  if (projectFiles.length === 0 || !hasPrimaryAction || !hasResponsiveLayout || !hasRollback || !smokePassed) {
-    return jsonResponse({
-      ok: false,
-      error: "The MVP failed its server publication contract. Fix the primary flow, responsive layout, runtime errors, or rollback version and run the smoke test again.",
-      errorCode: "PUBLICATION_CONTRACT_FAILED",
-      checks: { projectFiles: projectFiles.length > 0, primaryFlow: hasPrimaryAction, responsive: hasResponsiveLayout, rollback: hasRollback, smokeTest: smokePassed },
-    }, 409);
-  }
-  const currentMetadata = project.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
-    ? project.metadata as Record<string, unknown>
-    : {};
-  const nextMetadata = {
-    ...currentMetadata,
-    lastPublishValidation: {
-      smokeTest,
-      structuralChecks: { primaryFlow: hasPrimaryAction, responsive: hasResponsiveLayout, rollback: hasRollback },
-      validatedAt: typeof validation.validatedAt === "string" ? validation.validatedAt : new Date().toISOString(),
-    },
-  };
+  const testRunId = typeof body.testRunId === 'string' ? body.testRunId : '';
+  if (!/^[0-9a-f-]{36}$/i.test(testRunId)) return jsonResponse({ok:false,error:'Run the customer workflow test before publishing.',errorCode:'TEST_REQUIRED'},409);
+  const {data: verified, error: testError} = await supabase.rpc('inspect_mvp_workflow_test',{p_project_id:projectId,p_user_id:user.id,p_test_id:testRunId});
+  if (testError || !verified) return jsonResponse({ok:false,error:'The current saved revision needs a passing customer workflow test.',errorCode:'TEST_REQUIRED'},409);
+  if (verified.alreadyPublished && project.subdomain_slug) return jsonResponse({ok:true,slug:project.subdomain_slug,url:'https://' + project.subdomain_slug + '.' + BASE_DOMAIN,creditsUsed:0,reused:true});
 
   // Charge for the publish before doing any work. Held credits are released if
   // anything below fails. Every publish is a distinct charge (idempotency key per click).
   const creditFeature = "APP_BUILDER_DEPLOY";
   const creditCost = CREDIT_COSTS[creditFeature];
-  const idempotencyKey = req.headers.get("Idempotency-Key") ?? crypto.randomUUID();
+  const idempotencyKey = 'workflow-publish:' + projectId + ':' + testRunId;
   const creditCheck = await reserveMVPBuilderCredits(
     user.id,
     creditFeature,
@@ -208,11 +176,7 @@ serve(async (req) => {
 
     if (slug) {
       const url = `https://${slug}.${BASE_DOMAIN}`;
-      const { error: reuseError } = await supabase
-        .from("mvp_projects")
-        .update({ deployment_url: url, deployment_status: "deployed", metadata: nextMetadata })
-        .eq("id", projectId)
-        .eq("user_id", user.id);
+      const { error: reuseError } = await supabase.rpc('publish_tested_mvp',{p_project_id:projectId,p_user_id:user.id,p_test_id:testRunId,p_slug:slug,p_url:url,p_reservation_id:reservationId});
       if (reuseError) throw new Error("Unable to update project");
     } else {
       const base = slugifyProjectName(typeof project.title === "string" ? project.title : "");
@@ -247,11 +211,7 @@ serve(async (req) => {
         attempted.add(candidate);
         const url = `https://${candidate}.${BASE_DOMAIN}`;
 
-        const { error: updateError } = await supabase
-          .from("mvp_projects")
-          .update({ subdomain_slug: candidate, deployment_url: url, deployment_status: "deployed", metadata: nextMetadata })
-          .eq("id", projectId)
-          .eq("user_id", user.id);
+        const { error: updateError } = await supabase.rpc('publish_tested_mvp',{p_project_id:projectId,p_user_id:user.id,p_test_id:testRunId,p_slug:candidate,p_url:url,p_reservation_id:reservationId});
 
         if (!updateError) {
           assigned = candidate;

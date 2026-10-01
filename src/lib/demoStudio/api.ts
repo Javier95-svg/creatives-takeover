@@ -1,3 +1,4 @@
+import { getDemoReadiness } from './readiness';
 // Demo Studio data-access layer. Uses the Supabase client directly; RLS on the
 // demo_studio_* tables is the authoritative access control. Table names are cast
 // with `as any` because the generated DB types don't include these tables yet.
@@ -425,30 +426,8 @@ export async function publishDemo(
 ): Promise<DemoStudioDemo> {
   const existing = await getDemo(id);
   const [steps, hotspots] = await Promise.all([listSteps(id), listHotspotsForDemo(id)]);
-  const stepIds = new Set(steps.map((step) => step.id));
-  const brokenHotspot = hotspots.find((hotspot) => {
-    const action = hotspot.action;
-    if (!Number.isFinite(hotspot.x) || !Number.isFinite(hotspot.y) || !Number.isFinite(hotspot.w) || !Number.isFinite(hotspot.h)) return true;
-    if (hotspot.w <= 0 || hotspot.h <= 0 || hotspot.x < 0 || hotspot.y < 0 || hotspot.x + hotspot.w > 1 || hotspot.y + hotspot.h > 1) return true;
-    if (action === 'goto') return !hotspot.action_target || !stepIds.has(hotspot.action_target);
-    if (action === 'url') {
-      try {
-        const url = new URL(hotspot.action_target ?? '');
-        return !['http:', 'https:'].includes(url.protocol);
-      } catch {
-        return true;
-      }
-    }
-    return action !== 'next';
-  });
-  const incompleteStep = steps.find((step) => (
-    !step.asset_url?.trim()
-    || /placeholder/i.test(step.asset_url)
-    || !step.caption?.trim()
-  ));
-  if (steps.length < 2 || incompleteStep || brokenHotspot || hotspots.length === 0) {
-    throw new Error('Complete at least two captioned steps and fix every hotspot before publishing.');
-  }
+  const readiness = getDemoReadiness(steps.map(step => ({...step,hotspots:hotspots.filter(h => h.step_id === step.id)})), existing?.theme ?? {});
+  if (!readiness.ready) throw new Error(readiness.blockers.join(' '));
   // Free-tier cap: enforce only when transitioning draft -> published (republish
   // of an already-public demo is never blocked). Mirrors Arcade's free ceiling.
   if (existing && existing.status !== 'published' && opts?.ownerId) {
@@ -627,11 +606,12 @@ export async function duplicateStep(step: DemoStepWithHotspots, position: number
 }
 
 export async function persistStepOrder(orderedIds: string[]): Promise<void> {
-  await Promise.all(
-    orderedIds.map((id, index) =>
-      supabase.from(STEPS).update({ position: index } as any).eq('id', id),
-    ),
-  );
+  const {error}=await (supabase as any).rpc('reorder_demo_screens',{p_ids:orderedIds});
+  if(error)throw new Error(error.message);
+}
+export async function restoreDemoEdit(demo: DemoStudioDemo, steps: DemoStepWithHotspots[]): Promise<void> {
+  const {error}=await (supabase as any).rpc('restore_demo_edit',{p_demo_id:demo.id,p_title:demo.title,p_theme:demo.theme,p_steps:steps});
+  if(error)throw new Error(error.message);
 }
 
 export async function deleteStep(id: string): Promise<void> {

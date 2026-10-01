@@ -1,4 +1,9 @@
-import React, { useRef, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { MVPWorkflowPanel } from './MVPWorkflowPanel';
+import { useMvpWorkflowTest } from '@/hooks/useMvpWorkflowTest';
+import { workflowErrors, publicKeyError } from '../../../supabase/functions/_shared/mvp-workflow';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import React, { useRef, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useMVPBuilder } from '@/hooks/useMVPBuilder';
 import { MVPBuilderHeader } from './MVPBuilderHeader';
@@ -97,13 +102,39 @@ export const MVPBuilder: React.FC = () => {
     lastSavedAt,
   } = useMVPBuilder();
 
+  const draftIdentity=JSON.stringify([projectId,projectFiles,setupInput.workflow,setupInput.workflowPublicKey,supabaseConnection.connectionId]);
+  const tests=useMvpWorkflowTest(projectId,draftIdentity,()=>saveProject({silent:true}),isShowingPreviewFallback);
+  const [consent,setConsent]=useState<{prompt:string;cost:number;repairKey?:string;identity:string}|null>(null);
+  const [quoting,setQuoting]=useState(false);
+  const quotedSend=async(prompt:string,options?:{responseMode?:'chat'|'build'},repairKey?:string)=>{
+    if(options?.responseMode==='chat') return sendMessage(prompt,options);
+    if(quoting || isGenerating)return;
+    if(!projectFiles.length && tests.available!==true){toast.error('New workflow builds are temporarily unavailable while testing is offline. No credits were charged.');return;}
+    if(!projectFiles.length && workflowErrors(setupInput.workflow).length){toast.error('Choose a starter and define the customer task first.');return;}
+    if(setupInput.workflow && !supabaseConnection.connected){toast.error('Connect the database for this workflow first.');return;}
+    if(setupInput.workflow && publicKeyError(setupInput.workflowPublicKey)){toast.error(publicKeyError(setupInput.workflowPublicKey)!);return;}
+    setQuoting(true);
+    try {const quote=await classifyActionQuote(prompt);if(quote && quote.actionType!=='unsupported' && quote.actionType!=='unclear')setConsent({prompt,cost:quote.creditCost,repairKey,identity:JSON.stringify([draftIdentity,selectedModels])});else toast.error('This request is outside the supported workflow scope.');}
+    finally{setQuoting(false);}
+  };
+  const confirmBuild=async()=>{
+    const next=consent;if(!next)return;setConsent(null);
+    if(!projectFiles.length && tests.available!==true){toast.error('Workflow testing is offline. No credits were charged.');return;}
+    if(next.identity!==JSON.stringify([draftIdentity,selectedModels])){toast.error("Scope or model changed. Review a new quote before building.");return;}
+    if(projectFiles.length){createManualSnapshot(); if(!await saveProject({silent:true})){toast.error('Could not save the checkpoint. Retry before changing this app.');return;}}
+    if(projectFiles.length){const {error}=await (supabase as any).rpc('mvp_edit_checkpoint',{p_project_id:projectId,p_restore:false});if(error){toast.error('Could not create the recovery checkpoint. Nothing was changed.');return;}}
+    if(next.repairKey)autoFixAttemptsRef.current.set(next.repairKey,(autoFixAttemptsRef.current.get(next.repairKey)??0)+1);
+    await sendMessage(next.prompt,{responseMode:'build'});
+  };
+  const publishTested=()=>{if(!tests.testRunId){toast.error('Save and test this revision before publishing.');return;}void publishProject(tests.testRunId);};
   const [mobileTab, setMobileTab] = useState<MobileTab>('chat');
   const [topUpsOpen, setTopUpsOpen] = useState(false);
   const isMobile = useIsMobile();
   // Bounded auto-fix: each distinct runtime error gets at most two automatic
-  // debug rounds. The click is the credit consent; the cap stops error loops
+  // debug rounds. Each attempt opens a price confirmation; the cap stops error loops
   // from draining the balance.
   const autoFixAttemptsRef = useRef<Map<string, number>>(new Map());
+  useEffect(()=>{autoFixAttemptsRef.current.clear();},[projectId]);
   const handleAutoFix = (error: string) => {
     const signature = error.trim().slice(0, 160);
     const attempts = autoFixAttemptsRef.current.get(signature) ?? 0;
@@ -113,10 +144,9 @@ export const MVPBuilder: React.FC = () => {
       });
       return;
     }
-    autoFixAttemptsRef.current.set(signature, attempts + 1);
-    void sendMessage(
+    void quotedSend(
       `Fix this runtime error without changing the app's design or unrelated behavior. Error (attempt ${attempts + 1} of 2):\n\n${error.trim().slice(0, 1200)}`,
-      { responseMode: 'build' },
+      { responseMode: 'build' }, signature,
     );
   };
 
@@ -151,7 +181,7 @@ export const MVPBuilder: React.FC = () => {
       onSelectedModelsChange={setSelectedModels}
       onSetupInputChange={setSetupInput}
       onProjectTypeChange={setSelectedProjectType}
-      onSend={sendMessage}
+      onSend={quotedSend}
       onClassifyAction={classifyActionQuote}
       onCancelGeneration={cancelGeneration}
       onConnectGitHub={connectGitHub}
@@ -195,7 +225,7 @@ export const MVPBuilder: React.FC = () => {
       onRestoreSnapshot={restoreProjectSnapshot}
       onSelectEntryFile={setEntryFilePath}
       onExportZip={exportProjectZip}
-      onDeploy={publishProject}
+      onDeploy={publishTested}
       onAutoFix={handleAutoFix}
       integrations={integrations}
       githubConnection={githubConnection}
@@ -234,6 +264,9 @@ export const MVPBuilder: React.FC = () => {
         hasActiveProject={projectFiles.length > 0 || messages.length > 0}
         onBuyCredits={() => setTopUpsOpen(true)}
       />
+      {projectFiles.length>0 && <details className="px-4 py-1 text-xs"><summary className="cursor-pointer">Recovery</summary><Button variant="ghost" size="sm" disabled={isGenerating || isDeploying} onClick={async()=>{const {error}=await (supabase as any).rpc('mvp_edit_checkpoint',{p_project_id:projectId,p_restore:true});if(error)toast.error(error.message);else await loadProject(projectId,true);}}>Restore the checkpoint before the last paid change</Button></details>}
+      <MVPWorkflowPanel available={tests.available} projectId={projectId} setup={setupInput} onChange={setSetupInput} hasFiles={!!projectFiles.length} connected={!!supabaseConnection.connected} onBuild={()=>void quotedSend('Build the agreed '+setupInput.workflow?.starter+' workflow for '+setupInput.workflow?.customer+'. Task: '+setupInput.workflow?.task+'. Success: '+setupInput.workflow?.outcome)} onTest={()=>void tests.run()} testing={tests.testing} result={tests.result} dirty={tests.dirty} fallback={isShowingPreviewFallback}/>
+      <Dialog open={!!consent} onOpenChange={open=>{if(!open)setConsent(null);}}><DialogContent><DialogHeader><DialogTitle>Confirm this build</DialogTitle></DialogHeader><p className="text-sm">{consent?.prompt}</p><p className="text-sm text-muted-foreground">{setupInput.workflow?.features.join(' / ')}</p><p className="font-semibold">{consent?.cost} credits</p><p className="text-xs text-muted-foreground">Existing files are checkpointed before this change. Test-result review is free. Each repair requires a new quote.</p><Button onClick={()=>void confirmBuild()}>Confirm and build</Button></DialogContent></Dialog>
       <MVPBuilderTopUpDialog open={topUpsOpen} onOpenChange={setTopUpsOpen} />
       <MVPBuilderCreditExhaustedDialog
         open={isCreditExhaustedModalOpen}

@@ -11,7 +11,6 @@ import {
   Code2,
   TriangleAlert,
   TerminalSquare,
-  Link2,
   Wrench,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -301,6 +300,9 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
   return (
     <TooltipProvider>
       <div className="flex h-full min-h-0 flex-col">
+        <p className="px-3 py-1 text-xs text-muted-foreground" role="status">
+          {isShowingPreviewFallback ? 'Fallback preview - unavailable for publishing.' : 'Working draft preview. Publish uses the saved revision shown in your passing workflow test.'}
+        </p>
         <div className="flex items-center justify-between border-b border-border/40 bg-background/80 px-3 h-10 shrink-0">
           <div className="flex items-center rounded-full bg-muted p-0.5">
             <button
@@ -315,42 +317,8 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
               <Monitor className="h-3 w-3" />
               Preview
             </button>
-            <button
-              onClick={() => setActiveTab('code')}
-              className={cn(
-                'h-6 rounded-full px-3 text-xs font-medium transition-all duration-200 flex items-center gap-1.5',
-                activeTab === 'code'
-                  ? 'bg-background shadow-sm text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              <Code2 className="h-3 w-3" />
-              Code
-            </button>
-            <button
-              onClick={() => setActiveTab('domain')}
-              className={cn(
-                'h-6 rounded-full px-3 text-xs font-medium transition-all duration-200 flex items-center gap-1.5',
-                activeTab === 'domain'
-                  ? 'bg-background shadow-sm text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              <Globe className="h-3 w-3" />
-              Domain
-            </button>
-            <button
-              onClick={() => setActiveTab('integrations')}
-              className={cn(
-                'h-6 rounded-full px-3 text-xs font-medium transition-all duration-200 flex items-center gap-1.5',
-                activeTab === 'integrations'
-                  ? 'bg-background shadow-sm text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              <Link2 className="h-3 w-3" />
-              Integrations
-            </button>
+            <button className="px-3 text-xs" onClick={()=>setActiveTab('integrations')}>Database</button>
+            <details className="relative text-xs"><summary className="cursor-pointer px-3">Advanced</summary><div className="absolute z-30 mt-2 grid min-w-32 gap-2 rounded border bg-background p-3"><button onClick={()=>setActiveTab('code')}>Code and versions</button><button onClick={()=>setActiveTab('domain')}>Domain</button><button onClick={()=>setActiveTab('integrations')}>Connections</button></div></details>
           </div>
 
           {statusBadge}
@@ -606,7 +574,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
             {(html || projectFramework === 'react-vite') && (
               projectFramework === 'react-vite' ? (
                 <div className="flex h-full w-full flex-col bg-slate-950 text-muted-foreground">
-                  {webContainerState.previewUrl ? (
+                  {webContainerState.previewUrl && webContainerState.status === 'ready' ? (
                     <iframe
                       key={`${previewKey}-${webContainerState.previewUrl}`}
                       title="MVP Builder WebContainer Preview"

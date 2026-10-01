@@ -1,3 +1,4 @@
+import DemoResultsSummary from '@/components/demo-studio/analytics/DemoResultsSummary';
 ﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -67,12 +68,14 @@ import {
   persistStepOrder,
   publishDemo,
   replaceStepAsset,
+  restoreDemoEdit,
   updateDemo,
   updateHotspot,
   updateStep,
   uploadStepAsset,
   uploadStepHtmlSnapshot,
 } from '@/lib/demoStudio/api';
+import { EditorSaveQueue, type SaveStatus } from '@/lib/demoStudio/saveQueue';
 import { getDemoReadiness } from '@/lib/demoStudio/readiness';
 import {
   captureVideoFrame,
@@ -117,7 +120,7 @@ export default function DemoEditorPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const replaceInputRef = useRef<HTMLInputElement>(null);
   const htmlInputRef = useRef<HTMLInputElement>(null);
-  const hotspotPersistTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
   const captureVideoRef = useRef<HTMLVideoElement>(null);
   const captureStreamRef = useRef<MediaStream | null>(null);
   const keptFramesRef = useRef<KeptFrame[]>([]);
@@ -141,6 +144,48 @@ export default function DemoEditorPage() {
   const [captureStream, setCaptureStream] = useState<MediaStream | null>(null);
   const [keptFrames, setKeptFrames] = useState<KeptFrame[]>([]);
   const [capturing, setCapturing] = useState(false);
+
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
+  const saveQueue = useMemo(() => new EditorSaveQueue(setSaveStatus), [demoId]);
+  const [batchOpen, setBatchOpen] = useState(false);
+  const history = useRef<{ past: Array<{steps: DemoStepWithHotspots[]; demo: DemoStudioDemo}>; future: Array<{steps: DemoStepWithHotspots[]; demo: DemoStudioDemo}> }>({past: [], future: []});
+  const [, refreshHistory] = useState(0);
+  const rememberEdit = () => {
+    if (!demo) return;
+    history.current.past.push(structuredClone({steps, demo}));
+    history.current.past = history.current.past.slice(-50);
+    history.current.future = [];
+    refreshHistory(n => n + 1);
+  };
+  const travelHistory = async (direction: 'past' | 'future') => {
+    if (!demo) return;
+    try {await saveQueue.flush();} catch {toast.error('Retry saving before undo or redo.');return;}
+    const target = history.current[direction].pop();
+    if (!target) return;
+    history.current[direction === 'past' ? 'future' : 'past'].push(structuredClone({steps, demo}));
+    setSteps(target.steps); setDemo({...demo,title:target.demo.title,theme:target.demo.theme});
+    if (!target.steps.some(step => step.id === selectedStepId)) setSelectedStepId(target.steps[0]?.id ?? null);
+    setSelectedHotspotId(null);
+    saveQueue.enqueue('snapshot',{snapshot:target}, p => restoreDemoEdit(p.snapshot.demo,p.snapshot.steps));
+    refreshHistory(n => n + 1);
+  };
+  const clearEditHistory = () => { history.current = {past:[],future:[]}; refreshHistory(n => n + 1); };
+  useEffect(() => {
+    const leave = (event: BeforeUnloadEvent) => { if (saveQueue.status !== 'saved') {event.preventDefault(); event.returnValue = ''; } };
+    window.addEventListener('beforeunload', leave);
+    return () => {window.removeEventListener('beforeunload',leave); void saveQueue.flush().catch(() => undefined);};
+  }, [saveQueue]);
+  useEffect(() => {
+    const key = (event: KeyboardEvent) => {
+      if ((event.target as HTMLElement).closest('input,textarea,select,[contenteditable="true"],[role="dialog"]') || previewOpen) return;
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      event.preventDefault();
+      const index = steps.findIndex(s => s.id === selectedStepId);
+      setSelectedStepId(steps[Math.max(0, Math.min(steps.length - 1, index + (event.key === 'ArrowRight' ? 1 : -1)))]?.id ?? null);
+      setSelectedHotspotId(null);
+    };
+    window.addEventListener('keydown',key); return () => window.removeEventListener('keydown',key);
+  }, [steps, selectedStepId, previewOpen]);
 
   const theme = useMemo<DemoTheme>(() => demo?.theme ?? {}, [demo?.theme]);
   const primaryColor = theme.primaryColor || DEFAULT_COLOR;
@@ -176,6 +221,7 @@ export default function DemoEditorPage() {
         });
         const merged = stepRows.map((s) => ({ ...s, hotspots: byStep.get(s.id) ?? [] }));
         const [briefRow, projectRow] = projectId ? await Promise.all([getBrief(projectId), getProject(projectId)]) : [null, null];
+        clearEditHistory();
         setDemo(demoRow);
         setBrief(briefRow);
         setProject(projectRow);
@@ -214,6 +260,8 @@ export default function DemoEditorPage() {
   const screenshotsStale = staleDays >= 30;
 
   const handleFiles = async (files: FileList | null) => {
+    try { await saveQueue.flush(); } catch { toast.error("Retry saving before changing screens."); return; }
+    rememberEdit();
     if (!files || files.length === 0 || !user || !demoId) return;
     setUploading(true);
     try {
@@ -340,6 +388,8 @@ export default function DemoEditorPage() {
   };
 
   const handleConfirmCapture = async () => {
+    try { await saveQueue.flush(); } catch { toast.error("Retry saving before changing screens."); return; }
+    rememberEdit();
     if (!user || !demoId || keptFrames.length === 0) return;
     setCapturing(true);
     // We have the frames now â€” stop the screen share immediately.
@@ -377,15 +427,14 @@ export default function DemoEditorPage() {
   };
 
   const handleReorder = async (orderedIds: string[]) => {
+    rememberEdit();
     setSteps((prev) => orderedIds.map((id, i) => ({ ...prev.find((s) => s.id === id)!, position: i })));
-    try {
-      await persistStepOrder(orderedIds);
-    } catch {
-      toast.error('Could not save the new order.');
-    }
+    saveQueue.enqueue('order', {orderedIds}, p => persistStepOrder(p.orderedIds));
   };
 
   const handleDeleteStep = async (id: string) => {
+    try { await saveQueue.flush(); } catch { toast.error("Retry saving before changing screens or click targets."); return; }
+    rememberEdit();
     const prev = steps;
     setSteps((s) => s.filter((step) => step.id !== id));
     if (selectedStepId === id) setSelectedStepId(prev.find((s) => s.id !== id)?.id ?? null);
@@ -398,6 +447,8 @@ export default function DemoEditorPage() {
   };
 
   const handleDuplicateStep = async (id: string) => {
+    try { await saveQueue.flush(); } catch { toast.error("Retry saving before changing screens or click targets."); return; }
+    rememberEdit();
     const step = steps.find((item) => item.id === id);
     if (!step) return;
     try {
@@ -412,6 +463,8 @@ export default function DemoEditorPage() {
   };
 
   const handleApplyStoryboard = async () => {
+    try { await saveQueue.flush(); } catch { toast.error("Retry saving before changing screens or click targets."); return; }
+    rememberEdit();
     if (!demo || !brief?.ai_storyboard?.length) return;
     try {
       const created = await applyStoryboardToDemo(demo.id, brief.ai_storyboard, steps.length);
@@ -429,6 +482,8 @@ export default function DemoEditorPage() {
   }, []);
 
   const handleReplaceFile = async (files: FileList | null) => {
+    try { await saveQueue.flush(); } catch { toast.error("Retry saving before changing screens."); return; }
+    rememberEdit();
     const file = files?.[0];
     if (!file || !user || !selectedStep) return;
     if (!file.type.startsWith('image/')) {
@@ -449,6 +504,8 @@ export default function DemoEditorPage() {
   };
 
   const handleImportHtml = async (files: FileList | null) => {
+    try { await saveQueue.flush(); } catch { toast.error("Retry saving before changing screens."); return; }
+    rememberEdit();
     const file = files?.[0];
     if (!file || !user || !demoId) return;
     if (!/\.html?$/i.test(file.name) && file.type !== 'text/html') {
@@ -487,12 +544,9 @@ export default function DemoEditorPage() {
     id: string,
     patch: Partial<Pick<DemoStepWithHotspots, 'title' | 'caption' | 'speaker_notes'>>,
   ) => {
+    rememberEdit();
     patchStepLocal(id, patch);
-    try {
-      await updateStep(id, patch);
-    } catch {
-      toast.error('Could not save step details.');
-    }
+    saveQueue.enqueue('step:' + id, patch, p => updateStep(id, p));
   };
 
   const patchHotspotLocal = useCallback((id: string, patch: Partial<DemoStudioHotspot>) => {
@@ -504,15 +558,13 @@ export default function DemoEditorPage() {
     );
   }, []);
 
-  const persistHotspotDebounced = useCallback((id: string, patch: Partial<DemoStudioHotspot>) => {
-    const timers = hotspotPersistTimers.current;
-    if (timers[id]) clearTimeout(timers[id]);
-    timers[id] = setTimeout(() => {
-      void updateHotspot(id, patch).catch(() => toast.error('Could not save hotspot.'));
-    }, 400);
-  }, []);
+  const persistHotspotDebounced = (id: string, patch: Partial<DemoStudioHotspot>) => {
+    saveQueue.enqueue('hotspot:' + id, patch, p => updateHotspot(id,p));
+  };
 
   const handleCreateHotspot = async (rect: Rect) => {
+    try { await saveQueue.flush(); } catch { toast.error("Retry saving before changing screens or click targets."); return; }
+    rememberEdit();
     if (!selectedStepId) return;
     try {
       const created = await createHotspot(selectedStepId, rect);
@@ -521,6 +573,10 @@ export default function DemoEditorPage() {
           step.id === selectedStepId ? { ...step, hotspots: [...step.hotspots, created] } : step,
         ),
       );
+      const last = steps[steps.length - 1]?.id === selectedStepId;
+      const guidance = last ? {label: theme.endCtaLabel || 'Learn more', action:'url' as const, action_target: theme.endCtaHref || ''} : {label:'Continue',action:'next' as const,action_target:null};
+      patchHotspotLocal(created.id,guidance);
+      persistHotspotDebounced(created.id,guidance);
       setSelectedHotspotId(created.id);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Could not create hotspot.');
@@ -529,11 +585,14 @@ export default function DemoEditorPage() {
 
   const handleInspectorChange = (patch: Partial<DemoStudioHotspot>) => {
     if (!selectedHotspotId) return;
+    rememberEdit();
     patchHotspotLocal(selectedHotspotId, patch);
     persistHotspotDebounced(selectedHotspotId, patch);
   };
 
   const handleDeleteHotspot = async (id: string) => {
+    try { await saveQueue.flush(); } catch { toast.error("Retry saving before changing screens or click targets."); return; }
+    rememberEdit();
     const prev = steps;
     setSteps((s) =>
       s.map((step) => ({ ...step, hotspots: step.hotspots.filter((h) => h.id !== id) })),
@@ -548,30 +607,25 @@ export default function DemoEditorPage() {
   };
 
   const handleGeometryCommit = (id: string, rect: Rect) => {
+    rememberEdit();
     patchHotspotLocal(id, rect);
-    void updateHotspot(id, rect).catch(() => toast.error('Could not save hotspot position.'));
+    persistHotspotDebounced(id, rect);
   };
 
   const updateTheme = async (patch: Partial<DemoTheme>) => {
     if (!demo) return;
+    rememberEdit();
     const nextTheme = { ...theme, ...patch };
     setDemo({ ...demo, theme: nextTheme });
-    try {
-      await updateDemo(demo.id, { theme: nextTheme });
-    } catch {
-      toast.error('Could not save theme.');
-    }
+    saveQueue.enqueue('demo', {theme:nextTheme}, p => updateDemo(demo.id,p));
   };
 
   const handleTitleBlur = async (value: string) => {
     if (!demo || value.trim() === demo.title) return;
+    rememberEdit();
     const title = value.trim() || 'Untitled demo';
     setDemo({ ...demo, title });
-    try {
-      await updateDemo(demo.id, { title });
-    } catch {
-      toast.error('Could not rename demo.');
-    }
+    saveQueue.enqueue('demo', {title}, p => updateDemo(demo.id,p));
   };
 
   const handlePublish = async () => {
@@ -581,13 +635,14 @@ export default function DemoEditorPage() {
       return;
     }
     if (!demoReadiness.ready) {
-      toast.error(`This demo is not ready to publish yet (${demoReadiness.score}%).`, {
+      toast.error(`Complete these items before sharing.`, {
         description: demoReadiness.missing.slice(0, 3).join(' '),
       });
       return;
     }
     setPublishing(true);
     try {
+      await saveQueue.flush();
       const updated = await publishDemo(demo.id, { ownerId: demo.owner_id, ownerPlan: planTier });
       setDemo(updated);
       // Publishing a demo is the common path, but only the Launch Composer ever recorded
@@ -733,7 +788,12 @@ export default function DemoEditorPage() {
 
   return (
     // Rails stack below lg (see grid below); on touch, every control is a 44px tap target. Desktop unchanged.
-    <div className="min-h-screen bg-background touch:[&_button]:min-h-[44px]">
+    <div className="min-h-screen bg-background touch:[&_button]:min-h-[44px]" onClickCapture={event => {
+      if (saveQueue.status !== 'saved' && (event.target as HTMLElement).closest('a[href]')) {
+        event.preventDefault(); event.stopPropagation();
+        toast.error('Finish saving or retry the failed save before leaving this editor.');
+      }
+    }}>
       <SEO title={`${demo?.title ?? 'Demo'} â€” Demo Studio`} description="Build your interactive product demo." noindex url="/demo-studio" />
 
       {/* Top bar */}
@@ -745,6 +805,7 @@ export default function DemoEditorPage() {
             </Link>
           </Button>
           <Input
+            key={demo?.title}
             defaultValue={demo?.title ?? ''}
             onBlur={(e) => handleTitleBlur(e.target.value)}
             className="h-9 w-full min-w-0 flex-1 border-transparent bg-transparent text-sm font-semibold hover:border-border focus:border-border sm:w-48 sm:flex-none md:w-72"
@@ -776,13 +837,22 @@ export default function DemoEditorPage() {
           <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setPreviewOpen(true)}>
             <Eye className="h-4 w-4" /> <span className="hidden sm:inline">Preview</span>
           </Button>
-          <Button size="sm" className="gap-1.5" onClick={handlePublish} disabled={publishing}>
+          <Button size="sm" className="gap-1.5" onClick={handlePublish} disabled={publishing || uploading || saveStatus !== 'saved'}>
             {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
             {demo?.status === 'published' ? 'Republish' : 'Publish'}
           </Button>
         </div>
       </header>
 
+      <div className="flex flex-wrap items-center gap-2 border-b px-4 py-2 text-xs">
+        <span role="status" aria-live="polite">{saveStatus === 'saved' ? 'Saved' : saveStatus === 'failed' ? 'Save failed - your edits are kept here' : 'Saving...'}</span>
+        {saveStatus === 'failed' && <Button size="sm" variant="outline" onClick={() => void saveQueue.flush().catch(() => toast.error('Still unable to save. Your edits are retained.'))}>Retry save</Button>}
+        <Button size="sm" variant="ghost" disabled={!history.current.past.length} onClick={() => travelHistory('past')}>Undo edit</Button>
+        <Button size="sm" variant="ghost" disabled={!history.current.future.length} onClick={() => travelHistory('future')}>Redo edit</Button>
+        <Button size="sm" variant="outline" disabled={!steps.length} onClick={() => setBatchOpen(!batchOpen)}>Batch captions</Button>
+        <span className="text-muted-foreground">Arrow keys move between screens. Undo and redo work for this editing session.</span>
+      </div>
+      {batchOpen && <section className="grid gap-3 border-b p-4 sm:grid-cols-2" aria-label="Batch captions">{steps.map((step,index) => <label key={step.id} className="text-sm">Screen {index+1}<Textarea value={step.caption || ''} onChange={e => handleStepFieldCommit(step.id,{caption:e.target.value})}/></label>)}</section>}
       <input
         ref={fileInputRef}
         type="file"
@@ -817,7 +887,7 @@ export default function DemoEditorPage() {
           <div className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-center justify-between gap-3">
               <h4 className="text-sm font-semibold">Readiness</h4>
-              <Badge variant={demoReadiness.ready ? 'default' : 'outline'}>{demoReadiness.score}%</Badge>
+              <Badge variant={demoReadiness.ready ? 'default' : 'outline'}>{demoReadiness.ready ? 'Ready to share' : 'Needs attention'}</Badge>
             </div>
             {demoReadiness.missing.length ? (
               <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
@@ -828,6 +898,7 @@ export default function DemoEditorPage() {
             ) : (
               <p className="mt-3 text-xs text-muted-foreground">Demo has the essentials for a strong walkthrough.</p>
             )}
+            {!!demoReadiness.suggestions.length && <details className="mt-3 text-xs text-muted-foreground"><summary>Optional improvements</summary><ul>{demoReadiness.suggestions.map(item => <li key={item}>{item}</li>)}</ul></details>}
             {screenshotsStale && (
               <div className="mt-3 flex items-start gap-2 rounded-md border border-warning/40 bg-warning/5 px-2.5 py-2 text-xs text-warning">
                 <RefreshCw className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
@@ -895,7 +966,7 @@ export default function DemoEditorPage() {
           <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-4">
             <p className="text-sm font-semibold text-primary">Build the interactive demo</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Your launch page needs one published demo and one recorded VSL. You can create them in either order.
+              Add screens, guide the viewer, preview, then share. Video and a full launch page are optional next steps.
             </p>
             <div className="mt-3 grid gap-2 sm:grid-cols-5">
               {setupChecklist.map((item, index) => (
@@ -994,12 +1065,13 @@ export default function DemoEditorPage() {
                   Paste this into any site: Webflow, Framer, WordPress, or plain HTML.
                 </p>
               </div>
+              <DemoResultsSummary demoId={demo!.id}/>
               {/* The PMF scorer already reads published-demo behavior as verified evidence,
                   but nothing in Demo Studio ever said so — founders had no reason to think
                   sharing this link fed their build decision. */}
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
                 <p className="text-xs leading-5 text-muted-foreground">
-                  Views, CTA clicks, and signups on this demo count as verified demand evidence in your PMF score.
+                  Views, CTA clicks, and signups provide attributed demo behavior for PMF Lab. Use target-customer feedback to interpret what it means.
                 </p>
                 <Button asChild size="sm" variant="outline" className="shrink-0 gap-1.5">
                   <Link to="/pmf-lab">
@@ -1063,6 +1135,7 @@ export default function DemoEditorPage() {
           <HotspotInspector
             hotspot={selectedHotspot}
             stepCount={steps.length}
+            steps={steps}
             onChange={handleInspectorChange}
             onDelete={handleDeleteHotspot}
           />
@@ -1095,8 +1168,7 @@ export default function DemoEditorPage() {
                     id="step-title"
                     value={selectedStep.title ?? ''}
                     placeholder="e.g. Create your first project"
-                    onChange={(e) => patchStepLocal(selectedStep.id, { title: e.target.value })}
-                    onBlur={(e) => handleStepFieldCommit(selectedStep.id, { title: e.target.value || null })}
+                    onChange={(e) => handleStepFieldCommit(selectedStep.id, { title: e.target.value })}
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -1106,8 +1178,7 @@ export default function DemoEditorPage() {
                     rows={3}
                     value={selectedStep.caption ?? ''}
                     placeholder="Tell viewers what they are seeing and why it matters."
-                    onChange={(e) => patchStepLocal(selectedStep.id, { caption: e.target.value })}
-                    onBlur={(e) => handleStepFieldCommit(selectedStep.id, { caption: e.target.value || null })}
+                    onChange={(e) => handleStepFieldCommit(selectedStep.id, { caption: e.target.value })}
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -1117,8 +1188,7 @@ export default function DemoEditorPage() {
                     rows={3}
                     value={selectedStep.speaker_notes ?? ''}
                     placeholder="Notes for what to say when recording your VSL."
-                    onChange={(e) => patchStepLocal(selectedStep.id, { speaker_notes: e.target.value })}
-                    onBlur={(e) => handleStepFieldCommit(selectedStep.id, { speaker_notes: e.target.value || null })}
+                    onChange={(e) => handleStepFieldCommit(selectedStep.id, { speaker_notes: e.target.value })}
                   />
                 </div>
               </div>
@@ -1133,6 +1203,7 @@ export default function DemoEditorPage() {
               <Label htmlFor="demo-cta-label">End CTA label</Label>
               <Input
                 id="demo-cta-label"
+                key={theme.endCtaLabel}
                 defaultValue={theme.endCtaLabel ?? ''}
                 placeholder="Join the waitlist"
                 onBlur={(e) => updateTheme({ endCtaLabel: e.target.value || undefined })}
@@ -1142,6 +1213,7 @@ export default function DemoEditorPage() {
               <Label htmlFor="demo-cta-url">End CTA URL</Label>
               <Input
                 id="demo-cta-url"
+                key={theme.endCtaHref}
                 defaultValue={theme.endCtaHref ?? ''}
                 placeholder="/p/your-launch-page"
                 onBlur={(e) => updateTheme({ endCtaHref: e.target.value || undefined })}

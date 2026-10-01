@@ -1,3 +1,4 @@
+import { resolveDemoTarget } from '@/lib/demoStudio/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Download, Loader2, Mic, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
@@ -124,19 +125,21 @@ export default function DemoPlayer({
         return;
       }
       if (hotspot.action === 'goto' && hotspot.action_target) {
-        const target = Number.parseInt(hotspot.action_target, 10);
-        if (!Number.isNaN(target)) {
+        const target = resolveDemoTarget(hotspot.action_target, steps);
+        if (target >= 0) {
           goTo(target);
           return;
         }
       }
       goTo(index + 1);
     },
-    [goTo, index],
+    [goTo, index, steps],
   );
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement)?.closest('input,textarea,select,[contenteditable="true"]')) return;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') e.preventDefault();
       if (e.key === 'ArrowRight') goTo(index + 1);
       if (e.key === 'ArrowLeft') goTo(index - 1);
     };

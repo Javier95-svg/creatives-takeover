@@ -867,7 +867,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
             </div>
           )}
 
-          <div className="mb-3 flex flex-wrap items-center gap-2 text-label text-muted-foreground">
+          <details className="mb-3 text-label text-muted-foreground"><summary className="cursor-pointer">Advanced: models, repository and history</summary><div className="mt-2 flex flex-wrap gap-2">
             <Button
               type="button"
               variant="ghost"
@@ -912,7 +912,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
               <span>·</span>
               <span>{githubConnection.connected ? 'Repo linked' : 'No repo linked'}</span>
             </div>
-          </div>
+          </div></details>
 
           {selectedReferenceItems.length > 0 && (
             <div className="mb-3 flex flex-wrap items-center gap-2">

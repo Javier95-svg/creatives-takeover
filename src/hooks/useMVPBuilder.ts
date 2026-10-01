@@ -33,7 +33,6 @@ import {
   buildPreviewFromProject,
   createProjectFromHtml,
   detectProjectFileLanguage,
-  extractHtmlFromText,
   extractProjectDependenciesFromFiles,
   extractProjectFromText,
   getChangedProjectFiles,
@@ -74,8 +73,7 @@ import {
   type MVPIntegrationStatus,
 } from '@/lib/mvp-builder/integrations';
 import { MVP_PUBLISH_BASE_DOMAIN, buildPublicAppUrl } from '@/lib/mvp-builder/publish';
-import { evaluateMvpQuality, hasMvpSuccessEventInstrumentation } from '@/lib/mvp-builder/qualityChecks';
-import { runMvpBrowserSmokeTest } from '@/lib/mvp-builder/smokeTest';
+import { hasMvpSuccessEventInstrumentation } from '@/lib/mvp-builder/qualityChecks';
 import { createJourneyHandoff, trackJourneyEvent, upsertJourneyOutcome } from '@/lib/journeyOutcomes';
 
 export interface MVPMessage {
@@ -137,6 +135,7 @@ export interface SupabaseConnectionState {
     status?: string | null;
     organizationId?: string | null;
     organizationName?: string | null;
+    projectUrl?: string | null;
   } | null;
 }
 
@@ -393,13 +392,6 @@ function extractGeneratedCode(
     files[0];
   if (preferredEntry?.content) return preferredEntry.content;
   return html ?? '';
-}
-
-function sanitizeStreamedCode(value: string): string {
-  return value
-    .replace(/^```(?:html)?\s*/i, '')
-    .replace(/\s*```$/i, '')
-    .trim();
 }
 
 function sortHistory(items: MVPPromptHistoryItem[]): MVPPromptHistoryItem[] {
@@ -1514,8 +1506,8 @@ export function useMVPBuilder() {
         const artifact = recordFiles.length > 0
           ? {
               projectName: record.title || DEFAULT_PROJECT_NAME,
-              framework: 'static-html' as const,
-              projectType: 'landing-page' as const,
+              framework: inferProjectFramework(recordFiles, record.project_type === 'react_vite' ? 'react-vite' : undefined),
+              projectType: record.project_type === 'react_vite' ? 'web-app' as const : 'landing-page' as const,
               entryFile: pickProjectEntryFile(recordFiles) ?? recordFiles[0]?.path ?? 'index.html',
               summary: 'Loaded from MVP Builder project storage.',
               dependencies: [],
@@ -1573,7 +1565,7 @@ export function useMVPBuilder() {
               title: typeof record.title === 'string' && record.title.trim() ? record.title.trim() : DEFAULT_PROJECT_NAME,
               prompt_history: Array.isArray(record.prompt_history) ? (record.prompt_history as MVPMessage[]) : [],
               generated_code: typeof record.generated_code === 'string' ? record.generated_code : null,
-              project_type: record.project_type === 'react_multi' ? 'react_multi' : 'html_single',
+              project_type: record.project_type === 'react_vite' ? 'react_vite' : record.project_type === 'react_multi' ? 'react_multi' : 'html_single',
               template: sanitizeMVPBuilderTemplate(record.template),
               project_files: Array.isArray(record.project_files) ? record.project_files as MVPProjectRecord['project_files'] : [],
               versions: Array.isArray(record.versions) ? record.versions as MVPBuilderVersion[] : [],
@@ -1836,7 +1828,7 @@ export function useMVPBuilder() {
           title: typeof data.title === 'string' && data.title.trim() ? data.title.trim() : DEFAULT_PROJECT_NAME,
           prompt_history: Array.isArray(data.prompt_history) ? (data.prompt_history as MVPMessage[]) : payload.prompt_history,
           generated_code: typeof data.generated_code === 'string' ? data.generated_code : codeToSave,
-          project_type: data.project_type === 'react_multi' ? 'react_multi' : 'html_single',
+          project_type: data.project_type === 'react_vite' ? 'react_vite' : data.project_type === 'react_multi' ? 'react_multi' : 'html_single',
           template: sanitizeMVPBuilderTemplate(data.template),
           project_files: Array.isArray(data.project_files) ? data.project_files as MVPProjectRecord['project_files'] : payload.project_files,
           versions: Array.isArray(data.versions) ? data.versions as MVPBuilderVersion[] : projectVersions,
@@ -1878,11 +1870,11 @@ export function useMVPBuilder() {
   );
 
   const loadProject = useCallback(
-    async (id: string) => {
+    async (id: string, force = false) => {
       if (!user || !id) return;
 
       try {
-        let project = savedProjects.find((item) => item.id === id) ?? null;
+        let project = force ? null : savedProjects.find((item) => item.id === id) ?? null;
         if (!project) {
           const { data, error } = await supabase
             .from(MVP_PROJECTS_TABLE as never)
@@ -1899,7 +1891,7 @@ export function useMVPBuilder() {
             title: typeof data.title === 'string' && data.title.trim() ? data.title.trim() : DEFAULT_PROJECT_NAME,
             prompt_history: Array.isArray(data.prompt_history) ? (data.prompt_history as MVPMessage[]) : [],
             generated_code: typeof data.generated_code === 'string' ? data.generated_code : null,
-            project_type: data.project_type === 'react_multi' ? 'react_multi' : 'html_single',
+            project_type: data.project_type === 'react_vite' ? 'react_vite' : data.project_type === 'react_multi' ? 'react_multi' : 'html_single',
             template: sanitizeMVPBuilderTemplate(data.template),
             project_files: Array.isArray(data.project_files) ? data.project_files as MVPProjectRecord['project_files'] : [],
             versions: Array.isArray(data.versions) ? data.versions as MVPBuilderVersion[] : [],
@@ -2832,7 +2824,7 @@ export function useMVPBuilder() {
         return;
       }
       if (localActionType === 'unsupported') {
-        toast.info('That request needs backend/auth/payment support planned for a later phase. Phase 2 supports frontend app generation, edits, bug fixes, add-page, add-feature, and redesign.');
+        toast.info('Connected Supabase workflows are supported. Payments, marketplaces and arbitrary backend stacks are outside this release.');
         return;
       }
 
@@ -2934,7 +2926,7 @@ export function useMVPBuilder() {
             actionType: localActionType,
             template: activeSetupInput.template,
             palettePreference: activeSetupInput.palettePreference,
-            setupInput: activeSetupInput,
+            setupInput: {...activeSetupInput, workflowRuntime: { projectId, url: supabaseConnection.project?.projectUrl, publicKey: setupInput.workflowPublicKey }},
             projectContext: {
               ...(startupContext ?? {}),
               source: activeSetupInput.prefillSource,
@@ -2986,7 +2978,7 @@ export function useMVPBuilder() {
         let completedCreditCost = required;
         let completedModel: string | null = null;
         let finalized = false;
-        let liveProjectApplied = false;
+
 
         const finalizeResponse = () => {
           if (finalized) return;
@@ -3090,16 +3082,12 @@ export function useMVPBuilder() {
               });
               setProjectVersions((prev) => [version, ...prev]);
             }
-            if (liveProjectApplied && committedProject === newProject) {
-              setLastGeneratedProject(normalizeSnapshotArtifact(committedProject));
-            } else {
-              applyProjectArtifact(committedProject, {
+            applyProjectArtifact(committedProject, {
                 allowFallback: false,
                 setAsBaseline: true,
                 preserveProjectName: projectName !== DEFAULT_PROJECT_NAME,
                 preserveProjectType: false,
               });
-            }
             addProjectSnapshot(
               committedProject,
               messages.length === 0 ? 'Initial generated build' : 'Generated refinement',
@@ -3119,7 +3107,8 @@ export function useMVPBuilder() {
         while (true) {
           const { done, value } = await reader.read();
           if (done) {
-            finalizeResponse();
+            if (responseMode === 'chat') finalizeResponse();
+            else if (!finalized) throw new Error('Build stream ended before completion. The previous version is preserved.');
             break;
           }
 
@@ -3173,19 +3162,7 @@ export function useMVPBuilder() {
               }
             } else if (event.type === 'code-delta' && typeof event.content === 'string') {
               streamedCode += event.content;
-              const completedHtml = extractHtmlFromText(streamedCode);
-
-              if (completedHtml && /<\/html>/i.test(completedHtml)) {
-                const liveProject = createProjectFromHtml(completedHtml, projectName);
-                applyProjectArtifact(liveProject, {
-                  allowFallback: false,
-                  setAsBaseline: false,
-                  preserveProjectName: true,
-                  preserveProjectType: true,
-                });
-              } else {
-                setGeneratedCode(sanitizeStreamedCode(streamedCode));
-              }
+              // Keep the last complete artifact visible until the server confirms completion.
             } else if (event.type === 'credit-reserved') {
               void refreshCredits();
             } else if (event.type === 'credit-finalized') {
@@ -3232,14 +3209,6 @@ export function useMVPBuilder() {
                 dependencies: nextProject.dependencies,
                 files: normalizeProjectFiles(nextProject.files || []),
               };
-              setGeneratedCode(extractGeneratedCode(newProject.files, newProject.entryFile, null));
-              applyProjectArtifact(newProject, {
-                allowFallback: true,
-                setAsBaseline: false,
-                preserveProjectName: projectName !== DEFAULT_PROJECT_NAME,
-                preserveProjectType: false,
-              });
-              liveProjectApplied = true;
             } else if (event.type === 'complete') {
               completedModel = typeof event.model === 'string' ? event.model : null;
               finalizeResponse();
@@ -3373,6 +3342,7 @@ export function useMVPBuilder() {
       selectedModels,
       selectedProjectType,
       setupInput,
+      supabaseConnection,
       startupContext,
       user,
     ]
@@ -3634,34 +3604,20 @@ export function useMVPBuilder() {
   // The actual slug assignment + uniqueness check runs server-side in the
   // `mvp-builder-publish` edge function (service role spans all users; the slug is
   // locked on first publish so renaming the project never breaks shared links).
-  const publishProject = useCallback(async () => {
+  const publishProject = useCallback(async (testRunId?: string) => {
+    if (!testRunId || isShowingPreviewFallback) {toast.error("Test the current build before publishing. Fallback previews cannot be published.");return;}
     if (!user || projectFiles.length === 0 || isDeploying) {
       if (!user) toast.error('Please sign in to publish this MVP.');
       if (projectFiles.length === 0) toast.error('Generate a project before publishing.');
       return;
     }
-    const smokeTest = await runMvpBrowserSmokeTest({
-      ...previewState,
-      html: previewState.html ?? currentHtml,
-    });
-    const quality = evaluateMvpQuality({
-      files: projectFiles,
-      preview: { ...previewState, html: previewState.html ?? currentHtml },
-      versionCount: projectVersions.length,
-      smokeTestPassed: smokeTest.passed,
-    });
-    if (!quality.passed) {
-      toast.error('This MVP is not ready to publish yet.', {
-        description: quality.failures.slice(0, 3).join(' '),
-      });
-      return;
-    }
+    const quality = {checks:{server_workflow_test:true},passed:true};
     if (creditsLoading) {
       toast('Loading credit balance...');
       return;
     }
     // Persist first so the project row exists for the publish function to read/update.
-    await saveProject({ silent: true });
+    if (!await saveProject({ silent: true })) {toast.error("Save failed. Nothing was published.");return;}
     setIsDeploying(true);
     try {
       const session = await getSessionSafely();
@@ -3674,11 +3630,7 @@ export function useMVPBuilder() {
         },
         body: {
           projectId,
-          validation: {
-            smokeTest,
-            qualityChecks: quality.checks,
-            validatedAt: new Date().toISOString(),
-          },
+          testRunId,
         },
       });
 
@@ -3750,7 +3702,7 @@ export function useMVPBuilder() {
         source: 'mvp_publish',
         published_url: data.url,
         evidence_source_count: setupInput.evidenceManifest?.sources.length ?? 0,
-        primary_flow_smoke_test: true,
+        customer_workflow_test: true,
       });
       void refreshCredits();
       showDashboardReturnToast({
@@ -3764,7 +3716,7 @@ export function useMVPBuilder() {
     } finally {
       setIsDeploying(false);
     }
-  }, [creditsLoading, currentHtml, handleCreditError, isDeploying, navigate, previewState, projectFiles, projectId, projectVersions.length, refreshCredits, saveProject, setupInput, user]);
+  }, [creditsLoading, currentHtml, handleCreditError, isDeploying, isShowingPreviewFallback, navigate, previewState, projectFiles, projectId, projectVersions.length, refreshCredits, saveProject, setupInput, user]);
 
   const closeCreditExhaustedModal = useCallback(() => {
     setIsCreditExhaustedModalOpen(false);

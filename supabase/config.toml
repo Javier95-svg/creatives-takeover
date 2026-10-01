@@ -330,3 +330,13 @@ verify_jwt = false
 
 [functions.validation-sessions]
 verify_jwt = false
+
+# Authenticated owners or a separate worker credential are checked in the handler.
+[functions.mvp-workflow-tests]
+verify_jwt = false
+
+[functions.mvp-builder-publish]
+verify_jwt = false
+
+[functions.mvp-builder-deploy]
+verify_jwt = false

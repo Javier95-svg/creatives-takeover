@@ -1,3 +1,5 @@
+import { workflowPrompt, workflowErrors, publicKeyError } from '../_shared/mvp-workflow.ts';
+import { workflowWorkerAvailable } from '../_shared/mvp-worker-health.ts';
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { getUserFromAuth } from "../_shared/credit-deduction.ts";
@@ -620,7 +622,7 @@ function classifyAction(input: string, hasProject: boolean): MVPBuilderActionTyp
   if (!normalized) return "unclear";
   if (!hasProject) return "generation";
   if (/\b(error|bug|broken|fix|doesn'?t work|not working|console|crash)\b/.test(normalized)) return "debug";
-  if (/\b(auth|database|supabase|stripe|payment|marketplace|backend|server action)\b/.test(normalized)) return "unsupported";
+  if (/\b(stripe|payment|marketplace|arbitrary backend|server action)\b/.test(normalized)) return "unsupported";
   if (/\b(add|create|build)\b.{0,40}\b(page|route|screen)\b|\b(new page|new route|another screen)\b/.test(normalized)) return "add_page";
   if (/\b(add|build|create|implement)\b.*\b(feature|flow|component|wizard|form|dashboard|table|chart|modal|settings)\b/.test(normalized)) return "add_feature";
   if (/\b(redesign|design overhaul|make it beautiful|modernize|visual refresh|new look|polish the design|theme|thematic|tematic|brand|rebrand|palette|colou?r scheme|aesthetic|look and feel|skin care|skincare)\b/.test(normalized)) return "design_overhaul";
@@ -1285,6 +1287,9 @@ ${projectBlock}${contextBlock}
 Reply directly and conversationally.`;
   }
 
+  if (setup.workflow) {
+    return params.userMessage + '\n' + workflowPrompt(setup.workflow) + '\nPublic database settings and project identity: ' + JSON.stringify(setup.workflowRuntime) + '\nVisual preference: ' + params.palette + '\nCurrent saved source (make targeted edits and preserve unrelated files): ' + JSON.stringify(params.currentProject);
+  }
   if (params.actionType === "generation") {
     // The user's typed request is authoritative. Founder/setup data is optional
     // background only — it must never override the subject the user asked for.
@@ -1307,6 +1312,9 @@ HOW TO INTERPRET THE REQUEST
 - The request above is the single source of truth for WHAT to build: the product/idea, its audience, its industry, and its purpose. Build precisely that.
 - If the request names a subject (e.g. "a landing page for trading learners"), that subject IS the product. Invent a fitting brand name, realistic copy, audience, and value props for THAT subject.
 - Do NOT substitute the founder's own product or a different topic. The background section below is reference only — use it solely to fill details the request leaves unspecified (e.g. visual taste), and ignore anything in it that conflicts with the request.
+
+${workflowPrompt(setup.workflow)}
+${setup.workflow ? "Public database settings and project identity: " + JSON.stringify(setup.workflowRuntime) : ""}
 
 GENERATION REQUIREMENTS
 - Template: ${params.template}
@@ -1335,6 +1343,8 @@ ${params.template === "blank" ? `ADDITIONAL DETAIL FROM THE USER\n${customPrompt
 
 FOUNDER REQUEST
 ${params.userMessage}
+
+${workflowPrompt(setup.workflow)}
 
 CURRENT PROJECT
 ${JSON.stringify(params.currentProject, null, 2)}
@@ -1606,6 +1616,21 @@ serve(async (req: Request) => {
   const baseCreditCost = CREDIT_COSTS[creditFeature];
   const creditCost     = resolveModelAdjustedCreditCost(baseCreditCost, primaryModel, defaultModel);
   const idempotencyKey = req.headers.get("Idempotency-Key") ?? crypto.randomUUID();
+  const setupInput = body.setupInput && typeof body.setupInput === "object" ? body.setupInput as Record<string, unknown> : {};
+  if (setupInput.workflow && classifiedAction !== 'chat' && !body.currentProject?.files?.length) {
+    const admin=getAdminClient();
+    const health=admin ? await admin.from('mvp_workflow_worker_health').select('last_seen').eq('id',true).maybeSingle() : null;
+    if(!workflowWorkerAvailable(Deno.env.get('MVP_WORKFLOW_WORKER_SECRET')||'',health?.data?.last_seen)) {
+      return new Response(JSON.stringify({error:'New workflow builds are temporarily unavailable while testing is offline. No credits were charged.',code:'WORKFLOW_UNAVAILABLE'}),{status:503,headers:{...corsHeaders,'Content-Type':'application/json'}});
+    }
+  }
+  if (setupInput.workflow && publicKeyError(setupInput.workflowPublicKey)) return new Response(JSON.stringify({error:publicKeyError(setupInput.workflowPublicKey)}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if (setupInput.workflow && workflowErrors(setupInput.workflow).length) return new Response(JSON.stringify({error:workflowErrors(setupInput.workflow).join(' ')}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if (setupInput.workflow) {
+    const runtime=(setupInput.workflowRuntime || {}) as Record<string,unknown>;
+    if (!/^https:\/\/[a-z0-9]+\.supabase\.co$/.test(String(runtime.url || '')) || !/^[0-9a-f-]{36}$/i.test(String(body.projectId || ''))) return errorStream('Connect a supported database and save the project identity first.','BAD_REQUEST');
+    setupInput.workflowRuntime={url:runtime.url,publicKey:setupInput.workflowPublicKey,projectId:body.projectId};
+  }
   const reservation = await reserveMVPBuilderCredits(
     userId,
     creditFeature,
@@ -1632,7 +1657,6 @@ serve(async (req: Request) => {
   }
   const reservationId = reservation.reservationId;
   const heldCredits = Number(reservation.heldCredits ?? 0);
-  const setupInput = body.setupInput && typeof body.setupInput === "object" ? body.setupInput as Record<string, unknown> : {};
   const productName = typeof setupInput.productName === "string" ? setupInput.productName : "Generated MVP";
   const posthogKey = Deno.env.get("POSTHOG_API_KEY") ?? "";
 
@@ -1658,7 +1682,8 @@ serve(async (req: Request) => {
   // Build the per-action system prompt. Chat mode uses a standalone
   // conversational prompt; all build actions extend the code-generation BASE.
   const actionAddition = ACTION_SYSTEM_ADDITIONS[classifiedAction];
-  const systemPrompt = classifiedAction === "chat"
+  const workflowSystem = 'Build a small working customer workflow with a responsive, accessible interface. Return only a JSON object with project_type (html_single or react_vite), files (array of filename,content,description), package_json, dev_command, build_command, preview_port (5173), setup_instructions, posthog_events (empty array), generation_notes. HTML projects use inline/local CSS and native browser JavaScript. React uses react, react-dom and lucide-react only; no external runtime CDN, Tailwind tooling or custom backend. Use the supplied public Supabase connection for real authentication and saved records. Never mock a database write or authentication. Keep the required data-testid hooks on real controls. Explain missing setup clearly in the interface. For edits return only changed complete files and preserve all unrelated source. Never include service-role credentials, email sends, payments or webhooks. Use only the supplied public key. Implement the agreed workflow and at most three essential features.';
+  const systemPrompt = setupInput.workflow && classifiedAction !== 'chat' ? workflowSystem : classifiedAction === "chat"
     ? CHAT_SYSTEM_PROMPT
     : actionAddition
     ? `${BASE_SYSTEM_PROMPT}\n\n---\n${actionAddition}`
