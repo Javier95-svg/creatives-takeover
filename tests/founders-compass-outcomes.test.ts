@@ -81,8 +81,8 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
   const fallback = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   const prerender = readFileSync(new URL('../scripts/generate-prerendered-pages.mjs', import.meta.url), 'utf8');
   const paragraphs = [
-    'A business growth platform for founders: guided steps and real mentors, from first idea to paying customers.',
-    'Find your customer, prove demand, launch, get users, and raise. Your code and hosting stay where they are.',
+    'Startup incubator platform.',
+    "Define what to build, who it's for, and whether they'll pay before you spend months guessing.",
     'No application. No cohort. No equity.',
   ];
   const renderedSources = [hero, fallback, prerender].map((source) =>
@@ -129,11 +129,12 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
   assert.match(prerender, /Pro[\s\S]*\$65[\s\S]*Accelerate and Fundraise/);
 });
 
-// Removed after visitor feedback (Oct 2026): the market-stats strip read as hype
-// and made the platform feel "AI-ish" rather than a place to meet people.
-test('hero no longer shows the market-stats strip', () => {
+test('hero scrolling cards retain the restored market data', () => {
   const hero = readFileSync(new URL('../src/components/Hero.tsx', import.meta.url), 'utf8');
-  assert.doesNotMatch(hero, /\$680B|DEFAULT_STATS|ct-hero__stats/);
+  assert.match(hero, /value: "5", unit: "×", label: "Faster idea → MVP than pre-AI builders"/);
+  assert.match(hero, /value: "\$680B", unit: "\+", label: "Into AI-native startups since 2024"/);
+  assert.match(hero, /value: "1 in 4", label: "New 2026 launches are solo founders"/);
+  assert.match(hero, /value: "~18", unit: "mo", label: "Before incumbents close the AI-native gap"/);
 });
 
 test('Pro expert support has a protected queue while the restored mentorship hero remains intact', () => {

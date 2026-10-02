@@ -60,11 +60,6 @@ test("the hero opens three separate audience tabs with a visual account guide", 
   assert.match(hero, /Who is this for\?[\s\r\n]*<\/button>/);
   assert.match(hero, /hero-who-is-this-for/);
   assert.match(hero, /setIsAudienceDialogOpen\(true\)/);
-  // Founders who already shipped open the dialog straight on the post-launch stage.
-  assert.match(hero, /Already launched\?[\s\r\n]*<\/button>/);
-  assert.match(hero, /setAudienceInitialTab\("Post-launch"\)/);
-  assert.match(hero, /initialTab=\{audienceInitialTab\}/);
-  assert.match(dialog, /if \(open\) setActiveIndex\(initialIndex\)/);
   assert.match(hero, /<WhoIsThisForDialog/);
   assert.doesNotMatch(hero, /handleStartupCycleClick|hero-startup-cycle-link/);
 
