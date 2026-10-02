@@ -38,6 +38,8 @@ import {
 type WhoIsThisForDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** The tab shown each time the dialog opens. */
+  initialTab?: AudienceTab;
 };
 
 const TOOL_ICONS: Record<FounderProfileToolKey, LucideIcon> = {
@@ -49,6 +51,8 @@ const TOOL_ICONS: Record<FounderProfileToolKey, LucideIcon> = {
 };
 
 const AUDIENCE_TABS = ["Account types", "Pre-build", "Post-launch"] as const;
+
+export type AudienceTab = (typeof AUDIENCE_TABS)[number];
 
 const PRE_BUILD_PATH = [
   { label: "Idea", icon: Lightbulb },
@@ -100,14 +104,15 @@ const ProfileBannerIllustration = ({ profileId }: { profileId: FounderProfileId 
   );
 };
 
-const WhoIsThisForDialog = ({ open, onOpenChange }: WhoIsThisForDialogProps) => {
+const WhoIsThisForDialog = ({ open, onOpenChange, initialTab = "Account types" }: WhoIsThisForDialogProps) => {
   const { set: setAttribution } = useCTAAttribution();
-  const [activeIndex, setActiveIndex] = useState(0);
+  const initialIndex = AUDIENCE_TABS.indexOf(initialTab);
+  const [activeIndex, setActiveIndex] = useState(initialIndex);
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (open) setActiveIndex(0);
-  }, [open]);
+    if (open) setActiveIndex(initialIndex);
+  }, [open, initialIndex]);
 
   const showTab = (index: number) => {
     setActiveIndex(index);

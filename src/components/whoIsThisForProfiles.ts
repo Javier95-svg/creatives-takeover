@@ -81,7 +81,7 @@ export const WHO_IS_THIS_FOR_PROFILES: FounderProfileDefinition[] = [
     headline: "You shipped. Now growth still depends on you.",
     status: "Your product is live and you are looking for a way to grow",
     description:
-      "Your product is live, but finding new users still takes a lot of effort. Pick one group of people to reach and try one way to reach them. See who tries your product and who comes back, then use what you learn to grow.",
+      "Your product is live, but finding new users still takes a lot of effort. Pick one group of people to reach and try one way to reach them. See who tries your product and who comes back, then use what you learn to grow. Your code and hosting stay where they are, and mentors and the marketplace can help with marketing and distribution.",
     indicators: [
       "New users show up sometimes, but you are not sure why.",
       "You try many ways to reach people and do not know which works.",

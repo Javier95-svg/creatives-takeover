@@ -8,6 +8,8 @@ import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { supabase } from "@/integrations/supabase/client";
 import heroCompass from "@/assets/hero-compass.svg";
 import HeroIdeaInput from "@/components/hero/HeroIdeaInput";
+// Type-only, so it is erased and does not pull the lazy dialog chunk back in.
+import type { AudienceTab } from "@/components/WhoIsThisForDialog";
 import "./hero-cinematic-spotlight.css";
 import { trackActivationEntry, trackActivationFunnelEvent } from "@/lib/activationEntry";
 import { classifyHeroInput, trackHeroInputFocused, trackHeroInputSubmitted } from "@/lib/heroFunnel";
@@ -44,12 +46,6 @@ type HeroNavItem = {
   active?: boolean;
 };
 
-type HeroStat = {
-  value: string;
-  unit?: string;
-  label: string;
-};
-
 type HeroProps = {
   eyebrow?: string;
   eyebrowPill?: string;
@@ -59,7 +55,6 @@ type HeroProps = {
   dashboardUrl?: string;
   dashboardBread?: string;
   navItems?: HeroNavItem[];
-  stats?: HeroStat[];
 };
 
 type DashStatProps = {
@@ -79,20 +74,21 @@ const DEFAULT_NAV: HeroNavItem[] = [
   { label: "Focus Funnel" },
 ];
 
-const DEFAULT_STATS: HeroStat[] = [
-  { value: "5", unit: "×", label: "Faster idea → MVP than pre-AI builders" },
-  { value: "$680B", unit: "+", label: "Into AI-native startups since 2024" },
-  { value: "1 in 4", label: "New 2026 launches are solo founders" },
-  { value: "~18", unit: "mo", label: "Before incumbents close the AI-native gap" },
-];
-
+/*
+ * Visitor feedback (Oct 2026): a founder with a live SaaS asked whether we
+ * replace his hosting, and another read the market-stats strip and the dark UI
+ * as "AI-ish", unsure he would meet people rather than an algorithm. So the
+ * lede says what we are (guidance and real people), names the post-launch
+ * stage, and says plainly that code and hosting stay where they are. The
+ * market-stats strip was removed for the same reason.
+ */
 const DEFAULT_LEDE = (
   <>
     <span className="ct-hero__lede-block">
-      Business Development platform for startup founders, product managers and indie builders.
+      A business growth platform for founders: guided steps and real mentors, from first idea to paying customers.
     </span>
     <span className="ct-hero__lede-block">
-      Define your ideal customer, prove demand, build your MVP, launch it, and find investment.
+      Find your customer, prove demand, launch, get users, and raise. Your code and hosting stay where they are.
     </span>
     <strong className="ct-hero__lede-final">No application. No cohort. No equity.</strong>
   </>
@@ -110,7 +106,6 @@ const Hero = ({
   dashboardUrl = "creatives-takeover.com/dashboard",
   dashboardBread = "Building · Stage 4 of 7",
   navItems = DEFAULT_NAV,
-  stats = DEFAULT_STATS,
 }: HeroProps) => {
   const { isAuthenticated, user } = useAuth();
   const { trackTriggerView, trackEngagement } = useConversionTracking();
@@ -122,6 +117,7 @@ const Hero = ({
   const [userUsername, setUserUsername] = useState<string | null>(null);
   const [isAudienceDialogOpen, setIsAudienceDialogOpen] = useState(false);
   const [hasOpenedAudienceDialog, setHasOpenedAudienceDialog] = useState(false);
+  const [audienceInitialTab, setAudienceInitialTab] = useState<AudienceTab>("Account types");
   const [ideaText, setIdeaText] = useState("");
   const [heroMode, setHeroMode] = useState<HeroMode>(DEFAULT_HERO_MODE);
 
@@ -169,7 +165,7 @@ const Hero = ({
         });
       },
       // 0.15, not 0.5. This observes the whole hero section, which contains the
-      // ~920px dashboard mock and the stats strip - on a phone the section is
+      // ~920px dashboard mock - on a phone the section is
       // far taller than the viewport, so a 0.5 threshold was effectively
       // unreachable and impressions barely fired. That is why
       // hero-who-is-this-for looked like 14 clicks per user: the denominator
@@ -202,6 +198,16 @@ const Hero = ({
 
   const handleWhoIsThisForClick = () => {
     void trackEngagement("hero-who-is-this-for", 60);
+    setAudienceInitialTab("Account types");
+    setHasOpenedAudienceDialog(true);
+    setIsAudienceDialogOpen(true);
+  };
+
+  // Founders who already shipped go straight to the post-launch stage instead
+  // of reading account types first.
+  const handleAlreadyLaunchedClick = () => {
+    void trackEngagement("hero-already-launched", 60);
+    setAudienceInitialTab("Post-launch");
     setHasOpenedAudienceDialog(true);
     setIsAudienceDialogOpen(true);
   };
@@ -309,6 +315,9 @@ const Hero = ({
                 <button type="button" className="ct-hero__audience-link" onClick={handleWhoIsThisForClick}>
                   Who is this for?
                 </button>
+                <button type="button" className="ct-hero__audience-link" onClick={handleAlreadyLaunchedClick}>
+                  Already launched?
+                </button>
               </div>
             </>
           )}
@@ -362,30 +371,16 @@ const Hero = ({
             </div>
           </div>
         </div> : null}
-
-        <div className="ct-hero__stats" aria-label="Founder stats for 2026">
-          <div className="ct-hero__stats-track">
-            {[...stats, ...stats].map((stat, index) => (
-              <div
-                key={`${stat.value}-${stat.label}-${index}`}
-                className="ct-hero__strip-stat"
-                aria-hidden={index >= stats.length || undefined}
-              >
-                <div className="v">
-                  {stat.value}
-                  {stat.unit ? <span className="small">{stat.unit}</span> : null}
-                </div>
-                <div className="l">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
       {/* Mounted only once the visitor has actually asked for it, so the chunk
           is never fetched on a page view that ignores the link. */}
       {!isAuthenticated && hasOpenedAudienceDialog ? (
         <Suspense fallback={null}>
-          <WhoIsThisForDialog open={isAudienceDialogOpen} onOpenChange={setIsAudienceDialogOpen} />
+          <WhoIsThisForDialog
+            open={isAudienceDialogOpen}
+            onOpenChange={setIsAudienceDialogOpen}
+            initialTab={audienceInitialTab}
+          />
         </Suspense>
       ) : null}
     </section>
