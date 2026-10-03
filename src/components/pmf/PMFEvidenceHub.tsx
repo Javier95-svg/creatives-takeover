@@ -1,4 +1,3 @@
-import WorkflowSummary from '@/components/core-tools/WorkflowSummary';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ClipboardCheck, Gauge, MessageSquareText, Search, Sparkles, Target, UsersRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -26,10 +25,6 @@ interface PMFEvidenceHubProps {
   authoritativeSignalCount?: number;
   /** Verified Demo Studio behaviors counted by the scorer (server-side, capped at 10). */
   demoBehaviorSignals?: number;
-  currentAssumption?: string;
-  strongestObjection?: string;
-  nextTest?: string;
-  screenedInterviewCount?: number;
 }
 
 // Mirrors the server weights in supabase/functions/_shared/pmf-evidence.ts. Founders
@@ -47,7 +42,7 @@ const RECOMMENDATION_COPY: Record<PMFHubRecommendation, string> = {
   interviews: 'Start by logging the customer interviews behind your score.',
   survey: 'Start by collecting the Sean Ellis 40% signal from real users.',
   checklist: 'Start by saving the validation milestones you have already hit.',
-  discovery: 'Find relevant customers and reviewers for your next validation session.',
+  discovery: 'Start by finding real people and communities to validate with.',
   score: "You have enough evidence — run your PMF score now.",
 };
 
@@ -69,13 +64,9 @@ const PMFEvidenceHub = ({
   onRunScore,
   authoritativeSignalCount,
   demoBehaviorSignals = 0,
-  currentAssumption,
-  strongestObjection,
-  nextTest,
-  screenedInterviewCount,
 }: PMFEvidenceHubProps) => {
-  const savedInterviews = screenedInterviewCount ?? evidence?.interview_notes_count ?? 0;
-  const surveyResponses = surveyAggregate.total;
+  const savedInterviews = evidence?.interview_notes_count ?? 0;
+  const surveyResponses = surveyAggregate.total || evidence?.survey_results_count || 0;
   const estimatedSignals = Math.floor(savedInterviews + surveyResponses * 0.75);
   const totalSignals = authoritativeSignalCount ?? estimatedSignals;
   const progress = requiredSignals > 0 ? Math.min(100, Math.round((totalSignals / requiredSignals) * 100)) : 0;
@@ -146,7 +137,7 @@ const PMFEvidenceHub = ({
       key: 'discovery',
       label: 'Discovery',
       value: hasDiscovery ? `${customerDiscoverySignals}` : 'Not run',
-      description: hasDiscovery ? 'Customer discovery signals saved' : 'Find relevant customers and reviewers',
+      description: hasDiscovery ? 'Customer discovery signals saved' : 'Find people and communities to validate with',
       icon: Search,
       ready: hasDiscovery,
     },
@@ -154,16 +145,6 @@ const PMFEvidenceHub = ({
 
   return (
     <section className="rounded-3xl border border-border/60 bg-background/90 p-5 shadow-sm sm:p-6">
-      <WorkflowSummary title="Your next validation decision"
-        objective={currentAssumption || 'Find out whether your target customer needs this offer.'}
-        evidence={`${savedInterviews} customer interviews ? ${surveyResponses} product-user survey responses. ${strongestObjection ? 'Strongest objection: ' + strongestObjection : 'No recurring objection identified yet.'}`}
-        next={nextTest || RECOMMENDATION_COPY[recommended]}
-        action={recommended === 'score' ? 'Review evidence and assess' : recommended === 'interviews' ? 'Add a customer conversation' : recommended === 'discovery' ? 'Find a relevant customer' : 'Collect customer feedback'}
-        onAction={recommended === 'score' ? onRunScore : recommended === 'interviews' ? onLogInterviews : recommended === 'discovery' ? onFindCustomers : onCreateOrReviewSurvey}
-        example="Test whether independent consultants need faster proposals. Ask potential buyers about their last proposal, their current workaround, and what would make them pay. Record what they actually did."
-      />
-      <details className="mt-4"><summary className="cursor-pointer rounded py-3 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">Evidence breakdown and other ways to collect feedback</summary>
-      <p className="mb-4 text-xs text-muted-foreground">The 5, 10, and 25 signal thresholds are CT guidance for planning the next test. They are not statistical confidence levels or a guarantee of product-market fit.</p>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-2xl space-y-3">
           <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary">
@@ -308,7 +289,6 @@ const PMFEvidenceHub = ({
           Find customers to talk to
         </Button>
       </div>
-      </details>
     </section>
   );
 };

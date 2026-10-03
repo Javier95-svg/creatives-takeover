@@ -1,9 +1,3 @@
-import { workflowPrompt, workflowErrors, publicKeyError } from '../_shared/mvp-workflow.ts';
-import { workflowWorkerAvailable } from '../_shared/mvp-worker-health.ts';
-import { buildBriefErrors, buildBriefPrompt, type MVPBuildBrief } from '../_shared/mvp-build-brief.ts';
-import { automaticWorkflow } from '../_shared/mvp-builder-journey.ts';
-import { openSecret } from '../_shared/connection-secrets.ts';
-import { deriveCapabilities } from '../_shared/mvp-capabilities.ts';
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { getUserFromAuth } from "../_shared/credit-deduction.ts";
@@ -624,9 +618,9 @@ function normalizePalette(value: unknown): MVPBuilderPaletteId {
 function classifyAction(input: string, hasProject: boolean): MVPBuilderActionType | "unclear" | "unsupported" {
   const normalized = input.trim().toLowerCase();
   if (!normalized) return "unclear";
-  if (/\b(marketplace|arbitrary backend|server action|react native|native (?:ios|android|mobile)|(?:swift|kotlin) (?:app|code))\b/.test(normalized)) return "unsupported";
   if (!hasProject) return "generation";
   if (/\b(error|bug|broken|fix|doesn'?t work|not working|console|crash)\b/.test(normalized)) return "debug";
+  if (/\b(auth|database|supabase|stripe|payment|marketplace|backend|server action)\b/.test(normalized)) return "unsupported";
   if (/\b(add|create|build)\b.{0,40}\b(page|route|screen)\b|\b(new page|new route|another screen)\b/.test(normalized)) return "add_page";
   if (/\b(add|build|create|implement)\b.*\b(feature|flow|component|wizard|form|dashboard|table|chart|modal|settings)\b/.test(normalized)) return "add_feature";
   if (/\b(redesign|design overhaul|make it beautiful|modernize|visual refresh|new look|polish the design|theme|thematic|tematic|brand|rebrand|palette|colou?r scheme|aesthetic|look and feel|skin care|skincare)\b/.test(normalized)) return "design_overhaul";
@@ -1291,12 +1285,6 @@ ${projectBlock}${contextBlock}
 Reply directly and conversationally.`;
   }
 
-  if (setup.buildBrief) {
-    return params.userMessage+'\n'+buildBriefPrompt(setup.buildBrief as MVPBuildBrief)+'\n'+(setup.workflow?workflowPrompt(setup.workflow):'')+'\nPublic database configuration: '+JSON.stringify(setup.workflowRuntime)+'\nVisual preference: '+params.palette+'\nCurrent saved source (preserve unrelated files): '+JSON.stringify(params.currentProject);
-  }
-  if (setup.workflow) {
-    return params.userMessage + '\n' + workflowPrompt(setup.workflow) + '\nPublic database settings and project identity: ' + JSON.stringify(setup.workflowRuntime) + '\nVisual preference: ' + params.palette + '\nCurrent saved source (make targeted edits and preserve unrelated files): ' + JSON.stringify(params.currentProject);
-  }
   if (params.actionType === "generation") {
     // The user's typed request is authoritative. Founder/setup data is optional
     // background only — it must never override the subject the user asked for.
@@ -1319,9 +1307,6 @@ HOW TO INTERPRET THE REQUEST
 - The request above is the single source of truth for WHAT to build: the product/idea, its audience, its industry, and its purpose. Build precisely that.
 - If the request names a subject (e.g. "a landing page for trading learners"), that subject IS the product. Invent a fitting brand name, realistic copy, audience, and value props for THAT subject.
 - Do NOT substitute the founder's own product or a different topic. The background section below is reference only — use it solely to fill details the request leaves unspecified (e.g. visual taste), and ignore anything in it that conflicts with the request.
-
-${workflowPrompt(setup.workflow)}
-${setup.workflow ? "Public database settings and project identity: " + JSON.stringify(setup.workflowRuntime) : ""}
 
 GENERATION REQUIREMENTS
 - Template: ${params.template}
@@ -1350,8 +1335,6 @@ ${params.template === "blank" ? `ADDITIONAL DETAIL FROM THE USER\n${customPrompt
 
 FOUNDER REQUEST
 ${params.userMessage}
-
-${workflowPrompt(setup.workflow)}
 
 CURRENT PROJECT
 ${JSON.stringify(params.currentProject, null, 2)}
@@ -1519,7 +1502,7 @@ async function repairModelOutputWithFallback(
   onRepairAccepted?: (model: string, usedLocalRepair: boolean) => void | Promise<void>
 ): Promise<ReturnType<typeof validateOutput>> {
   let lastError: unknown = null;
-  for (const candidate of modelCandidates.slice(0,2)) {
+  for (const candidate of modelCandidates) {
     try {
       const repaired = await requestModelJson(candidate, systemPrompt, messages, config);
       const usedLocalRepair = modelOutputNeedsLocalRepair(repaired);
@@ -1595,7 +1578,7 @@ serve(async (req: Request) => {
   if (classifiedAction === "unclear") return errorStream("Please clarify what you want MVP Builder to change.", "UNCLEAR_ACTION");
   if (classifiedAction === "unsupported") {
     return errorStream(
-      "This builder supports browser apps, connected Supabase workflows and provider-hosted checkout. Native binaries, multi-vendor marketplaces and arbitrary backend stacks need a separate implementation.",
+      "That request needs backend/auth/payment support planned for a later phase. Phase 2 supports frontend app generation, targeted edits, bug fixes, add-page, add-feature, and design overhaul.",
       "UNSUPPORTED_ACTION"
     );
   }
@@ -1623,39 +1606,6 @@ serve(async (req: Request) => {
   const baseCreditCost = CREDIT_COSTS[creditFeature];
   const creditCost     = resolveModelAdjustedCreditCost(baseCreditCost, primaryModel, defaultModel);
   const idempotencyKey = req.headers.get("Idempotency-Key") ?? crypto.randomUUID();
-  const setupInput = body.setupInput && typeof body.setupInput === "object" ? body.setupInput as Record<string, unknown> : {};
-  const buildBrief=setupInput.buildBrief as MVPBuildBrief | undefined;
-  if(buildBrief && buildBriefErrors(buildBrief).length)return new Response(JSON.stringify({error:buildBriefErrors(buildBrief).join(' ')}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
-  if(setupInput.managedApp && buildBrief?.delivery==='connected'){
-    const admin=getAdminClient();
-    if(!admin)return errorStream('App setup is unavailable. No credits were charged.','CONFIGURATION_ERROR');
-    const {data:managed}=await admin.from('mvp_managed_apps').select('status,manifest,public_runtime').eq('project_id',body.projectId).eq('user_id',userId).maybeSingle();
-    const profile=deriveCapabilities(buildBrief).profile;
-    if(!managed||managed.status!=='ready'||!['private_records','lead_capture_v2'].includes(profile)||managed.manifest?.profile!==profile)return errorStream('Finish app setup for this saved-data workflow before building. No credits were charged.','MANAGED_SETUP_REQUIRED');
-    const {data:sealed}=await admin.from('mvp_managed_secrets').select('sealed').eq('project_id',body.projectId).single();
-    if(!sealed)return errorStream('App connection is unavailable. Retry setup.','MANAGED_SETUP_REQUIRED');
-    const credentials=await openSecret(sealed.sealed);
-    setupInput.workflowPublicKey=credentials.publicKey;
-    setupInput.workflowRuntime={url:credentials.url,publicKey:credentials.publicKey,projectId:body.projectId};
-    setupInput.workflow=automaticWorkflow(buildBrief);
-  }
-  if(buildBrief && !setupInput.workflow)setupInput.workflow=automaticWorkflow(buildBrief);
-  if(buildBrief?.delivery==='preview' && setupInput.workflow)return new Response(JSON.stringify({error:'Choose connected mode before adding a database workflow.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
-  if ((setupInput.workflow || buildBrief?.delivery==='connected') && classifiedAction !== 'chat' && !body.currentProject?.files?.length) {
-    const admin=getAdminClient();
-    const health=admin ? await admin.from('mvp_workflow_worker_health').select('last_seen').eq('id',true).maybeSingle() : null;
-    if(!workflowWorkerAvailable(Deno.env.get('MVP_WORKFLOW_WORKER_SECRET')||'',health?.data?.last_seen)) {
-      return new Response(JSON.stringify({error:'New workflow builds are temporarily unavailable while testing is offline. No credits were charged.',code:'WORKFLOW_UNAVAILABLE'}),{status:503,headers:{...corsHeaders,'Content-Type':'application/json'}});
-    }
-  }
-  if ((setupInput.workflow || buildBrief?.delivery==='connected') && publicKeyError(setupInput.workflowPublicKey)) return new Response(JSON.stringify({error:publicKeyError(setupInput.workflowPublicKey)}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
-  if (setupInput.workflow && workflowErrors(setupInput.workflow).length) return new Response(JSON.stringify({error:workflowErrors(setupInput.workflow).join(' ')}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
-  if (setupInput.workflow || buildBrief?.delivery==='connected') {
-    const runtime=(setupInput.workflowRuntime || {}) as Record<string,unknown>;
-    if (!/^https:\/\/[a-z0-9]+\.supabase\.co$/.test(String(runtime.url || '')) || !/^[0-9a-f-]{36}$/i.test(String(body.projectId || ''))) return errorStream('Connect a supported database and save the project identity first.','BAD_REQUEST');
-    setupInput.workflowRuntime={url:runtime.url,publicKey:setupInput.workflowPublicKey,projectId:body.projectId};
-  }
-  if(buildBrief?.delivery==='preview')setupInput.workflowRuntime=undefined;
   const reservation = await reserveMVPBuilderCredits(
     userId,
     creditFeature,
@@ -1682,6 +1632,7 @@ serve(async (req: Request) => {
   }
   const reservationId = reservation.reservationId;
   const heldCredits = Number(reservation.heldCredits ?? 0);
+  const setupInput = body.setupInput && typeof body.setupInput === "object" ? body.setupInput as Record<string, unknown> : {};
   const productName = typeof setupInput.productName === "string" ? setupInput.productName : "Generated MVP";
   const posthogKey = Deno.env.get("POSTHOG_API_KEY") ?? "";
 
@@ -1707,9 +1658,7 @@ serve(async (req: Request) => {
   // Build the per-action system prompt. Chat mode uses a standalone
   // conversational prompt; all build actions extend the code-generation BASE.
   const actionAddition = ACTION_SYSTEM_ADDITIONS[classifiedAction];
-  const workflowSystem = 'Build a small working customer workflow with a responsive, accessible interface. Return only a JSON object with project_type (html_single or react_vite), files (array of filename,content,description), package_json, dev_command, build_command, preview_port (5173), setup_instructions, posthog_events (empty array), generation_notes. HTML projects use inline/local CSS and native browser JavaScript. React uses react, react-dom and lucide-react only; no external runtime CDN, Tailwind tooling or custom backend. Use the supplied public Supabase connection for real authentication and saved records. Never mock a database write or authentication. Keep the required data-testid hooks on real controls. Explain missing setup clearly in the interface. For edits return only changed complete files and preserve all unrelated source. Never include service-role credentials, email sends, payments or webhooks. Use only the supplied public key. Implement the agreed workflow and at most three essential features.';
-  const briefSystem='Generate a complete accessible HTML or React/Vite product from the approved brief. Return only JSON with project_type (html_single or react_vite), files (filename,content,description), package_json, dev_command, build_command, preview_port (5173), setup_instructions, posthog_events (empty array), generation_notes. Use inline/local CSS and browser JavaScript, or React with react-dom and lucide-react. Do not install a custom backend or arbitrary dependencies. Implement real client interactions. The brief defines preview versus connected data behavior; never misrepresent simulated authentication, cloud writes, notifications or payments as working services. Provider-hosted checkout is a supplied HTTPS link, never card collection. Edits return complete changed files only and preserve unrelated source.';
-  const systemPrompt = setupInput.buildBrief && classifiedAction !== 'chat' ? briefSystem : setupInput.workflow && classifiedAction !== 'chat' ? workflowSystem : classifiedAction === "chat"
+  const systemPrompt = classifiedAction === "chat"
     ? CHAT_SYSTEM_PROMPT
     : actionAddition
     ? `${BASE_SYSTEM_PROMPT}\n\n---\n${actionAddition}`
@@ -1811,8 +1760,6 @@ serve(async (req: Request) => {
           completionBoundary: "deterministic_edit_accepted",
         });
         if (!finalized.success) throw new Error("Unable to finalize MVP Builder credits");
-        // Register the accepted source against its paid operation; clients cannot mint repair credits.
-        { const admin=getAdminClient(); if(admin){const {error}=await admin.rpc('register_mvp_repair_budget',{p_reservation:reservationId,p_files:validated.files});if(error)console.error('Could not register included repairs',error.code);} }
         await writer.write(enc({ type: "credit-finalized", ...finalized }));
         emitMVPBuilderTelemetry("mvp_builder_deterministic_edit_used", userId, {
           action_type: classifiedAction,
@@ -2240,8 +2187,6 @@ ${fullText}`,
         completionBoundary: "valid_artifact_accepted",
       });
       if (!finalized.success) throw new Error("Unable to finalize MVP Builder credits");
-        // Register the accepted source against its paid operation; clients cannot mint repair credits.
-        { const admin=getAdminClient(); if(admin){const {error}=await admin.rpc('register_mvp_repair_budget',{p_reservation:reservationId,p_files:validated.files});if(error)console.error('Could not register included repairs',error.code);} }
       await writer.write(enc({ type: "credit-finalized", ...finalized }));
       void emitCostTelemetry(Number(finalized.creditsUsed ?? heldCredits));
       await writer.write(enc({

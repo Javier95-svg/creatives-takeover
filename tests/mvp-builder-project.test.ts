@@ -210,7 +210,7 @@ test('phase 1 action classifier maps supported and unsupported actions', () => {
   assert.equal(classifyMVPBuilderAction('add a pricing page', true), 'add_page');
   assert.equal(classifyMVPBuilderAction('add a dashboard feature', true), 'add_feature');
   assert.equal(classifyMVPBuilderAction('redesign the entire app', true), 'design_overhaul');
-  assert.equal(classifyMVPBuilderAction('add auth and database tables', true), 'targeted_edit');
+  assert.equal(classifyMVPBuilderAction('add auth and database tables', true), 'unsupported');
 });
 
 test('phase 2 MVP action credit costs use the regular account credit balance pricing', () => {

@@ -33,6 +33,7 @@ import {
   buildPreviewFromProject,
   createProjectFromHtml,
   detectProjectFileLanguage,
+  extractHtmlFromText,
   extractProjectDependenciesFromFiles,
   extractProjectFromText,
   getChangedProjectFiles,
@@ -73,7 +74,8 @@ import {
   type MVPIntegrationStatus,
 } from '@/lib/mvp-builder/integrations';
 import { MVP_PUBLISH_BASE_DOMAIN, buildPublicAppUrl } from '@/lib/mvp-builder/publish';
-import { hasMvpSuccessEventInstrumentation } from '@/lib/mvp-builder/qualityChecks';
+import { evaluateMvpQuality, hasMvpSuccessEventInstrumentation } from '@/lib/mvp-builder/qualityChecks';
+import { runMvpBrowserSmokeTest } from '@/lib/mvp-builder/smokeTest';
 import { createJourneyHandoff, trackJourneyEvent, upsertJourneyOutcome } from '@/lib/journeyOutcomes';
 
 export interface MVPMessage {
@@ -135,7 +137,6 @@ export interface SupabaseConnectionState {
     status?: string | null;
     organizationId?: string | null;
     organizationName?: string | null;
-    projectUrl?: string | null;
   } | null;
 }
 
@@ -392,6 +393,13 @@ function extractGeneratedCode(
     files[0];
   if (preferredEntry?.content) return preferredEntry.content;
   return html ?? '';
+}
+
+function sanitizeStreamedCode(value: string): string {
+  return value
+    .replace(/^```(?:html)?\s*/i, '')
+    .replace(/\s*```$/i, '')
+    .trim();
 }
 
 function sortHistory(items: MVPPromptHistoryItem[]): MVPPromptHistoryItem[] {
@@ -993,12 +1001,6 @@ export function useMVPBuilder() {
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSavingProject, setIsSavingProject] = useState(false);
-  const [saveError,setSaveError]=useState<string|null>(null);
-  const savingRef=useRef(false);
-  const editRevisionRef=useRef(0);
-  const currentProjectRef=useRef(projectId);currentProjectRef.current=projectId;
-  useEffect(()=>{setSaveError(null);},[projectId]);
-  useEffect(()=>{if(!hasUnsavedChanges)return;const warn=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue='';};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn);},[hasUnsavedChanges]);
   const [savedProjects, setSavedProjects] = useState<MVPProjectRecord[]>([]);
   const [isProjectsLoading, setIsProjectsLoading] = useState(false);
   const [promptHistory, setPromptHistory] = useState<MVPPromptHistoryItem[]>([]);
@@ -1099,7 +1101,6 @@ export function useMVPBuilder() {
   const abortRef = useRef<AbortController | null>(null);
   const lastStablePreviewHtmlRef = useRef<string | null>(null);
   const markProjectDirty = useCallback(() => {
-    editRevisionRef.current++;
     setHasUnsavedChanges(true);
   }, []);
 
@@ -1485,7 +1486,6 @@ export function useMVPBuilder() {
       setProjectId(record.id);
       setProjectNameState(record.title || DEFAULT_PROJECT_NAME);
       setLastSavedAt(record.updated_at ?? record.created_at);
-      setSaveError(null);
       setHasUnsavedChanges(false);
       setGeneratedCode(record.generated_code ?? '');
       setProjectVersions(Array.isArray(record.versions) ? record.versions : []);
@@ -1514,8 +1514,8 @@ export function useMVPBuilder() {
         const artifact = recordFiles.length > 0
           ? {
               projectName: record.title || DEFAULT_PROJECT_NAME,
-              framework: inferProjectFramework(recordFiles, record.project_type === 'react_vite' ? 'react-vite' : undefined),
-              projectType: record.project_type === 'react_vite' ? 'web-app' as const : 'landing-page' as const,
+              framework: 'static-html' as const,
+              projectType: 'landing-page' as const,
               entryFile: pickProjectEntryFile(recordFiles) ?? recordFiles[0]?.path ?? 'index.html',
               summary: 'Loaded from MVP Builder project storage.',
               dependencies: [],
@@ -1573,7 +1573,7 @@ export function useMVPBuilder() {
               title: typeof record.title === 'string' && record.title.trim() ? record.title.trim() : DEFAULT_PROJECT_NAME,
               prompt_history: Array.isArray(record.prompt_history) ? (record.prompt_history as MVPMessage[]) : [],
               generated_code: typeof record.generated_code === 'string' ? record.generated_code : null,
-              project_type: record.project_type === 'react_vite' ? 'react_vite' : record.project_type === 'react_multi' ? 'react_multi' : 'html_single',
+              project_type: record.project_type === 'react_multi' ? 'react_multi' : 'html_single',
               template: sanitizeMVPBuilderTemplate(record.template),
               project_files: Array.isArray(record.project_files) ? record.project_files as MVPProjectRecord['project_files'] : [],
               versions: Array.isArray(record.versions) ? record.versions as MVPBuilderVersion[] : [],
@@ -1764,9 +1764,6 @@ export function useMVPBuilder() {
   const saveProject = useCallback(
     async (options?: { silent?: boolean }) => {
       if (!user) return false;
-      if(savingRef.current)return false;
-      const savingRevision=editRevisionRef.current;
-      savingRef.current=true;setSaveError(null);
 
       const codeToSave =
         generatedCode ||
@@ -1839,7 +1836,7 @@ export function useMVPBuilder() {
           title: typeof data.title === 'string' && data.title.trim() ? data.title.trim() : DEFAULT_PROJECT_NAME,
           prompt_history: Array.isArray(data.prompt_history) ? (data.prompt_history as MVPMessage[]) : payload.prompt_history,
           generated_code: typeof data.generated_code === 'string' ? data.generated_code : codeToSave,
-          project_type: data.project_type === 'react_vite' ? 'react_vite' : data.project_type === 'react_multi' ? 'react_multi' : 'html_single',
+          project_type: data.project_type === 'react_multi' ? 'react_multi' : 'html_single',
           template: sanitizeMVPBuilderTemplate(data.template),
           project_files: Array.isArray(data.project_files) ? data.project_files as MVPProjectRecord['project_files'] : payload.project_files,
           versions: Array.isArray(data.versions) ? data.versions as MVPBuilderVersion[] : projectVersions,
@@ -1854,9 +1851,9 @@ export function useMVPBuilder() {
           updated_at: typeof data.updated_at === 'string' ? data.updated_at : timestamp,
         };
 
-        const stillCurrent=currentProjectRef.current===projectId;
-        const fullySaved=stillCurrent&&editRevisionRef.current===savingRevision;
-        if(stillCurrent){setLastSavedAt(savedRecord.updated_at);setHasUnsavedChanges(!fullySaved);}
+        setProjectId(savedRecord.id);
+        setLastSavedAt(savedRecord.updated_at);
+        setHasUnsavedChanges(false);
         setSavedProjects((prev) =>
           [savedRecord, ...prev.filter((project) => project.id !== savedRecord.id)].sort(
             (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
@@ -1866,16 +1863,14 @@ export function useMVPBuilder() {
         if (!options?.silent) {
           toast.success('Project saved.');
         }
-        return fullySaved;
+        return true;
       } catch (error) {
-        if(currentProjectRef.current===projectId)setSaveError('Save failed. Your draft is still open. Retry saving before leaving.');
         console.error('Failed to save MVP project:', error);
         if (!options?.silent) {
           toast.error('Unable to save this project right now.');
         }
         return false;
       } finally {
-        savingRef.current=false;
         setIsSavingProject(false);
       }
     },
@@ -1883,11 +1878,11 @@ export function useMVPBuilder() {
   );
 
   const loadProject = useCallback(
-    async (id: string, force = false) => {
+    async (id: string) => {
       if (!user || !id) return;
 
       try {
-        let project = force ? null : savedProjects.find((item) => item.id === id) ?? null;
+        let project = savedProjects.find((item) => item.id === id) ?? null;
         if (!project) {
           const { data, error } = await supabase
             .from(MVP_PROJECTS_TABLE as never)
@@ -1904,7 +1899,7 @@ export function useMVPBuilder() {
             title: typeof data.title === 'string' && data.title.trim() ? data.title.trim() : DEFAULT_PROJECT_NAME,
             prompt_history: Array.isArray(data.prompt_history) ? (data.prompt_history as MVPMessage[]) : [],
             generated_code: typeof data.generated_code === 'string' ? data.generated_code : null,
-            project_type: data.project_type === 'react_vite' ? 'react_vite' : data.project_type === 'react_multi' ? 'react_multi' : 'html_single',
+            project_type: data.project_type === 'react_multi' ? 'react_multi' : 'html_single',
             template: sanitizeMVPBuilderTemplate(data.template),
             project_files: Array.isArray(data.project_files) ? data.project_files as MVPProjectRecord['project_files'] : [],
             versions: Array.isArray(data.versions) ? data.versions as MVPBuilderVersion[] : [],
@@ -2837,7 +2832,7 @@ export function useMVPBuilder() {
         return;
       }
       if (localActionType === 'unsupported') {
-        toast.info('Browser apps, Supabase workflows and hosted checkout are supported. Native binaries, multi-vendor marketplaces and arbitrary backend stacks need a separate implementation.');
+        toast.info('That request needs backend/auth/payment support planned for a later phase. Phase 2 supports frontend app generation, edits, bug fixes, add-page, add-feature, and redesign.');
         return;
       }
 
@@ -2939,7 +2934,7 @@ export function useMVPBuilder() {
             actionType: localActionType,
             template: activeSetupInput.template,
             palettePreference: activeSetupInput.palettePreference,
-            setupInput: {...activeSetupInput, workflowRuntime: setupInput.managedApp ? setupInput.managedRuntime : { projectId, url: supabaseConnection.project?.projectUrl, publicKey: setupInput.workflowPublicKey }},
+            setupInput: activeSetupInput,
             projectContext: {
               ...(startupContext ?? {}),
               source: activeSetupInput.prefillSource,
@@ -2991,7 +2986,7 @@ export function useMVPBuilder() {
         let completedCreditCost = required;
         let completedModel: string | null = null;
         let finalized = false;
-
+        let liveProjectApplied = false;
 
         const finalizeResponse = () => {
           if (finalized) return;
@@ -3095,12 +3090,16 @@ export function useMVPBuilder() {
               });
               setProjectVersions((prev) => [version, ...prev]);
             }
-            applyProjectArtifact(committedProject, {
+            if (liveProjectApplied && committedProject === newProject) {
+              setLastGeneratedProject(normalizeSnapshotArtifact(committedProject));
+            } else {
+              applyProjectArtifact(committedProject, {
                 allowFallback: false,
                 setAsBaseline: true,
                 preserveProjectName: projectName !== DEFAULT_PROJECT_NAME,
                 preserveProjectType: false,
               });
+            }
             addProjectSnapshot(
               committedProject,
               messages.length === 0 ? 'Initial generated build' : 'Generated refinement',
@@ -3120,8 +3119,7 @@ export function useMVPBuilder() {
         while (true) {
           const { done, value } = await reader.read();
           if (done) {
-            if (responseMode === 'chat') finalizeResponse();
-            else if (!finalized) throw new Error('Build stream ended before completion. The previous version is preserved.');
+            finalizeResponse();
             break;
           }
 
@@ -3175,7 +3173,19 @@ export function useMVPBuilder() {
               }
             } else if (event.type === 'code-delta' && typeof event.content === 'string') {
               streamedCode += event.content;
-              // Keep the last complete artifact visible until the server confirms completion.
+              const completedHtml = extractHtmlFromText(streamedCode);
+
+              if (completedHtml && /<\/html>/i.test(completedHtml)) {
+                const liveProject = createProjectFromHtml(completedHtml, projectName);
+                applyProjectArtifact(liveProject, {
+                  allowFallback: false,
+                  setAsBaseline: false,
+                  preserveProjectName: true,
+                  preserveProjectType: true,
+                });
+              } else {
+                setGeneratedCode(sanitizeStreamedCode(streamedCode));
+              }
             } else if (event.type === 'credit-reserved') {
               void refreshCredits();
             } else if (event.type === 'credit-finalized') {
@@ -3222,6 +3232,14 @@ export function useMVPBuilder() {
                 dependencies: nextProject.dependencies,
                 files: normalizeProjectFiles(nextProject.files || []),
               };
+              setGeneratedCode(extractGeneratedCode(newProject.files, newProject.entryFile, null));
+              applyProjectArtifact(newProject, {
+                allowFallback: true,
+                setAsBaseline: false,
+                preserveProjectName: projectName !== DEFAULT_PROJECT_NAME,
+                preserveProjectType: false,
+              });
+              liveProjectApplied = true;
             } else if (event.type === 'complete') {
               completedModel = typeof event.model === 'string' ? event.model : null;
               finalizeResponse();
@@ -3355,7 +3373,6 @@ export function useMVPBuilder() {
       selectedModels,
       selectedProjectType,
       setupInput,
-      supabaseConnection,
       startupContext,
       user,
     ]
@@ -3617,20 +3634,34 @@ export function useMVPBuilder() {
   // The actual slug assignment + uniqueness check runs server-side in the
   // `mvp-builder-publish` edge function (service role spans all users; the slug is
   // locked on first publish so renaming the project never breaks shared links).
-  const publishProject = useCallback(async (testRunId?: string) => {
-    if (!testRunId || isShowingPreviewFallback) {toast.error("Test the current build before publishing. Fallback previews cannot be published.");return;}
+  const publishProject = useCallback(async () => {
     if (!user || projectFiles.length === 0 || isDeploying) {
       if (!user) toast.error('Please sign in to publish this MVP.');
       if (projectFiles.length === 0) toast.error('Generate a project before publishing.');
       return;
     }
-    const quality = {checks:{server_workflow_test:true},passed:true};
+    const smokeTest = await runMvpBrowserSmokeTest({
+      ...previewState,
+      html: previewState.html ?? currentHtml,
+    });
+    const quality = evaluateMvpQuality({
+      files: projectFiles,
+      preview: { ...previewState, html: previewState.html ?? currentHtml },
+      versionCount: projectVersions.length,
+      smokeTestPassed: smokeTest.passed,
+    });
+    if (!quality.passed) {
+      toast.error('This MVP is not ready to publish yet.', {
+        description: quality.failures.slice(0, 3).join(' '),
+      });
+      return;
+    }
     if (creditsLoading) {
       toast('Loading credit balance...');
       return;
     }
     // Persist first so the project row exists for the publish function to read/update.
-    if (!await saveProject({ silent: true })) {toast.error("Save failed. Nothing was published.");return;}
+    await saveProject({ silent: true });
     setIsDeploying(true);
     try {
       const session = await getSessionSafely();
@@ -3643,7 +3674,11 @@ export function useMVPBuilder() {
         },
         body: {
           projectId,
-          testRunId,
+          validation: {
+            smokeTest,
+            qualityChecks: quality.checks,
+            validatedAt: new Date().toISOString(),
+          },
         },
       });
 
@@ -3715,7 +3750,7 @@ export function useMVPBuilder() {
         source: 'mvp_publish',
         published_url: data.url,
         evidence_source_count: setupInput.evidenceManifest?.sources.length ?? 0,
-        customer_workflow_test: true,
+        primary_flow_smoke_test: true,
       });
       void refreshCredits();
       showDashboardReturnToast({
@@ -3729,7 +3764,7 @@ export function useMVPBuilder() {
     } finally {
       setIsDeploying(false);
     }
-  }, [creditsLoading, currentHtml, handleCreditError, isDeploying, isShowingPreviewFallback, navigate, previewState, projectFiles, projectId, projectVersions.length, refreshCredits, saveProject, setupInput, user]);
+  }, [creditsLoading, currentHtml, handleCreditError, isDeploying, navigate, previewState, projectFiles, projectId, projectVersions.length, refreshCredits, saveProject, setupInput, user]);
 
   const closeCreditExhaustedModal = useCallback(() => {
     setIsCreditExhaustedModalOpen(false);
@@ -3823,7 +3858,6 @@ export function useMVPBuilder() {
     isGenerating,
     isSavingProject,
     saveStatus,
-    saveError,
     hasUnsavedChanges,
     projectName,
     projectId,

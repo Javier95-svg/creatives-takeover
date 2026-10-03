@@ -56,7 +56,7 @@ type VercelDomainResult = { registered: boolean; skipped?: boolean; status?: num
 
 // Attach {slug}.creatives-takeover.com to the Vercel project so it routes + gets
 // HTTPS automatically. Idempotent (a slug already on the project counts as success).
-// Verify attachment to this project before activating or charging for a release.
+// Best-effort with a small retry; the caller never fails the publish over this.
 async function ensureVercelDomain(domain: string): Promise<VercelDomainResult> {
   const token = Deno.env.get("VERCEL_TOKEN");
   if (!token) return { registered: false, skipped: true, error: "VERCEL_TOKEN not configured" };
@@ -71,19 +71,15 @@ async function ensureVercelDomain(domain: string): Promise<VercelDomainResult> {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ name: domain }),
-        signal: AbortSignal.timeout(15000),
-        redirect: 'error',
       });
+      if (resp.ok) return { registered: true, status: resp.status };
+
       // deno-lint-ignore no-explicit-any
       const data: any = await resp.json().catch(() => ({}));
       const code = data?.error?.code;
-      if (resp.ok || resp.status === 409 || code === "domain_already_in_use" || code === "domain_already_exists") {
-        const check = await fetch(`https://api.vercel.com/v9/projects/${VERCEL_PROJECT_ID}/domains/${encodeURIComponent(domain)}${query}`, {
-          headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(15000), redirect:'error',
-        });
-        const actual=await check.json().catch(()=>({}));
-        if(check.ok && actual.name===domain && actual.verified===true)return {registered:true,status:check.status};
-        return {registered:false,error:'The public address is not verified on the publishing project yet.'};
+      // Already attached to this project => idempotent success.
+      if (resp.status === 409 || code === "domain_already_in_use" || code === "domain_already_exists") {
+        return { registered: true, status: resp.status };
       }
       lastError = data?.error?.message || `Vercel API ${resp.status}`;
       // 4xx (other than 409) won't fix on retry; bail out.
@@ -134,17 +130,49 @@ serve(async (req) => {
     return jsonResponse({ ok: false, error: "Project not found", errorCode: "NOT_FOUND" }, 404);
   }
 
-  const testRunId = typeof body.testRunId === 'string' ? body.testRunId : '';
-  if (!/^[0-9a-f-]{36}$/i.test(testRunId)) return jsonResponse({ok:false,error:'Run the customer workflow test before publishing.',errorCode:'TEST_REQUIRED'},409);
-  const {data: verified, error: testError} = await supabase.rpc('inspect_mvp_workflow_test',{p_project_id:projectId,p_user_id:user.id,p_test_id:testRunId});
-  if (testError || !verified) return jsonResponse({ok:false,error:'The current saved revision needs a passing customer workflow test.',errorCode:'TEST_REQUIRED'},409);
-  if (verified.alreadyPublished && project.subdomain_slug) return jsonResponse({ok:true,slug:project.subdomain_slug,url:'https://' + project.subdomain_slug + '.' + BASE_DOMAIN,creditsUsed:0,reused:true});
+  const validation = body.validation && typeof body.validation === "object" && !Array.isArray(body.validation)
+    ? body.validation as Record<string, unknown>
+    : {};
+  const smokeTest = validation.smokeTest && typeof validation.smokeTest === "object" && !Array.isArray(validation.smokeTest)
+    ? validation.smokeTest as Record<string, unknown>
+    : {};
+  const projectFiles = Array.isArray(project.project_files) ? project.project_files : [];
+  const source = projectFiles
+    .map((file) => file && typeof file === "object" && "content" in file ? String(file.content ?? "") : "")
+    .join("\n");
+  const hasPrimaryAction = /<(button|form)\b|<a\b[^>]*href=|onClick\s*=|type\s*=\s*["']submit["']/i.test(source);
+  const hasResponsiveLayout = /name\s*=\s*["']viewport["']|@media\b|\b(sm|md|lg|xl):/i.test(source);
+  const hasRollback = Array.isArray(project.versions) && project.versions.length > 0;
+  const smokePassed = smokeTest.passed === true
+    && smokeTest.primaryActionFound === true
+    && smokeTest.primaryActionTriggered === true
+    && Array.isArray(smokeTest.runtimeErrors)
+    && smokeTest.runtimeErrors.length === 0;
+  if (projectFiles.length === 0 || !hasPrimaryAction || !hasResponsiveLayout || !hasRollback || !smokePassed) {
+    return jsonResponse({
+      ok: false,
+      error: "The MVP failed its server publication contract. Fix the primary flow, responsive layout, runtime errors, or rollback version and run the smoke test again.",
+      errorCode: "PUBLICATION_CONTRACT_FAILED",
+      checks: { projectFiles: projectFiles.length > 0, primaryFlow: hasPrimaryAction, responsive: hasResponsiveLayout, rollback: hasRollback, smokeTest: smokePassed },
+    }, 409);
+  }
+  const currentMetadata = project.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+    ? project.metadata as Record<string, unknown>
+    : {};
+  const nextMetadata = {
+    ...currentMetadata,
+    lastPublishValidation: {
+      smokeTest,
+      structuralChecks: { primaryFlow: hasPrimaryAction, responsive: hasResponsiveLayout, rollback: hasRollback },
+      validatedAt: typeof validation.validatedAt === "string" ? validation.validatedAt : new Date().toISOString(),
+    },
+  };
 
   // Charge for the publish before doing any work. Held credits are released if
   // anything below fails. Every publish is a distinct charge (idempotency key per click).
   const creditFeature = "APP_BUILDER_DEPLOY";
   const creditCost = CREDIT_COSTS[creditFeature];
-  const idempotencyKey = 'workflow-publish:' + projectId + ':' + testRunId;
+  const idempotencyKey = req.headers.get("Idempotency-Key") ?? crypto.randomUUID();
   const creditCheck = await reserveMVPBuilderCredits(
     user.id,
     creditFeature,
@@ -180,14 +208,14 @@ serve(async (req) => {
 
     if (slug) {
       const url = `https://${slug}.${BASE_DOMAIN}`;
-      const domain = await ensureVercelDomain(`${slug}.${BASE_DOMAIN}`);
-      if(!domain.registered)throw new Error('Public address setup is incomplete. The previous release remains active.');
-      const { error: reuseError } = await supabase.rpc('publish_tested_mvp',{p_project_id:projectId,p_user_id:user.id,p_test_id:testRunId,p_slug:slug,p_url:url,p_reservation_id:reservationId});
+      const { error: reuseError } = await supabase
+        .from("mvp_projects")
+        .update({ deployment_url: url, deployment_status: "deployed", metadata: nextMetadata })
+        .eq("id", projectId)
+        .eq("user_id", user.id);
       if (reuseError) throw new Error("Unable to update project");
     } else {
-      const {data:managed}=await supabase.from('mvp_managed_apps').select('status').eq('project_id',projectId).eq('user_id',user.id).maybeSingle();
-      const managedSlug=managed?.status==='ready' && project.metadata?.setupInput?.managedApp ? 'app-'+projectId : null;
-      const base = managedSlug || slugifyProjectName(typeof project.title === "string" ? project.title : "");
+      const base = slugifyProjectName(typeof project.title === "string" ? project.title : "");
 
       // Pull every slug that could collide with `base` or `base-N` so we can pick
       // the lowest free suffix. Service role => spans all users (global uniqueness).
@@ -204,7 +232,6 @@ serve(async (req) => {
       );
 
       const nextCandidate = (skip: Set<string>): string => {
-        if(managedSlug){if(taken.has(base)||skip.has(base))throw new Error('Managed app address requires operator reconciliation');return base;}
         if (!taken.has(base) && !skip.has(base)) return base;
         let suffix = 2;
         while (taken.has(`${base}-${suffix}`) || skip.has(`${base}-${suffix}`)) suffix += 1;
@@ -219,10 +246,12 @@ serve(async (req) => {
         const candidate = nextCandidate(attempted);
         attempted.add(candidate);
         const url = `https://${candidate}.${BASE_DOMAIN}`;
-        const domain = await ensureVercelDomain(`${candidate}.${BASE_DOMAIN}`);
-        if(!domain.registered)throw new Error('Public address setup is incomplete. Retry publication after it is verified.');
 
-        const { error: updateError } = await supabase.rpc('publish_tested_mvp',{p_project_id:projectId,p_user_id:user.id,p_test_id:testRunId,p_slug:candidate,p_url:url,p_reservation_id:reservationId});
+        const { error: updateError } = await supabase
+          .from("mvp_projects")
+          .update({ subdomain_slug: candidate, deployment_url: url, deployment_status: "deployed", metadata: nextMetadata })
+          .eq("id", projectId)
+          .eq("user_id", user.id);
 
         if (!updateError) {
           assigned = candidate;
@@ -243,10 +272,10 @@ serve(async (req) => {
 
     const url = `https://${slug}.${BASE_DOMAIN}`;
 
-    const domain: VercelDomainResult = {registered:true};
+    // Auto-register the subdomain on Vercel (idempotent, best-effort). The slug is
+    // already reserved in the DB; we never fail the publish if this hiccups.
+    const domain = await ensureVercelDomain(`${slug}.${BASE_DOMAIN}`);
 
-    // The publication RPC already committed both the artifact and the charge.
-    // Follow-up metadata/telemetry must not turn a committed release into an error.
     const finalized = await finalizeMVPBuilderCredits(reservationId, {
       mvpBuilderActionType: "publish",
       projectId,
@@ -254,7 +283,10 @@ serve(async (req) => {
       slug,
       domainRegistered: domain.registered,
       completionBoundary: "publish_saved",
-    }).catch(()=>null);
+    });
+    if (!finalized.success) {
+      throw new Error("Unable to finalize MVP Builder publish credits");
+    }
 
     return jsonResponse({
       ok: true,
@@ -265,11 +297,11 @@ serve(async (req) => {
       domainPending: !domain.registered,
       domainError: domain.error ?? null,
       reservationId,
-      reservationStatus: "finalized",
+      reservationStatus: finalized.reservationStatus,
       listedCreditCost: creditCost,
       heldCredits,
-      creditsUsed: finalized?.success ? finalized.creditsUsed : heldCredits,
-      balanceAfter: finalized?.success ? finalized.balanceAfter : undefined,
+      creditsUsed: finalized.creditsUsed,
+      balanceAfter: finalized.balanceAfter,
     });
   } catch (error) {
     await releaseMVPBuilderCredits(reservationId, "MVP Builder publish failed", {
@@ -278,7 +310,7 @@ serve(async (req) => {
     }).catch(() => {});
     return jsonResponse({
       ok: false,
-      error: "Publication could not be confirmed. Check your current release, then retry. Any unspent credit hold has been released.",
+      error: "Publishing failed. Held credits have been released.",
       errorCode: "PUBLISH_FAILED",
     }, 500);
   }

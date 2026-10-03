@@ -1,7 +1,4 @@
-import ValidationBrief, { type ValidationBriefValue } from '@/components/pmf/ValidationBrief';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import PMFConnectedEvidence from '@/components/pmf/PMFConnectedEvidence';
-import ProductDataPanel from '@/components/core-tools/ProductDataPanel';
+import { useEffect, useRef, useState } from 'react';
 import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
@@ -287,15 +284,12 @@ export default function PMFLabPage() {
 
   // The single next action to spotlight, in the canonical evidence order:
   // get the 40% survey signal → log interviews → save the checklist → score.
-  const [validationBrief, setValidationBrief] = useState<ValidationBriefValue | null>(null);
-  const [connectedProductId, setConnectedProductId] = useState('');
-  const demandInterviews = useMemo(() => interviewStore.interviews.filter(i => i.targetCustomer !== false), [interviewStore.interviews]);
-  const savedInterviews = demandInterviews.length;
-  const surveyResponsesCount = surveyAggregate.total;
+  const savedInterviews = interviewStore.interviews.length;
+  const surveyResponsesCount = surveyAggregate.total || evidence?.survey_results_count || 0;
   const checklistCount = evidence?.validation_checklist?.length ?? 0;
   const hubRecommendation: PMFHubRecommendation = (() => {
-    if (savedInterviews === 0) return 'interviews';
     if (surveyResponsesCount === 0 && !survey) return 'survey';
+    if (savedInterviews === 0) return 'interviews';
     if (checklistCount === 0) return 'checklist';
     return 'score';
   })();
@@ -388,7 +382,7 @@ export default function PMFLabPage() {
   if (user && hasAccess && !validationContextId) {
     return (
       <div className="min-h-screen bg-background">
-        <SEO title="Choose an evidence case — PMF Lab" description="Choose which idea PMF Lab should evaluate." noindex />
+        <SEO title="Choose an evidence case â€” PMF Lab" description="Choose which idea PMF Lab should evaluate." noindex />
         <Navigation />
         <main className="container mx-auto max-w-3xl px-4 pb-20 pt-32">
           <div className="rounded-3xl border border-border/60 bg-card p-7 shadow-sm">
@@ -569,12 +563,7 @@ export default function PMFLabPage() {
                     {/* Phase A — Evidence hub + guided steps (one open at a time) */}
                     {phase === 'intake' && (
                       <div className="space-y-6">
-                        {user && validationContextId && <ValidationBrief storageKey={`ct-validation-brief:${user.id}:${validationContextId}`} onSaved={setValidationBrief} />}
                         <PMFEvidenceHub
-                          screenedInterviewCount={savedInterviews}
-                          currentAssumption={validationBrief ? `${validationBrief.assumption} Audience: ${validationBrief.audience}. Decision: ${validationBrief.decision}` : icpProblem || undefined}
-                          strongestObjection={analysis?.commonObjections?.[0]}
-                          nextTest={analysis?.nextExperiment}
                           evidence={evidence}
                           requiredSignals={PMF_REQUIRED_SIGNALS}
                           survey={survey}
@@ -596,8 +585,6 @@ export default function PMFLabPage() {
                           onFindCustomers={() => setMode('discover')}
                           onRunScore={() => chooseStep('score')}
                         />
-                        <ProductDataPanel tool="pmf_lab" artifactId={validationContextId} onProductChange={setConnectedProductId} />
-                        <PMFConnectedEvidence interviews={interviewStore.interviews} surveyAggregate={surveyAggregate} productId={connectedProductId} contextId={validationContextId} onAdded={interviewStore.reload} onReview={() => chooseStep('score')} />
 
                         {/* Step 1 — Gather evidence */}
                         <div ref={surveyRef} className="scroll-mt-28 overflow-hidden rounded-3xl border border-border/60 bg-background/70">
@@ -662,7 +649,7 @@ export default function PMFLabPage() {
                               initialStep={wantsInterviewStep ? 1 : undefined}
                               icpInterviewPlan={icpInterviewPlan}
                               icpDraftId={icpDraftId}
-                              initialInterviews={demandInterviews}
+                              initialInterviews={interviewStore.interviews}
                               onSaveInterview={interviewStore.saveInterview}
                               onDeleteInterview={interviewStore.deleteInterview}
                               onImportInterviews={interviewStore.saveMany}

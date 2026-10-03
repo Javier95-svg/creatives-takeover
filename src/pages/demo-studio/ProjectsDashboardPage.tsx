@@ -8,7 +8,6 @@ import {
   ImagePlus,
   Loader2,
   MonitorPlay,
-  MousePointerClick,
   Plus,
   Rocket,
   Share2,
@@ -31,7 +30,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
-import { createDemo, createProject, getOwnerDemoCounts, listProjects } from '@/lib/demoStudio/api';
+import { createProject, getOwnerDemoCounts, listProjects } from '@/lib/demoStudio/api';
 import type { DemoStudioProject } from '@/lib/demoStudio/types';
 import GettingStartedChecklist, { type ChecklistStep } from '@/components/demo-studio/GettingStartedChecklist';
 import WhatIsADemoPopover from '@/components/demo-studio/WhatIsADemoPopover';
@@ -45,11 +44,11 @@ import { ensurePrebuildContext } from '@/lib/prebuildContext';
 import { consumeJourneyHandoff, findJourneyHandoff, trackJourneyEvent, trackPrebuildLineageEvent } from '@/lib/journeyOutcomes';
 
 const HOW_IT_WORKS = [
-  { icon: ImagePlus, step: '1', title: 'Add screens', desc: 'Upload screenshots or capture your product.' },
-  { icon: MousePointerClick, step: '2', title: 'Guide the viewer', desc: 'Add captions and optional click targets.' },
-  { icon: MonitorPlay, step: '3', title: 'Preview', desc: 'Check the story and final action.' },
-  { icon: Share2, step: '4', title: 'Share', desc: 'Publish a link and see how viewers respond.' },
-
+  { icon: Sparkles, step: '1', title: 'Define the story', desc: 'Audience, promise, aha moment, and CTA.' },
+  { icon: ImagePlus, step: '2', title: 'Build the demo', desc: 'Screenshots, captions, and hotspots.' },
+  { icon: Video, step: '3', title: 'Record the VSL', desc: 'Save up to three Loom pitch variations.' },
+  { icon: Rocket, step: '4', title: 'Publish the page', desc: 'One URL with demo, pitch, and signup.' },
+  { icon: Share2, step: '5', title: 'Measure interest', desc: 'Views, VSL impressions, and signups.' },
 ];
 
 export default function ProjectsDashboardPage() {
@@ -189,16 +188,7 @@ export default function ProjectsDashboardPage() {
       toast.success('Project created.');
       // Carry the ICP through so the brief prefills from the same draft.
       const briefPath = `/demo-studio/projects/${project.id}/brief`;
-      if (icpParam) navigate(briefPath + '?icp=' + encodeURIComponent(icpParam));
-      else {
-        try {
-          const demo = await createDemo(project.id, user.id, project.name);
-          navigate('/demo-studio/projects/' + project.id + '/demos/' + demo.id + '/edit');
-        } catch {
-          toast.error('Your project was saved. Open it to retry creating the demo.');
-          navigate('/demo-studio/projects/' + project.id);
-        }
-      }
+      navigate(icpParam ? `${briefPath}?icp=${encodeURIComponent(icpParam)}` : briefPath);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Could not create project.');
     } finally {
@@ -215,16 +205,16 @@ export default function ProjectsDashboardPage() {
       action: { label: 'New project', onClick: () => setDialogOpen(true) },
     },
     {
-      label: 'Add screens and guide the viewer',
-      description: 'Upload a screen, add a caption, and choose your final action.',
+      label: 'Define the proof story',
+      description: 'Write the brief, then generate storyboard, VSL scripts, and launch copy.',
       done: counts.total > 0,
       action: recentProjectId
-        ? { label: 'Open project', to: `/demo-studio/projects/${recentProjectId}` }
+        ? { label: 'Open brief', to: `/demo-studio/projects/${recentProjectId}/brief` }
         : { label: 'New project', onClick: () => setDialogOpen(true) },
     },
     {
-      label: 'Preview and share your demo',
-      description: 'Share your interactive demo. Add a video or launch page later if useful.',
+      label: 'Publish proof page',
+      description: 'Publish a demo, record a VSL, then ship the launch page.',
       done: counts.published > 0,
       action: recentProjectId
         ? { label: 'Open project', to: `/demo-studio/projects/${recentProjectId}` }
@@ -253,12 +243,12 @@ export default function ProjectsDashboardPage() {
               <Sparkles className="h-3.5 w-3.5" /> Demo Studio · Prototype stage
             </span>
             <h1 className="creatives-font mt-4 text-4xl font-bold leading-[1.05] md:text-5xl">
-              Create a <span className="takeover-gradient">shareable product demo</span>
+              Build your <span className="takeover-gradient">demo + VSL</span> in an afternoon
             </h1>
             <p className="mt-4 text-base text-muted-foreground md:text-lg">
-              Turn screenshots into an{' '}
-              <strong className="font-semibold text-foreground">interactive walkthrough</strong> and
-              share it with customers. Video and launch pages are optional.
+              Define the product story, turn screenshots into an{' '}
+              <strong className="font-semibold text-foreground">interactive walkthrough</strong>, record a VSL, and
+              publish one proof page with signup capture.
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Button size="lg" className="gap-2" onClick={() => setDialogOpen(true)}>
@@ -282,7 +272,7 @@ export default function ProjectsDashboardPage() {
 
         {/* How it works — concretely defines a "demo" */}
         {!allChecklistDone && (
-          <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {HOW_IT_WORKS.map((s, index) => (
               <div
                 key={s.step}

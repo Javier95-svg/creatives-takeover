@@ -1,4 +1,3 @@
-import { resolveDemoTarget } from './navigation.ts';
 import type {
   DemoStepWithHotspots,
   DemoStudioLaunchPage,
@@ -18,8 +17,6 @@ export interface DemoReadiness {
   score: number;
   ready: boolean;
   missing: string[];
-  blockers: string[];
-  suggestions: string[];
   steps: StepReadiness[];
 }
 
@@ -35,34 +32,51 @@ export interface LaunchReadiness {
 }
 
 export function getDemoReadiness(steps: DemoStepWithHotspots[], theme?: DemoTheme): DemoReadiness {
-  const blockers: string[] = [], suggestions: string[] = [];
-  const validUrl = (value?: string | null) => {
-    if (!value?.trim() || value.includes('\\') || value.startsWith('//')) return false;
-    try {
-      const url = new URL(value, value.startsWith('/') ? 'https://creatives-takeover.com' : undefined);
-      return ['https:', 'http:'].includes(url.protocol);
-    } catch { return false; }
-  };
-  if (!steps.length) blockers.push('Add at least one screen.');
-  if (!theme?.endCtaLabel?.trim()) blockers.push('Give your final call to action a label.');
-  if (!validUrl(theme?.endCtaHref)) blockers.push('Add a valid http, https or internal destination for the final call to action.');
-  const details = steps.map((step, index) => {
-    const missing: string[] = [];
-    if (!step.asset_url?.trim() || /placeholder/i.test(step.asset_url)) missing.push('Add a captured or uploaded screen.');
-    if (!step.caption?.trim()) missing.push('Add a caption explaining this screen.');
-    if (!step.speaker_notes?.trim()) suggestions.push('Screen ' + (index + 1) + ': add speaker notes if you want narrated export.');
-    for (const hotspot of step.hotspots) {
-      const bounds = [hotspot.x,hotspot.y,hotspot.w,hotspot.h].every(Number.isFinite) && hotspot.x >= 0 && hotspot.y >= 0 && hotspot.w > 0 && hotspot.h > 0 && hotspot.x + hotspot.w <= 1 && hotspot.y + hotspot.h <= 1;
-      const target = hotspot.action === 'next' ? index < steps.length - 1 : hotspot.action === 'goto' ? resolveDemoTarget(hotspot.action_target,steps) >= 0 && resolveDemoTarget(hotspot.action_target,steps) !== index : hotspot.action === 'url' && validUrl(hotspot.action_target);
-      if (!bounds || !target || !hotspot.label?.trim()) missing.push('Fix the label, position or destination of a hotspot.');
-    }
-    // The player provides Next/Back controls even when no hotspots are present.
-    if (steps.length > 1 && !step.hotspots.length) suggestions.push('Screen ' + (index + 1) + ': optionally highlight where to click; viewers can use Next.');
-    [...new Set(missing)].forEach(item => blockers.push('Screen ' + (index + 1) + ': ' + item));
-    return {stepId:step.id,label:step.title || 'Screen ' + (index + 1),missing:[...new Set(missing)],ready:!missing.length};
+  const missing = new Set<string>();
+  if (steps.length < 3) missing.add('Add at least 3 storyboard steps.');
+  if (!theme?.endCtaLabel?.trim()) missing.add('Set an end CTA label.');
+  if (!theme?.endCtaHref?.trim()) missing.add('Set a working end CTA destination.');
+
+  const stepReadiness = steps.map((step, index) => {
+    const stepMissing: string[] = [];
+    if (!step.asset_url) stepMissing.push('screenshot');
+    if (!step.caption?.trim()) stepMissing.push('caption');
+    if (!step.speaker_notes?.trim()) stepMissing.push('speaker notes');
+    if (index < steps.length - 1 && step.hotspots.length === 0) stepMissing.push('hotspot');
+    const hasBrokenHotspot = step.hotspots.some((hotspot) => {
+      if (!hotspot.label?.trim() || hotspot.w <= 0 || hotspot.h <= 0) return true;
+      if (hotspot.action === 'next') return index >= steps.length - 1;
+      if (hotspot.action === 'goto') return !hotspot.action_target || !steps.some((candidate) => candidate.id === hotspot.action_target);
+      if (hotspot.action === 'url') {
+        try {
+          const target = new URL(hotspot.action_target || '');
+          return target.protocol !== 'https:' && target.protocol !== 'http:';
+        } catch {
+          return true;
+        }
+      }
+      return false;
+    });
+    if (hasBrokenHotspot) stepMissing.push('working hotspot action');
+    stepMissing.forEach((item) => missing.add(`Step ${index + 1}: add ${item}.`));
+    return {
+      stepId: step.id,
+      label: step.title || `Step ${index + 1}`,
+      missing: stepMissing,
+      ready: stepMissing.length === 0,
+    };
   });
-  const totalChecks = 3 + steps.length * 3;
-  return {ready:!blockers.length,blockers,missing:blockers,suggestions,steps:details,score:Math.max(0,Math.round(100 * (1 - blockers.length / totalChecks)))};
+
+  const totalChecks = 3 + Math.max(1, steps.length) * 5;
+  const missingChecks = missing.size + stepReadiness.reduce((sum, step) => sum + step.missing.length, 0);
+  const score = Math.max(0, Math.min(100, Math.round(((totalChecks - missingChecks) / totalChecks) * 100)));
+
+  return {
+    score,
+    ready: missing.size === 0 && steps.length >= 3,
+    missing: Array.from(missing),
+    steps: stepReadiness,
+  };
 }
 
 export function getVslReadiness(vsl: DemoStudioVsl | null | undefined): VslReadiness {

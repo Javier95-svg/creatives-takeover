@@ -323,24 +323,3 @@ verify_jwt = false
 # confirms password-based identities, cancels billing, and deletes server-side.
 [functions.delete-account]
 verify_jwt = true
-
-# OAuth callbacks and private invitations verify state/tokens in the handler.
-[functions.core-connections]
-verify_jwt = false
-
-[functions.validation-sessions]
-verify_jwt = false
-
-# Authenticated owners or a separate worker credential are checked in the handler.
-[functions.mvp-workflow-tests]
-verify_jwt = false
-
-[functions.mvp-builder-publish]
-verify_jwt = false
-
-[functions.mvp-builder-deploy]
-verify_jwt = false
-
-# Every action verifies the CT owner before accessing managed app credentials.
-[functions.mvp-managed-app]
-verify_jwt = false

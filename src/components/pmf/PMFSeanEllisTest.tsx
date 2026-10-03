@@ -116,7 +116,7 @@ const PMFSeanEllisTest: React.FC<PMFSeanEllisTestProps> = ({
               </p>
               {surveyAggregate.total > 0 && (
                 <Badge variant="outline" className="border-success/25 bg-success/10 text-success">
-                  Hosted responses from self-reported users
+                  Verified hosted evidence
                 </Badge>
               )}
             </div>
@@ -180,7 +180,6 @@ const PMFSeanEllisTest: React.FC<PMFSeanEllisTestProps> = ({
         </div>
       </div>
 
-      {!!surveyAggregate?.conceptFeedback?.length && <details className="rounded-xl border p-3"><summary className="cursor-pointer text-sm">Concept feedback or unknown product use (excluded from Sean Ellis result)</summary>{surveyAggregate.conceptFeedback.map((v,i)=><p key={i} className="mt-2 text-sm">{v.feedback || v.mainBenefit || 'No written feedback'}{v.role ? ' ? '+v.role : ''}</p>)}</details>}
       {live ? (
         /* Verbatim feed from real responses */
         surveyAggregate.verbatims.length > 0 && (

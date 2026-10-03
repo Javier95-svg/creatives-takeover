@@ -1,4 +1,3 @@
-import { resolveDemoTarget } from '@/lib/demoStudio/navigation';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,12 +14,11 @@ import type { DemoStudioHotspot, HotspotAction, HotspotType } from '@/lib/demoSt
 interface HotspotInspectorProps {
   hotspot: DemoStudioHotspot | null;
   stepCount: number;
-  steps: Array<{id:string;title:string|null}>;
   onChange: (patch: Partial<DemoStudioHotspot>) => void;
   onDelete: (id: string) => void;
 }
 
-export default function HotspotInspector({ hotspot, stepCount, steps, onChange, onDelete }: HotspotInspectorProps) {
+export default function HotspotInspector({ hotspot, stepCount, onChange, onDelete }: HotspotInspectorProps) {
   if (!hotspot) {
     return (
       <div className="rounded-xl border border-dashed border-muted-foreground/30 p-4 text-sm text-muted-foreground">
@@ -84,7 +82,21 @@ export default function HotspotInspector({ hotspot, stepCount, steps, onChange, 
       {hotspot.action === 'goto' && (
         <div className="space-y-1.5">
           <Label htmlFor="hotspot-target-step">Step number (1–{stepCount})</Label>
-          <select id="hotspot-target-step" className="w-full rounded border bg-background p-2" value={steps[resolveDemoTarget(hotspot.action_target,steps)]?.id || ''} onChange={e=>onChange({action_target:e.target.value})}><option value="" disabled>Choose a screen</option>{steps.filter(step=>step.id!==hotspot.step_id).map((step,i)=><option key={step.id} value={step.id}>{step.title || 'Screen '+(i+1)}</option>)}</select>
+          <Input
+            id="hotspot-target-step"
+            type="number"
+            min={1}
+            max={stepCount}
+            value={hotspot.action_target ? String(Number(hotspot.action_target) + 1) : ''}
+            onChange={(e) => {
+              const oneBased = Number.parseInt(e.target.value, 10);
+              if (Number.isNaN(oneBased)) {
+                onChange({ action_target: null });
+                return;
+              }
+              onChange({ action_target: String(Math.max(0, oneBased - 1)) });
+            }}
+          />
         </div>
       )}
 

@@ -491,7 +491,7 @@ export default function DemoBriefPage() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
                   <CardTitle className="text-base">Demo readiness</CardTitle>
-                  <Badge variant={storyboardReadiness.ready ? 'default' : 'outline'}>{storyboardReadiness.ready ? 'Ready to share' : 'Needs attention'}</Badge>
+                  <Badge variant={storyboardReadiness.ready ? 'default' : 'outline'}>{storyboardReadiness.score}%</Badge>
                 </CardHeader>
                 <CardContent>
                   {storyboardReadiness.missing.length ? (

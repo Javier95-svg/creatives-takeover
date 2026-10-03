@@ -1,4 +1,3 @@
-import { getDemoReadiness } from './readiness';
 import { evaluateOutcomeContract } from '@/lib/outcomeContracts';
 import type { DemoStepWithHotspots, DemoStudioLaunchPage, DemoStudioProject, DemoTheme } from './types';
 
@@ -34,10 +33,12 @@ export function evaluateDemoArtifact(input: {
   containsGeneratedPlaceholders?: boolean;
   externalActivity?: boolean;
 }) {
-  const workingHotspots = getDemoReadiness(input.steps,input.theme).ready;
+  const workingHotspots = input.steps.length >= 2
+    && input.steps.slice(0, -1).every((step) => step.hotspots.length > 0)
+    && validateDemoInteractions(input.steps);
   const publicUrl = Boolean(input.project?.slug?.trim()) || input.published;
   const qualityChecks = {
-    interactive_steps: input.steps.length >= 1,
+    interactive_steps: input.steps.length >= 2,
     working_hotspots: workingHotspots,
     captions_complete: input.steps.every((step) => Boolean(step.caption?.trim())),
     single_cta: Boolean(input.launchPage?.cta_label?.trim() || input.theme?.endCtaLabel?.trim()),

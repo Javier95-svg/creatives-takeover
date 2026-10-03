@@ -149,7 +149,6 @@ export default function DemoAnalyticsPanel({ demoId, publicId, className }: Demo
         </div>
       ) : metrics && metrics.views > 0 ? (
         <>
-          <div className="rounded-xl border bg-card p-4 text-sm"><strong>Next suggested edit</strong><p>{metrics.completionRate < 50 ? 'Review the first screen where viewers leave. Shorten its caption and make the next action clear.' : metrics.ctaClicks === 0 ? 'Viewers are finishing. Make the final action specific and explain what happens after the click.' : 'Ask a few target customers what they expected after clicking. Use their feedback to choose your next edit.'}</p><p className="mt-2 text-xs text-muted-foreground">These are demo engagement signals, not proof of product demand or willingness to pay.</p></div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
               icon={Users}

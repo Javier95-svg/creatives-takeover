@@ -320,9 +320,9 @@ export async function exportNarratedDemoVideo(
   opts: DemoExportOptions,
 ): Promise<{ blob: Blob; ext: 'mp4' | 'webm' }> {
   if (steps.length === 0) throw new Error('Nothing to export — add a step first.');
-  const texts = steps.map((s) => (s.speaker_notes?.trim() || s.caption?.trim() || '').trim().slice(0, 600));
-  if (texts.some((t) => !t)) {
-    throw new Error('Add speaker notes or a caption to every screen before narrated export.');
+  const texts = steps.map((s) => (s.speaker_notes ?? s.caption ?? s.title ?? '').trim().slice(0, 600));
+  if (texts.every((t) => !t)) {
+    throw new Error('No narration text found. Add speaker notes or captions to your steps first.');
   }
 
   const { supabase } = await import('@/integrations/supabase/client');

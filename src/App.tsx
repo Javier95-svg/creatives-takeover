@@ -173,8 +173,6 @@ const DemoCalls = lazy(() => import("./pages/DemoCalls"));
 const MVPBuilderBetaPage = lazy(() => import("./pages/MVPBuilderBetaPage"));
 const BuildPage = lazy(() => import("./pages/BuildPage"));
 const TractionEnginePage = lazy(() => import("./pages/TractionEnginePage"));
-const ValidationSessionsPage = lazy(() => import('./pages/ValidationSessionsPage'));
-const ConnectionsPage = lazy(() => import("./pages/ConnectionsPage"));
 const ProjectsDashboard = lazy(() => import("./components/dashboard/ProjectsDashboard"));
 
 // Demo Studio (interactive demo builder + public demo viewer)
@@ -339,8 +337,6 @@ function App() {
                         <WorkspaceRouteFrame>
                         <Routes>
                         <Route path="/app-entry" element={<AppEntry />} />
-                        <Route path="/validation-sessions" element={<ValidationSessionsPage />} />
-                      <Route path="/connections" element={<ConnectionsPage />} />
                         <Route path="/prototypes/founder-guide" element={<ProductGuidePrototype concept="founder-guide" />} />
                         <Route path="/prototypes/command-center" element={<ProductGuidePrototype concept="command-center" />} />
                         <Route path="/prototypes/guided-journey" element={<ProductGuidePrototype concept="guided-journey" />} />

@@ -45,7 +45,6 @@ export default function PMFSurveyPage() {
   const [state, setState] = useState<'loading' | 'ready' | 'missing'>('loading');
 
   const [answer, setAnswer] = useState('');
-  const [productUsage, setProductUsage] = useState<'used' | 'concept_only' | ''>('');
   const [mainBenefit, setMainBenefit] = useState('');
   const [wouldUseInstead, setWouldUseInstead] = useState('');
   const [role, setRole] = useState('');
@@ -82,8 +81,8 @@ export default function PMFSurveyPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!survey || !productUsage || (productUsage === 'used' && !answer)) {
-      toast.error('Please tell us whether you have used the product and answer the relevant questions.');
+    if (!survey || !answer) {
+      toast.error('Please choose how you would feel.');
       return;
     }
     setSubmitting(true);
@@ -92,7 +91,6 @@ export default function PMFSurveyPage() {
         body: {
           slug: survey.slug,
           seanEllisAnswer: answer,
-          productUsage,
           mainBenefit,
           wouldUseInstead,
           role,
@@ -154,17 +152,8 @@ export default function PMFSurveyPage() {
               </p>
             </div>
 
-            <fieldset className="space-y-3">
-              <legend className="text-sm font-semibold">Have you personally used {productName} to do something you needed?</legend>
-              {([{ value: 'used', label: 'Yes, I have used the product' }, { value: 'concept_only', label: 'I have only seen the idea, pitch, or demo' }] as const).map(option => (
-                <label key={option.value} className="flex items-center gap-3 rounded-xl border p-3 text-sm">
-                  <input type="radio" name="productUsage" value={option.value} checked={productUsage === option.value} onChange={() => { setProductUsage(option.value); setAnswer(''); }} />{option.label}
-                </label>
-              ))}
-              {productUsage === 'concept_only' && <p className="text-xs text-muted-foreground">Your concept feedback will help improve the offer. The product-use survey percentage includes only people who have used it.</p>}
-            </fieldset>
-            {/* Only product users can answer the Sean Ellis question. */}
-            {productUsage === 'used' && <div className="space-y-3">
+            {/* Sean Ellis question */}
+            <div className="space-y-3">
               <Label className="text-sm font-semibold">
                 How would you feel if you could no longer use {productName}?
               </Label>
@@ -191,7 +180,7 @@ export default function PMFSurveyPage() {
                   </button>
                 ))}
               </div>
-            </div>}
+            </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="benefit" className="text-xs">What's the main benefit you get from it?</Label>
@@ -229,7 +218,7 @@ export default function PMFSurveyPage() {
               </label>
             </div>
 
-            <Button type="submit" className="w-full" disabled={submitting || !productUsage || (productUsage === 'used' && !answer)}>
+            <Button type="submit" className="w-full" disabled={submitting || !answer}>
               {submitting ? 'Submitting…' : 'Submit feedback'}
             </Button>
           </form>

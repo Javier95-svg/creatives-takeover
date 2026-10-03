@@ -60,9 +60,6 @@ export interface PMFEvidenceAnswers {
 }
 
 export interface PMFInterviewLog {
-  targetCustomer?: boolean;
-  incentivized?: boolean;
-  sourceEvidenceId?: string;
   id: string;
   sourceLeadId?: string;
   intervieweeName: string;

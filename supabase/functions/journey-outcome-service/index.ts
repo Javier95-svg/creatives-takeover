@@ -158,9 +158,9 @@ async function loadAuthoritativeChecks(
     const brokenHotspot = (hotspots ?? []).some((hotspot) => {
       const x = Number(hotspot.x); const y = Number(hotspot.y); const w = Number(hotspot.w); const h = Number(hotspot.h);
       if (![x, y, w, h].every(Number.isFinite) || x < 0 || y < 0 || w <= 0 || h <= 0 || x + w > 1 || y + h > 1) return true;
-      if (hotspot.action === 'goto') { const i=stepIds.indexOf(hotspot.action_target); const target=i>=0?i:/^\d+$/.test(hotspot.action_target || '')?Number(hotspot.action_target):-1; return target<0 || target>=stepIds.length || stepIds[target]===hotspot.step_id; }
+      if (hotspot.action === 'goto') return !stepIds.includes(hotspot.action_target);
       if (hotspot.action === 'url') return !authenticUrl(hotspot.action_target);
-      return hotspot.action !== 'next' || stepIds.indexOf(hotspot.step_id) === stepIds.length - 1;
+      return hotspot.action !== 'next';
     });
     const noPlaceholders = stepRows.every((step) => hasText(step.asset_url) && !/placeholder/i.test(String(step.asset_url)));
     const published = demo.status === 'published' && hasText(demo.public_id);
@@ -169,20 +169,20 @@ async function loadAuthoritativeChecks(
     // on" without the Launch Composer. Requiring a launch page here meant the common
     // path — publish a demo — produced no outcome and therefore no handoff at all.
     const theme = recordValue(demo.theme);
-    const demoEndCta = hasText(theme.endCtaLabel) && (authenticUrl(theme.endCtaHref) || /^\/(?![\/\\])/.test(textValue(theme.endCtaHref,2048)));
+    const demoEndCta = hasText(theme.endCtaLabel) && authenticUrl(theme.endCtaHref);
     const launchWired = Boolean(launch && launch.primary_demo_id === artifactId);
     return {
       buyer_promise: stepRows.some((step) => hasText(step.caption)) || hasText(theme.endCtaLabel),
-      interactive_proof: stepRows.length >= 1 && !brokenHotspot,
-      interactive_steps: stepRows.length >= 1,
-      working_hotspots: stepRows.length > 0 && !brokenHotspot,
-      captions_complete: stepRows.length >= 1 && stepRows.every((step) => hasText(step.caption)),
+      interactive_proof: stepRows.length >= 1 && (hotspots?.length ?? 0) > 0 && !brokenHotspot,
+      interactive_steps: stepRows.length >= 2,
+      working_hotspots: (hotspots?.length ?? 0) > 0 && !brokenHotspot,
+      captions_complete: stepRows.length >= 2 && stepRows.every((step) => hasText(step.caption)),
       single_cta: (launchWired && hasText(launch?.cta_label)) || demoEndCta,
       lead_capture: launchWired || (published && demoEndCta),
       analytics: published,
       published,
       no_unresolved_placeholders: noPlaceholders,
-      no_broken_interactions: stepRows.length >= 1 && !brokenHotspot,
+      no_broken_interactions: stepRows.length >= 2 && !brokenHotspot,
       external_activity: (events?.length ?? 0) > 0 || (signups?.length ?? 0) > 0,
     };
   }
@@ -222,38 +222,32 @@ async function loadAuthoritativeChecks(
     if (error || !data) throw new Error('The MVP project was not found for this account');
     const metadata = recordValue(data.metadata);
     const setup = recordValue(metadata.setupInput);
-
-    const {data:release}=await supabase.from('mvp_published_releases').select('test_run_id,revision,files').eq('project_id',artifactId).maybeSingle();
-    const {data:test}=release?.test_run_id ? await supabase.from('mvp_build_tests').select('status,revision,assertions,snapshot').eq('id',release.test_run_id).eq('project_id',artifactId).eq('user_id',userId).maybeSingle() : {data:null};
-    const tested=test?.status==='passed' && test.revision===release?.revision;
-    const assertions=tested?recordValue(test.assertions):{};
-    const workflow=tested?recordValue(recordValue(test.snapshot).workflow):recordValue(setup.workflow);
-
-
+    const validation = recordValue(metadata.lastPublishValidation);
+    const smoke = recordValue(validation.smokeTest);
+    const structural = recordValue(validation.structuralChecks);
     const files = arrayValue(data.project_files).map(recordValue);
     const source = files.map((file) => textValue(file.content, 1_000_000)).join('\n');
-    const features = arrayValue(workflow.features || setup.essentialFeatures).filter(hasText);
+    const features = arrayValue(setup.essentialFeatures).filter(hasText);
     const evidenceManifest = recordValue(setup.evidenceManifest);
     const evidenceBacked = setup.buildEvidenceMode === 'evidence_backed';
     const published = data.deployment_status === 'deployed' && authenticUrl(data.deployment_url);
     return {
       evidence_manifest_approved: evidenceBacked && hasText(setup.evidenceApprovedAt) && arrayValue(evidenceManifest.sources).length > 0,
-      one_customer: hasText(workflow.customer) || hasText(setup.coreCustomer),
-      one_core_job: hasText(workflow.task) || hasText(setup.coreJob),
-      success_event: hasText(workflow.outcome) || hasText(setup.successEvent),
+      one_customer: hasText(setup.coreCustomer),
+      one_core_job: hasText(setup.coreJob),
+      success_event: hasText(setup.successEvent),
       feature_budget: features.length >= 1 && features.length <= 3,
       project_generated: files.length > 0,
       preview_ready: files.length > 0,
-      primary_flow_present: tested && assertions.customer_task === true,
-      primary_flow_smoke_test: tested && assertions.customer_task === true,
-      customer_workflow_test: tested,
-      responsive_ui: tested && assertions.responsive_ui === true,
-      no_runtime_errors: tested && assertions.no_runtime_errors === true,
-      rollback_support: arrayValue(data.versions).length > 0,
+      primary_flow_present: structural.primaryFlow === true,
+      primary_flow_smoke_test: smoke.passed === true && smoke.primaryActionTriggered === true,
+      responsive_ui: structural.responsive === true,
+      no_runtime_errors: Array.isArray(smoke.runtimeErrors) && smoke.runtimeErrors.length === 0,
+      rollback_support: structural.rollback === true && arrayValue(data.versions).length > 0,
       analytics_injected_on_publish: hasText(setup.successEvent) && /analytics|track\s*\(|captureEvent|data-event/i.test(source),
       published,
       external_success_event: false,
-      platform_observed_publish: published && tested,
+      platform_observed_publish: published && smoke.passed === true && hasText(setup.successEvent),
     };
   }
 

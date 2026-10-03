@@ -136,7 +136,7 @@ test('migration and handoffs preserve ownership, versions, and exact source IDs'
   assert.match(migration, /source_gtm_play_id/);
   assert.match(migration, /auth\.uid\(\) = user_id/);
   assert.match(traction, /\.eq\('plan_id', gtmPlanId\)/);
-  assert.match(traction, /p_source: gtmSource/);
+  assert.match(traction, /source_gtm_play_id: gtmSource/);
   assert.match(directories, /\.eq\('user_id', user\.id\)/);
   assert.match(analyzer, /schemaVersion === 2/);
   assert.match(analyzer, /checkAndDeductCredits/);
@@ -294,13 +294,13 @@ test('weekly review rewrites the next week from exact Traction evidence without 
   const workspace = readFileSync(new URL('../src/components/gtm/GTMWorkspace.tsx', import.meta.url), 'utf8');
   const hook = readFileSync(new URL('../src/hooks/useGTMStrategist.ts', import.meta.url), 'utf8');
   assert.match(review, /source_gtm_play_id/);
-  assert.match(review, /decision = reviewed\.decision/);
+  assert.match(review, /experiment\.decision/);
   assert.match(review, /analysis\.sixWeekPlan/);
   assert.match(review, /analysis\.tasks/);
   assert.match(review, /healthSnapshot/);
   assert.match(review, /decision === 'kill'/);
   assert.doesNotMatch(review, /deductCredits|checkAndDeductCredits/);
-  assert.match(workspace, /Apply reviewed changes/);
+  assert.match(workspace, /Week \{weeklyReview\.adaptation\.week\} rewritten/);
   assert.match(workspace, /Start sprint here/);
   assert.match(hook, /activate_gtm_play_v2/);
   assert.match(hook, /createJourneyHandoff/);
