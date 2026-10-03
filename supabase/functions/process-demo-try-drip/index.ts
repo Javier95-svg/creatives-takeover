@@ -74,7 +74,7 @@ function buildFollowup1Html(args: {
     <div style="font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; line-height: 1.6; color: #0f172a; max-width: 560px;">
       <h1 style="margin: 0 0 12px; font-size: 22px; font-weight: 700;">Your interactive demo for ${productName} is still waiting.</h1>
       <p style="margin: 0 0 16px; color: #334155;">
-        You built a ${args.stepCount}-step walkthrough yesterday but haven't saved it yet. It's still here — one click restores it exactly as you left it.
+        You built a ${args.stepCount}-step walkthrough yesterday but haven't saved it yet. It's still here, and one click restores it exactly as you left it.
       </p>
       <p style="margin: 0 0 16px; color: #334155; font-size: 14px;">
         Save it to a free account to publish it, embed it on your site, and add a pitch video on top.
@@ -106,7 +106,7 @@ function buildFollowup2Html(args: {
         This is the last reminder for your <strong>${productName}</strong> demo. After the link expires, the draft is gone.
       </p>
       <div style="background: #fef3c7; border: 1px solid #fde68a; border-radius: 16px; padding: 16px; margin: 0 0 20px;">
-        <p style="margin: 0; font-size: 14px; color: #92400e; font-weight: 600;">⏰ Your demo draft expires soon — save it to keep it.</p>
+        <p style="margin: 0; font-size: 14px; color: #92400e; font-weight: 600;">Your demo draft expires soon. Save it to keep it.</p>
       </div>
       <div style="margin: 24px 0;">
         <a href="${escapeHtml(resumeUrl)}" style="background: #6366f1; color: #fff; padding: 12px 28px; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 15px; display: inline-block;">

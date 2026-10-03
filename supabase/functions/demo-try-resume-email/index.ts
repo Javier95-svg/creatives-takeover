@@ -133,11 +133,11 @@ function buildEmailHtml(args: {
     <div style="font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; line-height: 1.6; color: #0f172a; max-width: 560px;">
       <h1 style="margin: 0 0 16px; font-size: 24px; font-weight: 700;">Your interactive demo is ready to finish.</h1>
       <p style="margin: 0 0 16px; color: #334155;">
-        You built a ${stepCount}-step interactive demo for <strong>${productName}</strong>. It's saved — open it on any device and pick up exactly where you left off.
+        You built a ${stepCount}-step interactive demo for <strong>${productName}</strong>. It's saved, so open it on any device and pick up exactly where you left off.
       </p>
       <div style="border: 1px solid #e2e8f0; border-radius: 20px; background: #f8fafc; padding: 20px; margin: 0 0 20px;">
         <p style="margin: 0; font-size: 18px; font-weight: 700;">${productName}</p>
-        <p style="margin: 8px 0 0; color: #475569;">${stepCount}-step walkthrough${firstTitle ? ` — starts with "${firstTitle}"` : ""}</p>
+        <p style="margin: 8px 0 0; color: #475569;">${stepCount}-step walkthrough${firstTitle ? `, starting with "${firstTitle}"` : ""}</p>
       </div>
       <div style="margin: 24px 0;">
         <a href="${escapeHtml(resumeUrl)}" style="background: #6366f1; color: #fff; padding: 12px 28px; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 15px; display: inline-block;">

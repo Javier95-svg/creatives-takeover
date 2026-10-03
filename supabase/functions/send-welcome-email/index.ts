@@ -65,18 +65,18 @@ serve(async (req: Request): Promise<Response> => {
           <li>Or start one conversation that can generate a real reply.</li>
           <li>Or book one discovery call with genuine intent.</li>
         </ul>
-        <p style="margin: 0 0 16px; color: #334155;">The goal is to leave your first session with a real thread, mentor, or next step — something concrete to come back to.</p>
+        <p style="margin: 0 0 16px; color: #334155;">The goal is to leave your first session with a real thread, mentor, or next step. Something concrete to come back to.</p>
         <div style="margin: 24px 0;">
           <a href="${safeOnboardingUrl}" style="background: #32b8c6; color: #fff; padding: 12px 28px; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 15px; display: inline-block;">
-            Complete onboarding →
+            Complete onboarding
           </a>
         </div>
         <p style="margin: 0 0 12px; color: #64748b; font-size: 13px;">If you did not create this account, you can safely ignore this email.</p>
-        <p style="margin: 0 0 4px; color: #64748b; font-size: 13px;">— The Creatives Takeover Team</p>
+        <p style="margin: 0 0 4px; color: #64748b; font-size: 13px;">Javier, Creatives Takeover</p>
       </div>
     `;
 
-    const subject = "Welcome — here's your first step inside Creatives Takeover";
+    const subject = "Welcome. Here's your first step inside Creatives Takeover";
 
     const sendPayload: Record<string, unknown> = {
       from: `${fromName} <${fromEmail}>`,

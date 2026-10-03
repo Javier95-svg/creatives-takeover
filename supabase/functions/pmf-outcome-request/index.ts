@@ -88,8 +88,8 @@ serve(async (req) => {
       <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:520px;margin:0 auto;color:#0f172a;">
         <h1 style="font-size:20px;margin:0 0 16px;">Hey ${escapeHtml(firstName)}, what happened with your idea?</h1>
         <p style="font-size:14px;line-height:1.6;color:#334155;">
-          ${scoreLine}It's been a few weeks since you ran PMF Lab. Telling us the real outcome — launched, pivoted,
-          funded, or shelved — takes 20 seconds and is how PMF Lab learns whether its scores were right.
+          ${scoreLine}It's been a few weeks since you ran PMF Lab. Telling us the real outcome (launched, pivoted,
+          funded, or shelved) takes 20 seconds and is how PMF Lab learns whether its scores were right.
         </p>
         <p style="margin:24px 0;">
           <a href="${ctaUrl}" style="background:#6d28d9;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-size:14px;font-weight:600;display:inline-block;">

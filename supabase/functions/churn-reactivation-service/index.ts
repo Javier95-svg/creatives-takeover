@@ -67,7 +67,7 @@ async function sendWinBackEmail(
     .map((f) => `<li style="margin-bottom: 8px;">${f}</li>`)
     .join('');
 
-  const subject = `We miss you, ${firstName} — come back to Creatives Takeover`;
+  const subject = `${firstName}, your Creatives Takeover account is still here`;
 
   const html = `
     <div style="font-family: Inter, ui-sans-serif, system-ui, -apple-system, Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #0f172a; line-height: 1.6;">
@@ -93,11 +93,11 @@ async function sendWinBackEmail(
       </div>
 
       <p style="color: #6b7280; font-size: 14px; margin: 0 0 8px;">
-        Questions? Just reply to this email — we read every message.
+        Questions? Just reply to this email. Replies come straight to me.
       </p>
 
       <p style="color: #6b7280; font-size: 14px; margin: 0 0 32px;">
-        — The Creatives Takeover Team
+        Javier, Creatives Takeover
       </p>
 
       <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 0 0 16px;">
