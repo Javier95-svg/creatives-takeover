@@ -46,6 +46,17 @@ const CALM_FILES = [
   'src/components/demo-studio/DemoDistributionPanel.tsx',
   'src/components/demo-studio/analytics/DemoAnalyticsPanel.tsx',
   'src/components/wallpapers/DemoStoryboardWallpaper.tsx',
+  'src/pages/AppBuilderPage.tsx',
+  'src/components/mvp-builder/MVPBuilder.tsx',
+  'src/components/mvp-builder/MVPBuilderHeader.tsx',
+  'src/components/mvp-builder/MVPBuilderChat.tsx',
+  'src/components/mvp-builder/MVPMessageItem.tsx',
+  'src/components/mvp-builder/MVPBuilderPreview.tsx',
+  'src/components/mvp-builder/MVPBuilderCodePanel.tsx',
+  'src/components/mvp-builder/MVPBuilderIntegrationPanel.tsx',
+  'src/components/mvp-builder/MVPBuilderPublishPanel.tsx',
+  'src/components/mvp-builder/MVPBuilderDomainPanel.tsx',
+  'src/components/wallpapers/MVPBlueprintWallpaper.tsx',
 ];
 
 const VISUAL_RULES: Array<[RegExp, string]> = [

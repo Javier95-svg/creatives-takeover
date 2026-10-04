@@ -74,7 +74,7 @@ function DnsRow({
       <div className="flex items-center justify-between gap-2">
         <div>
           <p className="font-semibold text-foreground">{label}</p>
-          <p className="text-caption uppercase tracking-wide text-muted-foreground">
+          <p className="text-caption text-muted-foreground">
             {recordType}
           </p>
         </div>

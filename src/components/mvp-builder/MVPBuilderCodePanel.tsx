@@ -253,7 +253,7 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
           </div>
           {htmlEntryOptions.length > 0 && (
             <div className="mt-3 rounded-xl border border-border/60 bg-background/80 p-3">
-              <label className="text-label font-medium uppercase tracking-[0.14em] text-muted-foreground">
+              <label className="text-label font-medium text-muted-foreground">
                 Preview entry
               </label>
               <select
@@ -291,12 +291,12 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
                   <FileCode2 className="h-4 w-4 shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{file.path}</p>
-                    <p className="truncate text-label uppercase tracking-[0.12em] text-muted-foreground">
+                    <p className="truncate text-label text-muted-foreground">
                       {file.language}
                     </p>
                   </div>
                   {changeStatus && (
-                    <span className="rounded-full bg-warning/10 px-2 py-0.5 text-caption font-semibold uppercase tracking-[0.12em] text-warning">
+                    <span className="rounded-full bg-warning/10 px-2 py-0.5 text-caption font-semibold text-warning">
                       {changeStatus}
                     </span>
                   )}
@@ -316,12 +316,12 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
                   {selectedFile?.path ?? 'Select a file'}
                 </p>
                 {selectedFile?.path === entryFilePath && (
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-caption font-semibold uppercase tracking-[0.12em] text-primary">
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-caption font-semibold text-primary">
                     Preview entry
                   </span>
                 )}
                 {isDirty && (
-                  <span className="rounded-full bg-warning/10 px-2 py-0.5 text-caption font-semibold uppercase tracking-[0.12em] text-warning">
+                  <span className="rounded-full bg-warning/10 px-2 py-0.5 text-caption font-semibold text-warning">
                     Unsaved
                   </span>
                 )}
@@ -392,13 +392,13 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
               onChange={(event) => handleDraftChange(event.target.value)}
               spellCheck={false}
               disabled={!selectedFile}
-              className="h-full min-h-[420px] resize-none rounded-none border-0 bg-[radial-gradient(circle_at_top,hsl(var(--primary)/0.08),transparent_42%),hsl(var(--background))] px-5 py-4 font-mono text-sm leading-6 focus-visible:ring-0"
+              className="h-full min-h-[420px] resize-none rounded-none border-0 px-5 py-4 font-mono text-sm leading-6 focus-visible:ring-0"
             />
           </div>
 
           <div className="bg-muted/20 px-4 py-4">
             <div className="rounded-2xl border border-border/60 bg-background/90 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              <p className="text-xs font-semibold text-muted-foreground">
                 Project manifest
               </p>
               <div className="mt-3 space-y-3 text-sm text-foreground">
@@ -425,7 +425,7 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
                         className="rounded-xl border border-border/60 bg-muted/30 px-3 py-2"
                       >
                         <p className="text-sm font-medium text-foreground">{dependency.name}</p>
-                        <p className="text-label uppercase tracking-[0.12em] text-muted-foreground">
+                        <p className="text-label text-muted-foreground">
                           {dependency.version
                             ? `${dependency.source} · ${dependency.version}`
                             : dependency.source}
@@ -441,7 +441,7 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
             </div>
 
             <div className="mt-4 rounded-2xl border border-border/60 bg-background/90 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              <p className="text-xs font-semibold text-muted-foreground">
                 Code state
               </p>
               <div className="mt-3 space-y-3 text-sm text-foreground">
@@ -468,7 +468,7 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
 
             <div className="mt-4 rounded-2xl border border-border/60 bg-background/90 p-4">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                <p className="text-xs font-semibold text-muted-foreground">
                   Snapshots
                 </p>
                 <Button
@@ -497,7 +497,7 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
                           <p className="truncate text-sm font-medium text-foreground">
                             {snapshot.label}
                           </p>
-                          <p className="text-label uppercase tracking-[0.12em] text-muted-foreground">
+                          <p className="text-label text-muted-foreground">
                             {snapshot.source} · {new Date(snapshot.createdAt).toLocaleString()}
                           </p>
                         </div>
@@ -517,7 +517,7 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
             </div>
 
             <div className="mt-4 rounded-2xl border border-border/60 bg-background/90 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              <p className="text-xs font-semibold text-muted-foreground">
                 Selected file diff
               </p>
               {!selectedFile ? (
@@ -537,15 +537,15 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div className="rounded-xl border border-border/60 bg-muted/30 px-2 py-3">
                       <p className="text-lg font-semibold text-foreground">{selectedDiffStats.added}</p>
-                      <p className="text-label uppercase tracking-[0.12em] text-muted-foreground">Added</p>
+                      <p className="text-label text-muted-foreground">Added</p>
                     </div>
                     <div className="rounded-xl border border-border/60 bg-muted/30 px-2 py-3">
                       <p className="text-lg font-semibold text-foreground">{selectedDiffStats.changed}</p>
-                      <p className="text-label uppercase tracking-[0.12em] text-muted-foreground">Changed</p>
+                      <p className="text-label text-muted-foreground">Changed</p>
                     </div>
                     <div className="rounded-xl border border-border/60 bg-muted/30 px-2 py-3">
                       <p className="text-lg font-semibold text-foreground">{selectedDiffStats.removed}</p>
-                      <p className="text-label uppercase tracking-[0.12em] text-muted-foreground">Removed</p>
+                      <p className="text-label text-muted-foreground">Removed</p>
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground">
@@ -556,7 +556,7 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
             </div>
 
             <div className="mt-4 rounded-2xl border border-border/60 bg-background/90 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              <p className="text-xs font-semibold text-muted-foreground">
                 Change summary
               </p>
               {codeChanges.length === 0 ? (
@@ -573,7 +573,7 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
                       <p className="truncate text-sm font-medium text-foreground">
                         {change.path}
                       </p>
-                      <p className="text-xs uppercase tracking-[0.12em] text-warning">
+                      <p className="text-xs text-warning">
                         {change.status}
                       </p>
                     </div>

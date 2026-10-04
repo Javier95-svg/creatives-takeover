@@ -109,6 +109,11 @@ All colors MUST be HSL.
     --tool-demo: 342 70% 44%;
     --tool-demo-foreground: 0 0% 100%;
     --tool-demo-subtle: 342 70% 44% / 0.1;
+    /* MVP Builder identity: a blueprint teal-green, between the success green
+       and the teal accent. */
+    --tool-mvp: 166 76% 28%;
+    --tool-mvp-foreground: 0 0% 100%;
+    --tool-mvp-subtle: 166 76% 28% / 0.1;
     
     /* Blue variants */
     --blue-primary: 217 91% 60%; /* #3B82F6 */
@@ -361,6 +366,9 @@ All colors MUST be HSL.
     --tool-demo: 340 82% 72%;
     --tool-demo-foreground: 342 60% 12%;
     --tool-demo-subtle: 340 82% 72% / 0.14;
+    --tool-mvp: 164 66% 52%;
+    --tool-mvp-foreground: 166 70% 9%;
+    --tool-mvp-subtle: 164 66% 52% / 0.14;
     
     /* RGB Color Variants for Dark Mode (brighter for visibility) */
     --blue-primary: 217 92% 65%;
@@ -4821,4 +4829,10 @@ img {
   --primary: var(--tool-demo);
   --primary-foreground: var(--tool-demo-foreground);
   --ring: var(--tool-demo);
+}
+
+.tool-theme-mvp {
+  --primary: var(--tool-mvp);
+  --primary-foreground: var(--tool-mvp-foreground);
+  --ring: var(--tool-mvp);
 }

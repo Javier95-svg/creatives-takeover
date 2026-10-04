@@ -18,7 +18,7 @@ import {
   ChevronDown,
   ChevronRight,
   FilePlus2,
-  Sparkles,
+  Plus,
   Bug,
   Palette,
   Lock,
@@ -45,7 +45,7 @@ import type { MVPBuilderSetupInput, MVPBuilderVersion } from '@/lib/mvp-builder/
 import {
   MVP_BUILDER_ACTION_LABELS,
 } from '@/lib/mvp-builder/phase1';
-import ctBrandLogo from '@/assets/ct-brand-logo.webp';
+import MVPBlueprintWallpaper from '@/components/wallpapers/MVPBlueprintWallpaper';
 import {
   MVP_MODEL_OPTIONS,
   getMVPDefaultModelForPlan,
@@ -300,6 +300,12 @@ interface MVPBuilderChatProps {
   onBuyCredits: () => void;
   isGenerating: boolean;
 }
+
+const START_EXAMPLES = [
+  'A booking page for a dog groomer: customers pick a time slot and leave their phone number. Success is 5 bookings in the first week.',
+  'A waitlist page for a budgeting app for freelancers, with an email signup and three short benefit sections.',
+  'A tool where small fleet owners upload a fuel receipt and see spending per truck for the month.',
+];
 
 export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   messages,
@@ -707,37 +713,52 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
       <ScrollArea className="flex-1 min-h-0">
         <div className="p-4">
           {isEmpty ? (
-            <div className="flex flex-col gap-4 py-6">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-info/20 bg-white/[0.04] shadow-[0_0_24px_rgba(56,189,248,0.18)]">
-                <img
-                  src={ctBrandLogo}
-                  alt="Creatives Takeover"
-                  className="h-8 w-8 object-contain drop-shadow-[0_0_8px_rgba(45,212,191,0.28)]"
-                  width={32}
-                  height={32}
-                  decoding="async"
-                />
+            <div className="relative -m-4 min-h-[70vh] p-4">
+            <MVPBlueprintWallpaper />
+            <div className="relative flex flex-col gap-5 py-6">
+              <div className="space-y-2">
+                <h2 className="text-lg font-semibold text-white">What do you want to build?</h2>
+                <p className="text-sm leading-relaxed text-muted-foreground">Describe it in the box below. A good first message says:</p>
+                <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                  <li>who it is for</li>
+                  <li>the one thing they should get done</li>
+                  <li>how you will know it worked</li>
+                </ul>
               </div>
               <div className="space-y-2">
-                <h2 className="text-base font-semibold text-white">Ready to build</h2>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  Describe your MVP below, or start with your saved evidence.
-                </p>
+                <p className="text-xs font-medium text-muted-foreground">Or start from an example</p>
+                {START_EXAMPLES.map((example) => (
+                  <button
+                    key={example}
+                    type="button"
+                    onClick={() => {
+                      setInput(example);
+                      requestAnimationFrame(() => textareaRef.current?.focus());
+                    }}
+                    className="w-full rounded-lg border border-white/10 bg-background/60 px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-white"
+                  >
+                    {example}
+                  </button>
+                ))}
               </div>
-              <Button
-                type="button"
-                onClick={() => void handleBuildFromEvidence()}
-                disabled={isLoadingEvidence || isGenerating}
-                className="w-full justify-center gap-2 rounded-xl border border-info/30 bg-info/15 py-5 text-sm font-semibold text-white shadow-[0_0_24px_rgba(56,189,248,0.12)] hover:bg-info/25"
-              >
-                {isLoadingEvidence ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4 text-info" />}
-                {isLoadingEvidence ? 'Loading your evidence…' : 'Use my saved evidence'}
-              </Button>
+              <div className="border-t border-white/8 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => void handleBuildFromEvidence()}
+                  disabled={isLoadingEvidence || isGenerating}
+                  className="w-full justify-center gap-2 border-white/15 bg-transparent text-sm text-white hover:bg-white/[0.06]"
+                >
+                  {isLoadingEvidence ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  {isLoadingEvidence ? 'Loading your research' : 'Start from my customer research'}
+                </Button>
+                <p className="mt-1.5 text-xs text-muted-foreground">Uses the customer, task and success measure from your ICP and PMF work.</p>
+              </div>
               {setupInput.buildEvidenceMode === 'evidence_backed' ? (
-                <div className="rounded-xl border border-info/25 bg-info/[0.07] p-4 text-left">
+                <div className="rounded-xl border border-primary/30 bg-background/80 p-4 text-left">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-info">Evidence-backed scope review</p>
-                    <Badge variant="outline" className="border-info/30 text-info">
+                    <p className="text-sm font-semibold text-white">Check the scope from your research</p>
+                    <Badge variant="outline" className="border-primary/30 text-primary">
                       {setupInput.evidenceApprovedAt ? 'Approved' : 'Approval required'}
                     </Badge>
                   </div>
@@ -751,7 +772,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                     </div>
                   </dl>
                   <p className="mt-3 text-[11px] leading-4 text-muted-foreground">
-                    You can build without approving this scope, but the artifact stays Draft and will not complete the Building milestone.
+                    You can build without approving this, but the app stays a draft and will not count toward your Building milestone.
                   </p>
                   <Button
                     type="button"
@@ -768,10 +789,11 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                     onClick={() => onSetupInputChange({ evidenceApprovedAt: new Date().toISOString() })}
                   >
                     <Check className="h-4 w-4" />
-                    {setupInput.evidenceApprovedAt ? 'Evidence scope approved' : 'Approve this MVP scope'}
+                    {setupInput.evidenceApprovedAt ? 'Scope approved' : 'Approve this scope'}
                   </Button>
                 </div>
               ) : null}
+            </div>
             </div>
           ) : (
             <div className="space-y-4">
@@ -791,13 +813,11 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                 return (
                   <div
                     key={card.id}
-                    className="rounded-3xl border border-info/14 bg-[linear-gradient(180deg,rgba(56,189,248,0.08),rgba(255,255,255,0.03))] p-4 shadow-overlay"
+                    className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-label font-semibold uppercase tracking-[0.22em] text-info/75">
-                          Build change summary
-                        </p>
+                        <p className="text-xs font-medium text-muted-foreground">What changed</p>
                         <p className="mt-1 text-sm font-medium text-white">
                           {card.updatedSections} sections updated · {card.addedComponents} components added
                         </p>
@@ -849,13 +869,13 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
         </div>
       </ScrollArea>
 
-      <div className="shrink-0 border-t border-white/6 bg-gradient-to-b from-background/20 to-background/95 px-4 pb-4 pt-3">
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-3 shadow-2xl backdrop-blur-xl transition-all duration-200 focus-within:border-info/25 focus-within:bg-white/[0.06]">
+      <div className="shrink-0 border-t border-white/6 bg-background px-4 pb-4 pt-3">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 transition-colors duration-200 focus-within:border-primary/40">
           {queuedSubmissions.length > 0 && (
             <div className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-warning/20 bg-warning/10 px-3 py-2 text-xs text-warning">
               <span>
                 {queuedSubmissions.length} message{queuedSubmissions.length > 1 ? 's' : ''} queued
-                {' '}— processing...
+{', processing...'}
               </span>
               <button
                 type="button"
@@ -873,6 +893,8 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
               variant="ghost"
               size="icon-sm"
               onClick={() => setModelsOpen(true)}
+              aria-label="Choose the AI model"
+              title="Choose the AI model"
               className="border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:text-white"
             >
               <Bot className="h-3.5 w-3.5" />
@@ -882,6 +904,8 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
               variant="ghost"
               size="icon-sm"
               onClick={() => setGithubOpen(true)}
+              aria-label="GitHub"
+              title="GitHub"
               className="border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:text-white"
             >
               <Github className="h-3.5 w-3.5" />
@@ -891,6 +915,8 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
               variant="ghost"
               size="icon-sm"
               onClick={() => setHistoryOpen(true)}
+              aria-label="Version history"
+              title="Version history"
               className="border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:text-white"
             >
               <Clock3 className="h-3.5 w-3.5" />
@@ -903,6 +929,8 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                 setInput((prev) => `${prev}${prev && !prev.endsWith(' ') ? ' ' : ''}@`);
                 requestAnimationFrame(() => textareaRef.current?.focus());
               }}
+              aria-label="Point to a part of the app"
+              title="Point to a part of the app"
               className="border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:text-white"
             >
               <AtSign className="h-3.5 w-3.5" />
@@ -919,7 +947,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
               {selectedReferenceItems.map((reference) => (
                 <span
                   key={reference.id}
-                  className="inline-flex items-center gap-2 rounded-full border border-info/20 bg-info/10 px-3 py-1 text-xs text-info"
+                  className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-xs text-primary"
                 >
                   {reference.label}
                   <button
@@ -934,8 +962,9 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
             </div>
           )}
 
-          {builderMode === 'build' && (
-            <div className="mb-3 grid grid-cols-4 gap-1.5">
+          {/* Quick edits only make sense once there is an app to edit. */}
+          {builderMode === 'build' && !isEmpty && (
+            <div className="mb-3 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
               {[
                 {
                   label: 'Add Page',
@@ -945,7 +974,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                 {
                   label: 'Add Feature',
                   prompt: 'Add a useful frontend feature with realistic state, empty states, and polished interactions.',
-                  Icon: Sparkles,
+                  Icon: Plus,
                 },
                 {
                   label: 'Fix Bug',
@@ -964,9 +993,9 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                   variant="ghost"
                   size="pill-sm"
                   onClick={() => applyActionPrompt(prompt)}
-                  className="h-8 min-w-0 rounded-lg border border-info/20 bg-white/[0.06] px-1.5 text-[10px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-all hover:border-info/45 hover:bg-info/15 hover:text-white"
+                  className="h-8 min-w-0 rounded-lg border border-white/10 bg-white/[0.04] px-1.5 text-[11px] font-medium text-white transition-colors hover:border-primary/40 hover:text-white"
                 >
-                  <Icon className="h-3 w-3 text-info" />
+                  <Icon className="h-3 w-3 text-primary" />
                   <span className="min-w-0 truncate">{label}</span>
                 </Button>
               ))}
@@ -984,7 +1013,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                   builderMode === 'chat'
                     ? 'Ask for product direction, UX decisions, or implementation advice...'
                     : isEmpty
-                    ? 'Describe your MVP idea, core flow, and visual style...'
+                    ? 'e.g. A booking page for a dog groomer where customers pick a time and leave their number...'
                     : githubRepoSession
                     ? 'Describe the repository change to implement...'
                     : 'Describe the next change to make...'
@@ -1048,7 +1077,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                 className={cn(
                   'px-3.5 text-xs font-semibold transition-all duration-150',
                   builderMode === mode
-                    ? 'bg-info text-white shadow-sm hover:bg-info hover:text-white'
+                    ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground'
                     : 'text-white/85 hover:bg-white/[0.06] hover:text-white'
                 )}
               >
@@ -1071,7 +1100,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
           <button
             type="button"
             onClick={onBuyCredits}
-            className="text-label font-medium text-info hover:text-info"
+            className="text-label font-medium text-primary hover:text-primary"
           >
             Buy credits
           </button>
@@ -1288,7 +1317,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <label className="space-y-1.5">
-                          <span className="text-label uppercase tracking-wide text-muted-foreground">
+                          <span className="text-label text-muted-foreground">
                             Repository
                           </span>
                           <select
@@ -1307,7 +1336,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                         </label>
 
                         <label className="space-y-1.5">
-                          <span className="text-label uppercase tracking-wide text-muted-foreground">
+                          <span className="text-label text-muted-foreground">
                             Branch (locked)
                           </span>
                           <select
@@ -1401,7 +1430,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                               </div>
 
                               <div className="rounded-md border border-border/50 overflow-hidden">
-                                <div className="grid grid-cols-[58px_58px_auto] gap-2 px-2 py-1 text-caption uppercase tracking-wide text-muted-foreground bg-muted/40 border-b border-border/40">
+                                <div className="grid grid-cols-[58px_58px_auto] gap-2 px-2 py-1 text-caption text-muted-foreground bg-muted/40 border-b border-border/40">
                                   <span>Old</span>
                                   <span>New</span>
                                   <span>Content</span>
@@ -1447,7 +1476,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                       <p className="text-sm font-medium">Commit / Push to main</p>
 
                       <label className="space-y-1.5 block">
-                        <span className="text-label uppercase tracking-wide text-muted-foreground">
+                        <span className="text-label text-muted-foreground">
                           Commit message
                         </span>
                         <Textarea

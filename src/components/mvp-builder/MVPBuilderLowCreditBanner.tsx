@@ -40,7 +40,7 @@ export const MVPBuilderLowCreditBanner = ({ projectName, onGetCredits }: MVPBuil
   const visible = isLow && !dismissed;
 
   const contextLine = projectName
-    ? `You're building "${projectName}" — ${totalAvailable} credits left.`
+    ? `You're building "${projectName}". ${totalAvailable} credits left.`
     : `${totalAvailable} credits left this cycle.`;
 
   const contextualProps = {

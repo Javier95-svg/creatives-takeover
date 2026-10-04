@@ -16,9 +16,9 @@ import {
   AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { getMVPModelLabel } from '@/data/mvpModels';
 import { cn } from '@/lib/utils';
 import type { MVPBuilderIntegrationsHealth, MVPIntegrationStatus } from '@/lib/mvp-builder/integrations';
+import type { MvpNextStep } from '@/lib/mvp-builder/nextStep';
 import type { MVPProjectRecord } from '@/hooks/useMVPBuilder';
 
 interface MVPBuilderHeaderProps {
@@ -36,6 +36,10 @@ interface MVPBuilderHeaderProps {
   hasUnsavedChanges: boolean;
   isSavingProject: boolean;
   lastSavedAt: string | null;
+  /** Why the last save failed; cleared when a save succeeds. */
+  saveError: string | null;
+  onRetrySave: () => void;
+  nextStep: MvpNextStep;
   hasActiveProject: boolean;
   onBuyCredits: () => void;
 }
@@ -53,7 +57,6 @@ function formatRelativeTime(iso: string): string {
 export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
   projectName,
   setProjectName,
-  selectedModels,
   creditsAvailable,
   integrations,
   onNewProject,
@@ -65,6 +68,9 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
   hasUnsavedChanges,
   isSavingProject,
   lastSavedAt,
+  saveError,
+  onRetrySave,
+  nextStep,
   hasActiveProject,
   onBuyCredits,
 }) => {
@@ -75,8 +81,6 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
   const [deleteTarget, setDeleteTarget] = useState<MVPProjectRecord | null>(null);
   const [isDeletingProject, setIsDeletingProject] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const primaryModelLabel = getMVPModelLabel(selectedModels[0]) ?? 'AI model';
-  const additionalModels = Math.max(selectedModels.length - 1, 0);
   const deleteTargetTitle = deleteTarget?.title?.trim() || 'Untitled Project';
   const deletingCurrentProject = deleteTarget?.id === currentProjectId;
   const deletingPublishedProject = Boolean(deleteTarget?.deployment_url || deleteTarget?.subdomain_slug);
@@ -147,27 +151,38 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
   ) => {
     const healthy = status === 'connected';
     const needsAuth = status === 'expired' || status === 'error';
+    if (!healthy && !needsAuth) return null;
     return (
       <span
         className={cn(
           'hidden lg:flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-label font-medium',
-          healthy && 'border-success/20 bg-success/10 text-success',
-          needsAuth && 'border-warning/25 bg-warning/10 text-warning',
-          !healthy && !needsAuth && 'border-white/10 bg-white/5 text-muted-foreground'
+          healthy && 'border-white/10 text-muted-foreground',
+          needsAuth && 'border-warning/25 bg-warning/10 text-warning'
         )}
       >
         <Icon className="h-3 w-3" />
-        {label}: {healthy ? 'live' : needsAuth ? 'reauth' : 'setup'}
+        {label}{needsAuth ? ': reconnect' : ''}
       </span>
     );
   };
 
   const saveIndicator = () => {
+    if (saveError && !isSavingProject) {
+      return (
+        <span className="flex items-center gap-1.5 text-label" role="status" title={saveError}>
+          <AlertCircle className="h-3 w-3 text-destructive" aria-hidden="true" />
+          <span className="text-destructive">Not saved</span>
+          <button type="button" onClick={onRetrySave} className="font-medium text-primary underline-offset-4 hover:underline">
+            Retry
+          </button>
+        </span>
+      );
+    }
     if (isSavingProject) {
       return (
         <span className="hidden sm:flex items-center gap-1 text-label text-muted-foreground">
           <Loader2 className="h-3 w-3 animate-spin" />
-          Saving…
+          Saving
         </span>
       );
     }
@@ -177,15 +192,13 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
           onClick={onSaveProject}
           className="hidden sm:flex items-center gap-1 text-label text-warning hover:text-warning transition-colors"
         >
-          <AlertCircle className="h-3 w-3" />
-          Unsaved
+          Unsaved changes
         </button>
       );
     }
     if (lastSavedAt) {
       return (
         <span className="hidden sm:flex items-center gap-1 text-label text-muted-foreground">
-          <Check className="h-3 w-3 text-success" />
           Saved {formatRelativeTime(lastSavedAt)}
         </span>
       );
@@ -196,11 +209,8 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
   return (
     <>
       <header
-        className="relative flex h-13 items-center justify-between px-5 col-span-2 shrink-0 bg-surface-deep/95 backdrop-blur-2xl border-b border-white/8 overflow-hidden"
+        className="relative flex h-13 items-center justify-between gap-3 px-5 col-span-2 shrink-0 bg-surface-deep border-b border-white/8 overflow-hidden"
       >
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="h-14 w-[34rem] rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.16),transparent_65%)] blur-3xl" />
-        </div>
 
         {/* Left — back + projects */}
         <div className="relative flex items-center gap-2">
@@ -254,7 +264,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
           ) : (
             <button
               onClick={() => { setDraft(projectName); setIsEditing(true); }}
-              className="group flex items-center gap-1.5 bg-gradient-to-r from-white to-slate-300 bg-clip-text text-sm font-semibold text-transparent transition-opacity hover:opacity-80"
+              className="group flex items-center gap-1.5 text-sm font-semibold text-white transition-opacity hover:opacity-80"
             >
               {projectName}
               <Pencil className="h-3 w-3 text-white opacity-0 transition-opacity group-hover:opacity-40" />
@@ -265,14 +275,13 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
 
         {/* Right — status chips + actions */}
         <div className="relative flex items-center gap-2">
+          {/* The one thing to do next; the hint explains it on hover. */}
+          <span className="hidden max-w-[22rem] truncate text-xs text-muted-foreground xl:inline" title={nextStep.hint}>
+            Next: <span className="font-medium text-primary">{nextStep.label}</span>
+          </span>
           {renderStatusChip('GitHub', integrations.github.status, Github)}
           {renderStatusChip('Supabase', integrations.supabase.status, Database)}
-          <span className="hidden md:flex items-center gap-1.5 rounded-full border border-success/20 bg-success/10 px-2 py-0.5 text-label font-medium text-success">
-            {primaryModelLabel}
-            {additionalModels > 0 ? ` +${additionalModels}` : ''}
-          </span>
-          <span className="hidden sm:flex items-center gap-1.5 rounded-full border border-info/20 bg-info/10 px-2.5 py-0.5 text-xs font-medium text-info backdrop-blur-sm">
-            <span className="h-1.5 w-1.5 rounded-full bg-info shrink-0" />
+          <span className="hidden sm:inline text-xs text-muted-foreground">
             {creditsAvailable} credits
           </span>
           {creditsAvailable === 0 && (
@@ -313,7 +322,6 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
           </Button>
         </div>
       </header>
-      <div className="h-px shrink-0 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
       {/* Projects drawer */}
       <Sheet open={projectsOpen} onOpenChange={setProjectsOpen}>
@@ -321,7 +329,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
           <SheetHeader className="px-5 pt-5 pb-4 border-b border-white/8">
             <SheetTitle className="text-white text-sm font-semibold">Your Projects</SheetTitle>
             <SheetDescription className="text-muted-foreground text-xs">
-              Click a project to load it. Your current project auto-saves every 30 seconds.
+              Click a project to open it. Your work saves a few seconds after each change.
             </SheetDescription>
           </SheetHeader>
           <ScrollArea className="flex-1 h-[calc(100vh-100px)]">
@@ -390,7 +398,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white">Start a new project?</AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
-              Your current project is auto-saved. It will appear in your Projects list and you can come back to it any time.
+              Your current project stays in your Projects list, so you can come back to it any time.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

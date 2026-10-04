@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import ctBrandLogo from '@/assets/ct-brand-logo.webp';
+import MVPBlueprintWallpaper, { MVPBlueprintSketch } from '@/components/wallpapers/MVPBlueprintWallpaper';
 import { MVPBuilderDomainPanel } from './MVPBuilderDomainPanel';
 import { MVPBuilderPublishPanel } from './MVPBuilderPublishPanel';
 import { MVPBuilderCodePanel } from './MVPBuilderCodePanel';
@@ -530,32 +530,14 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                 'flex flex-1 min-h-0 items-center justify-center overflow-hidden',
                 viewMode === 'mobile' ? 'bg-muted/20 p-4' : 'bg-muted/10 p-0'
               )}
-              style={
-                !html
-                  ? {
-                      backgroundImage:
-                        'radial-gradient(circle, hsl(var(--border)/0.6) 1px, transparent 1px)',
-                      backgroundSize: '24px 24px',
-                    }
-                  : undefined
-              }
             >
             {!html && !isGenerating && projectFiles.length === 0 && (
-              <div className="select-none px-8 py-12 text-center">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/20 to-primary/5 shadow-[0_0_28px_rgba(56,189,248,0.18)]">
-                  <img
-                    src={ctBrandLogo}
-                    alt="Creatives Takeover"
-                    className="h-12 w-12 object-contain drop-shadow-[0_0_10px_rgba(45,212,191,0.28)]"
-                    width={48}
-                    height={48}
-                    decoding="async"
-                  />
-                </div>
-                <div className="mt-4 space-y-1">
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Your product will appear here
-                  </p>
+              <div className="relative flex h-full w-full select-none items-center justify-center px-8 py-12 text-center">
+                <MVPBlueprintWallpaper />
+                <div className="relative">
+                  <MVPBlueprintSketch className="mx-auto h-36 w-52" />
+                  <p className="mt-4 text-sm font-medium text-white">Your app will appear here</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Describe it in the chat and the preview updates as it builds.</p>
                 </div>
               </div>
             )}
@@ -605,7 +587,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
 
             {(html || projectFramework === 'react-vite') && (
               projectFramework === 'react-vite' ? (
-                <div className="flex h-full w-full flex-col bg-slate-950 text-muted-foreground">
+                <div className="flex h-full w-full flex-col bg-black text-muted-foreground">
                   {webContainerState.previewUrl ? (
                     <iframe
                       key={`${previewKey}-${webContainerState.previewUrl}`}

@@ -200,7 +200,7 @@ export const MVPBuilderPublishPanel: React.FC<MVPBuilderPublishPanelProps> = ({
         </div>
         <div className="mt-3 space-y-2">
           <label className="block text-caption font-medium text-muted-foreground">
-            SEO title (10–60 characters)
+            SEO title (10 to 60 characters)
             <input
               value={seoTitle}
               onChange={(event) => setSeoTitle(event.target.value)}
@@ -209,7 +209,7 @@ export const MVPBuilderPublishPanel: React.FC<MVPBuilderPublishPanelProps> = ({
             />
           </label>
           <label className="block text-caption font-medium text-muted-foreground">
-            SEO description (50–160 characters)
+            SEO description (50 to 160 characters)
             <textarea
               value={seoDescription}
               onChange={(event) => setSeoDescription(event.target.value)}

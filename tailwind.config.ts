@@ -165,6 +165,12 @@ export default {
 					foreground: 'hsl(var(--tool-demo-foreground) / <alpha-value>)',
 					subtle: 'hsl(var(--tool-demo-subtle))',
 				},
+				// MVP Builder identity (see .tool-theme-mvp in index.css)
+				'tool-mvp': {
+					DEFAULT: 'hsl(var(--tool-mvp) / <alpha-value>)',
+					foreground: 'hsl(var(--tool-mvp-foreground) / <alpha-value>)',
+					subtle: 'hsl(var(--tool-mvp-subtle))',
+				},
 				// Violet accent (marketplace provider surfaces)
 				'accent-violet': 'hsl(var(--accent-violet) / <alpha-value>)',
 				// Deep chrome surface for the MVP builder dark sub-theme

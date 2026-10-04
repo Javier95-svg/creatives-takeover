@@ -12,6 +12,7 @@ import { MessageSquare, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { getMvpNextStep } from '@/lib/mvp-builder/nextStep';
 
 type MobileTab = 'chat' | 'preview';
 
@@ -95,9 +96,20 @@ export const MVPBuilder: React.FC = () => {
     hasUnsavedChanges,
     isSavingProject,
     lastSavedAt,
+    saveError,
+    retrySave,
+    changedSincePublish,
   } = useMVPBuilder();
 
   const [mobileTab, setMobileTab] = useState<MobileTab>('chat');
+  const nextStep = getMvpNextStep({
+    hasFiles: projectFiles.length > 0,
+    isGenerating,
+    // React/Vite projects preview in a WebContainer, not the static preview.
+    previewErrorCount: projectFramework === 'react-vite' ? 0 : previewState.errors?.length ?? 0,
+    isPublished: Boolean(deploymentUrl),
+    changedSincePublish,
+  });
   const [topUpsOpen, setTopUpsOpen] = useState(false);
   const isMobile = useIsMobile();
   // Bounded auto-fix: each distinct runtime error gets at most two automatic
@@ -215,7 +227,7 @@ export const MVPBuilder: React.FC = () => {
   );
 
   return (
-    <div className="dark mvp-surface h-screen w-screen flex flex-col overflow-hidden bg-background">
+    <div className="dark mvp-surface tool-theme-mvp h-screen w-screen flex flex-col overflow-hidden bg-background">
       <MVPBuilderHeader
         projectName={projectName}
         setProjectName={setProjectName}
@@ -231,6 +243,9 @@ export const MVPBuilder: React.FC = () => {
         hasUnsavedChanges={hasUnsavedChanges}
         isSavingProject={isSavingProject}
         lastSavedAt={lastSavedAt}
+        saveError={saveError}
+        onRetrySave={() => void retrySave()}
+        nextStep={nextStep}
         hasActiveProject={projectFiles.length > 0 || messages.length > 0}
         onBuyCredits={() => setTopUpsOpen(true)}
       />
@@ -264,7 +279,7 @@ export const MVPBuilder: React.FC = () => {
               className={cn(
                 'gap-1.5 px-4 text-xs font-medium transition-all duration-200',
                 mobileTab === 'chat'
-                  ? 'bg-white text-foreground shadow-sm hover:bg-white hover:text-foreground'
+                  ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground'
                   : 'text-muted-foreground hover:bg-transparent hover:text-white'
               )}
               onClick={() => setMobileTab('chat')}
@@ -278,7 +293,7 @@ export const MVPBuilder: React.FC = () => {
               className={cn(
                 'gap-1.5 px-4 text-xs font-medium transition-all duration-200',
                 mobileTab === 'preview'
-                  ? 'bg-white text-foreground shadow-sm hover:bg-white hover:text-foreground'
+                  ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground'
                   : 'text-muted-foreground hover:bg-transparent hover:text-white'
               )}
               onClick={() => setMobileTab('preview')}
@@ -296,7 +311,7 @@ export const MVPBuilder: React.FC = () => {
                 {chatPanel}
               </div>
 
-              <div className="hidden md:block w-px bg-gradient-to-b from-transparent via-white/10 to-transparent self-stretch" />
+              <div className="hidden md:block w-px bg-white/10 self-stretch" />
 
               <div className="min-h-0">{previewPanel}</div>
             </>

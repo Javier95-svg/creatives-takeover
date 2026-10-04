@@ -342,6 +342,16 @@ type FunctionError = Error & { status?: number };
 const DEFAULT_PROJECT_NAME = 'Untitled Project';
 const MVP_PROJECTS_TABLE = 'mvp_projects';
 
+/** Cheap change check for "edits not published yet": path, length and a rolling hash per file. */
+function fingerprintFiles(files: Array<{ path: string; content: string }>): string {
+  let hash = 0;
+  for (const file of files) {
+    const text = `${file.path}:${file.content.length}:${file.content}`;
+    for (let i = 0; i < text.length; i += 1) hash = (hash * 31 + text.charCodeAt(i)) | 0;
+  }
+  return `${files.length}:${hash}`;
+}
+
 const MVP_BUILDER_HUMAN_ERROR_MESSAGES: Record<string, string> = {
   VALIDATION_FAILED: 'I understood the request, but the code output was malformed. I restored your credits. Try again and I will simplify the edit.',
   AI_ERROR: 'The model could not respond right now. I restored your credits. Please try again.',
@@ -1000,6 +1010,12 @@ export function useMVPBuilder() {
   const [projectId, setProjectId] = useState<string>(() => crypto.randomUUID());
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  // A failed autosave used to be silent: the header kept saying "Unsaved" with
+  // no reason and no retry. The error is kept until a save succeeds.
+  const [saveError, setSaveError] = useState<string | null>(null);
+  // Fingerprint of the files at the last publish in this session, so the header
+  // can say when edits are not live yet.
+  const [publishedFingerprint, setPublishedFingerprint] = useState<string | null>(null);
   const [isSavingProject, setIsSavingProject] = useState(false);
   const [savedProjects, setSavedProjects] = useState<MVPProjectRecord[]>([]);
   const [isProjectsLoading, setIsProjectsLoading] = useState(false);
@@ -1854,6 +1870,7 @@ export function useMVPBuilder() {
         setProjectId(savedRecord.id);
         setLastSavedAt(savedRecord.updated_at);
         setHasUnsavedChanges(false);
+        setSaveError(null);
         setSavedProjects((prev) =>
           [savedRecord, ...prev.filter((project) => project.id !== savedRecord.id)].sort(
             (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
@@ -1866,6 +1883,7 @@ export function useMVPBuilder() {
         return true;
       } catch (error) {
         console.error('Failed to save MVP project:', error);
+        setSaveError(error instanceof Error && error.message ? error.message : 'Could not save.');
         if (!options?.silent) {
           toast.error('Unable to save this project right now.');
         }
@@ -1962,13 +1980,25 @@ export function useMVPBuilder() {
   useEffect(() => {
     if (!user) return;
 
+    // Save a few seconds after a change; after a failure, wait longer before
+    // trying again on its own (Retry in the header saves straight away).
     const intervalId = window.setInterval(() => {
       if (!hasUnsavedChanges || isSavingProject) return;
       void saveProject({ silent: true });
-    }, 30000);
+    }, saveError ? 30000 : 5000);
 
     return () => window.clearInterval(intervalId);
-  }, [hasUnsavedChanges, isSavingProject, saveProject, user]);
+  }, [hasUnsavedChanges, isSavingProject, saveError, saveProject, user]);
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [hasUnsavedChanges]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -3695,6 +3725,7 @@ export function useMVPBuilder() {
       }
 
       setDeploymentUrl(data.url);
+      setPublishedFingerprint(fingerprintFiles(projectFiles));
       trackMVPDeployed({ slug: typeof data.slug === 'string' ? data.slug : undefined });
       const hasEvidenceManifest = (setupInput.evidenceManifest?.sources.length ?? 0) > 0;
       const evidenceApproved = hasEvidenceManifest && Boolean(setupInput.evidenceApprovedAt);
@@ -3838,6 +3869,11 @@ export function useMVPBuilder() {
   const saveStatus =
     isGenerating ? 'generating' : hasUnsavedChanges ? 'unsaved' : lastSavedAt ? 'saved' : 'idle';
 
+  const changedSincePublish = useMemo(
+    () => Boolean(deploymentUrl && publishedFingerprint && fingerprintFiles(projectFiles) !== publishedFingerprint),
+    [deploymentUrl, projectFiles, publishedFingerprint],
+  );
+
   return {
     messages,
     projectFiles,
@@ -3858,6 +3894,9 @@ export function useMVPBuilder() {
     isGenerating,
     isSavingProject,
     saveStatus,
+    saveError,
+    retrySave: () => saveProject({ silent: false }),
+    changedSincePublish,
     hasUnsavedChanges,
     projectName,
     projectId,

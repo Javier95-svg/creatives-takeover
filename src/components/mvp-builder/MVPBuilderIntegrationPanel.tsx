@@ -104,7 +104,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
       <div className="space-y-1">
         <h2 className="text-sm font-semibold text-white">Integrations</h2>
         <p className="text-xs leading-relaxed text-muted-foreground">
-          Connect GitHub to push code to a repo and Supabase to manage your backend. Both are optional — the builder works without them.
+          Connect GitHub to push code to a repo and Supabase to manage your backend. Both are optional. The builder works without them.
         </p>
       </div>
 
@@ -158,7 +158,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
           <div className="space-y-3">
             <div className="flex items-end gap-2">
               <label className="flex-1 space-y-1.5">
-                <span className="text-label font-medium uppercase tracking-wider text-muted-foreground">Repository</span>
+                <span className="text-label font-mediumr text-muted-foreground">Repository</span>
                 <select
                   value={selectedRepo}
                   onChange={(e) => setSelectedRepo(e.target.value)}
@@ -184,7 +184,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
             </div>
             {selectedRepoMeta?.defaultBranch && selectedRepoMeta.defaultBranch !== 'main' && (
               <p className="text-label text-warning">
-                Default branch is <code>{selectedRepoMeta.defaultBranch}</code> — import will use main.
+                Default branch is <code>{selectedRepoMeta.defaultBranch}</code>. Import will use main.
               </p>
             )}
             <Button
@@ -257,7 +257,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
         ) : (
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <label className="text-label font-medium uppercase tracking-wider text-muted-foreground">
+              <label className="text-label font-mediumr text-muted-foreground">
                 Project URL
               </label>
               <input
@@ -270,7 +270,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-label font-medium uppercase tracking-wider text-muted-foreground">
+              <label className="text-label font-mediumr text-muted-foreground">
                 Service Role Key
               </label>
               <div className="relative">
