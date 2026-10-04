@@ -10,6 +10,7 @@ import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
 import { Button } from '@/components/ui/button';
 import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
 import { ToolPageShell } from '@/components/tool-shell/ToolPageShell';
+import PMFLabWallpaper, { PMFLabChart } from '@/components/wallpapers/PMFLabWallpaper';
 import { NextStepCard } from '@/components/tool-shell/NextStepCard';
 import { ToolStepper, type ToolStep } from '@/components/tool-shell/ToolStepper';
 import { PMFConversationsStep, type PMFIcpInterviewPlanItem } from '@/components/pmf/PMFConversationsStep';
@@ -565,6 +566,9 @@ export default function PMFLabPage() {
         <ToolPageShell
           title="PMF Lab"
           purpose={PURPOSE}
+          theme="pmf"
+          wallpaper={<PMFLabWallpaper />}
+          headerArt={<PMFLabChart />}
           context={user && hasAccess && validationContextId ? contextLine : undefined}
           actions={caseSelector}
         >

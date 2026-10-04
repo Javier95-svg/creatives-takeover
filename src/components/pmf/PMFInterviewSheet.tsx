@@ -34,7 +34,7 @@ export function PMFInterviewSheet({ open, interview, isNew, assumptions, saving,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
+      <DialogContent className="tool-theme-pmf max-h-[90vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{isNew ? 'Add a conversation' : 'Edit conversation'}</DialogTitle>
           <DialogDescription>Write down what this person told you, in their words where you can.</DialogDescription>

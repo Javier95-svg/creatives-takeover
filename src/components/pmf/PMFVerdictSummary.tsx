@@ -65,7 +65,7 @@ export function PMFVerdictSummary({
       <div className="rounded-xl border border-border/60 bg-card p-5 sm:p-6">
         <p className="text-sm text-muted-foreground">Your verdict</p>
         <div className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-          <h2 className="font-space-grotesk text-3xl font-semibold text-foreground">{formatPmfDecision(decision)}</h2>
+          <h2 className="font-space-grotesk text-3xl font-semibold text-primary">{formatPmfDecision(decision)}</h2>
           <span className="text-lg text-muted-foreground">{Math.round(analysis.overallScore)} / 100</span>
         </div>
         <p className="mt-2 text-base text-foreground">{DECISION_MEANING[decision]}</p>

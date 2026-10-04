@@ -141,6 +141,12 @@ export default {
 					hover: 'hsl(var(--accent-teal-hover) / <alpha-value>)',
 					deep: 'hsl(var(--accent-teal-deep) / <alpha-value>)',
 				},
+				// PMF Lab identity (see .tool-theme-pmf in index.css)
+				'tool-pmf': {
+					DEFAULT: 'hsl(var(--tool-pmf) / <alpha-value>)',
+					foreground: 'hsl(var(--tool-pmf-foreground) / <alpha-value>)',
+					subtle: 'hsl(var(--tool-pmf-subtle))',
+				},
 				// Violet accent (marketplace provider surfaces)
 				'accent-violet': 'hsl(var(--accent-violet) / <alpha-value>)',
 				// Deep chrome surface for the MVP builder dark sub-theme

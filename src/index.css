@@ -90,6 +90,11 @@ All colors MUST be HSL.
     --accent-teal-deep: 185.9 70.8% 28.2%; /* #15717b */
     /* Violet accent (marketplace provider surfaces) */
     --accent-violet: 262 70% 55%;
+    /* PMF Lab identity: a plum violet, distinct from the brand blue and the
+       marketplace violet. Applied through .tool-theme-pmf (see below). */
+    --tool-pmf: 271 56% 48%;
+    --tool-pmf-foreground: 0 0% 100%;
+    --tool-pmf-subtle: 271 56% 48% / 0.1;
     
     /* Blue variants */
     --blue-primary: 217 91% 60%; /* #3B82F6 */
@@ -329,6 +334,10 @@ All colors MUST be HSL.
     --accent-teal-deep: 185.9 70.8% 28.2%; /* #15717b */
     /* Violet accent — brighter for dark surfaces */
     --accent-violet: 262 83% 72%;
+    /* PMF Lab identity: lifted for dark surfaces, with dark text on fills. */
+    --tool-pmf: 271 80% 74%;
+    --tool-pmf-foreground: 271 45% 14%;
+    --tool-pmf-subtle: 271 80% 74% / 0.14;
     
     /* RGB Color Variants for Dark Mode (brighter for visibility) */
     --blue-primary: 217 92% 65%;
@@ -4762,4 +4771,13 @@ img {
 .journey-action-card:active {
   transform: translateY(-1px);
   box-shadow: 0 14px 30px -26px hsl(var(--foreground) / 0.34);
+}
+
+/* Per-tool identity. Wrapping a tool screen (and its dialogs) in .tool-theme-pmf
+   remaps primary to the PMF Lab colour, so buttons, focus rings, checkboxes and
+   links inside it carry the tool's colour without per-component overrides. */
+.tool-theme-pmf {
+  --primary: var(--tool-pmf);
+  --primary-foreground: var(--tool-pmf-foreground);
+  --ring: var(--tool-pmf);
 }
