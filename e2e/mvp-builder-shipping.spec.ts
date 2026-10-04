@@ -21,14 +21,26 @@ for(const viewport of [{width:1440,height:1000},{width:390,height:844}])test('bu
  await page.getByText('App details and recovery',{exact:true}).click();
  await expect(page.getByLabel('Build mode')).toHaveValue('managed');
  await expect(page.getByRole('button',{name:'Review price and build'})).toBeEnabled();
+ await page.getByLabel('Who uses it?').fill('');
+ await expect(page.getByText('Tell us who will use this app.',{exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Review price and build'})).toBeDisabled();
+ await page.getByLabel('Who uses it?').fill('Studio customers');
+ await expect(page.getByRole('button',{name:'Review price and build'})).toBeEnabled();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.getByRole('button',{name:'Review price and build'}).click();
  await expect(page.getByRole('dialog').getByText('Review this build',{exact:true})).toBeVisible();
  await expect(page.getByRole('dialog')).toContainText('two automatic outcome repair attempts');
  rejectSaves=true;
  await page.getByRole('button',{name:'Confirm and build'}).click();
- await expect(page.getByText('Save failed. Nothing was built.',{exact:true}).first()).toBeVisible();
+ await expect(page.getByText('Your latest changes have not been saved.',{exact:true})).toBeVisible();
+ await page.getByText('Failure details',{exact:true}).click();
+ await expect(page.getByText('Save failed. Your draft is still open. Retry saving before leaving.',{exact:true})).toBeVisible();
  expect(setupRequests).toBe(0);expect(buildRequests).toBe(0);
  await expect(page.getByRole('button',{name:'Retry save',exact:true}).first()).toBeVisible();
+ rejectSaves=false;
+ await page.getByRole('button',{name:'Retry save',exact:true}).first().click();
+ await expect(page.getByRole('button',{name:'Review price and build'})).toBeEnabled();
+ await expect(page.getByText('Your latest changes have not been saved.',{exact:true})).toHaveCount(0);
+ expect(setupRequests).toBe(0);expect(buildRequests).toBe(0);
  if(viewport.width<768){await page.getByRole('button',{name:'Preview',exact:true}).first().click();await page.getByRole('button',{name:'Chat',exact:true}).first().click();await expect(page.getByText('Your build plan',{exact:true})).toBeVisible();}
 });

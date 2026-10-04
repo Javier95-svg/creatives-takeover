@@ -207,9 +207,9 @@ export const MVPBuilder: React.FC = () => {
   const safeLoad=async(id:string)=>{if(busy)return;if(hasUnsavedChanges&&!await saveProject({silent:true}))return;await loadProject(id,true);};
   const safeNew=async()=>{if(busy)return;if(hasUnsavedChanges&&!await saveProject({silent:true}))return;resetProject();};
   const controls=<MVPBuilderShipControls setup={setupInput} onChange={setSetupInput} hasFiles={!!projectFiles.length} busy={busy} progress={isDeploying?'Publishing and verifying your address...':isGenerating?'Building...':preparing?managedStage:tests.testing?tests.progress:hasUnsavedChanges||tests.dirty?'Changes need a fresh check':tests.testRunId?(deploymentUrl?'Live release available; draft ready to publish':'Ready to publish'):tests.result?.status==='failed'?tests.progress:deploymentUrl?'Live release available; check this draft before publishing an update':''}
-    activity={activity} saveError={saveError} test={tests.result} dirty={tests.dirty} canPublish={!!tests.testRunId} workerAvailable={tests.available}
+    deploymentUrl={deploymentUrl} checkFailure={tests.failure} onRefreshAvailability={()=>void tests.refreshAvailability()} activity={activity} saveError={saveError} test={tests.result} dirty={tests.dirty} canPublish={!!tests.testRunId} workerAvailable={tests.available}
     onBuild={()=>void quotedSend(setupInput.customPrompt||setupInput.buildBrief?.idea||'')} onCheck={()=>void tests.run()} onPublish={publishTested}
-    onRetrySave={()=>void saveProject({silent:false})} repairChanges={tests.repairChanges} managedStage={managedStage} managedFailure={managedFailure}
+    onRetrySave={()=>void (async()=>{if(await saveProject({silent:false}))setManagedFailure('');})()} repairChanges={tests.repairChanges} managedStage={managedStage} managedFailure={managedFailure}
     onRestore={()=>void (async()=>{if(!await saveProject({silent:true}))return;const {error}=await (supabase as any).rpc('mvp_edit_checkpoint',{p_project_id:projectId,p_restore:true});if(error)toast.error(error.message);else await loadProject(projectId,true);})()}/>;
 
   const [mobileTab, setMobileTab] = useState<MobileTab>('chat');

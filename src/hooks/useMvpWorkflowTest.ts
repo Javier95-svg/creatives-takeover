@@ -8,6 +8,14 @@ export function useMvpWorkflowTest(projectId:string, draft:string, save:()=>Prom
   const [available,setAvailable]=useState<boolean|null>(null);
   const [profiles,setProfiles]=useState<string[]>([]);
   const [progress,setProgress]=useState('');
+  const [failure,setFailure]=useState('');
+  const refreshAvailability=async()=>{
+    try {
+      const {data,error}=await supabase.functions.invoke('mvp-workflow-tests',{body:{action:'status'}});
+      setAvailable(!error&&data?.available===true);
+      setProfiles(Array.isArray(data?.profiles)?data.profiles:[]);
+    } catch {setAvailable(false);}
+  };
   const [repairChanges,setRepairChanges]=useState<string[]>([]);
   const liveDraft=useRef(draft);liveDraft.current=draft;
   useEffect(()=>{
@@ -24,7 +32,7 @@ export function useMvpWorkflowTest(projectId:string, draft:string, save:()=>Prom
   },[]);
   const testedDraft=useRef('');
   const active=useRef(0);
-  useEffect(()=>{active.current++;setResult(null);setTesting(false);setRepairChanges([]);setProgress('');},[projectId]);
+  useEffect(()=>{active.current++;setResult(null);setTesting(false);setRepairChanges([]);setProgress('');setFailure('');},[projectId]);
   useEffect(()=>()=>{active.current++;},[]);
   // A finished result survives reopening. A local edit always invalidates it.
   useEffect(()=>{
@@ -41,9 +49,9 @@ export function useMvpWorkflowTest(projectId:string, draft:string, save:()=>Prom
   },[projectId,draft,unsaved,testing,fallback]);
   const run=async()=>{
     if (testing || fallback) return;
-    if(available!==true){toast.error('Workflow testing is temporarily unavailable. Your saved app is safe.');return;}
+    if(available!==true){setFailure('Launch checks are unavailable. Check availability below, then try again.');return;}
     const request=++active.current;
-    setTesting(true);setProgress('Saving and checking your app...');setRepairChanges([]);
+    setTesting(true);setResult(null);setFailure('');setProgress('Saving and checking your app...');setRepairChanges([]);
     try {
       if (!await save()) throw new Error('Save failed. Your workflow was not tested.');
       if(active.current!==request)return;
@@ -70,7 +78,7 @@ export function useMvpWorkflowTest(projectId:string, draft:string, save:()=>Prom
           setProgress('Repairing the failed task. No additional credits will be charged...');
           const {data:fixed,error:fixError}=await supabase.functions.invoke('mvp-workflow-tests',{body:{action:'repair',testId}});
           if(active.current!==request)return;
-          if(fixError||!fixed?.repaired){let message=fixed?.error;if(!message&&fixError?.context instanceof Response){try{message=(await fixError.context.json()).error;}catch{}}setProgress(message||'Automatic repair could not finish. Your previous version is preserved.');return;}
+          if(fixError||!fixed?.repaired){let message=fixed?.error;if(!message&&fixError?.context instanceof Response){try{message=(await fixError.context.json()).error;}catch{}}setFailure(message||'Automatic repair could not finish. Your previous version is preserved.');return;}
           repairs++;setRepairChanges(previous=>Array.from(new Set([...previous,...fixed.changedFiles])));
           if(await onRepaired()===false)throw Error('The repair is saved, but your draft could not reopen. Reopen this project before checking again.');
           await new Promise(resolve=>setTimeout(resolve,0));
@@ -84,9 +92,9 @@ export function useMvpWorkflowTest(projectId:string, draft:string, save:()=>Prom
         await new Promise(resolve=>setTimeout(resolve,2500));
       }
       if(active.current===request) throw new Error('The test took too long. Your saved draft is safe; try again later.');
-    } catch(e){if(active.current===request) toast.error(e instanceof Error?e.message:'Test failed');}
+    } catch(e){if(active.current===request){const message=e instanceof Error?e.message:'Checks could not finish. Try again.';setFailure(message);setProgress('Checks need attention.');toast.error(message);}}
     finally {if(active.current===request)setTesting(false);}
   };
   const dirty=!!result && (unsaved||testedDraft.current!==draft);
-  return {run,result,testing,dirty,available,profiles,progress,repairChanges,testRunId:!dirty && !fallback && !testing && result?.status==='passed'?result.id:null};
+  return {run,result,testing,dirty,available,profiles,progress,failure,refreshAvailability,repairChanges,testRunId:!dirty && !fallback && !testing && result?.status==='passed'?result.id:null};
 }
