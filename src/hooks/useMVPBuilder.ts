@@ -341,6 +341,8 @@ type FunctionError = Error & { status?: number };
 
 const DEFAULT_PROJECT_NAME = 'Untitled Project';
 const MVP_PROJECTS_TABLE = 'mvp_projects';
+const isMissingFunction = (error: { code?: string; message?: string } | null) =>
+  Boolean(error && (error.code === 'PGRST202' || error.code === '42883' || /could not find the function/i.test(error.message ?? '')));
 
 const MVP_BUILDER_HUMAN_ERROR_MESSAGES: Record<string, string> = {
   VALIDATION_FAILED: 'I understood the request, but the code output was malformed. I restored your credits. Try again and I will simplify the edit.',
@@ -1827,7 +1829,16 @@ export function useMVPBuilder() {
 
       setIsSavingProject(true);
       try {
-        const { data, error } = await (supabase as any).rpc('save_mvp_project', {p_project:payload,p_expected_updated_at:lastSavedAt});
+        let { data, error } = await (supabase as any).rpc('save_mvp_project', {p_project:payload,p_expected_updated_at:lastSavedAt});
+        // save_mvp_project ships in 20261004130000_mvp_shipping_contract.sql. Until
+        // that migration is applied, save the way we did before it, or every save fails.
+        if (isMissingFunction(error)) {
+          ({ data, error } = await (supabase as any)
+            .from(MVP_PROJECTS_TABLE)
+            .upsert(payload)
+            .select('id, title, prompt_history, generated_code, project_type, template, project_files, versions, deployment_url, deployment_slug, subdomain_slug, deployment_status, github_connection_id, supabase_connection_id, metadata, created_at, updated_at')
+            .single());
+        }
 
         if (error) throw error;
 
