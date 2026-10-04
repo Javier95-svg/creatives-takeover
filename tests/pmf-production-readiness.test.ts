@@ -4,16 +4,13 @@ import { readFileSync } from 'node:fs';
 
 const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('pmf lab opens with an evidence hub before the scoring form', () => {
+test('pmf lab opens on one next step, then three steps in order', () => {
   const page = read('src/pages/PMFLabPage.tsx');
 
-  assert.match(page, /PMFEvidenceHub/);
-  assert.match(
-    page,
-    /<PMFEvidenceHub[\s\S]*<PMFEvidenceChecklist[\s\S]*<PMFSeanEllisTest[\s\S]*<PMFEvidenceForm/,
-  );
-  assert.match(page, /Evidence-first PMF preview/);
-  assert.doesNotMatch(page, /<PMFEvidenceForm[\s\S]*onSubmit=\{\(\) => \{\}\}/);
+  assert.match(page, /<NextStepCard[\s\S]*<ToolStepper[\s\S]*<PMFConversationsStep[\s\S]*<PMFSurveyStep[\s\S]*<PMFVerdictStep/);
+  assert.match(page, /getPmfNextStep\(progress\)/);
+  assert.match(page, /Three steps to a clear answer/);
+  assert.match(page, /onSubmit=\{\(answers\) => runAnalysis\(answers/);
 });
 
 test('pmf funnel analytics events are wired on client actions', () => {

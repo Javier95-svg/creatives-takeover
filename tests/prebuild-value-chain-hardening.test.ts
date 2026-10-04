@@ -50,10 +50,13 @@ test('Demo completion action follows the selected validation goal', () => {
 
 test('PMF refuses implicit latest-record mixing and persists interview CRUD by context', () => {
   const page = read('src/pages/PMFLabPage.tsx');
-  const form = read('src/components/pmf/PMFEvidenceForm.tsx');
+  const form = read('src/components/pmf/PMFConversationsStep.tsx');
   const store = read('src/hooks/usePMFInterviews.ts');
-  assert.match(page, /Which idea are you evaluating\?/);
-  assert.match(page, /Create an unscoped evidence case/);
+  // Every piece of evidence belongs to one case. The page opens the most recent
+  // case or starts an empty one, and a header selector switches or starts cases.
+  assert.match(page, /if \(contexts\.length > 0\) selectContext\(contexts\[0\]\);\s*else startNewCase\(\);/);
+  assert.match(page, /explicitlyUnscoped: true/);
+  assert.match(page, /Start a new idea/);
   assert.match(page, /usePMFInterviews\(user\?\.id, validationContextId/);
   assert.match(form, /onSaveInterview/);
   assert.match(form, /onDeleteInterview/);

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, Download, RefreshCw, CheckCircle2, XCircle, ArrowRight, AlertTriangle, MessageSquareWarning, MonitorPlay, Share2, Sparkles, ChevronDown, ChevronUp, Zap, GitFork, TrendingUp, Globe, Compass } from 'lucide-react';
+import { Save, Download, RefreshCw, CheckCircle2, XCircle, ArrowRight, AlertTriangle, MessageSquareWarning, MonitorPlay, Share2, ChevronDown, ChevronUp, Zap, GitFork, TrendingUp, Globe, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -8,14 +8,12 @@ import PMFScoreCircle from './PMFScoreCircle';
 import PMFDimensionBars from './PMFDimensionBars';
 import PMFRecommendations from './PMFRecommendations';
 import PMFSegmentBreakdown from './PMFSegmentBreakdown';
-import PMFSeanEllisTest from './PMFSeanEllisTest';
-import PMFEvidenceChecklist from './PMFEvidenceChecklist';
 import PMFScoreTrend from './PMFScoreTrend';
 import PMFOutcomeCapture from './PMFOutcomeCapture';
 import { SourceCitation } from '@/components/chatbot/SourceCitation';
 import { ContextualMentorRecommendations } from '@/components/mentor-marketplace/ContextualMentorRecommendations';
 import type { PMFReadinessAnalysis, PMFInterviewLog, PMFValidationEvidence, PMFScoreTrendPoint } from '@/hooks/usePMFLab';
-import type { PMFSurvey, PMFSurveyAggregate } from '@/hooks/usePMFSurvey';
+import type { PMFSurveyAggregate } from '@/hooks/usePMFSurvey';
 import { Link } from 'react-router-dom';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 import { BizMapShareDialog } from '@/components/bizmap/BizMapShareDialog';
@@ -36,15 +34,9 @@ interface PMFReadinessReportProps {
   onExport: () => void;
   onReanalyze: () => void;
   onReScore: () => void;
-  onSaveSeanEllis: (tally: { very: number; somewhat: number; not: number }) => Promise<boolean>;
-  onSaveChecklist: (items: string[]) => Promise<boolean>;
   onFindCustomers?: () => void;
   // Hosted survey
-  survey: PMFSurvey | null;
   surveyAggregate: PMFSurveyAggregate;
-  surveyShareUrl: string | null;
-  isCreatingSurvey: boolean;
-  onCreateSurvey: () => void;
   customerDiscoverySignalCount?: number;
   validationContextId?: string | null;
   icpAnalysisId?: string | null;
@@ -62,14 +54,8 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
   onExport,
   onReanalyze,
   onReScore,
-  onSaveSeanEllis,
-  onSaveChecklist,
   onFindCustomers,
-  survey,
   surveyAggregate,
-  surveyShareUrl,
-  isCreatingSurvey,
-  onCreateSurvey,
   customerDiscoverySignalCount = 0,
   validationContextId,
   icpAnalysisId,
@@ -159,7 +145,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
         iconColor: 'text-warning',
         // Leads with the evidence gap rather than a capped verdict, so a thin sample
         // never reads as a judgment on the idea.
-        message: `${confidence.label}: ${observedSignalCount} of ${PMF_SIGNAL_THRESHOLDS.decisionGrade} weighted signals. Gather ${confidence.signalsToNext} more to reach the next confidence level — PMF Lab withholds a Build, Narrow, Pivot, or Stop call until the evidence supports one.`,
+        message: `${confidence.label}: ${observedSignalCount} of ${PMF_SIGNAL_THRESHOLDS.decisionGrade} weighted signals. Gather ${confidence.signalsToNext} more to reach the next confidence level, PMF Lab withholds a Build, Narrow, Pivot, or Stop call until the evidence supports one.`,
       };
 
   const ThresholdIcon = thresholdBanner.icon;
@@ -205,7 +191,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
         </div>
         <div className="space-y-1 min-w-0">
           <p className={cn(
-            'text-xs font-semibold uppercase tracking-[0.18em]',
+            'text-sm font-medium',
             lowestDimScore <= 7
               ? 'text-destructive'
               : lowestDimScore <= 13
@@ -223,7 +209,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
 
       {analysis.decisionChange && (
         <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Why the decision changed</p>
+          <p className="text-sm font-medium text-primary">Why the decision changed</p>
           <p className="mt-2 text-sm font-semibold text-foreground">
             {analysis.decisionChange.previousDecision} → {analysis.decisionChange.nextDecision}
             {' '}({analysis.decisionChange.scoreDelta >= 0 ? '+' : ''}{analysis.decisionChange.scoreDelta} points)
@@ -241,7 +227,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
           />
           {belowSampleThreshold && (
             <Badge variant="secondary" className="bg-warning-subtle text-warning border-warning/30 text-caption">
-              {confidence.label} — score capped until {PMF_SIGNAL_THRESHOLDS.decisionGrade} signals
+              {confidence.label}, score capped until {PMF_SIGNAL_THRESHOLDS.decisionGrade} signals
             </Badge>
           )}
         </div>
@@ -254,7 +240,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
                 only thing that failed is the sample size. Report the evidence gap instead;
                 the diagnostic dimensions below still do the teaching. */}
             <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">
+              <p className="text-sm font-medium text-primary/70">
                 {meetsThreshold ? 'PMF Lab Decision' : 'Evidence progress'}
               </p>
               <div>
@@ -264,7 +250,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
                 <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
                   {meetsThreshold
                     ? scoreMeaning
-                    : `${confidence.description} Your dimension scores below are still a reliable diagnostic — use them to decide what to ask next.`}
+                    : `${confidence.description} Your dimension scores below are still a reliable diagnostic, use them to decide what to ask next.`}
                 </p>
               </div>
             </div>
@@ -315,7 +301,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
       <div className="rounded-2xl border border-info/20 bg-info/5 p-5 space-y-4">
         <div className="flex items-center gap-2">
           <Globe className="h-4 w-4 text-info shrink-0" />
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-info">Evidence used</p>
+          <p className="text-sm font-medium text-info">Evidence used</p>
         </div>
         <p className="text-sm leading-relaxed text-muted-foreground">
           This is an AI interpretation of your evidence. Interview records remain the primary signal; survey data and external sources strengthen or challenge the read.
@@ -358,7 +344,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
               <Compass className="h-4 w-4" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Your next evidence action</p>
+              <p className="text-sm font-medium text-primary">Your next evidence action</p>
               <p className="mt-2 text-base font-semibold text-foreground">{decisionAction.title}</p>
               <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{decisionAction.description}</p>
               <p className="mt-2 text-xs text-muted-foreground">
@@ -412,7 +398,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="rounded-2xl border border-border/60 bg-muted/20 p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">What this score means</p>
+          <p className="text-sm font-medium text-primary/70">What this score means</p>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             Five weighted signals create directional evidence, ten reveal emerging patterns, and {PMF_REQUIRED_SIGNALS} support a decision grade Build, Narrow, Pivot, or Stop recommendation.
           </p>
@@ -423,7 +409,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
           </p>
         </div>
         <div className="rounded-2xl border border-border/60 bg-muted/20 p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">AI interpretation of your evidence</p>
+          <p className="text-sm font-medium text-primary/70">AI interpretation of your evidence</p>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             {analysis.nextExperiment ?? (meetsThreshold
               ? 'Move into MVP scope definition and preserve only the features tied to the strongest buying signals.'
@@ -436,8 +422,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
       {analysis.diagnosis && (
         <div className="rounded-2xl border border-primary/15 bg-primary/5 p-5 space-y-2">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary shrink-0" />
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">What the evidence pattern means</p>
+            <p className="text-sm font-medium text-primary/70">What the evidence pattern means</p>
           </div>
           <p className="text-sm leading-relaxed text-foreground">{analysis.diagnosis}</p>
         </div>
@@ -448,11 +433,11 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
         <div className="rounded-2xl border border-success/20 bg-success/5 p-5 space-y-3">
           <div className="flex items-center gap-2">
             <MonitorPlay className="h-4 w-4 text-success shrink-0" />
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-success">Verified demo behavior included</p>
+            <p className="text-sm font-medium text-success">Verified demo behavior included</p>
           </div>
           <p className="text-sm leading-relaxed text-foreground">
             Your live Demo Studio data from the last {analysis.demoEvidence.windowDays} days was scored as behavioral
-            demand evidence — collected by the platform, not self-reported.
+            demand evidence, collected by the platform, not self-reported.
           </p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {[
@@ -475,7 +460,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
         <div className="rounded-2xl border border-info/20 bg-info/5 p-5 space-y-3">
           <div className="flex items-center gap-2">
             <Globe className="h-4 w-4 text-info shrink-0" />
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-info">External demand evidence</p>
+            <p className="text-sm font-medium text-info">External demand evidence</p>
           </div>
           {analysis.marketEvidenceSummary && (
             <p className="text-sm leading-relaxed text-foreground">{analysis.marketEvidenceSummary}</p>
@@ -484,7 +469,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
             <SourceCitation sources={analysis.dataSources!} />
           ) : (
             <p className="text-xs text-muted-foreground">
-              No external web signal was retrieved for this run — your score rests on your own interview evidence.
+              No external web signal was retrieved for this run, your score rests on your own interview evidence.
             </p>
           )}
         </div>
@@ -498,7 +483,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
         <div className="rounded-2xl border border-warning/25 bg-warning-subtle p-5 space-y-3">
           <div className="flex items-center gap-2">
             <GitFork className="h-4 w-4 text-warning shrink-0" />
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-warning">Tensions in your data</p>
+            <p className="text-sm font-medium text-warning">Tensions in your data</p>
           </div>
           <div className="space-y-2">
             {analysis.contradictions.map((item, i) => (
@@ -523,7 +508,6 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
       <div className="grid gap-4 md:grid-cols-2">
         <div className="rounded-2xl border border-border/60 bg-background/70 p-5 space-y-3">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-semibold">Strongest buying signals</h3>
           </div>
           {buyingSignals.length > 0 ? (
@@ -600,7 +584,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
       <div className="grid gap-4 sm:grid-cols-2">
         {analysis.strengths?.length > 0 && (
           <div className="rounded-lg border border-success/20 bg-success/5 p-4 space-y-2">
-            <p className="text-xs font-bold text-success uppercase tracking-wider">
+            <p className="text-sm font-medium text-success">
               What's working
             </p>
             <ul className="space-y-1.5">
@@ -615,7 +599,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
         )}
         {analysis.gaps?.length > 0 && (
           <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4 space-y-2">
-            <p className="text-xs font-bold text-destructive uppercase tracking-wider">
+            <p className="text-sm font-medium text-destructive">
               What's missing
             </p>
             <ul className="space-y-1.5">
@@ -641,7 +625,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
             </div>
             <div className="space-y-1 min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Do this first</p>
+                <p className="text-sm font-medium text-primary">Do this first</p>
                 <span className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-caption font-medium text-primary">
                   {criticalRec.timeframe}
                 </span>
@@ -706,24 +690,6 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
 
         <PMFScoreTrend trend={trend} />
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          <PMFEvidenceChecklist
-            evidence={evidence}
-            requiredSignals={PMF_REQUIRED_SIGNALS}
-            onSaveChecklist={onSaveChecklist}
-          />
-          <PMFSeanEllisTest
-            initialVery={evidence?.sean_ellis_very_disappointed}
-            initialSomewhat={evidence?.sean_ellis_somewhat_disappointed}
-            initialNot={evidence?.sean_ellis_not_disappointed}
-            onSave={onSaveSeanEllis}
-            survey={survey}
-            surveyAggregate={surveyAggregate}
-            shareUrl={surveyShareUrl}
-            isCreatingSurvey={isCreatingSurvey}
-            onCreateSurvey={onCreateSurvey}
-          />
-        </div>
 
         {analysisId && (
           <PMFOutcomeCapture

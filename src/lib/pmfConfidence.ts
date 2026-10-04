@@ -67,6 +67,25 @@ export function getPmfConfidence(signalCount: number): PmfConfidenceResult {
   };
 }
 
+// Mirrors the server weights in supabase/functions/_shared/pmf-evidence.ts.
+// The Evidence Hub and the checklist used to count these differently; this is
+// now the one count every PMF Lab surface shows.
+export const PMF_SIGNAL_WEIGHTS = { interview: 1, survey: 0.75, demo: 0.75 } as const;
+export const PMF_DEMO_SIGNAL_CAP = 10;
+
+export function countPmfSignals(input: {
+  interviews: number;
+  surveyResponses: number;
+  demoBehaviors?: number;
+}): number {
+  const safe = (value: number | undefined) => Math.max(0, Number.isFinite(value) ? Number(value) : 0);
+  return Math.floor(
+    safe(input.interviews) * PMF_SIGNAL_WEIGHTS.interview +
+      safe(input.surveyResponses) * PMF_SIGNAL_WEIGHTS.survey +
+      Math.min(PMF_DEMO_SIGNAL_CAP, safe(input.demoBehaviors)) * PMF_SIGNAL_WEIGHTS.demo,
+  );
+}
+
 export function getPmfDecision(score: number): PmfDecision {
   const normalizedScore = Math.max(0, Math.min(100, Number.isFinite(score) ? score : 0));
   if (normalizedScore >= 75) return "build";

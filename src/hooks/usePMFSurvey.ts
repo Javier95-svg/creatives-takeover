@@ -19,6 +19,8 @@ export interface PMFSurveyVerbatim {
   feedback: string | null;
   role: string | null;
   seanEllis: string;
+  /** True when the respondent has only seen the idea, not used the product. */
+  conceptOnly: boolean;
   createdAt: string;
 }
 
@@ -28,13 +30,15 @@ export interface PMFSurveyAggregate {
   somewhat: number;
   not: number;
   veryPct: number;
+  /** Respondents who have only seen the idea. Kept out of the 40% metric. */
+  conceptOnly: number;
   verbatims: PMFSurveyVerbatim[];
 }
 
 const SURVEYS = 'pmf_surveys' as never;
 const RESPONSES = 'pmf_survey_responses' as never;
 
-const EMPTY_AGGREGATE: PMFSurveyAggregate = { total: 0, very: 0, somewhat: 0, not: 0, veryPct: 0, verbatims: [] };
+const EMPTY_AGGREGATE: PMFSurveyAggregate = { total: 0, very: 0, somewhat: 0, not: 0, veryPct: 0, conceptOnly: 0, verbatims: [] };
 
 const shortId = (n = 6) => Math.random().toString(36).slice(2, 2 + n);
 const slugify = (s: string) =>
@@ -56,7 +60,7 @@ export function usePMFSurvey(validationContextId?: string | null, originatingHan
   const loadResponses = useCallback(async (surveyId: string) => {
     const { data, error } = await supabase
       .from(RESPONSES)
-      .select('sean_ellis_answer, main_benefit, would_use_instead, role, feedback, created_at')
+      .select('sean_ellis_answer, product_usage, main_benefit, would_use_instead, role, feedback, created_at')
       .eq('survey_id', surveyId)
       .order('created_at', { ascending: false })
       .limit(300);
@@ -64,12 +68,13 @@ export function usePMFSurvey(validationContextId?: string | null, originatingHan
       setAggregate(EMPTY_AGGREGATE);
       return;
     }
-    let very = 0, somewhat = 0, not = 0;
+    let very = 0, somewhat = 0, not = 0, conceptOnly = 0;
     const verbatims: PMFSurveyVerbatim[] = [];
     for (const r of data as unknown as Array<Record<string, string | null>>) {
       if (r.sean_ellis_answer === 'very') very++;
       else if (r.sean_ellis_answer === 'somewhat') somewhat++;
       else if (r.sean_ellis_answer === 'not') not++;
+      if (r.product_usage === 'concept_only') conceptOnly++;
       if ((r.main_benefit || r.feedback) && verbatims.length < 8) {
         verbatims.push({
           mainBenefit: r.main_benefit,
@@ -77,13 +82,14 @@ export function usePMFSurvey(validationContextId?: string | null, originatingHan
           feedback: r.feedback,
           role: r.role,
           seanEllis: r.sean_ellis_answer ?? '',
+          conceptOnly: r.product_usage === 'concept_only',
           createdAt: r.created_at ?? '',
         });
       }
     }
     const total = very + somewhat + not;
     if (activeContextRef.current === validationContextId) {
-      setAggregate({ total, very, somewhat, not, veryPct: total > 0 ? Math.round((very / total) * 100) : 0, verbatims });
+      setAggregate({ total, very, somewhat, not, veryPct: total > 0 ? Math.round((very / total) * 100) : 0, conceptOnly, verbatims });
     }
   }, [validationContextId]);
 
@@ -147,7 +153,7 @@ export function usePMFSurvey(validationContextId?: string | null, originatingHan
             has_product_name: Boolean(opts.productName?.trim()),
             has_audience: Boolean(opts.audience?.trim()),
           });
-          toast.success('Survey published — share the link to collect real feedback.');
+          toast.success('Survey published. Share the link with people who have used your product.');
           return data as unknown as PMFSurvey;
         }
         lastError = error;

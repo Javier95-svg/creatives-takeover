@@ -1,51 +1,56 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+
 import SEO, { createBreadcrumbSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
-import { useLeanStartupStore } from '@/store/leanStartupStore';
-import { usePMFLab } from '@/hooks/usePMFLab';
-import { usePMFSurvey } from '@/hooks/usePMFSurvey';
-import PMFEvidenceForm, { type PMFIcpInterviewPlanItem } from '@/components/pmf/PMFEvidenceForm';
-import PMFEvidenceHub, { type PMFHubRecommendation } from '@/components/pmf/PMFEvidenceHub';
-import PMFEvidenceChecklist from '@/components/pmf/PMFEvidenceChecklist';
-import PMFSeanEllisTest from '@/components/pmf/PMFSeanEllisTest';
-import PMFScoringLoader from '@/components/pmf/PMFScoringLoader';
+import { Button } from '@/components/ui/button';
+import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
+import { ToolPageShell } from '@/components/tool-shell/ToolPageShell';
+import { NextStepCard } from '@/components/tool-shell/NextStepCard';
+import { ToolStepper, type ToolStep } from '@/components/tool-shell/ToolStepper';
+import { PMFConversationsStep, type PMFIcpInterviewPlanItem } from '@/components/pmf/PMFConversationsStep';
+import { PMFSurveyStep, copySurveyLink } from '@/components/pmf/PMFSurveyStep';
+import { PMFVerdictStep } from '@/components/pmf/PMFVerdictStep';
+import { PMFVerdictSummary } from '@/components/pmf/PMFVerdictSummary';
 import PMFReadinessReport from '@/components/pmf/PMFReadinessReport';
 import PMFCustomerDiscovery from '@/components/pmf/PMFCustomerDiscovery';
 import ConceptRecruitment from '@/components/pmf/ConceptRecruitment';
-import { isCompletionChainEnabled } from '@/lib/completionChain';
 import PMFOutcomeCapture from '@/components/pmf/PMFOutcomeCapture';
-import { PMFContextBanner } from '@/components/pmf/PMFContextBanner';
-import { normalizeStoredArtifact } from '@/lib/icpDraftArtifacts';
-import { cn } from '@/lib/utils';
-import { useSearchParams } from 'react-router-dom';
-import { ArrowRight, ChevronDown, Rocket } from 'lucide-react';
-import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
-import { getPublicTabConfig } from '@/config/publicTabVisibility';
+import type { PMFInterviewLeadSeed } from '@/components/pmf/PMFDiscoveryPipeline';
+import { useLeanStartupStore } from '@/store/leanStartupStore';
+import { usePMFLab } from '@/hooks/usePMFLab';
+import { usePMFSurvey } from '@/hooks/usePMFSurvey';
+import { usePMFInterviews } from '@/hooks/usePMFInterviews';
+import { useCustomerDiscovery } from '@/hooks/useCustomerDiscovery';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
-import { useCustomerDiscovery } from '@/hooks/useCustomerDiscovery';
+import { useFeatureFlagEnabled } from '@/hooks/usePosthogFeatureFlag';
+import { isCompletionChainEnabled } from '@/lib/completionChain';
+import { normalizeStoredArtifact } from '@/lib/icpDraftArtifacts';
+import { getPublicTabConfig } from '@/config/publicTabVisibility';
 import { captureEvent, trackToolOpened } from '@/lib/analytics';
 import { supabase } from '@/integrations/supabase/client';
-import type { PMFInterviewLeadSeed } from '@/components/pmf/PMFDiscoveryPipeline';
 import { ensurePrebuildContext, getPrebuildContext, listPrebuildContexts, type PrebuildValidationContext } from '@/lib/prebuildContext';
-import { usePMFInterviews } from '@/hooks/usePMFInterviews';
-import { Button } from '@/components/ui/button';
 import { findJourneyHandoff, trackPrebuildLineageEvent } from '@/lib/journeyOutcomes';
-import { useFeatureFlagEnabled } from '@/hooks/usePosthogFeatureFlag';
 import { isPMFPathwayEnvironmentEnabled, PMF_PATHWAY_FEATURE_FLAG } from '@/lib/pmfPathwayRollout';
+import { countPmfSignals, formatPmfDecision, getPmfDecision, PMF_SIGNAL_THRESHOLDS } from '@/lib/pmfConfidence';
+import { FIRST_READ_INTERVIEWS, getPmfNextStep, getPmfStepStatuses, type PmfStepId } from '@/lib/pmfNextStep';
 
 const structuredData = [
   {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    name: 'PMF Lab — Evidence Analyzer',
-    description: 'Submit your real validation evidence and get a PMF Readiness Score. Find out if you have enough evidence to start building your MVP.',
+    name: 'PMF Lab',
+    description: 'Log customer conversations, ask product users one question, and get a clear verdict on whether to build.',
     url: 'https://creatives-takeover.com/pmf-lab',
   },
 ];
+
+const PURPOSE = 'Find out whether people want what you are building before you build more of it.';
 
 export default function PMFLabPage() {
   const { user } = useAuth();
@@ -65,30 +70,41 @@ export default function PMFLabPage() {
     () => (new URLSearchParams(window.location.search).get('mode') === 'discover' ? 'discover' : 'score'),
   );
   const [interviewLeadSeed, setInterviewLeadSeed] = useState<PMFInterviewLeadSeed | null>(null);
-  // Progressive disclosure: only one detail step is expanded at a time so the
-  // page opens with a single clear focus instead of a wall of stacked sections.
-  const [activeStep, setActiveStep] = useState<'gather' | 'score'>('gather');
-  const stepChosenRef = useRef(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const outcomeAnalysisId = searchParams.get('outcome');
   const icpParam = searchParams.get('icp');
-  const contextParam = searchParams.get('context');
-  const [validationContextId, setValidationContextId] = useState<string | null>(contextParam);
+  const [validationContextId, setValidationContextId] = useState<string | null>(searchParams.get('context'));
   const [originatingHandoffId, setOriginatingHandoffId] = useState<string | null>(searchParams.get('handoff'));
   const [demoProjectId, setDemoProjectId] = useState<string | null>(searchParams.get('project'));
   const [demoId, setDemoId] = useState<string | null>(searchParams.get('demo'));
-  const [contexts, setContexts] = useState<PrebuildValidationContext[]>([]);
+  const [contexts, setContexts] = useState<PrebuildValidationContext[] | null>(null);
   const [contextStartedAt, setContextStartedAt] = useState<string | null>(null);
-  // ?step=interviews is the conversation-stage entry point ICP Builder links to.
-  // (?mode=discover, the distribution entry point Demo Studio links to after publish,
-  // is applied in the `mode` initializer above so the first paint is already correct.)
-  const wantsInterviewStep = searchParams.get('step') === 'interviews';
+  // ?step=interviews is the conversation entry point ICP Builder links to.
+  const [activeStep, setActiveStep] = useState<PmfStepId | null>(
+    () => (new URLSearchParams(window.location.search).get('step') === 'interviews' ? 'talk' : null),
+  );
+  const [addRequest, setAddRequest] = useState(0);
+  const autoContextRef = useRef(false);
   const hubViewedRef = useRef(false);
-  const surveyRef = useRef<HTMLDivElement | null>(null);
-  const scoreFormRef = useRef<HTMLDivElement | null>(null);
+  const stepPanelRef = useRef<HTMLDivElement | null>(null);
 
-  const scrollTo = (ref: { current: HTMLDivElement | null }) => {
-    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const selectContext = (context: PrebuildValidationContext) => {
+    setValidationContextId(context.id);
+    setContextStartedAt(context.created_at);
+    const next = new URLSearchParams(searchParams);
+    next.set('context', context.id);
+    if (context.icp_analysis_id) next.set('icp', context.icp_analysis_id);
+    else next.delete('icp');
+    setSearchParams(next, { replace: true });
+  };
+
+  const startNewCase = () => {
+    if (!user) return;
+    void ensurePrebuildContext({ userId: user.id, explicitlyUnscoped: true, sourceTool: 'pmf_lab' })
+      .then((context) => {
+        setContexts((items) => [context, ...(items ?? [])]);
+        selectContext(context);
+      });
   };
 
   useEffect(() => {
@@ -99,14 +115,20 @@ export default function PMFLabPage() {
   useEffect(() => {
     if (!user || validationContextId || !icpParam) return;
     void ensurePrebuildContext({ userId: user.id, icpAnalysisId: icpParam, sourceTool: 'pmf_lab' })
-      .then((context) => {
-        setValidationContextId(context.id);
-        setContextStartedAt(context.created_at);
-        const next = new URLSearchParams(searchParams);
-        next.set('context', context.id);
-        setSearchParams(next, { replace: true });
-      });
-  }, [icpParam, searchParams, setSearchParams, user, validationContextId]);
+      .then((context) => selectContext(context));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [icpParam, user, validationContextId]);
+
+  // Evidence never mixes across ideas: every interview, survey and score belongs to
+  // one case. Instead of stopping on a chooser, open the most recent case (the
+  // header selector switches), or start an empty one for a first-time founder.
+  useEffect(() => {
+    if (!user || !hasAccess || validationContextId || icpParam || contexts === null || autoContextRef.current) return;
+    autoContextRef.current = true;
+    if (contexts.length > 0) selectContext(contexts[0]);
+    else startNewCase();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contexts, hasAccess, icpParam, user, validationContextId]);
 
   useEffect(() => {
     if (!user || !demoProjectId || demoId) return;
@@ -128,15 +150,8 @@ export default function PMFLabPage() {
     }).catch(() => undefined);
   }, [demoId, originatingHandoffId, validationContextId, searchParams]);
 
-  const chooseStep = (step: 'gather' | 'score') => {
-    stepChosenRef.current = true;
-    setActiveStep(step);
-    requestAnimationFrame(() => scrollTo(step === 'gather' ? surveyRef : scoreFormRef));
-  };
-
   useEffect(() => {
     if (!user) return;
-
     let active = true;
     const loadContext = async () => {
       if (!validationContextId) return;
@@ -180,9 +195,7 @@ export default function PMFLabPage() {
       setIcpProblem(icpRow?.business_description ?? null);
       // The stored artifact names the persona properly; target_audience is the fallback.
       const artifact = icpRow ? normalizeStoredArtifact(icpRow as never).artifact : null;
-      setIcpPersonaName(
-        artifact?.draftDocument.customer.personaName?.trim() || icpRow?.target_audience || null,
-      );
+      setIcpPersonaName(artifact?.draftDocument.customer.personaName?.trim() || icpRow?.target_audience || null);
       const plan = artifact?.draftDocument.decisionBrief?.interviewValidationPlan ?? null;
       setIcpInterviewPlan(plan && plan.length > 0 ? plan : null);
 
@@ -190,18 +203,9 @@ export default function PMFLabPage() {
       setDemoProjectId(demoRow?.id ?? demoProjectId);
       setWaitlistProductName(demoRow?.name ?? context.label ?? null);
     };
-
     void loadContext();
     return () => { active = false; };
   }, [user, icpParam, validationContextId, demoProjectId]);
-  const pageStructuredData = [
-    ...structuredData,
-    createBreadcrumbSchema([
-      { name: 'Home', url: '/' },
-      { name: 'BizMap AI', url: '/bizmap-ai' },
-      { name: 'PMF Lab', url: '/pmf-lab' },
-    ]),
-  ];
 
   useEffect(() => {
     markToolUsed('pmf-lab');
@@ -221,7 +225,7 @@ export default function PMFLabPage() {
     validationContextId,
     pathwayEnabled,
     contextStartedAt: contextStartedAt
-      ?? contexts.find((context) => context.id === validationContextId)?.created_at
+      ?? contexts?.find((context) => context.id === validationContextId)?.created_at
       ?? null,
     originatingHandoffId,
     icpAnalysisId: icpDraftId,
@@ -232,11 +236,11 @@ export default function PMFLabPage() {
 
   const interviewStore = usePMFInterviews(user?.id, validationContextId, originatingHandoffId);
 
+  // Production PMF Lab path: score evidence via pmf-evidence-scorer.
   const {
     phase,
     analysis,
     analysisId,
-    hasSavedReport,
     isSaving,
     isExporting,
     evidence,
@@ -245,67 +249,67 @@ export default function PMFLabPage() {
     reScore,
     saveReport,
     saveSeanEllis,
-    saveChecklist,
     exportReport,
     resetToIntake,
   } = usePMFLab(scope);
 
-  // Production PMF Lab path: score evidence via pmf-evidence-scorer.
-  // market-validation-engine is broader market validation, and pmf-analyzer is legacy.
-  const {
-    discovery,
-    loadDiscovery,
-  } = useCustomerDiscovery(validationContextId, originatingHandoffId);
-
+  const { discovery, loadDiscovery } = useCustomerDiscovery(validationContextId, originatingHandoffId);
   const customerDiscoverySignals =
     (discovery?.painPoints.length ?? 0) +
     (discovery?.people.length ?? 0) +
     (discovery?.communities.length ?? 0) +
     (discovery?.threads.length ?? 0);
 
-  // The single next action to spotlight, in the canonical evidence order:
-  // get the 40% survey signal → log interviews → save the checklist → score.
-  const savedInterviews = interviewStore.interviews.length;
-  const surveyResponsesCount = surveyAggregate.total || evidence?.survey_results_count || 0;
-  const checklistCount = evidence?.validation_checklist?.length ?? 0;
-  const hubRecommendation: PMFHubRecommendation = (() => {
-    if (surveyResponsesCount === 0 && !survey) return 'survey';
-    if (savedInterviews === 0) return 'interviews';
-    if (checklistCount === 0) return 'checklist';
-    return 'score';
-  })();
-  const recommendedStep: 'gather' | 'score' =
-    hubRecommendation === 'survey' || hubRecommendation === 'checklist' ? 'gather' : 'score';
+  const interviewCount = interviewStore.interviews.length;
+  const surveyResponses = surveyAggregate.total || evidence?.survey_results_count || 0;
+  const demoBehaviors = analysis?.demoEvidence
+    ? Math.max(analysis.demoEvidence.completions, analysis.demoEvidence.ctaClicks, analysis.demoEvidence.signups)
+    : 0;
+  const signalCount = countPmfSignals({ interviews: interviewCount, surveyResponses, demoBehaviors });
+  const hasResult = Boolean(analysis) || trend.length > 0;
+  const progress = { interviewCount, hasSurvey: Boolean(survey), surveyResponses, hasResult };
+  const nextStep = getPmfNextStep(progress);
+  const statuses = getPmfStepStatuses(progress);
+  const shownStep = activeStep ?? nextStep.step;
 
-  // An explicit ?step=interviews link beats the recommendation: the founder was sent
-  // here to log a conversation, not to be re-triaged into the survey step.
-  useEffect(() => {
-    if (!wantsInterviewStep || stepChosenRef.current) return;
-    stepChosenRef.current = true;
-    setMode('score');
-    setActiveStep('score');
-    requestAnimationFrame(() => scrollTo(scoreFormRef));
-  }, [wantsInterviewStep]);
-
-  // Default the open step to the recommendation until the user picks one themselves.
-  useEffect(() => {
-    if (stepChosenRef.current || phase !== 'intake' || mode !== 'score') return;
-    setActiveStep(recommendedStep);
-  }, [recommendedStep, phase, mode]);
+  const lastScore = trend.length > 0 ? trend[trend.length - 1].score : null;
+  const steps: ToolStep<PmfStepId>[] = useMemo(() => [
+    {
+      id: 'talk',
+      label: 'Talk to customers',
+      detail: interviewCount >= FIRST_READ_INTERVIEWS ? `${interviewCount} conversations` : `${interviewCount} of ${FIRST_READ_INTERVIEWS} logged`,
+      status: statuses.talk,
+    },
+    {
+      id: 'ask',
+      label: 'Ask product users',
+      detail: survey ? `${surveyResponses} answer${surveyResponses === 1 ? '' : 's'}` : 'Not started',
+      status: statuses.ask,
+    },
+    {
+      id: 'verdict',
+      label: 'Get your verdict',
+      detail: lastScore !== null
+        ? `${formatPmfDecision(getPmfDecision(lastScore))}, ${Math.round(lastScore)}/100`
+        : `${signalCount} of ${PMF_SIGNAL_THRESHOLDS.decisionGrade} signals`,
+      status: statuses.verdict,
+    },
+  ], [interviewCount, lastScore, signalCount, statuses.ask, statuses.talk, statuses.verdict, survey, surveyResponses]);
 
   useEffect(() => {
     if (!user || !hasAccess || phase !== 'intake' || mode !== 'score' || hubViewedRef.current) return;
     captureEvent('pmf_evidence_hub_viewed', {
-      saved_interviews: evidence?.interview_notes_count ?? 0,
+      saved_interviews: interviewCount,
       survey_responses: surveyAggregate.total,
       has_survey: Boolean(survey),
       customer_discovery_signals: customerDiscoverySignals,
+      next_step: nextStep.step,
     });
     hubViewedRef.current = true;
-  }, [customerDiscoverySignals, evidence?.interview_notes_count, hasAccess, mode, phase, survey, surveyAggregate.total, user]);
+  }, [customerDiscoverySignals, hasAccess, interviewCount, mode, nextStep.step, phase, survey, surveyAggregate.total, user]);
 
-  // Keep the per-user Sean Ellis evidence in sync with real survey responses, so the
-  // 40% metric, the 25-signal count, and the score all reflect verified data silently.
+  // Keep the per-case Sean Ellis evidence in sync with real survey responses, so the
+  // 40% metric, the signal count and the score all reflect verified data.
   useEffect(() => {
     if (surveyAggregate.total > 0) {
       void saveSeanEllis(
@@ -316,6 +320,11 @@ export default function PMFLabPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [surveyAggregate.total, surveyAggregate.very, surveyAggregate.somewhat, surveyAggregate.not]);
 
+  const showStep = (step: PmfStepId) => {
+    setActiveStep(step);
+    requestAnimationFrame(() => stepPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  };
+
   const handleCreateSurvey = () => {
     void createAndPublishSurvey({
       productName: waitlistProductName ?? undefined,
@@ -323,78 +332,229 @@ export default function PMFLabPage() {
     });
   };
 
-  const handleSurveyHubAction = () => {
-    if (!survey) {
-      handleCreateSurvey();
+  const runNextStep = () => {
+    if (nextStep.step === 'talk') {
+      setActiveStep('talk');
+      setAddRequest((count) => count + 1);
       return;
     }
-    scrollTo(surveyRef);
+    if (nextStep.step === 'ask') {
+      showStep('ask');
+      if (!survey) handleCreateSurvey();
+      else void copySurveyLink(surveyShareUrl);
+      return;
+    }
+    showStep('verdict');
   };
 
   const handleModeChange = (nextMode: 'score' | 'discover') => {
     if (nextMode === 'score') void loadDiscovery();
     setMode(nextMode);
   };
-  const ruleCards = [
-    {
-      label: 'Score 75 or higher',
-      title: 'Move to Building',
-      description: 'You have enough demand evidence to scope your MVP and move into the building stage.',
-      icon: Rocket,
-      tone: 'border-success/25 bg-success/10 text-success dark:text-success',
-    },
-    {
-      label: 'Score below 75',
-      title: 'Iterate before building',
-      description: 'PMF Lab will surface missing features, recurring objections, and what to improve before moving into development.',
-      icon: ArrowRight,
-      tone: 'border-warning/25 bg-warning/10 text-warning dark:text-warning',
-    },
+
+  const pageStructuredData = [
+    ...structuredData,
+    createBreadcrumbSchema([
+      { name: 'Home', url: '/' },
+      { name: 'BizMap AI', url: '/bizmap-ai' },
+      { name: 'PMF Lab', url: '/pmf-lab' },
+    ]),
   ];
 
-  const chooseContext = (context: PrebuildValidationContext) => {
-    setValidationContextId(context.id);
-    const next = new URLSearchParams(searchParams);
-    next.set('context', context.id);
-    if (context.icp_analysis_id) next.set('icp', context.icp_analysis_id);
-    setSearchParams(next);
-  };
+  const contextLine = (
+    <span>
+      {waitlistProductName ? <>Product: <span className="text-foreground">{waitlistProductName}</span>. </> : null}
+      {icpPersonaName ? (
+        <>Customer: <Link to={icpDraftId ? `/icp/draft/${icpDraftId}` : '/icp-builder'} className="text-foreground underline-offset-4 hover:underline">{icpPersonaName}</Link></>
+      ) : (
+        <>No customer profile linked. <Link to="/icp-builder" className="text-primary underline-offset-4 hover:underline">Define your customer first</Link></>
+      )}
+    </span>
+  );
 
-  if (user && hasAccess && !validationContextId) {
+  const caseSelector = user && hasAccess && contexts && contexts.length > 0 ? (
+    <label className="flex items-center gap-2 text-sm text-muted-foreground">
+      Idea
+      <select
+        value={validationContextId ?? ''}
+        onChange={(event) => {
+          if (event.target.value === '__new') {
+            startNewCase();
+            return;
+          }
+          const context = contexts.find((item) => item.id === event.target.value);
+          if (context) selectContext(context);
+        }}
+        className="h-9 max-w-56 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+      >
+        {contexts.map((context) => (
+          <option key={context.id} value={context.id}>{context.label || 'Untitled idea'}</option>
+        ))}
+        <option value="__new">Start a new idea</option>
+      </select>
+    </label>
+  ) : null;
+
+  const renderSignedIn = () => {
+    if (!validationContextId) {
+      return (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          Opening your idea…
+        </div>
+      );
+    }
+
+    if (mode === 'discover') {
+      return (
+        <div className="space-y-4">
+          <Button type="button" variant="ghost" onClick={() => handleModeChange('score')} className="-ml-3">
+            <ArrowLeft className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            Back to your evidence
+          </Button>
+          {isCompletionChainEnabled() && (
+            <ConceptRecruitment key={validationContextId} contextId={validationContextId} projectId={demoProjectId} audience={icpPersonaName} problem={icpProblem} />
+          )}
+          <PMFCustomerDiscovery
+            defaultProductName={waitlistProductName}
+            defaultTargetAudience={icpPersonaName}
+            defaultIndustry={icpIndustry}
+            defaultProblem={icpProblem}
+            onCompleted={() => void loadDiscovery()}
+            onLogInterview={(seed) => {
+              setInterviewLeadSeed(seed);
+              setMode('score');
+              setActiveStep('talk');
+            }}
+          />
+        </div>
+      );
+    }
+
+    if (phase === 'analyzing') {
+      return (
+        <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-card p-6 text-sm text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
+          Reading your conversations and survey answers. This usually takes under a minute.
+        </div>
+      );
+    }
+
+    if (phase === 'results' && analysis) {
+      return (
+        <div className="space-y-6">
+          <PMFVerdictSummary
+            analysis={analysis}
+            analysisId={analysisId}
+            validationContextId={validationContextId}
+            icpAnalysisId={icpDraftId}
+            pathwayEnabled={pathwayEnabled}
+            isSaving={isSaving}
+            isExporting={isExporting}
+            onBackToEvidence={resetToIntake}
+            onSave={saveReport}
+            onExport={exportReport}
+          />
+          <DashboardDisclosure title="Full report" summary="Scores by area, every objection and signal, and recommended experiments.">
+            <PMFReadinessReport
+              analysis={analysis}
+              analysisId={analysisId}
+              isSaving={isSaving}
+              isExporting={isExporting}
+              evidence={evidence}
+              trend={trend}
+              onSave={saveReport}
+              onExport={exportReport}
+              onReanalyze={resetToIntake}
+              onReScore={reScore}
+              onFindCustomers={() => setMode('discover')}
+              surveyAggregate={surveyAggregate}
+              customerDiscoverySignalCount={customerDiscoverySignals}
+              validationContextId={validationContextId}
+              icpAnalysisId={icpDraftId}
+              pathwayEnabled={pathwayEnabled}
+            />
+          </DashboardDisclosure>
+        </div>
+      );
+    }
+
+    // On the verdict step the form's own button is the action, so the card is not repeated.
+    const showNextStepCard = !(shownStep === 'verdict' && nextStep.step === 'verdict');
+
     return (
-      <div className="min-h-screen bg-background">
-        <SEO title="Choose an evidence case â€” PMF Lab" description="Choose which idea PMF Lab should evaluate." noindex />
-        <Navigation />
-        <main className="container mx-auto max-w-3xl px-4 pb-20 pt-32">
-          <div className="rounded-3xl border border-border/60 bg-card p-7 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">PMF evidence scope</p>
-            <h1 className="mt-2 text-3xl font-bold">Which idea are you evaluating?</h1>
-            <p className="mt-3 text-muted-foreground">PMF Lab never mixes your latest artifacts. Choose an existing ICP/Demo journey, or deliberately start an unscoped evidence case.</p>
-            <div className="mt-6 space-y-3">
-              {contexts.map((context) => (
-                <button key={context.id} type="button" onClick={() => chooseContext(context)} className="flex w-full items-center justify-between rounded-2xl border border-border p-4 text-left hover:border-primary/50">
-                  <span><span className="block font-semibold">{context.label || 'Untitled idea'}</span><span className="text-xs text-muted-foreground">{context.icp_analysis_id ? 'ICP-linked journey' : 'Explicitly unscoped evidence'}</span></span>
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              ))}
-            </div>
-            <Button className="mt-5" variant="outline" onClick={() => {
-              void ensurePrebuildContext({ userId: user.id, explicitlyUnscoped: true, sourceTool: 'pmf_lab' })
-                .then((context) => { setContextStartedAt(context.created_at); setContexts((items) => [context, ...items]); chooseContext(context); });
-            }}>Create an unscoped evidence case</Button>
-            <p className="mt-3 text-xs text-muted-foreground">Legacy surveys, reports, and Demo activity remain readable in their original views, but are not attached automatically.</p>
+      <>
+        {outcomeAnalysisId && (
+          <div className="space-y-3">
+            <h2 className="text-lg font-semibold text-foreground">Tell us what happened with your idea</h2>
+            <PMFOutcomeCapture analysisId={outcomeAnalysisId} />
           </div>
-        </main>
-        <Footer />
-      </div>
+        )}
+
+        {showNextStepCard && (
+          <NextStepCard
+            title={nextStep.title}
+            reason={nextStep.reason}
+            cta={nextStep.step === 'ask' && isCreatingSurvey ? 'Creating survey…' : nextStep.cta}
+            disabled={nextStep.step === 'ask' && isCreatingSurvey}
+            onAction={runNextStep}
+            secondary={nextStep.step === 'talk' ? (
+              <Button type="button" variant="link" className="px-0" onClick={() => handleModeChange('discover')}>
+                Find people to talk to
+              </Button>
+            ) : null}
+          />
+        )}
+
+        <ToolStepper steps={steps} activeId={shownStep} onSelect={showStep} />
+
+        <div ref={stepPanelRef} className="scroll-mt-28">
+          {shownStep === 'talk' && (
+            <PMFConversationsStep
+              interviews={interviewStore.interviews}
+              icpDraftId={icpDraftId}
+              icpInterviewPlan={icpInterviewPlan}
+              addRequest={addRequest}
+              leadSeed={interviewLeadSeed}
+              showAddButton={nextStep.step !== 'talk'}
+              onSaveInterview={interviewStore.saveInterview}
+              onDeleteInterview={interviewStore.deleteInterview}
+              onImportInterviews={interviewStore.saveMany}
+              onFindPeople={() => handleModeChange('discover')}
+            />
+          )}
+          {shownStep === 'ask' && (
+            <PMFSurveyStep
+              survey={survey}
+              aggregate={surveyAggregate}
+              shareUrl={surveyShareUrl}
+              evidence={evidence}
+              onSaveManualCounts={saveSeanEllis}
+            />
+          )}
+          {shownStep === 'verdict' && (
+            <PMFVerdictStep
+              interviews={interviewStore.interviews}
+              surveyResponses={surveyResponses}
+              signalCount={signalCount}
+              onSubmit={(answers) => runAnalysis(answers, {
+                businessContext: {
+                  productName: waitlistProductName ?? undefined,
+                  targetAudience: icpPersonaName ?? undefined,
+                },
+              })}
+            />
+          )}
+        </div>
+      </>
     );
-  }
+  };
 
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="PMF Lab — Creatives Takeover"
-        description="Submit your real customer validation evidence and get an AI-powered PMF Readiness Score. Know if you're ready to build before you commit."
+        title="PMF Lab | Creatives Takeover"
+        description="Log customer conversations, ask product users one question, and get a clear verdict on whether to build, narrow, pivot or stop."
         keywords="product market fit, PMF score, startup validation, customer evidence, lean startup"
         url="/pmf-lab"
         structuredData={pageStructuredData}
@@ -402,302 +562,51 @@ export default function PMFLabPage() {
       <Navigation />
 
       <main>
-        <section className="px-4 pt-28 pb-20 md:pt-32 lg:pt-36 relative overflow-hidden">
-          {/* Background — same as original PMF Lab */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
-            <div
-              className="absolute -top-40 -right-48 w-[55rem] h-[55rem] rounded-full opacity-70 blur-3xl"
-              style={{
-                background:
-                  'radial-gradient(circle at 30% 30%, rgba(139, 92, 246, 0.3), transparent 60%), radial-gradient(circle at 70% 70%, rgba(236, 72, 153, 0.35), transparent 55%)',
-                animation: 'spin 28s linear infinite',
-              }}
-            />
-          </div>
-
-          <div className="container mx-auto max-w-5xl relative z-10">
-            <div className="mb-12 space-y-8 animate-fade-in">
-              <div className="text-center space-y-4">
-                <div className="space-y-3">
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold takeover-gradient creatives-font leading-tight pb-2">
-                    PMF Lab
-                  </h1>
-                  <p className="mx-auto max-w-4xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
-                    The PMF Lab evaluates user feedback to score and explain a product's chances of market success, guiding whether to build or iterate.
-                  </p>
-                </div>
-              </div>
-
-              {phase === 'intake' && (
-                <>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {ruleCards.map(({ label, title, description, icon: Icon, tone }) => (
-                      <div key={title} className={`rounded-2xl border p-5 ${tone}`}>
-                        <div className="flex items-start gap-3">
-                          <div className="mt-0.5 rounded-xl bg-background/70 p-2 text-current">
-                            <Icon className="h-4 w-4" />
-                          </div>
-                          <div className="space-y-2">
-                            <p className="text-xs font-semibold uppercase tracking-[0.18em]">{label}</p>
-                            <h3 className="text-lg font-semibold text-foreground">{title}</h3>
-                            <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-
-            {!user ? (
-              publicTab && (
-                <PreviewModeWrapper
-                  featureName={publicTab.featureName}
-                  description={publicTab.description || ''}
-                  showPricingCta={publicTab.showPricingCta}
-                >
-                  <div className="rounded-3xl border border-border/60 bg-background/90 p-6 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">
-                      Evidence-first PMF preview
-                    </p>
-                    <h2 className="mt-3 text-2xl font-semibold text-foreground">
-                      Log interviews, run the 40% test, then score the evidence.
-                    </h2>
-                    <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                      PMF Lab is built to interpret customer proof, not just rate an idea. Create an account to save interviews, publish a Sean Ellis survey, and unlock the full evidence score.
-                    </p>
-                    <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                      {['Interview log', 'Sean Ellis survey', 'Evidence score'].map((item) => (
-                        <div key={item} className="rounded-2xl border border-border/60 bg-muted/20 p-4 text-sm font-medium text-foreground">
-                          {item}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </PreviewModeWrapper>
-              )
-            ) : hasAccess ? (
-              <>
-                {/* PMF Lab silently inherits the ICP persona and the product from Demo
-                    Studio and uses them to prefill. Showing that provenance is what makes
-                    the three tools read as one chain instead of three separate forms. */}
-                <PMFContextBanner
-                  className="mb-6"
-                  icpPersonaName={icpPersonaName}
-                  waitlistProductName={waitlistProductName}
-                  icpDraftId={icpDraftId}
-                />
-                {isCompletionChainEnabled() && validationContextId && mode === 'discover' && (
-                  <ConceptRecruitment key={validationContextId} contextId={validationContextId} projectId={demoProjectId} audience={icpPersonaName} problem={icpProblem} />
-                )}
-
-                {/* Outcome follow-up deep-link (from the "what happened?" email) */}
-                {outcomeAnalysisId && (
-                  <div className="mb-8">
-                    <h2 className="mb-3 text-lg font-semibold text-foreground">Update what happened with your idea</h2>
-                    <PMFOutcomeCapture analysisId={outcomeAnalysisId} />
-                  </div>
-                )}
-
-                {/* Mode toggle — score existing evidence vs. find customers to talk to */}
-                <div className="mb-6 flex justify-center">
-                  <div className="inline-flex rounded-xl border border-border/60 bg-muted/30 p-1">
-                    {([
-                      { id: 'score' as const, label: 'Score my evidence' },
-                      { id: 'discover' as const, label: 'Find customers to talk to' },
-                    ]).map(({ id, label }) => (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => handleModeChange(id)}
-                        className={cn(
-                          'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
-                          mode === id
-                            ? 'bg-background text-foreground shadow-sm'
-                            : 'text-muted-foreground hover:text-foreground',
-                        )}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {mode === 'discover' ? (
-                  <PMFCustomerDiscovery
-                    defaultProductName={waitlistProductName}
-                    defaultTargetAudience={icpPersonaName}
-                    defaultIndustry={icpIndustry}
-                    defaultProblem={icpProblem}
-                    onCompleted={() => void loadDiscovery()}
-                    onLogInterview={(seed) => {
-                      setInterviewLeadSeed(seed);
-                      setMode('score');
-                      setActiveStep('score');
-                      requestAnimationFrame(() => scrollTo(scoreFormRef));
-                    }}
-                  />
-                ) : (
-                  <>
-                    {/* Phase A — Evidence hub + guided steps (one open at a time) */}
-                    {phase === 'intake' && (
-                      <div className="space-y-6">
-                        <PMFEvidenceHub
-                          evidence={evidence}
-                          requiredSignals={PMF_REQUIRED_SIGNALS}
-                          survey={survey}
-                          surveyAggregate={surveyAggregate}
-                          customerDiscoverySignals={customerDiscoverySignals}
-                          authoritativeSignalCount={analysis?.evidenceSignalCount}
-                          demoBehaviorSignals={
-                            analysis?.demoEvidence
-                              ? Math.max(
-                                  analysis.demoEvidence.completions,
-                                  analysis.demoEvidence.ctaClicks,
-                                  analysis.demoEvidence.signups,
-                                )
-                              : 0
-                          }
-                          recommended={hubRecommendation}
-                          onLogInterviews={() => chooseStep('score')}
-                          onCreateOrReviewSurvey={() => { chooseStep('gather'); handleSurveyHubAction(); }}
-                          onFindCustomers={() => setMode('discover')}
-                          onRunScore={() => chooseStep('score')}
-                        />
-
-                        {/* Step 1 — Gather evidence */}
-                        <div ref={surveyRef} className="scroll-mt-28 overflow-hidden rounded-3xl border border-border/60 bg-background/70">
-                          <button
-                            type="button"
-                            onClick={() => chooseStep('gather')}
-                            className="flex w-full items-center justify-between gap-3 p-5 text-left"
-                            aria-expanded={activeStep === 'gather'}
-                          >
-                            <div className="flex items-center gap-3">
-                              <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold', activeStep === 'gather' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground')}>1</span>
-                              <div>
-                                <p className="text-base font-semibold text-foreground">Gather your evidence</p>
-                                <p className="text-xs text-muted-foreground">Run the Sean Ellis 40% survey and check off the validation milestones you've hit.</p>
-                              </div>
-                            </div>
-                            <ChevronDown className={cn('h-5 w-5 shrink-0 text-muted-foreground transition-transform', activeStep === 'gather' && 'rotate-180')} />
-                          </button>
-                          <div className={cn('border-t border-border/60 p-5', activeStep !== 'gather' && 'hidden')}>
-                            <div className="grid gap-4 lg:grid-cols-2">
-                              <PMFEvidenceChecklist
-                                evidence={evidence}
-                                requiredSignals={PMF_REQUIRED_SIGNALS}
-                                onSaveChecklist={saveChecklist}
-                              />
-                              <PMFSeanEllisTest
-                                initialVery={evidence?.sean_ellis_very_disappointed}
-                                initialSomewhat={evidence?.sean_ellis_somewhat_disappointed}
-                                initialNot={evidence?.sean_ellis_not_disappointed}
-                                onSave={saveSeanEllis}
-                                survey={survey}
-                                surveyAggregate={surveyAggregate}
-                                shareUrl={surveyShareUrl}
-                                isCreatingSurvey={isCreatingSurvey}
-                                onCreateSurvey={handleCreateSurvey}
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Step 2 — Score your evidence */}
-                        <div ref={scoreFormRef} className="scroll-mt-28 overflow-hidden rounded-3xl border border-border/60 bg-background/70">
-                          <button
-                            type="button"
-                            onClick={() => chooseStep('score')}
-                            className="flex w-full items-center justify-between gap-3 p-5 text-left"
-                            aria-expanded={activeStep === 'score'}
-                          >
-                            <div className="flex items-center gap-3">
-                              <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold', activeStep === 'score' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground')}>2</span>
-                              <div>
-                                <p className="text-base font-semibold text-foreground">Score your evidence</p>
-                                <p className="text-xs text-muted-foreground">Log your interviews and demand signals, then get your PMF Readiness Score.</p>
-                              </div>
-                            </div>
-                            <ChevronDown className={cn('h-5 w-5 shrink-0 text-muted-foreground transition-transform', activeStep === 'score' && 'rotate-180')} />
-                          </button>
-                          {/* Kept mounted (hidden) when collapsed so in-progress form answers survive. */}
-                          <div className={cn('border-t border-border/60 p-5', activeStep !== 'score' && 'hidden')}>
-                            <PMFEvidenceForm
-                              initialInterviewLead={interviewLeadSeed}
-                              initialStep={wantsInterviewStep ? 1 : undefined}
-                              icpInterviewPlan={icpInterviewPlan}
-                              icpDraftId={icpDraftId}
-                              initialInterviews={interviewStore.interviews}
-                              onSaveInterview={interviewStore.saveInterview}
-                              onDeleteInterview={interviewStore.deleteInterview}
-                              onImportInterviews={interviewStore.saveMany}
-                              onSubmit={(answers) => runAnalysis(answers, {
-                                businessContext: {
-                                  productName: waitlistProductName ?? undefined,
-                                  targetAudience: icpPersonaName ?? undefined,
-                                },
-                              })}
-                              isSubmitting={false}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Phase B — Scoring Loader */}
-                    {phase === 'analyzing' && <PMFScoringLoader />}
-
-                    {/* Phase C — PMF Readiness Report */}
-                    {phase === 'results' && analysis && (
-                      <div className="space-y-6">
-                        <PMFReadinessReport
-                          analysis={analysis}
-                          analysisId={analysisId}
-                          isSaving={isSaving}
-                          isExporting={isExporting}
-                          evidence={evidence}
-                          trend={trend}
-                          onSave={saveReport}
-                          onExport={exportReport}
-                          onReanalyze={resetToIntake}
-                          onReScore={reScore}
-                          onSaveSeanEllis={saveSeanEllis}
-                          onSaveChecklist={saveChecklist}
-                          onFindCustomers={() => setMode('discover')}
-                          survey={survey}
-                          surveyAggregate={surveyAggregate}
-                          surveyShareUrl={surveyShareUrl}
-                          isCreatingSurvey={isCreatingSurvey}
-                          onCreateSurvey={handleCreateSurvey}
-                          customerDiscoverySignalCount={customerDiscoverySignals}
-                          validationContextId={validationContextId}
-                          icpAnalysisId={icpDraftId}
-                          pathwayEnabled={pathwayEnabled}
-                        />
-                      </div>
-                    )}
-                  </>
-                )}
-              </>
-            ) : (
-              // Defensive only: pmf_lab is `state: 'full'` on every plan, so this branch is
-              // currently unreachable. The unlock copy is derived from the plan config rather
-              // than hardcoded, which previously claimed "Starter and above" and contradicted
-              // the matrix that gives rookie full access.
-              <BlurredToolPreview
-                featureName="PMF Lab"
-                unlockCondition="PMF Lab is available on every plan. Refresh the page or contact support if this message persists."
-                requiredPlan={upgradeTarget}
-                locked
+        <ToolPageShell
+          title="PMF Lab"
+          purpose={PURPOSE}
+          context={user && hasAccess && validationContextId ? contextLine : undefined}
+          actions={caseSelector}
+        >
+          {!user ? (
+            publicTab && (
+              <PreviewModeWrapper
+                featureName={publicTab.featureName}
+                description={publicTab.description || ''}
+                showPricingCta={publicTab.showPricingCta}
               >
-                <div />
-              </BlurredToolPreview>
-            )}
-          </div>
-        </section>
+                <div className="rounded-xl border border-border/60 bg-card p-6">
+                  <h2 className="text-xl font-semibold text-foreground">Three steps to a clear answer</h2>
+                  <ol className="mt-4 grid gap-3 sm:grid-cols-3">
+                    {[
+                      ['Talk to customers', 'Log what real people told you.'],
+                      ['Ask product users', 'Share one question about your product.'],
+                      ['Get your verdict', 'Build, narrow, pivot or stop, with the reasons.'],
+                    ].map(([title, body], index) => (
+                      <li key={title} className="rounded-lg border border-border/60 p-4">
+                        <p className="text-sm font-medium text-foreground">{index + 1}. {title}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">{body}</p>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              </PreviewModeWrapper>
+            )
+          ) : hasAccess ? (
+            renderSignedIn()
+          ) : (
+            // Defensive only: pmf_lab is `state: 'full'` on every plan, so this branch is
+            // currently unreachable. The unlock copy is derived from the plan config.
+            <BlurredToolPreview
+              featureName="PMF Lab"
+              unlockCondition="PMF Lab is available on every plan. Refresh the page or contact support if this message persists."
+              requiredPlan={upgradeTarget}
+              locked
+            >
+              <div />
+            </BlurredToolPreview>
+          )}
+        </ToolPageShell>
       </main>
 
       <Footer />

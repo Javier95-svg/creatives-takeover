@@ -41,6 +41,7 @@ test('authenticated founder keeps two pre-build ideas isolated through PMF hydra
     const url = new URL(route.request().url());
     const table = url.pathname.split('/').pop();
     const wantsObject = (route.request().headers().accept || '').includes('vnd.pgrst.object');
+    if (table === 'account_context') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ userType: 'founder', approvalStatus: 'approved', hasCategoryAccess: true, requiresProject: false, hasProject: true, startupName: 'Fleetpay' }) });
     if (table === 'prebuild_validation_contexts') {
       const idFilter = url.searchParams.get('id');
       if (idFilter?.startsWith('eq.')) {
@@ -57,19 +58,15 @@ test('authenticated founder keeps two pre-build ideas isolated through PMF hydra
   });
   await page.route('**/functions/v1/**', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, success: true, handoff: null }) }));
 
+  // The most recent idea opens on its own; nothing from the other idea is read.
   await page.goto('/pmf-lab');
-  await expect(page.getByRole('heading', { name: 'Which idea are you evaluating?' })).toBeVisible();
-  await expect(page.getByText('Idea Alpha')).toBeVisible();
-  await expect(page.getByText('Idea Beta')).toBeVisible();
-
-  await page.getByText('Idea Alpha').click();
   await expect(page).toHaveURL(new RegExp(`context=${contexts[0].id}`));
   await expect.poll(() => scopedRequests.some((url) => url.includes(`validation_context_id=eq.${contexts[0].id}`))).toBe(true);
   expect(scopedRequests.filter((url) => url.includes(`validation_context_id=eq.${contexts[1].id}`))).toHaveLength(0);
 
+  // Switching ideas from the header selector reads only the newly chosen idea.
   scopedRequests.length = 0;
-  await page.goto('/pmf-lab');
-  await page.getByText('Idea Beta').click();
+  await page.getByRole('combobox', { name: 'Idea' }).selectOption(contexts[1].id);
   await expect(page).toHaveURL(new RegExp(`context=${contexts[1].id}`));
   await expect.poll(() => scopedRequests.some((url) => url.includes(`validation_context_id=eq.${contexts[1].id}`))).toBe(true);
   const firstBetaRequest = scopedRequests.findIndex((url) => url.includes(`validation_context_id=eq.${contexts[1].id}`));

@@ -122,7 +122,7 @@ test('Demo and MVP publication paths enforce structural checks before publishing
 });
 
 test('PMF interviews and Traction weeks can append attributed ICP confidence signals', () => {
-  const pmfForm = readFileSync(new URL('../src/components/pmf/PMFEvidenceForm.tsx', import.meta.url), 'utf8');
+  const pmfForm = readFileSync(new URL('../src/components/pmf/PMFInterviewSheet.tsx', import.meta.url), 'utf8');
   const traction = readFileSync(new URL('../src/pages/TractionEnginePage.tsx', import.meta.url), 'utf8');
   assert.match(pmfForm, /Which ICP assumption did this interview test/);
   assert.match(traction, /ICP assumption tested/);

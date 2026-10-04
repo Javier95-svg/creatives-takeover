@@ -47,7 +47,9 @@ test('PMF survey response analytics are owner-attributed and emitted once per in
   assert.match(server, /eventName: "pmf_survey_response_received"/);
   assert.match(server, /userId: survey\.user_id/);
   assert.match(server, /survey_slug: slug/);
-  assert.match(server, /sean_ellis_answer: answer/);
+  // Concept-only respondents never answer the 40% question, so the event records null.
+  assert.match(server, /sean_ellis_answer: conceptOnly \? null : answer/);
+  assert.match(server, /product_usage: usage \?\? "unknown"/);
   assert.match(server, /has_email: Boolean\(email\)/);
   assert.doesNotMatch(client, /captureEvent\('pmf_survey_response_received'/);
 });

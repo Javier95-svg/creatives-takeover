@@ -33,6 +33,11 @@ function getSessionId(): string {
   }
 }
 
+const USAGE = [
+  { value: 'used', label: 'Yes, I have used it' },
+  { value: 'concept_only', label: 'Not yet, I have only seen the idea' },
+] as const;
+
 const ANSWERS = [
   { value: 'very', label: 'Very disappointed' },
   { value: 'somewhat', label: 'Somewhat disappointed' },
@@ -44,6 +49,7 @@ export default function PMFSurveyPage() {
   const [survey, setSurvey] = useState<PublicSurvey | null>(null);
   const [state, setState] = useState<'loading' | 'ready' | 'missing'>('loading');
 
+  const [usage, setUsage] = useState<'' | 'used' | 'concept_only'>('');
   const [answer, setAnswer] = useState('');
   const [mainBenefit, setMainBenefit] = useState('');
   const [wouldUseInstead, setWouldUseInstead] = useState('');
@@ -78,11 +84,15 @@ export default function PMFSurveyPage() {
   }, [slug]);
 
   const productName = survey?.product_name?.trim() || 'this product';
+  // Only people who have used the product answer the 40% question; the others
+  // still leave feedback, which the founder sees separately.
+  const hasUsed = usage === 'used';
+  const canSubmit = usage === 'concept_only' || (hasUsed && Boolean(answer));
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!survey || !answer) {
-      toast.error('Please choose how you would feel.');
+    if (!survey || !canSubmit) {
+      toast.error(usage ? 'Please choose how you would feel.' : 'Please tell us whether you have used it.');
       return;
     }
     setSubmitting(true);
@@ -90,7 +100,8 @@ export default function PMFSurveyPage() {
       const { data, error } = await supabase.functions.invoke('pmf-survey-respond', {
         body: {
           slug: survey.slug,
-          seanEllisAnswer: answer,
+          seanEllisAnswer: hasUsed ? answer : undefined,
+          productUsage: usage,
           mainBenefit,
           wouldUseInstead,
           role,
@@ -132,7 +143,7 @@ export default function PMFSurveyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30 px-4 py-12">
+    <div className="min-h-screen bg-background px-4 py-12">
       <SEO title={`Quick feedback on ${productName}`} description="Share 60 seconds of feedback." url={`/pmf-survey/${slug}`} noindex />
       <div className="mx-auto w-full max-w-xl">
         {submitted ? (
@@ -148,10 +159,38 @@ export default function PMFSurveyPage() {
             <div className="space-y-2 text-center">
               <h1 className="text-2xl font-bold text-foreground">Quick feedback on {productName}</h1>
               <p className="text-sm leading-relaxed text-muted-foreground">
-                {survey?.intro?.trim() || 'A few quick questions — takes under a minute. Your answers are anonymous.'}
+                {survey?.intro?.trim() || 'A few quick questions. It takes under a minute and your answers are anonymous.'}
               </p>
             </div>
 
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold">Have you used {productName}?</Label>
+              <div className="space-y-2">
+                {USAGE.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setUsage(opt.value)}
+                    className={cn(
+                      'flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition-colors',
+                      usage === opt.value
+                        ? 'border-primary bg-primary/5 text-foreground'
+                        : 'border-border/60 bg-background hover:border-primary/40',
+                    )}
+                  >
+                    <span className={cn(
+                      'flex h-4 w-4 items-center justify-center rounded-full border',
+                      usage === opt.value ? 'border-primary' : 'border-muted-foreground/40',
+                    )}>
+                      {usage === opt.value && <span className="h-2 w-2 rounded-full bg-primary" />}
+                    </span>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {hasUsed && (<>
             {/* Sean Ellis question */}
             <div className="space-y-3">
               <Label className="text-sm font-semibold">
@@ -190,6 +229,13 @@ export default function PMFSurveyPage() {
               <Label htmlFor="instead" className="text-xs">What would you use instead if it went away?</Label>
               <Input id="instead" value={wouldUseInstead} onChange={(e) => setWouldUseInstead(e.target.value)} />
             </div>
+            </>)}
+            {usage === 'concept_only' && (
+              <div className="space-y-1.5">
+                <Label htmlFor="benefit" className="text-xs">What would make you want to try it?</Label>
+                <Textarea id="benefit" value={mainBenefit} onChange={(e) => setMainBenefit(e.target.value)} rows={2} />
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="feedback" className="text-xs">Anything else you'd change or want?</Label>
               <Textarea id="feedback" value={feedback} onChange={(e) => setFeedback(e.target.value)} rows={3} />
@@ -218,7 +264,7 @@ export default function PMFSurveyPage() {
               </label>
             </div>
 
-            <Button type="submit" className="w-full" disabled={submitting || !answer}>
+            <Button type="submit" className="w-full" disabled={submitting || !canSubmit}>
               {submitting ? 'Submitting…' : 'Submit feedback'}
             </Button>
           </form>

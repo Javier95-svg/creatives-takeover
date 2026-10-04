@@ -14,10 +14,15 @@ const corsHeaders = {
 const RATE_LIMIT_PER_MIN = 10;
 const PMF_REQUIRED_SIGNALS = 25;
 const VALID_ANSWERS = ["very", "somewhat", "not"];
+// "used": answered the Sean Ellis question and counts toward the 40% metric.
+// "concept_only": has only seen the idea, so their feedback is kept but the
+// Sean Ellis answer is not asked (the table enforces this pairing).
+const VALID_USAGE = ["used", "concept_only"];
 
 interface RespondRequest {
   slug?: string;
   seanEllisAnswer?: string;
+  productUsage?: string;
   mainBenefit?: string;
   wouldUseInstead?: string;
   role?: string;
@@ -70,8 +75,12 @@ serve(async (req) => {
 
     const slug = (body.slug || "").trim();
     const answer = (body.seanEllisAnswer || "").trim();
+    // Older survey links do not send productUsage; those keep the previous
+    // behaviour (an answer is required and usage is stored as unknown).
+    const usage = VALID_USAGE.includes((body.productUsage || "").trim()) ? (body.productUsage || "").trim() : null;
+    const conceptOnly = usage === "concept_only";
     if (!slug) return json({ success: false, error: "Missing survey." }, 400);
-    if (!VALID_ANSWERS.includes(answer)) {
+    if (!conceptOnly && !VALID_ANSWERS.includes(answer)) {
       return json({ success: false, error: "Please choose how you would feel." }, 400);
     }
 
@@ -114,7 +123,8 @@ serve(async (req) => {
       .from("pmf_survey_responses")
       .insert({
         survey_id: survey.id,
-        sean_ellis_answer: answer,
+        sean_ellis_answer: conceptOnly ? null : answer,
+        ...(usage ? { product_usage: usage } : {}),
         main_benefit: clean(body.mainBenefit, 2000),
         would_use_instead: clean(body.wouldUseInstead, 2000),
         role: clean(body.role, 200),
@@ -136,7 +146,8 @@ serve(async (req) => {
         userId: survey.user_id,
         properties: {
           survey_slug: slug,
-          sean_ellis_answer: answer,
+          sean_ellis_answer: conceptOnly ? null : answer,
+          product_usage: usage ?? "unknown",
           has_email: Boolean(email),
           has_main_benefit: Boolean(clean(body.mainBenefit, 2000)),
           has_feedback: Boolean(clean(body.feedback, 4000)),

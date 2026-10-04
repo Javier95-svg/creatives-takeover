@@ -241,7 +241,7 @@ test('client surfaces stage selector, community matches, external mentions, and 
 test('client surfaces flags, filters, pipeline, export, and interview linkage', () => {
   const discovery = read('src/components/pmf/PMFCustomerDiscovery.tsx');
   const pipeline = read('src/components/pmf/PMFDiscoveryPipeline.tsx');
-  const interview = read('src/components/pmf/PMFEvidenceForm.tsx');
+  const interview = read('src/components/pmf/pmfInterviewModel.ts');
   const workflow = read('.github/workflows/supabase-production-deploy.yml');
   assert.match(discovery, /pmf-discovery-search-v2/);
   assert.match(discovery, /pmf-discovery-pipeline-v1/);
