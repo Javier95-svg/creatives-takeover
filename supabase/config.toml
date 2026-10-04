@@ -235,6 +235,10 @@ verify_jwt = true
 [functions.mvp-app-visit]
 verify_jwt = false
 
+# Anonymous form submissions from published MVP sites; rate limit + size caps inside.
+[functions.mvp-app-lead]
+verify_jwt = false
+
 # Anonymous capture upload from published MVP sites; authenticated by the
 # unguessable pending session id created by the owner in the demo editor.
 [functions.demo-capture-ingest]

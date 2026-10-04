@@ -10,6 +10,8 @@ export interface MvpProjectStart {
   title: string;
   customer: string;
   prompt: string;
+  /** Three starting points for this project: waitlist, request form, booking. */
+  examples: string[];
 }
 
 export function icpArtifactToMvpStart(artifact: StoredIcpArtifact, projectTitle: string): MvpProjectStart | null {
@@ -26,5 +28,11 @@ export function icpArtifactToMvpStart(artifact: StoredIcpArtifact, projectTitle:
     success ? `It works if ${success.charAt(0).toLowerCase()}${success.slice(1)}.` : '',
     'Keep it to one page with a clear signup or request form.',
   ];
-  return { title, customer, prompt: parts.filter(Boolean).join(' ') };
+  const pain = clean(doc.decisionBrief?.rankedPains?.slice().sort((a, b) => a.rank - b.rank)[0]?.pain || doc.pain.whyItHurts);
+  const examples = [
+    `A waitlist page for ${title} aimed at ${customer}: a headline about ${success ? success.toLowerCase() : task}, three short benefits, and an email signup.`,
+    `A request form where ${customer} ask ${title} to ${task.charAt(0).toLowerCase()}${task.slice(1)}, with a confirmation message.`,
+    `A page where ${customer} book a 15-minute call${pain ? ` about ${pain.charAt(0).toLowerCase()}${pain.slice(1)}` : ''}, with name, email and a short note.`,
+  ];
+  return { title, customer, prompt: parts.filter(Boolean).join(' '), examples };
 }

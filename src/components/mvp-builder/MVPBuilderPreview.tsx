@@ -11,6 +11,7 @@ import {
   Code2,
   TriangleAlert,
   TerminalSquare,
+  Inbox,
   Link2,
   Wrench,
 } from 'lucide-react';
@@ -24,6 +25,8 @@ import {
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import MVPBlueprintWallpaper, { MVPBlueprintSketch } from '@/components/wallpapers/MVPBlueprintWallpaper';
+import MVPBuilderLeadsPanel from './MVPBuilderLeadsPanel';
+import MVPBuilderPublishCheckDialog from './MVPBuilderPublishCheckDialog';
 import { MVPBuilderDomainPanel } from './MVPBuilderDomainPanel';
 import { MVPBuilderPublishPanel } from './MVPBuilderPublishPanel';
 import { MVPBuilderCodePanel } from './MVPBuilderCodePanel';
@@ -61,7 +64,7 @@ const INITIAL_WEB_CONTAINER_STATE: MVPWebContainerState = {
   logs: [],
 };
 
-type PreviewTab = 'preview' | 'code' | 'domain' | 'integrations';
+type PreviewTab = 'preview' | 'code' | 'domain' | 'integrations' | 'leads';
 
 interface MVPBuilderPreviewProps {
   html: string | null;
@@ -188,6 +191,8 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
   const [loadingStep, setLoadingStep] = useState(0);
   const [activeTab, setActiveTab] = useState<PreviewTab>('preview');
   const [runtimeError, setRuntimeError] = useState<string | null>(null);
+  // Publish opens the check first (see MVPBuilderPublishCheckDialog).
+  const [publishCheckOpen, setPublishCheckOpen] = useState(false);
   const [webContainerState, setWebContainerState] = useState<MVPWebContainerState>(INITIAL_WEB_CONTAINER_STATE);
 
   useEffect(() => {
@@ -351,6 +356,18 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
               <Link2 className="h-3 w-3" />
               Integrations
             </button>
+            <button
+              onClick={() => setActiveTab('leads')}
+              className={cn(
+                'h-6 rounded-full px-3 text-xs font-medium transition-all duration-200 flex items-center gap-1.5',
+                activeTab === 'leads'
+                  ? 'bg-background shadow-sm text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <Inbox className="h-3 w-3" />
+              Leads
+            </button>
           </div>
 
           {statusBadge}
@@ -450,7 +467,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                       variant="ghost"
                       size="sm"
                       className="h-7 gap-1.5 px-2 text-xs"
-                      onClick={onDeploy}
+                      onClick={() => setPublishCheckOpen(true)}
                       disabled={(!html && projectFramework !== 'react-vite') || isDeploying}
                     >
                       {isDeploying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Globe className="h-3.5 w-3.5" />}
@@ -499,6 +516,24 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
               onRestoreSnapshot={onRestoreSnapshot}
               onSelectEntryFile={onSelectEntryFile}
             />
+          </div>
+        )}
+
+        <MVPBuilderPublishCheckDialog
+          open={publishCheckOpen}
+          onOpenChange={setPublishCheckOpen}
+          projectId={projectId}
+          files={projectFiles}
+          runtimeError={runtimeError}
+          previewErrors={previewState.errors ?? []}
+          framework={projectFramework}
+          onPublish={onDeploy}
+          onAutoFix={onAutoFix}
+        />
+
+        {activeTab === 'leads' && (
+          <div className="min-h-0 flex-1 overflow-y-auto bg-background">
+            <MVPBuilderLeadsPanel projectId={projectId} isPublished={Boolean(deploymentUrl)} />
           </div>
         )}
 

@@ -16,6 +16,7 @@ export const config = { runtime: 'edge' };
 
 import { fetchLaunchProject, launchDocument } from './_launch';
 import { renderSeoDocument } from './_seo';
+import { buildLeadScript } from './_mvpLeadScript';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? 'https://rcjlaybjnozqbsoxzboa.supabase.co';
 const SUPABASE_KEY = process.env.VITE_SUPABASE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
@@ -47,10 +48,14 @@ function contentTypeFor(filename: string): string {
 const VISIT_BEACON_URL = `${SUPABASE_URL}/functions/v1/mvp-app-visit`;
 const ANALYTICS_SNIPPET = `<script>(function(){try{if(/ct-capture=/.test(location.hash)){var s=document.createElement("script");s.src="https://${BASE_DOMAIN}/ct-capture.js";document.head.appendChild(s);}var k="ct_vid";var v=localStorage.getItem(k);if(!v){v=(self.crypto&&crypto.randomUUID)?crypto.randomUUID():Date.now()+"-"+Math.random().toString(36).slice(2);localStorage.setItem(k,v);}var d=new Date().toISOString().slice(0,10);var dk="ct_vd_"+d;if(sessionStorage.getItem(dk))return;sessionStorage.setItem(dk,"1");fetch("${VISIT_BEACON_URL}",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({slug:location.hostname.split(".")[0],visitorId:v}),keepalive:true}).catch(function(){});}catch(e){}})();</script>`;
 
+// Forms marked data-ct-lead save to the founder's Leads tab (see _mvpLeadScript.ts).
+const LEAD_SNIPPET = buildLeadScript(`${SUPABASE_URL}/functions/v1/mvp-app-lead`);
+
 function injectAnalytics(html: string): string {
+  const snippets = ANALYTICS_SNIPPET + LEAD_SNIPPET;
   const idx = html.toLowerCase().lastIndexOf('</body>');
-  if (idx === -1) return html + ANALYTICS_SNIPPET;
-  return html.slice(0, idx) + ANALYTICS_SNIPPET + html.slice(idx);
+  if (idx === -1) return html + snippets;
+  return html.slice(0, idx) + snippets + html.slice(idx);
 }
 
 function escapeHtml(value: string): string {

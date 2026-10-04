@@ -61,6 +61,8 @@ const CALM_FILES = [
   'src/components/mvp-builder/MVPBuilderPublishPanel.tsx',
   'src/components/mvp-builder/MVPBuilderDomainPanel.tsx',
   'src/components/wallpapers/MVPBlueprintWallpaper.tsx',
+  'src/components/mvp-builder/MVPBuilderLeadsPanel.tsx',
+  'src/components/mvp-builder/MVPBuilderPublishCheckDialog.tsx',
 ];
 
 const VISUAL_RULES: Array<[RegExp, string]> = [

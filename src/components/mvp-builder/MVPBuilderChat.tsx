@@ -256,7 +256,7 @@ function stripTrailingMention(value: string): string {
 
 interface MVPBuilderChatProps {
   /** A first message built from the workspace project's ICP, when it has one. */
-  projectStart?: { title: string; customer: string; prompt: string } | null;
+  projectStart?: { title: string; customer: string; prompt: string; examples: string[] } | null;
   messages: MVPMessage[];
   promptHistory: MVPPromptHistoryItem[];
   selectedModels: string[];
@@ -742,7 +742,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
               ) : null}
               <div className="space-y-2">
                 <p className="text-xs font-medium text-muted-foreground">Or start from an example</p>
-                {START_EXAMPLES.map((example) => (
+                {(projectStart?.examples.length ? projectStart.examples : START_EXAMPLES).map((example) => (
                   <button
                     key={example}
                     type="button"
@@ -756,6 +756,9 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                   </button>
                 ))}
               </div>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Works today: pages, forms that save signups and requests to your Leads tab, export and your own domain. Not yet: user logins and payments.
+              </p>
               <div className="border-t border-white/8 pt-4">
                 <Button
                   type="button"
