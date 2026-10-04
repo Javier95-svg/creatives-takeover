@@ -126,7 +126,7 @@ export function getDemoReadiness(steps: DemoStepWithHotspots[], theme?: DemoThem
     blockers.push('Fix where the end button goes: use a web address, or a page here such as /p/your-page.');
   } else if (ctaLabel && !ctaHref) {
     blockers.push('Add where the end button goes, or clear its label.');
-  } else if (!ctaHref) {
+  } else if (!ctaHref && !theme?.collectEmail) {
     suggestions.push('Add an end button, such as "Join the waitlist", so interested viewers can act.');
   }
 

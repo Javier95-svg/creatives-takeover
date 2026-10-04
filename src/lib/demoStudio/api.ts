@@ -979,6 +979,19 @@ export async function createLaunchSignup(
   trackDemoStudioFunnel('demo_lead_captured', { projectId });
 }
 
+/** Owner-read: emails left on a demo's end screen (or its launch page), newest first. */
+export async function listDemoSignups(projectId: string, demoId: string): Promise<Array<{ email: string; created_at: string; referrer: string | null; owner_view: boolean | null }>> {
+  const { data, error } = await supabase
+    .from(SIGNUPS)
+    .select('email, created_at, referrer, owner_view, demo_id')
+    .eq('project_id', projectId)
+    .eq('demo_id', demoId)
+    .order('created_at', { ascending: false })
+    .limit(500);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as unknown as Array<{ email: string; created_at: string; referrer: string | null; owner_view: boolean | null }>;
+}
+
 /** Owner-only: send a sample payload to a webhook URL to confirm lead routing works. */
 export async function testLeadWebhook(projectId: string, webhookUrl: string): Promise<void> {
   const { data, error } = await supabase.functions.invoke('demo-studio-lead', {

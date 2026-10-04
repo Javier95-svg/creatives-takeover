@@ -36,6 +36,10 @@ export interface DemoTheme {
   ownerPlan?: string;
   endCtaLabel?: string;
   endCtaHref?: string;
+  /** Ask viewers for their email on the end screen; leads go to demo_studio_signups. */
+  collectEmail?: boolean;
+  /** The line above the email box, e.g. "Get early access". */
+  collectEmailPrompt?: string;
   brief?: {
     audience?: string;
     promise?: string;

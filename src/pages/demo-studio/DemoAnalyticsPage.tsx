@@ -7,6 +7,7 @@ import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import DemoAnalyticsPanel from '@/components/demo-studio/analytics/DemoAnalyticsPanel';
+import DemoLeadsPanel from '@/components/demo-studio/analytics/DemoLeadsPanel';
 import { getDemo } from '@/lib/demoStudio/api';
 import type { DemoStudioDemo } from '@/lib/demoStudio/types';
 
@@ -84,9 +85,14 @@ export default function DemoAnalyticsPage() {
         </div>
 
         <div className="mb-6">
-          <h1 className="creatives-font text-3xl font-bold md:text-4xl">{demo?.title}</h1>
+          <h1 className="font-space-grotesk text-3xl font-semibold text-foreground md:text-4xl">{demo?.title}</h1>
         </div>
 
+        {demoId && projectId ? (
+          <div className="mb-6">
+            <DemoLeadsPanel projectId={projectId} demoId={demoId} collectsEmail={demo?.theme?.collectEmail === true} />
+          </div>
+        ) : null}
         {demoId && <DemoAnalyticsPanel demoId={demoId} publicId={demo?.public_id} />}
       </main>
     </div>

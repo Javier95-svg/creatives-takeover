@@ -16,6 +16,8 @@ import {
   Loader2,
   Monitor,
   RefreshCw,
+  Redo2,
+  Undo2,
   MousePointerClick,
   Rocket,
   X,
@@ -50,6 +52,7 @@ import { trackDemoStudioFunnel, trackToolOutputCreated } from '@/lib/analytics';
 import { buildEmbedSnippet } from '@/lib/demoStudio/share';
 import {
   applyStoryboardToDemo,
+  generateDemoStudioDraftStoryboard,
   createHotspot,
   createStep,
   deleteHotspot,
@@ -71,6 +74,10 @@ import {
 } from '@/lib/demoStudio/api';
 import { getDemoReadiness } from '@/lib/demoStudio/readiness';
 import { createSaveQueue, type SaveQueue, type SaveQueueState } from '@/lib/demoStudio/saveQueue';
+import { createEditHistory, toRestorePayload, type EditSnapshot } from '@/lib/demoStudio/editHistory';
+import { fileToDownscaledDataUrl } from '@/lib/demoStudio/tryDraft';
+import { captionsFromDraft, screensNeedingCaptions } from '@/lib/demoStudio/captionDraft';
+import { supabase } from '@/integrations/supabase/client';
 import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
 import {
   captureVideoFrame,
@@ -156,6 +163,123 @@ export default function DemoEditorPage() {
     return () => window.removeEventListener('beforeunload', warn);
   }, [hasUnsavedChanges]);
 
+  // Undo and redo. A snapshot of the demo is recorded before each change and
+  // restored atomically through restore_demo_edit.
+  const historyRef = useRef(createEditHistory<DemoStepWithHotspots>());
+  const [, setHistoryVersion] = useState(0);
+  const [restoring, setRestoring] = useState(false);
+  // Remounts uncontrolled fields (title, end button) after an undo or redo.
+  const [restoreCount, setRestoreCount] = useState(0);
+  const latestRef = useRef<EditSnapshot<DemoStepWithHotspots>>({ title: '', theme: {}, steps: [] });
+  latestRef.current = { title: demo?.title ?? '', theme: (demo?.theme ?? {}) as Record<string, unknown>, steps };
+  const lastRecordAtRef = useRef(0);
+  const draggingRef = useRef(false);
+  const recordHistory = useCallback(() => {
+    historyRef.current.record(latestRef.current);
+    lastRecordAtRef.current = Date.now();
+    setHistoryVersion((value) => value + 1);
+  }, []);
+  // Typing in a field records once per pause, not once per key.
+  const recordHistoryThrottled = useCallback(() => {
+    if (Date.now() - lastRecordAtRef.current > 1500) recordHistory();
+    else lastRecordAtRef.current = Date.now();
+  }, [recordHistory]);
+
+  // Writes a caption for each screen that has none, from the screenshot itself
+  // (the same vision draft the Try page uses: free, a few calls a minute).
+  // Captions the founder wrote are never replaced.
+  const [draftingCaptions, setDraftingCaptions] = useState(false);
+  const [rightTab, setRightTab] = useState<'screen' | 'finish'>('screen');
+  useEffect(() => {
+    if (selectedHotspotId) setRightTab('screen');
+  }, [selectedHotspotId]);
+  const draftCaptions = async () => {
+    const targets = screensNeedingCaptions(steps);
+    if (targets.length === 0 || draftingCaptions) return;
+    recordHistory();
+    setDraftingCaptions(true);
+    let filled = 0;
+    try {
+      for (let start = 0; start < targets.length; start += 3) {
+        const batch = targets.slice(start, start + 3);
+        const screenshots = await Promise.all(batch.map(async (step) => {
+          const response = await fetch(step.asset_url as string);
+          const blob = await response.blob();
+          return fileToDownscaledDataUrl(new File([blob], 'screen.jpg', { type: blob.type || 'image/jpeg' }), 1024, 0.8);
+        }));
+        const result = await generateDemoStudioDraftStoryboard({
+          productName: project?.name,
+          description: project?.tagline ?? undefined,
+          stepCount: batch.length >= 3 ? 3 : 2,
+          brief: {
+            audience: brief?.audience ?? theme.brief?.audience ?? undefined,
+            problem: brief?.problem ?? undefined,
+            product_promise: brief?.product_promise ?? theme.brief?.promise ?? undefined,
+          },
+          screenshots,
+        });
+        for (const { stepId, caption } of captionsFromDraft(batch, result)) {
+          void handleStepFieldCommit(stepId, { caption });
+          filled += 1;
+        }
+      }
+      if (filled > 0) toast.success(filled === 1 ? 'Drafted 1 caption. Edit it to sound like you.' : `Drafted ${filled} captions. Edit them to sound like you.`);
+      else toast.info('Could not draft captions right now. Write them yourself, or try again in a minute.');
+    } catch (draftError) {
+      toast.error('Could not draft captions.', { description: draftError instanceof Error ? draftError.message : undefined });
+    } finally {
+      setDraftingCaptions(false);
+    }
+  };
+
+  const applyHistory = async (direction: 'undo' | 'redo') => {
+    if (!demo || restoring) return;
+    const history = historyRef.current;
+    const target = direction === 'undo' ? history.undo(latestRef.current) : history.redo(latestRef.current);
+    if (!target) return;
+    setRestoring(true);
+    try {
+      if (!(await saveQueue.flush())) throw new Error('Some changes are not saved yet.');
+      const { error } = await (supabase as any).rpc('restore_demo_edit', {
+        p_demo_id: demo.id,
+        p_title: target.title,
+        p_theme: target.theme,
+        p_steps: toRestorePayload(target.steps as unknown as Array<Record<string, unknown>>),
+      });
+      if (error) throw error;
+      setDemo({ ...demo, title: target.title, theme: target.theme as DemoTheme });
+      setSteps(target.steps);
+      setSelectedStepId((current) => (target.steps.some((step) => step.id === current) ? current : target.steps[0]?.id ?? null));
+      setSelectedHotspotId(null);
+      setRestoreCount((value) => value + 1);
+    } catch (restoreError) {
+      // Put the history back the way it was.
+      if (direction === 'undo') history.redo(target);
+      else history.undo(target);
+      toast.error(direction === 'undo' ? 'Could not undo.' : 'Could not redo.', {
+        description: restoreError instanceof Error ? restoreError.message : undefined,
+      });
+    } finally {
+      setRestoring(false);
+      setHistoryVersion((value) => value + 1);
+    }
+  };
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey)) return;
+      const key = event.key.toLowerCase();
+      if (key !== 'z' && key !== 'y') return;
+      // Inside a text field the browser's own undo applies.
+      const target = event.target as HTMLElement | null;
+      if (target && (target.closest('input, textarea, [contenteditable="true"]'))) return;
+      event.preventDefault();
+      void applyHistory(key === 'y' || event.shiftKey ? 'redo' : 'undo');
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+
   const theme = useMemo<DemoTheme>(() => demo?.theme ?? {}, [demo?.theme]);
   const primaryColor = theme.primaryColor || DEFAULT_COLOR;
 
@@ -229,6 +353,7 @@ export default function DemoEditorPage() {
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0 || !user || !demoId) return;
+    recordHistory();
     setUploading(true);
     try {
       let position = steps.length;
@@ -355,6 +480,7 @@ export default function DemoEditorPage() {
 
   const handleConfirmCapture = async () => {
     if (!user || !demoId || keptFrames.length === 0) return;
+    recordHistory();
     setCapturing(true);
     // We have the frames now, so stop the screen share immediately.
     stopStream(captureStreamRef.current);
@@ -391,6 +517,7 @@ export default function DemoEditorPage() {
   };
 
   const handleReorder = async (orderedIds: string[]) => {
+    recordHistory();
     setSteps((prev) => orderedIds.map((id, i) => ({ ...prev.find((s) => s.id === id)!, position: i })));
     try {
       await persistStepOrder(orderedIds);
@@ -400,6 +527,7 @@ export default function DemoEditorPage() {
   };
 
   const handleDeleteStep = async (id: string) => {
+    recordHistory();
     const prev = steps;
     setSteps((s) => s.filter((step) => step.id !== id));
     if (selectedStepId === id) setSelectedStepId(prev.find((s) => s.id !== id)?.id ?? null);
@@ -414,6 +542,7 @@ export default function DemoEditorPage() {
   const handleDuplicateStep = async (id: string) => {
     const step = steps.find((item) => item.id === id);
     if (!step) return;
+    recordHistory();
     try {
       const created = await duplicateStep(step, steps.length);
       setSteps((prev) => [...prev, created]);
@@ -427,6 +556,7 @@ export default function DemoEditorPage() {
 
   const handleApplyStoryboard = async () => {
     if (!demo || !brief?.ai_storyboard?.length) return;
+    recordHistory();
     try {
       const created = await applyStoryboardToDemo(demo.id, brief.ai_storyboard, steps.length);
       setSteps((prev) => [...prev, ...created]);
@@ -445,6 +575,7 @@ export default function DemoEditorPage() {
   const handleReplaceFile = async (files: FileList | null) => {
     const file = files?.[0];
     if (!file || !user || !selectedStep) return;
+    recordHistory();
     if (!file.type.startsWith('image/')) {
       toast.error('Please choose an image file.');
       return;
@@ -465,6 +596,7 @@ export default function DemoEditorPage() {
   const handleImportHtml = async (files: FileList | null) => {
     const file = files?.[0];
     if (!file || !user || !demoId) return;
+    recordHistory();
     if (!/\.html?$/i.test(file.name) && file.type !== 'text/html') {
       toast.error('Choose a saved .html page (e.g. exported with SingleFile).');
       return;
@@ -520,6 +652,7 @@ export default function DemoEditorPage() {
 
   const handleCreateHotspot = async (rect: Rect) => {
     if (!selectedStepId) return;
+    recordHistory();
     try {
       const created = await createHotspot(selectedStepId, rect);
       setSteps((prev) =>
@@ -535,11 +668,13 @@ export default function DemoEditorPage() {
 
   const handleInspectorChange = (patch: Partial<DemoStudioHotspot>) => {
     if (!selectedHotspotId) return;
+    recordHistoryThrottled();
     patchHotspotLocal(selectedHotspotId, patch);
     persistHotspot(selectedHotspotId, patch);
   };
 
   const handleDeleteHotspot = async (id: string) => {
+    recordHistory();
     const prev = steps;
     setSteps((s) =>
       s.map((step) => ({ ...step, hotspots: step.hotspots.filter((h) => h.id !== id) })),
@@ -555,12 +690,14 @@ export default function DemoEditorPage() {
   };
 
   const handleGeometryCommit = (id: string, rect: Rect) => {
+    draggingRef.current = false;
     patchHotspotLocal(id, rect);
     persistHotspot(id, rect);
   };
 
   const updateTheme = async (patch: Partial<DemoTheme>) => {
     if (!demo) return;
+    recordHistory();
     const nextTheme = { ...theme, ...patch };
     setDemo({ ...demo, theme: nextTheme });
     saveQueue.enqueue('demo', { theme: nextTheme }, (queued) => updateDemo(demo.id, queued));
@@ -568,6 +705,7 @@ export default function DemoEditorPage() {
 
   const handleTitleBlur = async (value: string) => {
     if (!demo || value.trim() === demo.title) return;
+    recordHistory();
     const title = value.trim() || 'Untitled demo';
     setDemo({ ...demo, title });
     saveQueue.enqueue('demo', { title }, (queued) => updateDemo(demo.id, queued));
@@ -739,6 +877,7 @@ export default function DemoEditorPage() {
             </Link>
           </Button>
           <Input
+            key={`title-${restoreCount}`}
             defaultValue={demo?.title ?? ''}
             onBlur={(e) => handleTitleBlur(e.target.value)}
             className="h-9 w-full min-w-0 flex-1 border-transparent bg-transparent text-sm font-semibold hover:border-border focus:border-border sm:w-48 sm:flex-none md:w-72"
@@ -767,6 +906,28 @@ export default function DemoEditorPage() {
               </Link>
             </Button>
           )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            aria-label="Undo"
+            title="Undo (Ctrl or Cmd + Z)"
+            disabled={restoring || !historyRef.current.canUndo()}
+            onClick={() => void applyHistory('undo')}
+          >
+            <Undo2 className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            aria-label="Redo"
+            title="Redo (Ctrl or Cmd + Shift + Z)"
+            disabled={restoring || !historyRef.current.canRedo()}
+            onClick={() => void applyHistory('redo')}
+          >
+            <Redo2 className="h-4 w-4" />
+          </Button>
           <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setPreviewOpen(true)}>
             <Eye className="h-4 w-4" /> <span className="hidden sm:inline">Preview</span>
           </Button>
@@ -839,6 +1000,19 @@ export default function DemoEditorPage() {
             ) : (
               <p className="mt-2 text-sm text-muted-foreground">Ready to publish.</p>
             )}
+            {screensNeedingCaptions(steps).length > 0 ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-3 h-auto w-full whitespace-normal py-2"
+                disabled={draftingCaptions}
+                onClick={() => void draftCaptions()}
+              >
+                {draftingCaptions ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : null}
+                Draft captions with AI
+              </Button>
+            ) : null}
             {demoReadiness.suggestions.length ? (
               <div className="mt-3 border-t border-border/60 pt-3">
                 <p className="text-xs font-medium text-muted-foreground">Optional</p>
@@ -970,7 +1144,13 @@ export default function DemoEditorPage() {
               onSelectHotspot={setSelectedHotspotId}
               onCreateHotspot={handleCreateHotspot}
               onCommitGeometry={handleGeometryCommit}
-              onPreviewGeometry={(id, rect) => patchHotspotLocal(id, rect)}
+              onPreviewGeometry={(id, rect) => {
+                if (!draggingRef.current) {
+                  draggingRef.current = true;
+                  recordHistory();
+                }
+                patchHotspotLocal(id, rect);
+              }}
             />
           )}
           {demo?.public_id && (
@@ -1027,6 +1207,169 @@ export default function DemoEditorPage() {
 
         {/* Right: inspector + theme */}
         <aside className="space-y-4 lg:sticky lg:top-[68px] lg:h-fit">
+          {/* Two tabs instead of four stacked panels: the screen you are on, and
+              how the demo ends. Selecting a click target opens "This screen". */}
+          <div role="tablist" aria-label="Editor panels" className="grid grid-cols-2 rounded-lg border border-border bg-card p-1">
+            {([['screen', 'This screen'], ['finish', 'Finish']] as const).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={rightTab === id}
+                onClick={() => setRightTab(id)}
+                className={rightTab === id
+                  ? 'rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground'
+                  : 'rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground'}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {rightTab === 'screen' ? (
+            <>
+          <div className="space-y-4 rounded-xl border border-border bg-card p-4">
+            <div className="flex items-center justify-between gap-2">
+              <h4 className="text-sm font-semibold">{selectedStep ? `Screen ${steps.findIndex((step) => step.id === selectedStep.id) + 1}` : 'Screen'}</h4>
+              {selectedStep && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 gap-1"
+                    onClick={() => replaceInputRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    <RefreshCw className="h-4 w-4" /> Replace
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-8 gap-1" onClick={() => handleDuplicateStep(selectedStep.id)}>
+                    <CopyPlus className="h-4 w-4" /> Duplicate
+                  </Button>
+                </div>
+              )}
+            </div>
+            {selectedStep ? (
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="step-title">Screen title</Label>
+                  <Input
+                    id="step-title"
+                    onFocus={recordHistory}
+                    value={selectedStep.title ?? ''}
+                    placeholder="e.g. Create your first project"
+                    onChange={(e) => patchStepLocal(selectedStep.id, { title: e.target.value })}
+                    onBlur={(e) => handleStepFieldCommit(selectedStep.id, { title: e.target.value || null })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="step-caption">Caption the viewer reads</Label>
+                  <Textarea
+                    id="step-caption"
+                    onFocus={recordHistory}
+                    rows={3}
+                    value={selectedStep.caption ?? ''}
+                    placeholder="Tell viewers what they are seeing and why it matters."
+                    onChange={(e) => patchStepLocal(selectedStep.id, { caption: e.target.value })}
+                    onBlur={(e) => handleStepFieldCommit(selectedStep.id, { caption: e.target.value || null })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="speaker-notes">Speaker notes (optional)</Label>
+                  <Textarea
+                    id="speaker-notes"
+                    onFocus={recordHistory}
+                    rows={3}
+                    value={selectedStep.speaker_notes ?? ''}
+                    placeholder="What to say if you record a voice-over or pitch video."
+                    onChange={(e) => patchStepLocal(selectedStep.id, { speaker_notes: e.target.value })}
+                    onBlur={(e) => handleStepFieldCommit(selectedStep.id, { speaker_notes: e.target.value || null })}
+                  />
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Pick a screen on the left to write its caption.</p>
+            )}
+          </div>
+
+          <HotspotInspector
+            hotspot={selectedHotspot}
+            screens={steps.map((step, index) => ({ id: step.id, label: step.title?.trim() || `Screen ${index + 1}` }))}
+            currentScreenId={selectedStepId}
+            onChange={handleInspectorChange}
+            onDelete={handleDeleteHotspot}
+          />
+            </>
+          ) : (
+            <>
+          <div className="space-y-4 rounded-xl border border-border bg-card p-4">
+            <h4 className="text-sm font-semibold">End button and colour</h4>
+            <div className="space-y-1.5">
+              <Label htmlFor="demo-cta-label">End button label</Label>
+              <Input
+                key={`cta-label-${restoreCount}`}
+                id="demo-cta-label"
+                defaultValue={theme.endCtaLabel ?? ''}
+                placeholder="Join the waitlist"
+                onBlur={(e) => updateTheme({ endCtaLabel: e.target.value || undefined })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="demo-cta-url">Where it goes</Label>
+              <Input
+                key={`cta-url-${restoreCount}`}
+                id="demo-cta-url"
+                defaultValue={theme.endCtaHref ?? ''}
+                placeholder="https://yoursite.com/signup or /p/your-page"
+                onBlur={(e) => updateTheme({ endCtaHref: e.target.value || undefined })}
+              />
+            </div>
+            <div className="space-y-2 border-t border-border/60 pt-3">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <Label htmlFor="collect-email">Ask for email at the end</Label>
+                  <p className="text-xs text-muted-foreground">Leads show up in this demo&apos;s results.</p>
+                </div>
+                <Switch
+                  id="collect-email"
+                  checked={theme.collectEmail === true}
+                  onCheckedChange={(checked) => updateTheme({ collectEmail: checked })}
+                />
+              </div>
+              {theme.collectEmail ? (
+                <Input
+                  aria-label="Line above the email box"
+                  defaultValue={theme.collectEmailPrompt ?? ''}
+                  placeholder="Want early access? Leave your email."
+                  onBlur={(e) => updateTheme({ collectEmailPrompt: e.target.value.trim() || undefined })}
+                />
+              ) : null}
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="primary-color">Demo colour</Label>
+              <input
+                id="primary-color"
+                type="color"
+                value={primaryColor}
+                onChange={(e) => updateTheme({ primaryColor: e.target.value })}
+                className="h-8 w-12 cursor-pointer rounded border border-border bg-transparent"
+              />
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <Label htmlFor="watermark">Show watermark</Label>
+                {!canRemoveWatermark(planTier) && (
+                  <p className="text-label text-muted-foreground">Upgrade to Rising or Pro to remove.</p>
+                )}
+              </div>
+              <Switch
+                id="watermark"
+                checked={shouldShowWatermark(theme.watermark, planTier)}
+                disabled={!canRemoveWatermark(planTier)}
+                onCheckedChange={(checked) => updateTheme({ watermark: checked })}
+              />
+            </div>
+          </div>
+
           <DashboardDisclosure title="Story notes" summary="Optional. Who this is for and the moment it should land.">
           <div className="space-y-4">
             <div className="space-y-1.5">
@@ -1060,120 +1403,8 @@ export default function DemoEditorPage() {
             </div>
           </div>
           </DashboardDisclosure>
-
-          <HotspotInspector
-            hotspot={selectedHotspot}
-            screens={steps.map((step, index) => ({ id: step.id, label: step.title?.trim() || `Screen ${index + 1}` }))}
-            currentScreenId={selectedStepId}
-            onChange={handleInspectorChange}
-            onDelete={handleDeleteHotspot}
-          />
-
-          <div className="space-y-4 rounded-xl border border-border bg-card p-4">
-            <div className="flex items-center justify-between gap-2">
-              <h4 className="text-sm font-semibold">This screen</h4>
-              {selectedStep && (
-                <div className="flex items-center gap-1">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 gap-1"
-                    onClick={() => replaceInputRef.current?.click()}
-                    disabled={uploading}
-                  >
-                    <RefreshCw className="h-4 w-4" /> Replace
-                  </Button>
-                  <Button size="sm" variant="ghost" className="h-8 gap-1" onClick={() => handleDuplicateStep(selectedStep.id)}>
-                    <CopyPlus className="h-4 w-4" /> Duplicate
-                  </Button>
-                </div>
-              )}
-            </div>
-            {selectedStep ? (
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="step-title">Screen title</Label>
-                  <Input
-                    id="step-title"
-                    value={selectedStep.title ?? ''}
-                    placeholder="e.g. Create your first project"
-                    onChange={(e) => patchStepLocal(selectedStep.id, { title: e.target.value })}
-                    onBlur={(e) => handleStepFieldCommit(selectedStep.id, { title: e.target.value || null })}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="step-caption">Caption the viewer reads</Label>
-                  <Textarea
-                    id="step-caption"
-                    rows={3}
-                    value={selectedStep.caption ?? ''}
-                    placeholder="Tell viewers what they are seeing and why it matters."
-                    onChange={(e) => patchStepLocal(selectedStep.id, { caption: e.target.value })}
-                    onBlur={(e) => handleStepFieldCommit(selectedStep.id, { caption: e.target.value || null })}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="speaker-notes">Speaker notes (optional)</Label>
-                  <Textarea
-                    id="speaker-notes"
-                    rows={3}
-                    value={selectedStep.speaker_notes ?? ''}
-                    placeholder="What to say if you record a voice-over or pitch video."
-                    onChange={(e) => patchStepLocal(selectedStep.id, { speaker_notes: e.target.value })}
-                    onBlur={(e) => handleStepFieldCommit(selectedStep.id, { speaker_notes: e.target.value || null })}
-                  />
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">Pick a screen on the left to write its caption.</p>
-            )}
-          </div>
-
-          <div className="space-y-4 rounded-xl border border-border bg-card p-4">
-            <h4 className="text-sm font-semibold">End button and colour</h4>
-            <div className="space-y-1.5">
-              <Label htmlFor="demo-cta-label">End button label</Label>
-              <Input
-                id="demo-cta-label"
-                defaultValue={theme.endCtaLabel ?? ''}
-                placeholder="Join the waitlist"
-                onBlur={(e) => updateTheme({ endCtaLabel: e.target.value || undefined })}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="demo-cta-url">Where it goes</Label>
-              <Input
-                id="demo-cta-url"
-                defaultValue={theme.endCtaHref ?? ''}
-                placeholder="https://yoursite.com/signup or /p/your-page"
-                onBlur={(e) => updateTheme({ endCtaHref: e.target.value || undefined })}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="primary-color">Demo colour</Label>
-              <input
-                id="primary-color"
-                type="color"
-                value={primaryColor}
-                onChange={(e) => updateTheme({ primaryColor: e.target.value })}
-                className="h-8 w-12 cursor-pointer rounded border border-border bg-transparent"
-              />
-            </div>
-            <div className="flex items-center justify-between gap-2">
-              <div>
-                <Label htmlFor="watermark">Show watermark</Label>
-                {!canRemoveWatermark(planTier) && (
-                  <p className="text-label text-muted-foreground">Upgrade to Rising or Pro to remove.</p>
-                )}
-              </div>
-              <Switch
-                id="watermark"
-                checked={shouldShowWatermark(theme.watermark, planTier)}
-                disabled={!canRemoveWatermark(planTier)}
-                onCheckedChange={(checked) => updateTheme({ watermark: checked })}
-              />
-            </div>
-          </div>
+            </>
+          )}
         </aside>
       </div>
 
@@ -1258,6 +1489,7 @@ export default function DemoEditorPage() {
           demoId={demoId}
           existingStepCount={steps.length}
           onImported={(imported) => {
+            recordHistory();
             setSteps((prev) => [...prev, ...imported]);
             setSelectedStepId((prev) => prev ?? imported[0]?.id ?? null);
             trackDemoStudioFunnel('demo_step_added', { demoId, source: 'live_capture', count: imported.length });

@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { submitDemoResponse, trackDemoEvent } from '@/lib/demoStudio/events';
+import { createLaunchSignup } from '@/lib/demoStudio/api';
 import { resolveGotoTarget } from '@/lib/demoStudio/readiness';
 import SnapshotFrame from '@/components/demo-studio/SnapshotFrame';
 import type { DemoStepWithHotspots, DemoStudioHotspot, DemoTheme } from '@/lib/demoStudio/types';
@@ -52,6 +53,23 @@ export default function DemoPlayer({
   const [exporting, setExporting] = useState<null | 'mp4' | 'gif' | 'narrated'>(null);
   const [objection, setObjection] = useState('');
   const [responseSent, setResponseSent] = useState(false);
+  const [leadEmail, setLeadEmail] = useState('');
+  const [leadState, setLeadState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
+  const collectEmail = theme?.collectEmail === true;
+
+  const submitLead = async () => {
+    if (mode !== 'live' || !projectId || !demoId || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(leadEmail.trim())) return;
+    setLeadState('sending');
+    try {
+      await createLaunchSignup(projectId, leadEmail, {
+        demoId,
+        referrer: typeof document !== 'undefined' ? document.referrer || null : null,
+      });
+      setLeadState('done');
+    } catch {
+      setLeadState('error');
+    }
+  };
   const onCompleteRef = useRef(onComplete);
   useEffect(() => {
     onCompleteRef.current = onComplete;
@@ -221,6 +239,38 @@ export default function DemoPlayer({
             <p className="max-w-sm text-sm text-white/70">
               {mode === 'live' ? 'Your reaction helps the founder decide what to build.' : 'You reached the outcome. Publish it to get a live share link.'}
             </p>
+            {collectEmail ? (
+              leadState === 'done' ? (
+                <p className="text-sm font-medium text-white">Thanks, you are on the list.</p>
+              ) : (
+                <form
+                  className="w-full max-w-sm space-y-2"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void submitLead();
+                  }}
+                >
+                  <p className="text-sm text-white/80">{theme?.collectEmailPrompt?.trim() || 'Want early access? Leave your email.'}</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="email"
+                      required
+                      value={leadEmail}
+                      onChange={(event) => setLeadEmail(event.target.value)}
+                      placeholder="you@company.com"
+                      aria-label="Your email"
+                      disabled={mode !== 'live'}
+                      className="h-10 min-w-0 flex-1 rounded-md border border-white/20 bg-white/10 px-3 text-sm text-white placeholder:text-white/45"
+                    />
+                    <Button type="submit" disabled={mode !== 'live' || leadState === 'sending'} style={{ backgroundColor: primaryColor }}>
+                      {leadState === 'sending' ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send'}
+                    </Button>
+                  </div>
+                  {mode !== 'live' ? <p className="text-xs text-white/55">Viewers can leave their email here once the demo is published.</p> : null}
+                  {leadState === 'error' ? <p className="text-xs text-white/80">That did not go through. Please try again.</p> : null}
+                </form>
+              )
+            ) : null}
             {mode === 'live' && demoId && demoGoal === 'validate_interest' && !responseSent ? (
               <div className="w-full max-w-sm space-y-2">
                 <textarea

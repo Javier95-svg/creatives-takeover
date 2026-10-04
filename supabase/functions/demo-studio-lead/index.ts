@@ -217,14 +217,21 @@ serve(async (req) => {
       .eq("id", projectId)
       .maybeSingle();
     if (projectError) throw projectError;
-    if (!project || project.launch_published !== true) {
+    if (!project) {
       return json({ success: false, error: "This launch page is not accepting signups." }, 404);
     }
     const demoId = (body.demoId || '').trim() || null;
+    let demoCollectsEmail = false;
     if (demoId) {
-      const { data: demo } = await admin.from('demo_studio_demos').select('id')
+      const { data: demo } = await admin.from('demo_studio_demos').select('id, theme')
         .eq('id', demoId).eq('project_id', projectId).eq('status', 'published').maybeSingle();
       if (!demo) return json({ success: false, error: 'Published demo not found.' }, 404);
+      demoCollectsEmail = (demo as { theme?: { collectEmail?: boolean } | null }).theme?.collectEmail === true;
+    }
+    // Signups come from a published launch page, or from the end screen of a
+    // published demo whose owner turned on "Ask for email at the end".
+    if (project.launch_published !== true && !demoCollectsEmail) {
+      return json({ success: false, error: "This launch page is not accepting signups." }, 404);
     }
 
     /*

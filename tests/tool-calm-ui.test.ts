@@ -47,6 +47,8 @@ const CALM_FILES = [
   'src/components/demo-studio/editor/HotspotCanvas.tsx',
   'src/components/demo-studio/DemoDistributionPanel.tsx',
   'src/components/demo-studio/analytics/DemoAnalyticsPanel.tsx',
+  'src/components/demo-studio/analytics/DemoLeadsPanel.tsx',
+  'src/pages/demo-studio/DemoAnalyticsPage.tsx',
   'src/components/wallpapers/DemoStoryboardWallpaper.tsx',
   'src/pages/AppBuilderPage.tsx',
   'src/components/mvp-builder/MVPBuilder.tsx',
