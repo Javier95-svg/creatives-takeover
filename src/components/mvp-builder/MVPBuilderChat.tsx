@@ -299,7 +299,6 @@ interface MVPBuilderChatProps {
   onRefreshGitHubCommitHistory: (fullName?: string, branch?: string) => void | Promise<void>;
   onBuyCredits: () => void;
   isGenerating: boolean;
-  workflowControls?: React.ReactNode;
 }
 
 export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
@@ -316,6 +315,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   githubCommitHistory,
   isGitHubBusy,
   suggestedGitHubCommitMessage,
+  integrationReady,
   lastBuildChangeSummary,
   setupInput,
   projectVersions,
@@ -337,7 +337,6 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   onRefreshGitHubCommitHistory,
   onBuyCredits,
   isGenerating,
-  workflowControls,
 }) => {
   const [input, setInput] = useState('');
   const [builderMode, setBuilderMode] = useState<MVPBuilderResponseMode>('build');
@@ -707,7 +706,6 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
     <div className="flex h-full min-h-0 flex-col bg-background text-muted-foreground">
       <ScrollArea className="flex-1 min-h-0">
         <div className="p-4">
-          {workflowControls}
           {isEmpty ? (
             <div className="flex flex-col gap-4 py-6">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-info/20 bg-white/[0.04] shadow-[0_0_24px_rgba(56,189,248,0.18)]">

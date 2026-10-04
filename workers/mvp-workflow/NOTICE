@@ -1,1 +1,0 @@
-The Chromium sandbox seccomp profile is derived from Microsoft Playwright. Copyright Microsoft Corporation. Licensed under Apache License 2.0; see PLAYWRIGHT-LICENSE. Source: https://github.com/microsoft/playwright/blob/main/utils/docker/seccomp_profile.json

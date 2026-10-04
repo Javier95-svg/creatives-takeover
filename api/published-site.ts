@@ -10,7 +10,7 @@
 // Scope/limitations:
 // - Best for self-contained / static (html_single) projects, including multi-file
 //   static sites (each asset path is looked up on demand).
-// - React/Vite releases serve their compiled, revision-tested artifact.
+// - React/Vite projects store source, not a build, so they cannot be served as-is.
 
 export const config = { runtime: 'edge' };
 
@@ -19,7 +19,7 @@ import { renderSeoDocument } from './_seo';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? 'https://rcjlaybjnozqbsoxzboa.supabase.co';
 const SUPABASE_KEY = process.env.VITE_SUPABASE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
-const BASE_DOMAIN = process.env.MVP_PUBLISH_BASE_DOMAIN || 'creatives-takeover.com';
+const BASE_DOMAIN = 'creatives-takeover.com';
 const RESERVED_LABELS = new Set(['www', 'app', 'api', 'mail', 'admin', 'staging']);
 
 const CONTENT_TYPES: Record<string, string> = {
@@ -42,14 +42,12 @@ function contentTypeFor(filename: string): string {
 
 // Platform analytics snippet injected into every served HTML page. Tracks one
 // deduped visit per visitor per day (server-side unique constraint) so the
-// founder can view visitor counts as context without treating them as retention.
+// founder's Traction Engine retention snapshot can autofill with verified data.
 // Inline (no external request for the script itself) and fail-silent.
 const VISIT_BEACON_URL = `${SUPABASE_URL}/functions/v1/mvp-app-visit`;
 const ANALYTICS_SNIPPET = `<script>(function(){try{if(/ct-capture=/.test(location.hash)){var s=document.createElement("script");s.src="https://${BASE_DOMAIN}/ct-capture.js";document.head.appendChild(s);}var k="ct_vid";var v=localStorage.getItem(k);if(!v){v=(self.crypto&&crypto.randomUUID)?crypto.randomUUID():Date.now()+"-"+Math.random().toString(36).slice(2);localStorage.setItem(k,v);}var d=new Date().toISOString().slice(0,10);var dk="ct_vd_"+d;if(sessionStorage.getItem(dk))return;sessionStorage.setItem(dk,"1");fetch("${VISIT_BEACON_URL}",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({slug:location.hostname.split(".")[0],visitorId:v}),keepalive:true}).catch(function(){});}catch(e){}})();</script>`;
 
-const ERROR_SNIPPET='<script>(function(){var count=0;function report(kind){if(count++>=10)return;fetch('+JSON.stringify(SUPABASE_URL+'/rest/v1/rpc/report_mvp_app_error')+',{method:"POST",headers:{"Content-Type":"application/json",apikey:'+JSON.stringify(SUPABASE_KEY)+'},body:JSON.stringify({p_slug:location.hostname.split(".")[0],p_kind:kind}),keepalive:true}).catch(function(){});}addEventListener("error",function(){report("runtime");});addEventListener("unhandledrejection",function(){report("runtime");});addEventListener("ct-workflow-error",function(e){if(["write","auth","network"].includes(e.detail?.kind))report(e.detail.kind);});})();</script>';
 function injectAnalytics(html: string): string {
-  html=html.replace(/<head[^>]*>/i,match=>match+ERROR_SNIPPET);
   const idx = html.toLowerCase().lastIndexOf('</body>');
   if (idx === -1) return html + ANALYTICS_SNIPPET;
   return html.slice(0, idx) + ANALYTICS_SNIPPET + html.slice(idx);
@@ -198,29 +196,24 @@ export default async function handler(req: Request): Promise<Response> {
   const isSitemapRequest = normalizedPath === 'sitemap.xml';
   const rpcPath = isRobotsRequest || isSitemapRequest ? 'index.html' : requestedPath;
 
-  const probeToken=url.searchParams.get('ct-release-probe');
-  if(probeToken&&!/^[0-9a-f-]{36}$/i.test(probeToken))return notFound('Invalid release probe.');
   try {
-    const rpc=probeToken?'get_mvp_release_probe_file':'get_published_mvp_file_v2';
-    const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${rpc}`, {
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_published_mvp_file_v2`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         apikey: SUPABASE_KEY,
         Authorization: `Bearer ${SUPABASE_KEY}`,
       },
-      body: JSON.stringify({ p_slug: slug, p_path: rpcPath, ...(probeToken?{p_token:probeToken}:{}) }),
+      body: JSON.stringify({ p_slug: slug, p_path: rpcPath }),
     });
 
     if (!resp.ok) {
-      if(probeToken)return notFound('Release probe unavailable.');
       const launch = await serveLaunchPage(slug);
       if (launch) return launch;
       return notFound('This site could not be loaded right now.');
     }
 
     const rows = (await resp.json()) as Array<{
-      revision?: string;
       content: string | null;
       filename: string | null;
       seo_indexable: boolean | null;
@@ -230,14 +223,12 @@ export default async function handler(req: Request): Promise<Response> {
     }>;
     const file = Array.isArray(rows) ? rows[0] : null;
     if (!file || file.content == null) {
-      if(probeToken)return notFound('Release probe unavailable.');
       // Not an MVP Builder site. The slug may belong to a Demo Studio launch page.
       const launch = await serveLaunchPage(slug);
       if (launch) return launch;
       return notFound('There is no published page at this address yet.');
     }
 
-    if(probeToken)return new Response(file.content,{status:200,headers:{'Content-Type':contentTypeFor(file.filename||'index.html'),'Cache-Control':'no-store','X-Robots-Tag':'noindex','X-CT-Release-Revision':file.revision||''}});
     const canonical = `https://${slug}.${BASE_DOMAIN}/`;
     if (isRobotsRequest) {
       const body = file.seo_indexable
