@@ -242,7 +242,11 @@ async function readFunctionErrorBody(error: unknown): Promise<{ code?: string; e
   }
 }
 
-export function useGTMStrategist() {
+/**
+ * @param projectId The active workspace project. When set, the saved plan shown
+ * is that project's current one, and switching project reloads it.
+ */
+export function useGTMStrategist(projectId: string | null = null) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { refreshProgress } = useBizMapProgress();
@@ -285,10 +289,18 @@ export function useGTMStrategist() {
   // On mount: restore explicitly saved GTM work and load available MVP import sources.
   useEffect(() => {
     if (!user) return;
+    // Switching project starts clean, then restores that project's plan.
+    setAnalysis(null);
+    setPlanId(null);
+    setWeeklyReview(null);
+    setReviewProposal(null);
+    setPrefillV2({});
+    setPhase('intake');
+    setIsRestoringPlan(true);
     void loadExistingPlan();
     void loadMvpProjects();
   // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: dependency omission is intentional (preserves current behaviour); revisit if a stale-state bug surfaces
-  }, [requestedMvpProjectId, user]);
+  }, [requestedMvpProjectId, user, projectId]);
 
   const loadExistingPlan = useCallback(async () => {
     if (!user) return;
@@ -302,6 +314,7 @@ export function useGTMStrategist() {
         .in('status', ['saved', 'exported'])
         .eq('schema_version', 2);
       if (inbound?.consumed_artifact_id) savedQuery = savedQuery.eq('id', inbound.consumed_artifact_id);
+      else if (projectId) savedQuery = savedQuery.eq('project_id', projectId).is('superseded_at', null);
       const { data } = await savedQuery
         .order('updated_at', { ascending: false })
         .limit(1)
@@ -355,7 +368,7 @@ export function useGTMStrategist() {
     } finally {
       setIsRestoringPlan(false);
     }
-  }, [requestedMvpProjectId, user]);
+  }, [projectId, requestedMvpProjectId, user]);
 
   const loadMvpProjects = useCallback(async () => {
     if (!user) {

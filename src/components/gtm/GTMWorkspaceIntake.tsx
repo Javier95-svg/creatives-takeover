@@ -297,7 +297,7 @@ export default function GTMWorkspaceIntake({
       <div>
         <h2 className="text-xl font-semibold text-foreground">{isRegeneration ? 'Edit your answers' : 'Tell us about your product'}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Five short steps. Your answers become a six-week plan you can edit at any time.
+          {activeSteps.length === 1 ? 'One quick check.' : `${activeSteps.length} short steps.`} Your answers become a six-week plan you can edit at any time.
         </p>
       </div>
 

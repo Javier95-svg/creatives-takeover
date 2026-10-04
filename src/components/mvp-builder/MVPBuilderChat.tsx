@@ -255,6 +255,8 @@ function stripTrailingMention(value: string): string {
 }
 
 interface MVPBuilderChatProps {
+  /** A first message built from the workspace project's ICP, when it has one. */
+  projectStart?: { title: string; customer: string; prompt: string } | null;
   messages: MVPMessage[];
   promptHistory: MVPPromptHistoryItem[];
   selectedModels: string[];
@@ -308,6 +310,7 @@ const START_EXAMPLES = [
 ];
 
 export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
+  projectStart = null,
   messages,
   promptHistory,
   selectedModels,
@@ -724,6 +727,19 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                   <li>how you will know it worked</li>
                 </ul>
               </div>
+              {projectStart ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setInput(projectStart.prompt);
+                    requestAnimationFrame(() => textareaRef.current?.focus());
+                  }}
+                  className="w-full rounded-lg border border-primary/40 bg-primary/10 px-3 py-3 text-left transition-colors hover:border-primary"
+                >
+                  <span className="block text-sm font-semibold text-white">Build for {projectStart.title}</span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">For {projectStart.customer}. Filled in from your customer profile; edit it before you build.</span>
+                </button>
+              ) : null}
               <div className="space-y-2">
                 <p className="text-xs font-medium text-muted-foreground">Or start from an example</p>
                 {START_EXAMPLES.map((example) => (

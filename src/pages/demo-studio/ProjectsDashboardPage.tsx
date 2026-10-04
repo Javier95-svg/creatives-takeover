@@ -21,9 +21,11 @@ import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure'
 import { NextStepCard } from '@/components/tool-shell/NextStepCard';
 import { ToolEmptyState } from '@/components/tool-shell/ToolEmptyState';
 import { ToolPageShell } from '@/components/tool-shell/ToolPageShell';
+import { ToolProjectContext } from '@/components/tool-shell/ToolProjectContext';
+import { useActiveProjectContext } from '@/hooks/useActiveProjectContext';
 import DemoStoryboardWallpaper, { DemoStoryboardChart } from '@/components/wallpapers/DemoStoryboardWallpaper';
 import { useAuth } from '@/contexts/AuthContext';
-import { createDemo, createProject, getOwnerDemoCounts, listProjects } from '@/lib/demoStudio/api';
+import { createDemo, createProject, getOwnerDemoCounts, listProjects, updateBrief } from '@/lib/demoStudio/api';
 import type { DemoStudioProject } from '@/lib/demoStudio/types';
 import { trackToolOpened } from '@/lib/analytics';
 import { resolveIcpSource } from '@/lib/icpHandoffSource';
@@ -51,6 +53,7 @@ export default function ProjectsDashboardPage() {
   const [validationContextId, setValidationContextId] = useState<string | null>(null);
   const [originatingHandoffId, setOriginatingHandoffId] = useState<string | null>(null);
   const handoffConsumedRef = useRef(false);
+  const projectContext = useActiveProjectContext();
 
   useEffect(() => {
     const abandon = () => {
@@ -159,8 +162,14 @@ export default function ProjectsDashboardPage() {
         tagline: tagline.trim() || undefined,
         validationContextId,
         originatingHandoffId,
-        sourceIcpAnalysisId: icpParam,
+        sourceIcpAnalysisId: icpParam ?? projectContext.outcomes?.icpDraftId ?? null,
+        workspaceProjectId: projectContext.projectId,
       });
+      if (!icpParam && projectContext.icp) {
+        // The brief is optional, but filling it from the ICP costs nothing and
+        // lets the storyboard and launch copy start from the real customer.
+        await updateBrief(project.id, user.id, icpArtifactToDemoBrief(projectContext.icp.artifact).patch).catch(() => undefined);
+      }
       if (originatingHandoffId) {
         await consumeJourneyHandoff(originatingHandoffId, project.id);
         handoffConsumedRef.current = true;
@@ -184,8 +193,21 @@ export default function ProjectsDashboardPage() {
     }
   };
 
-  const latestProject = projects[0];
-  const openNewProject = () => setDialogOpen(true);
+  // The workspace project's current Demo Studio project comes first; demos made
+  // for other projects (or before projects existed) are listed separately.
+  const workspaceProjectId = projectContext.projectId;
+  const currentProject = workspaceProjectId
+    ? projects.find((project) => project.project_id === workspaceProjectId && !project.superseded_at) ?? null
+    : projects[0] ?? null;
+  const listedProjects = projects.filter((project) => project.id !== currentProject?.id);
+  const openNewProject = () => {
+    if (!name.trim() && projectContext.project) {
+      const fromIcp = projectContext.icp ? icpArtifactToDemoBrief(projectContext.icp.artifact).project : null;
+      setName(fromIcp?.name || projectContext.project.title);
+      setTagline((current) => current || fromIcp?.tagline || projectContext.project?.ideaSummary || '');
+    }
+    setDialogOpen(true);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -199,6 +221,7 @@ export default function ProjectsDashboardPage() {
         <ToolPageShell
           title="Demo Studio"
           purpose={PURPOSE}
+          context={<ToolProjectContext context={projectContext} />}
           theme="demo"
           wallpaper={<DemoStoryboardWallpaper />}
           headerArt={<DemoStoryboardChart />}
@@ -209,14 +232,14 @@ export default function ProjectsDashboardPage() {
             </div>
           ) : (
             <>
-              {latestProject ? (
+              {currentProject ? (
                 <NextStepCard
-                  title={`Continue ${latestProject.name}`}
-                  reason={latestProject.launch_published
+                  title={`Continue ${currentProject.name}`}
+                  reason={currentProject.launch_published
                     ? 'Your launch page is live. Check who watched the demo and what they clicked.'
                     : 'Pick up where you left off. The project page shows the one thing to do next.'}
                   cta="Open project"
-                  onAction={() => navigate(`/demo-studio/projects/${latestProject.id}`)}
+                  onAction={() => navigate(`/demo-studio/projects/${currentProject.id}`)}
                   secondary={(
                     <button type="button" onClick={openNewProject} className="text-sm font-medium text-primary underline-offset-4 hover:underline">
                       Start another project
@@ -225,8 +248,10 @@ export default function ProjectsDashboardPage() {
                 />
               ) : (
                 <NextStepCard
-                  title="Make your first demo"
-                  reason="Name your product, then add screenshots. A one-screen demo can go live, and you can add screens later."
+                  title={projectContext.project ? `Make a demo for ${projectContext.project.title}` : 'Make your first demo'}
+                  reason={projectContext.icp
+                    ? 'The name and story are filled in from your customer profile. Add screenshots next; a one-screen demo can go live.'
+                    : 'Name your product, then add screenshots. A one-screen demo can go live, and you can add screens later.'}
                   cta="New project"
                   onAction={openNewProject}
                   secondary={(
@@ -237,16 +262,16 @@ export default function ProjectsDashboardPage() {
                 />
               )}
 
-              {projects.length > 0 ? (
+              {listedProjects.length > 0 ? (
                 <section className="space-y-3" aria-labelledby="demo-projects-heading">
                   <div className="flex items-baseline justify-between gap-3">
-                    <h2 id="demo-projects-heading" className="text-lg font-semibold text-foreground">Your projects</h2>
+                    <h2 id="demo-projects-heading" className="text-lg font-semibold text-foreground">{currentProject ? 'Other demo projects' : 'Your demo projects'}</h2>
                     <span className="text-sm text-muted-foreground">
                       {counts.published} of {counts.total} {counts.total === 1 ? 'demo' : 'demos'} published
                     </span>
                   </div>
                   <ul className="divide-y divide-border/60 rounded-xl border border-border/60 bg-card">
-                    {projects.map((project) => (
+                    {listedProjects.map((project) => (
                       <li key={project.id}>
                         <Link
                           to={`/demo-studio/projects/${project.id}`}
@@ -268,7 +293,7 @@ export default function ProjectsDashboardPage() {
                     ))}
                   </ul>
                 </section>
-              ) : (
+              ) : currentProject ? null : (
                 <ToolEmptyState
                   title="No projects yet"
                   description="A project holds your demos for one product. Later you can add a short pitch video and a launch page to it."

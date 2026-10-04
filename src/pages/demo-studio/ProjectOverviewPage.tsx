@@ -201,6 +201,7 @@ export default function ProjectOverviewPage() {
   ) : nextStep.action === 'share_demo' ? (
     <>
       <button type="button" className={linkClass} onClick={() => void copyEmbedSnippet()}>Copy embed code</button>
+      <Link to="/pmf-lab" className={linkClass}>Ask viewers the demand question in PMF Lab</Link>
       {arrivedFromTry && publishedDemo ? (
         <Link to={`/demo-studio/projects/${projectId}/demos/${publishedDemo.id}/edit`} className={linkClass}>
           {tryAssetMode === 'generated_placeholders' ? 'Replace the sample frames with screenshots' : 'Refine screens and click targets'}

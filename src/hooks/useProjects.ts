@@ -53,6 +53,20 @@ function storeActiveProject(userId: string, projectId: string): void {
   }
 }
 
+/**
+ * Marks a project as the one the founder is working in, server side. Owners can
+ * update their own projects (row-level security), and `last_run_at` is only
+ * read to find the current project. Failures are ignored: the browser choice
+ * still drives what the tools show.
+ */
+export async function touchProject(projectId: string): Promise<void> {
+  try {
+    await supabase.from('projects').update({ last_run_at: new Date().toISOString() }).eq('id', projectId);
+  } catch {
+    // Offline or blocked; the next selection or tool visit retries.
+  }
+}
+
 export function useProjects() {
   const { user } = useAuth();
   const userId = user?.id ?? null;
@@ -109,7 +123,10 @@ export function useProjects() {
   const selectProject = useCallback((projectId: string) => {
     if (!userId) return;
     storeActiveProject(userId, projectId);
-    invalidate();
+    // New tool outputs attach to the founder's most recently touched project
+    // (ensure_active_project), including ones written by edge functions. Marking
+    // the chosen project as touched keeps that in step with the switcher.
+    void touchProject(projectId).finally(invalidate);
   }, [userId, invalidate]);
 
   const createProject = useMutation({

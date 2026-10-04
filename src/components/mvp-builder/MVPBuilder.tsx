@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useMVPBuilder } from '@/hooks/useMVPBuilder';
 import { MVPBuilderHeader } from './MVPBuilderHeader';
@@ -13,6 +13,9 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { getMvpNextStep } from '@/lib/mvp-builder/nextStep';
+import { icpArtifactToMvpStart } from '@/lib/mvp-builder/icpToMvpPrompt';
+import { useActiveProjectContext } from '@/hooks/useActiveProjectContext';
+import { ProjectSwitcher } from '@/components/workspace/ProjectSwitcher';
 
 type MobileTab = 'chat' | 'preview';
 
@@ -102,6 +105,37 @@ export const MVPBuilder: React.FC = () => {
   } = useMVPBuilder();
 
   const [mobileTab, setMobileTab] = useState<MobileTab>('chat');
+  const projectContext = useActiveProjectContext();
+  const projectStart = useMemo(
+    () => (projectContext.icp && projectContext.project
+      ? icpArtifactToMvpStart(projectContext.icp.artifact, projectContext.project.title)
+      : null),
+    [projectContext.icp, projectContext.project],
+  );
+
+  // Follow the workspace project. On first open, an app already in progress in
+  // this browser stays; otherwise the project's current app opens. On a later
+  // switch, the current work is saved first, then the other project's app (or a
+  // blank start) opens.
+  const followedProjectRef = useRef<string | null>(null);
+  const currentAppId = projectContext.outcomes?.mvpProjectId ?? null;
+  useEffect(() => {
+    if (projectContext.isLoading || !projectContext.projectId) return;
+    if (followedProjectRef.current === projectContext.projectId) return;
+    const firstOpen = followedProjectRef.current === null;
+    followedProjectRef.current = projectContext.projectId;
+    const hasWork = projectFiles.length > 0 || messages.length > 0;
+    if (firstOpen) {
+      if (!hasWork && currentAppId) void loadProject(currentAppId);
+      return;
+    }
+    void (async () => {
+      if (hasWork && hasUnsavedChanges) await saveProject({ silent: true });
+      if (currentAppId) void loadProject(currentAppId);
+      else resetProject();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reviewed: runs on project switch only
+  }, [projectContext.projectId, projectContext.isLoading, currentAppId]);
   const nextStep = getMvpNextStep({
     hasFiles: projectFiles.length > 0,
     isGenerating,
@@ -160,6 +194,7 @@ export const MVPBuilder: React.FC = () => {
       setupInput={setupInput}
       projectVersions={projectVersions}
       lastActionQuote={lastActionQuote}
+      projectStart={projectStart}
       onSelectedModelsChange={setSelectedModels}
       onSetupInputChange={setSetupInput}
       onProjectTypeChange={setSelectedProjectType}
@@ -246,6 +281,7 @@ export const MVPBuilder: React.FC = () => {
         saveError={saveError}
         onRetrySave={() => void retrySave()}
         nextStep={nextStep}
+        projectSwitcher={<ProjectSwitcher />}
         hasActiveProject={projectFiles.length > 0 || messages.length > 0}
         onBuyCredits={() => setTopUpsOpen(true)}
       />

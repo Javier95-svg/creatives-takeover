@@ -59,6 +59,9 @@ export interface DemoStudioProject {
   validation_context_id?: string | null;
   originating_handoff_id?: string | null;
   source_icp_analysis_id?: string | null;
+  /** The workspace project this belongs to; one current Demo Studio project per workspace project. */
+  project_id?: string | null;
+  superseded_at?: string | null;
   created_at: string;
   updated_at: string;
 }

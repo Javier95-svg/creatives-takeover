@@ -10,6 +10,8 @@ import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
 import { Button } from '@/components/ui/button';
 import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
 import { ToolPageShell } from '@/components/tool-shell/ToolPageShell';
+import { ToolProjectContext } from '@/components/tool-shell/ToolProjectContext';
+import { useActiveProjectContext } from '@/hooks/useActiveProjectContext';
 import PMFLabWallpaper, { PMFLabChart } from '@/components/wallpapers/PMFLabWallpaper';
 import { NextStepCard } from '@/components/tool-shell/NextStepCard';
 import { ToolStepper, type ToolStep } from '@/components/tool-shell/ToolStepper';
@@ -85,7 +87,10 @@ export default function PMFLabPage() {
     () => (new URLSearchParams(window.location.search).get('step') === 'interviews' ? 'talk' : null),
   );
   const [addRequest, setAddRequest] = useState(0);
-  const autoContextRef = useRef(false);
+  // Which workspace project the evidence case was last chosen for.
+  const autoContextForRef = useRef<string | null>(null);
+  const projectContext = useActiveProjectContext();
+  const projectIcpId = projectContext.outcomes?.icpDraftId ?? null;
   const hubViewedRef = useRef(false);
   const stepPanelRef = useRef<HTMLDivElement | null>(null);
 
@@ -121,15 +126,32 @@ export default function PMFLabPage() {
   }, [icpParam, user, validationContextId]);
 
   // Evidence never mixes across ideas: every interview, survey and score belongs to
-  // one case. Instead of stopping on a chooser, open the most recent case (the
-  // header selector switches), or start an empty one for a first-time founder.
+  // one case. Open the case for the workspace project's customer profile
+  // (creating it if needed), and follow the project when the founder switches.
+  // An explicit ?context= link is kept on first open.
   useEffect(() => {
-    if (!user || !hasAccess || validationContextId || icpParam || contexts === null || autoContextRef.current) return;
-    autoContextRef.current = true;
+    if (!user || !hasAccess || icpParam || contexts === null || projectContext.isLoading) return;
+    const key = projectContext.projectId ?? 'none';
+    if (autoContextForRef.current === key) return;
+    const firstOpen = autoContextForRef.current === null;
+    autoContextForRef.current = key;
+    if (firstOpen && validationContextId) return;
+    if (projectIcpId) {
+      void ensurePrebuildContext({
+        userId: user.id,
+        icpAnalysisId: projectIcpId,
+        label: projectContext.project?.title ?? null,
+        sourceTool: 'pmf_lab',
+      }).then((context) => {
+        setContexts((items) => (items?.some((item) => item.id === context.id) ? items : [context, ...(items ?? [])]));
+        selectContext(context);
+      }).catch(() => undefined);
+      return;
+    }
     if (contexts.length > 0) selectContext(contexts[0]);
     else startNewCase();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contexts, hasAccess, icpParam, user, validationContextId]);
+  }, [contexts, hasAccess, icpParam, user, validationContextId, projectContext.projectId, projectContext.isLoading, projectIcpId]);
 
   useEffect(() => {
     if (!user || !demoProjectId || demoId) return;
@@ -569,7 +591,7 @@ export default function PMFLabPage() {
           theme="pmf"
           wallpaper={<PMFLabWallpaper />}
           headerArt={<PMFLabChart />}
-          context={user && hasAccess && validationContextId ? contextLine : undefined}
+          context={user && hasAccess ? (projectContext.project ? <ToolProjectContext context={projectContext} /> : validationContextId ? contextLine : undefined) : undefined}
           actions={caseSelector}
         >
           {!user ? (

@@ -105,6 +105,8 @@ export async function createProject(
     validationContextId?: string | null;
     originatingHandoffId?: string | null;
     sourceIcpAnalysisId?: string | null;
+    /** Workspace project; without it the database attaches the founder's current one. */
+    workspaceProjectId?: string | null;
   },
 ): Promise<DemoStudioProject> {
   const result = await supabase
@@ -118,6 +120,7 @@ export async function createProject(
       validation_context_id: fields.validationContextId ?? null,
       originating_handoff_id: fields.originatingHandoffId ?? null,
       source_icp_analysis_id: fields.sourceIcpAnalysisId ?? null,
+      ...(fields.workspaceProjectId ? { project_id: fields.workspaceProjectId } : {}),
     } as any)
     .select('*')
     .single();

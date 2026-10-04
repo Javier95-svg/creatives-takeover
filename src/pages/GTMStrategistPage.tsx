@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { FileDown, Loader2, RefreshCw, Save, Share2 } from 'lucide-react';
 
@@ -9,6 +9,9 @@ import { Button } from '@/components/ui/button';
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
 import { ToolPageShell } from '@/components/tool-shell/ToolPageShell';
+import { ToolProjectContext } from '@/components/tool-shell/ToolProjectContext';
+import { useActiveProjectContext } from '@/hooks/useActiveProjectContext';
+import { icpArtifactToGtmIntake } from '@/lib/icpToGtmIntake';
 import GTMWorkspaceIntake from '@/components/gtm/GTMWorkspaceIntake';
 import GTMWorkspace from '@/components/gtm/GTMWorkspace';
 import { FirstCustomerProofWorkspace } from '@/pages/FirstCustomerSprintPage';
@@ -48,6 +51,7 @@ export default function GTMStrategistPage() {
   const publicTab = getPublicTabConfig('/go-to-market');
   const { hasAccess, upgradeTarget } = usePlanAccess('gtm_strategist');
   const markToolUsed = useLeanStartupStore((state) => state.markToolUsed);
+  const projectContext = useActiveProjectContext();
   const {
     phase,
     analysis,
@@ -74,7 +78,7 @@ export default function GTMStrategistPage() {
     importMvpProject,
     openDiagnose,
     resumeWorkspace,
-  } = useGTMStrategist();
+  } = useGTMStrategist(projectContext.projectId);
   const v2Analysis = analysis && isGTMPlanV2(analysis) ? analysis : null;
   const isFirstCustomerProofWorkspace = searchParams.get('workspace') === 'first-customer-proof';
   const showWorkspace = Boolean(user && hasAccess && !isRestoringPlan && !isFirstCustomerProofWorkspace && phase === 'results' && v2Analysis && planId);
@@ -108,9 +112,16 @@ export default function GTMStrategistPage() {
     </>
   ) : undefined;
 
-  const context = showWorkspace && v2Analysis
-    ? <>For {v2Analysis.intake.productName}{v2Analysis.intake.targetSegment ? `, reaching ${v2Analysis.intake.targetSegment}` : ''}</>
-    : undefined;
+  const context = user ? <ToolProjectContext context={projectContext} /> : undefined;
+
+  // A new plan starts from the project's ICP (and PMF verdict). An MVP import or
+  // an inbound handoff, when present, wins field by field.
+  const intakePrefill = useMemo(() => {
+    const fromIcp = projectContext.icp
+      ? icpArtifactToGtmIntake({ artifact: projectContext.icp.artifact, projectTitle: projectContext.project?.title, pmf: projectContext.pmf })
+      : {};
+    return { ...fromIcp, ...prefillV2 };
+  }, [prefillV2, projectContext.icp, projectContext.pmf, projectContext.project?.title]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -151,8 +162,8 @@ export default function GTMStrategistPage() {
               ) : null}
               {!isRestoringPlan && phase === 'intake' && !isFirstCustomerProofWorkspace ? (
                 <GTMWorkspaceIntake
-                  prefill={v2Analysis?.intake ?? prefillV2}
-                  draftScope={selectedMvpProjectId ? `mvp-${selectedMvpProjectId}` : planId ? `plan-${planId}` : 'manual'}
+                  prefill={v2Analysis?.intake ?? intakePrefill}
+                  draftScope={selectedMvpProjectId ? `mvp-${selectedMvpProjectId}` : planId ? `plan-${planId}` : projectContext.projectId ? `project-${projectContext.projectId}` : 'manual'}
                   isRegeneration={Boolean(v2Analysis && planId)}
                   onSubmit={(intake) => void runV2Analysis(intake, Boolean(planId))}
                   onCancel={v2Analysis && planId ? resumeWorkspace : undefined}

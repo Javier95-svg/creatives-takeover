@@ -40,6 +40,8 @@ interface MVPBuilderHeaderProps {
   saveError: string | null;
   onRetrySave: () => void;
   nextStep: MvpNextStep;
+  /** The workspace project switcher; the app shown follows the chosen project. */
+  projectSwitcher?: React.ReactNode;
   hasActiveProject: boolean;
   onBuyCredits: () => void;
 }
@@ -71,6 +73,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
   saveError,
   onRetrySave,
   nextStep,
+  projectSwitcher,
   hasActiveProject,
   onBuyCredits,
 }) => {
@@ -263,6 +266,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
             </button>
           )}
           {saveIndicator()}
+          {projectSwitcher ? <span className="hidden md:inline-flex">{projectSwitcher}</span> : null}
         </div>
 
         {/* Right — status chips + actions */}
