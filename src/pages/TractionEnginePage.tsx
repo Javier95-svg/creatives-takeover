@@ -173,6 +173,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
   const [journeyAssumptions, setJourneyAssumptions] = useState<JourneyAssumption[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [workflowRecords, setWorkflowRecords] = useState<number | null>(null);
   const [platformVisitors, setPlatformVisitors] = useState<number | null>(null);
   const [benchmarks, setBenchmarks] = useState<{ cohortUsers: number; p25: number; p50: number; p75: number } | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -298,6 +299,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
   useEffect(() => {
     if (!userId) return;
     let active = true;
+    void (supabase as any).rpc('get_mvp_workflow_activity').then(({data,error}:any)=>{if(active&&!error&&data?.[0]?.observed_at)setWorkflowRecords(Number(data[0].completed_records));});
     void supabase.rpc('get_mvp_retention_snapshot' as never).then(({ data, error }) => {
       if (!active || error || !data) return;
       const row = (Array.isArray(data) ? data[0] : data) as { total_visitors: number | null } | null;
@@ -919,6 +921,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
             sevenDayStatus={sevenDayStatus}
             thirtyDayStatus={thirtyDayStatus}
             platformVisitors={platformVisitors}
+            workflowRecords={workflowRecords}
             onChange={(patch) => setRetention((current) => ({ ...current, ...patch }))}
           />
 

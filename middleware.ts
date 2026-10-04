@@ -20,7 +20,7 @@ const BOT_UA =
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? 'https://rcjlaybjnozqbsoxzboa.supabase.co';
 const SUPABASE_KEY = process.env.VITE_SUPABASE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
 
-const PUBLISH_BASE = 'creatives-takeover.com';
+const PUBLISH_BASE = process.env.MVP_PUBLISH_BASE_DOMAIN || 'creatives-takeover.com';
 const RESERVED_LABELS = new Set(['www', 'app', 'api', 'mail', 'admin', 'staging']);
 
 function esc(s: string): string {
@@ -51,9 +51,13 @@ export default async function middleware(request: Request): Promise<Response | u
     const fnUrl = new URL('/api/published-site', url.origin);
     fnUrl.searchParams.set('slug', slug);
     fnUrl.searchParams.set('p', url.pathname.replace(/^\/+/, ''));
+    const probe=url.searchParams.get('ct-release-probe');
+    if(probe)fnUrl.searchParams.set('ct-release-probe',probe);
     try {
       const res = await fetch(fnUrl.toString());
       const headers = new Headers();
+      const revision=res.headers.get('x-ct-release-revision');
+      if(revision)headers.set('x-ct-release-revision',revision);
       const contentType = res.headers.get('content-type');
       const cacheControl = res.headers.get('cache-control');
       const xRobotsTag = res.headers.get('x-robots-tag');
@@ -62,7 +66,7 @@ export default async function middleware(request: Request): Promise<Response | u
       headers.set('x-robots-tag', xRobotsTag ?? 'noindex,follow');
       return new Response(res.body, { status: res.status, headers });
     } catch {
-      return undefined; // fail open to the SPA rather than hard-error
+      return new Response('This published app is temporarily unavailable.',{status:503,headers:{'Cache-Control':'no-store','X-Robots-Tag':'noindex'}});
     }
   }
 

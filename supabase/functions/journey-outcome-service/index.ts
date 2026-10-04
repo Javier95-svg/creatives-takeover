@@ -223,8 +223,11 @@ async function loadAuthoritativeChecks(
     const metadata = recordValue(data.metadata);
     const setup = recordValue(metadata.setupInput);
     const validation = recordValue(metadata.lastPublishValidation);
-    const smoke = recordValue(validation.smokeTest);
-    const structural = recordValue(validation.structuralChecks);
+    const {data:verified}=hasText(validation.testRunId)?await supabase.rpc('inspect_mvp_workflow_test',{p_project_id:artifactId,p_user_id:userId,p_test_id:validation.testRunId}):{data:null};
+    const trusted=recordValue(verified);
+    const checked=Boolean(trusted.alreadyPublished);
+    const {data:testRow}=checked?await supabase.from('mvp_build_tests').select('assertions').eq('id',validation.testRunId).eq('user_id',userId).maybeSingle():{data:null};
+    const assertions=recordValue(testRow?.assertions);
     const files = arrayValue(data.project_files).map(recordValue);
     const source = files.map((file) => textValue(file.content, 1_000_000)).join('\n');
     const features = arrayValue(setup.essentialFeatures).filter(hasText);
@@ -239,15 +242,15 @@ async function loadAuthoritativeChecks(
       feature_budget: features.length >= 1 && features.length <= 3,
       project_generated: files.length > 0,
       preview_ready: files.length > 0,
-      primary_flow_present: structural.primaryFlow === true,
-      primary_flow_smoke_test: smoke.passed === true && smoke.primaryActionTriggered === true,
-      responsive_ui: structural.responsive === true,
-      no_runtime_errors: Array.isArray(smoke.runtimeErrors) && smoke.runtimeErrors.length === 0,
-      rollback_support: structural.rollback === true && arrayValue(data.versions).length > 0,
+      primary_flow_present: assertions.customer_task === true,
+      primary_flow_smoke_test: checked && assertions.customer_task === true,
+      responsive_ui: assertions.responsive_ui === true,
+      no_runtime_errors: assertions.no_runtime_errors === true,
+      rollback_support: arrayValue(data.versions).length > 0,
       analytics_injected_on_publish: hasText(setup.successEvent) && /analytics|track\s*\(|captureEvent|data-event/i.test(source),
       published,
       external_success_event: false,
-      platform_observed_publish: published && smoke.passed === true && hasText(setup.successEvent),
+      platform_observed_publish: published && checked && hasText(setup.successEvent),
     };
   }
 

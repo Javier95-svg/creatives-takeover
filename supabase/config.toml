@@ -323,3 +323,15 @@ verify_jwt = false
 # confirms password-based identities, cancels billing, and deletes server-side.
 [functions.delete-account]
 verify_jwt = true
+
+[functions.mvp-managed-app]
+verify_jwt = false
+
+[functions.mvp-workflow-tests]
+verify_jwt = false
+
+[functions.mvp-builder-publish]
+verify_jwt = false
+
+[functions.mvp-builder-deploy]
+verify_jwt = false

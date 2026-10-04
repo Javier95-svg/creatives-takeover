@@ -1,0 +1,23 @@
+[Unit]
+Description=CT isolated app outcome worker
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/ct/workers/mvp-workflow
+EnvironmentFile=/etc/ct/mvp-worker.env
+Environment=CT_WORKER_STATE=/var/lib/ct-mvp-worker
+ExecStart=/usr/bin/node controller.mjs
+Restart=on-failure
+RestartSec=15
+StateDirectory=ct-mvp-worker
+UMask=0077
+NoNewPrivileges=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/ct-mvp-worker
+TimeoutStopSec=420
+
+[Install]
+WantedBy=multi-user.target

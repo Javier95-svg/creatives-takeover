@@ -116,9 +116,13 @@ test('Demo and MVP publication paths enforce structural checks before publishing
   const demoApi = readFileSync(new URL('../src/lib/demoStudio/api.ts', import.meta.url), 'utf8');
   const mvpPublish = readFileSync(new URL('../supabase/functions/mvp-builder-publish/index.ts', import.meta.url), 'utf8');
   assert.match(demoApi, /Complete at least two captioned steps and fix every hotspot before publishing/);
-  assert.match(mvpPublish, /PUBLICATION_CONTRACT_FAILED/);
-  assert.match(mvpPublish, /smokeTest\.runtimeErrors\.length === 0/);
-  assert.match(mvpPublish, /lastPublishValidation/);
+  assert.match(mvpPublish, /TEST_REQUIRED/);
+  assert.match(mvpPublish, /inspect_mvp_workflow_test/);
+  assert.match(mvpPublish, /publish_tested_mvp/);
+  assert.match(mvpPublish, /probeRelease/);
+  assert.doesNotMatch(mvpPublish, /smokeTest\.passed/);
+  const migration=readFileSync(new URL('../supabase/migrations/20261001120000_mvp_workflow_tests.sql',import.meta.url),'utf8');
+  assert.match(migration,/lastPublishValidation/);
 });
 
 test('PMF interviews and Traction weeks can append attributed ICP confidence signals', () => {

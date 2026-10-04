@@ -1,3 +1,6 @@
+import { classifyBuilderAction } from '../../../supabase/functions/_shared/mvp-action.ts';
+import type { WorkflowDefinition } from '../../../supabase/functions/_shared/mvp-workflow';
+import type { MVPBuildBrief } from '../../../supabase/functions/_shared/mvp-build-brief';
 import type {
   MVPProjectArtifact,
   MVPProjectFile,
@@ -37,6 +40,12 @@ export type MVPBuilderActionType =
 export type MVPBuilderOutputProjectType = 'html_single' | 'react_vite';
 
 export interface MVPBuilderSetupInput {
+  backendMode?: 'managed' | 'external' | 'preview';
+  managedApp?: boolean;
+  managedRuntime?: {url:string;publicKey:string;projectId:string};
+  buildBrief?: MVPBuildBrief;
+  workflow?: WorkflowDefinition;
+  workflowPublicKey?: string;
   productName: string;
   oneLineDescription: string;
   validatedProblemStatement: string;
@@ -237,30 +246,7 @@ export function sanitizeMVPBuilderPalette(value: unknown): MVPBuilderPaletteId {
     : 'minimal';
 }
 
-export function classifyMVPBuilderAction(input: string, hasProject: boolean): MVPBuilderActionType | 'unclear' | 'unsupported' {
-  const normalized = input.trim().toLowerCase();
-  if (!normalized) return 'unclear';
-  if (!hasProject) return 'generation';
-  if (/\b(error|bug|broken|fix|doesn'?t work|not working|console|crash)\b/.test(normalized)) {
-    return 'debug';
-  }
-  if (/\b(auth|database|supabase|stripe|payment|marketplace|backend|server action)\b/.test(normalized)) {
-    return 'unsupported';
-  }
-  if (/\b(add|create|build)\b.{0,40}\b(page|route|screen)\b|\b(new page|new route|another screen)\b/.test(normalized)) {
-    return 'add_page';
-  }
-  if (/\b(add|build|create|implement)\b.*\b(feature|flow|component|wizard|form|dashboard|table|chart|modal|settings)\b/.test(normalized)) {
-    return 'add_feature';
-  }
-  if (/\b(redesign|design overhaul|make it beautiful|modernize|visual refresh|new look|polish the design|theme|thematic|tematic|brand|rebrand|palette|colou?r scheme|aesthetic|look and feel|skin care|skincare)\b/.test(normalized)) {
-    return 'design_overhaul';
-  }
-  if (/\b(change|make|replace|remove|update|edit|rewrite|rename|color|headline|button|copy|spacing)\b/.test(normalized)) {
-    return 'targeted_edit';
-  }
-  return 'targeted_edit';
-}
+export function classifyMVPBuilderAction(input: string, hasProject: boolean) { return classifyBuilderAction(input, hasProject); }
 
 export function parseMVPBuilderOutput(raw: string): unknown {
   const trimmed = raw.trim();

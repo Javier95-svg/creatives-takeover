@@ -43,6 +43,7 @@ interface TractionRetentionCardProps {
   sevenDayStatus: RetentionWindowStatus;
   thirtyDayStatus: RetentionWindowStatus;
   platformVisitors: number | null;
+  workflowRecords?: number | null;
   onChange: (patch: Partial<TractionRetentionInput>) => void;
 }
 
@@ -52,6 +53,7 @@ export function TractionRetentionCard({
   sevenDayStatus,
   thirtyDayStatus,
   platformVisitors,
+  workflowRecords,
   onChange,
 }: TractionRetentionCardProps) {
   const scored = { ...retention, sevenDayStatus, thirtyDayStatus };
@@ -119,6 +121,7 @@ export function TractionRetentionCard({
         </Field>
       </div>
 
+      {workflowRecords != null && <p className="text-xs text-muted-foreground">Your managed apps have {workflowRecords} verified saved records at the last database check. This includes leads, requests and private records; it does not measure returning users.</p>}
       {platformVisitors !== null && (
         <p className="text-xs text-muted-foreground">
           Your published MVP site has recorded {platformVisitors} visitor{platformVisitors === 1 ? '' : 's'}. Use your analytics to count the people from one starting week.
