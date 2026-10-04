@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { PMFValidationEvidence } from '@/hooks/usePMFLab';
 import type { PMFSurvey, PMFSurveyAggregate } from '@/hooks/usePMFSurvey';
+import { buildSurveyOutreach, PMF_TARGET_RESPONSES } from '@/lib/pmfOutreach';
 
 // The Sean Ellis question: "How would you feel if you could no longer use it?"
 // Only people who have used the product answer it; people who have only seen
@@ -29,6 +30,15 @@ export async function copySurveyLink(shareUrl: string | null) {
     toast.success('Survey link copied.');
   } catch {
     toast.error('Could not copy the link. Select it and copy it by hand.');
+  }
+}
+
+async function copyText(text: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast.success('Message copied. Replace {name} before sending.');
+  } catch {
+    toast.error('Could not copy. Select the text and copy it by hand.');
   }
 }
 
@@ -68,6 +78,28 @@ export function PMFSurveyStep({ survey, aggregate, shareUrl, evidence, onSaveMan
             </Button>
           </div>
 
+          <p className="text-sm text-muted-foreground">
+            {aggregate.total + aggregate.conceptOnly} of {PMF_TARGET_RESPONSES} answers so far. Send the link to people who have used it; each message below is ready to copy.
+          </p>
+
+          {shareUrl ? (
+            <DashboardDisclosure title="Messages to send with the link" summary="A direct message, an email and a community post">
+              <ul className="space-y-3">
+                {buildSurveyOutreach({ productName: survey.product_name ?? '', audience: survey.audience, link: shareUrl }).map((message) => (
+                  <li key={message.channel} className="rounded-lg border border-border/60 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-medium text-foreground">{message.channel}</p>
+                      <Button type="button" size="sm" variant="ghost" onClick={() => void copyText(message.text)}>
+                        <Copy className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />Copy
+                      </Button>
+                    </div>
+                    <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{message.text}</p>
+                  </li>
+                ))}
+              </ul>
+            </DashboardDisclosure>
+          ) : null}
+
           {aggregate.total === 0 ? (
             <p className="text-sm text-muted-foreground">No answers yet from people who have used it.</p>
           ) : (
@@ -95,7 +127,10 @@ export function PMFSurveyStep({ survey, aggregate, shareUrl, evidence, onSaveMan
               <ul className="space-y-2">
                 {aggregate.verbatims.slice(0, 5).map((item, index) => (
                   <li key={`${item.createdAt}-${index}`} className="text-sm text-muted-foreground">
-                    “{item.mainBenefit || item.feedback}”
+                    {item.followUpAnswer && item.followUpQuestion ? (
+                      <span className="block text-xs text-muted-foreground/80">{item.followUpQuestion}</span>
+                    ) : null}
+                    “{item.followUpAnswer || item.mainBenefit || item.feedback}”
                     {item.role ? <span className="text-foreground/70">, {item.role}</span> : null}
                     {item.conceptOnly ? <span className="text-foreground/70"> (has not used it)</span> : null}
                   </li>

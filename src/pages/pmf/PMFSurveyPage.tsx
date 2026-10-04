@@ -59,6 +59,9 @@ export default function PMFSurveyPage() {
   const [honeypot, setHoneypot] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  // One short "why?" written for this answer (AI, or a fixed question).
+  const [followUpQuestion, setFollowUpQuestion] = useState('');
+  const [followUpAnswer, setFollowUpAnswer] = useState('');
 
   useEffect(() => {
     if (!slug) return;
@@ -83,6 +86,22 @@ export default function PMFSurveyPage() {
     };
   }, [slug]);
 
+  useEffect(() => {
+    if (!survey || usage !== 'used' || !answer) {
+      setFollowUpQuestion('');
+      return;
+    }
+    let active = true;
+    void supabase.functions.invoke('pmf-survey-respond', {
+      body: { action: 'follow_up', slug: survey.slug, seanEllisAnswer: answer },
+    }).then(({ data }) => {
+      if (active && data?.success && typeof data.question === 'string') setFollowUpQuestion(data.question);
+    }).catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [answer, survey, usage]);
+
   const productName = survey?.product_name?.trim() || 'this product';
   // Only people who have used the product answer the 40% question; the others
   // still leave feedback, which the founder sees separately.
@@ -106,6 +125,7 @@ export default function PMFSurveyPage() {
           wouldUseInstead,
           role,
           feedback,
+          ...(followUpQuestion && followUpAnswer.trim() ? { followUpQuestion, followUpAnswer } : {}),
           email: email || undefined,
           honeypot,
           sessionId: getSessionId(),
@@ -220,6 +240,13 @@ export default function PMFSurveyPage() {
                 ))}
               </div>
             </div>
+
+            {followUpQuestion ? (
+              <div className="space-y-1.5">
+                <Label htmlFor="follow-up" className="text-sm font-semibold">{followUpQuestion}</Label>
+                <Textarea id="follow-up" value={followUpAnswer} onChange={(e) => setFollowUpAnswer(e.target.value)} rows={2} placeholder="In your own words" />
+              </div>
+            ) : null}
 
             <div className="space-y-1.5">
               <Label htmlFor="benefit" className="text-xs">What's the main benefit you get from it?</Label>

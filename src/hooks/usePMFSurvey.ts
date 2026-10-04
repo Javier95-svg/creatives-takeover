@@ -14,6 +14,9 @@ export interface PMFSurvey {
 }
 
 export interface PMFSurveyVerbatim {
+  /** The "why?" asked after their answer, and what they said. */
+  followUpQuestion: string | null;
+  followUpAnswer: string | null;
   mainBenefit: string | null;
   wouldUseInstead: string | null;
   feedback: string | null;
@@ -58,12 +61,16 @@ export function usePMFSurvey(validationContextId?: string | null, originatingHan
   activeContextRef.current = validationContextId;
 
   const loadResponses = useCallback(async (surveyId: string) => {
-    const { data, error } = await supabase
+    const columns = 'sean_ellis_answer, product_usage, main_benefit, would_use_instead, role, feedback, created_at';
+    const query = (select: string) => supabase
       .from(RESPONSES)
-      .select('sean_ellis_answer, product_usage, main_benefit, would_use_instead, role, feedback, created_at')
+      .select(select)
       .eq('survey_id', surveyId)
       .order('created_at', { ascending: false })
       .limit(300);
+    // The follow-up columns arrive with 20261005120000; read without them until then.
+    let { data, error } = await query(`${columns}, follow_up_question, follow_up_answer`);
+    if (error) ({ data, error } = await query(columns));
     if (error || !data) {
       setAggregate(EMPTY_AGGREGATE);
       return;
@@ -75,8 +82,10 @@ export function usePMFSurvey(validationContextId?: string | null, originatingHan
       else if (r.sean_ellis_answer === 'somewhat') somewhat++;
       else if (r.sean_ellis_answer === 'not') not++;
       if (r.product_usage === 'concept_only') conceptOnly++;
-      if ((r.main_benefit || r.feedback) && verbatims.length < 8) {
+      if ((r.follow_up_answer || r.main_benefit || r.feedback) && verbatims.length < 8) {
         verbatims.push({
+          followUpQuestion: r.follow_up_question ?? null,
+          followUpAnswer: r.follow_up_answer ?? null,
           mainBenefit: r.main_benefit,
           wouldUseInstead: r.would_use_instead,
           feedback: r.feedback,

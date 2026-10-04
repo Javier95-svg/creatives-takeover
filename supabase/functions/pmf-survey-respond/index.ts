@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { emitBusinessEvent } from "../_shared/analytics.ts";
+import { fixedFollowUp } from "../_shared/pmf-follow-up.ts";
 
 // Public endpoint: a logged-out visitor submits a PMF survey response.
 // verify_jwt stays true — supabase-js attaches the anon JWT for anonymous callers,
@@ -20,7 +21,11 @@ const VALID_ANSWERS = ["very", "somewhat", "not"];
 const VALID_USAGE = ["used", "concept_only"];
 
 interface RespondRequest {
+  /** 'follow_up' returns the "why?" question for an answer; nothing is stored. */
+  action?: string;
   slug?: string;
+  followUpQuestion?: string;
+  followUpAnswer?: string;
   seanEllisAnswer?: string;
   productUsage?: string;
   mainBenefit?: string;
@@ -60,6 +65,40 @@ const clean = (value: string | undefined, max: number): string | null => {
   return v ? v.slice(0, max) : null;
 };
 
+// AI-written follow-up questions per survey; after this the fixed question is
+// used, so a popular survey never costs the founder anything.
+const FOLLOW_UP_AI_CAP = 100;
+
+async function writeFollowUp(answer: string, productName: string, audience: string | null): Promise<string | null> {
+  const apiKey = Deno.env.get("OPENAI_API_KEY");
+  if (!apiKey) return null;
+  const meaning = answer === "very" ? "would be very disappointed without it"
+    : answer === "somewhat" ? "would be somewhat disappointed without it"
+      : answer === "not" ? "would not be disappointed without it"
+        : "has not used it yet";
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        temperature: 0.4,
+        max_tokens: 60,
+        messages: [
+          { role: "system", content: "You write one short follow-up question for a product survey. Plain words, under 18 words, no leading or yes/no questions, no emoji, no quotes. Return only the question." },
+          { role: "user", content: `Product: ${productName}. Audience: ${audience || "unknown"}. The respondent ${meaning}. Ask why, in a way that gets a concrete answer in their own words.` },
+        ],
+      }),
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    const text = String(data?.choices?.[0]?.message?.content ?? "").trim().replace(/^["']|["']$/g, "");
+    return text && text.length <= 200 && text.endsWith("?") ? text : null;
+  } catch {
+    return null;
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -75,6 +114,33 @@ serve(async (req) => {
 
     const slug = (body.slug || "").trim();
     const answer = (body.seanEllisAnswer || "").trim();
+
+    if (body.action === "follow_up") {
+      if (!slug) return json({ success: false, error: "Missing survey." }, 400);
+      const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const { error: rlError } = await admin.rpc("assert_rate_limit", {
+        p_key: `pmf_survey_follow_up:${getClientIp(req)}`,
+        p_user_id: null,
+        p_max_per_minute: RATE_LIMIT_PER_MIN,
+      });
+      if (rlError && /rate_limit_exceeded/i.test(rlError.message || "")) {
+        return json({ success: true, question: fixedFollowUp(answer, ""), source: "fixed" });
+      }
+      const { data: survey } = await admin
+        .from("pmf_surveys")
+        .select("id, status, product_name, audience")
+        .eq("slug", slug)
+        .maybeSingle();
+      if (!survey || survey.status !== "published") {
+        return json({ success: false, error: "This survey is not accepting responses." }, 404);
+      }
+      const productName = (survey.product_name || "").trim();
+      const fixed = fixedFollowUp(answer, productName);
+      const { data: claimed } = await admin.rpc("claim_pmf_follow_up_slot", { p_survey_id: survey.id, p_cap: FOLLOW_UP_AI_CAP });
+      if (claimed !== true) return json({ success: true, question: fixed, source: "fixed" });
+      const written = await writeFollowUp(answer, productName || "this product", survey.audience ?? null);
+      return json({ success: true, question: written ?? fixed, source: written ? "ai" : "fixed" });
+    }
     // Older survey links do not send productUsage; those keep the previous
     // behaviour (an answer is required and usage is stored as unknown).
     const usage = VALID_USAGE.includes((body.productUsage || "").trim()) ? (body.productUsage || "").trim() : null;
@@ -119,21 +185,30 @@ serve(async (req) => {
     }
 
     const verifiedParticipantHash = await participantHash(req, survey.id, email);
-    const { error: insertError } = await admin
+    const responseRow: Record<string, unknown> = {
+      survey_id: survey.id,
+      sean_ellis_answer: conceptOnly ? null : answer,
+      ...(usage ? { product_usage: usage } : {}),
+      main_benefit: clean(body.mainBenefit, 2000),
+      would_use_instead: clean(body.wouldUseInstead, 2000),
+      role: clean(body.role, 200),
+      feedback: clean(body.feedback, 4000),
+      email: email || null,
+      session_id: clean(body.sessionId, 100),
+      participant_hash: verifiedParticipantHash,
+      verified: true,
+    };
+    const followUp = clean(body.followUpAnswer, 2000)
+      ? { follow_up_question: clean(body.followUpQuestion, 300), follow_up_answer: clean(body.followUpAnswer, 2000) }
+      : null;
+    let { error: insertError } = await admin
       .from("pmf_survey_responses")
-      .insert({
-        survey_id: survey.id,
-        sean_ellis_answer: conceptOnly ? null : answer,
-        ...(usage ? { product_usage: usage } : {}),
-        main_benefit: clean(body.mainBenefit, 2000),
-        would_use_instead: clean(body.wouldUseInstead, 2000),
-        role: clean(body.role, 200),
-        feedback: clean(body.feedback, 4000),
-        email: email || null,
-        session_id: clean(body.sessionId, 100),
-        participant_hash: verifiedParticipantHash,
-        verified: true,
-      });
+      .insert(followUp ? { ...responseRow, ...followUp } : responseRow);
+    // Before the follow-up migration (20261005120000) the columns do not exist;
+    // keep the response rather than lose it.
+    if (insertError && followUp && (insertError.code === "42703" || /follow_up/i.test(insertError.message || ""))) {
+      ({ error: insertError } = await admin.from("pmf_survey_responses").insert(responseRow));
+    }
     // A repeat email for the same survey is a no-op, not an error.
     if (insertError && !/duplicate key|unique/i.test(insertError.message || "")) {
       throw insertError;
