@@ -13,7 +13,6 @@ import {
   Eye,
   FileCode,
   ImagePlus,
-  LayoutDashboard,
   Loader2,
   Monitor,
   RefreshCw,
@@ -761,11 +760,6 @@ export default function DemoEditorPage() {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm" className="gap-1.5">
-            <Link to="/dashboard" aria-label="Open your command center">
-              <LayoutDashboard className="h-4 w-4" /> <span className="hidden md:inline">Command center</span>
-            </Link>
-          </Button>
           {demo?.status === 'published' && (
             <Button asChild variant="ghost" size="sm" className="gap-1.5">
               <Link to={`/demo-studio/projects/${projectId}/demos/${demoId}/analytics`}>
