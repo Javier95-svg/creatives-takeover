@@ -27,6 +27,16 @@ const CALM_FILES = [
   'src/components/traction/TractionExperimentCard.tsx',
   'src/components/traction/TractionRetentionCard.tsx',
   'src/components/wallpapers/TractionLogbookWallpaper.tsx',
+  'src/pages/GTMStrategistPage.tsx',
+  'src/components/gtm/GTMWorkspace.tsx',
+  'src/components/gtm/GTMThisWeek.tsx',
+  'src/components/gtm/GTMPlayCard.tsx',
+  'src/components/gtm/GTMReviewPanel.tsx',
+  'src/components/gtm/GTMDraftsPanel.tsx',
+  'src/components/gtm/GTMCompetitorsPanel.tsx',
+  'src/components/gtm/GTMAnalysisLoader.tsx',
+  'src/components/gtm/GTMWorkspaceIntake.tsx',
+  'src/components/wallpapers/GTMRouteWallpaper.tsx',
 ];
 
 const VISUAL_RULES: Array<[RegExp, string]> = [

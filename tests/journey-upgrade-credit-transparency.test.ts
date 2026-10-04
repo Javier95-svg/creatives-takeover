@@ -38,7 +38,7 @@ test('credit action quote and receipt helpers are exposed from useCreditActions'
 test('metered tools disclose credit costs before action', () => {
   const costNoticeSource = readFileSync(new URL('../src/components/CreditCostNotice.tsx', import.meta.url), 'utf8');
   const waitlistSource = readFileSync(new URL('../src/components/waitlist/WaitlistEditor.tsx', import.meta.url), 'utf8');
-  const gtmSource = readFileSync(new URL('../src/components/gtm/GTMIntakeForm.tsx', import.meta.url), 'utf8');
+  const gtmSource = readFileSync(new URL('../src/components/gtm/GTMWorkspaceIntake.tsx', import.meta.url), 'utf8');
   const mvpSource = readFileSync(new URL('../src/components/mvp-builder/MVPBuilderChat.tsx', import.meta.url), 'utf8');
   const pitchSource = readFileSync(new URL('../src/components/pitch-deck-analyzer/PitchDeckUploader.tsx', import.meta.url), 'utf8');
   const promptSource = readFileSync(new URL('../src/pages/PromptLibrary.tsx', import.meta.url), 'utf8');

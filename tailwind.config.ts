@@ -153,6 +153,12 @@ export default {
 					foreground: 'hsl(var(--tool-traction-foreground) / <alpha-value>)',
 					subtle: 'hsl(var(--tool-traction-subtle))',
 				},
+				// GTM Strategist identity (see .tool-theme-gtm in index.css)
+				'tool-gtm': {
+					DEFAULT: 'hsl(var(--tool-gtm) / <alpha-value>)',
+					foreground: 'hsl(var(--tool-gtm-foreground) / <alpha-value>)',
+					subtle: 'hsl(var(--tool-gtm-subtle))',
+				},
 				// Violet accent (marketplace provider surfaces)
 				'accent-violet': 'hsl(var(--accent-violet) / <alpha-value>)',
 				// Deep chrome surface for the MVP builder dark sub-theme

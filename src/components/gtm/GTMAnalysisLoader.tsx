@@ -1,59 +1,23 @@
-import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
-const STEPS = [
-  'Analyzing your business model...',
-  'Scoring channel fit against your profile...',
-  'Building your messaging hierarchy...',
-  'Assembling your GTM brief...',
-];
+// A plain progress state. The old loader ticked through timed fake steps and
+// showed "Building your GTM Brief" even when it was only opening a saved plan.
 
-const GTMAnalysisLoader: React.FC = () => {
-  const [visibleSteps, setVisibleSteps] = useState<number[]>([]);
+interface GTMAnalysisLoaderProps {
+  mode?: 'building' | 'restoring';
+}
 
-  useEffect(() => {
-    STEPS.forEach((_, i) => {
-      const t = setTimeout(() => setVisibleSteps(prev => [...prev, i]), i * 1600);
-      return () => clearTimeout(t);
-    });
-  }, []);
-
+export default function GTMAnalysisLoader({ mode = 'building' }: GTMAnalysisLoaderProps) {
+  const restoring = mode === 'restoring';
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8 text-center max-w-md mx-auto">
-      <Loader2 className="w-12 h-12 animate-spin text-primary" />
-      <div className="space-y-2">
-        <h2 className="text-xl font-semibold">Building your GTM Brief</h2>
-        <p className="text-sm text-muted-foreground">This takes about 15–20 seconds</p>
-      </div>
-      <div className="space-y-3 w-full text-left">
-        {STEPS.map((step, i) => (
-          <div
-            key={i}
-            className={cn(
-              'flex items-center gap-3 transition-all duration-500',
-              visibleSteps.includes(i) ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4',
-            )}
-          >
-            <div className={cn(
-              'w-2 h-2 rounded-full shrink-0 transition-colors duration-300',
-              visibleSteps.includes(i + 1) || (i === STEPS.length - 1 && visibleSteps.includes(i))
-                ? 'bg-primary'
-                : visibleSteps.includes(i)
-                ? 'bg-primary/50 animate-pulse'
-                : 'bg-muted',
-            )} />
-            <p className={cn(
-              'text-sm transition-colors duration-300',
-              visibleSteps.includes(i) ? 'text-foreground' : 'text-muted-foreground',
-            )}>
-              {step}
-            </p>
-          </div>
-        ))}
+    <div role="status" aria-live="polite" className="flex min-h-[40vh] flex-col items-center justify-center gap-4 text-center">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+      <div className="space-y-1">
+        <h2 className="text-lg font-semibold text-foreground">{restoring ? 'Opening your plan' : 'Building your plan'}</h2>
+        <p className="text-sm text-muted-foreground">
+          {restoring ? 'Loading your channels, tasks and last review.' : 'Researching your market and picking channels. This usually takes under a minute.'}
+        </p>
       </div>
     </div>
   );
-};
-
-export default GTMAnalysisLoader;
+}

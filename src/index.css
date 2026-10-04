@@ -99,6 +99,11 @@ All colors MUST be HSL.
     --tool-traction: 14 80% 46%;
     --tool-traction-foreground: 0 0% 100%;
     --tool-traction-subtle: 14 80% 46% / 0.1;
+    /* GTM Strategist identity: a cerulean route colour, between the teal
+       accent and the brand blue. */
+    --tool-gtm: 196 85% 32%;
+    --tool-gtm-foreground: 0 0% 100%;
+    --tool-gtm-subtle: 196 85% 32% / 0.1;
     
     /* Blue variants */
     --blue-primary: 217 91% 60%; /* #3B82F6 */
@@ -345,6 +350,9 @@ All colors MUST be HSL.
     --tool-traction: 16 92% 64%;
     --tool-traction-foreground: 16 60% 12%;
     --tool-traction-subtle: 16 92% 64% / 0.14;
+    --tool-gtm: 194 82% 60%;
+    --tool-gtm-foreground: 196 70% 10%;
+    --tool-gtm-subtle: 194 82% 60% / 0.14;
     
     /* RGB Color Variants for Dark Mode (brighter for visibility) */
     --blue-primary: 217 92% 65%;
@@ -4793,4 +4801,10 @@ img {
   --primary: var(--tool-traction);
   --primary-foreground: var(--tool-traction-foreground);
   --ring: var(--tool-traction);
+}
+
+.tool-theme-gtm {
+  --primary: var(--tool-gtm);
+  --primary-foreground: var(--tool-gtm-foreground);
+  --ring: var(--tool-gtm);
 }

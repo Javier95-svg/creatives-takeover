@@ -65,6 +65,32 @@ const safeStringArray = (value: unknown, fallback: string[] = []) => Array.isArr
   ? value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0).map((item) => item.trim().slice(0, 600)).slice(0, 8)
   : fallback;
 
+// Shared by the model reply and by a proposal the founder approved in the
+// preview. Either way the decision and the target rules stay the server's.
+const normalizeAdaptation = (
+  parsed: Record<string, any>,
+  decision: string,
+  fallback: { objective: string; actions: string[]; target: number },
+) => {
+  const actions = safeStringArray(parsed.actions, fallback.actions).slice(0, 4);
+  return {
+    objective: typeof parsed.objective === 'string' && parsed.objective.trim() ? parsed.objective.trim().slice(0, 500) : fallback.objective,
+    actions: actions.length > 0 ? actions : fallback.actions,
+    target: decision === 'double_down' ? Math.max(fallback.target, Number(parsed.target) || 0) : fallback.target,
+    changedVariables: safeStringArray(parsed.changedVariables).slice(0, decision === 'iterate' ? 1 : 4),
+    rationale: typeof parsed.rationale === 'string' ? parsed.rationale.trim().slice(0, 1000) : '',
+    signals: safeStringArray(parsed.signals),
+    changeLog: safeStringArray(parsed.changeLog),
+    assumptionsToAdd: safeStringArray(parsed.assumptionsToAdd),
+    assumptionsToRetire: safeStringArray(parsed.assumptionsToRetire),
+    messagePatch: typeof parsed.messagePatch === 'string' ? parsed.messagePatch.trim().slice(0, 1200) : '',
+    assetUpdates: Array.isArray(parsed.assetUpdates)
+      ? parsed.assetUpdates.filter((item: any) => typeof item?.type === 'string' && typeof item?.content === 'string')
+        .slice(0, 2).map((item: any) => ({ type: String(item.type).slice(0, 60), content: String(item.content).slice(0, 6000) }))
+      : [] as Array<Record<string, string>>,
+  };
+};
+
 async function generateAdaptiveReview(args: {
   analysis: Record<string, any>;
   decision: string;
@@ -105,21 +131,7 @@ async function generateAdaptiveReview(args: {
     if (!response.ok) throw new Error(`Adaptive review model failed: ${response.status}`);
     const data = await response.json();
     const parsed = JSON.parse(data.choices?.[0]?.message?.content ?? '{}');
-    const actions = safeStringArray(parsed.actions, args.fallback.actions).slice(0, 4);
-    const changedVariables = safeStringArray(parsed.changedVariables).slice(0, args.decision === 'iterate' ? 1 : 4);
-    return {
-      objective: typeof parsed.objective === 'string' && parsed.objective.trim() ? parsed.objective.trim().slice(0, 500) : args.fallback.objective,
-      actions: actions.length > 0 ? actions : args.fallback.actions,
-      target: args.decision === 'double_down' ? Math.max(args.fallback.target, Number(parsed.target) || 0) : args.fallback.target,
-      changedVariables,
-      rationale: typeof parsed.rationale === 'string' ? parsed.rationale.trim().slice(0, 1000) : '',
-      signals: safeStringArray(parsed.signals),
-      changeLog: safeStringArray(parsed.changeLog),
-      assumptionsToAdd: safeStringArray(parsed.assumptionsToAdd),
-      assumptionsToRetire: safeStringArray(parsed.assumptionsToRetire),
-      messagePatch: typeof parsed.messagePatch === 'string' ? parsed.messagePatch.trim().slice(0, 1200) : '',
-      assetUpdates: Array.isArray(parsed.assetUpdates) ? parsed.assetUpdates.filter((item: any) => typeof item?.type === 'string' && typeof item?.content === 'string').slice(0, 2) : [],
-    };
+    return normalizeAdaptation(parsed, args.decision, args.fallback);
   } catch (error) {
     console.warn('Adaptive GTM review fell back to deterministic rules:', error);
     return {
@@ -138,8 +150,14 @@ serve(async (req) => {
   try {
     const user = await getUserFromAuth(req);
     if (!user) return json({ error: 'Authentication required' }, 401);
-    const body = await req.json() as { planId?: string; weekStart?: string; reviewInput?: unknown };
+    // mode 'preview' proposes next week's changes without writing anything.
+    // mode 'apply' saves a proposal the founder approved. Calls without a mode
+    // keep the old behaviour (propose and save in one step).
+    const body = await req.json() as { planId?: string; weekStart?: string; reviewInput?: unknown; mode?: string; proposal?: unknown };
     if (!body.planId) return json({ error: 'planId is required' }, 400);
+    const mode = body.mode === 'preview' || body.mode === 'apply' ? body.mode : 'auto';
+    const proposal = body.proposal && typeof body.proposal === 'object' ? body.proposal as Record<string, any> : null;
+    if (mode === 'apply' && !proposal) return json({ error: 'proposal is required to apply a review' }, 400);
     const reviewInput = cleanReviewInput(body.reviewInput);
     const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
@@ -192,19 +210,25 @@ serve(async (req) => {
       ? `${experiment.pass ? 'Met' : 'Missed'} the latest target (${experiment.result_value}/${experiment.target_value}). Traction Engine decision: ${decision.replace('_', ' ')}.`
       : play ? 'No Traction Engine result has been logged. The review will collect evidence instead of inventing a conclusion.' : 'No active play is linked to this plan.';
 
-    const thisWeek = planWeek(analysis.generatedAt);
+    // Week 1 starts when the play went live, not when the plan was written.
+    const thisWeek = planWeek(playContent.activatedAt ?? analysis.generatedAt);
     const nextWeek = Math.min(6, thisWeek + 1);
     const baseAdaptation = adaptationFor(decision, channel, metric, target);
-    const adaptation = await generateAdaptiveReview({
-      analysis,
-      decision,
-      channel,
-      metric,
-      target,
-      experimentHistory,
-      reviewInput,
-      fallback: baseAdaptation,
-    });
+    if (mode === 'apply' && proposal?.decision !== decision) {
+      return json({ error: 'Your Traction results changed since the preview. Preview the review again.', code: 'stale_proposal' }, 409);
+    }
+    const adaptation = mode === 'apply'
+      ? normalizeAdaptation(proposal?.adaptation ?? {}, decision, baseAdaptation)
+      : await generateAdaptiveReview({
+        analysis,
+        decision,
+        channel,
+        metric,
+        target,
+        experimentHistory,
+        reviewInput,
+        fallback: baseAdaptation,
+      });
     const previousWeek = (analysis.sixWeekPlan ?? []).find((item: any) => Number(item.week) === nextWeek);
     analysis.sixWeekPlan = (analysis.sixWeekPlan ?? []).map((item: any) => Number(item.week) === nextWeek
       ? { ...item, objective: adaptation.objective, actions: adaptation.actions }
@@ -214,11 +238,9 @@ serve(async (req) => {
     if (decision === 'kill' && play) {
       const replacement = allPlays.find((item) => item.id !== play.id && item.status === 'active')
         ?? allPlays.find((item) => item.status === 'backlog');
-      await admin.from('gtm_plays' as never).update({ status: 'paused' } as never).eq('id', play.id).eq('user_id', user.id);
-      if (replacement) {
-        nextActiveId = replacement.id;
-        await admin.from('gtm_plays' as never).update({ status: 'active' } as never).eq('id', replacement.id).eq('user_id', user.id);
-      }
+      // The status change is saved with the other play writes below, so a
+      // preview never pauses anything.
+      if (replacement) nextActiveId = replacement.id;
     }
 
     analysis.plays = (analysis.plays ?? []).map((item: any) => {
@@ -289,6 +311,28 @@ serve(async (req) => {
     };
     analysis.health = healthSnapshot;
 
+    const weekStart = /^\d{4}-\d{2}-\d{2}$/.test(body.weekStart ?? '') ? body.weekStart! : currentWeekStart();
+    const reviewPayload = {
+      plan_id: body.planId, play_id: play?.id ?? null, traction_experiment_id: experiment?.id ?? null,
+      user_id: user.id, week_start: weekStart, decision, next_best_action: nextBestAction,
+      evidence_summary: evidenceSummary,
+      adaptation: { week: nextWeek, previousObjective: previousWeek?.objective, nextObjective: adaptation.objective, nextActions: adaptation.actions, changedVariables: adaptation.changedVariables, rationale: adaptation.rationale },
+      health_snapshot: healthSnapshot,
+      review_input: reviewInput,
+      signals: adaptation.signals,
+      change_log: adaptation.changeLog,
+    };
+
+    if (mode === 'preview') {
+      // Nothing is written: the founder sees current versus proposed first.
+      return json({
+        success: true,
+        mode: 'preview',
+        review: { ...reviewPayload, id: null },
+        proposal: { decision, adaptation },
+        analysis,
+      });
+    }
     const taskRows = newTasks.map((task: any) => ({
       id: task.id, user_id: user.id, plan_id: body.planId, play_id: task.playId || null, week_number: task.week,
       title: task.title, detail: task.detail, owner_label: task.owner, time_estimate_minutes: task.timeEstimateMinutes,
@@ -311,17 +355,6 @@ serve(async (req) => {
     const { error: planError } = await admin.from('gtm_plans' as never).update({ plan_content: analysis } as never).eq('id', body.planId).eq('user_id', user.id);
     if (planError) throw planError;
 
-    const weekStart = /^\d{4}-\d{2}-\d{2}$/.test(body.weekStart ?? '') ? body.weekStart! : currentWeekStart();
-    const reviewPayload = {
-      plan_id: body.planId, play_id: play?.id ?? null, traction_experiment_id: experiment?.id ?? null,
-      user_id: user.id, week_start: weekStart, decision, next_best_action: nextBestAction,
-      evidence_summary: evidenceSummary,
-      adaptation: { week: nextWeek, previousObjective: previousWeek?.objective, nextObjective: adaptation.objective, nextActions: adaptation.actions, changedVariables: adaptation.changedVariables, rationale: adaptation.rationale },
-      health_snapshot: healthSnapshot,
-      review_input: reviewInput,
-      signals: adaptation.signals,
-      change_log: adaptation.changeLog,
-    };
     const { data: review, error: reviewError } = await admin.from('gtm_weekly_reviews' as never)
       .upsert(reviewPayload as never, { onConflict: 'plan_id,week_start' }).select('*').single();
     if (reviewError) throw reviewError;

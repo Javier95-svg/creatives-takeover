@@ -187,7 +187,7 @@ test('GTM intake starts blank and exposes MVP import from an in-form CTA', () =>
   assert.match(intake, /businessModel: ''/);
   assert.match(intake, /geography: ''/);
   assert.match(intake, /currentTraction: ''/);
-  assert.match(intake, /Import Context/);
+  assert.match(intake, /Import context/);
   assert.doesNotMatch(intake, /context fields imported/);
   assert.match(picker, /SelectValue placeholder="Select an MVP Builder project"/);
   assert.match(page, /phase === 'intake'/);
@@ -291,7 +291,8 @@ test('competitive upgrade persists evidence, provenance, qualitative reviews, ri
 
 test('weekly review rewrites the next week from exact Traction evidence without a credit charge', () => {
   const review = readFileSync(new URL('../supabase/functions/gtm-plan-review/index.ts', import.meta.url), 'utf8');
-  const workspace = readFileSync(new URL('../src/components/gtm/GTMWorkspace.tsx', import.meta.url), 'utf8');
+  const panel = readFileSync(new URL('../src/components/gtm/GTMReviewPanel.tsx', import.meta.url), 'utf8');
+  const playCard = readFileSync(new URL('../src/components/gtm/GTMPlayCard.tsx', import.meta.url), 'utf8');
   const hook = readFileSync(new URL('../src/hooks/useGTMStrategist.ts', import.meta.url), 'utf8');
   assert.match(review, /source_gtm_play_id/);
   assert.match(review, /experiment\.decision/);
@@ -300,8 +301,8 @@ test('weekly review rewrites the next week from exact Traction evidence without 
   assert.match(review, /healthSnapshot/);
   assert.match(review, /decision === 'kill'/);
   assert.doesNotMatch(review, /deductCredits|checkAndDeductCredits/);
-  assert.match(workspace, /Week \{weeklyReview\.adaptation\.week\} rewritten/);
-  assert.match(workspace, /Start sprint here/);
+  assert.match(panel, /Week \{weeklyReview\.adaptation\.week\} updated/);
+  assert.match(playCard, /Start this experiment/);
   assert.match(hook, /activate_gtm_play_v2/);
   assert.match(hook, /createJourneyHandoff/);
   assert.match(hook, /gtm_directory_actions/);

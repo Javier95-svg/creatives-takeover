@@ -23,6 +23,7 @@ import {
   type GTMIntakeV2,
   type GTMPlanV2,
   type GTMPlay,
+  type GTMReviewProposal,
   type GTMWeeklyReview,
   type GTMWeeklyReviewInput,
 } from '@/lib/gtmV2';
@@ -204,6 +205,43 @@ const syncGTMJourneyOutcome = async (
   }
 };
 
+function mapWeeklyReviewRow(row: any, reviewInput: GTMWeeklyReviewInput): GTMWeeklyReview {
+  return {
+    id: row.id ?? undefined,
+    planId: row.plan_id,
+    weekStart: row.week_start,
+    decision: row.decision,
+    nextBestAction: row.next_best_action,
+    evidenceSummary: row.evidence_summary,
+    activePlayId: row.play_id ?? undefined,
+    tractionExperimentId: row.traction_experiment_id ?? undefined,
+    adaptation: row.adaptation ? {
+      week: Number(row.adaptation.week),
+      previousObjective: row.adaptation.previousObjective ?? undefined,
+      nextObjective: row.adaptation.nextObjective,
+      nextActions: row.adaptation.nextActions ?? [],
+      changedVariables: row.adaptation.changedVariables ?? [],
+      rationale: row.adaptation.rationale ?? undefined,
+    } : undefined,
+    reviewInput: row.review_input ?? reviewInput,
+    signals: row.signals ?? [],
+    changeLog: row.change_log ?? [],
+    healthSnapshot: row.health_snapshot ?? undefined,
+    createdAt: row.created_at,
+  };
+}
+
+// supabase.functions.invoke wraps non-2xx replies; the JSON body is on error.context.
+async function readFunctionErrorBody(error: unknown): Promise<{ code?: string; error?: string } | null> {
+  const context = (error as { context?: unknown } | null)?.context;
+  if (!(context instanceof Response)) return null;
+  try {
+    return await context.clone().json();
+  } catch {
+    return null;
+  }
+}
+
 export function useGTMStrategist() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -221,6 +259,7 @@ export function useGTMStrategist() {
   const [isLoadingMvpProjects, setIsLoadingMvpProjects] = useState(true);
   const [weeklyReview, setWeeklyReview] = useState<GTMWeeklyReview | null>(null);
   const [isReviewing, setIsReviewing] = useState(false);
+  const [reviewProposal, setReviewProposal] = useState<GTMReviewProposal | null>(null);
   const [isRestoringPlan, setIsRestoringPlan] = useState(true);
   const mvpParam = new URLSearchParams(window.location.search).get('mvp');
   const [inboundMvpProjectId, setInboundMvpProjectId] = useState<string | null>(null);
@@ -576,9 +615,16 @@ export function useGTMStrategist() {
       toast.error(error?.message || 'Could not activate this GTM play.');
       return;
     }
-    const activatedPlay = { ...play, tractionSprintId: sprintId };
+    const activatedPlay: GTMPlay = { ...play, status: 'active', tractionSprintId: sprintId, activatedAt: play.activatedAt ?? new Date().toISOString() };
     const activatedPlan = { ...analysis, plays: analysis.plays.map((item) => item.id === play.id ? activatedPlay : item) };
     setAnalysis(activatedPlan);
+    // The activation RPC records the sprint but not the start date, and week 1
+    // of the plan counts from that date (see getGTMPlanWeek).
+    const [{ error: activatedPlayError }, { error: activatedPlanError }] = await Promise.all([
+      supabase.from('gtm_plays').update({ play_content: activatedPlay as any }).eq('id', play.id).eq('user_id', user.id),
+      supabase.from('gtm_plans').update({ plan_content: activatedPlan as any }).eq('id', planId).eq('user_id', user.id),
+    ]);
+    if (activatedPlayError || activatedPlanError) console.warn('Could not save the play start date:', activatedPlayError ?? activatedPlanError);
     captureEvent('gtm_traction_sprint_started', { plan_id: planId, play_id: play.id, channel_id: play.channelId, sprint_id: sprintId });
     let marketExperimentId: string | null = null;
     try {
@@ -699,47 +745,67 @@ export function useGTMStrategist() {
     }
   }, [analysis, planId, user]);
 
-  const runWeeklyReview = useCallback(async (reviewInput: GTMWeeklyReviewInput) => {
+  // The weekly review is two steps. Preview asks the server for next week's
+  // changes without saving them; the founder compares current and proposed,
+  // then applies or dismisses. Apply re-checks the Traction decision on the
+  // server, so a stale preview cannot overwrite newer results.
+  const previewWeeklyReview = useCallback(async (reviewInput: GTMWeeklyReviewInput) => {
     if (!planId || !user) return;
     setIsReviewing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('gtm-plan-review', { body: { planId, reviewInput } });
-      if (error || !data?.success || !data.review) throw error || new Error(data?.error || 'Review failed');
-      const row = data.review as any;
-      const review: GTMWeeklyReview = {
-        id: row.id,
-        planId: row.plan_id,
-        weekStart: row.week_start,
-        decision: row.decision,
-        nextBestAction: row.next_best_action,
-        evidenceSummary: row.evidence_summary,
-        activePlayId: row.play_id ?? undefined,
-        tractionExperimentId: row.traction_experiment_id ?? undefined,
-        adaptation: row.adaptation ? {
-          week: Number(row.adaptation.week),
-          previousObjective: row.adaptation.previousObjective ?? undefined,
-          nextObjective: row.adaptation.nextObjective,
-          nextActions: row.adaptation.nextActions ?? [],
-          changedVariables: row.adaptation.changedVariables ?? [],
-          rationale: row.adaptation.rationale ?? undefined,
-        } : undefined,
-        reviewInput: row.review_input ?? reviewInput,
-        signals: row.signals ?? [],
-        changeLog: row.change_log ?? [],
-        healthSnapshot: row.health_snapshot ?? undefined,
-        createdAt: row.created_at,
-      };
-      setWeeklyReview(review);
-      if (isGTMPlanV2(data.analysis)) setAnalysis(data.analysis);
-      captureEvent('gtm_weekly_review_completed', { plan_id: planId, decision: review.decision });
-      toast.success('Weekly GTM review saved.');
+      const { data, error } = await supabase.functions.invoke('gtm-plan-review', { body: { planId, reviewInput, mode: 'preview' } });
+      if (error || !data?.success || !data.review || !data.proposal) throw error || new Error(data?.error || 'Review failed');
+      if (!isGTMPlanV2(data.analysis)) throw new Error('The proposed plan could not be read.');
+      setReviewProposal({
+        review: mapWeeklyReviewRow(data.review, reviewInput),
+        proposal: data.proposal,
+        proposedPlan: data.analysis,
+        reviewInput,
+      });
+      captureEvent('gtm_weekly_review_previewed', { plan_id: planId, decision: data.proposal.decision });
     } catch (error) {
-      console.error('Weekly GTM review failed:', error);
-      toast.error('Could not complete the weekly review.');
+      console.error('Weekly GTM review preview failed:', error);
+      toast.error('Could not prepare the weekly review.');
     } finally {
       setIsReviewing(false);
     }
   }, [planId, user]);
+
+  const applyWeeklyReview = useCallback(async () => {
+    if (!planId || !user || !reviewProposal) return;
+    setIsReviewing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('gtm-plan-review', {
+        body: { planId, reviewInput: reviewProposal.reviewInput, mode: 'apply', proposal: reviewProposal.proposal },
+      });
+      if (error) {
+        const body = await readFunctionErrorBody(error);
+        if (body?.code === 'stale_proposal') {
+          setReviewProposal(null);
+          toast.error('Your Traction results changed since this preview.', { description: 'Review the week again to see the new proposal.' });
+          return;
+        }
+        throw error;
+      }
+      if (!data?.success || !data.review) throw new Error(data?.error || 'Review failed');
+      const review = mapWeeklyReviewRow(data.review, reviewProposal.reviewInput);
+      setWeeklyReview(review);
+      if (isGTMPlanV2(data.analysis)) setAnalysis(data.analysis);
+      setReviewProposal(null);
+      captureEvent('gtm_weekly_review_completed', { plan_id: planId, decision: review.decision });
+      toast.success(review.adaptation ? `Week ${review.adaptation.week} updated.` : 'Weekly review saved.');
+    } catch (error) {
+      console.error('Weekly GTM review failed:', error);
+      toast.error('Could not apply the weekly review.');
+    } finally {
+      setIsReviewing(false);
+    }
+  }, [planId, reviewProposal, user]);
+
+  const dismissWeeklyReview = useCallback(() => {
+    if (reviewProposal) captureEvent('gtm_weekly_review_dismissed', { plan_id: planId, decision: reviewProposal.proposal.decision });
+    setReviewProposal(null);
+  }, [planId, reviewProposal]);
 
   const savePlan = useCallback(async (status: 'draft' | 'saved' | 'exported') => {
     if (!user) {
@@ -994,7 +1060,10 @@ export function useGTMStrategist() {
     updatePlay,
     startPlaySprint,
     updateV2Plan,
-    runWeeklyReview,
+    reviewProposal,
+    previewWeeklyReview,
+    applyWeeklyReview,
+    dismissWeeklyReview,
     savePlan,
     exportPlan,
     importMvpProject,

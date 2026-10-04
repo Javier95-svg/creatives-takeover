@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, CheckCircle2, FolderInput, Globe2, Loader2, Save, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, FolderInput, Loader2, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { CreditCostNotice } from '@/components/CreditCostNotice';
@@ -293,17 +293,15 @@ export default function GTMWorkspaceIntake({
   const selectedMvpProject = mvpProjects.find((project) => project.id === selectedMvpProjectId) ?? null;
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <div className="space-y-3 text-center">
-        <h1 className="pb-2 text-3xl font-bold leading-tight creatives-font takeover-gradient sm:text-4xl md:text-5xl">
-          GTM Strategist
-        </h1>
-        <p className="mx-auto max-w-3xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-          Add your product context manually or import a saved MVP Builder project, then build a researched six-week motion.
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-semibold text-foreground">{isRegeneration ? 'Edit your answers' : 'Tell us about your product'}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Five short steps. Your answers become a six-week plan you can edit at any time.
         </p>
       </div>
 
-      <div className="flex flex-col gap-4 rounded-2xl border border-primary/25 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-xl border border-border/60 bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
           <FolderInput className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
           <div>
@@ -311,8 +309,8 @@ export default function GTMWorkspaceIntake({
             <p className="mt-1 text-sm text-muted-foreground">Import its saved product context into this GTM form.</p>
           </div>
         </div>
-        <Button type="button" className="shrink-0" onClick={() => setIsImportOpen(true)}>
-          <FolderInput className="mr-2 h-4 w-4" />Import Context
+        <Button type="button" variant="outline" className="shrink-0" onClick={() => setIsImportOpen(true)}>
+          <FolderInput className="mr-2 h-4 w-4" />Import context
         </Button>
       </div>
 
@@ -342,7 +340,7 @@ export default function GTMWorkspaceIntake({
         ))}
       </div>
 
-      <div className="rounded-3xl border border-border/60 bg-background/85 p-5 shadow-sm sm:p-7">
+      <div className="rounded-xl border border-border/60 bg-card p-5 sm:p-7">
         {currentStep === 'product' ? (
           <div className="grid gap-5 md:grid-cols-2">
             <Field label="Product name"><Input value={intake.productName} onChange={(event) => update('productName', event.target.value)} placeholder="Acme" /></Field>
@@ -392,35 +390,29 @@ export default function GTMWorkspaceIntake({
           <div className="space-y-5">
             <Field label="Current measured traction"><Textarea value={intake.currentTraction} onChange={(event) => update('currentTraction', event.target.value)} rows={4} placeholder="Users, revenue, conversion, retention, channel results, or ‘no measured traction yet’." /></Field>
             <Field label="One outcome for the next six weeks" hint="Make it measurable: qualified calls, activated users, transactions, purchases, or subscribers."><Textarea value={intake.sixWeekOutcome} onChange={(event) => update('sixWeekOutcome', event.target.value)} rows={3} placeholder="e.g. Reach 30 activated teams and retain at least 12 into week two." /></Field>
-            <div className="flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm"><Globe2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><p className="text-muted-foreground">Generation includes targeted live research, cited sources, deterministic channel scoring, and durable plays. Sparse research is labeled instead of presented as fact.</p></div>
           </div>
         ) : null}
 
         {currentStep === 'confirm' ? (
           <div className="space-y-6">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Research brief</p>
-              <h2 className="mt-2 text-2xl font-semibold">Confirm the decisions that shape your motion</h2>
-              <p className="mt-2 text-sm text-muted-foreground">Imported evidence and your answers will become a focused, editable six-week operating plan.</p>
+              <h2 className="text-lg font-semibold text-foreground">Check your answers</h2>
+              <p className="mt-1 text-sm text-muted-foreground">We research your market, pick the channels that fit your time and budget, and write the first week&apos;s tasks. Nothing is sent or posted for you.</p>
             </div>
-            <div className="grid gap-3 md:grid-cols-2">
+            <dl className="divide-y divide-border/60 rounded-lg border border-border/60 text-sm">
               {[
-                ['Product', `${intake.productName} · ${MODELS.find((model) => model.value === intake.businessModel)?.label ?? intake.businessModel}`],
-                ['Best-fit customer', intake.targetSegment],
-                ['Six-week outcome', intake.sixWeekOutcome],
-                ['Operating constraint', `${intake.weeklyTimeHours} founder hours/week · $${intake.monthlyBudget}/month`],
+                ['Product', `${intake.productName}, ${MODELS.find((model) => model.value === intake.businessModel)?.label ?? intake.businessModel}`],
+                ['Customer', intake.targetSegment],
+                ['Six-week goal', intake.sixWeekOutcome],
+                ['Time and budget', `${intake.weeklyTimeHours} hours a week, $${intake.monthlyBudget} a month`],
               ].map(([label, value]) => (
-                <div key={label} className="rounded-2xl border border-border/60 bg-muted/20 p-4">
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
-                  <p className="mt-2 text-sm leading-relaxed">{value || 'Not provided'}</p>
+                <div key={label} className="grid gap-1 p-3 sm:grid-cols-[10rem_1fr]">
+                  <dt className="text-muted-foreground">{label}</dt>
+                  <dd className="text-foreground">{value || 'Not provided'}</dd>
                 </div>
               ))}
-            </div>
-            <Field label="First-party research notes (optional)" hint="Paste customer language, interview findings, pricing evidence, or measured channel results. You can add PDFs and more sources inside the workspace."><Textarea rows={5} value={evidenceNotes} onChange={(event) => setEvidenceNotes(event.target.value)} placeholder="Customers repeatedly said… / Our last LinkedIn test produced…" /></Field>
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm"><Globe2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><p className="text-muted-foreground">Live research validates alternatives, buyer signals, and channel conditions with cited sources. Sparse evidence is labeled.</p></div>
-              <div className="flex items-start gap-3 rounded-2xl border border-success/20 bg-success/5 p-4 text-sm"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success" /><p className="text-muted-foreground">You approve every asset and external action. The system never sends outreach, posts content, or operates external accounts.</p></div>
-            </div>
+            </dl>
+            <Field label="Anything customers told you (optional)" hint="Their words, interview notes, pricing reactions or past channel results. You can add files later."><Textarea rows={4} value={evidenceNotes} onChange={(event) => setEvidenceNotes(event.target.value)} placeholder="Customers kept saying… / Our last LinkedIn test got…" /></Field>
             <CreditCostNotice feature="GTM_ANALYSIS" featureName="GTM Strategist" />
           </div>
         ) : null}
@@ -435,7 +427,7 @@ export default function GTMWorkspaceIntake({
             <Save className="mr-2 h-4 w-4" />Save
           </Button>
           <Button type="button" disabled={!canContinue || isSubmitting} onClick={() => step < activeSteps.length - 1 ? setStep((current) => current + 1) : submit()}>
-            {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Building system…</> : step < activeSteps.length - 1 ? <>Continue<ArrowRight className="ml-2 h-4 w-4" /></> : <>{isRegeneration ? 'Regenerate GTM system' : 'Build GTM system'}<Sparkles className="ml-2 h-4 w-4" /></>}
+            {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Building your plan…</> : step < activeSteps.length - 1 ? <>Continue<ArrowRight className="ml-2 h-4 w-4" /></> : <>{isRegeneration ? 'Rebuild my plan' : 'Build my plan'}<ArrowRight className="ml-2 h-4 w-4" /></>}
           </Button>
         </div>
       </div>

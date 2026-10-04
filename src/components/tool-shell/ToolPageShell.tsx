@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 // its own identity through a theme class (its colour) and a quiet wallpaper
 // that depicts what the tool does.
 
-export type ToolTheme = 'pmf' | 'traction';
+export type ToolTheme = 'pmf' | 'traction' | 'gtm';
 
 interface ToolPageShellProps {
   title: string;

@@ -157,6 +157,8 @@ export interface GTMPlay {
   recommendedDirectoryIds: string[];
   actual?: number;
   tractionSprintId?: string;
+  /** When the play's Traction sprint started; week 1 of the plan counts from here. */
+  activatedAt?: string;
   directoryProgress?: Record<string, 'recommended' | 'visited' | 'submitted' | 'live' | 'skipped'>;
 }
 
@@ -331,6 +333,15 @@ export interface GTMWeeklyReview {
   changeLog?: string[];
   healthSnapshot?: GTMHealthScore;
   createdAt?: string;
+}
+
+/** A weekly review the founder has seen but not applied yet. Nothing is saved until they apply it. */
+export interface GTMReviewProposal {
+  review: GTMWeeklyReview;
+  /** Sent back unchanged on apply; the server re-checks the decision. */
+  proposal: { decision: GTMReviewDecision; adaptation: Record<string, unknown> };
+  proposedPlan: GTMPlanV2;
+  reviewInput: GTMWeeklyReviewInput;
 }
 
 export interface GTMWeeklyReviewInput {
@@ -662,11 +673,22 @@ export function buildCompetitorBriefs(plan: GTMPlanV2): GTMCompetitorBrief[] {
   }));
 }
 
+/**
+ * Which of the six weeks the founder is in. Week 1 starts when the active play
+ * went live in Traction Engine; before that, when the plan was written. The old
+ * count always used the plan date, so a plan written two weeks before launch
+ * opened on week 3.
+ */
+export function getGTMPlanWeek(plan: Pick<GTMPlanV2, 'generatedAt' | 'plays'>, now = Date.now()): number {
+  const active = plan.plays.find((play) => play.status === 'active' && play.activatedAt)
+    ?? plan.plays.find((play) => play.activatedAt);
+  const start = new Date(active?.activatedAt ?? plan.generatedAt).getTime();
+  if (!Number.isFinite(start)) return 1;
+  return Math.min(6, Math.max(1, Math.floor((now - start) / 604_800_000) + 1));
+}
+
 export function calculateGTMHealth(plan: GTMPlanV2, tasks = buildGTMTasks(plan)): GTMHealthScore {
-  const generatedAt = new Date(plan.generatedAt).getTime();
-  const currentWeek = Number.isFinite(generatedAt)
-    ? Math.min(6, Math.max(1, Math.floor((Date.now() - generatedAt) / 604_800_000) + 1))
-    : 1;
+  const currentWeek = getGTMPlanWeek(plan);
   const verifiedEvidence = (plan.evidenceItems ?? []).filter((item) => item.verified).length;
   const attributedClaims = (plan.claimAttributions ?? []).filter((claim) => !claim.assumption && claim.sourceIds.length > 0).length;
   const totalClaims = (plan.claimAttributions ?? []).length;
