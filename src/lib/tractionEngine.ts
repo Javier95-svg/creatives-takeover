@@ -26,8 +26,18 @@ export interface TractionExperimentInput {
   resultValue: number;
   timeInvestedHours: number;
   decision: TractionDecision;
+  /** People reached by the experiment this week (the denominator). */
+  sampleSize?: number;
 }
 
+export type RetentionWindowStatus = 'complete' | 'pending';
+
+/**
+ * Cohort retention. newUsers is the number of people who started in the cohort
+ * week; the active counts are how many of those same people came back within 7
+ * and 30 days. (Before calculation version 2 these fields held this week's new
+ * users and all active users, which is not a cohort and could exceed 100%.)
+ */
 export interface TractionRetentionInput {
   newUsers: number;
   sevenDayActiveUsers: number;
@@ -35,7 +45,15 @@ export interface TractionRetentionInput {
   primaryAcquisitionChannel: string;
   productCategory: TractionProductCategory;
   revenue?: number;
+  /** Monday of the week the cohort started. */
+  cohortWeekStart?: string;
+  /** A window that has not closed yet is left out of the score instead of counting as zero. */
+  sevenDayStatus?: RetentionWindowStatus;
+  thirtyDayStatus?: RetentionWindowStatus;
 }
+
+/** Calculation version stored with each weekly log; 2 means cohort retention. */
+export const TRACTION_CALCULATION_VERSION = 2;
 
 export interface TractionScoreInput {
   experiments: TractionExperimentInput[];
@@ -138,6 +156,33 @@ export const getCurrentWeekStart = (date = new Date()): string => {
   return utc.toISOString().slice(0, 10);
 };
 
+/** A cohort window is complete once the cohort week and the window have both passed. */
+export const getRetentionWindowStatus = (
+  cohortWeekStart: string,
+  windowDays: 7 | 30,
+  now = new Date(),
+): RetentionWindowStatus => {
+  const start = getWeekStartTime(cohortWeekStart);
+  if (start === 0) return 'pending';
+  return now.getTime() >= start + WEEK_MS + windowDays * DAY_MS ? 'complete' : 'pending';
+};
+
+/** Default cohort: five weeks before this week, so both windows have usually closed. */
+export const getDefaultCohortWeek = (currentWeekStart: string): string =>
+  new Date(getWeekStartTime(currentWeekStart) - 5 * WEEK_MS).toISOString().slice(0, 10);
+
+/** Share of the cohort that came back, never above 100%. Null when the window is pending or empty. */
+export const getCohortRate = (
+  retention: TractionRetentionInput,
+  window: 'sevenDay' | 'thirtyDay',
+): number | null => {
+  const cohort = Math.max(0, retention.newUsers);
+  const status = window === 'sevenDay' ? retention.sevenDayStatus : retention.thirtyDayStatus;
+  if (cohort === 0 || status === 'pending') return null;
+  const returned = Math.max(0, window === 'sevenDay' ? retention.sevenDayActiveUsers : retention.thirtyDayActiveUsers);
+  return Math.min(returned, cohort) / cohort;
+};
+
 /** Returns how many weeks into the 6-week sprint cycle a sprint is (1-based). */
 export const getSprintWeekNumber = (cycleStartDate: string, currentWeekStart: string): number => {
   const startMs = getWeekStartTime(cycleStartDate);
@@ -221,15 +266,15 @@ export const scoreExperiment = (
 };
 
 export const scoreRetention = (retention: TractionRetentionInput): number => {
-  const newUsers = Math.max(0, retention.newUsers);
-  if (newUsers === 0) return 0;
-
   const benchmarks = RETENTION_BENCHMARKS[retention.productCategory] ?? RETENTION_BENCHMARKS.other;
-  const sevenDayRate = Math.max(0, retention.sevenDayActiveUsers) / newUsers;
-  const thirtyDayRate = Math.max(0, retention.thirtyDayActiveUsers) / newUsers;
-  const sevenDayScore = Math.min(sevenDayRate / benchmarks.sevenDay, 1.3) / 1.3;
-  const thirtyDayScore = Math.min(thirtyDayRate / benchmarks.thirtyDay, 1.3) / 1.3;
-
+  const sevenDayRate = getCohortRate(retention, 'sevenDay');
+  const thirtyDayRate = getCohortRate(retention, 'thirtyDay');
+  if (sevenDayRate === null && thirtyDayRate === null) return 0;
+  const sevenDayScore = sevenDayRate === null ? null : Math.min(sevenDayRate / benchmarks.sevenDay, 1.3) / 1.3;
+  const thirtyDayScore = thirtyDayRate === null ? null : Math.min(thirtyDayRate / benchmarks.thirtyDay, 1.3) / 1.3;
+  // Only closed windows count; with one pending, the other carries the score.
+  if (sevenDayScore === null) return clampScore((thirtyDayScore ?? 0) * 100);
+  if (thirtyDayScore === null) return clampScore(sevenDayScore * 100);
   return clampScore((sevenDayScore * 0.45 + thirtyDayScore * 0.55) * 100);
 };
 
@@ -240,14 +285,14 @@ export const scoreRetention = (retention: TractionRetentionInput): number => {
  * - 7-day OK, 30-day below → core loop gap (users activate but don't form a habit)
  */
 export const diagnoseRetention = (retention: TractionRetentionInput): RetentionDiagnosis => {
-  const newUsers = Math.max(0, retention.newUsers);
-  if (newUsers === 0) return 'no_signal';
-
   const benchmarks = RETENTION_BENCHMARKS[retention.productCategory] ?? RETENTION_BENCHMARKS.other;
-  const sevenDayRate = Math.max(0, retention.sevenDayActiveUsers) / newUsers;
-  const thirtyDayRate = Math.max(0, retention.thirtyDayActiveUsers) / newUsers;
+  const sevenDayRate = getCohortRate(retention, 'sevenDay');
+  const thirtyDayRate = getCohortRate(retention, 'thirtyDay');
+  if (sevenDayRate === null) return 'no_signal';
 
   const sevenDayOk = sevenDayRate >= benchmarks.sevenDay * 0.8;
+  // A pending 30-day window cannot show a habit problem yet.
+  if (thirtyDayRate === null) return sevenDayOk ? 'healthy' : 'onboarding_gap';
   const thirtyDayOk = thirtyDayRate >= benchmarks.thirtyDay * 0.8;
 
   if (sevenDayOk && thirtyDayOk) return 'healthy';
@@ -259,7 +304,7 @@ export const diagnoseRetention = (retention: TractionRetentionInput): RetentionD
 const DIAGNOSIS_SIGNALS: Record<RetentionDiagnosis, string> = {
   no_signal: 'No acquisition quality signal yet.',
   healthy: ' is attracting users who retain at or above benchmark.',
-  wrong_audience: ' is bringing in users who churn quickly at both 7 and 30 days — likely an audience fit problem, not an onboarding problem.',
+  wrong_audience: ' is bringing in users who churn quickly at both 7 and 30 days. That points to audience fit, not onboarding.',
   onboarding_gap: ' users are churning before activation, but those who do activate stick around. The fix is onboarding, not targeting.',
   core_loop_gap: ' users activate but do not form a habit by day 30. The core product loop needs a stronger return trigger.',
 };
@@ -307,7 +352,8 @@ export const calculateTractionScore = (input: TractionScoreInput): TractionScore
     pass: experiment.pass,
     efficiencyScore: experiment.efficiencyScore,
     retentionHealthScore,
-    sampleSize: Math.max(0, input.experiments[index]?.resultValue ?? 0),
+    // The sample is the people reached, not the result (the result was used here before).
+    sampleSize: Math.max(0, input.experiments[index]?.sampleSize ?? 0),
   }));
   experimentScores.forEach((experiment, index) => { experiment.recommendedDecision = recommendedDecisions[index]; });
   const combinedScore = clampScore(
@@ -340,8 +386,8 @@ export const calculateTractionScore = (input: TractionScoreInput): TractionScore
     : 0;
   const retentionBenchmarks = RETENTION_BENCHMARKS[input.retention.productCategory] ?? RETENTION_BENCHMARKS.other;
   const newUsers = Math.max(0, input.retention.newUsers);
-  const sevenDayRate = newUsers > 0 ? Math.max(0, input.retention.sevenDayActiveUsers) / newUsers : 0;
-  const thirtyDayRate = newUsers > 0 ? Math.max(0, input.retention.thirtyDayActiveUsers) / newUsers : 0;
+  const sevenDayRate = getCohortRate(input.retention, 'sevenDay');
+  const thirtyDayRate = getCohortRate(input.retention, 'thirtyDay');
   const dimensions: TractionScoreDimensionInsight[] = [
     {
       key: 'consistency',
@@ -370,8 +416,15 @@ export const calculateTractionScore = (input: TractionScoreInput): TractionScore
       label: 'Retention Health',
       score: retentionHealthScore,
       detail: newUsers > 0
-        ? `7-day retention is ${formatRate(sevenDayRate)} versus a ${formatRate(retentionBenchmarks.sevenDay)} benchmark. 30-day retention is ${formatRate(thirtyDayRate)} versus ${formatRate(retentionBenchmarks.thirtyDay)}.`
-        : 'Add new users and returning users to measure retention health.',
+        ? [
+          sevenDayRate === null
+            ? 'The 7-day window is still open.'
+            : `7-day retention is ${formatRate(sevenDayRate)} versus a ${formatRate(retentionBenchmarks.sevenDay)} benchmark.`,
+          thirtyDayRate === null
+            ? 'The 30-day window is still open.'
+            : `30-day retention is ${formatRate(thirtyDayRate)} versus ${formatRate(retentionBenchmarks.thirtyDay)}.`,
+        ].join(' ')
+        : 'Add how many people started in a week and how many came back to measure retention.',
     },
   ];
   const rankedDimensions = [...dimensions].sort((left, right) => right.score - left.score);
@@ -397,7 +450,7 @@ export const calculateTractionScore = (input: TractionScoreInput): TractionScore
   if (retentionDiagnosis === 'onboarding_gap') {
     signals.push({
       severity: 85,
-      message: 'Users are not activating after signup. The channel is not the problem — your onboarding flow is. Fix activation before spending more time on distribution.',
+      message: 'Users are not activating after signup. The channel is not the problem; your onboarding flow is. Fix activation before spending more time on distribution.',
     });
   }
   if (retentionDiagnosis === 'core_loop_gap') {
@@ -427,7 +480,7 @@ export const calculateTractionScore = (input: TractionScoreInput): TractionScore
   if (retentionHealthScore >= 70 && consistencyScore < 55) {
     signals.push({
       severity: 60,
-      message: 'Users are retaining well, but your distribution is inconsistent. You have a product worth growing — protect a weekly sprint block.',
+      message: 'Users are retaining well, but your distribution is inconsistent. You have a product worth growing, so protect a weekly sprint block.',
     });
   }
   if (combinedScore >= 75 && !phaseSevenReady) {

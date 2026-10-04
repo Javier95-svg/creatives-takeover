@@ -147,6 +147,12 @@ export default {
 					foreground: 'hsl(var(--tool-pmf-foreground) / <alpha-value>)',
 					subtle: 'hsl(var(--tool-pmf-subtle))',
 				},
+				// Traction Engine identity (see .tool-theme-traction in index.css)
+				'tool-traction': {
+					DEFAULT: 'hsl(var(--tool-traction) / <alpha-value>)',
+					foreground: 'hsl(var(--tool-traction-foreground) / <alpha-value>)',
+					subtle: 'hsl(var(--tool-traction-subtle))',
+				},
 				// Violet accent (marketplace provider surfaces)
 				'accent-violet': 'hsl(var(--accent-violet) / <alpha-value>)',
 				// Deep chrome surface for the MVP builder dark sub-theme

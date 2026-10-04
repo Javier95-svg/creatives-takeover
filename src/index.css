@@ -95,6 +95,10 @@ All colors MUST be HSL.
     --tool-pmf: 271 56% 48%;
     --tool-pmf-foreground: 0 0% 100%;
     --tool-pmf-subtle: 271 56% 48% / 0.1;
+    /* Traction Engine identity: a warm signal orange, distinct from warning amber. */
+    --tool-traction: 14 80% 46%;
+    --tool-traction-foreground: 0 0% 100%;
+    --tool-traction-subtle: 14 80% 46% / 0.1;
     
     /* Blue variants */
     --blue-primary: 217 91% 60%; /* #3B82F6 */
@@ -338,6 +342,9 @@ All colors MUST be HSL.
     --tool-pmf: 271 80% 74%;
     --tool-pmf-foreground: 271 45% 14%;
     --tool-pmf-subtle: 271 80% 74% / 0.14;
+    --tool-traction: 16 92% 64%;
+    --tool-traction-foreground: 16 60% 12%;
+    --tool-traction-subtle: 16 92% 64% / 0.14;
     
     /* RGB Color Variants for Dark Mode (brighter for visibility) */
     --blue-primary: 217 92% 65%;
@@ -4780,4 +4787,10 @@ img {
   --primary: var(--tool-pmf);
   --primary-foreground: var(--tool-pmf-foreground);
   --ring: var(--tool-pmf);
+}
+
+.tool-theme-traction {
+  --primary: var(--tool-traction);
+  --primary-foreground: var(--tool-traction-foreground);
+  --ring: var(--tool-traction);
 }

@@ -105,20 +105,20 @@ test('Tech Stack charges once per completed budget generation', () => {
   assert.match(source, /setShowBudget\(false\)/);
 });
 
-test('Traction Engine charges before saving weekly scorecards', () => {
+// Logging a week became free in October 2026: it is routine upkeep, and charging
+// for it discouraged the weekly habit the tool depends on.
+test('Traction Engine saves weekly logs without charging credits', () => {
   const constantsSource = readFileSync(new URL('../src/config/constants.ts', import.meta.url), 'utf8');
-  const edgeConstantsSource = readFileSync(new URL('../supabase/functions/_shared/credit-constants.ts', import.meta.url), 'utf8');
   const pageSource = readFileSync(new URL('../src/pages/TractionEnginePage.tsx', import.meta.url), 'utf8');
   const creditActionsSource = readFileSync(new URL('../src/hooks/useCreditActions.ts', import.meta.url), 'utf8');
+  const pricingSource = readFileSync(new URL('../src/components/PricingComparison.tsx', import.meta.url), 'utf8');
 
-  assert.match(constantsSource, /TRACTION_ENGINE_SCORECARD:\s*2/);
-  assert.match(edgeConstantsSource, /TRACTION_ENGINE_SCORECARD:\s*2/);
-  assert.match(creditActionsSource, /TRACTION_ENGINE_SCORECARD: 'Traction Engine Scorecard'/);
-  assert.match(creditActionsSource, /'TRACTION_ENGINE_SCORECARD'/);
-  assert.match(pageSource, /deductCredits\('TRACTION_ENGINE_SCORECARD'/);
-  assert.match(pageSource, /operationId: `traction-engine-\$\{userId\}-\$\{currentWeekStart\}`/);
-  assert.match(pageSource, /if \(activeSprints\.length \+ newChannels\.length > 2\)[\s\S]*deductCredits\('TRACTION_ENGINE_SCORECARD'/);
-  assert.match(pageSource, /if \(!charged\) return;[\s\S]*const sprintByChannel = await ensureSprints\(\)/);
+  assert.match(constantsSource, /TRACTION_ENGINE_SCORECARD:\s*0/);
+  assert.doesNotMatch(pageSource, /deductCredits|useCreditActions/);
+  assert.doesNotMatch(creditActionsSource, /ALWAYS_PAID_FEATURES = new Set<string>\(\[[\s\S]*'TRACTION_ENGINE_SCORECARD'[\s\S]*?\]\);/);
+  assert.match(pricingSource, /toolName\.traction, rookie: "Free weekly logs"/);
+  // The two-channel limit is still enforced before anything is written.
+  assert.match(pageSource, /if \(activeSprints\.length \+ newChannels\.length > 2\)[\s\S]*const sprintByChannel = await ensureSprints\(\)/);
 });
 
 test('local publish flows perform real deductions, not receipt-only accounting', () => {

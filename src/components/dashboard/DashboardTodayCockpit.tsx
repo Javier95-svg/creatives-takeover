@@ -45,7 +45,6 @@ const CREDIT_FEATURE_BY_TOOL: Partial<Record<string, CreditFeature>> = {
   mvp_builder: 'APP_BUILDER_GENERATE',
   tech_stack: 'TECH_STACK_GENERATION',
   gtm_strategist: 'GTM_ANALYSIS',
-  traction_engine: 'TRACTION_ENGINE_SCORECARD',
   pitch_deck_analyzer: 'PITCH_DECK_ANALYZER',
   decision_sprint: 'SPRINT_TASK_GENERATION',
   insighta_test: 'FUNDRAISING_READINESS_ANALYSIS',

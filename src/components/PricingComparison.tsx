@@ -75,7 +75,7 @@ const features: FeatureCategory[] = [
       { feature: "First Customer Proof", rookie: "Preview", starter: "Preview after validation", rising: "Full workflow", pro: "Full workflow" },
       { feature: toolName.directories, rookie: quotaValue(MONTHLY_FREE_QUOTAS.directory_visits.rookie, "visits"), starter: quotaValue(MONTHLY_FREE_QUOTAS.directory_visits.starter, "visits"), rising: quotaValue(MONTHLY_FREE_QUOTAS.directory_visits.rising, "visits"), pro: quotaValue(MONTHLY_FREE_QUOTAS.directory_visits.pro, "visits") },
       { feature: "Prompt Library", rookie: "Standard models", starter: "Standard models", rising: "Full library + export", pro: "Full library + export" },
-      { feature: toolName.traction, rookie: `${CREDIT_COSTS.TRACTION_ENGINE_SCORECARD} credits/scorecard`, starter: `${CREDIT_COSTS.TRACTION_ENGINE_SCORECARD} credits/scorecard`, rising: `${CREDIT_COSTS.TRACTION_ENGINE_SCORECARD} credits/scorecard`, pro: `${CREDIT_COSTS.TRACTION_ENGINE_SCORECARD} credits/scorecard` },
+      { feature: toolName.traction, rookie: "Free weekly logs", starter: "Free weekly logs", rising: "Free weekly logs", pro: "Free weekly logs" },
     ],
   },
   {

@@ -23,6 +23,10 @@ const CALM_FILES = [
   'src/pages/pmf/PMFSurveyPage.tsx',
   // Tool wallpapers are allowed, but they are held to the same no-glow rules.
   'src/components/wallpapers/PMFLabWallpaper.tsx',
+  'src/pages/TractionEnginePage.tsx',
+  'src/components/traction/TractionExperimentCard.tsx',
+  'src/components/traction/TractionRetentionCard.tsx',
+  'src/components/wallpapers/TractionLogbookWallpaper.tsx',
 ];
 
 const VISUAL_RULES: Array<[RegExp, string]> = [
@@ -38,7 +42,8 @@ const VISUAL_RULES: Array<[RegExp, string]> = [
 const COPY_RULES: Array<[RegExp, string]> = [
   [/\bcanonical\b/i, 'jargon: canonical'],
   [/\bdeterministic\b/i, 'jargon: deterministic'],
-  [/\bprovenance\b/i, 'jargon: provenance'],
+  // Object keys such as `provenance:` are data, not copy.
+  [/\bprovenance\b(?!\s*:)/i, 'jargon: provenance'],
   [/\bauditable\b/i, 'jargon: auditable'],
   [/×0\.\d+/, 'signal weight shown to users'],
   [/[—–]/, 'em or en dash'],
