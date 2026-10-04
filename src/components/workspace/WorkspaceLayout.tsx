@@ -8,6 +8,7 @@ import { WorkspaceFrameContext } from '@/contexts/WorkspaceFrameContext';
 import { WorkspaceSidebar } from './WorkspaceSidebar';
 import type { UserType } from '@/lib/accountTypes';
 import { enterWorkspaceRoute } from '@/lib/workspaceNavigation';
+import { isFullScreenToolPath } from '@/lib/workspacePolicy';
 import '@/components/workspace-route-frame.css';
 
 export interface WorkspaceLayoutProps {
@@ -51,6 +52,10 @@ export default function WorkspaceLayout({ children, account, avatar, profileHref
     setDrawer(false); setSearchOpen(false); setMore(false);
     document.querySelector('.workspace-route-content')?.scrollTo(0, 0);
   }, [location.pathname, location.search]);
+  // MVP Builder is the one exception: it is a full-screen workspace with its
+  // own header (projects, credits, save), so the shell's top bar is dropped
+  // there to give the chat and preview the full height.
+  const hideTopBar = isFullScreenToolPath(location.pathname);
   const sidebar = <WorkspaceSidebar account={account} avatar={avatar} profileHref={profileHref} updates={updates} userType={userType}
     currentPath={currentPath ?? (home ? '/' : location.pathname)} initialCollapsed={persistentPreviewNavigation || !home} mobile={mobile}
     navigateTo={path => { setDrawer(false); (onNavigate ?? enterWorkspaceRoute)(path); }} />;
@@ -58,7 +63,7 @@ export default function WorkspaceLayout({ children, account, avatar, profileHref
     <div data-telemetry-private className={`ph-no-capture ph-mask workspace-shell flex h-dvh overflow-hidden bg-background text-foreground ${persistentPreviewNavigation ? 'workspace-preview-persistent' : ''}`}>
       {!mobile && sidebar}
       <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="relative z-20 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border/60 bg-card/60 px-3 md:gap-4 md:pl-5 lg:pl-8">
+        {hideTopBar ? null : <header className="relative z-20 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border/60 bg-card/60 px-3 md:gap-4 md:pl-5 lg:pl-8">
           {mobile ? <div className="flex items-center gap-1">
             <Sheet open={drawer} onOpenChange={setDrawer}>
               <SheetTrigger asChild><button aria-label="Open navigation" className="workspace-icon-button"><Menu /></button></SheetTrigger>
@@ -74,7 +79,7 @@ export default function WorkspaceLayout({ children, account, avatar, profileHref
             {mobile ? <Popover open={more} onOpenChange={setMore}><PopoverTrigger asChild><button aria-label="Account utilities" className="workspace-icon-button"><MoreHorizontal /></button></PopoverTrigger><PopoverContent align="end" className="w-auto"><div className="flex items-center gap-1">{utilities}</div><div className="mt-2 flex items-center justify-between gap-3 border-t border-border pt-2">{theme}{signOut}</div></PopoverContent></Popover>
               : <><div className="ml-2 flex items-center gap-1 border-x border-border/60 px-2" role="group" aria-label="Account utilities">{utilities}</div>{theme}{signOut}</>}
           </div>
-        </header>
+        </header>}
         <Suspense fallback={<div role="status" aria-live="polite" className="min-h-0 flex-1 p-8 text-muted-foreground">Loading page…</div>}>
           {home ? children : <div role="region" aria-label="Route content" className="workspace-route-content min-h-0 flex-1 overflow-auto">{children}</div>}
         </Suspense>

@@ -23,6 +23,10 @@ export function isWorkspaceRoute(path: string) {
   if (/(^|\/)(admin|public|embed|share)(\/|$)/.test(path) || path === '/demo-studio/try' || path === '/newspaper/rss.xml') return false;
   return path === '/' || exact.includes(path) || roots.some(root => path === root || path.startsWith(`${root}/`));
 }
+/** Tools that fill the screen with their own header, so the workspace top bar is hidden. Only MVP Builder. */
+export function isFullScreenToolPath(path: string) {
+  return path === '/mvp-builder' || path.startsWith('/mvp-builder/');
+}
 export function workspaceEligible(userId: string | undefined, authLoading: boolean, flag: boolean | undefined, configured: boolean) {
   return configured && !authLoading && Boolean(userId) && flag === true;
 }
