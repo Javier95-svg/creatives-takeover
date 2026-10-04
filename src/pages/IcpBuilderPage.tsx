@@ -3,7 +3,7 @@ import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import Navigation from "@/components/Navigation";
-import SEO, { createBreadcrumbSchema, createFAQSchema, createSoftwareApplicationSchema } from "@/components/SEO";
+import SEO, { createBreadcrumbSchema, createSoftwareApplicationSchema } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { readIcpBuilderSession } from "@/lib/icpBuilderSession";
 import {
@@ -107,21 +107,6 @@ export default function ICPBuilderPage() {
     navigate("/");
   };
 
-  const icpFaqs = [
-    {
-      question: "What is an ideal customer profile for a startup?",
-      answer: "An ideal customer profile is the specific type of customer most likely to need your product, feel the pain strongly, and adopt early. It is more precise than a broad persona or market category.",
-    },
-    {
-      question: "Why do founders need an ICP before building?",
-      answer: "Without a clear ICP, founders build for everyone and reach no one. Defining your ideal customer first sharpens your MVP scope, your messaging, and your first sales conversations.",
-    },
-    {
-      question: "How long does it take to build an ICP draft?",
-      answer: "The ICP Builder guides you through a structured flow in around 10–15 minutes. You can refine the output as you learn more from real customer conversations.",
-    },
-  ];
-
   const structuredData = [
     createSoftwareApplicationSchema({
       name: "Creatives Takeover ICP Builder",
@@ -137,7 +122,6 @@ export default function ICPBuilderPage() {
       ],
       price: "0",
     }),
-    createFAQSchema(icpFaqs),
     createBreadcrumbSchema([
       { name: "Home", url: "/" },
       { name: "ICP Builder", url: "/icp-builder" },

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
+import SEO, { createBreadcrumbSchema } from '@/components/SEO';
 import RelatedToolsSection from '@/components/seo/RelatedToolsSection';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
@@ -1696,20 +1696,6 @@ export default function TractionEnginePage() {
     featureName: 'Traction Engine',
     description: 'Evaluate pre-registered acquisition experiments, metric-level evidence, decisions, and retention signals.',
   };
-  const tractionFaqs = [
-    {
-      question: "How does Traction Engine score traction?",
-      answer: "It blends four equally weighted dimensions: consistency streak, channel efficiency, experiment quality, and retention health, benchmarked by product category.",
-    },
-    {
-      question: "What makes an acquisition result CT Verified?",
-      answer: "The experiment must reach its pre-registered sample and the result must be supported by platform-recorded or reviewer-verified customer evidence. Passing the target is not required.",
-    },
-    {
-      question: "Why should founders track distribution experiments weekly?",
-      answer: "Weekly tracking creates a compound record of what channels convert, what messaging resonates, and where retention breaks — the pattern is more valuable than any single data point.",
-    },
-  ];
 
   const structuredData = [
     {
@@ -1719,7 +1705,6 @@ export default function TractionEnginePage() {
       description: 'Weekly distribution experiment tracker and retention scorecard for founders building repeatable traction.',
       url: 'https://creatives-takeover.com/traction-engine',
     },
-    createFAQSchema(tractionFaqs),
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'Traction Engine', url: '/traction-engine' },

@@ -1,10 +1,9 @@
 import { useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
+import SEO, { createBreadcrumbSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-import PageFAQSection from '@/components/seo/PageFAQSection';
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
 import GTMWorkspaceIntake from '@/components/gtm/GTMWorkspaceIntake';
@@ -36,21 +35,6 @@ const structuredData = [
     { name: 'BizMap AI', url: '/bizmap-ai' },
     { name: 'GTM Strategist', url: '/go-to-market' },
   ]),
-];
-
-const faqs = [
-  {
-    question: 'What is a go-to-market strategy for an early-stage startup?',
-    answer: 'A go-to-market strategy is the practical plan for reaching the right customers, explaining the offer clearly, choosing channels, and turning launch activity into early traction.',
-  },
-  {
-    question: 'Does GTM Strategist recommend startup acquisition channels?',
-    answer: 'Yes. It applies eligibility rules and transparent scoring to choose one primary channel, one secondary channel, and one deferred bet.',
-  },
-  {
-    question: 'When should founders use GTM Strategist?',
-    answer: 'Use it when your product is launch-ready or already live. It turns existing founder evidence into a six-week motion and adapts the next week from measured results.',
-  },
 ];
 
 export default function GTMStrategistPage() {
@@ -105,7 +89,7 @@ export default function GTMStrategistPage() {
         description="Build a researched six-week go-to-market plan, activate focused plays through Directories and Traction Engine, and adapt through weekly evidence reviews."
         keywords="go to market strategy, gtm channels, startup marketing, first customers, founder marketing"
         url="/go-to-market"
-        structuredData={[...structuredData, createFAQSchema(faqs)]}
+        structuredData={structuredData}
       />
       <GTMStrategistWallpaper />
       <div className="relative z-10">
@@ -162,9 +146,6 @@ export default function GTMStrategistPage() {
                 <div />
               </BlurredToolPreview>
             )}
-            <div className="pt-8 md:pt-12">
-              <PageFAQSection title="Frequent Questions" faqs={faqs} />
-            </div>
           </div>
         </main>
         <Footer />

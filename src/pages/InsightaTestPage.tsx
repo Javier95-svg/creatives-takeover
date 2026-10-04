@@ -1,8 +1,7 @@
-import SEO, { createBreadcrumbSchema, createFAQSchema, createSoftwareApplicationSchema } from "@/components/SEO";
+import SEO, { createBreadcrumbSchema, createSoftwareApplicationSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import AnswerSummary from "@/components/seo/AnswerSummary";
-import PageFAQSection from "@/components/seo/PageFAQSection";
 import RelatedPageLinks from "@/components/seo/RelatedPageLinks";
 import FundraisingReadinessToolkitAll from "@/components/blog/FundraisingReadinessToolkitAll";
 import { useFreeToolOpened } from "@/hooks/useFreeToolOpened";
@@ -12,23 +11,6 @@ export default function InsightaTestPage() {
   // see useFreeToolOpened for why we don't gate on it.
   useFreeToolOpened('insighta_test');
 
-  const faqs = [
-    {
-      question: "What is fundraising readiness?",
-      answer:
-        "Fundraising readiness is how prepared your startup is to present a credible opportunity to investors, including story clarity, traction evidence, market understanding, and overall preparedness.",
-    },
-    {
-      question: "Should founders assess readiness before contacting investors?",
-      answer:
-        "Yes. A readiness check helps you catch obvious gaps before you start outreach, which can improve both the deck and the fundraising narrative.",
-    },
-    {
-      question: "What if the readiness score is low?",
-      answer:
-        "A low score usually means the startup should strengthen proof, messaging, or investor materials before pushing harder on fundraising conversations.",
-    },
-  ];
   const structuredData = [
     createSoftwareApplicationSchema({
       name: "Insighta Test",
@@ -36,7 +18,6 @@ export default function InsightaTestPage() {
       url: "/insighta-test",
       featureList: ["readiness assessment", "fundraising gaps", "investor preparation checklist"],
     }),
-    createFAQSchema(faqs),
     createBreadcrumbSchema([
       { name: "Home", url: "/" },
       { name: "Insighta Test", url: "/insighta-test" },
@@ -117,11 +98,6 @@ export default function InsightaTestPage() {
                       "The output helps founders decide whether to improve the deck, traction proof, targeting, or overall fundraising narrative first.",
                   },
                 ]}
-              />
-
-              <PageFAQSection
-                faqs={faqs}
-                description="Common founder questions about investor readiness, fundraising preparation, and what to fix before outreach."
               />
             </div>
           </div>

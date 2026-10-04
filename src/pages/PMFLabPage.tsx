@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
+import SEO, { createBreadcrumbSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-import PageFAQSection from '@/components/seo/PageFAQSection';
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
@@ -195,26 +194,8 @@ export default function PMFLabPage() {
     void loadContext();
     return () => { active = false; };
   }, [user, icpParam, validationContextId, demoProjectId]);
-  const faqs = [
-    {
-      question: 'What does a PMF Readiness Score of 75 or higher actually mean?',
-      answer:
-        'A score of 75 or above can support a Build recommendation only when the report has also reached decision grade evidence. It does not guarantee success. It means the weighted customer and behavioral evidence is strong enough to justify the smallest next build.\n\nThe score combines five dimensions, while confidence comes from a separate evidence ladder. Five weighted signals are directional, ten reveal emerging patterns, and twenty five support a decision grade Build, Narrow, Pivot, or Stop recommendation. Interviews carry the most weight, hosted survey responses and verified demo behavior add direct evidence, and cited research can corroborate but cannot replace customer proof.\n\nLower confidence reports stay explicit about uncertainty and show the next evidence needed. Treat the score as a diagnostic, not a grade.',
-    },
-    {
-      question: 'Why does PMF Lab use five, ten, and twenty five evidence signals?',
-      answer:
-        'At five weighted signals, PMF Lab can suggest the next validation direction without pretending a pattern is proven. At ten, repeated pains, objections, and behaviors begin to form an emerging pattern. At twenty five, the system can make a decision grade recommendation while still showing contradictions and missing evidence.\n\nThe sources are weighted because they are not equally strong. A structured customer interview carries full weight. Hosted survey responses and verified Demo Studio behavior carry substantial direct weight. Cited market research can corroborate a conclusion but cannot substitute for people acting or describing a recent behavior.\n\nPMF Lab can run early, but it caps confidence and keeps the recommendation provisional until the evidence earns the next level.',
-    },
-    {
-      question: 'How does PMF Lab connect with ICP Builder and Demo Studio?',
-      answer:
-        'PMF Lab is designed as the third and final validation tool in the BizMap journey, and it builds directly on the work you did in Stage I and Stage II. In ICP Builder, you defined who your target customer is: their segment, recurring pain, and behavioral triggers. In Demo Studio, you tested whether that customer would express enough interest to sign up before your product exists. PMF Lab now asks whether the real-world evidence you have gathered confirms or contradicts those earlier assumptions.\n\nWhen you open PMF Lab, it automatically pulls your ICP persona name and your waitlist product name and displays them in a context banner. The questions in the evidence form are designed to be answered in relation to the ICP you defined and the waitlist you built, not in isolation. If your interview segments do not match your ICP target, or if buying intent from your waitlist leads is lower than expected, the report will surface that disconnect explicitly.\n\nThe output of PMF Lab, your PMF Readiness Score and the segment-level breakdown, is what you carry into Stage IV. It becomes the evidence base for scoping your MVP, prioritising features, and making the case to co-founders, advisors, or investors that you are building for a real, validated demand. Think of the three tools as one continuous workflow: define your customer, prove they want something, then verify the evidence is strong enough to build.',
-    },
-  ];
   const pageStructuredData = [
     ...structuredData,
-    createFAQSchema(faqs),
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'BizMap AI', url: '/bizmap-ai' },
@@ -715,13 +696,6 @@ export default function PMFLabPage() {
                 <div />
               </BlurredToolPreview>
             )}
-
-            <div className="mt-10 space-y-8">
-              <PageFAQSection
-                title="FAQ"
-                faqs={faqs}
-              />
-            </div>
           </div>
         </section>
       </main>

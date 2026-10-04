@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import SEO, { createBreadcrumbSchema, createFAQSchema, createSoftwareApplicationSchema } from '@/components/SEO';
+import SEO, { createBreadcrumbSchema, createSoftwareApplicationSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-import PageFAQSection from '@/components/seo/PageFAQSection';
 import RelatedToolsSection from '@/components/seo/RelatedToolsSection';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -137,24 +136,6 @@ export default function BizMapJourneyHubPage() {
     }
   };
 
-  const faqs = [
-    {
-      question: 'What does BizMap AI help founders do?',
-      answer:
-        'BizMap AI helps founders validate a startup idea, define an ideal customer, scope an MVP, test demand, and prepare for launch inside one connected workflow.',
-    },
-    {
-      question: 'Is BizMap AI better for new ideas or existing startups?',
-      answer:
-        'It is strongest for early-stage ideas and pre-launch startups, but founders with an existing product can still use it to tighten positioning, validation, and launch planning.',
-    },
-    {
-      question: 'What happens after idea validation in BizMap AI?',
-      answer:
-        'After validation, the workflow moves into customer targeting, product-market fit review, MVP planning, demand testing, and go-to-market execution so you do not restart from scratch at each step.',
-    },
-  ];
-
   const structuredData = [
     {
       '@context': 'https://schema.org',
@@ -171,7 +152,6 @@ export default function BizMapJourneyHubPage() {
       url: '/bizmap-ai',
       featureList: ['ICP Builder', 'PMF Lab', 'Demo Studio', 'MVP Builder', 'GTM Strategist'],
     }),
-    createFAQSchema(faqs),
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'BizMap AI', url: '/bizmap-ai' },
@@ -202,9 +182,6 @@ export default function BizMapJourneyHubPage() {
         <Navigation />
         <main className="nav-offset px-4 pb-20 pt-28 md:pt-32 lg:pt-36">
           <FounderExecutionCycle />
-          <div className="container mx-auto mt-10 max-w-6xl">
-            <PageFAQSection title="Frequent Questions" faqs={faqs} />
-          </div>
         </main>
         <Footer />
       </div>
@@ -352,10 +329,6 @@ export default function BizMapJourneyHubPage() {
             </div>
           </section>
 
-          <PageFAQSection
-            title="Frequent Questions"
-            faqs={faqs}
-          />
           <RelatedToolsSection
             tools={[
               { name: "ICP Builder", description: "Define your ideal customer before you build.", url: "/icp-builder" },

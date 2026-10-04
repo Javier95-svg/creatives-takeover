@@ -468,20 +468,6 @@ export const INDEXABLE_ROUTES = [
         copy: "You leave with clearer customer priorities, a tighter MVP, stronger launch preparation, and linked tools that carry your context forward stage by stage.",
       },
     ],
-    faqs: [
-      {
-        question: "What does BizMap AI help founders do?",
-        answer: "BizMap AI helps founders validate a startup idea, define an ideal customer, scope an MVP, test demand, and prepare for launch inside one connected workflow.",
-      },
-      {
-        question: "Is BizMap AI better for new ideas or existing startups?",
-        answer: "It is strongest for early-stage ideas and pre-launch startups, but founders with an existing product can still use it to tighten positioning, validation, and launch planning.",
-      },
-      {
-        question: "What happens after idea validation in BizMap AI?",
-        answer: "After validation, the workflow moves into customer targeting, product-market fit review, MVP planning, demand testing, and go-to-market execution so you do not restart from scratch at each step.",
-      },
-    ],
   },
   {
     path: "/pmf-lab",
@@ -506,20 +492,6 @@ export const INDEXABLE_ROUTES = [
       {
         heading: "What the output gives you",
         copy: "You get a readiness score, practical recommendations, and a clearer decision on whether to build now or keep iterating on validation.",
-      },
-    ],
-    faqs: [
-      {
-        question: "What is a good product-market fit score?",
-        answer: "A higher score means your startup has stronger evidence of demand, recurring pain, and momentum. In this tool, a score of 75 or above is treated as a stronger signal that you can move into building.",
-      },
-      {
-        question: "Can PMF Lab replace customer interviews?",
-        answer: "No. PMF Lab works best when you bring real customer interviews, waitlist data, or traction evidence into the assessment. It helps interpret evidence, not invent it.",
-      },
-      {
-        question: "Should founders use PMF Lab before building an MVP?",
-        answer: "Yes. The main use case is checking whether you have enough validation evidence to justify an MVP build instead of relying on assumptions.",
       },
     ],
   },
@@ -559,20 +531,6 @@ export const INDEXABLE_ROUTES = [
         copy: "You get a clearer ideal customer profile, sharper positioning, and practical next steps for validation before you spend more time on the wrong audience.",
       },
     ],
-    faqs: [
-      {
-        question: "What is an ideal customer profile for a startup?",
-        answer: "An ideal customer profile is the specific type of customer most likely to need your product, feel the pain strongly, and adopt early. It is more precise than a broad persona or market category.",
-      },
-      {
-        question: "Why does ICP definition matter before building?",
-        answer: "It affects product scope, messaging, interviews, and customer acquisition. If the ICP is vague, the rest of the startup plan becomes vague too.",
-      },
-      {
-        question: "Can ICP Builder help with positioning?",
-        answer: "Yes. The tool is designed to connect customer targeting with pain point clarity and positioning so you can explain the product more clearly.",
-      },
-    ],
   },
   {
     path: "/demo-studio",
@@ -597,20 +555,6 @@ export const INDEXABLE_ROUTES = [
       {
         heading: "What founders learn from it",
         copy: "You learn whether the walkthrough, pitch angle, and CTA are strong enough to earn attention and signups.",
-      },
-    ],
-    faqs: [
-      {
-        question: "What can founders build in Demo Studio?",
-        answer: "Founders can build a clickable product demo, save up to three VSL pitch variations, and publish a launch page that combines the demo, video, and signup form.",
-      },
-      {
-        question: "Does Demo Studio replace a waitlist page?",
-        answer: "Yes. The launch page still captures signups, but it is backed by an interactive demo and founder pitch so visitors have something real to evaluate.",
-      },
-      {
-        question: "Why record multiple VSL variations?",
-        answer: "Different hooks and CTAs can change conversion. Demo Studio stores up to three variations so founders can compare the pitch angles that earn the most signups.",
       },
     ],
   },
@@ -683,20 +627,6 @@ export const INDEXABLE_ROUTES = [
         copy: "The output includes positioning, messaging, recommended channels, a 30-day action plan, and a launch checklist you can execute immediately.",
       },
     ],
-    faqs: [
-      {
-        question: "What is a go-to-market strategy for an early-stage startup?",
-        answer: "A go-to-market strategy is the practical plan for reaching the right customers, explaining the offer clearly, choosing channels, and turning launch activity into early traction.",
-      },
-      {
-        question: "Does GTM Strategist recommend startup acquisition channels?",
-        answer: "Yes. It is designed to recommend channels based on your product, audience, and stage so you can focus on the tactics most likely to work first.",
-      },
-      {
-        question: "Can founders use GTM Strategist before launch?",
-        answer: "Yes. Pre-launch and first-launch planning are core use cases because the tool helps structure outreach, messaging, and execution before you waste effort on scattered tactics.",
-      },
-    ],
   },
   {
     path: "/directories",
@@ -734,20 +664,6 @@ export const INDEXABLE_ROUTES = [
         copy: "Three consecutive weeks at 75 or above flag Phase 7 readiness, which gives founders a defensible traction story before walking into investor conversations.",
       },
     ],
-    faqs: [
-      {
-        question: "How does Traction Engine score traction?",
-        answer: "It blends four equally weighted dimensions: consistency streak, channel efficiency, experiment quality, and retention health, benchmarked by product category.",
-      },
-      {
-        question: "Why only two active channels at a time?",
-        answer: "Early-stage founders win by going deep on a small number of channels. Traction Engine enforces a maximum of two active channel sprints to protect focus.",
-      },
-      {
-        question: "What is Phase 7 readiness?",
-        answer: "Phase 7 readiness is the signal that your traction is strong and repeatable enough to bring into a fundraising conversation, defined as three consecutive weeks at a Traction Score of 75 or higher.",
-      },
-    ],
   },
   {
     path: "/insighta",
@@ -783,20 +699,6 @@ export const INDEXABLE_ROUTES = [
       {
         heading: "What founders get from it",
         copy: "You get a more focused venture capital shortlist, faster research, and better preparation for outreach, pitch refinement, and follow-up.",
-      },
-    ],
-    faqs: [
-      {
-        question: "What is a venture capital database used for?",
-        answer: "A venture capital database is used to research investors, shortlist relevant firms, and avoid wasting time pitching funds that do not match your stage, sector, or geography.",
-      },
-      {
-        question: "How do founders build a better investor list?",
-        answer: "The main improvement comes from filtering by stage, check size, geography, and sector so your list reflects actual fit rather than a random collection of VC names.",
-      },
-      {
-        question: "Should founders research investors before outreach?",
-        answer: "Yes. Better research improves targeting, messaging, and response quality, which makes outreach more efficient and credible.",
       },
     ],
   },
@@ -847,20 +749,6 @@ export const INDEXABLE_ROUTES = [
         copy: "The tool returns a score and concrete recommendations so you know what to improve in the story, market explanation, traction proof, and investor clarity.",
       },
     ],
-    faqs: [
-      {
-        question: "What makes a pitch deck investor-ready?",
-        answer: "An investor-ready deck usually explains the problem, market, solution, traction, business model, and fundraising story clearly enough that an investor can quickly understand the opportunity.",
-      },
-      {
-        question: "Can a pitch deck analyzer improve fundraising odds?",
-        answer: "It can improve the quality of the deck by surfacing weak sections and unclear messaging, which makes founder preparation and investor conversations stronger.",
-      },
-      {
-        question: "What should founders fix first in a weak deck?",
-        answer: "Usually the biggest gains come from clarifying the story, tightening the market and traction slides, and making the business model easier to understand.",
-      },
-    ],
   },
   {
     path: "/insighta-test",
@@ -885,20 +773,6 @@ export const INDEXABLE_ROUTES = [
       {
         heading: "What happens after the assessment",
         copy: "You get clearer priorities on what to improve next, which can include narrative work, traction proof, deck improvements, or better investor targeting.",
-      },
-    ],
-    faqs: [
-      {
-        question: "What is fundraising readiness?",
-        answer: "Fundraising readiness is how prepared your startup is to present a credible opportunity to investors, including story clarity, traction evidence, market understanding, and overall preparedness.",
-      },
-      {
-        question: "Should founders assess readiness before contacting investors?",
-        answer: "Yes. A readiness check helps you catch obvious gaps before you start outreach, which can improve both the deck and the fundraising narrative.",
-      },
-      {
-        question: "What if the readiness score is low?",
-        answer: "A low score usually means the startup should strengthen proof, messaging, or investor materials before pushing harder on fundraising conversations.",
       },
     ],
   },
