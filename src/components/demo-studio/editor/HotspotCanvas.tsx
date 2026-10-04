@@ -9,7 +9,7 @@ import type { DemoStepWithHotspots } from '@/lib/demoStudio/types';
 function StepMedia({ step }: { step: DemoStepWithHotspots }) {
   if (!step.asset_url) {
     return (
-      <div className="flex aspect-video w-full items-center justify-center bg-slate-800 text-sm text-white/50">
+      <div className="flex aspect-video w-full items-center justify-center bg-black/80 text-sm text-white/50">
         This step has no {step.asset_type === 'html' ? 'captured page' : 'image'}.
       </div>
     );
@@ -187,16 +187,16 @@ export default function HotspotCanvas({
             }}
           >
             {h.label && (
-              <span className="pointer-events-none absolute left-0 top-0 -translate-y-full rounded bg-slate-900 px-1.5 py-0.5 text-caption text-white">
+              <span className="pointer-events-none absolute left-0 top-0 -translate-y-full rounded bg-black/90 px-1.5 py-0.5 text-caption text-white">
                 {h.label}
               </span>
             )}
           </div>
         ))}
-        <div className="absolute inset-x-0 bottom-0 flex justify-center bg-gradient-to-t from-black/85 to-transparent p-3">
+        <div className="absolute inset-x-0 bottom-0 flex justify-center bg-black/70 p-3">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-black/85 px-3 py-2 text-center text-xs font-medium text-white shadow-lg">
             <Monitor className="h-4 w-4 shrink-0" />
-            Hotspots are best edited on a larger screen — open this demo on desktop to add or resize them.
+            Click targets are easier to place on a larger screen. Open this demo on a computer to add or resize them.
           </span>
         </div>
       </div>
@@ -213,7 +213,7 @@ export default function HotspotCanvas({
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       role="application"
-      aria-label="Hotspot editor canvas"
+      aria-label="Screen with click targets"
     >
       <StepMedia step={step} />
 
@@ -236,7 +236,7 @@ export default function HotspotCanvas({
             }}
           >
             {h.label && (
-              <span className="pointer-events-none absolute left-0 top-0 -translate-y-full rounded bg-slate-900 px-1.5 py-0.5 text-caption text-white">
+              <span className="pointer-events-none absolute left-0 top-0 -translate-y-full rounded bg-black/90 px-1.5 py-0.5 text-caption text-white">
                 {h.label}
               </span>
             )}
@@ -265,18 +265,18 @@ export default function HotspotCanvas({
       {!step.asset_url ? (
         <div className="pointer-events-none absolute inset-x-0 top-3 flex justify-center px-3">
           <span className="rounded-full bg-black/75 px-3 py-1.5 text-xs font-medium text-white shadow-lg">
-            Upload or replace this step screenshot before adding hotspots
+            Add a screenshot to this screen first
           </span>
         </div>
       ) : step.hotspots.length === 0 ? (
         <div className="pointer-events-none absolute inset-x-0 top-3 flex justify-center px-3">
           <span className="rounded-full bg-black/75 px-3 py-1.5 text-xs font-medium text-white shadow-lg">
-            Drag on the screenshot to create a clickable hotspot
+            Optional: drag on the screenshot to add a click target
           </span>
         </div>
       ) : (
         <p className="pointer-events-none absolute left-2 top-2 rounded bg-black/50 px-2 py-1 text-caption text-white/70">
-          Drag to add another hotspot
+          Drag to add another click target
         </p>
       )}
     </div>

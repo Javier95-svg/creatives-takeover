@@ -134,7 +134,7 @@ export default function StepThumbnailList({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold">Steps</h4>
+        <h4 className="text-sm font-semibold">Screens</h4>
         <Button size="sm" variant="outline" className="h-8 gap-1" onClick={onAddClick} disabled={uploading}>
           {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Add
         </Button>

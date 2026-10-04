@@ -37,12 +37,21 @@ const CALM_FILES = [
   'src/components/gtm/GTMAnalysisLoader.tsx',
   'src/components/gtm/GTMWorkspaceIntake.tsx',
   'src/components/wallpapers/GTMRouteWallpaper.tsx',
+  'src/pages/demo-studio/ProjectsDashboardPage.tsx',
+  'src/pages/demo-studio/ProjectOverviewPage.tsx',
+  'src/pages/demo-studio/DemoEditorPage.tsx',
+  'src/pages/demo-studio/DemoBriefPage.tsx',
+  'src/components/demo-studio/editor/HotspotInspector.tsx',
+  'src/components/demo-studio/editor/HotspotCanvas.tsx',
+  'src/components/demo-studio/DemoDistributionPanel.tsx',
+  'src/components/demo-studio/analytics/DemoAnalyticsPanel.tsx',
+  'src/components/wallpapers/DemoStoryboardWallpaper.tsx',
 ];
 
 const VISUAL_RULES: Array<[RegExp, string]> = [
   [/takeover-gradient|bg-gradient-to|radial-gradient/, 'gradient'],
   // The old glowing backdrops; each tool now gets a quiet wallpaper of its own.
-  [/GTMStrategistWallpaper|TractionEngineWallpaper/, 'legacy glow wallpaper'],
+  [/GTMStrategistWallpaper|TractionEngineWallpaper|DemoStudioWallpaper/, 'legacy glow wallpaper'],
   [/\bSparkles\b/, 'Sparkles icon'],
   [/uppercase tracking-/, 'uppercase eyebrow label'],
   [/blur-3xl|animation: 'spin/, 'glow or spinning backdrop'],

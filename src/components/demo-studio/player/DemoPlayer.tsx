@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { submitDemoResponse, trackDemoEvent } from '@/lib/demoStudio/events';
+import { resolveGotoTarget } from '@/lib/demoStudio/readiness';
 import SnapshotFrame from '@/components/demo-studio/SnapshotFrame';
 import type { DemoStepWithHotspots, DemoStudioHotspot, DemoTheme } from '@/lib/demoStudio/types';
 
@@ -124,15 +125,16 @@ export default function DemoPlayer({
         return;
       }
       if (hotspot.action === 'goto' && hotspot.action_target) {
-        const target = Number.parseInt(hotspot.action_target, 10);
-        if (!Number.isNaN(target)) {
+        // Screen ids for new targets, screen numbers for older ones.
+        const target = resolveGotoTarget(hotspot.action_target, steps.map((step) => step.id));
+        if (target !== null) {
           goTo(target);
           return;
         }
       }
       goTo(index + 1);
     },
-    [goTo, index],
+    [goTo, index, steps],
   );
 
   useEffect(() => {

@@ -104,6 +104,11 @@ All colors MUST be HSL.
     --tool-gtm: 196 85% 32%;
     --tool-gtm-foreground: 0 0% 100%;
     --tool-gtm-subtle: 196 85% 32% / 0.1;
+    /* Demo Studio identity: a rose "recording" colour, away from destructive red
+       and the PMF violet. */
+    --tool-demo: 342 70% 44%;
+    --tool-demo-foreground: 0 0% 100%;
+    --tool-demo-subtle: 342 70% 44% / 0.1;
     
     /* Blue variants */
     --blue-primary: 217 91% 60%; /* #3B82F6 */
@@ -353,6 +358,9 @@ All colors MUST be HSL.
     --tool-gtm: 194 82% 60%;
     --tool-gtm-foreground: 196 70% 10%;
     --tool-gtm-subtle: 194 82% 60% / 0.14;
+    --tool-demo: 340 82% 72%;
+    --tool-demo-foreground: 342 60% 12%;
+    --tool-demo-subtle: 340 82% 72% / 0.14;
     
     /* RGB Color Variants for Dark Mode (brighter for visibility) */
     --blue-primary: 217 92% 65%;
@@ -4807,4 +4815,10 @@ img {
   --primary: var(--tool-gtm);
   --primary-foreground: var(--tool-gtm-foreground);
   --ring: var(--tool-gtm);
+}
+
+.tool-theme-demo {
+  --primary: var(--tool-demo);
+  --primary-foreground: var(--tool-demo-foreground);
+  --ring: var(--tool-demo);
 }

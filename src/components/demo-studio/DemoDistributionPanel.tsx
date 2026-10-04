@@ -66,7 +66,7 @@ export default function DemoDistributionPanel({ shareUrl, demoTitle, validationC
     return [
       `I am working on ${product} and I am trying to find out whether the problem is worth solving before I build it.`,
       '',
-      `I put together a short interactive walkthrough — no signup needed: ${shareUrl}`,
+      `I put together a short interactive walkthrough. No signup needed: ${shareUrl}`,
       '',
       'If you have two minutes, I would genuinely value knowing whether this looks useful or irrelevant to you.',
     ].join('\n');
@@ -124,7 +124,7 @@ export default function DemoDistributionPanel({ shareUrl, demoTitle, validationC
 
       {communities.length > 0 && (
         <div className="space-y-1.5">
-          <p className="text-label font-semibold uppercase tracking-wide text-muted-foreground">Communities</p>
+          <p className="text-sm font-medium text-muted-foreground">Communities</p>
           <ul className="space-y-1.5">
             {communities.map((community) => (
               <li key={community.name} className="flex items-start justify-between gap-3 text-sm">
@@ -153,7 +153,7 @@ export default function DemoDistributionPanel({ shareUrl, demoTitle, validationC
 
       {people.length > 0 && (
         <div className="space-y-1.5">
-          <p className="text-label font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="text-sm font-medium text-muted-foreground">
             <Users className="mr-1 inline h-3 w-3" />
             People who described this problem
           </p>
@@ -178,13 +178,13 @@ export default function DemoDistributionPanel({ shareUrl, demoTitle, validationC
       <div className="space-y-1.5">
         {interviewQuestions.length > 0 && (
           <div className="mb-4 rounded-lg border border-primary/20 bg-primary/5 p-3">
-            <p className="text-label font-semibold uppercase tracking-wide text-primary">Questions from this ICP</p>
+            <p className="text-sm font-medium text-primary">Questions from this ICP</p>
             <ol className="mt-2 list-decimal space-y-1 pl-4 text-xs text-muted-foreground">
               {interviewQuestions.map((question) => <li key={question}>{question}</li>)}
             </ol>
           </div>
         )}
-        <p className="text-label font-semibold uppercase tracking-wide text-muted-foreground">Outreach message</p>
+        <p className="text-sm font-medium text-muted-foreground">Outreach message</p>
         <Textarea
           rows={6}
           value={outreachMessage}

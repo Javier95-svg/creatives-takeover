@@ -139,11 +139,11 @@ export default function LiveCaptureDialog({
         }
         onImported(imported);
         toast.success(`${imported.length} step${imported.length === 1 ? '' : 's'} captured from your live product.`, {
-          description: 'Hotspots are already placed where you clicked — adjust anything in the canvas.',
+          description: 'Click targets are placed where you clicked. Adjust anything on the screen.',
         });
         onOpenChange(false);
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : 'Import failed. Your capture is saved — try again.');
+        toast.error(e instanceof Error ? e.message : 'Import failed. Your capture is saved, so try again.');
         setPhase('waiting');
         importingRef.current = false;
       }
@@ -191,7 +191,7 @@ export default function LiveCaptureDialog({
               </div>
             ) : mvps.length === 0 ? (
               <div className="rounded-lg border border-border/60 bg-muted/30 p-4 text-sm text-muted-foreground">
-                No published MVP Builder sites yet. Publish your MVP first (MVP Builder → Publish) — live capture
+                No published MVP Builder sites yet. Publish your MVP first (MVP Builder, then Publish). Live capture
                 works on your <span className="font-medium">*.{BASE_DOMAIN}</span> sites.
               </div>
             ) : (
@@ -222,7 +222,7 @@ export default function LiveCaptureDialog({
             <div className="flex items-center gap-2 rounded-lg border border-info/25 bg-info/5 px-3 py-2.5 text-sm">
               <Loader2 className="h-4 w-4 shrink-0 animate-spin text-info" />
               <span>
-                Waiting for your capture — click through your product in the new tab, then press{' '}
+                Waiting for your capture. Click through your product in the new tab, then press{' '}
                 <span className="font-semibold">Finish &amp; send</span>.
               </span>
             </div>

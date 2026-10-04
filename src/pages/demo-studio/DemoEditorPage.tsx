@@ -12,7 +12,6 @@ import {
   CopyPlus,
   Eye,
   FileCode,
-  Globe,
   ImagePlus,
   LayoutDashboard,
   Loader2,
@@ -23,7 +22,6 @@ import {
   X,
 } from 'lucide-react';
 import SEO from '@/components/SEO';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -45,7 +43,6 @@ import HotspotCanvas from '@/components/demo-studio/editor/HotspotCanvas';
 import HotspotInspector from '@/components/demo-studio/editor/HotspotInspector';
 import LiveCaptureDialog from '@/components/demo-studio/editor/LiveCaptureDialog';
 import DemoPlayer from '@/components/demo-studio/player/DemoPlayer';
-import WhatIsADemoPopover from '@/components/demo-studio/WhatIsADemoPopover';
 import DemoDistributionPanel from '@/components/demo-studio/DemoDistributionPanel';
 import { evaluateDemoArtifact } from '@/lib/demoStudio/outcome';
 import { createJourneyEvidenceManifest, createJourneyHandoff, findJourneyHandoff, trackPrebuildLineageEvent, upsertJourneyOutcome } from '@/lib/journeyOutcomes';
@@ -74,6 +71,8 @@ import {
   uploadStepHtmlSnapshot,
 } from '@/lib/demoStudio/api';
 import { getDemoReadiness } from '@/lib/demoStudio/readiness';
+import { createSaveQueue, type SaveQueue, type SaveQueueState } from '@/lib/demoStudio/saveQueue';
+import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
 import {
   captureVideoFrame,
   isScreenCaptureSupported,
@@ -117,7 +116,6 @@ export default function DemoEditorPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const replaceInputRef = useRef<HTMLInputElement>(null);
   const htmlInputRef = useRef<HTMLInputElement>(null);
-  const hotspotPersistTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const captureVideoRef = useRef<HTMLVideoElement>(null);
   const captureStreamRef = useRef<MediaStream | null>(null);
   const keptFramesRef = useRef<KeptFrame[]>([]);
@@ -141,6 +139,23 @@ export default function DemoEditorPage() {
   const [captureStream, setCaptureStream] = useState<MediaStream | null>(null);
   const [keptFrames, setKeptFrames] = useState<KeptFrame[]>([]);
   const [capturing, setCapturing] = useState(false);
+  const [saveState, setSaveState] = useState<SaveQueueState>({ status: 'idle', pendingCount: 0, error: null });
+  // Every edit goes through one queue so saves land in order, failures are kept
+  // for retry, and the header can say whether work is saved.
+  const saveQueueRef = useRef<SaveQueue | null>(null);
+  if (!saveQueueRef.current) saveQueueRef.current = createSaveQueue(setSaveState);
+  const saveQueue = saveQueueRef.current;
+  const hasUnsavedChanges = saveState.status === 'saving' || saveState.status === 'error';
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [hasUnsavedChanges]);
 
   const theme = useMemo<DemoTheme>(() => demo?.theme ?? {}, [demo?.theme]);
   const primaryColor = theme.primaryColor || DEFAULT_COLOR;
@@ -313,7 +328,7 @@ export default function DemoEditorPage() {
         });
       });
     } catch {
-      // User dismissed the OS screen picker â€” nothing to do.
+      // User dismissed the OS screen picker: nothing to do.
     }
   };
 
@@ -342,7 +357,7 @@ export default function DemoEditorPage() {
   const handleConfirmCapture = async () => {
     if (!user || !demoId || keptFrames.length === 0) return;
     setCapturing(true);
-    // We have the frames now â€” stop the screen share immediately.
+    // We have the frames now, so stop the screen share immediately.
     stopStream(captureStreamRef.current);
     captureStreamRef.current = null;
     setCaptureStream(null);
@@ -488,11 +503,7 @@ export default function DemoEditorPage() {
     patch: Partial<Pick<DemoStepWithHotspots, 'title' | 'caption' | 'speaker_notes'>>,
   ) => {
     patchStepLocal(id, patch);
-    try {
-      await updateStep(id, patch);
-    } catch {
-      toast.error('Could not save step details.');
-    }
+    saveQueue.enqueue(`step:${id}`, patch, (queued) => updateStep(id, queued));
   };
 
   const patchHotspotLocal = useCallback((id: string, patch: Partial<DemoStudioHotspot>) => {
@@ -504,13 +515,9 @@ export default function DemoEditorPage() {
     );
   }, []);
 
-  const persistHotspotDebounced = useCallback((id: string, patch: Partial<DemoStudioHotspot>) => {
-    const timers = hotspotPersistTimers.current;
-    if (timers[id]) clearTimeout(timers[id]);
-    timers[id] = setTimeout(() => {
-      void updateHotspot(id, patch).catch(() => toast.error('Could not save hotspot.'));
-    }, 400);
-  }, []);
+  const persistHotspot = useCallback((id: string, patch: Partial<DemoStudioHotspot>) => {
+    saveQueue.enqueue(`hotspot:${id}`, patch, (queued) => updateHotspot(id, queued));
+  }, [saveQueue]);
 
   const handleCreateHotspot = async (rect: Rect) => {
     if (!selectedStepId) return;
@@ -530,7 +537,7 @@ export default function DemoEditorPage() {
   const handleInspectorChange = (patch: Partial<DemoStudioHotspot>) => {
     if (!selectedHotspotId) return;
     patchHotspotLocal(selectedHotspotId, patch);
-    persistHotspotDebounced(selectedHotspotId, patch);
+    persistHotspot(selectedHotspotId, patch);
   };
 
   const handleDeleteHotspot = async (id: string) => {
@@ -539,6 +546,7 @@ export default function DemoEditorPage() {
       s.map((step) => ({ ...step, hotspots: step.hotspots.filter((h) => h.id !== id) })),
     );
     setSelectedHotspotId(null);
+    saveQueue.discard(`hotspot:${id}`);
     try {
       await deleteHotspot(id);
     } catch {
@@ -549,44 +557,39 @@ export default function DemoEditorPage() {
 
   const handleGeometryCommit = (id: string, rect: Rect) => {
     patchHotspotLocal(id, rect);
-    void updateHotspot(id, rect).catch(() => toast.error('Could not save hotspot position.'));
+    persistHotspot(id, rect);
   };
 
   const updateTheme = async (patch: Partial<DemoTheme>) => {
     if (!demo) return;
     const nextTheme = { ...theme, ...patch };
     setDemo({ ...demo, theme: nextTheme });
-    try {
-      await updateDemo(demo.id, { theme: nextTheme });
-    } catch {
-      toast.error('Could not save theme.');
-    }
+    saveQueue.enqueue('demo', { theme: nextTheme }, (queued) => updateDemo(demo.id, queued));
   };
 
   const handleTitleBlur = async (value: string) => {
     if (!demo || value.trim() === demo.title) return;
     const title = value.trim() || 'Untitled demo';
     setDemo({ ...demo, title });
-    try {
-      await updateDemo(demo.id, { title });
-    } catch {
-      toast.error('Could not rename demo.');
-    }
+    saveQueue.enqueue('demo', { title }, (queued) => updateDemo(demo.id, queued));
   };
 
   const handlePublish = async () => {
     if (!demo) return;
-    if (steps.length === 0) {
-      toast.error('Add at least one step before publishing.');
-      return;
-    }
     if (!demoReadiness.ready) {
-      toast.error(`This demo is not ready to publish yet (${demoReadiness.score}%).`, {
-        description: demoReadiness.missing.slice(0, 3).join(' '),
+      const count = demoReadiness.blockers.length;
+      toast.error(count === 1 ? 'Fix 1 thing before publishing.' : `Fix ${count} things before publishing.`, {
+        description: demoReadiness.blockers[0],
       });
       return;
     }
     setPublishing(true);
+    // Publish what is saved, so the live demo matches the editor.
+    if (!(await saveQueue.flush())) {
+      setPublishing(false);
+      toast.error('Some changes are not saved yet.', { description: 'Retry saving, then publish.' });
+      return;
+    }
     try {
       const updated = await publishDemo(demo.id, { ownerId: demo.owner_id, ownerPlan: planTier });
       setDemo(updated);
@@ -674,7 +677,7 @@ export default function DemoEditorPage() {
       });
       // Trigger 4 (activation complete): publishing a demo is a milestone. For
       // free-tier founders, surface a light prompt for the plan that removes the
-      // watermark and unlocks the next stage â€” fired after the success toast so
+      // watermark and unlocks the next stage. Fired after the success toast so
       // it never interrupts the publish flow itself.
       if (normalizePlan(planTier) === 'rookie') {
         setTimeout(() => {
@@ -712,16 +715,8 @@ export default function DemoEditorPage() {
     }
   };
   const hasStoryboard = Boolean(brief?.ai_storyboard?.length);
-  const setupChecklist = [
-    { label: 'Screenshots', done: steps.length > 0 && steps.every((step) => Boolean(step.asset_url)) },
-    { label: 'Captions', done: steps.length > 0 && steps.every((step) => Boolean(step.caption?.trim())) },
-    {
-      label: 'Hotspots',
-      done: steps.length > 0 && steps.every((step, index) => index === steps.length - 1 || step.hotspots.length > 0),
-    },
-    { label: 'CTA', done: Boolean(theme.endCtaLabel?.trim()) },
-    { label: 'Publish', done: demo?.status === 'published' },
-  ];
+  const firstBlockedStepId = demoReadiness.steps.find((step) => !step.ready)?.stepId ?? null;
+  const saveLabel = saveState.status === 'saving' ? 'Saving' : saveState.status === 'error' ? 'Not saved' : saveState.status === 'saved' ? 'Saved' : '';
 
   if (loading) {
     return (
@@ -733,8 +728,8 @@ export default function DemoEditorPage() {
 
   return (
     // Rails stack below lg (see grid below); on touch, every control is a 44px tap target. Desktop unchanged.
-    <div className="min-h-screen bg-background touch:[&_button]:min-h-[44px]">
-      <SEO title={`${demo?.title ?? 'Demo'} â€” Demo Studio`} description="Build your interactive product demo." noindex url="/demo-studio" />
+    <div className="tool-theme-demo min-h-screen bg-background touch:[&_button]:min-h-[44px]">
+      <SEO title={`${demo?.title ?? 'Demo'} | Demo Studio`} description="Build your interactive product demo." noindex url="/demo-studio" />
 
       {/* Top bar */}
       <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
@@ -749,16 +744,21 @@ export default function DemoEditorPage() {
             onBlur={(e) => handleTitleBlur(e.target.value)}
             className="h-9 w-full min-w-0 flex-1 border-transparent bg-transparent text-sm font-semibold hover:border-border focus:border-border sm:w-48 sm:flex-none md:w-72"
           />
-          {demo?.status === 'published' ? (
-            <span className="hidden items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success sm:inline-flex">
-              <Globe className="h-3 w-3" /> Published
-            </span>
-          ) : (
-            <span className="hidden rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground sm:inline">
-              Draft
-            </span>
-          )}
-          <WhatIsADemoPopover className="hidden md:inline-flex" />
+          <span className="hidden text-xs text-muted-foreground sm:inline">
+            {demo?.status === 'published' ? 'Published' : 'Draft'}
+          </span>
+          <span className="flex items-center gap-1.5 text-xs" role="status" aria-live="polite">
+            {saveState.status === 'error' ? (
+              <>
+                <span className="text-destructive">Not saved</span>
+                <button type="button" onClick={() => saveQueue.retry()} className="font-medium text-primary underline-offset-4 hover:underline">
+                  Retry
+                </button>
+              </>
+            ) : saveLabel ? (
+              <span className="text-muted-foreground">{saveState.status === 'saving' ? <Loader2 className="mr-1 inline h-3 w-3 animate-spin" aria-hidden="true" /> : null}{saveLabel}</span>
+            ) : null}
+          </span>
         </div>
         <div className="flex items-center gap-2">
           <Button asChild variant="ghost" size="sm" className="gap-1.5">
@@ -776,7 +776,7 @@ export default function DemoEditorPage() {
           <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setPreviewOpen(true)}>
             <Eye className="h-4 w-4" /> <span className="hidden sm:inline">Preview</span>
           </Button>
-          <Button size="sm" className="gap-1.5" onClick={handlePublish} disabled={publishing}>
+          <Button size="sm" className="gap-1.5" onClick={handlePublish} disabled={publishing || saveState.status === 'error'}>
             {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
             {demo?.status === 'published' ? 'Republish' : 'Publish'}
           </Button>
@@ -809,25 +809,50 @@ export default function DemoEditorPage() {
       <div className="grid grid-cols-1 gap-4 p-4 lg:grid-cols-[260px_minmax(0,1fr)_300px]">
         {/* Left: steps */}
         <aside className="space-y-4 lg:sticky lg:top-[68px] lg:h-fit">
-          <StoryboardRail
-            storyboard={brief?.ai_storyboard ?? []}
-            disabled={!demo || !brief?.ai_storyboard?.length}
-            onApply={handleApplyStoryboard}
-          />
+          {/* Only useful once a brief has drafted a storyboard; the brief is optional. */}
+          {hasStoryboard ? (
+            <StoryboardRail
+              storyboard={brief?.ai_storyboard ?? []}
+              disabled={!demo}
+              onApply={handleApplyStoryboard}
+            />
+          ) : null}
           <div className="rounded-xl border border-border bg-card p-4">
-            <div className="flex items-center justify-between gap-3">
-              <h4 className="text-sm font-semibold">Readiness</h4>
-              <Badge variant={demoReadiness.ready ? 'default' : 'outline'}>{demoReadiness.score}%</Badge>
-            </div>
-            {demoReadiness.missing.length ? (
-              <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
-                {demoReadiness.missing.slice(0, 5).map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
+            <h4 className="text-sm font-semibold">Before you publish</h4>
+            {demoReadiness.blockers.length ? (
+              <>
+                <ul className="mt-2 space-y-1.5 text-sm text-foreground">
+                  {demoReadiness.blockers.slice(0, 5).map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+                {demoReadiness.blockers.length > 5 ? (
+                  <p className="mt-1 text-xs text-muted-foreground">And {demoReadiness.blockers.length - 5} more.</p>
+                ) : null}
+                {firstBlockedStepId && firstBlockedStepId !== selectedStepId ? (
+                  <button
+                    type="button"
+                    className="mt-2 text-sm font-medium text-primary underline-offset-4 hover:underline"
+                    onClick={() => {
+                      setSelectedStepId(firstBlockedStepId);
+                      setSelectedHotspotId(null);
+                    }}
+                  >
+                    Go to the first screen to fix
+                  </button>
+                ) : null}
+              </>
             ) : (
-              <p className="mt-3 text-xs text-muted-foreground">Demo has the essentials for a strong walkthrough.</p>
+              <p className="mt-2 text-sm text-muted-foreground">Ready to publish.</p>
             )}
+            {demoReadiness.suggestions.length ? (
+              <div className="mt-3 border-t border-border/60 pt-3">
+                <p className="text-xs font-medium text-muted-foreground">Optional</p>
+                <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
+                  {demoReadiness.suggestions.map((item) => <li key={item}>{item}</li>)}
+                </ul>
+              </div>
+            ) : null}
             {screenshotsStale && (
               <div className="mt-3 flex items-start gap-2 rounded-md border border-warning/40 bg-warning/5 px-2.5 py-2 text-xs text-warning">
                 <RefreshCw className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
@@ -892,33 +917,16 @@ export default function DemoEditorPage() {
 
         {/* Center: canvas */}
         <main className="min-w-0">
-          <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-4">
-            <p className="text-sm font-semibold text-primary">Build the interactive demo</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Your launch page needs one published demo and one recorded VSL. You can create them in either order.
-            </p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-5">
-              {setupChecklist.map((item, index) => (
-                <div key={item.label} className="flex items-center gap-2 rounded-lg border border-border/70 bg-background/70 px-3 py-2">
-                  <span className={item.done ? 'text-success' : 'text-muted-foreground'}>
-                    {item.done ? <Check className="h-4 w-4" /> : <span className="flex h-4 w-4 items-center justify-center rounded-full border text-caption">{index + 1}</span>}
-                  </span>
-                  <span className="text-xs font-medium">{item.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {steps.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 bg-muted/20 px-6 py-20 text-center">
               <ImagePlus className="h-10 w-10 text-muted-foreground" />
               <h3 className="mt-4 text-lg font-semibold">
-                {hasStoryboard ? 'Attach screenshots to your storyboard steps' : 'Upload screenshots to start a blank walkthrough'}
+                {hasStoryboard ? 'Add a screenshot for each storyboard screen' : 'Add your first screens'}
               </h3>
               <p className="mt-1 max-w-sm text-sm text-muted-foreground">
                 {hasStoryboard
                   ? 'Use the Storyboard panel to apply guided steps, then upload product screenshots for each step.'
-                  : "Upload images of your product â€” each one becomes a step. Next you'll drag clickable hotspots on top to make it interactive."}
+                  : "Upload screenshots of your product. Each one becomes a screen. You can add click targets later if you want."}
               </p>
               <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
                 <Button
@@ -973,9 +981,7 @@ export default function DemoEditorPage() {
           )}
           {demo?.public_id && (
             <div className="mt-4 space-y-3 rounded-xl border border-border bg-card p-4">
-              <h4 className="flex items-center gap-1.5 text-sm font-semibold">
-                <Globe className="h-4 w-4 text-success" /> Share your demo
-              </h4>
+              <h4 className="text-sm font-semibold">Share your demo</h4>
               <div className="flex items-center gap-2">
                 <Input readOnly value={shareUrl} className="text-xs" />
                 <Button size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={() => copyShare(shareUrl, 'link')}>
@@ -997,9 +1003,9 @@ export default function DemoEditorPage() {
               {/* The PMF scorer already reads published-demo behavior as verified evidence,
                   but nothing in Demo Studio ever said so — founders had no reason to think
                   sharing this link fed their build decision. */}
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-3">
                 <p className="text-xs leading-5 text-muted-foreground">
-                  Views, CTA clicks, and signups on this demo count as verified demand evidence in your PMF score.
+                  Views, button clicks and signups on this demo count as evidence in PMF Lab.
                 </p>
                 <Button asChild size="sm" variant="outline" className="shrink-0 gap-1.5">
                   <Link to="/pmf-lab">
@@ -1027,8 +1033,8 @@ export default function DemoEditorPage() {
 
         {/* Right: inspector + theme */}
         <aside className="space-y-4 lg:sticky lg:top-[68px] lg:h-fit">
-          <div className="space-y-4 rounded-xl border border-border bg-card p-4">
-            <h4 className="text-sm font-semibold">Demo brief</h4>
+          <DashboardDisclosure title="Story notes" summary="Optional. Who this is for and the moment it should land.">
+          <div className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="brief-audience">Audience</Label>
               <Input
@@ -1059,17 +1065,19 @@ export default function DemoEditorPage() {
               />
             </div>
           </div>
+          </DashboardDisclosure>
 
           <HotspotInspector
             hotspot={selectedHotspot}
-            stepCount={steps.length}
+            screens={steps.map((step, index) => ({ id: step.id, label: step.title?.trim() || `Screen ${index + 1}` }))}
+            currentScreenId={selectedStepId}
             onChange={handleInspectorChange}
             onDelete={handleDeleteHotspot}
           />
 
           <div className="space-y-4 rounded-xl border border-border bg-card p-4">
             <div className="flex items-center justify-between gap-2">
-              <h4 className="text-sm font-semibold">Step script</h4>
+              <h4 className="text-sm font-semibold">This screen</h4>
               {selectedStep && (
                 <div className="flex items-center gap-1">
                   <Button
@@ -1090,7 +1098,7 @@ export default function DemoEditorPage() {
             {selectedStep ? (
               <div className="space-y-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="step-title">Step title</Label>
+                  <Label htmlFor="step-title">Screen title</Label>
                   <Input
                     id="step-title"
                     value={selectedStep.title ?? ''}
@@ -1100,7 +1108,7 @@ export default function DemoEditorPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="step-caption">Viewer caption</Label>
+                  <Label htmlFor="step-caption">Caption the viewer reads</Label>
                   <Textarea
                     id="step-caption"
                     rows={3}
@@ -1111,26 +1119,26 @@ export default function DemoEditorPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="speaker-notes">VSL speaker notes</Label>
+                  <Label htmlFor="speaker-notes">Speaker notes (optional)</Label>
                   <Textarea
                     id="speaker-notes"
                     rows={3}
                     value={selectedStep.speaker_notes ?? ''}
-                    placeholder="Notes for what to say when recording your VSL."
+                    placeholder="What to say if you record a voice-over or pitch video."
                     onChange={(e) => patchStepLocal(selectedStep.id, { speaker_notes: e.target.value })}
                     onBlur={(e) => handleStepFieldCommit(selectedStep.id, { speaker_notes: e.target.value || null })}
                   />
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Select a step to write its guide copy.</p>
+              <p className="text-sm text-muted-foreground">Pick a screen on the left to write its caption.</p>
             )}
           </div>
 
           <div className="space-y-4 rounded-xl border border-border bg-card p-4">
-            <h4 className="text-sm font-semibold">Theme</h4>
+            <h4 className="text-sm font-semibold">End button and colour</h4>
             <div className="space-y-1.5">
-              <Label htmlFor="demo-cta-label">End CTA label</Label>
+              <Label htmlFor="demo-cta-label">End button label</Label>
               <Input
                 id="demo-cta-label"
                 defaultValue={theme.endCtaLabel ?? ''}
@@ -1139,16 +1147,16 @@ export default function DemoEditorPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="demo-cta-url">End CTA URL</Label>
+              <Label htmlFor="demo-cta-url">Where it goes</Label>
               <Input
                 id="demo-cta-url"
                 defaultValue={theme.endCtaHref ?? ''}
-                placeholder="/p/your-launch-page"
+                placeholder="https://yoursite.com/signup or /p/your-page"
                 onBlur={(e) => updateTheme({ endCtaHref: e.target.value || undefined })}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label htmlFor="primary-color">Primary color</Label>
+              <Label htmlFor="primary-color">Demo colour</Label>
               <input
                 id="primary-color"
                 type="color"
@@ -1218,7 +1226,7 @@ export default function DemoEditorPage() {
               </div>
             )}
             <p className="text-xs text-muted-foreground">
-              Click <strong>Keep frame</strong> at each moment you want to show â€” each kept frame becomes a step.
+              Click <strong>Keep frame</strong> at each moment you want to show. Each kept frame becomes a screen.
             </p>
             <div className="flex items-center justify-between gap-2">
               <Button variant="outline" onClick={closeCapture} disabled={capturing}>
@@ -1276,7 +1284,7 @@ export default function DemoEditorPage() {
           </DialogHeader>
           <div className="space-y-4 text-sm">
             <p className="text-muted-foreground">
-              Capture your real product page â€” including logged-in screens â€” as a single, self-contained
+              Capture your real product page, including logged-in screens, as a single, self-contained
               file, then upload it here. It renders as a crisp, interactive page (not a screenshot), and you
               can drop hotspots on top.
             </p>
@@ -1294,7 +1302,7 @@ export default function DemoEditorPage() {
                 browser extension.
               </li>
               <li>Open the page you want to demo and click SingleFile to save it as one <code>.html</code> file.</li>
-              <li>Upload that file below â€” we sanitize it and render it safely (scripts are stripped).</li>
+              <li>Upload that file below. We sanitize it and render it safely (scripts are stripped).</li>
             </ol>
             <p className="text-xs text-muted-foreground">Max 15MB. The page is shown static (no live scripts), which is exactly what a demo step needs.</p>
             <div className="flex justify-end gap-2">
@@ -1314,7 +1322,7 @@ export default function DemoEditorPage() {
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Preview â€” {demo?.title}</DialogTitle>
+            <DialogTitle>Preview: {demo?.title}</DialogTitle>
           </DialogHeader>
           <DemoPlayer
             steps={steps}

@@ -443,7 +443,7 @@ export default function LaunchComposerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="tool-theme-demo min-h-screen bg-background">
       <SEO title={`${project?.name ?? 'Project'} Launch Page`} description="Compose the public page that shows your demo and founder VSL." noindex />
       <Navigation />
       <main className="container mx-auto max-w-6xl px-4 pt-28 pb-20 md:pt-32">
@@ -825,7 +825,7 @@ export default function LaunchComposerPage() {
                     id="lead-webhook"
                     type="url"
                     inputMode="url"
-                    placeholder="https://hooks.slack.com/â€¦ or Zapier/Make"
+                    placeholder="https://hooks.slack.com/... or Zapier/Make"
                     value={webhookDraft}
                     onChange={(e) => setWebhookDraft(e.target.value)}
                     onBlur={(e) => void handleWebhookBlur(e.target.value)}

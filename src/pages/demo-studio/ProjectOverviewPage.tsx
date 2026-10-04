@@ -1,38 +1,25 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { ArrowLeft, Loader2, Trash2 } from 'lucide-react';
 import { FinishSetupPrompt } from '@/components/onboarding/FinishSetupPrompt';
-import {
-  ArrowLeft,
-  ArrowRight,
-  BarChart3,
-  CheckCircle2,
-  Copy,
-  ExternalLink,
-  FileText,
-  Globe,
-  ImagePlus,
-  Loader2,
-  MonitorPlay,
-  Pencil,
-  Plus,
-  Rocket,
-  Sparkles,
-  Trash2,
-  Video,
-} from 'lucide-react';
 import SEO from '@/components/SEO';
 import Navigation from '@/components/Navigation';
+import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
+import { NextStepCard } from '@/components/tool-shell/NextStepCard';
+import { ToolPageShell } from '@/components/tool-shell/ToolPageShell';
+import DemoStoryboardWallpaper, { DemoStoryboardChart } from '@/components/wallpapers/DemoStoryboardWallpaper';
 import { useAuth } from '@/contexts/AuthContext';
-import { applyStoryboardToDemo, createDemo, deleteDemo, getBrief, getProject, getProjectReadiness, listDemos, listVsls } from '@/lib/demoStudio/api';
-import type { DemoStudioBrief, DemoStudioDemo, DemoStudioProject, DemoStudioReadiness, DemoStudioVsl } from '@/lib/demoStudio/types';
-import GettingStartedChecklist, { type ChecklistStep } from '@/components/demo-studio/GettingStartedChecklist';
-import WhatIsADemoPopover from '@/components/demo-studio/WhatIsADemoPopover';
+import { applyStoryboardToDemo, createDemo, deleteDemo, getBrief, getDemoMetrics, getProject, listDemos, listVsls } from '@/lib/demoStudio/api';
+import { getDemoProjectNextStep } from '@/lib/demoStudio/nextStep';
+import type { DemoMetrics, DemoStudioBrief, DemoStudioDemo, DemoStudioProject, DemoStudioVsl } from '@/lib/demoStudio/types';
 import { trackActivationFunnelEvent } from '@/lib/activationEntry';
 import { trackJourneyEvent } from '@/lib/journeyOutcomes';
 import { trackDemoStudioFunnel } from '@/lib/analytics';
 import { buildEmbedSnippet } from '@/lib/demoStudio/share';
+
+const linkClass = 'text-sm font-medium text-primary underline-offset-4 hover:underline';
 
 export default function ProjectOverviewPage() {
   const { id: projectId } = useParams<{ id: string }>();
@@ -43,7 +30,7 @@ export default function ProjectOverviewPage() {
   const [brief, setBrief] = useState<DemoStudioBrief | null>(null);
   const [demos, setDemos] = useState<DemoStudioDemo[]>([]);
   const [vsls, setVsls] = useState<DemoStudioVsl[]>([]);
-  const [readiness, setReadiness] = useState<DemoStudioReadiness | null>(null);
+  const [metrics, setMetrics] = useState<DemoMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
 
@@ -57,11 +44,10 @@ export default function ProjectOverviewPage() {
     let active = true;
     void (async () => {
       try {
-        const [projectRow, demoRows, vslRows, ready, briefRow] = await Promise.all([
+        const [projectRow, demoRows, vslRows, briefRow] = await Promise.all([
           getProject(projectId),
           listDemos(projectId),
           listVsls(projectId),
-          getProjectReadiness(projectId),
           getBrief(projectId),
         ]);
         if (!active) return;
@@ -74,7 +60,12 @@ export default function ProjectOverviewPage() {
         setBrief(briefRow);
         setDemos(demoRows);
         setVsls(vslRows);
-        setReadiness(ready);
+        // Results decide whether the next step is sharing or the launch page.
+        const live = demoRows.find((demo) => demo.status === 'published' && demo.public_id);
+        if (live) {
+          const result = await getDemoMetrics(live.id, 'all').catch(() => null);
+          if (active) setMetrics(result);
+        }
       } catch (e) {
         toast.error(e instanceof Error ? e.message : 'Failed to load project.');
       } finally {
@@ -90,7 +81,7 @@ export default function ProjectOverviewPage() {
     if (!user || !projectId) return;
     setCreating(true);
     try {
-      const demo = await createDemo(projectId, user.id, 'Untitled demo');
+      const demo = await createDemo(projectId, user.id, `${project?.name ?? 'Product'} demo`);
       navigate(`/demo-studio/projects/${projectId}/demos/${demo.id}/edit`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Could not create demo.');
@@ -99,11 +90,7 @@ export default function ProjectOverviewPage() {
   };
 
   const handleCreateGuidedDemo = async () => {
-    if (!user || !projectId) return;
-    if (!brief?.ai_storyboard?.length) {
-      navigate(`/demo-studio/projects/${projectId}/brief`);
-      return;
-    }
+    if (!user || !projectId || !brief?.ai_storyboard?.length) return;
     setCreating(true);
     try {
       const demo = await createDemo(projectId, user.id, `${project?.name ?? 'Product'} guided demo`);
@@ -115,11 +102,12 @@ export default function ProjectOverviewPage() {
     }
   };
 
-  const handleDeleteDemo = async (demoId: string) => {
+  const handleDeleteDemo = async (demo: DemoStudioDemo) => {
+    if (!window.confirm(`Delete "${demo.title}"? ${demo.status === 'published' ? 'Its public link will stop working.' : 'This cannot be undone.'}`)) return;
     const prev = demos;
-    setDemos((d) => d.filter((demo) => demo.id !== demoId));
+    setDemos((d) => d.filter((item) => item.id !== demo.id));
     try {
-      await deleteDemo(demoId);
+      await deleteDemo(demo.id);
       toast.success('Demo deleted.');
     } catch {
       setDemos(prev);
@@ -127,18 +115,11 @@ export default function ProjectOverviewPage() {
     }
   };
 
-  const hasPublishedDemo = demos.some((d) => d.status === 'published');
+  const publishedDemo = demos.find((demo) => demo.status === 'published' && demo.public_id);
+  const draftDemo = demos.find((demo) => demo.status !== 'published') ?? demos[0];
   const hasVsl = vsls.some((vsl) => vsl.loom_embed_url || vsl.loom_shared_url || vsl.video_url);
   const hasStoryboard = Boolean(brief?.ai_storyboard?.length);
-  const briefComplete = Boolean(
-    brief?.audience?.trim() &&
-    brief?.problem?.trim() &&
-    brief?.product_promise?.trim() &&
-    brief?.aha_moment?.trim() &&
-    brief?.primary_cta_label?.trim(),
-  );
-  const firstDemoId = demos[0]?.id;
-  const publishedDemo = demos.find((demo) => demo.status === 'published' && demo.public_id);
+  const briefStarted = Boolean(brief?.audience?.trim() || brief?.problem?.trim() || brief?.product_promise?.trim());
   const arrivedFromTry = searchParams.get('source') === 'demo-try' || project?.acquisition_source === 'demo-try';
   const tryAssetMode = publishedDemo?.asset_mode ?? (
     searchParams.get('assetMode') === 'generated_placeholders'
@@ -158,7 +139,7 @@ export default function ProjectOverviewPage() {
       toast.error('Could not copy the link.');
       return;
     }
-    toast.success('Live demo link copied.');
+    toast.success('Link copied. Send it to people who have the problem.');
     trackActivationFunnelEvent('activation_step_completed', {
       entry_id: 'demo_try',
       tool: 'demo_studio',
@@ -194,357 +175,193 @@ export default function ProjectOverviewPage() {
     }
   };
 
-  const nextProjectAction = !briefComplete
-    ? {
-        label: 'Complete brief',
-        description: `Start by defining who ${project?.name ?? 'your product'} is for, the pain it solves, and the proof your demo should show.`,
-        to: `/demo-studio/projects/${projectId}/brief`,
-        icon: FileText,
-      }
-    : !hasStoryboard
-      ? {
-          label: 'Generate storyboard + VSL scripts',
-          description: 'Use the completed brief to create guided demo steps and pitch scripts.',
-          to: `/demo-studio/projects/${projectId}/brief`,
-          icon: Sparkles,
-        }
-      : demos.length === 0
-        ? {
-            label: 'Create guided demo',
-            description: 'Turn the generated storyboard into an editable demo with steps ready for screenshots.',
-            onClick: handleCreateGuidedDemo,
-            icon: MonitorPlay,
-          }
-        : !hasPublishedDemo
-          ? {
-              label: 'Add screenshots',
-              description: 'Open the editor, attach screenshots, add hotspots, and publish the walkthrough.',
-              to: firstDemoId ? `/demo-studio/projects/${projectId}/demos/${firstDemoId}/edit` : undefined,
-              icon: MonitorPlay,
-            }
-          : !hasVsl
-            ? {
-                label: 'Record VSL',
-                description: 'Save one Loom founder pitch so the launch page has both proof formats.',
-                to: `/demo-studio/projects/${projectId}/vsl`,
-                icon: Video,
-              }
-            : {
-                label: 'Compose launch page',
-                description: 'Combine your published demo, VSL, and signup CTA into one public proof page.',
-                to: `/demo-studio/projects/${projectId}/launch`,
-                icon: Rocket,
-              };
-  const NextProjectActionIcon = nextProjectAction.icon;
-  const roadmapSteps: ChecklistStep[] = [
+  const nextStep = getDemoProjectNextStep({
+    demoCount: demos.length,
+    hasPublishedDemo: Boolean(publishedDemo),
+    hasViews: (metrics?.uniqueViewers ?? 0) > 0,
+    launchPublished: Boolean(project?.launch_published),
+  });
+
+  const runNextStep = () => {
+    if (!nextStep || !projectId) return;
+    if (nextStep.action === 'start_demo') void handleCreateBlankDemo();
+    else if (nextStep.action === 'finish_demo' && draftDemo) navigate(`/demo-studio/projects/${projectId}/demos/${draftDemo.id}/edit`);
+    else if (nextStep.action === 'share_demo') void copyShareLink();
+    else if (nextStep.action === 'add_launch_page') navigate(`/demo-studio/projects/${projectId}/launch`);
+  };
+
+  const nextStepLinks = !nextStep ? null : nextStep.action === 'start_demo' ? (
+    hasStoryboard ? (
+      <button type="button" className={linkClass} onClick={() => void handleCreateGuidedDemo()} disabled={creating}>
+        Start from your brief&apos;s storyboard
+      </button>
+    ) : (
+      <Link to={`/demo-studio/projects/${projectId}/brief`} className={linkClass}>Plan the story first (optional)</Link>
+    )
+  ) : nextStep.action === 'share_demo' ? (
+    <>
+      <button type="button" className={linkClass} onClick={() => void copyEmbedSnippet()}>Copy embed code</button>
+      {arrivedFromTry && publishedDemo ? (
+        <Link to={`/demo-studio/projects/${projectId}/demos/${publishedDemo.id}/edit`} className={linkClass}>
+          {tryAssetMode === 'generated_placeholders' ? 'Replace the sample frames with screenshots' : 'Refine screens and click targets'}
+        </Link>
+      ) : null}
+    </>
+  ) : nextStep.action === 'add_launch_page' && !hasVsl ? (
+    <Link to={`/demo-studio/projects/${projectId}/vsl`} className={linkClass}>Record the pitch video first</Link>
+  ) : null;
+
+  const extras = [
     {
-      label: 'Define the proof story',
-      description: 'Audience, pain, promise, aha moment, and CTA before screenshots.',
-      done: briefComplete,
-      action: { label: 'Complete brief', to: `/demo-studio/projects/${projectId}/brief` },
+      label: 'Story brief',
+      status: briefStarted ? 'Started' : 'Optional',
+      detail: 'Who the demo is for and the moment it should land. Can draft screens for you.',
+      to: `/demo-studio/projects/${projectId}/brief`,
+      action: briefStarted ? 'Edit brief' : 'Write a brief',
     },
     {
-      label: 'Build a guided demo',
-      description: 'Apply the storyboard, upload screenshots, then add clickable hotspots.',
-      done: demos.length > 0,
-      action: hasStoryboard
-        ? { label: 'Create guided demo', onClick: handleCreateGuidedDemo }
-        : { label: 'Open brief', to: `/demo-studio/projects/${projectId}/brief` },
+      label: 'Pitch video',
+      status: hasVsl ? `${vsls.length} saved` : 'Not recorded',
+      detail: 'A short Loom of you explaining the product. Needed for the launch page.',
+      to: `/demo-studio/projects/${projectId}/vsl`,
+      action: hasVsl ? 'Open pitch videos' : 'Record a pitch video',
     },
     {
-      label: 'Publish & share',
-      description: 'Publish to get a public link and an embed snippet.',
-      done: hasPublishedDemo,
-      // The step promises an embed snippet, so once it is done it has to hand one over.
-      action: hasPublishedDemo && publishedDemo?.public_id
-        ? { label: 'Copy embed snippet', onClick: () => void copyEmbedSnippet() }
-        : firstDemoId
-          ? { label: 'Add screenshots', to: `/demo-studio/projects/${projectId}/demos/${firstDemoId}/edit` }
-          : undefined,
-    },
-    {
-      label: 'Record a pitch video',
-      description: 'Up to 3 Loom variations to A/B test on your launch page.',
-      done: hasVsl,
-      action: { label: 'Open VSL Studio', to: `/demo-studio/projects/${projectId}/vsl` },
-    },
-    {
-      label: 'Publish your launch page',
-      description: 'Your demo + pitch + early-access signup on one public page.',
-      done: Boolean(project?.launch_published),
-      action: { label: 'Compose page', to: `/demo-studio/projects/${projectId}/launch` },
+      label: 'Launch page',
+      status: project?.launch_published ? 'Live' : 'Not published',
+      detail: 'Your demo, pitch video and a signup form on one link.',
+      to: `/demo-studio/projects/${projectId}/launch`,
+      action: project?.launch_published ? 'Edit launch page' : 'Build launch page',
     },
   ];
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background">
-      <SEO title={`${project?.name ?? 'Project'} — Demo Studio`} description="Manage your demos, pitch videos, and launch page." noindex url="/demo-studio/projects" />
+      <SEO title={`${project?.name ?? 'Project'} | Demo Studio`} description="Manage your demos, pitch videos, and launch page." noindex url="/demo-studio/projects" />
       <Navigation />
-
-      <main className="container mx-auto max-w-5xl px-4 pt-28 pb-20 md:pt-32">
-        <Link
-          to="/demo-studio/projects"
-          className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+      <main>
+        <ToolPageShell
+          title={project?.name ?? 'Project'}
+          purpose={project?.tagline || 'Your click-through demo, and what to do with it next.'}
+          context={(
+            <Link to="/demo-studio/projects" className="inline-flex items-center gap-1 hover:text-foreground">
+              <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> All projects
+            </Link>
+          )}
+          theme="demo"
+          wallpaper={<DemoStoryboardWallpaper />}
+          headerArt={<DemoStoryboardChart />}
         >
-          <ArrowLeft className="h-4 w-4" /> All projects
-        </Link>
-
-        <div className="mb-6">
-          <span className="inline-flex items-center rounded-full border border-border bg-muted/50 px-2.5 py-0.5 text-label font-medium uppercase tracking-wide text-muted-foreground">
-            Demo Studio project
-          </span>
-          <h1 className="creatives-font mt-2 text-3xl font-bold md:text-4xl">{project?.name}</h1>
-          {project?.tagline && <p className="mt-1 text-muted-foreground">{project.tagline}</p>}
-        </div>
-
-        {arrivedFromTry ? <FinishSetupPrompt surface="demo_project" className="mb-6" /> : null}
-        {arrivedFromTry && publishedDemo ? (
-          <section className="mb-6 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-5" aria-labelledby="demo-live-heading">
-            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
-                  <CheckCircle2 className="h-5 w-5" /> Published automatically
-                </p>
-                <h2 id="demo-live-heading" className="mt-1 text-2xl font-semibold">Your live demo is ready to share</h2>
-                <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                  This is the exact project you previewed. Copy its public link now; the launch-page and VSL roadmap stays available below.
-                </p>
-              </div>
-              <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-                <Button onClick={() => void copyShareLink()} className="gap-2">
-                  <Copy className="h-4 w-4" /> Copy live link
-                </Button>
-                <Button asChild variant="outline" className="gap-2">
-                  <Link to={`/demo-studio/projects/${projectId}/demos/${publishedDemo.id}/edit`}>
-                    <ImagePlus className="h-4 w-4" />
-                    {tryAssetMode === 'generated_placeholders' ? 'Replace frames with screenshots' : 'Refine screenshots and hotspots'}
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </section>
-        ) : null}
-
-        <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-5">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-sm font-semibold text-primary">Next best action</p>
-              <h2 className="mt-1 flex items-center gap-2 text-xl font-semibold">
-                <NextProjectActionIcon className="h-5 w-5 text-primary" />
-                {nextProjectAction.label}
-              </h2>
-              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{nextProjectAction.description}</p>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Your launch page needs one published demo and one recorded VSL. You can create them in either order.
-              </p>
-            </div>
-            <div className="flex shrink-0 flex-col items-stretch gap-2">
-              {nextProjectAction.to ? (
-                <Button asChild className="gap-2">
-                  <Link to={nextProjectAction.to}>
-                    {nextProjectAction.label} <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </Button>
-              ) : (
-                <Button onClick={nextProjectAction.onClick} disabled={creating} className="gap-2">
-                  {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <NextProjectActionIcon className="h-4 w-4" />}
-                  {nextProjectAction.label}
-                </Button>
-              )}
-              {/* Brief is enrichment, not a gate: let founders jump straight to screenshots. */}
-              {demos.length === 0 && (
-                <Button variant="ghost" size="sm" className="gap-1.5" onClick={handleCreateBlankDemo} disabled={creating}>
-                  <ImagePlus className="h-4 w-4" /> Skip — start from screenshots
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <GettingStartedChecklist
-          title="Your launch roadmap"
-          subtitle="Demo Studio is complete when your demo, pitch video, and launch page are all live."
-          steps={roadmapSteps}
-          className="mb-8"
-        />
-
-        <div className="mb-8 grid gap-4 md:grid-cols-4">
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Brief</p>
-            <p className="mt-2 text-2xl font-semibold">{readiness?.hasBrief ? 'Ready' : 'Draft'}</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Published demos</p>
-            <p className="mt-2 text-2xl font-semibold">{readiness?.publishedDemoCount ?? 0}</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">VSL variations</p>
-            <p className="mt-2 text-2xl font-semibold">{readiness?.vslCount ?? 0}/3</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Launch page</p>
-            <p className="mt-2 text-2xl font-semibold">{project?.launch_published ? 'Live' : 'Draft'}</p>
-          </div>
-        </div>
-
-        {/* Demos */}
-        <section className="mb-10">
-          <div className="mb-3 flex items-end justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-3">
-                <h2 className="flex items-center gap-2 text-lg font-semibold">
-                  <MonitorPlay className="h-5 w-5 text-primary" /> Demos
-                </h2>
-                <WhatIsADemoPopover />
-              </div>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                An interactive, click-through walkthrough of your product — screenshots + clickable hotspots.
-              </p>
-            </div>
-            <Button size="sm" variant="outline" className="shrink-0 gap-1.5" onClick={handleCreateBlankDemo} disabled={creating}>
-              {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Start blank demo
-            </Button>
-          </div>
-
-          {demos.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-muted-foreground/30 p-8 text-center">
-              <MonitorPlay className="mx-auto h-8 w-8 text-muted-foreground" />
-              <p className="mt-3 text-sm text-muted-foreground">
-                Build your first interactive demo — upload screenshots and add clickable hotspots.
-              </p>
-              <div className="mt-4 flex flex-wrap justify-center gap-2">
-                {hasStoryboard ? (
-                  <Button className="gap-1.5" onClick={handleCreateGuidedDemo} disabled={creating}>
-                    {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <MonitorPlay className="h-4 w-4" />}
-                    Create guided demo from brief
-                  </Button>
-                ) : (
-                  <Button asChild className="gap-1.5">
-                    <Link to={`/demo-studio/projects/${projectId}/brief`}>
-                      Open brief <FileText className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                )}
-                <Button variant="outline" className="gap-1.5" onClick={handleCreateBlankDemo} disabled={creating}>
-                  <Plus className="h-4 w-4" /> Start blank demo
-                </Button>
-              </div>
+          {loading ? (
+            <div className="flex justify-center py-16" role="status" aria-label="Loading project">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <div className="space-y-3">
-              {demos.map((demo) => (
-                <div
-                  key={demo.id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 transition hover:border-primary/40"
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
-                      <MonitorPlay className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">{demo.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {demo.status === 'published' ? 'Published' : 'Draft'}
-                      </p>
-                    </div>
+            <>
+              {arrivedFromTry ? <FinishSetupPrompt surface="demo_project" /> : null}
+
+              {nextStep ? (
+                <NextStepCard
+                  title={nextStep.title}
+                  reason={nextStep.reason}
+                  cta={nextStep.cta}
+                  onAction={runNextStep}
+                  disabled={creating}
+                  secondary={nextStepLinks}
+                />
+              ) : null}
+
+              {publishedDemo && metrics ? (
+                <section className="rounded-xl border border-border/60 bg-card p-4 sm:p-5" aria-labelledby="demo-results-heading">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <h2 id="demo-results-heading" className="text-base font-semibold text-foreground">Results so far</h2>
+                    <Link to={`/demo-studio/projects/${projectId}/demos/${publishedDemo.id}/analytics`} className={linkClass}>See full results</Link>
                   </div>
-                  <div className="flex shrink-0 items-center gap-1.5">
-                    {demo.status === 'published' && demo.public_id && (
-                      <Button asChild variant="ghost" size="sm" className="gap-1.5">
-                        <a href={`/demo/${demo.public_id}`} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="h-4 w-4" /> View
-                        </a>
-                      </Button>
-                    )}
-                    {demo.status === 'published' && (
-                      <Button asChild variant="ghost" size="sm" className="gap-1.5">
-                        <Link to={`/demo-studio/projects/${projectId}/demos/${demo.id}/analytics`}>
-                          <BarChart3 className="h-4 w-4" /> Stats
-                        </Link>
-                      </Button>
-                    )}
-                    <Button asChild variant="outline" size="sm" className="gap-1.5">
-                      <Link to={`/demo-studio/projects/${projectId}/demos/${demo.id}/edit`}>
-                        <Pencil className="h-4 w-4" /> Edit
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => handleDeleteDemo(demo.id)}
-                      aria-label="Delete demo"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  {metrics.uniqueViewers > 0 ? (
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {metrics.uniqueViewers} {metrics.uniqueViewers === 1 ? 'person' : 'people'} opened the demo, {metrics.completions} watched to the end, and {metrics.ctaClicks} clicked your end button.
+                      {' '}Views show interest, not that people will pay.
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-sm text-muted-foreground">Nobody has opened the demo yet. Results appear here as soon as someone does.</p>
+                  )}
+                </section>
+              ) : null}
+
+              <section className="space-y-3" aria-labelledby="demo-list-heading">
+                <div className="flex items-baseline justify-between gap-3">
+                  <h2 id="demo-list-heading" className="text-lg font-semibold text-foreground">Demos</h2>
+                  {demos.length > 0 ? (
+                    <button type="button" className={linkClass} onClick={() => void handleCreateBlankDemo()} disabled={creating}>
+                      Start another demo
+                    </button>
+                  ) : null}
                 </div>
-              ))}
-            </div>
+                {demos.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-border p-5 text-sm text-muted-foreground">
+                    No demos yet. Starting one opens the editor, where you add screenshots.
+                  </p>
+                ) : (
+                  <ul className="divide-y divide-border/60 rounded-xl border border-border/60 bg-card">
+                    {demos.map((demo) => (
+                      <li key={demo.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-foreground">{demo.title}</p>
+                          <p className="text-sm text-muted-foreground">{demo.status === 'published' ? 'Published' : 'Draft'}</p>
+                        </div>
+                        <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1">
+                          {demo.status === 'published' && demo.public_id ? (
+                            <a href={`/demo/${demo.public_id}`} target="_blank" rel="noopener noreferrer" className={linkClass}>View</a>
+                          ) : null}
+                          {demo.status === 'published' ? (
+                            <Link to={`/demo-studio/projects/${projectId}/demos/${demo.id}/analytics`} className={linkClass}>Results</Link>
+                          ) : null}
+                          <Button asChild variant="outline" size="sm">
+                            <Link to={`/demo-studio/projects/${projectId}/demos/${demo.id}/edit`}>Edit</Link>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            onClick={() => void handleDeleteDemo(demo)}
+                            aria-label={`Delete ${demo.title}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+
+              <section className="space-y-3" aria-labelledby="demo-extras-heading">
+                <div>
+                  <h2 id="demo-extras-heading" className="text-lg font-semibold text-foreground">After you share</h2>
+                  <p className="text-sm text-muted-foreground">Optional. Add these once people are watching the demo.</p>
+                </div>
+                <ul className="divide-y divide-border/60 rounded-xl border border-border/60 bg-card">
+                  {extras.map((item) => (
+                    <li key={item.label} className="flex flex-wrap items-center justify-between gap-3 p-4">
+                      <div className="min-w-0">
+                        <p className="font-medium text-foreground">
+                          {item.label} <span className="font-normal text-muted-foreground">· {item.status}</span>
+                        </p>
+                        <p className="text-sm text-muted-foreground">{item.detail}</p>
+                      </div>
+                      <Link to={item.to} className={linkClass}>{item.action}</Link>
+                    </li>
+                  ))}
+                </ul>
+                {project?.launch_published && project.slug ? (
+                  <a href={`/p/${project.slug}`} target="_blank" rel="noopener noreferrer" className={linkClass}>Open the live launch page</a>
+                ) : null}
+              </section>
+            </>
           )}
-        </section>
-
-        <section className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-xl border border-border bg-card p-5">
-            <h2 className="flex items-center gap-2 text-lg font-semibold">
-              <FileText className="h-5 w-5 text-primary" /> Demo Brief
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Define the story, generate AI drafts, and create a guided demo storyboard.
-            </p>
-            <Button asChild className="mt-4 gap-2">
-              <Link to={`/demo-studio/projects/${projectId}/brief`}>
-                Open brief <FileText className="h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-
-          <div className="rounded-xl border border-border bg-card p-5">
-            <h2 className="flex items-center gap-2 text-lg font-semibold">
-              <Video className="h-5 w-5 text-primary" /> VSL Studio
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Record or paste up to three Loom pitch variations for this demo.
-            </p>
-            <Button asChild className="mt-4 gap-2">
-              <Link to={`/demo-studio/projects/${projectId}/vsl`}>
-                Open VSL Studio <Video className="h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-
-          <div className="rounded-xl border border-border bg-card p-5">
-            <h2 className="flex items-center gap-2 text-lg font-semibold">
-              <Globe className="h-5 w-5 text-primary" /> Launch Page
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Publish one page with the demo, VSL, and signup form.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button asChild className="gap-2">
-                <Link to={`/demo-studio/projects/${projectId}/launch`}>
-                  Compose page <Rocket className="h-4 w-4" />
-                </Link>
-              </Button>
-              {project?.launch_published && project.slug && (
-                <Button asChild variant="outline" className="gap-2">
-                  <a href={`/p/${project.slug}`} target="_blank" rel="noopener noreferrer">
-                    View live <ExternalLink className="h-4 w-4" />
-                  </a>
-                </Button>
-              )}
-            </div>
-          </div>
-        </section>
+        </ToolPageShell>
       </main>
+      <Footer />
     </div>
   );
 }

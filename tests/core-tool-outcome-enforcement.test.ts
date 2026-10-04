@@ -115,7 +115,9 @@ test('MVP Builder starts empty and imports only a scoped handoff under the compl
 test('Demo and MVP publication paths enforce structural checks before publishing', () => {
   const demoApi = readFileSync(new URL('../src/lib/demoStudio/api.ts', import.meta.url), 'utf8');
   const mvpPublish = readFileSync(new URL('../supabase/functions/mvp-builder-publish/index.ts', import.meta.url), 'utf8');
-  assert.match(demoApi, /Complete at least two captioned steps and fix every hotspot before publishing/);
+  // Demo publishing shares the editor's rules (see demo-studio-polish.test.ts).
+  assert.match(demoApi, /const readiness = getDemoReadiness\(/);
+  assert.match(demoApi, /throw new Error\(readiness\.blockers\[0\]/);
   assert.match(mvpPublish, /TEST_REQUIRED/);
   assert.match(mvpPublish, /inspect_mvp_workflow_test/);
   assert.match(mvpPublish, /publish_tested_mvp/);

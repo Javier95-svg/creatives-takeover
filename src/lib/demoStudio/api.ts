@@ -36,6 +36,7 @@ import {
   normalizeLoomUrl,
 } from './vsl';
 import { canPublishDemo, getPublishedDemoCap } from './plan';
+import { getDemoReadiness } from './readiness';
 import { normalizePlan } from '@/config/planPermissions';
 import { trackDemoStudioFunnel } from '@/lib/analytics';
 
@@ -425,29 +426,13 @@ export async function publishDemo(
 ): Promise<DemoStudioDemo> {
   const existing = await getDemo(id);
   const [steps, hotspots] = await Promise.all([listSteps(id), listHotspotsForDemo(id)]);
-  const stepIds = new Set(steps.map((step) => step.id));
-  const brokenHotspot = hotspots.find((hotspot) => {
-    const action = hotspot.action;
-    if (!Number.isFinite(hotspot.x) || !Number.isFinite(hotspot.y) || !Number.isFinite(hotspot.w) || !Number.isFinite(hotspot.h)) return true;
-    if (hotspot.w <= 0 || hotspot.h <= 0 || hotspot.x < 0 || hotspot.y < 0 || hotspot.x + hotspot.w > 1 || hotspot.y + hotspot.h > 1) return true;
-    if (action === 'goto') return !hotspot.action_target || !stepIds.has(hotspot.action_target);
-    if (action === 'url') {
-      try {
-        const url = new URL(hotspot.action_target ?? '');
-        return !['http:', 'https:'].includes(url.protocol);
-      } catch {
-        return true;
-      }
-    }
-    return action !== 'next';
-  });
-  const incompleteStep = steps.find((step) => (
-    !step.asset_url?.trim()
-    || /placeholder/i.test(step.asset_url)
-    || !step.caption?.trim()
-  ));
-  if (steps.length < 2 || incompleteStep || brokenHotspot || hotspots.length === 0) {
-    throw new Error('Complete at least two captioned steps and fix every hotspot before publishing.');
+  // The same rules the editor shows, so a demo the editor calls ready publishes.
+  const readiness = getDemoReadiness(
+    steps.map((step) => ({ ...step, hotspots: hotspots.filter((hotspot) => hotspot.step_id === step.id) })),
+    existing?.theme ?? {},
+  );
+  if (!readiness.ready) {
+    throw new Error(readiness.blockers[0] ?? 'This demo is not ready to publish yet.');
   }
   // Free-tier cap: enforce only when transitioning draft -> published (republish
   // of an already-public demo is never blocked). Mirrors Arcade's free ceiling.

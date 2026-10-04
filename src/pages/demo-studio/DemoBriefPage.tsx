@@ -2,7 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ArrowLeft, ArrowRight, FileText, Loader2, MonitorPlay, Rocket, Sparkles, Target, Wand2 } from 'lucide-react';
+import { ArrowLeft, FileText, Loader2, MonitorPlay, Rocket, Target, Wand2 } from 'lucide-react';
+import Footer from '@/components/Footer';
+import { NextStepCard } from '@/components/tool-shell/NextStepCard';
+import { ToolPageShell } from '@/components/tool-shell/ToolPageShell';
+import DemoStoryboardWallpaper from '@/components/wallpapers/DemoStoryboardWallpaper';
 import SEO from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import { Badge } from '@/components/ui/badge';
@@ -207,7 +211,6 @@ export default function DemoBriefPage() {
       }),
     [aiKit.storyboard, brief?.primary_cta_label],
   );
-  const guideSteps = ['Define the story', 'Build the demo', 'Record the VSL', 'Publish the page', 'Measure interest'];
 
   const patchBrief = async (patch: Partial<DemoStudioBrief>) => {
     if (!projectId || !user || !brief) return;
@@ -242,7 +245,7 @@ export default function DemoBriefPage() {
       setBrief(saved);
       toast.success(
         mode === 'full_kit'
-          ? 'Full kit generated — storyboard, VSL scripts, and launch copy.'
+          ? 'Drafts ready: screens, pitch video scripts and launch page copy.'
           : 'Demo Studio drafts generated.',
       );
     } catch (e) {
@@ -313,25 +316,24 @@ export default function DemoBriefPage() {
 
   const nextBriefAction = !completeness.complete
     ? {
-        label: 'Complete brief',
-        description: `Fill in ${completeness.missing.join(', ')} to unlock storyboard and VSL script generation.`,
+        label: 'Finish the brief',
+        description: `Fill in ${completeness.missing.join(', ')}. Then Demo Studio can draft your screens and pitch video scripts.`,
         onClick: focusBrief,
         icon: FileText,
       }
     : !hasGeneratedKit
       ? {
-          label: 'Generate full kit',
-          description: 'One click turns the brief into a storyboard, VSL scripts, and launch copy.',
+          label: 'Draft everything from the brief',
+          description: 'Turns the brief into a screen-by-screen storyboard, pitch video scripts and launch page copy. Uses credits.',
           onClick: () => handleGenerate('full_kit'),
-          icon: Sparkles,
+          icon: Wand2,
         }
       : {
-          label: 'Create guided demo',
-          description: 'Use the generated storyboard to create your first interactive demo.',
+          label: 'Build the demo from this storyboard',
+          description: 'Creates a demo with one screen per storyboard step. You add the screenshots.',
           onClick: handleCreateDemoFromStoryboard,
           icon: MonitorPlay,
         };
-  const NextActionIcon = nextBriefAction.icon;
 
   if (loading) {
     return (
@@ -343,70 +345,38 @@ export default function DemoBriefPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEO title={`${project?.name ?? 'Project'} Demo Brief`} description="Define the story before building your demo and VSL." noindex />
+      <SEO title={`${project?.name ?? 'Project'} story brief`} description="Plan who the demo is for and the moment it should land." noindex />
       <Navigation />
-      <main className="container mx-auto max-w-6xl px-4 pt-28 pb-20 md:pt-32">
-        <Link
-          to={`/demo-studio/projects/${projectId}`}
-          className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+      <main>
+        <ToolPageShell
+          title="Story brief"
+          purpose="Optional. Say who the demo is for and the moment it should land, and Demo Studio drafts the screens for you."
+          context={(
+            <Link to={`/demo-studio/projects/${projectId}`} className="inline-flex items-center gap-1 hover:text-foreground">
+              <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> Back to {project?.name ?? 'project'}
+            </Link>
+          )}
+          theme="demo"
+          wallpaper={<DemoStoryboardWallpaper />}
+          className="[&_.container]:max-w-6xl"
         >
-          <ArrowLeft className="h-4 w-4" /> Back to project
-        </Link>
-
-        <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-          <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-              <FileText className="h-3.5 w-3.5" /> Demo Brief
-            </span>
-            <h1 className="creatives-font mt-3 text-3xl font-bold md:text-4xl">Define the proof before the pixels</h1>
-            <p className="mt-2 max-w-2xl text-muted-foreground">
-              We pre-filled your brief from the project. Generate a full kit — storyboard, VSL scripts, and launch copy — in one click, then refine the story.
-            </p>
-          </div>
-          <div className="flex flex-wrap justify-end gap-2">
-            <Button variant="outline" onClick={() => handleGenerate('storyboard')} disabled={generating || !completeness.complete} className="gap-2">
-              <Wand2 className="h-4 w-4" /> Storyboard only
-            </Button>
-            <Button onClick={() => handleGenerate('full_kit')} disabled={generating || !completeness.complete} className="gap-2">
-              {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              Generate full kit
-            </Button>
-            {completeness.complete ? (
-              <p className="w-full text-right text-xs text-muted-foreground">
-                One click: storyboard + VSL scripts + launch copy. Uses credits.
-              </p>
-            ) : (
-              <p className="w-full text-right text-xs text-muted-foreground">
-                Complete Audience, Problem, Product promise, Aha moment, and CTA to unlock this.
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-sm font-semibold text-primary">Step 1 of 5: Define the story</p>
-              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                Fill your proof brief first. From there, Demo Studio can generate storyboard steps and VSL scripts, then help you build the demo and publish the launch page.
-              </p>
-            </div>
-            <Button onClick={nextBriefAction.onClick} disabled={generating || saving || (hasGeneratedKit && !aiKit.storyboard?.length)} className="gap-2">
-              <NextActionIcon className="h-4 w-4" />
-              {nextBriefAction.label}
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
-            {guideSteps.map((step, index) => (
-              <div key={step} className="rounded-lg border border-border/70 bg-background/70 px-3 py-2">
-                <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">Step {index + 1}</p>
-                <p className="text-sm font-semibold">{step}</p>
-              </div>
-            ))}
-          </div>
-          <p className="mt-3 text-xs text-muted-foreground">{nextBriefAction.description}</p>
-        </div>
+        <NextStepCard
+          title={nextBriefAction.label}
+          reason={nextBriefAction.description}
+          cta={generating ? 'Drafting' : nextBriefAction.label}
+          onAction={nextBriefAction.onClick}
+          disabled={generating || saving || (hasGeneratedKit && !aiKit.storyboard?.length)}
+          secondary={completeness.complete ? (
+            <button
+              type="button"
+              onClick={() => handleGenerate('storyboard')}
+              disabled={generating}
+              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Draft only the storyboard
+            </button>
+          ) : undefined}
+        />
 
         {icpProvenance && !provenanceDismissed && (
           <div className="mb-6 flex flex-col gap-3 rounded-xl border border-accent-teal/30 bg-accent-teal/10 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
@@ -427,12 +397,6 @@ export default function DemoBriefPage() {
                 Dismiss
               </Button>
             </div>
-          </div>
-        )}
-
-        {!completeness.complete && (
-          <div className="mb-6 rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm text-warning">
-            Complete Audience, Problem, Product promise, Aha moment, and CTA to unlock storyboard and VSL script generation. Missing now: {completeness.missing.join(', ')}.
           </div>
         )}
 
@@ -576,7 +540,9 @@ export default function DemoBriefPage() {
             </Card>
           </div>
         </div>
+        </ToolPageShell>
       </main>
+      <Footer />
     </div>
   );
 }

@@ -59,7 +59,7 @@ export default function VslStudioPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="tool-theme-demo min-h-screen bg-background">
       <SEO title={`${project?.name ?? 'Project'} VSL Studio`} description="Record and manage up to three Video Sales Letter variations." noindex />
       <Navigation />
       <main className="container mx-auto max-w-6xl px-4 pt-28 pb-20 md:pt-32">

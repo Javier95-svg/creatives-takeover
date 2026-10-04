@@ -55,7 +55,7 @@ function StatCard({
     <div className="rounded-xl border border-border bg-card p-4">
       <div className="flex items-center gap-2 text-muted-foreground">
         <Icon className="h-4 w-4" />
-        <span className="text-xs font-medium uppercase tracking-wide">{label}</span>
+        <span className="text-xs font-medium">{label}</span>
       </div>
       <p className="mt-2 text-2xl font-semibold">{value}</p>
       {hint && <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>}
@@ -113,7 +113,7 @@ export default function DemoAnalyticsPanel({ demoId, publicId, className }: Demo
             <BarChart3 className="h-5 w-5 text-primary" /> Demo analytics
           </h2>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            How viewers move through this walkthrough — and where they drop off.
+            How viewers move through this demo, and where they stop.
           </p>
         </div>
         <Select value={window} onValueChange={(value) => setWindow(value as DemoStudioMetricsWindow)}>
@@ -179,7 +179,7 @@ export default function DemoAnalyticsPanel({ demoId, publicId, className }: Demo
           <div className="rounded-xl border border-border bg-card p-5">
             <h3 className="text-sm font-semibold">Step drop-off</h3>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Share of viewers who reached each step. Watch for the first big drop — that's where the story loses people.
+              Share of viewers who reached each step. Watch for the first big drop: that is where the story loses people.
             </p>
             <div className="mt-4 space-y-3">
               {metrics.funnel.map((row) => (

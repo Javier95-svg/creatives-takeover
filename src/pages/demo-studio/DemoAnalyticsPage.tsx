@@ -55,8 +55,8 @@ export default function DemoAnalyticsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <SEO title={`${demo?.title ?? 'Demo'} analytics — Demo Studio`} description="See how viewers engage with your interactive demo." noindex url="/demo-studio/projects" />
+    <div className="tool-theme-demo min-h-screen bg-background">
+      <SEO title={`${demo?.title ?? 'Demo'} results | Demo Studio`} description="See how viewers engage with your interactive demo." noindex url="/demo-studio/projects" />
       <Navigation />
 
       <main className="container mx-auto max-w-4xl px-4 pt-28 pb-20 md:pt-32">

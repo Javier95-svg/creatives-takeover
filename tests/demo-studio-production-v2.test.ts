@@ -57,7 +57,7 @@ test('AI kit normalization caps storyboard, scripts, and launch copy into safe s
   assert.equal(kit.launch_copy?.cta_label, DEFAULT_DEMO_STUDIO_CTA);
 });
 
-test('demo readiness scores screenshot, caption, hotspot, notes, and CTA gaps', () => {
+test('demo readiness blocks only what would break for a viewer', () => {
   const readiness = getDemoReadiness([
     {
       id: 'step-1',
@@ -72,11 +72,12 @@ test('demo readiness scores screenshot, caption, hotspot, notes, and CTA gaps', 
       created_at: '',
       hotspots: [{ id: 'hotspot-1', step_id: 'step-1', x: 0, y: 0, w: 0.1, h: 0.1, type: 'hotspot', label: 'Next', action: 'next', action_target: null, created_at: '' }],
     },
-  ], {});
+  ], { endCtaLabel: 'Join the waitlist' });
 
+  // One captioned screen is enough; a button label with nowhere to go is not.
   assert.equal(readiness.ready, false);
-  assert.match(readiness.missing.join(' '), /at least 3/);
-  assert.match(readiness.missing.join(' '), /CTA/);
+  assert.deepEqual(readiness.blockers, ['Add where the end button goes, or clear its label.']);
+  assert.match(readiness.suggestions.join(' '), /3 to 5 screens/);
 });
 
 test('VSL readiness requires script, hook, recording, and primary state', () => {

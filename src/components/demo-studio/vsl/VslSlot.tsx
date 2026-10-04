@@ -169,8 +169,8 @@ export default function VslSlot({
           <DialogHeader>
             <DialogTitle>Teleprompter variation {label}</DialogTitle>
           </DialogHeader>
-          <div className="max-h-[65vh] overflow-y-auto rounded-xl bg-slate-950 p-6 text-white">
-            <p className="text-sm uppercase tracking-wide text-white/50">{vsl?.hook || scriptDraft?.hook}</p>
+          <div className="max-h-[65vh] overflow-y-auto rounded-xl bg-black p-6 text-white">
+            <p className="text-sm text-white/50">{vsl?.hook || scriptDraft?.hook}</p>
             <div className="mt-4 whitespace-pre-wrap text-2xl leading-relaxed">{script || 'No script yet.'}</div>
           </div>
         </DialogContent>
