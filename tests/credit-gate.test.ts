@@ -43,6 +43,17 @@ test('credit-spending marketplace routes render inside the credit gate provider'
   );
 });
 
+// The page charges TRACTION_ENGINE_SCORECARD through useCreditActions, which
+// needs the provider. Without it the route crashed on load.
+test('Traction Engine renders inside the credit gate provider', () => {
+  const appSource = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8');
+
+  assert.match(
+    appSource,
+    /path="\/traction-engine"[\s\S]{0,200}<ToolRouteWithCreditGate>\s*<TractionEnginePage \/>\s*<\/ToolRouteWithCreditGate>/,
+  );
+});
+
 test('Tech Stack renders inside the credit gate provider and participates in route gating', () => {
   const appSource = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8');
   const contextSource = readFileSync(new URL('../src/contexts/CreditGateContext.tsx', import.meta.url), 'utf8');

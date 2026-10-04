@@ -516,7 +516,9 @@ function App() {
                           path="/traction-engine"
                           element={
                             <RouteErrorBoundary routeName="TractionEngine">
-                              <TractionEnginePage />
+                              <ToolRouteWithCreditGate>
+                                <TractionEnginePage />
+                              </ToolRouteWithCreditGate>
                             </RouteErrorBoundary>
                           }
                         />
