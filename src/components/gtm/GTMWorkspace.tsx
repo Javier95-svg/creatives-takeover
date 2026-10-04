@@ -79,6 +79,7 @@ export default function GTMWorkspace({
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tasksRef = useRef<HTMLDivElement>(null);
+  const quickLogRef = useRef<HTMLDivElement>(null);
   const requested = searchParams.get('view');
   const view: GTMView = requested === 'plan' || requested === 'review' ? requested : 'week';
   const setView = (next: GTMView) => setSearchParams((params) => {
@@ -111,6 +112,12 @@ export default function GTMWorkspace({
       return;
     }
     if (nextStep.action === 'log_result') {
+      // The week can be logged right here; Traction Engine stays the full log.
+      if (quickLogRef.current || view !== 'week') {
+        setView('week');
+        requestAnimationFrame(() => quickLogRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+        return;
+      }
       navigate(`/traction-engine?planId=${encodeURIComponent(planId)}${primaryPlay ? `&playId=${encodeURIComponent(primaryPlay.id)}` : ''}`);
       return;
     }
@@ -152,6 +159,9 @@ export default function GTMWorkspace({
           primaryPlay={primaryPlay}
           nextReviewDate={nextMonday()}
           onUpdatePlan={onUpdatePlan}
+          onUpdatePlay={onUpdatePlay}
+          onOpenReview={() => setView('review')}
+          quickLogRef={quickLogRef}
         />
       ) : null}
 

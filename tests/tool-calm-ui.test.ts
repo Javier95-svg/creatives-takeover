@@ -30,6 +30,8 @@ const CALM_FILES = [
   'src/pages/GTMStrategistPage.tsx',
   'src/components/gtm/GTMWorkspace.tsx',
   'src/components/gtm/GTMThisWeek.tsx',
+  'src/components/gtm/GTMQuickLog.tsx',
+  'src/components/tool-shell/ToolProjectContext.tsx',
   'src/components/gtm/GTMPlayCard.tsx',
   'src/components/gtm/GTMReviewPanel.tsx',
   'src/components/gtm/GTMDraftsPanel.tsx',

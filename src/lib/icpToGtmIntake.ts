@@ -74,7 +74,7 @@ export function icpArtifactToGtmIntake({ artifact, projectTitle, pmf }: IcpToGtm
 }
 
 /** The customer, pain and solution are known, so the market step is mostly confirmation. */
-export function icpCoversGtmMarket(prefill: Partial<GTMIntakeV2>): boolean {
+export function icpCoversGtmMarket(prefill: { targetSegment?: string; problem?: string; solution?: string; buyingTrigger?: string }): boolean {
   return [prefill.targetSegment, prefill.problem, prefill.solution, prefill.buyingTrigger]
     .every((value) => typeof value === 'string' && value.trim().length > 10);
 }

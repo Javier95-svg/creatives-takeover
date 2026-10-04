@@ -1,10 +1,16 @@
-import { forwardRef } from 'react';
+import { forwardRef, useEffect, useState, type Ref } from 'react';
 import { Link } from 'react-router-dom';
-import { Check, Clock3 } from 'lucide-react';
+import { Check, Clock3, Copy } from 'lucide-react';
+import { toast } from 'sonner';
 
+import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 import { captureEvent } from '@/lib/analytics';
 import { calculateGTMHealth, type GTMPlanV2, type GTMPlay, type GTMTask } from '@/lib/gtmV2';
+import { weeklyResultsFromExperiments, type WeeklyResult } from '@/lib/gtmProgress';
+import { buildGTMActionPacket } from '@/lib/marketExperiment';
 import { cn } from '@/lib/utils';
+import GTMQuickLog from './GTMQuickLog';
 
 interface GTMThisWeekProps {
   plan: GTMPlanV2;
@@ -14,15 +20,48 @@ interface GTMThisWeekProps {
   primaryPlay: GTMPlay | undefined;
   nextReviewDate: Date;
   onUpdatePlan: (plan: GTMPlanV2) => Promise<void>;
+  onUpdatePlay: (play: GTMPlay) => Promise<void>;
+  /** Opens the Review tab after a week is logged. */
+  onOpenReview: () => void;
+  /** Where the quick log sits, for the next-step card to scroll to. */
+  quickLogRef?: Ref<HTMLDivElement>;
 }
 
 const formatDay = (date: Date) => date.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' });
 
 /** The default GTM view: the goal, the channel, this week's tasks and the latest result. */
 const GTMThisWeek = forwardRef<HTMLDivElement, GTMThisWeekProps>(function GTMThisWeek(
-  { plan, planId, week, tasks, primaryPlay, nextReviewDate, onUpdatePlan },
+  { plan, planId, week, tasks, primaryPlay, nextReviewDate, onUpdatePlan, onUpdatePlay, onOpenReview, quickLogRef },
   tasksRef,
 ) {
+  const packet = primaryPlay ? buildGTMActionPacket(plan, primaryPlay) : null;
+  const [weekly, setWeekly] = useState<WeeklyResult[]>([]);
+
+  // Logged results for this play's experiment, by plan week, for the strip.
+  useEffect(() => {
+    const sprintId = primaryPlay?.tractionSprintId;
+    if (!sprintId) { setWeekly([]); return; }
+    let active = true;
+    void (supabase as any).from('traction_engine_experiments')
+      .select('result_value, target_value, created_at')
+      .eq('sprint_id', sprintId)
+      .order('created_at', { ascending: true })
+      .then(({ data }: { data: Array<{ result_value: number; target_value: number; created_at: string }> | null }) => {
+        if (active) setWeekly(weeklyResultsFromExperiments(data ?? [], primaryPlay?.activatedAt ?? plan.generatedAt));
+      });
+    return () => { active = false; };
+  }, [plan.generatedAt, primaryPlay?.activatedAt, primaryPlay?.actual, primaryPlay?.tractionSprintId]);
+
+  const copyMessage = async () => {
+    if (!packet) return;
+    try {
+      await navigator.clipboard.writeText(packet.approvedMessage);
+      toast.success('Message copied.');
+      captureEvent('gtm_message_copied', { plan_id: planId, play_id: primaryPlay?.id });
+    } catch {
+      toast.error('Could not copy.');
+    }
+  };
   const weekTasks = tasks.filter((task) => task.week === week && task.status !== 'skipped');
   const doneCount = weekTasks.filter((task) => task.status === 'done').length;
   const metric = primaryPlay?.metric.toLowerCase() ?? 'results';
@@ -107,6 +146,44 @@ const GTMThisWeek = forwardRef<HTMLDivElement, GTMThisWeekProps>(function GTMThi
           </p>
         )}
       </section>
+
+      {packet ? (
+        <section className="rounded-xl border border-border/60 bg-card p-4 sm:p-5" aria-labelledby="gtm-message-heading">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 id="gtm-message-heading" className="text-sm font-medium text-muted-foreground">Message to send</h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">To {packet.prospectCriteria}. About {packet.dailyQuota} a day.</p>
+            </div>
+            <Button type="button" size="sm" variant="ghost" onClick={() => void copyMessage()}>
+              <Copy className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />Copy
+            </Button>
+          </div>
+          <p className="mt-2 whitespace-pre-line text-sm text-foreground">{packet.approvedMessage}</p>
+        </section>
+      ) : null}
+
+      {primaryPlay?.tractionSprintId ? (
+        <div ref={quickLogRef} className="scroll-mt-28">
+          <GTMQuickLog plan={plan} planId={planId} play={primaryPlay} onUpdatePlay={onUpdatePlay} onLogged={onOpenReview} />
+        </div>
+      ) : null}
+
+      {weekly.some((item) => item.result !== null) ? (
+        <section className="rounded-xl border border-border/60 bg-card p-4 sm:p-5" aria-labelledby="gtm-progress-heading">
+          <h2 id="gtm-progress-heading" className="text-sm font-medium text-muted-foreground">Six weeks so far</h2>
+          <ol className="mt-3 grid grid-cols-6 gap-2">
+            {weekly.map((item) => (
+              <li key={item.week} className={cn('rounded-lg border p-2 text-center', item.week === week ? 'border-primary/50' : 'border-border/60')}>
+                <span className="block text-xs text-muted-foreground">W{item.week}</span>
+                <span className={cn('mt-1 block text-sm font-semibold', item.result === null ? 'text-muted-foreground' : item.hit ? 'text-primary' : 'text-foreground')}>
+                  {item.result === null ? '-' : item.result}
+                </span>
+                {item.target !== null ? <span className="block text-[11px] text-muted-foreground">of {item.target}</span> : null}
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : null}
 
       <section className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-xl border border-border/60 bg-card p-4 sm:p-5">

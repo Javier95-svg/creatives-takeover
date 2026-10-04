@@ -14,6 +14,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { GTMMVPProjectOption } from '@/hooks/useGTMStrategist';
 import { cn } from '@/lib/utils';
 import type { GTMBusinessModel, GTMIntakeV2 } from '@/lib/gtmV2';
+import { icpCoversGtmMarket } from '@/lib/icpToGtmIntake';
+import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
 
 interface GTMWorkspaceIntakeProps {
   prefill: Partial<GTMIntakeV2>;
@@ -39,9 +41,10 @@ const MODELS: Array<{ value: GTMBusinessModel; label: string }> = [
 ];
 
 const STRENGTHS = ['Writing', 'Speaking / Video', 'Networking', 'Coding / Technical', 'Design', 'Cold outreach'];
-type IntakeStep = 'product' | 'market' | 'constraints' | 'outcome' | 'confirm';
+// 'details' is the ICP quick start: one step with only what the ICP cannot know.
+type IntakeStep = 'details' | 'product' | 'market' | 'constraints' | 'outcome' | 'confirm';
 const STEP_LABELS: Record<IntakeStep, string> = {
-  product: 'Product', market: 'Market', constraints: 'Constraints', outcome: 'Outcome', confirm: 'Confirm',
+  details: 'A few details', product: 'Product', market: 'Market', constraints: 'Constraints', outcome: 'Outcome', confirm: 'Confirm',
 };
 
 type GTMIntakeFormState = Omit<
@@ -118,7 +121,7 @@ const hasValue = (value: unknown) => {
 };
 
 const missingForModel = (prefill: Partial<GTMIntakeFormState>, model: GTMBusinessModel | '') => {
-  const missing: Record<Exclude<IntakeStep, 'confirm'>, boolean> = {
+  const missing: Record<Exclude<IntakeStep, 'confirm' | 'details'>, boolean> = {
     product: !hasValue(prefill.productName) || !hasValue(prefill.lifecycle) || !hasValue(prefill.businessModel)
       || (!hasValue(prefill.pricing) && !hasValue(prefill.averageCustomerValue)),
     market: !hasValue(prefill.targetSegment) || !hasValue(prefill.problem) || !hasValue(prefill.solution)
@@ -174,11 +177,16 @@ export default function GTMWorkspaceIntake({
   const [evidenceNotes, setEvidenceNotes] = useState(savedDraft?.evidenceNotes ?? (effectivePrefill.firstPartyEvidence ?? []).find((item) => item.id === 'founder-research-notes')?.content ?? '');
   const activeSteps = useMemo<IntakeStep[]>(() => {
     const missing = missingForModel(effectivePrefill, effectivePrefill.businessModel ?? defaults.businessModel);
+    // With the customer, problem, solution and trigger from the ICP, everything
+    // left fits on one screen instead of four.
+    if (!isRegeneration && icpCoversGtmMarket(effectivePrefill)) {
+      return Object.values(missing).some(Boolean) ? ['details', 'confirm'] : ['confirm'];
+    }
     return [
-      ...(Object.keys(missing) as Array<Exclude<IntakeStep, 'confirm'>>).filter((key) => missing[key]),
+      ...(Object.keys(missing) as Array<Exclude<IntakeStep, 'confirm' | 'details'>>).filter((key) => missing[key]),
       'confirm',
     ];
-  }, [effectivePrefill]);
+  }, [effectivePrefill, isRegeneration]);
   const currentStep = activeSteps[step] ?? 'confirm';
   const activeStepsKey = activeSteps.join('|');
   useEffect(() => {
@@ -203,6 +211,12 @@ export default function GTMWorkspaceIntake({
   }, [activeStepsKey]);
 
   const canContinue = useMemo(() => {
+    if (currentStep === 'details') return intake.productName.trim().length > 1 && Boolean(intake.businessModel) && Boolean(intake.lifecycle)
+      && (Boolean(intake.pricing?.trim()) || (typeof intake.averageCustomerValue === 'number' && intake.averageCustomerValue > 0))
+      && Boolean(intake.geography.trim())
+      && typeof intake.weeklyTimeHours === 'number' && intake.weeklyTimeHours > 0
+      && typeof intake.monthlyBudget === 'number' && intake.monthlyBudget >= 0 && intake.founderStrengths.length > 0
+      && intake.currentTraction.trim().length > 3 && intake.sixWeekOutcome.trim().length > 10;
     if (currentStep === 'product') return intake.productName.trim().length > 1 && Boolean(intake.businessModel) && Boolean(intake.lifecycle)
       && (Boolean(intake.pricing?.trim()) || (typeof intake.averageCustomerValue === 'number' && intake.averageCustomerValue > 0));
     if (currentStep === 'market') return intake.targetSegment.trim().length > 10 && intake.problem.trim().length > 10
@@ -341,7 +355,13 @@ export default function GTMWorkspaceIntake({
       </div>
 
       <div className="rounded-xl border border-border/60 bg-card p-5 sm:p-7">
-        {currentStep === 'product' ? (
+        {currentStep === 'details' ? (
+          <p className="mb-5 text-sm text-muted-foreground">
+            Your customer, their problem, your solution and what makes them buy are filled in from your customer profile. Add the rest below.
+          </p>
+        ) : null}
+
+        {currentStep === 'product' || currentStep === 'details' ? (
           <div className="grid gap-5 md:grid-cols-2">
             <Field label="Product name"><Input value={intake.productName} onChange={(event) => update('productName', event.target.value)} placeholder="Acme" /></Field>
             <Field label="Product URL" hint="Optional for launch-ready products; live products should include the public URL."><Input type="url" value={intake.productUrl ?? ''} onChange={(event) => update('productUrl', event.target.value)} placeholder="https://…" /></Field>
@@ -374,8 +394,25 @@ export default function GTMWorkspaceIntake({
           </div>
         ) : null}
 
-        {currentStep === 'constraints' ? (
-          <div className="space-y-6">
+        {currentStep === 'details' ? (
+          <div className="mt-6 space-y-5">
+            <div className="grid gap-5 md:grid-cols-2">
+              <Field label="Geography"><Input value={intake.geography} onChange={(event) => update('geography', event.target.value)} placeholder="Global, US, Colombia…" /></Field>
+            </div>
+            <DashboardDisclosure title="Check customer and problem" summary="Filled in from your customer profile">
+              <div className="grid gap-5 md:grid-cols-2">
+                <div className="md:col-span-2"><Field label="Best-fit target segment"><Textarea value={intake.targetSegment} onChange={(event) => update('targetSegment', event.target.value)} rows={2} /></Field></div>
+                <Field label="Problem"><Textarea value={intake.problem} onChange={(event) => update('problem', event.target.value)} rows={3} /></Field>
+                <Field label="Solution"><Textarea value={intake.solution} onChange={(event) => update('solution', event.target.value)} rows={3} /></Field>
+                <Field label="Buying trigger"><Input value={intake.buyingTrigger ?? ''} onChange={(event) => update('buyingTrigger', event.target.value)} /></Field>
+                <Field label="Known competitors or alternatives"><Input value={competitors} onChange={(event) => setCompetitors(event.target.value)} /></Field>
+              </div>
+            </DashboardDisclosure>
+          </div>
+        ) : null}
+
+        {currentStep === 'constraints' || currentStep === 'details' ? (
+          <div className={cn('space-y-6', currentStep === 'details' && 'mt-6')}>
             <div className="grid gap-5 md:grid-cols-2">
               <Field label="Founder hours available per week"><Input type="number" min="1" max="80" value={intake.weeklyTimeHours} onChange={(event) => update('weeklyTimeHours', event.target.value === '' ? '' : Number(event.target.value))} placeholder="Enter hours" /></Field>
               <Field label="Monthly GTM budget (USD)"><Input type="number" min="0" value={intake.monthlyBudget} onChange={(event) => update('monthlyBudget', event.target.value === '' ? '' : Number(event.target.value))} placeholder="Enter budget" /></Field>
@@ -386,8 +423,8 @@ export default function GTMWorkspaceIntake({
           </div>
         ) : null}
 
-        {currentStep === 'outcome' ? (
-          <div className="space-y-5">
+        {currentStep === 'outcome' || currentStep === 'details' ? (
+          <div className={cn('space-y-5', currentStep === 'details' && 'mt-6')}>
             <Field label="Current measured traction"><Textarea value={intake.currentTraction} onChange={(event) => update('currentTraction', event.target.value)} rows={4} placeholder="Users, revenue, conversion, retention, channel results, or ‘no measured traction yet’." /></Field>
             <Field label="One outcome for the next six weeks" hint="Make it measurable: qualified calls, activated users, transactions, purchases, or subscribers."><Textarea value={intake.sixWeekOutcome} onChange={(event) => update('sixWeekOutcome', event.target.value)} rows={3} placeholder="e.g. Reach 30 activated teams and retain at least 12 into week two." /></Field>
           </div>

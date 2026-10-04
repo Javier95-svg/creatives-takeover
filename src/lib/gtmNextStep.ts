@@ -56,8 +56,8 @@ export function getGTMNextStep(state: GTMProgressState): GTMNextStep | null {
     return {
       action: 'log_result',
       title: `Log your first ${channel} result`,
-      reason: 'Add the number you reached in Traction Engine. The review uses it to decide whether to keep going, change one thing or stop.',
-      cta: 'Open Traction Engine',
+      reason: 'Add how many people you reached and the result. The review uses it to decide whether to keep going, change one thing or stop.',
+      cta: 'Log this week',
     };
   }
   if (!state.reviewedThisWeek) {
