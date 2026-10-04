@@ -49,7 +49,9 @@ test('metered tools disclose credit costs before action', () => {
   assert.match(waitlistSource, /feature="WAITLIST_GENERATION"/);
   assert.match(gtmSource, /feature="GTM_ANALYSIS"/);
   assert.match(mvpSource, /lastActionQuote\.creditCost/);
-  assert.match(mvpSource, /Buy credits/);
+  // Buying more credits sits on the balance in the builder header, next to the cost line's context.
+  const mvpHeader = readFileSync(new URL('../src/components/mvp-builder/MVPBuilderHeader.tsx', import.meta.url), 'utf8');
+  assert.match(mvpHeader, /title="Buy more credits"/);
   assert.doesNotMatch(mvpSource, /MVP credits/);
   assert.match(pitchSource, /feature="PITCH_DECK_ANALYZER"/);
   assert.match(promptSource, /feature="PROMPT_GENERATION"/);

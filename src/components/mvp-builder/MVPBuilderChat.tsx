@@ -341,7 +341,6 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   onCommitGitHubChanges,
   onRollbackGitHubCommit,
   onRefreshGitHubCommitHistory,
-  onBuyCredits,
   isGenerating,
 }) => {
   const [input, setInput] = useState('');
@@ -1074,6 +1073,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                 variant="ghost"
                 size="pill-sm"
                 onClick={() => setBuilderMode(mode)}
+                title={mode === 'chat' ? 'Talk through ideas. Nothing is built.' : 'Build or change the app.'}
                 className={cn(
                   'px-3.5 text-xs font-semibold transition-all duration-150',
                   builderMode === mode
@@ -1085,25 +1085,17 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
               </Button>
             ))}
           </div>
-          <div className="text-label text-muted-foreground">
-            {builderMode === 'chat' ? 'Text-only planning' : 'Generates and renders'}
-          </div>
-          {builderMode === 'build' && lastActionQuote && (
-            <div className="mt-2 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-label text-muted-foreground">
-              {lastActionQuote.actionType === 'unsupported'
-                ? 'Phase 2 supports frontend app generation, edits, bug fixes, add-page, add-feature, and redesign.'
-                : lastActionQuote.actionType === 'unclear'
-                ? 'Keep typing to preview the action cost.'
-                : `${MVP_BUILDER_ACTION_LABELS[lastActionQuote.actionType]} - ${lastActionQuote.creditCost} credits`}
-            </div>
-          )}
-          <button
-            type="button"
-            onClick={onBuyCredits}
-            className="text-label font-medium text-primary hover:text-primary"
-          >
-            Buy credits
-          </button>
+          {/* One quiet line: the cost of what you are about to send, or what the mode does.
+              Credits and buying more live in the header. */}
+          <p className="min-w-0 truncate text-right text-label text-muted-foreground">
+            {builderMode === 'chat'
+              ? 'Planning only, nothing is built'
+              : !lastActionQuote || lastActionQuote.actionType === 'unclear'
+              ? 'Builds or changes your app'
+              : lastActionQuote.actionType === 'unsupported'
+              ? 'This kind of change is not supported yet'
+              : `${MVP_BUILDER_ACTION_LABELS[lastActionQuote.actionType]}: ${lastActionQuote.creditCost} credits`}
+          </p>
         </div>
       </div>
 

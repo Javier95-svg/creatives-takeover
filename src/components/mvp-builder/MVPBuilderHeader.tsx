@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowLeft, Plus, Pencil, Check, Database, Github,
-  FolderOpen, LayoutDashboard, Save, Clock, ChevronRight, Loader2, AlertCircle,
+  FolderOpen, Save, Clock, ChevronRight, Loader2, AlertCircle,
   Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -221,14 +221,6 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
             <ArrowLeft className="h-4 w-4" />
             <span className="hidden sm:inline">Platform</span>
           </Link>
-          <Link
-            to="/dashboard"
-            aria-label="Open your command center"
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-white transition-colors"
-          >
-            <LayoutDashboard className="h-4 w-4" />
-            <span className="hidden lg:inline">Command center</span>
-          </Link>
           <Button
             variant="ghost"
             size="pill-sm"
@@ -281,9 +273,14 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
           </span>
           {renderStatusChip('GitHub', integrations.github.status, Github)}
           {renderStatusChip('Supabase', integrations.supabase.status, Database)}
-          <span className="hidden sm:inline text-xs text-muted-foreground">
+          <button
+            type="button"
+            onClick={onBuyCredits}
+            title="Buy more credits"
+            className="hidden sm:inline text-xs text-muted-foreground underline-offset-4 hover:text-white hover:underline"
+          >
             {creditsAvailable} credits
-          </span>
+          </button>
           {creditsAvailable === 0 && (
             <Button
               type="button"
