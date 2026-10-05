@@ -1,0 +1,45 @@
+name: SEO live check
+
+# Fetches production as Googlebot once a day (scripts/check-live-seo.mjs). On a
+# problem it opens one GitHub issue, which emails the repo owner, and comments
+# on that same issue on later failing days instead of opening new ones. Close
+# the issue once fixed. Run it by hand from the Actions tab after a big change.
+
+on:
+  schedule:
+    - cron: '0 13 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check what Google receives
+        id: check
+        run: |
+          set +e
+          node scripts/check-live-seo.mjs > report.txt
+          echo "status=$?" >> "$GITHUB_OUTPUT"
+          cat report.txt
+      - name: Open or update the alert issue
+        if: steps.check.outputs.status != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="SEO live check failing: Google may be shown the wrong homepage"
+          body="$(printf 'The daily check of https://creatives-takeover.com found:\n\n%s\n\nRun: %s/%s/actions/runs/%s\n\nScript: scripts/check-live-seo.mjs. Close this issue once fixed.' "$(cat report.txt)" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID")"
+          existing="$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --title "$title" --body "$body"
+          fi
+          exit 1

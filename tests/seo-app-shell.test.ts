@@ -52,3 +52,28 @@ test('the pages sitemap lists the most important pages first; the index does not
   const pages = read('public/sitemap-pages.xml');
   assert.ok(pages.indexOf('<loc>https://creatives-takeover.com/</loc>') < pages.indexOf('<loc>https://creatives-takeover.com/pricing</loc>'));
 });
+
+test('the build guard fails a deploy that brings the homepage fallback back', async () => {
+  const { mkdtempSync, mkdirSync, writeFileSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { verifySeoBuild } = await import('../scripts/verify-seo-build.mjs');
+  const page = (canonical: string, title: string, website = false) =>
+    `<html><head><title>${title}</title><link rel="canonical" href="${canonical}" />${website ? '<script type="application/ld+json">{"@type": "WebSite"}</script>' : ''}</head><body><h1>${title}</h1></body></html>`;
+  const routes = [{ path: '/', title: 'Home' }, { path: '/about', title: 'About' }];
+  const build = (shell: string, rewrite: string) => {
+    const dist = mkdtempSync(join(tmpdir(), 'seo-'));
+    writeFileSync(join(dist, 'index.html'), page('https://creatives-takeover.com/', 'Home', true));
+    mkdirSync(join(dist, 'about'));
+    writeFileSync(join(dist, 'about', 'index.html'), page('https://creatives-takeover.com/about', 'About'));
+    writeFileSync(join(dist, 'app-shell.html'), shell);
+    writeFileSync(join(dist, 'sitemap.xml'), '<sitemapindex><sitemap><lastmod>2026-07-01</lastmod></sitemap></sitemapindex>');
+    return verifySeoBuild({ distDir: dist, routes, vercelConfig: { rewrites: [{ source: '/((?!assets/).*)', destination: rewrite }] } });
+  };
+  assert.deepEqual(build('<html><head><title>Creatives Takeover</title></head><body><div id="root"></div></body></html>', '/app-shell.html'), []);
+  // The old setup: the fallback is the homepage.
+  const broken = build(page('https://creatives-takeover.com/', 'Home', true), '/index.html');
+  assert.equal(broken.length, 4);
+  assert.match(broken.join('\n'), /app-shell\.html has canonical/);
+  assert.match(broken.join('\n'), /rewrite .* -> \/index\.html/);
+});

@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "vite",
     "prebuild": "node scripts/validate-build-env.mjs",
-    "build": "node scripts/generate-llms-txt.mjs && node scripts/generate-seo-assets.mjs && vite build && node scripts/generate-prerendered-pages.mjs",
+    "build": "node scripts/generate-llms-txt.mjs && node scripts/generate-seo-assets.mjs && vite build && node scripts/generate-prerendered-pages.mjs && node scripts/verify-seo-build.mjs",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
