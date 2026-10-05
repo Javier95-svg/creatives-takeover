@@ -34,7 +34,9 @@ const frozenFiles = {
   // Builder live under Resources, and the top-level label is shortened to
   // BizMap. The redundant signed-in Home label was removed in favor of the
   // existing linked logo. The signed-out navbar remains unchanged.
-  '../src/components/Navigation.tsx': '7f8b0af667f2dc9395d52455067bfc2f964245942b25f8b1b6cac151830de557',
+  // Rehashed 2026-10-04: 83728f13 (2026-09-16) only returns null inside the
+  // signed-in workspace frame; visitors get the same navbar as before.
+  '../src/components/Navigation.tsx': 'a11808b9ce2b4ded1f740c543088e477b9cf825a9aae5142292192fdfee251f2',
   // Re-pinned 2026-07-25 (delivery audit, Phase 1): AISpecializationTrends moved
   // from a static import to lazy() + Suspense, matching how HomeFAQ and
   // FounderAnswerLibraryTeaser are already loaded. It is the only homepage
@@ -52,7 +54,10 @@ const frozenFiles = {
   // Rehashed 2026-08-24: the First Customer Sprint pilot announcement moved
   // from the public homepage to the authenticated Command Center, where
   // platform upgrades and founder-accountability work belong.
-  '../src/pages/Index.tsx': 'a30910fd67677bb08b01a31a8d820ffa93f608aa6c87a4e80dc71578ba75d8c8',
+  // Rehashed 2026-10-04 for two approved changes the red CI hid: 36bbf23c
+  // (2026-08-30, sticky mobile CTA removed) and 8a1bdfe9 (2026-09-08, new
+  // social image).
+  '../src/pages/Index.tsx': 'dce7e669f3d2e31f3df70b0ed99141fe8c06213b32d3edb67be54f4d988874ab',
 } as const;
 
 test('the approved unauthenticated landing page remains frozen during core-tool work', () => {

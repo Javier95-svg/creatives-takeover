@@ -157,7 +157,11 @@ function purgeAnalyticsStorage(): void {
   }
 
   try {
-    const keys = Object.keys(window.localStorage);
+    const keys: string[] = [];
+    for (let index = 0; index < local.length; index += 1) {
+      const key = local.key(index);
+      if (key) keys.push(key);
+    }
     for (const key of keys) {
       if (POSTHOG_KEY_PREFIXES.some((prefix) => key.startsWith(prefix))) {
         local.removeItem(key);

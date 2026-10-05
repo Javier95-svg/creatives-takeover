@@ -29,7 +29,7 @@ export function useInboundHandoff(destinationTool: JourneyTool) {
     }
     let cancelled = false;
     setLoading(true);
-    getInboundHandoff(destinationTool)
+    void getInboundHandoff(destinationTool)
       .then((row) => {
         if (cancelled) return;
         setHandoff(row);

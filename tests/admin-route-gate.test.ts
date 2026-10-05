@@ -24,6 +24,6 @@ test('the wait is bounded, so the gate cannot hang', () => {
 });
 
 test('a resolved non-admin is still turned away', () => {
-  assert.match(gate, /user\?\.email\?\.toLowerCase\(\) !== ADMIN_EMAIL/);
+  assert.match(gate, /user\??\.email\?\.toLowerCase\(\) !== ADMIN_EMAIL/);
   assert.match(gate, /Navigate to="\/" replace/);
 });

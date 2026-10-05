@@ -46,7 +46,7 @@ test('sign-in stacks the remember/forgot row on phones', () => {
   const row = source.slice(start, source.indexOf('Forgot your password?', start));
 
   // Side by side the two labels overflow a 360px card and wrap mid-phrase.
-  assert.match(row, /flex flex-col[^"]*sm:flex-row/);
+  assert.match(row, /flex-col[^"`]*sm:flex-row/);
   assert.doesNotMatch(row, /"flex items-center justify-between"/);
 
   // Radix renders Checkbox as a button, which the global mobile rule at

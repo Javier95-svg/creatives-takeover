@@ -18,22 +18,23 @@ test('visitor navbar replaces Free Tools with the desktop brand lockup', () => {
 });
 
 test('visitor navigation keeps the intended public destinations', () => {
-  for (const label of ['Tour', 'Build', 'Collab', 'Content', 'About', 'Pricing']) {
+  for (const label of ['Tour', 'Build', 'Collab', 'Newspaper', 'Podcast', 'About', 'Pricing']) {
     assert.match(source, new RegExp(`label: "${label}"`));
   }
 });
 
-test('visitor links run Tour, Build, Collab, then About and Pricing', () => {
-  // The render splits this array around the Content menu, taking the first three
-  // before it and the rest after, so the array order is the navbar layout.
-  const table = source.slice(source.indexOf('const visitorLinks'), source.indexOf('const contentMenu'));
+test('visitor links run Tour, Build, Collab, Newspaper, Podcast, then About and Pricing', () => {
+  // Newspaper and Podcast replaced the Content menu (2026-09-30), so the array
+  // order is the whole navbar layout.
+  const start = source.indexOf('const visitorLinks');
+  const table = source.slice(start, source.indexOf('];', start));
   const labels = [...table.matchAll(/label: "([^"]+)"/g)].map((match) => match[1]);
-  assert.deepEqual(labels, ['Tour', 'Build', 'Collab', 'About', 'Pricing']);
+  assert.deepEqual(labels, ['Tour', 'Build', 'Collab', 'Newspaper', 'Podcast', 'About', 'Pricing']);
   // Collab replaced Guidance and keeps the same destination.
   assert.match(table, /label: "Collab", href: "\/mentorship", icon: Handshake/);
   assert.doesNotMatch(table, /Guidance|Compass|Connect/);
 });
 
-test('visitor Content menu lists Newspaper before Podcast', () => {
-  assert.match(source, /const contentMenu:[\s\S]*?label: "Newspaper"[\s\S]*?label: "Podcast"/);
+test('visitor navbar has no Content menu any more', () => {
+  assert.doesNotMatch(source, /const contentMenu|label: "Content"/);
 });

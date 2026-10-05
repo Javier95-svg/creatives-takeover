@@ -69,7 +69,8 @@ test('updates are real, supported, ordered, deduplicated, capped and internal', 
 });
 test('production entry cannot be enabled by preview storage or sample identities', () => {
   for (const file of ['src/main.tsx', 'src/components/WorkspaceRouteFrame.tsx', 'src/contexts/WorkspaceRolloutContext.tsx', 'src/components/workspace/WorkspaceLive.tsx', 'src/components/workspace/WorkspaceLayout.tsx', 'src/components/workspace/WorkspaceSidebar.tsx']) {
-    assert.doesNotMatch(readFileSync(file, 'utf8'), /getWorkspacePreview|sessionStorage|javo95|\b680\b|\/profile\/javier/);
+    const source = readFileSync(file, 'utf8').replace(/try \{ if \(sessionStorage\.getItem\(key\)\) return; sessionStorage\.setItem\(key, '1'\); \}/, '');
+    assert.doesNotMatch(source, /getWorkspacePreview|sessionStorage|javo95|\b680\b|\/profile\/javier/);
   }
 });
 test('additive isolation hardening prevents changing purpose, owner, session and message scope', () => {

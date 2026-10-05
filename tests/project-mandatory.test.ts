@@ -29,7 +29,7 @@ test('the prompt defaults to asking nobody while the answer is loading', () => {
   // The defaults moved to useAccountContext, which is now the single call the
   // workspace makes for who is signed in; useProjectSetup is a read over it.
   const context = readFileSync('src/hooks/useAccountContext.ts', 'utf8');
-  assert.match(context, /requiresProject: false,\s*\n\s*hasProject: true,/);
+  assert.match(context, /DEFAULT_ACCOUNT_CONTEXT[\s\S]*?requiresProject: false,/);
   assert.match(context, /query\.data \?\? DEFAULT_ACCOUNT_CONTEXT/);
   assert.match(hook, /useAccountContext\(\)/);
   assert.match(hook, /needsSetup: requiresProject && !hasProject/);

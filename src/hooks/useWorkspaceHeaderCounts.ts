@@ -81,7 +81,7 @@ export function useWorkspaceHeaderCounts(): WorkspaceHeaderCounts {
       queryClient.setQueryData<HeaderCountsRow>(['workspace-header-counts', userId], (current) =>
         current ? { ...current, unreadMessages: Math.max(0, current.unreadMessages - count) } : current);
     }
-    refresh();
+    void refresh();
   }, [queryClient, userId, refresh]);
 
   useEffect(() => {

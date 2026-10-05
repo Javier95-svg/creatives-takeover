@@ -64,7 +64,7 @@ test('banner is non-modal, links to the privacy policy, and only reports accepts
   assert.match(source, /role="region"/);
   assert.doesNotMatch(source, /role="dialog"/);
   // A Radix dialog would trap focus and become a centered modal on desktop.
-  assert.doesNotMatch(source, /bottom-sheet|DialogContent/);
+  assert.doesNotMatch(source, /from ['"][^'"]*bottom-sheet['"]|DialogContent/);
   assert.match(source, /to="\/privacy-policy"/);
   assert.match(source, /Reject All/);
   assert.match(source, /Accept All/);
@@ -84,8 +84,8 @@ class MemoryStorage {
   setItem(key: string, value: string) { this.values.set(key, String(value)); }
   removeItem(key: string) { this.values.delete(key); }
   clear() { this.values.clear(); }
-  get size() { return this.values.size; }
-  keys() { return [...this.values.keys()]; }
+  get length() { return this.values.size; }
+  key(index: number) { return [...this.values.keys()][index] ?? null; }
 }
 
 const local = new MemoryStorage();

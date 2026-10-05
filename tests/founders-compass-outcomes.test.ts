@@ -81,8 +81,8 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
   const fallback = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   const prerender = readFileSync(new URL('../scripts/generate-prerendered-pages.mjs', import.meta.url), 'utf8');
   const paragraphs = [
-    'Startup incubator platform.',
-    "Define what to build, who it's for, and whether they'll pay before you spend months guessing.",
+    'Business Development platform for startup founders, product managers and indie builders.',
+    'Define your ideal customer, prove demand, build your MVP, launch it, and find investment.',
     'No application. No cohort. No equity.',
   ];
   const renderedSources = [hero, fallback, prerender].map((source) =>
