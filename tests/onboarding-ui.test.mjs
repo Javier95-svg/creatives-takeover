@@ -221,13 +221,13 @@ test('without a homepage choice, screen 1 is still asked',async()=>{
   }finally{close(dom);}
 });
 
-test('a guest choosing Mentor is sent to sign up without an invitation lookup',async()=>{
+test('a guest choosing Mentor answers the details before any sign-up prompt',async()=>{
   const reviewed=[];
   const dom=await mount({},{session:guestSession,formProps:{guest:{onPlanReady:()=>{},onReviewedChoice:(segment)=>reviewed.push(segment)}}});try{
     await choose(dom,'Mentor');
-    assert.equal(JSON.stringify(reviewed),JSON.stringify(['mentor']));
+    assert.equal(JSON.stringify(reviewed),JSON.stringify([]));
     assert.equal(dom.window.invitationChecked,undefined);
-    assert.ok(text(dom).includes('What brings you here today?'));
+    assert.ok(text(dom).includes('Tell us about your mentor work'));
   }finally{close(dom);}
 });
 

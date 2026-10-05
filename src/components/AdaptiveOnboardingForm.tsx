@@ -230,12 +230,13 @@ interface AdaptiveOnboardingFormProps {
   /**
    * Quiz for a visitor without an account. Nothing is sent to the server:
    * the final screen hands the answers to onPlanReady (which asks them to sign
-   * up), and choosing a reviewed account type goes to onReviewedChoice, since
-   * those need a sign-in for the invitation check and request.
+   * up). A reviewed account type answers its details too, then goes to
+   * onReviewedChoice: filing the request needs a sign-in, so that is where
+   * they sign up, with their answers saved, rather than before the questions.
    */
   guest?: {
     onPlanReady: (snapshot: { answers: OnboardingAnswersV1; selectedIntent?: string }) => void;
-    onReviewedChoice: (segment: ReviewedUserType) => void;
+    onReviewedChoice: (segment: ReviewedUserType, roleProfile: RoleProfile) => void;
   };
   /** Finish automatically when the session arrives complete (answers carried over from the guest quiz). */
   autoFinish?: boolean;
@@ -644,13 +645,9 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
     if (submittedReview) { onComplete?.('/'); return; }
     if (currentStep === 0 && reviewStage === 'choosing') {
       if (!answers.situation || !answers.founderSegment) { setError('Choose the option that describes your situation.'); return; }
-      // Reviewed accounts need a sign-in for the invitation check and request,
-      // so a guest signs up here and continues signed in.
-      if (guest && isReviewedType(answers.founderSegment)) {
-        guest.onReviewedChoice(answers.founderSegment);
-        return;
-      }
-      if (answers.founderSegment === 'mentor' || answers.founderSegment === 'marketplace') {
+      // The invitation check needs a sign-in, so a guest answers the details
+      // first and the check runs when they confirm the choice after signup.
+      if (!guest && (answers.founderSegment === 'mentor' || answers.founderSegment === 'marketplace')) {
         setIsSaving(true); submittingRef.current = true;
         try {
           const invitations = await getMyAccountInvitationTypes();
@@ -681,6 +678,11 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
       const missing = missingRoleFields(answers.founderSegment, roleDraft);
       if (missing.length > 0) {
         setError(`Fill in ${joinList(missing.map((field) => field.label.replace(/\?$/, '').toLowerCase()))}.`);
+        return;
+      }
+      // Quiz finished: now ask the guest to sign up, so the request is sent.
+      if (guest) {
+        guest.onReviewedChoice(answers.founderSegment, sanitizeRoleProfile(answers.founderSegment, roleDraft));
         return;
       }
       setIsSaving(true);

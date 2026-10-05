@@ -13,6 +13,7 @@ import { sanitizeReturnPath } from '@/lib/authRedirect';
 import { getGuestSession, saveGuestSnapshot } from '@/lib/guestOnboarding';
 import { readToolHandoff } from '@/lib/toolHandoff';
 import type { OnboardingAnswersV1 } from '@/lib/onboardingContext';
+import type { RoleProfile } from '@/lib/roleProfileSchema';
 
 type Gate = { title: string; description: string; returnPath: string };
 
@@ -20,7 +21,8 @@ type Gate = { title: string; description: string; returnPath: string };
  * The onboarding quiz for signed-out visitors from the homepage box.
  *
  * They answer first and create an account last: the final screen shows their
- * plan, and "Create my free account" opens the signup dialog. Nothing is sent
+ * plan (or, for mentors, providers and investors, their filled-in request),
+ * and only then the signup dialog opens. Nothing is sent
  * to our servers before that; /onboarding picks the answers up after signup.
  */
 export default function StartOnboarding() {
@@ -76,13 +78,15 @@ export default function StartOnboarding() {
     });
   };
 
-  const handleReviewedChoice = (segment: ReviewedUserType) => {
-    // Only the choice is kept; their details are asked once they are signed in.
-    saveGuestSnapshot({ answers: { situation: sessionSituation(segment), founderSegment: segment } as Partial<OnboardingAnswersV1> });
+  const handleReviewedChoice = (segment: ReviewedUserType, roleProfile: RoleProfile) => {
+    // Their details are kept, so after signup they confirm and send them.
+    saveGuestSnapshot({ answers: { situation: sessionSituation(segment), founderSegment: segment, roleProfile } as Partial<OnboardingAnswersV1> });
     trackOnboardingGuestGateShown({ segment, reason: 'reviewed_type' });
     setGate({
-      title: 'Create your account to request access',
-      description: `${USER_TYPE_LABEL[segment]} accounts are reviewed before they open. Create a free account, then tell us about your work.`,
+      title: segment === 'investor' ? 'Your profile is ready' : 'Your request is ready',
+      description: segment === 'investor'
+        ? 'Create a free account to save it and start seeing founders matched to you.'
+        : `Create a free account to send it. ${USER_TYPE_LABEL[segment]} accounts are reviewed before they open.`,
       returnPath: resumePath(false),
     });
   };
