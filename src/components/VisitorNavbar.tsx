@@ -108,7 +108,7 @@ const LegacyVisitorNavbar = () => {
       className="fixed left-0 right-0 z-50 transition-all duration-300"
       aria-label="Visitor navigation"
     >
-      <div className="mx-auto max-w-[1600px] px-3 pt-3 sm:px-5 lg:px-8">
+      <div className="mx-auto max-w-[1344px] px-3 pt-3 sm:px-5 lg:px-8">
         <div
           className={cn(
             "rounded-3xl border backdrop-blur-xl transition-all duration-300",
