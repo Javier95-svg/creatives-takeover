@@ -18,18 +18,18 @@ test('visitor navbar replaces Free Tools with the desktop brand lockup', () => {
 });
 
 test('visitor navigation keeps the intended public destinations', () => {
-  for (const label of ['Tour', 'Build', 'Collab', 'Newspaper', 'Podcast', 'About', 'Pricing']) {
+  for (const label of ['Tour', 'Build', 'Collab', 'News', 'Podcast', 'About', 'Pricing']) {
     assert.match(source, new RegExp(`label: "${label}"`));
   }
 });
 
-test('visitor links run Tour, Build, Collab, Newspaper, Podcast, then About and Pricing', () => {
-  // Newspaper and Podcast replaced the Content menu (2026-09-30), so the array
+test('visitor links run Tour, Build, Collab, News, Podcast, then About and Pricing', () => {
+  // News (the newspaper) and Podcast replaced the Content menu (2026-09-30), so the array
   // order is the whole navbar layout.
   const start = source.indexOf('const visitorLinks');
   const table = source.slice(start, source.indexOf('];', start));
   const labels = [...table.matchAll(/label: "([^"]+)"/g)].map((match) => match[1]);
-  assert.deepEqual(labels, ['Tour', 'Build', 'Collab', 'Newspaper', 'Podcast', 'About', 'Pricing']);
+  assert.deepEqual(labels, ['Tour', 'Build', 'Collab', 'News', 'Podcast', 'About', 'Pricing']);
   // Collab replaced Guidance and keeps the same destination.
   assert.match(table, /label: "Collab", href: "\/mentorship", icon: Handshake/);
   assert.doesNotMatch(table, /Guidance|Compass|Connect/);

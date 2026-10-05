@@ -30,7 +30,7 @@ const visitorLinks: VisitorLink[] = [
   { label: "Tour", href: "/demo", icon: PlayCircle, exact: true },
   { label: "Build", href: "/build", icon: Wrench },
   { label: "Collab", href: "/mentorship", icon: Handshake },
-  { label: "Newspaper", href: "/newspaper", icon: Newspaper },
+  { label: "News", href: "/newspaper", icon: Newspaper },
   { label: "Podcast", href: "/podcast", icon: Mic },
   { label: "About", href: "/about", icon: Info },
   { label: "Pricing", href: "/pricing", icon: DollarSign },
