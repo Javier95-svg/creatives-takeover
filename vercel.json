@@ -41,8 +41,8 @@
     { "source": "/marketplace", "destination": "/api/public-entity?type=marketplace" },
     { "source": "/marketplace/", "destination": "/api/public-entity?type=marketplace" },
     { "source": "/marketplace/:slug", "destination": "/api/public-entity?type=service&slug=:slug" },
-    { "source": "/mentorship/progress", "destination": "/index.html" },
-    { "source": "/mentorship/my-bookings", "destination": "/index.html" },
+    { "source": "/mentorship/progress", "destination": "/app-shell.html" },
+    { "source": "/mentorship/my-bookings", "destination": "/app-shell.html" },
     { "source": "/mentorship/:slug", "destination": "/api/public-entity?type=mentor&slug=:slug" },
     { "source": "/co-founder/listing/:slug", "destination": "/api/public-entity?type=cofounder&slug=:slug" },
     { "source": "/profile/:slug", "destination": "/api/public-entity?type=profile&slug=:slug" },
@@ -55,7 +55,7 @@
     { "source": "/sitemap-articles.xml", "destination": "/api/sitemap-articles" },
     { "source": "/sitemap-entities.xml", "destination": "/api/sitemap-entities" },
     { "source": "/sitemap-published.xml", "destination": "/api/sitemap-published" },
-    { "source": "/((?!assets/).*)", "destination": "/index.html" }
+    { "source": "/((?!assets/).*)", "destination": "/app-shell.html" }
   ],
   "headers": [
     {

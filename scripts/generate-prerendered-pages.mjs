@@ -520,6 +520,26 @@ function renderRoute(template, routeConfig, hubChildren = {}) {
   return html;
 }
 
+// The SPA fallback for every URL without its own shell: app screens, old
+// links, typos. It used to be dist/index.html, which after prerendering IS the
+// homepage, so each of those URLs answered 200 with the homepage's title, h1,
+// WebSite markup and canonical="/". Google saw dozens of homepage duplicates
+// with different rendered content, stopped trusting the homepage as the brand
+// result and showed /about instead. Patching routes one by one (VC profiles,
+// /build, /podcast) kept missing new ones, so the fallback itself now claims to
+// be no page in particular: the route's own <SEO> sets title and canonical
+// after render, and NotFound adds noindex.
+export function renderAppShell(template) {
+  let html = template;
+  html = replaceTag(html, /<title>[\s\S]*?<\/title>/i, `<title>${SITE_NAME}</title>`);
+  html = html.replace(/\s*<link\s+rel="canonical"[^>]*>/gi, "");
+  html = html.replace(/\s*<meta\s+name="(description|twitter:title|twitter:description)"[^>]*>/gi, "");
+  html = html.replace(/\s*<meta\s+property="og:(url|title|description)"[^>]*>/gi, "");
+  html = html.replace(/\s*<script type="application\/ld\+json">[\s\S]*?<\/script>/gi, "");
+  html = replaceTag(html, /<main id="seo-fallback">[\s\S]*?<\/main>/i, '<main id="seo-fallback"></main>');
+  return html;
+}
+
 async function writeRoute(template, routeConfig, hubChildren) {
   const html = renderRoute(template, routeConfig, hubChildren);
   const outputFile = path.join(DIST_DIR, toOutputPath(routeConfig));
@@ -550,6 +570,8 @@ async function main() {
   }
 
   await fs.mkdir(DIST_DIR, { recursive: true });
+  // Written from the untouched template, before the homepage overwrites index.html.
+  await fs.writeFile(path.join(DIST_DIR, "app-shell.html"), renderAppShell(template), "utf8");
   await Promise.all(
     INDEXABLE_ROUTES.map((routeConfig) => writeRoute(template, routeConfig, hubChildren)),
   );
@@ -559,7 +581,7 @@ async function main() {
   );
 }
 
-main().catch((error) => {
+if (process.argv[1] && import.meta.url.endsWith(path.basename(process.argv[1]))) main().catch((error) => {
   console.error("Failed to generate prerendered public pages.", error);
   process.exitCode = 1;
 });

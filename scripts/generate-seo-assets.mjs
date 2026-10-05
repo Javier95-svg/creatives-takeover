@@ -11,12 +11,23 @@ const ROBOTS_PATH = path.join(PUBLIC_DIR, "robots.txt");
 // as a built sitemap. Newspaper articles change between deploys, so they live in
 // a runtime sitemap (/sitemap-articles.xml -> /api/sitemap-articles) that always
 // reflects the latest published stories without waiting for a rebuild.
+const routeLastmod = (route) =>
+  route.lastmod || (route.updatedLabel ? updatedLabelToIso(route.updatedLabel) : null);
+
+// Most important first (home, pricing, hubs, then guides), keeping the config
+// order within a priority so related pages stay together.
+export function orderedRoutes(routes = INDEXABLE_ROUTES) {
+  return routes
+    .map((route, index) => ({ route, index }))
+    .sort((a, b) => b.route.priority - a.route.priority || a.index - b.index)
+    .map(({ route }) => route);
+}
+
 function generatePagesSitemapXml() {
   // Only emit <lastmod> when the route declares a real update date. Stamping the
   // build date on every URL each deploy teaches Google to distrust lastmod sitewide.
-  const urls = INDEXABLE_ROUTES.map((route) => {
-    const lastmod =
-      route.lastmod || (route.updatedLabel ? updatedLabelToIso(route.updatedLabel) : null);
+  const urls = orderedRoutes().map((route) => {
+    const lastmod = routeLastmod(route);
     return `  <url>
     <loc>${BASE_URL}${route.path}</loc>
 ${lastmod ? `    <lastmod>${lastmod}</lastmod>\n` : ""}    <changefreq>${route.changefreq}</changefreq>
@@ -31,26 +42,23 @@ ${urls}
 `;
 }
 
-function generateSitemapIndexXml() {
-  const now = new Date().toISOString();
+// The index used to stamp the build time on all four children, so every deploy
+// (several a day) told Google the whole site had changed. The pages sitemap now
+// carries its newest real content date; the live sitemaps carry none, because
+// their contents change independently of a deploy and they set their own.
+export function generateSitemapIndexXml(routes = INDEXABLE_ROUTES) {
+  const pagesLastmod = routes.map(routeLastmod).filter(Boolean).sort().at(-1);
+  const entry = (name, lastmod) => `  <sitemap>
+    <loc>${BASE_URL}/${name}</loc>
+${lastmod ? `    <lastmod>${lastmod}</lastmod>\n` : ""}  </sitemap>`;
   return `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <sitemap>
-    <loc>${BASE_URL}/sitemap-pages.xml</loc>
-    <lastmod>${now}</lastmod>
-  </sitemap>
-  <sitemap>
-    <loc>${BASE_URL}/sitemap-articles.xml</loc>
-    <lastmod>${now}</lastmod>
-  </sitemap>
-  <sitemap>
-    <loc>${BASE_URL}/sitemap-entities.xml</loc>
-    <lastmod>${now}</lastmod>
-  </sitemap>
-  <sitemap>
-    <loc>${BASE_URL}/sitemap-published.xml</loc>
-    <lastmod>${now}</lastmod>
-  </sitemap>
+${[
+  entry("sitemap-pages.xml", pagesLastmod),
+  entry("sitemap-articles.xml"),
+  entry("sitemap-entities.xml"),
+  entry("sitemap-published.xml"),
+].join("\n")}
 </sitemapindex>
 `;
 }
@@ -93,7 +101,7 @@ async function main() {
   console.log(`Generated SEO assets: sitemap index + ${INDEXABLE_ROUTES.length} page routes (articles served live at /sitemap-articles.xml).`);
 }
 
-main().catch((error) => {
+if (process.argv[1] && import.meta.url.endsWith(path.basename(process.argv[1]))) main().catch((error) => {
   console.error("Failed to generate SEO assets.", error);
   process.exitCode = 1;
 });

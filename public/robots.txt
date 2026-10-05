@@ -7,6 +7,7 @@ Disallow: /signup
 Disallow: /forgot-password
 Disallow: /reset-password
 Disallow: /onboarding
+Disallow: /start
 Disallow: /dashboard
 Disallow: /account
 Disallow: /messages
@@ -38,6 +39,7 @@ Disallow: /signup
 Disallow: /forgot-password
 Disallow: /reset-password
 Disallow: /onboarding
+Disallow: /start
 Disallow: /dashboard
 Disallow: /account
 Disallow: /messages
@@ -69,6 +71,7 @@ Disallow: /signup
 Disallow: /forgot-password
 Disallow: /reset-password
 Disallow: /onboarding
+Disallow: /start
 Disallow: /dashboard
 Disallow: /account
 Disallow: /messages
@@ -100,6 +103,7 @@ Disallow: /signup
 Disallow: /forgot-password
 Disallow: /reset-password
 Disallow: /onboarding
+Disallow: /start
 Disallow: /dashboard
 Disallow: /account
 Disallow: /messages
@@ -131,6 +135,7 @@ Disallow: /signup
 Disallow: /forgot-password
 Disallow: /reset-password
 Disallow: /onboarding
+Disallow: /start
 Disallow: /dashboard
 Disallow: /account
 Disallow: /messages
@@ -162,6 +167,7 @@ Disallow: /signup
 Disallow: /forgot-password
 Disallow: /reset-password
 Disallow: /onboarding
+Disallow: /start
 Disallow: /dashboard
 Disallow: /account
 Disallow: /messages
@@ -193,6 +199,7 @@ Disallow: /signup
 Disallow: /forgot-password
 Disallow: /reset-password
 Disallow: /onboarding
+Disallow: /start
 Disallow: /dashboard
 Disallow: /account
 Disallow: /messages
@@ -224,6 +231,7 @@ Disallow: /signup
 Disallow: /forgot-password
 Disallow: /reset-password
 Disallow: /onboarding
+Disallow: /start
 Disallow: /dashboard
 Disallow: /account
 Disallow: /messages
