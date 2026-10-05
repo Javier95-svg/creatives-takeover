@@ -8,7 +8,7 @@ import SoftGateModal from '@/components/auth/SoftGateModal';
 import OnboardingWallpaper from '@/components/wallpapers/OnboardingWallpaper';
 import { useAuth } from '@/contexts/AuthContext';
 import { USER_TYPE_LABEL, type ReviewedUserType } from '@/lib/accountTypes';
-import { trackOnboardingGuestGateShown, trackOnboardingStarted } from '@/lib/analytics';
+import { recordGuestSession, trackOnboardingGuestGateShown, trackOnboardingStarted } from '@/lib/analytics';
 import { sanitizeReturnPath } from '@/lib/authRedirect';
 import { getGuestSession, saveGuestSnapshot } from '@/lib/guestOnboarding';
 import { readToolHandoff } from '@/lib/toolHandoff';
@@ -49,8 +49,17 @@ export default function StartOnboarding() {
       flow_version: session.flow_version,
       rollout_variant: session.rollout_variant,
       device: window.innerWidth < 768 ? 'mobile' : 'desktop',
+      // The hero's own event is lost when the visitor accepts cookies only
+      // after submitting, so the entry is recorded again here.
+      entry: toolPath ? (isProduct ? 'hero_product' : 'hero_idea') : 'other',
     });
-  }, [isAuthenticated, loading, session]);
+  }, [isAuthenticated, loading, session, toolPath, isProduct]);
+
+  // Guests are recorded here only, to see which screen they leave the quiz on.
+  useEffect(() => {
+    if (loading || isAuthenticated) return;
+    return recordGuestSession();
+  }, [isAuthenticated, loading]);
 
   if (loading) {
     return (

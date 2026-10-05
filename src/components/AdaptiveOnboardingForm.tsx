@@ -67,7 +67,7 @@ import { clearToolHandoff, readToolHandoff } from '@/lib/toolHandoff';
 import { clearGuestOnboarding } from '@/lib/guestOnboarding';
 import { MAX_SECTORS } from '@/lib/onboardingAnswerRules';
 import { cn } from '@/lib/utils';
-import { trackOnboardingAccountTypeChanged, trackOnboardingPrefilled, trackOnboardingStepCompleted } from '@/lib/analytics';
+import { trackOnboardingAccountTypeChanged, trackOnboardingPrefilled, trackOnboardingStepCompleted, trackOnboardingStepViewed } from '@/lib/analytics';
 
 // Brief, business and evidence, goal and blocker, time and runway, review. The
 // situation question is shown before these, so founders see six screens.
@@ -475,6 +475,21 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
   useEffect(() => {
     abandonRef.current = { currentStep, userId: user?.id, visibleStep, visibleTotal, userType: answers.founderSegment };
   }, [currentStep, user?.id, visibleStep, visibleTotal, answers.founderSegment]);
+
+  // Every screen shown, so a guest's last one marks where they left.
+  const viewedStepName = stepNameFor(visibleStep, answers.founderSegment);
+  useEffect(() => {
+    trackOnboardingStepViewed({
+      step: visibleStep,
+      step_name: viewedStepName,
+      total_steps: visibleTotal,
+      segment: answers.founderSegment || 'unknown',
+      is_guest: Boolean(guest),
+      onboarding_session_id: session.id,
+    });
+    // Fires on a screen change only, not on every answer.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visibleStep, viewedStepName]);
 
   useEffect(() => {
     const startedAt = startedAtRef.current;

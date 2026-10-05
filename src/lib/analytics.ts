@@ -466,6 +466,21 @@ export const initPosthog = () => {
 
 export const getPosthogClient = () => posthogClient;
 
+/**
+ * Records this visit even though the visitor is signed out. Replay normally
+ * starts only after identify, because loading the recorder on the landing
+ * pages blocked the mobile main thread; a page that has to be watched (the
+ * guest quiz at /start) opts in here. Still consent-gated: without consent
+ * PostHog never loads, so this never fires. Starts when the browser is idle.
+ */
+export const recordGuestSession = () => {
+  if (isPosthogReady(posthogClient)) {
+    scheduleAuthenticatedSessionRecording(posthogClient);
+    return () => {};
+  }
+  return onPosthogReady((client) => scheduleAuthenticatedSessionRecording(client));
+};
+
 export const onPosthogReady = (listener: (client: PostHogClient) => void) => {
   if (isPosthogReady(posthogClient)) {
     listener(posthogClient);
@@ -781,10 +796,26 @@ export const trackOnboardingStarted = (properties: {
   rollout_variant?: string;
   plan?: string | null;
   device?: string | null;
+  /** How a guest reached /start: the hero's Idea or Product box, or anything else. */
+  entry?: 'hero_idea' | 'hero_product' | 'other';
 }) => captureAuthenticatedEvent('onboarding_started', properties.userId, properties);
 
 export const trackOnboardingCompleted = (properties: OnboardingCompletedProps) =>
   captureEvent('onboarding_completed', properties);
+
+/**
+ * One event per quiz screen shown, signed in or not. The last one a session
+ * fired is the screen it left on; onboarding_abandoned needs a user id, so
+ * guests at /start were invisible before this.
+ */
+export const trackOnboardingStepViewed = (properties: {
+  step: number;
+  step_name: string;
+  total_steps: number;
+  segment: string;
+  is_guest: boolean;
+  onboarding_session_id: string;
+} & AnalyticsProperties) => captureEvent('onboarding_step_viewed', properties);
 
 export const trackOnboardingStepCompleted = (properties: {
   step: number;

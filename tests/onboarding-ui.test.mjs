@@ -18,7 +18,7 @@ const mocks = {
   '@/lib/publishProofRollout': `export const PUBLISH_PROOF_FIRST_FLAG='test';export const isPublishProofFirstEnabled=()=>false;`,
   '@tanstack/react-query': `export const useQueryClient=()=>({invalidateQueries:async()=>{}});`,
   '@/integrations/supabase/client': `export const supabase={from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:{user_preferences:{}}})})})})};`,
-  '@/lib/analytics': `export const trackOnboardingStepCompleted=()=>{};export const trackOnboardingPrefilled=(value)=>window.events.push({name:'onboarding_prefilled',data:value});export const trackOnboardingAccountTypeChanged=(value)=>window.events.push({name:'onboarding_account_type_changed',data:value});`,
+  '@/lib/analytics': `export const trackOnboardingStepCompleted=()=>{};export const trackOnboardingStepViewed=(value)=>window.events.push({name:'onboarding_step_viewed',data:value});export const trackOnboardingPrefilled=(value)=>window.events.push({name:'onboarding_prefilled',data:value});export const trackOnboardingAccountTypeChanged=(value)=>window.events.push({name:'onboarding_account_type_changed',data:value});`,
   '@/lib/retentionSystem': `export const trackRetentionEvent=async(name,data)=>window.events.push({name,data}); export const trackActivationJourneyEvent=async()=>{}; export const ensureActivationGateVariant=async()=> 'control'; export const startActivationJourney=async()=>{};`,
   '@/lib/onboardingMentorRecommendations': `export const refreshOnboardingMentorRecommendations=async()=>{};`,
   '@/lib/accountApplications': `export const getMyAccountInvitationTypes=async()=>{window.invitationChecked=true;return window.invitationTypes;}; export const submitAccountApplication=async(value)=>{window.applications.push(value);return {approvalStatus:value.situation==='explore_investments'?'approved':'pending'};};`,
@@ -228,6 +228,8 @@ test('a guest choosing Mentor answers the details before any sign-up prompt',asy
     assert.equal(JSON.stringify(reviewed),JSON.stringify([]));
     assert.equal(dom.window.invitationChecked,undefined);
     assert.ok(text(dom).includes('Tell us about your mentor work'));
+    const viewed=dom.window.events.filter((event)=>event.name==='onboarding_step_viewed').map((event)=>[event.data.step,event.data.step_name,event.data.is_guest]);
+    assert.equal(JSON.stringify(viewed),JSON.stringify([[1,'About you',true],[2,'Your details',true]]));
   }finally{close(dom);}
 });
 

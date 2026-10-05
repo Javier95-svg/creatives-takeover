@@ -269,6 +269,13 @@
       "sourceFile": "src/lib/analytics.ts",
       "requiredProperties": ["step", "step_name", "total_steps", "onboarding_session_id", "flow_version", "rollout_variant"]
     },
+    "onboarding_step_viewed": {
+      "stage": "onboarding",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["step", "step_name", "total_steps", "segment", "is_guest", "onboarding_session_id"]
+    },
     "onboarding_completed": {
       "stage": "onboarding",
       "owner": "product",
