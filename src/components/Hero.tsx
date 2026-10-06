@@ -81,23 +81,25 @@ const DEFAULT_NAV: HeroNavItem[] = [
   { label: "Focus Funnel" },
 ];
 
-// The current rules of the game for new founders, each from a named source.
-// Verified 2026-10-06. When refreshing, keep every figure tied to its source:
-// - Carta, Solo Founders Report 2025: solo share of new startups 23.7% (2019) -> 36.3% (H1 2025)
-// - US Census Bureau, Business Formation Statistics: 5,671,836 applications in 2025, a record
+// The current rules of the game for new founders worldwide, each from a named
+// source. Verified 2026-10-06. When refreshing, keep every figure global and
+// tied to its source:
+// - Stripe Atlas, 2025 year in review: founders from 169 countries (a record);
+//   20% charged their first customer within 30 days (an all-time high)
 // - Crunchbase News, end of 2025: AI took close to 50% of global venture funding ($202.3B)
 // - Garry Tan (YC), W25 batch: a quarter of startups had ~95% AI-written code
 // - Stripe, 2025: top 100 AI companies on Stripe hit $1M ARR in a median 11.5 months
 // - CB Insights, 2024 post-mortems of 431 VC-backed shutdowns: 43% cite poor product-market fit
-// - MBO Partners, State of Independence 2025: 72.9M Americans work independently
+// - World Bank, Working Without Borders (2023): 154M-435M online gig workers,
+//   4.4%-12% of the global labor force
 const DEFAULT_STATS: HeroStat[] = [
-  { value: "36", unit: "%", label: "Of new US startups have a solo founder, up from 24% in 2019", source: "Carta, 2025" },
-  { value: "5.67M", label: "US business applications in 2025, an all-time record", source: "US Census Bureau" },
+  { value: "169", label: "Countries new founders incorporated from in 2025, a record", source: "Stripe Atlas, 2025" },
+  { value: "20", unit: "%", label: "Of new startups charge their first customer within 30 days", source: "Stripe Atlas, 2025" },
   { value: "~50", unit: "%", label: "Of global venture funding went to AI startups in 2025", source: "Crunchbase, 2025" },
   { value: "1 in 4", label: "YC W25 startups shipped with ~95% AI-written code", source: "Y Combinator, 2025" },
   { value: "11.5", unit: "mo", label: "Median time for top AI startups to reach $1M ARR", source: "Stripe, 2025" },
   { value: "43", unit: "%", label: "Of failed startups cite poor product-market fit", source: "CB Insights, 2024" },
-  { value: "72.9M", label: "Americans now work independently", source: "MBO Partners, 2025" },
+  { value: "435M", label: "People may already earn from online gig work, up to 12% of the global workforce", source: "World Bank, 2023" },
 ];
 
 const DEFAULT_LEDE = (

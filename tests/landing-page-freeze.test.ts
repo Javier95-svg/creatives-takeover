@@ -21,9 +21,9 @@ const frozenFiles = {
   // asked for. Copy, layout and the signed-in route are unchanged.
   // Rehashed 2026-10-06 for two requested hero enhancements: the dashboard
   // preview links to /signup with hover motion, and the scrolling cards show
-  // seven sourced figures on modern entrepreneurship. Headline, lede and
-  // layout are unchanged.
-  '../src/components/Hero.tsx': '199d0cddaa9addd25bb0e541f78e48d94780b298ce9056ac9c8883df96eab410',
+  // seven sourced figures on modern entrepreneurship (global, not US-only,
+  // after review). Headline, lede and layout are unchanged.
+  '../src/components/Hero.tsx': 'd773a1855fb40ffe382a5303556d21599699f154d4b695d50bfe2499ca229da4',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.

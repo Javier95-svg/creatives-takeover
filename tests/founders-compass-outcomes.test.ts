@@ -136,8 +136,10 @@ test('hero scrolling cards show sourced figures on modern entrepreneurship', () 
   assert.equal(entries.length, 7);
   // Every figure names who published it, so none reads as invented.
   entries.forEach((entry) => assert.match(entry, /source: "[^"]+"/));
-  assert.match(stats, /value: "5\.67M", label: "US business applications in 2025, an all-time record", source: "US Census Bureau"/);
-  assert.match(stats, /value: "36", unit: "%", label: "Of new US startups have a solo founder, up from 24% in 2019", source: "Carta, 2025"/);
+  // Global, not US-only: the figures speak to founders anywhere.
+  assert.doesNotMatch(stats, /\bUS\b|Americans/);
+  assert.match(stats, /value: "169", label: "Countries new founders incorporated from in 2025, a record", source: "Stripe Atlas, 2025"/);
+  assert.match(stats, /value: "435M", [^\n]*source: "World Bank, 2023"/);
 });
 
 test('the hero dashboard preview links visitors to sign-up', () => {
