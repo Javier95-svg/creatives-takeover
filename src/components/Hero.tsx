@@ -7,6 +7,8 @@ import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { supabase } from "@/integrations/supabase/client";
 import heroCompass from "@/assets/hero-compass.svg";
+import { WHO_IS_THIS_FOR_PROFILES } from "@/components/whoIsThisForProfiles";
+import { PLAN_PRICING } from "@/config/pricing";
 import HeroIdeaInput from "@/components/hero/HeroIdeaInput";
 import "./hero-cinematic-spotlight.css";
 import { trackActivationEntry, trackActivationFunnelEvent } from "@/lib/activationEntry";
@@ -79,11 +81,16 @@ const DEFAULT_NAV: HeroNavItem[] = [
   { label: "Focus Funnel" },
 ];
 
+// Facts about the product, read from the same config the site renders, so
+// they cannot drift. These replaced unsourced AI-market figures.
+const GUIDED_TOOL_COUNT = new Set(
+  WHO_IS_THIS_FOR_PROFILES.flatMap((profile) => profile.tools.map((tool) => tool.key)),
+).size;
+
 const DEFAULT_STATS: HeroStat[] = [
-  { value: "5", unit: "×", label: "Faster idea → MVP than pre-AI builders" },
-  { value: "$680B", unit: "+", label: "Into AI-native startups since 2024" },
-  { value: "1 in 4", label: "New 2026 launches are solo founders" },
-  { value: "~18", unit: "mo", label: "Before incumbents close the AI-native gap" },
+  { value: "7", label: "Stages from first idea to first raise" },
+  { value: String(GUIDED_TOOL_COUNT), label: "Guided tools, from finding your customer to growing traction" },
+  { value: "$0", label: `To start. Paid plans from $${PLAN_PRICING.starter.monthly} a month` },
 ];
 
 const DEFAULT_LEDE = (
@@ -363,23 +370,17 @@ const Hero = ({
           </div>
         </div> : null}
 
-        <div className="ct-hero__stats" aria-label="Founder stats for 2026">
-          <div className="ct-hero__stats-track">
-            {[...stats, ...stats].map((stat, index) => (
-              <div
-                key={`${stat.value}-${stat.label}-${index}`}
-                className="ct-hero__strip-stat"
-                aria-hidden={index >= stats.length || undefined}
-              >
-                <div className="v">
-                  {stat.value}
-                  {stat.unit ? <span className="small">{stat.unit}</span> : null}
-                </div>
-                <div className="l">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <ul className="ct-hero__stats" aria-label="Creatives Takeover at a glance">
+          {stats.map((stat) => (
+            <li key={stat.label} className="ct-hero__strip-stat">
+              <span className="v">
+                {stat.value}
+                {stat.unit ? <span className="small">{stat.unit}</span> : null}
+              </span>
+              <span className="l">{stat.label}</span>
+            </li>
+          ))}
+        </ul>
       </div>
       {/* Mounted only once the visitor has actually asked for it, so the chunk
           is never fetched on a page view that ignores the link. */}
