@@ -29,7 +29,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { AngelCard } from "@/components/angels/AngelCard";
-import { Sparkles, Loader2, Edit, Search, ChevronDown, X, ArrowLeft, Lock, Crown } from "lucide-react";
+import { Sparkles, Loader2, Edit, Search, ChevronDown, X, Lock, Crown } from "lucide-react";
 import { AngelInvestor } from "@/types/angel";
 import { useAngels } from "@/hooks/useAngels";
 import { useAuth } from "@/contexts/AuthContext";
@@ -369,15 +369,6 @@ const FindYourAngel = () => {
           <CommunityAngelsWallpaper />
 	        <Navigation />
 	        <div className="pt-header-offset relative z-10">
-            <div className="container mx-auto px-4 sm:px-6 pt-8">
-	            <Button variant="ghost" size="sm" asChild>
-	              <Link to="/mentorship" className="flex items-center gap-2">
-	                <ArrowLeft className="h-4 w-4" />
-	                Back to Community
-	              </Link>
-	            </Button>
-	          </div>
-
 	          {/* Hero Section */}
 	          <section className="relative py-16 lg:py-28">
             <div className="container mx-auto px-4 sm:px-6">
