@@ -129,12 +129,21 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
   assert.match(prerender, /Pro[\s\S]*\$65[\s\S]*Accelerate and Fundraise/);
 });
 
-test('hero scrolling cards retain the restored market data', () => {
+test('hero scrolling cards show sourced figures on modern entrepreneurship', () => {
   const hero = readFileSync(new URL('../src/components/Hero.tsx', import.meta.url), 'utf8');
-  assert.match(hero, /value: "5", unit: "×", label: "Faster idea → MVP than pre-AI builders"/);
-  assert.match(hero, /value: "\$680B", unit: "\+", label: "Into AI-native startups since 2024"/);
-  assert.match(hero, /value: "1 in 4", label: "New 2026 launches are solo founders"/);
-  assert.match(hero, /value: "~18", unit: "mo", label: "Before incumbents close the AI-native gap"/);
+  const stats = hero.slice(hero.indexOf('const DEFAULT_STATS'), hero.indexOf('];', hero.indexOf('const DEFAULT_STATS')));
+  const entries = stats.match(/\{ value: [^\n]+\}/g) ?? [];
+  assert.equal(entries.length, 7);
+  // Every figure names who published it, so none reads as invented.
+  entries.forEach((entry) => assert.match(entry, /source: "[^"]+"/));
+  assert.match(stats, /value: "5\.67M", label: "US business applications in 2025, an all-time record", source: "US Census Bureau"/);
+  assert.match(stats, /value: "36", unit: "%", label: "Of new US startups have a solo founder, up from 24% in 2019", source: "Carta, 2025"/);
+});
+
+test('the hero dashboard preview links visitors to sign-up', () => {
+  const hero = readFileSync(new URL('../src/components/Hero.tsx', import.meta.url), 'utf8');
+  assert.match(hero, /<Link\s+to="\/signup"\s+className="ct-hero__spotlight"/);
+  assert.match(hero, /setAttribution\("hero_dashboard_preview"/);
 });
 
 test('Pro expert support has a protected queue while the restored mentorship hero remains intact', () => {

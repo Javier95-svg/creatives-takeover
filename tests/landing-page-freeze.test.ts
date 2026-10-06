@@ -19,7 +19,11 @@ const frozenFiles = {
   // submissions open the guest onboarding quiz at /start (Idea -> Builder,
   // Product -> Founder); account creation is the last step, then the tool they
   // asked for. Copy, layout and the signed-in route are unchanged.
-  '../src/components/Hero.tsx': '0fc0d927c9ff89f7b4a5fdc7674c157db0e958ac33a89c6f6b06d398610acf47',
+  // Rehashed 2026-10-06 for two requested hero enhancements: the dashboard
+  // preview links to /signup with hover motion, and the scrolling cards show
+  // seven sourced figures on modern entrepreneurship. Headline, lede and
+  // layout are unchanged.
+  '../src/components/Hero.tsx': '199d0cddaa9addd25bb0e541f78e48d94780b298ce9056ac9c8883df96eab410',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.

@@ -1,4 +1,4 @@
-import { ReactNode, Suspense, lazy, useEffect, useRef, useState } from "react";
+import { CSSProperties, ReactNode, Suspense, lazy, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, LayoutDashboard, User } from "lucide-react";
 
@@ -48,6 +48,8 @@ type HeroStat = {
   value: string;
   unit?: string;
   label: string;
+  /** Who published the figure, and when. Shown under the label. */
+  source?: string;
 };
 
 type HeroProps = {
@@ -79,11 +81,23 @@ const DEFAULT_NAV: HeroNavItem[] = [
   { label: "Focus Funnel" },
 ];
 
+// The current rules of the game for new founders, each from a named source.
+// Verified 2026-10-06. When refreshing, keep every figure tied to its source:
+// - Carta, Solo Founders Report 2025: solo share of new startups 23.7% (2019) -> 36.3% (H1 2025)
+// - US Census Bureau, Business Formation Statistics: 5,671,836 applications in 2025, a record
+// - Crunchbase News, end of 2025: AI took close to 50% of global venture funding ($202.3B)
+// - Garry Tan (YC), W25 batch: a quarter of startups had ~95% AI-written code
+// - Stripe, 2025: top 100 AI companies on Stripe hit $1M ARR in a median 11.5 months
+// - CB Insights, 2024 post-mortems of 431 VC-backed shutdowns: 43% cite poor product-market fit
+// - MBO Partners, State of Independence 2025: 72.9M Americans work independently
 const DEFAULT_STATS: HeroStat[] = [
-  { value: "5", unit: "×", label: "Faster idea → MVP than pre-AI builders" },
-  { value: "$680B", unit: "+", label: "Into AI-native startups since 2024" },
-  { value: "1 in 4", label: "New 2026 launches are solo founders" },
-  { value: "~18", unit: "mo", label: "Before incumbents close the AI-native gap" },
+  { value: "36", unit: "%", label: "Of new US startups have a solo founder, up from 24% in 2019", source: "Carta, 2025" },
+  { value: "5.67M", label: "US business applications in 2025, an all-time record", source: "US Census Bureau" },
+  { value: "~50", unit: "%", label: "Of global venture funding went to AI startups in 2025", source: "Crunchbase, 2025" },
+  { value: "1 in 4", label: "YC W25 startups shipped with ~95% AI-written code", source: "Y Combinator, 2025" },
+  { value: "11.5", unit: "mo", label: "Median time for top AI startups to reach $1M ARR", source: "Stripe, 2025" },
+  { value: "43", unit: "%", label: "Of failed startups cite poor product-market fit", source: "CB Insights, 2024" },
+  { value: "72.9M", label: "Americans now work independently", source: "MBO Partners, 2025" },
 ];
 
 const DEFAULT_LEDE = (
@@ -194,6 +208,11 @@ const Hero = ({
 
   const handleDashboardCtaClick = () => {
     void trackEngagement("hero-dashboard-cta", 90);
+  };
+
+  const handleDashboardPreviewClick = () => {
+    void trackEngagement("hero-dashboard-preview", 70);
+    setAttribution("hero_dashboard_preview", location.pathname);
   };
 
   const handleEyebrowClick = () => {
@@ -314,9 +333,11 @@ const Hero = ({
           )}
         </div>
 
-        {!isAuthenticated ? <div
+        {!isAuthenticated ? <Link
+          to="/signup"
           className="ct-hero__spotlight"
-          aria-label="Preview of the Creatives Takeover dashboard"
+          aria-label="Create your free account to get the Creatives Takeover dashboard"
+          onClick={handleDashboardPreviewClick}
         >
           <div className="ct-hero__st-chrome">
             <div className="ct-hero__st-dots">
@@ -355,15 +376,21 @@ const Hero = ({
                   <div
                     key={`${height}-${index}`}
                     className={`ct-hero__st-bar${index === bars.length - 1 ? " ct-hero__st-bar--peak" : ""}`}
-                    style={{ height: `${height}%` }}
+                    // --i staggers the bars' rise on hover, left to right.
+                    style={{ height: `${height}%`, "--i": index } as CSSProperties}
                   />
                 ))}
               </div>
             </div>
           </div>
-        </div> : null}
 
-        <div className="ct-hero__stats" aria-label="Founder stats for 2026">
+          <span className="ct-hero__st-cta" aria-hidden="true">
+            Create your free account
+            <ArrowRight />
+          </span>
+        </Link> : null}
+
+        <div className="ct-hero__stats" aria-label="The founder landscape in numbers">
           <div className="ct-hero__stats-track">
             {[...stats, ...stats].map((stat, index) => (
               <div
@@ -376,6 +403,7 @@ const Hero = ({
                   {stat.unit ? <span className="small">{stat.unit}</span> : null}
                 </div>
                 <div className="l">{stat.label}</div>
+                {stat.source ? <div className="s">{stat.source}</div> : null}
               </div>
             ))}
           </div>
