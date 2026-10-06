@@ -7,6 +7,8 @@
   --ct-muted-2: #64748b;
   --ct-line: rgba(15, 23, 42, 0.12);
   --ct-blue: #2563eb;
+  --ct-electric: #1a7cff;
+  --ct-electric-glow: rgba(26, 124, 255, 0.28);
   --ct-blue-hi: #1d4ed8;
   --ct-title-2-start: #0f172a;
   --ct-title-2-mid: #111827;
@@ -90,6 +92,8 @@
   --ct-muted-2: #5a6678;
   --ct-line: rgba(255, 255, 255, 0.07);
   --ct-blue: #5aa2fb;
+  --ct-electric: #2e9bff;
+  --ct-electric-glow: rgba(46, 155, 255, 0.4);
   --ct-blue-hi: #4da8ff;
   --ct-title-2-start: #fff;
   --ct-title-2-mid: #fff;
@@ -801,7 +805,10 @@
 .ct-hero__stats {
   position: relative;
   max-width: 1100px;
-  margin: 64px auto 0;
+  /* 52px + 12px padding = the old 64px gap; the padding gives the cards'
+     glow room inside the clipped strip. */
+  margin: 52px auto 0;
+  padding: 12px 0;
   overflow: hidden;
   mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
   -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
@@ -837,9 +844,13 @@
   flex: 0 0 auto;
   width: 280px;
   padding: 22px 26px;
-  border: 1px solid var(--ct-line);
+  /* Electric blue edge with a soft outer glow so the strip reads at a glance. */
+  border: 1px solid var(--ct-electric);
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.025);
+  box-shadow:
+    0 0 0 1px var(--ct-electric-glow),
+    0 0 18px -4px var(--ct-electric-glow);
   text-align: left;
   backdrop-filter: blur(6px);
   pointer-events: none;
