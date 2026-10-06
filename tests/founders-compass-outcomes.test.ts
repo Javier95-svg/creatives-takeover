@@ -129,14 +129,12 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
   assert.match(prerender, /Pro[\s\S]*\$65[\s\S]*Accelerate and Fundraise/);
 });
 
-test('hero stats are static product facts, not a marquee of market figures', () => {
+test('hero scrolling cards retain the restored market data', () => {
   const hero = readFileSync(new URL('../src/components/Hero.tsx', import.meta.url), 'utf8');
-  const css = readFileSync(new URL('../src/components/hero-cinematic-spotlight.css', import.meta.url), 'utf8');
-  assert.match(hero, /value: "7", label: "Stages from first idea to first raise"/);
-  assert.match(hero, /value: String\(GUIDED_TOOL_COUNT\)/);
-  assert.match(hero, /PLAN_PRICING\.starter\.monthly/);
-  assert.doesNotMatch(hero, /\$680B|\[\.\.\.stats, \.\.\.stats\]/);
-  assert.doesNotMatch(css, /ct-hero-strip-scroll|ct-hero__stats-track/);
+  assert.match(hero, /value: "5", unit: "×", label: "Faster idea → MVP than pre-AI builders"/);
+  assert.match(hero, /value: "\$680B", unit: "\+", label: "Into AI-native startups since 2024"/);
+  assert.match(hero, /value: "1 in 4", label: "New 2026 launches are solo founders"/);
+  assert.match(hero, /value: "~18", unit: "mo", label: "Before incumbents close the AI-native gap"/);
 });
 
 test('Pro expert support has a protected queue while the restored mentorship hero remains intact', () => {
