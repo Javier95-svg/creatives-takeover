@@ -337,7 +337,7 @@ const LegacyNavigation = () => {
                 <img
                   src={ctLogoPolished}
                   alt="Creatives Takeover Logo"
-                  className="site-nav-logo nav-logo-hover"
+                  className="site-nav-logo animate-logo-breathing nav-logo-hover"
                   width={44}
                   height={44}
                   decoding="async"

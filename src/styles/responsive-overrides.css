@@ -127,6 +127,14 @@
     white-space: nowrap;
   }
 
+  .value-prop-nav {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .value-prop-nav button {
+    width: 100%;
+  }
+
   .responsive-filter-row .responsive-sort-group {
     margin-left: 0;
     width: 100%;
@@ -372,6 +380,16 @@
 
   .value-prop-card__body p {
     margin-bottom: 0.75rem;
+  }
+
+  .value-prop-nav {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 0.75rem;
+    margin-top: 1.25rem !important;
+  }
+
+  .value-prop-nav button {
+    width: 100%;
   }
 }
 

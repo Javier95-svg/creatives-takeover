@@ -10,7 +10,9 @@ const HomeWallpaper = ({ variant = "default" }: HomeWallpaperProps) => {
       <div
         aria-hidden="true"
         className="home-wallpaper home-wallpaper--landing fixed inset-0 -z-10 pointer-events-none"
-      />
+      >
+        <div className="home-wallpaper__mesh" />
+      </div>
     );
   }
 

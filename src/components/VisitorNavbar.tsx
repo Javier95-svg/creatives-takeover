@@ -127,7 +127,7 @@ const LegacyVisitorNavbar = () => {
               <img
                 src={ctLogoPolished}
                 alt="Creatives Takeover"
-                className="site-nav-logo nav-logo-hover h-11 w-11 shrink-0"
+                className="site-nav-logo animate-logo-breathing nav-logo-hover h-11 w-11 shrink-0"
                 width={44}
                 height={44}
                 decoding="async"

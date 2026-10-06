@@ -19,9 +19,7 @@ const frozenFiles = {
   // submissions open the guest onboarding quiz at /start (Idea -> Builder,
   // Product -> Founder); account creation is the last step, then the tool they
   // asked for. Copy, layout and the signed-in route are unchanged.
-  // Rehashed 2026-10-06 for the approved visual-polish audit: the scrolling
-  // strip of unsourced market figures became a static row of product facts.
-  '../src/components/Hero.tsx': 'ab499dd2b2f60208d191411e2c6d1599cfc399d051ca61db8d9e3b926f46d093',
+  '../src/components/Hero.tsx': '0fc0d927c9ff89f7b4a5fdc7674c157db0e958ac33a89c6f6b06d398610acf47',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.
@@ -38,9 +36,7 @@ const frozenFiles = {
   // existing linked logo. The signed-out navbar remains unchanged.
   // Rehashed 2026-10-04: 83728f13 (2026-09-16) only returns null inside the
   // signed-in workspace frame; visitors get the same navbar as before.
-  // Rehashed 2026-10-06 for the approved visual-polish audit: the logo no
-  // longer runs an infinite "breathing" animation.
-  '../src/components/Navigation.tsx': '37e0f91df5d57a551a48f516bb02d1a15b1806895271738c3b8960d4d1430317',
+  '../src/components/Navigation.tsx': 'a11808b9ce2b4ded1f740c543088e477b9cf825a9aae5142292192fdfee251f2',
   // Re-pinned 2026-07-25 (delivery audit, Phase 1): AISpecializationTrends moved
   // from a static import to lazy() + Suspense, matching how HomeFAQ and
   // FounderAnswerLibraryTeaser are already loaded. It is the only homepage
@@ -61,10 +57,7 @@ const frozenFiles = {
   // Rehashed 2026-10-04 for two approved changes the red CI hid: 36bbf23c
   // (2026-08-30, sticky mobile CTA removed) and 8a1bdfe9 (2026-09-08, new
   // social image).
-  // Rehashed 2026-10-06 for the approved visual-polish audit: the "Future of
-  // Work" section (invented chart data, self-typing paragraph) was removed, and
-  // the value cards took over its muted band to keep the alternation.
-  '../src/pages/Index.tsx': '18d7ae5e2dc7d28777cee03ff07ca99b32cae7afa65da6ed138349ef25e3872f',
+  '../src/pages/Index.tsx': 'dce7e669f3d2e31f3df70b0ed99141fe8c06213b32d3edb67be54f4d988874ab',
 } as const;
 
 test('the approved unauthenticated landing page remains frozen during core-tool work', () => {

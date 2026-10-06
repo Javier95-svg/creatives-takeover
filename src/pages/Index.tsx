@@ -15,8 +15,12 @@ import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
 import { trackLandingViewed } from "@/lib/analytics";
 
 // Lazy load below-the-fold components for better performance.
-// The "Future of Work" section (AISpecializationTrends) was removed: its charts
-// plotted invented figures and its closing paragraph typed itself out.
+// AISpecializationTrends is the only homepage section that uses Recharts; as a
+// static import it pulled ~77KB gz of charting into the fold-blocking bundle
+// for a section that renders well below the fold. The Suspense fallback below
+// reserves its measured height (969px mobile / 753px at lg) so deferring it
+// costs no layout shift.
+const AISpecializationTrends = lazy(() => import("@/components/AISpecializationTrends"));
 const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
 const FounderAnswerLibraryTeaser = lazy(() => import("@/components/seo/FounderAnswerLibraryTeaser"));
 
@@ -79,8 +83,13 @@ const Index = () => {
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
-                <ValuePropositionCards />
+                <Suspense fallback={<div className="min-h-[969px] lg:min-h-[753px] animate-pulse bg-muted/20" />}>
+                  <AISpecializationTrends />
+                </Suspense>
               </div>
+            </ScrollReveal>
+            <ScrollReveal variant="fade" amount={0.05}>
+              <ValuePropositionCards />
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <Suspense fallback={<div className="h-64 animate-pulse bg-muted/20" />}>
@@ -108,8 +117,13 @@ const Index = () => {
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
-                <ValuePropositionCards />
+                <Suspense fallback={<div className="min-h-[969px] lg:min-h-[753px] animate-pulse bg-muted/20" />}>
+                  <AISpecializationTrends />
+                </Suspense>
               </div>
+            </ScrollReveal>
+            <ScrollReveal variant="fade" amount={0.05}>
+              <ValuePropositionCards />
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <Suspense fallback={<div className="h-64 animate-pulse bg-muted/20" />}>

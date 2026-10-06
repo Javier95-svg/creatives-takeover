@@ -130,7 +130,7 @@ const ContactUs = () => {
       <div className="container mx-auto px-6 relative z-10">
         {/* Header */}
         <header className="text-center max-w-3xl mx-auto mb-16 animate-slide-up">
-          <h2 className="text-6xl font-bold mb-4 gradient-text animate-fade-in leading-relaxed pb-2 flex items-center justify-center gap-3">
+          <h2 className="text-6xl font-bold mb-4 gradient-text animate-text-shimmer animate-fade-in leading-relaxed pb-2 flex items-center justify-center gap-3">
             <span>Contact Us</span>
             <Send className="w-10 h-10" />
           </h2>

@@ -1251,6 +1251,49 @@ All colors MUST be HSL.
                 0 1px 4px hsl(var(--green-primary) / 0.06);
   }
   
+  /* Logo Breathing Pulse Effect - Subtle Scale In/Out with Pulsing RGB Glow */
+  .lightbulb-glow {
+    animation: logo-breathing 5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    transition: all 0.3s ease;
+    transform-origin: center;
+    will-change: transform, filter;
+    /* Base RGB glow for light mode */
+    filter: 
+      drop-shadow(0 0 6px hsl(var(--blue-primary) / 0.5))
+      drop-shadow(0 0 10px hsl(var(--red-primary) / 0.4))
+      drop-shadow(0 0 14px hsl(var(--green-primary) / 0.3))
+      brightness(1.05);
+  }
+  
+  .lightbulb-glow:hover {
+    animation-duration: 3.5s;
+    filter: 
+      drop-shadow(0 0 8px hsl(var(--blue-primary) / 0.6))
+      drop-shadow(0 0 12px hsl(var(--red-primary) / 0.5))
+      drop-shadow(0 0 16px hsl(var(--green-primary) / 0.4))
+      brightness(1.1);
+  }
+  
+  /* Dark mode - brighter RGB glow for visibility with enhanced pulsing */
+  .dark .lightbulb-glow {
+    filter: 
+      drop-shadow(0 0 8px hsl(var(--blue-primary) / 0.6))
+      drop-shadow(0 0 12px hsl(var(--red-primary) / 0.5))
+      drop-shadow(0 0 16px hsl(var(--green-primary) / 0.4))
+      drop-shadow(0 0 20px hsl(var(--blue-primary) / 0.3))
+      brightness(1.1);
+  }
+  
+  .dark .lightbulb-glow:hover {
+    animation-duration: 3.5s;
+    filter: 
+      drop-shadow(0 0 10px hsl(var(--blue-primary) / 0.8))
+      drop-shadow(0 0 14px hsl(var(--red-primary) / 0.7))
+      drop-shadow(0 0 18px hsl(var(--green-primary) / 0.6))
+      drop-shadow(0 0 24px hsl(var(--blue-primary) / 0.4))
+      brightness(1.15);
+  }
+  
   /* Enhanced Glass Morphism with RGB Colors */
   .glass-rgb {
     background: var(--glass-bg);
@@ -2850,6 +2893,48 @@ img {
   100% {
     transform: translateX(100%) translateY(100%) rotate(45deg);
   }
+}
+
+/* Logo Breathing Pulse Animation - Subtle Scale In/Out with RGB Glow */
+@keyframes logo-breathing {
+  0%, 100% {
+    transform: scale(1);
+    filter: 
+      drop-shadow(0 0 4px hsl(var(--blue-primary) / 0.35))
+      drop-shadow(0 0 8px hsl(var(--red-primary) / 0.3))
+      drop-shadow(0 0 12px hsl(var(--green-primary) / 0.25));
+  }
+  25% {
+    transform: scale(1.04);
+    filter: 
+      drop-shadow(0 0 6px hsl(var(--blue-primary) / 0.45))
+      drop-shadow(0 0 10px hsl(var(--red-primary) / 0.4))
+      drop-shadow(0 0 14px hsl(var(--green-primary) / 0.35));
+  }
+  50% {
+    transform: scale(1.08);
+    filter: 
+      drop-shadow(0 0 8px hsl(var(--blue-primary) / 0.55))
+      drop-shadow(0 0 12px hsl(var(--red-primary) / 0.5))
+      drop-shadow(0 0 16px hsl(var(--green-primary) / 0.45));
+  }
+  75% {
+    transform: scale(1.04);
+    filter: 
+      drop-shadow(0 0 6px hsl(var(--blue-primary) / 0.45))
+      drop-shadow(0 0 10px hsl(var(--red-primary) / 0.4))
+      drop-shadow(0 0 14px hsl(var(--green-primary) / 0.35));
+  }
+}
+
+/* Logo Breathing Animation Utility Class */
+.animate-logo-breathing {
+  animation: logo-breathing 3s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform, filter;
+  image-rendering: auto;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 /* Normalize navbar logo rendering across engines (Chrome/Firefox/Safari/Edge). */
@@ -4480,6 +4565,30 @@ img {
   .journey-action-card:active {
     transform: scale(0.986);
   }
+}
+
+/* ─── Startup Development Cycle – cross-browser SVG animations ──────────────
+   CSS @keyframes replace SMIL <animate> so Chrome and Firefox render identically.
+   r uses px units (required for valid CSS), spin animates the full circumference
+   (~245 SVG units at r=39) for one visible revolution per cycle. */
+@keyframes cycle-dash-spin {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: -245; }
+}
+
+@keyframes cycle-ring-pulse {
+  0%, 100% { r: 39px;   }
+  50%       { r: 39.5px; }
+}
+
+@keyframes cycle-ring-pulse-mobile {
+  0%, 100% { r: 39px;   }
+  50%       { r: 39.4px; }
+}
+
+@keyframes cycle-stroke-pulse {
+  0%, 100% { stroke-width: 0.8px; }
+  50%       { stroke-width: 1px;   }
 }
 
 /* Slim scrollbar for the newspaper topic filter row */

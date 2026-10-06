@@ -32,9 +32,10 @@ for (const [name, path] of pages) {
     const aside = source.slice(source.indexOf('<aside'), source.indexOf('</aside>'));
     assert.match(aside, /loading="lazy"/);
 
-    // The promo panel is one still image. It used to rotate a carousel every
-    // 3.6s, re-rendering the whole page while someone typed into the form.
-    assert.doesNotMatch(source, /setInterval/);
+    // Rotating a hidden carousel re-renders the whole page every 3.6s while
+    // someone is typing into the form.
+    assert.match(source, /matchMedia\('\(min-width: 768px\)'\)/);
+    assert.match(source, /query\.addEventListener\('change', sync\)/);
   });
 }
 

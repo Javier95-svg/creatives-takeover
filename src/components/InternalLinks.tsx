@@ -32,7 +32,7 @@ const InternalLinks = () => {
     <section className="py-20 bg-gradient-to-br from-background via-background to-primary/5">
       <div className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto text-center mb-16 animate-slide-up">
-          <h2 className="text-4xl font-bold mb-6 gradient-text">Continue Your Journey</h2>
+          <h2 className="text-4xl font-bold mb-6 gradient-text animate-text-shimmer">Continue Your Journey</h2>
           <p className="text-lg text-muted-foreground leading-relaxed animate-fade-in" style={{ animationDelay: '0.2s' }}>
             Ready to dive deeper? Explore everything Creatives Takeover has to offer
           </p>

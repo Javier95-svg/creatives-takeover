@@ -51,7 +51,7 @@ const TeamSection = () => {
     <section className="py-20 bg-background" id="team">
       <div className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto text-center mb-16 animate-slide-up">
-          <h2 className="text-4xl font-bold mb-6 gradient-text">Meet Our Team</h2>
+          <h2 className="text-4xl font-bold mb-6 gradient-text animate-text-shimmer">Meet Our Team</h2>
           <p className="text-lg text-muted-foreground leading-relaxed animate-fade-in" style={{ animationDelay: '0.2s' }}>
             The passionate people behind Creatives Takeover, united by a shared vision 
             of empowering creators worldwide
