@@ -160,57 +160,6 @@
   padding: 0 40px;
 }
 
-.ct-hero__ambient {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.ct-hero__glow-1 {
-  position: absolute;
-  top: -10%;
-  left: 50%;
-  width: 120%;
-  height: 90%;
-  transform: translateX(-50%);
-  background: radial-gradient(
-    ellipse at center,
-    rgba(91, 162, 251, 0.28) 0%,
-    rgba(91, 162, 251, 0.06) 30%,
-    transparent 60%
-  );
-  filter: blur(40px);
-}
-
-.ct-hero__glow-2 {
-  position: absolute;
-  top: 20%;
-  left: 10%;
-  width: 50%;
-  height: 60%;
-  background: radial-gradient(circle at center, rgba(243, 117, 117, 0.16) 0%, transparent 65%);
-  filter: blur(30px);
-}
-
-.ct-hero__glow-3 {
-  position: absolute;
-  top: 30%;
-  right: 8%;
-  width: 45%;
-  height: 55%;
-  background: radial-gradient(circle at center, rgba(37, 203, 122, 0.14) 0%, transparent 65%);
-  filter: blur(30px);
-}
-
-.ct-hero__grain {
-  position: absolute;
-  inset: 0;
-  opacity: 0.18;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
 .ct-hero__eyebrow {
   display: inline-flex;
   align-items: center;
@@ -259,7 +208,6 @@
 .ct-hero__title-row-1 {
   display: block;
   color: var(--ct-blue-hi);
-  text-shadow: 0 0 30px rgba(91, 162, 251, 0.45);
 }
 
 .ct-hero__title-row-2 {
@@ -283,7 +231,6 @@
   width: 0.78em;
   height: 0.78em;
   margin-left: 0.32em;
-  filter: drop-shadow(0 0 22px rgba(91, 162, 251, 0.36)) drop-shadow(0 0 12px rgba(243, 117, 117, 0.24));
   object-fit: contain;
   vertical-align: middle;
 }
@@ -351,30 +298,8 @@
   overflow: hidden;
 }
 
-/* Shimmer sweep — fires once after 1.4 s, then every 4 s */
-.ct-hero__cta::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    108deg,
-    transparent 35%,
-    rgba(255, 255, 255, 0.55) 50%,
-    transparent 65%
-  );
-  transform: translateX(-150%);
-  animation: ct-cta-shimmer 4s ease-in-out infinite 1.4s;
-  pointer-events: none;
-}
-
-@keyframes ct-cta-shimmer {
-  0%   { transform: translateX(-150%); }
-  30%  { transform: translateX(150%); }
-  100% { transform: translateX(150%); }
-}
-
-/* Secondary carries the same glow + shimmer as the primary, tuned down for its
-   dark translucent surface; the sweep is staggered 0.5s so the two CTAs cascade. */
+/* Secondary carries the same glow as the primary, tuned down for its dark
+   translucent surface. Neither CTA loops: a repeating shimmer was removed. */
 .ct-hero__cta--secondary {
   border: 1px solid var(--ct-secondary-cta-border);
   background: var(--ct-secondary-cta-bg);
@@ -383,16 +308,6 @@
     0 0 0 1px rgba(255, 255, 255, 0.06);
   color: var(--ct-fg);
   backdrop-filter: blur(10px);
-}
-
-.ct-hero__cta--secondary::after {
-  background: linear-gradient(
-    108deg,
-    transparent 35%,
-    rgba(255, 255, 255, 0.28) 50%,
-    transparent 65%
-  );
-  animation-delay: 1.9s;
 }
 
 .ct-hero__cta--secondary:hover {

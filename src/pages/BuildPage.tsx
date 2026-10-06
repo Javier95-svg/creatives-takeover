@@ -190,19 +190,6 @@ const useViewportAnimation = () => {
   return { hostRef, isActive };
 };
 
-// ─── Floating particles (deterministic so they're stable across renders) ─────
-
-const PARTICLE_COLORS = ['#3B82F6', '#EF4444', '#10B981'];
-const PARTICLES = Array.from({ length: 20 }, (_, i) => ({
-  left: `${6 + ((i * 17 + 11) % 88)}%`,
-  top: `${4 + ((i * 13 + 7) % 88)}%`,
-  size: 4 + (i % 4) * 1.75,
-  color: PARTICLE_COLORS[i % 3],
-  opacity: 0.28 + (i % 5) * 0.055,
-  duration: `${5 + (i % 6)}s`,
-  delay: `-${(i * 0.7) % 4}s`,
-}));
-
 // ─── Typing animation hook ────────────────────────────────────────────────────
 
 function useTypingAnimation(prompts: string[], paused: boolean): string {
@@ -293,33 +280,9 @@ const BuildHero = ({ onOpen }: HeroProps) => {
       <style>{`
         @keyframes ct-blink { 0%,49%{opacity:1}50%,100%{opacity:0} }
         .ct-caret { display:inline-block;width:2px;height:1.1em;vertical-align:-2px;border-radius:2px;margin-left:1px;animation:ct-blink 1.1s steps(1) infinite; }
-        @keyframes ct-floaty { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-16px)} }
       `}</style>
 
       <section className="relative overflow-hidden pb-20 pt-32 text-center lg:pb-28 lg:pt-40">
-        {/* ambient glows + floating particles */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute left-1/2 top-0 h-[560px] w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.22),transparent_62%)] blur-3xl" />
-          <div className="absolute left-[4%] top-[120px] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle,rgba(239,68,68,0.13),transparent_64%)] blur-3xl" />
-          <div className="absolute right-[4%] top-[160px] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.13),transparent_64%)] blur-3xl" />
-          {PARTICLES.map((p, i) => (
-            <span
-              key={i}
-              className="absolute rounded-full"
-              style={{
-                left: p.left,
-                top: p.top,
-                width: p.size,
-                height: p.size,
-                background: p.color,
-                opacity: p.opacity,
-                boxShadow: `0 0 ${p.size * 2}px ${p.color}`,
-                animation: `ct-floaty ${p.duration} ease-in-out ${p.delay} infinite`,
-              }}
-            />
-          ))}
-        </div>
-
         <div className="relative mx-auto max-w-[920px] px-4 sm:px-6">
           {/* Headline */}
           <h1 className="font-space-grotesk text-[clamp(48px,7.4vw,96px)] font-bold leading-[0.96] tracking-[-0.045em] text-balance">
@@ -732,7 +695,6 @@ const BuildEvidenceContext = ({ onOpen }: HeroProps) => {
       <ScrollReveal variant="slide-left" delay={0.08}>
         <div className="relative overflow-hidden rounded-2.5xl border border-border/70 bg-card/40 p-4 shadow-[0_35px_100px_-55px_rgba(59,130,246,0.7)] backdrop-blur-sm sm:p-6">
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.12),transparent_42%)]" />
-          <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-primary/10 blur-3xl animate-pulse motion-reduce:animate-none" />
           <div className="relative flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-4">
             <div>
               <p className="font-mono text-caption uppercase tracking-[0.18em] text-muted-foreground/70">Journey context compiler</p>
@@ -765,7 +727,7 @@ const BuildEvidenceContext = ({ onOpen }: HeroProps) => {
                     className={cn(
                       'h-2 w-2 rounded-full bg-current transition-all duration-300',
                       accent,
-                      isActive ? 'scale-100 animate-pulse motion-reduce:animate-none' : 'scale-0 group-hover:scale-75',
+                      isActive ? 'scale-100' : 'scale-0 group-hover:scale-75',
                     )}
                     aria-hidden="true"
                   />
@@ -790,7 +752,7 @@ const BuildEvidenceContext = ({ onOpen }: HeroProps) => {
           </div>
 
           <div className="relative mx-auto my-3 flex h-8 w-8 rotate-90 items-center justify-center rounded-full border border-border/70 bg-background/80 text-primary sm:my-4">
-            <ArrowRight className="h-4 w-4 animate-pulse motion-reduce:animate-none" aria-hidden="true" />
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </div>
 
           <div id="evidence-brief-preview" aria-live="polite" className="relative rounded-2xl border border-primary/30 bg-primary/[0.07] p-5 shadow-[0_20px_50px_-35px_rgba(59,130,246,0.8)]">

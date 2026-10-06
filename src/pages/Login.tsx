@@ -26,16 +26,12 @@ import {
 import { setOAuthAuthIntent } from "@/lib/referral";
 import { startSocialOAuth, type SocialAuthProviderId } from "@/lib/socialAuth";
 
-const loginHeroSlides = [
-  {
-    src: "/auth/solofounder.webp",
-    alt: "Solo founder working on a laptop in a warm workspace",
-  },
-  {
-    src: "/auth/solopreneur-female.webp",
-    alt: "Female solopreneur working on a laptop in a bright studio",
-  },
-];
+// One still image. This panel used to auto-rotate two slides every 3.6s,
+// which pulled the eye away from the form it sits beside.
+const loginHeroImage = {
+  src: "/auth/solofounder.webp",
+  alt: "Solo founder working on a laptop in a warm workspace",
+};
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -51,8 +47,6 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [resendEmailLoading, setResendEmailLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
-  const [activeLoginHeroSlide, setActiveLoginHeroSlide] = useState(0);
-  const [loginHeroTimerReset, setLoginHeroTimerReset] = useState(0);
 
   // Phones get a two-step form: providers + email first, password second.
   // Desktop and tablet keep the single full form, so both steps are "open"
@@ -76,29 +70,6 @@ const Login = () => {
     ),
     checkoutIntent,
   );
-
-  useEffect(() => {
-    // Hidden below md — see the matching note in Signup.tsx.
-    const query = window.matchMedia('(min-width: 768px)');
-    let timer: number | undefined;
-
-    const sync = () => {
-      if (timer !== undefined) window.clearInterval(timer);
-      timer = undefined;
-      if (!query.matches) return;
-      timer = window.setInterval(() => {
-        setActiveLoginHeroSlide((currentSlide) => (currentSlide + 1) % loginHeroSlides.length);
-      }, 3600);
-    };
-
-    sync();
-    query.addEventListener('change', sync);
-
-    return () => {
-      if (timer !== undefined) window.clearInterval(timer);
-      query.removeEventListener('change', sync);
-    };
-  }, [loginHeroTimerReset]);
 
   useEffect(() => {
     if (!checkoutIntent) return;
@@ -324,37 +295,8 @@ const Login = () => {
         </Link>
 
         <div className="relative z-10 mt-7 max-w-xl md:mt-8">
-          <style>{`
-            @keyframes loginTitleFlicker {
-              0%, 100% {
-                opacity: 1;
-                text-shadow: 0 0 0 rgba(255, 255, 255, 0);
-              }
-              45% {
-                opacity: 0.9;
-                text-shadow: 0 0 14px rgba(255, 255, 255, 0.26);
-              }
-              48% {
-                opacity: 0.58;
-                text-shadow: 0 0 6px rgba(255, 255, 255, 0.16);
-              }
-              51% {
-                opacity: 1;
-                text-shadow: 0 0 18px rgba(255, 255, 255, 0.32);
-              }
-              54% {
-                opacity: 0.76;
-                text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-              }
-              58% {
-                opacity: 1;
-                text-shadow: 0 0 0 rgba(255, 255, 255, 0);
-              }
-            }
-          `}</style>
           <h1
             className="signup-premium-left-title text-3xl font-bold leading-tight tracking-tight text-white md:text-4xl"
-            style={{ animation: "loginTitleFlicker 3.8s ease-in-out infinite" }}
           >
             Build what only you can build.
           </h1>
@@ -363,41 +305,12 @@ const Login = () => {
         <div className="relative z-10 mt-6 flex min-h-0 flex-1 items-center justify-center md:mt-8">
           <div className="signup-premium-carousel-shell flex h-full w-full max-w-[560px] flex-col items-center justify-center gap-2">
             <div className="signup-premium-carousel-frame flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden rounded-2xl">
-              <div
-                className="flex h-full w-full transition-transform duration-700 ease-in-out"
-                style={{ transform: `translateX(-${activeLoginHeroSlide * 100}%)` }}
-              >
-                {loginHeroSlides.map((slide) => (
-                  <div key={slide.src} className="flex h-full min-w-full items-center justify-center">
-                    <img
-                      src={slide.src}
-                      alt={slide.alt}
-                      loading="lazy"
-                      className="signup-premium-carousel-image h-auto max-h-full w-full rounded-2xl object-contain"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="signup-premium-carousel-dots flex items-center justify-center gap-2">
-              {loginHeroSlides.map((slide, index) => (
-                <button
-                  key={slide.src}
-                  type="button"
-                  aria-label={`Show login image ${index + 1}`}
-                  aria-current={activeLoginHeroSlide === index}
-                  onClick={() => {
-                    setActiveLoginHeroSlide(index);
-                    setLoginHeroTimerReset((resetKey) => resetKey + 1);
-                  }}
-                  className={`signup-premium-carousel-dot h-2.5 w-2.5 rounded-full border border-white transition-all duration-300 ${
-                    activeLoginHeroSlide === index
-                      ? "bg-white opacity-100"
-                      : "bg-transparent opacity-45 hover:opacity-80"
-                  }`}
-                />
-              ))}
+              <img
+                src={loginHeroImage.src}
+                alt={loginHeroImage.alt}
+                loading="lazy"
+                className="signup-premium-carousel-image h-auto max-h-full w-full rounded-2xl object-contain"
+              />
             </div>
           </div>
         </div>

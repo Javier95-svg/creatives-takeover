@@ -49,16 +49,12 @@ import { applySignupActivationSource } from "@/lib/retentionSystem";
 import { beginAttributedOAuthSignup } from "@/lib/signupAttribution";
 import { trackJourneyEvent } from "@/lib/journeyOutcomes";
 
-const signupHeroSlides = [
-  {
-    src: "/auth/solofounder.webp",
-    alt: "Solo founder working on a laptop in a warm workspace",
-  },
-  {
-    src: "/auth/solopreneur-female.webp",
-    alt: "Female solopreneur working on a laptop in a bright studio",
-  },
-];
+// One still image. This panel used to auto-rotate two slides every 3.6s,
+// which pulled the eye away from the form it sits beside.
+const signupHeroImage = {
+  src: "/auth/solofounder.webp",
+  alt: "Solo founder working on a laptop in a warm workspace",
+};
 
 const Signup = () => {
   // New accounts go to the onboarding quiz first; the dashboard's guided
@@ -82,8 +78,6 @@ const Signup = () => {
     email: "",
     password: ""
   });
-  const [activeSignupHeroSlide, setActiveSignupHeroSlide] = useState(0);
-  const [signupHeroTimerReset, setSignupHeroTimerReset] = useState(0);
   // Picked once per mount. Computing this during render would reshuffle the
   // example on every keystroke elsewhere in the form.
   const [usernameExample] = useState(randomUsernameExample);
@@ -105,31 +99,6 @@ const Signup = () => {
   const abandonmentTracked = useRef(false);
   const lastFocused = useRef<string | null>(null);
   const fieldsInteracted = useRef<Set<string>>(new Set());
-
-  useEffect(() => {
-    // The promo panel is hidden below md, so don't re-render the whole page
-    // every 3.6s for a carousel nobody can see. Tracks the query rather than
-    // reading it once, so rotating a phone into landscape still animates.
-    const query = window.matchMedia('(min-width: 768px)');
-    let timer: number | undefined;
-
-    const sync = () => {
-      if (timer !== undefined) window.clearInterval(timer);
-      timer = undefined;
-      if (!query.matches) return;
-      timer = window.setInterval(() => {
-        setActiveSignupHeroSlide((currentSlide) => (currentSlide + 1) % signupHeroSlides.length);
-      }, 3600);
-    };
-
-    sync();
-    query.addEventListener('change', sync);
-
-    return () => {
-      if (timer !== undefined) window.clearInterval(timer);
-      query.removeEventListener('change', sync);
-    };
-  }, [signupHeroTimerReset]);
 
   const trackFieldInteraction = (field: string) => {
     lastFocused.current = field;
@@ -618,37 +587,8 @@ const Signup = () => {
         </Link>
 
         <div className="relative z-10 mt-7 max-w-xl md:mt-8">
-          <style>{`
-            @keyframes signupTitleFlicker {
-              0%, 100% {
-                opacity: 1;
-                text-shadow: 0 0 0 rgba(255, 255, 255, 0);
-              }
-              45% {
-                opacity: 0.9;
-                text-shadow: 0 0 14px rgba(255, 255, 255, 0.26);
-              }
-              48% {
-                opacity: 0.58;
-                text-shadow: 0 0 6px rgba(255, 255, 255, 0.16);
-              }
-              51% {
-                opacity: 1;
-                text-shadow: 0 0 18px rgba(255, 255, 255, 0.32);
-              }
-              54% {
-                opacity: 0.76;
-                text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-              }
-              58% {
-                opacity: 1;
-                text-shadow: 0 0 0 rgba(255, 255, 255, 0);
-              }
-            }
-          `}</style>
           <h1
             className="signup-premium-left-title text-3xl font-bold leading-tight tracking-tight text-white md:text-4xl"
-            style={{ animation: "signupTitleFlicker 3.8s ease-in-out infinite" }}
           >
             Build what only you can build.
           </h1>
@@ -657,43 +597,14 @@ const Signup = () => {
         <div className="relative z-10 mt-6 flex min-h-0 flex-1 items-center justify-center md:mt-8">
           <div className="signup-premium-carousel-shell flex h-full w-full max-w-[560px] flex-col items-center justify-center gap-2">
             <div className="signup-premium-carousel-frame flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden rounded-2xl">
-              <div
-                className="flex h-full w-full transition-transform duration-700 ease-in-out"
-                style={{ transform: `translateX(-${activeSignupHeroSlide * 100}%)` }}
-              >
-                {signupHeroSlides.map((slide) => (
-                  <div key={slide.src} className="flex h-full min-w-full items-center justify-center">
-                    <img
-                      src={slide.src}
-                      alt={slide.alt}
-                      // Keeps phones from downloading desktop-only promo art:
-                      // lazy images inside a display:none subtree are never fetched.
-                      loading="lazy"
-                      className="signup-premium-carousel-image h-auto max-h-full w-full rounded-2xl object-contain"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="signup-premium-carousel-dots flex items-center justify-center gap-2">
-              {signupHeroSlides.map((slide, index) => (
-                <button
-                  key={slide.src}
-                  type="button"
-                  aria-label={`Show signup image ${index + 1}`}
-                  aria-current={activeSignupHeroSlide === index}
-                  onClick={() => {
-                    setActiveSignupHeroSlide(index);
-                    setSignupHeroTimerReset((resetKey) => resetKey + 1);
-                  }}
-                  className={`signup-premium-carousel-dot h-2.5 w-2.5 rounded-full border border-white transition-all duration-300 ${
-                    activeSignupHeroSlide === index
-                      ? "bg-white opacity-100"
-                      : "bg-transparent opacity-45 hover:opacity-80"
-                  }`}
-                />
-              ))}
+              <img
+                src={signupHeroImage.src}
+                alt={signupHeroImage.alt}
+                // Keeps phones from downloading desktop-only promo art:
+                // lazy images inside a display:none subtree are never fetched.
+                loading="lazy"
+                className="signup-premium-carousel-image h-auto max-h-full w-full rounded-2xl object-contain"
+              />
             </div>
           </div>
         </div>

@@ -60,7 +60,7 @@ function Brand({ collapsed, navigateTo }: { collapsed: boolean; navigateTo: (pat
         navigateTo('/');
       }
     }} className="flex min-w-0 items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-      <img className="animate-logo-breathing nav-logo-hover h-10 w-10 shrink-0 object-contain motion-reduce:animate-none" src={ctLogo} alt="Creatives Takeover" />
+      <img className="nav-logo-hover h-10 w-10 shrink-0 object-contain" src={ctLogo} alt="Creatives Takeover" />
       {!collapsed && <div className="min-w-0">
         <p className="truncate font-space-grotesk text-sm font-semibold text-foreground">Creatives Takeover</p>
         <p className="text-xs text-foreground">Think. Test. Ship.</p>

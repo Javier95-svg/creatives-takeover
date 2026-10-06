@@ -25,7 +25,7 @@ const MissionVision = () => {
     <section className="relative py-20 overflow-hidden" id="mission-vision">
       <div className="container mx-auto px-6 relative z-10">
         <div className="max-w-4xl mx-auto text-center mb-16 animate-slide-up">
-          <h2 className="text-5xl font-bold mb-6 gradient-text animate-text-shimmer">Mission + Vision</h2>
+          <h2 className="text-5xl font-bold mb-6 gradient-text">Mission + Vision</h2>
           <p className="text-lg text-foreground/85 leading-relaxed animate-fade-in" style={{ animationDelay: '0.2s' }}>
             Driven by purpose and guided by vision; discover what makes Creatives Takeover unique
           </p>

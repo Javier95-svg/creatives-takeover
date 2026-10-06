@@ -75,7 +75,7 @@ const MeetTheTeam = () => {
     <section className="relative overflow-hidden py-20" id="meet-the-team">
       <div className="container relative z-10 mx-auto px-6">
         <div className="mx-auto mb-16 max-w-3xl animate-slide-up text-center">
-          <h2 className="gradient-text animate-text-shimmer animate-fade-in flex items-center justify-center gap-3 text-6xl font-bold">
+          <h2 className="gradient-text animate-fade-in flex items-center justify-center gap-3 text-6xl font-bold">
             <span>Meet the Team</span>
             <Users className="h-10 w-10" aria-hidden="true" />
           </h2>

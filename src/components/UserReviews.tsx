@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Fingerprint,
@@ -10,11 +9,8 @@ import {
   Hammer,
   Rocket,
   ChartNoAxesCombined,
-  TrendingUp,
-  Play,
-  Pause
+  TrendingUp
 } from "lucide-react";
-import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 type CycleStep = {
   shortLabel: string;
@@ -86,26 +82,10 @@ const cycleSteps: CycleStep[] = [
 const STEP_ANGLE = 360 / cycleSteps.length;
 
 const UserReviews = () => {
+  // Static by design: the visitor picks a stage. It used to auto-advance every
+  // 5s, which moved the text before anyone could finish reading it.
   const [activeStepIndex, setActiveStepIndex] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const isMobile = useIsMobile();
-  const prefersReducedMotion = usePrefersReducedMotion();
-
-  // Auto-play functionality
-  useEffect(() => {
-    if (prefersReducedMotion) {
-      setIsAutoPlaying(false);
-      return;
-    }
-
-    if (!isAutoPlaying) return;
-
-    const interval = setInterval(() => {
-      setActiveStepIndex((prev) => (prev + 1) % cycleSteps.length);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [isAutoPlaying, prefersReducedMotion]);
 
   const stepPositions = cycleSteps.map((_, index) => {
     const angleInRadians = ((-90 + STEP_ANGLE * index) * Math.PI) / 180;
@@ -121,13 +101,13 @@ const UserReviews = () => {
   const ActiveIcon = activeStep.icon;
   const sectionHeader = (
     <div className="startup-cycle-header text-center mb-16 sm:mb-20 px-6 sm:px-8 lg:px-12">
-      <Badge variant="outline" className="homepage-section-badge mb-5 animate-in fade-in slide-in-from-top duration-700">
+      <Badge variant="outline" className="homepage-section-badge mb-5">
         The 7 Stage Journey
       </Badge>
-      <h2 className="homepage-section-title startup-cycle-title text-3xl sm:text-4xl lg:text-[2.9rem] mb-5 break-words animate-in fade-in slide-in-from-bottom duration-700 delay-100">
+      <h2 className="homepage-section-title startup-cycle-title text-3xl sm:text-4xl lg:text-[2.9rem] mb-5 break-words">
         Startup Development Cycle
       </h2>
-      <p className="homepage-section-copy startup-cycle-copy text-base sm:text-lg max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom duration-700 delay-200">
+      <p className="homepage-section-copy startup-cycle-copy text-base sm:text-lg max-w-3xl mx-auto">
         The Startup Development Cycle is a 7-stage roadmap built by Creatives Takeover to guide first-time founders from raw idea to funded startup.
         <br />
         <br />
@@ -135,29 +115,6 @@ const UserReviews = () => {
       </p>
     </div>
   );
-  const autoPlayControl = (
-    <div className="mt-6 flex justify-center animate-in fade-in zoom-in duration-700 delay-300">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-        className="gap-2 border-border/80 bg-background/70 hover:bg-background hover:scale-105 transition-transform duration-200"
-      >
-        {isAutoPlaying ? (
-          <>
-            <Pause className="w-4 h-4" />
-            Pause
-          </>
-        ) : (
-          <>
-            <Play className="w-4 h-4" />
-            Play
-          </>
-        )}
-      </Button>
-    </div>
-  );
-
   // Generate SVG path for connecting arc
   const generateConnectionPath = () => {
     const radius = 39;
@@ -214,7 +171,6 @@ const UserReviews = () => {
                       stroke="url(#mobileRingGradient)"
                       strokeWidth="0.25"
                       className="text-primary"
-                      style={prefersReducedMotion ? undefined : { animation: 'cycle-ring-pulse-mobile 3s ease-in-out infinite' }}
                     />
 
                     <path
@@ -224,7 +180,6 @@ const UserReviews = () => {
                       strokeWidth="0.4"
                       className="text-primary/30"
                       strokeDasharray="2 2"
-                      style={prefersReducedMotion ? undefined : { animation: 'cycle-dash-spin 8s linear infinite' }}
                     />
 
                     {stepPositions.map((_, index) => {
@@ -254,7 +209,6 @@ const UserReviews = () => {
                               ? "text-primary/50 opacity-70"
                               : "text-primary/10 opacity-50"
                           }`}
-                          style={isActiveSegment && !prefersReducedMotion ? { animation: 'cycle-stroke-pulse 2s ease-in-out infinite' } : undefined}
                         />
                       );
                     })}
@@ -264,7 +218,7 @@ const UserReviews = () => {
                   <div className="absolute inset-[18%] rounded-full border border-primary/15 shadow-[0_0_15px_rgba(99,102,241,0.1)]" />
 
                   <div className={`absolute inset-[31%] rounded-full border-2 border-primary/20 bg-gradient-to-br ${activeStep.color} backdrop-blur-sm flex items-center justify-center px-4 text-center transition-all duration-700 shadow-lg`}>
-                    <div key={`mobile-active-${activeStepIndex}`} className="animate-in fade-in zoom-in duration-500">
+                    <div key={`mobile-active-${activeStepIndex}`}>
                       <ActiveIcon className="mx-auto mb-2 h-7 w-7 text-primary" />
                       <p className="text-caption tracking-[0.22em] uppercase text-muted-foreground">Active</p>
                       <p className="mt-1 font-space-grotesk text-sm font-semibold text-foreground leading-tight">
@@ -285,7 +239,6 @@ const UserReviews = () => {
                         type="button"
                         onClick={() => {
                           setActiveStepIndex(index);
-                          setIsAutoPlaying(false);
                         }}
                         className={`absolute -translate-x-1/2 -translate-y-1/2 w-[78px] rounded-xl border px-2 py-2 text-center transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
                           isActive
@@ -312,7 +265,6 @@ const UserReviews = () => {
                     );
                   })}
                 </div>
-                {autoPlayControl}
               </CardContent>
             </Card>
 
@@ -345,10 +297,10 @@ const UserReviews = () => {
 
         <div className="grid gap-8 lg:gap-10 lg:grid-cols-2 items-stretch">
           <Card className="surface-panel trust-outline overflow-hidden relative group">
-            {/* Ambient background animation */}
+            {/* Ambient background */}
             <div className="absolute inset-0 bg-gradient-to-br from-primary/4 via-transparent to-primary/4" />
             <CardContent className="p-6 sm:p-8 relative">
-              <div className="relative mx-auto w-full max-w-[560px] aspect-square" style={{ perspective: '1000px' }}>
+              <div className="relative mx-auto w-full max-w-[560px] aspect-square">
                 {/* SVG Layer for Connection Lines */}
                 <svg
                   className="absolute inset-0 w-full h-full pointer-events-none"
@@ -372,7 +324,6 @@ const UserReviews = () => {
                     stroke="url(#ringGradient)"
                     strokeWidth="0.25"
                     className="text-primary"
-                    style={prefersReducedMotion ? undefined : { animation: 'cycle-ring-pulse 3s ease-in-out infinite' }}
                   />
 
                   {/* Animated connection path */}
@@ -383,7 +334,6 @@ const UserReviews = () => {
                     strokeWidth="0.4"
                     className="text-primary/30"
                     strokeDasharray="2 2"
-                    style={prefersReducedMotion ? undefined : { animation: 'cycle-dash-spin 8s linear infinite' }}
                   />
 
                   {/* Progress indicator - active segment glow */}
@@ -414,19 +364,18 @@ const UserReviews = () => {
                             ? "text-primary/50 opacity-70"
                             : "text-primary/10 opacity-50"
                         }`}
-                        style={isActiveSegment && !prefersReducedMotion ? { animation: 'cycle-stroke-pulse 2s ease-in-out infinite' } : undefined}
                       />
                     );
                   })}
                 </svg>
 
                 {/* Background circles with 3D effect */}
-                <div className="absolute inset-[8%] rounded-full border-2 border-primary/20 bg-gradient-to-b from-primary/[0.07] to-background shadow-[inset_0_2px_20px_rgba(0,0,0,0.1)]" style={{ transform: 'translateZ(0)' }} />
+                <div className="absolute inset-[8%] rounded-full border-2 border-primary/20 bg-gradient-to-b from-primary/[0.07] to-background shadow-[inset_0_2px_20px_rgba(0,0,0,0.1)]" />
                 <div className="absolute inset-[19%] rounded-full border border-primary/15 shadow-[0_0_15px_rgba(99,102,241,0.1)]" />
 
                 {/* Center active indicator with icon */}
-                <div className={`absolute inset-[33%] rounded-full border-2 border-primary/20 bg-gradient-to-br ${activeStep.color} backdrop-blur-sm flex items-center justify-center text-center px-6 transition-all duration-700 shadow-lg hover:scale-105`} style={{ transform: 'translateZ(20px)' }}>
-                  <div className="animate-in fade-in zoom-in duration-500" key={activeStepIndex}>
+                <div className={`absolute inset-[33%] rounded-full border-2 border-primary/20 bg-gradient-to-br ${activeStep.color} backdrop-blur-sm flex items-center justify-center text-center px-6 shadow-lg`}>
+                  <div key={activeStepIndex}>
                     <ActiveIcon className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-2 text-primary" />
                     <p className="text-xs tracking-[0.22em] uppercase text-muted-foreground mb-1">Active Stage</p>
                     <p className="font-space-grotesk text-lg sm:text-xl font-semibold bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text">{activeStep.shortLabel}</p>
@@ -446,26 +395,23 @@ const UserReviews = () => {
                       type="button"
                       onClick={() => {
                         setActiveStepIndex(index);
-                        setIsAutoPlaying(false);
                       }}
-                      className={`absolute -translate-x-1/2 -translate-y-1/2 w-[110px] sm:w-[122px] px-3 py-2.5 rounded-xl border-2 text-xs sm:text-sm text-center font-medium transition-all duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 group overflow-hidden ${
+                      className={`absolute -translate-x-1/2 -translate-y-1/2 w-[110px] sm:w-[122px] px-3 py-2.5 rounded-xl border-2 text-xs sm:text-sm text-center font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 overflow-hidden ${
                         isActive
-                          ? "bg-gradient-to-br from-primary via-primary to-primary/92 text-primary-foreground border-primary shadow-[0_22px_34px_-22px_rgba(37,99,235,0.7)] scale-110"
+                          ? "bg-primary text-primary-foreground border-primary shadow-md"
                           : isPast
-                          ? "bg-background/95 border-primary/40 hover:border-primary/60 hover:bg-primary/10 hover:scale-105 hover:shadow-[0_8px_20px_rgba(99,102,241,0.2)] hover:-translate-y-1"
-                          : "bg-background/95 border-border/70 hover:border-primary/60 hover:bg-primary/10 hover:scale-105 hover:shadow-[0_8px_20px_rgba(99,102,241,0.2)] hover:-translate-y-1"
+                          ? "bg-background/95 border-primary/40 hover:border-primary/60 hover:bg-primary/10"
+                          : "bg-background/95 border-border/70 hover:border-primary/60 hover:bg-primary/10"
                       }`}
                       style={{
                         left: `${position.x}%`,
                         top: `${position.y}%`,
-                        transform: isActive ? `translate(-50%, -50%) rotateX(5deg) rotateY(5deg) scale(1.1)` : 'translate(-50%, -50%)',
-                        transformStyle: 'preserve-3d'
                       }}
                       aria-pressed={isActive}
                       aria-label={`Select ${step.title}`}
                     >
                       <div className="relative z-10">
-                        <StepIcon className={`w-4 h-4 mx-auto mb-1 transition-all duration-300 ${isActive ? '' : 'group-hover:scale-125 group-hover:rotate-12'}`} />
+                        <StepIcon className="w-4 h-4 mx-auto mb-1" />
                         <span className="block text-caption sm:text-label tracking-[0.1em] uppercase opacity-75">
                           {index + 1}
                         </span>
@@ -475,44 +421,33 @@ const UserReviews = () => {
                   );
                 })}
               </div>
-              {autoPlayControl}
             </CardContent>
           </Card>
 
-          <Card className="surface-panel trust-outline overflow-hidden relative group">
-            {/* Animated gradient background */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${activeStep.color} opacity-28 transition-all duration-700`} />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(37,99,235,0.08),transparent)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-            {/* Floating particles effect */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-primary/20 rounded-full blur-sm" />
-              <div className="absolute top-3/4 right-1/4 w-3 h-3 bg-primary/15 rounded-full blur-sm" />
-              <div className="absolute top-1/2 right-1/3 w-1.5 h-1.5 bg-primary/25 rounded-full blur-sm" />
-            </div>
+          <Card className="surface-panel trust-outline overflow-hidden relative">
+            <div className={`absolute inset-0 bg-gradient-to-br ${activeStep.color} opacity-28`} />
 
             <CardContent className="p-6 sm:p-8 lg:p-10 h-full flex flex-col justify-center relative z-10">
-              <div className="animate-in fade-in slide-in-from-right duration-700" key={activeStepIndex}>
+              <div key={activeStepIndex}>
                 <div className="flex items-start gap-4 mb-4">
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${activeStep.color} border border-primary/18 shadow-[0_18px_32px_-24px_rgba(37,99,235,0.28)] backdrop-blur-sm hover:scale-110 transition-transform duration-300`}>
+                  <div className={`p-3 rounded-xl bg-gradient-to-br ${activeStep.color} border border-primary/18`}>
                     <ActiveIcon className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
                   </div>
                   <h3 className="font-space-grotesk text-2xl sm:text-3xl font-semibold flex-1 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
                     {activeStep.title}
                   </h3>
                 </div>
-                <p className="text-muted-foreground leading-relaxed text-base sm:text-lg whitespace-pre-line animate-in fade-in duration-700 delay-100">
+                <p className="text-muted-foreground leading-relaxed text-base sm:text-lg whitespace-pre-line">
                   {activeStep.description}
                 </p>
 
                 {/* Enhanced progress indicator */}
-                <div className="mt-6 flex gap-1.5 animate-in fade-in slide-in-from-bottom duration-700 delay-200">
+                <div className="mt-6 flex gap-1.5">
                   {cycleSteps.map((_, index) => (
                     <button
                       key={index}
                       onClick={() => {
                         setActiveStepIndex(index);
-                        setIsAutoPlaying(false);
                       }}
                       className={`h-1.5 rounded-full transition-all duration-500 hover:h-2 ${
                         index === activeStepIndex

@@ -58,7 +58,7 @@ const WhyFoundersChooseUs = () => {
 
       <div className="container mx-auto px-6 relative z-10">
         <header className="text-center max-w-3xl mx-auto mb-16 animate-slide-up">
-          <h2 className="text-5xl font-bold mb-4 gradient-text animate-text-shimmer animate-fade-in leading-relaxed pb-2">
+          <h2 className="text-5xl font-bold mb-4 gradient-text animate-fade-in leading-relaxed pb-2">
             Why Founders Choose Us
           </h2>
           <p className="text-lg text-foreground/85 leading-relaxed">
