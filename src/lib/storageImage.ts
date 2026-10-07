@@ -62,7 +62,11 @@ export function storageImageUrl(
   parsed.searchParams.set("width", String(width));
   if (height === null) parsed.searchParams.delete("height");
   else parsed.searchParams.set("height", String(height));
-  parsed.searchParams.set("resize", options.resize ?? "cover");
+  // Without a height, "cover" keeps the original height and crops the width:
+  // a 2180x1439 banner came back as a 640x1439 centre slice, so every
+  // newspaper thumbnail looked heavily zoomed in. "contain" scales the whole
+  // image down instead, which is what "preserve the aspect ratio" means.
+  parsed.searchParams.set("resize", options.resize ?? (height === null ? "contain" : "cover"));
   parsed.searchParams.set("quality", String(options.quality ?? 70));
 
   return parsed.toString();

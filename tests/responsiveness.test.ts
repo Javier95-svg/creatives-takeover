@@ -118,6 +118,8 @@ test('banner variants keep aspect ratio and existing avatars keep square sizing'
   const banner = new URL(storageImageUrl(original, { width: 320, height: null, quality: 80 })!);
   assert.equal(banner.searchParams.get('width'), '640');
   assert.equal(banner.searchParams.has('height'), false);
+  // Width-only + "cover" makes Storage crop the width to a tall centre slice.
+  assert.equal(banner.searchParams.get('resize'), 'contain');
   assert.match(banner.pathname, /render\/image\/public/);
   const avatar = new URL(storageImageUrl(original, { width: 96 })!);
   assert.equal(avatar.searchParams.get('width'), avatar.searchParams.get('height'));
