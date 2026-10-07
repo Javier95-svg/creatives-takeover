@@ -526,10 +526,10 @@ const Stories = () => {
               loading ? (
                 // A ~130px centred spinner was replaced by the full article
                 // grid once the query resolved, pushing everything below it
-                // down — measured CLS 0.30 desktop / 0.25 mobile. StoryCard is
-                // a uniform 394px tall at every breakpoint, so a skeleton of
-                // ARTICLES_PER_PAGE cards in the same grid reserves exactly the
-                // right space whether it lays out in 1, 2 or 3 columns.
+                // down — measured CLS 0.30 desktop / 0.25 mobile. StoryCard's
+                // banner is 16:10, so its height follows the column width;
+                // these are the measured row heights (2026-10-07) at 1, 2 and 3
+                // columns, so the skeleton reserves the space the grid will take.
                 <div
                   className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                   aria-busy="true"
@@ -538,7 +538,7 @@ const Stories = () => {
                   {Array.from({ length: ARTICLES_PER_PAGE }).map((_, index) => (
                     <div
                       key={index}
-                      className="h-[394px] rounded-lg border border-border bg-card animate-pulse"
+                      className="h-[442px] md:h-[423px] lg:h-[467px] rounded-lg border border-border bg-card animate-pulse"
                     />
                   ))}
                 </div>

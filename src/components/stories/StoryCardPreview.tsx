@@ -31,7 +31,7 @@ export const StoryCardPreview = ({
     <div className="w-full">
       <Card className="overflow-hidden h-full border-border bg-card rounded-lg">
         {/* Banner Image Section - Full Width at Top */}
-        <div className="relative w-full h-48 overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
+        <div className="relative w-full aspect-[16/10] overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
           {bannerImageUrl ? (
             <img
               src={bannerImageUrl}

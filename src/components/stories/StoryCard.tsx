@@ -29,7 +29,9 @@ const StoryCardComponent = ({ article, featured = false, showHashtags = true }: 
     >
       <Card className="overflow-hidden h-full hover:shadow-md transition-all duration-300 hover:scale-[1.02] border-border bg-card rounded-lg">
         {/* Banner Image Section - Full Width at Top */}
-        <div className="relative w-full h-48 overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
+        {/* 16:10 matches the uploaded banners (mostly 1.5-1.9:1); the old fixed
+            h-48 strip was ~2.3:1 and cropped them top and bottom. */}
+        <div className="relative w-full aspect-[16/10] overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
           {article.banner_image_url ? (
             <img
               key={article.banner_image_url}
