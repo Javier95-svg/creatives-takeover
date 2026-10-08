@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 
 import { LAUNCHPAD_TOPICS, launchpadTopic, postPath, RETIRED_ROOMS, roomPath } from '../src/lib/launchpadTopics.ts';
 import { previousRoundStart, roundEnd, roundStart, timeLeft } from '../src/lib/launchpadRoundTime.ts';
+import { EXAMPLE_LAUNCHES, EXAMPLE_POSTS, examplesForRoom } from '../src/lib/communityExamples.ts';
 import { FOUNDER_TOOL_CATALOG } from '../src/config/founderToolCatalog.ts';
 import { isWorkspaceRoute } from '../src/lib/workspacePolicy.ts';
 import { navSectionsForType, navToolsForType } from '../src/lib/workspaceNavForType.ts';
@@ -104,4 +105,21 @@ test('rooms and posts live under /launchpad/rooms, and old addresses redirect th
   assert.match(app, /path="\/launchpad\/topics\/:slug" element={<LegacyLaunchpadRedirect \/>}/);
   // No room slug may collide with the post route segment.
   assert.ok(!LAUNCHPAD_TOPICS.some((room) => room.slug === 'posts'));
+});
+
+test('examples cover every room and post type, and never pose as real people', () => {
+  for (const room of LAUNCHPAD_TOPICS) assert.ok(examplesForRoom(room.slug).length > 0, `no example for ${room.slug}`);
+  for (const post of EXAMPLE_POSTS) assert.ok(launchpadTopic(post.room), `${post.id} uses a retired room`);
+  assert.deepEqual([...new Set(EXAMPLE_POSTS.map((post) => post.kind))].sort(), ['discussion', 'feedback', 'idea', 'milestone']);
+  // Authors are described by role, never as a "First Last" person, and carry no photo or engagement numbers.
+  const personName = /^[A-Z][a-z]+ [A-Z][a-z]+$/;
+  for (const item of [...EXAMPLE_POSTS, ...EXAMPLE_LAUNCHES]) {
+    assert.ok(!personName.test(item.author), `${item.id} author looks like a person: ${item.author}`);
+    for (const key of ['avatar_url', 'upvotes', 'comment_count', 'username']) assert.ok(!(key in item), `${item.id} has ${key}`);
+  }
+  // The components label every example and say they are not written by members.
+  const ui = readFileSync(new URL('../src/components/launchpad/CommunityExamples.tsx', import.meta.url), 'utf8');
+  assert.match(ui, />Example</);
+  assert.match(ui, /not written by members/);
+  assert.match(ui, /Example products, not real entries/);
 });

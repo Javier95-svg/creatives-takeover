@@ -3,6 +3,7 @@ import { formatDistanceToNowStrict } from 'date-fns';
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Bookmark, LayoutGrid, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ExamplePosts } from '@/components/launchpad/CommunityExamples';
 import { InlineComposer } from '@/components/launchpad/InlineComposer';
 import { LaunchpadShell } from '@/components/launchpad/LaunchpadShell';
 import { PostComposerDialog } from '@/components/launchpad/PostComposerDialog';
@@ -71,7 +72,7 @@ export default function LaunchpadRooms() {
   const { slug } = useParams<{ slug?: string }>();
   const [params] = useSearchParams();
   const followed = useFollowedTopics();
-  const [composing, setComposing] = useState<{ kind?: PostKind } | null>(null);
+  const [composing, setComposing] = useState<{ kind?: PostKind; topic?: string } | null>(null);
 
   if (slug && !launchpadTopic(slug)) {
     const merged = RETIRED_ROOMS[slug];
@@ -84,7 +85,7 @@ export default function LaunchpadRooms() {
     : { kind: 'all' };
   const room = view.kind === 'room' ? launchpadTopic(view.slug) : null;
   const followedList = followed.data ? [...followed.data] : null;
-  const compose = (kind?: PostKind) => setComposing({ kind });
+  const compose = (kind?: PostKind, topic?: string) => setComposing({ kind, topic });
 
   const heading = view.kind === 'following' ? { icon: Star, title: 'Following', body: 'New posts from the rooms you follow.' }
     : view.kind === 'saved' ? { icon: Bookmark, title: 'Saved', body: 'Posts you saved to come back to.' }
@@ -117,20 +118,18 @@ export default function LaunchpadRooms() {
                 ? <EmptyState title="Nothing saved yet" body="Save posts you want to come back to. They stay private to you.">
                     <Button variant="outline" asChild><Link to="/launchpad/rooms">Browse rooms</Link></Button>
                   </EmptyState>
-                : room
-                  ? <EmptyState title={`No posts in ${room.label} yet`} body={room.prompt}>
-                      <Button onClick={() => compose()}>Write the first post</Button>
+                : view.kind === 'following'
+                  ? <EmptyState title="No posts in your rooms yet" body="New posts from the rooms you follow will show up here.">
+                      <Button variant="outline" asChild><Link to="/launchpad/rooms">Browse all rooms</Link></Button>
                     </EmptyState>
-                  : <EmptyState title="Start the first conversation" body="The fastest way to get useful replies is to ask for feedback on something specific: a landing page, a price or a pitch.">
-                      <Button onClick={() => compose('feedback')}>Ask for feedback</Button>
-                    </EmptyState>} />}
+                  : <ExamplePosts room={room?.slug ?? null} onCompose={(kind, exampleRoom) => compose(kind, exampleRoom)} />} />}
       </div>
 
       <RoomsAside />
     </div>
 
     <PostComposerDialog open={Boolean(composing)} onOpenChange={(open) => { if (!open) setComposing(null); }}
-      initialTopic={room?.slug ?? null} initialKind={composing?.kind} />
+      initialTopic={composing?.topic ?? room?.slug ?? null} initialKind={composing?.kind} />
   </LaunchpadShell>;
 }
 

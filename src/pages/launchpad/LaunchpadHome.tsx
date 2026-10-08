@@ -8,6 +8,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { ExampleLaunches } from '@/components/launchpad/CommunityExamples';
 import { LaunchpadShell } from '@/components/launchpad/LaunchpadShell';
 import { EnterLaunchDialog, LaunchLogo, LaunchRow, MyLaunchTools, PodiumCard, RoundCountdown } from '@/components/launchpad/LaunchRoundParts';
 import { useLaunchRound, useMyStage, useSupporterStatus, useToggleLaunchVote, useWithdrawLaunch } from '@/hooks/useLaunchpad';
@@ -161,15 +162,7 @@ export default function LaunchpadHome() {
         {rest.map((launch) => <LaunchRow key={launch.id} launch={launch} closed={false} onVote={() => voteFor(launch.id, !launch.voted)} />)}
       </div>}
 
-      {round.isSuccess && rows.length === 0 && <div className="mb-8 rounded-2xl border border-dashed border-border/80 px-6 py-10 text-center">
-        <Trophy className="mx-auto h-8 w-8 text-primary" aria-hidden="true" />
-        <h2 className="mt-2 font-space-grotesk text-lg font-semibold">No launches in this round yet</h2>
-        <p className="mx-auto mt-1.5 max-w-md text-sm text-muted-foreground">Enter a published Demo Studio launch page and you lead the round from day one.</p>
-        <div className="mt-4 flex flex-wrap justify-center gap-2">
-          <Button onClick={() => setEntering(true)}>Enter your launch</Button>
-          <Button variant="outline" asChild><Link to="/demo-studio">Open Demo Studio</Link></Button>
-        </div>
-      </div>}
+      {round.isSuccess && rows.length === 0 && <ExampleLaunches />}
 
       {lastRows.length > 0 && <section aria-labelledby="last-week-heading" className="mb-8">
         <h2 id="last-week-heading" className="mb-3 flex items-center gap-2 font-space-grotesk text-lg font-semibold"><Trophy className="h-5 w-5 text-warning" aria-hidden="true" />Last week's winners</h2>
