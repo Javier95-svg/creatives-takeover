@@ -40,7 +40,7 @@ export function platformUpdates(rows: Array<{ id: string; notification_type: str
     const route = typeof data.route === 'string' ? data.route : '';
     if (!route.startsWith('/') || route.startsWith('//') || route.includes('\\')) return [];
     const path = route.split(/[?#]/)[0];
-    const sections: Record<string, string> = { '/newspaper': 'Newspaper', '/mentorship': 'Mentorship', '/marketplace': 'Marketplace', '/podcast': 'Podcast', '/investors': 'Investors', '/co-founder': 'Co-founder', '/go-to-market': 'GTM Strategist', '/icp-builder': 'ICP Builder', '/demo-studio': 'Demo Studio', '/pmf-lab': 'PMF Lab', '/mvp-builder': 'MVP Builder', '/traction-engine': 'Traction Engine', '/vc-search': 'VC Search', '/accelerator-hunt': 'Accelerator Hunt' };
+    const sections: Record<string, string> = { '/newspaper': 'Newspaper', '/mentorship': 'Mentorship', '/marketplace': 'Marketplace', '/podcast': 'Podcast', '/investors': 'Investors', '/co-founder': 'Co-founder', '/go-to-market': 'GTM Strategist', '/icp-builder': 'ICP Builder', '/demo-studio': 'Demo Studio', '/pmf-lab': 'PMF Lab', '/mvp-builder': 'MVP Builder', '/traction-engine': 'Traction Engine', '/vc-search': 'VC Search', '/accelerator-hunt': 'Accelerator Hunt', '/rooms': 'Community', '/launchpad': 'Community' };
     const section = Object.entries(sections).find(([root]) => path === root || path.startsWith(root + '/'))?.[1];
     if (!section || !PLATFORM_UPDATE_TYPES.includes(row.notification_type)) return [];
     const title = typeof data.title === 'string' && data.title.trim() ? data.title :
