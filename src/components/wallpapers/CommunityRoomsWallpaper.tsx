@@ -1,19 +1,13 @@
 // Community Rooms' own backdrop: a transcript. Rows of speech bubbles, left
-// and right like a chat, fade out down the page, and RoomsThreadChart, drawn in
+// and right like a chat, repeat evenly from the top of the page to the bottom,
+// and RoomsThreadChart, drawn in
 // the header, shows a post with an upvote and its replies branching off it,
 // which is what a room is. Static and low-contrast like the other tool
 // backdrops (see PMFLabWallpaper).
 
 export default function CommunityRoomsWallpaper() {
   return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none absolute inset-x-0 top-0 h-[38rem] overflow-hidden text-tool-rooms"
-      style={{
-        maskImage: 'linear-gradient(to bottom, black 0%, black 40%, transparent 100%)',
-        WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 40%, transparent 100%)',
-      }}
-    >
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden text-tool-rooms">
       <svg className="absolute inset-0 h-full w-full" fill="none">
         <defs>
           {/* One tile holds a short exchange: a message on the left, a reply on the right. */}
