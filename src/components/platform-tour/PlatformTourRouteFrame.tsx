@@ -1,5 +1,6 @@
 import { useCallback, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { PlatformTourFrameBar } from './PlatformTourFrameBar';
 import { PlatformTourShell } from './PlatformTourShell';
 import { PlatformTourSignupGate } from './PlatformTourSignupGate';
 import { PlatformTourGateContext, type TourGateReason } from './PlatformTourGateContext';
@@ -35,12 +36,21 @@ export default function PlatformTourRouteFrame({ children }: { children: ReactNo
 
   const section = '/' + (pathname.split('/')[1] ?? '');
 
+  // Back to the previous page in the tour; straight to the tour when this page
+  // was opened directly and there is nothing in this app to go back to.
+  const goBack = useCallback(() => {
+    const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
+    if (idx > 0) navigate(-1); else navigate('/demo');
+  }, [navigate]);
+
   return <PlatformTourGateContext.Provider value={openGate}>
     <div className="platform-tour">
       <PlatformTourShell currentPath={section} onNavigate={onNavigate} openGate={openGate}>
         {children}
       </PlatformTourShell>
     </div>
+    {/* Outside the shell, as on /demo: the route region would trap a fixed child. */}
+    <PlatformTourFrameBar onBack={goBack} />
     <PlatformTourSignupGate reason={gate.reason} open={gate.open}
       onOpenChange={(open) => setGate((current) => ({ ...current, open }))} />
   </PlatformTourGateContext.Provider>;

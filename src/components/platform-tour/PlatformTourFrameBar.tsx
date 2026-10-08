@@ -4,20 +4,27 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { appendReturnParam } from '@/lib/authRedirect';
 import { TOUR_PANELS, type TourPanel } from '@/lib/platformTour/tourPanels';
+import { clearTour } from '@/lib/platformTour/tourSession';
 
 /**
  * Rendered as a sibling of WorkspaceLayout, never inside it. The route region
  * sets contain: layout paint, which makes it the containing block for any fixed
  * child and would trap this bar inside the scrolling panel. z-40 clears the
  * sidebar at 30 and the header at 20 while staying under Radix overlays at 50.
+ *
+ * On a public page framed by the tour (Newspaper, Podcast, Community…) there
+ * is no panel to step from, so a single back arrow returns to where the
+ * visitor came from instead of the previous and next arrows.
  */
-export function PlatformTourFrameBar({ panel, onSelect }: {
-  panel: TourPanel;
-  onSelect: (key: string) => void;
+export function PlatformTourFrameBar({ panel, onSelect, onBack }: {
+  panel?: TourPanel;
+  onSelect?: (key: string) => void;
+  /** For a framed public page: where the back arrow goes. */
+  onBack?: () => void;
 }) {
-  const index = TOUR_PANELS.findIndex((item) => item.key === panel.key);
-  const previous = TOUR_PANELS[index - 1];
-  const next = TOUR_PANELS[index + 1];
+  const index = panel ? TOUR_PANELS.findIndex((item) => item.key === panel.key) : -1;
+  const previous = panel ? TOUR_PANELS[index - 1] : undefined;
+  const next = panel ? TOUR_PANELS[index + 1] : undefined;
   // Publish the real height so the shell can shorten itself by exactly that
   // much. The bar wraps to two or three rows on narrow screens, and a guessed
   // value would be wrong on the widths where reaching the composer matters most.
@@ -40,19 +47,23 @@ export function PlatformTourFrameBar({ panel, onSelect }: {
         <p className="truncate text-xs text-muted-foreground">Nothing here is saved.</p>
       </div>
       <div className="flex shrink-0 items-center gap-2">
-        <Button variant="ghost" size="icon-sm" aria-label={previous ? `Back to ${previous.label}` : 'Back'}
-          disabled={!previous} onClick={() => previous && onSelect(previous.key)}>
+        {panel ? <>
+          <Button variant="ghost" size="icon-sm" aria-label={previous ? `Back to ${previous.label}` : 'Back'}
+            disabled={!previous} onClick={() => previous && onSelect?.(previous.key)}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon-sm" aria-label={next ? `Next, ${next.label}` : 'Next'}
+            disabled={!next} onClick={() => next && onSelect?.(next.key)}>
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </> : onBack && <Button variant="ghost" size="icon-sm" aria-label="Back" onClick={onBack}>
           <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon-sm" aria-label={next ? `Next, ${next.label}` : 'Next'}
-          disabled={!next} onClick={() => next && onSelect(next.key)}>
-          <ArrowRight className="h-4 w-4" />
-        </Button>
+        </Button>}
         <Button asChild size="sm">
           <Link to={appendReturnParam('/signup', '/demo')}>Create your free account</Link>
         </Button>
         <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
-          <Link to="/">Exit tour</Link>
+          <Link to="/" onClick={clearTour}>Exit tour</Link>
         </Button>
       </div>
     </div>
