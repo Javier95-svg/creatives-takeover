@@ -1,5 +1,4 @@
-import { Info, PenSquare } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ArrowBigDown, ArrowBigUp, Info, MessageCircle } from 'lucide-react';
 import { founderStageLabel } from '@/lib/bizmapStageOrder';
 import { EXAMPLE_LAUNCHES, examplesForRoom, type ExamplePost } from '@/lib/communityExamples';
 import { postKind, type PostKind } from '@/lib/launchpad';
@@ -37,10 +36,19 @@ function ExamplePostCard({ post, onUse }: { post: ExamplePost; onUse: () => void
       </div>
       <h3 className="mt-3 font-space-grotesk text-lg font-semibold leading-snug">{post.title}</h3>
       <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{post.body}</p>
-      <div className="mt-3">
-        <Button type="button" variant="outline" size="sm" onClick={onUse} className="gap-1.5">
-          <PenSquare className="h-4 w-4" aria-hidden="true" />Post something like this
-        </Button>
+      {/* Reddit-style indicators. Examples have no real votes, so the pills
+          say what they do instead of showing invented numbers. Reply opens
+          the composer on the same kind of post and room. */}
+      <div className="mt-3 flex items-center gap-2 text-sm">
+        <span className="inline-flex h-9 items-center gap-1 rounded-full bg-muted px-2 text-muted-foreground" title="Voting opens on real posts">
+          <ArrowBigUp className="h-5 w-5" aria-hidden="true" />
+          <span className="px-0.5 text-xs font-medium">Vote</span>
+          <ArrowBigDown className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <button type="button" onClick={onUse} aria-label={`Reply with a post like "${post.title}"`}
+          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-muted px-3 font-medium text-foreground transition-colors hover:bg-primary/15 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <MessageCircle className="h-4 w-4" aria-hidden="true" />Reply
+        </button>
       </div>
     </div>
   </article>;
