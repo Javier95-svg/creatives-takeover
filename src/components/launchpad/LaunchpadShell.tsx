@@ -40,7 +40,7 @@ export function LaunchpadShell({ title, intro, seoTitle, actions, children }: {
       <main className="container mx-auto max-w-5xl px-4 pt-header-offset nav-offset-roomy pb-16">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Launchpad</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Chat Rooms</p>
             <h1 className="mt-1 font-space-grotesk text-headline-lg font-semibold">{title}</h1>
             <p className="mt-2 text-body text-muted-foreground">{intro}</p>
           </div>

@@ -6,9 +6,9 @@ import {
   Clapperboard,
   Compass,
   LayoutDashboard,
+  MessageSquareMore,
   PanelLeftClose,
   PanelLeftOpen,
-  Rocket,
   Settings,
   Telescope,
   Users,
@@ -34,7 +34,7 @@ const NAV_ITEMS: Array<{ label: string; icon: Icon }> = [
   { label: "BizMap", icon: Compass },
   { label: "Network", icon: Users },
   { label: "Insighta", icon: Telescope },
-  { label: "Launchpad", icon: Rocket },
+  { label: "Chat Rooms", icon: MessageSquareMore },
   { label: "Content", icon: Clapperboard },
   { label: "Resources", icon: BookOpen },
   { label: "Pricing", icon: CircleDollarSign },
@@ -47,7 +47,7 @@ const NAV_TOOLS: Record<string, string[]> = {
   BizMap: ["ICP Builder", "Demo Studio", "PMF Lab", "MVP Builder", "GTM Strategist", "Directories"],
   Network: ["Find a Mentor", "Find a Co-Founder", "Find your Angel", "Marketplace"],
   Insighta: ["Traction Engine", "VC Search", "Pitch Deck Analyzer", "Insighta Test"],
-  Launchpad: ["Launchpad", "Posts", "Topics"],
+  "Chat Rooms": ["Launchpad", "Posts", "Topics"],
   Content: ["Newspaper", "Podcast"],
   Resources: ["Accelerator Hunt", "Tech Stack Builder"],
 };
@@ -140,7 +140,7 @@ export function WorkspaceSidebar({ navigateTo = enterWorkspaceRoute, currentPath
               type="button"
               aria-label={label}
               aria-expanded={toolsFor(label) ? !collapsed && openSection === label : undefined}
-              aria-controls={toolsFor(label) ? `workspace-tools-${label}` : undefined}
+              aria-controls={toolsFor(label) ? `workspace-tools-${label.replace(/\s+/g, "-")}` : undefined}
               title={collapsed ? label : undefined}
               onClick={() => handleSectionClick(label)}
               className={cn(
@@ -159,7 +159,7 @@ export function WorkspaceSidebar({ navigateTo = enterWorkspaceRoute, currentPath
             </button>}
 
             {!collapsed && openSection === label && toolsFor(label) && (
-              <div id={`workspace-tools-${label}`} role="group" aria-label={`${label} tools`} className="mb-2 ml-5 mt-1 space-y-0.5 border-l border-border/70 pl-4">
+              <div id={`workspace-tools-${label.replace(/\s+/g, "-")}`} role="group" aria-label={`${label} tools`} className="mb-2 ml-5 mt-1 space-y-0.5 border-l border-border/70 pl-4">
                 <p className="mb-2 border-b border-border/60 px-2 py-3 text-xs font-semibold leading-5 text-foreground">{sectionSloganFor(userType, label)}</p>
                 {toolsFor(label)!.map((tool, index) => {
                   const ToolIcon = WORKSPACE_ROUTE_ICONS[tool];

@@ -19,33 +19,33 @@ export interface NavSlice {
 }
 
 const MENTOR: NavSlice = {
-  sections: ['Dashboard', 'Network', 'Launchpad', 'Content', 'Resources', 'Pricing'],
+  sections: ['Dashboard', 'Network', 'Chat Rooms', 'Content', 'Resources', 'Pricing'],
   tools: {
     Dashboard: ['Overview', 'My Bookings', 'Analytics', 'Messages'],
     Network: ['Find a Mentor', 'Find a Co-Founder', 'Marketplace'],
-    Launchpad: ['Posts', 'Topics'],
+    'Chat Rooms': ['Posts', 'Topics'],
     Content: ['Newspaper', 'Podcast'],
     Resources: ['Accelerator Hunt', 'Tech Stack Builder'],
   },
 };
 
 const MARKETPLACE: NavSlice = {
-  sections: ['Dashboard', 'Network', 'Launchpad', 'Content', 'Resources', 'Pricing'],
+  sections: ['Dashboard', 'Network', 'Chat Rooms', 'Content', 'Resources', 'Pricing'],
   tools: {
     Dashboard: ['Overview', 'Enquiries', 'Analytics', 'Messages'],
     Network: ['Find a Mentor', 'Find a Co-Founder', 'Marketplace'],
-    Launchpad: ['Posts', 'Topics'],
+    'Chat Rooms': ['Posts', 'Topics'],
     Content: ['Newspaper', 'Podcast'],
     Resources: ['Accelerator Hunt', 'Tech Stack Builder'],
   },
 };
 
 const INVESTOR: NavSlice = {
-  sections: ['Dashboard', 'Network', 'Launchpad', 'Content', 'Pricing'],
+  sections: ['Dashboard', 'Network', 'Chat Rooms', 'Content', 'Pricing'],
   tools: {
     Dashboard: ['Overview', 'Matches', 'Messages'],
     Network: ['Find a Co-Founder', 'Find your Angel', 'Marketplace'],
-    Launchpad: ['Launchpad', 'Posts'],
+    'Chat Rooms': ['Launchpad', 'Posts'],
     Content: ['Newspaper', 'Podcast'],
   },
 };
