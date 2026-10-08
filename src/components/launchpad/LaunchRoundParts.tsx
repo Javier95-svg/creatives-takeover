@@ -127,7 +127,7 @@ export function EnterLaunchDialog({ open, onOpenChange }: { open: boolean; onOpe
   const available = eligible.filter((project) => !entered.data?.has(project.id));
 
   return <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent className="max-w-lg">
+    <DialogContent className="tool-theme-launches max-w-lg">
       <DialogHeader>
         <DialogTitle>Enter this week's round</DialogTitle>
         <DialogDescription>Pick a published launch page. Each page can be entered once, and you can have one launch per round.</DialogDescription>

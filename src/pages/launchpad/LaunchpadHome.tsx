@@ -15,6 +15,7 @@ import { listPublicLaunches } from '@/lib/demoStudio/api';
 import { isMissingRoundsError, previousRoundStart, roundEnd, roundStart, type LaunchSort } from '@/lib/launchpadLaunches';
 import { roomPath } from '@/lib/launchpadTopics';
 import { cn } from '@/lib/utils';
+import CommunityLaunchesWallpaper, { LaunchTrajectoryChart } from '@/components/wallpapers/CommunityLaunchesWallpaper';
 
 const STEPS = [
   { icon: Clapperboard, title: 'Publish a launch page', detail: 'Demo, pitch and early access list, built in Demo Studio.', to: '/demo-studio', cta: 'Open Demo Studio' },
@@ -91,7 +92,8 @@ export default function LaunchpadHome() {
   const totalVotes = rows.reduce((sum, launch) => sum + launch.upvotes, 0);
   const voteFor = (id: string, on: boolean) => vote.mutate({ launchId: id, on });
 
-  return <LaunchpadShell seoTitle="Launches | Community" title="Launches"
+  return <LaunchpadShell theme="launches" wallpaper={<CommunityLaunchesWallpaper />} headerArt={<LaunchTrajectoryChart />}
+    seoTitle="Launches | Community" title="Launches"
     intro="Weekly rounds of products founders are launching on Creatives Takeover, ranked by upvotes from other founders.">
     {roundsMissing ? <>
       <PublishedLaunches />
@@ -189,7 +191,7 @@ export default function LaunchpadHome() {
 
     <EnterLaunchDialog open={entering} onOpenChange={setEntering} />
     <AlertDialog open={Boolean(withdrawing)} onOpenChange={(open) => { if (!open) setWithdrawing(null); }}>
-      <AlertDialogContent>
+      <AlertDialogContent className="tool-theme-launches">
         <AlertDialogHeader>
           <AlertDialogTitle>Withdraw your launch?</AlertDialogTitle>
           <AlertDialogDescription>It leaves this round and loses its upvotes. You can enter it again in a later round.</AlertDialogDescription>

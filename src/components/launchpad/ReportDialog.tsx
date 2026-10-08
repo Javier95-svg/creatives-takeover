@@ -34,7 +34,7 @@ export function ReportDialog({ target, onClose }: { target: ReportTarget; onClos
   };
 
   return <Dialog open={Boolean(target)} onOpenChange={(open) => { if (!open) onClose(); }}>
-    <DialogContent className="max-w-md">
+    <DialogContent className="tool-theme-rooms max-w-md">
       <DialogHeader>
         <DialogTitle>Report this {noun}</DialogTitle>
         <DialogDescription>Reports are private. The author is not told who sent it.</DialogDescription>

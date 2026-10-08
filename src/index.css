@@ -114,6 +114,16 @@ All colors MUST be HSL.
     --tool-mvp: 166 76% 28%;
     --tool-mvp-foreground: 0 0% 100%;
     --tool-mvp-subtle: 166 76% 28% / 0.1;
+    /* Community Rooms identity: an orchid "conversation" colour, between the
+       PMF violet and the Demo rose and clear of both. */
+    --tool-rooms: 305 52% 40%;
+    --tool-rooms-foreground: 0 0% 100%;
+    --tool-rooms-subtle: 305 52% 40% / 0.1;
+    /* Community Launches identity: an ignition lime, away from success green
+       and warning amber. */
+    --tool-launches: 82 72% 28%;
+    --tool-launches-foreground: 0 0% 100%;
+    --tool-launches-subtle: 82 72% 28% / 0.1;
     
     /* Blue variants */
     --blue-primary: 217 91% 60%; /* #3B82F6 */
@@ -369,6 +379,12 @@ All colors MUST be HSL.
     --tool-mvp: 164 66% 52%;
     --tool-mvp-foreground: 166 70% 9%;
     --tool-mvp-subtle: 164 66% 52% / 0.14;
+    --tool-rooms: 305 70% 74%;
+    --tool-rooms-foreground: 305 50% 12%;
+    --tool-rooms-subtle: 305 70% 74% / 0.14;
+    --tool-launches: 82 70% 58%;
+    --tool-launches-foreground: 82 60% 10%;
+    --tool-launches-subtle: 82 70% 58% / 0.14;
     
     /* RGB Color Variants for Dark Mode (brighter for visibility) */
     --blue-primary: 217 92% 65%;
@@ -4835,4 +4851,16 @@ img {
   --primary: var(--tool-mvp);
   --primary-foreground: var(--tool-mvp-foreground);
   --ring: var(--tool-mvp);
+}
+
+.tool-theme-rooms {
+  --primary: var(--tool-rooms);
+  --primary-foreground: var(--tool-rooms-foreground);
+  --ring: var(--tool-rooms);
+}
+
+.tool-theme-launches {
+  --primary: var(--tool-launches);
+  --primary-foreground: var(--tool-launches-foreground);
+  --ring: var(--tool-launches);
 }

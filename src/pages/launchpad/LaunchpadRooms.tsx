@@ -15,6 +15,7 @@ import { useFollowedTopics, useTopicStats } from '@/hooks/useLaunchpad';
 import type { PostKind } from '@/lib/launchpad';
 import { LAUNCHPAD_TOPICS, launchpadTopic } from '@/lib/launchpadTopics';
 import { WORKSPACE_ROUTES } from '@/lib/workspaceNavigation';
+import CommunityRoomsWallpaper, { RoomsThreadChart } from '@/components/wallpapers/CommunityRoomsWallpaper';
 
 function EmptyState({ title, body, children }: { title: string; body: string; children?: ReactNode }) {
   return <div className="rounded-xl border border-dashed border-border/80 bg-card/50 px-6 py-12 text-center">
@@ -87,7 +88,8 @@ export default function LaunchpadRooms() {
     : view.kind === 'all' ? { icon: LayoutGrid, title: 'All rooms', body: 'Every conversation across the rooms.' }
     : null;
 
-  return <LaunchpadShell wide seoTitle={room ? `${room.label} | Rooms` : 'Rooms | Community'} title="Rooms"
+  return <LaunchpadShell wide theme="rooms" wallpaper={<CommunityRoomsWallpaper />} headerArt={<RoomsThreadChart />}
+    seoTitle={room ? `${room.label} | Rooms` : 'Rooms | Community'} title="Rooms"
     intro="Talk shop with founders by stage and skill. Ask for feedback, share wins and test ideas.">
     <div className="grid gap-6 lg:grid-cols-[13rem_minmax(0,1fr)] xl:grid-cols-[13rem_minmax(0,1fr)_17rem]">
       <RoomsRail view={view} />

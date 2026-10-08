@@ -22,6 +22,7 @@ import {
 import { authorName, COMMENT_MAX, postKind } from '@/lib/launchpad';
 import { launchpadTopic, postPath, roomPath, ROOMS_PATH } from '@/lib/launchpadTopics';
 import { WORKSPACE_ROUTES } from '@/lib/workspaceNavigation';
+import CommunityRoomsWallpaper, { RoomsThreadChart } from '@/components/wallpapers/CommunityRoomsWallpaper';
 import { cn } from '@/lib/utils';
 
 /** The room this post lives in, and a few more conversations from it. */
@@ -90,7 +91,7 @@ export default function LaunchpadPostDetail() {
     setReply('');
   };
 
-  return <LaunchpadShell wide seoTitle={data?.title ? `${data.title} | Rooms` : 'Post | Rooms'} title="Rooms">
+  return <LaunchpadShell wide theme="rooms" wallpaper={<CommunityRoomsWallpaper />} headerArt={<RoomsThreadChart />} seoTitle={data?.title ? `${data.title} | Rooms` : 'Post | Rooms'} title="Rooms">
     <div className="grid gap-6 lg:grid-cols-[13rem_minmax(0,1fr)] xl:grid-cols-[13rem_minmax(0,1fr)_17rem]">
       <RoomsRail view={room ? { kind: 'room', slug: room.slug } : { kind: 'all' }} />
 
@@ -193,7 +194,7 @@ export default function LaunchpadPostDetail() {
     <PostComposerDialog open={editing} onOpenChange={setEditing} editing={data} />
     <ReportDialog target={report} onClose={() => setReport(null)} />
     <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-      <AlertDialogContent>
+      <AlertDialogContent className="tool-theme-rooms">
         <AlertDialogHeader>
           <AlertDialogTitle>Delete this post?</AlertDialogTitle>
           <AlertDialogDescription>Its replies and upvotes are deleted with it. This cannot be undone.</AlertDialogDescription>

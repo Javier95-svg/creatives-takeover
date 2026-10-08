@@ -12,16 +12,23 @@ const TABS: ReadonlyArray<{ label: string; to: string; icon: LucideIcon; isActiv
   { label: 'Launches', to: '/launchpad', icon: Rocket, isActive: (path) => path === '/launchpad' },
 ];
 
+export type CommunityTheme = 'rooms' | 'launches';
+
 /**
- * Frame for the Community section: signed-in only, a compact header and the
- * two tabs. Rooms uses the wide layout for its three columns.
+ * Frame for the Community section, built like the core tool pages: each tab
+ * brings its own colour (a .tool-theme-* class that remaps primary), a quiet
+ * wallpaper behind the header, and a small illustration of what it does.
+ * Signed-in only.
  */
-export function LaunchpadShell({ title, intro, seoTitle, actions, wide = false, children }: {
+export function LaunchpadShell({ title, intro, seoTitle, actions, wide = false, theme, wallpaper, headerArt, children }: {
   title: string;
   intro?: ReactNode;
   seoTitle: string;
   actions?: ReactNode;
   wide?: boolean;
+  theme: CommunityTheme;
+  wallpaper?: ReactNode;
+  headerArt?: ReactNode;
   children: ReactNode;
 }) {
   const { user, loading } = useAuth();
@@ -36,34 +43,40 @@ export function LaunchpadShell({ title, intro, seoTitle, actions, wide = false, 
     <SEO title={seoTitle} description="Talk shop with founders, get feedback and launch with Creatives Takeover." url={location.pathname} noindex />
     <div className="min-h-screen bg-background">
       <Navigation />
-      <main className={cn('container mx-auto px-4 pt-header-offset nav-offset-roomy pb-16', wide ? 'max-w-7xl' : 'max-w-5xl')}>
-        <header className="mb-5 flex flex-wrap items-end justify-between gap-4">
-          <div className="min-w-0 max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Community</p>
-            <h1 className="mt-1 font-space-grotesk text-headline-lg font-semibold">{title}</h1>
-            {intro && <p className="mt-1.5 text-sm text-muted-foreground sm:text-body">{intro}</p>}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <nav aria-label="Community tabs" className="flex rounded-xl border border-border/70 bg-muted/40 p-1">
-              {TABS.map(({ label, to, icon: Icon, isActive }) => {
-                const active = isActive(location.pathname);
-                return <NavLink key={to} to={to} end={to === '/launchpad'} aria-current={active ? 'page' : undefined} className={cn(
-                  'flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                  active ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
-                )}>
-                  <Icon className="h-4 w-4" aria-hidden="true" />{label}
-                </NavLink>;
-              })}
-            </nav>
-            {actions}
-          </div>
-        </header>
+      <section className={cn('relative isolate overflow-hidden', `tool-theme-${theme}`)}>
+        {wallpaper}
+        <main className={cn('container relative mx-auto px-4 pt-header-offset nav-offset-roomy pb-16', wide ? 'max-w-7xl' : 'max-w-5xl')}>
+          <header className="mb-6 flex items-end justify-between gap-6 border-b border-border/60 pb-6">
+            <div className="min-w-0 space-y-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-primary">Community</p>
+                <h1 className="mt-1 font-space-grotesk text-3xl font-semibold text-foreground sm:text-4xl">{title}</h1>
+                {intro && <p className="mt-2 max-w-xl text-base text-muted-foreground">{intro}</p>}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <nav aria-label="Community tabs" className="flex rounded-xl border border-border/70 bg-card/80 p-1 backdrop-blur-sm">
+                  {TABS.map(({ label, to, icon: Icon, isActive }) => {
+                    const active = isActive(location.pathname);
+                    return <NavLink key={to} to={to} end={to === '/launchpad'} aria-current={active ? 'page' : undefined} className={cn(
+                      'flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      active ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
+                    )}>
+                      <Icon className="h-4 w-4" aria-hidden="true" />{label}
+                    </NavLink>;
+                  })}
+                </nav>
+                {actions}
+              </div>
+            </div>
+            {headerArt && <div className="hidden h-36 w-64 shrink-0 md:block lg:w-80">{headerArt}</div>}
+          </header>
 
-        {loading || !user ? <div role="status" className="space-y-3">
-          <span className="sr-only">Loading…</span>
-          {[0, 1, 2].map((index) => <div key={index} className="h-28 animate-pulse rounded-xl bg-muted/60" />)}
-        </div> : children}
-      </main>
+          {loading || !user ? <div role="status" className="space-y-3">
+            <span className="sr-only">Loading…</span>
+            {[0, 1, 2].map((index) => <div key={index} className="h-28 animate-pulse rounded-xl bg-muted/60" />)}
+          </div> : children}
+        </main>
+      </section>
       <Footer />
     </div>
   </>;

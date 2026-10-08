@@ -83,7 +83,7 @@ export function PostComposerDialog({ open, onOpenChange, initialTopic, initialKi
   };
 
   return <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent className="max-h-dvh max-w-2xl overflow-y-auto">
+    <DialogContent className="tool-theme-rooms max-h-dvh max-w-2xl overflow-y-auto">
       <DialogHeader>
         <DialogTitle>{editing ? 'Edit post' : 'Start a conversation'}</DialogTitle>
         <DialogDescription>Visible to signed-in members and on your public profile.</DialogDescription>

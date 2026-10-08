@@ -171,6 +171,18 @@ export default {
 					foreground: 'hsl(var(--tool-mvp-foreground) / <alpha-value>)',
 					subtle: 'hsl(var(--tool-mvp-subtle))',
 				},
+				// Community Rooms identity (see .tool-theme-rooms in index.css)
+				'tool-rooms': {
+					DEFAULT: 'hsl(var(--tool-rooms) / <alpha-value>)',
+					foreground: 'hsl(var(--tool-rooms-foreground) / <alpha-value>)',
+					subtle: 'hsl(var(--tool-rooms-subtle))',
+				},
+				// Community Launches identity (see .tool-theme-launches in index.css)
+				'tool-launches': {
+					DEFAULT: 'hsl(var(--tool-launches) / <alpha-value>)',
+					foreground: 'hsl(var(--tool-launches-foreground) / <alpha-value>)',
+					subtle: 'hsl(var(--tool-launches-subtle))',
+				},
 				// Violet accent (marketplace provider surfaces)
 				'accent-violet': 'hsl(var(--accent-violet) / <alpha-value>)',
 				// Deep chrome surface for the MVP builder dark sub-theme
