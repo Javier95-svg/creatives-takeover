@@ -1,5 +1,5 @@
 // Community Launches' own backdrop: a launch sky. A sparse starfield and a
-// few dashed constellations fade out down the page, and
+// few dashed constellations repeat evenly from the top of the page to the bottom, and
 // LaunchTrajectoryChart, drawn in the header, shows the week's podium with one
 // launch climbing off it, which is what a round is. Static and low-contrast
 // like the other tool backdrops (see PMFLabWallpaper).
@@ -14,29 +14,33 @@ const STARS: Array<[number, number, number]> = [
 // Star indexes joined into constellations, kept away from the title column.
 const CONSTELLATIONS: number[][] = [[10, 12, 14, 13], [17, 19, 18, 21], [2, 4, 6]];
 
+// The sky is one band this tall, stacked down the page so it covers it evenly
+// from top to bottom. Enough bands for the longest board; the rest is clipped.
+const BAND_HEIGHT = 420;
+const BANDS = 24;
+
+function SkyBand() {
+  return (
+    <svg className="block w-full shrink-0" height={BAND_HEIGHT} fill="none">
+      {/* A few constellations: past launches joined up across the sky. */}
+      <g stroke="currentColor" strokeOpacity="0.14" strokeWidth="1" strokeDasharray="3 6">
+        {CONSTELLATIONS.map((line) => line.slice(1).map((star, index) => {
+          const [x1, y1] = STARS[line[index]];
+          const [x2, y2] = STARS[star];
+          return <line key={`${line[index]}-${star}`} x1={`${x1}%`} y1={y1} x2={`${x2}%`} y2={y2} />;
+        }))}
+      </g>
+      {STARS.map(([x, y, r]) => (
+        <circle key={`${x}-${y}`} cx={`${x}%`} cy={y} r={r} fill="currentColor" fillOpacity={r > 1.4 ? 0.45 : 0.28} />
+      ))}
+    </svg>
+  );
+}
+
 export default function CommunityLaunchesWallpaper() {
   return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none absolute inset-x-0 top-0 h-[38rem] overflow-hidden text-tool-launches"
-      style={{
-        maskImage: 'linear-gradient(to bottom, black 0%, black 40%, transparent 100%)',
-        WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 40%, transparent 100%)',
-      }}
-    >
-      <svg className="absolute inset-0 h-full w-full" fill="none">
-        {/* A few constellations: past launches joined up across the sky. */}
-        <g stroke="currentColor" strokeOpacity="0.14" strokeWidth="1" strokeDasharray="3 6">
-          {CONSTELLATIONS.map((line) => line.slice(1).map((star, index) => {
-            const [x1, y1] = STARS[line[index]];
-            const [x2, y2] = STARS[star];
-            return <line key={`${line[index]}-${star}`} x1={`${x1}%`} y1={y1} x2={`${x2}%`} y2={y2} />;
-          }))}
-        </g>
-        {STARS.map(([x, y, r]) => (
-          <circle key={`${x}-${y}`} cx={`${x}%`} cy={y} r={r} fill="currentColor" fillOpacity={r > 1.4 ? 0.45 : 0.28} />
-        ))}
-      </svg>
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex flex-col overflow-hidden text-tool-launches">
+      {Array.from({ length: BANDS }, (_, index) => <SkyBand key={index} />)}
     </div>
   );
 }
