@@ -5,6 +5,7 @@ import { ArrowRight, Bookmark, LayoutGrid, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ExamplePosts } from '@/components/launchpad/CommunityExamples';
 import { InlineComposer } from '@/components/launchpad/InlineComposer';
+import { useRequireAccount } from '@/components/launchpad/requireAccount';
 import { LaunchpadShell } from '@/components/launchpad/LaunchpadShell';
 import { PostComposerDialog } from '@/components/launchpad/PostComposerDialog';
 import { PostFeed } from '@/components/launchpad/PostFeed';
@@ -12,6 +13,7 @@ import { RoomsAside } from '@/components/launchpad/RoomsAside';
 import { RoomsRail, type RoomView } from '@/components/launchpad/RoomsRail';
 import { TopicFollowButton } from '@/components/launchpad/TopicFollowButton';
 import { roomIcon } from '@/components/launchpad/roomVisuals';
+import { useAuth } from '@/contexts/AuthContext';
 import { useFollowedTopics, useTopicStats } from '@/hooks/useLaunchpad';
 import type { PostKind } from '@/lib/launchpad';
 import { LAUNCHPAD_TOPICS, launchpadTopic, RETIRED_ROOMS, roomPath, ROOMS_PATH } from '@/lib/launchpadTopics';
@@ -71,7 +73,9 @@ function PickRooms() {
 export default function LaunchpadRooms() {
   const { slug } = useParams<{ slug?: string }>();
   const [params] = useSearchParams();
+  const { user } = useAuth();
   const followed = useFollowedTopics();
+  const requireAccount = useRequireAccount();
   const [composing, setComposing] = useState<{ kind?: PostKind; topic?: string } | null>(null);
 
   if (slug && !launchpadTopic(slug)) {
@@ -85,7 +89,7 @@ export default function LaunchpadRooms() {
     : { kind: 'all' };
   const room = view.kind === 'room' ? launchpadTopic(view.slug) : null;
   const followedList = followed.data ? [...followed.data] : null;
-  const compose = (kind?: PostKind, topic?: string) => setComposing({ kind, topic });
+  const compose = (kind?: PostKind, topic?: string) => { if (requireAccount('start a conversation')) setComposing({ kind, topic }); };
 
   const heading = view.kind === 'following' ? { icon: Star, title: 'Following', body: 'New posts from the rooms you follow.' }
     : view.kind === 'saved' ? { icon: Bookmark, title: 'Saved', body: 'Posts you saved to come back to.' }
@@ -107,7 +111,13 @@ export default function LaunchpadRooms() {
 
         {view.kind !== 'saved' && <InlineComposer room={room?.slug} onCompose={compose} />}
 
-        {view.kind === 'following' && followed.isSuccess && followed.data.size === 0
+        {!user && (view.kind === 'following' || view.kind === 'saved')
+          ? <EmptyState title={view.kind === 'saved' ? 'Save posts to read later' : 'Follow the rooms you care about'}
+              body="Create a free account to follow rooms and keep a list of saved posts.">
+              <Button asChild><Link to={`/signup?source=community&return=${encodeURIComponent(`/rooms?view=${view.kind}`)}`}>Sign up free</Link></Button>
+              <Button variant="outline" asChild><Link to="/rooms">Browse all rooms</Link></Button>
+            </EmptyState>
+          : view.kind === 'following' && followed.isSuccess && followed.data.size === 0
           ? <PickRooms />
           : <PostFeed
               key={view.kind === 'room' ? view.slug : view.kind}

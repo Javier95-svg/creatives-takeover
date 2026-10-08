@@ -44,7 +44,8 @@ export interface SupporterStatus {
 /** True when the round functions are not deployed yet, so the tab can fall back. */
 export function isMissingRoundsError(error: unknown) {
   const code = error && typeof error === 'object' && 'code' in error ? String((error as { code: unknown }).code) : '';
-  return code === 'PGRST202' || code === '42883' || code === '42P01';
+  // 42501: deployed but not yet readable by visitors (20261010130000 grants it).
+  return code === 'PGRST202' || code === '42883' || code === '42P01' || code === '42501';
 }
 
 export async function listRound(week: string | null, sort: LaunchSort, limit = 50): Promise<RoundLaunch[]> {

@@ -21,7 +21,8 @@ export function useLaunchpadPosts(filters: PostFilters) {
   return useQuery({
     queryKey: [POSTS, user?.id, filters],
     queryFn: () => listPosts(filters, user?.id),
-    enabled: Boolean(user),
+    // Public: visitors can read Community; only actions need an account.
+    enabled: true,
     placeholderData: (previous) => previous,
   });
 }
@@ -31,7 +32,7 @@ export function useLaunchpadPost(id: string | undefined) {
   return useQuery({
     queryKey: [POST, user?.id, id],
     queryFn: () => getPost(id!, user?.id),
-    enabled: Boolean(user && id),
+    enabled: Boolean(id),
   });
 }
 
@@ -114,8 +115,7 @@ export function useDeletePost() {
 }
 
 export function useLaunchpadComments(postId: string | undefined) {
-  const { user } = useAuth();
-  return useQuery({ queryKey: ['launchpad-comments', postId], queryFn: () => listComments(postId!), enabled: Boolean(user && postId) });
+  return useQuery({ queryKey: ['launchpad-comments', postId], queryFn: () => listComments(postId!), enabled: Boolean(postId) });
 }
 
 export function useCommentMutations(postId: string) {
@@ -141,8 +141,7 @@ export function useCommentMutations(postId: string) {
 }
 
 export function useTopicStats() {
-  const { user } = useAuth();
-  return useQuery({ queryKey: ['launchpad-topic-stats'], queryFn: listTopicStats, enabled: Boolean(user), staleTime: 60_000 });
+  return useQuery({ queryKey: ['launchpad-topic-stats'], queryFn: listTopicStats, staleTime: 60_000 });
 }
 
 export function useFollowedTopics() {
@@ -193,7 +192,7 @@ export function useLaunchRound(week: string | null, sort: LaunchSort, limit = 50
   return useQuery({
     queryKey: [ROUND, user?.id, week, sort, limit],
     queryFn: () => listRound(week, sort, limit),
-    enabled: Boolean(user),
+    enabled: true,
     // A missing function is a deploy-order state, not a transient failure.
     retry: (count, error) => !isMissingRoundsError(error) && count < 2,
     placeholderData: (previous) => previous,

@@ -1,11 +1,13 @@
 import type { ReactNode } from 'react';
-import { Navigate, NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { MessagesSquare, Rocket, type LucideIcon } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import SEO from '@/components/SEO';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import { JoinGateProvider } from './JoinGate';
 
 const TABS: ReadonlyArray<{ label: string; to: string; icon: LucideIcon; isActive: (path: string) => boolean }> = [
   { label: 'Rooms', to: '/rooms', icon: MessagesSquare, isActive: (path) => path === '/rooms' || path.startsWith('/rooms/') },
@@ -18,7 +20,7 @@ export type CommunityTheme = 'rooms' | 'launches';
  * Frame for the Community section, built like the core tool pages: each tab
  * brings its own colour (a .tool-theme-* class that remaps primary), a quiet
  * wallpaper behind the header, and a small illustration of what it does.
- * Signed-in only.
+ * Public to read; every action asks visitors to join (see JoinGate).
  */
 export function LaunchpadShell({ title, intro, seoTitle, actions, wide = false, theme, wallpaper, headerArt, children }: {
   title: string;
@@ -34,12 +36,9 @@ export function LaunchpadShell({ title, intro, seoTitle, actions, wide = false, 
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  if (!loading && !user) {
-    const back = `${location.pathname}${location.search}`;
-    return <Navigate to={`/login?source=launchpad&return=${encodeURIComponent(back)}`} replace />;
-  }
+  const back = encodeURIComponent(`${location.pathname}${location.search}`);
 
-  return <>
+  return <JoinGateProvider theme={theme}>
     <SEO title={seoTitle} description="Talk shop with founders, get feedback and launch with Creatives Takeover." url={location.pathname} noindex />
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -71,7 +70,15 @@ export function LaunchpadShell({ title, intro, seoTitle, actions, wide = false, 
             {headerArt && <div className="hidden h-36 w-64 shrink-0 md:block lg:w-80">{headerArt}</div>}
           </header>
 
-          {loading || !user ? <div role="status" className="space-y-3">
+          {!loading && !user && <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/10 px-4 py-3">
+            <p className="text-sm"><span className="font-semibold">You're browsing as a visitor.</span> Sign up free to post, reply, upvote and launch your product.</p>
+            <div className="flex gap-2">
+              <Button asChild size="sm"><Link to={`/signup?source=community&return=${back}`}>Sign up free</Link></Button>
+              <Button asChild size="sm" variant="outline"><Link to={`/login?source=community&return=${back}`}>Log in</Link></Button>
+            </div>
+          </div>}
+
+          {loading ? <div role="status" className="space-y-3">
             <span className="sr-only">Loading…</span>
             {[0, 1, 2].map((index) => <div key={index} className="h-28 animate-pulse rounded-xl bg-muted/60" />)}
           </div> : children}
@@ -79,5 +86,5 @@ export function LaunchpadShell({ title, intro, seoTitle, actions, wide = false, 
       </section>
       <Footer />
     </div>
-  </>;
+  </JoinGateProvider>;
 }

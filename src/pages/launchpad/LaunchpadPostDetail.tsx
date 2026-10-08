@@ -11,6 +11,7 @@ import { AuthorAvatar, AuthorLine, PostMeta, UpvotePill } from '@/components/lau
 import { LaunchpadShell } from '@/components/launchpad/LaunchpadShell';
 import { PostComposerDialog } from '@/components/launchpad/PostComposerDialog';
 import { copyPostLink } from '@/components/launchpad/postActions';
+import { useRequireAccount } from '@/components/launchpad/requireAccount';
 import { ReportDialog, type ReportTarget } from '@/components/launchpad/ReportDialog';
 import { RoomsRail } from '@/components/launchpad/RoomsRail';
 import { TopicFollowButton } from '@/components/launchpad/TopicFollowButton';
@@ -74,6 +75,7 @@ export default function LaunchpadPostDetail() {
   const { add, remove } = useCommentMutations(id ?? '');
   const upvote = useUpvote();
   const save = useSavePost();
+  const requireAccount = useRequireAccount();
   const removePost = useDeletePost();
   const [reply, setReply] = useState('');
   const [editing, setEditing] = useState(false);
@@ -122,8 +124,8 @@ export default function LaunchpadPostDetail() {
               {data.title && <h2 className="mt-4 font-space-grotesk text-2xl font-semibold leading-tight">{data.title}</h2>}
               <p className="mt-3 whitespace-pre-line break-words text-body leading-7">{data.content}</p>
               <div className="mt-5 flex flex-wrap items-center gap-1 border-t border-border/60 pt-4 text-sm text-muted-foreground">
-                <UpvotePill post={data} onToggle={() => upvote.mutate({ postId: data.id, on: !data.voted })} />
-                <button type="button" onClick={() => save.mutate({ postId: data.id, on: !data.saved })} aria-pressed={data.saved}
+                <UpvotePill post={data} onToggle={() => { if (requireAccount('upvote posts')) upvote.mutate({ postId: data.id, on: !data.voted }); }} />
+                <button type="button" onClick={() => { if (requireAccount('save posts')) save.mutate({ postId: data.id, on: !data.saved }); }} aria-pressed={data.saved}
                   className={cn('inline-flex h-8 items-center gap-1.5 rounded-full px-3 hover:bg-muted hover:text-foreground', data.saved && 'text-primary')}>
                   <Bookmark className={cn('h-4 w-4', data.saved && 'fill-current')} aria-hidden="true" />{data.saved ? 'Saved' : 'Save'}
                 </button>
@@ -134,7 +136,7 @@ export default function LaunchpadPostDetail() {
                   {isOwn ? <>
                     <button type="button" onClick={() => setEditing(true)} className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 hover:bg-muted hover:text-foreground"><Pencil className="h-4 w-4" aria-hidden="true" />Edit</button>
                     <button type="button" onClick={() => setConfirmDelete(true)} className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 hover:bg-muted hover:text-destructive"><Trash2 className="h-4 w-4" aria-hidden="true" />Delete</button>
-                  </> : <button type="button" onClick={() => setReport({ postId: data.id })} className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 hover:bg-muted hover:text-foreground"><Flag className="h-4 w-4" aria-hidden="true" />Report</button>}
+                  </> : <button type="button" onClick={() => { if (requireAccount('report a post')) setReport({ postId: data.id }); }} className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 hover:bg-muted hover:text-foreground"><Flag className="h-4 w-4" aria-hidden="true" />Report</button>}
                 </span>
               </div>
             </div>
@@ -145,7 +147,7 @@ export default function LaunchpadPostDetail() {
               <MessageSquare className="h-5 w-5 text-primary" aria-hidden="true" />{data.comment_count} {data.comment_count === 1 ? 'reply' : 'replies'}
             </h2>
 
-            <form className="mb-5 flex gap-3 rounded-xl border border-border/70 bg-card p-3" onSubmit={(event) => { event.preventDefault(); void submitReply().catch(() => undefined); }}>
+            {user ? <form className="mb-5 flex gap-3 rounded-xl border border-border/70 bg-card p-3" onSubmit={(event) => { event.preventDefault(); void submitReply().catch(() => undefined); }}>
               <AuthorAvatar author={me ? { id: user?.id ?? '', username: me.username, full_name: myName, avatar_url: me.avatar_url } : null} className="h-8 w-8" />
               <div className="min-w-0 flex-1">
                 <label htmlFor="launchpad-reply" className="sr-only">Write a reply</label>
@@ -157,7 +159,10 @@ export default function LaunchpadPostDetail() {
                   <Button type="submit" size="sm" disabled={!reply.trim() || add.isPending}>{add.isPending ? 'Posting…' : 'Reply'}</Button>
                 </div>
               </div>
-            </form>
+            </form> : <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/10 p-4">
+              <p className="text-sm"><span className="font-semibold">Have an answer?</span> Join free to reply to this founder.</p>
+              <Button size="sm" onClick={() => requireAccount('reply')}>Join to reply</Button>
+            </div>}
 
             {comments.isError && <p role="alert" className="text-sm text-destructive">Could not load replies.</p>}
             {comments.isSuccess && comments.data.length === 0 && <p className="rounded-xl border border-dashed border-border/80 px-4 py-6 text-center text-sm text-muted-foreground">No replies yet. The first useful answer tends to get the most upvotes.</p>}
@@ -176,7 +181,7 @@ export default function LaunchpadPostDetail() {
                       <span className="ml-auto">
                         {comment.user_id === user?.id
                           ? <button type="button" onClick={() => remove.mutate(comment.id)} className="rounded px-1.5 py-0.5 text-xs text-muted-foreground hover:bg-muted hover:text-destructive">Delete</button>
-                          : <button type="button" onClick={() => setReport({ commentId: comment.id })} className="rounded px-1.5 py-0.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">Report</button>}
+                          : <button type="button" onClick={() => { if (requireAccount('report a reply')) setReport({ commentId: comment.id }); }} className="rounded px-1.5 py-0.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">Report</button>}
                       </span>
                     </div>
                     <p className="mt-1 whitespace-pre-line break-words text-sm leading-6">{comment.content}</p>

@@ -103,7 +103,8 @@ const ROUTE_PANELS: Record<string, string> = {
  * site, and a visitor who lands on live pricing is further along than one who
  * reads a mock of it.
  */
-export const TOUR_EXTERNAL_ROUTES = ['/pricing', '/newspaper', '/podcast', '/resources'];
+// Community (Rooms and Launchpad) is public to read too; posting asks for an account there.
+export const TOUR_EXTERNAL_ROUTES = ['/pricing', '/newspaper', '/podcast', '/resources', '/rooms', '/launchpad'];
 
 /** Routes that need an account, so they become the signup prompt. */
 export const TOUR_ACCOUNT_ROUTES = ['/dashboard/settings', '/account', '/messages'];

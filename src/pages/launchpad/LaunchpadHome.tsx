@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ExampleLaunches } from '@/components/launchpad/CommunityExamples';
+import { useRequireAccount } from '@/components/launchpad/requireAccount';
 import { LaunchpadShell } from '@/components/launchpad/LaunchpadShell';
 import { EnterLaunchDialog, LaunchLogo, LaunchRow, MyLaunchTools, PodiumCard, RoundCountdown } from '@/components/launchpad/LaunchRoundParts';
 import { useLaunchRound, useMyStage, useSupporterStatus, useToggleLaunchVote, useWithdrawLaunch } from '@/hooks/useLaunchpad';
@@ -91,7 +92,9 @@ export default function LaunchpadHome() {
   const lastRows = lastWeek.data ?? [];
   const status = supporter.data;
   const totalVotes = rows.reduce((sum, launch) => sum + launch.upvotes, 0);
-  const voteFor = (id: string, on: boolean) => vote.mutate({ launchId: id, on });
+  const requireAccount = useRequireAccount();
+  const voteFor = (id: string, on: boolean) => { if (requireAccount('upvote launches')) vote.mutate({ launchId: id, on }); };
+  const enter = () => { if (requireAccount('enter your launch')) setEntering(true); };
 
   return <LaunchpadShell theme="launches" wallpaper={<CommunityLaunchesWallpaper />} headerArt={<LaunchTrajectoryChart />}
     seoTitle="Launchpad | Community" title="Launchpad"
@@ -117,7 +120,7 @@ export default function LaunchpadHome() {
                   <MyLaunchTools myStage={myStage} onWithdraw={() => setWithdrawing(mine.id)} />
                 </div>
               : <div className="mt-4 flex flex-wrap items-center gap-2">
-                  <Button onClick={() => setEntering(true)} className="gap-2"><Rocket className="h-4 w-4" aria-hidden="true" />Enter your launch</Button>
+                  <Button onClick={enter} className="gap-2"><Rocket className="h-4 w-4" aria-hidden="true" />Enter your launch</Button>
                   <Button variant="ghost" asChild><Link to={roomPath('launch')}>Ask the Launch room</Link></Button>
                 </div>}
           </div>

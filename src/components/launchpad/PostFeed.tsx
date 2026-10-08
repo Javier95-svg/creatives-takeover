@@ -8,6 +8,7 @@ import { founderStageLabel } from '@/lib/bizmapStageOrder';
 import { POST_KINDS, type PostKind, type PostSort } from '@/lib/launchpad';
 import { cn } from '@/lib/utils';
 import { LaunchpadPostCard } from './LaunchpadPostCard';
+import { useRequireAccount } from './requireAccount';
 import { ReportDialog, type ReportTarget } from './ReportDialog';
 import { KIND_VISUALS } from './roomVisuals';
 
@@ -58,6 +59,7 @@ export function PostFeed({ topic, topics, savedOnly = false, empty }: {
   });
   const upvote = useUpvote();
   const save = useSavePost();
+  const requireAccount = useRequireAccount();
   const rows = posts.data ?? [];
   const filtered = Boolean(kind || atMyStage || search.trim());
   const myStageLabel = founderStageLabel(myStage);
@@ -106,9 +108,9 @@ export function PostFeed({ topic, topics, savedOnly = false, empty }: {
 
     <div className={cn('space-y-3 transition-opacity', posts.isFetching && !posts.isPending && 'opacity-70')}>
       {rows.map((post) => <LaunchpadPostCard key={post.id} post={post} isOwn={post.user_id === user?.id}
-        onUpvote={() => upvote.mutate({ postId: post.id, on: !post.voted })}
-        onSave={() => save.mutate({ postId: post.id, on: !post.saved })}
-        onReport={() => setReport({ postId: post.id })} />)}
+        onUpvote={() => { if (requireAccount('upvote posts')) upvote.mutate({ postId: post.id, on: !post.voted }); }}
+        onSave={() => { if (requireAccount('save posts')) save.mutate({ postId: post.id, on: !post.saved }); }}
+        onReport={() => { if (requireAccount('report a post')) setReport({ postId: post.id }); }} />)}
     </div>
 
     {rows.length >= limit && <div className="mt-6 flex justify-center">
