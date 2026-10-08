@@ -66,7 +66,9 @@ export default function WorkspaceLive({ children, home }: { children: ReactNode;
   // Mount on first open and keep it mounted so the dialog can animate closed.
   const [requestsMounted, setRequestsMounted] = useState(false);
   const { subscriptionData, loading: planLoading, statusError } = useSubscription({ fetchTiers: false, strictStatus: true });
-  const profile = useQuery({ queryKey: ['workspace-account', user!.id], queryFn: async ({ signal }) => {
+  // The shell stays mounted across routes, so a cached username outlives a
+  // rename and the avatar link 404s. Re-read on focus; saves invalidate it too.
+  const profile = useQuery({ queryKey: ['workspace-account', user!.id], staleTime: 0, refetchOnWindowFocus: true, queryFn: async ({ signal }) => {
     const { data, error } = await supabase.schema('public').from('profiles').select('username, full_name').eq('id', user!.id).abortSignal(signal).maybeSingle();
     if (error) throw error;
     return data;

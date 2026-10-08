@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ import {
 
 const Account = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [uploadLoading, setUploadLoading] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -431,6 +433,8 @@ const Account = () => {
       }
 
       setUsername(normalizedUsername);
+      // The workspace sidebar links to /profile/<username> from this cache.
+      void queryClient.invalidateQueries({ queryKey: ['workspace-account', user.id] });
 
       // Update initial values after successful save
       setInitialValues({

@@ -55,7 +55,8 @@ interface EditProfileModalProps {
     search_indexing_requested?: boolean | null;
     search_indexing_review_status?: 'not_requested' | 'pending' | 'approved' | 'rejected' | null;
   };
-  onSuccess: () => void;
+  /** Receives the saved username, which a name change can rewrite server side. */
+  onSuccess: (username?: string | null) => void;
 }
 
 export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProfileModalProps) => {
@@ -239,15 +240,19 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
         search_indexing_requested: formData.search_indexing_requested,
       };
 
-      const { error } = await supabase
+      // update_profile_username_trigger can rename a name-derived username when
+      // full_name changes, so read back the username the row now has.
+      const { data: saved, error } = await supabase
         .from('profiles')
         .update(updateData)
-        .eq('id', profile.id);
+        .eq('id', profile.id)
+        .select('username')
+        .maybeSingle();
 
       if (error) throw error;
 
       toast.success("Profile updated successfully!");
-      onSuccess();
+      onSuccess(saved?.username);
       onClose();
     } catch (error: any) {
       console.error('Error updating profile:', error);

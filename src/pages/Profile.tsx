@@ -870,9 +870,14 @@ const Profile = () => {
                     open={showEditModal}
                     onClose={() => setShowEditModal(false)}
                     profile={profile}
-                    onSuccess={() => {
+                    onSuccess={(savedUsername) => {
                       setShowEditModal(false);
-                      window.location.reload();
+                      // Reloading the old URL after a rename shows "Profile Not Found".
+                      if (savedUsername && savedUsername !== username) {
+                        window.location.assign(`/profile/${encodeURIComponent(savedUsername)}`);
+                      } else {
+                        window.location.reload();
+                      }
                     }}
                   />
                 </>

@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { Badge } from '@/components/ui/badge';
 import { RoleProfileFields } from '@/components/workspace/RoleProfileFields';
+import { InvestmentStageGuide } from '@/components/InvestmentStageGuide';
 import { INVESTMENT_STAGES, missingRoleFields, sanitizeRoleProfile, type RoleProfile } from '@/lib/roleProfileSchema';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -1180,6 +1181,7 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
                 <SelectTrigger id="investment-stage" className="mt-2"><SelectValue placeholder="Choose a funding stage" /></SelectTrigger>
                 <SelectContent>{INVESTMENT_STAGES.map((stage) => <SelectItem key={stage} value={stage}>{stage}</SelectItem>)}</SelectContent>
               </Select>
+              <InvestmentStageGuide selected={answers.investmentStage} />
             </div>
           )}
           <p className="mt-5 text-sm font-semibold">Sectors</p>

@@ -30,6 +30,15 @@ export const SERVICE_CATEGORIES = ['sales', 'marketing', 'ops', 'tech_support'] 
 /** Mirrors angel_investors.investment_stages. */
 export const INVESTMENT_STAGES = ['Pre-Seed', 'Seed', 'Series A', 'Series B', 'Series C+'] as const;
 
+/** One line per round, for founders who have not raised before and meet these terms here first. */
+export const INVESTMENT_STAGE_HINTS: Record<(typeof INVESTMENT_STAGES)[number], string> = {
+  'Pre-Seed': 'An idea or early prototype, usually funded by you, friends or angels. Most new founders are here.',
+  'Seed': 'First users or revenue. You are raising to prove people want it.',
+  'Series A': 'Clear demand and growing revenue. You are raising to scale what already works.',
+  'Series B': 'A working business expanding into new markets or a larger team.',
+  'Series C+': 'Late stage: large expansion, acquisitions or preparing to go public.',
+};
+
 export const ROLE_PROFILE_SCHEMA: Record<UserType, readonly RoleField[]> = {
   // Founders and builders are asked for the project, exactly as before. It is
   // not stored in role_profile; it creates a real project row. Listing it here

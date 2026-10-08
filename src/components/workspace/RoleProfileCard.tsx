@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccountContext } from '@/hooks/useAccountContext';
 import { USER_TYPE_LABEL, type UserType } from '@/lib/accountTypes';
+import { InvestmentStageGuide } from '@/components/InvestmentStageGuide';
 import { INVESTMENT_STAGES, missingRoleFields, sanitizeRoleProfile, storedRoleFields, type RoleProfile } from '@/lib/roleProfileSchema';
 import { RoleProfileFields } from './RoleProfileFields';
 import { trackRetentionEvent } from '@/lib/retentionSystem';
@@ -72,6 +73,7 @@ export function RoleProfileCard({ userTypeOverride }: { userTypeOverride?: UserT
   if (fields.length === 0) return <Card><CardHeader><CardTitle>Investor visibility</CardTitle><CardDescription>Choose whether approved investors can find your project summary through matching.</CardDescription></CardHeader><CardContent className="space-y-4">
     <label className="flex gap-2"><input type="checkbox" checked={visible} onChange={(event) => setVisible(event.target.checked)} />Include my project in investor matches</label>
     <label className="block">Funding stage<select className="mt-2 block w-full rounded border bg-background p-2" value={fundingStage} onChange={(event) => setFundingStage(event.target.value)}><option value="">Choose a funding stage</option>{INVESTMENT_STAGES.map((stage) => <option key={stage}>{stage}</option>)}</select></label>
+    <InvestmentStageGuide selected={fundingStage} />
     <Button disabled={visibilitySave.isPending} onClick={() => visibilitySave.mutate()}>Save visibility</Button>
   </CardContent></Card>;
   const missing = missingRoleFields(userType, draft);
