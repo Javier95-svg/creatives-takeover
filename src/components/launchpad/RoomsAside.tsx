@@ -70,7 +70,7 @@ function ActiveRooms() {
 
 /** The right column on wide screens: what is launching, where people are talking, how to get answers. */
 export function RoomsAside() {
-  return <aside className="sticky top-24 hidden space-y-4 self-start xl:block" aria-label="Around Chat Rooms">
+  return <aside className="sticky top-24 hidden space-y-4 self-start xl:block" aria-label="Around the community">
     <WeeklyLaunches />
     <ActiveRooms />
     <AsideCard title="Get better replies">

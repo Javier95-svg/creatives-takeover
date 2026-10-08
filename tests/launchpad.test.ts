@@ -32,10 +32,10 @@ test('each topic links to tools that have a workspace route', () => {
   assert.equal(launchpadTopic('not-a-topic'), null);
 });
 
-test('Chat Rooms sits between Insighta and Content and renders inside the workspace', () => {
+test('Community sits between Insighta and Content and renders inside the workspace', () => {
   const sidebar = readFileSync(new URL('../src/components/workspace/WorkspaceSidebar.tsx', import.meta.url), 'utf8');
   const order = [...sidebar.matchAll(/\{ label: "([A-Za-z ]+)", icon: /g)].map((match) => match[1]);
-  assert.deepEqual(order.slice(order.indexOf('Insighta'), order.indexOf('Insighta') + 3), ['Insighta', 'Chat Rooms', 'Content']);
+  assert.deepEqual(order.slice(order.indexOf('Insighta'), order.indexOf('Insighta') + 3), ['Insighta', 'Community', 'Content']);
   for (const tab of ['Rooms', 'Launches']) {
     assert.ok(WORKSPACE_ROUTES[tab]?.startsWith('/launchpad'), tab);
     assert.equal(isWorkspaceRoute(WORKSPACE_ROUTES[tab]), true, tab);
@@ -45,10 +45,10 @@ test('Chat Rooms sits between Insighta and Content and renders inside the worksp
 });
 
 test('reviewed account types get a Launchpad slice of their own', () => {
-  const all = ['Dashboard', 'BizMap', 'Network', 'Insighta', 'Chat Rooms', 'Content', 'Resources', 'Pricing'];
+  const all = ['Dashboard', 'BizMap', 'Network', 'Insighta', 'Community', 'Content', 'Resources', 'Pricing'];
   for (const type of ['mentor', 'marketplace', 'investor'] as const) {
-    assert.ok(navSectionsForType(type, all).includes('Chat Rooms'), type);
-    assert.ok(navToolsForType(type, 'Chat Rooms', {})?.includes('Rooms'), type);
+    assert.ok(navSectionsForType(type, all).includes('Community'), type);
+    assert.ok(navToolsForType(type, 'Community', {})?.includes('Rooms'), type);
   }
 });
 

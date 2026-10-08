@@ -13,7 +13,7 @@ const TABS: ReadonlyArray<{ label: string; to: string; icon: LucideIcon; isActiv
 ];
 
 /**
- * Frame for the Chat Rooms section: signed-in only, a compact header and the
+ * Frame for the Community section: signed-in only, a compact header and the
  * two tabs. Rooms uses the wide layout for its three columns.
  */
 export function LaunchpadShell({ title, intro, seoTitle, actions, wide = false, children }: {
@@ -39,12 +39,12 @@ export function LaunchpadShell({ title, intro, seoTitle, actions, wide = false, 
       <main className={cn('container mx-auto px-4 pt-header-offset nav-offset-roomy pb-16', wide ? 'max-w-7xl' : 'max-w-5xl')}>
         <header className="mb-5 flex flex-wrap items-end justify-between gap-4">
           <div className="min-w-0 max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Chat Rooms</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Community</p>
             <h1 className="mt-1 font-space-grotesk text-headline-lg font-semibold">{title}</h1>
             {intro && <p className="mt-1.5 text-sm text-muted-foreground sm:text-body">{intro}</p>}
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <nav aria-label="Chat Rooms tabs" className="flex rounded-xl border border-border/70 bg-muted/40 p-1">
+            <nav aria-label="Community tabs" className="flex rounded-xl border border-border/70 bg-muted/40 p-1">
               {TABS.map(({ label, to, icon: Icon, isActive }) => {
                 const active = isActive(location.pathname);
                 return <NavLink key={to} to={to} end={to === '/launchpad'} aria-current={active ? 'page' : undefined} className={cn(

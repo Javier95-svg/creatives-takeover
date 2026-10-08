@@ -369,7 +369,7 @@ function App() {
                         <Route path="/services" element={<Services />} />
                         <Route path="/software" element={<Software />} />
                         <Route path="/mentorship" element={<CommunityPage />} />
-                        {/* Chat Rooms: Rooms and Launches. The progress feed, Posts,
+                        {/* Community: Rooms and Launches. The progress feed, Posts,
                             Topics and Profiles all folded into Rooms; their old
                             addresses (and links in sent notifications) redirect. */}
                         <Route path="/launchpad" element={<LaunchpadHome />} />

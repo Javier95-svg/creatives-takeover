@@ -91,7 +91,7 @@ export default function LaunchpadHome() {
   const totalVotes = rows.reduce((sum, launch) => sum + launch.upvotes, 0);
   const voteFor = (id: string, on: boolean) => vote.mutate({ launchId: id, on });
 
-  return <LaunchpadShell seoTitle="Launches | Chat Rooms" title="Launches"
+  return <LaunchpadShell seoTitle="Launches | Community" title="Launches"
     intro="Weekly rounds of products founders are launching on Creatives Takeover, ranked by upvotes from other founders.">
     {roundsMissing ? <>
       <PublishedLaunches />

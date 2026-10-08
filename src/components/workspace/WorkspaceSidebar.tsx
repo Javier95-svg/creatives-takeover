@@ -34,7 +34,7 @@ const NAV_ITEMS: Array<{ label: string; icon: Icon }> = [
   { label: "BizMap", icon: Compass },
   { label: "Network", icon: Users },
   { label: "Insighta", icon: Telescope },
-  { label: "Chat Rooms", icon: MessageSquareMore },
+  { label: "Community", icon: MessageSquareMore },
   { label: "Content", icon: Clapperboard },
   { label: "Resources", icon: BookOpen },
   { label: "Pricing", icon: CircleDollarSign },
@@ -47,7 +47,7 @@ const NAV_TOOLS: Record<string, string[]> = {
   BizMap: ["ICP Builder", "Demo Studio", "PMF Lab", "MVP Builder", "GTM Strategist", "Directories"],
   Network: ["Find a Mentor", "Find a Co-Founder", "Find your Angel", "Marketplace"],
   Insighta: ["Traction Engine", "VC Search", "Pitch Deck Analyzer", "Insighta Test"],
-  "Chat Rooms": ["Rooms", "Launches"],
+  Community: ["Rooms", "Launches"],
   Content: ["Newspaper", "Podcast"],
   Resources: ["Accelerator Hunt", "Tech Stack Builder"],
 };

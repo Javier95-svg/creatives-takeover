@@ -33,7 +33,7 @@ export const WORKSPACE_SECTION_SLOGANS: Record<string, string> = {
   Dashboard: 'Accountability Partner ⏱️',
   BizMap: 'Validate ✅ Build 🛠️ Launch 🚀',
   Insighta: 'Distribute📦 Fundraise💸',
-  'Chat Rooms': 'Share Your Journey 📣',
+  Community: 'Share Your Journey 📣',
   Network: 'Connect & Collab 🌐',
   Content: 'Leisure Time🍿',
   Resources: 'Some Gifts 🎁',
@@ -84,21 +84,21 @@ export const SECTION_SLOGANS_BY_TYPE: Record<string, Record<string, string>> = {
   mentor: {
     Dashboard: 'Your Founders ⏱️',
     Network: 'Connect & Collab 🌐',
-    'Chat Rooms': 'Answer founders 💬',
+    Community: 'Answer founders 💬',
     Content: 'Leisure Time🍿',
     Resources: 'Some Gifts 🎁',
   },
   marketplace: {
     Dashboard: 'Your Clients 📥',
     Network: 'Connect & Collab 🌐',
-    'Chat Rooms': 'Answer founders 💬',
+    Community: 'Answer founders 💬',
     Content: 'Leisure Time🍿',
     Resources: 'Some Gifts 🎁',
   },
   investor: {
     Dashboard: 'Your Dealflow 🔎',
     Network: 'Connect & Collab 🌐',
-    'Chat Rooms': 'Spot momentum 🚀',
+    Community: 'Spot momentum 🚀',
     Content: 'Leisure Time🍿',
   },
 };

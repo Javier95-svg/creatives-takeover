@@ -87,7 +87,7 @@ export default function LaunchpadRooms() {
     : view.kind === 'all' ? { icon: LayoutGrid, title: 'All rooms', body: 'Every conversation across the rooms.' }
     : null;
 
-  return <LaunchpadShell wide seoTitle={room ? `${room.label} | Rooms` : 'Rooms | Chat Rooms'} title="Rooms"
+  return <LaunchpadShell wide seoTitle={room ? `${room.label} | Rooms` : 'Rooms | Community'} title="Rooms"
     intro="Talk shop with founders by stage and skill. Ask for feedback, share wins and test ideas.">
     <div className="grid gap-6 lg:grid-cols-[13rem_minmax(0,1fr)] xl:grid-cols-[13rem_minmax(0,1fr)_17rem]">
       <RoomsRail view={view} />
