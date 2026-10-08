@@ -9,6 +9,7 @@ import ThemeToggle from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { PLATFORM_TOUR_FIXTURE } from '@/lib/platformTour/tourFixture';
 import { tourHighlightPath, type TourPanel } from '@/lib/platformTour/tourPanels';
+import { clearTour } from '@/lib/platformTour/tourSession';
 import type { TourGateReason } from './PlatformTourGateContext';
 import { PlatformTourUtilities } from './PlatformTourUtilities';
 
@@ -25,17 +26,20 @@ import { PlatformTourUtilities } from './PlatformTourUtilities';
  * The header search is owned here rather than reused, because the product's
  * search module also carries a lazy reference to its Live variant.
  */
-export function PlatformTourShell({ panel, onNavigate, openGate, children }: {
-  panel: TourPanel;
+export function PlatformTourShell({ panel, currentPath, onNavigate, openGate, children }: {
+  /** A tour panel, or none when the shell frames a real public page (see PlatformTourRouteFrame). */
+  panel?: TourPanel;
+  /** The sidebar highlight for a framed public page, e.g. /rooms. */
+  currentPath?: string;
   onNavigate: (path: string) => void;
   openGate: (reason: TourGateReason) => void;
   children: ReactNode;
 }) {
   const { account, credits } = PLATFORM_TOUR_FIXTURE;
   return <WorkspaceLayout
-    home={panel.kind === 'home'}
+    home={panel?.kind === 'home'}
     onNavigate={onNavigate}
-    currentPath={tourHighlightPath(panel)}
+    currentPath={panel ? tourHighlightPath(panel) : currentPath}
     account={{ username: account.displayName, plan: `${account.plan} · sample` }}
     avatar={<ProfilePhoto initials={account.initials} />}
     profileHref={account.profileHref}
@@ -53,7 +57,7 @@ export function PlatformTourShell({ panel, onNavigate, openGate, children }: {
     utilities={<PlatformTourUtilities />}
     theme={<ThemeToggle />}
     signOut={<Button asChild variant="ghost" size="icon-sm" aria-label="Exit tour" title="Exit tour">
-      <Link to="/"><LogOut className="h-4 w-4" /></Link>
+      <Link to="/" onClick={clearTour}><LogOut className="h-4 w-4" /></Link>
     </Button>}
   >
     {children}

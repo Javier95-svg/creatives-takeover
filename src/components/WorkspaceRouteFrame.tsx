@@ -8,6 +8,7 @@ import { WorkspaceSkeleton } from '@/components/workspace/WorkspaceSkeleton';
 import { isProjectSubdomain } from '@/lib/demoStudio/publishedHost';
 import { readAuthSessionHint } from '@/lib/authSessionHint';
 import { supabaseBrowserConfig } from '@/integrations/supabase/env';
+import { isTourActive, isTourPublicRoute } from '@/lib/platformTour/tourSession';
 
 // Named factories so the shell can be warmed before authentication resolves.
 const importWorkspaceLive = () => import('./workspace/WorkspaceLive');
@@ -17,6 +18,7 @@ const importOnboardingGate = () => import('@/pages/AppEntry');
 const WorkspaceLive = lazy(importWorkspaceLive);
 const PulseHomeLive = lazy(importPulseHomeLive);
 const WorkspaceOnboardingGate = lazy(importOnboardingGate);
+const PlatformTourRouteFrame = lazy(() => import('./platform-tour/PlatformTourRouteFrame'));
 
 export default function WorkspaceRouteFrame({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
@@ -41,6 +43,10 @@ export default function WorkspaceRouteFrame({ children }: { children: ReactNode 
       void importOnboardingGate();
     }
   }, [warm, warmHome]);
+  // A visitor who opened this public page from the platform tour keeps the
+  // tour's sample workspace around it rather than the marketing site.
+  const tourFrame = !isProjectSubdomain() && !user && !(loading && mayBeSignedIn) && isTourActive() && isTourPublicRoute(pathname);
+  if (tourFrame) return <Suspense fallback={null}><PlatformTourRouteFrame>{children}</PlatformTourRouteFrame></Suspense>;
   if (applicable && ((loading && mayBeSignedIn) || (user && pending))) return <WorkspaceSkeleton />;
   if (!user || !enabled || !applicable) return <>{children}</>;
   return <RouteErrorBoundary routeName="Guided Journey"><Suspense fallback={<WorkspaceSkeleton />}>

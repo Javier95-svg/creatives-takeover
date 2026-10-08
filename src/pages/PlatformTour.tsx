@@ -13,6 +13,7 @@ import { NetworkPanel } from '@/components/platform-tour/panels/NetworkPanel';
 import { InstitutionsPanel } from '@/components/platform-tour/panels/InstitutionsPanel';
 import { ToolCatalogPanel } from '@/components/platform-tour/panels/ToolCatalogPanel';
 import { DEFAULT_TOUR_PANEL, resolveTourNavigation, resolveTourPanel } from '@/lib/platformTour/tourPanels';
+import { markTourActive } from '@/lib/platformTour/tourSession';
 import { referrerKind, trackPlatformTourOpened, trackPlatformTourGateShown, trackPlatformTourPanelViewed } from '@/lib/platformTour/tourAnalytics';
 import {
   EMPTY_TOUR_BUDGET, panelBlocked, questionsExhausted, questionsLeft,
@@ -72,6 +73,9 @@ export default function PlatformTour() {
   useEffect(() => {
     if (requested && requested !== panel.key) setParams({}, { replace: true });
   }, [requested, panel.key, setParams]);
+
+  // Public pages opened from here keep the tour frame (PlatformTourRouteFrame).
+  useEffect(() => { markTourActive(); }, []);
 
   const opened = useRef(false);
   useEffect(() => {

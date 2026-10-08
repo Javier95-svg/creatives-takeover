@@ -15,11 +15,12 @@ import { KIND_VISUALS } from './roomVisuals';
 export function InlineComposer({ room, onCompose }: { room?: string | null; onCompose: (kind?: PostKind) => void }) {
   const me = useMyProfileSummary().data;
   const name = me?.full_name || me?.username || 'You';
-  const firstName = name.split(' ')[0];
+  // Visitors have no name yet, so the prompt drops it rather than saying "You".
+  const greeting = me?.full_name || me?.username ? `, ${name.split(' ')[0]}` : '';
   const topic = launchpadTopic(room);
   return <section aria-label="Start a post" className="relative mb-5 overflow-hidden rounded-2xl border border-primary/40 bg-gradient-to-br from-primary/15 via-card to-card p-4 shadow-sm ring-1 ring-primary/10 sm:p-5">
     <p className="mb-3 font-space-grotesk text-base font-semibold">
-      {topic ? `What's happening in ${topic.label}, ${firstName}?` : `What are you working on, ${firstName}?`}
+      {topic ? `What's happening in ${topic.label}${greeting}?` : `What are you working on${greeting}?`}
     </p>
     <div className="flex items-center gap-3">
       <Avatar className="h-11 w-11 ring-2 ring-primary/30">

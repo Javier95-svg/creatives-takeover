@@ -329,3 +329,15 @@ test('the tour keeps the legacy layout and never inherits the workspace shell', 
   assert.equal(isWorkspaceRoute('/demo/123'), false);
   assert.equal(isWorkspaceRoute('/demo-studio'), true);
 });
+
+test('public pages opened from the tour keep the tour frame, including pages inside them', async () => {
+  const { isTourPublicRoute } = await import('../src/lib/platformTour/tourSession.ts');
+  for (const path of ['/rooms', '/rooms/pricing', '/rooms/posts/abc', '/launchpad', '/newspaper', '/newspaper/some-story', '/podcast', '/pricing']) {
+    assert.equal(isTourPublicRoute(path), true, path);
+  }
+  for (const path of ['/', '/dashboard', '/roomsx', '/signup', '/account']) assert.equal(isTourPublicRoute(path), false, path);
+  const frame = readFileSync(new URL('../src/components/WorkspaceRouteFrame.tsx', import.meta.url), 'utf8');
+  assert.match(frame, /!user && .*isTourActive\(\) && isTourPublicRoute\(pathname\)/);
+  const shell = readFileSync(new URL('../src/components/platform-tour/PlatformTourShell.tsx', import.meta.url), 'utf8');
+  assert.match(shell, /onClick=\{clearTour\}/);
+});
