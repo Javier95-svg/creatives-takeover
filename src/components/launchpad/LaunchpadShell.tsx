@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Navigate, NavLink, useLocation } from 'react-router-dom';
-import { Hash, MessagesSquare, Rocket, UsersRound, type LucideIcon } from 'lucide-react';
+import { Hash, MessagesSquare, Rocket, type LucideIcon } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import SEO from '@/components/SEO';
@@ -11,7 +11,6 @@ const LAUNCHPAD_TABS: ReadonlyArray<{ label: string; to: string; icon: LucideIco
   { label: 'Launchpad', to: '/launchpad', icon: Rocket, end: true },
   { label: 'Posts', to: '/launchpad/posts', icon: MessagesSquare },
   { label: 'Topics', to: '/launchpad/topics', icon: Hash },
-  { label: 'Profiles', to: '/launchpad/profiles', icon: UsersRound },
 ];
 
 /**

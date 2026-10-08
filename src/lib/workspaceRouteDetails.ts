@@ -1,5 +1,5 @@
 import { BIZMAP_STAGES, BIZMAP_TOOLS } from './bizmapStages';
-import { BarChart3, BriefcaseBusiness, CalendarClock, CheckSquare, FolderOpen, Gift, GraduationCap, Handshake, Hash, Inbox, LayoutDashboard, LineChart, MessageSquare, MessagesSquare, Mic, Newspaper, Repeat, Rocket, Settings, Sparkles, Users, UsersRound, type LucideIcon } from 'lucide-react';
+import { BarChart3, BriefcaseBusiness, CalendarClock, CheckSquare, FolderOpen, Gift, GraduationCap, Handshake, Hash, Inbox, LayoutDashboard, LineChart, MessageSquare, MessagesSquare, Mic, Newspaper, Repeat, Rocket, Settings, Sparkles, Users, type LucideIcon } from 'lucide-react';
 
 export const WORKSPACE_ROUTE_ICONS: Record<string, LucideIcon> = {
   ...Object.fromEntries(BIZMAP_TOOLS.map(tool => [tool.name, tool.icon])),
@@ -15,7 +15,6 @@ export const WORKSPACE_ROUTE_ICONS: Record<string, LucideIcon> = {
   Launchpad: Rocket,
   Posts: MessagesSquare,
   Topics: Hash,
-  Profiles: UsersRound,
   'Accelerator Hunt': Rocket,
   'Tech Stack Builder': Settings,
   Overview: LayoutDashboard,
@@ -54,7 +53,6 @@ export const WORKSPACE_ROUTE_DESCRIPTIONS: Record<string, string> = {
   Launchpad: 'Launches from founders building on CT.',
   Posts: 'Ask for feedback and share milestones.',
   Topics: 'Follow stages and skills you care about.',
-  Profiles: 'Find founders at your stage or in your sector.',
   'Accelerator Hunt': 'Find accelerator programs matched to your startup.',
   'Tech Stack Builder': 'Choose a practical stack for your product.',
   Overview: 'Track your progress and see what to work on next.',

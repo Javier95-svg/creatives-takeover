@@ -75,7 +75,6 @@ const LaunchpadPosts = lazy(() => import("./pages/launchpad/LaunchpadPosts"));
 const LaunchpadPostDetail = lazy(() => import("./pages/launchpad/LaunchpadPostDetail"));
 const LaunchpadTopics = lazy(() => import("./pages/launchpad/LaunchpadTopics"));
 const LaunchpadTopic = lazy(() => import("./pages/launchpad/LaunchpadTopic"));
-const LaunchpadProfiles = lazy(() => import("./pages/launchpad/LaunchpadProfiles"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Careers = lazy(() => import("./pages/Careers"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
@@ -370,7 +369,8 @@ function App() {
                         <Route path="/launchpad/posts/:id" element={<LaunchpadPostDetail />} />
                         <Route path="/launchpad/topics" element={<LaunchpadTopics />} />
                         <Route path="/launchpad/topics/:slug" element={<LaunchpadTopic />} />
-                        <Route path="/launchpad/profiles" element={<LaunchpadProfiles />} />
+                        {/* Profiles left Launchpad; the header search finds people. */}
+                        <Route path="/launchpad/profiles" element={<Navigate to="/launchpad/posts" replace />} />
                         <Route path="/mentorship/mentors/:id" element={<MentorProfilePage />} />
                         <Route path="/mentorship/book/:id" element={<MentorBookingPage />} />
                         <Route path="/mentorship/calls/respond" element={<MentorDiscoveryResponsePage />} />

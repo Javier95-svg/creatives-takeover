@@ -23,7 +23,7 @@ const MENTOR: NavSlice = {
   tools: {
     Dashboard: ['Overview', 'My Bookings', 'Analytics', 'Messages'],
     Network: ['Find a Mentor', 'Find a Co-Founder', 'Marketplace'],
-    Launchpad: ['Posts', 'Topics', 'Profiles'],
+    Launchpad: ['Posts', 'Topics'],
     Content: ['Newspaper', 'Podcast'],
     Resources: ['Accelerator Hunt', 'Tech Stack Builder'],
   },
@@ -34,7 +34,7 @@ const MARKETPLACE: NavSlice = {
   tools: {
     Dashboard: ['Overview', 'Enquiries', 'Analytics', 'Messages'],
     Network: ['Find a Mentor', 'Find a Co-Founder', 'Marketplace'],
-    Launchpad: ['Posts', 'Topics', 'Profiles'],
+    Launchpad: ['Posts', 'Topics'],
     Content: ['Newspaper', 'Podcast'],
     Resources: ['Accelerator Hunt', 'Tech Stack Builder'],
   },
@@ -45,7 +45,7 @@ const INVESTOR: NavSlice = {
   tools: {
     Dashboard: ['Overview', 'Matches', 'Messages'],
     Network: ['Find a Co-Founder', 'Find your Angel', 'Marketplace'],
-    Launchpad: ['Launchpad', 'Profiles', 'Posts'],
+    Launchpad: ['Launchpad', 'Posts'],
     Content: ['Newspaper', 'Podcast'],
   },
 };

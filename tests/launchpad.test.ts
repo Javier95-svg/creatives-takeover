@@ -36,7 +36,7 @@ test('Launchpad sits between Insighta and Content and renders inside the workspa
   const sidebar = readFileSync(new URL('../src/components/workspace/WorkspaceSidebar.tsx', import.meta.url), 'utf8');
   const order = [...sidebar.matchAll(/\{ label: "([A-Za-z]+)", icon: /g)].map((match) => match[1]);
   assert.deepEqual(order.slice(order.indexOf('Insighta'), order.indexOf('Insighta') + 3), ['Insighta', 'Launchpad', 'Content']);
-  for (const tab of ['Launchpad', 'Posts', 'Topics', 'Profiles']) {
+  for (const tab of ['Launchpad', 'Posts', 'Topics']) {
     assert.ok(WORKSPACE_ROUTES[tab]?.startsWith('/launchpad'), tab);
     assert.equal(isWorkspaceRoute(WORKSPACE_ROUTES[tab]), true, tab);
   }

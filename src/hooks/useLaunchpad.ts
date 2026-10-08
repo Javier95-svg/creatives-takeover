@@ -3,9 +3,9 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  addComment, createPost, deleteComment, deletePost, getPost, launchpadErrorMessage, listComments, listDirectory,
+  addComment, createPost, deleteComment, deletePost, getPost, launchpadErrorMessage, listComments,
   listFollowedTopics, listPosts, listTopicStats, setSaved, setTopicFollow, setUpvote, updatePost,
-  type DirectoryFilters, type LaunchpadPost, type NewPost, type PostFilters,
+  type LaunchpadPost, type NewPost, type PostFilters,
 } from '@/lib/launchpad';
 import {
   enterLaunch, getSupporterStatus, isMissingRoundsError, listEnteredProjectIds, listRound, toggleLaunchVote, withdrawLaunch,
@@ -167,16 +167,6 @@ export function useFollowTopic() {
       void queryClient.invalidateQueries({ queryKey: ['launchpad-followed-topics', user?.id] });
     },
     onSettled: () => void queryClient.invalidateQueries({ queryKey: ['launchpad-topic-stats'] }),
-  });
-}
-
-export function useDirectory(filters: DirectoryFilters) {
-  const { user } = useAuth();
-  return useQuery({
-    queryKey: ['launchpad-directory', filters],
-    queryFn: () => listDirectory(filters),
-    enabled: Boolean(user),
-    placeholderData: (previous) => previous,
   });
 }
 

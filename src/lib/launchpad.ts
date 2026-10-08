@@ -295,43 +295,6 @@ export async function setTopicFollow(userId: string, topic: string, on: boolean)
   if (error) throw error;
 }
 
-export interface DirectoryProfile {
-  id: string;
-  username: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  positioning_line: string | null;
-  startup_name: string | null;
-  startup_tagline: string | null;
-  startup_industry: string[] | null;
-  location: string | null;
-  user_type: string | null;
-  stage: number | null;
-  followers_count: number;
-  post_count: number;
-}
-
-export interface DirectoryFilters {
-  search: string;
-  userType: string | null;
-  stage: number | null;
-  sector: string | null;
-  limit: number;
-}
-
-export async function listDirectory(filters: DirectoryFilters): Promise<DirectoryProfile[]> {
-  const { data, error } = await db.rpc('launchpad_profiles', {
-    p_search: filters.search.trim() || null,
-    p_user_type: filters.userType,
-    p_stage: filters.stage,
-    p_sector: filters.sector,
-    p_limit: filters.limit,
-    p_offset: 0,
-  });
-  if (error) throw error;
-  return ((data ?? []) as DirectoryProfile[]).map((row) => ({ ...row, post_count: Number(row.post_count) }));
-}
-
 /** Supabase errors raised by the guard triggers carry a sentence meant for people. */
 export function launchpadErrorMessage(error: unknown, fallback: string) {
   const message = error && typeof error === 'object' && 'message' in error ? String((error as { message: unknown }).message) : '';
