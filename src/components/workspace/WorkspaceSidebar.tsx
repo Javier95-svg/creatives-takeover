@@ -1,6 +1,6 @@
 import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 import {
-  BookOpen,
+  Gift,
   ChevronDown,
   CircleDollarSign,
   Clapperboard,
@@ -36,7 +36,7 @@ const NAV_ITEMS: Array<{ label: string; icon: Icon }> = [
   { label: "Insighta", icon: Telescope },
   { label: "Community", icon: MessageSquareMore },
   { label: "Content", icon: Clapperboard },
-  { label: "Resources", icon: BookOpen },
+  { label: "Bonus", icon: Gift },
   { label: "Pricing", icon: CircleDollarSign },
 ];
 
@@ -47,9 +47,9 @@ const NAV_TOOLS: Record<string, string[]> = {
   BizMap: ["ICP Builder", "Demo Studio", "PMF Lab", "MVP Builder", "GTM Strategist", "Directories"],
   Network: ["Find a Mentor", "Find a Co-Founder", "Find your Angel", "Marketplace"],
   Insighta: ["Traction Engine", "VC Search", "Pitch Deck Analyzer", "Insighta Test"],
-  Community: ["Rooms", "Launches"],
+  Community: ["Rooms", "Launchpad"],
   Content: ["Newspaper", "Podcast"],
-  Resources: ["Accelerator Hunt", "Tech Stack Builder"],
+  Bonus: ["Accelerator Hunt", "Tech Stack Builder"],
 };
 
 // The lockup goes through navigateTo like every other link. It used to call

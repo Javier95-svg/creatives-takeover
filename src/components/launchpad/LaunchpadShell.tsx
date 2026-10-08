@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 
 const TABS: ReadonlyArray<{ label: string; to: string; icon: LucideIcon; isActive: (path: string) => boolean }> = [
   { label: 'Rooms', to: '/rooms', icon: MessagesSquare, isActive: (path) => path === '/rooms' || path.startsWith('/rooms/') },
-  { label: 'Launches', to: '/launchpad', icon: Rocket, isActive: (path) => path === '/launchpad' },
+  { label: 'Launchpad', to: '/launchpad', icon: Rocket, isActive: (path) => path === '/launchpad' },
 ];
 
 export type CommunityTheme = 'rooms' | 'launches';

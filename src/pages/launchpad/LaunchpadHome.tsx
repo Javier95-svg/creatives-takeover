@@ -70,7 +70,7 @@ function PublishedLaunches() {
 }
 
 /**
- * Launches: this week's round, ranked by upvotes from other founders. The top
+ * Launchpad: this week's round, ranked by upvotes from other founders. The top
  * three sit on a podium; supporters see what their upvotes have earned.
  */
 export default function LaunchpadHome() {
@@ -94,7 +94,7 @@ export default function LaunchpadHome() {
   const voteFor = (id: string, on: boolean) => vote.mutate({ launchId: id, on });
 
   return <LaunchpadShell theme="launches" wallpaper={<CommunityLaunchesWallpaper />} headerArt={<LaunchTrajectoryChart />}
-    seoTitle="Launches | Community" title="Launches"
+    seoTitle="Launchpad | Community" title="Launchpad"
     intro="Weekly rounds of products founders are launching on Creatives Takeover, ranked by upvotes from other founders.">
     {roundsMissing ? <>
       <PublishedLaunches />

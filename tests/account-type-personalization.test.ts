@@ -11,14 +11,14 @@ import { personaChips, personaFocus, personaGuidanceContext, personaHome, person
 import { navSectionsForType, navSliceForType, navToolsForType } from '../src/lib/workspaceNavForType.ts';
 import { notificationChannelsForType, allNotificationChannelKeys } from '../src/lib/notificationChannels.ts';
 
-const ALL_SECTIONS = ['Dashboard', 'BizMap', 'Network', 'Insighta', 'Content', 'Resources', 'Pricing'];
+const ALL_SECTIONS = ['Dashboard', 'BizMap', 'Network', 'Insighta', 'Content', 'Bonus', 'Pricing'];
 const ALL_TOOLS: Record<string, readonly string[]> = {
   Dashboard: ['Overview', 'Tasks'],
   BizMap: ['ICP Builder'],
   Network: ['Find a Mentor'],
   Insighta: ['VC Search'],
   Content: ['Newspaper'],
-  Resources: ['Accelerator Hunt'],
+  Bonus: ['Accelerator Hunt'],
 };
 
 // ------------------------------------------------------------ extensibility
@@ -174,7 +174,7 @@ test('founders and builders see the whole nav, unchanged', () => {
 
 test('the other three get a slice, in the product own order', () => {
   const mentor = navSectionsForType('mentor', ALL_SECTIONS);
-  assert.deepEqual(mentor, ['Dashboard', 'Network', 'Content', 'Resources', 'Pricing']);
+  assert.deepEqual(mentor, ['Dashboard', 'Network', 'Content', 'Bonus', 'Pricing']);
   assert.ok(!mentor.includes('BizMap'));
   assert.ok(!mentor.includes('Insighta'));
   assert.deepEqual(navToolsForType('mentor', 'Dashboard', ALL_TOOLS), ['Overview', 'My Bookings', 'Analytics', 'Messages']);

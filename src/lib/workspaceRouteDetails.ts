@@ -13,7 +13,7 @@ export const WORKSPACE_ROUTE_ICONS: Record<string, LucideIcon> = {
   Newspaper,
   Podcast: Mic,
   Rooms: MessagesSquare,
-  Launches: Rocket,
+  Launchpad: Rocket,
   'Accelerator Hunt': Rocket,
   'Tech Stack Builder': Settings,
   Overview: LayoutDashboard,
@@ -36,7 +36,7 @@ export const WORKSPACE_SECTION_SLOGANS: Record<string, string> = {
   Community: 'Share Your Journey 📣',
   Network: 'Connect & Collab 🌐',
   Content: 'Leisure Time🍿',
-  Resources: 'Some Gifts 🎁',
+  Bonus: 'Some Gifts 🎁',
 };
 
 export const WORKSPACE_ROUTE_DESCRIPTIONS: Record<string, string> = {
@@ -50,7 +50,7 @@ export const WORKSPACE_ROUTE_DESCRIPTIONS: Record<string, string> = {
   Newspaper: 'Read business cases and founder stories.',
   Podcast: 'Hear candid conversations with founders.',
   Rooms: 'Talk shop with founders by stage and skill.',
-  Launches: 'Weekly launch rounds from founders on CT.',
+  Launchpad: 'Weekly launch rounds from founders on CT.',
   'Accelerator Hunt': 'Find accelerator programs matched to your startup.',
   'Tech Stack Builder': 'Choose a practical stack for your product.',
   Overview: 'Track your progress and see what to work on next.',
@@ -86,14 +86,14 @@ export const SECTION_SLOGANS_BY_TYPE: Record<string, Record<string, string>> = {
     Network: 'Connect & Collab 🌐',
     Community: 'Answer founders 💬',
     Content: 'Leisure Time🍿',
-    Resources: 'Some Gifts 🎁',
+    Bonus: 'Some Gifts 🎁',
   },
   marketplace: {
     Dashboard: 'Your Clients 📥',
     Network: 'Connect & Collab 🌐',
     Community: 'Answer founders 💬',
     Content: 'Leisure Time🍿',
-    Resources: 'Some Gifts 🎁',
+    Bonus: 'Some Gifts 🎁',
   },
   investor: {
     Dashboard: 'Your Dealflow 🔎',
@@ -123,7 +123,7 @@ export const ROUTE_DESCRIPTIONS_BY_TYPE: Record<string, Record<string, string>> 
     'Find a Co-Founder': 'Browse founders looking for a partner.',
     'Find your Angel': 'See the rest of the investor network.',
     Marketplace: 'Find services for your portfolio.',
-    Launches: 'See what founders are launching this week.',
+    Launchpad: 'See what founders are launching this week.',
     Rooms: 'Follow founder progress and milestones.',
   },
 };

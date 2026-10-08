@@ -48,7 +48,7 @@ test('Community sits between Insighta and Content and renders inside the workspa
   const sidebar = readFileSync(new URL('../src/components/workspace/WorkspaceSidebar.tsx', import.meta.url), 'utf8');
   const order = [...sidebar.matchAll(/\{ label: "([A-Za-z ]+)", icon: /g)].map((match) => match[1]);
   assert.deepEqual(order.slice(order.indexOf('Insighta'), order.indexOf('Insighta') + 3), ['Insighta', 'Community', 'Content']);
-  for (const tab of ['Rooms', 'Launches']) {
+  for (const tab of ['Rooms', 'Launchpad']) {
     assert.equal(WORKSPACE_ROUTES[tab], tab === 'Rooms' ? '/rooms' : '/launchpad', tab);
     assert.equal(isWorkspaceRoute(WORKSPACE_ROUTES[tab]), true, tab);
   }
@@ -59,7 +59,7 @@ test('Community sits between Insighta and Content and renders inside the workspa
 });
 
 test('reviewed account types get a Launchpad slice of their own', () => {
-  const all = ['Dashboard', 'BizMap', 'Network', 'Insighta', 'Community', 'Content', 'Resources', 'Pricing'];
+  const all = ['Dashboard', 'BizMap', 'Network', 'Insighta', 'Community', 'Content', 'Bonus', 'Pricing'];
   for (const type of ['mentor', 'marketplace', 'investor'] as const) {
     assert.ok(navSectionsForType(type, all).includes('Community'), type);
     assert.ok(navToolsForType(type, 'Community', {})?.includes('Rooms'), type);
