@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   BellRing, ChartLine, ChartPie, ClipboardList, Flame, GraduationCap, House, Music, PawPrint, Presentation, Ruler, Send, Sprout, Timer, UtensilsCrossed,
   type LucideIcon,
@@ -6,11 +7,18 @@ import type { AvatarLook, LogoGlyph, LogoSpec } from '@/lib/communityExamples';
 import { cn } from '@/lib/utils';
 
 /**
- * A flat illustrated avatar for an invented example person. Drawn, never a
- * photo, so no real person's face is attached to an invented name.
+ * An invented example person's avatar: their AI-generated photo (a face of
+ * nobody real, served from this app) when one has been added, else a flat
+ * drawing. Never a real person's photo.
  */
-export function ExampleAvatar({ look, className }: { look: AvatarLook; className?: string }) {
+export function ExampleAvatar({ look, photo, className }: { look: AvatarLook; photo?: string; className?: string }) {
+  const [photoFailed, setPhotoFailed] = useState(false);
   const ink = '#2A1D16';
+  // A local, AI-generated face when one has been added; the drawing otherwise.
+  if (photo && !photoFailed) {
+    return <img src={photo} alt="" aria-hidden="true" loading="lazy" decoding="async" onError={() => setPhotoFailed(true)}
+      className={cn('h-9 w-9 shrink-0 rounded-full object-cover', className)} style={{ backgroundColor: look.background }} />;
+  }
   return <svg viewBox="0 0 64 64" aria-hidden="true" className={cn('h-9 w-9 shrink-0 rounded-full', className)}>
     <circle cx="32" cy="32" r="32" fill={look.background} />
     {look.style === 'long' && <path d="M15 30 C15 12 49 12 49 30 V52 C44 55 20 55 15 52 Z" fill={look.hair} />}

@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { ArrowBigDown, ArrowBigUp, Info, MessageCircle } from 'lucide-react';
 import { founderStageLabel } from '@/lib/bizmapStageOrder';
-import { EXAMPLE_LAUNCHES, examplesForRoom, type ExamplePost } from '@/lib/communityExamples';
+import { EXAMPLE_LAUNCHES, examplePhoto, examplesForRoom, type ExamplePost } from '@/lib/communityExamples';
 import { postKind, type PostKind } from '@/lib/launchpad';
 import { cn } from '@/lib/utils';
 import { ExampleAvatar, ExampleLogo } from './ExampleArt';
@@ -14,11 +15,12 @@ function ExampleBadge() {
 function ExamplePostCard({ post, onUse }: { post: ExamplePost; onUse: () => void }) {
   const { stripe } = KIND_VISUALS[postKind(post.kind)];
   const stage = founderStageLabel(post.stage);
+  const [expanded, setExpanded] = useState(false);
   return <article className="relative overflow-hidden rounded-xl border border-border/70 bg-card">
     <span aria-hidden="true" className={cn('absolute inset-y-0 left-0 w-1', stripe)} />
     <div className="p-4 pl-5 sm:p-5 sm:pl-6">
       <div className="flex items-start gap-3">
-        <ExampleAvatar look={post.author.look} />
+        <ExampleAvatar look={post.author.look} photo={examplePhoto(post.author.handle)} />
         <div className="min-w-0 flex-1 space-y-1.5">
           <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm">
             <span className="font-medium">{post.author.name}</span>
@@ -35,7 +37,11 @@ function ExamplePostCard({ post, onUse }: { post: ExamplePost; onUse: () => void
         </div>
       </div>
       <h3 className="mt-3 font-space-grotesk text-lg font-semibold leading-snug">{post.title}</h3>
-      <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{post.body}</p>
+      <p className={cn('mt-1 whitespace-pre-line text-sm text-muted-foreground', !expanded && 'line-clamp-4')}>{post.body}</p>
+      <button type="button" onClick={() => setExpanded(!expanded)} aria-expanded={expanded}
+        className="mt-1 text-sm font-medium text-primary underline-offset-4 hover:underline">
+        {expanded ? 'Show less' : 'Show more'}
+      </button>
       {/* Reddit-style indicators. Examples have no real votes, so the pills
           say what they do instead of showing invented numbers. Reply opens
           the composer on the same kind of post and room. */}
@@ -87,7 +93,7 @@ export function ExampleLaunches() {
         </div>
         <p className="mt-3 flex-1 text-sm text-muted-foreground">{launch.headline}</p>
         <div className="mt-4 flex items-center gap-2 border-t border-border/60 pt-3 text-xs text-muted-foreground">
-          <ExampleAvatar look={launch.maker.look} className="h-6 w-6" />
+          <ExampleAvatar look={launch.maker.look} photo={examplePhoto(launch.maker.handle)} className="h-6 w-6" />
           <span>by <span className="font-medium text-foreground">{launch.maker.name}</span></span>
         </div>
       </div>)}

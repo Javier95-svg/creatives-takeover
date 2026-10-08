@@ -65,48 +65,116 @@ const PEOPLE = {
 export const EXAMPLE_POSTS: readonly ExamplePost[] = [
   {
     id: 'ex-pricing-reviewer', kind: 'feedback', room: 'pricing', author: PEOPLE.daniel, stage: 3, ago: '3h',
-    title: 'Would you pay $19/month for a pitch-deck reviewer?',
-    body: 'It scores each slide against the questions angels actually ask and tells you which one loses them. Two founders I interviewed said they would pay; one said it should be free with a paid "fix it for me" tier. Which would you pick, and why?',
+    title: 'Is $19/mo too cheap for a pitch deck review tool? Or is monthly just wrong?',
+    body: `Been building Deckpulse nights and weekends for ~4 months. It reads your deck and flags the slides where angels usually check out, trained on ~300 decks I tagged by hand plus what came up in my own raise last year.
+
+Talked to 11 founders this month:
+- 2 said they'd pay $19/mo without blinking
+- 5 said they'd only need it for 2-3 weeks before a raise, so a subscription feels weird
+- 4 said "cool" and never replied again 😅
+
+I'm leaning towards a one-off $49 "raise pass" (30 days) instead. Has anyone priced something people only need occasionally? What did you land on, and did it hurt revenue?`,
   },
   {
     id: 'ex-customers-first-ten', kind: 'milestone', room: 'customers', author: PEOPLE.laura, stage: 5, ago: '7h',
-    title: 'First 10 paying customers, 41 days after launch',
-    body: 'What worked: replying to people who had already complained about no-shows in clinic forums, then offering a 20-minute setup call. What did not: two directories (lots of visits, zero signups) and a cold email batch with a 1% reply rate. Happy to share the message I used.',
+    title: '10 paying clinics, 41 days after launch. What worked and what was a waste of time',
+    body: `Nudgebay sends text reminders so physio clinics stop losing slots to no-shows. €39/mo per clinic.
+
+What worked:
+1. Searching physio Facebook groups for "no-show" and replying to people who were already complaining. 6 of the 10 came from that.
+2. Offering a 20-min setup call instead of a free trial. Everyone who took the call converted except one.
+3. Asking each new clinic "who else do you know dealing with this?" → 2 referrals.
+
+What didn't:
+- Two startup directories. ~900 visits, 0 clinics. Wrong audience entirely.
+- Cold email to 150 clinics. 1% reply rate, 0 sales.
+
+Next goal is 25 by end of the quarter. If you've sold to small healthcare practices, how did you handle "I need to check with our receptionist"?`,
   },
   {
     id: 'ex-validation-interviews', kind: 'idea', room: 'validation', author: PEOPLE.priya, stage: 3, ago: '1d',
-    title: 'Physio clinics lose 6 hours a week to no-shows. Worth building for?',
-    body: '14 interviews in. Every clinic owner named no-shows as a top-three problem, but only 3 already pay for reminders. Is "they already pay for something" the better signal, or the pain itself? What would you test next before writing code?',
+    title: '14 interviews with clinic owners. Is "they already pay for something" a better signal than "it hurts"?',
+    body: `Context: I'm a physio and I've been toying with building something for appointment no-shows.
+
+After 14 interviews:
+- 14/14 said no-shows are a top-3 problem
+- 9/14 estimated they lose 4-8 hours a week
+- only 3/14 pay for anything today (SMS reminders bundled into their booking system)
+
+Part of me reads that as "huge gap, nobody's solved it". The other part reads it as "they complain but won't pay".
+
+For those who validated in a niche like this: what test actually told you people would pay? I'm thinking a fake-door "book a demo" page with the price on it before I write any code.`,
   },
   {
     id: 'ex-product-landing', kind: 'feedback', room: 'product', author: PEOPLE.tom, stage: 4, ago: '1d',
-    title: 'Landing page check: is it clear what we do in five seconds?',
-    body: 'Testers keep describing Pebblecast as "an invoicing app", but it is a cash-flow forecast for freelancers. Link and screenshot below. What do you think we do, and what made you think that?',
+    title: 'Roast my landing page: people think we are an invoicing app (we are not)',
+    body: `Pebblecast shows freelancers how much cash they'll have over the next 90 days, using the invoices they've already sent. That's it.
+
+I watched 6 people land on the homepage for the first time (Zoom, screen share). 4 of them described it back to me as "an invoicing tool". Which… makes sense, because the hero screenshot is literally an invoice list. 🤦‍♂️
+
+What I'm considering:
+- swap the hero image for the 90-day cash chart
+- change the headline from "Get paid on time, plan with confidence" to "Know your cash for the next 90 days"
+
+Blunt feedback welcome. From the headline alone, what do you think it does?`,
   },
   {
     id: 'ex-building-nocode', kind: 'discussion', room: 'building', author: PEOPLE.marcus, stage: 4, ago: '2d',
-    title: 'No-code or code for a two-sided marketplace MVP?',
-    body: 'Tutors on one side, parents on the other, payments in the middle. I can ship a no-code version in three weeks or a coded one in eight. If you built a marketplace, what broke first on no-code, and when did you rebuild?',
+    title: 'Non-technical founder: no-code MVP for a two-sided marketplace, or wait and build it properly?',
+    body: `I'm building a tutoring marketplace (parents ↔ vetted maths tutors, payments in the middle). I can't code.
+
+Option A: Softr + Airtable + Stripe Connect. I can have something live in ~3 weeks myself.
+Option B: pay a freelance dev. ~8 weeks and most of my savings.
+
+My worry with A is that payouts get messy fast and I'll have to rebuild exactly when things start working. My worry with B is spending 8 weeks building something nobody books.
+
+If you launched a marketplace on no-code: what broke first, and how many transactions did you get to before you rebuilt?`,
   },
   {
     id: 'ex-launch-directories', kind: 'milestone', room: 'launch', author: PEOPLE.sofia, stage: 5, ago: '2d',
-    title: 'Launch week numbers: 3 directories, 1,240 visits, 61 waitlist signups',
-    body: 'Biggest surprise: the smallest directory sent the best visitors (12% signup rate vs 3%). Posting the full breakdown and the copy I changed halfway through the week, in case it helps anyone launching next.',
+    title: 'Launch week recap: 3 directories, 1,240 visits, 61 waitlist signups. The smallest one won',
+    body: `Launched Kilnly (bookings + firing schedules for community pottery studios) last week. Sharing numbers because posts like this helped me a lot before launching.
+
+Big general directory: 780 visits → 19 signups (2.4%)
+Maker/indie directory: 310 visits → 21 signups (6.8%)
+Tiny crafts newsletter: 150 visits → 21 signups (14%)
+
+Biggest lesson: niche beats big, by a mile. I also changed the headline on Wednesday from "Studio management, simplified" to "Stop running your kiln schedule in a spreadsheet" and the signup rate roughly doubled for the rest of the week.
+
+Happy to share the exact copy if you're launching soon.`,
   },
   {
     id: 'ex-traction-channels', kind: 'discussion', room: 'traction', author: PEOPLE.kenji, stage: 6, ago: '3d',
-    title: 'Cold email vs LinkedIn for B2B: 200 sends each',
-    body: 'Email: 4% replies, 2 demos. LinkedIn: 11% replies, 1 demo. More replies on LinkedIn, but they were mostly polite no\'s. Is anyone measuring a channel by demos booked rather than replies? Curious what your bar is before you double down.',
+    title: 'Cold email vs LinkedIn DMs for B2B: 200 sends each, results inside',
+    body: `Ran a small two-week test for Leadlane (we sell to sales teams at 20-100 person SaaS companies).
+
+Email, 200 sends: 8 replies (4%), 2 demos booked
+LinkedIn, 200 connection requests + 1 follow-up: 22 replies (11%), 1 demo booked
+
+LinkedIn "won" on replies, but most were polite "not right now". Email replies were fewer but far more qualified.
+
+I'm now judging channels purely on demos booked per 100 sends. What metric do you use before deciding to double down on a channel? Replies feel like a vanity number in hindsight.`,
   },
   {
     id: 'ex-fundraising-market', kind: 'feedback', room: 'fundraising', author: PEOPLE.hannah, stage: 7, ago: '4d',
-    title: 'Pre-seed deck: every investor asks about market size. Is my slide the problem?',
-    body: 'I show a top-down TAM from an industry report. Three calls in a row, the first question was "how did you get that number?" Should I switch to bottom-up (clinics × price) even though it looks smaller?',
+    title: 'Pre-seed: 3 calls in a row, the first question was "how did you get that market size?"',
+    body: `My market slide uses a top-down number from an industry report (€4.2B "clinic software market"). Every investor so far has poked at it within five minutes, and the rest of the call I'm on the back foot.
+
+I rebuilt it bottom-up last night: ~38,000 independent clinics in our 4 launch countries × €468/yr = €17.8M serviceable today. Much smaller, but I can defend every number.
+
+Is it a mistake to show the smaller number at pre-seed? Or do I lead with bottom-up and keep the big market for the expansion story? Would really appreciate input from anyone who raised recently.`,
   },
   {
     id: 'ex-founder-life-job', kind: 'discussion', room: 'founder-life', author: PEOPLE.omar, stage: 2, ago: '5d',
-    title: 'How do you protect build time with a full-time job?',
-    body: 'I get two good evenings a week and they keep disappearing into email and "quick" admin. What routine actually worked for you while employed? Mornings, weekends, one long day?',
+    title: 'How do you actually protect build time with a full-time job?',
+    body: `Product manager by day, building on the side for ~7 months. In theory I have two good evenings a week plus Saturday morning. In practice those evenings get eaten by email, "quick" admin and being too tired to think.
+
+Things I've tried:
+- 5am mornings: lasted 9 days
+- one long Saturday: productive, but I lose the whole weekend
+- phone in another room: honestly helps more than anything else
+
+If you shipped something while employed, what routine actually stuck for more than a month?`,
   },
 ];
 
@@ -151,4 +219,16 @@ export const EXAMPLE_LAUNCHES: readonly ExampleLaunch[] = [
 
 export function examplesForRoom(room: string | null | undefined): readonly ExamplePost[] {
   return room ? EXAMPLE_POSTS.filter((post) => post.room === room) : EXAMPLE_POSTS;
+}
+
+/**
+ * Example people who have a photo in public/community-examples/<handle>.jpg:
+ * an AI-generated face of nobody real, licensed for commercial use (see the
+ * README there). Add a handle here when its file is added; everyone else keeps
+ * the drawn avatar, and no request is made for a photo that is not there.
+ */
+export const EXAMPLE_PHOTO_HANDLES: ReadonlySet<string> = new Set<string>([]);
+
+export function examplePhoto(handle: string): string | undefined {
+  return EXAMPLE_PHOTO_HANDLES.has(handle) ? `/community-examples/${handle}.jpg` : undefined;
 }
