@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { JoinGateProvider } from './JoinGate';
+import { useRequireAccount } from './requireAccount';
 
 const TABS: ReadonlyArray<{ label: string; to: string; icon: LucideIcon; isActive: (path: string) => boolean }> = [
   { label: 'Rooms', to: '/rooms', icon: MessagesSquare, isActive: (path) => path === '/rooms' || path.startsWith('/rooms/') },
@@ -36,9 +37,10 @@ export function LaunchpadShell({ title, intro, seoTitle, actions, wide = false, 
   const { user, loading } = useAuth();
   const location = useLocation();
 
+  const requireAccount = useRequireAccount();
   const back = encodeURIComponent(`${location.pathname}${location.search}`);
 
-  return <JoinGateProvider theme={theme}>
+  return <JoinGateProvider>
     <SEO title={seoTitle} description="Talk shop with founders, get feedback and launch with Creatives Takeover." url={location.pathname} noindex />
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -73,7 +75,7 @@ export function LaunchpadShell({ title, intro, seoTitle, actions, wide = false, 
           {!loading && !user && <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/10 px-4 py-3">
             <p className="text-sm"><span className="font-semibold">You're browsing as a visitor.</span> Sign up free to post, reply, upvote and launch your product.</p>
             <div className="flex gap-2">
-              <Button asChild size="sm"><Link to={`/signup?source=community&return=${back}`}>Sign up free</Link></Button>
+              <Button size="sm" onClick={() => requireAccount('join the community')}>Sign up free</Button>
               <Button asChild size="sm" variant="outline"><Link to={`/login?source=community&return=${back}`}>Log in</Link></Button>
             </div>
           </div>}
