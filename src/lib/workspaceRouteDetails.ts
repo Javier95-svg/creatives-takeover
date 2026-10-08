@@ -36,7 +36,7 @@ export const WORKSPACE_SECTION_SLOGANS: Record<string, string> = {
   Community: 'Share Your Journey 📣',
   Network: 'Connect & Collab 🌐',
   Content: 'Leisure Time🍿',
-  Bonus: 'From Creatives Takeover with 💙',
+  Bonus: 'From CT with 💙',
 };
 
 export const WORKSPACE_ROUTE_DESCRIPTIONS: Record<string, string> = {
@@ -86,14 +86,14 @@ export const SECTION_SLOGANS_BY_TYPE: Record<string, Record<string, string>> = {
     Network: 'Connect & Collab 🌐',
     Community: 'Answer founders 💬',
     Content: 'Leisure Time🍿',
-    Bonus: 'From Creatives Takeover with 💙',
+    Bonus: 'From CT with 💙',
   },
   marketplace: {
     Dashboard: 'Your Clients 📥',
     Network: 'Connect & Collab 🌐',
     Community: 'Answer founders 💬',
     Content: 'Leisure Time🍿',
-    Bonus: 'From Creatives Takeover with 💙',
+    Bonus: 'From CT with 💙',
   },
   investor: {
     Dashboard: 'Your Dealflow 🔎',
