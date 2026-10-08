@@ -123,19 +123,21 @@ test('rooms and posts live under /rooms, Launches stays at /launchpad, and old a
   assert.ok(!LAUNCHPAD_TOPICS.some((room) => room.slug === 'posts'));
 });
 
-test('examples cover every room and post type, and never pose as real people', () => {
+test('examples cover every room and post type, stay labelled, and use drawn art only', () => {
   for (const room of LAUNCHPAD_TOPICS) assert.ok(examplesForRoom(room.slug).length > 0, `no example for ${room.slug}`);
   for (const post of EXAMPLE_POSTS) assert.ok(launchpadTopic(post.room), `${post.id} uses a retired room`);
   assert.deepEqual([...new Set(EXAMPLE_POSTS.map((post) => post.kind))].sort(), ['discussion', 'feedback', 'idea', 'milestone']);
-  // Authors are described by role, never as a "First Last" person, and carry no photo or engagement numbers.
-  const personName = /^[A-Z][a-z]+ [A-Z][a-z]+$/;
+  // Invented people get illustrated avatars, never photo URLs, and nothing carries vote or reply counts.
   for (const item of [...EXAMPLE_POSTS, ...EXAMPLE_LAUNCHES]) {
-    assert.ok(!personName.test(item.author), `${item.id} author looks like a person: ${item.author}`);
-    for (const key of ['avatar_url', 'upvotes', 'comment_count', 'username']) assert.ok(!(key in item), `${item.id} has ${key}`);
+    const person = 'author' in item ? item.author : item.maker;
+    assert.ok(person.look && !('avatar_url' in person) && !('photo' in person), `${item.id} has a photo`);
+    for (const key of ['avatar_url', 'upvotes', 'comment_count', 'votes']) assert.ok(!(key in item), `${item.id} has ${key}`);
   }
-  // The components label every example and say they are not written by members.
+  // Every example is tagged, and the page says the people and products are invented.
   const ui = readFileSync(new URL('../src/components/launchpad/CommunityExamples.tsx', import.meta.url), 'utf8');
-  assert.match(ui, />Example</);
-  assert.match(ui, /not written by members/);
-  assert.match(ui, /Example products, not real entries/);
+  assert.equal((ui.match(/<ExampleBadge \/>/g) ?? []).length, 2);
+  assert.match(ui, /the people and posts are invented, not members/);
+  assert.match(ui, /Example products and makers are invented, not real entries/);
+  const art = readFileSync(new URL('../src/components/launchpad/ExampleArt.tsx', import.meta.url), 'utf8');
+  assert.ok(!/<img|https?:\/\//.test(art), 'example art must be drawn, not loaded');
 });
