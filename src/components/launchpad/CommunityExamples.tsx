@@ -1,4 +1,4 @@
-import { Info, PenSquare, Rocket } from 'lucide-react';
+import { Info, PenSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { founderStageLabel } from '@/lib/bizmapStageOrder';
 import { EXAMPLE_LAUNCHES, examplesForRoom, type ExamplePost } from '@/lib/communityExamples';
@@ -52,27 +52,18 @@ function ExamplePostCard({ post, onUse }: { post: ExamplePost; onUse: () => void
  */
 export function ExamplePosts({ room, onCompose }: { room?: string | null; onCompose: (kind: PostKind, room: string) => void }) {
   const examples = examplesForRoom(room);
-  return <section aria-labelledby="examples-heading" className="space-y-3">
-    <div className="rounded-xl border border-border/70 bg-card p-4">
-      <h2 id="examples-heading" className="font-space-grotesk text-lg font-semibold">{room ? 'No posts here yet' : 'Be the first to post'}</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Here is the kind of post that gets useful replies. Start from one of these or write your own.</p>
-      <p className="mt-2 flex items-start gap-1.5 text-xs text-muted-foreground">
-        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-        Examples are illustrative: the people and posts are invented, not members. They disappear once real posts arrive.
-      </p>
-    </div>
+  return <section aria-label="Example posts" className="space-y-3">
+    <p className="flex items-start gap-1.5 px-1 text-xs text-muted-foreground">
+      <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      Examples are illustrative: the people and posts are invented, not members. They disappear once real posts arrive.
+    </p>
     {examples.map((post) => <ExamplePostCard key={post.id} post={post} onUse={() => onCompose(post.kind, post.room)} />)}
   </section>;
 }
 
 /** Shown while this week's round is empty: how the board will read, plainly marked. */
 export function ExampleLaunches() {
-  return <section aria-labelledby="example-launches-heading" className="mb-8 space-y-4">
-    <div className="rounded-2xl border border-dashed border-border/80 px-6 py-8 text-center">
-      <Rocket className="mx-auto h-8 w-8 text-primary" aria-hidden="true" />
-      <h2 id="example-launches-heading" className="mt-2 font-space-grotesk text-lg font-semibold">No launches in this round yet</h2>
-      <p className="mx-auto mt-1.5 max-w-md text-sm text-muted-foreground">Enter a published Demo Studio launch page and you lead the round from day one. This is how the board will look once launches are in.</p>
-    </div>
+  return <section aria-label="Example launches" className="mb-8 space-y-4">
     <div className="grid gap-3 md:grid-cols-3">
       {EXAMPLE_LAUNCHES.map((launch, index) => <div key={launch.id} className="flex h-full flex-col rounded-2xl border border-border/70 bg-card p-5">
         <div className="flex items-center justify-between gap-2">

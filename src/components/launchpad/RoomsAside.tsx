@@ -29,7 +29,7 @@ function WeeklyLaunches() {
   return <AsideCard title="This week's launches">
     <p className="-mt-2 mb-3 text-xs text-muted-foreground">Round closes in {left.days}d {left.hours}h</p>
     {round.isPending && <div className="h-20 animate-pulse rounded-lg bg-muted/60" />}
-    {round.isSuccess && rows.length === 0 && <p className="text-sm text-muted-foreground">No launches yet this week. Be the first one on the board.</p>}
+    {round.isSuccess && rows.length === 0 && <p className="text-sm text-muted-foreground">The round is open until Sunday. Enter a launch to get on the board.</p>}
     <ol className="space-y-2.5">
       {rows.map((launch) => <li key={launch.id} className="flex items-center gap-2.5">
         <span className="w-4 text-xs font-semibold tabular-nums text-muted-foreground">{launch.rank}</span>

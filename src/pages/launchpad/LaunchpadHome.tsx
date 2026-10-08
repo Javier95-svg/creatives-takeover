@@ -62,7 +62,7 @@ function PublishedLaunches() {
       </Link>)}
     </div>}
     {launches.isSuccess && rows.length === 0 && <div className="rounded-2xl border border-dashed border-border/80 px-6 py-10 text-center">
-      <h2 className="font-space-grotesk text-lg font-semibold">Be the first launch on the board</h2>
+      <h2 className="font-space-grotesk text-lg font-semibold">Launch your product here</h2>
       <p className="mx-auto mt-1.5 max-w-md text-sm text-muted-foreground">Publish your launch page in Demo Studio to appear here.</p>
       <Button asChild className="mt-4 gap-2"><Link to="/demo-studio">Build your launch page <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link></Button>
     </div>}
@@ -106,7 +106,7 @@ export default function LaunchpadHome() {
             <Badge variant="outline" className="border-primary/40 bg-card/70 text-xs text-primary">Round · {roundLabel()}</Badge>
             <h2 className="mt-3 font-space-grotesk text-2xl font-semibold">This week's launches</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              {rows.length > 0 ? `${rows.length} ${rows.length === 1 ? 'launch' : 'launches'} · ${totalVotes} ${totalVotes === 1 ? 'upvote' : 'upvotes'} so far` : 'The round is open. Be the first launch on the board.'}
+              {rows.length > 0 ? `${rows.length} ${rows.length === 1 ? 'launch' : 'launches'} · ${totalVotes} ${totalVotes === 1 ? 'upvote' : 'upvotes'} so far` : 'The round is open until Sunday at midnight (UTC).'}
             </p>
             {mine
               ? <div className="mt-4 space-y-3">
