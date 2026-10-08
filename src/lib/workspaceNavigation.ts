@@ -15,6 +15,10 @@ export const WORKSPACE_ROUTES: Record<string, string> = {
   Marketplace: '/marketplace',
   Newspaper: '/newspaper',
   Podcast: '/podcast',
+  Launchpad: '/launchpad',
+  Posts: '/launchpad/posts',
+  Topics: '/launchpad/topics',
+  Profiles: '/launchpad/profiles',
   Settings: '/dashboard/settings',
   Messages: '/messages',
   // Category surfaces. Only ever reached from a per type nav slice, so a

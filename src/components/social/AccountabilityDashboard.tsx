@@ -183,9 +183,9 @@ export const AccountabilityDashboard = () => {
 
           <div className="flex flex-wrap gap-3">
             <Button asChild>
-              <Link to="/mentorship/progress">
+              <Link to="/launchpad/posts">
                 <Megaphone className="h-4 w-4 mr-2" />
-                Share Progress in Community
+                Share Progress on Launchpad
               </Link>
             </Button>
             <Button variant="outline" onClick={() => setShowMatching(true)}>

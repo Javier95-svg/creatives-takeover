@@ -70,7 +70,12 @@ const StartupGuide = lazy(() => import("./pages/StartupGuide"));
 const Services = lazy(() => import("./pages/Services"));
 const Software = lazy(() => import("./pages/Software"));
 const CommunityPage = lazy(() => import("./pages/CommunityPage"));
-const ProgressCommunityPage = lazy(() => import("./pages/ProgressCommunityPage"));
+const LaunchpadHome = lazy(() => import("./pages/launchpad/LaunchpadHome"));
+const LaunchpadPosts = lazy(() => import("./pages/launchpad/LaunchpadPosts"));
+const LaunchpadPostDetail = lazy(() => import("./pages/launchpad/LaunchpadPostDetail"));
+const LaunchpadTopics = lazy(() => import("./pages/launchpad/LaunchpadTopics"));
+const LaunchpadTopic = lazy(() => import("./pages/launchpad/LaunchpadTopic"));
+const LaunchpadProfiles = lazy(() => import("./pages/launchpad/LaunchpadProfiles"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Careers = lazy(() => import("./pages/Careers"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
@@ -358,7 +363,14 @@ function App() {
                         <Route path="/services" element={<Services />} />
                         <Route path="/software" element={<Software />} />
                         <Route path="/mentorship" element={<CommunityPage />} />
-                        <Route path="/mentorship/progress" element={<ProgressCommunityPage />} />
+                        {/* The progress feed moved into Launchpad Posts, on the same table. */}
+                        <Route path="/mentorship/progress" element={<Navigate to="/launchpad/posts" replace />} />
+                        <Route path="/launchpad" element={<LaunchpadHome />} />
+                        <Route path="/launchpad/posts" element={<LaunchpadPosts />} />
+                        <Route path="/launchpad/posts/:id" element={<LaunchpadPostDetail />} />
+                        <Route path="/launchpad/topics" element={<LaunchpadTopics />} />
+                        <Route path="/launchpad/topics/:slug" element={<LaunchpadTopic />} />
+                        <Route path="/launchpad/profiles" element={<LaunchpadProfiles />} />
                         <Route path="/mentorship/mentors/:id" element={<MentorProfilePage />} />
                         <Route path="/mentorship/book/:id" element={<MentorBookingPage />} />
                         <Route path="/mentorship/calls/respond" element={<MentorDiscoveryResponsePage />} />

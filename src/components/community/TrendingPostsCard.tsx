@@ -58,7 +58,7 @@ const TrendingPostsCard = () => {
           {trendingPosts.map((post, index) => (
             <Link
               key={post.id}
-              to={`/mentorship?post=${post.id}`}
+              to={`/launchpad/posts/${post.id}`}
               className="block p-3 rounded-lg border hover:border-primary/50 transition-colors"
             >
               <div className="flex items-start gap-3">

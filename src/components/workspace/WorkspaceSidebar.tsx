@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   PanelLeftClose,
   PanelLeftOpen,
+  Rocket,
   Settings,
   Telescope,
   Users,
@@ -33,6 +34,7 @@ const NAV_ITEMS: Array<{ label: string; icon: Icon }> = [
   { label: "BizMap", icon: Compass },
   { label: "Network", icon: Users },
   { label: "Insighta", icon: Telescope },
+  { label: "Launchpad", icon: Rocket },
   { label: "Content", icon: Clapperboard },
   { label: "Resources", icon: BookOpen },
   { label: "Pricing", icon: CircleDollarSign },
@@ -45,6 +47,7 @@ const NAV_TOOLS: Record<string, string[]> = {
   BizMap: ["ICP Builder", "Demo Studio", "PMF Lab", "MVP Builder", "GTM Strategist", "Directories"],
   Network: ["Find a Mentor", "Find a Co-Founder", "Find your Angel", "Marketplace"],
   Insighta: ["Traction Engine", "VC Search", "Pitch Deck Analyzer", "Insighta Test"],
+  Launchpad: ["Launchpad", "Posts", "Topics", "Profiles"],
   Content: ["Newspaper", "Podcast"],
   Resources: ["Accelerator Hunt", "Tech Stack Builder"],
 };

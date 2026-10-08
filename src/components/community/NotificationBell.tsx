@@ -187,9 +187,9 @@ export const NotificationBell = () => {
       return;
     }
 
-    // Navigate to the post for community notifications
+    // Community posts live in Launchpad now.
     if (notification.post_id) {
-      navigateTo(`/mentorship?post=${notification.post_id}`);
+      navigateTo(metadataRoute?.startsWith('/launchpad/') ? metadataRoute : `/launchpad/posts/${notification.post_id}`);
       return;
     }
 
@@ -207,7 +207,10 @@ export const NotificationBell = () => {
       case 'comment':
         return `${actor.name} commented on your post`;
       case 'like':
-        return `${actor.name} liked your post`;
+        return `${actor.name} upvoted your post`;
+      case 'community_thread_awaiting_reply':
+      case 'community_report':
+        return typeof metadata?.message === 'string' ? metadata.message : `${actor.name} posted on Launchpad`;
       case 'repost':
         return `${actor.name} reposted your post`;
       case 'share':
