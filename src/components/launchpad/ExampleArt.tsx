@@ -1,5 +1,8 @@
-import { BellRing, LineChart, Ruler } from 'lucide-react';
-import type { AvatarLook, LogoSpec } from '@/lib/communityExamples';
+import {
+  BellRing, ChartLine, ChartPie, ClipboardList, Flame, GraduationCap, House, Music, PawPrint, Presentation, Ruler, Send, Sprout, Timer, UtensilsCrossed,
+  type LucideIcon,
+} from 'lucide-react';
+import type { AvatarLook, LogoGlyph, LogoSpec } from '@/lib/communityExamples';
 import { cn } from '@/lib/utils';
 
 /**
@@ -30,7 +33,11 @@ export function ExampleAvatar({ look, className }: { look: AvatarLook; className
   </svg>;
 }
 
-const GLYPHS = { bell: BellRing, pebble: LineChart, ruler: Ruler };
+const GLYPHS: Record<LogoGlyph, LucideIcon> = {
+  bell: BellRing, pebble: ChartLine, ruler: Ruler, cap: GraduationCap, slides: Presentation, clipboard: ClipboardList,
+  flame: Flame, send: Send, pie: ChartPie, timer: Timer, paw: PawPrint, sprout: Sprout, utensils: UtensilsCrossed,
+  house: House, music: Music,
+};
 
 /** A generated app-icon logo for an invented example product. */
 export function ExampleLogo({ logo, className }: { logo: LogoSpec; className?: string }) {

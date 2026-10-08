@@ -141,3 +141,13 @@ test('examples cover every room and post type, stay labelled, and use drawn art 
   const art = readFileSync(new URL('../src/components/launchpad/ExampleArt.tsx', import.meta.url), 'utf8');
   assert.ok(!/<img|https?:\/\//.test(art), 'example art must be drawn, not loaded');
 });
+
+test('the example board fills five rows of three with distinct products', () => {
+  assert.equal(EXAMPLE_LAUNCHES.length, 15);
+  assert.equal(new Set(EXAMPLE_LAUNCHES.map((launch) => launch.name)).size, 15);
+  assert.equal(new Set(EXAMPLE_LAUNCHES.map((launch) => launch.logo.glyph)).size, 15);
+  for (const launch of EXAMPLE_LAUNCHES) {
+    assert.ok(launch.headline.length > 30 && launch.category && launch.maker.name, launch.id);
+    assert.match(launch.logo.from, /^#[0-9A-F]{6}$/i);
+  }
+});

@@ -55,6 +55,11 @@ const PEOPLE = {
   hannah: { name: 'Hannah Clarke', handle: 'hannahclarke', role: 'Raising a pre-seed round', look: { skin: SKIN.light, hair: HAIR.auburn, style: 'long', background: '#E6EEF8', shirt: '#2F5D8C' } },
   omar: { name: 'Omar Haddad', handle: 'omarhaddad', role: 'Side-project founder', look: { skin: SKIN.olive, hair: HAIR.black, style: 'short', beard: true, background: '#ECEFD9', shirt: '#5F7A1E' } },
   ryan: { name: 'Ryan Doyle', handle: 'ryandoyle', role: 'Founder, Siteprice', look: { skin: SKIN.light, hair: HAIR.brown, style: 'short', beard: true, background: '#E3ECF3', shirt: '#44627A' } },
+  chloe: { name: 'Chloé Martin', handle: 'chloemartin', role: 'Founder, Petpatch', look: { skin: SKIN.light, hair: HAIR.blond, style: 'bun', background: '#FFEAD6', shirt: '#E07A2E' } },
+  mateus: { name: 'Mateus Silva', handle: 'mateussilva', role: 'Founder, Fieldbook', look: { skin: SKIN.tan, hair: HAIR.darkBrown, style: 'curly', background: '#DFF3E2', shirt: '#2D8A3E' } },
+  linh: { name: 'Linh Tran', handle: 'linhtran', role: 'Founder, Menuwise', look: { skin: SKIN.fair, hair: HAIR.black, style: 'long', glasses: true, background: '#FFE1E4', shirt: '#C23A4A' } },
+  jakub: { name: 'Jakub Nowak', handle: 'jakubnowak', role: 'Founder, Flatsplit', look: { skin: SKIN.light, hair: HAIR.brown, style: 'buzz', background: '#E2E8FF', shirt: '#3D55C8' } },
+  zara: { name: 'Zara Ahmed', handle: 'zaraahmed', role: 'Founder, Gigshelf', look: { skin: SKIN.tan, hair: HAIR.black, style: 'long', background: '#EFE3FF', shirt: '#6B32C8' } },
 } satisfies Record<string, ExamplePerson>;
 
 export const EXAMPLE_POSTS: readonly ExamplePost[] = [
@@ -107,10 +112,14 @@ export const EXAMPLE_POSTS: readonly ExamplePost[] = [
 
 /** A generated app-icon logo: a gradient tile with a glyph. */
 export interface LogoSpec {
-  glyph: 'bell' | 'pebble' | 'ruler';
+  glyph: LogoGlyph;
   from: string;
   to: string;
 }
+
+export type LogoGlyph =
+  | 'bell' | 'pebble' | 'ruler' | 'cap' | 'slides' | 'clipboard' | 'flame' | 'send'
+  | 'pie' | 'timer' | 'paw' | 'sprout' | 'utensils' | 'house' | 'music';
 
 export interface ExampleLaunch {
   id: string;
@@ -126,6 +135,18 @@ export const EXAMPLE_LAUNCHES: readonly ExampleLaunch[] = [
   { id: 'ex-launch-nudgebay', name: 'Nudgebay', headline: 'Text-message reminders that cut no-shows for small physio clinics.', category: 'HealthTech', maker: PEOPLE.laura, logo: { glyph: 'bell', from: '#FF8A5B', to: '#E2453A' } },
   { id: 'ex-launch-pebblecast', name: 'Pebblecast', headline: 'See your cash for the next 90 days from the invoices you already send.', category: 'FinTech', maker: PEOPLE.tom, logo: { glyph: 'pebble', from: '#8B6CFF', to: '#4B3BD1' } },
   { id: 'ex-launch-siteprice', name: 'Siteprice', headline: 'Turn a site visit into a priced quote before you leave the driveway.', category: 'SaaS', maker: PEOPLE.ryan, logo: { glyph: 'ruler', from: '#2BC4A9', to: '#11806F' } },
+  { id: 'ex-launch-deckpulse', name: 'Deckpulse', headline: 'Scores every slide of your pitch deck against the questions angels actually ask.', category: 'AI & Machine Learning', maker: PEOPLE.daniel, logo: { glyph: 'slides', from: '#5B8CFF', to: '#2346C7' } },
+  { id: 'ex-launch-tutorloop', name: 'Tutorloop', headline: 'Matches parents with a vetted maths tutor in under 24 hours, payments included.', category: 'EdTech', maker: PEOPLE.marcus, logo: { glyph: 'cap', from: '#FFC24B', to: '#E08A00' } },
+  { id: 'ex-launch-shiftnote', name: 'Shiftnote', headline: 'Night-shift nurses dictate the handover in 30 seconds; the day team reads it in 10.', category: 'HealthTech', maker: PEOPLE.priya, logo: { glyph: 'clipboard', from: '#3CCB8C', to: '#16895A' } },
+  { id: 'ex-launch-kilnly', name: 'Kilnly', headline: 'Shelf bookings and firing schedules for community pottery studios, without the spreadsheet.', category: 'Consumer & D2C', maker: PEOPLE.sofia, logo: { glyph: 'flame', from: '#FF9A6B', to: '#C2412D' } },
+  { id: 'ex-launch-leadlane', name: 'Leadlane', headline: 'Ranks cold-email replies by how likely they are to turn into a booked demo.', category: 'SaaS', maker: PEOPLE.kenji, logo: { glyph: 'send', from: '#33C3D6', to: '#0E7C8C' } },
+  { id: 'ex-launch-boundsize', name: 'Boundsize', headline: 'Builds a bottom-up market size from your price and customer count, ready for slide 4.', category: 'FinTech', maker: PEOPLE.hannah, logo: { glyph: 'pie', from: '#F06BA8', to: '#B0306E' } },
+  { id: 'ex-launch-twoevenings', name: 'Two Evenings', headline: 'Guards two weeknights for your side project and holds every notification until you are done.', category: 'Media & Creator Economy', maker: PEOPLE.omar, logo: { glyph: 'timer', from: '#9AD45B', to: '#4E8A1E' } },
+  { id: 'ex-launch-petpatch', name: 'Petpatch', headline: 'Find a neighbour who already feeds cats on your street while you travel.', category: 'Consumer & D2C', maker: PEOPLE.chloe, logo: { glyph: 'paw', from: '#FFB36B', to: '#E06A1F' } },
+  { id: 'ex-launch-fieldbook', name: 'Fieldbook', headline: 'Offline crop and spray logs for small farms that sync the moment the signal returns.', category: 'FoodTech & AgTech', maker: PEOPLE.mateus, logo: { glyph: 'sprout', from: '#6DD07A', to: '#2D8A3E' } },
+  { id: 'ex-launch-menuwise', name: 'Menuwise', headline: 'Reprices your restaurant menu the day a supplier raises costs, so margins stay put.', category: 'Travel & Hospitality', maker: PEOPLE.linh, logo: { glyph: 'utensils', from: '#FF7A7A', to: '#C23A4A' } },
+  { id: 'ex-launch-flatsplit', name: 'Flatsplit', headline: 'Collects rent and splits utility bills fairly in shared flats, down to the last kettle.', category: 'PropTech & Real Estate', maker: PEOPLE.jakub, logo: { glyph: 'house', from: '#7C9CFF', to: '#3D55C8' } },
+  { id: 'ex-launch-gigshelf', name: 'Gigshelf', headline: 'One link for independent musicians: tour dates, merch and a mailing list that fills itself.', category: 'Media & Creator Economy', maker: PEOPLE.zara, logo: { glyph: 'music', from: '#B57CFF', to: '#6B32C8' } },
 ];
 
 export function examplesForRoom(room: string | null | undefined): readonly ExamplePost[] {
