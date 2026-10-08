@@ -78,7 +78,7 @@ export const ContentGrid = ({ items, isOwnProfile, onEdit, onDelete }: ContentGr
               </div>
 
               {/* Content */}
-              <Link to={`/launchpad/rooms/posts/${item.id}`} className="block space-y-2">
+              <Link to={`/rooms/posts/${item.id}`} className="block space-y-2">
                 <h3 className="text-base font-semibold line-clamp-2 hover:text-primary transition-colors">
                   {item.title}
                 </h3>

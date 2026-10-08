@@ -44,7 +44,7 @@ export function launchpadTopic(slug: string | null | undefined): LaunchpadTopic 
 }
 
 /** Rooms are the topics, presented as places to talk. */
-export const ROOMS_PATH = '/launchpad/rooms';
+export const ROOMS_PATH = '/rooms';
 
 export function roomPath(slug: string) {
   return `${ROOMS_PATH}/${slug}`;

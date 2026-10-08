@@ -12,7 +12,7 @@ const roots = [
   '/account', '/settings/security', '/settings/delete-account', '/newspaper', '/podcast',
   '/saved-mentors', '/my-bookings', '/purchase-history', '/accountability',
   '/projects-dashboard', '/ai-goals', '/core-metrics', '/decision-sprint', '/validate',
-  '/insighta/vc', '/insighta/accelerator', '/launchpad',
+  '/insighta/vc', '/insighta/accelerator', '/launchpad', '/rooms',
 ];
 const exact = ['/pricing', '/files', '/tasks', '/routine', '/weekly-mission', '/focus-funnel',
   '/waitlist', '/waitlist-maker', '/waitlist/templates', '/gtm-strategist', '/client-acquisition',

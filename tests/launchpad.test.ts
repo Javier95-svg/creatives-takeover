@@ -49,11 +49,13 @@ test('Community sits between Insighta and Content and renders inside the workspa
   const order = [...sidebar.matchAll(/\{ label: "([A-Za-z ]+)", icon: /g)].map((match) => match[1]);
   assert.deepEqual(order.slice(order.indexOf('Insighta'), order.indexOf('Insighta') + 3), ['Insighta', 'Community', 'Content']);
   for (const tab of ['Rooms', 'Launches']) {
-    assert.ok(WORKSPACE_ROUTES[tab]?.startsWith('/launchpad'), tab);
+    assert.equal(WORKSPACE_ROUTES[tab], tab === 'Rooms' ? '/rooms' : '/launchpad', tab);
     assert.equal(isWorkspaceRoute(WORKSPACE_ROUTES[tab]), true, tab);
   }
-  assert.equal(isWorkspaceRoute('/launchpad/rooms/posts/abc'), true);
-  assert.equal(isWorkspaceRoute('/launchpad/rooms/pricing'), true);
+  assert.equal(isWorkspaceRoute('/rooms'), true);
+  assert.equal(isWorkspaceRoute('/rooms/posts/abc'), true);
+  assert.equal(isWorkspaceRoute('/rooms/pricing'), true);
+  assert.equal(isWorkspaceRoute('/launchpad'), true);
 });
 
 test('reviewed account types get a Launchpad slice of their own', () => {
@@ -94,15 +96,29 @@ test('the rounds migration guards self-votes, closed rounds and double rewards',
   assert.match(rounds, /weekly_cap constant integer := 5/);
 });
 
-test('rooms and posts live under /launchpad/rooms, and old addresses redirect there', () => {
-  assert.equal(roomPath('pricing'), '/launchpad/rooms/pricing');
-  assert.equal(postPath('abc'), '/launchpad/rooms/posts/abc');
+test('rooms and posts live under /rooms, Launches stays at /launchpad, and old addresses redirect', () => {
+  assert.equal(roomPath('pricing'), '/rooms/pricing');
+  assert.equal(postPath('abc'), '/rooms/posts/abc');
   const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8');
-  for (const legacy of ['/launchpad/posts', '/launchpad/topics', '/launchpad/profiles', '/mentorship/progress']) {
-    assert.match(app, new RegExp(`path="${legacy}" element={<Navigate to="/launchpad/rooms" replace />}`), legacy);
+  assert.match(app, /path="\/launchpad" element={<LaunchpadHome \/>}/);
+  assert.match(app, /path="\/rooms" element={<LaunchpadRooms \/>}/);
+  assert.match(app, /path="\/rooms\/posts\/:id" element={<LaunchpadPostDetail \/>}/);
+  for (const legacy of ['/launchpad/rooms', '/launchpad/posts', '/launchpad/topics', '/launchpad/profiles', '/mentorship/progress']) {
+    assert.match(app, new RegExp(`path="${legacy}" element={<Navigate to="/rooms" replace />}`), legacy);
   }
-  assert.match(app, /path="\/launchpad\/posts\/:id" element={<LegacyLaunchpadRedirect \/>}/);
-  assert.match(app, /path="\/launchpad\/topics\/:slug" element={<LegacyLaunchpadRedirect \/>}/);
+  for (const legacy of ['/launchpad/rooms/\\*', '/launchpad/posts/:id', '/launchpad/topics/:slug']) {
+    assert.match(app, new RegExp(`path="${legacy}" element={<LegacyLaunchpadRedirect />}`), legacy);
+  }
+  // The redirect's path rewrites, applied the way LegacyLaunchpadRedirect does.
+  const rewrite = (path: string) => path
+    .replace(/^\/launchpad\/rooms(?=\/|$)/, '/rooms')
+    .replace(/^\/launchpad\/posts\//, '/rooms/posts/')
+    .replace(/^\/launchpad\/topics\//, '/rooms/');
+  assert.equal(rewrite('/launchpad/rooms/posts/abc'), '/rooms/posts/abc');
+  assert.equal(rewrite('/launchpad/rooms/pricing'), '/rooms/pricing');
+  assert.equal(rewrite('/launchpad/posts/abc'), '/rooms/posts/abc');
+  assert.equal(rewrite('/launchpad/topics/pricing'), '/rooms/pricing');
+  assert.ok(app.includes(".replace(/^\\/launchpad\\/rooms(?=\\/|$)/, '/rooms')"));
   // No room slug may collide with the post route segment.
   assert.ok(!LAUNCHPAD_TOPICS.some((room) => room.slug === 'posts'));
 });

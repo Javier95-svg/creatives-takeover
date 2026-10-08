@@ -116,11 +116,11 @@ export default function LaunchpadRooms() {
               savedOnly={view.kind === 'saved'}
               empty={view.kind === 'saved'
                 ? <EmptyState title="Nothing saved yet" body="Save posts you want to come back to. They stay private to you.">
-                    <Button variant="outline" asChild><Link to="/launchpad/rooms">Browse rooms</Link></Button>
+                    <Button variant="outline" asChild><Link to="/rooms">Browse rooms</Link></Button>
                   </EmptyState>
                 : view.kind === 'following'
                   ? <EmptyState title="No posts in your rooms yet" body="New posts from the rooms you follow will show up here.">
-                      <Button variant="outline" asChild><Link to="/launchpad/rooms">Browse all rooms</Link></Button>
+                      <Button variant="outline" asChild><Link to="/rooms">Browse all rooms</Link></Button>
                     </EmptyState>
                   : <ExamplePosts room={room?.slug ?? null} onCompose={(kind, exampleRoom) => compose(kind, exampleRoom)} />} />}
       </div>

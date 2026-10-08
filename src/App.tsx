@@ -216,12 +216,15 @@ const LegacyCommunityRedirect = () => {
   return <Navigate to={`${nextPath}${location.search}${location.hash}`} replace />;
 };
 
-// /launchpad/posts/:id → /launchpad/rooms/posts/:id and /launchpad/topics/:slug → /launchpad/rooms/:slug.
+// Rooms moved to /rooms. Earlier addresses map onto it:
+// /launchpad/rooms/... → /rooms/..., /launchpad/posts/:id → /rooms/posts/:id,
+// /launchpad/topics/:slug → /rooms/:slug.
 const LegacyLaunchpadRedirect = () => {
   const location = useLocation();
   const next = location.pathname
-    .replace(/^\/launchpad\/posts\//, '/launchpad/rooms/posts/')
-    .replace(/^\/launchpad\/topics\//, '/launchpad/rooms/');
+    .replace(/^\/launchpad\/rooms(?=\/|$)/, '/rooms')
+    .replace(/^\/launchpad\/posts\//, '/rooms/posts/')
+    .replace(/^\/launchpad\/topics\//, '/rooms/');
   return <Navigate to={`${next}${location.search}${location.hash}`} replace />;
 };
 
@@ -369,19 +372,22 @@ function App() {
                         <Route path="/services" element={<Services />} />
                         <Route path="/software" element={<Software />} />
                         <Route path="/mentorship" element={<CommunityPage />} />
-                        {/* Community: Rooms and Launches. The progress feed, Posts,
-                            Topics and Profiles all folded into Rooms; their old
-                            addresses (and links in sent notifications) redirect. */}
+                        {/* Community: Rooms (/rooms) and Launches (/launchpad). The
+                            progress feed, Posts, Topics and Profiles all folded into
+                            Rooms; their old addresses (and links in notifications
+                            already sent) redirect. */}
                         <Route path="/launchpad" element={<LaunchpadHome />} />
-                        <Route path="/launchpad/rooms" element={<LaunchpadRooms />} />
-                        <Route path="/launchpad/rooms/posts/:id" element={<LaunchpadPostDetail />} />
-                        <Route path="/launchpad/rooms/:slug" element={<LaunchpadRooms />} />
-                        <Route path="/mentorship/progress" element={<Navigate to="/launchpad/rooms" replace />} />
-                        <Route path="/launchpad/posts" element={<Navigate to="/launchpad/rooms" replace />} />
+                        <Route path="/rooms" element={<LaunchpadRooms />} />
+                        <Route path="/rooms/posts/:id" element={<LaunchpadPostDetail />} />
+                        <Route path="/rooms/:slug" element={<LaunchpadRooms />} />
+                        <Route path="/launchpad/rooms/*" element={<LegacyLaunchpadRedirect />} />
                         <Route path="/launchpad/posts/:id" element={<LegacyLaunchpadRedirect />} />
-                        <Route path="/launchpad/topics" element={<Navigate to="/launchpad/rooms" replace />} />
                         <Route path="/launchpad/topics/:slug" element={<LegacyLaunchpadRedirect />} />
-                        <Route path="/launchpad/profiles" element={<Navigate to="/launchpad/rooms" replace />} />
+                        <Route path="/launchpad/rooms" element={<Navigate to="/rooms" replace />} />
+                        <Route path="/mentorship/progress" element={<Navigate to="/rooms" replace />} />
+                        <Route path="/launchpad/posts" element={<Navigate to="/rooms" replace />} />
+                        <Route path="/launchpad/topics" element={<Navigate to="/rooms" replace />} />
+                        <Route path="/launchpad/profiles" element={<Navigate to="/rooms" replace />} />
                         <Route path="/mentorship/mentors/:id" element={<MentorProfilePage />} />
                         <Route path="/mentorship/book/:id" element={<MentorBookingPage />} />
                         <Route path="/mentorship/calls/respond" element={<MentorDiscoveryResponsePage />} />
