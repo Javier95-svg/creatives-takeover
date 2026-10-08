@@ -263,3 +263,18 @@ export function useWithdrawLaunch() {
     onError: () => toast.error('Could not withdraw the launch.'),
   });
 }
+
+/** The viewer's name and photo, for the composer prompt. */
+export function useMyProfileSummary() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['launchpad-me', user?.id],
+    enabled: Boolean(user),
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.schema('public').from('profiles').select('full_name, username, avatar_url').eq('id', user!.id).maybeSingle();
+      if (error) throw error;
+      return (data ?? null) as { full_name: string | null; username: string | null; avatar_url: string | null } | null;
+    },
+  });
+}

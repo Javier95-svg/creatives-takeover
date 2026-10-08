@@ -120,11 +120,20 @@ export function bestScore(post: Pick<LaunchpadPost, 'upvotes' | 'comment_count' 
 export interface PostFilters {
   sort: PostSort;
   topic?: string | null;
+  /** Several rooms at once, for the Following feed. An empty list matches nothing. */
+  topics?: readonly string[] | null;
   kind?: PostKind | null;
+  /** Free text matched against title and body. */
+  search?: string | null;
   stage?: number | null;
   savedOnly?: boolean;
   authorId?: string | null;
   limit: number;
+}
+
+/** PostgREST filter syntax reserves these characters, so they never reach a filter. */
+export function cleanSearch(value: string | null | undefined) {
+  return (value ?? '').replace(/[,()*%\\:."']/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
 }
 
 export async function listPosts(filters: PostFilters, viewerId?: string): Promise<LaunchpadPost[]> {
@@ -142,9 +151,17 @@ export async function listPosts(filters: PostFilters, viewerId?: string): Promis
   const fetchSize = filters.sort === 'best' ? Math.max(filters.limit, 100) : filters.limit;
   let query = db.from('community_posts').select(POST_COLUMNS).eq('is_public', true).is('hidden_at', null);
   if (filters.topic) query = query.eq('topic', filters.topic);
+  if (filters.topics) {
+    if (filters.topics.length === 0) return [];
+    query = query.in('topic', [...filters.topics]);
+  }
+  // Every Launchpad post has a type; legacy rows carry older values and read
+  // as discussions, so "not one of the other three" is the discussion filter.
   if (filters.kind) query = filters.kind === 'discussion'
-    ? query.or('post_type.is.null,post_type.not.in.(feedback,milestone,idea)')
+    ? query.not('post_type', 'in', '(feedback,milestone,idea)')
     : query.eq('post_type', filters.kind);
+  const search = cleanSearch(filters.search);
+  if (search) query = query.or(`title.ilike.%${search}%,content.ilike.%${search}%`);
   if (filters.stage) query = query.eq('stage', filters.stage);
   if (filters.authorId) query = query.eq('user_id', filters.authorId);
   if (savedIds) query = query.in('id', savedIds);

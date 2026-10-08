@@ -1,21 +1,14 @@
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
-import { ArrowBigUp, Bookmark, Flag, FolderKanban, MessageSquare } from 'lucide-react';
+import { ArrowBigUp, Bookmark, Flag, FolderKanban, Link2, MessageSquare, MoreHorizontal } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { founderStageLabel } from '@/lib/bizmapStageOrder';
 import { authorName, postKind, postKindLabel, type LaunchpadAuthor, type LaunchpadPost } from '@/lib/launchpad';
-import { launchpadTopic } from '@/lib/launchpadTopics';
+import { launchpadTopic, postPath, roomPath } from '@/lib/launchpadTopics';
 import { cn } from '@/lib/utils';
-
-const KIND_STYLE: Record<string, string> = {
-  feedback: 'border-primary/40 bg-primary/10 text-primary',
-  milestone: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
-  idea: 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300',
-  discussion: 'border-border bg-muted/60 text-foreground',
-};
-
+import { copyPostLink } from './postActions';
+import { KIND_VISUALS, roomIcon } from './roomVisuals';
 
 export function AuthorAvatar({ author, className }: { author: LaunchpadAuthor | null; className?: string }) {
   const name = authorName(author);
@@ -28,38 +21,55 @@ export function AuthorAvatar({ author, className }: { author: LaunchpadAuthor | 
 export function AuthorLine({ author, createdAt, stage }: { author: LaunchpadAuthor | null; createdAt: string; stage?: number | null }) {
   const name = authorName(author);
   const stageLabel = founderStageLabel(stage);
-  return <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-sm">
+  return <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm">
     {author?.username
-      ? <Link to={`/profile/${encodeURIComponent(author.username)}`} className="inline-flex min-w-0 items-center truncate font-medium underline-offset-4 hover:underline">{name}</Link>
+      ? <Link to={`/profile/${encodeURIComponent(author.username)}`} className="no-touch-target !min-h-0 !min-w-0 truncate font-medium underline-offset-4 hover:underline">{name}</Link>
       : <span className="truncate font-medium">{name}</span>}
-    {author?.username && <span className="hidden truncate text-muted-foreground sm:inline">@{author.username}</span>}
     {stageLabel && <span className="text-xs text-muted-foreground">· Stage {stage} {stageLabel}</span>}
     <span className="text-xs text-muted-foreground">· {formatDistanceToNow(new Date(createdAt), { addSuffix: true })}</span>
   </div>;
 }
 
+export function KindBadge({ value }: { value: string | null }) {
+  const kind = postKind(value);
+  const { icon: Icon, badge } = KIND_VISUALS[kind];
+  return <span className={cn('inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium', badge)}>
+    <Icon className="h-3 w-3" aria-hidden="true" />{postKindLabel(value)}
+  </span>;
+}
+
+export function RoomChip({ slug }: { slug: string | null }) {
+  const room = launchpadTopic(slug);
+  if (!room) return null;
+  const Icon = roomIcon(room.slug);
+  return <Link to={roomPath(room.slug)} className="no-touch-target inline-flex !min-h-0 !min-w-0 items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary">
+    <Icon className="h-3 w-3" aria-hidden="true" />{room.label}
+  </Link>;
+}
+
 export function PostMeta({ post }: { post: Pick<LaunchpadPost, 'post_type' | 'topic' | 'project_name'> }) {
-  const kind = postKind(post.post_type);
-  const topic = launchpadTopic(post.topic);
   return <div className="flex flex-wrap items-center gap-1.5">
-    <Badge variant="outline" className={cn('text-xs font-medium', KIND_STYLE[kind])}>{postKindLabel(post.post_type)}</Badge>
-    {topic && <Link to={`/launchpad/topics/${topic.slug}`} className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-      <Badge variant="secondary" className="text-xs hover:bg-secondary/70">#{topic.label}</Badge>
-    </Link>}
-    {post.project_name && <Badge variant="outline" className="gap-1 text-xs"><FolderKanban className="h-3 w-3" aria-hidden="true" />{post.project_name}</Badge>}
+    <KindBadge value={post.post_type} />
+    <RoomChip slug={post.topic} />
+    {post.project_name && <span className="inline-flex items-center gap-1 rounded-full border border-border/70 px-2 py-0.5 text-xs font-medium">
+      <FolderKanban className="h-3 w-3" aria-hidden="true" />{post.project_name}
+    </span>}
   </div>;
 }
 
-export function UpvoteButton({ post, onToggle, disabled }: { post: LaunchpadPost; onToggle: () => void; disabled?: boolean }) {
+export function UpvotePill({ post, onToggle, disabled }: { post: LaunchpadPost; onToggle: () => void; disabled?: boolean }) {
   return <button type="button" onClick={onToggle} disabled={disabled}
     aria-pressed={post.voted} aria-label={post.voted ? `Remove upvote, ${post.upvotes} upvotes` : `Upvote, ${post.upvotes} upvotes`}
-    className={cn('flex h-14 w-12 shrink-0 flex-col items-center justify-center rounded-lg border text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60',
-      post.voted ? 'border-primary bg-primary/10 text-primary' : 'border-border/70 bg-background hover:border-primary/60 hover:text-primary')}>
-    <ArrowBigUp className={cn('h-5 w-5', post.voted && 'fill-current')} aria-hidden="true" />
-    {post.upvotes}
+    className={cn('inline-flex h-8 items-center gap-1 rounded-full border px-3 text-sm font-semibold tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60',
+      post.voted ? 'border-primary bg-primary text-primary-foreground' : 'border-border/70 bg-background hover:border-primary/60 hover:text-primary')}>
+    <ArrowBigUp className={cn('h-4 w-4', post.voted && 'fill-current')} aria-hidden="true" />{post.upvotes}
   </button>;
 }
 
+/**
+ * A post in a room. The coloured edge says what kind of post it is before the
+ * title is read; the footer holds the actions people use most.
+ */
 export function LaunchpadPostCard({ post, isOwn, onUpvote, onSave, onReport }: {
   post: LaunchpadPost;
   isOwn: boolean;
@@ -67,35 +77,42 @@ export function LaunchpadPostCard({ post, isOwn, onUpvote, onSave, onReport }: {
   onSave: () => void;
   onReport: () => void;
 }) {
-  const href = `/launchpad/posts/${post.id}`;
-  return <Card className="border-border/70 transition-shadow hover:shadow-md">
-    <CardContent className="flex gap-4 p-4 sm:p-5">
-      <UpvoteButton post={post} onToggle={onUpvote} />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-start gap-3">
-          <AuthorAvatar author={post.author} className="hidden sm:flex" />
-          <div className="min-w-0 flex-1 space-y-2">
-            <AuthorLine author={post.author} createdAt={post.created_at} stage={post.stage} />
-            <PostMeta post={post} />
-          </div>
-        </div>
-        <Link to={href} className="mt-3 block rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          {post.title && <h2 className="font-space-grotesk text-lg font-semibold leading-snug hover:underline">{post.title}</h2>}
-          <p className="mt-1 line-clamp-3 whitespace-pre-line text-sm text-muted-foreground">{post.content}</p>
-        </Link>
-        <div className="mt-3 flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
-          <Link to={href} className="flex items-center gap-1.5 rounded-md px-2 py-1 hover:bg-muted hover:text-foreground">
-            <MessageSquare className="h-4 w-4" aria-hidden="true" />
-            {post.comment_count} {post.comment_count === 1 ? 'reply' : 'replies'}
-          </Link>
-          <button type="button" onClick={onSave} aria-pressed={post.saved} className={cn('flex items-center gap-1.5 rounded-md px-2 py-1 hover:bg-muted hover:text-foreground', post.saved && 'text-primary')}>
-            <Bookmark className={cn('h-4 w-4', post.saved && 'fill-current')} aria-hidden="true" />{post.saved ? 'Saved' : 'Save'}
-          </button>
-          {!isOwn && <button type="button" onClick={onReport} className="ml-auto flex items-center gap-1.5 rounded-md px-2 py-1 hover:bg-muted hover:text-foreground">
-            <Flag className="h-4 w-4" aria-hidden="true" />Report
-          </button>}
+  const href = postPath(post.id);
+  const { stripe } = KIND_VISUALS[postKind(post.post_type)];
+  return <article className="group relative overflow-hidden rounded-xl border border-border/70 bg-card transition-all hover:border-primary/40 hover:shadow-md">
+    <span aria-hidden="true" className={cn('absolute inset-y-0 left-0 w-1', stripe)} />
+    <div className="p-4 pl-5 sm:p-5 sm:pl-6">
+      <div className="flex items-start gap-3">
+        <AuthorAvatar author={post.author} className="h-8 w-8" />
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <AuthorLine author={post.author} createdAt={post.created_at} stage={post.stage} />
+          <PostMeta post={post} />
         </div>
       </div>
-    </CardContent>
-  </Card>;
+      <Link to={href} className="mt-3 block rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        {post.title && <h2 className="font-space-grotesk text-lg font-semibold leading-snug group-hover:text-primary">{post.title}</h2>}
+        <p className="mt-1 line-clamp-2 whitespace-pre-line text-sm text-muted-foreground">{post.content}</p>
+      </Link>
+      <div className="mt-3 flex items-center gap-1 text-sm text-muted-foreground">
+        <UpvotePill post={post} onToggle={onUpvote} />
+        <Link to={href} className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 hover:bg-muted hover:text-foreground">
+          <MessageSquare className="h-4 w-4" aria-hidden="true" />
+          {post.comment_count}<span className="sr-only sm:not-sr-only">{post.comment_count === 1 ? 'reply' : 'replies'}</span>
+        </Link>
+        <button type="button" onClick={onSave} aria-pressed={post.saved} aria-label={post.saved ? 'Remove from saved' : 'Save post'}
+          className={cn('inline-flex h-8 items-center gap-1.5 rounded-full px-3 hover:bg-muted hover:text-foreground', post.saved && 'text-primary')}>
+          <Bookmark className={cn('h-4 w-4', post.saved && 'fill-current')} aria-hidden="true" /><span className="hidden sm:inline">{post.saved ? 'Saved' : 'Save'}</span>
+        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="More actions">
+            <MoreHorizontal className="h-4 w-4" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onSelect={() => void copyPostLink(post.id)}><Link2 className="mr-2 h-4 w-4" />Copy link</DropdownMenuItem>
+            {!isOwn && <DropdownMenuItem onSelect={onReport}><Flag className="mr-2 h-4 w-4" />Report</DropdownMenuItem>}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  </article>;
 }

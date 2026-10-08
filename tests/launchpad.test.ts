@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
 
-import { LAUNCHPAD_TOPICS, launchpadTopic } from '../src/lib/launchpadTopics.ts';
+import { LAUNCHPAD_TOPICS, launchpadTopic, postPath, roomPath } from '../src/lib/launchpadTopics.ts';
 import { previousRoundStart, roundEnd, roundStart, timeLeft } from '../src/lib/launchpadRoundTime.ts';
 import { FOUNDER_TOOL_CATALOG } from '../src/config/founderToolCatalog.ts';
 import { isWorkspaceRoute } from '../src/lib/workspacePolicy.ts';
@@ -36,18 +36,19 @@ test('Chat Rooms sits between Insighta and Content and renders inside the worksp
   const sidebar = readFileSync(new URL('../src/components/workspace/WorkspaceSidebar.tsx', import.meta.url), 'utf8');
   const order = [...sidebar.matchAll(/\{ label: "([A-Za-z ]+)", icon: /g)].map((match) => match[1]);
   assert.deepEqual(order.slice(order.indexOf('Insighta'), order.indexOf('Insighta') + 3), ['Insighta', 'Chat Rooms', 'Content']);
-  for (const tab of ['Launchpad', 'Posts', 'Topics']) {
+  for (const tab of ['Rooms', 'Launches']) {
     assert.ok(WORKSPACE_ROUTES[tab]?.startsWith('/launchpad'), tab);
     assert.equal(isWorkspaceRoute(WORKSPACE_ROUTES[tab]), true, tab);
   }
-  assert.equal(isWorkspaceRoute('/launchpad/posts/abc'), true);
+  assert.equal(isWorkspaceRoute('/launchpad/rooms/posts/abc'), true);
+  assert.equal(isWorkspaceRoute('/launchpad/rooms/pricing'), true);
 });
 
 test('reviewed account types get a Launchpad slice of their own', () => {
   const all = ['Dashboard', 'BizMap', 'Network', 'Insighta', 'Chat Rooms', 'Content', 'Resources', 'Pricing'];
   for (const type of ['mentor', 'marketplace', 'investor'] as const) {
     assert.ok(navSectionsForType(type, all).includes('Chat Rooms'), type);
-    assert.ok(navToolsForType(type, 'Chat Rooms', {})?.includes('Posts'), type);
+    assert.ok(navToolsForType(type, 'Chat Rooms', {})?.includes('Rooms'), type);
   }
 });
 
@@ -79,4 +80,17 @@ test('the rounds migration guards self-votes, closed rounds and double rewards',
   assert.match(rounds, /Voting for this round has closed/);
   assert.match(rounds, /UNIQUE \(user_id, demo_project_id\)/);
   assert.match(rounds, /weekly_cap constant integer := 5/);
+});
+
+test('rooms and posts live under /launchpad/rooms, and old addresses redirect there', () => {
+  assert.equal(roomPath('pricing'), '/launchpad/rooms/pricing');
+  assert.equal(postPath('abc'), '/launchpad/rooms/posts/abc');
+  const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8');
+  for (const legacy of ['/launchpad/posts', '/launchpad/topics', '/launchpad/profiles', '/mentorship/progress']) {
+    assert.match(app, new RegExp(`path="${legacy}" element={<Navigate to="/launchpad/rooms" replace />}`), legacy);
+  }
+  assert.match(app, /path="\/launchpad\/posts\/:id" element={<LegacyLaunchpadRedirect \/>}/);
+  assert.match(app, /path="\/launchpad\/topics\/:slug" element={<LegacyLaunchpadRedirect \/>}/);
+  // No room slug may collide with the post route segment.
+  assert.ok(!LAUNCHPAD_TOPICS.some((room) => room.slug === 'posts'));
 });

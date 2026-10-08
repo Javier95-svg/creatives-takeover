@@ -189,7 +189,7 @@ export const NotificationBell = () => {
 
     // Community posts live in Launchpad now.
     if (notification.post_id) {
-      navigateTo(metadataRoute?.startsWith('/launchpad/') ? metadataRoute : `/launchpad/posts/${notification.post_id}`);
+      navigateTo(metadataRoute?.startsWith('/launchpad/') ? metadataRoute : `/launchpad/rooms/posts/${notification.post_id}`);
       return;
     }
 

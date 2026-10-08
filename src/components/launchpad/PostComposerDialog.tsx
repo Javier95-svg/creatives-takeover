@@ -9,21 +9,22 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCreatePost, useUpdatePost } from '@/hooks/useLaunchpad';
 import { useProjects } from '@/hooks/useProjects';
 import { BODY_MAX, POST_KINDS, postKind, TITLE_MAX, type LaunchpadPost, type PostKind } from '@/lib/launchpad';
-import { LAUNCHPAD_TOPIC_GROUP_LABEL, LAUNCHPAD_TOPICS, launchpadTopic } from '@/lib/launchpadTopics';
+import { LAUNCHPAD_TOPIC_GROUP_LABEL, LAUNCHPAD_TOPICS, launchpadTopic, postPath } from '@/lib/launchpadTopics';
 import { cn } from '@/lib/utils';
 
 const NO_PROJECT = 'none';
 const KEEP_PROJECT = 'keep';
 
 /**
- * New post, or editing one. A topic is required so every post lands somewhere
+ * New post, or editing one. A room is required so every post lands somewhere
  * people follow; attaching a project is optional and defaults to the one the
  * founder is working in.
  */
-export function PostComposerDialog({ open, onOpenChange, initialTopic, editing }: {
+export function PostComposerDialog({ open, onOpenChange, initialTopic, initialKind, editing }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialTopic?: string | null;
+  initialKind?: PostKind;
   editing?: LaunchpadPost | null;
 }) {
   const navigate = useNavigate();
@@ -48,19 +49,19 @@ export function PostComposerDialog({ open, onOpenChange, initialTopic, editing }
       // Readers only see the project name, so an edit offers to keep it as is.
       setProjectId(editing.project_name ? KEEP_PROJECT : NO_PROJECT);
     } else {
-      setKind('feedback');
+      setKind(initialKind ?? 'feedback');
       setTitle('');
       setContent('');
       setTopic(initialTopic ?? '');
       setProjectId(activeProjectId ?? NO_PROJECT);
     }
-  }, [open, editing, initialTopic, activeProjectId]);
+  }, [open, editing, initialTopic, initialKind, activeProjectId]);
 
   const selectedTopic = launchpadTopic(topic);
   const errors = {
     title: !title.trim() ? 'Add a title.' : null,
     content: content.trim().length < 20 ? 'Write at least a couple of sentences so people can help.' : null,
-    topic: !selectedTopic ? 'Choose a topic.' : null,
+    topic: !selectedTopic ? 'Choose a room.' : null,
   };
   const valid = !errors.title && !errors.content && !errors.topic;
   const pending = create.isPending || update.isPending;
@@ -78,14 +79,14 @@ export function PostComposerDialog({ open, onOpenChange, initialTopic, editing }
     }
     const id = await create.mutateAsync({ title, content, kind, topic, projectId: chosen });
     onOpenChange(false);
-    navigate(`/launchpad/posts/${id}`);
+    navigate(postPath(id));
   };
 
   return <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="max-h-dvh max-w-2xl overflow-y-auto">
       <DialogHeader>
-        <DialogTitle>{editing ? 'Edit post' : 'Share with founders'}</DialogTitle>
-        <DialogDescription>Posts are visible to signed-in members and on your public profile.</DialogDescription>
+        <DialogTitle>{editing ? 'Edit post' : 'Start a conversation'}</DialogTitle>
+        <DialogDescription>Visible to signed-in members and on your public profile.</DialogDescription>
       </DialogHeader>
 
       <form className="space-y-5" onSubmit={(event) => { event.preventDefault(); void submit().catch(() => undefined); }}>
@@ -103,9 +104,9 @@ export function PostComposerDialog({ open, onOpenChange, initialTopic, editing }
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <Label htmlFor="launchpad-topic">Topic</Label>
+            <Label htmlFor="launchpad-topic">Room</Label>
             <Select value={topic || undefined} onValueChange={setTopic}>
-              <SelectTrigger id="launchpad-topic" className="mt-2" aria-invalid={touched && Boolean(errors.topic)}><SelectValue placeholder="Choose a topic" /></SelectTrigger>
+              <SelectTrigger id="launchpad-topic" className="mt-2" aria-invalid={touched && Boolean(errors.topic)}><SelectValue placeholder="Choose a room" /></SelectTrigger>
               <SelectContent>
                 {(['stage', 'craft'] as const).map((group) => <SelectGroup key={group}>
                   <SelectLabel>{LAUNCHPAD_TOPIC_GROUP_LABEL[group]}</SelectLabel>

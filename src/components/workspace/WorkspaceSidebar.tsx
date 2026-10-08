@@ -47,7 +47,7 @@ const NAV_TOOLS: Record<string, string[]> = {
   BizMap: ["ICP Builder", "Demo Studio", "PMF Lab", "MVP Builder", "GTM Strategist", "Directories"],
   Network: ["Find a Mentor", "Find a Co-Founder", "Find your Angel", "Marketplace"],
   Insighta: ["Traction Engine", "VC Search", "Pitch Deck Analyzer", "Insighta Test"],
-  "Chat Rooms": ["Launchpad", "Posts", "Topics"],
+  "Chat Rooms": ["Rooms", "Launches"],
   Content: ["Newspaper", "Podcast"],
   Resources: ["Accelerator Hunt", "Tech Stack Builder"],
 };

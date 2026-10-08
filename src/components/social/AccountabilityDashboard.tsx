@@ -183,7 +183,7 @@ export const AccountabilityDashboard = () => {
 
           <div className="flex flex-wrap gap-3">
             <Button asChild>
-              <Link to="/launchpad/posts">
+              <Link to="/launchpad/rooms">
                 <Megaphone className="h-4 w-4 mr-2" />
                 Share Progress on Launchpad
               </Link>

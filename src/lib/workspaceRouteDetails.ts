@@ -1,5 +1,5 @@
 import { BIZMAP_STAGES, BIZMAP_TOOLS } from './bizmapStages';
-import { BarChart3, BriefcaseBusiness, CalendarClock, CheckSquare, FolderOpen, Gift, GraduationCap, Handshake, Hash, Inbox, LayoutDashboard, LineChart, MessageSquare, MessagesSquare, Mic, Newspaper, Repeat, Rocket, Settings, Sparkles, Users, type LucideIcon } from 'lucide-react';
+import { BarChart3, BriefcaseBusiness, CalendarClock, CheckSquare, FolderOpen, Gift, GraduationCap, Handshake, Inbox, LayoutDashboard, LineChart, MessageSquare, MessagesSquare, Mic, Newspaper, Repeat, Rocket, Settings, Sparkles, Users, type LucideIcon } from 'lucide-react';
 
 export const WORKSPACE_ROUTE_ICONS: Record<string, LucideIcon> = {
   ...Object.fromEntries(BIZMAP_TOOLS.map(tool => [tool.name, tool.icon])),
@@ -12,9 +12,8 @@ export const WORKSPACE_ROUTE_ICONS: Record<string, LucideIcon> = {
   Marketplace: BriefcaseBusiness,
   Newspaper,
   Podcast: Mic,
-  Launchpad: Rocket,
-  Posts: MessagesSquare,
-  Topics: Hash,
+  Rooms: MessagesSquare,
+  Launches: Rocket,
   'Accelerator Hunt': Rocket,
   'Tech Stack Builder': Settings,
   Overview: LayoutDashboard,
@@ -50,9 +49,8 @@ export const WORKSPACE_ROUTE_DESCRIPTIONS: Record<string, string> = {
   Marketplace: 'Grow your business with niche services.',
   Newspaper: 'Read business cases and founder stories.',
   Podcast: 'Hear candid conversations with founders.',
-  Launchpad: 'Launches from founders building on CT.',
-  Posts: 'Ask for feedback and share milestones.',
-  Topics: 'Follow stages and skills you care about.',
+  Rooms: 'Talk shop with founders by stage and skill.',
+  Launches: 'Weekly launch rounds from founders on CT.',
   'Accelerator Hunt': 'Find accelerator programs matched to your startup.',
   'Tech Stack Builder': 'Choose a practical stack for your product.',
   Overview: 'Track your progress and see what to work on next.',
@@ -111,22 +109,22 @@ export const ROUTE_DESCRIPTIONS_BY_TYPE: Record<string, Record<string, string>> 
     'Find a Mentor': 'See how other mentors present themselves.',
     'Find a Co-Founder': 'Browse founders looking for a partner.',
     Marketplace: 'Find services for the founders you advise.',
-    Posts: 'Answer feedback requests from founders.',
+    Rooms: 'Answer feedback requests from founders.',
   },
   marketplace: {
     Overview: 'See new enquiries and how your listing is doing.',
     'Find a Mentor': 'Get advice on growing your practice.',
     'Find a Co-Founder': 'Meet people building something with you.',
     Marketplace: 'See your listing the way buyers see it.',
-    Posts: 'Answer founders asking for help in your field.',
+    Rooms: 'Answer founders asking for help in your field.',
   },
   investor: {
     Overview: 'See new matches and what your founders are shipping.',
     'Find a Co-Founder': 'Browse founders looking for a partner.',
     'Find your Angel': 'See the rest of the investor network.',
     Marketplace: 'Find services for your portfolio.',
-    Launchpad: 'See what founders are launching.',
-    Posts: 'Follow founder progress and milestones.',
+    Launches: 'See what founders are launching this week.',
+    Rooms: 'Follow founder progress and milestones.',
   },
 };
 

@@ -71,10 +71,8 @@ const Services = lazy(() => import("./pages/Services"));
 const Software = lazy(() => import("./pages/Software"));
 const CommunityPage = lazy(() => import("./pages/CommunityPage"));
 const LaunchpadHome = lazy(() => import("./pages/launchpad/LaunchpadHome"));
-const LaunchpadPosts = lazy(() => import("./pages/launchpad/LaunchpadPosts"));
+const LaunchpadRooms = lazy(() => import("./pages/launchpad/LaunchpadRooms"));
 const LaunchpadPostDetail = lazy(() => import("./pages/launchpad/LaunchpadPostDetail"));
-const LaunchpadTopics = lazy(() => import("./pages/launchpad/LaunchpadTopics"));
-const LaunchpadTopic = lazy(() => import("./pages/launchpad/LaunchpadTopic"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Careers = lazy(() => import("./pages/Careers"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
@@ -216,6 +214,15 @@ const LegacyCommunityRedirect = () => {
       : pathname.replace("/community", "/mentorship");
 
   return <Navigate to={`${nextPath}${location.search}${location.hash}`} replace />;
+};
+
+// /launchpad/posts/:id → /launchpad/rooms/posts/:id and /launchpad/topics/:slug → /launchpad/rooms/:slug.
+const LegacyLaunchpadRedirect = () => {
+  const location = useLocation();
+  const next = location.pathname
+    .replace(/^\/launchpad\/posts\//, '/launchpad/rooms/posts/')
+    .replace(/^\/launchpad\/topics\//, '/launchpad/rooms/');
+  return <Navigate to={`${next}${location.search}${location.hash}`} replace />;
 };
 
 const LegacyFirstCustomerProofRedirect = () => {
@@ -362,15 +369,19 @@ function App() {
                         <Route path="/services" element={<Services />} />
                         <Route path="/software" element={<Software />} />
                         <Route path="/mentorship" element={<CommunityPage />} />
-                        {/* The progress feed moved into Launchpad Posts, on the same table. */}
-                        <Route path="/mentorship/progress" element={<Navigate to="/launchpad/posts" replace />} />
+                        {/* Chat Rooms: Rooms and Launches. The progress feed, Posts,
+                            Topics and Profiles all folded into Rooms; their old
+                            addresses (and links in sent notifications) redirect. */}
                         <Route path="/launchpad" element={<LaunchpadHome />} />
-                        <Route path="/launchpad/posts" element={<LaunchpadPosts />} />
-                        <Route path="/launchpad/posts/:id" element={<LaunchpadPostDetail />} />
-                        <Route path="/launchpad/topics" element={<LaunchpadTopics />} />
-                        <Route path="/launchpad/topics/:slug" element={<LaunchpadTopic />} />
-                        {/* Profiles left Launchpad; the header search finds people. */}
-                        <Route path="/launchpad/profiles" element={<Navigate to="/launchpad/posts" replace />} />
+                        <Route path="/launchpad/rooms" element={<LaunchpadRooms />} />
+                        <Route path="/launchpad/rooms/posts/:id" element={<LaunchpadPostDetail />} />
+                        <Route path="/launchpad/rooms/:slug" element={<LaunchpadRooms />} />
+                        <Route path="/mentorship/progress" element={<Navigate to="/launchpad/rooms" replace />} />
+                        <Route path="/launchpad/posts" element={<Navigate to="/launchpad/rooms" replace />} />
+                        <Route path="/launchpad/posts/:id" element={<LegacyLaunchpadRedirect />} />
+                        <Route path="/launchpad/topics" element={<Navigate to="/launchpad/rooms" replace />} />
+                        <Route path="/launchpad/topics/:slug" element={<LegacyLaunchpadRedirect />} />
+                        <Route path="/launchpad/profiles" element={<Navigate to="/launchpad/rooms" replace />} />
                         <Route path="/mentorship/mentors/:id" element={<MentorProfilePage />} />
                         <Route path="/mentorship/book/:id" element={<MentorBookingPage />} />
                         <Route path="/mentorship/calls/respond" element={<MentorDiscoveryResponsePage />} />

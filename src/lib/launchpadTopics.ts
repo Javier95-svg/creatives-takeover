@@ -42,3 +42,14 @@ const BY_SLUG = new Map(LAUNCHPAD_TOPICS.map((topic) => [topic.slug, topic]));
 export function launchpadTopic(slug: string | null | undefined): LaunchpadTopic | null {
   return slug ? BY_SLUG.get(slug) ?? null : null;
 }
+
+/** Rooms are the topics, presented as places to talk. */
+export const ROOMS_PATH = '/launchpad/rooms';
+
+export function roomPath(slug: string) {
+  return `${ROOMS_PATH}/${slug}`;
+}
+
+export function postPath(id: string) {
+  return `${ROOMS_PATH}/posts/${id}`;
+}
