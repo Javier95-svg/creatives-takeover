@@ -26,7 +26,7 @@ export const LAUNCHPAD_TOPICS: readonly LaunchpadTopic[] = [
   // Skill rooms are kept to what founders ask about most and nothing else in
   // CT covers: team search lives in Find a Co-Founder, stack choices in Tech
   // Stack Builder and the Building room.
-  { slug: 'customers', label: 'Customers & growth', group: 'craft', description: 'Who you serve, and the channels and outreach that bring them in.', tools: ['ICP Builder', 'GTM Strategist', 'Directories'], prompt: 'Describe your ideal customer or share a channel experiment and its numbers.' },
+  { slug: 'customers', label: 'Customer discovery', group: 'craft', description: 'Finding, interviewing and winning the people you build for.', tools: ['ICP Builder', 'GTM Strategist', 'Directories'], prompt: 'Share what customer interviews taught you, or how you found your first users.' },
   { slug: 'pricing', label: 'Pricing', group: 'craft', description: 'Plans, price points and how you charge.', tools: ['GTM Strategist'], prompt: 'Share your pricing and ask whether it makes sense to a buyer.' },
   { slug: 'product', label: 'Product & UX', group: 'craft', description: 'Features, onboarding and what users actually do.', tools: ['MVP Builder', 'Demo Studio'], prompt: 'Ask for feedback on a screen, flow or feature.' },
   { slug: 'founder-life', label: 'Founder life', group: 'craft', description: 'Focus, motivation and building alongside a job.', tools: ['Find a Mentor'], prompt: 'Share a lesson, a hard week or what keeps you going.' },
