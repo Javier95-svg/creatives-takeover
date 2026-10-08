@@ -52,9 +52,20 @@ export function FeedPages({ page, total, onChange, hasMore = false }: {
   </nav>;
 }
 
-/** Scrolls a feed's top into view after a page change, so the reader starts at its first post. */
+/**
+ * Scrolls a feed's top into view after a page change, so the reader starts at
+ * its first post. Only the nearest scrolling area moves: scrollIntoView would
+ * also nudge the workspace shell, whose overflow is hidden, and push the
+ * sidebar logo and top bar off screen until reload.
+ */
 export function scrollToFeed(element: HTMLElement | null) {
   if (!element) return;
-  const top = element.getBoundingClientRect().top;
-  if (top < 0) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  let area = element.parentElement;
+  while (area && !/(auto|scroll)/.test(getComputedStyle(area).overflowY)) area = area.parentElement;
+  const container = area ?? document.scrollingElement;
+  if (!container) return;
+  const containerTop = area ? area.getBoundingClientRect().top : 0;
+  // Leave room for the sticky header on pages that scroll the window.
+  const offset = element.getBoundingClientRect().top - containerTop - (area ? 16 : 96);
+  if (offset < 0) container.scrollBy({ top: offset, behavior: 'smooth' });
 }

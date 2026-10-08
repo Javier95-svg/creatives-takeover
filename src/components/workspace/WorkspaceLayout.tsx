@@ -60,7 +60,11 @@ export default function WorkspaceLayout({ children, account, avatar, profileHref
     currentPath={currentPath ?? (home ? '/' : location.pathname)} initialCollapsed={persistentPreviewNavigation || !home} mobile={mobile}
     navigateTo={path => { setDrawer(false); (onNavigate ?? enterWorkspaceRoute)(path); }} />;
   return <WorkspaceFrameContext.Provider value={true}>
-    <div data-telemetry-private className={`ph-no-capture ph-mask workspace-shell flex h-dvh overflow-hidden bg-background text-foreground ${persistentPreviewNavigation ? 'workspace-preview-persistent' : ''}`}>
+    {/* The shell never scrolls; only the route content does. overflow-hidden
+        still lets scrollIntoView or focus nudge it, which pushes the logo and
+        top bar off screen, so any such offset is put straight back. */}
+    <div data-telemetry-private onScroll={(event) => { if (event.currentTarget.scrollTop || event.currentTarget.scrollLeft) event.currentTarget.scrollTo(0, 0); }}
+      className={`ph-no-capture ph-mask workspace-shell flex h-dvh overflow-hidden bg-background text-foreground ${persistentPreviewNavigation ? 'workspace-preview-persistent' : ''}`}>
       {!mobile && sidebar}
       <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
         {hideTopBar ? null : <header className="relative z-20 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border/60 bg-card/60 px-3 md:gap-4 md:pl-5 lg:pl-8">
