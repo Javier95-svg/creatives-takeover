@@ -35,7 +35,7 @@ export const WORKSPACE_SECTION_SLOGANS: Record<string, string> = {
   Dashboard: 'Accountability Partner ⏱️',
   BizMap: 'Validate ✅ Build 🛠️ Launch 🚀',
   Insighta: 'Distribute📦 Fundraise💸',
-  Launchpad: 'Share 📣 Get feedback 💬 Ship 🚀',
+  Launchpad: 'Share Your Journey 📣',
   Network: 'Connect & Collab 🌐',
   Content: 'Leisure Time🍿',
   Resources: 'Some Gifts 🎁',
