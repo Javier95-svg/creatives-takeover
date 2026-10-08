@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ArrowBigDown, ArrowBigUp, Info, MessageCircle } from 'lucide-react';
 import { founderStageLabel } from '@/lib/bizmapStageOrder';
 import { EXAMPLE_LAUNCHES, examplePhoto, examplesForRoom, type ExamplePost } from '@/lib/communityExamples';
 import { postKind, type PostKind } from '@/lib/launchpad';
 import { cn } from '@/lib/utils';
 import { ExampleAvatar, ExampleLogo } from './ExampleArt';
+import { FeedPages, POSTS_PER_PAGE, scrollToFeed } from './FeedPages';
 import { KindBadge, RoomChip } from './LaunchpadPostCard';
 import { KIND_VISUALS } from './roomVisuals';
 
@@ -66,12 +67,18 @@ function ExamplePostCard({ post, onUse }: { post: ExamplePost; onUse: () => void
  */
 export function ExamplePosts({ room, onCompose }: { room?: string | null; onCompose: (kind: PostKind, room: string) => void }) {
   const examples = examplesForRoom(room);
-  return <section aria-label="Example posts" className="space-y-3">
+  const [page, setPage] = useState(1);
+  const top = useRef<HTMLElement>(null);
+  const pages = Math.max(1, Math.ceil(examples.length / POSTS_PER_PAGE));
+  const current = Math.min(page, pages);
+  const shown = examples.slice((current - 1) * POSTS_PER_PAGE, current * POSTS_PER_PAGE);
+  return <section ref={top} aria-label="Example posts" className="scroll-mt-24 space-y-3">
     <p className="flex items-start gap-1.5 px-1 text-xs text-muted-foreground">
       <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
       Examples are illustrative: the people and posts are invented, not members. They disappear once real posts arrive.
     </p>
-    {examples.map((post) => <ExamplePostCard key={post.id} post={post} onUse={() => onCompose(post.kind, post.room)} />)}
+    {shown.map((post) => <ExamplePostCard key={post.id} post={post} onUse={() => onCompose(post.kind, post.room)} />)}
+    <FeedPages page={current} total={pages} onChange={(next) => { setPage(next); scrollToFeed(top.current); }} />
   </section>;
 }
 

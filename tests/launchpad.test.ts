@@ -145,6 +145,16 @@ test('examples cover every room and post type, stay labelled, and only use local
   assert.equal(examplePhoto('not-listed'), undefined);
 });
 
+test('room feeds show five posts a page with numbered pages', () => {
+  const pages = readFileSync(new URL('../src/components/launchpad/FeedPages.tsx', import.meta.url), 'utf8');
+  assert.match(pages, /export const POSTS_PER_PAGE = 5;/);
+  for (const file of ['PostFeed.tsx', 'CommunityExamples.tsx']) {
+    const source = readFileSync(new URL(`../src/components/launchpad/${file}`, import.meta.url), 'utf8');
+    assert.match(source, /<FeedPages page=\{current\} total=\{pages\}/, file);
+    assert.match(source, /\.slice\(\(current - 1\) \* POSTS_PER_PAGE, current \* POSTS_PER_PAGE\)/, file);
+  }
+});
+
 test('the example board fills five rows of three with distinct products', () => {
   assert.equal(EXAMPLE_LAUNCHES.length, 15);
   assert.equal(new Set(EXAMPLE_LAUNCHES.map((launch) => launch.name)).size, 15);

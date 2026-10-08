@@ -1,12 +1,12 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Clock, Flame, Layers, Search, TrendingUp, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLaunchpadPosts, useMyStage, useSavePost, useUpvote } from '@/hooks/useLaunchpad';
 import { founderStageLabel } from '@/lib/bizmapStageOrder';
 import { POST_KINDS, type PostKind, type PostSort } from '@/lib/launchpad';
 import { cn } from '@/lib/utils';
+import { FeedPages, POSTS_PER_PAGE, scrollToFeed } from './FeedPages';
 import { LaunchpadPostCard } from './LaunchpadPostCard';
 import { useRequireAccount } from './requireAccount';
 import { ReportDialog, type ReportTarget } from './ReportDialog';
@@ -18,7 +18,8 @@ const SORTS = [
   { value: 'top', label: 'Top', icon: TrendingUp },
 ] as const satisfies ReadonlyArray<{ value: PostSort; label: string; icon: unknown }>;
 
-const PAGE = 20;
+// Posts are fetched in batches and shown POSTS_PER_PAGE at a time.
+const BATCH = 100;
 
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
   return <button type="button" onClick={onClick} aria-pressed={active}
@@ -45,11 +46,13 @@ export function PostFeed({ topic, topics, savedOnly = false, empty }: {
   const [atMyStage, setAtMyStage] = useState(false);
   const [query, setQuery] = useState('');
   const [search, setSearch] = useState('');
-  const [limit, setLimit] = useState(PAGE);
+  const [limit, setLimit] = useState(BATCH);
+  const [page, setPage] = useState(1);
+  const top = useRef<HTMLElement>(null);
   const [report, setReport] = useState<ReportTarget>(null);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => { setSearch(query); setLimit(PAGE); }, 300);
+    const timer = window.setTimeout(() => { setSearch(query); setLimit(BATCH); setPage(1); }, 300);
     return () => window.clearTimeout(timer);
   }, [query]);
 
@@ -63,9 +66,19 @@ export function PostFeed({ topic, topics, savedOnly = false, empty }: {
   const rows = posts.data ?? [];
   const filtered = Boolean(kind || atMyStage || search.trim());
   const myStageLabel = founderStageLabel(myStage);
-  const clear = () => { setKind(null); setAtMyStage(false); setQuery(''); setSearch(''); };
+  const clear = () => { setKind(null); setAtMyStage(false); setQuery(''); setSearch(''); setPage(1); };
+  const pages = Math.max(1, Math.ceil(rows.length / POSTS_PER_PAGE));
+  const current = Math.min(page, pages);
+  const shown = rows.slice((current - 1) * POSTS_PER_PAGE, current * POSTS_PER_PAGE);
+  // A full batch means older posts may exist past the last page; Next loads them.
+  const hasMore = rows.length >= limit;
+  const goTo = (next: number) => {
+    if (next > pages && hasMore) setLimit(limit + BATCH);
+    setPage(next);
+    scrollToFeed(top.current);
+  };
 
-  return <section aria-label="Posts">
+  return <section ref={top} aria-label="Posts" className="scroll-mt-24">
     <div className="mb-4 space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-48 flex-1">
@@ -75,7 +88,7 @@ export function PostFeed({ topic, topics, savedOnly = false, empty }: {
         </div>
         <div role="tablist" aria-label="Sort posts" className="flex rounded-lg border border-border/70 bg-muted/40 p-0.5">
           {SORTS.map(({ value, label, icon: Icon }) => <button key={value} role="tab" type="button" aria-selected={sort === value}
-            onClick={() => { setSort(value); setLimit(PAGE); }}
+            onClick={() => { setSort(value); setLimit(BATCH); setPage(1); }}
             className={cn('inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors', sort === value ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}>
             <Icon className="h-3.5 w-3.5" aria-hidden="true" />{label}
           </button>)}
@@ -84,11 +97,11 @@ export function PostFeed({ topic, topics, savedOnly = false, empty }: {
       <div className="flex gap-1.5 overflow-x-auto pb-1">
         {POST_KINDS.map((option) => {
           const Icon = KIND_VISUALS[option.value].icon;
-          return <Chip key={option.value} active={kind === option.value} onClick={() => { setKind(kind === option.value ? null : option.value); setLimit(PAGE); }}>
+          return <Chip key={option.value} active={kind === option.value} onClick={() => { setKind(kind === option.value ? null : option.value); setLimit(BATCH); setPage(1); }}>
             <Icon className="h-3.5 w-3.5" aria-hidden="true" />{option.label}
           </Chip>;
         })}
-        {myStageLabel && <Chip active={atMyStage} onClick={() => setAtMyStage(!atMyStage)}><Layers className="h-3.5 w-3.5" aria-hidden="true" />{myStageLabel} stage</Chip>}
+        {myStageLabel && <Chip active={atMyStage} onClick={() => { setAtMyStage(!atMyStage); setPage(1); }}><Layers className="h-3.5 w-3.5" aria-hidden="true" />{myStageLabel} stage</Chip>}
       </div>
     </div>
 
@@ -107,15 +120,13 @@ export function PostFeed({ topic, topics, savedOnly = false, empty }: {
       : empty)}
 
     <div className={cn('space-y-3 transition-opacity', posts.isFetching && !posts.isPending && 'opacity-70')}>
-      {rows.map((post) => <LaunchpadPostCard key={post.id} post={post} isOwn={post.user_id === user?.id}
+      {shown.map((post) => <LaunchpadPostCard key={post.id} post={post} isOwn={post.user_id === user?.id}
         onUpvote={() => { if (requireAccount('upvote posts')) upvote.mutate({ postId: post.id, on: !post.voted }); }}
         onSave={() => { if (requireAccount('save posts')) save.mutate({ postId: post.id, on: !post.saved }); }}
         onReport={() => { if (requireAccount('report a post')) setReport({ postId: post.id }); }} />)}
     </div>
 
-    {rows.length >= limit && <div className="mt-6 flex justify-center">
-      <Button variant="outline" onClick={() => setLimit(limit + PAGE)} disabled={posts.isFetching}>{posts.isFetching ? 'Loading…' : 'Show more'}</Button>
-    </div>}
+    <FeedPages page={current} total={pages} onChange={goTo} hasMore={hasMore} />
 
     <ReportDialog target={report} onClose={() => setReport(null)} />
   </section>;
