@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
 
-import { LAUNCHPAD_TOPICS, launchpadTopic, postPath, roomPath } from '../src/lib/launchpadTopics.ts';
+import { LAUNCHPAD_TOPICS, launchpadTopic, postPath, RETIRED_ROOMS, roomPath } from '../src/lib/launchpadTopics.ts';
 import { previousRoundStart, roundEnd, roundStart, timeLeft } from '../src/lib/launchpadRoundTime.ts';
 import { FOUNDER_TOOL_CATALOG } from '../src/config/founderToolCatalog.ts';
 import { isWorkspaceRoute } from '../src/lib/workspacePolicy.ts';
@@ -18,9 +18,20 @@ const WORKSPACE_ROUTES: Record<string, string> = {
 
 const migration = readFileSync(new URL('../supabase/migrations/20261007130000_launchpad_posts_topics_profiles.sql', import.meta.url), 'utf8');
 
-test('every app topic is seeded in launchpad_topics, and nothing else is', () => {
+test('the app rooms match launchpad_topics after every migration, and retired rooms point at live ones', () => {
   const seeded = [...migration.matchAll(/^\s+\('([a-z0-9-]+)', '[^']+', \d+\)/gm)].map((match) => match[1]);
-  assert.deepEqual([...seeded].sort(), LAUNCHPAD_TOPICS.map((topic) => topic.slug).sort());
+  const simplify = readFileSync(new URL('../supabase/migrations/20261009120000_community_simplify_craft_rooms.sql', import.meta.url), 'utf8');
+  const removed = (simplify.match(/DELETE FROM public\.launchpad_topics WHERE slug IN \(([^)]+)\)/)?.[1] ?? '')
+    .split(',').map((slug) => slug.trim().replace(/'/g, ''));
+  const live = seeded.filter((slug) => !removed.includes(slug));
+  assert.deepEqual([...live].sort(), LAUNCHPAD_TOPICS.map((topic) => topic.slug).sort());
+  assert.deepEqual([...removed].sort(), Object.keys(RETIRED_ROOMS).sort());
+  for (const [from, to] of Object.entries(RETIRED_ROOMS)) {
+    assert.ok(launchpadTopic(to), `${from} → ${to}`);
+    assert.match(simplify, new RegExp(`SET topic = '${to}' WHERE topic = '${from}'`));
+  }
+  // Four skill rooms, none duplicating another section.
+  assert.equal(LAUNCHPAD_TOPICS.filter((topic) => topic.group === 'craft').length, 4);
 });
 
 test('each topic links to tools that have a workspace route', () => {

@@ -23,12 +23,12 @@ export const LAUNCHPAD_TOPICS: readonly LaunchpadTopic[] = [
   { slug: 'launch', label: 'Launch', group: 'stage', description: 'Getting the product in front of its first users.', tools: ['Demo Studio', 'Directories'], prompt: 'Ask for feedback on your launch page or share where you are launching.' },
   { slug: 'traction', label: 'Traction', group: 'stage', description: 'Growing usage and proving people stay.', tools: ['Traction Engine', 'GTM Strategist'], prompt: 'Which channel is working, and which one did you drop?' },
   { slug: 'fundraising', label: 'Fundraising', group: 'stage', description: 'Raising from angels, accelerators and funds.', tools: ['VC Search', 'Find your Angel', 'Pitch Deck Analyzer'], prompt: 'Ask for a pitch review or share what investors pushed back on.' },
-  { slug: 'customers', label: 'Customers & ICP', group: 'craft', description: 'Who you serve and how you reach them.', tools: ['ICP Builder'], prompt: 'Describe your ideal customer and ask others to poke holes in it.' },
-  { slug: 'distribution', label: 'Distribution', group: 'craft', description: 'Channels, content and outreach that bring users in.', tools: ['GTM Strategist', 'Directories'], prompt: 'Share a channel experiment and its numbers.' },
+  // Skill rooms are kept to what founders ask about most and nothing else in
+  // CT covers: team search lives in Find a Co-Founder, stack choices in Tech
+  // Stack Builder and the Building room.
+  { slug: 'customers', label: 'Customers & growth', group: 'craft', description: 'Who you serve, and the channels and outreach that bring them in.', tools: ['ICP Builder', 'GTM Strategist', 'Directories'], prompt: 'Describe your ideal customer or share a channel experiment and its numbers.' },
   { slug: 'pricing', label: 'Pricing', group: 'craft', description: 'Plans, price points and how you charge.', tools: ['GTM Strategist'], prompt: 'Share your pricing and ask whether it makes sense to a buyer.' },
   { slug: 'product', label: 'Product & UX', group: 'craft', description: 'Features, onboarding and what users actually do.', tools: ['MVP Builder', 'Demo Studio'], prompt: 'Ask for feedback on a screen, flow or feature.' },
-  { slug: 'tech-stack', label: 'Tech stack', group: 'craft', description: 'Tools, frameworks and no-code choices.', tools: ['Tech Stack Builder'], prompt: 'Which tool are you choosing between, and why?' },
-  { slug: 'team', label: 'Co-founders & team', group: 'craft', description: 'Finding partners, first hires and mentors.', tools: ['Find a Co-Founder', 'Find a Mentor'], prompt: 'Say who you are looking for and what you bring.' },
   { slug: 'founder-life', label: 'Founder life', group: 'craft', description: 'Focus, motivation and building alongside a job.', tools: ['Find a Mentor'], prompt: 'Share a lesson, a hard week or what keeps you going.' },
 ];
 
@@ -53,3 +53,10 @@ export function roomPath(slug: string) {
 export function postPath(id: string) {
   return `${ROOMS_PATH}/posts/${id}`;
 }
+
+/** Rooms that were merged away, and where their links and posts went (20261009120000). */
+export const RETIRED_ROOMS: Readonly<Record<string, string>> = {
+  distribution: 'customers',
+  'tech-stack': 'building',
+  team: 'founder-life',
+};

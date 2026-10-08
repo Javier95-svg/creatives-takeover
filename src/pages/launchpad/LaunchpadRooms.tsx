@@ -13,7 +13,7 @@ import { TopicFollowButton } from '@/components/launchpad/TopicFollowButton';
 import { roomIcon } from '@/components/launchpad/roomVisuals';
 import { useFollowedTopics, useTopicStats } from '@/hooks/useLaunchpad';
 import type { PostKind } from '@/lib/launchpad';
-import { LAUNCHPAD_TOPICS, launchpadTopic } from '@/lib/launchpadTopics';
+import { LAUNCHPAD_TOPICS, launchpadTopic, RETIRED_ROOMS, roomPath, ROOMS_PATH } from '@/lib/launchpadTopics';
 import { WORKSPACE_ROUTES } from '@/lib/workspaceNavigation';
 import CommunityRoomsWallpaper, { RoomsThreadChart } from '@/components/wallpapers/CommunityRoomsWallpaper';
 
@@ -73,7 +73,10 @@ export default function LaunchpadRooms() {
   const followed = useFollowedTopics();
   const [composing, setComposing] = useState<{ kind?: PostKind } | null>(null);
 
-  if (slug && !launchpadTopic(slug)) return <Navigate to="/launchpad/rooms" replace />;
+  if (slug && !launchpadTopic(slug)) {
+    const merged = RETIRED_ROOMS[slug];
+    return <Navigate to={merged ? roomPath(merged) : ROOMS_PATH} replace />;
+  }
   const viewParam = params.get('view');
   const view: RoomView = slug ? { kind: 'room', slug }
     : viewParam === 'following' ? { kind: 'following' }

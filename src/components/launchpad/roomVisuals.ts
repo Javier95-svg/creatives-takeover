@@ -1,6 +1,6 @@
 import {
-  Coffee, Cpu, FlaskConical, Hammer, HandCoins, Lightbulb, MessageCircleQuestion, MessagesSquare, Megaphone,
-  MousePointerClick, Rocket, Tag, Target, TrendingUp, Trophy, Users, type LucideIcon,
+  Coffee, FlaskConical, Hammer, HandCoins, Lightbulb, MessageCircleQuestion, MessagesSquare,
+  MousePointerClick, Rocket, Tag, Target, TrendingUp, Trophy, type LucideIcon,
 } from 'lucide-react';
 import type { PostKind } from '@/lib/launchpad';
 
@@ -12,11 +12,8 @@ export const ROOM_ICONS: Record<string, LucideIcon> = {
   traction: TrendingUp,
   fundraising: HandCoins,
   customers: Target,
-  distribution: Megaphone,
   pricing: Tag,
   product: MousePointerClick,
-  'tech-stack': Cpu,
-  team: Users,
   'founder-life': Coffee,
 };
 
