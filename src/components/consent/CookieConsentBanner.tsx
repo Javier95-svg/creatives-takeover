@@ -68,8 +68,8 @@ export function CookieConsentBanner() {
             {settingsOpen && status !== 'unknown' && (
               <span className="font-medium text-foreground">Current choice: {status === 'granted' ? 'accepted' : 'rejected'}. </span>
             )}
-            We use analytics cookies to improve platform performance, understand how visitors interact with
-            our features, and identify areas where we can enhance the user experience.{' '}
+            We use cookies to improve our platform performance, understand how users interact with our
+            features, and identify areas where we can enhance the user experience.{' '}
             <Link
               to="/privacy-policy"
               className="font-medium text-foreground underline underline-offset-2 hover:text-primary"
