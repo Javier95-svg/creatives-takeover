@@ -14,6 +14,7 @@ import { isActivationIntent } from './activationIntent.ts';
 export const ANSWER_OPTIONS = {
   businessModel: ['b2b_saas', 'service', 'b2c_product', 'marketplace', 'ecommerce', 'media', 'other'],
   evidenceState: ['none', 'prospects', 'replies', 'conversations', 'commitment', 'payment', 'repeatable_growth'],
+  productState: ['idea_only', 'prototype_demo', 'mvp_beta', 'live_product'],
   customerCountBand: ['0', '1', '2', '3', '4_plus'],
   revenueBand: ['none', 'under_1k', '1k_10k', '10k_50k', 'over_50k'],
   primaryGoal: ['validate_problem', 'win_first_customer', 'reach_three_customers', 'repeatable_growth', 'build_product', 'launch', 'raise'],

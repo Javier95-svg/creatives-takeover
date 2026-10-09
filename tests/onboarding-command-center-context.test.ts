@@ -188,3 +188,41 @@ test('dashboard personalization and feedback preserve the standardized shell', a
   assert.match(analytics, /'startupBrief'/);
   assert.match(analytics, /'country'/);
 });
+
+test('a founder with a live product and no customer evidence is Validating, not Ideation, and tests it with buyers', async () => {
+  const { recommendActivation } = await import('../src/lib/activationJourneyV2.ts');
+  // The answers from a real report: a live social app, no customers yet,
+  // validating the problem and unable to reach prospects.
+  const live: OnboardingAnswersV1 = {
+    ...completeAnswers,
+    founderSegment: 'founder',
+    businessModel: 'media',
+    productState: 'live_product',
+    evidenceState: 'none',
+    customerCountBand: '',
+    primaryGoal: 'validate_problem',
+    blocker: 'prospect_access',
+    selectedIntent: '',
+  };
+  const context = deriveOnboardingContextV1(live);
+  assert.equal(context.operatingStage, 3);
+  assert.equal(context.assignedStageLabel, 'Validating');
+  assert.ok(!context.stageRationaleCodes.includes('idea_only'));
+  assert.ok(context.stageRationaleCodes.includes('product_without_commitment'));
+  assert.equal(context.recommendedIntent, 'first_customer_sprint');
+  const stageAnswers = deriveStageAnswersFromOnboarding(live);
+  assert.equal(stageAnswers.productStatus, 'live_product');
+  // What the form actually opens: First Customer Proof, not Decision Sprint.
+  assert.equal(recommendActivation({ assignedStage: context.assignedStage, blocker: stageAnswers.blocker, productStatus: stageAnswers.productStatus }).intent, 'first_customer_sprint');
+
+  // An idea-only founder keeps the existing path.
+  const idea = deriveOnboardingContextV1({ ...live, productState: 'idea_only' });
+  assert.equal(idea.operatingStage, 1);
+  assert.equal(idea.recommendedIntent, 'start_validation');
+  // Answers saved before the question existed behave exactly as before.
+  const legacy = deriveOnboardingContextV1({ ...live, productState: undefined });
+  assert.equal(legacy.operatingStage, 1);
+  // Customer commitment outranks the product answer: no cap once demand is shown.
+  const committed = deriveOnboardingContextV1({ ...live, evidenceState: 'payment', customerCountBand: '2' });
+  assert.ok(!committed.stageRationaleCodes.includes('product_without_commitment'));
+});

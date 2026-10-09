@@ -154,6 +154,7 @@ const RATIONALE_LABELS: Record<string, string> = {
   live_product: 'Your product is live for customers.',
   scaling_product: 'You reported a live product with growth activity.',
   no_real_users: 'No external customer evidence is recorded yet.',
+  product_without_commitment: 'You have a usable product, and no customer has committed yet, so the focus is proving demand for it.',
   early_network_feedback: 'Your current feedback is from your immediate network.',
   target_customer_testing: 'Target customers are testing the proposition.',
   paying_customers: 'Paying-customer evidence is recorded.',

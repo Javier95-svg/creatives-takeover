@@ -114,6 +114,16 @@ const EVIDENCE_OPTIONS = [
   ['repeatable_growth', 'I have repeatable acquisition or retention'],
 ] as const;
 
+// What exists today. Asked of founders only: the evidence question ignores
+// their own work, so this is how a live product with no customers yet is told
+// apart from an idea.
+const PRODUCT_STATE_OPTIONS = [
+  ['idea_only', 'Only an idea or a plan'],
+  ['prototype_demo', 'A prototype, mockup or demo'],
+  ['mvp_beta', 'An MVP or beta people can try'],
+  ['live_product', 'A live product anyone can use'],
+] as const;
+
 const CUSTOMER_BANDS = [
   ['0', 'None yet'],
   ['1', '1 paying customer'],
@@ -615,6 +625,7 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
     // does not feel longer than the answers it needs.
     if (step === 1) {
       if (!answers.businessModel) return 'Choose the business model that fits best.';
+      if (answers.founderSegment === 'founder' && !answers.productState) return 'Choose what exists today.';
       if (!answers.evidenceState) return 'Choose the strongest evidence you have today.';
       if (requiresCustomerCount(answers.evidenceState) && !answers.customerCountBand) {
         return 'Choose your current paying-customer range.';
@@ -1223,7 +1234,7 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
         <>
           <StepHeading
             title={isBuilder ? 'Your idea and its customers' : 'Your business and its customers'}
-            description="Two quick questions. They shape the examples, playbooks and stage used across your dashboard."
+            description={`${isBuilder ? 'Two' : 'Three'} quick questions. They shape the examples, playbooks and stage used across your dashboard.`}
             headingRef={headingRef}
           />
           {/* Someone starting from scratch has no business yet, so builders are
@@ -1239,6 +1250,9 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
               onSelect={(businessModel) => patchAnswers({ businessModel })}
             />
           </SubQuestion>
+          {!isBuilder && <SubQuestion title="What exists today?" hint="Your own work counts here. Customer evidence comes next.">
+            <ChoiceGrid columns={2} options={PRODUCT_STATE_OPTIONS} value={answers.productState ?? ''} onSelect={(productState) => patchAnswers({ productState })} />
+          </SubQuestion>}
           <SubQuestion
             title="What is the strongest customer evidence you have?"
             hint="Pick the furthest point real customers have reached. Work you did on your own does not count yet."

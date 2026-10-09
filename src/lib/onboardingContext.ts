@@ -43,6 +43,13 @@ export type OnboardingEvidenceState =
   | 'payment'
   | 'repeatable_growth';
 
+/**
+ * What exists today, independent of customer evidence. The evidence question
+ * deliberately ignores the founder's own work, so without this a founder with a
+ * live product and no customers yet read as "only an idea".
+ */
+export type OnboardingProductState = 'idea_only' | 'prototype_demo' | 'mvp_beta' | 'live_product';
+
 export type OnboardingCustomerCountBand = '0' | '1' | '2' | '3' | '4_plus';
 export type OnboardingPrimaryGoal =
   | 'validate_problem'
@@ -113,6 +120,8 @@ export interface OnboardingAnswersV1 {
   founderSegment: OnboardingFounderSegment | '';
   businessModel: OnboardingBusinessModel | '';
   evidenceState: OnboardingEvidenceState | '';
+  /** Asked of founders with an existing project; builders start from an idea. */
+  productState?: OnboardingProductState | '';
   customerCountBand: OnboardingCustomerCountBand | '';
   primaryGoal: OnboardingPrimaryGoal | '';
   blocker: OnboardingBlocker | '';
@@ -228,6 +237,30 @@ const EVIDENCE_TO_PRODUCT: Record<OnboardingEvidenceState, FounderStageQuizAnswe
   repeatable_growth: 'scaling_product',
 };
 
+const PRODUCT_ORDER: FounderStageQuizAnswersV3['productStatus'][] = ['idea_only', 'prototype_demo', 'mvp_beta', 'live_product', 'scaling_product'];
+
+// Evidence a founder can have before anyone commits: still proving demand.
+const PRE_COMMITMENT_EVIDENCE: ReadonlySet<OnboardingEvidenceState> = new Set(['none', 'prospects', 'replies', 'conversations']);
+
+/** The furthest of what the founder built and what their evidence implies. */
+function productStatusFromAnswers(answers: OnboardingAnswersV1): FounderStageQuizAnswersV3['productStatus'] {
+  const fromEvidence = EVIDENCE_TO_PRODUCT[answers.evidenceState || 'none'];
+  const stated = answers.productState || null;
+  if (!stated) return fromEvidence;
+  return PRODUCT_ORDER.indexOf(stated) > PRODUCT_ORDER.indexOf(fromEvidence) ? stated : fromEvidence;
+}
+
+/**
+ * A usable product (MVP, beta or live) that no customer has committed to yet.
+ * The founder's job is proving demand for what exists, not picking an idea or
+ * building more, so the stage is Validating and the first action tests the
+ * product with buyers.
+ */
+export function hasProductAwaitingDemand(answers: OnboardingAnswersV1) {
+  return (answers.productState === 'mvp_beta' || answers.productState === 'live_product')
+    && PRE_COMMITMENT_EVIDENCE.has(answers.evidenceState || 'none');
+}
+
 const EVIDENCE_TO_TRACTION: Record<OnboardingEvidenceState, FounderStageQuizAnswersV3['tractionSignal']> = {
   none: 'none',
   prospects: 'waitlist_interest',
@@ -339,7 +372,7 @@ export function deriveStageAnswersFromOnboarding(
   const customerCount = customerCountFromBand(answers.customerCountBand);
 
   return {
-    productStatus: EVIDENCE_TO_PRODUCT[evidence],
+    productStatus: productStatusFromAnswers(answers),
     tractionSignal: EVIDENCE_TO_TRACTION[evidence],
     blocker: BLOCKER_TO_LEGACY[blocker],
     fundraisingStatus: answers.fundraisingStatus || (goal === 'raise' ? 'preparing' : 'not_now'),
@@ -371,6 +404,9 @@ export function recommendIntentFromAnswers(
     return { intent: 'run_icp', reasonCodes: ['customer_clarity_blocker'] };
   }
   if (answers.primaryGoal === 'validate_problem' || answers.blocker === 'prospect_access') {
+    // Decision Sprint scores ideas to pick one; a founder with a usable product
+    // needs buyers to test it instead.
+    if (hasProductAwaitingDemand(answers)) return { intent: 'first_customer_sprint', reasonCodes: ['product_needs_buyer_evidence'] };
     return { intent: 'start_validation', reasonCodes: ['external_evidence_goal'] };
   }
   if (answers.primaryGoal === 'build_product' || answers.blocker === 'product_delivery') {
@@ -398,6 +434,9 @@ export function recommendIntentFromAnswers(
     6: 'log_traction',
     7: 'analyze_pitch_deck',
   };
+  if (assignedStage === 3 && hasProductAwaitingDemand(answers)) {
+    return { intent: 'first_customer_sprint', reasonCodes: ['stage_fallback', 'product_needs_buyer_evidence'] };
+  }
   return { intent: stageFallback[assignedStage], reasonCodes: ['stage_fallback'] };
 }
 
@@ -410,7 +449,20 @@ export function deriveOnboardingContextV1(
   } = {},
 ): OnboardingContextV1 {
   const stageAnswers = deriveStageAnswersFromOnboarding(answers);
-  const diagnostic = assignFounderStageV3(stageAnswers);
+  const scored = assignFounderStageV3(stageAnswers);
+  // The scorer reads a usable product as Building or Launching. Without a
+  // customer commitment that overstates it: the founder is still validating.
+  const diagnostic = hasProductAwaitingDemand(answers) && scored.assignedStage !== 3
+    ? {
+      ...scored,
+      assignedStage: 3 as const,
+      operatingStage: 3 as const,
+      runnerUpStage: Math.min(scored.assignedStage, 6) as FounderOperatingStageId,
+      confidenceBand: 'medium' as const,
+      confidence: Math.min(scored.confidence, 75),
+      primarySignals: ['product_without_commitment', ...scored.primarySignals.filter((code) => code !== 'idea_only')],
+    }
+    : scored;
   const recommendation = recommendIntentFromAnswers(answers, diagnostic.assignedStage);
   const selectedIntent = options.selectedIntent || answers.selectedIntent || recommendation.intent;
   const routineGoal = answers.cofounderSituation === 'actively_looking'
