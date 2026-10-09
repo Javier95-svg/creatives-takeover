@@ -42,7 +42,10 @@ export default function AdminAdoption() {
     },
   });
 
-  const data = metrics.data;
+  // The section report needs the 20261012120000 migration; until then the
+  // function returns the older per-tool shape, which this page cannot show.
+  const data = metrics.data && Array.isArray(metrics.data.sections) ? metrics.data : undefined;
+  const outdated = Boolean(metrics.data && !data);
   const totals = data ? cohortTotals(data.cohorts) : null;
   const maxActive = data ? Math.max(1, ...data.weekly.map((week) => week.activeAccounts)) : 1;
   const leader = data ? topSection(data.sections) : null;
@@ -71,7 +74,9 @@ export default function AdminAdoption() {
         Could not load adoption metrics. {String((metrics.error as { message?: string })?.message ?? '')}
       </p>}
 
-      {metrics.isSuccess && !data && <p className="text-sm text-muted-foreground">No adoption data returned. If the adoption migration has not been applied yet, run it and reload.</p>}
+      {metrics.isSuccess && !data && <p className="text-sm text-muted-foreground">
+        {outdated ? 'The section report needs the latest adoption migration (20261012120000_adoption_by_section). Run it and reload.' : 'No adoption data returned. If the adoption migration has not been applied yet, run it and reload.'}
+      </p>}
 
       {data && totals && <div className="space-y-8">
         <section aria-label="Summary" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
