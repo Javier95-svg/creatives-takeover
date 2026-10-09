@@ -121,8 +121,9 @@ test('founder finishes in six screens and the fundraising follow-up stays visibl
     await click(dom,'Continue');
     assert.ok(text(dom).includes('3 of 6'));
     assert.ok(text(dom).includes('How does this business make money?'));
+    assert.ok(text(dom).includes('What exists today?'));
     assert.ok(text(dom).includes('What is the strongest customer evidence you have?'));
-    await click(dom,'B2B SaaS');await click(dom,'No external evidence yet');await click(dom,'Continue');
+    await click(dom,'B2B SaaS');await click(dom,'Only an idea or a plan');await click(dom,'No external evidence yet');await click(dom,'Continue');
     assert.ok(text(dom).includes('4 of 6'));
     await click(dom,'Win the first paying customer');await click(dom,'Fundraising preparation');
     assert.ok(text(dom).includes('Where is fundraising today?'));
@@ -183,7 +184,7 @@ test('a guest answers every screen without touching the server, then is asked to
     setter.call(area,'We help agencies turn client calls into clear project briefs.');area.dispatchEvent(new dom.window.Event('input',{bubbles:true}));await tick();
     await type(dom,field(dom,'What is your project called?'),'Acme');
     await click(dom,'Continue');
-    await click(dom,'B2B SaaS');await click(dom,'No external evidence yet');await click(dom,'Continue');
+    await click(dom,'B2B SaaS');await click(dom,'Only an idea or a plan');await click(dom,'No external evidence yet');await click(dom,'Continue');
     await click(dom,'Validate an urgent customer problem');await click(dom,'The customer or problem is still too broad');await click(dom,'Continue');
     await click(dom,'About 5 hours');await click(dom,'Not spending money on this yet');await click(dom,'Continue');
     assert.ok(text(dom).includes('Your plan is ready'));
