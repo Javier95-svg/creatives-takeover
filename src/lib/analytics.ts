@@ -132,6 +132,31 @@ let sessionRecordingGeneration = 0;
 // When true, all capture() calls are dropped so internal/admin activity never
 // enters the event stream. Set from AuthContext once the signed-in email is known.
 let internalUser = false;
+
+// A device an internal account has signed in on stays internal after signing
+// out, so the team's own browsing never counts as traffic. ?ct_internal=1 marks
+// a device without signing in (a phone, say); ?ct_internal=0 clears it.
+const INTERNAL_DEVICE_KEY = 'ct_internal_device_v1';
+const writeInternalDevice = (on: boolean) => {
+  try {
+    const storage = getSafeLocalStorage();
+    if (on) storage.setItem(INTERNAL_DEVICE_KEY, '1');
+    else storage.removeItem(INTERNAL_DEVICE_KEY);
+  } catch {
+    // Storage blocked: the flag lasts for this page only.
+  }
+};
+const readInternalDevice = () => {
+  if (typeof window === 'undefined') return false;
+  const flag = new URLSearchParams(window.location.search).get('ct_internal');
+  if (flag === '1' || flag === '0') writeInternalDevice(flag === '1');
+  try {
+    return flag === '1' || (flag !== '0' && getSafeLocalStorage().getItem(INTERNAL_DEVICE_KEY) === '1');
+  } catch {
+    return flag === '1';
+  }
+};
+let internalDevice = readInternalDevice();
 // A sign-out can race the deferred PostHog bootstrap. Remember the reset and
 // apply it from the loaded callback before any queued identity is flushed.
 let posthogResetPending = false;
@@ -448,6 +473,8 @@ export const initPosthog = () => {
           capture_pageview: 'history_change',
           before_send: (captureResult) => {
             if (!captureResult) return null;
+            // The team's own visits, pageviews included, never leave the browser.
+            if (isInternalUser()) return null;
             // Without consent only visits and our own funnel events are sent,
             // never recorded clicks or page interactions.
             if (!hasAnalyticsConsent() && CONSENT_ONLY_EVENTS.has(captureResult.event)) return null;
@@ -557,9 +584,20 @@ export const isInternalEmail = (email?: string | null): boolean =>
  */
 export const setInternalUser = (value: boolean) => {
   internalUser = value;
+  if (value && !internalDevice) {
+    internalDevice = true;
+    writeInternalDevice(true);
+  }
 };
 
-export const isInternalUser = () => internalUser;
+/** Someone outside the team signed in on this device, so it is tracked again. */
+export const clearInternalDevice = () => {
+  internalDevice = false;
+  writeInternalDevice(false);
+};
+
+/** Internal account signed in now, or a device the team uses. */
+export const isInternalUser = () => internalUser || internalDevice;
 
 /**
  * Tear every vendor down when a visitor withdraws consent mid-session (accepted,
@@ -617,7 +655,7 @@ export const resetAnalyticsIdentity = () => {
 export const captureEvent = (eventName: string, properties?: AnalyticsProperties) => {
   recordRoadmapAnalyticsEvent(eventName, properties);
   // Drop all events from internal/admin accounts so they never pollute metrics.
-  if (internalUser) {
+  if (isInternalUser()) {
     return;
   }
 

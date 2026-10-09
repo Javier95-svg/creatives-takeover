@@ -18,6 +18,7 @@ import {
   readAuthMethod,
   resetAnalyticsIdentity,
   setInternalUser,
+  clearInternalDevice,
   trackSignupCompleted,
   type SignupMethod,
 } from '@/lib/analytics';
@@ -127,6 +128,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Suppress analytics for internal/admin accounts before any capture/identify
       // runs below, so admin activity never pollutes product metrics.
       setInternalUser(isInternalEmail(email));
+      // A customer on a device the team used before: track them normally.
+      if (!isInternalEmail(email)) clearInternalDevice();
 
       // ── Step 1: Check if profile exists (SINGLE call) ──
       const { data: existingProfileData, error: existingProfileError } = await supabase
